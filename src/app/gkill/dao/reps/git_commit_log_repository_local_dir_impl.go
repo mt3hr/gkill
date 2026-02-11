@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -14,12 +15,13 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type gitCommitLogRepositoryLocalImpl struct {
 	gitrep   *git.Repository
 	filename string
-	m        sync.Mutex
+	m        sync.RWMutex
 }
 
 func NewGitRep(reppath string) (GitCommitLogRepository, error) {
@@ -34,8 +36,8 @@ func NewGitRep(reppath string) (GitCommitLogRepository, error) {
 	}, nil
 }
 func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	g.m.Lock()
-	defer g.m.Unlock()
+	g.m.RLock()
+	defer g.m.RUnlock()
 
 	var err error
 	// update_cacheであればキャッシュを更新する
@@ -66,7 +68,12 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 		return nil, nil
 		// return err
 	}
-	defer logs.Close()
+	defer func() {
+		err := logs.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	useCalendar := false
 	calendarStartDate := query.CalendarStartDate
@@ -225,8 +232,8 @@ loop:
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	g.m.Lock()
-	defer g.m.Unlock()
+	g.m.RLock()
+	defer g.m.RUnlock()
 
 	var err error
 
@@ -242,7 +249,12 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 		return nil, nil
 		// return err
 	}
-	defer logs.Close()
+	defer func() {
+		err := logs.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
 		if err != nil {
@@ -305,12 +317,14 @@ func (g *gitCommitLogRepositoryLocalImpl) GetRepName(ctx context.Context) (strin
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) Close(ctx context.Context) error {
+	g.m.Lock()
+	defer g.m.Unlock()
 	return nil
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error) {
-	g.m.Lock()
-	defer g.m.Unlock()
+	g.m.RLock()
+	defer g.m.RUnlock()
 
 	var err error
 
@@ -341,7 +355,12 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 		return nil, nil
 		// return err
 	}
-	defer logs.Close()
+	defer func() {
+		err := logs.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
 		if err != nil {
@@ -458,8 +477,8 @@ loop:
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
-	g.m.Lock()
-	defer g.m.Unlock()
+	g.m.RLock()
+	defer g.m.RUnlock()
 
 	var err error
 
@@ -475,7 +494,12 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 		return nil, nil
 		// return err
 	}
-	defer logs.Close()
+	defer func() {
+		err := logs.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
@@ -544,6 +568,8 @@ func (g *gitCommitLogRepositoryLocalImpl) UnWrap() ([]Repository, error) {
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
+	g.m.RLock()
+	defer g.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if updateCache {
@@ -565,7 +591,12 @@ func (g *gitCommitLogRepositoryLocalImpl) GetLatestDataRepositoryAddress(ctx con
 	if err != nil {
 		return nil, err
 	}
-	defer logs.Close()
+	defer func() {
+		err := logs.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {

@@ -22,7 +22,7 @@ const CURRENT_SCHEMA_VERSION_LANTANA_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 type lantanaRepositorySQLite3Impl struct {
 	filename    string
 	db          *sql.DB
-	m           *sync.Mutex
+	m           *sync.RWMutex
 	fullConnect bool
 }
 
@@ -72,7 +72,12 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 		err = fmt.Errorf("error at create LANTANA table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -88,7 +93,12 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 		err = fmt.Errorf("error at create LANTANA index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -116,12 +126,14 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	return &lantanaRepositorySQLite3Impl{
 		filename:    filename,
 		db:          db,
-		m:           &sync.Mutex{},
+		m:           &sync.RWMutex{},
 		fullConnect: fullConnect,
 	}, nil
 }
 
 func (l *lantanaRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if l.fullConnect {
@@ -131,7 +143,12 @@ func (l *lantanaRepositorySQLite3Impl) FindKyous(ctx context.Context, query *fin
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	// update_cacheであればキャッシュを更新する
@@ -203,7 +220,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -211,7 +233,12 @@ WHERE
 		err = fmt.Errorf("error at select from LANTANA: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -267,6 +294,8 @@ WHERE
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := l.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -293,6 +322,8 @@ func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, u
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if l.fullConnect {
@@ -302,7 +333,12 @@ func (l *lantanaRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id 
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	repName, err := l.GetRepName(ctx)
@@ -367,7 +403,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -375,7 +416,12 @@ WHERE
 		err = fmt.Errorf("error at select from LANTANA %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -451,6 +497,8 @@ func (l *lantanaRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, 
 }
 
 func (l *lantanaRepositorySQLite3Impl) Close(ctx context.Context) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	if l.fullConnect {
 		return l.db.Close()
 	}
@@ -458,6 +506,8 @@ func (l *lantanaRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (l *lantanaRepositorySQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if l.fullConnect {
@@ -467,7 +517,12 @@ func (l *lantanaRepositorySQLite3Impl) FindLantana(ctx context.Context, query *f
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	// update_cacheであればキャッシュを更新する
@@ -542,7 +597,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -551,7 +611,12 @@ WHERE
 		err = fmt.Errorf("error at select from LANTANA: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	lantanas := []*Lantana{}
 	for rows.Next() {
@@ -605,6 +670,8 @@ WHERE
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	// 最新のデータを返す
 	lantanaHistories, err := l.GetLantanaHistories(ctx, id)
 	if err != nil {
@@ -631,6 +698,8 @@ func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if l.fullConnect {
@@ -640,7 +709,12 @@ func (l *lantanaRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, 
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	sql := `
@@ -706,7 +780,12 @@ WHERE
 		err = fmt.Errorf("error at get lantana histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -715,7 +794,12 @@ WHERE
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	lantanas := []*Lantana{}
 	for rows.Next() {
@@ -780,7 +864,12 @@ func (l *lantanaRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lanta
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	sql := `
@@ -817,7 +906,12 @@ INSERT INTO LANTANA (
 		err = fmt.Errorf("error at add lantana sql %s: %w", lantana.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		lantana.IsDeleted,
@@ -868,7 +962,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -876,7 +975,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -885,7 +989,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -907,7 +1016,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -925,7 +1039,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)

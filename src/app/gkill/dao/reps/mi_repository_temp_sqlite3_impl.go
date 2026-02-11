@@ -16,7 +16,7 @@ import (
 
 type miTempRepositorySQLite3Impl miRepositorySQLite3Impl
 
-func NewMiTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m *sync.Mutex) (MiTempRepository, error) {
+func NewMiTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m *sync.RWMutex) (MiTempRepository, error) {
 	filename := "mi_temp"
 
 	sql := `
@@ -47,7 +47,12 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		err = fmt.Errorf("error at create MI table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -63,7 +68,12 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		err = fmt.Errorf("error at create MI index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -87,25 +97,35 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	}, nil
 }
 func (m *miTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.FindKyous(ctx, query)
 }
 
 func (m *miTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
 func (m *miTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.GetKyouHistories(ctx, id)
 }
 
 func (m *miTempRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	return "", fmt.Errorf("miTempRepositorySQLite3Impl does not support GetPath")
 }
 
 func (m *miTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.UpdateCache(ctx)
 }
@@ -115,21 +135,29 @@ func (m *miTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, e
 }
 
 func (m *miTempRepositorySQLite3Impl) Close(ctx context.Context) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.Close(ctx)
 }
 
 func (m *miTempRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.FindMi(ctx, query)
 }
 
 func (m *miTempRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.GetMi(ctx, id, updateTime)
 }
 
 func (m *miTempRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.GetMiHistories(ctx, id)
 }
@@ -185,7 +213,12 @@ INSERT INTO MI (
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	var limitTimeStr interface{}
 	if mi.LimitTime == nil {
@@ -237,11 +270,15 @@ INSERT INTO MI (
 }
 
 func (m *miTempRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.GetBoardNames(ctx)
 }
 
 func (m *miTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	var err error
 	sql := `
 SELECT 
@@ -286,7 +323,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -294,7 +336,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from mi temp: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -351,6 +398,8 @@ AND DEVICE = ?
 }
 
 func (m *miTempRepositorySQLite3Impl) GetMisByTXID(ctx context.Context, txID string, userID string, device string) ([]*Mi, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	var err error
 
 	sql := `
@@ -400,7 +449,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get mi by txid sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
@@ -411,7 +465,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	mis := []*Mi{}
 	for rows.Next() {
@@ -478,6 +537,8 @@ AND DEVICE = ?
 }
 
 func (m *miTempRepositorySQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 DELETE FROM MI
 WHERE TX_ID = ?
@@ -490,7 +551,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at delete temp mi kyou by TXID sql: %w", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		txID,

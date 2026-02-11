@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
@@ -19,7 +21,7 @@ type tagRepositorySQLite3ImplLocalCached struct {
 	localCacheDBFileName string
 	originalRep          TagRepository
 	localCachedRep       TagRepository
-	m                    sync.Mutex
+	m                    sync.RWMutex
 
 	fullConnect bool
 }
@@ -41,13 +43,25 @@ func NewTagRepositorySQLite3ImplLocalCached(ctx context.Context, filename string
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", filename, err)
+			return nil, err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return nil, err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
@@ -76,17 +90,19 @@ func NewTagRepositorySQLite3ImplLocalCached(ctx context.Context, filename string
 
 		fullConnect: fullConnect,
 
-		m: sync.Mutex{},
+		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
 }
 func (t *tagRepositorySQLite3ImplLocalCached) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.FindTags(ctx, query)
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	err := t.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
@@ -101,20 +117,20 @@ func (t *tagRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetTag(ctx, id, updateTime)
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetTagsByTagName(ctx, tagname)
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetTagsByTargetID(ctx, target_id)
 }
 
@@ -134,7 +150,7 @@ func (t *tagRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) e
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(t.originalDBFileName, ":", "", -1))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(t.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -150,13 +166,25 @@ func (t *tagRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) e
 		originalDBFile, err := os.Open(t.originalDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", t.originalDBFileName, err)
+			return err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", t.originalDBFileName, localCacheDBFileName, err)
@@ -175,8 +203,8 @@ func (t *tagRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) e
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.originalRep.GetPath(ctx, id)
 }
 
@@ -185,8 +213,8 @@ func (t *tagRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (s
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetTagHistories(ctx, id)
 }
 
@@ -201,14 +229,14 @@ func (t *tagRepositorySQLite3ImplLocalCached) AddTagInfo(ctx context.Context, ta
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) GetAllTagNames(ctx context.Context) ([]string, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetAllTagNames(ctx)
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) GetAllTags(ctx context.Context) ([]*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetAllTags(ctx)
 }
 

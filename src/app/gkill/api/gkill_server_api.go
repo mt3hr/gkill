@@ -830,7 +830,12 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.LoginRequest{}
 	response := &req_res.LoginResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -1030,7 +1035,12 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.LogoutRequest{}
 	response := &req_res.LogoutResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -1118,7 +1128,12 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 	request := &req_res.ResetPasswordRequest{}
 	response := &req_res.ResetPasswordResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -1247,7 +1262,12 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	request := &req_res.SetNewPasswordRequest{}
 	response := &req_res.SetNewPasswordResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -1340,7 +1360,12 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.AddTagRequest{}
 	response := &req_res.AddTagResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -1507,7 +1532,12 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.AddTextRequest{}
 	response := &req_res.AddTextResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -1673,7 +1703,12 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 	request := &req_res.AddNotificationRequest{}
 	response := &req_res.AddNotificationResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -1895,7 +1930,12 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.AddKmemoRequest{}
 	response := &req_res.AddKmemoResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -2075,7 +2115,12 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.AddKCRequest{}
 	response := &req_res.AddKCResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -2254,7 +2299,12 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.AddURLogRequest{}
 	response := &req_res.AddURLogResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -2465,7 +2515,12 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.AddNlogRequest{}
 	response := &req_res.AddNlogResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -2644,7 +2699,12 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 	request := &req_res.AddTimeIsRequest{}
 	response := &req_res.AddTimeIsResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -2824,7 +2884,12 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 	request := &req_res.AddLantanaRequest{}
 	response := &req_res.AddLantanaResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -3007,7 +3072,12 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.AddMiRequest{}
 	response := &req_res.AddMiResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -3187,7 +3257,12 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 	request := &req_res.AddReKyouRequest{}
 	response := &req_res.AddReKyouResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -3368,7 +3443,12 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 	request := &req_res.UpdateTagRequest{}
 	response := &req_res.UpdateTagResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -3549,7 +3629,12 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 	request := &req_res.UpdateTextRequest{}
 	response := &req_res.UpdateTextResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -3729,7 +3814,12 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 	request := &req_res.UpdateNotificationRequest{}
 	response := &req_res.UpdateNotificationResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -3932,7 +4022,12 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 	request := &req_res.UpdateKmemoRequest{}
 	response := &req_res.UpdateKmemoResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -4124,7 +4219,12 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.UpdateKCRequest{}
 	response := &req_res.UpdateKCResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -4317,7 +4417,12 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 	request := &req_res.UpdateURLogRequest{}
 	response := &req_res.UpdateURLogResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -4571,7 +4676,12 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 	request := &req_res.UpdateNlogRequest{}
 	response := &req_res.UpdateNlogResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -4763,7 +4873,12 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 	request := &req_res.UpdateTimeisRequest{}
 	response := &req_res.UpdateTimeisResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -4955,7 +5070,12 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 	request := &req_res.UpdateLantanaRequest{}
 	response := &req_res.UpdateLantanaResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -5134,7 +5254,12 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 	request := &req_res.UpdateIDFKyouRequest{}
 	response := &req_res.UpdateIDFKyouResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -5313,7 +5438,12 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.UpdateMiRequest{}
 	response := &req_res.UpdateMiResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -5492,7 +5622,12 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 	request := &req_res.UpdateReKyouRequest{}
 	response := &req_res.UpdateReKyouResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -5685,7 +5820,12 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.GetKyousRequest{}
 	response := &req_res.GetKyousResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -5757,7 +5897,12 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.GetKyouRequest{}
 	response := &req_res.GetKyouResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -5850,7 +5995,12 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.GetKmemoRequest{}
 	response := &req_res.GetKmemoResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -5934,7 +6084,12 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.GetKCRequest{}
 	response := &req_res.GetKCResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6018,7 +6173,12 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.GetURLogRequest{}
 	response := &req_res.GetURLogResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6102,7 +6262,12 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.GetNlogRequest{}
 	response := &req_res.GetNlogResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6186,7 +6351,12 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 	request := &req_res.GetTimeisRequest{}
 	response := &req_res.GetTimeisResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6270,7 +6440,12 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 	request := &req_res.GetMiRequest{}
 	response := &req_res.GetMiResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6354,7 +6529,12 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 	request := &req_res.GetLantanaRequest{}
 	response := &req_res.GetLantanaResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6438,7 +6618,12 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 	request := &req_res.GetReKyouRequest{}
 	response := &req_res.GetReKyouResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6522,7 +6707,12 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 	request := &req_res.GetGitCommitLogRequest{}
 	response := &req_res.GetGitCommitLogResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6606,7 +6796,12 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 	request := &req_res.GetIDFKyouRequest{}
 	response := &req_res.GetIDFKyouResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6690,7 +6885,12 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 	request := &req_res.GetMiBoardRequest{}
 	response := &req_res.GetMiBoardResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6774,7 +6974,12 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 	request := &req_res.GetAllTagNamesRequest{}
 	response := &req_res.GetAllTagNamesResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6858,7 +7063,12 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 	request := &req_res.GetAllRepNamesRequest{}
 	response := &req_res.GetAllRepNamesResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -6942,7 +7152,12 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 	request := &req_res.GetTagsByTargetIDRequest{}
 	response := &req_res.GetTagsByTargetIDResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7026,7 +7241,12 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 	request := &req_res.GetTagHistoryByTagIDRequest{}
 	response := &req_res.GetTagHistoryByTagIDResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7119,7 +7339,12 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 	request := &req_res.GetTextsByTargetIDRequest{}
 	response := &req_res.GetTextsByTargetIDResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7203,7 +7428,12 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 	request := &req_res.GetNotificationsByTargetIDRequest{}
 	response := &req_res.GetNotificationsByTargetIDResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7287,7 +7517,12 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 	request := &req_res.GetTextHistoryByTextIDRequest{}
 	response := &req_res.GetTextHistoryByTextIDResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7380,7 +7615,12 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 	request := &req_res.GetNotificationHistoryByNotificationIDRequest{}
 	response := &req_res.GetNotificationHistoryByNotificationIDResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7473,7 +7713,12 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	request := &req_res.GetApplicationConfigRequest{}
 	response := &req_res.GetApplicationConfigResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7629,7 +7874,12 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 	request := &req_res.GetServerConfigsRequest{}
 	response := &req_res.GetServerConfigsResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7744,7 +7994,12 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	g.GkillDAOManager.SetSkipIDF(true)
 	defer g.GkillDAOManager.SetSkipIDF(false)
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -7890,7 +8145,12 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 				gkillErrorCh <- gkillError
 				return
 			}
-			defer file.Close()
+			defer func() {
+				err := file.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			io.Copy(file, decoder)
 			os.Chtimes(filename, time.Now(), fileInfo.LastModified)
 
@@ -8019,7 +8279,12 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 	request := &req_res.UploadGPSLogFilesRequest{}
 	response := &req_res.UploadGPSLogFilesResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -8276,7 +8541,12 @@ loop:
 				gkillErrorCh <- gkillError
 				return
 			}
-			defer file.Close()
+			defer func() {
+				err := file.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			_, err = file.WriteString(gpxFileContent)
 			if err != nil {
 				err := fmt.Errorf("error at write gpx content to file filename= %s: %w", filename, err)
@@ -8321,7 +8591,12 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 	request := &req_res.UpdateApplicationConfigRequest{}
 	response := &req_res.UpdateApplicationConfigResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -8397,7 +8672,12 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 	request := &req_res.UpdateAccountStatusRequest{}
 	response := &req_res.UpdateAccountStatusResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -8503,7 +8783,12 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	request := &req_res.UpdateUserRepsRequest{}
 	response := &req_res.UpdateUserRepsResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -8615,7 +8900,12 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		request := &req_res.UpdateServerConfigsRequest{}
 		response := &req_res.UpdateServerConfigsResponse{}
 
-		defer r.Body.Close()
+		defer func() {
+			err := r.Body.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		defer func() {
 			err := json.NewEncoder(w).Encode(response)
 			if err != nil {
@@ -8767,7 +9057,12 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	request := &req_res.AddAccountRequest{}
 	response := &req_res.AddAccountResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -8930,7 +9225,12 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	request := &req_res.GenerateTLSFileRequest{}
 	response := &req_res.GenerateTLSFileResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -9327,7 +9627,12 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 	request := &req_res.GetGPSLogRequest{}
 	response := &req_res.GetGPSLogResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -9481,7 +9786,12 @@ func globalIP(ctx context.Context) (net.IP, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	b, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -9502,7 +9812,12 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 	request := &req_res.AddShareKyouListInfoRequest{}
 	response := &req_res.AddShareKyouListInfoResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -9626,7 +9941,12 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 	request := &req_res.UpdateShareKyouListInfoRequest{}
 	response := &req_res.UpdateShareKyouListInfoResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -9750,7 +10070,12 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 	request := &req_res.GetShareKyouListInfosRequest{}
 	response := &req_res.GetShareKyouListInfosResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -9822,7 +10147,12 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 	request := &req_res.DeleteShareKyouListInfoRequest{}
 	response := &req_res.DeleteShareKyouListInfosResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -9895,7 +10225,12 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	request := &req_res.GetSharedKyousRequest{}
 	response := &req_res.GetSharedKyousResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -10321,7 +10656,12 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 	request := &req_res.GetRepositoriesRequest{}
 	response := &req_res.GetRepositoriesResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -10790,7 +11130,12 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 	request := &req_res.GetGkillNotificationPublicKeyRequest{}
 	response := &req_res.GetGkillNotificationPublicKeyResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -10875,7 +11220,12 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 	request := &req_res.RegisterGkillNotificationRequest{}
 	response := &req_res.RegisterGkillNotificationResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -10941,7 +11291,12 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 	request := &req_res.OpenDirectoryRequest{}
 	response := &req_res.OpenDirectoryResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -11075,7 +11430,12 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.OpenFileRequest{}
 	response := &req_res.OpenFileResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -11209,7 +11569,12 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	request := &req_res.ReloadRepositoriesRequest{}
 	response := &req_res.ReloadRepositoriesResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -11384,7 +11749,12 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 
 	request := &req_res.URLogBookmarkletRequest{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
@@ -11634,7 +12004,12 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 		if resp.Body != nil {
-			defer resp.Body.Close()
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 		}
 		// 登録解除されていたらDBから消す
 		if resp.Status == "410 Gone" {
@@ -11657,7 +12032,12 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 	request := &req_res.GetUpdatedDatasByTimeRequest{}
 	response := &req_res.GetUpdatedDatasByTimeResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -11791,7 +12171,12 @@ func httpGetBase64Data(url string) (string, error) {
 		err = fmt.Errorf("error at http get %s: %w", url, err)
 		return "", err
 	}
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	b, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -11917,7 +12302,12 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 		}
 		if resp.Body != nil {
-			defer resp.Body.Close()
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 		}
 		// 登録解除されていたらDBから消す
 		if resp.Status == "410 Gone" {
@@ -11935,7 +12325,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 	request := &req_res.CommitTxRequest{}
 	response := &req_res.CommitTxResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
@@ -12718,7 +13113,12 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 	request := &req_res.DiscardTxRequest{}
 	response := &req_res.DiscardTxResponse{}
 
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
