@@ -21,12 +21,12 @@ type textRepositoryCachedSQLite3Impl struct {
 	cachedDB               *sql.DB
 	getTextsByTargetIDSQL  string
 	getTextsByTargetIDStmt *sql.Stmt
-	m                      *sync.Mutex
+	m                      *sync.RWMutex
 }
 
-func NewTextRepositoryCachedSQLite3Impl(ctx context.Context, textRep TextRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (TextRepository, error) {
+func NewTextRepositoryCachedSQLite3Impl(ctx context.Context, textRep TextRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (TextRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 
@@ -53,7 +53,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TEXT table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -69,7 +74,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TEXT index statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -85,7 +95,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TEXT_TARGET_ID index statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexTargetIDUnixStmt.Close()
+	defer func() {
+		err := indexTargetIDUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDUnixSQL)
 	_, err = indexTargetIDUnixStmt.ExecContext(ctx)
@@ -101,7 +116,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME_UNIX index statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexIDUpdateTimeUnixStmt.Close()
+	defer func() {
+		err := indexIDUpdateTimeUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeUnixSQL)
 	_, err = indexIDUpdateTimeUnixStmt.ExecContext(ctx)
@@ -154,8 +174,8 @@ ORDER BY TEXT1.UPDATE_TIME_UNIX DESC
 	}, nil
 }
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	if query.UseWords != nil && *query.UseWords {
@@ -227,7 +247,12 @@ WHERE
 		err = fmt.Errorf("error at get TEXT histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -236,7 +261,12 @@ WHERE
 		err = fmt.Errorf("error at select from TEXT: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	texts := []*Text{}
 	for rows.Next() {
@@ -280,6 +310,8 @@ WHERE
 }
 
 func (t *textRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	err := t.textRep.Close(ctx)
 	if err != nil {
 		return err
@@ -299,6 +331,8 @@ func (t *textRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	// 最新のデータを返す
 	textHistories, err := t.GetTextHistories(ctx, id)
 	if err != nil {
@@ -325,6 +359,8 @@ func (t *textRepositoryCachedSQLite3Impl) GetText(ctx context.Context, id string
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 	dataType := "text"
 
@@ -340,7 +376,12 @@ func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context
 		err = fmt.Errorf("error at select from TEXT: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	texts := []*Text{}
 	for rows.Next() {
@@ -383,6 +424,8 @@ func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context
 }
 
 func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -411,7 +454,12 @@ func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 		err = fmt.Errorf("error at create TEXT table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete TEXT table: %w", err)
@@ -457,7 +505,12 @@ INSERT INTO ` + t.dbName + ` (
 		err = fmt.Errorf("error at add text sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, text := range allTexts {
 		select {
@@ -515,8 +568,8 @@ func (t *textRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (strin
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	sql := `
@@ -575,7 +628,12 @@ WHERE
 		err = fmt.Errorf("error at get text histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -584,7 +642,12 @@ WHERE
 		err = fmt.Errorf("error at select from TEXT: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	texts := []*Text{}
 	for rows.Next() {
@@ -666,7 +729,12 @@ INSERT INTO ` + t.dbName + ` (
 		err = fmt.Errorf("error at add text sql %s: %w", text.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		text.IsDeleted,

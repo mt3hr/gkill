@@ -27,7 +27,7 @@ import (
 )
 
 type GkillDAOManager struct {
-	initializingMutex        map[string]map[string]*sync.Mutex
+	initializingMutex        map[string]map[string]*sync.RWMutex
 	gkillRepositories        map[string]map[string]*reps.GkillRepositories
 	gkillNotificators        map[string]map[string]*GkillNotificator
 	fileRepWatchCacheUpdater rep_cache_updater.FileRepCacheUpdater
@@ -116,7 +116,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 	// nilだったら初期化する
 	if g.initializingMutex == nil {
-		g.initializingMutex = map[string]map[string]*sync.Mutex{}
+		g.initializingMutex = map[string]map[string]*sync.RWMutex{}
 	}
 	if g.gkillRepositories == nil {
 		g.gkillRepositories = map[string]map[string]*reps.GkillRepositories{}
@@ -125,12 +125,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	// 初期化中だったらちょっとまつ
 	initializeMutexInUser, existRepsInUsers := g.initializingMutex[userID]
 	if !existRepsInUsers {
-		g.initializingMutex[userID] = map[string]*sync.Mutex{}
+		g.initializingMutex[userID] = map[string]*sync.RWMutex{}
 		initializeMutexInUser = g.initializingMutex[userID]
 	}
 	_, existMutexsInDevice := initializeMutexInUser[device]
 	if !existMutexsInDevice {
-		g.initializingMutex[userID][device] = &sync.Mutex{}
+		g.initializingMutex[userID][device] = &sync.RWMutex{}
 	}
 
 	// すでに存在していればそれを、存在していなければ作っていれる。Rep

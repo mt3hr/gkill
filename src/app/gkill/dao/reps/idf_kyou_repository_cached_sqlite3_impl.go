@@ -24,12 +24,12 @@ type idfKyouRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	idfRep   IDFKyouRepository
 	cachedDB *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
-func NewIDFCachedRep(ctx context.Context, idfRep IDFKyouRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (IDFKyouRepository, error) {
+func NewIDFCachedRep(ctx context.Context, idfRep IDFKyouRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (IDFKyouRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	sql := `
 CREATE TABLE IF NOT EXISTS "` + dbName + `" (
@@ -57,7 +57,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create IDF table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -73,7 +78,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create IDF index unix statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -92,8 +102,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	i.m.Lock()
-	i.m.Unlock()
+	i.m.RLock()
+	defer i.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -158,7 +168,12 @@ WHERE
 		err = fmt.Errorf("error at find kyou sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -166,7 +181,12 @@ WHERE
 		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -323,6 +343,8 @@ WHERE
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := i.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -349,8 +371,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	i.m.Lock()
-	i.m.Unlock()
+	i.m.RLock()
+	defer i.m.RUnlock()
 	var err error
 	sql := `
 SELECT 
@@ -410,7 +432,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -418,7 +445,12 @@ WHERE
 		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -492,6 +524,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	i.m.Lock()
+	defer i.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -520,7 +554,12 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		err = fmt.Errorf("error at create idf kyou table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete idf kyou table: %w", err)
@@ -567,7 +606,12 @@ INSERT INTO ` + i.dbName + ` (
 		err = fmt.Errorf("error at add idf sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, idfKyou := range allIDFKyous {
 		select {
@@ -623,6 +667,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (st
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	i.m.Lock()
+	defer i.m.Unlock()
 	err := i.idfRep.Close(ctx)
 	if err != nil {
 		return err
@@ -642,6 +688,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -709,7 +757,12 @@ WHERE
 		err = fmt.Errorf("error at find kyou sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -717,7 +770,12 @@ WHERE
 		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	idfKyous := []*IDFKyou{}
 	for rows.Next() {
@@ -844,6 +902,8 @@ WHERE
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	// 最新のデータを返す
 	idfHistories, err := i.GetIDFKyouHistories(ctx, id)
 	if err != nil {
@@ -870,8 +930,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyou(ctx context.Context, id 
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
-	i.m.Lock()
-	i.m.Unlock()
+	i.m.RLock()
+	defer i.m.RUnlock()
 	var err error
 	sql := `
 SELECT 
@@ -930,7 +990,12 @@ WHERE
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -938,7 +1003,12 @@ WHERE
 		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	idfKyous := []*IDFKyou{}
 	for rows.Next() {
@@ -1037,7 +1107,12 @@ INSERT INTO ` + i.dbName + ` (
 		err = fmt.Errorf("error at add idf sql %s: %w", idfKyou.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		idfKyou.IsDeleted,

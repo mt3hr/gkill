@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
@@ -19,7 +21,7 @@ type nlogRepositorySQLite3ImplLocalCached struct {
 	localCacheDBFileName string
 	originalRep          NlogRepository
 	localCachedRep       NlogRepository
-	m                    sync.Mutex
+	m                    sync.RWMutex
 
 	fullConnect bool
 }
@@ -41,13 +43,25 @@ func NewNlogRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", filename, err)
+			return nil, err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return nil, err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
@@ -76,31 +90,31 @@ func NewNlogRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 
 		fullConnect: fullConnect,
 
-		m: sync.Mutex{},
+		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
 }
 func (n *nlogRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.FindKyous(ctx, query)
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.GetKyouHistories(ctx, id)
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.originalRep.GetPath(ctx, id)
 }
 
@@ -120,7 +134,7 @@ func (n *nlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(n.originalDBFileName, ":", "", -1))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(n.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -136,13 +150,25 @@ func (n *nlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 		originalDBFile, err := os.Open(n.originalDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", n.originalDBFileName, err)
+			return err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", n.originalDBFileName, localCacheDBFileName, err)
@@ -165,6 +191,8 @@ func (n *nlogRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	err := n.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
@@ -179,20 +207,20 @@ func (n *nlogRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error 
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.FindNlog(ctx, query)
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) GetNlog(ctx context.Context, id string, updateTime *time.Time) (*Nlog, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.GetNlog(ctx, id, updateTime)
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.GetNlogHistories(ctx, id)
 }
 

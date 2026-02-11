@@ -20,7 +20,10 @@ func init() {
 	pf := DVNFCmd.PersistentFlags()
 	pf.BoolVarP(&rootOpt.createNew, createNewKey, createNewKeyP, false, "新たにdvnfを作成します")
 	pf.BoolVar(&rootOpt.autoCreate, autoCreateKey, true, "1つも存在しなかったときに自動で作成します。")
-	viper.BindPFlags(pf)
+	err := viper.BindPFlags(pf)
+	if err != nil {
+		panic(err)
+	}
 
 	// コマンドの親子設定
 	DVNFCmd.AddCommand(getCommand)

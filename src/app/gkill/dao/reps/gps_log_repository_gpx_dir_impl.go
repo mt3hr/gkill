@@ -3,11 +3,13 @@ package reps
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/twpayne/go-gpx"
 )
 
@@ -142,7 +144,12 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToGPSLogs(gpxfilename string) (gp
 		err = fmt.Errorf("failed to open file %s. %w", gpxfilename, err)
 		return nil, err
 	}
-	defer gpxFile.Close()
+	defer func() {
+		err := gpxFile.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	gpxData, err := gpx.Read(gpxFile)
 	if err != nil {
@@ -181,7 +188,12 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToPoints(gpxfilename string) (gps
 		err = fmt.Errorf("failed to open file %s. %w", gpxfilename, err)
 		return nil, err
 	}
-	defer gpxFile.Close()
+	defer func() {
+		err := gpxFile.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	gpxData, err := gpx.Read(gpxFile)
 	if err != nil {

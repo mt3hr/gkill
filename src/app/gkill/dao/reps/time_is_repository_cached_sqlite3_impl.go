@@ -20,12 +20,12 @@ type timeIsRepositoryCachedSQLite3Impl struct {
 	dbName    string
 	timeisRep TimeIsRepository
 	cachedDB  *sqllib.DB
-	m         *sync.Mutex
+	m         *sync.RWMutex
 }
 
-func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsRepository, cacheDB *sqllib.DB, m *sync.Mutex, dbName string) (TimeIsRepository, error) {
+func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (TimeIsRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 
@@ -52,7 +52,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -68,7 +73,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create timeis index unix statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -85,8 +95,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -209,7 +219,12 @@ FROM ` + t.dbName + `
 		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql, "params", queryArgsForStart, "params", queryArgsForPlaingStart, "params", queryArgsForEnd, "params", queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
@@ -217,7 +232,12 @@ FROM ` + t.dbName + `
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -262,6 +282,8 @@ FROM ` + t.dbName + `
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := t.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -288,8 +310,8 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
@@ -346,7 +368,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -355,7 +382,12 @@ WHERE
 		err = fmt.Errorf("error at select from TIMEIS %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -401,6 +433,8 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -429,7 +463,12 @@ func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete TIMEIS table: %w", err)
@@ -475,7 +514,12 @@ INSERT INTO ` + t.dbName + `(
 		err = fmt.Errorf("error at add timeis sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, timeis := range allTimeiss {
 		select {
@@ -535,6 +579,8 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (str
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	err := t.timeisRep.Close(ctx)
 	if err != nil {
 		return err
@@ -554,8 +600,8 @@ func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -679,7 +725,12 @@ FROM ` + t.dbName + `
 		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql, "params", queryArgsForStart, "params", queryArgsForPlaingStart, "params", queryArgsForEnd, "params", queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
@@ -687,7 +738,12 @@ FROM ` + t.dbName + `
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	timeiss := []*TimeIs{}
 	for rows.Next() {
@@ -736,8 +792,8 @@ FROM ` + t.dbName + `
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	// 最新のデータを返す
 	timeisHistories, err := t.GetTimeIsHistories(ctx, id)
 	if err != nil {
@@ -764,8 +820,8 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id st
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	sql := `
@@ -833,7 +889,12 @@ WHERE
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
@@ -842,7 +903,12 @@ WHERE
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	timeiss := []*TimeIs{}
 	for rows.Next() {
@@ -931,7 +997,12 @@ INSERT INTO ` + t.dbName + `(
 		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	var endTimeUnix interface{}
 	if timeis.EndTime == nil {

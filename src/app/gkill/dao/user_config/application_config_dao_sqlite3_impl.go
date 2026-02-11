@@ -20,7 +20,7 @@ const CURRENT_SCHEMA_VERSION_APPLICATION_CONFIG_DAO = "1.0.0"
 type applicationConfigDAOSQLite3Impl struct {
 	filename string
 	db       *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewApplicationConfigDAOSQLite3Impl(ctx context.Context, filename string) (ApplicationConfigDAO, error) {
@@ -65,7 +65,12 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
 		err = fmt.Errorf("error at create APPLICATION_CONFIG table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -82,7 +87,12 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
 		err = fmt.Errorf("error at create APPLICATION_CONFIG index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -102,7 +112,7 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
 	return &applicationConfigDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        &sync.RWMutex{},
 	}, nil
 }
 
@@ -168,6 +178,8 @@ var ignoreDeviceNameConfigKey = []string{
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error) {
+	a.m.RLock()
+	defer a.m.RUnlock()
 	sql := `
 SELECT 
   /* USER_ID */
@@ -400,7 +412,12 @@ GROUP BY USER_ID, DEVICE
 		err = fmt.Errorf("error at get get all application configs sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx,
@@ -427,7 +444,12 @@ GROUP BY USER_ID, DEVICE
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	applicationConfigs := []*ApplicationConfig{}
 	for rows.Next() {
@@ -511,6 +533,8 @@ GROUP BY USER_ID, DEVICE
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetApplicationConfig(ctx context.Context, userID string, device string) (*ApplicationConfig, error) {
+	a.m.RLock()
+	defer a.m.RUnlock()
 	sql := `
 SELECT 
   /* USER_ID */
@@ -743,7 +767,12 @@ HAVING USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get get application config sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		applicationConfigDefaultValue["USE_DARK_THEME"],
@@ -775,7 +804,12 @@ HAVING USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	applicationConfigs := []*ApplicationConfig{}
 	for rows.Next() {
@@ -884,6 +918,8 @@ HAVING USER_ID = ? AND DEVICE = ?
 }
 
 func (a *applicationConfigDAOSQLite3Impl) AddApplicationConfig(ctx context.Context, applicationConfig *ApplicationConfig) (bool, error) {
+	a.m.Lock()
+	defer a.m.Unlock()
 	sql := `
 INSERT INTO APPLICATION_CONFIG (
   USER_ID,
@@ -914,7 +950,12 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 		return false, err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	insertValuesMap := map[string]interface{}{
 		"USE_DARK_THEME":                applicationConfig.UseDarkTheme,
@@ -982,6 +1023,8 @@ INSERT INTO APPLICATION_CONFIG (
 }
 
 func (a *applicationConfigDAOSQLite3Impl) AddDefaultApplicationConfig(ctx context.Context, userID string, device string) (bool, error) {
+	a.m.Lock()
+	defer a.m.Unlock()
 	sql := `
 INSERT INTO APPLICATION_CONFIG (
   USER_ID,
@@ -1012,7 +1055,12 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 		return false, err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	insertValuesMap := map[string]interface{}{
 		"USE_DARK_THEME":                applicationConfigDefaultValue["USE_DARK_THEME"],
@@ -1080,6 +1128,8 @@ INSERT INTO APPLICATION_CONFIG (
 }
 
 func (a *applicationConfigDAOSQLite3Impl) UpdateApplicationConfig(ctx context.Context, applicationConfig *ApplicationConfig) (bool, error) {
+	a.m.Lock()
+	defer a.m.Unlock()
 	sql := `
 UPDATE APPLICATION_CONFIG SET
 VALUE = ?
@@ -1143,7 +1193,12 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 		return false, err
 	}
-	defer checkExistStmt.Close()
+	defer func() {
+		err := checkExistStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
 	if err != nil {
@@ -1155,7 +1210,12 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 		return false, err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	updateStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
@@ -1166,7 +1226,12 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 		return false, err
 	}
-	defer updateStmt.Close()
+	defer func() {
+		err := updateStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	// レコード自体が存在しなかったらいれる
 	for key, value := range updateValuesMap {
@@ -1289,6 +1354,8 @@ INSERT INTO APPLICATION_CONFIG (
 }
 
 func (a *applicationConfigDAOSQLite3Impl) DeleteApplicationConfig(ctx context.Context, userID string, device string) (bool, error) {
+	a.m.Lock()
+	defer a.m.Unlock()
 	sql := `
 DELETE FROM APPLICATION_CONFIG 
 WHERE USER_ID = ? AND DEVICE = ?
@@ -1299,7 +1366,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at delete application config sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		userID,
@@ -1316,6 +1388,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 }
 
 func (a *applicationConfigDAOSQLite3Impl) Close(ctx context.Context) error {
+	a.m.Lock()
+	defer a.m.Unlock()
 	return a.db.Close()
 }
 
@@ -1336,7 +1410,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -1344,7 +1423,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -1353,7 +1437,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -1375,7 +1464,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -1393,7 +1487,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
