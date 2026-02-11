@@ -16,7 +16,7 @@ import (
 
 type tagTempRepositorySQLite3Impl tagRepositorySQLite3Impl
 
-func NewTagTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (TagTempRepository, error) {
+func NewTagTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.RWMutex) (TagTempRepository, error) {
 	filename := "tag_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "TAG" (
@@ -43,7 +43,12 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		err = fmt.Errorf("error at create TAG table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -59,7 +64,12 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		err = fmt.Errorf("error at create TAG index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -82,7 +92,12 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		err = fmt.Errorf("error at create TAG_TARGET_ID index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexTargetIDStmt.Close()
+	defer func() {
+		err := indexTargetIDStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDSQL)
 	_, err = indexTargetIDStmt.ExecContext(ctx)
@@ -105,7 +120,12 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexIDUpdateTimeStmt.Close()
+	defer func() {
+		err := indexIDUpdateTimeStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeSQL)
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
@@ -128,31 +148,43 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}, nil
 }
 func (t *tagTempRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.FindTags(ctx, query)
 }
 
 func (t *tagTempRepositorySQLite3Impl) Close(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.Close(ctx)
 }
 
 func (t *tagTempRepositorySQLite3Impl) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetTag(ctx, id, updateTime)
 }
 
 func (t *tagTempRepositorySQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetTagsByTagName(ctx, tagname)
 }
 
 func (t *tagTempRepositorySQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetTagsByTargetID(ctx, target_id)
 }
 
 func (t *tagTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.UpdateCache(ctx)
 }
@@ -166,6 +198,8 @@ func (t *tagTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, 
 }
 
 func (t *tagTempRepositorySQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetTagHistories(ctx, id)
 }
@@ -215,7 +249,12 @@ INSERT INTO TAG (
 		err = fmt.Errorf("error at add tag sql %s: %w", tag.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		tag.IsDeleted,
@@ -245,16 +284,22 @@ INSERT INTO TAG (
 }
 
 func (t *tagTempRepositorySQLite3Impl) GetAllTagNames(ctx context.Context) ([]string, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetAllTagNames(ctx)
 }
 
 func (t *tagTempRepositorySQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetAllTags(ctx)
 }
 
 func (t *tagTempRepositorySQLite3Impl) GetTagsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	sql := `
@@ -301,7 +346,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get tag by tx id sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -309,7 +359,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -365,6 +420,8 @@ AND DEVICE = ?
 }
 
 func (t *tagTempRepositorySQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 DELETE FROM TAG
 WHERE TX_ID = ?
@@ -377,7 +434,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at delete temp tag by TXID sql: %w", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		txID,

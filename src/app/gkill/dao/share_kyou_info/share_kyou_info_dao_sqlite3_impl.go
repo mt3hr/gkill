@@ -19,7 +19,7 @@ const CURRENT_SCHEMA_VERSION_SHARE_KYOU_INFO_DAO = "1.0.0"
 type shareKyouInfoDAOSQLite3Impl struct {
 	filename string
 	db       *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewShareKyouInfoDAOSQLite3Impl(ctx context.Context, filename string) (ShareKyouInfoDAO, error) {
@@ -65,7 +65,12 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO" (
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -87,7 +92,12 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO_OPTIONS" (
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO_OPTIONS table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -107,7 +117,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO_OPTIONS" (
 	return &shareKyouInfoDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        &sync.RWMutex{},
 	}, nil
 }
 
@@ -120,6 +130,8 @@ var shareKyouInfoDefaultValue = map[string]interface{}{
 }
 
 func (m *shareKyouInfoDAOSQLite3Impl) GetAllKyouShareInfos(ctx context.Context) ([]*ShareKyouInfo, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	sql := fmt.Sprintf(`
 SELECT 
   ID,
@@ -204,7 +216,12 @@ FROM SHARE_KYOU_INFO
 		err = fmt.Errorf("error at get get all kyou share infos sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
@@ -212,7 +229,12 @@ FROM SHARE_KYOU_INFO
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyouShareInfos := []*ShareKyouInfo{}
 	for rows.Next() {
@@ -246,6 +268,8 @@ FROM SHARE_KYOU_INFO
 }
 
 func (m *shareKyouInfoDAOSQLite3Impl) GetKyouShareInfos(ctx context.Context, userID string, device string) ([]*ShareKyouInfo, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	sql := fmt.Sprintf(`
 SELECT 
   ID,
@@ -331,7 +355,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get get kyou share infos sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		userID,
@@ -343,7 +372,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyouShareInfos := []*ShareKyouInfo{}
 	for rows.Next() {
@@ -377,6 +411,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 }
 
 func (m *shareKyouInfoDAOSQLite3Impl) GetKyouShareInfo(ctx context.Context, sharedID string) (*ShareKyouInfo, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	sql := fmt.Sprintf(`
 SELECT 
   ID,
@@ -462,7 +498,12 @@ WHERE SHARE_ID = ?
 		err = fmt.Errorf("error at get get kyou share infos sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		sharedID,
@@ -473,7 +514,12 @@ WHERE SHARE_ID = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyouShareInfos := []*ShareKyouInfo{}
 	for rows.Next() {
@@ -510,6 +556,8 @@ WHERE SHARE_ID = ?
 }
 
 func (m *shareKyouInfoDAOSQLite3Impl) AddKyouShareInfo(ctx context.Context, kyouShareInfo *ShareKyouInfo) (bool, error) {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 INSERT INTO SHARE_KYOU_INFO (
   ID,
@@ -541,7 +589,12 @@ INSERT INTO SHARE_KYOU_INFO (
 		err = fmt.Errorf("error at add kyou share info sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		kyouShareInfo.ID,
@@ -588,7 +641,12 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		}
 		return false, err
 	}
-	defer optionsStmt.Close()
+	defer func() {
+		err := optionsStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for key, value := range insertValuesMap {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", optionsSQL)
@@ -623,6 +681,8 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 }
 
 func (m *shareKyouInfoDAOSQLite3Impl) UpdateKyouShareInfo(ctx context.Context, kyouShareInfo *ShareKyouInfo) (bool, error) {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 UPDATE SHARE_KYOU_INFO SET
   ID = ?,
@@ -645,7 +705,12 @@ WHERE SHARE_ID = ?
 		err = fmt.Errorf("error at update kyou share info sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		kyouShareInfo.ID,
@@ -697,7 +762,12 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		}
 		return false, err
 	}
-	defer updateOptionStmt.Close()
+	defer func() {
+		err := updateOptionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)
 	if err != nil {
@@ -708,7 +778,12 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		}
 		return false, err
 	}
-	defer checkExistStmt.Close()
+	defer func() {
+		err := checkExistStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	insertValuesMap := map[string]interface{}{
 		"IS_SHARE_TIME_ONLY":      kyouShareInfo.IsShareTimeOnly,
@@ -728,7 +803,12 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		}
 		return false, err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	// レコード自体が存在しなかったらいれる
 	for key, value := range insertValuesMap {
@@ -836,6 +916,8 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 }
 
 func (m *shareKyouInfoDAOSQLite3Impl) DeleteKyouShareInfo(ctx context.Context, shareID string) (bool, error) {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 DELETE FROM SHARE_KYOU_INFO
 WHERE SHARE_ID = ?
@@ -852,7 +934,12 @@ WHERE SHARE_ID = ?
 		err = fmt.Errorf("error at delete kyou share info sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		shareID,
@@ -879,7 +966,12 @@ WHERE SHARE_ID = ?
 		}
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs = []interface{}{
 		shareID,
@@ -909,6 +1001,8 @@ WHERE SHARE_ID = ?
 }
 
 func (m *shareKyouInfoDAOSQLite3Impl) Close(ctx context.Context) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	return m.db.Close()
 }
 
@@ -929,7 +1023,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -937,7 +1036,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -946,7 +1050,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -968,7 +1077,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -986,7 +1100,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)

@@ -104,14 +104,14 @@ type GkillRepositories struct {
 	isClosed              bool
 
 	cancelPreFunc    context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
-	updateCacheMutex sync.Mutex
+	updateCacheMutex sync.RWMutex
 
 	updateReqGen atomic.Uint64
 	lastHandled  atomic.Uint64
 
-	CacheMemoryDBMutex *sync.Mutex
+	CacheMemoryDBMutex *sync.RWMutex
 	CacheMemoryDB      *sql.DB
-	TempMemoryDBMutex  *sync.Mutex
+	TempMemoryDBMutex  *sync.RWMutex
 	TempMemoryDB       *sql.DB
 }
 
@@ -131,9 +131,9 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	}
 
 	// memory_dbの初期化
-	var CacheMemoryDBMutex *sync.Mutex
+	var CacheMemoryDBMutex *sync.RWMutex
 	var CacheMemoryDB *sql.DB
-	var TempMemoryDBMutex *sync.Mutex
+	var TempMemoryDBMutex *sync.RWMutex
 	var TempMemoryDB *sql.DB
 	if gkill_options.IsCacheInMemory {
 		CacheMemoryDB, err = sql.Open("sqlite3", "file:gkill_memory_db_"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
@@ -156,8 +156,8 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		TempMemoryDB.SetConnMaxLifetime(0)             // 無限
 		TempMemoryDB.SetConnMaxIdleTime(0)             // 無限
 
-		CacheMemoryDBMutex = &sync.Mutex{}
-		TempMemoryDBMutex = &sync.Mutex{}
+		CacheMemoryDBMutex = &sync.RWMutex{}
+		TempMemoryDBMutex = &sync.RWMutex{}
 	} else {
 		TempMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_temp_"+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
 		if err != nil {
@@ -170,8 +170,8 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 			return nil, err
 		}
 
-		CacheMemoryDBMutex = &sync.Mutex{}
-		TempMemoryDBMutex = &sync.Mutex{}
+		CacheMemoryDBMutex = &sync.RWMutex{}
+		TempMemoryDBMutex = &sync.RWMutex{}
 	}
 
 	// メモリ上でやる
@@ -198,7 +198,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 
 		TempReps: TempReps,
 
-		updateCacheMutex: sync.Mutex{},
+		updateCacheMutex: sync.RWMutex{},
 
 		TempMemoryDB:       TempMemoryDB,
 		CacheMemoryDB:      CacheMemoryDB,
@@ -1299,11 +1299,6 @@ loop:
 	return tagHistoriesList, nil
 }
 
-func (g *GkillRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
-	err := fmt.Errorf("not implements GkillRepositories.AddTagInfo")
-	return err
-}
-
 func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 	return g.TagReps.GetAllTagNames(ctx)
 }
@@ -1937,11 +1932,6 @@ loop:
 	return notificationHistoriesList, nil
 }
 
-func (g *GkillRepositories) AddTextInfo(ctx context.Context, text *Text) error {
-	err := fmt.Errorf("not implements GkillRepositories.AddTextInfo")
-	return err
-}
-
 func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query *find.FindQuery) (map[string]Repository, error) {
 	matchReps := map[string]Repository{}
 
@@ -1952,7 +1942,7 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 	defer close(errch)
 
 	// 並列処理
-	m := &sync.Mutex{}
+	m := &sync.RWMutex{}
 	targetReps := g.Reps
 	if query.UsePlaing != nil && *query.UsePlaing {
 		matchReps["timeis"] = g.TimeIsReps

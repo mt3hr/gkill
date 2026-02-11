@@ -13,6 +13,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -23,6 +24,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 // ---------------- Consts ----------------
@@ -319,7 +321,7 @@ type KCWriter struct {
 		lastVal string
 	}
 	seenTag map[string]struct{}
-	mu      sync.Mutex
+	mu      sync.RWMutex
 
 	// stats
 	inserted map[string]int64
@@ -640,7 +642,12 @@ func parseFileToRecs(t parseTask, sourceTZ string, fromPtr, toPtr *time.Time, ou
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
+	defer func() {
+		err := rc.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	cr := newCSVReader(rc)
 	// ヘッダ

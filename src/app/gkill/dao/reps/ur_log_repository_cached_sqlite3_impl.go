@@ -19,12 +19,12 @@ type urlogRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	urlogRep URLogRepository
 	cachedDB *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
-func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository URLogRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (URLogRepository, error) {
+func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository URLogRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (URLogRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 
@@ -54,7 +54,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create URLOG table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -70,7 +75,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create urlog index unix statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -88,8 +98,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	u.m.Lock()
-	u.m.Unlock()
+	u.m.RLock()
+	defer u.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -154,7 +164,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -163,7 +178,12 @@ WHERE
 		err = fmt.Errorf("error at select from URLOG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -207,6 +227,8 @@ WHERE
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	u.m.RLock()
+	defer u.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := u.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -233,8 +255,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	u.m.Lock()
-	u.m.Unlock()
+	u.m.RLock()
+	defer u.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -289,7 +311,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -298,7 +325,12 @@ WHERE
 		err = fmt.Errorf("error at select from URLOG %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -343,6 +375,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	u.m.Lock()
+	defer u.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -371,7 +405,12 @@ func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		err = fmt.Errorf("error at create URLOG table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete URLOG table: %w", err)
@@ -423,7 +462,12 @@ INSERT INTO ` + u.dbName + ` (
 		err = fmt.Errorf("error at add urlog sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, urlog := range allURLogs {
 		select {
@@ -479,6 +523,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (stri
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	u.m.Lock()
+	defer u.m.Unlock()
 	err := u.urlogRep.Close(ctx)
 	if err != nil {
 		return err
@@ -498,6 +544,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
+	u.m.RLock()
+	defer u.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -567,7 +615,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -576,7 +629,12 @@ WHERE
 		err = fmt.Errorf("error at select from URLOG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	urlogs := []*URLog{}
 	for rows.Next() {
@@ -622,6 +680,8 @@ WHERE
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error) {
+	u.m.RLock()
+	defer u.m.RUnlock()
 	// 最新のデータを返す
 	urlogHistories, err := u.GetURLogHistories(ctx, id)
 	if err != nil {
@@ -648,8 +708,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetURLog(ctx context.Context, id stri
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
-	u.m.Lock()
-	u.m.Unlock()
+	u.m.RLock()
+	defer u.m.RUnlock()
 	repName, err := u.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
@@ -714,7 +774,12 @@ WHERE
 		err = fmt.Errorf("error at get urlog histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -723,7 +788,12 @@ WHERE
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	urlogs := []*URLog{}
 	for rows.Next() {
@@ -816,7 +886,12 @@ INSERT INTO ` + u.dbName + ` (
 		err = fmt.Errorf("error at add urlog sql %s: %w", urlog.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		urlog.IsDeleted,

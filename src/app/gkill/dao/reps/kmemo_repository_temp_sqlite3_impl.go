@@ -16,7 +16,7 @@ import (
 
 type kmemoTempRepositorySQLite3Impl kmemoRepositorySQLite3Impl
 
-func NewKmemoTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (KmemoTempRepository, error) {
+func NewKmemoTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.RWMutex) (KmemoTempRepository, error) {
 	filename := "kmemo_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "KMEMO" (
@@ -42,7 +42,12 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 		err = fmt.Errorf("error at create KMEMO table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -58,7 +63,12 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 		err = fmt.Errorf("error at create KMEMO index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -83,16 +93,22 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
 	return impl.FindKyous(ctx, query)
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
 	return impl.GetKyouHistories(ctx, id)
 }
@@ -102,6 +118,8 @@ func (k *kmemoTempRepositorySQLite3Impl) GetPath(ctx context.Context, id string)
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
 	return impl.UpdateCache(ctx)
 }
@@ -116,16 +134,22 @@ func (k *kmemoTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
 	return impl.FindKmemo(ctx, query)
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) GetKmemo(ctx context.Context, id string, updateTime *time.Time) (*Kmemo, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
 	return impl.GetKmemo(ctx, id, updateTime)
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
 	return impl.GetKmemoHistories(ctx, id)
 }
@@ -173,7 +197,12 @@ INSERT INTO KMEMO (
 		err = fmt.Errorf("error at add kmemo sql %s: %w", kmemo.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		kmemo.IsDeleted,
@@ -247,7 +276,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -255,7 +289,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from kmemo temp: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -312,6 +351,8 @@ AND DEVICE = ?
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) GetKmemosByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kmemo, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
@@ -355,7 +396,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get kmemo by tx id sql %s: %w", txID, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -363,7 +409,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kmemos := []*Kmemo{}
 	for rows.Next() {
@@ -417,6 +468,8 @@ AND DEVICE = ?
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	sql := `
 DELETE FROM KMEMO
 WHERE TX_ID = ?
@@ -429,7 +482,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at delete temp kmemo kyou by TXID sql: %w", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		txID,

@@ -16,7 +16,7 @@ import (
 
 type lantanaTempRepositorySQLite3Impl lantanaRepositorySQLite3Impl
 
-func NewLantanaTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (LantanaTempRepository, error) {
+func NewLantanaTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.RWMutex) (LantanaTempRepository, error) {
 	filename := "lantana_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "LANTANA" (
@@ -42,7 +42,12 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 		err = fmt.Errorf("error at create LANTANA table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -58,7 +63,12 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 		err = fmt.Errorf("error at create LANTANA index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -82,16 +92,22 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	}, nil
 }
 func (l *lantanaTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.FindKyous(ctx, query)
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.GetKyouHistories(ctx, id)
 }
@@ -101,6 +117,8 @@ func (l *lantanaTempRepositorySQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.UpdateCache(ctx)
 }
@@ -110,21 +128,29 @@ func (l *lantanaTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (stri
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) Close(ctx context.Context) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.Close(ctx)
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.FindLantana(ctx, query)
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.GetLantana(ctx, id, updateTime)
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.GetLantanaHistories(ctx, id)
 }
@@ -172,7 +198,12 @@ INSERT INTO LANTANA (
 		err = fmt.Errorf("error at add lantana sql %s: %w", lantana.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		lantana.IsDeleted,
@@ -202,6 +233,8 @@ INSERT INTO LANTANA (
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	var err error
 	sql := `
 SELECT 
@@ -246,7 +279,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -254,7 +292,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from lantana temp: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -311,6 +354,8 @@ AND DEVICE = ?
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) GetLantanasByTXID(ctx context.Context, txID string, userID string, device string) ([]*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -354,7 +399,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get lantana by txid sql %s: %w", txID, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -363,7 +413,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	lantanas := []*Lantana{}
 	for rows.Next() {
@@ -417,6 +472,8 @@ AND DEVICE = ?
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
 DELETE FROM LANTANA
 WHERE TX_ID = ?
@@ -429,7 +486,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at delete temp lantana kyou by TXID sql: %w", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		txID,

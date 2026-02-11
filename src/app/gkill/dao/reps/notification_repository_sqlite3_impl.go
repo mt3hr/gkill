@@ -22,7 +22,7 @@ const CURRENT_SCHEMA_VERSION_NOTIFICATION_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 type notificationRepositorySQLite3Impl struct {
 	filename    string
 	db          *sql.DB
-	m           *sync.Mutex
+	m           *sync.RWMutex
 	fullConnect bool
 }
 
@@ -75,7 +75,12 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -91,7 +96,12 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 		err = fmt.Errorf("error at create NOTIFICATION index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -119,28 +129,35 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 	return &notificationRepositorySQLite3Impl{
 		filename:    filename,
 		db:          db,
-		m:           &sync.Mutex{},
+		m:           &sync.RWMutex{},
 		fullConnect: fullConnect,
 	}, nil
 }
-func (t *notificationRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
+func (n *notificationRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
-	if t.fullConnect {
-		db = t.db
+	if n.fullConnect {
+		db = n.db
 	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
-		err = t.UpdateCache(ctx)
+		err = n.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := t.GetRepName(ctx)
+			repName, _ := n.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
@@ -169,7 +186,7 @@ FROM NOTIFICATION
 WHERE 
 `
 
-	repName, err := t.GetRepName(ctx)
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at notification: %w", err)
 		return nil, err
@@ -207,7 +224,12 @@ WHERE
 		err = fmt.Errorf("error at get NOTIFICATION histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -216,7 +238,12 @@ WHERE
 		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	notifications := []*Notification{}
 	for rows.Next() {
@@ -272,16 +299,20 @@ WHERE
 	return notifications, nil
 }
 
-func (t *notificationRepositorySQLite3Impl) Close(ctx context.Context) error {
-	if t.fullConnect {
-		return t.db.Close()
+func (n *notificationRepositorySQLite3Impl) Close(ctx context.Context) error {
+	n.m.Lock()
+	defer n.m.Unlock()
+	if n.fullConnect {
+		return n.db.Close()
 	}
 	return nil
 }
 
-func (t *notificationRepositorySQLite3Impl) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
+func (n *notificationRepositorySQLite3Impl) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	// 最新のデータを返す
-	notificationHistories, err := t.GetNotificationHistories(ctx, id)
+	notificationHistories, err := n.GetNotificationHistories(ctx, id)
 	if err != nil {
 		err = fmt.Errorf("error at get notification histories from NOTIFICATION %s: %w", id, err)
 		return nil, err
@@ -305,17 +336,24 @@ func (t *notificationRepositorySQLite3Impl) GetNotification(ctx context.Context,
 	return notificationHistories[0], nil
 }
 
-func (t *notificationRepositorySQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
+func (n *notificationRepositorySQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
-	if t.fullConnect {
-		db = t.db
+	if n.fullConnect {
+		db = n.db
 	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	sql := `
@@ -340,7 +378,7 @@ FROM NOTIFICATION
 WHERE 
 `
 
-	repName, err := t.GetRepName(ctx)
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at notification: %w", err)
 		return nil, err
@@ -382,7 +420,12 @@ WHERE
 		err = fmt.Errorf("error at get notification histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -391,7 +434,12 @@ WHERE
 		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	notifications := []*Notification{}
 	for rows.Next() {
@@ -447,17 +495,24 @@ WHERE
 	return notifications, nil
 }
 
-func (t *notificationRepositorySQLite3Impl) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
+func (n *notificationRepositorySQLite3Impl) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
-	if t.fullConnect {
-		db = t.db
+	if n.fullConnect {
+		db = n.db
 	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	sql := `
@@ -483,7 +538,7 @@ WHERE
 `
 	sql += " (datetime(NOTIFICATION_TIME, 'localtime') BETWEEN datetime(?, 'localtime') AND datetime(?, 'localtime')) "
 
-	repName, err := t.GetRepName(ctx)
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at text: %w", err)
 		return nil, err
@@ -522,7 +577,12 @@ WHERE
 		err = fmt.Errorf("error at get notification between notification time sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -531,7 +591,12 @@ WHERE
 		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	notifications := []*Notification{}
 	for rows.Next() {
@@ -587,19 +652,19 @@ WHERE
 	return notifications, nil
 }
 
-func (t *notificationRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (n *notificationRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
-func (t *notificationRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+func (n *notificationRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
 	if id == "" {
-		return t.filename, nil
+		return n.filename, nil
 	}
-	return filepath.Abs(t.filename)
+	return filepath.Abs(n.filename)
 }
 
-func (t *notificationRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := t.GetPath(ctx, "")
+func (n *notificationRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	path, err := n.GetPath(ctx, "")
 	if err != nil {
 		err = fmt.Errorf("error at get path notification rep: %w", err)
 		return "", err
@@ -610,17 +675,24 @@ func (t *notificationRepositorySQLite3Impl) GetRepName(ctx context.Context) (str
 	return withoutExt, nil
 }
 
-func (t *notificationRepositorySQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
+func (n *notificationRepositorySQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
-	if t.fullConnect {
-		db = t.db
+	if n.fullConnect {
+		db = n.db
 	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	sql := `
@@ -645,7 +717,7 @@ FROM NOTIFICATION
 WHERE 
 `
 
-	repName, err := t.GetRepName(ctx)
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at notification: %w", err)
 		return nil, err
@@ -686,7 +758,12 @@ WHERE
 		err = fmt.Errorf("error at get notification histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -695,7 +772,12 @@ WHERE
 		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	notifications := []*Notification{}
 	for rows.Next() {
@@ -750,19 +832,24 @@ WHERE
 	}
 	return notifications, nil
 }
-func (t *notificationRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification) error {
-	t.m.Lock()
-	defer t.m.Unlock()
+func (n *notificationRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	var err error
 	var db *sql.DB
-	if t.fullConnect {
-		db = t.db
+	if n.fullConnect {
+		db = n.db
 	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 	sql := `
 INSERT INTO NOTIFICATION (
@@ -802,7 +889,12 @@ INSERT INTO NOTIFICATION (
 		err = fmt.Errorf("error at add NOTIFICATION sql %s: %w", notification.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		notification.IsDeleted,
@@ -830,8 +922,8 @@ INSERT INTO NOTIFICATION (
 	return nil
 }
 
-func (t *notificationRepositorySQLite3Impl) UnWrapTyped() ([]NotificationRepository, error) {
-	return []NotificationRepository{t}, nil
+func (n *notificationRepositorySQLite3Impl) UnWrapTyped() ([]NotificationRepository, error) {
+	return []NotificationRepository{n}, nil
 }
 
 func checkAndResolveDataSchemaNotificationRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO NotificationRepository, err error) {
@@ -851,7 +943,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -859,7 +956,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -868,7 +970,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -890,7 +997,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -908,7 +1020,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)

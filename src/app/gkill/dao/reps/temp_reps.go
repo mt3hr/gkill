@@ -21,7 +21,7 @@ type TempReps struct {
 	URLogTempRep        URLogTempRepository
 }
 
-func NewTempReps(db *sql.DB, m *sync.Mutex) (*TempReps, error) {
+func NewTempReps(db *sql.DB, m *sync.RWMutex) (*TempReps, error) {
 	ctx := context.Background()
 
 	idfKyouTempRep, err := NewIDFKyouTempRepositorySQLite3Impl(ctx, db, m)

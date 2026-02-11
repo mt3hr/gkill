@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"database/sql"
 	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -24,7 +23,7 @@ const CURRENT_SCHEMA_VERSION_TIMEIS_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 type timeIsRepositorySQLite3Impl struct {
 	filename    string
 	db          *sqllib.DB
-	m           *sync.Mutex
+	m           *sync.RWMutex
 	fullConnect bool
 }
 
@@ -76,7 +75,12 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -92,7 +96,12 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 		err = fmt.Errorf("error at create TIMEIS index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -120,11 +129,13 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 	return &timeIsRepositorySQLite3Impl{
 		filename:    filename,
 		db:          db,
-		m:           &sync.Mutex{},
+		m:           &sync.RWMutex{},
 		fullConnect: fullConnect,
 	}, nil
 }
 func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if t.fullConnect {
@@ -134,7 +145,12 @@ func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	// update_cacheであればキャッシュを更新する
@@ -270,7 +286,12 @@ FROM TIMEIS
 		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql, "params", queryArgsForStart, "params", queryArgsForPlaingStart, "params", queryArgsForEnd, "params", queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
@@ -278,7 +299,12 @@ FROM TIMEIS
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -336,6 +362,8 @@ FROM TIMEIS
 }
 
 func (t *timeIsRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := t.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -362,6 +390,8 @@ func (t *timeIsRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 }
 
 func (t *timeIsRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if t.fullConnect {
@@ -371,7 +401,12 @@ func (t *timeIsRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id s
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	repName, err := t.GetRepName(ctx)
@@ -432,7 +467,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -441,7 +481,12 @@ WHERE
 		err = fmt.Errorf("error at select from TIMEIS %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -519,6 +564,8 @@ func (t *timeIsRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, e
 }
 
 func (t *timeIsRepositorySQLite3Impl) Close(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	if t.fullConnect {
 		return t.db.Close()
 	}
@@ -526,6 +573,8 @@ func (t *timeIsRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if t.fullConnect {
@@ -535,7 +584,12 @@ func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *fin
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	// update_cacheであればキャッシュを更新する
@@ -670,7 +724,12 @@ FROM TIMEIS
 		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql, "params", queryArgsForStart, "params", queryArgsForPlaingStart, "params", queryArgsForEnd, "params", queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
@@ -678,7 +737,12 @@ FROM TIMEIS
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	timeiss := []*TimeIs{}
 	for rows.Next() {
@@ -740,6 +804,8 @@ FROM TIMEIS
 }
 
 func (t *timeIsRepositorySQLite3Impl) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	// 最新のデータを返す
 	timeisHistories, err := t.GetTimeIsHistories(ctx, id)
 	if err != nil {
@@ -766,6 +832,8 @@ func (t *timeIsRepositorySQLite3Impl) GetTimeIs(ctx context.Context, id string, 
 }
 
 func (t *timeIsRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if t.fullConnect {
@@ -775,7 +843,12 @@ func (t *timeIsRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	sql := `
@@ -849,7 +922,12 @@ WHERE
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
@@ -858,7 +936,12 @@ WHERE
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	timeiss := []*TimeIs{}
 	for rows.Next() {
@@ -931,7 +1014,12 @@ func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis 
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	sql := `
@@ -970,7 +1058,12 @@ INSERT INTO TIMEIS (
 		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	var endTimeStr interface{}
 	if timeis.EndTime == nil {
@@ -1012,7 +1105,7 @@ func (t *timeIsRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{t}, nil
 }
 
-func checkAndResolveDataSchemaTimeIsRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO TimeIsRepository, err error) {
+func checkAndResolveDataSchemaTimeIsRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB) (isOld bool, oldVerDAO TimeIsRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_TIMEIS"
 	currentSchemaVersion := CURRENT_SCHEMA_VERSION_TIMEIS_REPOISITORY_SQLITE3IMPL_DAO
 
@@ -1029,7 +1122,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -1037,7 +1135,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -1046,7 +1149,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -1068,14 +1176,19 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, sqllib.ErrNoRows) {
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
@@ -1086,7 +1199,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)

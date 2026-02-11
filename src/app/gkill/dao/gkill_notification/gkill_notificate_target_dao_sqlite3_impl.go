@@ -19,7 +19,7 @@ const CURRENT_SCHEMA_VERSION_GKILL_NOTIFICATE_TARGET_DAO = "1.0.0"
 type gkillNotificateTargetDAOSQLite3Impl struct {
 	filename string
 	db       *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewGkillNotificateTargetDAOSQLite3Impl(ctx context.Context, filename string) (GkillNotificateTargetDAO, error) {
@@ -62,7 +62,12 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -82,11 +87,13 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 	return &gkillNotificateTargetDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        &sync.RWMutex{},
 	}, nil
 }
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) GetAllGkillNotificationTargets(ctx context.Context) ([]*GkillNotificateTarget, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -101,7 +108,12 @@ FROM NOTIFICATION
 		err = fmt.Errorf("error at get all mi notificate target sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -110,7 +122,12 @@ FROM NOTIFICATION
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	gkillNotificateTargets := []*GkillNotificateTarget{}
 	for rows.Next() {
@@ -136,6 +153,8 @@ FROM NOTIFICATION
 }
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) GetGkillNotificationTargets(ctx context.Context, userID string, publicKey string) ([]*GkillNotificateTarget, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -151,7 +170,12 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 		err = fmt.Errorf("error at get mi notificate target sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		userID,
@@ -163,7 +187,12 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	gkillNotificateTargets := []*GkillNotificateTarget{}
 	for rows.Next() {
@@ -189,6 +218,8 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 }
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) AddGkillNotificationTarget(ctx context.Context, gkillNotificateTarget *GkillNotificateTarget) (bool, error) {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 INSERT INTO NOTIFICATION(
   ID,
@@ -209,7 +240,12 @@ VALUES (
 		err = fmt.Errorf("error at add mi notificate target sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		gkillNotificateTarget.ID,
@@ -227,6 +263,8 @@ VALUES (
 }
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) UpdateGkillNotificationTarget(ctx context.Context, gkillNotificateTarget *GkillNotificateTarget) (bool, error) {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 UPDATE NOTIFICATION
   ID = ?,
@@ -241,7 +279,12 @@ WHERE ID = ?
 		err = fmt.Errorf("error at update mi notificate target sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		gkillNotificateTarget.ID,
@@ -260,6 +303,8 @@ WHERE ID = ?
 }
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) DeleteGkillNotificationTarget(ctx context.Context, id string) (bool, error) {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 DELETE FROM NOTIFICATION
 WHERE ID = ?
@@ -270,7 +315,12 @@ WHERE ID = ?
 		err = fmt.Errorf("error at delete mi notification target sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		id,
@@ -286,6 +336,8 @@ WHERE ID = ?
 }
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) Close(ctx context.Context) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	return m.db.Close()
 }
 
@@ -310,7 +362,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -318,7 +375,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -327,7 +389,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -349,7 +416,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -367,7 +439,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)

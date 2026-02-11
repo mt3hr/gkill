@@ -21,12 +21,12 @@ type kcRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	kcRep    KCRepository
 	cachedDB *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
-func NewKCRepositoryCachedSQLite3Impl(ctx context.Context, kcRep KCRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (KCRepository, error) {
+func NewKCRepositoryCachedSQLite3Impl(ctx context.Context, kcRep KCRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (KCRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 	sql := `
@@ -52,7 +52,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create kc table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -68,7 +73,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create KC index unix statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -86,8 +96,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -150,7 +160,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -158,7 +173,12 @@ WHERE
 		err = fmt.Errorf("error at select from kc: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -202,6 +222,8 @@ WHERE
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := k.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -228,8 +250,8 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -283,7 +305,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -291,7 +318,12 @@ WHERE
 		err = fmt.Errorf("error at select from kc %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -335,6 +367,8 @@ func (k *kcRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -363,7 +397,12 @@ func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		err = fmt.Errorf("error at create KC table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete KC table: %w", err)
@@ -408,7 +447,12 @@ INSERT INTO ` + k.dbName + ` (
 		err = fmt.Errorf("error at add kc sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, kc := range allKCs {
 		select {
@@ -462,6 +506,8 @@ func (k *kcRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string,
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	err := k.kcRep.Close(ctx)
 	if err != nil {
 		return err
@@ -481,6 +527,8 @@ func (k *kcRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -543,7 +591,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -551,7 +604,12 @@ WHERE
 		err = fmt.Errorf("error at select from kc: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kcs := []*KC{}
 	for rows.Next() {
@@ -596,6 +654,8 @@ WHERE
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKC(ctx context.Context, id string, updateTime *time.Time) (*KC, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	// 最新のデータを返す
 	kcHistories, err := k.GetKCHistories(ctx, id)
 	if err != nil {
@@ -622,8 +682,8 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKC(ctx context.Context, id string, up
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -683,7 +743,12 @@ WHERE
 		err = fmt.Errorf("error at get kc histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -691,7 +756,12 @@ WHERE
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kcs := []*KC{}
 	for rows.Next() {
@@ -777,7 +847,12 @@ INSERT INTO ` + k.dbName + ` (
 		err = fmt.Errorf("error at add kc sql %s: %w", kc.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		kc.IsDeleted,

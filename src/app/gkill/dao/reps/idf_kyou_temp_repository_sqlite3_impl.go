@@ -18,7 +18,7 @@ import (
 
 type idfKyouRepositoryTempSQLite3Impl idfKyouRepositorySQLite3Impl
 
-func NewIDFKyouTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (IDFKyouTempRepository, error) {
+func NewIDFKyouTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.RWMutex) (IDFKyouTempRepository, error) {
 	filename := "temp_db"
 
 	sql := `
@@ -48,7 +48,12 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		err = fmt.Errorf("error at create IDF table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -64,7 +69,12 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		err = fmt.Errorf("error at create IDF index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -99,16 +109,22 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
 	return impl.FindKyous(ctx, query)
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
 	return impl.GetKyouHistories(ctx, id)
 }
@@ -118,6 +134,8 @@ func (i *idfKyouRepositoryTempSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) UpdateCache(ctx context.Context) error {
+	i.m.Lock()
+	defer i.m.Unlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
 	return impl.UpdateCache(ctx)
 }
@@ -132,16 +150,22 @@ func (i *idfKyouRepositoryTempSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
 	return impl.FindIDFKyou(ctx, query)
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
 	return impl.GetIDFKyou(ctx, id, updateTime)
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
 	return impl.GetIDFKyouHistories(ctx, id)
 }
@@ -195,7 +219,12 @@ INSERT INTO IDF (
 		err = fmt.Errorf("error at add idf sql %s: %w", idfKyou.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		idfKyou.IsDeleted,
@@ -230,6 +259,8 @@ func (i *idfKyouRepositoryTempSQLite3Impl) HandleFileServe(w http.ResponseWriter
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	var err error
 	sql := `
 SELECT 
@@ -275,7 +306,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -283,7 +319,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -365,6 +406,8 @@ AND DEVICE = ?
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) GetIDFKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
 	var err error
 	sql := `
 SELECT 
@@ -410,7 +453,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -418,7 +466,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	idfKyous := []*IDFKyou{}
 	for rows.Next() {
@@ -483,6 +536,8 @@ AND DEVICE = ?
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
+	i.m.Lock()
+	defer i.m.Unlock()
 	sql := `
 DELETE FROM IDF
 WHERE TX_ID = ?
@@ -495,7 +550,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at delete temp idf kyou by TXID sql: %w", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		txID,

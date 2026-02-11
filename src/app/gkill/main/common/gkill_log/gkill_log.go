@@ -16,7 +16,7 @@ var LogLevelFromCmd = "none"
 var router *Router
 
 func Init() {
-	logLevel := None
+	var logLevel slog.Level
 	switch strings.ToLower(LogLevelFromCmd) {
 	case "trace_sql":
 		logLevel = TraceSQL
