@@ -10,7 +10,7 @@ import (
 // mutexで1回のWriteを直列化するので、統合ログでも行が混ざりにくい。
 type SwitchWriter struct {
 	w  atomic.Value // stores io.Writer
-	mu sync.Mutex
+	mu sync.RWMutex
 }
 
 func NewSwitchWriter(initial io.Writer) *SwitchWriter {

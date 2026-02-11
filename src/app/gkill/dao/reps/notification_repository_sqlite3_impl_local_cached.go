@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
@@ -19,7 +21,7 @@ type notificationRepositorySQLite3ImplLocalCached struct {
 	localCacheDBFileName string
 	originalRep          NotificationRepository
 	localCachedRep       NotificationRepository
-	m                    sync.Mutex
+	m                    sync.RWMutex
 
 	fullConnect bool
 }
@@ -41,13 +43,25 @@ func NewNotificationRepositorySQLite3ImplLocalCached(ctx context.Context, filena
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", filename, err)
+			return nil, err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return nil, err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
@@ -76,17 +90,19 @@ func NewNotificationRepositorySQLite3ImplLocalCached(ctx context.Context, filena
 
 		fullConnect: fullConnect,
 
-		m: sync.Mutex{},
+		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
 }
 func (n *notificationRepositorySQLite3ImplLocalCached) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.FindNotifications(ctx, query)
 }
 
 func (n *notificationRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	err := n.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
@@ -101,20 +117,20 @@ func (n *notificationRepositorySQLite3ImplLocalCached) Close(ctx context.Context
 }
 
 func (n *notificationRepositorySQLite3ImplLocalCached) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.GetNotification(ctx, id, updateTime)
 }
 
 func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.GetNotificationsByTargetID(ctx, target_id)
 }
 
 func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.GetNotificationsBetweenNotificationTime(ctx, startTime, endTime)
 }
 
@@ -134,7 +150,7 @@ func (n *notificationRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.C
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(n.originalDBFileName, ":", "", -1))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(n.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -150,13 +166,25 @@ func (n *notificationRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.C
 		originalDBFile, err := os.Open(n.originalDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", n.originalDBFileName, err)
+			return err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", n.originalDBFileName, localCacheDBFileName, err)
@@ -175,8 +203,8 @@ func (n *notificationRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.C
 }
 
 func (n *notificationRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.originalRep.GetPath(ctx, id)
 }
 
@@ -185,8 +213,8 @@ func (n *notificationRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Co
 }
 
 func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
-	n.m.Lock()
-	n.m.Unlock()
+	n.m.RLock()
+	defer n.m.RUnlock()
 	return n.localCachedRep.GetNotificationHistories(ctx, id)
 }
 

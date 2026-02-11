@@ -173,6 +173,9 @@ var (
 
 			for _, targetUserID := range targetUserIDs {
 				_, err = gkillServerAPI.GkillDAOManager.GetRepositories(targetUserID, device)
+				if err != nil {
+					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+				}
 			}
 		},
 		Short: `optimize 'user_id'`,
@@ -231,7 +234,12 @@ func InitGkillServerAPI() error {
 
 func LaunchGkillServerAPI() error {
 	var err error
-	defer gkillServerAPI.Close()
+	defer func() {
+		err := gkillServerAPI.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	interceptCh := make(chan os.Signal, 1)
 	signal.Notify(interceptCh, os.Interrupt)
 	go func() {

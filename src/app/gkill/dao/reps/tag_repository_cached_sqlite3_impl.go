@@ -21,12 +21,12 @@ type tagRepositoryCachedSQLite3Impl struct {
 	dbName                string
 	getTagsByTargetIDSQL  string
 	getTagsByTargetIDStmt *sql.Stmt
-	m                     *sync.Mutex
+	m                     *sync.RWMutex
 }
 
-func NewTagRepositoryCachedSQLite3Impl(ctx context.Context, tagRep TagRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (TagRepository, error) {
+func NewTagRepositoryCachedSQLite3Impl(ctx context.Context, tagRep TagRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (TagRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 	sql := `
@@ -52,7 +52,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TAG table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -68,7 +73,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TAG_TARGET_ID_UNIX index statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexTargetIDUnixStmt.Close()
+	defer func() {
+		err := indexTargetIDUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDUnixSQL)
 	_, err = indexTargetIDUnixStmt.ExecContext(ctx)
@@ -84,7 +94,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME_UNIX index statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexIDUpdateTimeUnixStmt.Close()
+	defer func() {
+		err := indexIDUpdateTimeUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeUnixSQL)
 	_, err = indexIDUpdateTimeUnixStmt.ExecContext(ctx)
@@ -138,8 +153,8 @@ ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 	return cachedTagrepository, nil
 }
 func (t *tagRepositoryCachedSQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -204,7 +219,12 @@ WHERE
 		err = fmt.Errorf("error at get find tags sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -213,7 +233,12 @@ WHERE
 		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -256,6 +281,8 @@ WHERE
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	err := t.tagRep.Close(ctx)
 	if err != nil {
 		return err
@@ -275,6 +302,8 @@ func (t *tagRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	// 最新のデータを返す
 	tagHistories, err := t.GetTagHistories(ctx, id)
 	if err != nil {
@@ -301,6 +330,8 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTag(ctx context.Context, id string, 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	sql := `
@@ -360,7 +391,12 @@ WHERE
 		err = fmt.Errorf("error at get tag by name sql %s: %w", tagname, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -368,7 +404,12 @@ WHERE
 		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -411,6 +452,8 @@ WHERE
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 	dataType := "tag"
 
@@ -425,7 +468,12 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -469,6 +517,8 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	allTags, err := t.tagRep.GetAllTags(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags at update cache: %w", err)
@@ -490,7 +540,12 @@ func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error 
 		err = fmt.Errorf("error at create TAG table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete TAG table: %w", err)
@@ -535,7 +590,12 @@ INSERT INTO "` + t.dbName + `" (
 		err = fmt.Errorf("error at add tag sql %s: %w", sql, err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, tag := range allTags {
 		select {
@@ -593,8 +653,8 @@ func (t *tagRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	sql := `
@@ -653,7 +713,12 @@ WHERE
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -661,7 +726,12 @@ WHERE
 		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -744,7 +814,12 @@ INSERT INTO ` + t.dbName + ` (
 		err = fmt.Errorf("error at add tag sql %s: %w", tag.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		tag.IsDeleted,
@@ -772,8 +847,8 @@ INSERT INTO ` + t.dbName + ` (
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetAllTagNames(ctx context.Context) ([]string, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	sql := `
@@ -792,7 +867,12 @@ FROM ` + t.dbName + `
 		err = fmt.Errorf("error at get all tag names sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
@@ -800,7 +880,12 @@ FROM ` + t.dbName + `
 		err = fmt.Errorf("error at select all tag names from TAG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tagNamesMap := map[string]struct{}{}
 	for rows.Next() {
@@ -828,8 +913,8 @@ FROM ` + t.dbName + `
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	var err error
 
 	sql := `
@@ -883,7 +968,12 @@ WHERE
 		err = fmt.Errorf("error at get all tags sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -891,7 +981,12 @@ WHERE
 		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tags := []*Tag{}
 	for rows.Next() {

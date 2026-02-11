@@ -19,13 +19,13 @@ type reKyouRepositoryCachedSQLite3Impl struct {
 	dbName            string
 	rekyouRep         ReKyouRepository
 	cachedDB          *sqllib.DB
-	m                 *sync.Mutex
+	m                 *sync.RWMutex
 	gkillRepositories *GkillRepositories
 }
 
-func NewReKyouRepositoryCachedSQLite3Impl(ctx context.Context, rekyouRep ReKyouRepository, gkillRepositories *GkillRepositories, cacheDB *sqllib.DB, m *sync.Mutex, dbName string) (ReKyouRepository, error) {
+func NewReKyouRepositoryCachedSQLite3Impl(ctx context.Context, rekyouRep ReKyouRepository, gkillRepositories *GkillRepositories, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (ReKyouRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 	sql := `
@@ -50,7 +50,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create REKYOU table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -73,7 +78,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create rekyou index unix statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -91,8 +101,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	matchKyous := map[string][]*Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -172,6 +182,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := r.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -198,8 +210,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -258,7 +270,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -266,7 +283,12 @@ WHERE
 		err = fmt.Errorf("error at select from REKYOU %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -310,6 +332,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	r.m.Lock()
+	defer r.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -338,7 +362,12 @@ func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		err = fmt.Errorf("error at create REKYOU table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete REKYOU table: %w", err)
@@ -382,7 +411,12 @@ INSERT INTO ` + r.dbName + ` (
 		err = fmt.Errorf("error at add rekyou sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, rekyou := range allReKyous {
 		select {
@@ -445,6 +479,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
 	matchReKyous := []*ReKyou{}
 
 	// 未削除ReKyouを抽出
@@ -488,6 +524,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindReKyou(ctx context.Context, quer
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyou(ctx context.Context, id string, updateTime *time.Time) (*ReKyou, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
 	// 最新のデータを返す
 	reKyouHistories, err := r.GetReKyouHistories(ctx, id)
 	if err != nil {
@@ -514,8 +552,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyou(ctx context.Context, id st
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	var err error
 
 	sql := `
@@ -572,7 +610,12 @@ WHERE
 		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -581,7 +624,12 @@ WHERE
 		err = fmt.Errorf("error at select from REKYOU: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	reKyous := []*ReKyou{}
 	for rows.Next() {
@@ -660,7 +708,12 @@ INSERT INTO ` + r.dbName + ` (
 		err = fmt.Errorf("error at add rekyou sql %s: %w", rekyou.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		rekyou.IsDeleted,
@@ -687,6 +740,8 @@ INSERT INTO ` + r.dbName + ` (
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
 	var err error
 
 	sql := `
@@ -738,7 +793,12 @@ WHERE
 		err = fmt.Errorf("error at get all rekyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -747,7 +807,12 @@ WHERE
 		err = fmt.Errorf("error at select from REKYOU: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	reKyous := []*ReKyou{}
 	for rows.Next() {

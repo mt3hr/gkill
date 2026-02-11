@@ -9,7 +9,7 @@ import (
 
 type FileSink struct {
 	sw   *SwitchWriter
-	mu   sync.Mutex
+	mu   sync.RWMutex
 	cur  io.Closer
 	path string
 }

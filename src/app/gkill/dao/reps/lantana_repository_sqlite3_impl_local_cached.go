@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
@@ -19,7 +21,7 @@ type lantanaRepositorySQLite3ImplLocalCached struct {
 	localCacheDBFileName string
 	originalRep          LantanaRepository
 	localCachedRep       LantanaRepository
-	m                    sync.Mutex
+	m                    sync.RWMutex
 
 	fullConnect bool
 }
@@ -41,13 +43,25 @@ func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, filename st
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", filename, err)
+			return nil, err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return nil, err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
@@ -76,32 +90,32 @@ func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, filename st
 
 		fullConnect: fullConnect,
 
-		m: sync.Mutex{},
+		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	return l.localCachedRep.FindKyous(ctx, query)
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	return l.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	return l.localCachedRep.GetKyouHistories(ctx, id)
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	return l.originalRep.GetPath(ctx, id)
 }
 
@@ -121,7 +135,7 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(l.originalDBFileName, ":", "", -1))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(l.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -137,13 +151,25 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		originalDBFile, err := os.Open(l.originalDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", l.originalDBFileName, err)
+			return err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", l.originalDBFileName, localCacheDBFileName, err)
@@ -166,6 +192,8 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	err := l.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
@@ -180,20 +208,20 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) Close(ctx context.Context) err
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	return l.localCachedRep.FindLantana(ctx, query)
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	return l.localCachedRep.GetLantana(ctx, id, updateTime)
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	return l.localCachedRep.GetLantanaHistories(ctx, id)
 }
 

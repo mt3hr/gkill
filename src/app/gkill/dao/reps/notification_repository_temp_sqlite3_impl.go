@@ -16,7 +16,7 @@ import (
 
 type notificationTempRepositorySQLite3Impl notificationRepositorySQLite3Impl
 
-func NewNotificationTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (NotificationTempRepository, error) {
+func NewNotificationTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.RWMutex) (NotificationTempRepository, error) {
 	filename := "notification_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
@@ -44,7 +44,12 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -60,7 +65,12 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 		err = fmt.Errorf("error at create NOTIFICATION index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -83,52 +93,66 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 		m:        m,
 	}, nil
 }
-func (t *notificationTempRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
-	impl := notificationRepositorySQLite3Impl(*t)
+func (n *notificationTempRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
+	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.FindNotifications(ctx, query)
 }
 
-func (t *notificationTempRepositorySQLite3Impl) Close(ctx context.Context) error {
-	impl := notificationRepositorySQLite3Impl(*t)
+func (n *notificationTempRepositorySQLite3Impl) Close(ctx context.Context) error {
+	n.m.Lock()
+	defer n.m.Unlock()
+	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.Close(ctx)
 }
 
-func (t *notificationTempRepositorySQLite3Impl) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
-	impl := notificationRepositorySQLite3Impl(*t)
+func (n *notificationTempRepositorySQLite3Impl) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
+	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.GetNotification(ctx, id, updateTime)
 }
 
-func (t *notificationTempRepositorySQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
-	impl := notificationRepositorySQLite3Impl(*t)
+func (n *notificationTempRepositorySQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
+	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.GetNotificationsByTargetID(ctx, target_id)
 }
 
-func (t *notificationTempRepositorySQLite3Impl) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
-	impl := notificationRepositorySQLite3Impl(*t)
+func (n *notificationTempRepositorySQLite3Impl) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
+	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.GetNotificationsBetweenNotificationTime(ctx, startTime, endTime)
 }
 
-func (t *notificationTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
-	impl := notificationRepositorySQLite3Impl(*t)
+func (n *notificationTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	n.m.Lock()
+	defer n.m.Unlock()
+	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.UpdateCache(ctx)
 }
 
-func (t *notificationTempRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+func (n *notificationTempRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
 	return "", fmt.Errorf("not implemented")
 }
 
-func (t *notificationTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+func (n *notificationTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "notification_temp", nil
 }
 
-func (t *notificationTempRepositorySQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
-	impl := notificationRepositorySQLite3Impl(*t)
+func (n *notificationTempRepositorySQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
+	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.GetNotificationHistories(ctx, id)
 }
 
-func (t *notificationTempRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification, txID string, userID string, device string) error {
-	t.m.Lock()
-	defer t.m.Unlock()
+func (n *notificationTempRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification, txID string, userID string, device string) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	sql := `
 INSERT INTO NOTIFICATION (
   IS_DELETED,
@@ -168,12 +192,17 @@ INSERT INTO NOTIFICATION (
   ?
 )`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add NOTIFICATION sql %s: %w", notification.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		notification.IsDeleted,
@@ -204,7 +233,9 @@ INSERT INTO NOTIFICATION (
 	return nil
 }
 
-func (t *notificationTempRepositorySQLite3Impl) GetNotificationsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Notification, error) {
+func (n *notificationTempRepositorySQLite3Impl) GetNotificationsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Notification, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 
 	sql := `
@@ -231,7 +262,7 @@ AND USER_ID = ?
 AND DEVICE = ?
 `
 
-	repName, err := t.GetRepName(ctx)
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at notification: %w", err)
 		return nil, err
@@ -247,12 +278,17 @@ AND DEVICE = ?
 	}
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get notification by tx id sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -261,7 +297,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	notifications := []*Notification{}
 	for rows.Next() {
@@ -317,7 +358,9 @@ AND DEVICE = ?
 	return notifications, nil
 }
 
-func (t *notificationTempRepositorySQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
+func (n *notificationTempRepositorySQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	sql := `
 DELETE FROM NOTIFICATION
 WHERE TX_ID = ?
@@ -325,12 +368,17 @@ AND USER_ID = ?
 AND DEVICE = ?
 `
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp notification by TXID sql: %w", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		txID,
@@ -346,6 +394,6 @@ AND DEVICE = ?
 	return nil
 }
 
-func (t *notificationTempRepositorySQLite3Impl) UnWrapTyped() ([]NotificationTempRepository, error) {
-	return []NotificationTempRepository{t}, nil
+func (n *notificationTempRepositorySQLite3Impl) UnWrapTyped() ([]NotificationTempRepository, error) {
+	return []NotificationTempRepository{n}, nil
 }

@@ -20,7 +20,7 @@ const CURRENT_SCHEMA_VERSION_LOGIN_SESSION_DAO = "1.0.0"
 type loginSessionDAOSQLite3Impl struct {
 	filename string
 	db       *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewLoginSessionDAOSQLite3Impl(ctx context.Context, filename string) (LoginSessionDAO, error) {
@@ -68,7 +68,12 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
 		err = fmt.Errorf("error at create LOGIN_SESSION table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -84,7 +89,12 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
 		err = fmt.Errorf("error at create LOGIN_SESSION index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -104,11 +114,13 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
 	return &loginSessionDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        &sync.RWMutex{},
 	}, nil
 }
 
 func (l *loginSessionDAOSQLite3Impl) GetAllLoginSessions(ctx context.Context) ([]*LoginSession, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -128,7 +140,12 @@ FROM LOGIN_SESSION
 		err = fmt.Errorf("error at get all login sessions sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
@@ -136,7 +153,12 @@ FROM LOGIN_SESSION
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	loginSessions := []*LoginSession{}
 	for rows.Next() {
@@ -182,6 +204,8 @@ FROM LOGIN_SESSION
 }
 
 func (l *loginSessionDAOSQLite3Impl) GetLoginSessions(ctx context.Context, userID string, device string) ([]*LoginSession, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -202,7 +226,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get login sessions sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		userID,
@@ -214,7 +243,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	loginSessions := []*LoginSession{}
 	for rows.Next() {
@@ -260,6 +294,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 }
 
 func (l *loginSessionDAOSQLite3Impl) GetLoginSession(ctx context.Context, sessionID string) (*LoginSession, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -280,7 +316,12 @@ WHERE SESSION_ID = ?
 		err = fmt.Errorf("error at get login sessions sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		sessionID,
@@ -291,7 +332,12 @@ WHERE SESSION_ID = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	loginSessions := []*LoginSession{}
 	for rows.Next() {
@@ -340,6 +386,8 @@ WHERE SESSION_ID = ?
 }
 
 func (l *loginSessionDAOSQLite3Impl) AddLoginSession(ctx context.Context, loginSession *LoginSession) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
 INSERT INTO LOGIN_SESSION (
   ID,
@@ -369,7 +417,12 @@ INSERT INTO LOGIN_SESSION (
 		err = fmt.Errorf("error at update login sessions sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		loginSession.ID,
@@ -392,6 +445,8 @@ INSERT INTO LOGIN_SESSION (
 }
 
 func (l *loginSessionDAOSQLite3Impl) UpdateLoginSession(ctx context.Context, loginSession *LoginSession) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
 UPDATE LOGIN_SESSION SET
   ID = ?,
@@ -411,7 +466,12 @@ WHERE ID = ?
 		err = fmt.Errorf("error at add login sessions sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		loginSession.ID,
@@ -435,6 +495,8 @@ WHERE ID = ?
 }
 
 func (l *loginSessionDAOSQLite3Impl) DeleteLoginSession(ctx context.Context, sessionID string) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
 DELETE FROM LOGIN_SESSION
 WHERE SESSION_ID = ?
@@ -445,7 +507,12 @@ WHERE SESSION_ID = ?
 		err = fmt.Errorf("error at delete login session sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		sessionID,
@@ -460,6 +527,8 @@ WHERE SESSION_ID = ?
 }
 
 func (l *loginSessionDAOSQLite3Impl) Close(ctx context.Context) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	return l.db.Close()
 }
 
@@ -480,7 +549,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -488,7 +562,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -497,7 +576,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -519,7 +603,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -537,7 +626,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)

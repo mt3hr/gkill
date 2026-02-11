@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
@@ -19,7 +21,7 @@ type kmemoRepositorySQLite3ImplLocalCached struct {
 	localCacheDBFileName string
 	originalRep          KmemoRepository
 	localCachedRep       KmemoRepository
-	m                    sync.Mutex
+	m                    sync.RWMutex
 
 	fullConnect bool
 }
@@ -41,13 +43,25 @@ func NewKmemoRepositorySQLite3ImplLocalCached(ctx context.Context, filename stri
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", filename, err)
+			return nil, err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return nil, err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
@@ -76,32 +90,32 @@ func NewKmemoRepositorySQLite3ImplLocalCached(ctx context.Context, filename stri
 
 		fullConnect: fullConnect,
 
-		m: sync.Mutex{},
+		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	return k.localCachedRep.FindKyous(ctx, query)
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	return k.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	return k.localCachedRep.GetKyouHistories(ctx, id)
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	return k.originalRep.GetPath(ctx, id)
 }
 
@@ -121,7 +135,7 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(k.originalDBFileName, ":", "", -1))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(k.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -137,13 +151,25 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 		originalDBFile, err := os.Open(k.originalDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", k.originalDBFileName, err)
+			return err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", k.originalDBFileName, localCacheDBFileName, err)
@@ -166,6 +192,8 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) 
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	err := k.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
@@ -180,20 +208,20 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	return k.localCachedRep.FindKmemo(ctx, query)
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) GetKmemo(ctx context.Context, id string, updateTime *time.Time) (*Kmemo, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	return k.localCachedRep.GetKmemo(ctx, id, updateTime)
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	return k.localCachedRep.GetKmemoHistories(ctx, id)
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
@@ -19,7 +21,7 @@ type reKyouRepositorySQLite3ImplLocalCached struct {
 	localCacheDBFileName string
 	originalRep          ReKyouRepository
 	localCachedRep       ReKyouRepository
-	m                    sync.Mutex
+	m                    sync.RWMutex
 
 	fullConnect bool
 	reps        *GkillRepositories
@@ -42,13 +44,25 @@ func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename str
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", filename, err)
+			return nil, err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return nil, err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
@@ -78,32 +92,32 @@ func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename str
 		fullConnect: fullConnect,
 		reps:        reps,
 
-		m: sync.Mutex{},
+		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.localCachedRep.FindKyous(ctx, query)
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.localCachedRep.GetKyouHistories(ctx, id)
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.originalRep.GetPath(ctx, id)
 }
 
@@ -123,7 +137,7 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(r.originalDBFileName, ":", "", -1))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(r.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -139,13 +153,25 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 		originalDBFile, err := os.Open(r.originalDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", r.originalDBFileName, err)
+			return err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", r.originalDBFileName, localCacheDBFileName, err)
@@ -168,6 +194,8 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context)
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
+	r.m.Lock()
+	defer r.m.Unlock()
 	err := r.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
@@ -182,20 +210,20 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) Close(ctx context.Context) erro
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.localCachedRep.FindReKyou(ctx, query)
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyou(ctx context.Context, id string, updateTime *time.Time) (*ReKyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.localCachedRep.GetReKyou(ctx, id, updateTime)
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.localCachedRep.GetReKyouHistories(ctx, id)
 }
 
@@ -210,14 +238,14 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) AddReKyouInfo(ctx context.Conte
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.localCachedRep.GetReKyousAllLatest(ctx)
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
-	r.m.Lock()
-	r.m.Unlock()
+	r.m.RLock()
+	defer r.m.RUnlock()
 	return r.localCachedRep.GetRepositoriesWithoutReKyouRep(ctx)
 }
 

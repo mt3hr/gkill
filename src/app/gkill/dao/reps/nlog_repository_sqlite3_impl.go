@@ -24,7 +24,7 @@ const CURRENT_SCHEMA_VERSION_NLOG_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 type nlogRepositorySQLite3Impl struct {
 	filename    string
 	db          *sql.DB
-	m           *sync.Mutex
+	m           *sync.RWMutex
 	fullConnect bool
 }
 
@@ -76,7 +76,12 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 		err = fmt.Errorf("error at create NLOG table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -92,7 +97,12 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 		err = fmt.Errorf("error at create NLOG index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -120,11 +130,13 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 	return &nlogRepositorySQLite3Impl{
 		filename:    filename,
 		db:          db,
-		m:           &sync.Mutex{},
+		m:           &sync.RWMutex{},
 		fullConnect: fullConnect,
 	}, nil
 }
 func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -134,7 +146,12 @@ func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.F
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	// update_cacheであればキャッシュを更新する
@@ -206,7 +223,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -215,7 +237,12 @@ WHERE
 		err = fmt.Errorf("error at select from NLOG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -271,6 +298,8 @@ WHERE
 }
 
 func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := n.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -297,6 +326,8 @@ func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, upda
 }
 
 func (n *nlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -306,7 +337,12 @@ func (n *nlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id str
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	repName, err := n.GetRepName(ctx)
@@ -370,7 +406,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -378,7 +419,12 @@ WHERE
 		err = fmt.Errorf("error at select from NLOG %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -454,6 +500,8 @@ func (n *nlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, err
 }
 
 func (n *nlogRepositorySQLite3Impl) Close(ctx context.Context) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	if n.fullConnect {
 		return n.db.Close()
 	}
@@ -461,6 +509,8 @@ func (n *nlogRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -470,7 +520,12 @@ func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.Fi
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	// update_cacheであればキャッシュを更新する
@@ -544,7 +599,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -552,7 +612,12 @@ WHERE
 		err = fmt.Errorf("error at select from NLOG: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	nlogs := []*Nlog{}
 	for rows.Next() {
@@ -612,6 +677,8 @@ WHERE
 }
 
 func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string, updateTime *time.Time) (*Nlog, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	// 最新のデータを返す
 	nlogHistories, err := n.GetNlogHistories(ctx, id)
 	if err != nil {
@@ -638,6 +705,8 @@ func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string, upda
 }
 
 func (n *nlogRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
+	n.m.RLock()
+	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -647,7 +716,12 @@ func (n *nlogRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id str
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	repName, err := n.GetRepName(ctx)
@@ -713,7 +787,12 @@ WHERE
 		err = fmt.Errorf("error at get nlog histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -721,7 +800,12 @@ WHERE
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	nlogs := []*Nlog{}
 	for rows.Next() {
@@ -791,7 +875,12 @@ func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog)
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 	}
 
 	sql := `
@@ -832,7 +921,12 @@ INSERT INTO NLOG (
 		err = fmt.Errorf("error at add nlog sql %s: %w", nlog.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		nlog.IsDeleted,
@@ -885,7 +979,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -893,7 +992,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -902,7 +1006,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -924,7 +1033,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -942,7 +1056,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
