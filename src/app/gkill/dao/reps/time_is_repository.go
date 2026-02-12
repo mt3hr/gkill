@@ -8,11 +8,11 @@ import (
 )
 
 type TimeIsRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,13 +22,13 @@ type TimeIsRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error)
+	FindTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error)
 
 	GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error)
 
-	GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error)
+	GetTimeIsHistories(ctx context.Context, id string) ([]TimeIs, error)
 
-	AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error
+	AddTimeIsInfo(ctx context.Context, timeis TimeIs) error
 
 	UnWrapTyped() ([]TimeIsRepository, error)
 

@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	return rep, nil
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (i *idfKyouRepositoryTempSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
@@ -122,7 +122,7 @@ func (i *idfKyouRepositoryTempSQLite3Impl) GetKyou(ctx context.Context, id strin
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (i *idfKyouRepositoryTempSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
@@ -149,7 +149,7 @@ func (i *idfKyouRepositoryTempSQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
+func (i *idfKyouRepositoryTempSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
@@ -163,7 +163,7 @@ func (i *idfKyouRepositoryTempSQLite3Impl) GetIDFKyou(ctx context.Context, id st
 	return impl.GetIDFKyou(ctx, id, updateTime)
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
+func (i *idfKyouRepositoryTempSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	impl := idfKyouRepositorySQLite3Impl(*i)
@@ -174,7 +174,7 @@ func (i *idfKyouRepositoryTempSQLite3Impl) IDF(ctx context.Context) error {
 	return fmt.Errorf("not implemented yet, use IDF method of idfKyouRepositorySQLite3Impl instead")
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou, txID string, userID string, device string) error {
+func (i *idfKyouRepositoryTempSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou, txID string, userID string, device string) error {
 	i.m.Lock()
 	defer i.m.Unlock()
 	sql := `
@@ -258,7 +258,7 @@ func (i *idfKyouRepositoryTempSQLite3Impl) HandleFileServe(w http.ResponseWriter
 	panic("not implemented yet, use HandleFileServe method of idfKyouRepositorySQLite3Impl instead")
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (i *idfKyouRepositoryTempSQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	var err error
@@ -326,13 +326,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -382,7 +382,7 @@ AND DEVICE = ?
 				return nil, err
 			}
 
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.IsDeleted = idf.IsDeleted
 			kyou.ID = idf.ID
 			kyou.RepName = idf.RepName
@@ -405,7 +405,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) GetIDFKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*IDFKyou, error) {
+func (i *idfKyouRepositoryTempSQLite3Impl) GetIDFKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]IDFKyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	var err error
@@ -473,13 +473,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	idfKyous := []*IDFKyou{}
+	idfKyous := []IDFKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""

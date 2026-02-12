@@ -8,13 +8,13 @@ import (
 )
 
 type TextTempRepository interface {
-	FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error)
+	FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error)
 
 	Close(ctx context.Context) error
 
 	GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error)
 
-	GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error)
+	GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error)
 
 	UpdateCache(ctx context.Context) error
 
@@ -22,11 +22,11 @@ type TextTempRepository interface {
 
 	GetRepName(ctx context.Context) (string, error)
 
-	GetTextHistories(ctx context.Context, id string) ([]*Text, error)
+	GetTextHistories(ctx context.Context, id string) ([]Text, error)
 
-	AddTextInfo(ctx context.Context, text *Text, txID string, userID string, device string) error
+	AddTextInfo(ctx context.Context, text Text, txID string, userID string, device string) error
 
-	GetTextsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Text, error)
+	GetTextsByTXID(ctx context.Context, txID string, userID string, device string) ([]Text, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
 

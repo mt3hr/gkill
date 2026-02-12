@@ -95,7 +95,7 @@ func NewKmemoRepositorySQLite3ImplLocalCached(ctx context.Context, filename stri
 	return cachedRep, nil
 }
 
-func (k *kmemoRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kmemoRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.FindKyous(ctx, query)
@@ -107,7 +107,7 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id 
 	return k.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (k *kmemoRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (k *kmemoRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.GetKyouHistories(ctx, id)
@@ -207,7 +207,7 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error
 	return nil
 }
 
-func (k *kmemoRepositorySQLite3ImplLocalCached) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
+func (k *kmemoRepositorySQLite3ImplLocalCached) FindKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.FindKmemo(ctx, query)
@@ -219,13 +219,13 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) GetKmemo(ctx context.Context, id
 	return k.localCachedRep.GetKmemo(ctx, id, updateTime)
 }
 
-func (k *kmemoRepositorySQLite3ImplLocalCached) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
+func (k *kmemoRepositorySQLite3ImplLocalCached) GetKmemoHistories(ctx context.Context, id string) ([]Kmemo, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.GetKmemoHistories(ctx, id)
 }
 
-func (k *kmemoRepositorySQLite3ImplLocalCached) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+func (k *kmemoRepositorySQLite3ImplLocalCached) AddKmemoInfo(ctx context.Context, kmemo Kmemo) error {
 	err := func() error {
 		k.m.Lock()
 		defer k.m.Unlock()

@@ -10,5 +10,5 @@ type GetTagHistoryByTagIDResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	TagHistories []*reps.Tag `json:"tag_histories"`
+	TagHistories []reps.Tag `json:"tag_histories"`
 }

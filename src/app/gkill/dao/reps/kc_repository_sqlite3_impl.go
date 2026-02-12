@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS "KC" (
 	}, nil
 }
 
-func (k *kcRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kcRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	var db *sql.DB
 	if k.fullConnect {
@@ -242,13 +242,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -288,7 +288,7 @@ WHERE
 			}
 
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -315,16 +315,16 @@ func (k *kcRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (k *kcRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	var err error
@@ -424,13 +424,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -506,7 +506,7 @@ func (k *kcRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (k *kcRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
+func (k *kcRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]KC, error) {
 	var err error
 	var db *sql.DB
 	if k.fullConnect {
@@ -618,13 +618,13 @@ WHERE
 		}
 	}()
 
-	kcs := []*KC{}
+	kcs := []KC{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kc := &KC{}
+			kc := KC{}
 			kc.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			numValueStr := ""
@@ -692,16 +692,16 @@ func (k *kcRepositorySQLite3Impl) GetKC(ctx context.Context, id string, updateTi
 	if updateTime != nil {
 		for _, kyou := range kcHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kcHistories[0], nil
+	return &kcHistories[0], nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
+func (k *kcRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]KC, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	var err error
@@ -803,13 +803,13 @@ WHERE
 		}
 	}()
 
-	kcs := []*KC{}
+	kcs := []KC{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kc := &KC{}
+			kc := KC{}
 			kc.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			numValueStr := ""
@@ -858,7 +858,7 @@ WHERE
 	return kcs, nil
 }
 
-func (k *kcRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc *KC) error {
+func (k *kcRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc KC) error {
 	k.m.Lock()
 	defer k.m.Unlock()
 	var err error

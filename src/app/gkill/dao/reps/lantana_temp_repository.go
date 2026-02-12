@@ -8,11 +8,11 @@ import (
 )
 
 type LantanaTempRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,17 +22,17 @@ type LantanaTempRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error)
+	FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error)
 
 	GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error)
 
-	GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error)
+	GetLantanaHistories(ctx context.Context, id string) ([]Lantana, error)
 
-	AddLantanaInfo(ctx context.Context, lantana *Lantana, txID string, userID string, device string) error
+	AddLantanaInfo(ctx context.Context, lantana Lantana, txID string, userID string, device string) error
 
-	GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error)
+	GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error)
 
-	GetLantanasByTXID(ctx context.Context, txID string, userID string, device string) ([]*Lantana, error)
+	GetLantanasByTXID(ctx context.Context, txID string, userID string, device string) ([]Lantana, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
 

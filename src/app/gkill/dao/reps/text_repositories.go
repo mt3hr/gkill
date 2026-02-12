@@ -14,12 +14,12 @@ import (
 
 type TextRepositories []TextRepository
 
-func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
-	matchTexts := map[string]*Text{}
+func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
+	matchTexts := map[string]Text{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Text, len(t))
+	ch := make(chan []Text, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -81,11 +81,8 @@ loop:
 		}
 	}
 
-	matchTextsList := []*Text{}
+	matchTextsList := []Text{}
 	for _, text := range matchTexts {
-		if text == nil {
-			continue
-		}
 		if text.IsDeleted {
 			continue
 		}
@@ -200,12 +197,12 @@ loop:
 	return matchText, nil
 }
 
-func (t TextRepositories) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
-	matchTexts := map[string]*Text{}
+func (t TextRepositories) GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error) {
+	matchTexts := map[string]Text{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Text, len(t))
+	ch := make(chan []Text, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -262,11 +259,8 @@ loop:
 		}
 	}
 
-	textHistoriesList := []*Text{}
+	textHistoriesList := []Text{}
 	for _, text := range matchTexts {
-		if text == nil {
-			continue
-		}
 		textHistoriesList = append(textHistoriesList, text)
 	}
 
@@ -346,12 +340,12 @@ func (t TextRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "TextReps", nil
 }
 
-func (t TextRepositories) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
-	textHistories := map[string]*Text{}
+func (t TextRepositories) GetTextHistories(ctx context.Context, id string) ([]Text, error) {
+	textHistories := map[string]Text{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Text, len(t))
+	ch := make(chan []Text, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -408,11 +402,8 @@ loop:
 		}
 	}
 
-	textHistoriesList := []*Text{}
+	textHistoriesList := []Text{}
 	for _, text := range textHistories {
-		if text == nil {
-			continue
-		}
 		textHistoriesList = append(textHistoriesList, text)
 	}
 
@@ -423,12 +414,12 @@ loop:
 	return textHistoriesList, nil
 }
 
-func (t TextRepositories) GetTextHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Text, error) {
-	textHistories := map[string]*Text{}
+func (t TextRepositories) GetTextHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Text, error) {
+	textHistories := map[string]Text{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Text, len(t))
+	ch := make(chan []Text, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -497,11 +488,8 @@ loop:
 		}
 	}
 
-	textHistoriesList := []*Text{}
+	textHistoriesList := []Text{}
 	for _, text := range textHistories {
-		if text == nil {
-			continue
-		}
 		textHistoriesList = append(textHistoriesList, text)
 	}
 
@@ -512,7 +500,7 @@ loop:
 	return textHistoriesList, nil
 }
 
-func (t TextRepositories) AddTextInfo(ctx context.Context, text *Text) error {
+func (t TextRepositories) AddTextInfo(ctx context.Context, text Text) error {
 	err := fmt.Errorf("not implements TextReps.AddTextInfo")
 	return err
 }

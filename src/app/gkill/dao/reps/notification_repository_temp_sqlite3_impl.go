@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 		m:        m,
 	}, nil
 }
-func (n *notificationTempRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
+func (n *notificationTempRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	impl := notificationRepositorySQLite3Impl(*n)
@@ -114,14 +114,14 @@ func (n *notificationTempRepositorySQLite3Impl) GetNotification(ctx context.Cont
 	return impl.GetNotification(ctx, id, updateTime)
 }
 
-func (n *notificationTempRepositorySQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
+func (n *notificationTempRepositorySQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.GetNotificationsByTargetID(ctx, target_id)
 }
 
-func (n *notificationTempRepositorySQLite3Impl) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
+func (n *notificationTempRepositorySQLite3Impl) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	impl := notificationRepositorySQLite3Impl(*n)
@@ -143,14 +143,14 @@ func (n *notificationTempRepositorySQLite3Impl) GetRepName(ctx context.Context) 
 	return "notification_temp", nil
 }
 
-func (n *notificationTempRepositorySQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
+func (n *notificationTempRepositorySQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	impl := notificationRepositorySQLite3Impl(*n)
 	return impl.GetNotificationHistories(ctx, id)
 }
 
-func (n *notificationTempRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification, txID string, userID string, device string) error {
+func (n *notificationTempRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification Notification, txID string, userID string, device string) error {
 	n.m.Lock()
 	defer n.m.Unlock()
 	sql := `
@@ -233,7 +233,7 @@ INSERT INTO NOTIFICATION (
 	return nil
 }
 
-func (n *notificationTempRepositorySQLite3Impl) GetNotificationsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Notification, error) {
+func (n *notificationTempRepositorySQLite3Impl) GetNotificationsByTXID(ctx context.Context, txID string, userID string, device string) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	var err error
@@ -304,13 +304,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	notifications := []*Notification{}
+	notifications := []Notification{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			notification := &Notification{}
+			notification := Notification{}
 			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
 			dataType := ""
 

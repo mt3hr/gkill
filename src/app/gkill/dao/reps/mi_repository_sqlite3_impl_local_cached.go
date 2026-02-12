@@ -95,7 +95,7 @@ func NewMiRepositorySQLite3ImplLocalCached(ctx context.Context, filename string,
 	return cachedRep, nil
 }
 
-func (m *miRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (m *miRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.localCachedRep.FindKyous(ctx, query)
@@ -107,7 +107,7 @@ func (m *miRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id str
 	return m.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (m *miRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (m *miRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.localCachedRep.GetKyouHistories(ctx, id)
@@ -207,7 +207,7 @@ func (m *miRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
 	return nil
 }
 
-func (m *miRepositorySQLite3ImplLocalCached) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
+func (m *miRepositorySQLite3ImplLocalCached) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.localCachedRep.FindMi(ctx, query)
@@ -219,13 +219,13 @@ func (m *miRepositorySQLite3ImplLocalCached) GetMi(ctx context.Context, id strin
 	return m.localCachedRep.GetMi(ctx, id, updateTime)
 }
 
-func (m *miRepositorySQLite3ImplLocalCached) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+func (m *miRepositorySQLite3ImplLocalCached) GetMiHistories(ctx context.Context, id string) ([]Mi, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.localCachedRep.GetMiHistories(ctx, id)
 }
 
-func (m *miRepositorySQLite3ImplLocalCached) AddMiInfo(ctx context.Context, mi *Mi) error {
+func (m *miRepositorySQLite3ImplLocalCached) AddMiInfo(ctx context.Context, mi Mi) error {
 	err := func() error {
 		m.m.Lock()
 		defer m.m.Unlock()

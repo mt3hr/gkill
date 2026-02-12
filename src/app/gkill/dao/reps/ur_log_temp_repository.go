@@ -8,11 +8,11 @@ import (
 )
 
 type URLogTempRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,17 +22,17 @@ type URLogTempRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error)
+	FindURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error)
 
 	GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error)
 
-	GetURLogHistories(ctx context.Context, id string) ([]*URLog, error)
+	GetURLogHistories(ctx context.Context, id string) ([]URLog, error)
 
-	AddURLogInfo(ctx context.Context, urlog *URLog, txID string, userID string, device string) error
+	AddURLogInfo(ctx context.Context, urlog URLog, txID string, userID string, device string) error
 
-	GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error)
+	GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error)
 
-	GetURLogsByTXID(ctx context.Context, txID string, userID string, device string) ([]*URLog, error)
+	GetURLogsByTXID(ctx context.Context, txID string, userID string, device string) ([]URLog, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
 

@@ -12,12 +12,12 @@ import (
 
 type GPSLogRepositories []GPSLogRepository
 
-func (g GPSLogRepositories) GetAllGPSLogs(ctx context.Context) ([]*GPSLog, error) {
-	gpsLogs := []*GPSLog{}
+func (g GPSLogRepositories) GetAllGPSLogs(ctx context.Context) ([]GPSLog, error) {
+	gpsLogs := []GPSLog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*GPSLog, len(g))
+	ch := make(chan []GPSLog, len(g))
 	errch := make(chan error, len(g))
 	defer close(ch)
 	defer close(errch)
@@ -72,12 +72,12 @@ loop:
 	return gpsLogs, nil
 }
 
-func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime *time.Time, endTime *time.Time) ([]*GPSLog, error) {
-	gpsLogs := []*GPSLog{}
+func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime *time.Time, endTime *time.Time) ([]GPSLog, error) {
+	gpsLogs := []GPSLog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*GPSLog, len(g))
+	ch := make(chan []GPSLog, len(g))
 	errch := make(chan error, len(g))
 	defer close(ch)
 	defer close(errch)

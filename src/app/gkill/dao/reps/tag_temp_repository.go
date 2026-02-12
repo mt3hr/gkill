@@ -8,15 +8,15 @@ import (
 )
 
 type TagTempRepository interface {
-	FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error)
+	FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error)
 
 	Close(ctx context.Context) error
 
 	GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error)
 
-	GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error)
+	GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error)
 
-	GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error)
+	GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error)
 
 	UpdateCache(ctx context.Context) error
 
@@ -24,15 +24,15 @@ type TagTempRepository interface {
 
 	GetRepName(ctx context.Context) (string, error)
 
-	GetTagHistories(ctx context.Context, id string) ([]*Tag, error)
+	GetTagHistories(ctx context.Context, id string) ([]Tag, error)
 
-	AddTagInfo(ctx context.Context, tag *Tag, txID string, userID string, device string) error
+	AddTagInfo(ctx context.Context, tag Tag, txID string, userID string, device string) error
 
 	GetAllTagNames(ctx context.Context) ([]string, error)
 
-	GetAllTags(ctx context.Context) ([]*Tag, error)
+	GetAllTags(ctx context.Context) ([]Tag, error)
 
-	GetTagsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Tag, error)
+	GetTagsByTXID(ctx context.Context, txID string, userID string, device string) ([]Tag, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
 

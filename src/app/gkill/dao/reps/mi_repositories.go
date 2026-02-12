@@ -14,12 +14,12 @@ import (
 
 type MiRepositories []MiRepository
 
-func (m MiRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (m MiRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(m))
+	ch := make(chan map[string][]Kyou, len(m))
 	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
@@ -70,7 +70,7 @@ loop:
 					}
 
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
@@ -146,12 +146,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(m))
+	ch := make(chan []Kyou, len(m))
 	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
@@ -208,11 +208,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -335,12 +333,12 @@ errloop:
 	return nil
 }
 
-func (m MiRepositories) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
-	matchMis := map[string]*Mi{}
+func (m MiRepositories) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi, error) {
+	matchMis := map[string]Mi{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Mi, len(m))
+	ch := make(chan []Mi, len(m))
 	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
@@ -401,11 +399,9 @@ loop:
 		}
 	}
 
-	matchMisList := []*Mi{}
+	matchMisList := []Mi{}
 	for _, kyou := range matchMis {
-		if kyou == nil {
-			continue
-		}
+
 		matchMisList = append(matchMisList, kyou)
 	}
 	return matchMisList, nil
@@ -474,12 +470,12 @@ loop:
 	return matchMi, nil
 }
 
-func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
-	kyouHistories := map[string]*Mi{}
+func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]Mi, error) {
+	kyouHistories := map[string]Mi{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Mi, len(m))
+	ch := make(chan []Mi, len(m))
 	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
@@ -536,11 +532,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Mi{}
+	kyouHistoriesList := []Mi{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -551,12 +545,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (m MiRepositories) GetMiHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Mi, error) {
-	kyouHistories := map[string]*Mi{}
+func (m MiRepositories) GetMiHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Mi, error) {
+	kyouHistories := map[string]Mi{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Mi, len(m))
+	ch := make(chan []Mi, len(m))
 	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
@@ -625,11 +619,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Mi{}
+	kyouHistoriesList := []Mi{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -640,7 +632,7 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (m MiRepositories) AddMiInfo(ctx context.Context, mi *Mi) error {
+func (m MiRepositories) AddMiInfo(ctx context.Context, mi Mi) error {
 	err := fmt.Errorf("not implements MiReps.AddMiInfo")
 	return err
 }

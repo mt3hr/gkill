@@ -94,7 +94,7 @@ func NewTimeIsRepositorySQLite3ImplLocalCached(ctx context.Context, filename str
 	}
 	return cachedRep, nil
 }
-func (i *timeIsRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (i *timeIsRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.FindKyous(ctx, query)
@@ -106,7 +106,7 @@ func (i *timeIsRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id
 	return i.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (i *timeIsRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (i *timeIsRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.GetKyouHistories(ctx, id)
@@ -206,7 +206,7 @@ func (i *timeIsRepositorySQLite3ImplLocalCached) Close(ctx context.Context) erro
 	return nil
 }
 
-func (i *timeIsRepositorySQLite3ImplLocalCached) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
+func (i *timeIsRepositorySQLite3ImplLocalCached) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.FindTimeIs(ctx, query)
@@ -218,13 +218,13 @@ func (i *timeIsRepositorySQLite3ImplLocalCached) GetTimeIs(ctx context.Context, 
 	return i.localCachedRep.GetTimeIs(ctx, id, updateTime)
 }
 
-func (i *timeIsRepositorySQLite3ImplLocalCached) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
+func (i *timeIsRepositorySQLite3ImplLocalCached) GetTimeIsHistories(ctx context.Context, id string) ([]TimeIs, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.GetTimeIsHistories(ctx, id)
 }
 
-func (i *timeIsRepositorySQLite3ImplLocalCached) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+func (i *timeIsRepositorySQLite3ImplLocalCached) AddTimeIsInfo(ctx context.Context, timeis TimeIs) error {
 	err := func() error {
 		i.m.Lock()
 		defer i.m.Unlock()

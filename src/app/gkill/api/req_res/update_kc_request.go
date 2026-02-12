@@ -5,7 +5,7 @@ import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 type UpdateKCRequest struct {
 	SessionID string `json:"session_id"`
 
-	KC *reps.KC `json:"kc"`
+	KC reps.KC `json:"kc"`
 
 	TXID *string `json:"tx_id"`
 

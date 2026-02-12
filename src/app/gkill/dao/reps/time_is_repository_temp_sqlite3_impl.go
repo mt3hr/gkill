@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 		m:        m,
 	}, nil
 }
-func (t *timeIsTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (t *timeIsTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := timeIsRepositorySQLite3Impl(*t)
@@ -107,7 +107,7 @@ func (t *timeIsTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (t *timeIsTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (t *timeIsTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := timeIsRepositorySQLite3Impl(*t)
@@ -136,7 +136,7 @@ func (t *timeIsTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (t *timeIsTempRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
+func (t *timeIsTempRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := timeIsRepositorySQLite3Impl(*t)
@@ -150,14 +150,14 @@ func (t *timeIsTempRepositorySQLite3Impl) GetTimeIs(ctx context.Context, id stri
 	return impl.GetTimeIs(ctx, id, updateTime)
 }
 
-func (t *timeIsTempRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
+func (t *timeIsTempRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]TimeIs, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := timeIsRepositorySQLite3Impl(*t)
 	return impl.GetTimeIsHistories(ctx, id)
 }
 
-func (t *timeIsTempRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs, txID string, userID string, device string) error {
+func (t *timeIsTempRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis TimeIs, txID string, userID string, device string) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 	sql := `
@@ -244,7 +244,7 @@ INSERT INTO TIMEIS (
 	return nil
 }
 
-func (t *timeIsTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (t *timeIsTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -311,13 +311,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -365,7 +365,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (t *timeIsTempRepositorySQLite3Impl) GetTimeIssByTXID(ctx context.Context, txID string, userID string, device string) ([]*TimeIs, error) {
+func (t *timeIsTempRepositorySQLite3Impl) GetTimeIssByTXID(ctx context.Context, txID string, userID string, device string) ([]TimeIs, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -436,13 +436,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	timeiss := []*TimeIs{}
+	timeiss := []TimeIs{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			timeis := &TimeIs{}
+			timeis := TimeIs{}
 			timeis.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			startTimeStr, endTime := "", sqllib.NullString{}

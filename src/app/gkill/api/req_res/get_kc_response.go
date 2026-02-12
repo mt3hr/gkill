@@ -10,5 +10,5 @@ type GetKCResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	KCHistories []*reps.KC `json:"kc_histories"`
+	KCHistories []reps.KC `json:"kc_histories"`
 }
