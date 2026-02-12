@@ -97,7 +97,7 @@ func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename str
 	return cachedRep, nil
 }
 
-func (r *reKyouRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (r *reKyouRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	return r.localCachedRep.FindKyous(ctx, query)
@@ -109,7 +109,7 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id
 	return r.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (r *reKyouRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (r *reKyouRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	return r.localCachedRep.GetKyouHistories(ctx, id)
@@ -209,7 +209,7 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) Close(ctx context.Context) erro
 	return nil
 }
 
-func (r *reKyouRepositorySQLite3ImplLocalCached) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
+func (r *reKyouRepositorySQLite3ImplLocalCached) FindReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	return r.localCachedRep.FindReKyou(ctx, query)
@@ -221,13 +221,13 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyou(ctx context.Context, 
 	return r.localCachedRep.GetReKyou(ctx, id, updateTime)
 }
 
-func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
+func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyouHistories(ctx context.Context, id string) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	return r.localCachedRep.GetReKyouHistories(ctx, id)
 }
 
-func (r *reKyouRepositorySQLite3ImplLocalCached) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
+func (r *reKyouRepositorySQLite3ImplLocalCached) AddReKyouInfo(ctx context.Context, rekyou ReKyou) error {
 	err := func() error {
 		r.m.Lock()
 		defer r.m.Unlock()
@@ -244,7 +244,7 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) AddReKyouInfo(ctx context.Conte
 	return r.UpdateCache(ctx)
 }
 
-func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
+func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyousAllLatest(ctx context.Context) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	return r.localCachedRep.GetReKyousAllLatest(ctx)

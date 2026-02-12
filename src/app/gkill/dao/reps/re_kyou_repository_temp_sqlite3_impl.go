@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 		gkillRepositories: &GkillRepositories{},
 	}, nil
 }
-func (r *reKyouTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (r *reKyouTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	impl := reKyouRepositorySQLite3Impl(*r)
@@ -107,7 +107,7 @@ func (r *reKyouTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (r *reKyouTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (r *reKyouTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	impl := reKyouRepositorySQLite3Impl(*r)
@@ -136,7 +136,7 @@ func (r *reKyouTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (r *reKyouTempRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
+func (r *reKyouTempRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	impl := reKyouRepositorySQLite3Impl(*r)
@@ -150,14 +150,14 @@ func (r *reKyouTempRepositorySQLite3Impl) GetReKyou(ctx context.Context, id stri
 	return impl.GetReKyou(ctx, id, updateTime)
 }
 
-func (r *reKyouTempRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
+func (r *reKyouTempRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	impl := reKyouRepositorySQLite3Impl(*r)
 	return impl.GetReKyouHistories(ctx, id)
 }
 
-func (r *reKyouTempRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou, txID string, userID string, device string) error {
+func (r *reKyouTempRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou ReKyou, txID string, userID string, device string) error {
 	r.m.Lock()
 	defer r.m.Unlock()
 	sql := `
@@ -233,7 +233,7 @@ INSERT INTO REKYOU (
 	return nil
 }
 
-func (r *reKyouTempRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
+func (r *reKyouTempRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	impl := reKyouRepositorySQLite3Impl(*r)
@@ -247,7 +247,7 @@ func (r *reKyouTempRepositorySQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx co
 	return impl.GetRepositoriesWithoutReKyouRep(ctx)
 }
 
-func (r *reKyouTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (r *reKyouTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var err error
@@ -314,13 +314,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -368,7 +368,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (r *reKyouTempRepositorySQLite3Impl) GetReKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*ReKyou, error) {
+func (r *reKyouTempRepositorySQLite3Impl) GetReKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var err error
@@ -437,13 +437,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	reKyous := []*ReKyou{}
+	reKyous := []ReKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			reKyou := &ReKyou{}
+			reKyou := ReKyou{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(&reKyou.IsDeleted,

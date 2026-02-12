@@ -95,7 +95,7 @@ func NewKCRepositorySQLite3ImplLocalCached(ctx context.Context, filename string,
 	return cachedRep, nil
 }
 
-func (k *kcRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kcRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.FindKyous(ctx, query)
@@ -107,7 +107,7 @@ func (k *kcRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id str
 	return k.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (k *kcRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (k *kcRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.GetKyouHistories(ctx, id)
@@ -205,7 +205,7 @@ func (k *kcRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
 	return nil
 }
 
-func (k *kcRepositorySQLite3ImplLocalCached) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
+func (k *kcRepositorySQLite3ImplLocalCached) FindKC(ctx context.Context, query *find.FindQuery) ([]KC, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.FindKC(ctx, query)
@@ -217,13 +217,13 @@ func (k *kcRepositorySQLite3ImplLocalCached) GetKC(ctx context.Context, id strin
 	return k.localCachedRep.GetKC(ctx, id, updateTime)
 }
 
-func (k *kcRepositorySQLite3ImplLocalCached) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
+func (k *kcRepositorySQLite3ImplLocalCached) GetKCHistories(ctx context.Context, id string) ([]KC, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.GetKCHistories(ctx, id)
 }
 
-func (k *kcRepositorySQLite3ImplLocalCached) AddKCInfo(ctx context.Context, kc *KC) error {
+func (k *kcRepositorySQLite3ImplLocalCached) AddKCInfo(ctx context.Context, kc KC) error {
 	err := func() error {
 		k.m.Lock()
 		defer k.m.Unlock()

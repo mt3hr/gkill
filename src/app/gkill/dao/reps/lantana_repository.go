@@ -8,11 +8,11 @@ import (
 )
 
 type LantanaRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,13 +22,13 @@ type LantanaRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error)
+	FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error)
 
 	GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error)
 
-	GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error)
+	GetLantanaHistories(ctx context.Context, id string) ([]Lantana, error)
 
-	AddLantanaInfo(ctx context.Context, lantana *Lantana) error
+	AddLantanaInfo(ctx context.Context, lantana Lantana) error
 
 	UnWrapTyped() ([]LantanaRepository, error)
 

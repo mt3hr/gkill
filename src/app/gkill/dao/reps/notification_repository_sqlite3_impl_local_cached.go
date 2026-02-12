@@ -94,7 +94,7 @@ func NewNotificationRepositorySQLite3ImplLocalCached(ctx context.Context, filena
 	}
 	return cachedRep, nil
 }
-func (n *notificationRepositorySQLite3ImplLocalCached) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
+func (n *notificationRepositorySQLite3ImplLocalCached) FindNotifications(ctx context.Context, query *find.FindQuery) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.FindNotifications(ctx, query)
@@ -122,13 +122,13 @@ func (n *notificationRepositorySQLite3ImplLocalCached) GetNotification(ctx conte
 	return n.localCachedRep.GetNotification(ctx, id, updateTime)
 }
 
-func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
+func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.GetNotificationsByTargetID(ctx, target_id)
 }
 
-func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
+func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.GetNotificationsBetweenNotificationTime(ctx, startTime, endTime)
@@ -212,13 +212,13 @@ func (n *notificationRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Co
 	return n.originalRep.GetRepName(ctx)
 }
 
-func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
+func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationHistories(ctx context.Context, id string) ([]Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.GetNotificationHistories(ctx, id)
 }
 
-func (n *notificationRepositorySQLite3ImplLocalCached) AddNotificationInfo(ctx context.Context, notification *Notification) error {
+func (n *notificationRepositorySQLite3ImplLocalCached) AddNotificationInfo(ctx context.Context, notification Notification) error {
 	err := func() error {
 		n.m.Lock()
 		defer n.m.Unlock()

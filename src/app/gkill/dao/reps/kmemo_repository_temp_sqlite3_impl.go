@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	}, nil
 }
 
-func (k *kmemoTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kmemoTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
@@ -106,7 +106,7 @@ func (k *kmemoTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string,
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (k *kmemoTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (k *kmemoTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
@@ -133,7 +133,7 @@ func (k *kmemoTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (k *kmemoTempRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
+func (k *kmemoTempRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
@@ -147,14 +147,14 @@ func (k *kmemoTempRepositorySQLite3Impl) GetKmemo(ctx context.Context, id string
 	return impl.GetKmemo(ctx, id, updateTime)
 }
 
-func (k *kmemoTempRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
+func (k *kmemoTempRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]Kmemo, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	impl := kmemoRepositorySQLite3Impl(*k)
 	return impl.GetKmemoHistories(ctx, id)
 }
 
-func (k *kmemoTempRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo, txID string, userID string, device string) error {
+func (k *kmemoTempRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo Kmemo, txID string, userID string, device string) error {
 	k.m.Lock()
 	defer k.m.Unlock()
 	sql := `
@@ -231,7 +231,7 @@ INSERT INTO KMEMO (
 	return nil
 }
 
-func (k *kmemoTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (k *kmemoTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	var err error
 	sql := `
 SELECT 
@@ -296,13 +296,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -350,7 +350,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (k *kmemoTempRepositorySQLite3Impl) GetKmemosByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kmemo, error) {
+func (k *kmemoTempRepositorySQLite3Impl) GetKmemosByTXID(ctx context.Context, txID string, userID string, device string) ([]Kmemo, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	repName, err := k.GetRepName(ctx)
@@ -416,13 +416,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kmemos := []*Kmemo{}
+	kmemos := []Kmemo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kmemo := &Kmemo{}
+			kmemo := Kmemo{}
 			kmemo.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 

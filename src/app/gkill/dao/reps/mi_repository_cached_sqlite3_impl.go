@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		m:        m,
 	}, nil
 }
-func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -411,13 +411,13 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
@@ -444,7 +444,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -471,16 +471,16 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	var err error
 
 	trueValue := true
@@ -804,13 +804,13 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
@@ -1032,7 +1032,7 @@ func (m *miRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
+func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi, error) {
 	var err error
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = m.UpdateCache(ctx)
@@ -1370,13 +1370,13 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		}
 	}()
 
-	mis := []*Mi{}
+	mis := []Mi{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			mi := &Mi{}
+			mi := Mi{}
 			createTimeUnix, updateTimeUnix := int64(0), int64(0)
 			limitTime, estimateStartTime, estimateEndTime := sqllib.NullInt64{}, sqllib.NullInt64{}, sqllib.NullInt64{}
 
@@ -1444,16 +1444,16 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	if updateTime != nil {
 		for _, kyou := range miHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return miHistories[0], nil
+	return &miHistories[0], nil
 }
 
-func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]Mi, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	var err error
@@ -1773,13 +1773,13 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		}
 	}()
 
-	mis := []*Mi{}
+	mis := []Mi{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			mi := &Mi{}
+			mi := Mi{}
 			createTimeUnix, updateTimeUnix := int64(0), int64(0)
 			limitTime, estimateStartTime, estimateEndTime := sqllib.NullInt64{}, sqllib.NullInt64{}, sqllib.NullInt64{}
 
@@ -1829,7 +1829,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 
 }
 
-func (m *miRepositoryCachedSQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
+func (m *miRepositoryCachedSQLite3Impl) AddMiInfo(ctx context.Context, mi Mi) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 	sql := `

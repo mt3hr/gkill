@@ -95,7 +95,7 @@ func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, filename st
 	return cachedRep, nil
 }
 
-func (l *lantanaRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (l *lantanaRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	return l.localCachedRep.FindKyous(ctx, query)
@@ -107,7 +107,7 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, i
 	return l.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (l *lantanaRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (l *lantanaRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	return l.localCachedRep.GetKyouHistories(ctx, id)
@@ -207,7 +207,7 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) Close(ctx context.Context) err
 	return nil
 }
 
-func (l *lantanaRepositorySQLite3ImplLocalCached) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
+func (l *lantanaRepositorySQLite3ImplLocalCached) FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	return l.localCachedRep.FindLantana(ctx, query)
@@ -219,13 +219,13 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) GetLantana(ctx context.Context
 	return l.localCachedRep.GetLantana(ctx, id, updateTime)
 }
 
-func (l *lantanaRepositorySQLite3ImplLocalCached) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
+func (l *lantanaRepositorySQLite3ImplLocalCached) GetLantanaHistories(ctx context.Context, id string) ([]Lantana, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	return l.localCachedRep.GetLantanaHistories(ctx, id)
 }
 
-func (l *lantanaRepositorySQLite3ImplLocalCached) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
+func (l *lantanaRepositorySQLite3ImplLocalCached) AddLantanaInfo(ctx context.Context, lantana Lantana) error {
 	err := func() error {
 		l.m.Lock()
 		defer l.m.Unlock()

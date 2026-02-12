@@ -14,12 +14,12 @@ import (
 
 type GitCommitLogRepositories []GitCommitLogRepository
 
-func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(g))
+	ch := make(chan map[string][]Kyou, len(g))
 	errch := make(chan error, len(g))
 	defer close(ch)
 	defer close(errch)
@@ -65,7 +65,7 @@ loop:
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
 					if _, exist := matchKyous[kyou.ID]; !exist {
-						matchKyous[kyou.ID] = []*Kyou{}
+						matchKyous[kyou.ID] = []Kyou{}
 					}
 					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
 				}
@@ -141,12 +141,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(g))
+	ch := make(chan []Kyou, len(g))
 	errch := make(chan error, len(g))
 	defer close(ch)
 	defer close(errch)
@@ -203,11 +203,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -325,12 +323,12 @@ errloop:
 	return nil
 }
 
-func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error) {
-	matchGitCommitLogs := map[string]*GitCommitLog{}
+func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]GitCommitLog, error) {
+	matchGitCommitLogs := map[string]GitCommitLog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*GitCommitLog, len(g))
+	ch := make(chan []GitCommitLog, len(g))
 	errch := make(chan error, len(g))
 	defer close(ch)
 	defer close(errch)
@@ -387,11 +385,9 @@ loop:
 		}
 	}
 
-	matchGitCommitLogsList := []*GitCommitLog{}
+	matchGitCommitLogsList := []GitCommitLog{}
 	for _, kyou := range matchGitCommitLogs {
-		if kyou == nil {
-			continue
-		}
+
 		matchGitCommitLogsList = append(matchGitCommitLogsList, kyou)
 	}
 	return matchGitCommitLogsList, nil

@@ -17,12 +17,12 @@ import (
 
 type IDFKyouRepositories []IDFKyouRepository
 
-func (i IDFKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (i IDFKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(i))
+	ch := make(chan map[string][]Kyou, len(i))
 	errch := make(chan error, len(i))
 	defer close(ch)
 	defer close(errch)
@@ -72,7 +72,7 @@ loop:
 						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
@@ -147,12 +147,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (i IDFKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (i IDFKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(i))
+	ch := make(chan []Kyou, len(i))
 	errch := make(chan error, len(i))
 	defer close(ch)
 	defer close(errch)
@@ -209,11 +209,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 	return kyouHistoriesList, nil
@@ -331,12 +329,12 @@ errloop:
 	return nil
 }
 
-func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
-	matchIDFKyous := map[string]*IDFKyou{}
+func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error) {
+	matchIDFKyous := map[string]IDFKyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*IDFKyou, len(i))
+	ch := make(chan []IDFKyou, len(i))
 	errch := make(chan error, len(i))
 	defer close(ch)
 	defer close(errch)
@@ -397,11 +395,9 @@ loop:
 		}
 	}
 
-	matchIDFKyousList := []*IDFKyou{}
+	matchIDFKyousList := []IDFKyou{}
 	for _, kyou := range matchIDFKyous {
-		if kyou == nil {
-			continue
-		}
+
 		matchIDFKyousList = append(matchIDFKyousList, kyou)
 	}
 	return matchIDFKyousList, nil
@@ -470,12 +466,12 @@ loop:
 	return matchIDFKyou, nil
 }
 
-func (i IDFKyouRepositories) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
-	kyouHistories := map[string]*IDFKyou{}
+func (i IDFKyouRepositories) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {
+	kyouHistories := map[string]IDFKyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*IDFKyou, len(i))
+	ch := make(chan []IDFKyou, len(i))
 	errch := make(chan error, len(i))
 	defer close(ch)
 	defer close(errch)
@@ -532,11 +528,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*IDFKyou{}
+	kyouHistoriesList := []IDFKyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -547,12 +541,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (i IDFKyouRepositories) GetIDFKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*IDFKyou, error) {
-	kyouHistories := map[string]*IDFKyou{}
+func (i IDFKyouRepositories) GetIDFKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]IDFKyou, error) {
+	kyouHistories := map[string]IDFKyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*IDFKyou, len(i))
+	ch := make(chan []IDFKyou, len(i))
 	errch := make(chan error, len(i))
 	defer close(ch)
 	defer close(errch)
@@ -621,11 +615,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*IDFKyou{}
+	kyouHistoriesList := []IDFKyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -645,7 +637,7 @@ func (i IDFKyouRepositories) IDF(ctx context.Context) error {
 	return err
 }
 
-func (i IDFKyouRepositories) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
+func (i IDFKyouRepositories) AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou) error {
 	err := fmt.Errorf("not implements IDFKyouReps.AddIDFKyouInfo")
 	return err
 }

@@ -14,12 +14,12 @@ import (
 
 type TagRepositories []TagRepository
 
-func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
-	matchTags := map[string]*Tag{}
+func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
+	matchTags := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(t))
+	ch := make(chan []Tag, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -81,11 +81,8 @@ loop:
 		}
 	}
 
-	matchTagsList := []*Tag{}
+	matchTagsList := []Tag{}
 	for _, tag := range matchTags {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -200,12 +197,12 @@ loop:
 	return matchTag, nil
 }
 
-func (t TagRepositories) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
-	matchTags := map[string]*Tag{}
+func (t TagRepositories) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {
+	matchTags := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(t))
+	ch := make(chan []Tag, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -262,11 +259,8 @@ loop:
 		}
 	}
 
-	tagHistoriesList := []*Tag{}
+	tagHistoriesList := []Tag{}
 	for _, tag := range matchTags {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -275,12 +269,12 @@ loop:
 	return tagHistoriesList, nil
 }
 
-func (t TagRepositories) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
-	matchTags := map[string]*Tag{}
+func (t TagRepositories) GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error) {
+	matchTags := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(t))
+	ch := make(chan []Tag, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -337,11 +331,8 @@ loop:
 		}
 	}
 
-	tagHistoriesList := []*Tag{}
+	tagHistoriesList := []Tag{}
 	for _, tag := range matchTags {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -419,12 +410,12 @@ func (t TagRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "TagReps", nil
 }
 
-func (t TagRepositories) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
-	tagHistories := map[string]*Tag{}
+func (t TagRepositories) GetTagHistories(ctx context.Context, id string) ([]Tag, error) {
+	tagHistories := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(t))
+	ch := make(chan []Tag, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -481,11 +472,8 @@ loop:
 		}
 	}
 
-	tagHistoriesList := []*Tag{}
+	tagHistoriesList := []Tag{}
 	for _, tag := range tagHistories {
-		if tag == nil {
-			continue
-		}
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
@@ -495,12 +483,12 @@ loop:
 
 	return tagHistoriesList, nil
 }
-func (t TagRepositories) GetTagHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Tag, error) {
-	tagHistories := map[string]*Tag{}
+func (t TagRepositories) GetTagHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Tag, error) {
+	tagHistories := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(t))
+	ch := make(chan []Tag, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -569,11 +557,8 @@ loop:
 		}
 	}
 
-	tagHistoriesList := []*Tag{}
+	tagHistoriesList := []Tag{}
 	for _, tag := range tagHistories {
-		if tag == nil {
-			continue
-		}
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
@@ -584,7 +569,7 @@ loop:
 	return tagHistoriesList, nil
 }
 
-func (t TagRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
+func (t TagRepositories) AddTagInfo(ctx context.Context, tag Tag) error {
 	err := fmt.Errorf("not implements TagReps.AddTagInfo")
 	return err
 }
@@ -598,7 +583,7 @@ func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	latestTags := map[string]*Tag{}
+	latestTags := map[string]Tag{}
 	for _, tag := range tags {
 		if existTag, exist := latestTags[tag.ID]; exist {
 			if tag.UpdateTime.After(existTag.UpdateTime) {
@@ -610,9 +595,6 @@ func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 	}
 
 	for _, tag := range latestTags {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -624,12 +606,12 @@ func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 	return tagNames, nil
 }
 
-func (t TagRepositories) GetAllTags(ctx context.Context) ([]*Tag, error) {
-	allTags := map[string]*Tag{}
+func (t TagRepositories) GetAllTags(ctx context.Context) ([]Tag, error) {
+	allTags := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(t))
+	ch := make(chan []Tag, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -686,11 +668,8 @@ loop:
 		}
 	}
 
-	allTagsList := []*Tag{}
+	allTagsList := []Tag{}
 	for _, tag := range allTags {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}

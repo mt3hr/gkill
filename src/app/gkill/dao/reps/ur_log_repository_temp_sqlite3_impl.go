@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	}, nil
 }
 
-func (u *urlogTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (u *urlogTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	impl := urlogRepositorySQLite3Impl(*u)
@@ -110,7 +110,7 @@ func (u *urlogTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string,
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (u *urlogTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (u *urlogTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	impl := urlogRepositorySQLite3Impl(*u)
@@ -139,7 +139,7 @@ func (u *urlogTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (u *urlogTempRepositorySQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
+func (u *urlogTempRepositorySQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	impl := urlogRepositorySQLite3Impl(*u)
@@ -153,14 +153,14 @@ func (u *urlogTempRepositorySQLite3Impl) GetURLog(ctx context.Context, id string
 	return impl.GetURLog(ctx, id, updateTime)
 }
 
-func (u *urlogTempRepositorySQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
+func (u *urlogTempRepositorySQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]URLog, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	impl := urlogRepositorySQLite3Impl(*u)
 	return impl.GetURLogHistories(ctx, id)
 }
 
-func (u *urlogTempRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog, txID string, userID string, device string) error {
+func (u *urlogTempRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog URLog, txID string, userID string, device string) error {
 	u.m.Lock()
 	defer u.m.Unlock()
 	sql := `
@@ -249,7 +249,7 @@ INSERT INTO URLOG (
 	return nil
 }
 
-func (u *urlogTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (u *urlogTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	var err error
@@ -316,13 +316,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -370,7 +370,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (u *urlogTempRepositorySQLite3Impl) GetURLogsByTXID(ctx context.Context, txID string, userID string, device string) ([]*URLog, error) {
+func (u *urlogTempRepositorySQLite3Impl) GetURLogsByTXID(ctx context.Context, txID string, userID string, device string) ([]URLog, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	repName, err := u.GetRepName(ctx)
@@ -442,13 +442,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	urlogs := []*URLog{}
+	urlogs := []URLog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			urlog := &URLog{}
+			urlog := URLog{}
 			urlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 

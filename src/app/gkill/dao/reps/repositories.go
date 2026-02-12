@@ -14,12 +14,12 @@ import (
 
 type Repositories []Repository
 
-func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(r))
+	ch := make(chan map[string][]Kyou, len(r))
 	errch := make(chan error, len(r))
 	defer close(ch)
 	defer close(errch)
@@ -72,7 +72,7 @@ loop:
 						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
@@ -256,12 +256,12 @@ func (r Repositories) GetRepName(ctx context.Context) (string, error) {
 	return "Reps", nil
 }
 
-func (r Repositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (r Repositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(r))
+	ch := make(chan []Kyou, len(r))
 	errch := make(chan error, len(r))
 	defer close(ch)
 	defer close(errch)
@@ -302,9 +302,6 @@ loop:
 		select {
 		case matchKyousInRep := <-ch:
 			for _, kyou := range matchKyousInRep {
-				if kyou == nil {
-					continue
-				}
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
 					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
@@ -318,11 +315,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -333,12 +328,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (r Repositories) GetKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (r Repositories) GetKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(r))
+	ch := make(chan []Kyou, len(r))
 	errch := make(chan error, len(r))
 	defer close(ch)
 	defer close(errch)
@@ -391,9 +386,6 @@ loop:
 		select {
 		case matchKyousInRep := <-ch:
 			for _, kyou := range matchKyousInRep {
-				if kyou == nil {
-					continue
-				}
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
 					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
@@ -407,11 +399,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 

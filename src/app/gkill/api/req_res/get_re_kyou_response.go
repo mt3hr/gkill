@@ -10,5 +10,5 @@ type GetReKyouResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	ReKyouHistories []*reps.ReKyou `json:"rekyou_histories"`
+	ReKyouHistories []reps.ReKyou `json:"rekyou_histories"`
 }

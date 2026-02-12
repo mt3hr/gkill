@@ -8,11 +8,11 @@ import (
 )
 
 type GitCommitLogRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,7 +22,7 @@ type GitCommitLogRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error)
+	FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]GitCommitLog, error)
 
 	GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error)
 

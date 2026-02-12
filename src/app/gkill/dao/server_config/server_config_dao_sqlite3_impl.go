@@ -858,14 +858,12 @@ INSERT INTO SERVER_CONFIG (
 			row := checkExistStmt.QueryRowContext(ctx, queryArgs...)
 			err = row.Err()
 			if err != nil {
-				if err != nil {
-					err = fmt.Errorf("error at query :%w", err)
-					rollbackErr := tx.Rollback()
-					if rollbackErr != nil {
-						err = fmt.Errorf("%w: %w", err, rollbackErr)
-					}
-					return false, err
+				err = fmt.Errorf("error at query :%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
 				}
+				return false, err
 			}
 
 			recordCount := 0
@@ -1112,14 +1110,12 @@ INSERT INTO SERVER_CONFIG (
 		recordCount := 0
 		err = row.Scan(&recordCount)
 		if err != nil {
-			if err != nil {
-				err = fmt.Errorf("error at scan:%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
-				return false, err
+			err = fmt.Errorf("error at scan:%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
 			}
+			return false, err
 		}
 		if recordCount == 0 {
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
