@@ -181,8 +181,6 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}, nil
 }
 func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
-	t.m.RLock()
-	defer t.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if t.fullConnect {
@@ -215,6 +213,8 @@ func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.F
 			return nil, err
 		}
 	}
+	t.m.RLock()
+	defer t.m.RUnlock()
 
 	sql := `
 SELECT 

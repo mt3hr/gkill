@@ -153,8 +153,6 @@ ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 	return cachedTagrepository, nil
 }
 func (t *tagRepositoryCachedSQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
-	t.m.RLock()
-	defer t.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -167,6 +165,8 @@ func (t *tagRepositoryCachedSQLite3Impl) FindTags(ctx context.Context, query *fi
 		}
 
 	}
+	t.m.RLock()
+	defer t.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -517,8 +517,6 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	t.m.Lock()
-	defer t.m.Unlock()
 	allTags, err := t.tagRep.GetAllTags(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags at update cache: %w", err)

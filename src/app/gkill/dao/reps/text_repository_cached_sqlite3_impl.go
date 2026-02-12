@@ -174,8 +174,6 @@ ORDER BY TEXT1.UPDATE_TIME_UNIX DESC
 	}, nil
 }
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
-	t.m.RLock()
-	defer t.m.RUnlock()
 	var err error
 
 	if query.UseWords != nil && *query.UseWords {
@@ -193,6 +191,8 @@ func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *
 			return nil, err
 		}
 	}
+	t.m.RLock()
+	defer t.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -424,8 +424,6 @@ func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context
 }
 
 func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	t.m.Lock()
-	defer t.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{

@@ -134,8 +134,6 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 	}, nil
 }
 func (n *notificationRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
-	n.m.RLock()
-	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -163,6 +161,8 @@ func (n *notificationRepositorySQLite3Impl) FindNotifications(ctx context.Contex
 		}
 
 	}
+	n.m.RLock()
+	defer n.m.RUnlock()
 
 	sql := `
 SELECT 

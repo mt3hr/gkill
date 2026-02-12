@@ -213,9 +213,16 @@ func (t *textRepositorySQLite3ImplLocalCached) GetTextHistories(ctx context.Cont
 }
 
 func (t *textRepositorySQLite3ImplLocalCached) AddTextInfo(ctx context.Context, text *Text) error {
-	t.m.Lock()
-	defer t.m.Unlock()
-	err := t.originalRep.AddTextInfo(ctx, text)
+	err := func() error {
+		t.m.Lock()
+		defer t.m.Unlock()
+		err := t.originalRep.AddTextInfo(ctx, text)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

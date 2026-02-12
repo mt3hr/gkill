@@ -95,8 +95,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	t.m.RLock()
-	defer t.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -109,6 +107,8 @@ func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 		}
 
 	}
+	t.m.RLock()
+	defer t.m.RUnlock()
 
 	sqlStartTimeIs := `
 SELECT 
@@ -433,8 +433,6 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	t.m.Lock()
-	defer t.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -600,8 +598,6 @@ func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
-	t.m.RLock()
-	defer t.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -614,6 +610,8 @@ func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, quer
 		}
 
 	}
+	t.m.RLock()
+	defer t.m.RUnlock()
 
 	sqlStartTimeIs := `
 SELECT 
