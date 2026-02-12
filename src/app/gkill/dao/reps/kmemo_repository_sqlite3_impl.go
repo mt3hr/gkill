@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	}, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	var db *sql.DB
 	if k.fullConnect {
@@ -239,13 +239,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -285,7 +285,7 @@ WHERE
 			}
 
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -312,16 +312,16 @@ func (k *kmemoRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, upd
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (k *kmemoRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	var err error
@@ -421,13 +421,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -503,7 +503,7 @@ func (k *kmemoRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
+func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error) {
 	var err error
 	var db *sql.DB
 	if k.fullConnect {
@@ -609,13 +609,13 @@ WHERE
 		}
 	}()
 
-	kmemos := []*Kmemo{}
+	kmemos := []Kmemo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kmemo := &Kmemo{}
+			kmemo := Kmemo{}
 			kmemo.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -679,16 +679,16 @@ func (k *kmemoRepositorySQLite3Impl) GetKmemo(ctx context.Context, id string, up
 	if updateTime != nil {
 		for _, kyou := range kmemoHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kmemoHistories[0], nil
+	return &kmemoHistories[0], nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
+func (k *kmemoRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]Kmemo, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	var err error
@@ -789,13 +789,13 @@ WHERE
 		}
 	}()
 
-	kmemos := []*Kmemo{}
+	kmemos := []Kmemo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kmemo := &Kmemo{}
+			kmemo := Kmemo{}
 			kmemo.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -840,7 +840,7 @@ WHERE
 	return kmemos, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+func (k *kmemoRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo Kmemo) error {
 	k.m.Lock()
 	defer k.m.Unlock()
 	var err error

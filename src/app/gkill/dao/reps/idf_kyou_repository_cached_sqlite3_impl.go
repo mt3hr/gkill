@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	return rep, nil
 }
 
-func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -188,13 +188,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			targetRepName := ""
 
@@ -315,7 +315,7 @@ WHERE
 			}
 
 			if match {
-				kyou := &Kyou{}
+				kyou := Kyou{}
 				kyou.IsDeleted = idf.IsDeleted
 				kyou.ID = idf.ID
 				kyou.RepName = idf.RepName
@@ -333,7 +333,7 @@ WHERE
 				kyou.IsVideo = idf.IsVideo
 
 				if _, exist := kyous[kyou.ID]; !exist {
-					kyous[kyou.ID] = []*Kyou{}
+					kyous[kyou.ID] = []Kyou{}
 				}
 				kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 			}
@@ -361,16 +361,16 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	var err error
@@ -452,13 +452,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			targetRepName := ""
 
@@ -496,7 +496,7 @@ WHERE
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			idf.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.IsDeleted = idf.IsDeleted
 			kyou.ID = idf.ID
 			kyou.RepName = idf.RepName
@@ -685,7 +685,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (i *idfKyouRepositoryCachedSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -775,13 +775,13 @@ WHERE
 		}
 	}()
 
-	idfKyous := []*IDFKyou{}
+	idfKyous := []IDFKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			targetRepName := ""
 
@@ -918,16 +918,16 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyou(ctx context.Context, id 
 	if updateTime != nil {
 		for _, kyou := range idfHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return idfHistories[0], nil
+	return &idfHistories[0], nil
 }
 
-func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	var err error
@@ -1008,13 +1008,13 @@ WHERE
 		}
 	}()
 
-	idfKyous := []*IDFKyou{}
+	idfKyous := []IDFKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			targetRepName := ""
 
@@ -1062,7 +1062,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) IDF(ctx context.Context) error {
 	panic("not implemented")
 }
 
-func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
+func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou) error {
 	i.m.Lock()
 	defer i.m.Unlock()
 	sql := `

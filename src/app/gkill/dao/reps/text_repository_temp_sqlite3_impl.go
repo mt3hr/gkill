@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}, nil
 }
 
-func (t *textTempRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
+func (t *textTempRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := textRepositorySQLite3Impl(*t)
@@ -169,7 +169,7 @@ func (t *textTempRepositorySQLite3Impl) GetText(ctx context.Context, id string, 
 	return impl.GetText(ctx, id, updateTime)
 }
 
-func (t *textTempRepositorySQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
+func (t *textTempRepositorySQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := textRepositorySQLite3Impl(*t)
@@ -191,14 +191,14 @@ func (t *textTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string,
 	return "text_temp", nil
 }
 
-func (t *textTempRepositorySQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
+func (t *textTempRepositorySQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := textRepositorySQLite3Impl(*t)
 	return impl.GetTextHistories(ctx, id)
 }
 
-func (t *textTempRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text *Text, txID string, userID string, device string) error {
+func (t *textTempRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text Text, txID string, userID string, device string) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 	sql := `
@@ -278,7 +278,7 @@ INSERT INTO TEXT (
 	return nil
 }
 
-func (t *textTempRepositorySQLite3Impl) GetTextsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Text, error) {
+func (t *textTempRepositorySQLite3Impl) GetTextsByTXID(ctx context.Context, txID string, userID string, device string) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -348,13 +348,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	texts := []*Text{}
+	texts := []Text{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			text := &Text{}
+			text := Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 

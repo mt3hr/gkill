@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 		m:        m,
 	}, nil
 }
-func (n *nlogTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (n *nlogTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	impl := nlogRepositorySQLite3Impl(*n)
@@ -110,7 +110,7 @@ func (n *nlogTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, 
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (n *nlogTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (n *nlogTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	impl := nlogRepositorySQLite3Impl(*n)
@@ -139,7 +139,7 @@ func (n *nlogTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (n *nlogTempRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
+func (n *nlogTempRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]Nlog, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	impl := nlogRepositorySQLite3Impl(*n)
@@ -153,14 +153,14 @@ func (n *nlogTempRepositorySQLite3Impl) GetNlog(ctx context.Context, id string, 
 	return impl.GetNlog(ctx, id, updateTime)
 }
 
-func (n *nlogTempRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
+func (n *nlogTempRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]Nlog, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	impl := nlogRepositorySQLite3Impl(*n)
 	return impl.GetNlogHistories(ctx, id)
 }
 
-func (n *nlogTempRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog, txID string, userID string, device string) error {
+func (n *nlogTempRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog Nlog, txID string, userID string, device string) error {
 	n.m.Lock()
 	defer n.m.Unlock()
 	sql := `
@@ -243,7 +243,7 @@ INSERT INTO NLOG (
 	return nil
 }
 
-func (n *nlogTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (n *nlogTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	var err error
@@ -310,13 +310,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -364,7 +364,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (n *nlogTempRepositorySQLite3Impl) GetNlogsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Nlog, error) {
+func (n *nlogTempRepositorySQLite3Impl) GetNlogsByTXID(ctx context.Context, txID string, userID string, device string) ([]Nlog, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	repName, err := n.GetRepName(ctx)
@@ -431,13 +431,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	nlogs := []*Nlog{}
+	nlogs := []Nlog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			nlog := &Nlog{}
+			nlog := Nlog{}
 			nlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			amount := 0

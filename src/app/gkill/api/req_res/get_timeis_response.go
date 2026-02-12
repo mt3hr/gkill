@@ -10,5 +10,5 @@ type GetTimeisResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	TimeisHistories []*reps.TimeIs `json:"timeis_histories"`
+	TimeisHistories []reps.TimeIs `json:"timeis_histories"`
 }

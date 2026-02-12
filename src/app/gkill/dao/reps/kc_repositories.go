@@ -14,12 +14,12 @@ import (
 
 type KCRepositories []KCRepository
 
-func (k KCRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (k KCRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(k))
+	ch := make(chan map[string][]Kyou, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -69,7 +69,7 @@ loop:
 						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
@@ -144,12 +144,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (k KCRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (k KCRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(k))
+	ch := make(chan []Kyou, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -206,11 +206,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -333,12 +331,12 @@ errloop:
 	return nil
 }
 
-func (k KCRepositories) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
-	matchKCs := map[string]*KC{}
+func (k KCRepositories) FindKC(ctx context.Context, query *find.FindQuery) ([]KC, error) {
+	matchKCs := map[string]KC{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*KC, len(k))
+	ch := make(chan []KC, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -399,11 +397,9 @@ loop:
 		}
 	}
 
-	matchKCsList := []*KC{}
+	matchKCsList := []KC{}
 	for _, kyou := range matchKCs {
-		if kyou == nil {
-			continue
-		}
+
 		matchKCsList = append(matchKCsList, kyou)
 	}
 	return matchKCsList, nil
@@ -472,12 +468,12 @@ loop:
 	return matchKC, nil
 }
 
-func (k KCRepositories) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
-	kyouHistories := map[string]*KC{}
+func (k KCRepositories) GetKCHistories(ctx context.Context, id string) ([]KC, error) {
+	kyouHistories := map[string]KC{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*KC, len(k))
+	ch := make(chan []KC, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -534,11 +530,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*KC{}
+	kyouHistoriesList := []KC{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -549,12 +543,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (k KCRepositories) GetKCHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*KC, error) {
-	kyouHistories := map[string]*KC{}
+func (k KCRepositories) GetKCHistoriesByRepName(ctx context.Context, id string, repName *string) ([]KC, error) {
+	kyouHistories := map[string]KC{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*KC, len(k))
+	ch := make(chan []KC, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -623,11 +617,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*KC{}
+	kyouHistoriesList := []KC{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -638,7 +630,7 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (k KCRepositories) AddKCInfo(ctx context.Context, kc *KC) error {
+func (k KCRepositories) AddKCInfo(ctx context.Context, kc KC) error {
 	err := fmt.Errorf("not implements KCReps.AddKCInfo")
 	return err
 }

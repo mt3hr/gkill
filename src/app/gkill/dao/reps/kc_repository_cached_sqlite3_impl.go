@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 
-func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -180,13 +180,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -213,7 +213,7 @@ WHERE
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -240,16 +240,16 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (k *kcRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (k *kcRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	sql := `
@@ -325,13 +325,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -524,7 +524,7 @@ func (k *kcRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (k *kcRepositoryCachedSQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
+func (k *kcRepositoryCachedSQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]KC, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -609,13 +609,13 @@ WHERE
 		}
 	}()
 
-	kcs := []*KC{}
+	kcs := []KC{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kc := &KC{}
+			kc := KC{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			numValueStr := ""
 
@@ -670,16 +670,16 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKC(ctx context.Context, id string, up
 	if updateTime != nil {
 		for _, kyou := range kcHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kcHistories[0], nil
+	return &kcHistories[0], nil
 }
 
-func (k *kcRepositoryCachedSQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
+func (k *kcRepositoryCachedSQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]KC, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	sql := `
@@ -761,13 +761,13 @@ WHERE
 		}
 	}()
 
-	kcs := []*KC{}
+	kcs := []KC{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kc := &KC{}
+			kc := KC{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			numValueStr := ""
 
@@ -804,7 +804,7 @@ WHERE
 	return kcs, nil
 }
 
-func (k *kcRepositoryCachedSQLite3Impl) AddKCInfo(ctx context.Context, kc *KC) error {
+func (k *kcRepositoryCachedSQLite3Impl) AddKCInfo(ctx context.Context, kc KC) error {
 	k.m.Lock()
 	defer k.m.Unlock()
 	sql := `

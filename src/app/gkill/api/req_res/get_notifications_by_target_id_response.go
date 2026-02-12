@@ -10,5 +10,5 @@ type GetNotificationsByTargetIDResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	Notifications []*reps.Notification `json:"notifications"`
+	Notifications []reps.Notification `json:"notifications"`
 }

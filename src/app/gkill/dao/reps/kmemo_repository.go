@@ -8,11 +8,11 @@ import (
 )
 
 type KmemoRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,13 +22,13 @@ type KmemoRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error)
+	FindKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error)
 
 	GetKmemo(ctx context.Context, id string, updateTime *time.Time) (*Kmemo, error)
 
-	GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error)
+	GetKmemoHistories(ctx context.Context, id string) ([]Kmemo, error)
 
-	AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error
+	AddKmemoInfo(ctx context.Context, kmemo Kmemo) error
 
 	UnWrapTyped() ([]KmemoRepository, error)
 

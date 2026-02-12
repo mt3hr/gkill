@@ -8,11 +8,11 @@ import (
 )
 
 type KCRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,13 +22,13 @@ type KCRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error)
+	FindKC(ctx context.Context, query *find.FindQuery) ([]KC, error)
 
 	GetKC(ctx context.Context, id string, updateTime *time.Time) (*KC, error)
 
-	GetKCHistories(ctx context.Context, id string) ([]*KC, error)
+	GetKCHistories(ctx context.Context, id string) ([]KC, error)
 
-	AddKCInfo(ctx context.Context, kc *KC) error
+	AddKCInfo(ctx context.Context, kc KC) error
 
 	UnWrapTyped() ([]KCRepository, error)
 

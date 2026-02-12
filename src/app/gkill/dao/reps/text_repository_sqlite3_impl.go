@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		fullConnect: fullConnect,
 	}, nil
 }
-func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
+func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
 	var err error
 	var db *sql.DB
 	if t.fullConnect {
@@ -200,7 +200,7 @@ func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.F
 
 	if query.UseWords != nil && *query.UseWords {
 		if query.Words != nil && len(*query.Words) == 0 {
-			return []*Text{}, nil
+			return []Text{}, nil
 		}
 	}
 
@@ -296,13 +296,13 @@ WHERE
 		}
 	}()
 
-	texts := []*Text{}
+	texts := []Text{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			text := &Text{}
+			text := Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 
@@ -376,16 +376,16 @@ func (t *textRepositorySQLite3Impl) GetText(ctx context.Context, id string, upda
 	if updateTime != nil {
 		for _, kyou := range textHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return textHistories[0], nil
+	return &textHistories[0], nil
 }
 
-func (t *textRepositorySQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
+func (t *textRepositorySQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -489,13 +489,13 @@ WHERE
 		}
 	}()
 
-	texts := []*Text{}
+	texts := []Text{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			text := &Text{}
+			text := Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 
@@ -564,7 +564,7 @@ func (t *textRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, err
 	return withoutExt, nil
 }
 
-func (t *textRepositorySQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
+func (t *textRepositorySQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -667,13 +667,13 @@ WHERE
 		}
 	}()
 
-	texts := []*Text{}
+	texts := []Text{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			text := &Text{}
+			text := Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 
@@ -718,7 +718,7 @@ WHERE
 	}
 	return texts, nil
 }
-func (t *textRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text *Text) error {
+func (t *textRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text Text) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 	var err error

@@ -95,7 +95,7 @@ func NewURLogRepositorySQLite3ImplLocalCached(ctx context.Context, filename stri
 	return cachedRep, nil
 }
 
-func (u *urlogRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (u *urlogRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	return u.localCachedRep.FindKyous(ctx, query)
@@ -107,7 +107,7 @@ func (u *urlogRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id 
 	return u.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (u *urlogRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (u *urlogRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	return u.localCachedRep.GetKyouHistories(ctx, id)
@@ -207,7 +207,7 @@ func (u *urlogRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error
 	return nil
 }
 
-func (u *urlogRepositorySQLite3ImplLocalCached) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
+func (u *urlogRepositorySQLite3ImplLocalCached) FindURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	return u.localCachedRep.FindURLog(ctx, query)
@@ -219,13 +219,13 @@ func (u *urlogRepositorySQLite3ImplLocalCached) GetURLog(ctx context.Context, id
 	return u.localCachedRep.GetURLog(ctx, id, updateTime)
 }
 
-func (u *urlogRepositorySQLite3ImplLocalCached) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
+func (u *urlogRepositorySQLite3ImplLocalCached) GetURLogHistories(ctx context.Context, id string) ([]URLog, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	return u.localCachedRep.GetURLogHistories(ctx, id)
 }
 
-func (u *urlogRepositorySQLite3ImplLocalCached) AddURLogInfo(ctx context.Context, urlog *URLog) error {
+func (u *urlogRepositorySQLite3ImplLocalCached) AddURLogInfo(ctx context.Context, urlog URLog) error {
 	err := func() error {
 		u.m.Lock()
 		defer u.m.Unlock()

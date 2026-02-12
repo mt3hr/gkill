@@ -26,7 +26,7 @@ const (
 type FindFilter struct {
 }
 
-func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string, gkillDAOManager *dao.GkillDAOManager, findQuery *find.FindQuery) ([]*reps.Kyou, []*message.GkillError, error) {
+func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string, gkillDAOManager *dao.GkillDAOManager, findQuery *find.FindQuery) ([]reps.Kyou, []*message.GkillError, error) {
 	findKyouContext := &FindKyouContext{}
 
 	// QueryをContextに入れる
@@ -35,24 +35,24 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.GkillDAOManager = gkillDAOManager
 	findKyouContext.ParsedFindQuery = findQuery
 	findKyouContext.MatchReps = map[string]reps.Repository{}
-	findKyouContext.AllTags = map[string]*reps.Tag{}
-	findKyouContext.AllHideTagsWhenUnchecked = map[string]*reps.Tag{}
-	findKyouContext.MatchHideTagsWhenUncheckedKyou = map[string]*reps.Tag{}
-	findKyouContext.MatchHideTagsWhenUncheckedTimeIs = map[string]*reps.Tag{}
+	findKyouContext.AllTags = map[string]reps.Tag{}
+	findKyouContext.AllHideTagsWhenUnchecked = map[string]reps.Tag{}
+	findKyouContext.MatchHideTagsWhenUncheckedKyou = map[string]reps.Tag{}
+	findKyouContext.MatchHideTagsWhenUncheckedTimeIs = map[string]reps.Tag{}
 	findKyouContext.RelatedTagIDs = map[string]interface{}{}
-	findKyouContext.MatchTags = map[string]*reps.Tag{}
-	findKyouContext.MatchTexts = map[string]*reps.Text{}
-	findKyouContext.MatchTimeIssAtFindTimeIs = map[string]*reps.TimeIs{}
-	findKyouContext.MatchTimeIssAtFilterTags = map[string]*reps.TimeIs{}
-	findKyouContext.MatchTimeIsTags = map[string]*reps.Tag{}
-	findKyouContext.MatchTimeIsTexts = map[string]*reps.Text{}
-	findKyouContext.MatchKyousCurrent = map[string][]*reps.Kyou{}
-	findKyouContext.MatchKyousAtFindKyou = map[string][]*reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterMi = map[string][]*reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterTags = map[string][]*reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterTimeIs = map[string][]*reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterLocation = map[string][]*reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterImage = map[string][]*reps.Kyou{}
+	findKyouContext.MatchTags = map[string]reps.Tag{}
+	findKyouContext.MatchTexts = map[string]reps.Text{}
+	findKyouContext.MatchTimeIssAtFindTimeIs = map[string]reps.TimeIs{}
+	findKyouContext.MatchTimeIssAtFilterTags = map[string]reps.TimeIs{}
+	findKyouContext.MatchTimeIsTags = map[string]reps.Tag{}
+	findKyouContext.MatchTimeIsTexts = map[string]reps.Text{}
+	findKyouContext.MatchKyousCurrent = map[string][]reps.Kyou{}
+	findKyouContext.MatchKyousAtFindKyou = map[string][]reps.Kyou{}
+	findKyouContext.MatchKyousAtFilterMi = map[string][]reps.Kyou{}
+	findKyouContext.MatchKyousAtFilterTags = map[string][]reps.Kyou{}
+	findKyouContext.MatchKyousAtFilterTimeIs = map[string][]reps.Kyou{}
+	findKyouContext.MatchKyousAtFilterLocation = map[string][]reps.Kyou{}
+	findKyouContext.MatchKyousAtFilterImage = map[string][]reps.Kyou{}
 	// メモリキャッシュ有効の場合、型につき1つのDBに全部のデータがある。
 	// だから、LatestDataRepositoryAddressを知る必要がない
 	findKyouContext.DisableLatestDataRepositoryCache = gkill_options.IsCacheInMemory
@@ -479,7 +479,7 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 
 	existErr := false
 	wg := &sync.WaitGroup{}
-	tagsCh := make(chan []*reps.Tag, lenOfTagReps)
+	tagsCh := make(chan []reps.Tag, lenOfTagReps)
 	errch := make(chan error, lenOfTagReps)
 	defer close(tagsCh)
 	defer close(errch)
@@ -699,7 +699,7 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		return nil, err
 	}
 	// textでマッチしたものをID検索
-	textMatchKyousMap := map[string][]*reps.Kyou{}
+	textMatchKyousMap := map[string][]reps.Kyou{}
 	if len(targetIDs) != 0 {
 		textMatchKyousMap, err = matchReps.FindKyous(ctx, matchTextFindByIDQuery)
 		if err != nil {
@@ -708,7 +708,7 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	}
 	for id, textMatchKyous := range textMatchKyousMap {
 		if _, exist := kyousMap[id]; !exist {
-			kyousMap[id] = []*reps.Kyou{}
+			kyousMap[id] = []reps.Kyou{}
 		}
 		kyousMap[id] = append(kyousMap[id], textMatchKyous...)
 	}
@@ -716,14 +716,10 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	// 削除隅のものは消す
 	deleteTargetIDs := []string{}
 	for id, kyous := range kyousMap {
-		var latestKyou *reps.Kyou
+		var latestKyou reps.Kyou
 		for _, kyou := range kyous {
-			if latestKyou == nil {
+			if kyou.UpdateTime.After(latestKyou.UpdateTime) {
 				latestKyou = kyou
-			} else {
-				if kyou.UpdateTime.After(latestKyou.UpdateTime) {
-					latestKyou = kyou
-				}
 			}
 		}
 		if latestKyou.IsDeleted {
@@ -739,7 +735,7 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 }
 
 func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	resultKyous := map[string][]*reps.Kyou{}
+	resultKyous := map[string][]reps.Kyou{}
 
 	deleteTargetKyouIDs := []string{}
 	for id, kyous := range findCtx.MatchKyousCurrent {
@@ -748,7 +744,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 			continue
 		}
 
-		trimedKyousMap := map[int64]*reps.Kyou{}
+		trimedKyousMap := map[int64]reps.Kyou{}
 		for _, kyou := range kyous {
 			if findCtx.ParsedFindQuery.UseCalendar != nil && *findCtx.ParsedFindQuery.UseCalendar {
 				if (findCtx.ParsedFindQuery.CalendarStartDate != nil && kyou.RelatedTime.Before(*findCtx.ParsedFindQuery.CalendarStartDate)) ||
@@ -759,7 +755,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 			trimedKyousMap[kyou.RelatedTime.Unix()] = kyou
 		}
 
-		sortedKyous := make([]*reps.Kyou, 0, len(trimedKyousMap))
+		sortedKyous := make([]reps.Kyou, 0, len(trimedKyousMap))
 		for _, kyou := range trimedKyousMap {
 			sortedKyous = append(sortedKyous, kyou)
 		}
@@ -776,7 +772,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 
 	if (findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing) || (findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi) {
 		for id := range resultKyous {
-			resultKyous[id] = []*reps.Kyou{resultKyous[id][0]}
+			resultKyous[id] = []reps.Kyou{resultKyous[id][0]}
 		}
 	}
 
@@ -791,7 +787,7 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 
 	// Miを取得位する
 	// 作成日時以外の条件でmiを取得する。その後、作成日時で取得して追加する。
-	allMis := map[string]*reps.Mi{}
+	allMis := map[string]reps.Mi{}
 	falseValue := false
 	withoutCreatedMiFindQuery := *findCtx.ParsedFindQuery
 	withoutCreatedMiFindQuery.IncludeCreateMi = &falseValue
@@ -822,7 +818,7 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 	}
 
 	// チェック状態から対象Miを抽出する
-	targetMis := []*reps.Mi{}
+	targetMis := []reps.Mi{}
 	for _, mi := range allMis {
 		if findCtx.ParsedFindQuery.MiCheckState != nil {
 			switch string(*findCtx.ParsedFindQuery.MiCheckState) {
@@ -858,7 +854,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
-		matchOrTagKyousMap := map[string][]*reps.Kyou{}
+		matchOrTagKyousMap := map[string][]reps.Kyou{}
 		for _, tag := range findCtx.MatchTags {
 			kyou, exist := findCtx.MatchKyousCurrent[tag.TargetID]
 			if !exist {
@@ -868,7 +864,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		}
 
 		// タグ無しKyouリスト
-		noTagKyous := map[string][]*reps.Kyou{}
+		noTagKyous := map[string][]reps.Kyou{}
 		for id, kyou := range findCtx.MatchKyousCurrent {
 			_, relatedTagKyou := findCtx.RelatedTagIDs[id]
 			if !relatedTagKyou {
@@ -908,7 +904,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTags
 	} else if findCtx.ParsedFindQuery.Tags != nil && findCtx.ParsedFindQuery.TagsAnd != nil && (*findCtx.ParsedFindQuery.TagsAnd) {
 		// ANDの場合のフィルタリング処理
-		tagNameMap := map[string]map[string][]*reps.Kyou{} // map[タグ名][kyou.ID（tagTargetID）] = reps.kyou
+		tagNameMap := map[string]map[string][]reps.Kyou{} // map[タグ名][kyou.ID（tagTargetID）] = reps.kyou
 
 		for _, tag := range findCtx.MatchTags {
 			isTagInQuery := false
@@ -928,7 +924,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 
 			if _, exist := tagNameMap[tag.Tag]; !exist {
-				tagNameMap[tag.Tag] = map[string][]*reps.Kyou{}
+				tagNameMap[tag.Tag] = map[string][]reps.Kyou{}
 			}
 
 			tagNameMap[tag.Tag][tag.TargetID] = kyous
@@ -953,7 +949,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 				_, relatedTagKyou := findCtx.RelatedTagIDs[id]
 				if !relatedTagKyou {
 					if _, exist := tagNameMap[NoTags][id]; !exist {
-						tagNameMap[NoTags] = map[string][]*reps.Kyou{}
+						tagNameMap[NoTags] = map[string][]reps.Kyou{}
 					}
 					tagNameMap[NoTags][id] = kyous
 				}
@@ -961,32 +957,32 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		}
 
 		// tagNameMapの全部のタグ名に存在するKyouだけを抽出
-		hasAllMatchTagsKyousMap := map[string]map[string][]*reps.Kyou{}
+		hasAllMatchTagsKyousMap := map[string]map[string][]reps.Kyou{}
 		// 初回は全部いれる
 		for tagName, kyouIDMap := range tagNameMap {
 			for kyouID, kyous := range kyouIDMap {
 				if _, exist := hasAllMatchTagsKyousMap[tagName]; !exist {
-					hasAllMatchTagsKyousMap[tagName] = map[string][]*reps.Kyou{}
+					hasAllMatchTagsKyousMap[tagName] = map[string][]reps.Kyou{}
 				}
 				hasAllMatchTagsKyousMap[tagName][kyouID] = kyous
 			}
 		}
 		for tagName := range tagNameMap {
-			matchThisLoopKyousMap := map[string]map[string][]*reps.Kyou{}
+			matchThisLoopKyousMap := map[string]map[string][]reps.Kyou{}
 			// 初回ループ以外は、
 			// 以前のタグにマッチしたもの（hasAllMatchTagsKyous）にあり、かつ
 			// 今回のタグにマッチしたもの　をいれる。
 			if _, exist := matchThisLoopKyousMap[tagName]; !exist {
-				matchThisLoopKyousMap[tagName] = map[string][]*reps.Kyou{}
+				matchThisLoopKyousMap[tagName] = map[string][]reps.Kyou{}
 			}
 
-			beforeMatchKyous := map[string][]*reps.Kyou{}
+			beforeMatchKyous := map[string][]reps.Kyou{}
 			for _, kyous := range hasAllMatchTagsKyousMap {
 				for kyouID, kyou := range kyous {
 					beforeMatchKyous[kyouID] = kyou
 				}
 			}
-			currentMatchKyous := map[string][]*reps.Kyou{}
+			currentMatchKyous := map[string][]reps.Kyou{}
 			for kyouID, kyous := range tagNameMap[tagName] {
 				currentMatchKyous[kyouID] = kyous
 			}
@@ -1002,7 +998,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			hasAllMatchTagsKyousMap = matchThisLoopKyousMap
 		}
 
-		findCtx.MatchKyousAtFilterTags = map[string][]*reps.Kyou{}
+		findCtx.MatchKyousAtFilterTags = map[string][]reps.Kyou{}
 		for _, matchTagsKyousMap := range hasAllMatchTagsKyousMap {
 			for kyouID, kyous := range matchTagsKyousMap {
 				findCtx.MatchKyousAtFilterTags[kyouID] = kyous
@@ -1034,7 +1030,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
-		matchOrTagTimeIss := map[string]*reps.TimeIs{}
+		matchOrTagTimeIss := map[string]reps.TimeIs{}
 		for _, tag := range findCtx.MatchTimeIsTags {
 			matchTimeis, exist := findCtx.MatchTimeIssAtFindTimeIs[tag.TargetID]
 			if !exist {
@@ -1044,7 +1040,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		}
 
 		// タグ無しKyouリスト
-		noTagTimeIss := map[string]*reps.TimeIs{}
+		noTagTimeIss := map[string]reps.TimeIs{}
 		for _, timeis := range findCtx.MatchTimeIssAtFindTimeIs {
 			_, relatedTagTimeIs := findCtx.RelatedTagIDs[timeis.ID]
 			if !relatedTagTimeIs {
@@ -1083,7 +1079,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 	} else if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && (*findCtx.ParsedFindQuery.TimeIsTagsAnd) {
 		// ANDの場合のフィルタリング処理
 
-		tagNameMap := map[string]map[string]*reps.TimeIs{} // map[タグ名][kyou.ID（tagTargetID）] = reps.TimeIs
+		tagNameMap := map[string]map[string]reps.TimeIs{} // map[タグ名][kyou.ID（tagTargetID）] = reps.TimeIs
 
 		for _, tag := range findCtx.MatchTimeIsTags {
 			isTagInQuery := false
@@ -1101,7 +1097,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 				continue
 			}
 			if _, exist := tagNameMap[tag.Tag]; !exist {
-				tagNameMap[tag.Tag] = map[string]*reps.TimeIs{}
+				tagNameMap[tag.Tag] = map[string]reps.TimeIs{}
 			}
 
 			tagNameMap[tag.Tag][timeis.ID] = timeis
@@ -1130,7 +1126,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		}
 
 		// tagNameMapの全部のタグ名に存在するTimeIsだけを抽出
-		hasAllMatchTagsTimeIssMap := map[string]*reps.TimeIs{}
+		hasAllMatchTagsTimeIssMap := map[string]reps.TimeIs{}
 		index := 0
 		for _, timeisIDMap := range tagNameMap {
 			switch index {
@@ -1140,7 +1136,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 					hasAllMatchTagsTimeIssMap[timeis.ID] = timeis
 				}
 			default:
-				matchThisLoopTimeIssMap := map[string]*reps.TimeIs{}
+				matchThisLoopTimeIssMap := map[string]reps.TimeIs{}
 				for _, timeis := range timeisIDMap {
 					// 初回ループ以外は、
 					// 以前のタグにマッチしたもの（hasAllMatchTagsKyous）にあり、かつ
@@ -1214,7 +1210,7 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 
 	existErr := false
 	wg := &sync.WaitGroup{}
-	timeIssCh := make(chan []*reps.TimeIs, lenOfReps)
+	timeIssCh := make(chan []reps.TimeIs, lenOfReps)
 	errch := make(chan error, lenOfReps)
 	defer close(timeIssCh)
 	defer close(errch)
@@ -1298,7 +1294,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		return nil, nil
 	}
 
-	matchKyous := map[string][]*reps.Kyou{}
+	matchKyous := map[string][]reps.Kyou{}
 	var err error
 
 	// 開始日を取得
@@ -1336,12 +1332,12 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		isAllDays = true
 	}
 	// GPSLogを取得する
-	matchGPSLogs := []*reps.GPSLog{}
+	matchGPSLogs := []reps.GPSLog{}
 	lenOfReps := len(findCtx.Repositories.GPSLogReps)
 
 	existErr := false
 	wg := &sync.WaitGroup{}
-	gpsLogsCh := make(chan []*reps.GPSLog, lenOfReps)
+	gpsLogsCh := make(chan []reps.GPSLog, lenOfReps)
 	errch := make(chan error, lenOfReps)
 	defer close(gpsLogsCh)
 	defer close(errch)
@@ -1352,7 +1348,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		go func(rep reps.GPSLogRepository) {
 			defer wg.Done()
 			// repで検索
-			var gpsLogs []*reps.GPSLog
+			var gpsLogs []reps.GPSLog
 			if isAllDays {
 				gpsLogs, err = rep.GetAllGPSLogs(ctx)
 			} else {
@@ -1388,12 +1384,12 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	sort.Slice(matchGPSLogs, func(i, j int) bool { return matchGPSLogs[i].RelatedTime.Before(matchGPSLogs[j].RelatedTime) })
 
 	// 該当する時間を出す
-	matchGPSLogSetList := [][]*reps.GPSLog{}
+	matchGPSLogSetList := [][]reps.GPSLog{}
 
 	preTrue := false // 一つ前の時間でtrueだった
 	for i := range matchGPSLogs {
 		if preTrue {
-			matchGPSLogSetList = append(matchGPSLogSetList, []*reps.GPSLog{
+			matchGPSLogSetList = append(matchGPSLogSetList, []reps.GPSLog{
 				matchGPSLogs[i-1],
 				matchGPSLogs[i],
 			})
@@ -1583,7 +1579,7 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 
 	existErr := false
 	wg := &sync.WaitGroup{}
-	textsCh := make(chan []*reps.Text, lenOfTextReps)
+	textsCh := make(chan []reps.Text, lenOfTextReps)
 	errch := make(chan error, lenOfTextReps)
 	defer close(textsCh)
 	defer close(errch)
@@ -1647,7 +1643,7 @@ func (f *FindFilter) filterImageKyous(ctx context.Context, findCtx *FindKyouCont
 		return nil, nil
 	}
 
-	filterdImageKyous := map[string][]*reps.Kyou{}
+	filterdImageKyous := map[string][]reps.Kyou{}
 	for id, kyous := range findCtx.MatchKyousCurrent {
 		if kyous[0].IsImage || kyous[0].IsVideo {
 			filterdImageKyous[id] = kyous
@@ -1687,7 +1683,7 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 
 	existErr := false
 	wg := &sync.WaitGroup{}
-	textsCh := make(chan []*reps.Text, lenOfTextReps)
+	textsCh := make(chan []reps.Text, lenOfTextReps)
 	errch := make(chan error, lenOfTextReps)
 	defer close(textsCh)
 	defer close(errch)
@@ -1746,12 +1742,12 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	return nil, nil
 }
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	latestKyousMap := map[string][]*reps.Kyou{}
+	latestKyousMap := map[string][]reps.Kyou{}
 
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
 		if !findCtx.DisableLatestDataRepositoryCache {
 			sort.Slice(currentKyou, func(i, j int) bool { return currentKyou[i].UpdateTime.After(currentKyou[j].UpdateTime) })
-			latestKyousMap[id] = []*reps.Kyou{currentKyou[0]}
+			latestKyousMap[id] = []reps.Kyou{currentKyou[0]}
 			continue
 		}
 
@@ -1779,7 +1775,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		if err != nil {
 			return nil, fmt.Errorf("error at get latest kyou: %w", err)
 		}
-		latestKyousMap[id] = []*reps.Kyou{latestKyou}
+		latestKyousMap[id] = []reps.Kyou{*latestKyou}
 	}
 
 	// miの場合は最新以外消す
@@ -1789,7 +1785,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			sort.Slice(kyous, func(i, j int) bool {
 				return kyous[i].UpdateTime.After(kyous[j].UpdateTime)
 			})
-			latestKyousMap[id] = []*reps.Kyou{kyous[0]}
+			latestKyousMap[id] = []reps.Kyou{kyous[0]}
 		}
 	}
 

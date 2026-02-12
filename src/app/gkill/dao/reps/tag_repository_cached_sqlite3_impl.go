@@ -152,7 +152,7 @@ ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 	}
 	return cachedTagrepository, nil
 }
-func (t *tagRepositoryCachedSQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
+func (t *tagRepositoryCachedSQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -240,13 +240,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
@@ -320,16 +320,16 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTag(ctx context.Context, id string, 
 	if updateTime != nil {
 		for _, kyou := range tagHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return tagHistories[0], nil
+	return &tagHistories[0], nil
 }
 
-func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
+func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -411,13 +411,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
@@ -451,7 +451,7 @@ WHERE
 	return tags, nil
 }
 
-func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
+func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -475,13 +475,13 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			dataType := ""
@@ -650,7 +650,7 @@ func (t *tagRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string
 	return t.tagRep.GetRepName(ctx)
 }
 
-func (t *tagRepositoryCachedSQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
+func (t *tagRepositoryCachedSQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -731,13 +731,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
@@ -771,7 +771,7 @@ WHERE
 	return tags, nil
 }
 
-func (t *tagRepositoryCachedSQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag) error {
+func (t *tagRepositoryCachedSQLite3Impl) AddTagInfo(ctx context.Context, tag Tag) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 	sql := `
@@ -910,7 +910,7 @@ FROM ` + t.dbName + `
 	return tagNames, nil
 }
 
-func (t *tagRepositoryCachedSQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
+func (t *tagRepositoryCachedSQLite3Impl) GetAllTags(ctx context.Context) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -986,13 +986,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 

@@ -10,5 +10,5 @@ type GetTextsByTargetIDResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	Texts []*reps.Text `json:"texts"`
+	Texts []reps.Text `json:"texts"`
 }

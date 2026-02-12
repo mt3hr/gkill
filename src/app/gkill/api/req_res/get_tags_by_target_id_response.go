@@ -10,5 +10,5 @@ type GetTagsByTargetIDResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	Tags []*reps.Tag `json:"tags"`
+	Tags []reps.Tag `json:"tags"`
 }

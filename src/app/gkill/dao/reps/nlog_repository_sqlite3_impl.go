@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 		fullConnect: fullConnect,
 	}, nil
 }
-func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -244,13 +244,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -289,7 +289,7 @@ WHERE
 				return nil, err
 			}
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -316,16 +316,16 @@ func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, upda
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (n *nlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	var err error
@@ -426,13 +426,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -508,7 +508,7 @@ func (n *nlogRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
+func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]Nlog, error) {
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -619,13 +619,13 @@ WHERE
 		}
 	}()
 
-	nlogs := []*Nlog{}
+	nlogs := []Nlog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			nlog := &Nlog{}
+			nlog := Nlog{}
 			nlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			amount := 0
@@ -695,16 +695,16 @@ func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string, upda
 	if updateTime != nil {
 		for _, kyou := range nlogHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return nlogHistories[0], nil
+	return &nlogHistories[0], nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
+func (n *nlogRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]Nlog, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	var err error
@@ -807,13 +807,13 @@ WHERE
 		}
 	}()
 
-	nlogs := []*Nlog{}
+	nlogs := []Nlog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			nlog := &Nlog{}
+			nlog := Nlog{}
 			nlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			amount := 0
@@ -863,7 +863,7 @@ WHERE
 	return nlogs, nil
 }
 
-func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
+func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog Nlog) error {
 	n.m.Lock()
 	defer n.m.Unlock()
 	var err error

@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	return rep, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	var db *sql.DB
 	if i.fullConnect {
@@ -322,13 +322,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -488,7 +488,7 @@ WHERE
 			}
 
 			if match {
-				kyou := &Kyou{}
+				kyou := Kyou{}
 				kyou.IsDeleted = idf.IsDeleted
 				kyou.ID = idf.ID
 				kyou.RepName = idf.RepName
@@ -506,7 +506,7 @@ WHERE
 				kyou.IsVideo = idf.IsVideo
 
 				if _, exist := kyous[kyou.ID]; !exist {
-					kyous[kyou.ID] = []*Kyou{}
+					kyous[kyou.ID] = []Kyou{}
 				}
 				kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 			}
@@ -534,16 +534,16 @@ func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, u
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	var err error
@@ -646,13 +646,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -708,7 +708,7 @@ WHERE
 				return nil, err
 			}
 
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.IsDeleted = idf.IsDeleted
 			kyou.ID = idf.ID
 			kyou.RepName = idf.RepName
@@ -824,13 +824,13 @@ WHERE
 		}
 	}()
 
-	idfKyous := []*IDFKyou{}
+	idfKyous := []IDFKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return "", ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.RepName = repName
 
 			err = rows.Scan(&idf.IsDeleted,
@@ -894,7 +894,7 @@ func (i *idfKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error) {
 	var err error
 	var db *sql.DB
 	if i.fullConnect {
@@ -1005,13 +1005,13 @@ WHERE
 		}
 	}()
 
-	idfKyous := []*IDFKyou{}
+	idfKyous := []IDFKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -1172,16 +1172,16 @@ func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string
 	if updateTime != nil {
 		for _, kyou := range idfHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return idfHistories[0], nil
+	return &idfHistories[0], nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	var err error
@@ -1283,13 +1283,13 @@ WHERE
 		}
 	}()
 
-	idfKyous := []*IDFKyou{}
+	idfKyous := []IDFKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -1368,7 +1368,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 	contentDirAbs = filepath.Clean(contentDirAbs)
 	contentDirAbs = filepath.ToSlash(contentDirAbs)
 	// 対象内のファイルfullPath
-	existFileInfos := map[string]*fileinfo{}
+	existFileInfos := map[string]fileinfo{}
 	err = filepath.WalkDir(contentDirAbs, fs.WalkDirFunc(func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -1388,7 +1388,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 			return err
 		}
 		info.ModTime()
-		existFileInfos[path] = &fileinfo{
+		existFileInfos[path] = fileinfo{
 			Filename: path,
 			Lastmod:  info.ModTime(),
 		}
@@ -1413,7 +1413,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 	}
 
 	// 対象をidfする
-	idfKyous := []*IDFKyou{}
+	idfKyous := []IDFKyou{}
 	now := time.Now()
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -1443,7 +1443,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 				return err
 			}
 
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.IsDeleted = false
 			idf.ID = id.String()
 			idf.RepName = repName
@@ -1460,7 +1460,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 			idf.TargetFile = trimedFileName
 			idfKyous = append(idfKyous, idf)
 		} else {
-			idf := &IDFKyou{}
+			idf := IDFKyou{}
 			idf.IsDeleted = false
 			idf.ID = sqlite3impl.GenerateNewID()
 			idf.RepName = repName
@@ -1489,7 +1489,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 	return nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
+func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou) error {
 	i.m.Lock()
 	defer i.m.Unlock()
 	var err error

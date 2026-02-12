@@ -10,5 +10,5 @@ type GetKmemoResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	KmemoHistories []*reps.Kmemo `json:"kmemo_histories"`
+	KmemoHistories []reps.Kmemo `json:"kmemo_histories"`
 }

@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS "KC" (
 	}, nil
 }
 
-func (k *kcTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kcTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
@@ -110,7 +110,7 @@ func (k *kcTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (k *kcTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (k *kcTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
@@ -139,7 +139,7 @@ func (k *kcTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (k *kcTempRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
+func (k *kcTempRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]KC, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
@@ -153,14 +153,14 @@ func (k *kcTempRepositorySQLite3Impl) GetKC(ctx context.Context, id string, upda
 	return impl.GetKC(ctx, id, updateTime)
 }
 
-func (k *kcTempRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
+func (k *kcTempRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]KC, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.GetKCHistories(ctx, id)
 }
 
-func (k *kcTempRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc *KC, txID string, userID string, device string) error {
+func (k *kcTempRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc KC, txID string, userID string, device string) error {
 	k.m.Lock()
 	defer k.m.Unlock()
 	sql := `
@@ -240,7 +240,7 @@ INSERT INTO KC (
 	return nil
 }
 
-func (k *kcTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (k *kcTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	var err error
@@ -307,13 +307,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -361,7 +361,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (k *kcTempRepositorySQLite3Impl) GetKCsByTXID(ctx context.Context, txID string, userID string, device string) ([]*KC, error) {
+func (k *kcTempRepositorySQLite3Impl) GetKCsByTXID(ctx context.Context, txID string, userID string, device string) ([]KC, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	repName, err := k.GetRepName(ctx)
@@ -428,13 +428,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kcs := []*KC{}
+	kcs := []KC{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kc := &KC{}
+			kc := KC{}
 			kc.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			numValueStr := ""

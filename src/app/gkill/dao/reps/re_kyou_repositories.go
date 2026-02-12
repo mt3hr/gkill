@@ -17,11 +17,11 @@ type ReKyouRepositories struct {
 	GkillRepositories  *GkillRepositories
 }
 
-func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 
 	// 未削除ReKyouを抽出
-	notDeletedAllReKyous := []*ReKyou{}
+	notDeletedAllReKyous := []ReKyou{}
 	allReKyous, err := r.GetReKyousAllLatest(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyous all latest :%w", err)
@@ -47,7 +47,7 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 
 	for _, rekyou := range notDeletedAllReKyous {
 		existInRep := false
-		if rekyou == nil || rekyou.IsDeleted {
+		if rekyou.IsDeleted {
 			continue
 		}
 		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
@@ -56,7 +56,7 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 
 		// 存在すれば検索ヒットとする
 		if existInRep {
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.IsDeleted = rekyou.IsDeleted
 			kyou.ID = rekyou.ID
 			kyou.RepName = rekyou.RepName
@@ -71,7 +71,7 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 			kyou.UpdateUser = rekyou.UpdateUser
 			kyou.UpdateDevice = rekyou.UpdateDevice
 			if _, exist := matchKyous[kyou.ID]; !exist {
-				matchKyous[kyou.ID] = []*Kyou{}
+				matchKyous[kyou.ID] = []Kyou{}
 			}
 
 			key := kyou.ID
@@ -147,12 +147,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(r.ReKyouRepositories))
+	ch := make(chan []Kyou, len(r.ReKyouRepositories))
 	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
@@ -209,11 +209,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -336,11 +334,11 @@ errloop:
 	return nil
 }
 
-func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
-	matchReKyous := []*ReKyou{}
+func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
+	matchReKyous := []ReKyou{}
 
 	// 未削除ReKyouを抽出
-	notDeletedAllReKyous := []*ReKyou{}
+	notDeletedAllReKyous := []ReKyou{}
 	allReKyous, err := r.GetReKyousAllLatest(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyous all latest :%w", err)
@@ -366,7 +364,7 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 
 	for _, rekyou := range notDeletedAllReKyous {
 		existInRep := false
-		if rekyou == nil || rekyou.IsDeleted {
+		if rekyou.IsDeleted {
 			continue
 		}
 		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
@@ -444,12 +442,12 @@ loop:
 	return matchReKyou, nil
 }
 
-func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
-	kyouHistories := map[string]*ReKyou{}
+func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) ([]ReKyou, error) {
+	kyouHistories := map[string]ReKyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*ReKyou, len(r.ReKyouRepositories))
+	ch := make(chan []ReKyou, len(r.ReKyouRepositories))
 	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
@@ -506,11 +504,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*ReKyou{}
+	kyouHistoriesList := []ReKyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -521,12 +517,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (r *ReKyouRepositories) GetReKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*ReKyou, error) {
-	kyouHistories := map[string]*ReKyou{}
+func (r *ReKyouRepositories) GetReKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]ReKyou, error) {
+	kyouHistories := map[string]ReKyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*ReKyou, len(r.ReKyouRepositories))
+	ch := make(chan []ReKyou, len(r.ReKyouRepositories))
 	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
@@ -595,11 +591,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*ReKyou{}
+	kyouHistoriesList := []ReKyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -610,17 +604,17 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (r *ReKyouRepositories) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
+func (r *ReKyouRepositories) AddReKyouInfo(ctx context.Context, rekyou ReKyou) error {
 	err := fmt.Errorf("not implements ReKyouReps.AddReKyouInfo")
 	return err
 }
 
-func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
-	matchReKyous := map[string]*ReKyou{}
+func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]ReKyou, error) {
+	matchReKyous := map[string]ReKyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*ReKyou, len(r.ReKyouRepositories))
+	ch := make(chan []ReKyou, len(r.ReKyouRepositories))
 	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
@@ -677,11 +671,9 @@ loop:
 		}
 	}
 
-	matchReKyousList := []*ReKyou{}
+	matchReKyousList := []ReKyou{}
 	for _, kyou := range matchReKyous {
-		if kyou == nil {
-			continue
-		}
+
 		matchReKyousList = append(matchReKyousList, kyou)
 	}
 

@@ -107,7 +107,7 @@ type idfKyouRepositorySQLite3ImplLocalCached struct {
 	idfIgnore       *[]string
 }
 
-func (i *idfKyouRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (i *idfKyouRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.FindKyous(ctx, query)
@@ -119,7 +119,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, i
 	return i.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (i *idfKyouRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (i *idfKyouRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.GetKyouHistories(ctx, id)
@@ -219,7 +219,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) Close(ctx context.Context) err
 	return nil
 }
 
-func (i *idfKyouRepositorySQLite3ImplLocalCached) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
+func (i *idfKyouRepositorySQLite3ImplLocalCached) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.FindIDFKyou(ctx, query)
@@ -231,7 +231,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) GetIDFKyou(ctx context.Context
 	return i.localCachedRep.GetIDFKyou(ctx, id, updateTime)
 }
 
-func (i *idfKyouRepositorySQLite3ImplLocalCached) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
+func (i *idfKyouRepositorySQLite3ImplLocalCached) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.GetIDFKyouHistories(ctx, id)
@@ -254,7 +254,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) IDF(ctx context.Context) error
 	return i.UpdateCache(ctx)
 }
 
-func (i *idfKyouRepositorySQLite3ImplLocalCached) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
+func (i *idfKyouRepositorySQLite3ImplLocalCached) AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou) error {
 	err := func() error {
 		i.m.Lock()
 		defer i.m.Unlock()

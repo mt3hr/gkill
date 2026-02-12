@@ -10,5 +10,5 @@ type GetLantanaResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	LantanaHistories []*reps.Lantana `json:"lantana_histories"`
+	LantanaHistories []reps.Lantana `json:"lantana_histories"`
 }

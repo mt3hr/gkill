@@ -14,12 +14,12 @@ import (
 
 type TimeIsRepositories []TimeIsRepository
 
-func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(t))
+	ch := make(chan map[string][]Kyou, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -71,7 +71,7 @@ loop:
 					}
 
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					existStartTimeIs := false
 					existEndTimeIs := false
@@ -106,7 +106,7 @@ loop:
 		return nil, err
 	}
 
-	resultKyous := map[string][]*Kyou{}
+	resultKyous := map[string][]Kyou{}
 	for _, matchTimeIs := range matchTimeIssList {
 		key := matchTimeIs.ID
 		if query.OnlyLatestData == nil || !*query.OnlyLatestData {
@@ -181,12 +181,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(t))
+	ch := make(chan []Kyou, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -243,11 +243,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -370,12 +368,12 @@ errloop:
 	return nil
 }
 
-func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
-	matchTimeIss := map[string]*TimeIs{}
+func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error) {
+	matchTimeIss := map[string]TimeIs{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*TimeIs, len(t))
+	ch := make(chan []TimeIs, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -437,11 +435,9 @@ loop:
 		}
 	}
 
-	matchTimeIssList := []*TimeIs{}
+	matchTimeIssList := []TimeIs{}
 	for _, timeis := range matchTimeIss {
-		if timeis == nil {
-			continue
-		}
+
 		// Plaingで最新のものが範囲外だったらそれは追加しない
 		if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
 			if query.PlaingTime.After(timeis.StartTime) && (timeis.EndTime == nil || query.PlaingTime.Before(*timeis.EndTime)) {
@@ -518,12 +514,12 @@ loop:
 	return matchTimeIs, nil
 }
 
-func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
-	kyouHistories := map[string]*TimeIs{}
+func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) ([]TimeIs, error) {
+	kyouHistories := map[string]TimeIs{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*TimeIs, len(t))
+	ch := make(chan []TimeIs, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -580,11 +576,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*TimeIs{}
+	kyouHistoriesList := []TimeIs{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -595,12 +589,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (t TimeIsRepositories) GetTimeIsHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*TimeIs, error) {
-	kyouHistories := map[string]*TimeIs{}
+func (t TimeIsRepositories) GetTimeIsHistoriesByRepName(ctx context.Context, id string, repName *string) ([]TimeIs, error) {
+	kyouHistories := map[string]TimeIs{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*TimeIs, len(t))
+	ch := make(chan []TimeIs, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -669,11 +663,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*TimeIs{}
+	kyouHistoriesList := []TimeIs{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -684,7 +676,7 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (t TimeIsRepositories) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+func (t TimeIsRepositories) AddTimeIsInfo(ctx context.Context, timeis TimeIs) error {
 	err := fmt.Errorf("not implements TimeIsReps.AddTimeIsInfo")
 	return err
 }

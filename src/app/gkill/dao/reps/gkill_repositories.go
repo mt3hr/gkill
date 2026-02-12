@@ -96,7 +96,7 @@ type GkillRepositories struct {
 	LatestDataRepositoryAddressDAO gkill_cache.LatestDataRepositoryAddressDAO
 	TempReps                       *TempReps
 
-	LatestDataRepositoryAddresses                       map[string]*gkill_cache.LatestDataRepositoryAddress
+	LatestDataRepositoryAddresses                       map[string]gkill_cache.LatestDataRepositoryAddress
 	LastUpdatedLatestDataRepositoryAddressCacheFindTime time.Time
 
 	IsUpdateCacheNextTick bool
@@ -305,12 +305,12 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 	return nil
 }
 
-func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(g.Reps))
+	ch := make(chan map[string][]Kyou, len(g.Reps))
 	errch := make(chan error, len(g.Reps))
 	defer close(ch)
 	defer close(errch)
@@ -393,7 +393,7 @@ loop:
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
 					if _, exist := matchKyous[kyou.ID]; !exist {
-						matchKyous[kyou.ID] = []*Kyou{}
+						matchKyous[kyou.ID] = []Kyou{}
 					}
 					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
 				}
@@ -408,7 +408,7 @@ loop:
 
 func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	var matchKyou *Kyou
-	matchKyousInRep := []*Kyou{}
+	matchKyousInRep := []Kyou{}
 	var err error
 	ch := make(chan *Kyou, len(g.Reps))
 	errch := make(chan error, len(g.Reps))
@@ -435,17 +435,17 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 		if err != nil {
 			continue
 		}
-		matchKyousInRep = append(matchKyousInRep, matchKyouInRep)
+		matchKyousInRep = append(matchKyousInRep, *matchKyouInRep)
 	}
 
 	// Kyou集約。UpdateTimeが最新のものを収める
 	for _, matchKyouInRep := range matchKyousInRep {
 		if matchKyou != nil {
 			if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
-				matchKyou = matchKyouInRep
+				matchKyou = &matchKyouInRep
 			}
 		} else {
-			matchKyou = matchKyouInRep
+			matchKyou = &matchKyouInRep
 		}
 	}
 	return matchKyou, nil
@@ -467,11 +467,11 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	kyousCh := make(chan map[string][]*Kyou, len(g.Reps))
-	tagsCh := make(chan []*Tag, len(g.TagReps))
-	textsCh := make(chan []*Text, len(g.TextReps))
-	notificationsCh := make(chan []*Notification, len(g.NotificationReps))
-	rekyousCh := make(chan []*Kyou, len(g.ReKyouReps.ReKyouRepositories))
+	kyousCh := make(chan map[string][]Kyou, len(g.Reps))
+	tagsCh := make(chan []Tag, len(g.TagReps))
+	textsCh := make(chan []Text, len(g.TextReps))
+	notificationsCh := make(chan []Notification, len(g.NotificationReps))
+	rekyousCh := make(chan []Kyou, len(g.ReKyouReps.ReKyouRepositories))
 	errch := make(chan error, len(g.Reps)+len(g.TagReps)+len(g.TextReps)+len(g.NotificationReps))
 	rekyouErrch := make(chan error, len(g.ReKyouReps.ReKyouRepositories))
 	defer close(kyousCh)
@@ -482,10 +482,10 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	defer close(rekyousCh)
 	defer close(rekyouErrch)
 
-	allKyousMap := map[string][]*Kyou{}
-	allTags := []*Tag{}
-	allTexts := []*Text{}
-	allNotifications := []*Notification{}
+	allKyousMap := map[string][]Kyou{}
+	allTags := []Tag{}
+	allTexts := []Text{}
+	allNotifications := []Notification{}
 
 	// UpdateCache並列処理
 	updateCacheTargets := []interface {
@@ -662,7 +662,7 @@ kyousloop:
 		case kyouMaps := <-kyousCh:
 			for id, kyouMap := range kyouMaps {
 				if _, exist := allKyousMap[id]; !exist {
-					allKyousMap[id] = []*Kyou{}
+					allKyousMap[id] = []Kyou{}
 				}
 				allKyousMap[id] = append(allKyousMap[id], kyouMap...)
 			}
@@ -705,7 +705,7 @@ notificationsloop:
 	}
 
 	// 最新のKyou, tag, textのみにする
-	latestKyousMap := map[string]*Kyou{}
+	latestKyousMap := map[string]Kyou{}
 	for id, kyousMap := range allKyousMap {
 		for _, kyou := range kyousMap {
 			if existKyou, exist := latestKyousMap[id]; exist {
@@ -717,7 +717,7 @@ notificationsloop:
 			}
 		}
 	}
-	latestTagsMap := map[string]*Tag{}
+	latestTagsMap := map[string]Tag{}
 	for _, tag := range allTags {
 		if existTag, exist := latestTagsMap[tag.ID]; exist {
 			if tag.UpdateTime.After(existTag.UpdateTime) {
@@ -727,7 +727,7 @@ notificationsloop:
 			latestTagsMap[tag.ID] = tag
 		}
 	}
-	latestTextsMap := map[string]*Text{}
+	latestTextsMap := map[string]Text{}
 	for _, text := range allTexts {
 		if existText, exist := latestTextsMap[text.ID]; exist {
 			if text.UpdateTime.After(existText.UpdateTime) {
@@ -737,7 +737,7 @@ notificationsloop:
 			latestTextsMap[text.ID] = text
 		}
 	}
-	latestNotificationsMap := map[string]*Notification{}
+	latestNotificationsMap := map[string]Notification{}
 	for _, notification := range allNotifications {
 		if existNotification, exist := latestNotificationsMap[notification.ID]; exist {
 			if notification.UpdateTime.After(existNotification.UpdateTime) {
@@ -749,9 +749,9 @@ notificationsloop:
 	}
 
 	// 最新のKyou, Tag, Text, Notificationの状態をLatestDataRepositoryAddressにいれる
-	latestDataRepositoryAddresses := make([]*gkill_cache.LatestDataRepositoryAddress, 0, len(latestKyousMap)+len(latestTagsMap)+len(latestTextsMap)+len(latestNotificationsMap))
+	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestKyousMap)+len(latestTagsMap)+len(latestTextsMap)+len(latestNotificationsMap))
 	for _, kyou := range latestKyousMap {
-		latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kyou.IsDeleted,
 			TargetID:                               kyou.ID,
 			LatestDataRepositoryName:               kyou.RepName,
@@ -761,7 +761,7 @@ notificationsloop:
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, tag := range latestTagsMap {
-		latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              tag.IsDeleted,
 			TargetID:                               tag.ID,
 			TargetIDInData:                         &tag.TargetID,
@@ -772,7 +772,7 @@ notificationsloop:
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, text := range latestTextsMap {
-		latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              text.IsDeleted,
 			TargetID:                               text.ID,
 			TargetIDInData:                         &text.TargetID,
@@ -783,7 +783,7 @@ notificationsloop:
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, notification := range latestNotificationsMap {
-		latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              notification.IsDeleted,
 			TargetID:                               notification.ID,
 			TargetIDInData:                         &notification.TargetID,
@@ -801,7 +801,7 @@ notificationsloop:
 	}
 
 	if g.LatestDataRepositoryAddresses == nil {
-		g.LatestDataRepositoryAddresses = map[string]*gkill_cache.LatestDataRepositoryAddress{}
+		g.LatestDataRepositoryAddresses = map[string]gkill_cache.LatestDataRepositoryAddress{}
 	}
 	for _, updatedLatestDataRepositoryAddress := range updatedLatestDataRepositoryAddresses {
 		g.LatestDataRepositoryAddresses[updatedLatestDataRepositoryAddress.TargetID] = updatedLatestDataRepositoryAddress
@@ -858,12 +858,12 @@ func (g *GkillRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "Reps", nil
 }
 
-func (g *GkillRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (g *GkillRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(g.Reps))
+	ch := make(chan []Kyou, len(g.Reps))
 	errch := make(chan error, len(g.Reps))
 	defer close(ch)
 	defer close(errch)
@@ -907,9 +907,6 @@ loop:
 				continue loop
 			}
 			for _, kyou := range matchKyousInRep {
-				if kyou == nil {
-					continue
-				}
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
 					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
@@ -923,11 +920,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -938,12 +933,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
-	matchTags := map[string]*Tag{}
+func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
+	matchTags := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(g.TagReps))
+	ch := make(chan []Tag, len(g.TagReps))
 	errch := make(chan error, len(g.TagReps))
 	defer close(ch)
 	defer close(errch)
@@ -1033,11 +1028,8 @@ loop:
 		}
 	}
 
-	matchTagsList := []*Tag{}
+	matchTagsList := []Tag{}
 	for _, tag := range matchTags {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -1113,12 +1105,12 @@ loop:
 	return matchTag, nil
 }
 
-func (g *GkillRepositories) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
-	matchTags := map[string]*Tag{}
+func (g *GkillRepositories) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {
+	matchTags := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(g.TagReps))
+	ch := make(chan []Tag, len(g.TagReps))
 	errch := make(chan error, len(g.TagReps))
 	defer close(ch)
 	defer close(errch)
@@ -1175,11 +1167,8 @@ loop:
 		}
 	}
 
-	tagHistoriesList := []*Tag{}
+	tagHistoriesList := []Tag{}
 	for _, tag := range matchTags {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -1194,18 +1183,15 @@ loop:
 
 }
 
-func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
+func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error) {
 	matchTags, err := g.TagReps.GetTagsByTargetID(ctx, target_id)
 	if err != nil {
 		err = fmt.Errorf("error at get tags by target id: %w", err)
 		return nil, err
 	}
 
-	tagHistoriesList := []*Tag{}
+	tagHistoriesList := []Tag{}
 	for _, tag := range matchTags {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -1219,12 +1205,12 @@ func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id str
 	return tagHistoriesList, nil
 }
 
-func (g *GkillRepositories) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
-	tagHistories := map[string]*Tag{}
+func (g *GkillRepositories) GetTagHistories(ctx context.Context, id string) ([]Tag, error) {
+	tagHistories := map[string]Tag{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(g.TagReps))
+	ch := make(chan []Tag, len(g.TagReps))
 	errch := make(chan error, len(g.TagReps))
 	defer close(ch)
 	defer close(errch)
@@ -1281,11 +1267,8 @@ loop:
 		}
 	}
 
-	tagHistoriesList := []*Tag{}
+	tagHistoriesList := []Tag{}
 	for _, tag := range tagHistories {
-		if tag == nil {
-			continue
-		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -1372,12 +1355,12 @@ loop:
 	return repNamesList, nil
 }
 
-func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
-	matchTexts := map[string]*Text{}
+func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
+	matchTexts := map[string]Text{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Text, len(g.TextReps))
+	ch := make(chan []Text, len(g.TextReps))
 	errch := make(chan error, len(g.TextReps))
 	defer close(ch)
 	defer close(errch)
@@ -1469,11 +1452,8 @@ loop:
 		}
 	}
 
-	matchTextsList := []*Text{}
+	matchTextsList := []Text{}
 	for _, text := range matchTexts {
-		if text == nil {
-			continue
-		}
 		if text.IsDeleted {
 			continue
 		}
@@ -1612,12 +1592,12 @@ loop:
 	return matchNotification, nil
 }
 
-func (g *GkillRepositories) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
-	matchTexts := map[string]*Text{}
+func (g *GkillRepositories) GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error) {
+	matchTexts := map[string]Text{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Text, len(g.TextReps))
+	ch := make(chan []Text, len(g.TextReps))
 	errch := make(chan error, len(g.TextReps))
 	defer close(ch)
 	defer close(errch)
@@ -1674,11 +1654,8 @@ loop:
 		}
 	}
 
-	textHistoriesList := []*Text{}
+	textHistoriesList := []Text{}
 	for _, text := range matchTexts {
-		if text == nil {
-			continue
-		}
 		if text.IsDeleted {
 			continue
 		}
@@ -1692,12 +1669,12 @@ loop:
 	return textHistoriesList, nil
 }
 
-func (g *GkillRepositories) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
-	matchNotifications := map[string]*Notification{}
+func (g *GkillRepositories) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]Notification, error) {
+	matchNotifications := map[string]Notification{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Notification, len(g.NotificationReps))
+	ch := make(chan []Notification, len(g.NotificationReps))
 	errch := make(chan error, len(g.NotificationReps))
 	defer close(ch)
 	defer close(errch)
@@ -1754,11 +1731,8 @@ loop:
 		}
 	}
 
-	notificationHistoriesList := []*Notification{}
+	notificationHistoriesList := []Notification{}
 	for _, notification := range matchNotifications {
-		if notification == nil {
-			continue
-		}
 		if notification.IsDeleted {
 			continue
 		}
@@ -1772,12 +1746,12 @@ loop:
 	return notificationHistoriesList, nil
 }
 
-func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
-	textHistories := map[string]*Text{}
+func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]Text, error) {
+	textHistories := map[string]Text{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Text, len(g.TextReps))
+	ch := make(chan []Text, len(g.TextReps))
 	errch := make(chan error, len(g.TextReps))
 	defer close(ch)
 	defer close(errch)
@@ -1834,11 +1808,8 @@ loop:
 		}
 	}
 
-	textHistoriesList := []*Text{}
+	textHistoriesList := []Text{}
 	for _, text := range textHistories {
-		if text == nil {
-			continue
-		}
 		if text.IsDeleted {
 			continue
 		}
@@ -1852,12 +1823,12 @@ loop:
 	return textHistoriesList, nil
 }
 
-func (g *GkillRepositories) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
-	notificationHistories := map[string]*Notification{}
+func (g *GkillRepositories) GetNotificationHistories(ctx context.Context, id string) ([]Notification, error) {
+	notificationHistories := map[string]Notification{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Notification, len(g.NotificationReps))
+	ch := make(chan []Notification, len(g.NotificationReps))
 	errch := make(chan error, len(g.NotificationReps))
 	defer close(ch)
 	defer close(errch)
@@ -1914,11 +1885,8 @@ loop:
 		}
 	}
 
-	notificationHistoriesList := []*Notification{}
+	notificationHistoriesList := []Notification{}
 	for _, notification := range notificationHistories {
-		if notification == nil {
-			continue
-		}
 		if notification.IsDeleted {
 			continue
 		}

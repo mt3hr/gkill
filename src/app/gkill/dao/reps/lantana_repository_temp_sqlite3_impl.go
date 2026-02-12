@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 		m:        m,
 	}, nil
 }
-func (l *lantanaTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (l *lantanaTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
@@ -105,7 +105,7 @@ func (l *lantanaTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id strin
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (l *lantanaTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (l *lantanaTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
@@ -134,7 +134,7 @@ func (l *lantanaTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (l *lantanaTempRepositorySQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
+func (l *lantanaTempRepositorySQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
@@ -148,14 +148,14 @@ func (l *lantanaTempRepositorySQLite3Impl) GetLantana(ctx context.Context, id st
 	return impl.GetLantana(ctx, id, updateTime)
 }
 
-func (l *lantanaTempRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
+func (l *lantanaTempRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]Lantana, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	impl := lantanaRepositorySQLite3Impl(*l)
 	return impl.GetLantanaHistories(ctx, id)
 }
 
-func (l *lantanaTempRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lantana *Lantana, txID string, userID string, device string) error {
+func (l *lantanaTempRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lantana Lantana, txID string, userID string, device string) error {
 	l.m.Lock()
 	defer l.m.Unlock()
 	sql := `
@@ -232,7 +232,7 @@ INSERT INTO LANTANA (
 	return nil
 }
 
-func (l *lantanaTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (l *lantanaTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	var err error
@@ -299,13 +299,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -353,7 +353,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (l *lantanaTempRepositorySQLite3Impl) GetLantanasByTXID(ctx context.Context, txID string, userID string, device string) ([]*Lantana, error) {
+func (l *lantanaTempRepositorySQLite3Impl) GetLantanasByTXID(ctx context.Context, txID string, userID string, device string) ([]Lantana, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	sql := `
@@ -420,13 +420,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	lantanas := []*Lantana{}
+	lantanas := []Lantana{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			lantana := &Lantana{}
+			lantana := Lantana{}
 			lantana.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 

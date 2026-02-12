@@ -10,5 +10,5 @@ type GetIDFKyouResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	IDFKyouHistories []*reps.IDFKyou `json:"idf_kyou_histories"`
+	IDFKyouHistories []reps.IDFKyou `json:"idf_kyou_histories"`
 }

@@ -33,7 +33,7 @@ func NewGitRep(reppath string) (GitCommitLogRepository, error) {
 		filename: reppath,
 	}, nil
 }
-func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 
 	var err error
 	// update_cacheであればキャッシュを更新する
@@ -54,7 +54,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	}
 
 	// 判定OKであればKyouを作る
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 
 	var logs object.CommitIter
 	if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
@@ -196,7 +196,7 @@ loop:
 				}
 			}
 
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.IsDeleted = false
 			kyou.ID = commit.Hash.String()
 			kyou.RepName = repName
@@ -212,7 +212,7 @@ loop:
 			kyou.UpdateUser = commit.Author.Name
 
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 
@@ -261,7 +261,7 @@ loop:
 				continue
 			}
 
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.IsDeleted = false
 			kyou.ID = commit.Hash.String()
 			kyou.RepName = repName
@@ -276,20 +276,23 @@ loop:
 			kyou.UpdateDevice = ""
 			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
 
-			matchKyou = kyou
+			matchKyou = &kyou
 			break loop
 		}
 	}
 	return matchKyou, nil
 }
 
-func (g *gitCommitLogRepositoryLocalImpl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (g *gitCommitLogRepositoryLocalImpl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	kyou, err := g.GetKyou(ctx, id, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories git commit log repositories %s: %w", id, err)
 		return nil, err
 	}
-	return []*Kyou{kyou}, nil
+	if kyou == nil {
+		return nil, err
+	}
+	return []Kyou{*kyou}, nil
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetPath(ctx context.Context, id string) (string, error) {
@@ -308,7 +311,7 @@ func (g *gitCommitLogRepositoryLocalImpl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error) {
+func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]GitCommitLog, error) {
 
 	var err error
 
@@ -330,7 +333,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	}
 
 	// 判定OKであればGitCommitLogを作る
-	gitCommitLogs := []*GitCommitLog{}
+	gitCommitLogs := []GitCommitLog{}
 	var logs object.CommitIter
 	if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
 		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((*query.IDs)[0])})
@@ -429,7 +432,7 @@ loop:
 				deletion += stat.Deletion
 			}
 
-			gitCommitLog := &GitCommitLog{}
+			gitCommitLog := GitCommitLog{}
 			gitCommitLog.IsDeleted = false
 			gitCommitLog.ID = commit.Hash.String()
 			gitCommitLog.RepName = repName
