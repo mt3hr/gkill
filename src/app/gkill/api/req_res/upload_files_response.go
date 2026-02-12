@@ -10,5 +10,5 @@ type UploadFilesResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	UploadedKyous []*reps.Kyou `json:"uploaded_kyous"`
+	UploadedKyous []reps.Kyou `json:"uploaded_kyous"`
 }

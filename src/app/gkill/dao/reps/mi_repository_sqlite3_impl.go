@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	}, nil
 }
 
-func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	var db *sqllib.DB
 	if m.fullConnect {
@@ -445,13 +445,13 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -491,7 +491,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 				return nil, err
 			}
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -518,16 +518,16 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	var err error
 	var db *sqllib.DB
 	if m.fullConnect {
@@ -857,13 +857,13 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -942,7 +942,7 @@ func (m *miRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
+func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi, error) {
 	var err error
 	var db *sqllib.DB
 	if m.fullConnect {
@@ -1292,13 +1292,13 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		}
 	}()
 
-	mis := []*Mi{}
+	mis := []Mi{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			mi := &Mi{}
+			mi := Mi{}
 			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
 			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
@@ -1375,16 +1375,16 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 	if updateTime != nil {
 		for _, kyou := range miHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return miHistories[0], nil
+	return &miHistories[0], nil
 }
 
-func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]Mi, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	var err error
@@ -1731,13 +1731,13 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		}
 	}()
 
-	mis := []*Mi{}
+	mis := []Mi{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			mi := &Mi{}
+			mi := Mi{}
 			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
 			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
@@ -1796,7 +1796,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 
 }
 
-func (m *miRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
+func (m *miRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi Mi) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 	var err error

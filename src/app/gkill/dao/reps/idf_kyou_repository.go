@@ -9,11 +9,11 @@ import (
 )
 
 type IDFKyouRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -23,15 +23,15 @@ type IDFKyouRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error)
+	FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error)
 
 	GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error)
 
-	GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error)
+	GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error)
 
 	IDF(ctx context.Context) error
 
-	AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error
+	AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou) error
 
 	HandleFileServe(w http.ResponseWriter, r *http.Request)
 

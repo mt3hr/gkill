@@ -8,13 +8,13 @@ import (
 )
 
 type TextRepository interface {
-	FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error)
+	FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error)
 
 	Close(ctx context.Context) error
 
 	GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error)
 
-	GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error)
+	GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error)
 
 	UpdateCache(ctx context.Context) error
 
@@ -22,9 +22,9 @@ type TextRepository interface {
 
 	GetRepName(ctx context.Context) (string, error)
 
-	GetTextHistories(ctx context.Context, id string) ([]*Text, error)
+	GetTextHistories(ctx context.Context, id string) ([]Text, error)
 
-	AddTextInfo(ctx context.Context, text *Text) error
+	AddTextInfo(ctx context.Context, text Text) error
 
 	UnWrapTyped() ([]TextRepository, error)
 }

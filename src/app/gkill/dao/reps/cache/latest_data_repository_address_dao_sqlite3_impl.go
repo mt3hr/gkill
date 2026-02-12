@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS %s (
 	return latestDataRepositoryAddress, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) GetAllLatestDataRepositoryAddresses(ctx context.Context) (map[string]*LatestDataRepositoryAddress, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) GetAllLatestDataRepositoryAddresses(ctx context.Context) (map[string]LatestDataRepositoryAddress, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	sql := fmt.Sprintf(`
@@ -147,13 +147,13 @@ FROM %s
 		}
 	}()
 
-	latestDataRepositoryAddresses := map[string]*LatestDataRepositoryAddress{}
+	latestDataRepositoryAddresses := map[string]LatestDataRepositoryAddress{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			latestDataRepositoryAddress := &LatestDataRepositoryAddress{}
+			latestDataRepositoryAddress := LatestDataRepositoryAddress{}
 			dataUpdateTimeUnix := int64(0)
 			latestDataRepositoryAddressUpdatedTimeUnix := int64(0)
 			err = rows.Scan(
@@ -178,7 +178,7 @@ FROM %s
 	return latestDataRepositoryAddresses, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) (map[string]*LatestDataRepositoryAddress, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) (map[string]LatestDataRepositoryAddress, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	sql := fmt.Sprintf(`
@@ -221,13 +221,13 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 		}
 	}()
 
-	latestDataRepositoryAddresses := map[string]*LatestDataRepositoryAddress{}
+	latestDataRepositoryAddresses := map[string]LatestDataRepositoryAddress{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			latestDataRepositoryAddress := &LatestDataRepositoryAddress{}
+			latestDataRepositoryAddress := LatestDataRepositoryAddress{}
 			dataUpdateTimeUnix := int64(0)
 			latestDataRepositoryAddressUpdatedTimeUnix := int64(0)
 			err = rows.Scan(
@@ -329,7 +329,7 @@ WHERE TARGET_ID = ?
 	return latestDataRepositoryAddresses[0], nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int64) (map[string]*LatestDataRepositoryAddress, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int64) (map[string]LatestDataRepositoryAddress, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	sql := fmt.Sprintf(`
@@ -374,13 +374,13 @@ LIMIT ?
 		}
 	}()
 
-	latestDataRepositoryAddresses := map[string]*LatestDataRepositoryAddress{}
+	latestDataRepositoryAddresses := map[string]LatestDataRepositoryAddress{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			latestDataRepositoryAddress := &LatestDataRepositoryAddress{}
+			latestDataRepositoryAddress := LatestDataRepositoryAddress{}
 			dataUpdateTimeUnix := int64(0)
 			latestDataRepositoryAddressUpdatedTimeUnix := int64(0)
 			err = rows.Scan(
@@ -404,7 +404,7 @@ LIMIT ?
 	return latestDataRepositoryAddresses, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress LatestDataRepositoryAddress) (bool, error) {
 	l.m.Lock()
 	defer l.m.Unlock()
 	deleteSQL := fmt.Sprintf(`
@@ -482,7 +482,7 @@ INSERT INTO %s (
 	return true, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepositoryAddresses(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) (bool, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepositoryAddresses(ctx context.Context, latestDataRepositoryAddresses []LatestDataRepositoryAddress) (bool, error) {
 	l.m.Lock()
 	defer l.m.Unlock()
 
@@ -689,20 +689,20 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 	return true, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) ExtructUpdatedLatestDataRepositoryAddressDatas(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) ([]*LatestDataRepositoryAddress, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) ExtructUpdatedLatestDataRepositoryAddressDatas(ctx context.Context, latestDataRepositoryAddresses []LatestDataRepositoryAddress) ([]LatestDataRepositoryAddress, error) {
 	existlatestDataRepositoryAddresses, err := l.GetAllLatestDataRepositoryAddresses(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 		return nil, err
 	}
 
-	latestDataRepositoryAddressMap := map[string]*LatestDataRepositoryAddress{}
+	latestDataRepositoryAddressMap := map[string]LatestDataRepositoryAddress{}
 	for _, latestDataRepositoryAddress := range existlatestDataRepositoryAddresses {
 		latestDataRepositoryAddressMap[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 	}
 
 	// 内容が更新された（ハッシュ一が在しないデータのみを抽出する
-	notExistsLatestDataRepositoryAddresses := []*LatestDataRepositoryAddress{}
+	notExistsLatestDataRepositoryAddresses := []LatestDataRepositoryAddress{}
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 		if existLatestDataRepositoryAddress, exist := latestDataRepositoryAddressMap[latestDataRepositoryAddress.TargetID]; exist {
 			if existLatestDataRepositoryAddress.DataUpdateTime.Before(latestDataRepositoryAddress.DataUpdateTime) {
@@ -715,7 +715,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) ExtructUpdatedLatestDataReposit
 	return notExistsLatestDataRepositoryAddresses, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddressesData(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) error {
+func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddressesData(ctx context.Context, latestDataRepositoryAddresses []LatestDataRepositoryAddress) error {
 	notExistsLatestDataRepositoryAddresses, err := l.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository addresses: %w", err)

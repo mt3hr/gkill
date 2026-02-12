@@ -437,7 +437,7 @@ func (w *KCWriter) handle(ctx context.Context, r rec) error {
 func (w *KCWriter) insertKCAndTag(ctx context.Context, id string, r rec) error {
 	runAt := w.RunAt // 起動時刻をCREATE/UPDATEに入れる
 
-	kc := &reps.KC{
+	kc := reps.KC{
 		IsDeleted:    false,
 		ID:           id,
 		RelatedTime:  r.related, // サンプル時刻（UTC、+00:00）
@@ -477,7 +477,7 @@ func (w *KCWriter) insertKCAndTag(ctx context.Context, id string, r rec) error {
 
 	if needTag {
 		tagID := sha256.Sum256([]byte(id + "|" + fixedTag + "|" + fmtUTC00(r.related)))
-		tag := &reps.Tag{
+		tag := reps.Tag{
 			IsDeleted:    false,
 			ID:           fmt.Sprintf("%x", tagID[:]),
 			TargetID:     id,

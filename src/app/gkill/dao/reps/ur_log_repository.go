@@ -8,11 +8,11 @@ import (
 )
 
 type URLogRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,13 +22,13 @@ type URLogRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error)
+	FindURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error)
 
 	GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error)
 
-	GetURLogHistories(ctx context.Context, id string) ([]*URLog, error)
+	GetURLogHistories(ctx context.Context, id string) ([]URLog, error)
 
-	AddURLogInfo(ctx context.Context, urlog *URLog) error
+	AddURLogInfo(ctx context.Context, urlog URLog) error
 
 	UnWrapTyped() ([]URLogRepository, error)
 

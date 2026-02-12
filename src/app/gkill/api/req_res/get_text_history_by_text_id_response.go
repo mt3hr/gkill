@@ -10,5 +10,5 @@ type GetNotificationHistoryByNotificationIDResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	NotificationHistories []*reps.Notification `json:"notification_histories"`
+	NotificationHistories []reps.Notification `json:"notification_histories"`
 }

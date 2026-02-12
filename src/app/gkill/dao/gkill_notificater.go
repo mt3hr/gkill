@@ -55,7 +55,7 @@ func (n *notificator) waitAndNotify() {
 	updatedNotification.IsNotificated = true
 	updatedNotification.UpdateTime = time.Now()
 	updatedNotification.UpdateUser = "gkill_notificator"
-	err := n.gkillReps.WriteNotificationRep.AddNotificationInfo(notificationCtx, &updatedNotification)
+	err := n.gkillReps.WriteNotificationRep.AddNotificationInfo(notificationCtx, updatedNotification)
 	if err != nil {
 		slog.Log(n.ctx, gkill_log.Error, "error", "error", err)
 		return
@@ -205,7 +205,7 @@ func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error 
 		if notification.IsDeleted || notification.IsNotificated {
 			continue
 		}
-		notificator := newNotificator(g.notificationCtx, g.gkillDAOManager, g.gkillReps, notification)
+		notificator := newNotificator(g.notificationCtx, g.gkillDAOManager, g.gkillReps, &notification)
 		g.notificators[notification.ID] = notificator
 	}
 	return nil

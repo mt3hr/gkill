@@ -10,5 +10,5 @@ type GetTextHistoryByTextIDResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	TextHistories []*reps.Text `json:"text_histories"`
+	TextHistories []reps.Text `json:"text_histories"`
 }

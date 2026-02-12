@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 
-func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -185,13 +185,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
@@ -218,7 +218,7 @@ WHERE
 			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -245,16 +245,16 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (u *urlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	sql := `
@@ -332,13 +332,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
@@ -541,7 +541,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -634,13 +634,13 @@ WHERE
 		}
 	}()
 
-	urlogs := []*URLog{}
+	urlogs := []URLog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			urlog := &URLog{}
+			urlog := URLog{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
@@ -696,16 +696,16 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetURLog(ctx context.Context, id stri
 	if updateTime != nil {
 		for _, kyou := range urlogHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return urlogHistories[0], nil
+	return &urlogHistories[0], nil
 }
 
-func (u *urlogRepositoryCachedSQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]URLog, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
 	repName, err := u.GetRepName(ctx)
@@ -793,13 +793,13 @@ WHERE
 		}
 	}()
 
-	urlogs := []*URLog{}
+	urlogs := []URLog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			urlog := &URLog{}
+			urlog := URLog{}
 			urlog.RepName = repName
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
@@ -837,7 +837,7 @@ WHERE
 	return urlogs, nil
 }
 
-func (u *urlogRepositoryCachedSQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
+func (u *urlogRepositoryCachedSQLite3Impl) AddURLogInfo(ctx context.Context, urlog URLog) error {
 	u.m.Lock()
 	defer u.m.Unlock()
 	sql := `

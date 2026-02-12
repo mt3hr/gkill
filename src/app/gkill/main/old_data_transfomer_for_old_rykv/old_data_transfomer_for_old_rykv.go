@@ -402,7 +402,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = kmemoRep.AddKmemoInfo(context.Background(), kmemo)
+		err = kmemoRep.AddKmemoInfo(context.Background(), *kmemo)
 		if err != nil {
 			panic(err)
 		}
@@ -418,7 +418,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = urlogRep.AddURLogInfo(context.Background(), urlog)
+		err = urlogRep.AddURLogInfo(context.Background(), *urlog)
 		if err != nil {
 			panic(err)
 		}
@@ -434,7 +434,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = lantanaRep.AddLantanaInfo(context.Background(), lantana)
+		err = lantanaRep.AddLantanaInfo(context.Background(), *lantana)
 		if err != nil {
 			panic(err)
 		}
@@ -463,7 +463,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = idfKyouRep.AddIDFKyouInfo(context.Background(), idfKyou)
+		err = idfKyouRep.AddIDFKyouInfo(context.Background(), *idfKyou)
 		if err != nil {
 			panic(err)
 		}
@@ -479,7 +479,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = tagRep.AddTagInfo(context.Background(), tag)
+		err = tagRep.AddTagInfo(context.Background(), *tag)
 		if err != nil {
 			panic(err)
 		}
@@ -495,7 +495,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = textRep.AddTextInfo(context.Background(), text)
+		err = textRep.AddTextInfo(context.Background(), *text)
 		if err != nil {
 			panic(err)
 		}
@@ -511,7 +511,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = nlogRep.AddNlogInfo(context.Background(), nlog)
+		err = nlogRep.AddNlogInfo(context.Background(), *nlog)
 		if err != nil {
 			panic(err)
 		}
@@ -527,7 +527,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = miRep.AddMiInfo(context.Background(), mi)
+		err = miRep.AddMiInfo(context.Background(), *mi)
 		if err != nil {
 			panic(err)
 		}
@@ -543,7 +543,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = timeIsRep.AddTimeIsInfo(context.Background(), timeIs)
+		err = timeIsRep.AddTimeIsInfo(context.Background(), *timeIs)
 		if err != nil {
 			panic(err)
 		}
@@ -559,7 +559,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		if err != nil {
 			panic(err)
 		}
-		err = kcRep.AddKCInfo(context.Background(), kc)
+		err = kcRep.AddKCInfo(context.Background(), *kc)
 		if err != nil {
 			panic(err)
 		}
@@ -575,7 +575,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 			Tag:         "stvs_log",
 			RelatedTime: kc.RelatedTime,
 		}
-		err = tagRep.AddTagInfo(context.Background(), kcTag)
+		err = tagRep.AddTagInfo(context.Background(), *kcTag)
 		if err != nil {
 			panic(err)
 		}

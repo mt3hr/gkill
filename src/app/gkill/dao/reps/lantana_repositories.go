@@ -14,12 +14,12 @@ import (
 
 type LantanaRepositories []LantanaRepository
 
-func (l LantanaRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (l LantanaRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(l))
+	ch := make(chan map[string][]Kyou, len(l))
 	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
@@ -70,7 +70,7 @@ loop:
 					}
 
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
@@ -145,12 +145,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (l LantanaRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (l LantanaRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(l))
+	ch := make(chan []Kyou, len(l))
 	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
@@ -207,11 +207,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -334,12 +332,12 @@ errloop:
 	return nil
 }
 
-func (l LantanaRepositories) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
-	matchLantanas := map[string]*Lantana{}
+func (l LantanaRepositories) FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error) {
+	matchLantanas := map[string]Lantana{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Lantana, len(l))
+	ch := make(chan []Lantana, len(l))
 	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
@@ -400,11 +398,9 @@ loop:
 		}
 	}
 
-	matchLantanasList := []*Lantana{}
+	matchLantanasList := []Lantana{}
 	for _, kyou := range matchLantanas {
-		if kyou == nil {
-			continue
-		}
+
 		matchLantanasList = append(matchLantanasList, kyou)
 	}
 	return matchLantanasList, nil
@@ -473,12 +469,12 @@ loop:
 	return matchLantana, nil
 }
 
-func (l LantanaRepositories) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
-	kyouHistories := map[string]*Lantana{}
+func (l LantanaRepositories) GetLantanaHistories(ctx context.Context, id string) ([]Lantana, error) {
+	kyouHistories := map[string]Lantana{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Lantana, len(l))
+	ch := make(chan []Lantana, len(l))
 	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
@@ -535,11 +531,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Lantana{}
+	kyouHistoriesList := []Lantana{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -550,12 +544,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (l LantanaRepositories) GetLantanaHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Lantana, error) {
-	kyouHistories := map[string]*Lantana{}
+func (l LantanaRepositories) GetLantanaHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Lantana, error) {
+	kyouHistories := map[string]Lantana{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Lantana, len(l))
+	ch := make(chan []Lantana, len(l))
 	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
@@ -624,11 +618,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Lantana{}
+	kyouHistoriesList := []Lantana{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -639,7 +631,7 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (l LantanaRepositories) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
+func (l LantanaRepositories) AddLantanaInfo(ctx context.Context, lantana Lantana) error {
 	err := fmt.Errorf("not implements LantanaReps.AddLantanaInfo")
 	return err
 }

@@ -94,7 +94,7 @@ func NewTagRepositorySQLite3ImplLocalCached(ctx context.Context, filename string
 	}
 	return cachedRep, nil
 }
-func (t *tagRepositorySQLite3ImplLocalCached) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
+func (t *tagRepositorySQLite3ImplLocalCached) FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.FindTags(ctx, query)
@@ -122,13 +122,13 @@ func (t *tagRepositorySQLite3ImplLocalCached) GetTag(ctx context.Context, id str
 	return t.localCachedRep.GetTag(ctx, id, updateTime)
 }
 
-func (t *tagRepositorySQLite3ImplLocalCached) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
+func (t *tagRepositorySQLite3ImplLocalCached) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.GetTagsByTagName(ctx, tagname)
 }
 
-func (t *tagRepositorySQLite3ImplLocalCached) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
+func (t *tagRepositorySQLite3ImplLocalCached) GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.GetTagsByTargetID(ctx, target_id)
@@ -212,13 +212,13 @@ func (t *tagRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (s
 	return t.originalRep.GetRepName(ctx)
 }
 
-func (t *tagRepositorySQLite3ImplLocalCached) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
+func (t *tagRepositorySQLite3ImplLocalCached) GetTagHistories(ctx context.Context, id string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.GetTagHistories(ctx, id)
 }
 
-func (t *tagRepositorySQLite3ImplLocalCached) AddTagInfo(ctx context.Context, tag *Tag) error {
+func (t *tagRepositorySQLite3ImplLocalCached) AddTagInfo(ctx context.Context, tag Tag) error {
 	err := func() error {
 		t.m.Lock()
 		defer t.m.Unlock()
@@ -241,7 +241,7 @@ func (t *tagRepositorySQLite3ImplLocalCached) GetAllTagNames(ctx context.Context
 	return t.localCachedRep.GetAllTagNames(ctx)
 }
 
-func (t *tagRepositorySQLite3ImplLocalCached) GetAllTags(ctx context.Context) ([]*Tag, error) {
+func (t *tagRepositorySQLite3ImplLocalCached) GetAllTags(ctx context.Context) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.GetAllTags(ctx)

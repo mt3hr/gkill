@@ -94,7 +94,7 @@ func NewTextRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 	}
 	return cachedRep, nil
 }
-func (t *textRepositorySQLite3ImplLocalCached) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
+func (t *textRepositorySQLite3ImplLocalCached) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.FindTexts(ctx, query)
@@ -122,7 +122,7 @@ func (t *textRepositorySQLite3ImplLocalCached) GetText(ctx context.Context, id s
 	return t.localCachedRep.GetText(ctx, id, updateTime)
 }
 
-func (t *textRepositorySQLite3ImplLocalCached) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
+func (t *textRepositorySQLite3ImplLocalCached) GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.GetTextsByTargetID(ctx, target_id)
@@ -206,13 +206,13 @@ func (t *textRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (
 	return t.originalRep.GetRepName(ctx)
 }
 
-func (t *textRepositorySQLite3ImplLocalCached) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
+func (t *textRepositorySQLite3ImplLocalCached) GetTextHistories(ctx context.Context, id string) ([]Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.GetTextHistories(ctx, id)
 }
 
-func (t *textRepositorySQLite3ImplLocalCached) AddTextInfo(ctx context.Context, text *Text) error {
+func (t *textRepositorySQLite3ImplLocalCached) AddTextInfo(ctx context.Context, text Text) error {
 	err := func() error {
 		t.m.Lock()
 		defer t.m.Unlock()

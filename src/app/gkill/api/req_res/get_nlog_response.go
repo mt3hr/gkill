@@ -10,5 +10,5 @@ type GetNlogResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	NlogHistories []*reps.Nlog `json:"nlog_histories"`
+	NlogHistories []reps.Nlog `json:"nlog_histories"`
 }

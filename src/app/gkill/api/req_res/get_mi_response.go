@@ -10,5 +10,5 @@ type GetMiResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	MiHistories []*reps.Mi `json:"mi_histories"`
+	MiHistories []reps.Mi `json:"mi_histories"`
 }

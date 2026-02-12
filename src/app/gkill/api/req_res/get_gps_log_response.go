@@ -10,5 +10,5 @@ type GetGPSLogResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	GPSLogs []*reps.GPSLog `json:"gps_logs"`
+	GPSLogs []reps.GPSLog `json:"gps_logs"`
 }

@@ -10,5 +10,5 @@ type GetURLogResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	URLogHistories []*reps.URLog `json:"urlog_histories"`
+	URLogHistories []reps.URLog `json:"urlog_histories"`
 }

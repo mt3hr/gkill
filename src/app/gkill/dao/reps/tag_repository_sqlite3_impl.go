@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		fullConnect: fullConnect,
 	}, nil
 }
-func (t *tagRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
+func (t *tagRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
 	var err error
 	var db *sql.DB
 	if t.fullConnect {
@@ -291,13 +291,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 
@@ -371,16 +371,16 @@ func (t *tagRepositorySQLite3Impl) GetTag(ctx context.Context, id string, update
 	if updateTime != nil {
 		for _, kyou := range tagHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return tagHistories[0], nil
+	return &tagHistories[0], nil
 }
 
-func (t *tagRepositorySQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
+func (t *tagRepositorySQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -483,13 +483,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 
@@ -535,7 +535,7 @@ WHERE
 	return tags, nil
 }
 
-func (t *tagRepositorySQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
+func (t *tagRepositorySQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -638,13 +638,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 
@@ -713,7 +713,7 @@ func (t *tagRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, erro
 	return withoutExt, nil
 }
 
-func (t *tagRepositorySQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
+func (t *tagRepositorySQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -815,13 +815,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 
@@ -868,7 +868,7 @@ WHERE
 	return tags, nil
 }
 
-func (t *tagRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag) error {
+func (t *tagRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag Tag) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 	var err error
@@ -1028,7 +1028,7 @@ WHERE IS_DELETED = FALSE
 	return tagNames, nil
 }
 
-func (t *tagRepositorySQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
+func (t *tagRepositorySQLite3Impl) GetAllTags(ctx context.Context) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -1125,13 +1125,13 @@ WHERE
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 

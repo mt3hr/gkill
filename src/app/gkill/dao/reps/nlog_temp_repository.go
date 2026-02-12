@@ -8,11 +8,11 @@ import (
 )
 
 type NlogTempRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -22,17 +22,17 @@ type NlogTempRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error)
+	FindNlog(ctx context.Context, query *find.FindQuery) ([]Nlog, error)
 
 	GetNlog(ctx context.Context, id string, updateTime *time.Time) (*Nlog, error)
 
-	GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error)
+	GetNlogHistories(ctx context.Context, id string) ([]Nlog, error)
 
-	AddNlogInfo(ctx context.Context, nlog *Nlog, txID string, userID string, device string) error
+	AddNlogInfo(ctx context.Context, nlog Nlog, txID string, userID string, device string) error
 
-	GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error)
+	GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error)
 
-	GetNlogsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Nlog, error)
+	GetNlogsByTXID(ctx context.Context, txID string, userID string, device string) ([]Nlog, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
 

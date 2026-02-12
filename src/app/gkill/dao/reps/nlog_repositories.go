@@ -14,12 +14,12 @@ import (
 
 type NlogRepositories []NlogRepository
 
-func (n NlogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (n NlogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(n))
+	ch := make(chan map[string][]Kyou, len(n))
 	errch := make(chan error, len(n))
 	defer close(ch)
 	defer close(errch)
@@ -69,7 +69,7 @@ loop:
 						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
@@ -145,12 +145,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (n NlogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (n NlogRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(n))
+	ch := make(chan []Kyou, len(n))
 	errch := make(chan error, len(n))
 	defer close(ch)
 	defer close(errch)
@@ -207,11 +207,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -334,12 +332,12 @@ errloop:
 	return nil
 }
 
-func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
-	matchNlogs := map[string]*Nlog{}
+func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) ([]Nlog, error) {
+	matchNlogs := map[string]Nlog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Nlog, len(n))
+	ch := make(chan []Nlog, len(n))
 	errch := make(chan error, len(n))
 	defer close(ch)
 	defer close(errch)
@@ -400,11 +398,9 @@ loop:
 		}
 	}
 
-	matchNlogsList := []*Nlog{}
+	matchNlogsList := []Nlog{}
 	for _, kyou := range matchNlogs {
-		if kyou == nil {
-			continue
-		}
+
 		matchNlogsList = append(matchNlogsList, kyou)
 	}
 	return matchNlogsList, nil
@@ -473,12 +469,12 @@ loop:
 	return matchNlog, nil
 }
 
-func (n NlogRepositories) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
-	kyouHistories := map[string]*Nlog{}
+func (n NlogRepositories) GetNlogHistories(ctx context.Context, id string) ([]Nlog, error) {
+	kyouHistories := map[string]Nlog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Nlog, len(n))
+	ch := make(chan []Nlog, len(n))
 	errch := make(chan error, len(n))
 	defer close(ch)
 	defer close(errch)
@@ -535,11 +531,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Nlog{}
+	kyouHistoriesList := []Nlog{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -550,12 +544,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (n NlogRepositories) GetNlogHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Nlog, error) {
-	kyouHistories := map[string]*Nlog{}
+func (n NlogRepositories) GetNlogHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Nlog, error) {
+	kyouHistories := map[string]Nlog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Nlog, len(n))
+	ch := make(chan []Nlog, len(n))
 	errch := make(chan error, len(n))
 	defer close(ch)
 	defer close(errch)
@@ -624,11 +618,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Nlog{}
+	kyouHistoriesList := []Nlog{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -639,7 +631,7 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (n NlogRepositories) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
+func (n NlogRepositories) AddNlogInfo(ctx context.Context, nlog Nlog) error {
 	err := fmt.Errorf("not implements NlogReps.AddNlogInfo")
 	return err
 }

@@ -5,7 +5,7 @@ import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 type AddMiRequest struct {
 	SessionID string `json:"session_id"`
 
-	Mi *reps.Mi `json:"mi"`
+	Mi reps.Mi `json:"mi"`
 
 	TXID *string `json:"tx_id"`
 

@@ -14,12 +14,12 @@ import (
 
 type KmemoRepositories []KmemoRepository
 
-func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(k))
+	ch := make(chan map[string][]Kyou, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -70,7 +70,7 @@ loop:
 					}
 
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
@@ -145,12 +145,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(k))
+	ch := make(chan []Kyou, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -207,11 +207,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -334,12 +332,12 @@ errloop:
 	return nil
 }
 
-func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
-	matchKmemos := map[string]*Kmemo{}
+func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error) {
+	matchKmemos := map[string]Kmemo{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kmemo, len(k))
+	ch := make(chan []Kmemo, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -401,11 +399,9 @@ loop:
 		}
 	}
 
-	matchKmemosList := []*Kmemo{}
+	matchKmemosList := []Kmemo{}
 	for _, kyou := range matchKmemos {
-		if kyou == nil {
-			continue
-		}
+
 		matchKmemosList = append(matchKmemosList, kyou)
 	}
 
@@ -475,12 +471,12 @@ loop:
 	return matchKmemo, nil
 }
 
-func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
-	kyouHistories := map[string]*Kmemo{}
+func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]Kmemo, error) {
+	kyouHistories := map[string]Kmemo{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kmemo, len(k))
+	ch := make(chan []Kmemo, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -537,11 +533,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kmemo{}
+	kyouHistoriesList := []Kmemo{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -552,12 +546,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (k KmemoRepositories) GetKmemoHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Kmemo, error) {
-	kyouHistories := map[string]*Kmemo{}
+func (k KmemoRepositories) GetKmemoHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Kmemo, error) {
+	kyouHistories := map[string]Kmemo{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kmemo, len(k))
+	ch := make(chan []Kmemo, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -626,11 +620,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kmemo{}
+	kyouHistoriesList := []Kmemo{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -641,7 +633,7 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (k KmemoRepositories) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+func (k KmemoRepositories) AddKmemoInfo(ctx context.Context, kmemo Kmemo) error {
 	err := fmt.Errorf("not implements KmemoReps.AddKmemoInfo")
 	return err
 }
