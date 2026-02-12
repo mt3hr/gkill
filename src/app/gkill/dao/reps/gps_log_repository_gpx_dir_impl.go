@@ -21,8 +21,8 @@ func NewGPXDirRep(dirname string) GPSLogRepository {
 	return &gpsLogRepositoryDirectoryImpl{dirname: dirname}
 }
 
-func (g *gpsLogRepositoryDirectoryImpl) GetAllGPSLogs(ctx context.Context) ([]*GPSLog, error) {
-	gpsLogs := []*GPSLog{}
+func (g *gpsLogRepositoryDirectoryImpl) GetAllGPSLogs(ctx context.Context) ([]GPSLog, error) {
+	gpsLogs := []GPSLog{}
 	dirEntries, err := os.ReadDir(g.dirname)
 	if err != nil {
 		err = fmt.Errorf("error at get all gps logs:%w", err)
@@ -50,9 +50,9 @@ func (g *gpsLogRepositoryDirectoryImpl) GetAllGPSLogs(ctx context.Context) ([]*G
 	return gpsLogs, nil
 }
 
-func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTime *time.Time, endTime *time.Time) ([]*GPSLog, error) {
+func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTime *time.Time, endTime *time.Time) ([]GPSLog, error) {
 	var err error
-	gpsLogs := []*GPSLog{}
+	gpsLogs := []GPSLog{}
 
 	if startTime == nil && endTime == nil {
 		gpsLogs, err = g.GetAllGPSLogs(ctx)
@@ -138,7 +138,7 @@ func (g *gpsLogRepositoryDirectoryImpl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
-func (g *gpsLogRepositoryDirectoryImpl) gpxFileToGPSLogs(gpxfilename string) (gpsLogs []*GPSLog, err error) {
+func (g *gpsLogRepositoryDirectoryImpl) gpxFileToGPSLogs(gpxfilename string) (gpsLogs []GPSLog, err error) {
 	gpxFile, err := os.OpenFile(gpxfilename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("failed to open file %s. %w", gpxfilename, err)
@@ -160,7 +160,7 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToGPSLogs(gpxfilename string) (gp
 	for _, trk := range gpxData.Trk {
 		for _, trkseg := range trk.TrkSeg {
 			for _, pt := range trkseg.TrkPt {
-				gpsLog := &GPSLog{}
+				gpsLog := GPSLog{}
 				gpsLog.RelatedTime = pt.Time
 				gpsLog.Longitude = pt.Lon
 				gpsLog.Latitude = pt.Lat
@@ -182,7 +182,7 @@ func (g *gpsLogRepositoryDirectoryImpl) findGPXFileByDate(ctx context.Context, d
 	return filename, nil
 }
 
-func (g *gpsLogRepositoryDirectoryImpl) gpxFileToPoints(gpxfilename string) (gpsLogs []*GPSLog, err error) {
+func (g *gpsLogRepositoryDirectoryImpl) gpxFileToPoints(gpxfilename string) (gpsLogs []GPSLog, err error) {
 	gpxFile, err := os.OpenFile(gpxfilename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("failed to open file %s. %w", gpxfilename, err)
@@ -204,7 +204,7 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToPoints(gpxfilename string) (gps
 	for _, trk := range gpxData.Trk {
 		for _, trkseg := range trk.TrkSeg {
 			for _, pt := range trkseg.TrkPt {
-				gpsLog := &GPSLog{}
+				gpsLog := GPSLog{}
 				gpsLog.RelatedTime = pt.Time
 				gpsLog.Longitude = pt.Lon
 				gpsLog.Latitude = pt.Lat

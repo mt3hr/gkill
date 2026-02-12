@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 
-func (k *kmemoRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kmemoRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -177,13 +177,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -209,7 +209,7 @@ WHERE
 			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -236,16 +236,16 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (k *kmemoRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (k *kmemoRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	sql := `
@@ -321,13 +321,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -516,7 +516,7 @@ func (k *kmemoRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (k *kmemoRepositoryCachedSQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
+func (k *kmemoRepositoryCachedSQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -606,13 +606,13 @@ WHERE
 		}
 	}()
 
-	kmemos := []*Kmemo{}
+	kmemos := []Kmemo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kmemo := &Kmemo{}
+			kmemo := Kmemo{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kmemo.IsDeleted,
@@ -663,16 +663,16 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemo(ctx context.Context, id stri
 	if updateTime != nil {
 		for _, kyou := range kmemoHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kmemoHistories[0], nil
+	return &kmemoHistories[0], nil
 }
 
-func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
+func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]Kmemo, error) {
 	k.m.RLock()
 	defer k.m.RUnlock()
 	sql := `
@@ -749,13 +749,13 @@ WHERE
 		}
 	}()
 
-	kmemos := []*Kmemo{}
+	kmemos := []Kmemo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kmemo := &Kmemo{}
+			kmemo := Kmemo{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kmemo.IsDeleted,
@@ -787,7 +787,7 @@ WHERE
 	return kmemos, nil
 }
 
-func (k *kmemoRepositoryCachedSQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+func (k *kmemoRepositoryCachedSQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo Kmemo) error {
 	k.m.Lock()
 	defer k.m.Unlock()
 	sql := `

@@ -94,7 +94,7 @@ func NewNlogRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 	}
 	return cachedRep, nil
 }
-func (n *nlogRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (n *nlogRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.FindKyous(ctx, query)
@@ -106,7 +106,7 @@ func (n *nlogRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id s
 	return n.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (n *nlogRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (n *nlogRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.GetKyouHistories(ctx, id)
@@ -206,7 +206,7 @@ func (n *nlogRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error 
 	return nil
 }
 
-func (n *nlogRepositorySQLite3ImplLocalCached) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
+func (n *nlogRepositorySQLite3ImplLocalCached) FindNlog(ctx context.Context, query *find.FindQuery) ([]Nlog, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.FindNlog(ctx, query)
@@ -218,13 +218,13 @@ func (n *nlogRepositorySQLite3ImplLocalCached) GetNlog(ctx context.Context, id s
 	return n.localCachedRep.GetNlog(ctx, id, updateTime)
 }
 
-func (n *nlogRepositorySQLite3ImplLocalCached) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
+func (n *nlogRepositorySQLite3ImplLocalCached) GetNlogHistories(ctx context.Context, id string) ([]Nlog, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.GetNlogHistories(ctx, id)
 }
 
-func (n *nlogRepositorySQLite3ImplLocalCached) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
+func (n *nlogRepositorySQLite3ImplLocalCached) AddNlogInfo(ctx context.Context, nlog Nlog) error {
 	err := func() error {
 		n.m.Lock()
 		defer n.m.Unlock()

@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 		fullConnect: fullConnect,
 	}, nil
 }
-func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	var db *sqllib.DB
 	if t.fullConnect {
@@ -306,13 +306,13 @@ FROM TIMEIS
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -353,7 +353,7 @@ FROM TIMEIS
 			}
 
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -380,16 +380,16 @@ func (t *timeIsRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (t *timeIsRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -488,13 +488,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -572,7 +572,7 @@ func (t *timeIsRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
+func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error) {
 	var err error
 	var db *sqllib.DB
 	if t.fullConnect {
@@ -744,13 +744,13 @@ FROM TIMEIS
 		}
 	}()
 
-	timeiss := []*TimeIs{}
+	timeiss := []TimeIs{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			timeis := &TimeIs{}
+			timeis := TimeIs{}
 			timeis.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			startTimeStr, endTime := "", sqllib.NullString{}
@@ -822,16 +822,16 @@ func (t *timeIsRepositorySQLite3Impl) GetTimeIs(ctx context.Context, id string, 
 	if updateTime != nil {
 		for _, kyou := range timeisHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return timeisHistories[0], nil
+	return &timeisHistories[0], nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
+func (t *timeIsRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]TimeIs, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -943,13 +943,13 @@ WHERE
 		}
 	}()
 
-	timeiss := []*TimeIs{}
+	timeiss := []TimeIs{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			timeis := &TimeIs{}
+			timeis := TimeIs{}
 			timeis.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			startTimeStr, endTime := "", sqllib.NullString{}
@@ -1002,7 +1002,7 @@ WHERE
 	return timeiss, nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis TimeIs) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 	var err error

@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		m:        m,
 	}, nil
 }
-func (t *tagTempRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
+func (t *tagTempRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
@@ -168,14 +168,14 @@ func (t *tagTempRepositorySQLite3Impl) GetTag(ctx context.Context, id string, up
 	return impl.GetTag(ctx, id, updateTime)
 }
 
-func (t *tagTempRepositorySQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
+func (t *tagTempRepositorySQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetTagsByTagName(ctx, tagname)
 }
 
-func (t *tagTempRepositorySQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
+func (t *tagTempRepositorySQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
@@ -197,14 +197,14 @@ func (t *tagTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, 
 	return "tag_temp", nil
 }
 
-func (t *tagTempRepositorySQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
+func (t *tagTempRepositorySQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetTagHistories(ctx, id)
 }
 
-func (t *tagTempRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag, txID string, userID string, device string) error {
+func (t *tagTempRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag Tag, txID string, userID string, device string) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 	sql := `
@@ -290,14 +290,14 @@ func (t *tagTempRepositorySQLite3Impl) GetAllTagNames(ctx context.Context) ([]st
 	return impl.GetAllTagNames(ctx)
 }
 
-func (t *tagTempRepositorySQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
+func (t *tagTempRepositorySQLite3Impl) GetAllTags(ctx context.Context) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	impl := tagRepositorySQLite3Impl(*t)
 	return impl.GetAllTags(ctx)
 }
 
-func (t *tagTempRepositorySQLite3Impl) GetTagsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Tag, error) {
+func (t *tagTempRepositorySQLite3Impl) GetTagsByTXID(ctx context.Context, txID string, userID string, device string) ([]Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -366,13 +366,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	tags := []*Tag{}
+	tags := []Tag{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			tag := &Tag{}
+			tag := Tag{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			dataType := ""
 

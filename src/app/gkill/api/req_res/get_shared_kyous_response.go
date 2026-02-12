@@ -14,35 +14,35 @@ type GetSharedKyousResponse struct {
 
 	ViewType string `json:"view_type"`
 
-	Kyous []*reps.Kyou `json:"kyous"`
+	Kyous []reps.Kyou `json:"kyous"`
 
-	Kmemos []*reps.Kmemo `json:"kmemos"`
+	Kmemos []reps.Kmemo `json:"kmemos"`
 
-	KCs []*reps.KC `json:"kcs"`
+	KCs []reps.KC `json:"kcs"`
 
-	TimeIss []*reps.TimeIs `json:"timeiss"`
+	TimeIss []reps.TimeIs `json:"timeiss"`
 
-	Mis []*reps.Mi `json:"mis"`
+	Mis []reps.Mi `json:"mis"`
 
-	Nlogs []*reps.Nlog `json:"nlogs"`
+	Nlogs []reps.Nlog `json:"nlogs"`
 
-	Lantanas []*reps.Lantana `json:"lantanas"`
+	Lantanas []reps.Lantana `json:"lantanas"`
 
-	URLogs []*reps.URLog `json:"urlogs"`
+	URLogs []reps.URLog `json:"urlogs"`
 
-	IDFKyous []*reps.IDFKyou `json:"idf_kyous"`
+	IDFKyous []reps.IDFKyou `json:"idf_kyous"`
 
-	ReKyous []*reps.ReKyou `json:"rekyous"`
+	ReKyous []reps.ReKyou `json:"rekyous"`
 
-	GitCommitLogs []*reps.GitCommitLog `json:"git_commit_logs"`
+	GitCommitLogs []reps.GitCommitLog `json:"git_commit_logs"`
 
-	GPSLogs []*reps.GPSLog `json:"gps_logs"`
+	GPSLogs []reps.GPSLog `json:"gps_logs"`
 
-	AttachedTags []*reps.Tag `json:"attached_tags"`
+	AttachedTags []reps.Tag `json:"attached_tags"`
 
-	AttachedTexts []*reps.Text `json:"attached_texts"`
+	AttachedTexts []reps.Text `json:"attached_texts"`
 
-	AttachedTimeIss []*reps.TimeIs `json:"attached_timeiss"`
+	AttachedTimeIss []reps.TimeIs `json:"attached_timeiss"`
 
-	AttachedTimeIsKyous []*reps.Kyou `json:"attached_timeis_kyous"`
+	AttachedTimeIsKyous []reps.Kyou `json:"attached_timeis_kyous"`
 }

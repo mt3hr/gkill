@@ -14,12 +14,12 @@ import (
 
 type NotificationRepositories []NotificationRepository
 
-func (t NotificationRepositories) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
-	matchNotifications := map[string]*Notification{}
+func (t NotificationRepositories) FindNotifications(ctx context.Context, query *find.FindQuery) ([]Notification, error) {
+	matchNotifications := map[string]Notification{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Notification, len(t))
+	ch := make(chan []Notification, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -81,11 +81,8 @@ loop:
 		}
 	}
 
-	matchNotificationsList := []*Notification{}
+	matchNotificationsList := []Notification{}
 	for _, notification := range matchNotifications {
-		if notification == nil {
-			continue
-		}
 		if notification.IsDeleted {
 			continue
 		}
@@ -201,12 +198,12 @@ loop:
 	return matchNotification, nil
 }
 
-func (t NotificationRepositories) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
-	matchNotifications := map[string]*Notification{}
+func (t NotificationRepositories) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]Notification, error) {
+	matchNotifications := map[string]Notification{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Notification, len(t))
+	ch := make(chan []Notification, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -263,11 +260,8 @@ loop:
 		}
 	}
 
-	notificationHistoriesList := []*Notification{}
+	notificationHistoriesList := []Notification{}
 	for _, notification := range matchNotifications {
-		if notification == nil {
-			continue
-		}
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
@@ -278,12 +272,12 @@ loop:
 	return notificationHistoriesList, nil
 }
 
-func (t NotificationRepositories) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
-	matchNotifications := map[string]*Notification{}
+func (t NotificationRepositories) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]Notification, error) {
+	matchNotifications := map[string]Notification{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Notification, len(t))
+	ch := make(chan []Notification, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -340,11 +334,8 @@ loop:
 		}
 	}
 
-	notificationHistoriesList := []*Notification{}
+	notificationHistoriesList := []Notification{}
 	for _, notification := range matchNotifications {
-		if notification == nil {
-			continue
-		}
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
@@ -424,12 +415,12 @@ func (t NotificationRepositories) GetRepName(ctx context.Context) (string, error
 	return "NotificationReps", nil
 }
 
-func (t NotificationRepositories) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
-	notificationHistories := map[string]*Notification{}
+func (t NotificationRepositories) GetNotificationHistories(ctx context.Context, id string) ([]Notification, error) {
+	notificationHistories := map[string]Notification{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Notification, len(t))
+	ch := make(chan []Notification, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -486,11 +477,8 @@ loop:
 		}
 	}
 
-	notificationHistoriesList := []*Notification{}
+	notificationHistoriesList := []Notification{}
 	for _, notification := range notificationHistories {
-		if notification == nil {
-			continue
-		}
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
@@ -501,12 +489,12 @@ loop:
 	return notificationHistoriesList, nil
 }
 
-func (t NotificationRepositories) GetNotificationHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Notification, error) {
-	notificationHistories := map[string]*Notification{}
+func (t NotificationRepositories) GetNotificationHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Notification, error) {
+	notificationHistories := map[string]Notification{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Notification, len(t))
+	ch := make(chan []Notification, len(t))
 	errch := make(chan error, len(t))
 	defer close(ch)
 	defer close(errch)
@@ -575,11 +563,8 @@ loop:
 		}
 	}
 
-	notificationHistoriesList := []*Notification{}
+	notificationHistoriesList := []Notification{}
 	for _, notification := range notificationHistories {
-		if notification == nil {
-			continue
-		}
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
@@ -590,7 +575,7 @@ loop:
 	return notificationHistoriesList, nil
 }
 
-func (t NotificationRepositories) AddNotificationInfo(ctx context.Context, text *Notification) error {
+func (t NotificationRepositories) AddNotificationInfo(ctx context.Context, text Notification) error {
 	err := fmt.Errorf("not implements NotificationReps.AddNotificationInfo")
 	return err
 }

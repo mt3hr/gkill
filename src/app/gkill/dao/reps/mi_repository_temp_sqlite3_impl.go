@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		m:        m,
 	}, nil
 }
-func (m *miTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (m *miTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
@@ -110,7 +110,7 @@ func (m *miTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
-func (m *miTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (m *miTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
@@ -141,7 +141,7 @@ func (m *miTempRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return impl.Close(ctx)
 }
 
-func (m *miTempRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
+func (m *miTempRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
@@ -155,14 +155,14 @@ func (m *miTempRepositorySQLite3Impl) GetMi(ctx context.Context, id string, upda
 	return impl.GetMi(ctx, id, updateTime)
 }
 
-func (m *miTempRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+func (m *miTempRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]Mi, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	impl := miRepositorySQLite3Impl(*m)
 	return impl.GetMiHistories(ctx, id)
 }
 
-func (m *miTempRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi, txID string, userID string, device string) error {
+func (m *miTempRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi Mi, txID string, userID string, device string) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 	sql := `
@@ -276,7 +276,7 @@ func (m *miTempRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]stri
 	return impl.GetBoardNames(ctx)
 }
 
-func (m *miTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+func (m *miTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	var err error
@@ -343,13 +343,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
@@ -397,7 +397,7 @@ AND DEVICE = ?
 	return kyous, nil
 }
 
-func (m *miTempRepositorySQLite3Impl) GetMisByTXID(ctx context.Context, txID string, userID string, device string) ([]*Mi, error) {
+func (m *miTempRepositorySQLite3Impl) GetMisByTXID(ctx context.Context, txID string, userID string, device string) ([]Mi, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	var err error
@@ -472,13 +472,13 @@ AND DEVICE = ?
 		}
 	}()
 
-	mis := []*Mi{}
+	mis := []Mi{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			mi := &Mi{}
+			mi := Mi{}
 			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
 			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}

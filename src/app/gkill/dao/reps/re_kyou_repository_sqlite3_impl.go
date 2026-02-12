@@ -133,15 +133,15 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 		fullConnect:       fullConnect,
 	}, nil
 }
-func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var err error
 
-	matchKyous := map[string][]*Kyou{}
+	matchKyous := map[string][]Kyou{}
 
 	// 未削除ReKyouを抽出
-	notDeletedAllReKyous := []*ReKyou{}
+	notDeletedAllReKyous := []ReKyou{}
 	allReKyous, err := r.GetReKyousAllLatest(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyous all latest :%w", err)
@@ -192,7 +192,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 		}
 
 		if existInRep {
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.IsDeleted = rekyou.IsDeleted
 			kyou.ID = rekyou.ID
 			kyou.RepName = rekyou.RepName
@@ -208,7 +208,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 			kyou.UpdateDevice = rekyou.UpdateDevice
 
 			if _, exist := matchKyous[kyou.ID]; !exist {
-				matchKyous[kyou.ID] = []*Kyou{}
+				matchKyous[kyou.ID] = []Kyou{}
 			}
 			matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
 		}
@@ -237,16 +237,16 @@ func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (r *reKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var err error
@@ -346,13 +346,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -428,14 +428,14 @@ func (r *reKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
+func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var err error
-	matchReKyous := []*ReKyou{}
+	matchReKyous := []ReKyou{}
 
 	// 未削除ReKyouを抽出
-	notDeletedAllReKyous := []*ReKyou{}
+	notDeletedAllReKyous := []ReKyou{}
 	allReKyous, err := r.GetReKyousAllLatest(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyous all latest :%w", err)
@@ -461,7 +461,7 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *fin
 
 	for _, rekyou := range notDeletedAllReKyous {
 		existInRep := false
-		if rekyou == nil || rekyou.IsDeleted {
+		if rekyou.IsDeleted {
 			continue
 		}
 		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
@@ -493,16 +493,16 @@ func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string, 
 	if updateTime != nil {
 		for _, kyou := range reKyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return reKyouHistories[0], nil
+	return &reKyouHistories[0], nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
+func (r *reKyouRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var err error
@@ -604,13 +604,13 @@ WHERE
 		}
 	}()
 
-	reKyous := []*ReKyou{}
+	reKyous := []ReKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			reKyou := &ReKyou{}
+			reKyou := ReKyou{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(&reKyou.IsDeleted,
@@ -654,7 +654,7 @@ WHERE
 	return reKyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
+func (r *reKyouRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou ReKyou) error {
 	r.m.Lock()
 	defer r.m.Unlock()
 	var err error
@@ -738,7 +738,7 @@ INSERT INTO REKYOU (
 	return nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
+func (r *reKyouRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var err error
@@ -835,13 +835,13 @@ WHERE
 		}
 	}()
 
-	reKyous := []*ReKyou{}
+	reKyous := []ReKyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			reKyou := &ReKyou{}
+			reKyou := ReKyou{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(&reKyou.IsDeleted,

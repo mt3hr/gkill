@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	}, nil
 }
 
-func (l *lantanaRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (l *lantanaRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	var db *sql.DB
 	if l.fullConnect {
@@ -240,13 +240,13 @@ WHERE
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -285,7 +285,7 @@ WHERE
 				return nil, err
 			}
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -312,16 +312,16 @@ func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, u
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (l *lantanaRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (l *lantanaRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	var err error
@@ -423,13 +423,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -505,7 +505,7 @@ func (l *lantanaRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (l *lantanaRepositorySQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
+func (l *lantanaRepositorySQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error) {
 	var err error
 	var db *sql.DB
 	if l.fullConnect {
@@ -618,13 +618,13 @@ WHERE
 		}
 	}()
 
-	lantanas := []*Lantana{}
+	lantanas := []Lantana{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			lantana := &Lantana{}
+			lantana := Lantana{}
 			lantana.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -688,16 +688,16 @@ func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string
 	if updateTime != nil {
 		for _, kyou := range lantanaHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return lantanaHistories[0], nil
+	return &lantanaHistories[0], nil
 }
 
-func (l *lantanaRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
+func (l *lantanaRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]Lantana, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
 	var err error
@@ -801,13 +801,13 @@ WHERE
 		}
 	}()
 
-	lantanas := []*Lantana{}
+	lantanas := []Lantana{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			lantana := &Lantana{}
+			lantana := Lantana{}
 			lantana.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
@@ -852,7 +852,7 @@ WHERE
 	return lantanas, nil
 }
 
-func (l *lantanaRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
+func (l *lantanaRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lantana Lantana) error {
 	l.m.Lock()
 	defer l.m.Unlock()
 	var err error

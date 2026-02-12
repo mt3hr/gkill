@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		m:         m,
 	}, nil
 }
-func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -239,13 +239,13 @@ FROM ` + t.dbName + `
 		}
 	}()
 
-	kyous := map[string][]*Kyou{}
+	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
@@ -273,7 +273,7 @@ FROM ` + t.dbName + `
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
 			if _, exist := kyous[kyou.ID]; !exist {
-				kyous[kyou.ID] = []*Kyou{}
+				kyous[kyou.ID] = []Kyou{}
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
@@ -300,16 +300,16 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return kyouHistories[0], nil
+	return &kyouHistories[0], nil
 }
 
-func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	repName, err := t.GetRepName(ctx)
@@ -389,13 +389,13 @@ WHERE
 		}
 	}()
 
-	kyous := []*Kyou{}
+	kyous := []Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kyou := &Kyou{}
+			kyou := Kyou{}
 			kyou.RepName = repName
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
@@ -597,7 +597,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -743,13 +743,13 @@ FROM ` + t.dbName + `
 		}
 	}()
 
-	timeiss := []*TimeIs{}
+	timeiss := []TimeIs{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			timeis := &TimeIs{}
+			timeis := TimeIs{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			startTimeUnix, endTimeUnix := int64(0), sqllib.NullInt64{}
 
@@ -808,16 +808,16 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id st
 	if updateTime != nil {
 		for _, kyou := range timeisHistories {
 			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return kyou, nil
+				return &kyou, nil
 			}
 		}
 		return nil, nil
 	}
 
-	return timeisHistories[0], nil
+	return &timeisHistories[0], nil
 }
 
-func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]TimeIs, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
 	var err error
@@ -908,13 +908,13 @@ WHERE
 		}
 	}()
 
-	timeiss := []*TimeIs{}
+	timeiss := []TimeIs{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			timeis := &TimeIs{}
+			timeis := TimeIs{}
 			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			startTimeUnix, endTimeUnix := int64(0), sqllib.NullInt64{}
 
@@ -954,7 +954,7 @@ WHERE
 	return timeiss, nil
 }
 
-func (t *timeIsRepositoryCachedSQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+func (t *timeIsRepositoryCachedSQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis TimeIs) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 	sql := `

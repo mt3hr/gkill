@@ -9,11 +9,11 @@ import (
 )
 
 type IDFKyouTempRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
+	GetKyouHistories(ctx context.Context, id string) ([]Kyou, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 
@@ -23,21 +23,21 @@ type IDFKyouTempRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error)
+	FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error)
 
 	GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error)
 
-	GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error)
+	GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error)
 
 	IDF(ctx context.Context) error
 
-	AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou, txID string, userID string, device string) error
+	AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou, txID string, userID string, device string) error
 
 	HandleFileServe(w http.ResponseWriter, r *http.Request)
 
-	GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error)
+	GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error)
 
-	GetIDFKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*IDFKyou, error)
+	GetIDFKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]IDFKyou, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
 

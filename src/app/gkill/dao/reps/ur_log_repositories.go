@@ -14,12 +14,12 @@ import (
 
 type URLogRepositories []URLogRepository
 
-func (u URLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	matchKyous := map[string][]*Kyou{}
+func (u URLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan map[string][]*Kyou, len(u))
+	ch := make(chan map[string][]Kyou, len(u))
 	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
@@ -69,7 +69,7 @@ loop:
 						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
 					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []*Kyou{}
+						matchKyous[key] = []Kyou{}
 					}
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
@@ -145,12 +145,12 @@ loop:
 	return matchKyou, nil
 }
 
-func (u URLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyouHistories := map[string]*Kyou{}
+func (u URLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(u))
+	ch := make(chan []Kyou, len(u))
 	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
@@ -207,11 +207,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kyou{}
+	kyouHistoriesList := []Kyou{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -334,12 +332,12 @@ errloop:
 	return nil
 }
 
-func (u URLogRepositories) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
-	matchURLogs := map[string]*URLog{}
+func (u URLogRepositories) FindURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error) {
+	matchURLogs := map[string]URLog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*URLog, len(u))
+	ch := make(chan []URLog, len(u))
 	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
@@ -400,11 +398,9 @@ loop:
 		}
 	}
 
-	matchURLogsList := []*URLog{}
+	matchURLogsList := []URLog{}
 	for _, kyou := range matchURLogs {
-		if kyou == nil {
-			continue
-		}
+
 		matchURLogsList = append(matchURLogsList, kyou)
 	}
 	return matchURLogsList, nil
@@ -473,12 +469,12 @@ loop:
 	return matchURLog, nil
 }
 
-func (u URLogRepositories) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
-	kyouHistories := map[string]*URLog{}
+func (u URLogRepositories) GetURLogHistories(ctx context.Context, id string) ([]URLog, error) {
+	kyouHistories := map[string]URLog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*URLog, len(u))
+	ch := make(chan []URLog, len(u))
 	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
@@ -535,11 +531,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*URLog{}
+	kyouHistoriesList := []URLog{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -550,12 +544,12 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (u URLogRepositories) GetURLogHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*URLog, error) {
-	kyouHistories := map[string]*URLog{}
+func (u URLogRepositories) GetURLogHistoriesByRepName(ctx context.Context, id string, repName *string) ([]URLog, error) {
+	kyouHistories := map[string]URLog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*URLog, len(u))
+	ch := make(chan []URLog, len(u))
 	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
@@ -624,11 +618,9 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*URLog{}
+	kyouHistoriesList := []URLog{}
 	for _, kyou := range kyouHistories {
-		if kyou == nil {
-			continue
-		}
+
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
@@ -639,7 +631,7 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (u URLogRepositories) AddURLogInfo(ctx context.Context, urlog *URLog) error {
+func (u URLogRepositories) AddURLogInfo(ctx context.Context, urlog URLog) error {
 	err := fmt.Errorf("not implements URLogReps.AddURLogInfo")
 	return err
 }
