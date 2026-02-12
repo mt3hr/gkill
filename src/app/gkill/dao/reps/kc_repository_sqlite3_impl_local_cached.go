@@ -224,9 +224,16 @@ func (k *kcRepositorySQLite3ImplLocalCached) GetKCHistories(ctx context.Context,
 }
 
 func (k *kcRepositorySQLite3ImplLocalCached) AddKCInfo(ctx context.Context, kc *KC) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-	err := k.originalRep.AddKCInfo(ctx, kc)
+	err := func() error {
+		k.m.Lock()
+		defer k.m.Unlock()
+		err := k.originalRep.AddKCInfo(ctx, kc)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

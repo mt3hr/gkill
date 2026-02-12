@@ -132,8 +132,6 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 }
 
 func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	k.m.RLock()
-	defer k.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if k.fullConnect {
@@ -160,6 +158,8 @@ func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.
 			return nil, err
 		}
 	}
+	k.m.RLock()
+	defer k.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -504,8 +504,6 @@ func (k *kmemoRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
-	k.m.RLock()
-	defer k.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if k.fullConnect {
@@ -533,6 +531,8 @@ func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.
 		}
 
 	}
+	k.m.RLock()
+	defer k.m.RUnlock()
 
 	sql := `
 SELECT 

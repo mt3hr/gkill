@@ -102,8 +102,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	i.m.RLock()
-	defer i.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -114,6 +112,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, quer
 			return nil, err
 		}
 	}
+	i.m.RLock()
+	defer i.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -524,8 +524,6 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	i.m.Lock()
-	defer i.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -688,8 +686,6 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
-	i.m.RLock()
-	defer i.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -701,6 +697,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) FindIDFKyou(ctx context.Context, qu
 			return nil, err
 		}
 	}
+	i.m.RLock()
+	defer i.m.RUnlock()
 
 	sql := `
 SELECT 

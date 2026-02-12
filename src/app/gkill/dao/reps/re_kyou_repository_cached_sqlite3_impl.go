@@ -332,8 +332,6 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	r.m.Lock()
-	defer r.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{

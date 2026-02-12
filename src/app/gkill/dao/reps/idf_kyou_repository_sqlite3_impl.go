@@ -214,8 +214,6 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 }
 
 func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	i.m.RLock()
-	defer i.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if i.fullConnect {
@@ -242,6 +240,8 @@ func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *fin
 			return nil, err
 		}
 	}
+	i.m.RLock()
+	defer i.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -869,8 +869,7 @@ WHERE
 }
 
 func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
-	i.m.Lock()
-	defer i.m.Unlock()
+	// NOTE: Do not hold i.m while running IDF (long-running + it calls read APIs and per-row writers).
 	if i.autoIDF {
 		err := i.IDF(ctx)
 		if err != nil {
@@ -896,8 +895,6 @@ func (i *idfKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
-	i.m.RLock()
-	defer i.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if i.fullConnect {
@@ -924,6 +921,8 @@ func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *f
 			return nil, err
 		}
 	}
+	i.m.RLock()
+	defer i.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -1353,8 +1352,8 @@ WHERE
 }
 
 func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
-	i.m.Lock()
-	defer i.m.Unlock()
+	// NOTE: IDF internally calls FindIDFKyou (RLock) and per-row writers (Lock).
+	// Holding i.m.Lock here would deadlock (Lock -> RLock) and also blocks readers for a long time.
 	allIDFKyous, err := i.FindIDFKyou(ctx, &find.FindQuery{})
 	if err != nil {
 		err = fmt.Errorf("error at find idf kyou: %w", err)
@@ -1509,8 +1508,6 @@ func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKy
 			}
 		}()
 	}
-	i.m.Lock()
-	defer i.m.Unlock()
 	sql := `
 INSERT INTO IDF (
   IS_DELETED,

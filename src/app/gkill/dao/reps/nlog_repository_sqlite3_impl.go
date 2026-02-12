@@ -135,8 +135,6 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 	}, nil
 }
 func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	n.m.RLock()
-	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -164,6 +162,8 @@ func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.F
 		}
 
 	}
+	n.m.RLock()
+	defer n.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -509,8 +509,6 @@ func (n *nlogRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
-	n.m.RLock()
-	defer n.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if n.fullConnect {
@@ -537,6 +535,8 @@ func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.Fi
 			return nil, err
 		}
 	}
+	n.m.RLock()
+	defer n.m.RUnlock()
 
 	dataType := "nlog"
 

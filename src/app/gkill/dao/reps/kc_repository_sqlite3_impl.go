@@ -135,8 +135,6 @@ CREATE TABLE IF NOT EXISTS "KC" (
 }
 
 func (k *kcRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	k.m.RLock()
-	defer k.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if k.fullConnect {
@@ -163,6 +161,8 @@ func (k *kcRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 			return nil, err
 		}
 	}
+	k.m.RLock()
+	defer k.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -507,8 +507,6 @@ func (k *kcRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (k *kcRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
-	k.m.RLock()
-	defer k.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if k.fullConnect {
@@ -536,6 +534,8 @@ func (k *kcRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQu
 		}
 
 	}
+	k.m.RLock()
+	defer k.m.RUnlock()
 
 	sql := `
 SELECT 

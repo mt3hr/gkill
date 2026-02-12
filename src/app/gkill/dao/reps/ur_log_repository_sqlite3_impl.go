@@ -137,8 +137,6 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 }
 
 func (u *urlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	u.m.RLock()
-	defer u.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if u.fullConnect {
@@ -166,6 +164,8 @@ func (u *urlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.
 		}
 
 	}
+	u.m.RLock()
+	defer u.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -513,8 +513,6 @@ func (u *urlogRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (u *urlogRepositorySQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
-	u.m.RLock()
-	defer u.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if u.fullConnect {
@@ -542,6 +540,8 @@ func (u *urlogRepositorySQLite3Impl) FindURLog(ctx context.Context, query *find.
 		}
 
 	}
+	u.m.RLock()
+	defer u.m.RUnlock()
 
 	sql := `
 SELECT 

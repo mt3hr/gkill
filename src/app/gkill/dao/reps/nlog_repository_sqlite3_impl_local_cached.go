@@ -225,9 +225,16 @@ func (n *nlogRepositorySQLite3ImplLocalCached) GetNlogHistories(ctx context.Cont
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
-	n.m.Lock()
-	defer n.m.Unlock()
-	err := n.originalRep.AddNlogInfo(ctx, nlog)
+	err := func() error {
+		n.m.Lock()
+		defer n.m.Unlock()
+		err := n.originalRep.AddNlogInfo(ctx, nlog)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

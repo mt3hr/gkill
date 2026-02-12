@@ -226,9 +226,16 @@ func (m *miRepositorySQLite3ImplLocalCached) GetMiHistories(ctx context.Context,
 }
 
 func (m *miRepositorySQLite3ImplLocalCached) AddMiInfo(ctx context.Context, mi *Mi) error {
-	m.m.Lock()
-	defer m.m.Unlock()
-	err := m.originalRep.AddMiInfo(ctx, mi)
+	err := func() error {
+		m.m.Lock()
+		defer m.m.Unlock()
+		err := m.originalRep.AddMiInfo(ctx, mi)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

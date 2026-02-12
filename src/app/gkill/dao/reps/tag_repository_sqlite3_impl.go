@@ -182,8 +182,6 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}, nil
 }
 func (t *tagRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
-	t.m.RLock()
-	defer t.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if t.fullConnect {
@@ -211,6 +209,8 @@ func (t *tagRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.Fin
 		}
 
 	}
+	t.m.RLock()
+	defer t.m.RUnlock()
 
 	sql := `
 SELECT 
