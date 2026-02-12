@@ -1,7 +1,7 @@
 # ========== 設定 ==========
 $goProjectPath = "../app/"
 $nodeProjectPath = "../../"
-$outputFile = "../../DEPENDENCE_LICENSES"
+$outputFile = "../../LICENSES_DEPENDENCE"
 
 # ========== 出力初期化 ==========
 "=== 依存ライセンス一覧 ===`n" | Out-File -Encoding utf8 $outputFile
