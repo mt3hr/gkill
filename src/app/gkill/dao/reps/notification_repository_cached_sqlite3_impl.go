@@ -95,8 +95,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (n *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
-	n.m.RLock()
-	defer n.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -109,6 +107,8 @@ func (n *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.
 		}
 
 	}
+	n.m.RLock()
+	defer n.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -527,8 +527,6 @@ WHERE
 }
 
 func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	n.m.Lock()
-	defer n.m.Unlock()
 	allNotifications, err := n.notificationRep.GetNotificationsBetweenNotificationTime(ctx, time.Unix(0, 0), time.Unix(math.MaxInt64, 0))
 	if err != nil {
 		err = fmt.Errorf("error at get all notifications at update cache: %w", err)

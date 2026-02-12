@@ -92,8 +92,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (l *lantanaRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	l.m.RLock()
-	defer l.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -105,6 +103,8 @@ func (l *lantanaRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, quer
 		}
 
 	}
+	l.m.RLock()
+	defer l.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -366,8 +366,6 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	l.m.Lock()
-	defer l.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -524,8 +522,6 @@ func (l *lantanaRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
-	l.m.RLock()
-	defer l.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -538,6 +534,8 @@ func (l *lantanaRepositoryCachedSQLite3Impl) FindLantana(ctx context.Context, qu
 		}
 
 	}
+	l.m.RLock()
+	defer l.m.RUnlock()
 
 	sql := `
 SELECT 

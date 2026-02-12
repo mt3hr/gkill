@@ -134,8 +134,6 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 	}, nil
 }
 func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	t.m.RLock()
-	defer t.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if t.fullConnect {
@@ -163,6 +161,8 @@ func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 		}
 
 	}
+	t.m.RLock()
+	defer t.m.RUnlock()
 
 	sqlStartTimeIs := `
 SELECT 
@@ -573,8 +573,6 @@ func (t *timeIsRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
-	t.m.RLock()
-	defer t.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if t.fullConnect {
@@ -602,6 +600,8 @@ func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *fin
 		}
 
 	}
+	t.m.RLock()
+	defer t.m.RUnlock()
 
 	sqlStartTimeIs := `
 SELECT 
