@@ -545,6 +545,7 @@ export class GkillAPI {
 
         async logout(req: LogoutRequest): Promise<LogoutResponse> {
                 await delete_gkill_config_cache()
+                await delete_gkill_kyou_cache(null)
                 const res = await fetch(this.logout_address, {
                         'method': this.logout_method,
                         headers: {
