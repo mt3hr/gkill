@@ -33,7 +33,7 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
 
 export async function delete_gkill_config_cache(): Promise<void> {
     const data_types = [
-        'gkill_info',
+        'application_config',
         'all_rep_names',
         'all_tag_names',
         'mi_board_list'
