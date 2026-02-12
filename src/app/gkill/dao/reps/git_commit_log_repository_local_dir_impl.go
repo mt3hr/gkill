@@ -34,8 +34,6 @@ func NewGitRep(reppath string) (GitCommitLogRepository, error) {
 	}, nil
 }
 func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	g.m.RLock()
-	defer g.m.RUnlock()
 
 	var err error
 	// update_cacheであればキャッシュを更新する
@@ -47,6 +45,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 			return nil, err
 		}
 	}
+	g.m.RLock()
+	defer g.m.RUnlock()
 
 	repName, err := g.GetRepName(ctx)
 	if err != nil {
@@ -305,14 +305,10 @@ func (g *gitCommitLogRepositoryLocalImpl) GetRepName(ctx context.Context) (strin
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) Close(ctx context.Context) error {
-	g.m.Lock()
-	defer g.m.Unlock()
 	return nil
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error) {
-	g.m.RLock()
-	defer g.m.RUnlock()
 
 	var err error
 
@@ -325,6 +321,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 			return nil, err
 		}
 	}
+	g.m.RLock()
+	defer g.m.RUnlock()
 
 	repName, err := g.GetRepName(ctx)
 	if err != nil {

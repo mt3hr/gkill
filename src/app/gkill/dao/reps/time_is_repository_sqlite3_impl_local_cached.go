@@ -225,9 +225,16 @@ func (i *timeIsRepositorySQLite3ImplLocalCached) GetTimeIsHistories(ctx context.
 }
 
 func (i *timeIsRepositorySQLite3ImplLocalCached) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
-	i.m.Lock()
-	defer i.m.Unlock()
-	err := i.originalRep.AddTimeIsInfo(ctx, timeis)
+	err := func() error {
+		i.m.Lock()
+		defer i.m.Unlock()
+		err := i.originalRep.AddTimeIsInfo(ctx, timeis)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

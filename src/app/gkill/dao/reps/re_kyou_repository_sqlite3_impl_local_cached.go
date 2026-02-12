@@ -228,9 +228,16 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) GetReKyouHistories(ctx context.
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
-	r.m.Lock()
-	defer r.m.Unlock()
-	err := r.originalRep.AddReKyouInfo(ctx, rekyou)
+	err := func() error {
+		r.m.Lock()
+		defer r.m.Unlock()
+		err := r.originalRep.AddReKyouInfo(ctx, rekyou)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

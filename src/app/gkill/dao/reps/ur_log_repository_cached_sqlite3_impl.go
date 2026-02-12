@@ -98,8 +98,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	u.m.RLock()
-	defer u.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -112,6 +110,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query 
 		}
 
 	}
+	u.m.RLock()
+	defer u.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -375,8 +375,6 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	u.m.Lock()
-	defer u.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -544,8 +542,6 @@ func (u *urlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
-	u.m.RLock()
-	defer u.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -558,6 +554,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query 
 		}
 
 	}
+	u.m.RLock()
+	defer u.m.RUnlock()
 
 	sql := `
 SELECT 

@@ -226,9 +226,16 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) GetLantanaHistories(ctx contex
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
-	l.m.Lock()
-	defer l.m.Unlock()
-	err := l.originalRep.AddLantanaInfo(ctx, lantana)
+	err := func() error {
+		l.m.Lock()
+		defer l.m.Unlock()
+		err := l.originalRep.AddLantanaInfo(ctx, lantana)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

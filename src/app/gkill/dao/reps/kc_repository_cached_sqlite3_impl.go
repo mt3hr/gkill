@@ -96,8 +96,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	k.m.RLock()
-	defer k.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -108,6 +106,8 @@ func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 			return nil, err
 		}
 	}
+	k.m.RLock()
+	defer k.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -367,8 +367,6 @@ func (k *kcRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	k.m.Lock()
-	defer k.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -527,8 +525,6 @@ func (k *kcRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
-	k.m.RLock()
-	defer k.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -541,6 +537,8 @@ func (k *kcRepositoryCachedSQLite3Impl) FindKC(ctx context.Context, query *find.
 		}
 
 	}
+	k.m.RLock()
+	defer k.m.RUnlock()
 
 	sql := `
 SELECT 

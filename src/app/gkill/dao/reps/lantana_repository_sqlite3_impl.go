@@ -132,8 +132,6 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 }
 
 func (l *lantanaRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	l.m.RLock()
-	defer l.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if l.fullConnect {
@@ -161,6 +159,8 @@ func (l *lantanaRepositorySQLite3Impl) FindKyous(ctx context.Context, query *fin
 		}
 
 	}
+	l.m.RLock()
+	defer l.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -506,8 +506,6 @@ func (l *lantanaRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (l *lantanaRepositorySQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
-	l.m.RLock()
-	defer l.m.RUnlock()
 	var err error
 	var db *sql.DB
 	if l.fullConnect {
@@ -535,6 +533,8 @@ func (l *lantanaRepositorySQLite3Impl) FindLantana(ctx context.Context, query *f
 		}
 
 	}
+	l.m.RLock()
+	defer l.m.RUnlock()
 
 	sql := `
 SELECT 

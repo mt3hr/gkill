@@ -103,8 +103,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	n.m.RLock()
-	defer n.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -116,6 +114,8 @@ func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *
 		}
 
 	}
+	n.m.RLock()
+	defer n.m.RUnlock()
 
 	sql := `
 SELECT 
@@ -379,8 +379,6 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	n.m.Lock()
-	defer n.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -544,8 +542,6 @@ func (n *nlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
-	n.m.RLock()
-	defer n.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -557,6 +553,8 @@ func (n *nlogRepositoryCachedSQLite3Impl) FindNlog(ctx context.Context, query *f
 			return nil, err
 		}
 	}
+	n.m.RLock()
+	defer n.m.RUnlock()
 
 	dataType := "nlog"
 

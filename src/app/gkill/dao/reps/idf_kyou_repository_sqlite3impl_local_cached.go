@@ -238,9 +238,16 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) GetIDFKyouHistories(ctx contex
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) IDF(ctx context.Context) error {
-	i.m.Lock()
-	defer i.m.Unlock()
-	err := i.originalRep.IDF(ctx)
+	err := func() error {
+		i.m.Lock()
+		defer i.m.Unlock()
+		err := i.originalRep.IDF(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}
@@ -248,9 +255,16 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) IDF(ctx context.Context) error
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
-	i.m.Lock()
-	defer i.m.Unlock()
-	err := i.originalRep.AddIDFKyouInfo(ctx, idfKyou)
+	err := func() error {
+		i.m.Lock()
+		defer i.m.Unlock()
+		err := i.originalRep.AddIDFKyouInfo(ctx, idfKyou)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

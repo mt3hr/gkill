@@ -226,9 +226,16 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) GetKmemoHistories(ctx context.Co
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-	err := k.originalRep.AddKmemoInfo(ctx, kmemo)
+	err := func() error {
+		k.m.Lock()
+		defer k.m.Unlock()
+		err := k.originalRep.AddKmemoInfo(ctx, kmemo)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

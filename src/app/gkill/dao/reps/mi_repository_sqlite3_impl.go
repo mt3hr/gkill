@@ -120,8 +120,6 @@ CREATE TABLE IF NOT EXISTS "MI" (
 }
 
 func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if m.fullConnect {
@@ -148,6 +146,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 			return nil, err
 		}
 	}
+	m.m.RLock()
+	defer m.m.RUnlock()
 
 	repName, err := m.GetRepName(ctx)
 	if err != nil {
@@ -528,8 +528,6 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 }
 
 func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if m.fullConnect {
@@ -565,6 +563,8 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 			return nil, err
 		}
 	}
+	m.m.RLock()
+	defer m.m.RUnlock()
 
 	repName, err := m.GetRepName(ctx)
 	if err != nil {
@@ -943,8 +943,6 @@ func (m *miRepositorySQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	var err error
 	var db *sqllib.DB
 	if m.fullConnect {
@@ -970,6 +968,8 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 			return nil, err
 		}
 	}
+	m.m.RLock()
+	defer m.m.RUnlock()
 
 	repName, err := m.GetRepName(ctx)
 	if err != nil {
