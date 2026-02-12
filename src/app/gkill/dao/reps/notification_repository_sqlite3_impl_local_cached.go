@@ -219,9 +219,16 @@ func (n *notificationRepositorySQLite3ImplLocalCached) GetNotificationHistories(
 }
 
 func (n *notificationRepositorySQLite3ImplLocalCached) AddNotificationInfo(ctx context.Context, notification *Notification) error {
-	n.m.Lock()
-	defer n.m.Unlock()
-	err := n.originalRep.AddNotificationInfo(ctx, notification)
+	err := func() error {
+		n.m.Lock()
+		defer n.m.Unlock()
+		err := n.originalRep.AddNotificationInfo(ctx, notification)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

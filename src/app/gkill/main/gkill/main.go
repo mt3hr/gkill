@@ -147,12 +147,7 @@ var (
 				fmt.Printf("Electronが動かない環境であるかもしれません。その場合gkillは動きませんので変わりにgkill_serverを起動し、ブラウザからのアクセスを試みてください。")
 				log.Fatal(err)
 			}
-			defer func() {
-				err := a.Close()
-				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-				}
-			}()
+			defer func() { a.Close() }()
 
 			// Start astilectron
 			a.Start()

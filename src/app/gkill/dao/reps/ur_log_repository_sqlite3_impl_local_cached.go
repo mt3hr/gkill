@@ -226,9 +226,16 @@ func (u *urlogRepositorySQLite3ImplLocalCached) GetURLogHistories(ctx context.Co
 }
 
 func (u *urlogRepositorySQLite3ImplLocalCached) AddURLogInfo(ctx context.Context, urlog *URLog) error {
-	u.m.Lock()
-	defer u.m.Unlock()
-	err := u.originalRep.AddURLogInfo(ctx, urlog)
+	err := func() error {
+		u.m.Lock()
+		defer u.m.Unlock()
+		err := u.originalRep.AddURLogInfo(ctx, urlog)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}

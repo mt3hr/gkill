@@ -219,9 +219,16 @@ func (t *tagRepositorySQLite3ImplLocalCached) GetTagHistories(ctx context.Contex
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) AddTagInfo(ctx context.Context, tag *Tag) error {
-	t.m.Lock()
-	defer t.m.Unlock()
-	err := t.originalRep.AddTagInfo(ctx, tag)
+	err := func() error {
+		t.m.Lock()
+		defer t.m.Unlock()
+		err := t.originalRep.AddTagInfo(ctx, tag)
+		if err != nil {
+			return err
+		}
+		return nil
+	}()
+
 	if err != nil {
 		return err
 	}
