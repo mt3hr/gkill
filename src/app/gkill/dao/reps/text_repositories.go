@@ -36,7 +36,7 @@ func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) 
 			ch <- matchTextsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -115,7 +115,7 @@ func (t TextRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -160,7 +160,7 @@ func (t TextRepositories) GetText(ctx context.Context, id string, updateTime *ti
 			ch <- matchTextInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -225,7 +225,7 @@ func (t TextRepositories) GetTextsByTargetID(ctx context.Context, target_id stri
 			ch <- matchTextsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -297,7 +297,7 @@ func (t TextRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -372,7 +372,7 @@ func (t TextRepositories) GetTextHistories(ctx context.Context, id string) ([]Te
 			ch <- matchTextsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -460,7 +460,7 @@ func (t TextRepositories) GetTextHistoriesByRepName(ctx context.Context, id stri
 			ch <- matchTextsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

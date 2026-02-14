@@ -36,7 +36,7 @@ func (u URLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -106,7 +106,7 @@ func (u URLogRepositories) GetKyou(ctx context.Context, id string, updateTime *t
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -171,7 +171,7 @@ func (u URLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]K
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -270,7 +270,7 @@ func (u URLogRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -319,7 +319,7 @@ func (u URLogRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -364,7 +364,7 @@ func (u URLogRepositories) FindURLog(ctx context.Context, query *find.FindQuery)
 			ch <- matchURLogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -440,7 +440,7 @@ func (u URLogRepositories) GetURLog(ctx context.Context, id string, updateTime *
 			ch <- matchURLogInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -505,7 +505,7 @@ func (u URLogRepositories) GetURLogHistories(ctx context.Context, id string) ([]
 			ch <- matchURLogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -594,7 +594,7 @@ func (u URLogRepositories) GetURLogHistoriesByRepName(ctx context.Context, id st
 			ch <- matchURLogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

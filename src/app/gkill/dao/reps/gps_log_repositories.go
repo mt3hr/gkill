@@ -34,7 +34,7 @@ func (g GPSLogRepositories) GetAllGPSLogs(ctx context.Context) ([]GPSLog, error)
 			ch <- matchGPSLogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -96,7 +96,7 @@ func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime *time.Time
 			ch <- matchGPSLogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
