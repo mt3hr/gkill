@@ -26,16 +26,18 @@ func (u URLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range u {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				matchKyousInRep, err := rep.FindKyous(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -94,16 +96,18 @@ func (u URLogRepositories) GetKyou(ctx context.Context, id string, updateTime *t
 
 	// 並列処理
 	for _, rep := range u {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyouInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyouInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -157,16 +161,18 @@ func (u URLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]K
 
 	// 並列処理
 	for _, rep := range u {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -255,15 +261,17 @@ func (u URLogRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range u {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				err = rep.UpdateCache(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.UpdateCache(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -302,15 +310,17 @@ func (u URLogRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				err = rep.Close(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.Close(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -344,16 +354,18 @@ func (u URLogRepositories) FindURLog(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range u {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				matchURLogsInRep, err := rep.FindURLog(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchURLogsInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchURLogsInRep, err := rep.FindURLog(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchURLogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -418,16 +430,18 @@ func (u URLogRepositories) GetURLog(ctx context.Context, id string, updateTime *
 
 	// 並列処理
 	for _, rep := range u {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				matchURLogInRep, err := rep.GetURLog(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchURLogInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchURLogInRep, err := rep.GetURLog(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchURLogInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -481,16 +495,18 @@ func (u URLogRepositories) GetURLogHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range u {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				matchURLogsInRep, err := rep.GetURLogHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchURLogsInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchURLogsInRep, err := rep.GetURLogHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchURLogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -556,28 +572,30 @@ func (u URLogRepositories) GetURLogHistoriesByRepName(ctx context.Context, id st
 
 	// 並列処理
 	for _, rep := range u {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep URLogRepository) {
-				if repName != nil {
-					// repNameが一致しない場合はスキップ
-					repNameInRep, err := rep.GetRepName(ctx)
-					if err != nil {
-						errch <- fmt.Errorf("error at get rep name: %w", err)
-						return
-					}
-					if repNameInRep != *repName {
-						return
-					}
-				}
-
-				matchURLogsInRep, err := rep.GetURLogHistories(ctx, id)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
 				if err != nil {
-					errch <- err
+					errch <- fmt.Errorf("error at get rep name: %w", err)
 					return
 				}
-				ch <- matchURLogsInRep
-			}(rep)
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchURLogsInRep, err := rep.GetURLogHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchURLogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 

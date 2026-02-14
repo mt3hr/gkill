@@ -26,16 +26,18 @@ func (n NlogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) 
 
 	// 並列処理
 	for _, rep := range n {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				matchKyousInRep, err := rep.FindKyous(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -94,16 +96,18 @@ func (n NlogRepositories) GetKyou(ctx context.Context, id string, updateTime *ti
 
 	// 並列処理
 	for _, rep := range n {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyouInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyouInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -157,16 +161,18 @@ func (n NlogRepositories) GetKyouHistories(ctx context.Context, id string) ([]Ky
 
 	// 並列処理
 	for _, rep := range n {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -255,15 +261,17 @@ func (n NlogRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range n {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				err = rep.UpdateCache(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.UpdateCache(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -302,15 +310,17 @@ func (n NlogRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				err = rep.Close(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.Close(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -344,16 +354,18 @@ func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) (
 
 	// 並列処理
 	for _, rep := range n {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				matchNlogsInRep, err := rep.FindNlog(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchNlogsInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchNlogsInRep, err := rep.FindNlog(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNlogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -418,16 +430,18 @@ func (n NlogRepositories) GetNlog(ctx context.Context, id string, updateTime *ti
 
 	// 並列処理
 	for _, rep := range n {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				matchNlogInRep, err := rep.GetNlog(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchNlogInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchNlogInRep, err := rep.GetNlog(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNlogInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -481,16 +495,18 @@ func (n NlogRepositories) GetNlogHistories(ctx context.Context, id string) ([]Nl
 
 	// 並列処理
 	for _, rep := range n {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				matchNlogsInRep, err := rep.GetNlogHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchNlogsInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchNlogsInRep, err := rep.GetNlogHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNlogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -556,28 +572,30 @@ func (n NlogRepositories) GetNlogHistoriesByRepName(ctx context.Context, id stri
 
 	// 並列処理
 	for _, rep := range n {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep NlogRepository) {
-				if repName != nil {
-					// repNameが一致しない場合はスキップ
-					repNameInRep, err := rep.GetRepName(ctx)
-					if err != nil {
-						errch <- fmt.Errorf("error at get rep name: %w", err)
-						return
-					}
-					if repNameInRep != *repName {
-						return
-					}
-				}
-
-				matchNlogsInRep, err := rep.GetNlogHistories(ctx, id)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
 				if err != nil {
-					errch <- err
+					errch <- fmt.Errorf("error at get rep name: %w", err)
 					return
 				}
-				ch <- matchNlogsInRep
-			}(rep)
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchNlogsInRep, err := rep.GetNlogHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNlogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 

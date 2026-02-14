@@ -24,16 +24,18 @@ func (g GPSLogRepositories) GetAllGPSLogs(ctx context.Context) ([]GPSLog, error)
 
 	// 並列処理
 	for _, rep := range g {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep GPSLogRepository) {
-				matchGPSLogsInRep, err := rep.GetAllGPSLogs(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchGPSLogsInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchGPSLogsInRep, err := rep.GetAllGPSLogs(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchGPSLogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -84,16 +86,18 @@ func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime *time.Time
 
 	// 並列処理
 	for _, rep := range g {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep GPSLogRepository) {
-				matchGPSLogsInRep, err := rep.GetGPSLogs(ctx, startTime, endTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchGPSLogsInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchGPSLogsInRep, err := rep.GetGPSLogs(ctx, startTime, endTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchGPSLogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
