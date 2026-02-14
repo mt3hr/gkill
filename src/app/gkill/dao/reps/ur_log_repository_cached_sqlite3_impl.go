@@ -229,29 +229,123 @@ WHERE
 func (u *urlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
-	// 最新のデータを返す
-	kyouHistories, err := u.GetKyouHistories(ctx, id)
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + u.dbName + `
+WHERE 
+`
+	dataType := "urlog"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+
+	tableName := u.dbName
+	tableNameAlias := u.dbName
+	queryArgs := []interface{}{
+		dataType,
+	}
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
+	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
+	ignoreFindWord := false
+	appendOrderBy := false
+
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from URLOG %s: %w", id, err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(kyouHistories) == 0 {
-		return nil, nil
-	}
+	sql += commonWhereSQL
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at select from URLOG %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	kyous := []Kyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			kyou := Kyou{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
+			err = rows.Scan(
+				&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeUnix,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from URLOG %s: %w", id, err)
+				return nil, err
+			}
+
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			kyous = append(kyous, kyou)
+		}
+	}
+	if len(kyous) == 0 {
 		return nil, nil
 	}
-
-	return &kyouHistories[0], nil
+	return &kyous[0], nil
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -680,29 +774,139 @@ WHERE
 func (u *urlogRepositoryCachedSQLite3Impl) GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error) {
 	u.m.RLock()
 	defer u.m.RUnlock()
-	// 最新のデータを返す
-	urlogHistories, err := u.GetURLogHistories(ctx, id)
+	repName, err := u.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get urlog histories from URLog %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(urlogHistories) == 0 {
-		return nil, nil
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  URL,
+  TITLE,
+  DESCRIPTION,
+  FAVICON_IMAGE,
+  THUMBNAIL_IMAGE,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + u.dbName + `
+WHERE
+`
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+	dataType := "urlog"
+
+	tableName := u.dbName
+	tableNameAlias := u.dbName
+	queryArgs := []interface{}{
+		dataType,
+	}
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
+	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
+		return nil, err
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range urlogHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	sql += commonWhereSQL
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get urlog histories sql %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at query ")
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	urlogs := []URLog{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			urlog := URLog{}
+			urlog.RepName = repName
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
+			err = rows.Scan(
+				&urlog.IsDeleted,
+				&urlog.ID,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&urlog.CreateApp,
+				&urlog.CreateDevice,
+				&urlog.CreateUser,
+				&updateTimeUnix,
+				&urlog.UpdateApp,
+				&urlog.UpdateDevice,
+				&urlog.UpdateUser,
+				&urlog.URL,
+				&urlog.Title,
+				&urlog.Description,
+				&urlog.FaviconImage,
+				&urlog.ThumbnailImage,
+				&urlog.RepName,
+				&urlog.DataType,
+			)
+
+			urlog.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			urlog.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			urlog.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			if err != nil {
+				err = fmt.Errorf("error at scan from URLOG %s: %w", id, err)
+				return nil, err
+			}
+			urlogs = append(urlogs, urlog)
+		}
+	}
+	if len(urlogs) == 0 {
 		return nil, nil
 	}
-
-	return &urlogHistories[0], nil
+	return &urlogs[0], nil
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]URLog, error) {

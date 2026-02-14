@@ -220,30 +220,156 @@ func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 	r.m.RLock()
 	defer r.m.RUnlock()
 	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
 
-	// 最新のデータを返す
-	kyouHistories, err := r.GetKyouHistories(ctx, id)
+	repName, err := r.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from REKYOU %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at rekyou: %w", err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(kyouHistories) == 0 {
-		return nil, nil
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM REKYOU
+WHERE 
+`
+	dataType := "rekyou"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	tableName := "REKYOU"
+	tableNameAlias := "REKYOU"
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from REKYOU %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	kyous := []Kyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			kyou := Kyou{}
+			kyou.RepName = repName
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+
+			err = rows.Scan(&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeStr,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from REKYOU %s: %w", id, err)
+				return nil, err
+			}
+
+			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s at %s in REKYOU: %w", relatedTimeStr, id, err)
+				return nil, err
+			}
+			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s at %s in REKYOU: %w", createTimeStr, id, err)
+				return nil, err
+			}
+			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s at %s in REKYOU: %w", updateTimeStr, id, err)
+				return nil, err
+			}
+			kyous = append(kyous, kyou)
+		}
+	}
+	if len(kyous) == 0 {
 		return nil, nil
 	}
-
-	return &kyouHistories[0], nil
+	return &kyous[0], nil
 }
 
 func (r *reKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -477,29 +603,159 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *fin
 func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string, updateTime *time.Time) (*ReKyou, error) {
 	r.m.RLock()
 	defer r.m.RUnlock()
-	// 最新のデータを返す
-	reKyouHistories, err := r.GetReKyouHistories(ctx, id)
+	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_ID,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_USER,
+  CREATE_DEVICE,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM REKYOU
+WHERE  
+`
+	repName, err := r.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rekyou histories from REKYOU %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at rekyou: %w", err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(reKyouHistories) == 0 {
-		return nil, nil
+	dataType := "rekyou"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range reKyouHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	tableName := "REKYOU"
+	tableNameAlias := "REKYOU"
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at select from REKYOU: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	reKyous := []ReKyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			reKyou := ReKyou{}
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+
+			err = rows.Scan(&reKyou.IsDeleted,
+				&reKyou.ID,
+				&reKyou.TargetID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&reKyou.CreateApp,
+				&reKyou.CreateDevice,
+				&reKyou.CreateUser,
+				&updateTimeStr,
+				&reKyou.UpdateApp,
+				&reKyou.UpdateDevice,
+				&reKyou.UpdateUser,
+				&reKyou.RepName,
+				&reKyou.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from REKYOU %s: %w", id, err)
+				return nil, err
+			}
+
+			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s in REKYOU: %w", relatedTimeStr, err)
+				return nil, err
+			}
+			reKyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s in REKYOU: %w", createTimeStr, err)
+				return nil, err
+			}
+			reKyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s in REKYOU: %w", updateTimeStr, err)
+				return nil, err
+			}
+			reKyous = append(reKyous, reKyou)
+		}
+	}
+	if len(reKyous) == 0 {
 		return nil, nil
 	}
-
-	return &reKyouHistories[0], nil
+	return &reKyous[0], nil
 }
 
 func (r *reKyouRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]ReKyou, error) {
