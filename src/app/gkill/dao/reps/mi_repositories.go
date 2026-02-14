@@ -26,16 +26,18 @@ func (m MiRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (m
 
 	// 並列処理
 	for _, rep := range m {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				matchKyousInRep, err := rep.FindKyous(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -95,16 +97,18 @@ func (m MiRepositories) GetKyou(ctx context.Context, id string, updateTime *time
 
 	// 並列処理
 	for _, rep := range m {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyouInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyouInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -158,16 +162,18 @@ func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou
 
 	// 並列処理
 	for _, rep := range m {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -256,15 +262,17 @@ func (m MiRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range m {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				err = rep.UpdateCache(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.UpdateCache(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -303,15 +311,17 @@ func (m MiRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				err = rep.Close(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.Close(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -345,16 +355,18 @@ func (m MiRepositories) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi
 
 	// 並列処理
 	for _, rep := range m {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				matchMisInRep, err := rep.FindMi(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchMisInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchMisInRep, err := rep.FindMi(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchMisInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -419,16 +431,18 @@ func (m MiRepositories) GetMi(ctx context.Context, id string, updateTime *time.T
 
 	// 並列処理
 	for _, rep := range m {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				matchMiInRep, err := rep.GetMi(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchMiInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchMiInRep, err := rep.GetMi(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchMiInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -482,16 +496,18 @@ func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]Mi, er
 
 	// 並列処理
 	for _, rep := range m {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				matchMisInRep, err := rep.GetMiHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchMisInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchMisInRep, err := rep.GetMiHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchMisInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -557,28 +573,30 @@ func (m MiRepositories) GetMiHistoriesByRepName(ctx context.Context, id string, 
 
 	// 並列処理
 	for _, rep := range m {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep MiRepository) {
-				if repName != nil {
-					// repNameが一致しない場合はスキップ
-					repNameInRep, err := rep.GetRepName(ctx)
-					if err != nil {
-						errch <- fmt.Errorf("error at get rep name: %w", err)
-						return
-					}
-					if repNameInRep != *repName {
-						return
-					}
-				}
-
-				matchMisInRep, err := rep.GetMiHistories(ctx, id)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
 				if err != nil {
-					errch <- err
+					errch <- fmt.Errorf("error at get rep name: %w", err)
 					return
 				}
-				ch <- matchMisInRep
-			}(rep)
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchMisInRep, err := rep.GetMiHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchMisInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
