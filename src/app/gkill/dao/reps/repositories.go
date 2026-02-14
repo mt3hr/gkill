@@ -38,7 +38,7 @@ func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -108,7 +108,7 @@ func (r Repositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -153,7 +153,7 @@ func (r Repositories) GetKyou(ctx context.Context, id string, updateTime *time.T
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -284,7 +284,7 @@ func (r Repositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, 
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -370,7 +370,7 @@ func (r Repositories) GetKyouHistoriesByRepName(ctx context.Context, id string, 
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

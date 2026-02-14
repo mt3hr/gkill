@@ -39,7 +39,7 @@ func (i IDFKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -108,7 +108,7 @@ func (i IDFKyouRepositories) GetKyou(ctx context.Context, id string, updateTime 
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -173,7 +173,7 @@ func (i IDFKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -267,7 +267,7 @@ func (i IDFKyouRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -316,7 +316,7 @@ func (i IDFKyouRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -361,7 +361,7 @@ func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, query *find.FindQu
 			ch <- matchIDFKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -437,7 +437,7 @@ func (i IDFKyouRepositories) GetIDFKyou(ctx context.Context, id string, updateTi
 			ch <- matchIDFKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -502,7 +502,7 @@ func (i IDFKyouRepositories) GetIDFKyouHistories(ctx context.Context, id string)
 			ch <- matchIDFKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -591,7 +591,7 @@ func (i IDFKyouRepositories) GetIDFKyouHistoriesByRepName(ctx context.Context, i
 			ch <- matchIDFKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

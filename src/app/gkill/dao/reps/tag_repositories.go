@@ -36,7 +36,7 @@ func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -115,7 +115,7 @@ func (t TagRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -160,7 +160,7 @@ func (t TagRepositories) GetTag(ctx context.Context, id string, updateTime *time
 			ch <- matchTagInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -225,7 +225,7 @@ func (t TagRepositories) GetTagsByTagName(ctx context.Context, tagname string) (
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -299,7 +299,7 @@ func (t TagRepositories) GetTagsByTargetID(ctx context.Context, target_id string
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -369,7 +369,7 @@ func (t TagRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -444,7 +444,7 @@ func (t TagRepositories) GetTagHistories(ctx context.Context, id string) ([]Tag,
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -531,7 +531,7 @@ func (t TagRepositories) GetTagHistoriesByRepName(ctx context.Context, id string
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -644,7 +644,7 @@ func (t TagRepositories) GetAllTags(ctx context.Context) ([]Tag, error) {
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

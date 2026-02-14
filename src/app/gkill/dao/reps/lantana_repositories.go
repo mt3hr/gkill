@@ -36,7 +36,7 @@ func (l LantanaRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -106,7 +106,7 @@ func (l LantanaRepositories) GetKyou(ctx context.Context, id string, updateTime 
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -171,7 +171,7 @@ func (l LantanaRepositories) GetKyouHistories(ctx context.Context, id string) ([
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -270,7 +270,7 @@ func (l LantanaRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -319,7 +319,7 @@ func (l LantanaRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -364,7 +364,7 @@ func (l LantanaRepositories) FindLantana(ctx context.Context, query *find.FindQu
 			ch <- matchLantanasInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -440,7 +440,7 @@ func (l LantanaRepositories) GetLantana(ctx context.Context, id string, updateTi
 			ch <- matchLantanaInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -505,7 +505,7 @@ func (l LantanaRepositories) GetLantanaHistories(ctx context.Context, id string)
 			ch <- matchLantanasInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -594,7 +594,7 @@ func (l LantanaRepositories) GetLantanaHistoriesByRepName(ctx context.Context, i
 			ch <- matchLantanasInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
