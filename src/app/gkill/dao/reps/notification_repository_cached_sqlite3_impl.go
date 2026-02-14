@@ -251,29 +251,138 @@ func (n *notificationRepositoryCachedSQLite3Impl) Close(ctx context.Context) err
 func (n *notificationRepositoryCachedSQLite3Impl) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
-	// 最新のデータを返す
-	notificationHistories, err := n.GetNotificationHistories(ctx, id)
+	var err error
+
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_ID,
+  NOTIFICATION_TIME_UNIX,
+  CONTENT,
+  IS_NOTIFICATED,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_USER,
+  CREATE_DEVICE,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + n.dbName + `
+WHERE 
+`
+
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get notification histories from NOTIFICATION %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at notification: %w", err)
+		return nil, err
+	}
+	dataType := "notification"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	tableName := n.dbName
+	tableNameAlias := n.dbName
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "UPDATE_TIME_UNIX"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(notificationHistories) == 0 {
-		return nil, nil
-	}
+	sql += commonWhereSQL
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, notification := range notificationHistories {
-			if notification.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
-				return &notification, nil
-			}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get notification histories sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	notifications := []Notification{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			notification := Notification{}
+			notificationTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+			dataType := ""
+
+			err = rows.Scan(
+				&notification.IsDeleted,
+				&notification.ID,
+				&notification.TargetID,
+				&notificationTimeUnix,
+				&notification.Content,
+				&notification.IsNotificated,
+				&createTimeUnix,
+				&notification.CreateApp,
+				&notification.CreateDevice,
+				&notification.CreateUser,
+				&updateTimeUnix,
+				&notification.UpdateApp,
+				&notification.UpdateDevice,
+				&notification.UpdateUser,
+				&notification.RepName,
+				&dataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from NOTIFICATION: %w", err)
+				return nil, err
+			}
+
+			notification.NotificationTime = time.Unix(notificationTimeUnix, 0).Local()
+			notification.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			notification.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			notifications = append(notifications, notification)
+		}
+	}
+	if len(notifications) == 0 {
 		return nil, nil
 	}
-
-	return &notificationHistories[0], nil
+	return &notifications[0], nil
 }
 
 func (n *notificationRepositoryCachedSQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]Notification, error) {

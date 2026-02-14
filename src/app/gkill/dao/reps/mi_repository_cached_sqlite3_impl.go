@@ -453,31 +453,371 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	var err error
+
+	trueValue := true
+	query := &find.FindQuery{
+		UseIDs:          &trueValue,
+		IDs:             &[]string{id},
+		IncludeCreateMi: &trueValue,
+		IncludeStartMi:  &trueValue,
+		IncludeCheckMi:  &trueValue,
+		OnlyLatestData:  new(updateTime == nil),
+		UseUpdateTime:   new(updateTime != nil),
+		UpdateTime:      updateTime,
+	}
+
+	// update_cacheであればキャッシュを更新する
+	if query.UpdateCache != nil && *query.UpdateCache {
+		err = m.UpdateCache(ctx)
+		if err != nil {
+			repName, _ := m.GetRepName(ctx)
+			err = fmt.Errorf("error at update cache %s: %w", repName, err)
+			return nil, err
+		}
+	}
 	m.m.RLock()
 	defer m.m.RUnlock()
-	// 最新のデータを返す
-	kyouHistories, err := m.GetKyouHistories(ctx, id)
+
+	sqlCreateMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  CREATE_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_create' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+
+	sqlCheckMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  UPDATE_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_check' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+
+	sqlLimitMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  LIMIT_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_limit' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+	sqlStartMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  ESTIMATE_START_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_start' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+
+	sqlEndMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  ESTIMATE_END_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_end' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+
+	// 検索対象のデータ抽出用WHERE
+	filterWhereCounter := 0
+	sqlWhereFilterEndMi := ""
+	sqlWhereFilterEndMi += "DATA_TYPE IN ("
+
+	if query.IncludeCreateMi != nil && *query.IncludeCreateMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_create'"
+	}
+	if query.IncludeCheckMi != nil && *query.IncludeCheckMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_check'"
+	}
+	if query.IncludeLimitMi != nil && *query.IncludeLimitMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_limit'"
+	}
+	if query.IncludeStartMi != nil && *query.IncludeStartMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_start'"
+	}
+	if query.IncludeEndMi != nil && *query.IncludeEndMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_end'"
+	}
+	sqlWhereFilterEndMi += ")"
+	if filterWhereCounter == 0 {
+		sqlWhereFilterEndMi = " 1 = 0 " // false
+	}
+
+	tableName := m.dbName
+	tableNameAlias := m.dbName
+	queryArgsForCreate := []interface{}{}
+	whereCounter := 0
+	var onlyLatestData bool
+	relatedTimeColumnName := "CREATE_TIME_UNIX"
+	findWordTargetColumns := []string{"TITLE"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := false
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from MI %s: %w", id, err)
 		return nil, err
 	}
-
-	// なければnilを返す
-	if len(kyouHistories) == 0 {
-		return nil, nil
+	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForCreate += " AND "
+		sqlWhereForCreate += " BOARD_NAME = ? "
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	tableName = m.dbName
+	tableNameAlias = m.dbName
+	queryArgsForCheck := []interface{}{}
+	whereCounter = 0
+	relatedTimeColumnName = "RELATED_TIME_UNIX"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	findWordUseLike = true
+	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
+	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForCheck += " AND "
+		sqlWhereForCheck += " BOARD_NAME = ? "
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
+	}
+
+	tableName = m.dbName
+	tableNameAlias = m.dbName
+	queryArgsForLimit := []interface{}{}
+	whereCounter = 0
+	relatedTimeColumnName = "LIMIT_TIME_UNIX"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	findWordUseLike = true
+	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
+	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForLimit += " AND "
+		sqlWhereForLimit += " BOARD_NAME = ? "
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
+	}
+
+	tableName = m.dbName
+	tableNameAlias = m.dbName
+	queryArgsForStart := []interface{}{}
+	whereCounter = 0
+	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	findWordUseLike = true
+	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForStart += " AND "
+		sqlWhereForStart += " BOARD_NAME = ? "
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
+	}
+
+	tableName = m.dbName
+	tableNameAlias = m.dbName
+	queryArgsForEnd := []interface{}{}
+	whereCounter = 0
+	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	findWordUseLike = true
+	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForEnd += " AND "
+		sqlWhereForEnd += " BOARD_NAME = ? "
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
+	}
+
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get find kyous sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	queryArgs := []interface{}{}
+	queryArgs = append(queryArgs, queryArgsForCreate...)
+	queryArgs = append(queryArgs, queryArgsForCheck...)
+	queryArgs = append(queryArgs, queryArgsForLimit...)
+	queryArgs = append(queryArgs, queryArgsForStart...)
+	queryArgs = append(queryArgs, queryArgsForEnd...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at select from MI: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	kyous := []Kyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			kyou := Kyou{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
+			err = rows.Scan(
+				&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeUnix,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi: %w", err)
+				return nil, err
+			}
+
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			kyous = append(kyous, kyou)
+		}
+	}
+	if len(kyous) == 0 {
 		return nil, nil
 	}
-
-	return &kyouHistories[0], nil
+	return &kyous[0], nil
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -1428,29 +1768,381 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
-	// 最新のデータを返す
-	miHistories, err := m.GetMiHistories(ctx, id)
+	var err error
+
+	trueValue := true
+	query := &find.FindQuery{
+		UseIDs:          &trueValue,
+		IDs:             &[]string{id},
+		IncludeCreateMi: &trueValue,
+		IncludeStartMi:  &trueValue,
+		IncludeCheckMi:  &trueValue,
+		OnlyLatestData:  new(updateTime == nil),
+		UseUpdateTime:   new(updateTime != nil),
+		UpdateTime:      updateTime,
+	}
+
+	sqlCreateMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  TITLE,
+  	      IS_CHECKED,
+          BOARD_NAME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_create' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+
+	sqlCheckMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  TITLE,
+  	      IS_CHECKED,
+          BOARD_NAME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_check' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+
+	sqlLimitMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  TITLE,
+  	      IS_CHECKED,
+          BOARD_NAME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_limit' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+	sqlStartMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  TITLE,
+  	      IS_CHECKED,
+          BOARD_NAME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_start' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+
+	sqlEndMi := `
+		SELECT
+		  IS_DELETED,
+		  ID,
+		  TITLE,
+  	      IS_CHECKED,
+          BOARD_NAME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
+		  CREATE_APP,
+		  CREATE_DEVICE,
+		  CREATE_USER,
+		  UPDATE_TIME_UNIX,
+		  UPDATE_APP,
+		  UPDATE_DEVICE,
+		  UPDATE_USER,
+		  REP_NAME,
+		  'mi_end' AS DATA_TYPE
+		FROM ` + m.dbName + `
+		`
+
+	// 検索対象のデータ抽出用WHERE
+	filterWhereCounter := 0
+	sqlWhereFilterEndMi := ""
+	sqlWhereFilterEndMi += "DATA_TYPE IN ("
+
+	if query.IncludeCreateMi != nil && *query.IncludeCreateMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_create'"
+	}
+	if query.IncludeCheckMi != nil && *query.IncludeCheckMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_check'"
+	}
+	if query.IncludeLimitMi != nil && *query.IncludeLimitMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_limit'"
+	}
+	if query.IncludeStartMi != nil && *query.IncludeStartMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_start'"
+	}
+	if query.IncludeEndMi != nil && *query.IncludeEndMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_end'"
+	}
+	sqlWhereFilterEndMi += ")"
+	if filterWhereCounter == 0 {
+		sqlWhereFilterEndMi = " 1 = 0 " // false
+	}
+
+	tableName := m.dbName
+	tableNameAlias := m.dbName
+	queryArgsForCreate := []interface{}{}
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "CREATE_TIME_UNIX"
+	findWordTargetColumns := []string{"TITLE"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := false
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
-		err = fmt.Errorf("error at get mi histories from MI %s: %w", id, err)
 		return nil, err
 	}
-
-	// なければnilを返す
-	if len(miHistories) == 0 {
-		return nil, nil
+	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForCreate += " AND "
+		sqlWhereForCreate += " BOARD_NAME = ? "
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range miHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	tableName = m.dbName
+	tableNameAlias = m.dbName
+	queryArgsForCheck := []interface{}{}
+	whereCounter = 0
+	onlyLatestData = false
+	relatedTimeColumnName = "CREATE_TIME_UNIX"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	findWordUseLike = true
+	ignoreCase = true
+	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForCheck += " AND "
+		sqlWhereForCheck += " BOARD_NAME = ? "
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
+	}
+
+	tableName = m.dbName
+	tableNameAlias = m.dbName
+	queryArgsForLimit := []interface{}{}
+	whereCounter = 0
+	onlyLatestData = false
+	relatedTimeColumnName = "LIMIT_TIME_UNIX"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	findWordUseLike = true
+	ignoreCase = true
+	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForLimit += " AND "
+		sqlWhereForLimit += " BOARD_NAME = ? "
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
+	}
+
+	tableName = m.dbName
+	tableNameAlias = m.dbName
+	queryArgsForStart := []interface{}{}
+	whereCounter = 0
+	onlyLatestData = false
+	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	findWordUseLike = true
+	ignoreCase = true
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForStart += " AND "
+		sqlWhereForStart += " BOARD_NAME = ? "
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
+	}
+
+	tableName = m.dbName
+	tableNameAlias = m.dbName
+	queryArgsForEnd := []interface{}{}
+	whereCounter = 0
+	onlyLatestData = false
+	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	findWordUseLike = true
+	ignoreCase = true
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForEnd += " AND "
+		sqlWhereForEnd += " BOARD_NAME = ? "
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
+	}
+
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get find kyous sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	queryArgs := []interface{}{}
+	queryArgs = append(queryArgs, queryArgsForCreate...)
+	queryArgs = append(queryArgs, queryArgsForCheck...)
+	queryArgs = append(queryArgs, queryArgsForLimit...)
+	queryArgs = append(queryArgs, queryArgsForStart...)
+	queryArgs = append(queryArgs, queryArgsForEnd...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at select from MI: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	mis := []Mi{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			mi := Mi{}
+			createTimeUnix, updateTimeUnix := int64(0), int64(0)
+			limitTime, estimateStartTime, estimateEndTime := sqllib.NullInt64{}, sqllib.NullInt64{}, sqllib.NullInt64{}
+
+			err = rows.Scan(
+				&mi.IsDeleted,
+				&mi.ID,
+				&mi.Title,
+				&mi.IsChecked,
+				&mi.BoardName,
+				&limitTime,
+				&estimateStartTime,
+				&estimateEndTime,
+				&createTimeUnix,
+				&mi.CreateApp,
+				&mi.CreateDevice,
+				&mi.CreateUser,
+				&updateTimeUnix,
+				&mi.UpdateApp,
+				&mi.UpdateDevice,
+				&mi.UpdateUser,
+				&mi.RepName,
+				&mi.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi: %w", err)
+				return nil, err
+			}
+
+			mi.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			mi.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			if limitTime.Valid {
+				parsedLimitTime := time.Unix(limitTime.Int64, 0)
+				mi.LimitTime = &parsedLimitTime
+			}
+			if estimateStartTime.Valid {
+				parsedEstimateStartTime := time.Unix(estimateStartTime.Int64, 0).Local()
+				mi.EstimateStartTime = &parsedEstimateStartTime
+			}
+			if estimateEndTime.Valid {
+				parsedEstimateEndTime := time.Unix(estimateEndTime.Int64, 0).Local()
+				mi.EstimateEndTime = &parsedEstimateEndTime
+			}
+			mis = append(mis, mi)
+		}
+	}
+	if len(mis) == 0 {
 		return nil, nil
 	}
+	return &mis[0], nil
 
-	return &miHistories[0], nil
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]Mi, error) {
