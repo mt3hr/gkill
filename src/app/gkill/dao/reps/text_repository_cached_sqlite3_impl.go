@@ -333,29 +333,129 @@ func (t *textRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 func (t *textRepositoryCachedSQLite3Impl) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
-	// 最新のデータを返す
-	textHistories, err := t.GetTextHistories(ctx, id)
+	var err error
+
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_ID,
+  TEXT,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + t.dbName + `
+WHERE 
+`
+
+	dataType := "text"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+	queryArgs := []interface{}{
+		dataType,
+	}
+
+	tableName := t.dbName
+	tableNameAlias := t.dbName
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "UPDATE_TIME_UNIX"
+	findWordTargetColumns := []string{"TEXT"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
-		err = fmt.Errorf("error at get text histories from TEXT %s: %w", id, err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(textHistories) == 0 {
-		return nil, nil
-	}
+	sql += commonWhereSQL
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range textHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get text histories sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at select from TEXT: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	texts := []Text{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			text := Text{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+			dataType := ""
+
+			err = rows.Scan(&text.IsDeleted,
+				&text.ID,
+				&text.TargetID,
+				&text.Text,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&text.CreateApp,
+				&text.CreateDevice,
+				&text.CreateUser,
+				&updateTimeUnix,
+				&text.UpdateApp,
+				&text.UpdateDevice,
+				&text.UpdateUser,
+				&text.RepName,
+				&dataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan TEXT: %w", err)
+				return nil, err
+			}
+
+			text.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			text.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			text.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			texts = append(texts, text)
+		}
+	}
+	if len(texts) == 0 {
 		return nil, nil
 	}
-
-	return &textHistories[0], nil
+	return &texts[0], nil
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error) {

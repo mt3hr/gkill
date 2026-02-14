@@ -518,29 +518,195 @@ WHERE
 func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
-	// 最新のデータを返す
-	kyouHistories, err := i.GetKyouHistories(ctx, id)
+	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_REP_NAME,
+  TARGET_FILE,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM IDF
+WHERE
+`
+
+	repName, err := i.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from idf %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at idf : %w", err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(kyouHistories) == 0 {
-		return nil, nil
+	dataType := "idf"
+	queryArgs := []interface{}{
+		repName,
+		dataType,
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+
+	tableName := "IDF"
+	tableNameAlias := "IDF"
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"TARGET_FILE"}
+	ignoreFindWord := true
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
+		err = fmt.Errorf("error at generate find sql common: %w", err)
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from idf: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	kyous := []Kyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			idf := IDFKyou{}
+			idf.RepName = repName
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			targetRepName := ""
+
+			err = rows.Scan(
+				&idf.IsDeleted,
+				&idf.ID,
+				&targetRepName,
+				&idf.TargetFile,
+				&relatedTimeStr,
+				&createTimeStr,
+				&idf.CreateApp,
+				&idf.CreateDevice,
+				&idf.CreateUser,
+				&updateTimeStr,
+				&idf.UpdateApp,
+				&idf.UpdateDevice,
+				&idf.UpdateUser,
+				&idf.RepName,
+				&idf.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				return nil, err
+			}
+
+			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
+			if err != nil {
+				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
+				return nil, err
+			}
+
+			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+
+			// 画像であるか判定
+			idf.IsImage = isImage(idf.TargetFile)
+			idf.IsVideo = isVideo(idf.TargetFile)
+			idf.IsAudio = isAudio(idf.TargetFile)
+
+			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
+				return nil, err
+			}
+			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
+				return nil, err
+			}
+			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
+				return nil, err
+			}
+
+			kyou := Kyou{}
+			kyou.IsDeleted = idf.IsDeleted
+			kyou.ID = idf.ID
+			kyou.RepName = idf.RepName
+			kyou.RelatedTime = idf.RelatedTime
+			kyou.DataType = idf.DataType
+			kyou.CreateTime = idf.CreateTime
+			kyou.CreateApp = idf.CreateApp
+			kyou.CreateDevice = idf.CreateDevice
+			kyou.CreateUser = idf.CreateUser
+			kyou.UpdateTime = idf.UpdateTime
+			kyou.UpdateApp = idf.UpdateApp
+			kyou.UpdateUser = idf.UpdateUser
+			kyou.UpdateDevice = idf.UpdateDevice
+			kyou.IsImage = idf.IsImage
+			kyou.IsVideo = idf.IsVideo
+
+			kyous = append(kyous, kyou)
+		}
+	}
+	if len(kyous) == 0 {
 		return nil, nil
 	}
-
-	return &kyouHistories[0], nil
+	return &kyous[0], nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -1156,29 +1322,177 @@ WHERE
 func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error) {
 	i.m.RLock()
 	defer i.m.RUnlock()
-	// 最新のデータを返す
-	idfHistories, err := i.GetIDFKyouHistories(ctx, id)
+	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_REP_NAME,
+  TARGET_FILE,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM IDF
+WHERE 
+`
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+
+	repName, err := i.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get idf kyou histories from IDF %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at idf : %w", err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(idfHistories) == 0 {
-		return nil, nil
+	dataType := "idf"
+	queryArgs := []interface{}{
+		repName,
+		dataType,
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range idfHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	tableName := "IDF"
+	tableNameAlias := "IDF"
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"ID"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := false
+	ignoreCase := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get idf histories sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from idf: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	idfKyous := []IDFKyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			idf := IDFKyou{}
+			idf.RepName = repName
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			targetRepName := ""
+
+			err = rows.Scan(
+				&idf.IsDeleted,
+				&idf.ID,
+				&targetRepName,
+				&idf.TargetFile,
+				&relatedTimeStr,
+				&createTimeStr,
+				&idf.CreateApp,
+				&idf.CreateDevice,
+				&idf.CreateUser,
+				&updateTimeStr,
+				&idf.UpdateApp,
+				&idf.UpdateDevice,
+				&idf.UpdateUser,
+				&idf.RepName,
+				&idf.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				return nil, err
+			}
+
+			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
+			if err != nil {
+				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
+				return nil, err
+			}
+
+			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+
+			// 画像であるか判定
+			idf.IsImage = isImage(idf.TargetFile)
+			idf.IsVideo = isVideo(idf.TargetFile)
+			idf.IsAudio = isAudio(idf.TargetFile)
+
+			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
+				return nil, err
+			}
+			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
+				return nil, err
+			}
+			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
+				return nil, err
+			}
+
+			idfKyous = append(idfKyous, idf)
+		}
+	}
+	if len(idfKyous) == 0 {
 		return nil, nil
 	}
-
-	return &idfHistories[0], nil
+	return &idfKyous[0], nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {
