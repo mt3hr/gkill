@@ -284,29 +284,126 @@ FROM ` + t.dbName + `
 func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
-	// 最新のデータを返す
-	kyouHistories, err := t.GetKyouHistories(ctx, id)
+	repName, err := t.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from TIMEIS%s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(kyouHistories) == 0 {
-		return nil, nil
+	// startのみ
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  START_TIME_UNIX AS RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  'timeis_start' AS DATA_TYPE
+FROM ` + t.dbName + `
+WHERE 
+`
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	tableName := t.dbName
+	tableNameAlias := t.dbName
+	queryArgs := []interface{}{}
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
+	findWordTargetColumns := []string{"TITLE"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at select from TIMEIS %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	kyous := []Kyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			kyou := Kyou{}
+			kyou.RepName = repName
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
+			err = rows.Scan(
+				&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeUnix,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan kyou: %w", err)
+				return nil, err
+			}
+
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			kyous = append(kyous, kyou)
+		}
+	}
+	if len(kyous) == 0 {
 		return nil, nil
 	}
-
-	return &kyouHistories[0], nil
+	return &kyous[0], nil
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -792,29 +889,144 @@ FROM ` + t.dbName + `
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
-	// 最新のデータを返す
-	timeisHistories, err := t.GetTimeIsHistories(ctx, id)
+	var err error
+
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TITLE,
+  START_TIME_UNIX,
+  END_TIME_UNIX,
+  CREATE_TIME_UNIX AS RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + t.dbName + `
+WHERE
+`
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+
+	dataType := "timeis"
+
+	queryArgs := []interface{}{
+		dataType,
+	}
+
+	tableName := t.dbName
+	tableNameAlias := t.dbName
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
+	findWordTargetColumns := []string{"TITLE"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	queryArgsForPlaingStart := []interface{}{}
+	sqlWhereFilterPlaingTimeisStart := ""
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
-		err = fmt.Errorf("error at get timeis histories from TIMEIS%s: %w", id, err)
 		return nil, err
 	}
-
-	// なければnilを返す
-	if len(timeisHistories) == 0 {
-		return nil, nil
+	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		whereCounter++
+		whereCounter++
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range timeisHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get time is histories sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
+	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
+
+	if err != nil {
+		err = fmt.Errorf("error at select from TIMEIS: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	timeiss := []TimeIs{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			timeis := TimeIs{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+			startTimeUnix, endTimeUnix := int64(0), sqllib.NullInt64{}
+
+			err = rows.Scan(
+				&timeis.IsDeleted,
+				&timeis.ID,
+				&timeis.Title,
+				&startTimeUnix,
+				&endTimeUnix,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&timeis.CreateApp,
+				&timeis.CreateDevice,
+				&timeis.CreateUser,
+				&updateTimeUnix,
+				&timeis.UpdateApp,
+				&timeis.UpdateDevice,
+				&timeis.UpdateUser,
+				&timeis.RepName,
+				&timeis.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan timeis: %w", err)
+				return nil, err
+			}
+
+			timeis.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			timeis.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			timeis.StartTime = time.Unix(startTimeUnix, 0).Local()
+			if endTimeUnix.Valid {
+				parsedEndTime := time.Unix(endTimeUnix.Int64, 0).Local()
+				timeis.EndTime = &parsedEndTime
+			}
+			timeiss = append(timeiss, timeis)
+		}
+	}
+	if len(timeiss) == 0 {
 		return nil, nil
 	}
-
-	return &timeisHistories[0], nil
+	return &timeiss[0], nil
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]TimeIs, error) {

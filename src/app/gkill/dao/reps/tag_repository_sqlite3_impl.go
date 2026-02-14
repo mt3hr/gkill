@@ -355,29 +355,162 @@ func (t *tagRepositorySQLite3Impl) Close(ctx context.Context) error {
 func (t *tagRepositorySQLite3Impl) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
-	// 最新のデータを返す
-	tagHistories, err := t.GetTagHistories(ctx, id)
+	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_ID,
+  TAG,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM TAG
+WHERE 
+`
+
+	repName, err := t.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get tag histories from TAG %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at tag: %w", err)
+		return nil, err
+	}
+	dataType := "tag"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	tableName := "TAG"
+	tableNameAlias := "TAG"
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "UPDATE_TIME"
+	findWordTargetColumns := []string{"TAG"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := false
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(tagHistories) == 0 {
-		return nil, nil
-	}
+	sql += commonWhereSQL
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range tagHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get tag histories sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from TAG: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	tags := []Tag{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			tag := Tag{}
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			dataType := ""
+
+			err = rows.Scan(&tag.IsDeleted,
+				&tag.ID,
+				&tag.TargetID,
+				&tag.Tag,
+				&relatedTimeStr,
+				&createTimeStr,
+				&tag.CreateApp,
+				&tag.CreateDevice,
+				&tag.CreateUser,
+				&updateTimeStr,
+				&tag.UpdateApp,
+				&tag.UpdateDevice,
+				&tag.UpdateUser,
+				&tag.RepName,
+				&dataType,
+			)
+
+			if err != nil {
+				err = fmt.Errorf("error at read rows at get tag histories: %w", err)
+				return nil, err
+			}
+
+			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s in TAG: %w", relatedTimeStr, err)
+				return nil, err
+			}
+			tag.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s in TAG: %w", createTimeStr, err)
+				return nil, err
+			}
+			tag.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s in TAG: %w", updateTimeStr, err)
+				return nil, err
+			}
+			tags = append(tags, tag)
+		}
+	}
+	if len(tags) == 0 {
 		return nil, nil
 	}
-
-	return &tagHistories[0], nil
+	return &tags[0], nil
 }
 
 func (t *tagRepositorySQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {

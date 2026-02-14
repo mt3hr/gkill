@@ -233,29 +233,121 @@ WHERE
 func (n *nlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
-	// 最新のデータを返す
-	kyouHistories, err := n.GetKyouHistories(ctx, id)
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + n.dbName + `
+WHERE 
+`
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+
+	dataType := "nlog"
+	queryArgs := []interface{}{
+		dataType,
+	}
+
+	tableName := n.dbName
+	tableNameAlias := n.dbName
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
+	findWordTargetColumns := []string{"TITLE", "SHOP"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from NLOG%s: %w", id, err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(kyouHistories) == 0 {
-		return nil, nil
-	}
+	sql += commonWhereSQL
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from NLOG %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	kyous := []Kyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			kyou := Kyou{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
+			err = rows.Scan(&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeUnix,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan NLOG %s: %w", id, err)
+				return nil, err
+			}
+
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			kyous = append(kyous, kyou)
+		}
+	}
+	if len(kyous) == 0 {
 		return nil, nil
 	}
-
-	return &kyouHistories[0], nil
+	return &kyous[0], nil
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -672,29 +764,129 @@ WHERE
 func (n *nlogRepositoryCachedSQLite3Impl) GetNlog(ctx context.Context, id string, updateTime *time.Time) (*Nlog, error) {
 	n.m.RLock()
 	defer n.m.RUnlock()
-	// 最新のデータを返す
-	nlogHistories, err := n.GetNlogHistories(ctx, id)
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  SHOP,
+  TITLE,
+  AMOUNT,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + n.dbName + `
+WHERE 
+`
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+
+	dataType := "nlog"
+	queryArgs := []interface{}{
+		dataType,
+	}
+	tableName := n.dbName
+	tableNameAlias := n.dbName
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
+	findWordTargetColumns := []string{"TITLE", "SHOP"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+
 	if err != nil {
-		err = fmt.Errorf("error at get nlog histories from NLOG%s: %w", id, err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(nlogHistories) == 0 {
-		return nil, nil
-	}
+	sql += commonWhereSQL
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range nlogHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get nlog histories sql %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at query ")
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	nlogs := []Nlog{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			nlog := Nlog{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+			amount := 0
+
+			err = rows.Scan(&nlog.IsDeleted,
+				&nlog.ID,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&nlog.CreateApp,
+				&nlog.CreateDevice,
+				&nlog.CreateUser,
+				&updateTimeUnix,
+				&nlog.UpdateApp,
+				&nlog.UpdateDevice,
+				&nlog.UpdateUser,
+				&nlog.Shop,
+				&nlog.Title,
+				&amount,
+				&nlog.RepName,
+				&nlog.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan NLOG %s: %w", id, err)
+				return nil, err
+			}
+
+			nlog.Amount = json.Number(strconv.Itoa(amount))
+
+			nlog.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			nlog.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			nlog.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			nlogs = append(nlogs, nlog)
+		}
+	}
+	if len(nlogs) == 0 {
 		return nil, nil
 	}
-
-	return &nlogHistories[0], nil
+	return &nlogs[0], nil
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]Nlog, error) {

@@ -296,29 +296,159 @@ WHERE
 func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	// 最新のデータを返す
-	kyouHistories, err := l.GetKyouHistories(ctx, id)
+	var err error
+	var db *sql.DB
+	if l.fullConnect {
+		db = l.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, l.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+
+	repName, err := l.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from LANTANA %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at lantana: %w", err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(kyouHistories) == 0 {
-		return nil, nil
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM  LANTANA
+WHERE 
+`
+
+	dataType := "lantana"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	tableName := "LANTANA"
+	tableNameAlias := "LANTANA"
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from LANTANA %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	kyous := []Kyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			kyou := Kyou{}
+			kyou.RepName = repName
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+
+			err = rows.Scan(&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeStr,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from LANTANA %s: %w", id, err)
+				return nil, err
+			}
+
+			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s at %s in LANTANA: %w", relatedTimeStr, id, err)
+				return nil, err
+			}
+			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s at %s in LANTANA: %w", createTimeStr, id, err)
+				return nil, err
+			}
+			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s at %s in LANTANA: %w", updateTimeStr, id, err)
+				return nil, err
+			}
+			kyous = append(kyous, kyou)
+		}
+	}
+	if len(kyous) == 0 {
 		return nil, nil
 	}
-
-	return &kyouHistories[0], nil
+	return &kyous[0], nil
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
@@ -672,29 +802,162 @@ WHERE
 func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	// 最新のデータを返す
-	lantanaHistories, err := l.GetLantanaHistories(ctx, id)
+	var err error
+	var db *sql.DB
+	if l.fullConnect {
+		db = l.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, l.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  MOOD,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM LANTANA
+WHERE
+`
+
+	repName, err := l.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get lantana histories from LANTANA %s: %w", id, err)
+		err = fmt.Errorf("error at get rep name at lantana: %w", err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(lantanaHistories) == 0 {
-		return nil, nil
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
 	}
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range lantanaHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	dataType := "lantana"
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	tableName := "LANTANA"
+	tableNameAlias := "LANTANA"
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := false
+	findWordUseLike := true
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get lantana histories sql %s: %w", id, err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
+	if err != nil {
+		err = fmt.Errorf("error at query ")
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	lantanas := []Lantana{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			lantana := Lantana{}
+			lantana.RepName = repName
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+
+			err = rows.Scan(&lantana.IsDeleted,
+				&lantana.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&lantana.CreateApp,
+				&lantana.CreateDevice,
+				&lantana.CreateUser,
+				&updateTimeStr,
+				&lantana.UpdateApp,
+				&lantana.UpdateDevice,
+				&lantana.UpdateUser,
+				&lantana.Mood,
+				&lantana.RepName,
+				&lantana.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from LANTANA: %w", err)
+				return nil, err
+			}
+
+			lantana.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s at %s in LANTANA: %w", relatedTimeStr, id, err)
+				return nil, err
+			}
+			lantana.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s at %s in LANTANA: %w", createTimeStr, id, err)
+				return nil, err
+			}
+			lantana.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s at %s in LANTANA: %w", updateTimeStr, id, err)
+				return nil, err
+			}
+			lantanas = append(lantanas, lantana)
+		}
+	}
+	if len(lantanas) == 0 {
 		return nil, nil
 	}
-
-	return &lantanaHistories[0], nil
+	return &lantanas[0], nil
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]Lantana, error) {
