@@ -13,6 +13,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -237,7 +238,6 @@ func getBody(targeturl string, timeout time.Duration, useragent string, enablePr
 // imageを取得してurlogに書き込む
 func (u *URLog) fillImage(body []byte) error {
 	// image
-	imageBase64 := ""
 	imgSrc, err := getImageOG(body)
 	if err != nil {
 		err = fmt.Errorf("failed to getImageOG: %w", err)
@@ -273,22 +273,23 @@ func (u *URLog) fillImage(body []byte) error {
 	resizedImg := resizeImage(img, 220)
 
 	// bufにエンコードする
-	buf := bytes.NewBuffer([]byte{})
+	var sb strings.Builder
+	enc := base64.NewEncoder(base64.StdEncoding, &sb)
 	switch imgType {
 	case "jpeg", "jpg":
-		err := jpeg.Encode(buf, resizedImg, &jpeg.Options{Quality: 100})
+		err := jpeg.Encode(enc, resizedImg, &jpeg.Options{Quality: 100})
 		if err != nil {
 			err = fmt.Errorf("failed to image encode to %s: %w", imgType, err)
 			return err
 		}
 	case "png":
-		err := png.Encode(buf, resizedImg)
+		err := png.Encode(enc, resizedImg)
 		if err != nil {
 			err = fmt.Errorf("failed to image encode to %s: %w", imgType, err)
 			return err
 		}
 	case "gif":
-		err := gif.Encode(buf, resizedImg, nil)
+		err := gif.Encode(enc, resizedImg, nil)
 		if err != nil {
 			err = fmt.Errorf("failed to image encode to %s: %w", imgType, err)
 			return err
@@ -300,17 +301,7 @@ func (u *URLog) fillImage(body []byte) error {
 	}
 
 	// base64にエンコードする
-	b, err := io.ReadAll(buf)
-	if err != nil {
-		// bufを読めないのはおかしい
-		err = fmt.Errorf("failed to read buf: %w", err)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		imageBase64 = base64.StdEncoding.EncodeToString(b)
-	}
-	u.ThumbnailImage = imageBase64
+	u.ThumbnailImage = sb.String()
 	return nil
 }
 
