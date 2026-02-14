@@ -96,16 +96,18 @@ func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string, updateTime 
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep ReKyouRepository) {
-				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyouInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyouInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -159,16 +161,18 @@ func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep ReKyouRepository) {
-				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -257,15 +261,17 @@ func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep ReKyouRepository) {
-				err = rep.UpdateCache(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.UpdateCache(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -304,15 +310,17 @@ func (r *ReKyouRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep ReKyouRepository) {
-				err := rep.Close(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err := rep.Close(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -391,16 +399,18 @@ func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string, updateTim
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep ReKyouRepository) {
-				matchReKyouInRep, err := rep.GetReKyou(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchReKyouInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchReKyouInRep, err := rep.GetReKyou(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchReKyouInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -454,16 +464,18 @@ func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) 
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep ReKyouRepository) {
-				matchReKyousInRep, err := rep.GetReKyouHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchReKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchReKyousInRep, err := rep.GetReKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchReKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -529,28 +541,30 @@ func (r *ReKyouRepositories) GetReKyouHistoriesByRepName(ctx context.Context, id
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep ReKyouRepository) {
-				if repName != nil {
-					// repNameが一致しない場合はスキップ
-					repNameInRep, err := rep.GetRepName(ctx)
-					if err != nil {
-						errch <- fmt.Errorf("error at get rep name: %w", err)
-						return
-					}
-					if repNameInRep != *repName {
-						return
-					}
-				}
-
-				matchReKyousInRep, err := rep.GetReKyouHistories(ctx, id)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
 				if err != nil {
-					errch <- err
+					errch <- fmt.Errorf("error at get rep name: %w", err)
 					return
 				}
-				ch <- matchReKyousInRep
-			}(rep)
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchReKyousInRep, err := rep.GetReKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchReKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -621,16 +635,18 @@ func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]ReKyou,
 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep ReKyouRepository) {
-				matchReKyousInRep, err := rep.GetReKyousAllLatest(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchReKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchReKyousInRep, err := rep.GetReKyousAllLatest(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchReKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
