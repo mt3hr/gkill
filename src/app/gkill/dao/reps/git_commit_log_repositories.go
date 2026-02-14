@@ -26,16 +26,18 @@ func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.Fin
 
 	// 並列処理
 	for _, rep := range g {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep GitCommitLogRepository) {
-				matchKyousInRep, err := rep.FindKyous(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -90,16 +92,18 @@ func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string, update
 
 	// 並列処理
 	for _, rep := range g {
-		_ = threads.Go(ctx, wg, func() {
-			go func(rep GitCommitLogRepository) {
-				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyouInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyouInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -153,16 +157,18 @@ func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id strin
 
 	// 並列処理
 	for _, rep := range g {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep GitCommitLogRepository) {
-				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -245,15 +251,17 @@ func (g GitCommitLogRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range g {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep GitCommitLogRepository) {
-				err = rep.UpdateCache(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.UpdateCache(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -292,15 +300,17 @@ func (g GitCommitLogRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep GitCommitLogRepository) {
-				err = rep.Close(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.Close(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 
 	wg.Wait()
@@ -335,16 +345,18 @@ func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *f
 
 	// 並列処理
 	for _, rep := range g {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep GitCommitLogRepository) {
-				matchGitCommitLogsInRep, err := rep.FindGitCommitLog(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchGitCommitLogsInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchGitCommitLogsInRep, err := rep.FindGitCommitLog(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchGitCommitLogsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -405,16 +417,18 @@ func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string
 
 	// 並列処理
 	for _, rep := range g {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep GitCommitLogRepository) {
-				matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchGitCommitLogInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchGitCommitLogInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 

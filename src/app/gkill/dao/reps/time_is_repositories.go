@@ -26,16 +26,18 @@ func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 
 	// 並列処理
 	for _, rep := range t {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				matchKyousInRep, err := rep.FindKyous(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -130,16 +132,18 @@ func (t TimeIsRepositories) GetKyou(ctx context.Context, id string, updateTime *
 
 	// 並列処理
 	for _, rep := range t {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyouInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyouInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -193,16 +197,18 @@ func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range t {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchKyousInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -291,15 +297,17 @@ func (t TimeIsRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range t {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				err = rep.UpdateCache(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.UpdateCache(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -338,15 +346,17 @@ func (t TimeIsRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				err = rep.Close(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			err = rep.Close(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
 		})
+		if err != nil {
+			return err
+		}
 	}
 	wg.Wait()
 
@@ -380,16 +390,18 @@ func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuer
 
 	// 並列処理
 	for _, rep := range t {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				matchTimeIssInRep, err := rep.FindTimeIs(ctx, query)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchTimeIssInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchTimeIssInRep, err := rep.FindTimeIs(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchTimeIssInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -463,16 +475,18 @@ func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string, updateTime
 
 	// 並列処理
 	for _, rep := range t {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				matchTimeIsInRep, err := rep.GetTimeIs(ctx, id, updateTime)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchTimeIsInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchTimeIsInRep, err := rep.GetTimeIs(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchTimeIsInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -526,16 +540,18 @@ func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) (
 
 	// 並列処理
 	for _, rep := range t {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
-				if err != nil {
-					errch <- err
-					return
-				}
-				ch <- matchTimeIssInRep
-			}(rep)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchTimeIssInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
@@ -601,28 +617,30 @@ func (t TimeIsRepositories) GetTimeIsHistoriesByRepName(ctx context.Context, id 
 
 	// 並列処理
 	for _, rep := range t {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				if repName != nil {
-					// repNameが一致しない場合はスキップ
-					repNameInRep, err := rep.GetRepName(ctx)
-					if err != nil {
-						errch <- fmt.Errorf("error at get rep name: %w", err)
-						return
-					}
-					if repNameInRep != *repName {
-						return
-					}
-				}
-
-				matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
 				if err != nil {
-					errch <- err
+					errch <- fmt.Errorf("error at get rep name: %w", err)
 					return
 				}
-				ch <- matchTimeIssInRep
-			}(rep)
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchTimeIssInRep
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 	wg.Wait()
 
