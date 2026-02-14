@@ -304,29 +304,128 @@ func (t *tagRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 func (t *tagRepositoryCachedSQLite3Impl) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
 	t.m.RLock()
 	defer t.m.RUnlock()
-	// 最新のデータを返す
-	tagHistories, err := t.GetTagHistories(ctx, id)
+	var err error
+
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_ID,
+  TAG,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + t.dbName + `
+WHERE 
+`
+
+	dataType := "tag"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs:         &trueValue,
+		IDs:            &ids,
+		OnlyLatestData: new(updateTime == nil),
+		UseUpdateTime:  new(updateTime != nil),
+		UpdateTime:     updateTime,
+	}
+	queryArgs := []interface{}{
+		dataType,
+	}
+
+	tableName := t.dbName
+	tableNameAlias := t.dbName
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "UPDATE_TIME_UNIX"
+	findWordTargetColumns := []string{"TAG"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	findWordUseLike := false
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
-		err = fmt.Errorf("error at get tag histories from TAG %s: %w", id, err)
 		return nil, err
 	}
 
-	// なければnilを返す
-	if len(tagHistories) == 0 {
-		return nil, nil
-	}
+	sql += commonWhereSQL
 
-	// updateTimeが指定されていれば一致するものを返す
-	if updateTime != nil {
-		for _, kyou := range tagHistories {
-			if kyou.UpdateTime.Unix() == updateTime.Unix() {
-				return &kyou, nil
-			}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get tag histories sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from TAG: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	tags := []Tag{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			tag := Tag{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+			dataType := ""
+
+			err = rows.Scan(&tag.IsDeleted,
+				&tag.ID,
+				&tag.TargetID,
+				&tag.Tag,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&tag.CreateApp,
+				&tag.CreateDevice,
+				&tag.CreateUser,
+				&updateTimeUnix,
+				&tag.UpdateApp,
+				&tag.UpdateDevice,
+				&tag.UpdateUser,
+				&tag.RepName,
+				&dataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at read rows at get tag histories: %w", err)
+				return nil, err
+			}
+
+			tag.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			tag.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			tag.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			tags = append(tags, tag)
+		}
+	}
+	if len(tags) == 0 {
 		return nil, nil
 	}
-
-	return &tagHistories[0], nil
+	return &tags[0], nil
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {
