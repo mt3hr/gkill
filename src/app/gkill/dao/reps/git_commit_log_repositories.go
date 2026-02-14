@@ -36,7 +36,7 @@ func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.Fin
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -102,7 +102,7 @@ func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string, update
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -167,7 +167,7 @@ func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id strin
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -260,7 +260,7 @@ func (g GitCommitLogRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -309,10 +309,9 @@ func (g GitCommitLogRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
-
 	wg.Wait()
 
 	// エラー集約
@@ -355,7 +354,7 @@ func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *f
 			ch <- matchGitCommitLogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -427,7 +426,7 @@ func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string
 			ch <- matchGitCommitLogInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

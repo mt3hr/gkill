@@ -36,7 +36,7 @@ func (t NotificationRepositories) FindNotifications(ctx context.Context, query *
 			ch <- matchNotificationsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -116,7 +116,7 @@ func (t NotificationRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -161,7 +161,7 @@ func (t NotificationRepositories) GetNotification(ctx context.Context, id string
 			ch <- matchNotificationInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -226,7 +226,7 @@ func (t NotificationRepositories) GetNotificationsByTargetID(ctx context.Context
 			ch <- matchNotificationsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -302,7 +302,7 @@ func (t NotificationRepositories) GetNotificationsBetweenNotificationTime(ctx co
 			ch <- matchNotificationsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -374,7 +374,7 @@ func (t NotificationRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -449,7 +449,7 @@ func (t NotificationRepositories) GetNotificationHistories(ctx context.Context, 
 			ch <- matchNotificationsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -537,7 +537,7 @@ func (t NotificationRepositories) GetNotificationHistoriesByRepName(ctx context.
 			ch <- matchNotificationsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

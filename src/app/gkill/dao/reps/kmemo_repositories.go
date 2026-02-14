@@ -36,7 +36,7 @@ func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -106,7 +106,7 @@ func (k KmemoRepositories) GetKyou(ctx context.Context, id string, updateTime *t
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -171,7 +171,7 @@ func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]K
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -270,7 +270,7 @@ func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -319,7 +319,7 @@ func (k KmemoRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -364,7 +364,7 @@ func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery)
 			ch <- matchKmemosInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -442,7 +442,7 @@ func (k KmemoRepositories) GetKmemo(ctx context.Context, id string, updateTime *
 			ch <- matchKmemoInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -507,7 +507,7 @@ func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]
 			ch <- matchKmemosInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -596,7 +596,7 @@ func (k KmemoRepositories) GetKmemoHistoriesByRepName(ctx context.Context, id st
 			ch <- matchKmemosInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

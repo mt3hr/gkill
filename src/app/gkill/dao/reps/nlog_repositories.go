@@ -36,7 +36,7 @@ func (n NlogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) 
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -106,7 +106,7 @@ func (n NlogRepositories) GetKyou(ctx context.Context, id string, updateTime *ti
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -171,7 +171,7 @@ func (n NlogRepositories) GetKyouHistories(ctx context.Context, id string) ([]Ky
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -270,7 +270,7 @@ func (n NlogRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -319,7 +319,7 @@ func (n NlogRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -364,7 +364,7 @@ func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) (
 			ch <- matchNlogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -440,7 +440,7 @@ func (n NlogRepositories) GetNlog(ctx context.Context, id string, updateTime *ti
 			ch <- matchNlogInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -505,7 +505,7 @@ func (n NlogRepositories) GetNlogHistories(ctx context.Context, id string) ([]Nl
 			ch <- matchNlogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -594,7 +594,7 @@ func (n NlogRepositories) GetNlogHistoriesByRepName(ctx context.Context, id stri
 			ch <- matchNlogsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

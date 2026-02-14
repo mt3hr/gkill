@@ -36,7 +36,7 @@ func (m MiRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (m
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -107,7 +107,7 @@ func (m MiRepositories) GetKyou(ctx context.Context, id string, updateTime *time
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -172,7 +172,7 @@ func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -271,7 +271,7 @@ func (m MiRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -320,7 +320,7 @@ func (m MiRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -365,7 +365,7 @@ func (m MiRepositories) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi
 			ch <- matchMisInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -441,7 +441,7 @@ func (m MiRepositories) GetMi(ctx context.Context, id string, updateTime *time.T
 			ch <- matchMiInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -506,7 +506,7 @@ func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]Mi, er
 			ch <- matchMisInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -595,7 +595,7 @@ func (m MiRepositories) GetMiHistoriesByRepName(ctx context.Context, id string, 
 			ch <- matchMisInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
