@@ -322,6 +322,21 @@ WHERE
 		}
 	}()
 
+	words := []string{}
+	notWords := []string{}
+	if query.Words != nil {
+		words = *query.Words
+		for i := range words {
+			words[i] = strings.ToLower(words[i])
+		}
+	}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+		for i := range notWords {
+			notWords[i] = strings.ToLower(notWords[i])
+		}
+	}
+
 	kyous := map[string][]Kyou{}
 	for rows.Next() {
 		select {
@@ -435,21 +450,6 @@ WHERE
 						return nil, err
 					}
 					fileContentText += strings.ToLower(string(b))
-				}
-			}
-
-			words := []string{}
-			notWords := []string{}
-			if query.Words != nil {
-				words = *query.Words
-				for i := range words {
-					words[i] = strings.ToLower(words[i])
-				}
-			}
-			if query.NotWords != nil {
-				notWords = *query.NotWords
-				for i := range notWords {
-					notWords[i] = strings.ToLower(notWords[i])
 				}
 			}
 
@@ -1171,6 +1171,21 @@ WHERE
 		}
 	}()
 
+	words := []string{}
+	notWords := []string{}
+	if query.Words != nil {
+		words = *query.Words
+		for i := range words {
+			words[i] = strings.ToLower(words[i])
+		}
+	}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+		for i := range notWords {
+			notWords[i] = strings.ToLower(notWords[i])
+		}
+	}
+
 	idfKyous := []IDFKyou{}
 	for rows.Next() {
 		select {
@@ -1266,15 +1281,6 @@ WHERE
 					}
 					fileContentText += strings.ToLower(string(b))
 				}
-			}
-
-			words := []string{}
-			notWords := []string{}
-			if query.Words != nil {
-				words = *query.Words
-			}
-			if query.NotWords != nil {
-				notWords = *query.NotWords
 			}
 
 			match := true
