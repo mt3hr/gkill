@@ -36,7 +36,7 @@ func (k KCRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (m
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -105,7 +105,7 @@ func (k KCRepositories) GetKyou(ctx context.Context, id string, updateTime *time
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -170,7 +170,7 @@ func (k KCRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -269,7 +269,7 @@ func (k KCRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -318,7 +318,7 @@ func (k KCRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -363,7 +363,7 @@ func (k KCRepositories) FindKC(ctx context.Context, query *find.FindQuery) ([]KC
 			ch <- matchKCsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -439,7 +439,7 @@ func (k KCRepositories) GetKC(ctx context.Context, id string, updateTime *time.T
 			ch <- matchKCInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -504,7 +504,7 @@ func (k KCRepositories) GetKCHistories(ctx context.Context, id string) ([]KC, er
 			ch <- matchKCsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -593,7 +593,7 @@ func (k KCRepositories) GetKCHistoriesByRepName(ctx context.Context, id string, 
 			ch <- matchKCsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

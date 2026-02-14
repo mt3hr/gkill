@@ -364,7 +364,7 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -542,7 +542,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 
@@ -576,7 +576,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 
@@ -610,7 +610,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 
@@ -644,7 +644,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 
@@ -890,7 +890,7 @@ func (g *GkillRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -996,7 +996,7 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1078,7 +1078,7 @@ func (g *GkillRepositories) GetTag(ctx context.Context, id string, updateTime *t
 			ch <- matchTagInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1143,7 +1143,7 @@ func (g *GkillRepositories) GetTagsByTagName(ctx context.Context, tagname string
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1245,7 +1245,7 @@ func (g *GkillRepositories) GetTagHistories(ctx context.Context, id string) ([]T
 			ch <- matchTagsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1334,7 +1334,7 @@ func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error
 			ch <- repName
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1430,7 +1430,7 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 			ch <- matchTextsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1512,7 +1512,7 @@ func (g *GkillRepositories) GetText(ctx context.Context, id string, updateTime *
 			ch <- matchTextInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1577,7 +1577,7 @@ func (g *GkillRepositories) GetNotification(ctx context.Context, id string, upda
 			ch <- matchNotificationInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1642,7 +1642,7 @@ func (g *GkillRepositories) GetTextsByTargetID(ctx context.Context, target_id st
 			ch <- matchTextsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1721,7 +1721,7 @@ func (g *GkillRepositories) GetNotificationsByTargetID(ctx context.Context, targ
 			ch <- matchNotificationsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1800,7 +1800,7 @@ func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]
 			ch <- matchTextsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1879,7 +1879,7 @@ func (g *GkillRepositories) GetNotificationHistories(ctx context.Context, id str
 			ch <- matchNotificationsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -1981,7 +1981,7 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 			errch <- nil
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
