@@ -36,7 +36,7 @@ func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -142,7 +142,7 @@ func (t TimeIsRepositories) GetKyou(ctx context.Context, id string, updateTime *
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -207,7 +207,7 @@ func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -306,7 +306,7 @@ func (t TimeIsRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -355,7 +355,7 @@ func (t TimeIsRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -400,7 +400,7 @@ func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuer
 			ch <- matchTimeIssInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -485,7 +485,7 @@ func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string, updateTime
 			ch <- matchTimeIsInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -550,7 +550,7 @@ func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) (
 			ch <- matchTimeIssInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -639,7 +639,7 @@ func (t TimeIsRepositories) GetTimeIsHistoriesByRepName(ctx context.Context, id 
 			ch <- matchTimeIssInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()

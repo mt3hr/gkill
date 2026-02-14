@@ -106,7 +106,7 @@ func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string, updateTime 
 			ch <- matchKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -171,7 +171,7 @@ func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 			ch <- matchKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -270,7 +270,7 @@ func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -319,7 +319,7 @@ func (r *ReKyouRepositories) Close(ctx context.Context) error {
 			}
 		})
 		if err != nil {
-			return err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -409,7 +409,7 @@ func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string, updateTim
 			ch <- matchReKyouInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -474,7 +474,7 @@ func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) 
 			ch <- matchReKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -563,7 +563,7 @@ func (r *ReKyouRepositories) GetReKyouHistoriesByRepName(ctx context.Context, id
 			ch <- matchReKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
@@ -645,7 +645,7 @@ func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]ReKyou,
 			ch <- matchReKyousInRep
 		})
 		if err != nil {
-			return nil, err
+			errch <- err
 		}
 	}
 	wg.Wait()
