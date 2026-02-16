@@ -616,6 +616,11 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	if err := t.tagRep.UpdateCache(ctx); err != nil {
+		repName, _ := t.GetRepName(ctx)
+		return fmt.Errorf("error at update inner cache before rebuild %s: %w", repName, err)
+	}
+
 	allTags, err := t.tagRep.GetAllTags(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags at update cache: %w", err)
