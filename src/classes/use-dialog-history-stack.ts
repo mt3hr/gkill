@@ -1,223 +1,268 @@
-// use-dialog-history-stack.ts
-import { watch, onBeforeUnmount, type Ref } from "vue"
+import { onBeforeUnmount, onMounted, type Ref, watch } from "vue"
 
-type Entry = { id: string; dialog: Ref<boolean> }
-const stack: Entry[] = []
-
-let listening = false
-let suppressNextPop = 0
-
-const closingByPop = new Set<string>()
-const closingByCascade = new Set<string>()
+/**
+ * Dialog history stack manager with race protection (optimized).
+ *
+ * Key optimizations vs previous version:
+ * - history.replaceState is wrapped ONLY while dialogs are open; restored when stack becomes empty.
+ * - The wrapper avoids cloning state unless necessary.
+ * - watch() uses default flush (no "sync") to reduce synchronous overhead.
+ */
 
 const MARK = "__gkillDlg"
 const DEPTH = "__gkillDlgDepth"
 
-function makeId() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const c = (globalThis as any).crypto
-  return c?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+type AnyObj = Record<string, any>
+function isObj(v: any): v is AnyObj {
+  return v !== null && typeof v === "object"
+}
+function isDialogState(state: any): boolean {
+  return isObj(state) && state[MARK] === true && typeof state[DEPTH] === "number"
 }
 
-function isObj(v: unknown): v is Record<string, any> {
-  return !!v && typeof v === "object"
-}
-
-function getRouterLocationString(): string {
-  return `${location.pathname}${location.search}${location.hash}`
-}
-
-function getDepthFromState(state: any): number {
-  if (!state || state[MARK] !== true) return 0
-  const n = state?.[DEPTH]
-  return typeof n === "number" && Number.isFinite(n) ? n : 0
-}
-
-function buildDialogState(depth: number) {
-  // router互換っぽい形でマージ（routerのstateを壊さない）
-  const base = isObj(history.state) ? history.state : {}
-  const pos = typeof base.position === "number" ? base.position : 0
-  const current = typeof base.current === "string" ? base.current : getRouterLocationString()
-
-  return {
-    ...base,
-    back: current,
-    current,
-    forward: null,
-    position: pos + 1,
-    [MARK]: true,
-    [DEPTH]: depth,
-  }
-}
-
-function clearDialogKeysFromCurrentState() {
-  const base = isObj(history.state) ? { ...history.state } : {}
-  if (base[MARK] !== true && base[DEPTH] == null) return
-  delete base[MARK]
-  delete base[DEPTH]
-  history.replaceState(base, "")
-}
-
-function pushDepth(depth: number) {
-  history.pushState(buildDialogState(depth), "")
-}
-
-function ensureListener() {
-  if (listening) return
-  // capture: routerより先に拾う（重要）
-  window.addEventListener("popstate", onPopState, { capture: true })
-  listening = true
-}
-
-function maybeRemoveListener() {
-  if (!listening) return
-  if (stack.length > 0) return
-  window.removeEventListener("popstate", onPopState, { capture: true } as any)
-  listening = false
+function stripDialogKeys(state: any): any {
+  if (!isObj(state)) return state
+  // Avoid cloning if keys are not present
+  if (!(MARK in state) && !(DEPTH in state)) return state
+  const { [MARK]: _m, [DEPTH]: _d, ...rest } = state
+  return rest
 }
 
 /**
- * popstate（ブラウザバック/フォワード）でダイアログを閉じる。
- * - back: stackの深さが減る → ダイアログを閉じ、routerに渡さない
- * - forward: stackの深さが増える → 事故りやすいので即座に無効化して戻す
+ * Try to "apply" dialog markers to an existing state object without cloning.
+ * If we cannot safely mutate, we clone minimally.
  */
-function onPopState(e: PopStateEvent) {
-  if (suppressNextPop > 0) {
-    suppressNextPop--
-    return
+function applyDialogMarkers(base: any, depth: number): any {
+  if (!isObj(base)) {
+    return { [MARK]: true, [DEPTH]: depth }
   }
 
-  const targetDepth = getDepthFromState(e.state)
-  const curDepth = stack.length
+  // If already correct, reuse object
+  if (base[MARK] === true && base[DEPTH] === depth) return base
 
-  // forward（深くなるpop）は無効化：即戻す
-  if (targetDepth > curDepth) {
-    e.stopImmediatePropagation()
-    suppressNextPop++
-    history.go(-1)
-    return
+  // Prefer in-place mutation if possible
+  try {
+    // Some objects might be non-extensible/frozen; assignment will throw in strict mode.
+    (base as AnyObj)[MARK] = true
+      ; (base as AnyObj)[DEPTH] = depth
+    return base
+  } catch {
+    // Fallback: shallow clone
+    const st = { ...(base as AnyObj) }
+    st[MARK] = true
+    st[DEPTH] = depth
+    return st
   }
-
-  // back（深さが減るpop）は閉じるためなのでrouterへ渡さない
-  if (curDepth > 0 && targetDepth < curDepth) {
-    e.stopImmediatePropagation()
-  }
-
-  // targetDepth まで上から閉じる
-  for (let i = curDepth - 1; i >= targetDepth; i--) {
-    const top = stack[i]
-    if (!top) continue
-    closingByPop.add(top.id)
-    top.dialog.value = false
-  }
-
-  stack.length = Math.min(curDepth, targetDepth)
-
-  if (stack.length === 0) {
-    // state汚染を掃除（余計なpushStateはしない：PWAの「戻るで終了」を壊しやすい）
-    clearDialogKeysFromCurrentState()
-  }
-
-  maybeRemoveListener()
 }
 
-export function useDialogHistoryStack(dialog: Ref<boolean>) {
-  const id = makeId()
+// --- Global stack (module singleton) ---
+type Entry = { id: string; dialog: Ref<boolean> }
+const stack: Entry[] = []
 
-  watch(dialog, (open) => {
+// Identity helpers
+const refIdMap = new WeakMap<object, string>()
+let refIdSeq = 0
+function getRefId(r: object): string {
+  const existing = refIdMap.get(r)
+  if (existing) return existing
+  const id = `dlg_${(++refIdSeq).toString(16)}`
+  refIdMap.set(r, id)
+  return id
+}
+
+// Prevent multi-registration for same Ref<boolean>
+const watchedRefs = new WeakSet<object>()
+
+// When we close a dialog because of popstate, watcher should NOT call history.go again.
+const closingFromPop = new WeakSet<object>()
+
+// --- Race protection: queue opens while a history.go(-delta) close is pending ---
+let pendingNav = 0
+const queuedOpens: Array<{ id: string; dialog: Ref<boolean> }> = []
+
+function queueOpen(id: string, dialog: Ref<boolean>) {
+  const idx = queuedOpens.findIndex((x) => x.id === id)
+  if (idx >= 0) queuedOpens.splice(idx, 1)
+  queuedOpens.push({ id, dialog })
+}
+
+function flushQueuedOpens() {
+  if (pendingNav > 0 || queuedOpens.length === 0) return
+  const items = queuedOpens.splice(0, queuedOpens.length)
+  for (const it of items) {
+    if (it.dialog.value !== true) continue
+    const existingIdx = stack.findIndex((e) => e.id === it.id)
+    if (existingIdx >= 0) {
+      const [e] = stack.splice(existingIdx, 1)
+      stack.push(e)
+    } else {
+      stack.push({ id: it.id, dialog: it.dialog })
+    }
+    history.pushState(applyDialogMarkers(history.state, stack.length), "")
+  }
+}
+
+// --- replaceState guard (installed only while dialogs are open) ---
+let rawReplaceState: History["replaceState"] | null = null
+let guardActive = false
+
+function activateReplaceGuard() {
+  if (guardActive) return
+  guardActive = true
+
+  if (!rawReplaceState) rawReplaceState = history.replaceState.bind(history)
+
+  history.replaceState = ((data: any, unused: string, url?: string | URL | null) => {
+    // While dialogs are open, preserve markers with current stack length.
+    // Do NOT clone unless needed.
+    const next = applyDialogMarkers(data, stack.length)
+    return rawReplaceState!(next, unused, url as any)
+  }) as any
+}
+
+function deactivateReplaceGuardIfPossible() {
+  if (!guardActive) return
+  if (stack.length !== 0) return
+  // Restore native replaceState
+  if (rawReplaceState) {
+    history.replaceState = rawReplaceState as any
+  }
+  guardActive = false
+}
+
+function clearDialogKeysFromCurrentState() {
+  if (stack.length !== 0) return
+  // Ensure we are NOT guarding replaceState here to avoid overhead and marker re-adding.
+  deactivateReplaceGuardIfPossible()
+  const cleaned = stripDialogKeys(history.state)
+  // Use rawReplaceState if available, otherwise current replaceState
+  const rs = rawReplaceState ? rawReplaceState : history.replaceState.bind(history)
+  rs(cleaned, "")
+}
+
+// --- popstate handling ---
+let popListenerInstalled = false
+function ensurePopListenerInstalled() {
+  if (popListenerInstalled) return
+  popListenerInstalled = true
+
+  window.addEventListener("popstate", (e) => {
+    if (pendingNav > 0) {
+      pendingNav = 0
+      if (stack.length === 0) clearDialogKeysFromCurrentState()
+      flushQueuedOpens()
+      return
+    }
+
+    // Forward into a dialog state while stack is empty: block it.
+    if (stack.length === 0 && isDialogState(e.state)) {
+      pendingNav = 1
+      history.go(-1)
+      return
+    }
+
+    // If any dialog is open, back/forward closes the topmost.
+    if (stack.length > 0) {
+      const top = stack[stack.length - 1]
+      closingFromPop.add(top.dialog as any)
+      top.dialog.value = false
+      return
+    }
+  })
+}
+
+// --- Core hook ---
+export function useDialogHistoryStack(dialog: Ref<boolean>): void {
+  const refObj = dialog as unknown as object
+  const id = getRefId(refObj)
+
+  if (watchedRefs.has(refObj)) {
+    // Still ensure pop listener
+    ensurePopListenerInstalled()
+    return
+  }
+  watchedRefs.add(refObj)
+  ensurePopListenerInstalled()
+
+  const stop = watch(dialog, (open) => {
     if (open) {
-      if (!stack.some((e) => e.id === id)) stack.push({ id, dialog })
-      pushDepth(stack.length)
-      ensureListener()
+      if (pendingNav > 0) {
+        queueOpen(id, dialog)
+        return
+      }
+
+      const existingIdx = stack.findIndex((e) => e.id === id)
+      if (existingIdx >= 0) {
+        const [e] = stack.splice(existingIdx, 1)
+        stack.push(e)
+      } else {
+        stack.push({ id, dialog })
+      }
+
+      // Turn on replaceState guard only while dialogs are open
+      activateReplaceGuard()
+
+      history.pushState(applyDialogMarkers(history.state, stack.length), "")
       return
     }
 
-    // pop由来のcloseは履歴操作しない（onPopState側でstackを更新済み）
-    if (closingByPop.has(id)) {
-      closingByPop.delete(id)
-      maybeRemoveListener()
+    // close
+    if (closingFromPop.has(refObj)) {
+      closingFromPop.delete(refObj)
+      const idx = stack.findIndex((e) => e.id === id)
+      if (idx >= 0) stack.splice(idx, 1)
+      if (stack.length === 0) clearDialogKeysFromCurrentState()
       return
     }
 
-    // 親closeに巻き込まれた子も履歴操作しない（親側でまとめる）
-    if (closingByCascade.has(id)) {
-      closingByCascade.delete(id)
-      maybeRemoveListener()
-      return
-    }
-
-    // プログラム的に閉じた場合（例: ダイアログ外クリック）
+    // Programmatic close: remove itself and children, rewind history.
     const idx = stack.findIndex((e) => e.id === id)
-    if (idx === -1) {
-      maybeRemoveListener()
+    if (idx < 0) {
+      if (stack.length === 0) clearDialogKeysFromCurrentState()
       return
     }
 
     const prevDepth = stack.length
+    stack.splice(idx, stack.length - idx)
+    const delta = prevDepth - stack.length
 
-    // 親が閉じたなら子も閉じる（上をまとめて閉じる）
-    if (idx < prevDepth - 1) {
-      for (let i = prevDepth - 1; i > idx; i--) {
-        const top = stack[i]
-        closingByCascade.add(top.id)
-        top.dialog.value = false
-      }
-    }
-
-    // 自分＋子をstackから消す
-    stack.splice(idx)
-    const newDepth = stack.length
-    const delta = prevDepth - newDepth
-
-    // 「今いる履歴がダイアログで積んだ状態」なら、その分だけ戻す
-    const histDepth = getDepthFromState(history.state)
-    if (delta > 0 && histDepth === prevDepth) {
-      suppressNextPop++
+    if (delta > 0) {
+      pendingNav = delta
       history.go(-delta)
     }
 
-    if (stack.length === 0) {
+    if (stack.length === 0 && delta === 0) {
       clearDialogKeysFromCurrentState()
     }
-
-    maybeRemoveListener()
   })
 
   onBeforeUnmount(() => {
-    closingByPop.delete(id)
-    closingByCascade.delete(id)
+    stop()
+    watchedRefs.delete(refObj)
+
+    // If unmounted while open, close it.
+    if (dialog.value === true) dialog.value = false
 
     const idx = stack.findIndex((e) => e.id === id)
-    if (idx === -1) {
-      maybeRemoveListener()
-      return
-    }
+    if (idx >= 0) stack.splice(idx, 1)
+    if (stack.length === 0) clearDialogKeysFromCurrentState()
+  })
 
-    const prevDepth = stack.length
-
-    // 自分が親なら子も一緒に閉じる
-    if (idx < prevDepth - 1) {
-      for (let i = prevDepth - 1; i > idx; i--) {
-        const top = stack[i]
-        closingByCascade.add(top.id)
-        top.dialog.value = false
+  onMounted(() => {
+    if (dialog.value === true) {
+      if (pendingNav > 0) {
+        queueOpen(id, dialog)
+      } else {
+        const existingIdx = stack.findIndex((e) => e.id === id)
+        if (existingIdx >= 0) {
+          const [e] = stack.splice(existingIdx, 1)
+          stack.push(e)
+        } else {
+          stack.push({ id, dialog })
+        }
+        activateReplaceGuard()
+        history.pushState(applyDialogMarkers(history.state, stack.length), "")
       }
     }
-
-    stack.splice(idx)
-    const newDepth = stack.length
-    const delta = prevDepth - newDepth
-
-    const histDepth = getDepthFromState(history.state)
-    if (delta > 0 && histDepth === prevDepth) {
-      suppressNextPop++
-      history.go(-delta)
-    }
-
-    if (stack.length === 0) {
-      clearDialogKeysFromCurrentState()
-    }
-
-    maybeRemoveListener()
   })
 }

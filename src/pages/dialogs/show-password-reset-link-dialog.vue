@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <ShowPasswordResetLinkView :application_config="application_config" :gkill_api="gkill_api"
             :server_configs="server_configs" :account="cloned_account"
             @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"

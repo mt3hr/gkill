@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <AddRyuuItemView :application_config="application_config" :gkill_api="gkill_api"
             @requested_add_related_kyou_query="(...related_kyou_query :any[]) => emits('requested_add_related_kyou_query', related_kyou_query[0] as RelatedKyouQuery)"
             @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"

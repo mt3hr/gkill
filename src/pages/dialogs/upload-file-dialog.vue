@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <UploadFileView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :last_added_tag="last_added_tag" :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
