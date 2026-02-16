@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmGenerateTLSFilesView :application_config="application_config" :gkill_api="gkill_api"
             :server_config="server_config" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
