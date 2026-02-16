@@ -12,7 +12,7 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="show_manage_account_dialog">{{
                         i18n.global.t("MANAGE_ACCOUNT_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -42,6 +42,12 @@
                     <td>
                         <v-checkbox v-model="server_config.is_local_only_access" hide-detail
                             :label="i18n.global.t('USE_LOCAL_ACCSESS_ONLY_TITLE')" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <v-checkbox v-model="server_config.use_gkill_notification" hide-detail
+                            :label="i18n.global.t('USE_GKILL_NOTIFICATION_TITLE')" />
                     </td>
                 </tr>
                 <tr>
@@ -127,7 +133,7 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -219,6 +225,7 @@ function add_device(device_name: string): void {
     }
     const new_server_config = new ServerConfig()
     new_server_config.is_local_only_access = server_config.value.is_local_only_access
+    new_server_config.use_gkill_notification = server_config.value.use_gkill_notification
     new_server_config.address = server_config.value.address
     new_server_config.enable_tls = server_config.value.enable_tls
     new_server_config.tls_cert_file = server_config.value.tls_cert_file
