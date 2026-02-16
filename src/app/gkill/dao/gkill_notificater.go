@@ -183,6 +183,27 @@ func (g *GkillNotificator) updateLoopWhenTick() {
 }
 
 func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error {
+	// 現在のServerConfigを取得する
+	var currentServerConfig *server_config.ServerConfig
+	serverConfigs, err := g.gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
+	if err != nil {
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		return err
+	}
+	for _, serverConfig := range serverConfigs {
+		if serverConfig.EnableThisDevice {
+			currentServerConfig = serverConfig
+		}
+	}
+	if currentServerConfig == nil {
+		err = fmt.Errorf("current server config is not found. in gkill notificator")
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		return err
+	}
+	if !currentServerConfig.UseGkillNotification {
+		return nil
+	}
+
 	// 30分前から1時間30分あとを範囲として取得する
 	startTime, endTime := time.Now().Add(time.Minute*30*-1), time.Now().Add(time.Minute*90)
 
