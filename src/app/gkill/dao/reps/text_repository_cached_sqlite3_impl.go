@@ -524,6 +524,11 @@ func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context
 }
 
 func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	if err := t.textRep.UpdateCache(ctx); err != nil {
+		repName, _ := t.GetRepName(ctx)
+		return fmt.Errorf("error at update inner cache before rebuild %s: %w", repName, err)
+	}
+
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
