@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <v-card>
             <v-card-title>{{ i18n.global.t('ADD_DEVICE_TITLE') }}</v-card-title>
             <v-row class="ma-0 pa-0">
