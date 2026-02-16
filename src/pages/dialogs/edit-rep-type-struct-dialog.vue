@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <EditRepTypeStructView :application_config="application_config" :gkill_api="gkill_api"
             :rep_type_struct="application_config.rep_type_struct"
             @requested_reload_application_config="(...application_config: any[]) => emits('requested_reload_application_config', application_config[0] as ApplicationConfig)"

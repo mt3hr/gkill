@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <ShareKyousListLinkView v-if="share_kyou_list_info" :application_config="application_config"
             :gkill_api="gkill_api" :share_kyou_list_info="share_kyou_list_info"
             @updated_share_kyou_list_info="(share_kyou_list_info: ShareKyousInfo) => emits('updated_share_kyou_list_info', share_kyou_list_info)"
