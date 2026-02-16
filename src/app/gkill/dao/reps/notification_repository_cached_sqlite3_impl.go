@@ -636,6 +636,11 @@ WHERE
 }
 
 func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	if err := n.notificationRep.UpdateCache(ctx); err != nil {
+		repName, _ := n.GetRepName(ctx)
+		return fmt.Errorf("error at update inner cache before rebuild %s: %w", repName, err)
+	}
+
 	allNotifications, err := n.notificationRep.GetNotificationsBetweenNotificationTime(ctx, time.Unix(0, 0), time.Unix(math.MaxInt64, 0))
 	if err != nil {
 		err = fmt.Errorf("error at get all notifications at update cache: %w", err)
