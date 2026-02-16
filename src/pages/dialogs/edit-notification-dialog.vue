@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <EditNotificationView :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="notification_highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
             :notification="notification" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"

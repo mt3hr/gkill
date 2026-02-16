@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <EditDnoteItemView :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
