@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <EditTagView :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="tag_highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" :tag="tag"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"

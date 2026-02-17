@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <EditFolderView :application_config="application_config" :folder_name="folder_name" :gkill_api="gkill_api"
             :struct_obj="struct_obj"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"

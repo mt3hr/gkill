@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmDeleteShareKyousListView v-if="share_kyou_list_info" :application_config="application_config"
             :gkill_api="gkill_api" :share_kyou_list_info="share_kyou_list_info"
             @requested_delete_share_kyou_link_info="(...share_kyou_link_info: any[]) => emits('requested_delete_share_kyou_link_info', share_kyou_link_info[0] as ShareKyousInfo)"
