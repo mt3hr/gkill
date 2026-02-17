@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <ShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
             :find_kyou_query="find_kyou_query" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" @regestered_share_kyou_list_info="(...share_kyou_info :any[]) => {

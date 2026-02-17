@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <ManageAccountView :application_config="application_config" :gkill_api="gkill_api"
             :server_configs="server_configs"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"

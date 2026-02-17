@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog" class="kyou_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog" class="kyou_dialog">
         <v-card class="pa-2">
             <KyouView :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
                 :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
