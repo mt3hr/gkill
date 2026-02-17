@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <v-card class="edit_dnote_dialog_view">
             <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :query="new FindKyouQuery()"

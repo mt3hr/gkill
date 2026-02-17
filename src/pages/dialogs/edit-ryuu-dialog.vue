@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <v-card class="edit_ryuu_dialog_view">
             <RyuuListView v-model="model_value" :application_config="application_config" :gkill_api="gkill_api"
                 :editable="true" :find_kyou_query_default="new FindKyouQuery()" :target_kyou="new Kyou()"
