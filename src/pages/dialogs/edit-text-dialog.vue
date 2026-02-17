@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <EditTextView :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="text_highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" :text="text"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"

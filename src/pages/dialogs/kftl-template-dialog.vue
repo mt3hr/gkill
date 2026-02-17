@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <KFTLTemplateView :application_config="application_config" :gkill_api="gkill_api" :template="template"
             @clicked_template_element_leaf="(template: KFTLTemplateElementData) => emits('clicked_template_element_leaf', template)"
             @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"

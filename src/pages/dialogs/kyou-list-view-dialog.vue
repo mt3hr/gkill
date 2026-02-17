@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog" class="kyou_list_view_dialog kyou_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog" class="kyou_list_view_dialog kyou_dialog">
         <v-card v-if="is_show_dialog" class="kyou_list_view_dialog_view pa-2" :width="'fit-content'">
             <KyouListView :kyou_height="180" :width="400" :list_height="list_height"
                 :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="model_value!"
