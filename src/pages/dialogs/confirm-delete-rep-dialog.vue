@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmDeleteRepView :application_config="application_config" :gkill_api="gkill_api"
             :repository="cloned_repository" :server_configs="server_configs"
             @requested_delete_rep="(...rep :any[]) => emits('requested_delete_rep', rep[0] as Repository)"

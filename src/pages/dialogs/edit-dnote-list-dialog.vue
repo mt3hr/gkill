@@ -1,5 +1,5 @@
 <template>
-    <v-dialog persistent @click:outside="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
         <EditDnoteListView :application_config="application_config" :gkill_api="gkill_api"
             :dnote_list_query="dnote_list_query"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
