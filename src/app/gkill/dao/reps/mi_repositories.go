@@ -67,7 +67,7 @@ loop:
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
 					key := kyou.ID
-					if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					if !query.OnlyLatestData {
 						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
 
@@ -230,12 +230,12 @@ loop:
 func (m MiRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// 並列処理
 	matchPaths := []string{}
-	trueValue := true
+
 	ids := []string{id}
 	for _, rep := range m {
 		query := &find.FindQuery{
-			IDs:    &ids,
-			UseIDs: &trueValue,
+			IDs:    ids,
+			UseIDs: true,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -395,7 +395,7 @@ loop:
 			}
 			for _, kyou := range matchMisInRep {
 				key := kyou.ID
-				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				if !query.OnlyLatestData {
 					key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 				}
 				if existMi, exist := matchMis[key]; exist {
@@ -658,10 +658,8 @@ func (m MiRepositories) AddMiInfo(ctx context.Context, mi Mi) error {
 func (m MiRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
 	boardNames := map[string]interface{}{}
 
-	trueValue := true
-
 	findMiQuery := &find.FindQuery{}
-	findMiQuery.OnlyLatestData = &trueValue
+	findMiQuery.OnlyLatestData = true
 	mis, err := m.FindMi(ctx, findMiQuery)
 	if err != nil {
 		err = fmt.Errorf("error at find mi: %w", err)

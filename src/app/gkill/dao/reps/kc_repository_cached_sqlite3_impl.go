@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = k.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := k.GetRepName(ctx)
@@ -143,11 +143,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -244,13 +241,12 @@ WHERE
 `
 	dataType := "kc"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []interface{}{
@@ -363,11 +359,10 @@ WHERE
 `
 	dataType := "kc"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		dataType,
@@ -458,11 +453,10 @@ func (k *kcRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	trueValue := true
-	falseValue := false
+
 	query := &find.FindQuery{
-		UpdateCache:    &trueValue,
-		OnlyLatestData: &falseValue,
+		UpdateCache:    true,
+		OnlyLatestData: false,
 	}
 
 	allKCs, err := k.kcRep.FindKC(ctx, query)
@@ -619,7 +613,7 @@ func (k *kcRepositoryCachedSQLite3Impl) FindKC(ctx context.Context, query *find.
 	var err error
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = k.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := k.GetRepName(ctx)
@@ -765,13 +759,13 @@ SELECT
 FROM ` + k.dbName + `
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	dataType := "kc"
@@ -790,11 +784,8 @@ WHERE
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -896,11 +887,11 @@ SELECT
 FROM ` + k.dbName + `
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	dataType := "kc"
 
@@ -918,11 +909,8 @@ WHERE
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err

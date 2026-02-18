@@ -72,7 +72,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish selectMatchRepsFromQuery")
-	if findKyouContext.ParsedFindQuery.UpdateCache != nil && *findKyouContext.ParsedFindQuery.UpdateCache {
+	if findKyouContext.ParsedFindQuery.UpdateCache {
 		gkillErr, err = f.updateCache(ctx, findKyouContext)
 		if err != nil {
 			err = fmt.Errorf("error at update cache: %w", err)
@@ -136,7 +136,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	}
 
 	// タグ取得
-	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+	if findQuery.UseTags {
 		wg.Add(1)
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
@@ -195,7 +195,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		slog.Log(ctx, gkill_log.Trace, "finish findTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 	}()
 
-	if findQuery.UseTimeIs != nil && *(findQuery.UseTimeIs) {
+	if findQuery.UseTimeIs {
 		wg.Add(1)
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
@@ -235,7 +235,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	wg.Wait()
 
 	// TimeIs取得
-	if findQuery.UseTimeIs != nil && *(findQuery.UseTimeIs) {
+	if findQuery.UseTimeIs {
 		gkillErr, err = f.findTimeIs(ctx, findKyouContext)
 		if err != nil {
 			err = fmt.Errorf("error at find timeis: %w", err)
@@ -243,7 +243,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		}
 		slog.Log(ctx, gkill_log.Trace, "finish findTimeIs", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 
-		if findQuery.UseTimeIsTags == nil || !(*findQuery.UseTimeIsTags) || findQuery.TimeIsTags == nil {
+		if !(findQuery.UseTimeIsTags) || findQuery.TimeIsTags == nil {
 			gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
 			if err != nil {
 				err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
@@ -280,7 +280,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish filterMiForMi", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+	if findQuery.UseTags {
 		gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
 		if err != nil {
 			err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
@@ -288,7 +288,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		}
 		slog.Log(ctx, gkill_log.Trace, "finish getMatchHideTagsWhenUnckedKyou", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 	}
-	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+	if findQuery.UseTags {
 		gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
 		if err != nil {
 			err = fmt.Errorf("error at filter tags kyous: %w", err)
@@ -362,24 +362,24 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 
 	typeMatchReps := []reps.Repository{}
 
-	if findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi {
+	if findCtx.ParsedFindQuery.ForMi {
 		// ForMiだったらMi以外は無視する
 		for _, rep := range repositories.MiReps {
 			typeMatchReps = append(typeMatchReps, rep)
 		}
-	} else if findCtx.ParsedFindQuery.IsImageOnly != nil && *findCtx.ParsedFindQuery.IsImageOnly {
+	} else if findCtx.ParsedFindQuery.IsImageOnly {
 		// ImageOnlyだったらIDFRep以外は無視する
 		for _, rep := range repositories.IDFKyouReps {
 			typeMatchReps = append(typeMatchReps, rep)
 		}
-	} else if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
+	} else if findCtx.ParsedFindQuery.UsePlaing {
 		// PlaingだったらTimeIsRep以外は無視する
 		for _, rep := range repositories.TimeIsReps {
 			typeMatchReps = append(typeMatchReps, rep)
 		}
-	} else if findCtx.ParsedFindQuery.UseRepTypes != nil && *findCtx.ParsedFindQuery.UseRepTypes {
+	} else if findCtx.ParsedFindQuery.UseRepTypes {
 		// RepType指定の場合、指定以外は除外する
-		for _, repType := range *findCtx.ParsedFindQuery.RepTypes {
+		for _, repType := range findCtx.ParsedFindQuery.RepTypes {
 			switch repType {
 			case "kmemo":
 				for _, rep := range repositories.KmemoReps {
@@ -429,7 +429,7 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 
 	targetRepNames := []string{}
 	if findCtx.ParsedFindQuery.Reps != nil {
-		targetRepNames = *findCtx.ParsedFindQuery.Reps
+		targetRepNames = findCtx.ParsedFindQuery.Reps
 	}
 
 	for _, matchRep := range typeMatchReps {
@@ -463,8 +463,7 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 		err = fmt.Errorf("error at update repositories cache: %w", err)
 		return nil, err
 	}
-	falseValue := false
-	findCtx.ParsedFindQuery.UpdateCache = &falseValue
+	findCtx.ParsedFindQuery.UpdateCache = false
 	return nil, nil
 }
 
@@ -474,8 +473,7 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 	lenOfTagReps := len(findCtx.Repositories.TagReps)
 
 	// 全タグ取得用検索クエリ
-	falseValue := false
-	findTagsQuery := &find.FindQuery{IsDeleted: &falseValue}
+	findTagsQuery := &find.FindQuery{IsDeleted: false}
 
 	existErr := false
 	wg := &sync.WaitGroup{}
@@ -547,7 +545,7 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *FindKyouContext, userID string, device string) ([]*message.GkillError, error) {
 	hideTagNames := []string{}
 	if findCtx.ParsedFindQuery.HideTags != nil {
-		hideTagNames = append(hideTagNames, *findCtx.ParsedFindQuery.HideTags...)
+		hideTagNames = append(hideTagNames, findCtx.ParsedFindQuery.HideTags...)
 	}
 
 	for _, hideTagName := range hideTagNames {
@@ -581,7 +579,7 @@ func (f *FindFilter) getMatchHideTagsWhenUnckedKyou(ctx context.Context, findCtx
 	}
 	for _, hideTag := range findCtx.AllHideTagsWhenUnchecked {
 		isCheckedByUser := false
-		for _, tagname := range *findCtx.ParsedFindQuery.Tags {
+		for _, tagname := range findCtx.ParsedFindQuery.Tags {
 			if hideTag.Tag == tagname {
 				isCheckedByUser = true
 				break
@@ -597,7 +595,7 @@ func (f *FindFilter) getMatchHideTagsWhenUnckedKyou(ctx context.Context, findCtx
 func (f *FindFilter) getMatchHideTagsWhenUnckedTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	for _, hideTag := range findCtx.AllHideTagsWhenUnchecked {
 		isCheckedByUser := false
-		for _, tagname := range *findCtx.ParsedFindQuery.TimeIsTags {
+		for _, tagname := range findCtx.ParsedFindQuery.TimeIsTags {
 			if hideTag.Tag == tagname {
 				isCheckedByUser = true
 				break
@@ -612,11 +610,11 @@ func (f *FindFilter) getMatchHideTagsWhenUnckedTimeIs(ctx context.Context, findC
 
 func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	// タグを使わない場合はnil
-	if findCtx.ParsedFindQuery.UseTimeIsTags == nil || !(*findCtx.ParsedFindQuery.UseTimeIsTags) {
+	if !(findCtx.ParsedFindQuery.UseTimeIsTags) {
 		return nil, nil
 	}
 
-	for _, tagName := range *findCtx.ParsedFindQuery.TimeIsTags {
+	for _, tagName := range findCtx.ParsedFindQuery.TimeIsTags {
 		matchTags, err := findCtx.Repositories.TagReps.GetTagsByTagName(ctx, tagName)
 		if err != nil {
 			err = fmt.Errorf("error at get tags by name %s: %w", tagName, err)
@@ -642,14 +640,12 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 }
 
 func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	trueValue := true
-	falseValue := false
 
 	query := &find.FindQuery{
-		// IsDeleted: &falseValue, // TagReps.FindTags内に考慮があるため削除
-		UseWords: &trueValue,
+		// IsDeleted: false, // TagReps.FindTags内に考慮があるため削除
+		UseWords: true,
 		Words:    findCtx.ParsedFindQuery.Tags,
-		WordsAnd: &falseValue,
+		WordsAnd: false,
 	}
 	matchTags, err := findCtx.Repositories.TagReps.FindTags(ctx, query)
 	if err != nil {
@@ -682,10 +678,10 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	for _, text := range findCtx.MatchTexts {
 		targetIDs = append(targetIDs, text.TargetID)
 	}
-	trueValue := true
+
 	matchTextFindByIDQuery := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &targetIDs,
+		UseIDs: true,
+		IDs:    targetIDs,
 	}
 
 	matchReps := reps.Repositories{}
@@ -746,7 +742,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 
 		trimedKyousMap := map[int64]reps.Kyou{}
 		for _, kyou := range kyous {
-			if findCtx.ParsedFindQuery.UseCalendar != nil && *findCtx.ParsedFindQuery.UseCalendar {
+			if findCtx.ParsedFindQuery.UseCalendar {
 				if (findCtx.ParsedFindQuery.CalendarStartDate != nil && kyou.RelatedTime.Before(*findCtx.ParsedFindQuery.CalendarStartDate)) ||
 					(findCtx.ParsedFindQuery.CalendarEndDate != nil && kyou.RelatedTime.After(*findCtx.ParsedFindQuery.CalendarEndDate)) {
 					continue
@@ -770,7 +766,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		delete(resultKyous, deleteTargetKyouID)
 	}
 
-	if (findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing) || (findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi) {
+	if (findCtx.ParsedFindQuery.UsePlaing) || (findCtx.ParsedFindQuery.ForMi) {
 		for id := range resultKyous {
 			resultKyous[id] = []reps.Kyou{resultKyous[id][0]}
 		}
@@ -781,16 +777,15 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 }
 
 func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.ForMi == nil || !(*findCtx.ParsedFindQuery.ForMi) {
+	if !(findCtx.ParsedFindQuery.ForMi) {
 		return nil, nil
 	}
 
 	// Miを取得位する
 	// 作成日時以外の条件でmiを取得する。その後、作成日時で取得して追加する。
 	allMis := map[string]reps.Mi{}
-	falseValue := false
 	withoutCreatedMiFindQuery := *findCtx.ParsedFindQuery
-	withoutCreatedMiFindQuery.IncludeCreateMi = &falseValue
+	withoutCreatedMiFindQuery.IncludeCreateMi = false
 	withoutCreatedMis, err := findCtx.Repositories.MiReps.FindMi(ctx, &withoutCreatedMiFindQuery)
 	if err != nil {
 		err = fmt.Errorf("error at get without created mis: %w", err)
@@ -820,19 +815,17 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 	// チェック状態から対象Miを抽出する
 	targetMis := []reps.Mi{}
 	for _, mi := range allMis {
-		if findCtx.ParsedFindQuery.MiCheckState != nil {
-			switch string(*findCtx.ParsedFindQuery.MiCheckState) {
-			case string(find.Checked):
-				if mi.IsChecked {
-					targetMis = append(targetMis, mi)
-				}
-			case string(find.UncCheck):
-				if !mi.IsChecked {
-					targetMis = append(targetMis, mi)
-				}
-			case string(find.All):
+		switch string(findCtx.ParsedFindQuery.MiCheckState) {
+		case string(find.Checked):
+			if mi.IsChecked {
 				targetMis = append(targetMis, mi)
 			}
+		case string(find.UncCheck):
+			if !mi.IsChecked {
+				targetMis = append(targetMis, mi)
+			}
+		case string(find.All):
+			targetMis = append(targetMis, mi)
 		}
 	}
 
@@ -850,7 +843,7 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 }
 
 func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.Tags != nil && findCtx.ParsedFindQuery.TagsAnd != nil && !(*findCtx.ParsedFindQuery.TagsAnd) {
+	if !(findCtx.ParsedFindQuery.TagsAnd) {
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
@@ -876,7 +869,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		existNoTags := false
 		tags := []string{}
 		if findCtx.ParsedFindQuery.Tags != nil {
-			tags = *findCtx.ParsedFindQuery.Tags
+			tags = findCtx.ParsedFindQuery.Tags
 		}
 
 		for _, tag := range tags {
@@ -902,13 +895,13 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		}
 
 		findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTags
-	} else if findCtx.ParsedFindQuery.Tags != nil && findCtx.ParsedFindQuery.TagsAnd != nil && (*findCtx.ParsedFindQuery.TagsAnd) {
+	} else if findCtx.ParsedFindQuery.TagsAnd {
 		// ANDの場合のフィルタリング処理
 		tagNameMap := map[string]map[string][]reps.Kyou{} // map[タグ名][kyou.ID（tagTargetID）] = reps.kyou
 
 		for _, tag := range findCtx.MatchTags {
 			isTagInQuery := false
-			for _, tagName := range *findCtx.ParsedFindQuery.Tags {
+			for _, tagName := range findCtx.ParsedFindQuery.Tags {
 				if tagName == tag.Tag {
 					isTagInQuery = true
 					break
@@ -934,7 +927,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		existNoTags := false
 		tags := []string{}
 		if findCtx.ParsedFindQuery.Tags != nil {
-			tags = *findCtx.ParsedFindQuery.Tags
+			tags = findCtx.ParsedFindQuery.Tags
 		}
 
 		for _, tag := range tags {
@@ -1017,7 +1010,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 }
 
 func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.UseTimeIsTags == nil || !(*findCtx.ParsedFindQuery.UseTimeIsTags) {
+	if !(findCtx.ParsedFindQuery.UseTimeIsTags) {
 		for _, timeis := range findCtx.MatchTimeIssAtFindTimeIs {
 			if timeis.IsDeleted {
 				continue
@@ -1026,7 +1019,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		}
 		return nil, nil
 	}
-	if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && !(*findCtx.ParsedFindQuery.TimeIsTagsAnd) {
+	if findCtx.ParsedFindQuery.TimeIsTags != nil && !(findCtx.ParsedFindQuery.TimeIsTagsAnd) {
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
@@ -1052,7 +1045,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		existNoTags := false
 		tags := []string{}
 		if findCtx.ParsedFindQuery.TimeIsTags != nil {
-			tags = *findCtx.ParsedFindQuery.TimeIsTags
+			tags = findCtx.ParsedFindQuery.TimeIsTags
 		}
 		for _, tag := range tags {
 			if tag == NoTags {
@@ -1076,14 +1069,14 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 			delete(findCtx.MatchTimeIssAtFilterTags, hideTag.TargetID)
 		}
 
-	} else if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && (*findCtx.ParsedFindQuery.TimeIsTagsAnd) {
+	} else if findCtx.ParsedFindQuery.TimeIsTags != nil && (findCtx.ParsedFindQuery.TimeIsTagsAnd) {
 		// ANDの場合のフィルタリング処理
 
 		tagNameMap := map[string]map[string]reps.TimeIs{} // map[タグ名][kyou.ID（tagTargetID）] = reps.TimeIs
 
 		for _, tag := range findCtx.MatchTimeIsTags {
 			isTagInQuery := false
-			for _, tagName := range *findCtx.ParsedFindQuery.TimeIsTags {
+			for _, tagName := range findCtx.ParsedFindQuery.TimeIsTags {
 				if tagName == tag.Tag {
 					isTagInQuery = true
 					break
@@ -1107,7 +1100,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		existNoTags := false
 		tags := []string{}
 		if findCtx.ParsedFindQuery.TimeIsTags != nil {
-			tags = *findCtx.ParsedFindQuery.TimeIsTags
+			tags = findCtx.ParsedFindQuery.TimeIsTags
 		}
 
 		for _, tag := range tags {
@@ -1161,7 +1154,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 }
 
 func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.UseTimeIs == nil || !(*findCtx.ParsedFindQuery.UseTimeIs) {
+	if !(findCtx.ParsedFindQuery.UseTimeIs) {
 		return nil, nil
 	}
 
@@ -1178,22 +1171,20 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 
 func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	var err error
-	if findCtx.ParsedFindQuery.UseTimeIs == nil || !*findCtx.ParsedFindQuery.UseTimeIs {
+	if !findCtx.ParsedFindQuery.UseTimeIs {
 		return nil, nil
 	}
 
-	trueValue := true
-
 	// 対象TimeIs取得用検索クエリ
 	timeisFindKyouQuery := &find.FindQuery{
-		UseWords:          &trueValue,
+		UseWords:          true,
 		Words:             findCtx.ParsedFindQuery.TimeIsWords,
 		NotWords:          findCtx.ParsedFindQuery.TimeIsNotWords,
 		WordsAnd:          findCtx.ParsedFindQuery.TimeIsWordsAnd,
 		UseCalendar:       findCtx.ParsedFindQuery.UseCalendar,
 		CalendarStartDate: findCtx.ParsedFindQuery.CalendarStartDate,
 		CalendarEndDate:   findCtx.ParsedFindQuery.CalendarEndDate,
-		IncludeEndTimeIs:  &trueValue,
+		IncludeEndTimeIs:  true,
 	}
 
 	// text検索用クエリ
@@ -1202,8 +1193,8 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		targetIDs = append(targetIDs, text.TargetID)
 	}
 	matchTextFindByIDQuery := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &targetIDs,
+		UseIDs: true,
+		IDs:    targetIDs,
 	}
 
 	lenOfReps := len(findCtx.Repositories.TimeIsReps)
@@ -1290,7 +1281,7 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 }
 
 func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.UseMap == nil || !*findCtx.ParsedFindQuery.UseMap {
+	if !findCtx.ParsedFindQuery.UseMap {
 		return nil, nil
 	}
 
@@ -1306,29 +1297,25 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	var latitude float64
 	var longitude float64
 
-	if findCtx.ParsedFindQuery.MapRadius != nil {
-		radius = *findCtx.ParsedFindQuery.MapRadius / 1000
+	if findCtx.ParsedFindQuery.MapRadius != 0 {
+		radius = findCtx.ParsedFindQuery.MapRadius / 1000
 	}
-	if findCtx.ParsedFindQuery.MapLatitude != nil {
-		latitude = *findCtx.ParsedFindQuery.MapLatitude
-	}
-	if findCtx.ParsedFindQuery.MapLongitude != nil {
-		longitude = *findCtx.ParsedFindQuery.MapLongitude
-	}
+	latitude = findCtx.ParsedFindQuery.MapLatitude
+	longitude = findCtx.ParsedFindQuery.MapLongitude
 
 	// 日付のnil解決 もしくは全部の日付
 	isAllDays := false
-	if (startTime != nil && endTime == nil) && findCtx.ParsedFindQuery.UseCalendar != nil && *findCtx.ParsedFindQuery.UseCalendar {
+	if (startTime != nil && endTime == nil) && findCtx.ParsedFindQuery.UseCalendar {
 		s := time.Time(*startTime)
 		e := time.Time(*startTime).Add(time.Hour*23 + time.Minute*59 + time.Second*59)
 		startTime = &s
 		endTime = &e
-	} else if (startTime != nil && endTime != nil) && findCtx.ParsedFindQuery.UseCalendar != nil && *findCtx.ParsedFindQuery.UseCalendar {
+	} else if (startTime != nil && endTime != nil) && findCtx.ParsedFindQuery.UseCalendar {
 		s := time.Time(*startTime)
 		e := time.Time(*endTime).Add(time.Hour*23 + time.Minute*59 + time.Second*59)
 		startTime = &s
 		endTime = &e
-	} else if (startTime == nil && endTime == nil) || (findCtx.ParsedFindQuery.UseCalendar == nil || !*findCtx.ParsedFindQuery.UseCalendar) {
+	} else if (startTime == nil && endTime == nil) || (!findCtx.ParsedFindQuery.UseCalendar) {
 		isAllDays = true
 	}
 	// GPSLogを取得する
@@ -1416,7 +1403,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	return nil, nil
 }
 func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.ForMi == nil || findCtx.ParsedFindQuery.MiSortType == nil || !*findCtx.ParsedFindQuery.ForMi {
+	if !findCtx.ParsedFindQuery.ForMi {
 		// kyou検索の場合は何もしない
 		return nil, nil
 	}
@@ -1426,16 +1413,16 @@ func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) 
 		kyous, exist := findCtx.MatchKyousCurrent[mi.ID]
 		if exist {
 			kyous[0].DataType = mi.DataType
-			if string(*findCtx.ParsedFindQuery.MiSortType) == string(find.CreateTime) {
+			if string(findCtx.ParsedFindQuery.MiSortType) == string(find.CreateTime) {
 				kyous[0].DataType = "mi_create"
 				kyous[0].RelatedTime = mi.CreateTime
-			} else if string(*findCtx.ParsedFindQuery.MiSortType) == string(find.EstimateStartTime) && mi.EstimateStartTime != nil {
+			} else if string(findCtx.ParsedFindQuery.MiSortType) == string(find.EstimateStartTime) && mi.EstimateStartTime != nil {
 				kyous[0].DataType = "mi_start"
 				kyous[0].RelatedTime = *mi.EstimateStartTime
-			} else if string(*findCtx.ParsedFindQuery.MiSortType) == string(find.EstimateEndTime) && mi.EstimateEndTime != nil {
+			} else if string(findCtx.ParsedFindQuery.MiSortType) == string(find.EstimateEndTime) && mi.EstimateEndTime != nil {
 				kyous[0].DataType = "mi_end"
 				kyous[0].RelatedTime = *mi.EstimateEndTime
-			} else if string(*findCtx.ParsedFindQuery.MiSortType) == string(find.LimitTime) && mi.LimitTime != nil {
+			} else if string(findCtx.ParsedFindQuery.MiSortType) == string(find.LimitTime) && mi.LimitTime != nil {
 				kyous[0].DataType = "mi_limit"
 				kyous[0].RelatedTime = *mi.LimitTime
 			} else {
@@ -1449,7 +1436,7 @@ func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) 
 }
 
 func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.ForMi == nil || findCtx.ParsedFindQuery.MiSortType == nil || !*findCtx.ParsedFindQuery.ForMi {
+	if !findCtx.ParsedFindQuery.ForMi {
 		// kyouとしてソート
 		sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
 			iUnix := findCtx.ResultKyous[i].RelatedTime.Unix()
@@ -1467,7 +1454,7 @@ func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext
 	}
 
 	// miとしてソート。指定日時でソートする。指定日時がないものは、末尾に作成日時でくっつける
-	sortType := *findCtx.ParsedFindQuery.MiSortType
+	sortType := findCtx.ParsedFindQuery.MiSortType
 	sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
 		var iTime *time.Time = nil
 		var jTime *time.Time = nil
@@ -1561,19 +1548,19 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 	words := []string{}
 	notWords := []string{}
 	if findCtx.ParsedFindQuery.Words != nil {
-		words = *findCtx.ParsedFindQuery.Words
+		words = findCtx.ParsedFindQuery.Words
 	}
 	if findCtx.ParsedFindQuery.NotWords != nil {
-		notWords = *findCtx.ParsedFindQuery.NotWords
+		notWords = findCtx.ParsedFindQuery.NotWords
 	}
 
 	// 対象タグ取得用検索クエリ
-	trueValue := true
+
 	findTextsQuery := &find.FindQuery{
-		// IsDeleted: &falseValue, // TextReps.FindTexts内に考慮があるため削除
-		UseWords: &trueValue,
-		Words:    &words,
-		NotWords: &notWords,
+		// IsDeleted: false, // TextReps.FindTexts内に考慮があるため削除
+		UseWords: true,
+		Words:    words,
+		NotWords: notWords,
 		WordsAnd: findCtx.ParsedFindQuery.WordsAnd,
 	}
 
@@ -1639,7 +1626,7 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 }
 
 func (f *FindFilter) filterImageKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.IsImageOnly == nil || !(*findCtx.ParsedFindQuery.IsImageOnly) {
+	if !(findCtx.ParsedFindQuery.IsImageOnly) {
 		return nil, nil
 	}
 
@@ -1665,19 +1652,19 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	words := []string{}
 	notWords := []string{}
 	if findCtx.ParsedFindQuery.TimeIsWords != nil {
-		words = *findCtx.ParsedFindQuery.TimeIsWords
+		words = findCtx.ParsedFindQuery.TimeIsWords
 	}
 	if findCtx.ParsedFindQuery.TimeIsNotWords != nil {
-		notWords = *findCtx.ParsedFindQuery.TimeIsNotWords
+		notWords = findCtx.ParsedFindQuery.TimeIsNotWords
 	}
 
 	// 対象タグ取得用検索クエリ
-	trueValue := true
+
 	findTextsQuery := &find.FindQuery{
-		// IsDeleted: &falseValue, // TextReps.FindTexts内に考慮があるため削除
-		UseWords: &trueValue,
-		Words:    &words,
-		NotWords: &notWords,
+		// IsDeleted: false, // TextReps.FindTexts内に考慮があるため削除
+		UseWords: true,
+		Words:    words,
+		NotWords: notWords,
 		WordsAnd: findCtx.ParsedFindQuery.TimeIsWordsAnd,
 	}
 
@@ -1756,9 +1743,9 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			continue
 		}
 
-		isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi
+		isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFindQuery.ForMi
 		isTimeIsData := strings.HasPrefix(currentKyou[0].DataType, "timeis")
-		isUsePlaing := findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil
+		isUsePlaing := findCtx.ParsedFindQuery.UsePlaing
 
 		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
 		// Miもそのままいれる
@@ -1779,7 +1766,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	}
 
 	// miの場合は最新以外消す
-	isForMi := findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi
+	isForMi := findCtx.ParsedFindQuery.ForMi
 	if isForMi {
 		for id, kyous := range latestKyousMap {
 			sort.Slice(kyous, func(i, j int) bool {

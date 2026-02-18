@@ -101,7 +101,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query 
 	var err error
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = u.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := u.GetRepName(ctx)
@@ -147,11 +147,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -249,13 +246,12 @@ WHERE
 `
 	dataType := "urlog"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -371,11 +367,10 @@ WHERE
 `
 	dataType := "urlog"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	tableName := u.dbName
@@ -469,11 +464,10 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	trueValue := true
-	falseValue := false
+
 	query := &find.FindQuery{
-		UpdateCache:    &trueValue,
-		OnlyLatestData: &falseValue,
+		UpdateCache:    true,
+		OnlyLatestData: false,
 	}
 
 	allURLogs, err := u.urlogRep.FindURLog(ctx, query)
@@ -639,7 +633,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query 
 	var err error
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = u.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := u.GetRepName(ctx)
@@ -690,11 +684,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -804,13 +795,12 @@ FROM ` + u.dbName + `
 WHERE
 `
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	dataType := "urlog"
@@ -942,11 +932,10 @@ FROM ` + u.dbName + `
 WHERE
 `
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	dataType := "urlog"
 

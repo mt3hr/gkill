@@ -68,7 +68,7 @@ loop:
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
 					key := kyou.ID
-					if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					if !query.OnlyLatestData {
 						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
 
@@ -111,7 +111,7 @@ loop:
 	resultKyous := map[string][]Kyou{}
 	for _, matchTimeIs := range matchTimeIssList {
 		key := matchTimeIs.ID
-		if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+		if !query.OnlyLatestData {
 			key += fmt.Sprintf("%d", matchTimeIs.UpdateTime.Unix())
 		}
 		resultKyous[matchTimeIs.ID] = matchKyous[key]
@@ -265,12 +265,12 @@ loop:
 func (t TimeIsRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// 並列処理
 	matchPaths := []string{}
-	trueValue := true
+
 	ids := []string{id}
 	for _, rep := range t {
 		query := &find.FindQuery{
-			IDs:    &ids,
-			UseIDs: &trueValue,
+			IDs:    ids,
+			UseIDs: true,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -430,7 +430,7 @@ loop:
 			}
 			for _, kyou := range matchTimeIssInRep {
 				key := kyou.ID
-				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				if !query.OnlyLatestData {
 					key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 				}
 
@@ -451,7 +451,7 @@ loop:
 	for _, timeis := range matchTimeIss {
 
 		// Plaingで最新のものが範囲外だったらそれは追加しない
-		if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+		if query.UsePlaing {
 			if query.PlaingTime.After(timeis.StartTime) && (timeis.EndTime == nil || query.PlaingTime.Before(*timeis.EndTime)) {
 				matchTimeIssList = append(matchTimeIssList, timeis)
 			}

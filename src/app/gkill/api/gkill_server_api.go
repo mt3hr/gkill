@@ -5851,8 +5851,8 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	trueValue := true
-	request.Query.OnlyLatestData = &trueValue
+
+	request.Query.OnlyLatestData = true
 
 	// アカウントを取得
 	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
@@ -10296,9 +10296,8 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	trueValue := true
-	falseValue := false
-	findQuery.OnlyLatestData = &trueValue
+
+	findQuery.OnlyLatestData = true
 
 	// Kyou
 	findFilter := &FindFilter{}
@@ -10316,18 +10315,18 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	useIDs := len(kyous) != 0
 	findQueryValueForKyouInstances := *findQuery
 	findQueryForKyouInstances := &findQueryValueForKyouInstances
-	findQueryForKyouInstances.UseIDs = &useIDs
-	findQueryForKyouInstances.IncludeCreateMi = &trueValue
-	findQueryForKyouInstances.IncludeStartMi = &trueValue
-	findQueryForKyouInstances.IncludeCheckMi = &trueValue
-	findQueryForKyouInstances.IncludeEndMi = &trueValue
-	findQueryForKyouInstances.IncludeLimitMi = &trueValue
-	findQueryForKyouInstances.IncludeEndTimeIs = &trueValue
-	findQueryForKyouInstances.IDs = &[]string{}
+	findQueryForKyouInstances.UseIDs = useIDs
+	findQueryForKyouInstances.IncludeCreateMi = true
+	findQueryForKyouInstances.IncludeStartMi = true
+	findQueryForKyouInstances.IncludeCheckMi = true
+	findQueryForKyouInstances.IncludeEndMi = true
+	findQueryForKyouInstances.IncludeLimitMi = true
+	findQueryForKyouInstances.IncludeEndTimeIs = true
+	findQueryForKyouInstances.IDs = []string{}
 	for _, kyou := range kyous {
-		*findQueryForKyouInstances.IDs = append(*findQueryForKyouInstances.IDs, kyou.ID)
+		findQueryForKyouInstances.IDs = append(findQueryForKyouInstances.IDs, kyou.ID)
 	}
-	findQueryForKyouInstances.OnlyLatestData = &falseValue
+	findQueryForKyouInstances.OnlyLatestData = false
 
 	// Mi
 	mis, err := repositories.MiReps.FindMi(r.Context(), findQueryForKyouInstances)
@@ -10540,29 +10539,29 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	attachedTimeisKyous := []reps.Kyou{}
 	attachedTimeiss := []reps.TimeIs{}
 	if sharedKyouInfo.IsShareWithTimeIss {
-		trueValue := true
+
 		attachedTimeIsKyousMap := map[string]reps.Kyou{}
 		attachedTimeIssMap := map[string]reps.TimeIs{}
 		queries := []find.FindQuery{}
 
 		timeisQueryValue := *findQuery
 		timeisQuery := timeisQueryValue
-		timeisQuery.UseRepTypes = &trueValue
-		timeisQuery.RepTypes = &[]string{"timeis"}
-		timeisQuery.OnlyLatestData = &trueValue
+		timeisQuery.UseRepTypes = true
+		timeisQuery.RepTypes = []string{"timeis"}
+		timeisQuery.OnlyLatestData = true
 		queries = append(queries, timeisQuery)
 
-		if timeisQuery.UseCalendar != nil && *timeisQuery.UseCalendar && timeisQuery.CalendarStartDate != nil {
+		if timeisQuery.UseCalendar && timeisQuery.CalendarStartDate != nil {
 			timeisPlaingHeadQuery := find.FindQuery{}
-			timeisPlaingHeadQuery.UsePlaing = &trueValue
-			timeisPlaingHeadQuery.PlaingTime = timeisQuery.CalendarStartDate
+			timeisPlaingHeadQuery.UsePlaing = true
+			timeisPlaingHeadQuery.PlaingTime = *timeisQuery.CalendarStartDate
 			queries = append(queries, timeisPlaingHeadQuery)
 		}
 
-		if timeisQuery.UseCalendar != nil && *timeisQuery.UseCalendar && timeisQuery.CalendarEndDate != nil {
+		if timeisQuery.UseCalendar && timeisQuery.CalendarEndDate != nil {
 			timeisPlaingHipQuery := find.FindQuery{}
-			timeisPlaingHipQuery.UsePlaing = &trueValue
-			timeisPlaingHipQuery.PlaingTime = timeisQuery.CalendarEndDate
+			timeisPlaingHipQuery.UsePlaing = true
+			timeisPlaingHipQuery.PlaingTime = *timeisQuery.CalendarEndDate
 			queries = append(queries, timeisPlaingHipQuery)
 		}
 

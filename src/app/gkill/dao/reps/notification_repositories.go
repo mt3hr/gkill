@@ -66,7 +66,7 @@ loop:
 			}
 			for _, notification := range matchNotificationsInRep {
 				key := notification.ID
-				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				if !query.OnlyLatestData {
 					key += fmt.Sprintf("%d", notification.UpdateTime.Unix())
 				}
 
@@ -400,12 +400,12 @@ errloop:
 func (t NotificationRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// 並列処理
 	matchPaths := []string{}
-	trueValue := true
+
 	ids := []string{id}
 	for _, rep := range t {
 		query := &find.FindQuery{
-			IDs:    &ids,
-			UseIDs: &trueValue,
+			IDs:    ids,
+			UseIDs: true,
 		}
 		notifications, err := rep.FindNotifications(ctx, query)
 		if len(notifications) == 0 || err != nil {
