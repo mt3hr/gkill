@@ -548,6 +548,16 @@ func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		return err
 	}
 
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	sql := `DELETE FROM ` + t.dbName
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
@@ -615,7 +625,6 @@ INSERT INTO ` + t.dbName + `(
 	for _, timeis := range allTimeiss {
 		select {
 		case <-ctx.Done():
-			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -653,7 +662,6 @@ INSERT INTO ` + t.dbName + `(
 			return nil
 		}()
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
@@ -662,6 +670,7 @@ INSERT INTO ` + t.dbName + `(
 		err = fmt.Errorf("error at commit transaction for add timeiss: %w", err)
 		return err
 	}
+	isCommitted = true
 	return nil
 }
 

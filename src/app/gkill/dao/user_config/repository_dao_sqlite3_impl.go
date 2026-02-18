@@ -272,6 +272,15 @@ func (r *repositoryDAOSQLite3Impl) DeleteWriteRepositories(ctx context.Context, 
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	sql := `
 DELETE FROM REPOSITORY
@@ -297,9 +306,6 @@ WHERE USER_ID = ?
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
-		errAtRollback := tx.Rollback()
-		err = fmt.Errorf("%w, %w", err, errAtRollback)
-		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
 
@@ -330,10 +336,6 @@ INSERT INTO REPOSITORY (
 	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add repositories sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -362,32 +364,21 @@ INSERT INTO REPOSITORY (
 
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 	}
 
 	err = r.checkUseToWriteRepositoryCount(ctx, tx, userID)
 	if err != nil {
-		errAtRollback := tx.Rollback()
-		err = fmt.Errorf("%w, %w", err, errAtRollback)
-		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
-
+	isCommitted = true
 	return true, nil
 }
 
@@ -422,6 +413,16 @@ INSERT INTO REPOSITORY (
 		err = fmt.Errorf("error at begin update repository: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
@@ -449,16 +450,10 @@ INSERT INTO REPOSITORY (
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
-		errAtRollback := tx.Rollback()
-		err = fmt.Errorf("%w, %w", err, errAtRollback)
-		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
 	err = r.checkUseToWriteRepositoryCount(ctx, tx, repository.UserID)
 	if err != nil {
-		errAtRollback := tx.Rollback()
-		err = fmt.Errorf("%w, %w", err, errAtRollback)
-		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
 	err = tx.Commit()
@@ -466,6 +461,7 @@ INSERT INTO REPOSITORY (
 		err = fmt.Errorf("error at add repository commit: %w", err)
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 
@@ -477,6 +473,15 @@ func (r *repositoryDAOSQLite3Impl) AddRepositories(ctx context.Context, reposito
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	sql := `
 INSERT INTO REPOSITORY (
@@ -505,10 +510,6 @@ INSERT INTO REPOSITORY (
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add repositories sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -536,10 +537,6 @@ INSERT INTO REPOSITORY (
 
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 	}
@@ -547,9 +544,6 @@ INSERT INTO REPOSITORY (
 	for _, repository := range repositories {
 		err = r.checkUseToWriteRepositoryCount(ctx, tx, repository.UserID)
 		if err != nil {
-			errAtRollback := tx.Rollback()
-			err = fmt.Errorf("%w, %w", err, errAtRollback)
-			err = fmt.Errorf("error at query :%w", err)
 			return false, err
 		}
 	}
@@ -557,13 +551,9 @@ INSERT INTO REPOSITORY (
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
-
+	isCommitted = true
 	return true, nil
 }
 
@@ -586,6 +576,16 @@ WHERE ID = ?
 		err = fmt.Errorf("error at begin update repository: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
@@ -612,16 +612,10 @@ WHERE ID = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
-		errAtRollback := tx.Rollback()
-		err = fmt.Errorf("%w, %w", err, errAtRollback)
-		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
 	err = r.checkUseToWriteRepositoryCount(ctx, tx, repository.UserID)
 	if err != nil {
-		errAtRollback := tx.Rollback()
-		err = fmt.Errorf("%w, %w", err, errAtRollback)
-		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
 	err = tx.Commit()
@@ -629,6 +623,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at add repository commit: %w", err)
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 

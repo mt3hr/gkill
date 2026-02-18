@@ -939,15 +939,20 @@ INSERT INTO APPLICATION_CONFIG (
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add application config sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1001,10 +1006,6 @@ INSERT INTO APPLICATION_CONFIG (
 		if err != nil {
 			err = fmt.Errorf("error at add application config sql: %w", err)
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 	}
@@ -1012,13 +1013,9 @@ INSERT INTO APPLICATION_CONFIG (
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
-
+	isCommitted = true
 	return true, nil
 }
 
@@ -1044,15 +1041,20 @@ INSERT INTO APPLICATION_CONFIG (
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add application config sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1106,10 +1108,6 @@ INSERT INTO APPLICATION_CONFIG (
 		if err != nil {
 			err = fmt.Errorf("error at add application config sql: %w", err)
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 	}
@@ -1117,13 +1115,9 @@ INSERT INTO APPLICATION_CONFIG (
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
-
+	isCommitted = true
 	return true, nil
 }
 
@@ -1163,6 +1157,16 @@ INSERT INTO APPLICATION_CONFIG (
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	updateValuesMap := map[string]interface{}{
 		"USE_DARK_THEME":                applicationConfig.UseDarkTheme,
 		"GOOGLE_MAP_API_KEY":            applicationConfig.GoogleMapAPIKey,
@@ -1187,10 +1191,6 @@ INSERT INTO APPLICATION_CONFIG (
 	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)
 	if err != nil {
 		err = fmt.Errorf("error at pre get application config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1204,10 +1204,6 @@ INSERT INTO APPLICATION_CONFIG (
 	if err != nil {
 		err = fmt.Errorf("error at add application config sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1220,10 +1216,6 @@ INSERT INTO APPLICATION_CONFIG (
 	updateStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1258,10 +1250,6 @@ INSERT INTO APPLICATION_CONFIG (
 		err = row.Err()
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 
@@ -1269,10 +1257,6 @@ INSERT INTO APPLICATION_CONFIG (
 		err = row.Scan(&recordCount)
 		if err != nil {
 			err = fmt.Errorf("error at scan:%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 		if recordCount == 0 {
@@ -1300,10 +1284,6 @@ INSERT INTO APPLICATION_CONFIG (
 			if err != nil {
 				err = fmt.Errorf("error at add application config sql: %w", err)
 				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
 				return false, err
 			}
 		}
@@ -1333,10 +1313,6 @@ INSERT INTO APPLICATION_CONFIG (
 		_, err = updateStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 	}
@@ -1344,12 +1320,9 @@ INSERT INTO APPLICATION_CONFIG (
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 

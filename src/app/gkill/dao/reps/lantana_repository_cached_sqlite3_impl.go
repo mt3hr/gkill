@@ -475,6 +475,16 @@ func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		return err
 	}
 
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	sql := `DELETE FROM ` + l.dbName
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
@@ -540,7 +550,6 @@ INSERT INTO ` + l.dbName + ` (
 	for _, lantana := range allLantanas {
 		select {
 		case <-ctx.Done():
-			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -570,7 +579,6 @@ INSERT INTO ` + l.dbName + ` (
 			return nil
 		}()
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
@@ -579,7 +587,7 @@ INSERT INTO ` + l.dbName + ` (
 		err = fmt.Errorf("error at commit transaction for add timeiss: %w", err)
 		return err
 	}
-
+	isCommitted = true
 	return nil
 }
 

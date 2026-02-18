@@ -492,6 +492,16 @@ func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepository
 		return false, err
 	}
 
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	deleteSQL := fmt.Sprintf(`
 DELETE FROM %s
 WHERE TARGET_ID = ?`, l.tableName)
@@ -499,10 +509,6 @@ WHERE TARGET_ID = ?`, l.tableName)
 	deleteStmt, err := tx.PrepareContext(ctx, deleteSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repoisitory address delete sql: %w", err)
-		errTx := tx.Rollback()
-		if errTx != nil {
-			err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
-		}
 		return false, err
 	}
 	defer func() {
@@ -532,10 +538,6 @@ INSERT INTO %s (
 	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repoisitory address insert sql: %w", err)
-		errTx := tx.Rollback()
-		if errTx != nil {
-			err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
-		}
 		return false, err
 	}
 	defer func() {
@@ -555,10 +557,6 @@ INSERT INTO %s (
 			_, err = deleteStmt.ExecContext(ctx, deleteQueryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
-				errTx := tx.Rollback()
-				if errTx != nil {
-					err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
-				}
 				return false, err
 			}
 
@@ -576,10 +574,6 @@ INSERT INTO %s (
 			_, err = insertStmt.ExecContext(ctx, insertQueryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
-				errTx := tx.Rollback()
-				if errTx != nil {
-					err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
-				}
 				return false, err
 			}
 			return true, nil
@@ -594,6 +588,7 @@ INSERT INTO %s (
 		err = fmt.Errorf("error at commit: %w: %w", err, errCommit)
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 

@@ -687,6 +687,16 @@ INSERT INTO SERVER_CONFIG (
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	insertValuesMap := map[string]interface{}{
 		"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
 		"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
@@ -710,10 +720,6 @@ INSERT INTO SERVER_CONFIG (
 	if err != nil {
 		err = fmt.Errorf("error at add server config sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -736,13 +742,10 @@ INSERT INTO SERVER_CONFIG (
 		if err != nil {
 			err = fmt.Errorf("error at add server config sql: %w", err)
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 	}
+	isCommitted = true
 	return true, nil
 }
 
@@ -754,6 +757,15 @@ func (s *serverConfigDAOSQLite3Impl) UpdateServerConfigs(ctx context.Context, se
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	sql := `
 UPDATE SERVER_CONFIG SET
@@ -782,10 +794,6 @@ INSERT INTO SERVER_CONFIG (
 	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)
 	if err != nil {
 		err = fmt.Errorf("error at pre get server config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -799,10 +807,6 @@ INSERT INTO SERVER_CONFIG (
 	if err != nil {
 		err = fmt.Errorf("error at add server config sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -815,10 +819,6 @@ INSERT INTO SERVER_CONFIG (
 	updateStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update server config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -859,10 +859,6 @@ INSERT INTO SERVER_CONFIG (
 			err = row.Err()
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
 				return false, err
 			}
 
@@ -870,10 +866,6 @@ INSERT INTO SERVER_CONFIG (
 			err = row.Scan(&recordCount)
 			if err != nil {
 				err = fmt.Errorf("error at scan:%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
 				return false, err
 			}
 			if recordCount == 0 {
@@ -889,10 +881,6 @@ INSERT INTO SERVER_CONFIG (
 				if err != nil {
 					err = fmt.Errorf("error at add server config sql: %w", err)
 					err = fmt.Errorf("error at query :%w", err)
-					rollbackErr := tx.Rollback()
-					if rollbackErr != nil {
-						err = fmt.Errorf("%w: %w", err, rollbackErr)
-					}
 					return false, err
 				}
 			}
@@ -911,10 +899,6 @@ INSERT INTO SERVER_CONFIG (
 
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
 				return false, err
 			}
 		}
@@ -931,10 +915,6 @@ GROUP BY DEVICE
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -952,10 +932,6 @@ GROUP BY DEVICE
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -983,25 +959,15 @@ GROUP BY DEVICE
 		}
 	}
 	if enableDeviceCount != 1 {
-		errAtRollBack := tx.Rollback()
 		err = fmt.Errorf("enable device count is not 1")
-		if errAtRollBack != nil {
-			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			err = fmt.Errorf("error at commit: %w", err)
-		}
 		return false, err
 	}
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		errAtRollBack := tx.Rollback()
-		if errAtRollBack != nil {
-			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			err = fmt.Errorf("error at commit: %w", err)
-			return false, err
-		}
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 
@@ -1013,6 +979,16 @@ func (s *serverConfigDAOSQLite3Impl) UpdateServerConfig(ctx context.Context, ser
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	sql := `
 UPDATE SERVER_CONFIG SET
 VALUE = ?
@@ -1058,10 +1034,6 @@ INSERT INTO SERVER_CONFIG (
 	stmt, err := tx.PrepareContext(ctx, checkExistSQL)
 	if err != nil {
 		err = fmt.Errorf("error at pre get server config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1075,10 +1047,6 @@ INSERT INTO SERVER_CONFIG (
 	if err != nil {
 		err = fmt.Errorf("error at add server config sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1100,10 +1068,6 @@ INSERT INTO SERVER_CONFIG (
 		err = row.Err()
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 
@@ -1111,10 +1075,6 @@ INSERT INTO SERVER_CONFIG (
 		err = row.Scan(&recordCount)
 		if err != nil {
 			err = fmt.Errorf("error at scan:%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 		if recordCount == 0 {
@@ -1130,10 +1090,6 @@ INSERT INTO SERVER_CONFIG (
 			if err != nil {
 				err = fmt.Errorf("error at add server config sql: %w", err)
 				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
 				return false, err
 			}
 		}
@@ -1142,10 +1098,6 @@ INSERT INTO SERVER_CONFIG (
 	updateStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update server config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1167,10 +1119,6 @@ INSERT INTO SERVER_CONFIG (
 
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 	}
@@ -1187,10 +1135,6 @@ GROUP BY DEVICE
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1208,10 +1152,6 @@ GROUP BY DEVICE
 
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1239,26 +1179,15 @@ GROUP BY DEVICE
 		}
 	}
 	if enableDeviceCount != 1 {
-		errAtRollBack := tx.Rollback()
 		err = fmt.Errorf("enable device count is not 1")
-		if errAtRollBack != nil {
-			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			err = fmt.Errorf("error at commit: %w", err)
-		}
 		return false, err
 	}
 	err = tx.Commit()
 	if err != nil {
-		errAtRollBack := tx.Rollback()
-		if errAtRollBack != nil {
-			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			err = fmt.Errorf("error at commit: %w", err)
-			return false, err
-		}
-
 		err = fmt.Errorf("error at commit: %w", err)
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 
@@ -1298,12 +1227,20 @@ WHERE DEVICE = ?
 func (s *serverConfigDAOSQLite3Impl) DeleteWriteServerConfigs(ctx context.Context, serverConfigs []*ServerConfig) (bool, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
-
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	// 全レコード削除
 	deleteSQL := `
@@ -1403,10 +1340,6 @@ GROUP BY DEVICE
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1423,10 +1356,6 @@ GROUP BY DEVICE
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, queryArgsCheckEnableDevice...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -1454,25 +1383,15 @@ GROUP BY DEVICE
 		}
 	}
 	if enableDeviceCount != 1 {
-		errAtRollBack := tx.Rollback()
 		err = fmt.Errorf("enable device count is not 1")
-		if errAtRollBack != nil {
-			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			err = fmt.Errorf("error at commit: %w", err)
-		}
 		return false, err
 	}
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		errAtRollBack := tx.Rollback()
-		if errAtRollBack != nil {
-			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			err = fmt.Errorf("error at commit: %w", err)
-			return false, err
-		}
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 

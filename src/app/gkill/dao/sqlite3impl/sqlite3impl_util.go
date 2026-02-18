@@ -468,10 +468,13 @@ ORDER BY name;
 	if err != nil {
 		return fmt.Errorf("begin: %w", err)
 	}
+	isCommitted := false
 	defer func() {
-		err := tx.Rollback()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
 		}
 	}()
 
@@ -492,6 +495,7 @@ ORDER BY name;
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit: %w", err)
 	}
+	isCommitted = true
 	return nil
 }
 
