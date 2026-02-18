@@ -17,7 +17,8 @@
                                 { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
                                 { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
-                                <v-list-item-title @click="router.replace('/' + page.page_name + '?loaded=true')">
+                                <v-list-item-title
+                                    @click="async () => { await resetDialogHistory(); router.replace('/' + page.page_name + '?loaded=true') }">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -76,7 +77,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { type Ref, ref, computed, watch, nextTick } from 'vue'
+import { type Ref, ref, computed, watch, nextTick, onMounted } from 'vue'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import KyouView from './views/kyou-view.vue'
 import { InfoIdentifier } from '@/classes/datas/info-identifier'
@@ -85,8 +86,8 @@ import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 import { useTheme } from 'vuetify'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useRoute } from 'vue-router'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const theme = useTheme()
 
@@ -94,7 +95,6 @@ const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialo
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
-useDialogHistoryStack(enable_dialog)
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -110,6 +110,9 @@ const hightlight_targets: Ref<Array<InfoIdentifier>> = ref(new Array<InfoIdentif
 const is_image_view: Ref<boolean> = ref(false)
 const kyou: Ref<Kyou> = ref(new Kyou())
 
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 async function load_kyou(): Promise<void> {
     let kyou_id = new URL(location.href).searchParams.get('kyou_id')

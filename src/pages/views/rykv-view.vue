@@ -20,7 +20,8 @@
                                 { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
                                 { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
-                                <v-list-item-title @click="router.replace('/' + page.page_name + '?loaded=true')">
+                                <v-list-item-title
+                                    @click="async () => { await resetDialogHistory(); router.replace('/' + page.page_name + '?loaded=true') }">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -507,14 +508,13 @@ import RyuuListView from './ryuu-list-view.vue'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { Tag } from '@/classes/datas/tag'
 import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
-useDialogHistoryStack(enable_dialog)
 
 const query_editor_sidebar = ref<InstanceType<typeof RykvQueryEditorSideBar> | null>(null);
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);

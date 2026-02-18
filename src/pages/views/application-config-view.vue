@@ -272,6 +272,7 @@ import type { DeviceStructElementData } from '@/classes/datas/config/device-stru
 import type { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import type { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const theme = useTheme()
 
@@ -451,6 +452,7 @@ async function logout(close_database: boolean): Promise<void> {
 
     props.gkill_api.set_session_id("")
 
+    await resetDialogHistory()
     router.replace("/")
 }
 
