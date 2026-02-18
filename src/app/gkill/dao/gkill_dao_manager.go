@@ -895,6 +895,14 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			}
 			repositories.ReKyouReps = reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{cachedReKyouRep}, GkillRepositories: repositories}
 		}
+		if *gkill_options.CacheGitCommitLogReps {
+			cachedGitCommitLogRep, err := reps.NewGitRepCachedSQLite3Impl(ctx, repositories.GitCommitLogReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_GIT_COMMIT_LOG")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.GitCommitLogReps = []reps.GitCommitLogRepository{cachedGitCommitLogRep}
+		}
 
 		// Repsへの追加
 		for _, rep := range repositories.KmemoReps {
