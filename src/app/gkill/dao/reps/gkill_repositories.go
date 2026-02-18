@@ -326,12 +326,12 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// jsonからパースする
-			queryLatestValue := *query
-			queryLatest := &queryLatestValue
+			queryLatestValue := query
+			queryLatest := queryLatestValue
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs == nil || len(*query.IDs) == 0 {
-				ids := append([]string{}, *query.IDs...)
+			if query.IDs == nil || len(query.IDs) == 0 {
+				ids := append([]string{}, query.IDs...)
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -349,9 +349,9 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 					ids = append(ids, latestDataRepositoryAddress.TargetID)
 				}
-				trueValue := true
-				queryLatest.IDs = &ids
-				queryLatest.UseIDs = &trueValue
+
+				queryLatest.IDs = ids
+				queryLatest.UseIDs = true
 			}
 
 			matchKyousInRep, err := rep.FindKyous(ctx, queryLatest)
@@ -531,7 +531,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 				}
 
 				reps := []string{repName}
-				kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: &reps})
+				kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: reps})
 				if err != nil {
 					repName, _ := rep.GetRepName(ctx)
 					err = fmt.Errorf("error at %s: %w", repName, err)
@@ -567,7 +567,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 				}
 
 				reps := []string{repName}
-				tags, err := rep.FindTags(ctx, &find.FindQuery{Reps: &reps})
+				tags, err := rep.FindTags(ctx, &find.FindQuery{Reps: reps})
 				if err != nil {
 					errch <- err
 					return
@@ -601,7 +601,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 				}
 
 				reps := []string{repName}
-				texts, err := rep.FindTexts(ctx, &find.FindQuery{Reps: &reps})
+				texts, err := rep.FindTexts(ctx, &find.FindQuery{Reps: reps})
 				if err != nil {
 					errch <- err
 					return
@@ -635,7 +635,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 				}
 
 				reps := []string{repName}
-				notifications, err := rep.FindNotifications(ctx, &find.FindQuery{Reps: &reps})
+				notifications, err := rep.FindNotifications(ctx, &find.FindQuery{Reps: reps})
 				if err != nil {
 					errch <- err
 					return
@@ -841,12 +841,12 @@ func (g *GkillRepositories) UpdateCacheNextTick() {
 func (g *GkillRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// 並列処理
 	matchPaths := []string{}
-	trueValue := true
+
 	ids := []string{id}
 	for _, rep := range g.Reps {
 		query := &find.FindQuery{
-			IDs:    &ids,
-			UseIDs: &trueValue,
+			IDs:    ids,
+			UseIDs: true,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -959,11 +959,11 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 	for _, rep := range g.TagReps {
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
-			queryLatestValue := *query
-			queryLatest := &queryLatestValue
+			queryLatestValue := query
+			queryLatest := queryLatestValue
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs == nil || len(*query.IDs) == 0 {
+			if query.IDs == nil || len(query.IDs) == 0 {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -983,9 +983,8 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 					ids = append(ids, latestDataRepositoryAddress.TargetID)
 				}
 
-				trueValue := true
-				queryLatest.IDs = &ids
-				queryLatest.UseIDs = &trueValue
+				queryLatest.IDs = ids
+				queryLatest.UseIDs = true
 			}
 
 			matchTagsInRep, err := rep.FindTags(ctx, queryLatest)
@@ -1026,7 +1025,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				key := tag.ID
-				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				if !query.OnlyLatestData {
 					key += fmt.Sprintf("%d", tag.UpdateTime.Unix())
 				}
 				if existTag, exist := matchTags[key]; exist {
@@ -1395,7 +1394,7 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 			queryLatest := query
 			ids := []string{}
 			if query.IDs != nil {
-				ids = append([]string{}, *query.IDs...)
+				ids = append([]string{}, query.IDs...)
 			}
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
 			if query.IDs == nil || len(ids) == 0 {
@@ -1417,9 +1416,8 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 					ids = append(ids, latestDataRepositoryAddress.TargetID)
 				}
 
-				trueValue := true
-				queryLatest.IDs = &ids
-				queryLatest.UseIDs = &trueValue
+				queryLatest.IDs = ids
+				queryLatest.UseIDs = true
 			}
 
 			matchTextsInRep, err := rep.FindTexts(ctx, queryLatest)
@@ -1460,7 +1458,7 @@ loop:
 			}
 			for _, text := range matchTextsInRep {
 				key := text.ID
-				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				if !query.OnlyLatestData {
 					key += fmt.Sprintf("%d", text.UpdateTime.Unix())
 				}
 				if existText, exist := matchTexts[key]; exist {
@@ -1948,7 +1946,7 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 	// 並列処理
 	m := &sync.RWMutex{}
 	targetReps := g.Reps
-	if query.UsePlaing != nil && *query.UsePlaing {
+	if query.UsePlaing {
 		matchReps["timeis"] = g.TimeIsReps
 		return matchReps, nil
 	}
@@ -1962,7 +1960,7 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 			}
 
 			if query.Reps != nil {
-				for _, targetRepName := range *query.Reps {
+				for _, targetRepName := range query.Reps {
 					if targetRepName == repName {
 						m.Lock()
 						if _, exist := matchReps[repName]; !exist {
@@ -1971,7 +1969,7 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 						m.Unlock()
 					}
 				}
-			} else if query.Reps == nil || len(*query.Reps) == 0 {
+			} else if query.Reps == nil || len(query.Reps) == 0 {
 				m.Lock()
 				if _, exist := matchReps[repName]; !exist {
 					matchReps[repName] = rep

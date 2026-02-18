@@ -175,11 +175,11 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 		}
 
 		matchID := false
-		if query.UseIDs == nil || !*query.UseIDs {
+		if !query.UseIDs {
 			matchID = true
-		} else if *query.UseIDs {
-			if query.IDs != nil && len(*query.IDs) != 0 {
-				for _, id := range *query.IDs {
+		} else if query.UseIDs {
+			if query.IDs != nil && len(query.IDs) != 0 {
+				for _, id := range query.IDs {
 					if id == rekyou.ID {
 						matchID = true
 						break
@@ -262,13 +262,12 @@ WHERE
 `
 	dataType := "rekyou"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []interface{}{
@@ -418,11 +417,10 @@ WHERE
 `
 	dataType := "rekyou"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		repName,
@@ -647,13 +645,12 @@ WHERE
 
 	dataType := "rekyou"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []interface{}{
@@ -805,11 +802,10 @@ WHERE
 
 	dataType := "rekyou"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		repName,

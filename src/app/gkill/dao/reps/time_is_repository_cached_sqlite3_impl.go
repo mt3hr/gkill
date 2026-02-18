@@ -98,7 +98,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 	var err error
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -146,7 +146,7 @@ FROM ` + t.dbName + `
 `
 
 	sqlWhereFilterEndTimeIs := ""
-	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
+	if query.IncludeEndTimeIs {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME_UNIX IS NOT NULL"
 	} else {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
@@ -164,12 +164,9 @@ FROM ` + t.dbName + `
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+
+	onlyLatestData = query.OnlyLatestData
+	if query.UsePlaing {
 		onlyLatestData = true
 	}
 	queryArgsForPlaingStart := []interface{}{}
@@ -178,10 +175,10 @@ FROM ` + t.dbName + `
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
@@ -202,10 +199,10 @@ FROM ` + t.dbName + `
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisEnd += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Unix())
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Unix())
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Unix())
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
@@ -309,13 +306,13 @@ SELECT
 FROM ` + t.dbName + `
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -434,11 +431,11 @@ SELECT
 FROM ` + t.dbName + `
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	tableName := t.dbName
@@ -530,11 +527,10 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	trueValue := true
-	falseValue := false
+
 	query := &find.FindQuery{
-		UpdateCache:    &trueValue,
-		OnlyLatestData: &falseValue,
+		UpdateCache:    true,
+		OnlyLatestData: false,
 	}
 
 	allTimeiss, err := t.timeisRep.FindTimeIs(ctx, query)
@@ -698,7 +694,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, quer
 	var err error
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -752,7 +748,7 @@ FROM ` + t.dbName + `
 `
 
 	sqlWhereFilterEndTimeIs := ""
-	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
+	if query.IncludeEndTimeIs {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME_UNIX IS NOT NULL"
 	} else {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
@@ -769,21 +765,18 @@ FROM ` + t.dbName + `
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
@@ -804,10 +797,10 @@ FROM ` + t.dbName + `
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisEnd += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Unix())
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Unix())
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Unix())
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
@@ -912,13 +905,13 @@ SELECT
 FROM ` + t.dbName + `
 WHERE
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -944,10 +937,10 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
@@ -1055,11 +1048,11 @@ SELECT
 FROM ` + t.dbName + `
 WHERE
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	dataType := "timeis"
@@ -1084,10 +1077,10 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
