@@ -70,11 +70,9 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
 import type { Notification } from '@/classes/datas/notification';
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
-useDialogHistoryStack(enable_dialog)
 
 defineProps<DecideRelatedTimeUploadedFileViewProps>()
 const emits = defineEmits<KyouViewEmits>()

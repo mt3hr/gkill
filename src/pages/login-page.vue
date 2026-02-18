@@ -36,6 +36,7 @@ import LoginView from './views/login-view.vue'
 import package_json from '../../package.json'
 import router from '@/router'
 import { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -46,6 +47,10 @@ const gkill_api = computed(() => GkillAPI.get_instance())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 const gkill_version: Ref<string> = ref(package_json.version)
+
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 onMounted(async () => {
     await delete_gkill_config_cache()
@@ -65,6 +70,7 @@ async function handle_success_login(session_id: string): Promise<void> {
     await sleep(1500)
 
     // ログインに成功したらrykv画面に遷移
+    await resetDialogHistory()
     router.replace('rykv')
 }
 
