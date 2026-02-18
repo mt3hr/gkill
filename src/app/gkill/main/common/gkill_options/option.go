@@ -65,4 +65,5 @@ var (
 	CacheTextReps         = &IsCacheInMemory
 	CacheNotificationReps = &IsCacheInMemory
 	CacheReKyouReps       = &IsCacheInMemory
+	CacheGitCommitLogReps = &IsCacheInMemory
 )
