@@ -233,6 +233,8 @@ func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error 
 }
 
 func (g *GkillNotificator) Close(ctx context.Context) error {
-	g.cancelFunc()
+	if g.cancelFunc != nil {
+		g.cancelFunc()
+	}
 	return nil
 }
