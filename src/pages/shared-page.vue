@@ -38,12 +38,13 @@ import { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { GetSharedKyousRequest } from '@/classes/api/req_res/get-shared-kyous-request';
-import { computed, nextTick, type Ref, ref } from 'vue';
+import { computed, nextTick, onMounted, type Ref, ref } from 'vue';
 import SharedMiPage from './shared-mi-page.vue';
 import SharedRYKVPage from './shared-rykv-page.vue';
 import { useRoute } from 'vue-router';
 import type { ApplicationConfig } from '@/classes/datas/config/application-config';
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request';
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack';
 
 const route = useRoute()
 const share_id = computed(() => route.query.share_id!.toString())
@@ -55,6 +56,10 @@ const application_config: Ref<ApplicationConfig | null> = ref(null)
 const is_loading: Ref<boolean> = ref(true)
 
 gkill_api_plane.value = GkillAPI.get_instance()
+
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 nextTick(async () => await load_gkill_api_and_application_config())
 

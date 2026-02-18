@@ -17,7 +17,8 @@
                                 { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
                                 { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
-                                <v-list-item-title @click="router.replace('/' + page.page_name + '?loaded=true')">
+                                <v-list-item-title
+                                    @click="async () => { await resetDialogHistory(); router.replace('/' + page.page_name + '?loaded=true') }">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -79,7 +80,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { type Ref, ref, computed, watch, nextTick } from 'vue'
+import { type Ref, ref, computed, watch, nextTick, onMounted } from 'vue'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import PlaingTimeisView from './views/plaing-timeis-view.vue'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
@@ -89,6 +90,7 @@ import { useRoute } from 'vue-router'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const theme = useTheme()
 
@@ -104,6 +106,10 @@ const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
+
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()

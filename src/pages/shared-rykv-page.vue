@@ -23,7 +23,7 @@
 
 <script lang="ts" setup>
 'use strict'
-import { ref, type Ref } from 'vue'
+import { onMounted, ref, type Ref } from 'vue'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
@@ -31,6 +31,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import rykvView from './views/rykv-view.vue'
 import type { KyouViewEmits } from './views/kyou-view-emits'
 import type { SharedRYKVPageProps } from './shared-rykv-page-props'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 defineProps<SharedRYKVPageProps>()
 defineEmits<KyouViewEmits>()
@@ -41,6 +42,10 @@ const browser_url_bar_height: Ref<Number> = ref(0)
 const app_title_bar_height: Ref<Number> = ref(50)
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
+
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 async function resize_content(): Promise<void> {
     const inner_element = document.querySelector('#control-height')

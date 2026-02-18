@@ -41,7 +41,7 @@
 
 <script lang="ts" setup>
 'use strict'
-import { computed, nextTick, ref, type Ref } from 'vue'
+import { computed, nextTick, onMounted, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
@@ -61,6 +61,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const theme = useTheme()
 
@@ -76,6 +77,10 @@ const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
+
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
