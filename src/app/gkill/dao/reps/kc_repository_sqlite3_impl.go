@@ -153,7 +153,7 @@ func (k *kcRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = k.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := k.GetRepName(ctx)
@@ -205,11 +205,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -342,13 +339,12 @@ WHERE
 `
 	dataType := "kc"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []interface{}{
@@ -498,11 +494,10 @@ WHERE
 `
 	dataType := "kc"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		repName,
@@ -653,7 +648,7 @@ func (k *kcRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQu
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = k.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := k.GetRepName(ctx)
@@ -708,11 +703,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -847,13 +839,13 @@ SELECT
 FROM KC
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	dataType := "kc"
@@ -1010,11 +1002,11 @@ SELECT
 FROM KC
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	dataType := "kc"
 

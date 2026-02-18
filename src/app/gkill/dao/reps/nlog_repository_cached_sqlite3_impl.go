@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = n.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := n.GetRepName(ctx)
@@ -152,11 +152,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
@@ -252,13 +249,12 @@ FROM ` + n.dbName + `
 WHERE 
 `
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -372,11 +368,10 @@ FROM ` + n.dbName + `
 WHERE 
 `
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	dataType := "nlog"
@@ -471,11 +466,10 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	trueValue := true
-	falseValue := false
+
 	query := &find.FindQuery{
-		UpdateCache:    &trueValue,
-		OnlyLatestData: &falseValue,
+		UpdateCache:    true,
+		OnlyLatestData: false,
 	}
 
 	allNlogs, err := n.nlogRep.FindNlog(ctx, query)
@@ -637,7 +631,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) FindNlog(ctx context.Context, query *f
 	var err error
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = n.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := n.GetRepName(ctx)
@@ -785,13 +779,13 @@ SELECT
 FROM ` + n.dbName + `
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -913,11 +907,11 @@ SELECT
 FROM ` + n.dbName + `
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	dataType := "nlog"
