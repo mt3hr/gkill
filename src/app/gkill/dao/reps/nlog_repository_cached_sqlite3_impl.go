@@ -487,6 +487,16 @@ func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 		return err
 	}
 
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	sql := `DELETE FROM ` + n.dbName
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
@@ -556,7 +566,6 @@ INSERT INTO ` + n.dbName + ` (
 	for _, nlog := range allNlogs {
 		select {
 		case <-ctx.Done():
-			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -588,7 +597,6 @@ INSERT INTO ` + n.dbName + ` (
 			return nil
 		}()
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
@@ -597,6 +605,7 @@ INSERT INTO ` + n.dbName + ` (
 		err = fmt.Errorf("error at commit transaction for add nlogs: %w", err)
 		return err
 	}
+	isCommitted = true
 	return nil
 }
 

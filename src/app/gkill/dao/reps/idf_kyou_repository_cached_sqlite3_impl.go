@@ -646,7 +646,6 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-
 	query := &find.FindQuery{
 		UpdateCache:    true,
 		OnlyLatestData: false,
@@ -666,6 +665,16 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		err = fmt.Errorf("error at begin transaction for add idf kyou: %w", err)
 		return err
 	}
+
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	sql := `DELETE FROM ` + i.dbName
 	stmt, err := tx.PrepareContext(ctx, sql)
@@ -735,7 +744,6 @@ INSERT INTO ` + i.dbName + ` (
 	for _, idfKyou := range allIDFKyous {
 		select {
 		case <-ctx.Done():
-			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -768,7 +776,6 @@ INSERT INTO ` + i.dbName + ` (
 			return nil
 		}()
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
@@ -777,7 +784,7 @@ INSERT INTO ` + i.dbName + ` (
 		err = fmt.Errorf("error at commit transaction for add idf kyous: %w", err)
 		return err
 	}
-
+	isCommitted = true
 	return nil
 }
 

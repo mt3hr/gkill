@@ -468,6 +468,15 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		err = fmt.Errorf("error at begin transaction for add git commit log: %w", err)
 		return err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	sql := `DELETE FROM ` + g.dbName
 	stmt, err := tx.PrepareContext(ctx, sql)
@@ -537,7 +546,6 @@ INSERT INTO ` + g.dbName + ` (
 	for _, gitCommitLog := range allGitCommitLogs {
 		select {
 		case <-ctx.Done():
-			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -569,7 +577,6 @@ INSERT INTO ` + g.dbName + ` (
 			return nil
 		}()
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
@@ -578,6 +585,7 @@ INSERT INTO ` + g.dbName + ` (
 		err = fmt.Errorf("error at commit transaction for add git commit log: %w", err)
 		return err
 	}
+	isCommitted = true
 	return nil
 }
 

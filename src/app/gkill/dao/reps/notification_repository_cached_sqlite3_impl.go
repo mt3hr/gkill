@@ -651,6 +651,16 @@ func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		return err
 	}
 
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
+
 	sql := `DELETE FROM ` + n.dbName
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
@@ -719,7 +729,6 @@ INSERT INTO ` + n.dbName + ` (
 	for _, notification := range allNotifications {
 		select {
 		case <-ctx.Done():
-			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -750,7 +759,6 @@ INSERT INTO ` + n.dbName + ` (
 			return nil
 		}()
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
@@ -759,6 +767,7 @@ INSERT INTO ` + n.dbName + ` (
 		err = fmt.Errorf("error at commit transaction for add notifications: %w", err)
 		return err
 	}
+	isCommitted = true
 	return nil
 }
 

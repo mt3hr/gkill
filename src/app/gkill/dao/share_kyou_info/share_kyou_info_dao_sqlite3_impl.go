@@ -582,6 +582,15 @@ INSERT INTO SHARE_KYOU_INFO (
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
@@ -635,10 +644,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	if err != nil {
 		err = fmt.Errorf("error at add share kyou info options sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -660,10 +665,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		if err != nil {
 			err = fmt.Errorf("error at add share kyou info options sql: %w", err)
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 	}
@@ -671,12 +672,9 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 
@@ -698,6 +696,15 @@ WHERE SHARE_ID = ?
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
@@ -756,10 +763,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	updateOptionStmt, err := tx.PrepareContext(ctx, updateOptionsSQL)
 	if err != nil {
 		err = fmt.Errorf("error at update share kyou info options sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -772,10 +775,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)
 	if err != nil {
 		err = fmt.Errorf("error at pre get share kyou info options sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -797,10 +796,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	if err != nil {
 		err = fmt.Errorf("error at add share kyou info sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -822,10 +817,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		err = row.Err()
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 
@@ -833,10 +824,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		err = row.Scan(&recordCount)
 		if err != nil {
 			err = fmt.Errorf("error at scan:%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
 			return false, err
 		}
 		if recordCount == 0 {
@@ -852,10 +839,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 			if err != nil {
 				err = fmt.Errorf("error at add share kyou info options sql: %w", err)
 				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
 				return false, err
 			}
 		} else {
@@ -871,10 +854,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 			if err != nil {
 				err = fmt.Errorf("error at update share kyou info options sql: %w", err)
 				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
 				return false, err
 			}
 		}
@@ -896,22 +875,15 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	if err != nil {
 		err = fmt.Errorf("error at update share kyou info options sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 
@@ -927,6 +899,15 @@ WHERE SHARE_ID = ?
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+			}
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
@@ -960,10 +941,6 @@ WHERE SHARE_ID = ?
 	if err != nil {
 		err = fmt.Errorf("error at delete share kyou info options sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 	defer func() {
@@ -981,22 +958,15 @@ WHERE SHARE_ID = ?
 	if err != nil {
 		err = fmt.Errorf("error at delete share kyou info options sql: %w", err)
 		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("error at commit: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
-		}
 		return false, err
 	}
+	isCommitted = true
 	return true, nil
 }
 
