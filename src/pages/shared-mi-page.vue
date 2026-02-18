@@ -23,7 +23,7 @@
 
 <script lang="ts" setup>
 'use strict'
-import { computed, ref, type Ref } from 'vue'
+import { computed, onMounted, ref, type Ref } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
@@ -31,6 +31,7 @@ import sharedMiTaskView from './views/shared-mi-view.vue'
 import { useRoute } from 'vue-router'
 import type { SharedMiPageProps } from './shared-mi-page-props'
 import { GkillAPI } from '@/classes/api/gkill-api'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 defineProps<SharedMiPageProps>()
 
@@ -41,6 +42,10 @@ const app_title_bar_height: Ref<number> = ref(50)
 const app_content_height: Ref<number> = ref(0)
 const app_content_width: Ref<number> = ref(0)
 const share_kyou_id = computed(() => useRoute().query.share_id!.toString())
+
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 async function resize_content(): Promise<void> {
     const inner_element = document.querySelector('#control-height')

@@ -43,7 +43,7 @@
 
 <script lang="ts" setup>
 'use strict'
-import { computed, nextTick, ref, type Ref } from 'vue'
+import { computed, nextTick, onMounted, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
@@ -60,6 +60,7 @@ import { useRoute } from 'vue-router'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const theme = useTheme()
 
@@ -77,7 +78,9 @@ const app_content_width: Ref<Number> = ref(0)
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
 
-
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()

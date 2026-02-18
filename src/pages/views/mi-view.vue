@@ -17,7 +17,8 @@
                                 { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
                                 { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
-                                <v-list-item-title @click="router.replace('/' + page.page_name + '?loaded=true')">
+                                <v-list-item-title
+                                    @click="async () => { await resetDialogHistory(); router.replace('/' + page.page_name + '?loaded=true') }">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -74,7 +75,7 @@
                             @dragover.prevent.stop="(...args: any[]) => on_dragover_board_task(args[0] as DragEvent, query)">
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                                }}</v-card-title>
+                            }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400" :draggable="true"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -445,16 +446,15 @@ import { deepEquals } from '@/classes/deep-equals'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { Tag } from '@/classes/datas/tag'
 import { Mi } from '@/classes/datas/mi'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
-useDialogHistoryStack(enable_dialog)
 
 const query_editor_sidebar = ref<InstanceType<typeof MiQueryEditorSidebar> | null>(null);
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);

@@ -120,9 +120,9 @@
 </template>
 
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 'use strict'
-import { computed, ref, watch, type Ref } from 'vue'
+import { i18n } from '@/i18n'
+import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import router from '@/router'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
@@ -143,7 +143,7 @@ import { useTheme } from 'vuetify'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useRoute } from 'vue-router'
-
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const theme = useTheme()
 
@@ -170,6 +170,10 @@ const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
+onMounted(async () => {
+    await resetDialogHistory()
+})
+
 async function show_dialog(): Promise<void> {
     const dialog = new URL(location.href).searchParams.get('dialog')
     const is_saved = new URL(location.href).searchParams.get('is_saved')
@@ -180,7 +184,8 @@ async function show_dialog(): Promise<void> {
         write_messages([message])
 
         await sleep(2500)
-        router.replace('/saihate')
+        await resetDialogHistory()
+        await router.replace('/saihate')
         window.close()
     }
     switch (dialog) {

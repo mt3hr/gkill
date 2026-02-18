@@ -41,6 +41,7 @@ import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useTheme } from 'vuetify';
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 const theme = useTheme()
 
 const welcome_emoji = computed(() => theme.current.value.dark ? "⭐️" : "❄️")
@@ -74,6 +75,7 @@ async function check_logined(): Promise<void> {
     const session_id = props.gkill_api.get_session_id()
     const default_page = props.gkill_api.get_default_page_from_cookie()
     if (session_id && session_id !== "" && default_page && default_page !== "") {
+        await resetDialogHistory()
         router.replace("/" + default_page)
     }
 }
