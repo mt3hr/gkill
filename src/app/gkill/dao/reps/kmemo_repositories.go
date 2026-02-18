@@ -67,7 +67,7 @@ loop:
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
 					key := kyou.ID
-					if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					if !query.OnlyLatestData {
 						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
 
@@ -229,12 +229,12 @@ loop:
 func (k KmemoRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// 並列処理
 	matchPaths := []string{}
-	trueValue := true
+
 	ids := []string{id}
 	for _, rep := range k {
 		query := &find.FindQuery{
-			IDs:    &ids,
-			UseIDs: &trueValue,
+			IDs:    ids,
+			UseIDs: true,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -394,7 +394,7 @@ loop:
 			}
 			for _, kyou := range matchKmemosInRep {
 				key := kyou.ID
-				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				if !query.OnlyLatestData {
 					key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 				}
 

@@ -232,7 +232,7 @@ func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *fin
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = i.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := i.GetRepName(ctx)
@@ -285,11 +285,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -325,13 +322,13 @@ WHERE
 	words := []string{}
 	notWords := []string{}
 	if query.Words != nil {
-		words = *query.Words
+		words = query.Words
 		for i := range words {
 			words[i] = strings.ToLower(words[i])
 		}
 	}
 	if query.NotWords != nil {
-		notWords = *query.NotWords
+		notWords = query.NotWords
 		for i := range notWords {
 			notWords[i] = strings.ToLower(notWords[i])
 		}
@@ -432,7 +429,7 @@ WHERE
 			}
 
 			fileContentText := ""
-			if query.UseWords != nil && *query.UseWords {
+			if query.UseWords {
 				fileContentText += strings.ToLower(filename)
 				switch filepath.Ext(idf.TargetFile) {
 				case ".md":
@@ -454,9 +451,9 @@ WHERE
 			}
 
 			match := true
-			if query.UseWords != nil && *query.UseWords {
+			if query.UseWords {
 				// ワードand検索である場合の判定
-				if query.WordsAnd != nil && *query.WordsAnd {
+				if query.WordsAnd {
 					match = true
 					for _, word := range words {
 						match = strings.Contains(fileContentText, word)
@@ -467,7 +464,7 @@ WHERE
 					if !match {
 						continue
 					}
-				} else if query.WordsAnd != nil && !(*query.WordsAnd) {
+				} else if !(query.WordsAnd) {
 					// ワードor検索である場合の判定
 					match = false
 					for _, word := range words {
@@ -567,13 +564,12 @@ WHERE
 		dataType,
 	}
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -761,11 +757,10 @@ WHERE
 		dataType,
 	}
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	tableName := "IDF"
@@ -936,11 +931,10 @@ WHERE
 
 	dataType := "idf"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		repName,
@@ -1079,7 +1073,7 @@ func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *f
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = i.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := i.GetRepName(ctx)
@@ -1132,11 +1126,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
@@ -1174,13 +1165,13 @@ WHERE
 	words := []string{}
 	notWords := []string{}
 	if query.Words != nil {
-		words = *query.Words
+		words = query.Words
 		for i := range words {
 			words[i] = strings.ToLower(words[i])
 		}
 	}
 	if query.NotWords != nil {
-		notWords = *query.NotWords
+		notWords = query.NotWords
 		for i := range notWords {
 			notWords[i] = strings.ToLower(notWords[i])
 		}
@@ -1262,7 +1253,7 @@ WHERE
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
-			if query.UseWords != nil && *query.UseWords {
+			if query.UseWords {
 				fileContentText += filename
 				switch filepath.Ext(idf.TargetFile) {
 				case ".md":
@@ -1284,9 +1275,9 @@ WHERE
 			}
 
 			match := true
-			if query.UseWords != nil && *query.UseWords {
+			if query.UseWords {
 				// ワードand検索である場合の判定
-				if query.WordsAnd != nil && *query.WordsAnd {
+				if query.WordsAnd {
 					match = true
 					for _, word := range words {
 						match = strings.Contains(fileContentText, word)
@@ -1297,7 +1288,7 @@ WHERE
 					if !match {
 						continue
 					}
-				} else if query.WordsAnd != nil && !(*query.WordsAnd) {
+				} else if !(query.WordsAnd) {
 					// ワードor検索である場合の判定
 					match = false
 					for _, word := range words {
@@ -1365,13 +1356,12 @@ FROM IDF
 WHERE 
 `
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1541,11 +1531,10 @@ FROM IDF
 WHERE 
 `
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	repName, err := i.GetRepName(ctx)

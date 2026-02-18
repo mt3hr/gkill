@@ -198,14 +198,14 @@ func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.F
 		}()
 	}
 
-	if query.UseWords != nil && *query.UseWords {
-		if query.Words != nil && len(*query.Words) == 0 {
+	if query.UseWords {
+		if len(query.Words) == 0 {
 			return []Text{}, nil
 		}
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -258,11 +258,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -405,13 +402,12 @@ WHERE
 	}
 	dataType := "text"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []interface{}{
@@ -567,11 +563,10 @@ WHERE
 
 	dataType := "text"
 
-	trueValue := true
 	targetIDs := []string{target_id}
 	query := &find.FindQuery{
-		UseWords: &trueValue,
-		Words:    &targetIDs,
+		UseWords: true,
+		Words:    targetIDs,
 	}
 	queryArgs := []interface{}{
 		repName,
@@ -745,11 +740,10 @@ WHERE
 	}
 	dataType := "text"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		repName,

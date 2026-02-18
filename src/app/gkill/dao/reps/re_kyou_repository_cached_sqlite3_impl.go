@@ -140,11 +140,11 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 		}
 
 		matchID := false
-		if query.UseIDs == nil || !*query.UseIDs {
+		if !query.UseIDs {
 			matchID = true
-		} else if *query.UseIDs {
-			if query.IDs != nil && len(*query.IDs) != 0 {
-				for _, id := range *query.IDs {
+		} else if query.UseIDs {
+			if query.IDs != nil && len(query.IDs) != 0 {
+				for _, id := range query.IDs {
 					if id == rekyou.ID {
 						matchID = true
 						break
@@ -204,13 +204,12 @@ WHERE
 `
 	dataType := "rekyou"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []interface{}{
@@ -227,11 +226,8 @@ WHERE
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := false
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -328,11 +324,10 @@ WHERE
 `
 	dataType := "rekyou"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		dataType,
@@ -348,11 +343,8 @@ WHERE
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := false
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -428,11 +420,10 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	trueValue := true
-	falseValue := false
+
 	query := &find.FindQuery{
-		UpdateCache:    &trueValue,
-		OnlyLatestData: &falseValue,
+		UpdateCache:    true,
+		OnlyLatestData: false,
 	}
 
 	allReKyous, err := r.rekyouRep.FindReKyou(ctx, query)
@@ -643,13 +634,12 @@ WHERE
 `
 	dataType := "rekyou"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []interface{}{
@@ -767,11 +757,10 @@ WHERE
 `
 	dataType := "rekyou"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		dataType,

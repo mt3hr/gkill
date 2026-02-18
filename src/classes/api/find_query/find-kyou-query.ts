@@ -74,6 +74,8 @@ export class FindKyouQuery {
     include_end_mi: boolean
     include_end_timeis: boolean
 
+    use_include_id: boolean
+
     static parse_find_kyou_query(json: any): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.query_id = json.query_id
@@ -131,6 +133,7 @@ export class FindKyouQuery {
         cloned.include_start_mi = json.include_start_mi
         cloned.include_end_mi = json.include_end_mi
         cloned.include_end_timeis = json.include_end_timeis
+        cloned.use_include_id = json.use_include_id
         return cloned
     }
 
@@ -191,6 +194,7 @@ export class FindKyouQuery {
         cloned.include_start_mi = this.include_start_mi
         cloned.include_end_mi = this.include_end_mi
         cloned.include_end_timeis = this.include_end_timeis
+        cloned.use_include_id = this.use_include_id
         return cloned
     }
 
@@ -251,6 +255,7 @@ export class FindKyouQuery {
         this.include_start_mi = false
         this.include_end_mi = false
         this.include_end_timeis = true
+        this.use_include_id = true
     }
 
     parse_words_and_not_words() {

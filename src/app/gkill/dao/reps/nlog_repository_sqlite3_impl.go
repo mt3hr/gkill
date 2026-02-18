@@ -153,7 +153,7 @@ func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.F
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = n.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := n.GetRepName(ctx)
@@ -206,11 +206,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
@@ -342,13 +339,12 @@ FROM NLOG
 WHERE 
 `
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -499,11 +495,10 @@ FROM NLOG
 WHERE 
 `
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	dataType := "nlog"
@@ -656,7 +651,7 @@ func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.Fi
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = n.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := n.GetRepName(ctx)
@@ -711,11 +706,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -852,13 +844,13 @@ SELECT
 FROM NLOG 
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1017,11 +1009,11 @@ SELECT
 FROM NLOG 
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	dataType := "nlog"

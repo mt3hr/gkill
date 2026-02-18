@@ -44,12 +44,8 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	// id検索である場合のSQL追記
 	useIDs := false
 	ids := []string{}
-	if query.UseIDs != nil {
-		useIDs = *query.UseIDs
-	}
-	if query.IDs != nil {
-		ids = *query.IDs
-	}
+	useIDs = query.UseIDs
+	ids = query.IDs
 
 	if useIDs {
 		if len(ids) != 0 {
@@ -79,7 +75,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	*whereCounter++
 
 	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
+	if query.UseWords {
 		// ワード指定ありで検索対象列がない場合は全部false
 		if ignoreFindWord && len(findWordTargetColumns) == 0 {
 			if *whereCounter != 0 {
@@ -88,9 +84,8 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			sql += " 1 = 0 "
 			*whereCounter++
 		} else {
-
-			if query.Words != nil && len(*query.Words) != 0 {
-				if query.WordsAnd != nil && *query.WordsAnd {
+			if len(query.Words) != 0 {
+				if query.WordsAnd {
 					if *whereCounter != 0 {
 						sql += " AND "
 					}
@@ -101,7 +96,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 							sql += " AND "
 						}
 
-						for i, word := range *query.Words {
+						for i, word := range query.Words {
 							if i == 0 {
 								sql += " ( "
 							} else {
@@ -110,11 +105,22 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 							if findWordUseLike {
 								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
+
+								sql += " OR "
+
+								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, "ID", lower)
+								*queryArgs = append(*queryArgs, "%"+word+"%")
 							} else {
 								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
-								*queryArgs = append(*queryArgs, word)
+								*queryArgs = append(*queryArgs, "%"+word+"%")
+
+								sql += " OR "
+
+								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, "ID", lower)
+								*queryArgs = append(*queryArgs, "%"+word+"%")
+
 							}
-							if i == len(*query.Words)-1 {
+							if i == len(query.Words)-1 {
 								sql += " ) "
 							}
 							*whereCounter++
@@ -136,7 +142,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 							sql += " OR "
 						}
 
-						for i, word := range *query.Words {
+						for i, word := range query.Words {
 							if i == 0 {
 								sql += " ( "
 							} else {
@@ -145,11 +151,21 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 							if findWordUseLike {
 								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
+
+								sql += " OR "
+
+								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, "ID", lower)
+								*queryArgs = append(*queryArgs, "%"+word+"%")
 							} else {
 								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, word)
+
+								sql += " OR "
+
+								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, "ID", lower)
+								*queryArgs = append(*queryArgs, "%"+word+"%")
 							}
-							if i == len(*query.Words)-1 {
+							if i == len(query.Words)-1 {
 								sql += " ) "
 							}
 							*whereCounter++
@@ -162,7 +178,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 				}
 			}
 
-			if query.NotWords != nil && len(*query.NotWords) != 0 {
+			if len(query.NotWords) != 0 {
 				// notワードを除外するSQLを追記
 				if *whereCounter != 0 {
 					sql += " AND "
@@ -174,7 +190,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 						sql += " AND "
 					}
 
-					for i, notWord := range *query.NotWords {
+					for i, notWord := range query.NotWords {
 						if i == 0 {
 							sql += " ( "
 						} else {
@@ -183,11 +199,21 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 						if findWordUseLike {
 							sql += fmt.Sprintf("%s(%s) NOT LIKE %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, "%"+notWord+"%")
+
+							sql += " OR "
+
+							sql += fmt.Sprintf("%s(%s) NOT LIKE %s(?)", lower, "ID", lower)
+							*queryArgs = append(*queryArgs, "%"+notWord+"%")
 						} else {
 							sql += fmt.Sprintf("%s(%s) <> %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, notWord)
+
+							sql += " OR "
+
+							sql += fmt.Sprintf("%s(%s) <> %s(?)", lower, "ID", lower)
+							*queryArgs = append(*queryArgs, notWord)
 						}
-						if i == len(*query.NotWords)-1 {
+						if i == len(query.NotWords)-1 {
 							sql += " ) "
 						}
 						*whereCounter++
@@ -205,9 +231,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	useCalendar := false
 	var calendarStartDate *time.Time
 	var calendarEndDate *time.Time
-	if query.UseCalendar != nil {
-		useCalendar = *query.UseCalendar
-	}
+	useCalendar = query.UseCalendar
 	if query.CalendarStartDate != nil {
 		calendarStartDate = query.CalendarStartDate
 	}
@@ -216,23 +240,21 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	}
 
 	// UPDATE_TIMEか、Calendarの条件をSQLに追記
-	if query.UseUpdateTime != nil && *query.UseUpdateTime && query.UpdateTime != nil {
-		if query.UpdateTime != nil {
-			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") { // UNIXついてればキャッシュでしょ（適当）
-				if *whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += fmt.Sprintf("%s = ?", "UPDATE_TIME_UNIX")
-				*queryArgs = append(*queryArgs, ((*query.UpdateTime).Unix()))
-				*whereCounter++
-			} else {
-				if *whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += fmt.Sprintf("datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
-				*queryArgs = append(*queryArgs, ((*query.UpdateTime).Format(TimeLayout)))
-				*whereCounter++
+	if query.UseUpdateTime {
+		if strings.HasSuffix(relatedTimeColumnName, "_UNIX") { // UNIXついてればキャッシュでしょ（適当）
+			if *whereCounter != 0 {
+				sql += " AND "
 			}
+			sql += fmt.Sprintf("%s = ?", "UPDATE_TIME_UNIX")
+			*queryArgs = append(*queryArgs, ((query.UpdateTime).Unix()))
+			*whereCounter++
+		} else {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += fmt.Sprintf("datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
+			*queryArgs = append(*queryArgs, ((query.UpdateTime).Format(TimeLayout)))
+			*whereCounter++
 		}
 	} else if useCalendar {
 		// 開始日時を指定するSQLを追記
@@ -278,9 +300,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	usePeriodOfTime := false
 	var periodOfStartTimeSecond *int64
 	var periodOfEndTimeSecond *int64
-	if query.UsePeriodOfTime != nil {
-		usePeriodOfTime = *query.UsePeriodOfTime
-	}
+	usePeriodOfTime = query.UsePeriodOfTime
 	if query.PeriodOfTimeStartTimeSecond != nil {
 		periodOfStartTimeSecond = query.PeriodOfTimeStartTimeSecond
 	}

@@ -66,7 +66,7 @@ loop:
 			}
 			for _, text := range matchTextsInRep {
 				key := text.ID
-				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				if !query.OnlyLatestData {
 					key += fmt.Sprintf("%d", text.UpdateTime.Unix())
 				}
 
@@ -323,12 +323,12 @@ errloop:
 func (t TextRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// 並列処理
 	matchPaths := []string{}
-	trueValue := true
+
 	ids := []string{id}
 	for _, rep := range t {
 		query := &find.FindQuery{
-			IDs:    &ids,
-			UseIDs: &trueValue,
+			IDs:    ids,
+			UseIDs: true,
 		}
 		texts, err := rep.FindTexts(ctx, query)
 		if len(texts) == 0 || err != nil {
