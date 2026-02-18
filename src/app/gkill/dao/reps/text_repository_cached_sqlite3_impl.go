@@ -176,14 +176,14 @@ ORDER BY TEXT1.UPDATE_TIME_UNIX DESC
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
 	var err error
 
-	if query.UseWords != nil && *query.UseWords {
-		if query.Words != nil && len(*query.Words) == 0 {
+	if query.UseWords {
+		if len(query.Words) == 0 {
 			return []Text{}, nil
 		}
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -230,11 +230,8 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -358,13 +355,12 @@ WHERE
 
 	dataType := "text"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []interface{}{
@@ -529,11 +525,9 @@ func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 		return fmt.Errorf("error at update inner cache before rebuild %s: %w", repName, err)
 	}
 
-	trueValue := true
-	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache:    &trueValue,
-		OnlyLatestData: &falseValue,
+		UpdateCache:    true,
+		OnlyLatestData: false,
 	}
 
 	allTexts, err := t.textRep.FindTexts(ctx, query)
@@ -698,11 +692,10 @@ WHERE
 
 	dataType := "text"
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 	queryArgs := []interface{}{
 		dataType,

@@ -66,7 +66,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				key := tag.ID
-				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				if !query.OnlyLatestData {
 					key += fmt.Sprintf("%d", tag.UpdateTime.Unix())
 				}
 
@@ -395,12 +395,12 @@ errloop:
 func (t TagRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// 並列処理
 	matchPaths := []string{}
-	trueValue := true
+
 	ids := []string{id}
 	for _, rep := range t {
 		query := &find.FindQuery{
-			IDs:    &ids,
-			UseIDs: &trueValue,
+			IDs:    ids,
+			UseIDs: true,
 		}
 		tags, err := rep.FindTags(ctx, query)
 		if len(tags) == 0 || err != nil {

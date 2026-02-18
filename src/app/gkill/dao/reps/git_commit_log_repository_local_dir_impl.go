@@ -37,7 +37,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 
 	var err error
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = g.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := g.GetRepName(ctx)
@@ -57,8 +57,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	kyous := map[string][]Kyou{}
 
 	var logs object.CommitIter
-	if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
-		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((*query.IDs)[0])})
+	if query.UseIDs && len(query.IDs) == 1 {
+		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((query.IDs)[0])})
 	} else {
 		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
 	}
@@ -71,8 +71,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	useCalendar := false
 	calendarStartDate := query.CalendarStartDate
 	calendarEndDate := query.CalendarEndDate
-	if query.UseCalendar != nil {
-		useCalendar = *query.UseCalendar
+	if query.UseCalendar {
+		useCalendar = query.UseCalendar
 	}
 
 loop:
@@ -88,7 +88,7 @@ loop:
 			match := true
 
 			// 削除済みであるかどうかの判定
-			if query.IsDeleted != nil && *query.IsDeleted {
+			if query.IsDeleted {
 				match = false
 				if !match {
 					continue
@@ -96,10 +96,10 @@ loop:
 			}
 
 			// id検索である場合のSQL追記
-			if query.UseIDs != nil && *query.UseIDs {
+			if query.UseIDs {
 				ids := []string{}
 				if query.IDs != nil {
-					ids = *query.IDs
+					ids = query.IDs
 				}
 				for _, id := range ids {
 					match = id == commit.Hash.String()
@@ -107,38 +107,32 @@ loop:
 						break
 					}
 				}
-				if !match {
-					continue
-				}
 			}
 
 			words := []string{}
 			notWords := []string{}
 			if query.Words != nil {
-				words = *query.Words
+				words = query.Words
 			}
 			if query.NotWords != nil {
-				notWords = *query.NotWords
+				notWords = query.NotWords
 			}
 
-			if query.UseWords != nil && *query.UseWords {
+			if query.UseWords {
 				// ワードand検索である場合の判定
-				if query.WordsAnd != nil && *query.WordsAnd {
+				if query.WordsAnd {
 					match = true
 					for _, word := range words {
-						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
+						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word)) || strings.Contains(strings.ToLower(commit.ID().String()), strings.ToLower(word))
 						if !match {
 							break
 						}
 					}
-					if !match {
-						continue
-					}
-				} else if query.WordsAnd != nil && !(*query.WordsAnd) {
+				} else if !(query.WordsAnd) {
 					// ワードor検索である場合の判定
 					match = false
 					for _, word := range words {
-						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
+						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word)) || strings.Contains(strings.ToLower(commit.ID().String()), strings.ToLower(word))
 						if match {
 							break
 						}
@@ -147,7 +141,7 @@ loop:
 
 				// notワードを除外する場合の判定
 				for _, notWord := range notWords {
-					match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(notWord))
+					match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(notWord)) || strings.Contains(strings.ToLower(commit.ID().String()), strings.ToLower(notWord))
 					if match {
 						match = false
 						break
@@ -216,7 +210,7 @@ loop:
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 
-			if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
+			if query.UseIDs && len(query.IDs) == 1 {
 				break loop
 			}
 		}
@@ -316,7 +310,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	var err error
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = g.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := g.GetRepName(ctx)
@@ -335,8 +329,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	// 判定OKであればGitCommitLogを作る
 	gitCommitLogs := []GitCommitLog{}
 	var logs object.CommitIter
-	if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
-		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((*query.IDs)[0])})
+	if query.UseIDs && len(query.IDs) == 1 {
+		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((query.IDs)[0])})
 	} else {
 		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
 	}
@@ -358,10 +352,10 @@ loop:
 			match := true
 
 			// id検索である場合のSQL追記
-			if query.UseIDs != nil && query.IDs != nil {
+			if query.IDs != nil {
 				ids := []string{}
 				if query.IDs != nil {
-					ids = *query.IDs
+					ids = query.IDs
 				}
 				for _, id := range ids {
 					match = id == commit.Hash.String()
@@ -377,15 +371,15 @@ loop:
 			words := []string{}
 			notWords := []string{}
 			if query.Words != nil {
-				words = *query.Words
+				words = query.Words
 			}
 			if query.NotWords != nil {
-				notWords = *query.NotWords
+				notWords = query.NotWords
 			}
 
-			if query.UseWords != nil && *query.UseWords {
+			if query.UseWords {
 				// ワードand検索である場合の判定
-				if query.WordsAnd != nil && *query.WordsAnd {
+				if query.WordsAnd {
 					match = true
 					for _, word := range words {
 						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
@@ -396,7 +390,7 @@ loop:
 					if !match {
 						continue
 					}
-				} else if query.WordsAnd != nil && !(*query.WordsAnd) {
+				} else if !(query.WordsAnd) {
 					// ワードor検索である場合の判定
 					match = false
 					for _, word := range words {
@@ -452,7 +446,7 @@ loop:
 
 			gitCommitLogs = append(gitCommitLogs, gitCommitLog)
 
-			if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
+			if query.UseIDs && len(query.IDs) == 1 {
 				break loop
 			}
 		}
@@ -595,7 +589,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetLatestDataRepositoryAddress(ctx con
 }
 
 func buildPeriodOfTimeSeconds(query *find.FindQuery) (use bool, stOK bool, stSec int, etOK bool, etSec int) {
-	if query.UsePeriodOfTime == nil || !*query.UsePeriodOfTime {
+	if !query.UsePeriodOfTime {
 		return false, false, 0, false, 0
 	}
 	use = true

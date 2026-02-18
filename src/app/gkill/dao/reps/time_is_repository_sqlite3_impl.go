@@ -152,7 +152,7 @@ func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -200,7 +200,7 @@ FROM TIMEIS
 `
 
 	sqlWhereFilterEndTimeIs := ""
-	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
+	if query.IncludeEndTimeIs {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME IS NOT NULL"
 	} else {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
@@ -227,22 +227,19 @@ FROM TIMEIS
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+
+	onlyLatestData = query.OnlyLatestData
+	if query.UsePlaing {
 		onlyLatestData = true
 	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -261,19 +258,16 @@ FROM TIMEIS
 	queryArgsForPlaingEnd := []interface{}{}
 	sqlWhereFilterPlaingTimeisEnd := ""
 	ignoreCase = true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -406,13 +400,13 @@ SELECT
 FROM TIMEIS 
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -563,11 +557,11 @@ SELECT
 FROM TIMEIS 
 WHERE 
 `
-	trueValue := true
+
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	queryArgs := []interface{}{
@@ -720,7 +714,7 @@ func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *fin
 	}
 
 	// update_cacheであればキャッシュを更新する
-	if query.UpdateCache != nil && *query.UpdateCache {
+	if query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -774,7 +768,7 @@ FROM TIMEIS
 `
 
 	sqlWhereFilterEndTimeIs := ""
-	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
+	if query.IncludeEndTimeIs {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME IS NOT NULL"
 	} else {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
@@ -801,19 +795,16 @@ FROM TIMEIS
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	ignoreCase := true
-	if query.OnlyLatestData != nil {
-		onlyLatestData = *query.OnlyLatestData
-	} else {
-		onlyLatestData = false
-	}
+
+	onlyLatestData = query.OnlyLatestData
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -837,10 +828,10 @@ FROM TIMEIS
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -979,13 +970,12 @@ WHERE
 		return nil, err
 	}
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         &trueValue,
-		IDs:            &ids,
-		OnlyLatestData: new(updateTime == nil),
-		UseUpdateTime:  new(updateTime != nil),
+		UseIDs:         true,
+		IDs:            ids,
+		OnlyLatestData: updateTime == nil,
+		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1011,10 +1001,10 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
@@ -1156,11 +1146,10 @@ WHERE
 		return nil, err
 	}
 
-	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
+		UseIDs: true,
+		IDs:    ids,
 	}
 
 	dataType := "timeis"
@@ -1185,10 +1174,10 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+	if query.UsePlaing {
 		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		whereCounter++
 		whereCounter++
 	}
