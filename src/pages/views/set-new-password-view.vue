@@ -50,6 +50,7 @@ import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useTheme } from 'vuetify';
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 const theme = useTheme()
 
 const welcome_emoji = computed(() => theme.current.value.dark ? "⭐️" : "❄️")
@@ -135,6 +136,7 @@ async function try_set_new_password(): Promise<boolean> {
     }
 
     await sleep(2500)
+    await resetDialogHistory()
     router.replace("/")
 
     return true

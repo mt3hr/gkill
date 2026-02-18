@@ -17,7 +17,8 @@
                                 { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
                                 { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
-                                <v-list-item-title @click="router.replace('/' + page.page_name + '?loaded=true')">
+                                <v-list-item-title
+                                    @click="async () => { await resetDialogHistory(); router.replace('/' + page.page_name + '?loaded=true') }">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -66,7 +67,7 @@
 import { i18n } from '@/i18n'
 'use strict'
 import router from '@/router'
-import { computed, nextTick, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
@@ -79,6 +80,7 @@ import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 const theme = useTheme()
 
@@ -95,6 +97,10 @@ const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
+
+onMounted(async () => {
+    await resetDialogHistory()
+})
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()

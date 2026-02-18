@@ -78,6 +78,7 @@ import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-config
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { useTheme } from 'vuetify';
+import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 const theme = useTheme()
 
 const welcome_emoji = computed(() => theme.current.value.dark ? "⭐️" : "❄️")
@@ -296,6 +297,7 @@ async function try_regist_account(): Promise<boolean> {
         // eslint-disable-next-line no-fallthrough
         default:
             await sleep(2500)
+            await resetDialogHistory()
             router.replace("/")
             return true
     }
