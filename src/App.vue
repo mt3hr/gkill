@@ -65,7 +65,8 @@ html {
 }
 
 .mi_view_wrap,
-.rykv_view_wrap {
+.rykv_view_wrap,
+.saihate_view_wrap {
   position: relative;
 }
 
@@ -106,8 +107,8 @@ td {
 .kyou_dialog :is(.kyou_image, .kyou_video) {
   width: unset !important;
   height: unset !important;
-  max-width: 85vw !important;
-  max-height: 85vh !important;
+  max-width: 80vw !important;
+  max-height: 70vh !important;
 }
 
 /* =========================================================
@@ -142,16 +143,16 @@ body::-webkit-scrollbar {
 /* ダイアログ（スクロール） */
 .kyou_detail_view,
 .kyou_list_view,
-.v-dialog .v-card {
+.gkill-float-scrim .v-card {
   overflow-y: scroll;
 }
 
 /* mkfl ダイアログだけ例外 */
-.mkfl_dialog.v-dialog .v-card {
+.mkfl_dialog.gkill-float-scrim .v-card {
   overflow-y: hidden;
 }
 
-.mkfl_dialog.v-dialog .v-card::-webkit-scrollbar {
+.mkfl_dialog.gkill-float-scrim .v-card::-webkit-scrollbar {
   width: 0px;
 }
 
@@ -195,7 +196,7 @@ body::-webkit-scrollbar {
   .kyou_list_view_image,
   .dnote_list_view,
   .kftl_text_area,
-  .v-dialog .v-card)::-webkit-scrollbar {
+  .gkill-float-scrim .v-card)::-webkit-scrollbar {
   margin-left: 1px;
   width: var(--gkill-scrollbar-size);
   height: var(--gkill-scrollbar-size);
@@ -213,7 +214,7 @@ body::-webkit-scrollbar {
   .kyou_list_view_image,
   .dnote_list_view,
   .kftl_text_area,
-  .v-dialog .v-card)::-webkit-scrollbar-thumb {
+  .gkill-float-scrim .v-card)::-webkit-scrollbar-thumb {
   background: rgb(var(--v-theme-primary));
   width: var(--gkill-scrollbar-thumb-width);
   border-radius: var(--gkill-scrollbar-thumb-radius);
@@ -339,5 +340,74 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   width: var(--lantana-tr-width);
   max-width: var(--lantana-tr-width);
   min-width: var(--lantana-tr-width);
+}
+
+
+
+.gkill-float-scrim {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2999;
+}
+
+.gkill-floating-dialog {
+  border-radius: 12px;
+  max-width: 85vw;
+}
+
+.gkill-floating-dialog.is-transparent {
+  opacity: 0.75;
+}
+
+.gkill-floating-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.gkill-floating-dialog__header:active {
+  cursor: grabbing;
+}
+
+.gkill-floating-dialog__title {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.gkill-floating-dialog__spacer {
+  flex: 1;
+}
+
+.gkill-floating-dialog__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  touch-action: manipulation;
+}
+
+.gkill-floating-dialog__btn {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.92);
+  min-height: 32px;
+  min-width: 32px;
+  touch-action: manipulation;
+}
+
+.gkill-floating-dialog__body {
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: 85vw;
+  max-height: 80vh;
+  overflow: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 </style>

@@ -216,7 +216,7 @@ function delete_device_struct(id: string): void {
 </script>
 <style lang="css" scoped>
 .device_struct_root {
-    max-height: 80vh;
+    max-height: unset;
     overflow-y: scroll;
 }
 </style>
