@@ -13,7 +13,7 @@
                 <v-col cols="auto">
                     <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{
                         i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -262,9 +262,9 @@ async function show_kftl_template_dialog(): Promise<void> {
 async function resize(): Promise<void> {
     line_label_width.value = 100
     line_label_height.value = props.app_content_height.valueOf() - title_height - action_height
-    text_area_width.value = props.app_content_width !== 'unset' ? props.app_content_width.valueOf() - line_label_width.value.valueOf() - 7 : 'unset' // 7はマジックナンバー
+    text_area_width.value = props.app_content_width.valueOf() - line_label_width.value.valueOf() - 7 // 7はマジックナンバー
     text_area_height.value = props.app_content_height.valueOf() - title_height - action_height
-    kftl_input_width.value = text_area_width.value !== 'unset' ? line_label_width.value.valueOf() + text_area_width.value.valueOf() : 'unset'
+    kftl_input_width.value = line_label_width.value.valueOf() + text_area_width.value.valueOf()
     kftl_input_height.value = props.app_content_height.valueOf() - title_height - action_height
 }
 
@@ -324,6 +324,7 @@ textarea {
 }
 
 .kftl_view {
+    width: 85vw;
     overflow-y: hidden;
 }
 </style>

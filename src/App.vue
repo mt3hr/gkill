@@ -108,7 +108,7 @@ td {
   width: unset !important;
   height: unset !important;
   max-width: 80vw !important;
-  max-height: 70vh !important;
+  max-height: 85vh !important;
 }
 
 /* =========================================================
@@ -144,7 +144,7 @@ body::-webkit-scrollbar {
 .kyou_detail_view,
 .kyou_list_view,
 .gkill-float-scrim .v-card {
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 /* mkfl ダイアログだけ例外 */
@@ -359,6 +359,22 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   max-width: 85vw;
 }
 
+.mkfl_dialog .plaing_timeis_view_wrap {
+  width: 85vh;
+}
+
+.plaing_timeis_view_wrap {
+  width: 85vw;
+}
+
+.v-virtual-scroll  {
+  max-width: unset;
+}
+
+.kyou_list_view .kyou_in_list {
+  width: max-content;
+}
+
 .gkill-floating-dialog.is-transparent {
   opacity: 0.75;
 }
@@ -410,7 +426,7 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   box-sizing: border-box;
   width: fit-content;
   max-width: 85vw;
-  max-height: 80vh;
+  max-height: 85vh;
   overflow: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
