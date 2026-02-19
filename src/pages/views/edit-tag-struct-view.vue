@@ -216,7 +216,7 @@ function delete_tag_struct(id: string): void {
 </script>
 <style lang="css" scoped>
 .tag_struct_root {
-    max-height: 80vh;
+    max-height: unset;
     overflow-y: scroll;
 }
 </style>
