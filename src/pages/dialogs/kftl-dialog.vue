@@ -40,13 +40,7 @@ const emits = defineEmits<KFTLDialogEmits>()
 defineExpose({ show, hide })
 
 const view_height = computed(() => props.app_content_height.valueOf() * 0.75)
-const view_width = computed(() => {
-  if (props.app_content_width == 'unset') {
-    return 'unset'
-  } else {
-    return props.app_content_width.valueOf() - 50
-  }
-})
+const view_width = computed(() => props.app_content_width.valueOf() * 0.85)
 
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'

@@ -14,7 +14,7 @@
         <v-row v-if="show_timeis_plaing_end_button && kyou.typed_timeis && !kyou.typed_timeis.end_time"
             class="pa-0 ma-0">
             <v-spacer cols="auto" />
-            <v-col cols="auto" class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0 pr-4">
                 <v-btn dark color="primary" @click="show_end_timeis_dialog()">{{ i18n.global.t("END_TITLE") }}</v-btn>
             </v-col>
         </v-row>
