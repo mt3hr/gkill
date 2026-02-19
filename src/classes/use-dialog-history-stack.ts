@@ -5,6 +5,9 @@ import { onBeforeUnmount, onMounted, type Ref, watch } from "vue"
  * + resetDialogHistory()
  * + Back is dialog-only mode (when stack is empty, back is blocked).
  *
+ * Extra:
+ * - Escape closes ONLY the topmost dialog (no global "全部閉じる" 問題を回避)
+ *
  * Notes:
  * - This will prevent leaving the app via back button (PWA exit / previous site).
  * - Forward into dialog states while stack is empty is also blocked.
@@ -34,6 +37,14 @@ function withDialogMarkers(base: any, depth: number): any {
 // --- Global stack (module singleton) ---
 type Entry = { id: string; dialog: Ref<boolean> }
 const stack: Entry[] = []
+
+// Public helper: close only the topmost dialog.
+export function closeTopDialog(): boolean {
+  if (stack.length === 0) return false
+  const top = stack[stack.length - 1]
+  top.dialog.value = false
+  return true
+}
 
 // Identity helpers
 const refIdMap = new WeakMap<object, string>()
@@ -203,6 +214,32 @@ function ensurePopListenerInstalled() {
   )
 }
 
+// --- Escape handling (close only topmost) ---
+let escListenerInstalled = false
+function ensureEscListenerInstalled() {
+  if (escListenerInstalled) return
+  escListenerInstalled = true
+
+  window.addEventListener(
+    "keydown",
+    (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      if (e.repeat) return
+      if (stack.length === 0) return
+
+      // popstate の処理中にさらに閉じるとややこしいので避ける
+      if (pendingNav > 0) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      // 1回の ESC で 1つだけ閉じる
+      closeTopDialog()
+    },
+    { capture: true },
+  )
+}
+
 // --- Core hook ---
 export function useDialogHistoryStack(dialog: Ref<boolean>): void {
   const refObj = dialog as unknown as object
@@ -210,10 +247,12 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
 
   if (watchedRefs.has(refObj)) {
     ensurePopListenerInstalled()
+    ensureEscListenerInstalled()
     return
   }
   watchedRefs.add(refObj)
   ensurePopListenerInstalled()
+  ensureEscListenerInstalled()
 
   const stop = watch(
     dialog,

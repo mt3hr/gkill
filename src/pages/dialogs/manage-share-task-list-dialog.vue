@@ -1,20 +1,40 @@
 <template>
-    <v-dialog persistent @click:outside="hide" @keydown.esc="hide" :no-click-animation="true"  :width="'fit-content'" v-model="is_show_dialog">
-        <ManageShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
-            :share_kyou_list_infos="share_kyou_list_infos"
-            @requested_show_confirm_delete_share_kyou_list_dialog="show_confirm_delete_share_kyou_list_dialog"
-            @requested_show_share_kyou_link_dialog="show_share_kyou_list_link_dialog" />
-        <ShareKyousListLinkDialog :share_kyou_list_info="share_kyou_list" :application_config="application_config"
-            :gkill_api="gkill_api" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @updated_share_kyou_list_info="reload_share_kyou_list_infos()"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" ref="share_kyou_list_link_dialog" />
-        <ConfirmDeleteShareKyousListDialog :share_kyou_list_info="share_kyou_link"
-            :application_config="application_config" :gkill_api="gkill_api"
-            @requested_delete_share_kyou_link_info="(share_kyou_list_infos: ShareKyousInfo) => delete_share_kyou_link_info(share_kyou_list_infos)"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            ref="confirm_delete_share_kyou_list_dialog" />
-    </v-dialog>
+    <Teleport to="body" v-if="is_show_dialog" >
+        <div class="gkill-float-scrim" :class="ui.isTransparent.value ? 'is-transparent' : ''" />
+
+        <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog"
+            :class="ui.isTransparent.value ? 'is-transparent' : ''">
+            <div class="gkill-floating-dialog__header" @mousedown="ui.onHeaderPointerDown"
+                @touchstart="ui.onHeaderPointerDown">
+                <div class="gkill-floating-dialog__title"></div>
+                <div class="gkill-floating-dialog__spacer"></div>
+                <v-checkbox v-model="ui.isTransparent.value" size="small" variant="flat" 
+                    :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+            </div>
+
+            <div class="gkill-floating-dialog__body"> 
+                <ManageShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
+                    :share_kyou_list_infos="share_kyou_list_infos"
+                    @requested_show_confirm_delete_share_kyou_list_dialog="show_confirm_delete_share_kyou_list_dialog"
+                    @requested_show_share_kyou_link_dialog="show_share_kyou_list_link_dialog" />
+                <ShareKyousListLinkDialog :share_kyou_list_info="share_kyou_list"
+                    :application_config="application_config" :gkill_api="gkill_api"
+                    @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                    @updated_share_kyou_list_info="reload_share_kyou_list_infos()"
+                    @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                    ref="share_kyou_list_link_dialog" />
+                <ConfirmDeleteShareKyousListDialog :share_kyou_list_info="share_kyou_link"
+                    :application_config="application_config" :gkill_api="gkill_api"
+                    @requested_delete_share_kyou_link_info="(share_kyou_list_infos: ShareKyousInfo) => delete_share_kyou_link_info(share_kyou_list_infos)"
+                    @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                    @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                    ref="confirm_delete_share_kyou_list_dialog" />
+            </div>
+        </div>
+    </Teleport>
 </template>
 <script lang="ts" setup>
 import { type Ref, ref } from 'vue'
@@ -42,8 +62,13 @@ const share_kyou_list: Ref<ShareKyousInfo> = ref(new ShareKyousInfo())
 const share_kyou_link: Ref<ShareKyousInfo> = ref(new ShareKyousInfo())
 
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
+const ui = useFloatingDialog("", {
+  centerMode: "always",
+})
 
 async function show(): Promise<void> {
     reload_share_kyou_list_infos()
