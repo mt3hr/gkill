@@ -192,7 +192,7 @@ function delete_rep_struct(id: string): void {
 </script>
 <style lang="css" scoped>
 .rep_struct_root {
-    max-height: 80vh;
+    max-height: unset;
     overflow-y: scroll;
 }
 </style>
