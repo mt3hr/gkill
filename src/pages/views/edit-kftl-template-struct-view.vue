@@ -221,7 +221,7 @@ function delete_kftl_template_struct(id: string): void {
 </script>
 <style lang="css" scoped>
 .kftl_template_struct_root {
-    max-height: 80vh;
+    max-height: unset;
     overflow-y: scroll;
 }
 </style>

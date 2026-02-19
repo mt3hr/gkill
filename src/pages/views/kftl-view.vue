@@ -13,7 +13,7 @@
                 <v-col cols="auto">
                     <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{
                         i18n.global.t("SAVE_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -66,7 +66,7 @@ import { CommitTXRequest } from '@/classes/api/req_res/commit-tx-request'
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
 const text_area_content: Ref<string> = ref("")
-const text_area_width: Ref<Number> = ref(0)
+const text_area_width: Ref<Number | 'unset'> = ref(0)
 const text_area_width_px = computed(() => text_area_width.value.toString().concat("px"))
 const text_area_height: Ref<Number> = ref(0)
 const text_area_height_px = computed(() => text_area_height.value.toString().concat("px"))
@@ -79,7 +79,7 @@ const title_height = 52
 const action_height = 10
 const kftl_input_height: Ref<number> = ref(0)
 const kftl_input_height_px = computed(() => kftl_input_height.value.toString().concat("px"))
-const kftl_input_width: Ref<number> = ref(0)
+const kftl_input_width: Ref<number | 'unset'> = ref(0)
 const kftl_input_width_px = computed(() => kftl_input_width.value.toString().concat("px"))
 
 const line_label_datas: Ref<Array<LineLabelData>> = ref(new Array<LineLabelData>())
@@ -262,9 +262,9 @@ async function show_kftl_template_dialog(): Promise<void> {
 async function resize(): Promise<void> {
     line_label_width.value = 100
     line_label_height.value = props.app_content_height.valueOf() - title_height - action_height
-    text_area_width.value = props.app_content_width.valueOf() - line_label_width.value.valueOf() - 7 // 7はマジックナンバー
+    text_area_width.value = props.app_content_width !== 'unset' ? props.app_content_width.valueOf() - line_label_width.value.valueOf() - 7 : 'unset' // 7はマジックナンバー
     text_area_height.value = props.app_content_height.valueOf() - title_height - action_height
-    kftl_input_width.value = line_label_width.value.valueOf() + text_area_width.value.valueOf()
+    kftl_input_width.value = text_area_width.value !== 'unset' ? line_label_width.value.valueOf() + text_area_width.value.valueOf() : 'unset'
     kftl_input_height.value = props.app_content_height.valueOf() - title_height - action_height
 }
 

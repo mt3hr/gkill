@@ -1,6 +1,6 @@
 <template>
     <div class="plaing_timeis_view_wrap">
-        <KyouListView :kyou_height="180" :width="app_content_width.valueOf() - 8" :list_height="kyou_list_view_height"
+        <KyouListView :kyou_height="180" :width="app_content_width" :list_height="kyou_list_view_height"
             :show_timeis_plaing_end_button="true" :application_config="application_config" :gkill_api="gkill_api"
             :matched_kyous="match_kyous_list" :query="query" :last_added_tag="last_added_tag" :is_focused_list="true"
             :closable="false" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
