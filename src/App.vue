@@ -368,10 +368,12 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   cursor: grab;
   user-select: none;
   touch-action: none;
+  background: rgb(var(--v-theme-primary));
 }
 
 .gkill-floating-dialog__header:active {
   cursor: grabbing;
+  background: rgb(var(--v-theme-primary));
 }
 
 .gkill-floating-dialog__title {
