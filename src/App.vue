@@ -342,7 +342,10 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   min-width: var(--lantana-tr-width);
 }
 
-
+.kyou_list_view video::-webkit-media-controls,
+.kyou_list_view_image video::-webkit-media-controls {
+  display: none !important;
+}
 
 .gkill-float-scrim {
   position: fixed;
