@@ -370,8 +370,8 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   box-shadow: 0 0 8px silver;
 }
 
-.mkfl_dialog .plaing_timeis_view_wrap {
-  width: 100vw;
+.gkill-floating-dialog__body .plaing_timeis_view_wrap {
+  width: unset;
 }
 
 .plaing_timeis_view_wrap {
