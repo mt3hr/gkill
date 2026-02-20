@@ -196,7 +196,7 @@ body::-webkit-scrollbar {
   .kyou_list_view_image,
   .dnote_list_view,
   .kftl_text_area,
-  .gkill-float-scrim .v-card)::-webkit-scrollbar {
+  .gkill-float-scrim .v-card .gkill-floating-dialog__body)::-webkit-scrollbar {
   margin-left: 1px;
   width: var(--gkill-scrollbar-size);
   height: var(--gkill-scrollbar-size);
@@ -214,7 +214,7 @@ body::-webkit-scrollbar {
   .kyou_list_view_image,
   .dnote_list_view,
   .kftl_text_area,
-  .gkill-float-scrim .v-card)::-webkit-scrollbar-thumb {
+  .gkill-float-scrim .v-card .gkill-floating-dialog__body)::-webkit-scrollbar-thumb {
   background: rgb(var(--v-theme-primary));
   width: var(--gkill-scrollbar-thumb-width);
   border-radius: var(--gkill-scrollbar-thumb-radius);
@@ -357,17 +357,18 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
 .gkill-floating-dialog {
   border-radius: 12px;
   max-width: 85vw;
+  box-shadow: 0 0 8px silver;
 }
 
 .mkfl_dialog .plaing_timeis_view_wrap {
-  width: 85vh;
+  width: 85vw;
 }
 
 .plaing_timeis_view_wrap {
   width: 85vw;
 }
 
-.v-virtual-scroll  {
+.v-virtual-scroll {
   max-width: unset;
 }
 
@@ -425,10 +426,10 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
 .gkill-floating-dialog__body {
   box-sizing: border-box;
   width: fit-content;
-  max-width: 85vw;
-  max-height: 85vh;
+  max-width: 95vw;
+  max-height: 92vh;
   overflow: auto;
   overflow-x: hidden;
-  scrollbar-gutter: stable;
+  background-color: var(--v-theme-background);
 }
 </style>
