@@ -53,7 +53,7 @@ const props = defineProps<MKFLDialogProps>()
 const emits = defineEmits<MKFLDialogEmits>()
 defineExpose({ show, hide })
 
-const view_width = computed(() => props.app_content_width.valueOf() * 0.85)
+const view_width = computed(() => Math.min(props.app_content_width.valueOf() * 0.85, 600))
 const view_height = computed(() => props.app_content_height.valueOf() * 0.85)
 
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
