@@ -202,6 +202,8 @@ const dialog_events = {
   requested_reload_list: () => emits('requested_reload_list'),
   requested_update_check_kyous: (kyous: Array<Kyou>, is_checked: boolean) =>
     emits('requested_update_check_kyous', kyous, is_checked),
+  requested_open_rykv_dialog: (kind: any, kyou: any, payload: any) =>
+    emits('requested_open_rykv_dialog', kind, kyou, payload),
 }
 
 onMounted(async () => {
