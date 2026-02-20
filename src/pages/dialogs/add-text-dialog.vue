@@ -8,7 +8,7 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-        <v-checkbox v-model="ui.isTransparent.value" dark  size="small" variant="flat"  :label="i18n.global.t('TRANSPARENT_TITLE')" />
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"  :label="i18n.global.t('TRANSPARENT_TITLE')" />
         <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide">
           <v-icon>mdi-close</v-icon>
         </v-btn>
