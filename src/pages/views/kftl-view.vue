@@ -322,9 +322,4 @@ textarea {
 .kftl_line_label::-webkit-scrollbar {
     display: none;
 }
-
-.kftl_view {
-    width: 85vw;
-    overflow-y: hidden;
-}
 </style>
