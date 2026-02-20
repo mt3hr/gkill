@@ -25,6 +25,7 @@
                 @requested_reload_kyou="(...cloned_kyou: any[]) => emits('requested_reload_kyou', cloned_kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])"
                 ref="related_kyou_list_item_views" />
 
             <AddRyuuItemDialog :gkill_api="gkill_api" :application_config="application_config"
@@ -32,6 +33,27 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 ref="add_ryuu_item_dialog" />
+            <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
+                :last_added_tag="''" :enable_context_menu="true" :enable_dialog="true"
+                @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
+                @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
+                @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
+                @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
+                @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
+                @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
+                @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
+                @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
+                @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
+                @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
+                @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
+                @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
+                @requested_reload_list="emits('requested_reload_list')"
+                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
 
             <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
                 <v-menu transition="slide-x-transition">
@@ -74,6 +96,8 @@ import type { Text } from '@/classes/datas/text';
 import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
+import RykvDialogHost from './rykv-dialog-host.vue';
+import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from './rykv-dialog-kind';
 
 const add_ryuu_item_dialog = ref<InstanceType<typeof AddRyuuItemDialog> | null>(null);
 const related_kyou_list_item_views = ref()
@@ -83,6 +107,7 @@ const props = defineProps<RyuuListViewProps>()
 const emits = defineEmits<RyuuListViewEmits>()
 
 const related_kyou_queries: Ref<Array<RelatedKyouQuery>> = ref(new Array<RelatedKyouQuery>())
+const opened_dialogs: Ref<Array<OpenedRykvDialog>> = ref([])
 const abort_controler: Ref<AbortController> = ref(new AbortController())
 
 nextTick(async () => {
@@ -214,6 +239,25 @@ function handle_move_related_kyou_query(srcId: string, targetId: string, dropTyp
     related_kyou_queries.value.splice(insertIndex, 0, item)
 
     nextTick(() => load_related_kyou())
+}
+
+function open_rykv_dialog(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void {
+    opened_dialogs.value.push({
+        id: props.gkill_api.generate_uuid(),
+        kind,
+        kyou: kyou.clone(),
+        payload: payload ?? null,
+        opened_at: Date.now(),
+    })
+}
+
+function close_rykv_dialog(dialog_id: string): void {
+    for (let i = 0; i < opened_dialogs.value.length; i++) {
+        if (opened_dialogs.value[i].id === dialog_id) {
+            opened_dialogs.value.splice(i, 1)
+            break
+        }
+    }
 }
 </script>
 
