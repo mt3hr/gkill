@@ -162,7 +162,8 @@
                             @updated_kyou="(...updated_kyou: any[]) => { reload_kyou(updated_kyou[0]); emits('updated_kyou', updated_kyou[0] as Kyou) }"
                             @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
                             @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-                            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)" />
+                            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
+                            @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
                     </td>
                     <td valign="top" v-if="!is_shared_rykv_view"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
@@ -205,7 +206,8 @@
                                 @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
                                 @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
                                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                                @requested_reload_list="() => { }" />
+                                @requested_reload_list="() => { }"
+                                @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
                         </div>
                         <div class="ryuu_view dummy">
                             <RyuuListView v-if="focused_kyou && default_query" :application_config="application_config"
@@ -436,6 +438,25 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 ref="upload_file_dialog" />
+            <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
+                :last_added_tag="last_added_tag" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
+                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(true, false); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
+                @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
+                @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
+                @registered_kyou="(...registered_kyou: any[]) => { emits('registered_kyou', registered_kyou[0] as Kyou) }"
+                @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
+                @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
+                @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
+                @updated_kyou="(...updated_kyou: any[]) => { reload_kyou(updated_kyou[0]); emits('updated_kyou', updated_kyou[0] as Kyou) }"
+                @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
+                @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
+                @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @requested_reload_list="() => { }" />
             <v-avatar v-if="!is_shared_rykv_view" :style="floatingActionButtonStyle()" color="primary"
                 class="position-fixed">
                 <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
@@ -512,6 +533,8 @@ import { Tag } from '@/classes/datas/tag'
 import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import RykvDialogHost from './rykv-dialog-host.vue'
+import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from './rykv-dialog-kind'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -529,6 +552,7 @@ const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(nul
 const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 const kyou_list_views = ref();
 const rykv_root = ref<HTMLElement | null>(null);
+const opened_dialogs: Ref<Array<OpenedRykvDialog>> = ref([])
 
 const querys: Ref<Array<FindKyouQuery>> = ref([new FindKyouQuery()])
 const querys_backup: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>()) // 更新検知用バックアップ
@@ -961,6 +985,25 @@ const enable_enter_shortcut = ref(true)
 useScopedEnterForKFTL(rykv_root, show_kftl_dialog, enable_enter_shortcut);
 
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
+
+function open_rykv_dialog(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void {
+    opened_dialogs.value.push({
+        id: props.gkill_api.generate_uuid(),
+        kind,
+        kyou: kyou.clone(),
+        payload: payload ?? null,
+        opened_at: Date.now(),
+    })
+}
+
+function close_rykv_dialog(dialog_id: string): void {
+    for (let i = 0; i < opened_dialogs.value.length; i++) {
+        if (opened_dialogs.value[i].id === dialog_id) {
+            opened_dialogs.value.splice(i, 1)
+            break
+        }
+    }
+}
 </script>
 <style lang="css" scoped>
 .kyou_detail_view.dummy {
