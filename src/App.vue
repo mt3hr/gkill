@@ -399,6 +399,7 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   user-select: none;
   touch-action: none;
   background: rgb(var(--v-theme-primary));
+  color:white;
 }
 
 .gkill-floating-dialog__header:active {
