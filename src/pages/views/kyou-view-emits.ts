@@ -6,6 +6,7 @@ import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
 import type { Text } from "@/classes/datas/text"
 import type { Notification } from "@/classes/datas/notification"
+import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 
 export interface KyouViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
@@ -27,4 +28,5 @@ export interface KyouViewEmits {
     (e: 'requested_reload_list'): void
     (e: 'requested_close_dialog'): void
     (e: 'clicked_kyou', kyou: Kyou): void
+    (e: 'requested_open_rykv_dialog', kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void
 }
