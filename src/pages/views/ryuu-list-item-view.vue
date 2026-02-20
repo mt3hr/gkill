@@ -89,6 +89,7 @@
             @requested_reload_kyou="(...cloned_kyou: any[]) => emits('requested_reload_kyou', cloned_kyou[0] as Kyou)"
             @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             ref="kyou_dialog" />
 
         <RyuuListItemContextMenu :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
