@@ -22,7 +22,8 @@
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...cloned_kyou: any[]) => emits('requested_reload_kyou', cloned_kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
-                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
+                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
             <div v-if="show_attached_timeis">
                 <AttachedTimeIsPlaing v-for="attached_timeis_plaing in cloned_kyou.attached_timeis_kyou"
                     :key="attached_timeis_plaing.id" :timeis_kyou="attached_timeis_plaing"
@@ -45,7 +46,8 @@
                     @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                     @requested_reload_kyou="(...cloned_kyou: any[]) => emits('requested_reload_kyou', cloned_kyou[0] as Kyou)"
                     @requested_reload_list="emits('requested_reload_list')"
-                    @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
+                    @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
             </div>
             <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)"
                 :class="kyou_class">
@@ -83,6 +85,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="kmemo_view" />
             <KCView v-if="cloned_kyou.typed_kc" :kc="cloned_kyou.typed_kc" :application_config="application_config"
                 :draggable=draggable :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
@@ -105,6 +108,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="kc_view" />
             <miKyouView v-if="cloned_kyou.typed_mi" :mi="cloned_kyou.typed_mi" :application_config="application_config"
                 :draggable=draggable :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
@@ -128,6 +132,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="mi_view" />
             <NlogView v-if="cloned_kyou.typed_nlog" :nlog="cloned_kyou.typed_nlog" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
@@ -150,6 +155,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="nlog_view" />
             <LantanaView v-if="cloned_kyou.typed_lantana" :lantana="cloned_kyou.typed_lantana" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
@@ -172,6 +178,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="lantana_view" />
             <TimeIsView v-if="cloned_kyou.typed_timeis" :timeis="cloned_kyou.typed_timeis" :draggable=draggable
                 :show_timeis_elapsed_time="show_timeis_elapsed_time"
@@ -196,6 +203,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="timeis_view" />
             <URLogView v-if="cloned_kyou.typed_urlog" :urlog="cloned_kyou.typed_urlog" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
@@ -218,6 +226,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="urlog_view" />
             <IDFKyouView v-if="cloned_kyou.typed_idf_kyou" :idf_kyou="cloned_kyou.typed_idf_kyou" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
@@ -240,6 +249,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="idf_kyou_view" />
             <ReKyouView v-if="cloned_kyou.typed_rekyou" :rekyou="cloned_kyou.typed_rekyou" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
@@ -262,6 +272,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="rekyou_view" />
             <GitCommitLogView v-if="cloned_kyou.typed_git_commit_log" :git_commit_log="cloned_kyou.typed_git_commit_log"
                 :draggable=draggable :application_config="application_config" :gkill_api="gkill_api"
@@ -285,6 +296,7 @@
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                 ref="git_commit_log_view" />
         </div>
         <div v-if="!show_content_only">
@@ -308,7 +320,8 @@
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
-                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
+                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
         </div>
         <div v-if="!show_content_only">
             <AttachedNotification v-for="attached_notification in cloned_kyou.attached_notifications"
@@ -332,31 +345,9 @@
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
-                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
-        </div>
-        <kyouDialog :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
-            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            :is_readonly_mi_check="is_readonly_mi_check" :show_timeis_plaing_end_button="show_timeis_plaing_end_button"
-            @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...cloned_kyou: any[]) => emits('requested_reload_kyou', cloned_kyou[0] as Kyou)"
-            @requested_reload_list="emits('requested_reload_list')"
-            @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
-            ref="kyou_dialog" />
-    </div>
+                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
+        </div>    </div>
 </template>
 <script setup lang="ts">
 import { computed, watch, type Ref, ref, nextTick, onUnmounted } from 'vue'
@@ -376,7 +367,6 @@ import NlogView from './nlog-view.vue'
 import ReKyouView from './re-kyou-view.vue'
 import TimeIsView from './time-is-view.vue'
 import URLogView from './ur-log-view.vue'
-import kyouDialog from '../dialogs/kyou-dialog.vue'
 
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { KyouViewProps } from './kyou-view-props'
@@ -390,7 +380,6 @@ import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
-const kyou_dialog = ref<InstanceType<typeof kyouDialog> | null>(null);
 const kmemo_view = ref<InstanceType<typeof KmemoView> | null>(null);
 const kc_view = ref<InstanceType<typeof KCView> | null>(null);
 const mi_view = ref<InstanceType<typeof MiKyouView> | null>(null);
@@ -503,7 +492,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 
 function show_kyou_dialog(): void {
     if (props.enable_dialog) {
-        kyou_dialog.value?.show()
+        emits('requested_open_rykv_dialog', 'kyou', cloned_kyou.value)
     }
 }
 

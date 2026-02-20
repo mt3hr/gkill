@@ -83,6 +83,16 @@ html {
   will-change: transform;
 }
 
+.mkfl_view_wrap .kftl_view {
+  width: 100vw;
+  overflow-y: hidden;
+}
+
+.gkill-float-scrim .kftl_view {
+  width: 100vw;
+  overflow-y: hidden;
+}
+
 /* テーブルの隙間埋め */
 table,
 tr,
@@ -361,11 +371,11 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
 }
 
 .mkfl_dialog .plaing_timeis_view_wrap {
-  width: 85vw;
+  width: 100vw;
 }
 
 .plaing_timeis_view_wrap {
-  width: 85vw;
+  width: 100vw;
 }
 
 .v-virtual-scroll {
@@ -426,10 +436,10 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
 .gkill-floating-dialog__body {
   box-sizing: border-box;
   width: fit-content;
-  max-width: 95vw;
+  max-width: 85vw;
   max-height: 92vh;
   overflow: auto;
   overflow-x: hidden;
-  background-color: var(--v-theme-background);
+  background-color: rgba(var(--v-theme-background));
 }
 </style>

@@ -25,6 +25,7 @@
             @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
             @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             @dblclick.prevent.stop="() => { }" />
         <ReKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" ref="context_menu"
@@ -45,7 +46,8 @@
             @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
             @requested_reload_list="() => emits('requested_reload_list')"
-            @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
+            @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
     </v-card>
 </template>
 <script setup lang="ts">
