@@ -76,5 +76,6 @@ async function show(): Promise<void> {
 }
 async function hide(): Promise<void> {
   is_show_dialog.value = false
+  emits('closed')
 }
 </script>
