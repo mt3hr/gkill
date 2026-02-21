@@ -76,8 +76,8 @@
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
-            <KyouView v-if="kyou.typed_lantana" :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
-                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
+            <KyouView v-if="cloned_kyou.typed_lantana" :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
@@ -134,7 +134,7 @@ const props = defineProps<EditLantanaViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
-const mood: Ref<Number> = ref(props.kyou.typed_lantana!.mood)
+const mood: Ref<Number> = ref(props.kyou.typed_lantana?.mood ?? 0)
 const related_date_typed: Ref<Date> = ref(moment(props.kyou.related_time).toDate())
 const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
 const related_time_string: Ref<string> = ref(moment(props.kyou.related_time).format("HH:mm:ss"))
@@ -152,8 +152,8 @@ async function load(): Promise<void> {
     await cloned_kyou.value.load_typed_datas()
     cloned_kyou.value.load_all()
     mood.value = cloned_kyou.value.typed_lantana ? cloned_kyou.value.typed_lantana!.mood : 0
-    related_date_typed.value = moment(props.kyou.related_time).toDate()
-    related_time_string.value = moment(props.kyou.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 
 
@@ -164,7 +164,7 @@ async function save(): Promise<void> {
         cloned_kyou.value.abort_controller = new AbortController()
 
         // データがちゃんとあるか確認。なければエラーメッセージを出力する
-        const lantana = props.kyou.typed_lantana
+        const lantana = cloned_kyou.value.typed_lantana
         if (!lantana) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_lantana_is_null
@@ -235,14 +235,13 @@ function now_to_related_date_time(): void {
 }
 
 function reset_related_date_time(): void {
-    related_date_typed.value = moment(props.kyou.related_time).toDate()
-    related_time_string.value = moment(props.kyou.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 
 function reset(): void {
-    mood.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_lantana!.mood : 0
+    mood.value = cloned_kyou.value.typed_lantana ? cloned_kyou.value.typed_lantana.mood : 0
     related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
     related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 </script>
-
