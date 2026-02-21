@@ -12,26 +12,9 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <table>
-            <tr>
-                <td>
-                    <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')"
-                        autofocus :readonly="is_requested_submit" />
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <v-text-field class="input text" type="text" v-model="title"
-                        :label="i18n.global.t('URLOG_TITLE_TITLE')" :readonly="is_requested_submit" />
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <v-checkbox v-model="re_get_urlog_content" :label="i18n.global.t('URLOG_REGET_TITLE')" hide-details
-                        color="primary" />
-                </td>
-            </tr>
-        </table>
+        <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')" autofocus :readonly="is_requested_submit" />
+        <v-text-field class="input text" type="text" v-model="title" :label="i18n.global.t('URLOG_TITLE_TITLE')" :readonly="is_requested_submit" />
+        <v-checkbox v-model="re_get_urlog_content" :label="i18n.global.t('URLOG_REGET_TITLE')" hide-details color="primary" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
