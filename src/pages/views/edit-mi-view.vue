@@ -201,7 +201,7 @@
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api" :show_timeis_elapsed_time="true" :is_image_request_to_thumb_size="false"
                 :show_timeis_plaing_end_button="false" :highlight_targets="highlight_targets" :is_image_view="false"
-                :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_mi_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
@@ -226,7 +226,7 @@
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
         </v-card>
-        <NewBoardNameDialog v-if="kyou.typed_mi" :application_config="application_config" :gkill_api="gkill_api"
+        <NewBoardNameDialog v-if="cloned_kyou.typed_mi" :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
@@ -527,4 +527,3 @@ async function save(): Promise<void> {
 
 load_mi_board_names()
 </script>
-
