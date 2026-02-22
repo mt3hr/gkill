@@ -12,11 +12,11 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_title_value" :label="i18n.global.t('NLOG_TITLE_TITLE')"
+        <v-text-field v-if="cloned_kyou.typed_nlog" v-model="nlog_title_value" :label="i18n.global.t('NLOG_TITLE_TITLE')"
             autofocus :readonly="is_requested_submit" />
-        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_shop_value" :label="i18n.global.t('NLOG_SHOP_NAME_TITLE')"
+        <v-text-field v-if="cloned_kyou.typed_nlog" v-model="nlog_shop_value" :label="i18n.global.t('NLOG_SHOP_NAME_TITLE')"
             :readonly="is_requested_submit" />
-        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_amount_value" type="number"
+        <v-text-field v-if="cloned_kyou.typed_nlog" v-model="nlog_amount_value" type="number"
             :label="i18n.global.t('NLOG_AMOUNT_TITLE')" :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
@@ -81,8 +81,8 @@
         </v-row>
 
         <v-card v-if="show_kyou">
-            <KyouView v-if="kyou.typed_nlog" :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
-                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
+            <KyouView v-if="cloned_kyou.typed_nlog" :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
@@ -137,13 +137,13 @@ const props = defineProps<EditNlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
-const nlog_title_value: Ref<string> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.title : "")
-const nlog_amount_value: Ref<number> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.amount : 0)
-const nlog_shop_value: Ref<string> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.shop : "")
+const nlog_title_value: Ref<string> = ref(cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.title : "")
+const nlog_amount_value: Ref<number> = ref(cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.amount : 0)
+const nlog_shop_value: Ref<string> = ref(cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.shop : "")
 
-const related_date_typed: Ref<Date> = ref(moment(props.kyou.related_time).toDate())
+const related_date_typed: Ref<Date> = ref(moment(cloned_kyou.value.related_time).toDate())
 const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
-const related_time_string: Ref<string> = ref(moment(props.kyou.related_time).format("HH:mm:ss"))
+const related_time_string: Ref<string> = ref(moment(cloned_kyou.value.related_time).format("HH:mm:ss"))
 const show_kyou: Ref<boolean> = ref(false)
 
 const show_related_date_menu = ref(false)
@@ -157,11 +157,11 @@ async function load(): Promise<void> {
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
     cloned_kyou.value.load_all()
-    nlog_title_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.title : ""
-    nlog_amount_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.amount : 0
-    nlog_shop_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.shop : ""
-    related_date_typed.value = moment(props.kyou.related_time).toDate()
-    related_time_string.value = moment(props.kyou.related_time).format("HH:mm:ss")
+    nlog_title_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.title : ""
+    nlog_amount_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.amount : 0
+    nlog_shop_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.shop : ""
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 
 async function save(): Promise<void> {
@@ -171,7 +171,7 @@ async function save(): Promise<void> {
         cloned_kyou.value.abort_controller = new AbortController()
 
         // データがちゃんとあるか確認。なければエラーメッセージを出力する
-        const nlog = props.kyou.typed_nlog
+        const nlog = cloned_kyou.value.typed_nlog
         if (!nlog) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_nlog_is_null
@@ -280,17 +280,16 @@ function now_to_related_date_time(): void {
 }
 
 function reset_related_date_time(): void {
-    related_date_typed.value = moment(props.kyou.related_time).toDate()
-    related_time_string.value = moment(props.kyou.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 
 function reset(): void {
-    nlog_title_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.title : ""
-    nlog_amount_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.amount : 0
-    nlog_shop_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.shop : ""
-    related_date_typed.value = moment(props.kyou.related_time).toDate()
-    related_time_string.value = moment(props.kyou.related_time).format("HH:mm:ss")
+    nlog_title_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.title : ""
+    nlog_amount_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.amount : 0
+    nlog_shop_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.shop : ""
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 
 }
 </script>
-
