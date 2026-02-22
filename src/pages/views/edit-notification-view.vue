@@ -66,7 +66,7 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
-                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
@@ -120,6 +120,7 @@ const is_requested_submit = ref(false)
 const props = defineProps<EditNotificationViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
+const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const cloned_notification: Ref<Notification> = ref(props.notification.clone())
 const content_value: Ref<string> = ref(cloned_notification.value.content)
 const notification_date_typed: Ref<Date> = ref(moment(props.notification.notification_time).toDate())
@@ -130,10 +131,14 @@ const show_kyou: Ref<boolean> = ref(false)
 const show_notification_date_menu = ref(false)
 const show_notification_time_menu = ref(false)
 
-watch(() => props.notification, () => load())
+watch([() => props.kyou, () => props.notification], () => load())
 load()
 
 async function load(): Promise<void> {
+    cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.reload(false, true)
+    await cloned_kyou.value.load_typed_datas()
+    cloned_kyou.value.load_all()
     cloned_notification.value = props.notification.clone()
     cloned_notification.value.attached_histories[0]
     content_value.value = cloned_notification.value.content
@@ -218,4 +223,3 @@ function reset_notification_date_time(): void {
     notification_time_string.value = moment(props.notification.notification_time).format("HH:mm:ss")
 }
 </script>
-
