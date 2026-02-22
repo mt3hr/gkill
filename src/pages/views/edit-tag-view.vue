@@ -24,7 +24,7 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
-                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
@@ -74,14 +74,19 @@ const is_requested_submit = ref(false)
 const props = defineProps<EditTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
+const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const cloned_tag: Ref<Tag> = ref(props.tag.clone())
 const tag_name: Ref<string> = ref(props.tag.tag)
 const show_kyou: Ref<boolean> = ref(false)
 
-watch(() => props.tag, () => load())
+watch([() => props.kyou, () => props.tag], () => load())
 load()
 
 async function load(): Promise<void> {
+    cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.reload(false, true)
+    await cloned_kyou.value.load_typed_datas()
+    cloned_kyou.value.load_all()
     cloned_tag.value = props.tag.clone()
     cloned_tag.value.attached_histories[0]
     tag_name.value = cloned_tag.value.tag
@@ -142,4 +147,3 @@ async function save(): Promise<void> {
     }
 }
 </script>
-
