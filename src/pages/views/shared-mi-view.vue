@@ -24,6 +24,7 @@
                                 :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
                                 :show_rep_name="false" :force_show_latest_kyou_info="true"
                                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                                @focused_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
                                 @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
                                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
@@ -96,6 +97,8 @@
                 @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @focused_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
+                @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
                 @requested_reload_list="() => { }"
                 @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />

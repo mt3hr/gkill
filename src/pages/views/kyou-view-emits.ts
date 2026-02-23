@@ -27,6 +27,7 @@ export interface KyouViewEmits {
     (e: 'requested_reload_kyou', kyou: Kyou): void
     (e: 'requested_reload_list'): void
     (e: 'requested_close_dialog'): void
+    (e: 'focused_kyou', kyou: Kyou): void
     (e: 'clicked_kyou', kyou: Kyou): void
     (e: 'requested_open_rykv_dialog', kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void
 }
