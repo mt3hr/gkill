@@ -19,7 +19,8 @@
         <UploadFileView :app_content_height="app_content_height" :app_content_width="app_content_width"
           :last_added_tag="last_added_tag" :application_config="application_config" :gkill_api="gkill_api"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
+          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+          @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
       </div>
     </div>
   </Teleport>
