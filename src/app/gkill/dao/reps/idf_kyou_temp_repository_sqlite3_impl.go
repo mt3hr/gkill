@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -359,7 +358,7 @@ AND DEVICE = ?
 				return nil, err
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
@@ -506,7 +505,7 @@ AND DEVICE = ?
 				return nil, err
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
