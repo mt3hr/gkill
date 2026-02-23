@@ -28,7 +28,7 @@
                                 @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
                                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                                @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -83,7 +83,7 @@
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :last_added_tag="''" :enable_context_menu="false" :enable_dialog="false"
                 @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
-                @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -172,6 +172,22 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
         await updated_kyou.load_all()
         focused_kyou.value = updated_kyou
     }
+}
+
+function removeKyouFromListById(list: Array<Kyou>, deletedId: string): void {
+    for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i].id === deletedId) {
+            list.splice(i, 1)
+        }
+    }
+}
+
+function onDeletedKyou(deletedKyou: Kyou): void {
+    removeKyouFromListById(match_kyous.value, deletedKyou.id)
+    if (focused_kyou.value?.id === deletedKyou.id) {
+        focused_kyou.value = null
+    }
+    emits('deleted_kyou', deletedKyou)
 }
 
 watch(() => focused_time.value, () => {

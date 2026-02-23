@@ -47,6 +47,7 @@
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @deleted_kyou="(...deleted_kyou: any[]) => removeUploadedKyou(deleted_kyou[0] as Kyou)"
             @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             ref="decide_related_time_uploaded_file_dialog" />
     </div>
@@ -205,5 +206,14 @@ async function reload_kyou(kyou: Kyou) {
             uploaded_kyous.value.splice(i, 1, updated_kyou)
         }
     }
+}
+
+function removeUploadedKyou(deletedKyou: Kyou): void {
+    for (let i = uploaded_kyous.value.length - 1; i >= 0; i--) {
+        if (uploaded_kyous.value[i].id === deletedKyou.id) {
+            uploaded_kyous.value.splice(i, 1)
+        }
+    }
+    emits('deleted_kyou', deletedKyou)
 }
 </script>
