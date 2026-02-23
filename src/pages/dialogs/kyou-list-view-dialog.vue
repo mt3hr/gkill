@@ -27,6 +27,7 @@
                         @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                         @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                         @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
+                        @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                         ref="kyou_list_views"
                         @deleted_kyou="(...deleted_kyou: any[]) => { /* reload_list(index); reload_kyou(deleted_kyou); */ }"
                         @deleted_tag="(...deleted_tag: any[]) => { }" @deleted_text="(...deleted_text: any[]) => { }"
