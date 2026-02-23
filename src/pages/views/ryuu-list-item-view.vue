@@ -55,7 +55,8 @@
                                             :force_show_latest_kyou_info="true" :show_attached_tags="true"
                                             :show_attached_texts="true" :show_attached_notifications="true"
                                             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                                            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
+                                            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                                            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
                                     </td>
 
                                     <td>

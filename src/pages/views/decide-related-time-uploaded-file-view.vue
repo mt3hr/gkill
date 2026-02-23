@@ -28,6 +28,7 @@
                     @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
                     @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
                     @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
+                    @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                     ref="kyou_list_view" />
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
