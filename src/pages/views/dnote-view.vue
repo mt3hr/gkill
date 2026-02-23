@@ -19,7 +19,7 @@
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
                 <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE')
-                    }}</div>
+                }}</div>
             </div>
         </v-overlay>
         <h1>
@@ -69,7 +69,7 @@
             @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
             @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_list_table_view" />
-        <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
+        <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-dnote">
             <v-menu transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
                     <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
@@ -91,7 +91,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -421,10 +421,6 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
 
 </script>
 <style lang="css" scoped>
-.position-fixed {
-    position: relative;
-}
-
 .overlay_target {
     z-index: -10000;
     position: absolute;
