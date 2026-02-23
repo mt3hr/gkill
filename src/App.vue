@@ -104,6 +104,23 @@ td {
    Media (Kyou image/video)
 ========================================================= */
 
+.kyou_image {
+  box-sizing: border-box;
+  border: 1px solid gray;
+  height: 200px;
+  width: 200px;
+  object-fit: cover;
+}
+
+.kyou_video {
+  box-sizing: border-box;
+  border: 1px solid gray;
+  height: 200px;
+  width: 200px;
+  object-fit: cover;
+}
+
+
 /* detail view: image/video 共通 */
 .kyou_detail_view :is(.kyou_image, .kyou_video) {
   width: -webkit-fill-available !important;
@@ -399,7 +416,7 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   user-select: none;
   touch-action: none;
   background: rgb(var(--v-theme-primary));
-  color:white;
+  color: white;
 }
 
 .gkill-floating-dialog__header:active {
