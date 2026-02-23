@@ -942,6 +942,91 @@ function show_upload_file_dialog(): void {
 const enable_enter_shortcut = ref(true)
 useScopedEnterForKFTL(mi_root, show_kftl_dialog, enable_enter_shortcut);
 
+function isTargetMiKyou(kyou: Kyou, miId: string): boolean {
+    return kyou.typed_mi?.id === miId || kyou.id === miId
+}
+
+function findKyouInstancesByMiId(miId: string): Array<{ columnIndex: number, rowIndex: number, kyou: Kyou }> {
+    const instances: Array<{ columnIndex: number, rowIndex: number, kyou: Kyou }> = []
+    for (let columnIndex = 0; columnIndex < match_kyous_list.value.length; columnIndex++) {
+        const column = match_kyous_list.value[columnIndex]
+        for (let rowIndex = 0; rowIndex < column.length; rowIndex++) {
+            const kyou = column[rowIndex]
+            if (isTargetMiKyou(kyou, miId)) {
+                instances.push({ columnIndex, rowIndex, kyou })
+            }
+        }
+    }
+    return instances
+}
+
+function removeKyouFromColumnById(columnIndex: number, kyouId: string): void {
+    const column = match_kyous_list.value[columnIndex]
+    if (!column) {
+        return
+    }
+    for (let i = column.length - 1; i >= 0; i--) {
+        if (column[i].id === kyouId) {
+            column.splice(i, 1)
+        }
+    }
+}
+
+function insertKyouIntoColumnIfAbsent(columnIndex: number, kyou: Kyou): void {
+    const column = match_kyous_list.value[columnIndex]
+    if (!column) {
+        return
+    }
+    for (let i = 0; i < column.length; i++) {
+        if (column[i].id === kyou.id) {
+            return
+        }
+    }
+    column.push(kyou)
+}
+
+function patchKyouMiBoardName(kyou: Kyou, updatedMi: Mi): void {
+    if (!kyou.typed_mi) {
+        kyou.typed_mi = new Mi()
+    }
+    kyou.typed_mi.id = updatedMi.id
+    kyou.typed_mi.board_name = updatedMi.board_name
+    kyou.typed_mi.update_app = updatedMi.update_app
+    kyou.typed_mi.update_device = updatedMi.update_device
+    kyou.typed_mi.update_user = updatedMi.update_user
+    kyou.typed_mi.update_time = updatedMi.update_time
+}
+
+function applyBoardMoveLocally(miId: string, beforeBoard: string, afterBoard: string, updatedMi: Mi): void {
+    const instances = findKyouInstancesByMiId(miId)
+    if (instances.length === 0) {
+        return
+    }
+
+    // 既存インスタンスにボード更新を反映
+    for (let i = 0; i < instances.length; i++) {
+        patchKyouMiBoardName(instances[i].kyou, updatedMi)
+    }
+    const targetKyou = instances[0].kyou
+
+    for (let i = 0; i < querys.value.length; i++) {
+        const query = querys.value[i]
+        if (query.use_mi_board_name && query.mi_board_name === beforeBoard) {
+            removeKyouFromColumnById(i, targetKyou.id)
+        }
+        if (query.use_mi_board_name && query.mi_board_name === afterBoard) {
+            insertKyouIntoColumnIfAbsent(i, targetKyou)
+        }
+    }
+
+    if (focused_kyou.value && isTargetMiKyou(focused_kyou.value, miId)) {
+        patchKyouMiBoardName(focused_kyou.value, updatedMi)
+    }
+    if (is_show_kyou_count_calendar.value) {
+        update_focused_kyous_list(focused_column_index.value)
+    }
+}
+
 async function on_drop_board_task(e: DragEvent, find_kyou_query: FindKyouQuery) {
     let mi: Mi
     try {
@@ -991,36 +1076,12 @@ async function on_drop_board_task(e: DragEvent, find_kyou_query: FindKyouQuery) 
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
+
+    const updatedMi = (res.updated_mi && res.updated_mi.id !== "") ? res.updated_mi : mi
+    applyBoardMoveLocally(mi.id, before_board_name, after_board_name, updatedMi)
+
     if (res.updated_kyou) {
         emits('updated_kyou', res.updated_kyou)
-    }
-
-    // 更更新と更新あとの板をリロードする
-    let before_board_query_index = -1
-    let after_board_query_index = -1
-    let all_board_query_index = -1
-    for (let i = 0; i < querys.value.length; i++) {
-        const query = querys.value[i]
-        if (query.mi_board_name === before_board_name) {
-            before_board_query_index = i
-        }
-        if (query.mi_board_name === after_board_name) {
-            after_board_query_index = i
-        }
-        if (!query.use_mi_board_name) {
-            all_board_query_index = i
-        }
-    }
-    const reload_target_indexes = new Set<number>()
-    reload_target_indexes.add(before_board_query_index)
-    reload_target_indexes.add(after_board_query_index)
-    reload_target_indexes.add(all_board_query_index)
-    const targets = [...reload_target_indexes].filter(i => i !== -1)
-    for (const target_column_index of targets) {
-        skip_search_this_tick.value = true
-        // nextTick(() => skip_search_this_tick.value = false)
-        reload_list(target_column_index)
-        await nextTick(() => { })
     }
 }
 function on_dragover_board_task(e: DragEvent, _find_kyou_query: FindKyouQuery) {
