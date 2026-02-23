@@ -10,6 +10,16 @@ function isTextInput(el: Element | null): boolean {
     return false;
 }
 
+function isInsideDialog(el: Element | null): boolean {
+    if (!el) return false;
+    return !!el.closest('.gkill-floating-dialog, [role="dialog"][aria-modal="true"]');
+}
+
+function isButtonLike(el: Element | null): boolean {
+    if (!el) return false;
+    return !!el.closest('button, [type="button"], [type="submit"], [role="button"], .v-btn');
+}
+
 function isAnyBlockingModalOpen(): boolean {
     // ツールチップ/メニュー類は無視して、実モーダルっぽいものだけブロック
     const overlays = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]:not(.kyou_dialog)'));
@@ -40,6 +50,13 @@ export function useScopedEnterForKFTL(
             const target = e.target as Element | null;
             if (isTextInput(target) || isTextInput(document.activeElement)) {
                 if (debug) console.debug('[KFTL] text input focused');
+                return;
+            }
+            if (
+                (isInsideDialog(target) && isButtonLike(target)) ||
+                (isInsideDialog(document.activeElement) && isButtonLike(document.activeElement))
+            ) {
+                if (debug) console.debug('[KFTL] dialog button focused');
                 return;
             }
 
