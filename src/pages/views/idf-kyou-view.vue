@@ -98,21 +98,3 @@ function buildMediaUrl(fileUrl: string, isVideoThumb: boolean): string {
     return fileUrl
 }
 </script>
-
-<style lang="css" scoped>
-.kyou_image {
-    box-sizing: border-box;
-    border: 1px solid gray;
-    height: 200px;
-    width: 200px;
-    object-fit: cover;
-}
-
-.kyou_video {
-    box-sizing: border-box;
-    border: 1px solid gray;
-    height: 200px;
-    width: 200px;
-    object-fit: cover;
-}
-</style>
