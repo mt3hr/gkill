@@ -31,7 +31,7 @@
                         @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                         @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                         ref="kyou_list_views"
-                        @deleted_kyou="(...deleted_kyou: any[]) => { /* dialog-local list only: parent side effect is intentionally ignored */ }"
+                        @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                         @deleted_tag="(...deleted_tag: any[]) => { /* intentionally ignored */ }" @deleted_text="(...deleted_text: any[]) => { /* intentionally ignored */ }"
                         @deleted_notification="(...deleted_notification: any[]) => { /* intentionally ignored */ }"
                         @registered_kyou="(...registered_kyou: any[]) => { /* intentionally ignored */ }"
@@ -99,6 +99,18 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
             }
         }
     })();
+}
+
+function onDeletedKyou(deletedKyou: Kyou): void {
+    if (!model_value.value) {
+        return
+    }
+    for (let i = model_value.value.length - 1; i >= 0; i--) {
+        if (model_value.value[i].id === deletedKyou.id) {
+            model_value.value.splice(i, 1)
+        }
+    }
+    emits('deleted_kyou', deletedKyou)
 }
 </script>
 
