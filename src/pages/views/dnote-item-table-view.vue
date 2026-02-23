@@ -8,6 +8,8 @@
                         :application_config="application_config" :gkill_api="gkill_api"
                         @requested_move_dnote_item="(...args: any[]) => handle_move_dnote_item(args[0] as string, args[1] as number, args[2] as string, args[3] as number, args[4] as 'up' | 'down')"
                         @finish_a_aggregate_task="emits('finish_a_aggregate_task')"
+                        @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0])"
+                        @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0]); emits('clicked_kyou', kyou[0]) }"
                         @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0])"
                         @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0])"
                         @deleted_text="(...text: any[]) => emits('deleted_text', text[0])"

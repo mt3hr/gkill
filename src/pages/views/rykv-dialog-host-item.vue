@@ -198,6 +198,11 @@ const dialog_events = {
   updated_notification: (notification: Notification) => emits('updated_notification', notification),
   received_errors: (errors: Array<GkillError>) => emits('received_errors', errors),
   received_messages: (messages: Array<GkillMessage>) => emits('received_messages', messages),
+  focused_kyou: (kyou: Kyou) => emits('focused_kyou', kyou),
+  clicked_kyou: (kyou: Kyou) => {
+    emits('focused_kyou', kyou)
+    emits('clicked_kyou', kyou)
+  },
   requested_reload_kyou: (kyou: Kyou) => emits('requested_reload_kyou', kyou),
   requested_reload_list: () => emits('requested_reload_list'),
   requested_update_check_kyous: (kyous: Array<Kyou>, is_checked: boolean) =>
