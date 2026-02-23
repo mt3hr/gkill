@@ -20,6 +20,7 @@
                         @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0])"
                         @updated_text="(...text: any[]) => emits('updated_text', text[0])"
                         @updated_notification="(...n: any[]) => emits('updated_notification', n[0])"
+                        @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
                         ref="dnote_item_list_views" />
                 </td>
             </tr>

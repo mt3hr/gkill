@@ -18,7 +18,9 @@
         @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0])"
         @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0])"
         @updated_text="(...text: any[]) => emits('updated_text', text[0])"
-        @updated_notification="(...n: any[]) => emits('updated_notification', n[0])" ref="dnote_list_views" />
+        @updated_notification="(...n: any[]) => emits('updated_notification', n[0])"
+        @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
+        ref="dnote_list_views" />
     </div>
   </div>
 </template>

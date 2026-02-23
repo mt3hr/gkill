@@ -51,6 +51,7 @@
             @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
             @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
             @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
+            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_item_table_view" />
         <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
             v-if="dnote_list_item_table_view_data" v-model="dnote_list_item_table_view_data"
@@ -66,6 +67,7 @@
             @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
             @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
             @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
+            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_list_table_view" />
         <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
             <v-menu transition="slide-x-transition">

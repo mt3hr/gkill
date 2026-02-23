@@ -47,6 +47,7 @@
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             ref="decide_related_time_uploaded_file_dialog" />
     </div>
 </template>
