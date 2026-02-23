@@ -6,6 +6,8 @@
             @requested_move_dnote_item="(...args: any[]) => emits('requested_move_dnote_item', args[0] as string, args[1] as number, args[2] as string, args[3] as number, args[4] as 'up' | 'down')"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0])"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0])"
+            @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0])"
+            @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0]); emits('clicked_kyou', kyou[0]) }"
             @requested_delete_dnote_item="(...id: any[]) => delete_dnote_item(id[0] as string)"
             @requested_update_dnote_item="(...d: any[]) => update_dnote_item(d[0])"
             @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0])"

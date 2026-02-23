@@ -14,6 +14,7 @@
                     :force_show_latest_kyou_info="true"
                     @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" :scroll_top="0"
                     :show_checkbox="false" :show_footer="false" :show_content_only="false"
+                    @focused_kyou="(...kyou: any[]) => focused_kyou = kyou[0] as Kyou"
                     @clicked_kyou="(...kyou: any[]) => focused_kyou = kyou[0] as Kyou"
                     @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                     @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"

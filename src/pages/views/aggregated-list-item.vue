@@ -32,6 +32,8 @@
             :show_rep_name="true" :force_show_latest_kyou_info="true" :show_timeis_plaing_end_button="false"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+            @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
             @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
             @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
             @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
