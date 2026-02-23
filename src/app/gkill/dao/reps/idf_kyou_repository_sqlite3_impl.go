@@ -377,7 +377,7 @@ WHERE
 			}
 
 			// 対象IDFRepsからファイルURLを取得
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
@@ -656,7 +656,7 @@ WHERE
 				return nil, err
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
@@ -846,7 +846,7 @@ WHERE
 				return nil, err
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
@@ -1006,7 +1006,7 @@ WHERE
 				return "", nil
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", idf.TargetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(idf.TargetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
@@ -1211,7 +1211,7 @@ WHERE
 			}
 
 			// 対象IDFRepsからファイルURLを取得
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
@@ -1459,7 +1459,7 @@ WHERE
 				return nil, err
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
@@ -1631,7 +1631,7 @@ WHERE
 				return nil, err
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
