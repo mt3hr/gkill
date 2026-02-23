@@ -51,6 +51,8 @@
             @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
             @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
             @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
+            @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+            @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
             @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_item_table_view" />
         <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
@@ -67,6 +69,8 @@
             @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
             @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
             @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
+            @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+            @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
             @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_list_table_view" />
         <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-dnote">

@@ -112,9 +112,14 @@
                                 focused_column_index = index
                                 focused_query = querys[index]
                                 clicked_kyou_in_list_view(index, typed_kyou)
-                                gps_log_map_start_time = typed_kyou.related_time
-                                gps_log_map_end_time = typed_kyou.related_time
-                                gps_log_map_marker_time = typed_kyou.related_time
+                                onFocusedKyouFromSubView(typed_kyou)
+                            }" @focused_kyou="(...kyou: any[]) => {
+                                const typed_kyou = kyou[0] as Kyou
+                                skip_search_this_tick = true
+                                focused_column_index = index
+                                focused_query = querys[index]
+                                clicked_kyou_in_list_view(index, typed_kyou)
+                                onFocusedKyouFromSubView(typed_kyou)
                             }"
                             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
@@ -226,7 +231,9 @@
                                 @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
                                 @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
                                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                                @requested_reload_list="() => { }" />
+                                @requested_reload_list="() => { }"
+                                @focused_kyou="(...kyou: any[]) => onFocusedKyouFromSubView(kyou[0] as Kyou)"
+                                @clicked_kyou="(...kyou: any[]) => onFocusedKyouFromSubView(kyou[0] as Kyou)" />
                         </div>
                     </td>
                     <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
@@ -251,6 +258,8 @@
                             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                             @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
                             @requested_reload_list="() => { }"
+                            @focused_kyou="(...kyou: any[]) => onFocusedKyouFromSubView(kyou[0] as Kyou)"
+                            @clicked_kyou="(...kyou: any[]) => onFocusedKyouFromSubView(kyou[0] as Kyou)"
                             @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])"
                             ref="dnote_view" />
                     </td>
@@ -458,6 +467,8 @@
                 @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @focused_kyou="(...kyou: any[]) => onFocusedKyouFromSubView(kyou[0] as Kyou)"
+                @clicked_kyou="(...kyou: any[]) => onFocusedKyouFromSubView(kyou[0] as Kyou)"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
                 @requested_reload_list="() => { }"
                 @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
@@ -834,6 +845,13 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
             kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
         }
     }
+}
+
+function onFocusedKyouFromSubView(kyou: Kyou): void {
+    focused_kyou.value = kyou
+    gps_log_map_start_time.value = kyou.related_time
+    gps_log_map_end_time.value = kyou.related_time
+    gps_log_map_marker_time.value = kyou.related_time
 }
 
 const abort_controllers: Ref<Array<AbortController>> = ref([])

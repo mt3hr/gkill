@@ -1,5 +1,5 @@
 <template>
-    <div @dblclick="show_kyou_dialog()" @click.prevent="nextTick(() => emits('clicked_kyou', cloned_kyou))"
+    <div @dblclick="show_kyou_dialog()" @click.prevent="nextTick(() => { emits('focused_kyou', cloned_kyou); emits('clicked_kyou', cloned_kyou) })"
         :key="kyou.id" :class="'kyou_'.concat(kyou.id)">
         <div v-if="!show_content_only">
             <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag" :key="attached_tag.id"
