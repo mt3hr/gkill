@@ -1,5 +1,5 @@
 <template>
-    <Teleport to="body" v-if="is_show_dialog" >
+    <Teleport to="body" v-if="is_show_dialog">
         <div class="gkill-float-scrim" :class="ui.isTransparent.value ? 'is-transparent' : ''" />
 
         <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog"
@@ -8,14 +8,15 @@
                 @touchstart="ui.onHeaderPointerDown">
                 <div class="gkill-floating-dialog__title"></div>
                 <div class="gkill-floating-dialog__spacer"></div>
-                color="white"   size="small" variant="flat" 
+                <v-checkbox v-model="ui.isTransparent.value" color="white" size="small" variant="flat"
                     :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details
+                    :color="'primary'" variant="flat">
+                    <v-icon>mdi-close</v-icon>
+                </v-btn>
             </div>
 
-            <div class="gkill-floating-dialog__body"> 
+            <div class="gkill-floating-dialog__body">
                 <ManageShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
                     :share_kyou_list_infos="share_kyou_list_infos"
                     @requested_show_confirm_delete_share_kyou_list_dialog="show_confirm_delete_share_kyou_list_dialog"
@@ -67,7 +68,7 @@ const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("", {
-  centerMode: "always",
+    centerMode: "always",
 })
 
 async function show(): Promise<void> {
