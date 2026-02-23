@@ -33,6 +33,8 @@
           @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+          @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+          @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
           @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
           @requested_reload_list="emits('requested_reload_list')" @requested_close_dialog="hide()"
           @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
@@ -74,3 +76,4 @@ async function hide(): Promise<void> {
   emits('closed')
 }
 </script>
+

@@ -11,8 +11,6 @@ import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 export interface KyouListViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'received_messages', message: Array<GkillMessage>): void
-    (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'registered_kyou', kyou: Kyou): void
     (e: 'updated_kyou', kyou: Kyou): void
     (e: 'deleted_kyou', kyou: Kyou): void
@@ -29,10 +27,7 @@ export interface KyouListViewEmits {
     (e: 'requested_reload_kyou', kyou: Kyou): void
     (e: 'requested_reload_list'): void
     (e: 'requested_close_dialog'): void
-    (e: 'clicked_kyou', kyou: Kyou): void
-    (e: 'requested_reload_kyou', kyou: Kyou): void
-    (e: 'requested_focus_kyou', kyou: Kyou): void
-    (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void
+    (e: 'focused_kyou', kyou: Kyou): void
     (e: 'clicked_kyou', kyou: Kyou): void
     (e: 'requested_search'): void
     (e: 'requested_close_column'): void

@@ -7,6 +7,8 @@
         @requested_delete_dnote_list_query="(...id: any[]) => delete_dnote_list_query(id[0] as string)"
         @requested_update_dnote_list_query="(...qq: any[]) => update_dnote_list_query(qq[0])"
         @finish_a_aggregate_task="emits('finish_a_aggregate_task')"
+        @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0])"
+        @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0]); emits('clicked_kyou', kyou[0]) }"
         @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0])"
         @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0])"
         @deleted_text="(...text: any[]) => emits('deleted_text', text[0])"

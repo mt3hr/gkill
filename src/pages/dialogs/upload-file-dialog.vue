@@ -20,6 +20,8 @@
           :last_added_tag="last_added_tag" :application_config="application_config" :gkill_api="gkill_api"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+          @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+          @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
           @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
       </div>
     </div>
@@ -34,6 +36,7 @@ import { type Ref, ref } from 'vue'
 import type { KyouViewEmits } from '../views/kyou-view-emits';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
+import type { Kyou } from '@/classes/datas/kyou';
 
 defineProps<UploadFileDialogProps>()
 const emits = defineEmits<KyouViewEmits>()

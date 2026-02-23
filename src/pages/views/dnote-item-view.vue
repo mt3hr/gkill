@@ -41,6 +41,8 @@
       @updated_notification="(...n: any[]) => emits('updated_notification', n[0])"
       @received_errors="(...errors: any[]) => emits('received_errors', errors[0])"
       @received_messages="(...messages: any[]) => emits('received_messages', messages[0])"
+      @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+      @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
       @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
       ref="kyou_list_view_dialog" />
 
