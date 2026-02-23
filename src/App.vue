@@ -211,37 +211,14 @@ body::-webkit-scrollbar {
   --gkill-scrollbar-thumb-radius: 5px;
 }
 
-/* スクロールバー（対象の一覧） */
-:where(.tag_struct_root,
-  .rep_struct_root,
-  .rep_type_struct_root,
-  .device_struct_root,
-  .kftl_template_struct_root,
-  .v-navigation-drawer__content,
-  .kyou_detail_view,
-  .kyou_list_view,
-  .kyou_list_view_image,
-  .dnote_list_view,
-  .kftl_text_area,
-  .gkill-float-scrim .v-card .gkill-floating-dialog__body)::-webkit-scrollbar {
+/* スクロールバー */
+div::-webkit-scrollbar {
   margin-left: 1px;
   width: var(--gkill-scrollbar-size);
   height: var(--gkill-scrollbar-size);
 }
 
-:where(.tag_struct_root,
-  .rep_struct_root,
-  .rep_type_struct_root,
-  .device_struct_root,
-  .kftl_template_struct_root,
-  .v-navigation-drawer__content,
-  .kyou_detail_view,
-  .ryuu_view,
-  .kyou_list_view,
-  .kyou_list_view_image,
-  .dnote_list_view,
-  .kftl_text_area,
-  .gkill-float-scrim .v-card .gkill-floating-dialog__body)::-webkit-scrollbar-thumb {
+div::-webkit-scrollbar-thumb {
   background: rgb(var(--v-theme-primary));
   width: var(--gkill-scrollbar-thumb-width);
   border-radius: var(--gkill-scrollbar-thumb-radius);
