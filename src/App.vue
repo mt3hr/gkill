@@ -201,6 +201,19 @@ body::-webkit-scrollbar {
   z-index: 100000000;
 }
 
+.position-fixed {
+  position: relative;
+}
+
+.position-fixed-ryuu {
+  position: absolute;
+}
+
+.position-fixed-dnote {
+  position: absolute;
+}
+
+
 /* =========================================================
    Scrollbar style (dedup)
 ========================================================= */
