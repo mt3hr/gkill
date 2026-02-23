@@ -12,13 +12,9 @@
                 </v-col>
             </v-row>
         </v-card-title>
+        <v-text-field class="input text" type="text" v-model="mi_title" :label="i18n.global.t('MI_TITLE_TITLE')"
+            autofocus :readonly="is_requested_submit" />
         <table>
-            <tr>
-                <td>
-                    <v-text-field class="input text" type="text" v-model="mi_title"
-                        :label="i18n.global.t('MI_TITLE_TITLE')" autofocus :readonly="is_requested_submit" />
-                </td>
-            </tr>
             <tr>
                 <td>
                     <v-select class="select" v-model="mi_board_name" :items="mi_board_names"
@@ -203,13 +199,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <NewBoardNameDialog v-if="mi" :application_config="application_config" :gkill_api="gkill_api"
