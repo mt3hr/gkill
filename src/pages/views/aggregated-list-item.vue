@@ -44,6 +44,7 @@
             @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
             @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
             @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
+            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             ref="kyou_list_view_dialog" />
     </v-card>
 </template>
