@@ -17,7 +17,7 @@
                     @focused_kyou="(...kyou: any[]) => focused_kyou = kyou[0] as Kyou"
                     @clicked_kyou="(...kyou: any[]) => focused_kyou = kyou[0] as Kyou"
                     @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
-                    @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
+                    @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                     @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                     @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0])"
                     @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -37,7 +37,7 @@
                     <EditIDFKyouView v-if="focused_kyou" :application_config="application_config" :gkill_api="gkill_api"
                         :highlight_targets="[]" :kyou="focused_kyou" :last_added_tag="last_added_tag"
                         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                        @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
+                        @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                         @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                         @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0])"
                         @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -76,7 +76,7 @@ import type { Notification } from '@/classes/datas/notification';
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
 
-defineProps<DecideRelatedTimeUploadedFileViewProps>()
+const props = defineProps<DecideRelatedTimeUploadedFileViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 const focused_kyou: Ref<Kyou | null> = ref(null)
 
@@ -91,6 +91,22 @@ async function reload_focused_kyou(): Promise<void> {
     await updated_kyou.reload(false, true)
     await updated_kyou.load_all()
     focused_kyou.value = updated_kyou
+}
+
+function removeKyouFromListById(list: Array<Kyou>, deletedId: string): void {
+    for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i].id === deletedId) {
+            list.splice(i, 1)
+        }
+    }
+}
+
+function onDeletedKyou(deletedKyou: Kyou): void {
+    removeKyouFromListById(props.uploaded_kyous, deletedKyou.id)
+    if (focused_kyou.value?.id === deletedKyou.id) {
+        focused_kyou.value = null
+    }
+    emits('deleted_kyou', deletedKyou)
 }
 </script>
 <style lang="css">

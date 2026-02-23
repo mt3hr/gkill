@@ -143,7 +143,7 @@
                                     querys_backup.splice(index, 1, query)
                                     reload_list(index)
                                 }" @requested_close_column="close_list_view(index)"
-                                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -174,7 +174,7 @@
                                 :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                 :show_attached_tags="false" :show_attached_texts="false"
                                 :show_attached_notifications="false"
-                                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -204,7 +204,7 @@
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -222,7 +222,7 @@
             <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -245,7 +245,7 @@
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -266,7 +266,7 @@
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -287,7 +287,7 @@
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -308,7 +308,7 @@
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -330,7 +330,7 @@
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 :app_content_width="app_content_width"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -352,7 +352,7 @@
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 :app_content_width="app_content_width"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -372,7 +372,7 @@
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -390,7 +390,7 @@
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :last_added_tag="last_added_tag" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
-                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -556,6 +556,29 @@ function update_focused_kyous_list(column_index: number): void {
         return
     }
     focused_kyous_list.value = match_kyous_list.value[column_index]
+}
+
+function removeKyouFromListById(list: Array<Kyou>, deletedId: string): void {
+    for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i].id === deletedId) {
+            list.splice(i, 1)
+        }
+    }
+}
+
+function removeKyouFromMultiColumnLists(lists: Array<Array<Kyou>>, deletedId: string): void {
+    for (let i = 0; i < lists.length; i++) {
+        removeKyouFromListById(lists[i], deletedId)
+    }
+}
+
+function onDeletedKyou(deletedKyou: Kyou): void {
+    removeKyouFromMultiColumnLists(match_kyous_list.value, deletedKyou.id)
+    removeKyouFromListById(focused_kyous_list.value, deletedKyou.id)
+    if (focused_kyou.value?.id === deletedKyou.id) {
+        focused_kyou.value = null
+    }
+    emits('deleted_kyou', deletedKyou)
 }
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
