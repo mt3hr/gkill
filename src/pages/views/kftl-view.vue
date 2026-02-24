@@ -13,7 +13,7 @@
                 <v-col cols="auto">
                     <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{
                         i18n.global.t("SAVE_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -220,6 +220,11 @@ async function submit(): Promise<void> {
         }
         if (errors.length != 0) {
             emits('received_errors', errors)
+            text_area_content.value = text_area_content.value.replace(
+                "\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n",
+                "\n",
+            )
+
             if (tx_id) {
                 const deiscard_req = new DiscardTXRequest()
                 deiscard_req.tx_id = tx_id
@@ -236,6 +241,10 @@ async function submit(): Promise<void> {
             const commit_res = await props.gkill_api.commit_tx(commit_req)
             if (commit_res.errors && commit_res.errors.length != 0) {
                 emits('received_errors', commit_res.errors)
+                text_area_content.value = text_area_content.value.replace(
+                    "\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n",
+                    "\n",
+                )
                 return
             }
         }
