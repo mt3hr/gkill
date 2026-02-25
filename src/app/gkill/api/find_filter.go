@@ -360,6 +360,20 @@ func (f *FindFilter) getRepositories(ctx context.Context, userID string, device 
 func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	repositories := findCtx.Repositories
 
+	if !findCtx.ParsedFindQuery.UseReps {
+		for _, rep := range repositories.Reps {
+			rep := rep
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
+				return nil, err
+			}
+			if _, exist := findCtx.MatchReps[repName]; !exist {
+				findCtx.MatchReps[repName] = rep
+			}
+		}
+		return nil, nil
+	}
+
 	typeMatchReps := []reps.Repository{}
 
 	if findCtx.ParsedFindQuery.ForMi {
