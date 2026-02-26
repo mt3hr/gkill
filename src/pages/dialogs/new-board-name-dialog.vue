@@ -50,7 +50,7 @@ import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("", {
+const ui = useFloatingDialog("new-board-name-dialog", {
   centerMode: "always",
 })
 
@@ -68,3 +68,4 @@ function emits_board_name(): void {
   hide()
 }
 </script>
+

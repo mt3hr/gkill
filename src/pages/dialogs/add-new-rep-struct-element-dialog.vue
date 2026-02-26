@@ -45,7 +45,7 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("", {
+const ui = useFloatingDialog("add-new-rep-struct-element-dialog", {
   centerMode: "always",
 })
 
@@ -59,3 +59,4 @@ async function hide(): Promise<void> {
   add_new_rep_struct_element_view.value?.reset_rep_name()
 }
 </script>
+
