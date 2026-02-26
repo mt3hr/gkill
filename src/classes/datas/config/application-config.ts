@@ -89,7 +89,7 @@ export class ApplicationConfig {
         return application_config
     }
     async append_not_found_infos(): Promise<Array<GkillError>> {
-        const errors = Array<GkillError>()
+        const errors = new Array<GkillError>()
         errors.concat(await this.append_not_found_reps())
         errors.concat(await this.append_not_found_devices())
         errors.concat(await this.append_not_found_rep_types())
@@ -295,23 +295,22 @@ export class ApplicationConfig {
         res.rep_names.forEach(rep_name => {
             const device_name = this.get_device_from_rep_name(rep_name)
             let exist = false
-            let rep_name_walk = (_rep: RepStructElementData): void => { }
-            rep_name_walk = (rep: RepStructElementData): void => {
-                const rep_children = rep.children
-                if (device_name === this.get_device_from_rep_name(rep.rep_name)) {
+            let device_name_walk = (_device: DeviceStructElementData): void => { }
+            device_name_walk = (device: DeviceStructElementData): void => {
+                const rep_children = device.children
+                if (device_name === (device.device_name)) {
                     exist = true
                 }
                 if (rep_children) {
                     rep_children.forEach(child_rep => {
                         if (child_rep) {
-                            rep_name_walk(child_rep)
+                            device_name_walk(child_rep)
                         }
                     })
                 }
             }
-            rep_name_walk(this.rep_struct)
+            device_name_walk(this.device_struct)
             if (!exist) {
-                const device_name = this.get_device_from_rep_name(rep_name)
                 if (device_name) {
                     not_found.add(device_name)
                 }
