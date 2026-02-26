@@ -111,7 +111,7 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("", {
+const ui = useFloatingDialog("kyou-histories-dialog", {
   centerMode: "always",
 })
 
@@ -125,4 +125,5 @@ async function hide(): Promise<void> {
   emits('closed')
 }
 </script>
+
 
