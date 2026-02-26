@@ -3,13 +3,12 @@ import { onBeforeUnmount, onMounted, type Ref, watch } from "vue"
 /**
  * Dialog history stack manager (lightweight, router-friendly)
  * + resetDialogHistory()
- * + Back is dialog-only mode (when stack is empty, back is blocked).
+ * + Back closes topmost dialog first when dialogs are open.
  *
  * Extra:
  * - Escape closes ONLY the topmost dialog (no global "全部閉じる" 問題を回避)
  *
  * Notes:
- * - This will prevent leaving the app via back button (PWA exit / previous site).
  * - Forward into dialog states while stack is empty is also blocked.
  */
 
@@ -145,8 +144,10 @@ export function resetDialogHistory(): Promise<void> {
   })
 }
 
-// --- Back is dialog-only mode ---
-const backOnlyEnabled = true
+// --- Back handling ---
+// When no dialogs are open, do not consume back navigation.
+// This allows normal browser/PWA behavior (including app close in standalone mode).
+const backOnlyEnabled = false
 let backOnlyBouncePending = 0 // prevents infinite loops when we call history.go(1)
 
 // --- popstate handling ---
