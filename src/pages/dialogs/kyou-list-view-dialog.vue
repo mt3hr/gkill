@@ -8,6 +8,8 @@
                 @touchstart="ui.onHeaderPointerDown">
                 <div class="gkill-floating-dialog__title"></div>
                 <div class="gkill-floating-dialog__spacer"></div>
+                <v-checkbox v-model="ui.isTransparent.value" color="white" size="small" variant="flat"
+                    :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
                 <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
           <v-icon>mdi-close</v-icon>
         </v-btn>
@@ -75,7 +77,7 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("", {
+const ui = useFloatingDialog("kyou-list-view-dialog", {
   centerMode: "always",
 })
 
@@ -126,3 +128,4 @@ function onDeletedKyou(deletedKyou: Kyou): void {
     overflow-y: hidden !important;
 }
 </style>
+
