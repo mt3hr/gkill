@@ -59,6 +59,11 @@ html {
   overflow-y: hidden !important;
 }
 
+html,
+body {
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
 .mi_view_table,
 .rykv_view_table {
   padding-top: 0px;
