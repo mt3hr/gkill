@@ -2,7 +2,7 @@
     <div class="rykv_view_wrap" ref="rykv_root">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-app-bar-nav-icon v-if="!is_shared_rykv_view" @click.stop="() => { if (inited) { drawer = !drawer } }"
-                :active="is_loaded" />
+                :disabled="!inited" />
             <v-toolbar-title>
                 <div>
                     <span v-if="!is_shared_rykv_view">
@@ -48,7 +48,7 @@
                 @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
         <v-navigation-drawer v-if="!is_shared_rykv_view" v-model="drawer" app :height="app_content_height"
-            :mobile="drawer_mode_is_mobile" :width="312">
+            :touchless="!inited" :mobile="drawer_mode_is_mobile" :width="312">
             <RykvQueryEditorSideBar v-show="inited" class="rykv_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
