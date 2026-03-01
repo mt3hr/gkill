@@ -1,7 +1,8 @@
 <template>
     <div class="rykv_view_wrap" ref="rykv_root">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
-            <v-app-bar-nav-icon v-if="!is_shared_rykv_view" @click.stop="() => { if (inited) { drawer = !drawer } }" />
+            <v-app-bar-nav-icon v-if="!is_shared_rykv_view" @click.stop="() => { if (inited) { drawer = !drawer } }"
+                :active="is_loaded" />
             <v-toolbar-title>
                 <div>
                     <span v-if="!is_shared_rykv_view">
@@ -47,7 +48,7 @@
                 @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
         <v-navigation-drawer v-if="!is_shared_rykv_view" v-model="drawer" app :height="app_content_height"
-            :mobile="drawer_mode_is_mobile" :width="312" :touchless="!drawer_mode_is_mobile">
+            :mobile="drawer_mode_is_mobile" :width="312">
             <RykvQueryEditorSideBar v-show="inited" class="rykv_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
@@ -433,8 +434,7 @@
                 @requested_reload_list="() => { }" ref="mkfl_dialog" />
             <UploadFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
-                :last_added_tag="''"
-                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
+                :last_added_tag="''" @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
@@ -451,8 +451,8 @@
                 @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])"
                 ref="upload_file_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
-                :last_added_tag="last_added_tag" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
+                :last_added_tag="last_added_tag" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
                 @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
