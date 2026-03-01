@@ -429,7 +429,7 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
     z-index: -10000;
     position: absolute;
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
-    min-width: calc(100vw);
+    min-width: v-bind("is_loading ? 'calc(100vw)' : '0px'");
     display: flex;
     flex-direction: column;
     align-items: center;
