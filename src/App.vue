@@ -83,11 +83,6 @@ body {
   width: 416px;
 }
 
-.v-navigation-drawer {
-  transition: transform 0.3s ease-out !important;
-  will-change: transform;
-}
-
 .mkfl_view_wrap .kftl_view {
   width: 100vw;
   overflow-y: hidden;
