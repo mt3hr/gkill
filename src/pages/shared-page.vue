@@ -190,6 +190,6 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     z-index: -10000;
     position: absolute;
     min-height: calc(100vh);
-    min-width: calc(100vw);
+    min-width: v-bind("is_loading ? 'calc(100vw)' : '0px'");
 }
 </style>
