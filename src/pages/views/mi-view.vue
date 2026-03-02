@@ -189,7 +189,7 @@
                                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                                @requested_reload_list="() => { }"
+                                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                                 @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
                         </div>
@@ -239,7 +239,7 @@
                 @focused_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
                 @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -260,7 +260,7 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -281,7 +281,7 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -302,7 +302,7 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -323,7 +323,7 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_nlog_dialog" />
             <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -345,7 +345,7 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -367,7 +367,7 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
@@ -405,7 +405,7 @@
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="() => { for (let i = 0; i < querys.length; i++) { reload_list(i) } }"
                 @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
             <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">

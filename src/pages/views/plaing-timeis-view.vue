@@ -60,8 +60,8 @@
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)" @requested_reload_list="() => { }"
-            ref="add_timeis_dialog" />
+            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @requested_reload_list="() => reload_list(false)" ref="add_timeis_dialog" />
         <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
@@ -79,8 +79,8 @@
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)" @requested_reload_list="() => { }"
-            ref="add_lantana_dialog" />
+            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @requested_reload_list="() => reload_list(false)" ref="add_lantana_dialog" />
         <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
@@ -98,8 +98,8 @@
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)" @requested_reload_list="() => { }"
-            ref="add_urlog_dialog" />
+            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @requested_reload_list="() => reload_list(false)" ref="add_urlog_dialog" />
         <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
@@ -117,8 +117,8 @@
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)" @requested_reload_list="() => { }"
-            ref="add_mi_dialog" />
+            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @requested_reload_list="() => reload_list(false)" ref="add_mi_dialog" />
         <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
@@ -136,8 +136,8 @@
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)" @requested_reload_list="() => { }"
-            ref="add_nlog_dialog" />
+            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @requested_reload_list="() => reload_list(false)" ref="add_nlog_dialog" />
         <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -156,8 +156,8 @@
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)" @requested_reload_list="() => { }"
-            ref="kftl_dialog" />
+            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @requested_reload_list="() => reload_list(false)" ref="kftl_dialog" />
         <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -176,8 +176,8 @@
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)" @requested_reload_list="() => { }"
-            ref="mkfl_dialog" />
+            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            @requested_reload_list="() => reload_list(false)" ref="mkfl_dialog" />
         <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
             @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
@@ -209,12 +209,11 @@
             @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
             @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
             @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-                @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                @requested_reload_kyou="reload_list(false)"
-                @requested_reload_list="reload_list(false)"
-                @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
+            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_reload_kyou="reload_list(false)" @requested_reload_list="reload_list(false)"
+            @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
         <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
             <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
