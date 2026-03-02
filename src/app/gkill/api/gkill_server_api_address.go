@@ -155,6 +155,8 @@ type GkillServerAPIAddress struct {
 
 	DiscardTXAddress string
 
+	SubmitKFTLTextAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -306,6 +308,8 @@ type GkillServerAPIAddress struct {
 	CommitTXMethod string
 
 	DiscardTXMethod string
+
+	SubmitKFTLTextMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -388,6 +392,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetUpdatedDatasByTimeAddress = "/api/get_updated_datas_by_time"
 	gkillAPIAddress.CommitTXAddress = "/api/commit_tx"
 	gkillAPIAddress.DiscardTXAddress = "/api/discard_tx"
+	gkillAPIAddress.SubmitKFTLTextAddress = "/api/submit_kftl_text"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -464,5 +469,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetUpdatedDatasByTimeMethod = "POST"
 	gkillAPIAddress.CommitTXMethod = "POST"
 	gkillAPIAddress.DiscardTXMethod = "POST"
+	gkillAPIAddress.SubmitKFTLTextMethod = "POST"
 	return gkillAPIAddress
 }

@@ -39,3 +39,14 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+/.claude
+
+# Wear OS (Gradle project)
+src/wear_os/.gradle/
+src/wear_os/.idea/
+src/wear_os/**/*.iml
+src/wear_os/**/build/
+src/wear_os/local.properties
+src/wear_os/gradle.properties
+src/wear_os/phone_companion/src/main/res/raw/wearable_app.apk
