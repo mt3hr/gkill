@@ -100,9 +100,9 @@ func newKFTLStartTimeIsStatementLine(lineText string, ctx *KFTLStatementLineCont
 func (l *kftlStartTimeIsStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
-func (l *kftlStartTimeIsStatementLine) GetLabelName() string                 { return "timeIs" }
+func (l *kftlStartTimeIsStatementLine) GetLabelName() string                  { return "timeIs" }
 func (l *kftlStartTimeIsStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlStartTimeIsStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlStartTimeIsStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlTimeIsTitleStatementLine reads the title for a ーち TimeIs.
 type kftlTimeIsTitleStatementLine struct {
@@ -124,9 +124,9 @@ func (l *kftlTimeIsTitleStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 	l.req.title = l.lineText
 	return nil
 }
-func (l *kftlTimeIsTitleStatementLine) GetLabelName() string                 { return "timeIsTitle" }
+func (l *kftlTimeIsTitleStatementLine) GetLabelName() string                  { return "timeIsTitle" }
 func (l *kftlTimeIsTitleStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlTimeIsTitleStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlTimeIsTitleStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlTimeIsStartTimeStatementLine reads start_time for a ーち TimeIs.
 type kftlTimeIsStartTimeStatementLine struct {
@@ -153,9 +153,9 @@ func (l *kftlTimeIsStartTimeStatementLine) ApplyThisLineToRequestMap(_ context.C
 	l.req.SetRelatedTime(t)
 	return nil
 }
-func (l *kftlTimeIsStartTimeStatementLine) GetLabelName() string                 { return "timeIsStartTime" }
+func (l *kftlTimeIsStartTimeStatementLine) GetLabelName() string                  { return "timeIsStartTime" }
 func (l *kftlTimeIsStartTimeStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlTimeIsStartTimeStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlTimeIsStartTimeStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlTimeIsEndTimeStatementLine reads end_time for a ーち TimeIs.
 type kftlTimeIsEndTimeStatementLine struct {
@@ -179,9 +179,9 @@ func (l *kftlTimeIsEndTimeStatementLine) ApplyThisLineToRequestMap(_ context.Con
 	l.req.endTime = &t
 	return nil
 }
-func (l *kftlTimeIsEndTimeStatementLine) GetLabelName() string                 { return "timeIsEndTime" }
+func (l *kftlTimeIsEndTimeStatementLine) GetLabelName() string                  { return "timeIsEndTime" }
 func (l *kftlTimeIsEndTimeStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlTimeIsEndTimeStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlTimeIsEndTimeStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // ─── TimeIs Start-only (ーた) ─────────────────────────────────────────────────
 
@@ -266,9 +266,9 @@ func newKFTLStartTimeIsStartStatementLine(lineText string, ctx *KFTLStatementLin
 func (l *kftlStartTimeIsStartStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
-func (l *kftlStartTimeIsStartStatementLine) GetLabelName() string                 { return "timeIsStart" }
+func (l *kftlStartTimeIsStartStatementLine) GetLabelName() string                  { return "timeIsStart" }
 func (l *kftlStartTimeIsStartStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlStartTimeIsStartStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlStartTimeIsStartStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlTimeIsStartTitleStatementLine reads the title for a ーた TimeIs.
 type kftlTimeIsStartTitleStatementLine struct {
@@ -288,9 +288,9 @@ func (l *kftlTimeIsStartTitleStatementLine) ApplyThisLineToRequestMap(_ context.
 	l.req.title = l.lineText
 	return nil
 }
-func (l *kftlTimeIsStartTitleStatementLine) GetLabelName() string                 { return "timeIsStartTitle" }
+func (l *kftlTimeIsStartTitleStatementLine) GetLabelName() string                  { return "timeIsStartTitle" }
 func (l *kftlTimeIsStartTitleStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlTimeIsStartTitleStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlTimeIsStartTitleStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // ─── TimeIs End by title (ーえ / ーいえ) ──────────────────────────────────────
 
@@ -323,8 +323,9 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	endTime := r.GetRelatedTime()
 
 	query := &find.FindQuery{
-		UsePlaing:  true,
-		PlaingTime: endTime,
+		UsePlaing:      true,
+		PlaingTime:     time.Now(),
+		OnlyLatestData: true,
 	}
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
 	if err != nil {
@@ -390,9 +391,9 @@ func newKFTLStartTimeIsEndStatementLine(lineText string, ctx *KFTLStatementLineC
 func (l *kftlStartTimeIsEndStatementLine) ApplyThisLineToRequestMap(_ context.Context, requestMap *KFTLRequestMap) error {
 	return requestMap.Set(l.ctx.ThisStatementLineTargetID, l.req)
 }
-func (l *kftlStartTimeIsEndStatementLine) GetLabelName() string                 { return "timeIsEnd" }
+func (l *kftlStartTimeIsEndStatementLine) GetLabelName() string                  { return "timeIsEnd" }
 func (l *kftlStartTimeIsEndStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlStartTimeIsEndStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlStartTimeIsEndStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlTimeIsEndTitleStatementLine reads the title to find the playing TimeIs.
 type kftlTimeIsEndTitleStatementLine struct {
@@ -412,9 +413,9 @@ func (l *kftlTimeIsEndTitleStatementLine) ApplyThisLineToRequestMap(_ context.Co
 	l.req.title = l.lineText
 	return nil
 }
-func (l *kftlTimeIsEndTitleStatementLine) GetLabelName() string                 { return "timeIsEndTitle" }
+func (l *kftlTimeIsEndTitleStatementLine) GetLabelName() string                  { return "timeIsEndTitle" }
 func (l *kftlTimeIsEndTitleStatementLine) GetContext() *KFTLStatementLineContext { return l.ctx }
-func (l *kftlTimeIsEndTitleStatementLine) GetStatementLineText() string         { return l.lineText }
+func (l *kftlTimeIsEndTitleStatementLine) GetStatementLineText() string          { return l.lineText }
 
 // kftlStartTimeIsEndIfExistStatementLine handles "ーいえ" (no error if not found).
 // Mirrors: kftl-start-time-is-end-if-exist-statement-line.ts
@@ -482,8 +483,9 @@ func (r *kftlTimeIsEndByTagRequest) DoRequest(ctx context.Context) error {
 	endTime := r.GetRelatedTime()
 
 	query := &find.FindQuery{
-		UsePlaing:  true,
-		PlaingTime: endTime,
+		UsePlaing:      true,
+		PlaingTime:     time.Now(),
+		OnlyLatestData: true,
 	}
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
 	if err != nil {
