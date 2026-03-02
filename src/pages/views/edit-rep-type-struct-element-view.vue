@@ -35,8 +35,9 @@ async function apply(): Promise<void> {
     const rep_type_struct = new RepTypeStructElementData()
     rep_type_struct.id = props.struct_obj.id
     rep_type_struct.check_when_inited = check_when_inited.value
-    rep_type_struct.children = null
+    rep_type_struct.children = props.struct_obj.children
     rep_type_struct.indeterminate = false
+    rep_type_struct.is_dir = props.struct_obj.is_dir
     rep_type_struct.key = props.struct_obj.rep_type_name
     rep_type_struct.rep_type_name = props.struct_obj.rep_type_name
     rep_type_struct.name = props.struct_obj.rep_type_name

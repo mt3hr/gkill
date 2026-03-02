@@ -38,6 +38,10 @@ async function apply(): Promise<void> {
     kftl_template_struct.id = props.struct_obj.id
     kftl_template_struct.title = title.value
     kftl_template_struct.template = template.value ? template.value : ""
+    kftl_template_struct.key = title.value
+    kftl_template_struct.name = title.value
+    kftl_template_struct.is_dir = props.struct_obj.is_dir
+    kftl_template_struct.children = props.struct_obj.children
     emits('requested_update_kftl_template_struct', kftl_template_struct)
     emits('requested_close_dialog')
 }
