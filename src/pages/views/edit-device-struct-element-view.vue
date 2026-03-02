@@ -35,8 +35,9 @@ async function apply(): Promise<void> {
     const device_struct = new DeviceStructElementData()
     device_struct.id = props.struct_obj.id
     device_struct.check_when_inited = check_when_inited.value
-    device_struct.children = null
+    device_struct.children = props.struct_obj.children
     device_struct.indeterminate = false
+    device_struct.is_dir = props.struct_obj.is_dir
     device_struct.key = props.struct_obj.device_name
     device_struct.device_name = props.struct_obj.device_name
     device_struct.name = props.struct_obj.device_name
