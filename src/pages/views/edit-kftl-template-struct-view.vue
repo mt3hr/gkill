@@ -138,7 +138,7 @@ function update_kftl_template_struct(kftl_template_struct_obj: KFTLTemplateStruc
     let kftl_template_walk = (_kftl_template: KFTLTemplateStructElementData): boolean => false
     kftl_template_walk = (kftl_template: KFTLTemplateStructElementData): boolean => {
         const kftl_template_children = kftl_template.children
-        if (kftl_template.id === kftl_template.id) {
+        if (kftl_template.id === kftl_template_struct_obj.id) {
             return true
         } else if (kftl_template_children) {
             for (let i = 0; i < kftl_template_children.length; i++) {

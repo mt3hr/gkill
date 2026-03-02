@@ -38,8 +38,9 @@ async function apply(): Promise<void> {
     tag_struct.id = props.struct_obj.id
     tag_struct.check_when_inited = check_when_inited.value
     tag_struct.is_force_hide = is_force_hide.value
-    tag_struct.children = null
+    tag_struct.children = props.struct_obj.children
     tag_struct.indeterminate = false
+    tag_struct.is_dir = props.struct_obj.is_dir
     tag_struct.key = props.struct_obj.tag_name
     tag_struct.tag_name = props.struct_obj.tag_name
     tag_struct.name = props.struct_obj.tag_name
