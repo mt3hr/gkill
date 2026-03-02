@@ -1,0 +1,131 @@
+package api
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"net/http"
+
+	"github.com/mt3hr/gkill/src/app/gkill/api/kftl"
+	"github.com/mt3hr/gkill/src/app/gkill/api/message"
+	"github.com/mt3hr/gkill/src/app/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+)
+
+func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.SubmitKFTLTextRequest{}
+	response := &req_res.SubmitKFTLTextResponse{}
+
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse submit kftl text response to json: %w", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidSubmitKFTLTextRequestDataError,
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse submit kftl text request from json: %w", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidSubmitKFTLTextRequestDataError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+	if err != nil || applicationConfig == nil {
+		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
+		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), defaultApplicationConfig)
+		if err != nil {
+			slog.Log(r.Context(), gkill_log.Debug, "error at add default application config", "error", err)
+		}
+		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetApplicationConfigError,
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	statement := &kftl.KFTLStatement{StatementText: request.KFTLText}
+	err = statement.GenerateAndExecuteRequests(
+		r.Context(),
+		repositories,
+		applicationConfig,
+		userID,
+		device,
+		"gkill_kftl",
+		request.LocaleName,
+	)
+	if err != nil {
+		err = fmt.Errorf("error at submit kftl text user id = %s device = %s: %w", userID, device, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		gkillError := &message.GkillError{
+			ErrorCode:    message.SubmitKFTLTextError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SUBMIT_KFTL_TEXT_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.SubmitKFTLTextSuccessMessage,
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_SUBMIT_KFTL_TEXT_MESSAGE"}),
+	})
+}

@@ -78,4 +78,5 @@ const (
 	UpdateKCSuccessMessage                 = "MSG000073"
 	GetKCSuccessMessage                    = "MSG000074"
 	CommitTxSuccessMessage                 = "MSG000075"
+	SubmitKFTLTextSuccessMessage           = "MSG000076"
 )
