@@ -352,4 +352,6 @@ const (
 	NotFoundTLSKeyFileError                                          = "ERR000347"
 	GetAccountSessionsError                                          = "ERR000348"
 	AddURLogLoginSessionError                                        = "ERR000349"
+	InvalidSubmitKFTLTextRequestDataError                            = "ERR000350"
+	SubmitKFTLTextError                                              = "ERR000351"
 )
