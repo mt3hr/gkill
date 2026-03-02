@@ -1,7 +1,7 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            {{ i18n.global.t("DELETE_TAG_STRUCT_TITLE") }}
+            {{ i18n.global.t("DELETE_DEVICE_STRUCT_TITLE") }}
         </v-card-title>
         {{ device_struct.device_name }}
         <v-row class="pa-0 ma-0">

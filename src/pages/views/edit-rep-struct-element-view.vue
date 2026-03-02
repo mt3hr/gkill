@@ -41,8 +41,9 @@ async function apply(): Promise<void> {
     rep_struct.name = props.struct_obj.rep_name
     rep_struct.check_when_inited = check_when_inited.value
     rep_struct.ignore_check_rep_rykv = ignore_check_rep_rykv.value
-    rep_struct.children = null
+    rep_struct.children = props.struct_obj.children
     rep_struct.indeterminate = false
+    rep_struct.is_dir = props.struct_obj.is_dir
     emits('requested_update_rep_struct', rep_struct)
     emits('requested_close_dialog')
 }
