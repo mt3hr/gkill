@@ -3,6 +3,7 @@ package kftl
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
@@ -550,7 +551,9 @@ func newKFTLStartTimeIsEndByTagStatementLine(lineText string, ctx *KFTLStatement
 	ctx.ThisIsPrototype = true
 
 	req := newKFTLTimeIsEndByTagRequest(targetID, ctx, true)
-	ctx.NextStatementLineConstructor = ctx.factory.generateNoneConstructor(ctx.NextStatementLineText)
+	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+		return newKFTLTimeIsEndByTagTagStatementLine(lt, c, req)
+	}
 	return &kftlStartTimeIsEndByTagStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
@@ -577,7 +580,9 @@ func newKFTLStartTimeIsEndByTagIfExistStatementLine(lineText string, ctx *KFTLSt
 	ctx.ThisIsPrototype = true
 
 	req := newKFTLTimeIsEndByTagRequest(targetID, ctx, false)
-	ctx.NextStatementLineConstructor = ctx.factory.generateNoneConstructor(ctx.NextStatementLineText)
+	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+		return newKFTLTimeIsEndByTagTagStatementLine(lt, c, req)
+	}
 	return &kftlStartTimeIsEndByTagIfExistStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
@@ -593,3 +598,33 @@ func (l *kftlStartTimeIsEndByTagIfExistStatementLine) GetContext() *KFTLStatemen
 func (l *kftlStartTimeIsEndByTagIfExistStatementLine) GetStatementLineText() string {
 	return l.lineText
 }
+
+// kftlTimeIsEndByTagTagStatementLine reads the tag name (plain text, no 。 prefix)
+// for ーたえ / ーいたえ. Multiple tags can be separated by 、.
+type kftlTimeIsEndByTagTagStatementLine struct {
+	lineText string
+	ctx      *KFTLStatementLineContext
+	req      *kftlTimeIsEndByTagRequest
+}
+
+func newKFTLTimeIsEndByTagTagStatementLine(lineText string, ctx *KFTLStatementLineContext, req *kftlTimeIsEndByTagRequest) *kftlTimeIsEndByTagTagStatementLine {
+	targetID := ctx.ThisStatementLineTargetID
+	ctx.NextStatementLineTargetID = &targetID
+	ctx.NextStatementLineConstructor = ctx.factory.generateNoneConstructor(ctx.NextStatementLineText)
+	return &kftlTimeIsEndByTagTagStatementLine{lineText: lineText, ctx: ctx, req: req}
+}
+
+func (l *kftlTimeIsEndByTagTagStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
+	for _, tag := range strings.Split(l.lineText, "、") {
+		tag = strings.TrimSpace(tag)
+		if tag != "" {
+			l.req.AddTag(tag)
+		}
+	}
+	return nil
+}
+func (l *kftlTimeIsEndByTagTagStatementLine) GetLabelName() string { return "timeIsEndByTagTag" }
+func (l *kftlTimeIsEndByTagTagStatementLine) GetContext() *KFTLStatementLineContext {
+	return l.ctx
+}
+func (l *kftlTimeIsEndByTagTagStatementLine) GetStatementLineText() string { return l.lineText }
