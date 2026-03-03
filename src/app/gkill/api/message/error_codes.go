@@ -354,4 +354,7 @@ const (
 	AddURLogLoginSessionError                                        = "ERR000349"
 	InvalidSubmitKFTLTextRequestDataError                            = "ERR000350"
 	SubmitKFTLTextError                                              = "ERR000351"
+	InvalidGetKyousMCPRequestDataError                               = "ERR000352"
+	InvalidGetKyousMCPResponseDataError                              = "ERR000353"
+	GetKyousMCPError                                                 = "ERR000354"
 )
