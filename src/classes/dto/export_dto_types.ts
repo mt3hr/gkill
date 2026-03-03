@@ -52,8 +52,8 @@ export type KmemoDTO = {
 
 export type KcDTO = {
     kind: "kc"
-    key: string
-    value: number
+    title : string
+    num_value: number
 }
 
 export type UrlogDTO = {

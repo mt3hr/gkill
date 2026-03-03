@@ -157,6 +157,8 @@ type GkillServerAPIAddress struct {
 
 	SubmitKFTLTextAddress string
 
+	GetKyousMCPAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -310,6 +312,8 @@ type GkillServerAPIAddress struct {
 	DiscardTXMethod string
 
 	SubmitKFTLTextMethod string
+
+	GetKyousMCPMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -393,6 +397,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.CommitTXAddress = "/api/commit_tx"
 	gkillAPIAddress.DiscardTXAddress = "/api/discard_tx"
 	gkillAPIAddress.SubmitKFTLTextAddress = "/api/submit_kftl_text"
+	gkillAPIAddress.GetKyousMCPAddress = "/api/get_kyous_mcp"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -470,5 +475,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.CommitTXMethod = "POST"
 	gkillAPIAddress.DiscardTXMethod = "POST"
 	gkillAPIAddress.SubmitKFTLTextMethod = "POST"
+	gkillAPIAddress.GetKyousMCPMethod = "POST"
 	return gkillAPIAddress
 }
