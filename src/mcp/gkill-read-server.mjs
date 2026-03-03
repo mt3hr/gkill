@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import process from "node:process";
 
 const SERVER_NAME = "gkill-read-mcp";
-const SERVER_VERSION = "0.1.0";
+const SERVER_VERSION = "0.2.0";
 
 const AUTH_ERROR_CODES = new Set([
   "ERR000002", // AccountNotFoundError
@@ -96,7 +96,13 @@ const TOOLS = [
   {
     name: "gkill_get_kyous",
     description:
-      "Get kyou list by FindQuery. `query` shape follows Go find.FindQuery. If omitted, server defaults are used.",
+      "Search life-log entries (kyou) with optional filters and return enriched results including tags, texts, notifications, and typed payload inline. " +
+      "Each result contains data_type, related_time, tags[], texts[], notifications[], and payload (type-specific fields). " +
+      "Supports cursor-based pagination via next_cursor / cursor parameters. " +
+      "Use limit and max_size_mb to control response size. " +
+      "Available data_type values: kmemo, kc, timeis, nlog, lantana, urlog, idf, git_commit_log, mi. " +
+      "The server always applies only_latest_data=true. " +
+      "Response fields: kyous[], total_count, returned_count, has_more, next_cursor.",
     inputSchema: {
       type: "object",
       properties: {
@@ -105,210 +111,28 @@ const TOOLS = [
           type: "string",
           description: "Locale, e.g. ja/en.",
         },
-      },
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_kyou",
-    description: "Get history by kyou id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
+        limit: {
+          type: "integer",
+          description: "Max number of entries to return. Default: 50.",
+          default: 50,
         },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_kmemo",
-    description: "Get kmemo history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
+        cursor: {
           type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
+          description:
+            `Pagination cursor. Pass the next_cursor value from the previous response to fetch the next page. ${ISO_DATETIME_DESC}`,
         },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_kc",
-    description: "Get kc history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
+        max_size_mb: {
+          type: "number",
+          description: "Max response size in MB. Default: 1.0.",
+          default: 1.0,
         },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
       },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_urlog",
-    description: "Get urlog history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
-        },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_nlog",
-    description: "Get nlog history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
-        },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_timeis",
-    description: "Get timeis history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
-        },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_mi",
-    description: "Get mi history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
-        },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_lantana",
-    description: "Get lantana history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: "Optional ISO-8601 timestamp.",
-        },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_rekyou",
-    description: "Get rekyou history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: "Optional ISO-8601 timestamp.",
-        },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_git_commit_log",
-    description: "Get git commit log history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
-        },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_idf_kyou",
-    description: "Get idf_kyou history by id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
-        },
-        rep_name: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
       additionalProperties: false,
     },
   },
   {
     name: "gkill_get_mi_board_list",
-    description: "Get mi board list. Read-only.",
+    description: "Get the list of Mi (task) board names. Use this to discover board names for use in Mi queries.",
     inputSchema: {
       type: "object",
       properties: {
@@ -319,7 +143,7 @@ const TOOLS = [
   },
   {
     name: "gkill_get_all_tag_names",
-    description: "Get all tag names. Read-only.",
+    description: "Get all tag names defined in gkill. Use this to discover available tags for filtering.",
     inputSchema: {
       type: "object",
       properties: {
@@ -330,61 +154,18 @@ const TOOLS = [
   },
   {
     name: "gkill_get_all_rep_names",
-    description: "Get all repository names. Read-only.",
+    description: "Get all repository names configured in gkill. Use this to discover rep names for filtering.",
     inputSchema: {
       type: "object",
       properties: {
         locale_name: { type: "string" },
       },
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_tags_by_target_id",
-    description: "Get tags by target_id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        target_id: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["target_id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_texts_by_target_id",
-    description: "Get texts by target_id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        target_id: { type: "string" },
-        locale_name: { type: "string" },
-      },
-      required: ["target_id"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "gkill_get_notification_histories_by_notification_id",
-    description: "Get notification histories by notification id. Read-only.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        update_time: {
-          type: "string",
-          description: `Optional ${ISO_DATETIME_DESC}`,
-        },
-        locale_name: { type: "string" },
-      },
-      required: ["id"],
       additionalProperties: false,
     },
   },
   {
     name: "gkill_get_gps_log",
-    description: "Get gps logs in date range. Read-only.",
+    description: "Get GPS log entries in a date range. Read-only.",
     inputSchema: {
       type: "object",
       properties: {
@@ -680,135 +461,14 @@ class McpServer {
 
     switch (name) {
       case "gkill_get_kyous":
-        return this.client.callRead("/api/get_kyous", { query: p.query || {}, locale_name: p.locale_name }, true);
-      case "gkill_get_kyou":
-        requireString("id");
         return this.client.callRead(
-          "/api/get_kyou",
+          "/api/get_kyous_mcp",
           {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
+            query: p.query || {},
             locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_kmemo":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_kmemo",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_kc":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_kc",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_urlog":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_urlog",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_nlog":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_nlog",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_timeis":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_timeis",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_mi":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_mi",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_lantana":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_lantana",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_rekyou":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_rekyou",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_git_commit_log":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_git_commit_log",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_idf_kyou":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_idf_kyou",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            rep_name: p.rep_name,
-            locale_name: p.locale_name,
+            limit: p.limit,
+            cursor: p.cursor,
+            max_size_mb: p.max_size_mb,
           },
           true,
         );
@@ -818,37 +478,6 @@ class McpServer {
         return this.client.callRead("/api/get_all_tag_names", { locale_name: p.locale_name }, true);
       case "gkill_get_all_rep_names":
         return this.client.callRead("/api/get_all_rep_names", { locale_name: p.locale_name }, true);
-      case "gkill_get_tags_by_target_id":
-        requireString("target_id");
-        return this.client.callRead(
-          "/api/get_tags_by_id",
-          {
-            target_id: p.target_id,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_texts_by_target_id":
-        requireString("target_id");
-        return this.client.callRead(
-          "/api/get_texts_by_id",
-          {
-            target_id: p.target_id,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
-      case "gkill_get_notification_histories_by_notification_id":
-        requireString("id");
-        return this.client.callRead(
-          "/api/get_gkill_notification_histories_by_notification_id",
-          {
-            id: p.id,
-            update_time: p.update_time,
-            locale_name: p.locale_name,
-          },
-          true,
-        );
       case "gkill_get_gps_log":
         requireString("start_date");
         requireString("end_date");
@@ -924,21 +553,17 @@ class McpServer {
         const toolName = params.name;
         const toolArgs = params.arguments || {};
         const response = await this.handleToolCall(toolName, toolArgs);
-        this.sendResult(id, this.toolResultText(JSON.stringify(response, null, 2), false));
+        this.sendResult(id, this.toolResultText(JSON.stringify(response), false));
       } catch (error) {
         const detail = error instanceof GkillApiError ? error.detail : null;
         const messageText = error instanceof Error ? error.message : "Unknown tool error";
         this.sendResult(
           id,
           this.toolResultText(
-            JSON.stringify(
-              {
-                error: messageText,
-                detail,
-              },
-              null,
-              2,
-            ),
+            JSON.stringify({
+              error: messageText,
+              detail,
+            }),
             true,
           ),
         );
