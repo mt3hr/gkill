@@ -36,8 +36,8 @@ export function toExportKyouDto(kyou: any) {
             } :
                 kyou.typed_kc ? {
                     kind: "kc",
-                    key: kyou.typed_kc.key,
-                    value: kyou.typed_kc.value,
+                    title: kyou.typed_kc.title,
+                    num_value: kyou.typed_kc.num_value,
                 } :
                     kyou.typed_urlog ? {
                         kind: "urlog",

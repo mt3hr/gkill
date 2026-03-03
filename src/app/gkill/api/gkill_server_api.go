@@ -635,6 +635,12 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleSubmitKFTLText(w, r)
 	}).Methods(g.APIAddress.SubmitKFTLTextMethod)
+	router.HandleFunc(g.APIAddress.GetKyousMCPAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleGetKyousMCP(w, r)
+	}).Methods(g.APIAddress.GetKyousMCPMethod)
 
 	gkillPage, err := fs.Sub(EmbedFS, "embed/html")
 	if err != nil {
