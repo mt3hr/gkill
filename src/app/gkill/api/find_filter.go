@@ -360,21 +360,13 @@ func (f *FindFilter) getRepositories(ctx context.Context, userID string, device 
 func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	repositories := findCtx.Repositories
 
-	if !findCtx.ParsedFindQuery.UseReps {
-		for _, rep := range repositories.Reps {
-			rep := rep
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				return nil, err
-			}
-			if _, exist := findCtx.MatchReps[repName]; !exist {
-				findCtx.MatchReps[repName] = rep
-			}
-		}
-		return nil, nil
-	}
-
+	// Step1: タイプ系フィルタ（ForMi / IsImageOnly / UsePlaing / UseRepTypes）で候補repを構築する
+	// UseRepsの値に関わらず先に評価することで、UseRepTypesがUseRepsに依存していたバグを修正する
 	typeMatchReps := []reps.Repository{}
+	hasTypeFilter := findCtx.ParsedFindQuery.ForMi ||
+		findCtx.ParsedFindQuery.IsImageOnly ||
+		findCtx.ParsedFindQuery.UsePlaing ||
+		findCtx.ParsedFindQuery.UseRepTypes
 
 	if findCtx.ParsedFindQuery.ForMi {
 		// ForMiだったらMi以外は無視する
@@ -437,10 +429,49 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 				}
 			}
 		}
-	} else {
+	}
+
+	// Step2: タイプフィルタもUseRepsも指定なし → 全repをそのまま追加して終了
+	if !hasTypeFilter && !findCtx.ParsedFindQuery.UseReps {
+		for _, rep := range repositories.Reps {
+			rep := rep
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
+				return nil, err
+			}
+			if _, exist := findCtx.MatchReps[repName]; !exist {
+				findCtx.MatchReps[repName] = rep
+			}
+		}
+		return nil, nil
+	}
+
+	// タイプフィルタなし（UseRepsのみ指定）→ 全repを候補にする
+	if !hasTypeFilter {
 		typeMatchReps = append(typeMatchReps, repositories.Reps...)
 	}
 
+	// Step3: UseRepsなし → typeMatchReps を全てMatchRepsへ追加して終了
+	if !findCtx.ParsedFindQuery.UseReps {
+		for _, matchRep := range typeMatchReps {
+			repImpls, err := matchRep.UnWrap()
+			if err != nil {
+				return nil, err
+			}
+			for _, repImpl := range repImpls {
+				repName, err := repImpl.GetRepName(ctx)
+				if err != nil {
+					return nil, err
+				}
+				if _, exist := findCtx.MatchReps[repName]; !exist {
+					findCtx.MatchReps[repName] = repImpl
+				}
+			}
+		}
+		return nil, nil
+	}
+
+	// Step4: UseRepsあり → typeMatchRepsをrep名でさらにフィルタ
 	targetRepNames := []string{}
 	if findCtx.ParsedFindQuery.Reps != nil {
 		targetRepNames = findCtx.ParsedFindQuery.Reps
