@@ -1,6 +1,6 @@
 package req_res
 
-import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+import "github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 
 type AddTagRequest struct {
 	SessionID string `json:"session_id"`

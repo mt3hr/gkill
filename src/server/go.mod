@@ -1,4 +1,4 @@
-module github.com/mt3hr/gkill/src/app
+module github.com/mt3hr/gkill/src/server
 
 go 1.26.0
 

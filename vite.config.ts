@@ -24,7 +24,7 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         injectRegister: 'auto',
         strategies: 'injectManifest',
-        srcDir: 'src',
+        srcDir: 'src/client',
         filename: 'serviceWorker.ts',
         manifest: {
           version: package_json.version,
@@ -55,7 +55,7 @@ export default defineConfig(() => {
     ],
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url))
+        '@': fileURLToPath(new URL('./src/client', import.meta.url))
       }
     },
     define: {

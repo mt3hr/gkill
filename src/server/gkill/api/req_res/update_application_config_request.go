@@ -1,6 +1,6 @@
 package req_res
 
-import "github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+import "github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 
 type UpdateApplicationConfigRequest struct {
 	SessionID string `json:"session_id"`

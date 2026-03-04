@@ -1,9 +1,9 @@
 package api
 
 import (
-	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	"github.com/mt3hr/gkill/src/app/gkill/dao"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/dao"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 )
 
 type FindKyouContext struct {
