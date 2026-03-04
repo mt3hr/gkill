@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/threads"
 )
 
 type GPSLogRepositories []GPSLogRepository

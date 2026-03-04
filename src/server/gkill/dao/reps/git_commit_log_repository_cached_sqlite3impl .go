@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 type gitCommitLogRepositoryCachedSQLite3Impl struct {

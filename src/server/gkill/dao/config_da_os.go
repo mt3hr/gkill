@@ -1,12 +1,12 @@
 package dao
 
 import (
-	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/account_state"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/gkill_notification"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
 
 type ConfigDAOs struct {
