@@ -20,12 +20,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mattn/go-zglob"
-	"github.com/mt3hr/gkill/src/app/gkill/api"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/hide_files"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
-	dvnf_cmd "github.com/mt3hr/gkill/src/app/gkill/dvnf/cmd"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/server/gkill/api"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/hide_files"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	dvnf_cmd "github.com/mt3hr/gkill/src/server/gkill/dvnf/cmd"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 )
 

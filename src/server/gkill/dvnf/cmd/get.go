@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dvnf"
+	"github.com/mt3hr/gkill/src/server/gkill/dvnf"
 	"github.com/spf13/cobra"
 )
 

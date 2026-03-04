@@ -12,18 +12,18 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mattn/go-zglob"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/hide_files"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/account_state"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/gkill_notification"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/hide_files"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/rep_cache_updater"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps/rep_cache_updater"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 type GkillDAOManager struct {

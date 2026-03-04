@@ -3,8 +3,8 @@ package server_config
 import (
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
 
 type ServerConfig struct {
