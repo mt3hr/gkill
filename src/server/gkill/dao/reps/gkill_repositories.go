@@ -220,7 +220,9 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 				continue
 			}
 			if repositories.IsUpdateCacheNextTick {
-				err := repositories.UpdateCache(context.Background())
+				tickCtx, tickCancel := context.WithTimeout(context.Background(), 1*time.Hour)
+				err := repositories.UpdateCache(tickCtx)
+				tickCancel()
 				if err != nil {
 					slog.Log(ctx, gkill_log.Error, "error", "error", err)
 					continue
@@ -454,7 +456,11 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 }
 
 func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
-	<-updateCacheThreadPool
+	select {
+	case <-updateCacheThreadPool:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 	defer func() { updateCacheThreadPool <- struct{}{} }()
 	g.updateCacheMutex.Lock()
 	defer g.updateCacheMutex.Unlock()
