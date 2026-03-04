@@ -159,6 +159,8 @@ type GkillServerAPIAddress struct {
 
 	GetKyousMCPAddress string
 
+	UpdateCacheAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -314,6 +316,8 @@ type GkillServerAPIAddress struct {
 	SubmitKFTLTextMethod string
 
 	GetKyousMCPMethod string
+
+	UpdateCacheMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -476,5 +480,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.DiscardTXMethod = "POST"
 	gkillAPIAddress.SubmitKFTLTextMethod = "POST"
 	gkillAPIAddress.GetKyousMCPMethod = "POST"
+	gkillAPIAddress.UpdateCacheAddress = "/api/update_cache"
+	gkillAPIAddress.UpdateCacheMethod = "POST"
 	return gkillAPIAddress
 }

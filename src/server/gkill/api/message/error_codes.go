@@ -357,4 +357,7 @@ const (
 	InvalidGetKyousMCPRequestDataError                               = "ERR000352"
 	InvalidGetKyousMCPResponseDataError                              = "ERR000353"
 	GetKyousMCPError                                                 = "ERR000354"
+	InvalidUpdateCacheRequestDataError                               = "ERR000355"
+	InvalidUpdateCacheResponseDataError                              = "ERR000356"
+	UpdateCacheError                                                 = "ERR000357"
 )

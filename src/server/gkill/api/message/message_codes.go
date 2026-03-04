@@ -80,4 +80,5 @@ const (
 	CommitTxSuccessMessage                 = "MSG000075"
 	SubmitKFTLTextSuccessMessage           = "MSG000076"
 	GetKyousMCPSuccessMessage              = "MSG000077"
+	UpdateCacheSuccessMessage              = "MSG000078"
 )

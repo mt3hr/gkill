@@ -641,6 +641,12 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleGetKyousMCP(w, r)
 	}).Methods(g.APIAddress.GetKyousMCPMethod)
+	router.HandleFunc(g.APIAddress.UpdateCacheAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleUpdateCache(w, r)
+	}).Methods(g.APIAddress.UpdateCacheMethod)
 
 	gkillPage, err := fs.Sub(EmbedFS, "embed/html")
 	if err != nil {
