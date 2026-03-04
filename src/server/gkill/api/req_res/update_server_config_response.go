@@ -1,8 +1,8 @@
 package req_res
 
 import (
-	"github.com/mt3hr/gkill/src/app/gkill/api/message"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 )
 
 type UpdateServerConfigsResponse struct {

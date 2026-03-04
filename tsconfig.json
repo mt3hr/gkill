@@ -18,7 +18,7 @@
     ],
   },
   "exclude": [
-    "src/app/**/*",
+    "src/server/**/*",
     "dist",
     "node_modules",
   ]

@@ -1,6 +1,6 @@
 package req_res
 
-import "github.com/mt3hr/gkill/src/app/gkill/api/find"
+import "github.com/mt3hr/gkill/src/server/gkill/api/find"
 
 type GetKyousRequest struct {
 	SessionID string `json:"session_id"`

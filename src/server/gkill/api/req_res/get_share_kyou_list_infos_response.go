@@ -1,8 +1,8 @@
 package req_res
 
 import (
-	"github.com/mt3hr/gkill/src/app/gkill/api/message"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
 )
 
 type GetShareKyouListInfosResponse struct {

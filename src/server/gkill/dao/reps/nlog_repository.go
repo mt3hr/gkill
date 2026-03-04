@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 )
 
 type NlogRepository interface {

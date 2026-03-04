@@ -1,5 +1,5 @@
 # ========== 設定 ==========
-$goProjectPath = "../app/"
+$goProjectPath = "../server/"
 $nodeProjectPath = "../../"
 $outputFile = "../../LICENSES_DEPENDENCE"
 

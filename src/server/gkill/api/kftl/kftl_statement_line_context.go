@@ -3,8 +3,8 @@ package kftl
 import (
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
 
 // StatementLineConstructorFunc is a function that creates a KFTLStatementLine.

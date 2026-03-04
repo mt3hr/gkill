@@ -7,11 +7,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/mt3hr/gkill/src/app/gkill/api/kftl"
-	"github.com/mt3hr/gkill/src/app/gkill/api/message"
-	"github.com/mt3hr/gkill/src/app/gkill/api/req_res"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/api/kftl"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
+	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
