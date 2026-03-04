@@ -37,6 +37,7 @@ func init() {
 	ServerCmd.AddCommand(common.GenerateThumbCacheCmd)
 	ServerCmd.AddCommand(common.GenerateVideoCacheCmd)
 	ServerCmd.AddCommand(common.OptimizeCmd)
+	ServerCmd.AddCommand(common.UpdateCacheCmd)
 }
 
 var (

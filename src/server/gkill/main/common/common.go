@@ -1,10 +1,14 @@
 package common
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -15,14 +19,15 @@ import (
 
 	_ "time/tzdata"
 
-	"net/http"
 	_ "net/http/pprof"
 
 	"github.com/gorilla/mux"
 	"github.com/mattn/go-zglob"
 	"github.com/mt3hr/gkill/src/server/gkill/api"
+	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/hide_files"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	dvnf_cmd "github.com/mt3hr/gkill/src/server/gkill/dvnf/cmd"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
@@ -179,6 +184,99 @@ var (
 			}
 		},
 		Short: `optimize 'user_id'`,
+	}
+
+	UpdateCacheCmd = &cobra.Command{
+		Use: "update_cache",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Usage()
+				return
+			}
+
+			targetUserIDs := args
+			ctx := cmd.Context()
+
+			configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
+			serverConfigDAO, err := server_config.NewServerConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "server_config.db"))
+			if err != nil {
+				err = fmt.Errorf("error at create server config dao: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+			defer serverConfigDAO.Close(ctx)
+
+			serverConfigs, err := serverConfigDAO.GetAllServerConfigs(ctx)
+			if err != nil {
+				err = fmt.Errorf("error at get all server configs: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+
+			var currentServerConfig *server_config.ServerConfig
+			for _, sc := range serverConfigs {
+				if sc.EnableThisDevice {
+					currentServerConfig = sc
+					break
+				}
+			}
+			if currentServerConfig == nil {
+				err = fmt.Errorf("error: no enabled device found in server configs")
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+
+			scheme := "http"
+			if currentServerConfig.EnableTLS && !gkill_options.DisableTLSForce {
+				scheme = "https"
+			}
+			address := fmt.Sprintf("%s://localhost%s/api/update_cache", scheme, currentServerConfig.Address)
+
+			requestBody := &req_res.UpdateCacheRequest{
+				UserIDs: targetUserIDs,
+			}
+			jsonBody, err := json.Marshal(requestBody)
+			if err != nil {
+				err = fmt.Errorf("error at marshal update cache request: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+
+			httpClient := &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				},
+			}
+			resp, err := httpClient.Post(address, "application/json", bytes.NewReader(jsonBody))
+			if err != nil {
+				err = fmt.Errorf("error at post update cache request to %s: %w", address, err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+			defer resp.Body.Close()
+
+			response := &req_res.UpdateCacheResponse{}
+			err = json.NewDecoder(resp.Body).Decode(response)
+			if err != nil {
+				err = fmt.Errorf("error at decode update cache response: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+
+			for _, msg := range response.Messages {
+				fmt.Printf("%s\n", msg.Message)
+			}
+			for _, errMsg := range response.Errors {
+				fmt.Fprintf(os.Stderr, "%s: %s\n", errMsg.ErrorCode, errMsg.ErrorMessage)
+			}
+		},
+		Short: `update_cache 'user_id'`,
 	}
 )
 

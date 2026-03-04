@@ -802,5 +802,7 @@
     "USE_GKILL_NOTIFICATION_TITLE": "通知サービス有効",
     "TRANSPARENT_TITLE": "透過",
     "FAILED_SUBMIT_KFTL_TEXT_MESSAGE": "KFTLテキストの記録に失敗しました",
-    "SUCCESS_SUBMIT_KFTL_TEXT_MESSAGE": "KFTLテキストを記録しました"
+    "SUCCESS_SUBMIT_KFTL_TEXT_MESSAGE": "KFTLテキストを記録しました",
+    "FAILED_UPDATE_CACHE_MESSAGE": "キャッシュの更新に失敗しました",
+    "SUCCESS_UPDATE_CACHE_MESSAGE": "キャッシュを更新しました"
 }
