@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
-	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // KFTLRequest is the interface implemented by all KFTL request types.

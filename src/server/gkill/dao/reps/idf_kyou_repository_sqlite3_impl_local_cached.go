@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 func NewIDFDirRepLocalCached(ctx context.Context, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {

@@ -18,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"golang.org/x/sync/singleflight"
 )
 

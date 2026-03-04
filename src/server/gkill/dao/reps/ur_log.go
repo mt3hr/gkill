@@ -18,10 +18,10 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/saintfish/chardet"
 	"golang.org/x/image/draw"
 )

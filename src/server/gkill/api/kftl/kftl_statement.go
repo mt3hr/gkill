@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
 )
 
 // KFTLStatement is the entry point for parsing and executing KFTL text.

@@ -11,8 +11,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 const CURRENT_SCHEMA_VERSION_LATEST_DATA_REPOSITORY_ADDRESS_DAO = "1.0.0"

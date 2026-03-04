@@ -1,6 +1,6 @@
 package req_res
 
-import "github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
+import "github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
 
 type ShareKyouListInfo struct {
 	ShareID string `json:"share_id"`

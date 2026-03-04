@@ -32,7 +32,7 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import SetNewPasswordView from './views/set-new-password-view.vue'
-import package_json from '../../package.json'
+import package_json from '../../../package.json'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 

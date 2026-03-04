@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 
 	zglob "github.com/mattn/go-zglob"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

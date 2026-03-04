@@ -3,7 +3,7 @@ package kftl
 import (
 	"context"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
 
 // kftlSplitStatementLine separates two entities.

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mt3hr/gkill/src/app/gkill/api/req_res"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/twpayne/go-gpx"
 )
 

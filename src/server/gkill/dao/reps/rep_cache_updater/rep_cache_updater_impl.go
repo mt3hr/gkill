@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
 const defaultDebounce = 300 * time.Millisecond
