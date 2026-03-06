@@ -131,7 +131,7 @@ async function save(): Promise<void> {
         if (notification_date_string.value === "" || notification_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.notification_time_is_blank
-            error.error_message = i18n.global.t("NOTIFICATION_DATE_TIME_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("NOTIFICATION_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -161,7 +161,6 @@ async function save(): Promise<void> {
         new_notification.create_device = props.application_config.device
         new_notification.create_time = new Date(Date.now())
         new_notification.create_user = props.application_config.user_id
-        new_notification.update_app = "gkill"
         new_notification.update_app = "gkill"
         new_notification.update_device = props.application_config.device
         new_notification.update_time = new Date(Date.now())

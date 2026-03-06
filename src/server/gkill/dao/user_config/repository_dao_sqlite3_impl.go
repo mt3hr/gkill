@@ -129,7 +129,7 @@ FROM REPOSITORY
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get all repositories sql: %w", err)
+		err = fmt.Errorf("error at get all repositories sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -203,7 +203,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get repositories sql: %w", err)
+		err = fmt.Errorf("error at get repositories sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -410,7 +410,7 @@ INSERT INTO REPOSITORY (
 `
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		err = fmt.Errorf("error at begin update repository: %w", err)
+		err = fmt.Errorf("error at begin add repository: %w", err)
 		return false, err
 	}
 	isCommitted := false
@@ -620,7 +620,7 @@ WHERE ID = ?
 	}
 	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("error at add repository commit: %w", err)
+		err = fmt.Errorf("error at update repository commit: %w", err)
 		return false, err
 	}
 	isCommitted = true

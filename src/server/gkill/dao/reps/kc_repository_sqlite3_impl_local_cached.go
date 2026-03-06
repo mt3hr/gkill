@@ -125,7 +125,7 @@ func (k *kcRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) er
 
 	err := k.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at update cache %s", err)
+		err = fmt.Errorf("error at update cache: %w", err)
 		return err
 	}
 
@@ -194,12 +194,12 @@ func (k *kcRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (st
 func (k *kcRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
 	err := k.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	err = k.originalRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	return nil

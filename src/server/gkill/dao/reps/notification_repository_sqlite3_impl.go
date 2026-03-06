@@ -218,7 +218,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get NOTIFICATION histories sql: %w", err)
+		err = fmt.Errorf("error at find notifications sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -387,7 +387,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get notification histories sql: %w", err)
+		err = fmt.Errorf("error at get notification sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -548,7 +548,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get notification histories sql: %w", err)
+		err = fmt.Errorf("error at get notifications by target id sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -671,7 +671,7 @@ WHERE
 
 	repName, err := n.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at text: %w", err)
+		err = fmt.Errorf("error at get rep name at notification: %w", err)
 		return nil, err
 	}
 

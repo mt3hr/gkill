@@ -352,7 +352,7 @@ func LaunchGkillServerAPI() error {
 			if errors.Is(err, http.ErrServerClosed) {
 				// サーバが正常に閉じられた場合はスルーして立ち上げ直す
 			} else {
-				slog.Log(context.Background(), gkill_log.Debug, "error at gkill server api serve", "error", err)
+				slog.Log(context.Background(), gkill_log.Error, "error at gkill server api serve", "error", err)
 				return err
 			}
 		}

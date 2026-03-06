@@ -805,7 +805,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -923,7 +923,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {

@@ -841,7 +841,7 @@ FROM TIMEIS
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at find kyous sql: %w", err)
+		err = fmt.Errorf("error at find timeis sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -910,7 +910,7 @@ FROM TIMEIS
 			}
 			timeis.StartTime, err = time.Parse(sqlite3impl.TimeLayout, startTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", startTimeStr, err)
 				return nil, err
 			}
 			if endTime.Valid {
@@ -1013,7 +1013,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get time is histories sql: %w", err)
+		err = fmt.Errorf("error at get time is sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -1083,7 +1083,7 @@ WHERE
 			}
 			timeis.StartTime, err = time.Parse(sqlite3impl.TimeLayout, startTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", startTimeStr, err)
 				return nil, err
 			}
 			if endTime.Valid {
@@ -1256,7 +1256,7 @@ WHERE
 			}
 			timeis.StartTime, err = time.Parse(sqlite3impl.TimeLayout, startTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", startTimeStr, err)
 				return nil, err
 			}
 			if endTime.Valid {
