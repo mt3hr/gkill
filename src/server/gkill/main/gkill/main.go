@@ -67,6 +67,9 @@ var (
 				log.Fatal(err)
 			}
 
+			serverCtx, serverCancel := context.WithCancel(cmd.Context())
+			defer serverCancel()
+
 			go func() {
 				for _, preLoadUserNames := range gkill_options.PreLoadUserNames {
 					userID := preLoadUserNames
@@ -83,7 +86,7 @@ var (
 				}
 			}()
 
-			go common.LaunchGkillServerAPI()
+			go common.LaunchGkillServerAPI(serverCtx)
 
 			for ; ; time.Sleep(time.Microsecond * 500) {
 				api := common.GetGkillServerAPI()
@@ -192,6 +195,7 @@ document.addEventListener('click', (e) => {
 
 			// Blocking pattern
 			a.Wait()
+			serverCancel()
 			os.Exit(0)
 		},
 	}
