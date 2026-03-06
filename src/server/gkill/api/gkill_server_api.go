@@ -62,7 +62,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 	}
 
 	// 初回起動の場合、Adminアカウントデータを作成する
-	accounts, err := gkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(context.TODO())
+	accounts, err := gkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all account: %w", err)
 		return nil, err
@@ -76,7 +76,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			IsEnable:           true,
 			PasswordResetToken: &passwordResetToken,
 		}
-		_, err := gkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(context.TODO(), adminAccount)
+		_, err := gkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(ctx, adminAccount)
 		if err != nil {
 			err = fmt.Errorf("error at add admin account: %w", err)
 			return nil, err
@@ -111,7 +111,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			return nil, err
 		}
 
-		_, err = gkillDAOManager.ConfigDAOs.ServerConfigDAO.AddServerConfig(context.TODO(), serverConfig)
+		_, err = gkillDAOManager.ConfigDAOs.ServerConfigDAO.AddServerConfig(ctx, serverConfig)
 		if err != nil {
 			err = fmt.Errorf("error at add init data to server config db: %w", err)
 			return nil, err
@@ -140,7 +140,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		return nil, err
 	}
 
-	applicationConfigs, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetAllApplicationConfigs(context.TODO())
+	applicationConfigs, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetAllApplicationConfigs(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all application configs: %w", err)
 		return nil, err
@@ -928,7 +928,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if account == nil {
-		err = fmt.Errorf("error at get account user id = %s: %w", request.UserID, err)
+		err = fmt.Errorf("error at get account user id = %s: account not found", request.UserID)
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
@@ -940,7 +940,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// アカウント有効確認
 	if !account.IsEnable {
-		err = fmt.Errorf("error at account is not enable = %s: %w", request.UserID, err)
+		err = fmt.Errorf("error at account is not enable = %s", request.UserID)
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountIsNotEnableError,
@@ -952,7 +952,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// パスワードリセット処理実施中のアカウントはログインから弾く
 	if account.PasswordResetToken != nil {
-		err = fmt.Errorf("error at password reset token is not nil = %s: %w", request.UserID, err)
+		err = fmt.Errorf("error at password reset token is not nil = %s", request.UserID)
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountPasswordResetTokenIsNotNilError,
@@ -964,7 +964,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// パスワード不一致を弾く
 	if account.PasswordSha256 != nil && *account.PasswordSha256 != request.PasswordSha256 {
-		err = fmt.Errorf("error at account invalid password = %s: %w", request.UserID, err)
+		err = fmt.Errorf("error at account invalid password = %s", request.UserID)
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidPasswordError,
@@ -1214,7 +1214,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 
 	// パスワードリセット操作をしたユーザを特定
 	requesterSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
-	if err != nil {
+	if requesterSession == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -4582,7 +4582,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 
 			defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
-			_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), defaultApplicationConfig)
+			_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
 
 			if err != nil {
 				gkillError := &message.GkillError{
@@ -4593,7 +4593,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 				return
 			}
 			applicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-			if err != nil {
+			if err != nil || applicationConfig == nil {
 				gkillError := &message.GkillError{
 					ErrorCode:    message.GetApplicationConfigError,
 					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
@@ -7824,7 +7824,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 
 		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
-		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), defaultApplicationConfig)
+		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
 
 		if err != nil {
 			gkillError := &message.GkillError{
@@ -7835,7 +7835,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 			return
 		}
 		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-		if err != nil {
+		if err != nil || applicationConfig == nil {
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetApplicationConfigError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
@@ -7846,7 +7846,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	}
 
 	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
-	if err != nil {
+	if session == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -8203,7 +8203,16 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 				}
 			}()
-			io.Copy(file, decoder)
+			_, err = io.Copy(file, decoder)
+			if err != nil {
+				err = fmt.Errorf("error at copy file content filename= %s: %w", filename, err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				gkillErrorCh <- &message.GkillError{
+					ErrorCode:    message.GetRepPathError,
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
+				}
+				return
+			}
 			os.Chtimes(filename, time.Now(), fileInfo.LastModified)
 
 			// idfKyouを作る
@@ -8546,7 +8555,7 @@ loop:
 		}
 
 		wg2.Add(1)
-		go func(filename string, gpsLogs []reps.GPSLog) {
+		go func(filename string, gpsLogs []reps.GPSLog, datestr string) {
 			defer wg2.Done()
 			// Mergeだったら既存のデータも混ぜる
 			if request.ConflictBehavior == req_res.Merge {
@@ -8554,18 +8563,21 @@ loop:
 				if err != nil {
 					err = fmt.Errorf("error at parse date string %s: %w", datestr, err)
 					slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-					gkillError = &message.GkillError{
+					gkillErrorCh2 <- &message.GkillError{
 						ErrorCode:    message.ConvertGPSLogError,
 						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 					}
-					response.Errors = append(response.Errors, gkillError)
+					return
 				}
 				endTime := startTime.Add(time.Hour * 24).Add(-time.Millisecond)
 				existGPSLogs, err := targetRep.GetGPSLogs(r.Context(), &startTime, &endTime)
 				if err != nil {
 					err = fmt.Errorf("error at exist gpx datas %s: %w", datestr, err)
 					slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-					gkillErrorCh2 <- gkillError
+					gkillErrorCh2 <- &message.GkillError{
+						ErrorCode:    message.ConvertGPSLogError,
+						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
+					}
 					return
 				}
 				gpsLogs = append(gpsLogs, existGPSLogs...)
@@ -8575,22 +8587,20 @@ loop:
 			if err != nil {
 				err := fmt.Errorf("error at generate gpx file content filename = %s: %w", filename, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-				gkillError = &message.GkillError{
+				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.GenerateGPXFileContentError,
 					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
-				gkillErrorCh2 <- gkillError
 				return
 			}
 			file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 			if err != nil {
 				err := fmt.Errorf("error at open file filename= %s: %w", filename, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-				gkillError = &message.GkillError{
+				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.GetRepPathError,
 					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
-				gkillErrorCh <- gkillError
 				return
 			}
 			defer func() {
@@ -8603,14 +8613,13 @@ loop:
 			if err != nil {
 				err := fmt.Errorf("error at write gpx content to file filename= %s: %w", filename, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-				gkillError = &message.GkillError{
+				gkillErrorCh2 <- &message.GkillError{
 					ErrorCode:    message.WriteGPXFileError,
 					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
-				gkillErrorCh <- gkillError
 				return
 			}
-		}(estimateCreateFileName, gpsLogs)
+		}(estimateCreateFileName, gpsLogs, datestr)
 	}
 	wg2.Wait()
 
@@ -9198,7 +9207,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 
 	// アカウント情報を追加
 	defaultApplicationConfig := user_config.GetDefaultApplicationConfig(request.AccountInfo.UserID, device)
-	_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), defaultApplicationConfig)
+	_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
 	if err != nil {
 		err = fmt.Errorf("error at add application config user id = %s id = %s: %w", userID, request.AccountInfo.UserID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
@@ -9311,7 +9320,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	// TLSファイル作成操作をしたユーザを特定
 	requesterSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
-	if err != nil {
+	if requesterSession == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -11375,7 +11384,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 	}
 
 	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
-	if err != nil {
+	if session == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -11514,7 +11523,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 	}
 
 	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
-	if err != nil {
+	if session == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -11766,7 +11775,7 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 		return false
 	}
 
-	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(context.TODO())
+	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get all account config")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)

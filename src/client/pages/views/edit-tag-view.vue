@@ -86,9 +86,8 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     cloned_tag.value = props.tag.clone()
-    cloned_tag.value.attached_histories[0]
     tag_name.value = cloned_tag.value.tag
 }
 
@@ -118,7 +117,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後タグ情報を用意する
-        const updated_tag = await cloned_tag.value.clone()
+        const updated_tag = cloned_tag.value.clone()
         updated_tag.tag = tag_name.value
         updated_tag.update_app = "gkill"
         updated_tag.update_device = props.application_config.device

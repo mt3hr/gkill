@@ -771,6 +771,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -786,6 +787,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -801,6 +803,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -816,6 +819,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -831,6 +835,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -846,6 +851,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -861,6 +867,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -876,6 +883,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -891,6 +899,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -906,6 +915,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -921,6 +931,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -936,6 +947,7 @@ export class GkillAPI {
                         headers: {
                                 'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
@@ -1462,7 +1474,6 @@ export class GkillAPI {
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetTagsByTargetIDResponse = json
-                this.check_auth(response)
                 if (!response.tags) {
                         response.tags = new Array<Tag>()
                 }
@@ -1499,7 +1510,6 @@ export class GkillAPI {
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetTagHistoryByTagIDResponse = json
-                this.check_auth(response)
                 if (!response.tag_histories) {
                         response.tag_histories = new Array<Tag>()
                 }
@@ -1704,9 +1714,8 @@ export class GkillAPI {
                 application_config.mi_default_period = response.application_config.mi_default_period
                 application_config.is_show_share_footer = response.application_config.is_show_share_footer
                 application_config.urlog_bookmarklet_session = response.application_config.urlog_bookmarklet_session
+                application_config.for_share_kyou = response.application_config.for_share_kyou
 
-                application_config.user_id = response.application_config.user_id
-                application_config.device = response.application_config.device
                 application_config.user_is_admin = response.application_config.user_is_admin
                 application_config.cache_clear_count_limit = response.application_config.cache_clear_count_limit
                 application_config.global_ip = response.application_config.global_ip
@@ -2708,14 +2717,14 @@ export class GkillAPI {
         private shared_id_cookie_key = "gkill_shared_id"
 
         set_shared_id_to_cookie(shared_id: string): void {
-                document.cookie = this.shared_id_cookie_key + "=shared_id" + shared_id + "; path=/; max-age=" + 86400 * 400
+                document.cookie = this.shared_id_cookie_key + "=" + shared_id + "; path=/; max-age=" + 86400 * 400
         }
 
         get_shared_id_from_cookie(): string {
                 const cookies = document.cookie.split(';')
                 const shared_id_string = cookies.find(
                         (cookie) => cookie.split('=')[0].trim() === this.shared_id_cookie_key.trim()
-                )?.replace(this.shared_id_cookie_key + "=shared_id", "").trim()
+                )?.split('=')[1]?.trim()
                 const shared_id = shared_id_string ? shared_id_string : ""
 
                 if (!shared_id || shared_id === "") {
@@ -2792,31 +2801,6 @@ export class GkillAPI {
                                 }
                 }
 
-                switch (locale_in_cookie) {
-                        case 'ja':
-                        case 'en':
-                        case 'zh':
-                        case 'ko':
-                        case 'es':
-                        case 'fr':
-                        case 'de':
-                                locale = locale_in_cookie
-                                break
-                        default:
-                                switch (window.navigator.language) {
-                                        case 'ja':
-                                        case 'en':
-                                        case 'zh':
-                                        case 'ko':
-                                        case 'es':
-                                        case 'fr':
-                                        case 'de':
-                                                locale = window.navigator.language
-                                                break
-                                        default:
-                                                locale = 'ja'
-                                }
-                }
                 i18n.global.locale = locale
         }
 

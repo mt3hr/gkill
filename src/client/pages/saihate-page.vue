@@ -120,9 +120,8 @@
 </template>
 
 <script lang="ts" setup>
-'use strict'
 import { i18n } from '@/i18n'
-import { computed, onMounted, ref, watch, type Ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import router from '@/router'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
@@ -278,14 +277,12 @@ async function write_errors(errors_: Array<GkillError>) {
         }
     }
     messages.value.push(...received_errors)
-    for (let i = 0; i < received_errors.length; i++) {
-        for (let j = 0; j < received_errors.length; j++) {
-            const auto_close_duration_milli_seconds = received_errors[j].auto_close_duration_milli_seconds
-            if (auto_close_duration_milli_seconds) {
-                sleep(auto_close_duration_milli_seconds).then(() => {
-                    close_message(received_errors[j].id)
-                })
-            }
+    for (let j = 0; j < received_errors.length; j++) {
+        const auto_close_duration_milli_seconds = received_errors[j].auto_close_duration_milli_seconds
+        if (auto_close_duration_milli_seconds) {
+            sleep(auto_close_duration_milli_seconds).then(() => {
+                close_message(received_errors[j].id)
+            })
         }
     }
 }
@@ -306,14 +303,12 @@ async function write_messages(messages_: Array<GkillMessage>) {
         }
     }
     messages.value.push(...received_messages)
-    for (let i = 0; i < received_messages.length; i++) {
-        for (let j = 0; j < received_messages.length; j++) {
-            const auto_close_duration_milli_seconds = received_messages[j].auto_close_duration_milli_seconds
-            if (auto_close_duration_milli_seconds) {
-                sleep(auto_close_duration_milli_seconds).then(() => {
-                    close_message(received_messages[j].id)
-                })
-            }
+    for (let j = 0; j < received_messages.length; j++) {
+        const auto_close_duration_milli_seconds = received_messages[j].auto_close_duration_milli_seconds
+        if (auto_close_duration_milli_seconds) {
+            sleep(auto_close_duration_milli_seconds).then(() => {
+                close_message(received_messages[j].id)
+            })
         }
     }
 }
@@ -322,6 +317,7 @@ function close_message(message_id: string): void {
     for (let i = 0; i < messages.value.length; i++) {
         if (messages.value[i].id === message_id) {
             messages.value.splice(i, 1)
+            return
         }
     }
 }
@@ -338,8 +334,12 @@ watch(() => is_loading.value, (new_value: boolean, old_value: boolean) => {
     }
 })
 
-window.addEventListener('resize', () => {
+const onResize = () => {
     resize_content()
+}
+window.addEventListener('resize', onResize)
+onUnmounted(() => {
+    window.removeEventListener('resize', onResize)
 })
 
 resize_content()

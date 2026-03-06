@@ -337,6 +337,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 
@@ -503,6 +507,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(tags) == 0 {
 		return nil, nil
 	}
@@ -660,6 +668,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 
@@ -813,6 +825,10 @@ WHERE
 			}
 			tags = append(tags, tag)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return tags, nil
 }
@@ -991,6 +1007,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 
@@ -1151,6 +1171,10 @@ WHERE IS_DELETED = FALSE
 			tagNames = append(tagNames, tagName)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tagNames, nil
 }
 
@@ -1300,6 +1324,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 
@@ -1337,12 +1365,6 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)

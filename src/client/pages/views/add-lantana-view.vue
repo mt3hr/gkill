@@ -147,7 +147,7 @@ async function save(): Promise<void> {
         }
 
         // 追加するLantana情報を用意する
-        const new_lantana = await lantana.value.clone()
+        const new_lantana = lantana.value.clone()
         new_lantana.id = props.gkill_api.generate_uuid()
         new_lantana.mood = await edit_lantana_flowers.value!.get_mood()
         new_lantana.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()

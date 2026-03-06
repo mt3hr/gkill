@@ -486,7 +486,7 @@ ORDER BY name;
 	}
 
 	for _, n := range names {
-		stmt := fmt.Sprintf(`DROP INDEX IF EXISTS %s;`, quoteIdent(n))
+		stmt := fmt.Sprintf(`DROP INDEX IF EXISTS %s;`, QuoteIdent(n))
 		if _, err := tx.Exec(stmt); err != nil {
 			return fmt.Errorf("drop index %q: %w", n, err)
 		}
@@ -522,6 +522,6 @@ func Optimize(db *sql.DB) error {
 	return nil
 }
 
-func quoteIdent(s string) string {
+func QuoteIdent(s string) string {
 	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
 }

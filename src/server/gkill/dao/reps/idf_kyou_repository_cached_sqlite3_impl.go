@@ -32,7 +32,7 @@ func NewIDFCachedRep(ctx context.Context, idfRep IDFKyouRepository, cacheDB *sql
 		m = &sync.RWMutex{}
 	}
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TARGET_REP_NAME,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `" (ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + ` (ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -133,7 +133,7 @@ SELECT
   CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + i.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(i.dbName) + `
 WHERE
 `
 	dataType := "idf"
@@ -336,6 +336,10 @@ WHERE
 			}
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -361,7 +365,7 @@ SELECT
   CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + i.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(i.dbName) + `
 WHERE
 `
 
@@ -487,6 +491,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(kyous) == 0 {
 		return nil, nil
 	}
@@ -515,7 +523,7 @@ SELECT
   CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + i.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(i.dbName) + `
 WHERE
 `
 
@@ -638,6 +646,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -676,7 +688,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		}
 	}()
 
-	sql := `DELETE FROM ` + i.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(i.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create idf kyou table statement %s: %w", "memory", err)
@@ -695,7 +707,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 	}
 
 	sql = `
-INSERT INTO ` + i.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
   IS_DELETED,
   ID,
   TARGET_REP_NAME,
@@ -805,7 +817,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 			return err
 		}
 	} else {
-		_, err = i.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+i.dbName)
+		_, err = i.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(i.dbName))
 		if err != nil {
 			return err
 		}
@@ -846,7 +858,7 @@ SELECT
   CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + i.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(i.dbName) + `
 WHERE
 `
 	dataType := "idf"
@@ -1027,6 +1039,10 @@ WHERE
 			}
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return idfKyous, nil
 }
 
@@ -1052,8 +1068,8 @@ SELECT
   CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + i.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(i.dbName) + `
+WHERE
 `
 
 	ids := []string{id}
@@ -1160,6 +1176,10 @@ WHERE
 			idfKyous = append(idfKyous, idf)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(idfKyous) == 0 {
 		return nil, nil
 	}
@@ -1188,8 +1208,8 @@ SELECT
   CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + i.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(i.dbName) + `
+WHERE
 `
 
 	ids := []string{id}
@@ -1293,6 +1313,10 @@ WHERE
 			idfKyous = append(idfKyous, idf)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return idfKyous, nil
 }
 
@@ -1304,7 +1328,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context,
 	i.m.Lock()
 	defer i.m.Unlock()
 	sql := `
-INSERT INTO ` + i.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
   IS_DELETED,
   ID,
   TARGET_REP_NAME,

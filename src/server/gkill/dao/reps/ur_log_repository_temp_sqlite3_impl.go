@@ -367,6 +367,10 @@ AND DEVICE = ?
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -495,6 +499,10 @@ AND DEVICE = ?
 			}
 			urlogs = append(urlogs, urlog)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return urlogs, nil
 }

@@ -77,14 +77,6 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create KMEMO table to %s: %w", filename, err)
-		return nil, err
-	}
-
 	return &kmemoTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
@@ -347,6 +339,10 @@ AND DEVICE = ?
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -463,6 +459,10 @@ AND DEVICE = ?
 			}
 			kmemos = append(kmemos, kmemo)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return kmemos, nil
 }

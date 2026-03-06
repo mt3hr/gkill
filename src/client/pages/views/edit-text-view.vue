@@ -85,9 +85,8 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     cloned_text.value = props.text.clone()
-    cloned_text.value.attached_histories[0]
     text_value.value = cloned_text.value.text
 }
 
@@ -117,7 +116,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後テキスト情報を用意する
-        const updated_text = await cloned_text.value.clone()
+        const updated_text = cloned_text.value.clone()
         updated_text.text = text_value.value
         updated_text.update_app = "gkill"
         updated_text.update_device = props.application_config.device

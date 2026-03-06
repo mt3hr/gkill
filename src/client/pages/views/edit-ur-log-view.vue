@@ -151,7 +151,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     title.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.title : ""
     url.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : ""
     related_date_typed.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").toDate()
@@ -219,7 +219,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後URLog情報を用意する
-        const updated_urlog = await urlog.clone()
+        const updated_urlog = urlog.clone()
         updated_urlog.title = title.value
         updated_urlog.url = url.value
         updated_urlog.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()

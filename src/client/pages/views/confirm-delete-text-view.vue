@@ -79,7 +79,7 @@ const show_kyou: Ref<boolean> = ref(true)
 
 async function delete_text(): Promise<void> {
     // 更新後テキスト情報を用意する
-    const updated_text = await props.text.clone()
+    const updated_text = props.text.clone()
     updated_text.is_deleted = true
     updated_text.update_app = "gkill"
     updated_text.update_device = props.application_config.device
