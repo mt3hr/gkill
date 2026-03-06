@@ -73,7 +73,7 @@ const show_kyou: Ref<boolean> = ref(false)
 
 async function delete_tag(): Promise<void> {
     // 更新後タグ情報を用意する
-    const updated_tag = await props.tag.clone()
+    const updated_tag = props.tag.clone()
     updated_tag.is_deleted = true
     updated_tag.update_app = "gkill"
     updated_tag.update_device = props.application_config.device

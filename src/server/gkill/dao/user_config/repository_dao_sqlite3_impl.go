@@ -180,6 +180,10 @@ FROM REPOSITORY
 			repositories = append(repositories, repository)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return repositories, nil
 }
 
@@ -260,6 +264,10 @@ WHERE USER_ID = ? AND DEVICE = ?
 
 			repositories = append(repositories, repository)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return repositories, nil
 }
@@ -860,6 +868,10 @@ GROUP BY TYPE, DEVICE
 		}
 		devices = append(devices, device)
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return err
+	}
 
 	for _, targetDevice := range devices {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSQL)
@@ -906,6 +918,10 @@ GROUP BY TYPE, DEVICE
 					return err
 				}
 			}
+		}
+		if err := rows.Err(); err != nil {
+			err = fmt.Errorf("error at iterate rows: %w", err)
+			return err
 		}
 	}
 	return nil

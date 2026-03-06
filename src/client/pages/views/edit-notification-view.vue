@@ -138,7 +138,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     cloned_notification.value = props.notification.clone()
     cloned_notification.value.attached_histories[0]
     content_value.value = cloned_notification.value.content
@@ -182,7 +182,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後通知情報を用意する
-        const updated_notification = await cloned_notification.value.clone()
+        const updated_notification = cloned_notification.value.clone()
         updated_notification.content = content_value.value
         updated_notification.notification_time = moment(notification_date_string.value + " " + notification_time_string.value).toDate()
         updated_notification.update_app = "gkill"

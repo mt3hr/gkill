@@ -30,7 +30,7 @@ func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, c
 	var err error
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -126,7 +126,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlCheckMi := `
@@ -144,7 +144,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlLimitMi := `
@@ -162,7 +162,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -179,7 +179,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlEndMi := `
@@ -197,7 +197,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -434,6 +434,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -478,7 +482,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlCheckMi := `
@@ -496,7 +500,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlLimitMi := `
@@ -514,7 +518,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -531,7 +535,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlEndMi := `
@@ -549,7 +553,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -782,6 +786,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(kyous) == 0 {
 		return nil, nil
@@ -827,7 +835,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlCheckMi := `
@@ -845,7 +853,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlLimitMi := `
@@ -863,7 +871,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -880,7 +888,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlEndMi := `
@@ -898,7 +906,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -1132,6 +1140,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -1171,7 +1183,7 @@ func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		}
 	}()
 
-	sql := `DELETE FROM ` + m.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(m.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table statement %s: %w", "memory", err)
@@ -1190,7 +1202,7 @@ func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 	}
 
 	sql = `
-INSERT INTO ` + m.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(m.dbName) + ` (
   IS_DELETED,
   ID,
   TITLE,
@@ -1325,7 +1337,7 @@ func (m *miRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 			return err
 		}
 	} else {
-		_, err = m.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+m.dbName)
+		_, err = m.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(m.dbName))
 		if err != nil {
 			return err
 		}
@@ -1366,7 +1378,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlCheckMi := `
@@ -1389,7 +1401,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlLimitMi := `
@@ -1412,7 +1424,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -1434,7 +1446,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlEndMi := `
@@ -1457,7 +1469,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -1708,6 +1720,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 			mis = append(mis, mi)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return mis, nil
 }
 
@@ -1747,7 +1763,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlCheckMi := `
@@ -1770,7 +1786,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlLimitMi := `
@@ -1793,7 +1809,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -1815,7 +1831,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlEndMi := `
@@ -1838,7 +1854,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -2082,6 +2098,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 			}
 			mis = append(mis, mi)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(mis) == 0 {
 		return nil, nil
@@ -2124,7 +2144,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlCheckMi := `
@@ -2147,7 +2167,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlLimitMi := `
@@ -2170,7 +2190,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -2192,7 +2212,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	sqlEndMi := `
@@ -2215,7 +2235,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  UPDATE_USER,
 		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM ` + m.dbName + `
+		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -2460,6 +2480,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 			mis = append(mis, mi)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return mis, nil
 
 }
@@ -2468,7 +2492,7 @@ func (m *miRepositoryCachedSQLite3Impl) AddMiInfo(ctx context.Context, mi Mi) er
 	m.m.Lock()
 	defer m.m.Unlock()
 	sql := `
-INSERT INTO ` + m.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(m.dbName) + ` (
   IS_DELETED,
   ID,
   TITLE,
@@ -2573,7 +2597,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetBoardNames(ctx context.Context) ([]st
 	sql := `
 SELECT 
   DISTINCT BOARD_NAME
-FROM ` + m.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 `
 	tableName := m.dbName
 	tableNameAlias := m.dbName
@@ -2620,6 +2644,10 @@ FROM ` + m.dbName + `
 			}
 			boardNames = append(boardNames, boardName)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return boardNames, nil
 }

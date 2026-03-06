@@ -138,7 +138,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
     related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
@@ -173,8 +173,7 @@ async function save(): Promise<void> {
         }
 
         // 更新がなかったらエラーメッセージを出力する
-        if (moment(rekyou.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime() &&
-            moment(rekyou.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime()) {
+        if (moment(rekyou.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.rekyou_is_no_update
             error.error_message = i18n.global.t("REKYOU_IS_NO_UPDATE_MESSAGE")

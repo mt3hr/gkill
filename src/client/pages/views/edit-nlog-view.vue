@@ -156,7 +156,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     nlog_title_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.title : ""
     nlog_amount_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.amount : 0
     nlog_shop_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.shop : ""
@@ -241,7 +241,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後Nlog情報を用意する
-        const updated_nlog = await nlog.clone()
+        const updated_nlog = nlog.clone()
         updated_nlog.amount = nlog_amount_value.value
         updated_nlog.shop = nlog_shop_value.value
         updated_nlog.title = nlog_title_value.value

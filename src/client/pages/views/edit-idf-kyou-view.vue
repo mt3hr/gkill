@@ -140,7 +140,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
     related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
@@ -187,7 +187,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後IDFKyou情報を用意する
-        const updated_idf_kyou = await idf_kyou.clone()
+        const updated_idf_kyou = idf_kyou.clone()
         updated_idf_kyou.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_idf_kyou.update_app = "gkill"
         updated_idf_kyou.update_device = props.application_config.device

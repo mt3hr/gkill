@@ -205,7 +205,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
     timeis_start_date_typed.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").toDate()
     timeis_start_time_string.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
@@ -311,7 +311,7 @@ async function save(): Promise<void> {
         if (timeis_end_date_string.value !== "" && timeis_end_time_string.value !== "") {
             end_time = moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate()
         }
-        const updated_timeis = await timeis.clone()
+        const updated_timeis = timeis.clone()
         updated_timeis.title = timeis_title.value
         updated_timeis.start_time = moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate()
         updated_timeis.end_time = end_time

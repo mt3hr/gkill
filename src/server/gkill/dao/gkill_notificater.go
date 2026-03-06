@@ -129,14 +129,13 @@ func (n *notificator) waitAndNotify() {
 		if err != nil {
 			err = fmt.Errorf("error at send gkill notification: %w", err)
 			slog.Log(n.ctx, gkill_log.Warn, "error", "error", err)
+			continue
 		}
 		if resp.Body != nil {
-			defer func() {
-				err := resp.Body.Close()
-				if err != nil {
-					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-				}
-			}()
+			err := resp.Body.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at close response body", "error", err)
+			}
 		}
 		// 登録解除されていたらDBから消す
 		if resp.Status == "410 Gone" {

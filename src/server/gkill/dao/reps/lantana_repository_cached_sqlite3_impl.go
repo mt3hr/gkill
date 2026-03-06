@@ -28,7 +28,7 @@ func NewLantanaRepositoryCachedSQLite3Impl(ctx context.Context, lantanaRep Lanta
 	}
 	var err error
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   MOOD NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -121,7 +121,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + l.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(l.dbName) + `
 WHERE
 `
 	dataType := "lantana"
@@ -212,6 +212,10 @@ WHERE
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -233,8 +237,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + l.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(l.dbName) + `
+WHERE
 `
 
 	dataType := "lantana"
@@ -329,6 +333,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(kyous) == 0 {
 		return nil, nil
 	}
@@ -353,8 +361,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + l.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(l.dbName) + `
+WHERE
 `
 
 	dataType := "lantana"
@@ -446,6 +454,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -485,7 +497,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		}
 	}()
 
-	sql := `DELETE FROM ` + l.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(l.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create LANTANA table statement %s: %w", "memory", err)
@@ -504,7 +516,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 	}
 
 	sql = `
-INSERT INTO ` + l.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(l.dbName) + ` (
   IS_DELETED,
   ID,
   MOOD,
@@ -608,7 +620,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 			return err
 		}
 	} else {
-		_, err = l.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+l.dbName)
+		_, err = l.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(l.dbName))
 		if err != nil {
 			return err
 		}
@@ -648,7 +660,7 @@ SELECT
   MOOD,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + l.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(l.dbName) + `
 WHERE
 `
 	dataType := "lantana"
@@ -738,6 +750,10 @@ WHERE
 			lantanas = append(lantanas, lantana)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return lantanas, nil
 }
 
@@ -760,7 +776,7 @@ SELECT
   MOOD,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + l.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(l.dbName) + `
 WHERE
 `
 
@@ -858,6 +874,10 @@ WHERE
 			lantanas = append(lantanas, lantana)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(lantanas) == 0 {
 		return nil, nil
 	}
@@ -883,7 +903,7 @@ SELECT
   MOOD,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + l.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(l.dbName) + `
 WHERE
 `
 
@@ -978,6 +998,10 @@ WHERE
 			lantanas = append(lantanas, lantana)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return lantanas, nil
 }
 
@@ -985,7 +1009,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) AddLantanaInfo(ctx context.Context,
 	l.m.Lock()
 	defer l.m.Unlock()
 	sql := `
-INSERT INTO ` + l.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(l.dbName) + ` (
   IS_DELETED,
   ID,
   MOOD,

@@ -243,7 +243,7 @@ async function save(): Promise<void> {
         if (timeis_end_date_string.value !== "" && timeis_end_time_string.value !== "") {
             end_time = moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate()
         }
-        const new_timeis = await timeis.value.clone()
+        const new_timeis = timeis.value.clone()
         new_timeis.id = props.gkill_api.generate_uuid()
         new_timeis.title = timeis_title.value
         new_timeis.start_time = moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate()
@@ -270,7 +270,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits("updated_kyou", res.added_kyou!)
+        emits("registered_kyou", res.added_kyou!)
         emits('requested_reload_list')
         emits('requested_close_dialog')
         return

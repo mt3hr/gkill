@@ -29,7 +29,7 @@ func NewReKyouRepositoryCachedSQLite3Impl(ctx context.Context, rekyouRep ReKyouR
 	}
 	var err error
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TARGET_ID NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -199,7 +199,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + r.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(r.dbName) + `
 WHERE 
 `
 	dataType := "rekyou"
@@ -295,6 +295,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(kyous) == 0 {
 		return nil, nil
 	}
@@ -319,7 +323,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + r.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(r.dbName) + `
 WHERE 
 `
 	dataType := "rekyou"
@@ -412,6 +416,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -451,7 +459,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		}
 	}()
 
-	sql := `DELETE FROM ` + r.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(r.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU table statement %s: %w", "memory", err)
@@ -470,7 +478,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 	}
 
 	sql = `
-INSERT INTO ` + r.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(r.dbName) + ` (
   IS_DELETED,
   ID,
   TARGET_ID,
@@ -566,7 +574,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	defer r.m.Unlock()
 
 	if gkill_options.CacheReKyouReps != nil && *gkill_options.CacheReKyouReps {
-		_, err := r.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+r.dbName)
+		_, err := r.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(r.dbName))
 		return err
 	}
 	return r.cachedDB.Close()
@@ -638,7 +646,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + r.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(r.dbName) + `
 WHERE  
 `
 	dataType := "rekyou"
@@ -734,6 +742,10 @@ WHERE
 			reKyous = append(reKyous, reKyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(reKyous) == 0 {
 		return nil, nil
 	}
@@ -761,7 +773,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + r.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(r.dbName) + `
 WHERE  
 `
 	dataType := "rekyou"
@@ -854,6 +866,10 @@ WHERE
 			reKyous = append(reKyous, reKyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return reKyous, nil
 }
 
@@ -861,7 +877,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) AddReKyouInfo(ctx context.Context, r
 	r.m.Lock()
 	defer r.m.Unlock()
 	sql := `
-INSERT INTO ` + r.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(r.dbName) + ` (
   IS_DELETED,
   ID,
   TARGET_ID,
@@ -948,7 +964,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + r.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(r.dbName) + `
 WHERE 
 `
 
@@ -1036,6 +1052,10 @@ WHERE
 			reKyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			reKyous = append(reKyous, reKyou)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return reKyous, nil
 }

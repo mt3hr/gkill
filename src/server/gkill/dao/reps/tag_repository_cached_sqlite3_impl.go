@@ -30,7 +30,7 @@ func NewTagRepositoryCachedSQLite3Impl(ctx context.Context, tagRep TagRepository
 	}
 	var err error
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TARGET_ID NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexTargetIDUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_TARGET_ID_UNIX" ON "` + dbName + `"(TARGET_ID, UPDATE_TIME_UNIX DESC);`
+	indexTargetIDUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_TARGET_ID_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(TARGET_ID, UPDATE_TIME_UNIX DESC);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDUnixSQL)
 	indexTargetIDUnixStmt, err := cacheDB.PrepareContext(ctx, indexTargetIDUnixSQL)
 	if err != nil {
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexIDUpdateTimeUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_ID_UPDATE_TIME_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
+	indexIDUpdateTimeUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_ID_UPDATE_TIME_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeUnixSQL)
 	indexIDUpdateTimeUnixStmt, err := cacheDB.PrepareContext(ctx, indexIDUpdateTimeUnixSQL)
 	if err != nil {
@@ -125,11 +125,11 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + dbName + ` AS TAG1
+FROM ` + sqlite3impl.QuoteIdent(dbName) + ` AS TAG1
 WHERE TAG1.TARGET_ID = ?
   AND NOT EXISTS (
     SELECT 1
-    FROM ` + dbName + ` AS TAG2
+    FROM ` + sqlite3impl.QuoteIdent(dbName) + ` AS TAG2
     WHERE TAG2.ID = TAG1.ID
       AND TAG2.UPDATE_TIME_UNIX > TAG1.UPDATE_TIME_UNIX
   )
@@ -184,7 +184,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + t.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 WHERE
 `
 	dataType := "tag"
@@ -192,8 +192,8 @@ WHERE
 		dataType,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
@@ -274,6 +274,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 
@@ -290,7 +294,7 @@ func (t *tagRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 			return err
 		}
 	} else {
-		_, err = t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
+		_, err = t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(t.dbName))
 		if err != nil {
 			return err
 		}
@@ -320,8 +324,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + t.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
+WHERE
 `
 
 	dataType := "tag"
@@ -338,8 +342,8 @@ WHERE
 		dataType,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
@@ -418,6 +422,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(tags) == 0 {
 		return nil, nil
 	}
@@ -446,8 +454,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + t.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
+WHERE
 `
 
 	dataType := "tag"
@@ -462,8 +470,8 @@ WHERE
 		dataType,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
@@ -542,6 +550,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 
@@ -607,6 +619,10 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 
@@ -641,7 +657,7 @@ func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error 
 		}
 	}()
 
-	sql := `DELETE FROM ` + t.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(t.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table statement %s: %w", "memory", err)
@@ -660,7 +676,7 @@ func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error 
 	}
 
 	sql = `
-INSERT INTO "` + t.dbName + `" (
+INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
   IS_DELETED,
   ID,
   TAG,
@@ -780,8 +796,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + t.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
+WHERE
 `
 
 	dataType := "tag"
@@ -795,8 +811,8 @@ WHERE
 		dataType,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
@@ -875,6 +891,10 @@ WHERE
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 
@@ -882,7 +902,7 @@ func (t *tagRepositoryCachedSQLite3Impl) AddTagInfo(ctx context.Context, tag Tag
 	t.m.Lock()
 	defer t.m.Unlock()
 	sql := `
-INSERT INTO ` + t.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
   IS_DELETED,
   ID,
   TAG,
@@ -896,7 +916,7 @@ INSERT INTO ` + t.dbName + ` (
   REP_NAME,
   RELATED_TIME_UNIX,
   CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX 
+  UPDATE_TIME_UNIX
 ) VALUES (
   ?,
   ?,
@@ -957,12 +977,12 @@ func (t *tagRepositoryCachedSQLite3Impl) GetAllTagNames(ctx context.Context) ([]
 	var err error
 
 	sql := `
-SELECT 
+SELECT
   DISTINCT TAG
-FROM ` + t.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 `
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	sql += fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
 	sql += " GROUP BY TAG "
 
@@ -1010,6 +1030,10 @@ FROM ` + t.dbName + `
 			tagNamesMap[tagName] = struct{}{}
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	tagNames := []string{}
 	for tagName := range tagNamesMap {
 		tagNames = append(tagNames, tagName)
@@ -1039,8 +1063,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + t.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
+WHERE
 `
 
 	dataType := "tag"
@@ -1050,8 +1074,8 @@ WHERE
 		dataType,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
@@ -1129,6 +1153,10 @@ WHERE
 			tag.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			tags = append(tags, tag)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return tags, nil
 }

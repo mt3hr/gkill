@@ -29,7 +29,7 @@ func NewNotificationRepositoryCachedSQLite3Impl(ctx context.Context, notificatio
 	}
 	var err error
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TARGET_ID NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -128,7 +128,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
@@ -221,6 +221,10 @@ WHERE
 			notifications = append(notifications, notification)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return notifications, nil
 }
 
@@ -237,7 +241,7 @@ func (n *notificationRepositoryCachedSQLite3Impl) Close(ctx context.Context) err
 			return err
 		}
 	} else {
-		_, err = n.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+n.dbName)
+		_, err = n.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(n.dbName))
 		if err != nil {
 			return err
 		}
@@ -268,7 +272,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
@@ -375,6 +379,10 @@ WHERE
 			notifications = append(notifications, notification)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(notifications) == 0 {
 		return nil, nil
 	}
@@ -404,7 +412,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
@@ -503,6 +511,10 @@ WHERE
 			notifications = append(notifications, notification)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return notifications, nil
 }
 
@@ -529,7 +541,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 	sql += " (NOTIFICATION_TIME_UNIX BETWEEN ? AND ?) "
@@ -627,6 +639,10 @@ WHERE
 			notifications = append(notifications, notification)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return notifications, nil
 }
 
@@ -661,7 +677,7 @@ func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		}
 	}()
 
-	sql := `DELETE FROM ` + n.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(n.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", "memory", err)
@@ -680,7 +696,7 @@ func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 	}
 
 	sql = `
-INSERT INTO ` + n.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
   IS_DELETED,
   ID,
   CONTENT,
@@ -802,7 +818,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
@@ -906,13 +922,17 @@ WHERE
 			notifications = append(notifications, notification)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return notifications, nil
 }
 func (n *notificationRepositoryCachedSQLite3Impl) AddNotificationInfo(ctx context.Context, notification Notification) error {
 	n.m.Lock()
 	defer n.m.Unlock()
 	sql := `
-INSERT INTO ` + n.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
   IS_DELETED,
   ID,
   CONTENT,

@@ -30,7 +30,7 @@ func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsR
 	var err error
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -111,7 +111,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 	defer t.m.RUnlock()
 
 	sqlStartTimeIs := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   START_TIME_UNIX AS RELATED_TIME_UNIX,
@@ -125,10 +125,10 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   'timeis_start' AS DATA_TYPE
-FROM ` + t.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 `
 	sqlEndTimeIs := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   END_TIME_UNIX AS RELATED_TIME_UNIX,
@@ -142,7 +142,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   'timeis_end' AS DATA_TYPE
-FROM ` + t.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 `
 
 	sqlWhereFilterEndTimeIs := ""
@@ -154,8 +154,8 @@ FROM ` + t.dbName + `
 
 	queryArgsForStart := []interface{}{}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
@@ -183,8 +183,8 @@ FROM ` + t.dbName + `
 		whereCounter++
 	}
 
-	tableName = t.dbName
-	tableNameAlias = t.dbName
+	tableName = sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias = sqlite3impl.QuoteIdent(t.dbName)
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -275,6 +275,10 @@ FROM ` + t.dbName + `
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -289,7 +293,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 
 	// startのみ
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   START_TIME_UNIX AS RELATED_TIME_UNIX,
@@ -303,8 +307,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   'timeis_start' AS DATA_TYPE
-FROM ` + t.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
+WHERE
 `
 
 	ids := []string{id}
@@ -316,8 +320,8 @@ WHERE
 		UpdateTime:     updateTime,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	queryArgs := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := false
@@ -396,6 +400,10 @@ WHERE
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(kyous) == 0 {
 		return nil, nil
@@ -414,7 +422,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context
 
 	// startのみ
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   START_TIME_UNIX AS RELATED_TIME_UNIX,
@@ -428,8 +436,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   'timeis_start' AS DATA_TYPE
-FROM ` + t.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
+WHERE
 `
 
 	ids := []string{id}
@@ -438,8 +446,8 @@ WHERE
 		IDs:    ids,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	queryArgs := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := false
@@ -518,6 +526,10 @@ WHERE
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return kyous, nil
 }
@@ -558,7 +570,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		}
 	}()
 
-	sql := `DELETE FROM ` + t.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(t.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", "memory", err)
@@ -577,7 +589,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 	}
 
 	sql = `
-INSERT INTO ` + t.dbName + `(
+INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
   IS_DELETED,
   ID,
   TITLE,
@@ -691,7 +703,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 			return err
 		}
 	} else {
-		_, err = t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
+		_, err = t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(t.dbName))
 		if err != nil {
 			return err
 		}
@@ -716,7 +728,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, quer
 	defer t.m.RUnlock()
 
 	sqlStartTimeIs := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   TITLE,
@@ -733,10 +745,10 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   'timeis_start' AS DATA_TYPE
-FROM ` + t.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 `
 	sqlEndTimeIs := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   TITLE,
@@ -753,7 +765,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   'timeis_end' AS DATA_TYPE
-FROM ` + t.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 `
 
 	sqlWhereFilterEndTimeIs := ""
@@ -764,8 +776,8 @@ FROM ` + t.dbName + `
 	}
 
 	queryArgsForStart := []interface{}{}
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
@@ -791,8 +803,8 @@ FROM ` + t.dbName + `
 	}
 
 	queryArgsForEnd := []interface{}{}
-	tableName = t.dbName
-	tableNameAlias = t.dbName
+	tableName = sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias = sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
@@ -885,6 +897,10 @@ FROM ` + t.dbName + `
 			timeiss = append(timeiss, timeis)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return timeiss, nil
 }
 
@@ -894,7 +910,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id st
 	var err error
 
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   TITLE,
@@ -911,7 +927,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + t.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 WHERE
 `
 
@@ -930,8 +946,8 @@ WHERE
 		dataType,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
@@ -1025,6 +1041,10 @@ WHERE
 			timeiss = append(timeiss, timeis)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(timeiss) == 0 {
 		return nil, nil
 	}
@@ -1037,7 +1057,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Conte
 	var err error
 
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   TITLE,
@@ -1054,7 +1074,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + t.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 WHERE
 `
 
@@ -1070,8 +1090,8 @@ WHERE
 		dataType,
 	}
 
-	tableName := t.dbName
-	tableNameAlias := t.dbName
+	tableName := sqlite3impl.QuoteIdent(t.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
@@ -1165,6 +1185,10 @@ WHERE
 			timeiss = append(timeiss, timeis)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return timeiss, nil
 }
 
@@ -1172,7 +1196,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) AddTimeIsInfo(ctx context.Context, t
 	t.m.Lock()
 	defer t.m.Unlock()
 	sql := `
-INSERT INTO ` + t.dbName + `(
+INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
   IS_DELETED,
   ID,
   TITLE,

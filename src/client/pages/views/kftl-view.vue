@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-import { computed, nextTick, onMounted, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import { GkillError } from '@/classes/api/gkill-error'
 import { LineLabelData } from '@/classes/kftl/line-label-data'
 
@@ -286,11 +286,13 @@ async function focus_kftl_text_area(): Promise<void> {
     document.getElementById("kftl_text_area")?.focus()
 }
 
-window.addEventListener("resize", () => {
+function on_resize() {
     resize()
     update_line_labels()
-})
+}
+window.addEventListener("resize", on_resize)
 onMounted(() => resize())
+onUnmounted(() => window.removeEventListener("resize", on_resize))
 
 </script>
 

@@ -355,6 +355,10 @@ AND DEVICE = ?
 			notifications = append(notifications, notification)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return notifications, nil
 }
 
