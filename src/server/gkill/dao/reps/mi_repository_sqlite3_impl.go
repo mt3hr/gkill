@@ -494,6 +494,10 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -877,6 +881,10 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(kyous) == 0 {
 		return nil, nil
 	}
@@ -1259,6 +1267,10 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 			}
 			kyous = append(kyous, kyou)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return kyous, nil
 }
@@ -1705,6 +1717,10 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 			mis = append(mis, mi)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return mis, nil
 }
 
@@ -2115,6 +2131,10 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 			}
 			mis = append(mis, mi)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(mis) == 0 {
 		return nil, nil
@@ -2529,6 +2549,10 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 			mis = append(mis, mi)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return mis, nil
 
 }
@@ -2733,6 +2757,10 @@ WHERE
 			}
 			boardNames = append(boardNames, boardName)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return boardNames, nil
 }

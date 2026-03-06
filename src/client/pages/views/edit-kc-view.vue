@@ -149,7 +149,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     title.value = cloned_kyou.value.typed_kc ? cloned_kyou.value.typed_kc.title : ""
     num_value.value = cloned_kyou.value.typed_kc ? cloned_kyou.value.typed_kc.num_value : 0
     related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
@@ -219,7 +219,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後KC情報を用意する
-        const updated_kc = await kc.clone()
+        const updated_kc = kc.clone()
         updated_kc.title = title.value
         updated_kc.num_value = num_value.value
         updated_kc.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()

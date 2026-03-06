@@ -171,7 +171,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後Nlog情報を用意する
-        const new_nlog = await nlog.value.clone()
+        const new_nlog = nlog.value.clone()
         new_nlog.id = props.gkill_api.generate_uuid()
         new_nlog.amount = nlog_amount_value.value
         new_nlog.shop = nlog_shop_value.value

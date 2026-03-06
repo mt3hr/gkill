@@ -30,7 +30,7 @@ func NewKCRepositoryCachedSQLite3Impl(ctx context.Context, kcRep KCRepository, c
 	}
 	var err error
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   REP_NAME NOT NULL,
   RELATED_TIME_UNIX NOT NULL,
   CREATE_TIME_UNIX NOT NULL,
-  UPDATE_TIME_UNIX NOT NULL 
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -124,7 +124,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + k.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(k.dbName) + `
 WHERE
 `
 
@@ -215,6 +215,10 @@ WHERE
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -236,8 +240,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + k.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(k.dbName) + `
+WHERE
 `
 	dataType := "kc"
 
@@ -330,6 +334,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(kyous) == 0 {
 		return nil, nil
 	}
@@ -354,8 +362,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + k.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(k.dbName) + `
+WHERE
 `
 	dataType := "kc"
 
@@ -445,6 +453,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -484,7 +496,7 @@ func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		}
 	}()
 
-	sql := `DELETE FROM ` + k.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(k.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create KC table statement %s: %w", "memory", err)
@@ -503,7 +515,7 @@ func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 	}
 
 	sql = `
-INSERT INTO ` + k.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(k.dbName) + ` (
   IS_DELETED,
   ID,
   TITLE,
@@ -609,7 +621,7 @@ func (k *kcRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 			return err
 		}
 	} else {
-		_, err = k.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+k.dbName)
+		_, err = k.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(k.dbName))
 		if err != nil {
 			return err
 		}
@@ -650,7 +662,7 @@ SELECT
   NUM_VALUE,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + k.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(k.dbName) + `
 WHERE
 `
 	dataType := "kc"
@@ -741,6 +753,10 @@ WHERE
 			kcs = append(kcs, kc)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kcs, nil
 }
 
@@ -764,8 +780,8 @@ SELECT
   NUM_VALUE,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + k.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(k.dbName) + `
+WHERE
 `
 
 	ids := []string{id}
@@ -866,6 +882,10 @@ WHERE
 			kcs = append(kcs, kc)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(kcs) == 0 {
 		return nil, nil
 	}
@@ -892,8 +912,8 @@ SELECT
   NUM_VALUE,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + k.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(k.dbName) + `
+WHERE
 `
 
 	ids := []string{id}
@@ -991,6 +1011,10 @@ WHERE
 			kcs = append(kcs, kc)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kcs, nil
 }
 
@@ -998,7 +1022,7 @@ func (k *kcRepositoryCachedSQLite3Impl) AddKCInfo(ctx context.Context, kc KC) er
 	k.m.Lock()
 	defer k.m.Unlock()
 	sql := `
-INSERT INTO ` + k.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(k.dbName) + ` (
   IS_DELETED,
   ID,
   TITLE,

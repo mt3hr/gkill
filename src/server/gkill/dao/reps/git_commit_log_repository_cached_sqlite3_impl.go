@@ -27,7 +27,7 @@ func NewGitRepCachedSQLite3Impl(ctx context.Context, gitRep GitCommitLogReposito
 	}
 	var err error
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   COMMIT_MESSAGE NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -121,7 +121,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + g.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
 WHERE
 `
 
@@ -211,6 +211,10 @@ WHERE
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -232,7 +236,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + g.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
 WHERE 
 `
 	dataType := "git_commit_log"
@@ -326,6 +330,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(kyous) == 0 {
 		return nil, nil
 	}
@@ -350,7 +358,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + g.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
 WHERE 
 `
 	dataType := "git_commit_log"
@@ -441,6 +449,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -478,7 +490,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		}
 	}()
 
-	sql := `DELETE FROM ` + g.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(g.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create git commit log table statement %s: %w", "memory", err)
@@ -497,7 +509,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 	}
 
 	sql = `
-INSERT INTO ` + g.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
   IS_DELETED,
   ID,
   COMMIT_MESSAGE,
@@ -606,7 +618,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) Close(ctx context.Context) err
 			return err
 		}
 	} else {
-		_, err = g.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+g.dbName)
+		_, err = g.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(g.dbName))
 		if err != nil {
 			return err
 		}
@@ -648,7 +660,7 @@ SELECT
   DELETION,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + g.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
 WHERE
 `
 
@@ -740,6 +752,10 @@ WHERE
 			gitCommitLogs = append(gitCommitLogs, gitCommitLog)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return gitCommitLogs, nil
 }
 
@@ -764,7 +780,7 @@ SELECT
   DELETION,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + g.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
 WHERE 
 `
 
@@ -861,6 +877,10 @@ WHERE
 			gitCommitLoig.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			gitCommitLog = append(gitCommitLog, gitCommitLoig)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(gitCommitLog) == 0 {
 		return nil, nil

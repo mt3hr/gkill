@@ -292,7 +292,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     mi_title.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : ""
     mi_board_name.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : ""
     mi_estimate_start_date_typed.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).toDate() : null
@@ -492,7 +492,7 @@ async function save(): Promise<void> {
         if (mi_limit_date_string.value !== "" && mi_limit_time_string.value !== "") {
             limit_time = moment(mi_limit_date_string.value + " " + mi_limit_time_string.value).toDate()
         }
-        const updated_mi = await mi.clone()
+        const updated_mi = mi.clone()
         updated_mi.title = mi_title.value
         updated_mi.board_name = mi_board_name.value
         updated_mi.estimate_start_time = estimate_start_time

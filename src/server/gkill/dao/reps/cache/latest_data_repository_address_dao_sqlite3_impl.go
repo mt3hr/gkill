@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
@@ -47,8 +48,8 @@ func NewLatestDataRepositoryAddressSQLite3Impl(userID string, db *sql.DB, mutex 
 		}
 	}
 
-	sql := fmt.Sprintf(`
-CREATE TABLE IF NOT EXISTS %s (
+	sql := `
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(latestDataRepositoryAddress.tableName) + ` (
   IS_DELETED NOT NULL,
   TARGET_ID_IN_DATA,
   TARGET_ID NOT NULL,
@@ -56,7 +57,7 @@ CREATE TABLE IF NOT EXISTS %s (
   DATA_UPDATE_TIME_UNIX NOT NULL,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX NOT NULL,
   PRIMARY KEY(TARGET_ID)
-);`, latestDataRepositoryAddress.tableName)
+);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := latestDataRepositoryAddress.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -84,7 +85,7 @@ CREATE TABLE IF NOT EXISTS %s (
 		return nil, err
 	}
 
-	indexSQL := fmt.Sprintf("CREATE INDEX IF NOT EXISTS INDEX_%s ON %s (TARGET_ID);", latestDataRepositoryAddress.tableName, latestDataRepositoryAddress.tableName)
+	indexSQL := "CREATE INDEX IF NOT EXISTS " + sqlite3impl.QuoteIdent("INDEX_"+latestDataRepositoryAddress.tableName) + " ON " + sqlite3impl.QuoteIdent(latestDataRepositoryAddress.tableName) + " (TARGET_ID);"
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	indexStmt, err := latestDataRepositoryAddress.db.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -111,16 +112,16 @@ CREATE TABLE IF NOT EXISTS %s (
 func (l *latestDataRepositoryAddressSQLite3Impl) GetAllLatestDataRepositoryAddresses(ctx context.Context) (map[string]LatestDataRepositoryAddress, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	sql := fmt.Sprintf(`
-SELECT 
+	sql := `
+SELECT
   IS_DELETED,
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME_UNIX,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
-FROM %s
-`, l.tableName)
+FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
+`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -175,23 +176,27 @@ FROM %s
 			latestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return latestDataRepositoryAddresses, nil
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) (map[string]LatestDataRepositoryAddress, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	sql := fmt.Sprintf(`
-SELECT 
+	sql := `
+SELECT
   IS_DELETED,
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME_UNIX,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
-FROM %s
+FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE LATEST_DATA_REPOSITORY_NAME = ?
-`, l.tableName)
+`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -249,23 +254,27 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 			latestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return latestDataRepositoryAddresses, nil
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, targetID string) (*LatestDataRepositoryAddress, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	sql := fmt.Sprintf(`
-SELECT 
+	sql := `
+SELECT
   IS_DELETED,
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME_UNIX,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
-FROM %s
+FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE TARGET_ID = ?
-`, l.tableName)
+`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -323,6 +332,10 @@ WHERE TARGET_ID = ?
 			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(latestDataRepositoryAddresses) == 0 {
 		return nil, nil
 	}
@@ -332,18 +345,18 @@ WHERE TARGET_ID = ?
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int64) (map[string]LatestDataRepositoryAddress, error) {
 	l.m.RLock()
 	defer l.m.RUnlock()
-	sql := fmt.Sprintf(`
-SELECT 
+	sql := `
+SELECT
   IS_DELETED,
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME_UNIX,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
-FROM %s
+FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX >= ?
 LIMIT ?
-`, l.tableName)
+`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -401,18 +414,22 @@ LIMIT ?
 			latestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return latestDataRepositoryAddresses, nil
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress LatestDataRepositoryAddress) (bool, error) {
 	l.m.Lock()
 	defer l.m.Unlock()
-	deleteSQL := fmt.Sprintf(`
-DELETE FROM %s
-WHERE TARGET_ID = ?`, l.tableName)
+	deleteSQL := `
+DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
+WHERE TARGET_ID = ?`
 
-	insertSQL := fmt.Sprintf(`
-INSERT INTO %s (
+	insertSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
   IS_DELETED,
   TARGET_ID,
   TARGET_ID_IN_DATA,
@@ -427,7 +444,7 @@ INSERT INTO %s (
   ?,
   ?
 )
-`, l.tableName)
+`
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", deleteSQL)
 	deleteStmt, err := l.db.PrepareContext(ctx, deleteSQL)
@@ -502,9 +519,9 @@ func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepository
 		}
 	}()
 
-	deleteSQL := fmt.Sprintf(`
-DELETE FROM %s
-WHERE TARGET_ID = ?`, l.tableName)
+	deleteSQL := `
+DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
+WHERE TARGET_ID = ?`
 
 	deleteStmt, err := tx.PrepareContext(ctx, deleteSQL)
 	if err != nil {
@@ -518,8 +535,8 @@ WHERE TARGET_ID = ?`, l.tableName)
 		}
 	}()
 
-	insertSQL := fmt.Sprintf(`
-INSERT INTO %s (
+	insertSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
   IS_DELETED,
   TARGET_ID,
   TARGET_ID_IN_DATA,
@@ -534,7 +551,7 @@ INSERT INTO %s (
   ?,
   ?
 )
-`, l.tableName)
+`
 	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repoisitory address insert sql: %w", err)
@@ -595,10 +612,10 @@ INSERT INTO %s (
 func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
 	l.m.Lock()
 	defer l.m.Unlock()
-	sql := fmt.Sprintf(`
-DELETE FROM %s
+	sql := `
+DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE TARGET_ID = ?
-`, l.tableName)
+`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -627,9 +644,9 @@ WHERE TARGET_ID = ?
 func (l *latestDataRepositoryAddressSQLite3Impl) DeleteAllLatestDataRepositoryAddress(ctx context.Context) (bool, error) {
 	l.m.Lock()
 	defer l.m.Unlock()
-	sql := fmt.Sprintf(`
-DELETE FROM %s
-`, l.tableName)
+	sql := `
+DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
+`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -655,10 +672,10 @@ DELETE FROM %s
 func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddressInRep(ctx context.Context, repName string) (bool, error) {
 	l.m.Lock()
 	defer l.m.Unlock()
-	sql := fmt.Sprintf(`
-DELETE FROM %s
+	sql := `
+DELETE FROM ` + sqlite3impl.QuoteIdent(l.tableName) + `
 WHERE LATEST_DATA_REPOSITORY_NAME  = ?
-`, l.tableName)
+`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -729,7 +746,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) erro
 	l.m.Lock()
 	defer l.m.Unlock()
 	if gkill_options.IsCacheInMemory {
-		sql := fmt.Sprintf(`DROP TABLE %s `, l.tableName)
+		sql := `DROP TABLE ` + sqlite3impl.QuoteIdent(l.tableName) + ` `
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 		stmt, err := l.db.PrepareContext(ctx, sql)
 		if err != nil {
@@ -785,12 +802,6 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)

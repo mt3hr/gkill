@@ -10,13 +10,13 @@
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field id="username" @keydown.enter="try_login(user_id, password_sha256)" name="username"
+                    <v-text-field id="username" @keydown.enter="try_login(user_id)" name="username"
                         autocomplete="username" :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field id="password" @keydown.enter="try_login(user_id, password_sha256)"
+                    <v-text-field id="password" @keydown.enter="try_login(user_id)"
                         name="current-password" autocomplete="current-password" :label="i18n.global.t('PASSWORD_TITLE')"
                         :type="'password'" v-model="password" />
                 </v-col>
@@ -24,7 +24,7 @@
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto">
-                    <v-btn dark class="login_button" color="primary" @click="try_login(user_id, password_sha256)">
+                    <v-btn dark class="login_button" color="primary" @click="try_login(user_id)">
                         {{ i18n.global.t("LOGIN_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
@@ -55,11 +55,9 @@ const emits = defineEmits<LoginViewEmits>()
 
 const app_content_height_px = computed(() => props.app_content_height + 'px')
 const app_content_width_px = computed(() => props.app_content_width + 'px')
-// eslint-disable-next-line vue/no-async-in-computed-properties
-const password_sha256 = computed(async () => {
+async function compute_password_sha256(): Promise<string> {
     const encoder = new TextEncoder();
     const msgUint8 = encoder.encode(password.value);
-    // eslint-disable-next-line vue/no-async-in-computed-properties
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
 
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -67,7 +65,7 @@ const password_sha256 = computed(async () => {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
     return hashHex;
-})
+}
 
 check_logined()
 
@@ -80,7 +78,7 @@ async function check_logined(): Promise<void> {
     }
 }
 
-async function try_login(user_id: string, password_sha256: Promise<string>): Promise<boolean> {
+async function try_login(user_id: string): Promise<boolean> {
     // 未入力チェック
     try {
         if (user_id === "") {
@@ -108,7 +106,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
         // request作成
         const req = new LoginRequest()
         req.user_id = user_id
-        req.password_sha256 = (await password_sha256.then((value) => value))
+        req.password_sha256 = await compute_password_sha256()
 
         // ログインとエラーチェック
         const res = await props.gkill_api.login(req)
