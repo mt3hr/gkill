@@ -5,6 +5,8 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/mt3hr/gkill/src/server/gkill/main/common"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
@@ -61,6 +63,9 @@ var (
 				log.Fatal(err)
 			}
 
+			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+
 			go func() {
 				for _, preLoadUserNames := range gkill_options.PreLoadUserNames {
 					userID := preLoadUserNames
@@ -71,17 +76,16 @@ var (
 
 					if err != nil {
 						err = fmt.Errorf("error at get device name: %w", err)
-						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+						slog.Log(ctx, gkill_log.Error, "error", "error", err)
 					}
 					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
 				}
 			}()
 
-			err = common.LaunchGkillServerAPI()
+			err = common.LaunchGkillServerAPI(ctx)
 			if err != nil {
 				log.Fatal(err)
 			}
-			os.Exit(0)
 		},
 	}
 )

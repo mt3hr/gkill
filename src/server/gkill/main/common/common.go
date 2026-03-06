@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -330,27 +329,24 @@ func InitGkillServerAPI() error {
 	return nil
 }
 
-func LaunchGkillServerAPI() error {
-	var err error
+func LaunchGkillServerAPI(ctx context.Context) error {
 	defer func() {
 		err := gkillServerAPI.Close()
 		if err != nil {
 			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
 	}()
-	interceptCh := make(chan os.Signal, 1)
-	signal.Notify(interceptCh, os.Interrupt)
-	go func() {
-		<-interceptCh
-		gkillServerAPI.Close()
-		os.Exit(0)
-	}()
 
-	for err == nil {
-		err = gkillServerAPI.Serve()
+	var err error
+	for {
+		err = gkillServerAPI.Serve(ctx)
 		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
-				// サーバが正常に閉じられた場合はスルーして立ち上げ直す
+				if ctx.Err() != nil {
+					// SIGINT/SIGTERM → 終了
+					return nil
+				}
+				// HandleUpdateServerConfigs → リスタート（ループ継続）
 			} else {
 				slog.Log(context.Background(), gkill_log.Error, "error at gkill server api serve", "error", err)
 				return err
@@ -361,8 +357,6 @@ func LaunchGkillServerAPI() error {
 			return err
 		}
 	}
-
-	return nil
 }
 
 func GetGkillServerAPI() *api.GkillServerAPI {
