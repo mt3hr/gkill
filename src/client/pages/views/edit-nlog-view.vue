@@ -240,7 +240,7 @@ async function save(): Promise<void> {
             return
         }
 
-        // 更新後Kmemo情報を用意する
+        // 更新後Nlog情報を用意する
         const updated_nlog = await nlog.clone()
         updated_nlog.amount = nlog_amount_value.value
         updated_nlog.shop = nlog_shop_value.value

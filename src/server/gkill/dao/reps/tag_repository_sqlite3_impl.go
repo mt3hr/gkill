@@ -742,7 +742,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get target id sql %s: %w", target_id, err)
+		err = fmt.Errorf("error at get target id sql %s: %w", target_id, err)
 		return nil, err
 	}
 	defer func() {

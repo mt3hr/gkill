@@ -208,7 +208,6 @@ async function save(): Promise<void> {
         // 更新がなかったらエラーメッセージを出力する
         if (urlog.title === title.value &&
             urlog.url === url.value &&
-            moment(urlog.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime() &&
             moment(urlog.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.urlog_is_no_update

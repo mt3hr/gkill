@@ -105,12 +105,12 @@ func (t *tagRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
 	defer t.m.Unlock()
 	err := t.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	err = t.originalRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	return nil
@@ -140,7 +140,7 @@ func (t *tagRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) e
 
 	err := t.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at update cache %s", err)
+		err = fmt.Errorf("error at update cache: %w", err)
 		return err
 	}
 

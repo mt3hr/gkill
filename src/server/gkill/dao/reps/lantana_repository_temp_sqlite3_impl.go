@@ -410,7 +410,7 @@ AND DEVICE = ?
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {

@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create KC IDF index unix to %s: %w", dbName, err)
+		err = fmt.Errorf("error at create KC index unix to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -585,7 +585,7 @@ INSERT INTO ` + k.dbName + ` (
 	}
 	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("error at commit transaction for add kmemo: %w", err)
+		err = fmt.Errorf("error at commit transaction for add kc: %w", err)
 		return err
 	}
 	isCommitted = true
@@ -816,7 +816,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -941,7 +941,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {

@@ -100,7 +100,7 @@ func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTim
 		for _, date := range dates {
 			gpxFileName, err := g.findGPXFileByDate(ctx, date)
 			if err != nil {
-				err = fmt.Errorf("fialed to find gpx file by date %s. %w", date, err)
+				err = fmt.Errorf("failed to find gpx file by date %s. %w", date, err)
 				return nil, err
 			}
 

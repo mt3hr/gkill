@@ -105,12 +105,12 @@ func (n *notificationRepositorySQLite3ImplLocalCached) Close(ctx context.Context
 	defer n.m.Unlock()
 	err := n.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	err = n.originalRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	return nil
@@ -140,7 +140,7 @@ func (n *notificationRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.C
 
 	err := n.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at update cache %s", err)
+		err = fmt.Errorf("error at update cache: %w", err)
 		return err
 	}
 

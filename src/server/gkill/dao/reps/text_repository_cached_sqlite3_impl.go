@@ -160,7 +160,7 @@ ORDER BY TEXT1.UPDATE_TIME_UNIX DESC
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", getTextsByTargetIDSQL)
 	getTextsByTargetIDStmt, err := cacheDB.PrepareContext(ctx, getTextsByTargetIDSQL)
 	if err != nil {
-		err = fmt.Errorf("error at get get target id sql: %w", err)
+		err = fmt.Errorf("error at get target id sql: %w", err)
 		return nil, err
 	}
 
