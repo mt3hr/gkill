@@ -21,7 +21,7 @@ npm run mcp:gkill-read
 - `GKILL_SESSION_ID` (任意。指定時はログインをスキップ)
 - `GKILL_LOCALE` (default: `ja`)
 
-### 提供ツール（5つ）
+### 提供ツール（6つ）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
@@ -29,6 +29,7 @@ npm run mcp:gkill-read
 | `gkill_get_all_tag_names` | 全タグ名を取得 |
 | `gkill_get_all_rep_names` | 全リポジトリ名を取得 |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得 |
+| `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
 
 ### AI用運用ガイド（MCP）
 AIが安定して呼び出せるよう、以下のルールを推奨します。
@@ -46,10 +47,11 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 - `git_commit_log`: Gitコミット記録
 
 #### 2) ツール選択フロー（推奨）
-1. 事前準備が必要な場合は `gkill_get_all_tag_names` / `gkill_get_all_rep_names` / `gkill_get_mi_board_list` でメタ情報を確認
-2. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
-3. 件数が多い場合は `cursor` / `next_cursor` でページングして追加取得
-4. 地図系は `gkill_get_gps_log` を使う
+1. まず `gkill_get_application_config` でタグ階層・ボード構造・リポジトリ構造を把握する
+2. 必要に応じて `gkill_get_all_tag_names` / `gkill_get_all_rep_names` / `gkill_get_mi_board_list` でメタ情報を補完
+3. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
+4. 件数が多い場合は `cursor` / `next_cursor` でページングして追加取得
+5. 地図系は `gkill_get_gps_log` を使う
 
 #### 3) `gkill_get_kyous` のパラメータ
 | パラメータ | 型 | 説明 |
@@ -138,7 +140,33 @@ Mi抽出:
 }
 ```
 
-#### 7) エラー時の推奨リトライ方針
+#### 7) `gkill_get_application_config` の詳細
+
+タグ階層やボード構造などの設定情報を取得します。`gkill_get_kyous` の前に呼び出すことで、より的確なクエリを構築できます。
+
+**パラメータ:**
+| パラメータ | 型 | 説明 |
+|---|---|---|
+| `locale_name` | string | ロケール（例: ja, en） |
+
+**レスポンスフィールド:**
+| フィールド | 説明 |
+|---|---|
+| `tag_struct` | タグの親子階層構造。各要素は `tag_name`, `check_when_inited`（デフォルトチェック状態）, `is_force_hide`（非表示設定）, `children`（子タグ配列）を持つ |
+| `mi_board_struct` | タスクボードの構造 |
+| `rep_struct` | リポジトリの組織構造 |
+| `rep_type_struct` | リポジトリの種別構造 |
+| `device_struct` | デバイスの組織構造 |
+| `kftl_template_struct` | KFTLテンプレート構造 |
+| `mi_default_board` | デフォルトのタスクボード名（例: "Inbox"） |
+| `show_tags_in_list` | タグ表示がオンかオフか |
+
+**推奨運用:**
+- クエリ前にタグ構造を確認し、`is_force_hide: true` のタグを `hide_tags` に含める
+- `check_when_inited: true` のタグはデフォルトで選択されるタグ（ユーザーが頻繁に使うタグ）
+- `children` でタグの親子関係を辿り、関連タグをまとめて検索に利用する
+
+#### 8) エラー時の推奨リトライ方針
 - 認証系（例: `ERR000013`, `ERR000002`, `ERR000238`）:
   - セッション再取得（再ログイン）後に同一リクエストを1回再試行
 - 入力不正系:
@@ -146,7 +174,7 @@ Mi抽出:
 - データなし:
   - エラーではなく空配列として扱う
 
-#### 8) 大量データ取得時の運用
+#### 9) 大量データ取得時の運用
 - `limit` と `max_size_mb` を適切に設定してレスポンスサイズを制御する
 - `has_more: true` の場合は `next_cursor` を使って続きを取得する
 - まず期間を絞り込んでから取得する（`use_calendar` 推奨）
