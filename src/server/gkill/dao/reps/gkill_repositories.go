@@ -1735,7 +1735,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get text histories: %w", e)
+			err = fmt.Errorf("error at find get notification histories: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -1993,7 +1993,7 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 	for range len(g.Reps) {
 		e := <-errch
 		if e != nil {
-			err = fmt.Errorf("error at update cache: %w: %w", e, err)
+			err = fmt.Errorf("error at select match reps from query: %w: %w", e, err)
 			existErr = true
 		}
 	}

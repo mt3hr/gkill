@@ -791,7 +791,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheKmemoReps {
 			cachedKmemoRep, err := reps.NewKmemoRepositoryCachedSQLite3Impl(ctx, repositories.KmemoReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_KMEMO")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached kmemo rep: %w", err)
 				return nil, err
 			}
 			repositories.KmemoReps = []reps.KmemoRepository{cachedKmemoRep}
@@ -800,7 +800,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheURLogReps {
 			cachedURLogRep, err := reps.NewURLogRepositoryCachedSQLite3Impl(ctx, repositories.URLogReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_URLOG")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached urlog rep: %w", err)
 				return nil, err
 			}
 			repositories.URLogReps = []reps.URLogRepository{cachedURLogRep}
@@ -809,7 +809,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheKCReps {
 			cachedKCRep, err := reps.NewKCRepositoryCachedSQLite3Impl(ctx, repositories.KCReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_KC")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached kc rep: %w", err)
 				return nil, err
 			}
 			repositories.KCReps = []reps.KCRepository{cachedKCRep}
@@ -818,7 +818,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheIDFKyouReps {
 			cachedIDFKyouRep, err := reps.NewIDFCachedRep(ctx, repositories.IDFKyouReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_IDF")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached idf kyou rep: %w", err)
 				return nil, err
 			}
 			repositories.IDFKyouReps = []reps.IDFKyouRepository{cachedIDFKyouRep}
@@ -827,7 +827,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheLantanaReps {
 			cachedLantanaRep, err := reps.NewLantanaRepositoryCachedSQLite3Impl(ctx, repositories.LantanaReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_LANTANA")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached lantana rep: %w", err)
 				return nil, err
 			}
 			repositories.LantanaReps = []reps.LantanaRepository{cachedLantanaRep}
@@ -836,7 +836,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheTimeIsReps {
 			cachedTimeIsRep, err := reps.NewTimeIsRepositoryCachedSQLite3Impl(ctx, repositories.TimeIsReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_TIMEIS")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached timeis rep: %w", err)
 				return nil, err
 			}
 			repositories.TimeIsReps = []reps.TimeIsRepository{cachedTimeIsRep}
@@ -845,7 +845,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheMiReps {
 			cachedMiRep, err := reps.NewMiRepositoryCachedSQLite3Impl(ctx, repositories.MiReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_MI")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached mi rep: %w", err)
 				return nil, err
 			}
 			repositories.MiReps = []reps.MiRepository{cachedMiRep}
@@ -854,7 +854,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheNlogReps {
 			cachedNlogRep, err := reps.NewNlogRepositoryCachedSQLite3Impl(ctx, repositories.NlogReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_NLOG")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached nlog rep: %w", err)
 				return nil, err
 			}
 			repositories.NlogReps = []reps.NlogRepository{cachedNlogRep}
@@ -872,7 +872,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheTextReps {
 			cachedTextRep, err := reps.NewTextRepositoryCachedSQLite3Impl(ctx, repositories.TextReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_TEXT")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached text rep: %w", err)
 				return nil, err
 			}
 			repositories.TextReps = []reps.TextRepository{cachedTextRep}
@@ -881,7 +881,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheNotificationReps {
 			cachedNotificationRep, err := reps.NewNotificationRepositoryCachedSQLite3Impl(ctx, repositories.NotificationReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_NOTIFICATION")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached notification rep: %w", err)
 				return nil, err
 			}
 			repositories.NotificationReps = []reps.NotificationRepository{cachedNotificationRep}
@@ -890,7 +890,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			rekyouRepositories := reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{&repositories.ReKyouReps}, GkillRepositories: repositories}
 			cachedReKyouRep, err := reps.NewReKyouRepositoryCachedSQLite3Impl(ctx, &rekyouRepositories, repositories, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_REKYOU")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached rekyou rep: %w", err)
 				return nil, err
 			}
 			repositories.ReKyouReps = reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{cachedReKyouRep}, GkillRepositories: repositories}
@@ -898,7 +898,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		if *gkill_options.CacheGitCommitLogReps {
 			cachedGitCommitLogRep, err := reps.NewGitRepCachedSQLite3Impl(ctx, repositories.GitCommitLogReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_GIT_COMMIT_LOG")
 			if err != nil {
-				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				err = fmt.Errorf("error at new cached git commit log rep: %w", err)
 				return nil, err
 			}
 			repositories.GitCommitLogReps = []reps.GitCommitLogRepository{cachedGitCommitLogRep}
@@ -944,7 +944,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		g.gkillRepositories[userID][device] = repositories
 		repositories = repositoriesInUser[device]
 
-		_, _ = g.GetNotificator(userID, device)
+		if _, err := g.GetNotificator(userID, device); err != nil {
+			slog.Log(context.Background(), gkill_log.Warn, "error at get notificator", "error", err, "userID", userID, "device", device)
+		}
 	}
 
 	return repositories, nil

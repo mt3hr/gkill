@@ -105,7 +105,7 @@ FROM NOTIFICATION
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get all mi notificate target sql: %w", err)
+		err = fmt.Errorf("error at get all gkill notification target sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -143,7 +143,7 @@ FROM NOTIFICATION
 				&gkillNotificateTarget.Subscription,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at scan mi notificate target: %w", err)
+				err = fmt.Errorf("error at scan gkill notification target: %w", err)
 				return nil, err
 			}
 			gkillNotificateTargets = append(gkillNotificateTargets, gkillNotificateTarget)
@@ -167,7 +167,7 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get mi notificate target sql: %w", err)
+		err = fmt.Errorf("error at get gkill notification target sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -208,7 +208,7 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 				&gkillNotificateTarget.Subscription,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at scan mi notificate target: %w", err)
+				err = fmt.Errorf("error at scan gkill notification target: %w", err)
 				return nil, err
 			}
 			gkillNotificateTargets = append(gkillNotificateTargets, gkillNotificateTarget)
@@ -237,7 +237,7 @@ VALUES (
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add mi notificate target sql: %w", err)
+		err = fmt.Errorf("error at add gkill notification target sql: %w", err)
 		return false, err
 	}
 	defer func() {
@@ -276,7 +276,7 @@ WHERE ID = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at update mi notificate target sql: %w", err)
+		err = fmt.Errorf("error at update gkill notification target sql: %w", err)
 		return false, err
 	}
 	defer func() {
@@ -312,7 +312,7 @@ WHERE ID = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at delete mi notification target sql: %w", err)
+		err = fmt.Errorf("error at delete gkill notification target sql: %w", err)
 		return false, err
 	}
 	defer func() {

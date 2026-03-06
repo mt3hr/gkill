@@ -113,7 +113,7 @@ FROM FILE_UPLOAD_HISTORY
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get all file upload histories sql: %w", err)
+		err = fmt.Errorf("error at get all file upload histories sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -191,7 +191,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get file upload histories sql: %w", err)
+		err = fmt.Errorf("error at get file upload histories sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -326,7 +326,7 @@ WHERE ID = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add file upload histories sql: %w", err)
+		err = fmt.Errorf("error at update file upload histories sql: %w", err)
 		return false, err
 	}
 	defer func() {

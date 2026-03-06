@@ -125,7 +125,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     } catch (e) {
         // TLSの場合、サーバ証明書が入っていないとログインできない
         const error = new GkillError()
-        error.error_code = GkillErrorCodes.requeired_certificate
+        error.error_code = GkillErrorCodes.required_certificate
         error.error_message = i18n.global.t("REQUEST_CERTIFICATE_REQUIRED_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)

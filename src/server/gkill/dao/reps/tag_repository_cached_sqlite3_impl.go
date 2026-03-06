@@ -138,7 +138,7 @@ ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", getTagsByTargetIDSQL)
 	getTagsByTargetIDStmt, err := cacheDB.PrepareContext(ctx, getTagsByTargetIDSQL)
 	if err != nil {
-		err = fmt.Errorf("error at get get target id sql: %w", err)
+		err = fmt.Errorf("error at get target id sql: %w", err)
 		return nil, err
 	}
 

@@ -802,7 +802,7 @@ func (g *GkillServerAPI) Serve() error {
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
 	if err != nil {
 		err = fmt.Errorf("error at get server config device = %s: %w", device, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	port := serverConfig.Address
@@ -851,14 +851,14 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Warn, "error at defer close", "error", err)
 		}
 	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse login response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidLoginResponseDataError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
@@ -871,7 +871,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse login request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidLoginRequestDataError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
@@ -884,7 +884,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	account, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.UserID)
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
@@ -895,7 +895,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	if account == nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INVALID_USER_ID_OR_PASSWORD"}),
@@ -907,7 +907,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// アカウント有効確認
 	if !account.IsEnable {
 		err = fmt.Errorf("error at account is not enable = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountIsNotEnableError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "ACCOUNT_DISABLED_MESSAGE"}),
@@ -919,7 +919,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// パスワードリセット処理実施中のアカウントはログインから弾く
 	if account.PasswordResetToken != nil {
 		err = fmt.Errorf("error at password reset token is not nil = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountPasswordResetTokenIsNotNilError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "REQUESTED_PASSWORD_RESET_MESSAGE"}),
@@ -931,7 +931,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// パスワード不一致を弾く
 	if account.PasswordSha256 != nil && *account.PasswordSha256 != request.PasswordSha256 {
 		err = fmt.Errorf("error at account invalid password = %s: %w", request.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidPasswordError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
@@ -958,7 +958,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -982,7 +982,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error add login session user_id = %s: %w", request.UserID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountLoginInternalServerError,
@@ -997,7 +997,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err != nil {
 			err = fmt.Errorf("error get login sessions = %s: %w", request.UserID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountSessionsError,
@@ -1029,7 +1029,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		if !ok || err != nil {
 			if err != nil {
 				err = fmt.Errorf("error add login session = %s: %w", request.UserID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogLoginSessionError,
@@ -1056,14 +1056,14 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			slog.Log(context.Background(), gkill_log.Warn, "error at defer close", "error", err)
 		}
 	}()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse logout request to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidLogoutResponseDataError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGOUT_MESSAGE"}),
@@ -1076,7 +1076,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse logout request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidLogoutRequestDataError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGOUT_MESSAGE"}),
@@ -1090,7 +1090,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if err != nil {
 				err = fmt.Errorf("error account from session id = %s: %w", request.SessionID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1098,7 +1098,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		device, err := g.GetDevice()
 		if err != nil {
 			err = fmt.Errorf("error at get device name: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -1110,7 +1110,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		_, err = g.GkillDAOManager.CloseUserRepositories(account.UserID, device)
 		if err != nil {
 			err = fmt.Errorf("error at close repository user id = %s device = %s: %w", account.UserID, device, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -1123,8 +1123,8 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	ok, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.DeleteLoginSession(r.Context(), request.SessionID)
 	if !ok || err != nil {
 		if err != nil {
-			err = fmt.Errorf("error add logout session id = %s: %w", request.SessionID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			err = fmt.Errorf("error at delete login session id = %s: %w", request.SessionID, err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountLogoutInternalServerError,
@@ -1458,7 +1458,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("exist tag id = %s", request.Tag.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistTagError,
+			ErrorCode:    message.AlreadyExistTagError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -1521,7 +1521,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -1630,7 +1630,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("exist text id = %s", request.Text.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistTextError,
+			ErrorCode:    message.AlreadyExistTextError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -1692,7 +1692,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -1801,7 +1801,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		err = fmt.Errorf("exist notification id = %s", request.Notification.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistNotificationError,
+			ErrorCode:    message.AlreadyExistNotificationError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -1863,7 +1863,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -1931,7 +1931,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -2028,7 +2028,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		err = fmt.Errorf("exist kmemo id = %s", request.Kmemo.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistKmemoError,
+			ErrorCode:    message.AlreadyExistKmemoError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -2089,7 +2089,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -2213,7 +2213,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("exist kc id = %s", request.KC.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistKCError,
+			ErrorCode:    message.AlreadyExistKCError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -2275,7 +2275,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -2339,7 +2339,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse add kmemo request to json: %w", err)
+		err = fmt.Errorf("error at parse add urlog request to json: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddURLogRequestDataError,
@@ -2397,7 +2397,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		err = fmt.Errorf("exist urlog id = %s", request.URLog.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistURLogError,
+			ErrorCode:    message.AlreadyExistURLogError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -2490,7 +2490,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -2613,7 +2613,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("exist nlog id = %s", request.Nlog.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistNlogError,
+			ErrorCode:    message.AlreadyExistNlogError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -2674,7 +2674,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -2797,7 +2797,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		err = fmt.Errorf("exist timeis id = %s", request.TimeIs.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistTimeIsError,
+			ErrorCode:    message.AlreadyExistTimeIsError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -2858,7 +2858,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -2983,7 +2983,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		err = fmt.Errorf("exist lantana id = %s", request.Lantana.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistLantanaError,
+			ErrorCode:    message.AlreadyExistLantanaError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -3045,7 +3045,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -3170,7 +3170,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("exist mi id = %s", request.Mi.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistMiError,
+			ErrorCode:    message.AlreadyExistMiError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -3231,7 +3231,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -3355,7 +3355,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		err = fmt.Errorf("exist rekyou id = %s", request.ReKyou.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistReKyouError,
+			ErrorCode:    message.AlreadyExistReKyouError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -3418,7 +3418,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -3541,10 +3541,10 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 	if request.TXID == nil {
 		err = repositories.WriteTagRep.AddTagInfo(r.Context(), request.Tag)
 		if err != nil {
-			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
+			err = fmt.Errorf("error at update tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddTagError,
+				ErrorCode:    message.UpdateTagError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -3555,17 +3555,17 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
 			err = repositories.TagReps[0].AddTagInfo(r.Context(), request.Tag)
 			if err != nil {
-				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
+				err = fmt.Errorf("error at update tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
+			err = fmt.Errorf("error at update tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddTagError,
+				ErrorCode:    message.UpdateTagError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -3595,7 +3595,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -3727,10 +3727,10 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 	if request.TXID == nil {
 		err = repositories.WriteTextRep.AddTextInfo(r.Context(), request.Text)
 		if err != nil {
-			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
+			err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddTextError,
+				ErrorCode:    message.UpdateTextError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -3740,17 +3740,17 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
 			err = repositories.TextReps[0].AddTextInfo(r.Context(), request.Text)
 			if err != nil {
-				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
+				err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
+			err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddTextError,
+				ErrorCode:    message.UpdateTextError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -3780,7 +3780,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -3912,10 +3912,10 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 	if request.TXID == nil {
 		err = repositories.WriteNotificationRep.AddNotificationInfo(r.Context(), request.Notification)
 		if err != nil {
-			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+			err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddNotificationError,
+				ErrorCode:    message.UpdateNotificationError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -3924,17 +3924,17 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
 			err = repositories.NotificationReps[0].AddNotificationInfo(r.Context(), request.Notification)
 			if err != nil {
-				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+				err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+			err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddNotificationError,
+				ErrorCode:    message.UpdateNotificationError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -3964,7 +3964,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -4120,10 +4120,10 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 	if request.TXID == nil {
 		err = repositories.WriteKmemoRep.AddKmemoInfo(r.Context(), request.Kmemo)
 		if err != nil {
-			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
+			err = fmt.Errorf("error at update kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddKmemoError,
+				ErrorCode:    message.UpdateKmemoError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -4132,17 +4132,17 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		if len(repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
 			err = repositories.KmemoReps[0].AddKmemoInfo(r.Context(), request.Kmemo)
 			if err != nil {
-				err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
+				err = fmt.Errorf("error at update kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
+			err = fmt.Errorf("error at update kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddKmemoError,
+				ErrorCode:    message.UpdateKmemoError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -4171,7 +4171,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -4317,10 +4317,10 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 	if request.TXID == nil {
 		err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
 		if err != nil {
-			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+			err = fmt.Errorf("error at update kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddKCError,
+				ErrorCode:    message.UpdateKCError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -4329,17 +4329,17 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
 			err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
 			if err != nil {
-				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+				err = fmt.Errorf("error at update kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+			err = fmt.Errorf("error at update kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddKCError,
+				ErrorCode:    message.UpdateKCError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -4368,7 +4368,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -4578,10 +4578,10 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 	if request.TXID == nil {
 		err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), request.URLog)
 		if err != nil {
-			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
+			err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddURLogError,
+				ErrorCode:    message.UpdateURLogError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -4590,18 +4590,18 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
 			err = repositories.URLogReps[0].AddURLogInfo(r.Context(), request.URLog)
 			if err != nil {
-				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
+				err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
+			err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddURLogError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
+				ErrorCode:    message.UpdateURLogError,
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4629,7 +4629,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -4774,10 +4774,10 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 	if request.TXID == nil {
 		err = repositories.WriteNlogRep.AddNlogInfo(r.Context(), request.Nlog)
 		if err != nil {
-			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
+			err = fmt.Errorf("error at update nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddNlogError,
+				ErrorCode:    message.UpdateNlogError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -4786,17 +4786,17 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
 			err = repositories.NlogReps[0].AddNlogInfo(r.Context(), request.Nlog)
 			if err != nil {
-				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
+				err = fmt.Errorf("error at update nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
+			err = fmt.Errorf("error at update nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddNlogError,
+				ErrorCode:    message.UpdateNlogError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -4825,7 +4825,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -4971,10 +4971,10 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 	if request.TXID == nil {
 		err = repositories.WriteTimeIsRep.AddTimeIsInfo(r.Context(), request.TimeIs)
 		if err != nil {
-			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
+			err = fmt.Errorf("error at update timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddTimeIsError,
+				ErrorCode:    message.UpdateTimeIsError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -4983,17 +4983,17 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
 			err = repositories.TimeIsReps[0].AddTimeIsInfo(r.Context(), request.TimeIs)
 			if err != nil {
-				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
+				err = fmt.Errorf("error at update timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
+			err = fmt.Errorf("error at update timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddTimeIsError,
+				ErrorCode:    message.UpdateTimeIsError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5022,7 +5022,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -5155,10 +5155,10 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 	if request.TXID == nil {
 		err = repositories.WriteLantanaRep.AddLantanaInfo(r.Context(), request.Lantana)
 		if err != nil {
-			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
+			err = fmt.Errorf("error at update lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddLantanaError,
+				ErrorCode:    message.UpdateLantanaError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5167,17 +5167,17 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		if len(repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
 			err = repositories.LantanaReps[0].AddLantanaInfo(r.Context(), request.Lantana)
 			if err != nil {
-				err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
+				err = fmt.Errorf("error at update lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
+			err = fmt.Errorf("error at update lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddLantanaError,
+				ErrorCode:    message.UpdateLantanaError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5206,7 +5206,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -5339,10 +5339,10 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 	if request.TXID == nil {
 		err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), request.IDFKyou)
 		if err != nil {
-			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
+			err = fmt.Errorf("error at update idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddIDFKyouError,
+				ErrorCode:    message.UpdateIDFKyouError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5351,17 +5351,17 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
 			err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), request.IDFKyou)
 			if err != nil {
-				err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
+				err = fmt.Errorf("error at update idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.IDFKyouTempRep.AddIDFKyouInfo(r.Context(), request.IDFKyou, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
+			err = fmt.Errorf("error at update idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddIDFKyouError,
+				ErrorCode:    message.UpdateIDFKyouError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5390,7 +5390,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.IDFKyou.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -5546,10 +5546,10 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 	if request.TXID == nil {
 		err = repositories.WriteMiRep.AddMiInfo(r.Context(), request.Mi)
 		if err != nil {
-			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
+			err = fmt.Errorf("error at update mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddMiError,
+				ErrorCode:    message.UpdateMiError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5558,17 +5558,17 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		if len(repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
 			err = repositories.MiReps[0].AddMiInfo(r.Context(), request.Mi)
 			if err != nil {
-				err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
+				err = fmt.Errorf("error at update mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
+			err = fmt.Errorf("error at update mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddMiError,
+				ErrorCode:    message.UpdateMiError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5597,7 +5597,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -5720,10 +5720,10 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 	if request.TXID == nil {
 		err = repositories.WriteReKyouRep.AddReKyouInfo(r.Context(), request.ReKyou)
 		if err != nil {
-			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
+			err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddReKyouError,
+				ErrorCode:    message.UpdateReKyouError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5732,17 +5732,17 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(r.Context(), request.ReKyou)
 			if err != nil {
-				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
+				err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			}
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
 		if err != nil {
-			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
+			err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
-				ErrorCode:    message.AddReKyouError,
+				ErrorCode:    message.UpdateReKyouError,
 				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -5772,7 +5772,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -9155,7 +9155,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		err = fmt.Errorf("exist account id = %s", userID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistAccountError,
+			ErrorCode:    message.AlreadyExistAccountError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -9389,7 +9389,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	validFor := &validForDuration
 	isCA := &isCABool
 	if len(*host) == 0 {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Missing required --host parameter")
+		slog.Log(r.Context(), gkill_log.Error, "finish Missing required --host parameter")
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9417,7 +9417,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	case "P521":
 		priv, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
-		slog.Log(r.Context(), gkill_log.Trace, "finish Unrecognized elliptic", "curve", *ecdsaCurve)
+		slog.Log(r.Context(), gkill_log.Error, "finish Unrecognized elliptic", "curve", *ecdsaCurve)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9428,7 +9428,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to generate private key", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to generate private key", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9455,7 +9455,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	} else {
 		notBefore, err = time.Parse("Jan 2 15:04:05 2006", *validFrom)
 		if err != nil {
-			slog.Log(r.Context(), gkill_log.Trace, "finish Failed to parse creation date", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish Failed to parse creation date", "error", err)
 			err = fmt.Errorf("error at generate tls files")
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
@@ -9472,7 +9472,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to generate serial number", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to generate serial number", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9512,7 +9512,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey(priv), priv)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to create certificate", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to create certificate", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9528,7 +9528,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	err = os.MkdirAll(parentDirCert, os.ModePerm)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to open cert.pem for writing", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to open cert.pem for writing", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9540,7 +9540,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	}
 	err = os.MkdirAll(parentDirKey, os.ModePerm)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to open cert.pem for writing", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to open cert.pem for writing", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9553,7 +9553,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	certOut, err := os.Create(certFileName)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to open cert.pem for writing", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to open cert.pem for writing", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9564,7 +9564,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to write data to cert.pem", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to write data to cert.pem", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9575,7 +9575,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err := certOut.Close(); err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Error closing cert.pem", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Error closing cert.pem", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9588,7 +9588,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	keyOut, err := os.OpenFile(pemFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to open key.pem for writing", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to open key.pem for writing", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9600,7 +9600,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	}
 	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Unable to marshal private key", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Unable to marshal private key", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9611,7 +9611,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err := pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes}); err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Failed to write data to key.pem", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Failed to write data to key.pem", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9622,7 +9622,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	if err := keyOut.Close(); err != nil {
-		slog.Log(r.Context(), gkill_log.Trace, "finish Error closing key.pem", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish Error closing key.pem", "error", err)
 		err = fmt.Errorf("error at generate tls files")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
@@ -9898,7 +9898,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 		err = fmt.Errorf("not exist ShareKyouListInfo id = %s", request.ShareKyouListInfo.ShareID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistShareKyouListInfoError,
+			ErrorCode:    message.AlreadyExistShareKyouListInfoError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -10252,7 +10252,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
-			err = fmt.Errorf("error at parse delete ShareKyouListInfos response to json: %w", err)
+			err = fmt.Errorf("error at parse get shared kyous response to json: %w", err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiSharedTasksResponseDataError,
@@ -10265,7 +10265,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse delete ShareKyouListInfos request to json: %w", err)
+		err = fmt.Errorf("error at parse get shared kyous request to json: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiSharedTasksRequestDataError,
@@ -10898,7 +10898,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 
 	userDataRootDirectory := filepath.Join(os.ExpandEnv(serverConfig.UserDataDirectory), account.UserID)
 	if _, err := os.Stat(os.ExpandEnv(userDataRootDirectory)); err == nil {
-		err := fmt.Errorf("error at initialize new user reps. user root directory aleady exist %s: %w", userDataRootDirectory, err)
+		err := fmt.Errorf("error at initialize new user reps. user root directory already exist %s: %w", userDataRootDirectory, err)
 		return err
 	} else {
 		err := os.MkdirAll(os.ExpandEnv(userDataRootDirectory), fs.ModePerm)
@@ -11051,7 +11051,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 			return
 		}
 		sharedID = strings.ReplaceAll(sharedIDCookie.Value, "shared_id", "")
@@ -11067,7 +11067,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if account == nil || gkillError != nil || err != nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 			return
 		}
 		userID = account.UserID
@@ -11076,14 +11076,14 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil || sharedKyouInfo == nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 			return
 		}
 		userID = sharedKyouInfo.UserID
 	} else {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 		return
 	}
 
@@ -11091,7 +11091,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 		return
 	}
 
@@ -11099,7 +11099,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 		return
 	}
 
@@ -11112,7 +11112,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 		return
 	}
 	for _, idfRep := range idfRepImpls {
@@ -11120,7 +11120,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 			return
 		}
 		if repName == targetRepName {
@@ -11132,7 +11132,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if targetIDFRep == nil {
 		w.WriteHeader(http.StatusNotFound)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Trace, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
 		return
 	}
 
@@ -11875,7 +11875,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		err = fmt.Errorf("exist urlog id = %s", urlog.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistURLogError,
+			ErrorCode:    message.AlreadyExistURLogError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		_ = gkillError
@@ -11957,7 +11957,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
 	if err != nil {
-		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 	}
 
@@ -12593,7 +12593,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -12639,7 +12639,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kc.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -12686,7 +12686,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kmemo.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -12733,7 +12733,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[lantana.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -12780,7 +12780,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[mi.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -12827,7 +12827,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[nlog.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -12875,7 +12875,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[notification.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -12923,7 +12923,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[rekyou.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -12972,7 +12972,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[tag.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -13019,7 +13019,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[text.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -13066,7 +13066,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[timeis.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
@@ -13113,7 +13113,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
 		if err != nil {
-			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+			err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		}
 	}
