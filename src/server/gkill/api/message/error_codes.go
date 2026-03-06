@@ -371,4 +371,5 @@ const (
 	UpdateIDFKyouError                                               = "ERR000369"
 	UpdateKCError                                                    = "ERR000370"
 	UpdateNotificationError                                          = "ERR000371"
+	InvalidURLogBookmarkletRequestDataError                          = "ERR000372"
 )

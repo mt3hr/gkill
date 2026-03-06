@@ -11331,7 +11331,7 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 		return
 	}
 	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateTagSuccessMessage,
+		MessageCode: message.RegisterGkillNotificationSuccessMessage,
 		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
 	})
 }
@@ -11812,7 +11812,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		err = fmt.Errorf("error at parse urlog bookmarklet request to json: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AccountInvalidAddKmemoRequestDataError,
+			ErrorCode:    message.InvalidURLogBookmarkletRequestDataError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		// response.Errors = append(response.Errors, gkillError)
@@ -12434,7 +12434,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SAVE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
