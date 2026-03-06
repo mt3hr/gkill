@@ -64,8 +64,8 @@ export class Kyou extends InfoBase {
         const awaitPromises = new Array<Promise<any>>()
         try {
             awaitPromises.push(this.load_typed_datas(query))
-            this.load_attached_histories(query)
-            this.load_attached_datas()
+            awaitPromises.push(this.load_attached_histories(query))
+            awaitPromises.push(this.load_attached_datas())
             return Promise.all(awaitPromises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {

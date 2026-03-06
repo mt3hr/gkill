@@ -5,9 +5,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 const snowField = ref<HTMLElement | null>(null)
+let timerId: ReturnType<typeof setTimeout> | null = null
 
 function createSnowflake() {
     const flake = document.createElement('div')
@@ -29,11 +30,17 @@ function createSnowflake() {
 
 function loopSnowfall() {
     createSnowflake()
-    setTimeout(loopSnowfall, 100)
+    timerId = setTimeout(loopSnowfall, 100)
 }
 
 onMounted(() => {
     loopSnowfall()
+})
+
+onUnmounted(() => {
+    if (timerId !== null) {
+        clearTimeout(timerId)
+    }
 })
 </script>
 

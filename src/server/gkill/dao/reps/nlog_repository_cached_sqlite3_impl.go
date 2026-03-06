@@ -30,7 +30,7 @@ func NewNlogRepositoryCachedSQLite3Impl(ctx context.Context, nlogRep NlogReposit
 	}
 	var err error
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   SHOP NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -132,7 +132,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE
 `
 
@@ -224,6 +224,10 @@ WHERE
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -245,7 +249,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
@@ -340,6 +344,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(kyous) == 0 {
 		return nil, nil
 	}
@@ -364,7 +372,7 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
@@ -456,6 +464,10 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -497,7 +509,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 		}
 	}()
 
-	sql := `DELETE FROM ` + n.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(n.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create NLOG table statement %s: %w", "memory", err)
@@ -516,7 +528,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 	}
 
 	sql = `
-INSERT INTO ` + n.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
   IS_DELETED,
   ID,
   SHOP,
@@ -628,7 +640,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 			return err
 		}
 	} else {
-		_, err = n.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+n.dbName)
+		_, err = n.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(n.dbName))
 		if err != nil {
 			return err
 		}
@@ -671,7 +683,7 @@ SELECT
   AMOUNT,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE
 `
 
@@ -761,6 +773,10 @@ WHERE
 			nlogs = append(nlogs, nlog)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return nlogs, nil
 }
 
@@ -785,7 +801,7 @@ SELECT
   AMOUNT,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
@@ -886,6 +902,10 @@ WHERE
 			nlogs = append(nlogs, nlog)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	if len(nlogs) == 0 {
 		return nil, nil
 	}
@@ -913,7 +933,7 @@ SELECT
   AMOUNT,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + n.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
@@ -1011,6 +1031,10 @@ WHERE
 			nlogs = append(nlogs, nlog)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return nlogs, nil
 }
 
@@ -1018,7 +1042,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) AddNlogInfo(ctx context.Context, nlog 
 	n.m.Lock()
 	defer n.m.Unlock()
 	sql := `
-INSERT INTO ` + n.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
   IS_DELETED,
   ID,
   SHOP,

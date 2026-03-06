@@ -76,12 +76,6 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 		err = fmt.Errorf("error at create ACCOUNT table to %s: %w", filename, err)
 		return nil, err
 	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_ACCOUNT ON ACCOUNT (USER_ID);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -178,6 +172,10 @@ FROM ACCOUNT
 			accounts = append(accounts, account)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return accounts, nil
 }
 func (a *accountDAOSQLite3Impl) GetAccount(ctx context.Context, userID string) (*Account, error) {
@@ -237,15 +235,23 @@ WHERE USER_ID = ?
 				&account.IsEnable,
 				&account.PasswordResetToken,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan account: %w", err)
+				return nil, err
+			}
 			accounts = append(accounts, account)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(accounts) == 0 {
 		return nil, nil
 	} else if len(accounts) == 1 {
 		return accounts[0], nil
 	}
-	return nil, fmt.Errorf("複数のアカウントが見つかりました。%s: %w", userID, err)
+	return nil, fmt.Errorf("複数のアカウントが見つかりました。%s", userID)
 }
 func (a *accountDAOSQLite3Impl) AddAccount(ctx context.Context, account *Account) (bool, error) {
 	a.m.Lock()
@@ -405,12 +411,6 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -465,8 +465,7 @@ VALUES(?, ?)`
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertCurrentVersionSQL)
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
-				err = fmt.Errorf("error at get schema version sql: %w", err)
-				err = fmt.Errorf("error at insert schema version sql: %w", err)
+				err = fmt.Errorf("error at prepare insert schema version sql: %w", err)
 				return false, nil, err
 			}
 			defer func() {
@@ -479,8 +478,7 @@ VALUES(?, ?)`
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
-				err = fmt.Errorf("error at get schema version sql: %w", err)
-				err = fmt.Errorf("error at query :%w", err)
+				err = fmt.Errorf("error at exec insert schema version sql: %w", err)
 				return false, nil, err
 			}
 

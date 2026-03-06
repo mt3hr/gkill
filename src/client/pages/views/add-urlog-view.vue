@@ -150,7 +150,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後URLog情報を用意する
-        const new_urlog = await urlog.value.clone()
+        const new_urlog = urlog.value.clone()
         new_urlog.id = props.gkill_api.generate_uuid()
         new_urlog.title = title.value
         new_urlog.url = url.value
@@ -177,7 +177,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits("updated_kyou", res.added_kyou!)
+        emits("registered_kyou", res.added_kyou!)
         emits('requested_reload_list')
         emits('requested_close_dialog')
         return

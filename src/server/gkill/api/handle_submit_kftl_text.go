@@ -86,13 +86,17 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 	if err != nil || applicationConfig == nil {
 		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
-		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), defaultApplicationConfig)
+		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
 		if err != nil {
 			slog.Log(r.Context(), gkill_log.Debug, "error at add default application config", "error", err)
 		}
 		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-		if err != nil {
-			err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
+		if err != nil || applicationConfig == nil {
+			if err != nil {
+				err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
+			} else {
+				err = fmt.Errorf("error at get application config user id = %s device = %s: application config is nil", userID, device)
+			}
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetApplicationConfigError,

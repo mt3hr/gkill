@@ -278,7 +278,7 @@ const show_end_time_menu = ref(false)
 const show_limit_date_menu = ref(false)
 const show_limit_time_menu = ref(false)
 
-watch(() => props.application_config, () => load_mi_board_names)
+watch(() => props.application_config, () => load_mi_board_names())
 load_mi_board_names()
 
 async function load_mi_board_names(): Promise<void> {
@@ -440,9 +440,9 @@ async function save(): Promise<void> {
 
         // 更新がなかったらエラーメッセージを出力する
         if (mi.value.title === mi_title.value &&
-            moment(mi.value.estimate_start_time) === (moment(mi_estimate_start_date_string.value + " " + mi_estimate_start_time_string.value)) &&
-            moment(mi.value.estimate_end_time) === moment(mi_estimate_end_date_string.value + " " + mi_estimate_end_time_string.value) &&
-            moment(mi.value.limit_time) === (moment(mi_limit_date_string.value + " " + mi_limit_time_string.value))
+            moment(mi.value.estimate_start_time).valueOf() === moment(mi_estimate_start_date_string.value + " " + mi_estimate_start_time_string.value).valueOf() &&
+            moment(mi.value.estimate_end_time).valueOf() === moment(mi_estimate_end_date_string.value + " " + mi_estimate_end_time_string.value).valueOf() &&
+            moment(mi.value.limit_time).valueOf() === moment(mi_limit_date_string.value + " " + mi_limit_time_string.value).valueOf()
         ) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.mi_is_no_update
@@ -468,7 +468,7 @@ async function save(): Promise<void> {
         if (mi_limit_date_string.value !== "" && mi_limit_time_string.value !== "") {
             limit_time = moment(mi_limit_date_string.value + " " + mi_limit_time_string.value).toDate()
         }
-        const new_mi = await mi.value.clone()
+        const new_mi = mi.value.clone()
         new_mi.id = mi.value.id
         new_mi.title = mi_title.value
         new_mi.board_name = mi_board_name.value

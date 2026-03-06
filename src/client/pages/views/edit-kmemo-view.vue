@@ -147,7 +147,7 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
-    cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_all()
     kmemo_value.value = cloned_kyou.value.typed_kmemo ? cloned_kyou.value.typed_kmemo.content : ""
     related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
     related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
@@ -186,7 +186,7 @@ async function save(): Promise<void> {
         if (related_date_string.value === "" || related_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kmemo_related_time_is_blank
-            error.error_message = i18n.global.t("KMEMO_CONTENT_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("KC_RELATED_TIME_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -205,7 +205,7 @@ async function save(): Promise<void> {
         }
 
         // 更新後Kmemo情報を用意する
-        const updated_kmemo = await kmemo.clone()
+        const updated_kmemo = kmemo.clone()
         updated_kmemo.content = kmemo_value.value
         updated_kmemo.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_kmemo.update_app = "gkill"
