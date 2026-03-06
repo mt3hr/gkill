@@ -81,4 +81,5 @@ const (
 	SubmitKFTLTextSuccessMessage           = "MSG000076"
 	GetKyousMCPSuccessMessage              = "MSG000077"
 	UpdateCacheSuccessMessage              = "MSG000078"
+	RegisterGkillNotificationSuccessMessage = "MSG000079"
 )
