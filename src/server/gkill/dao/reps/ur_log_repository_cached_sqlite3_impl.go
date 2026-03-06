@@ -29,7 +29,7 @@ func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository UR
 	var err error
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "` + dbName + `" (
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   URL NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
@@ -128,14 +128,14 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + u.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
 WHERE
 `
 
 	dataType := "urlog"
 
-	tableName := u.dbName
-	tableNameAlias := u.dbName
+	tableName := sqlite3impl.QuoteIdent(u.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -220,6 +220,10 @@ WHERE
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return kyous, nil
 }
 
@@ -241,8 +245,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + u.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
+WHERE
 `
 	dataType := "urlog"
 
@@ -255,8 +259,8 @@ WHERE
 		UpdateTime:     updateTime,
 	}
 
-	tableName := u.dbName
-	tableNameAlias := u.dbName
+	tableName := sqlite3impl.QuoteIdent(u.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -337,6 +341,10 @@ WHERE
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(kyous) == 0 {
 		return nil, nil
@@ -362,8 +370,8 @@ SELECT
   UPDATE_USER,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + u.dbName + `
-WHERE 
+FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
+WHERE
 `
 	dataType := "urlog"
 
@@ -373,8 +381,8 @@ WHERE
 		IDs:    ids,
 	}
 
-	tableName := u.dbName
-	tableNameAlias := u.dbName
+	tableName := sqlite3impl.QuoteIdent(u.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -455,6 +463,10 @@ WHERE
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return kyous, nil
 }
@@ -495,7 +507,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		}
 	}()
 
-	sql := `DELETE FROM ` + u.dbName
+	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(u.dbName)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create URLOG table statement %s: %w", "memory", err)
@@ -514,7 +526,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 	}
 
 	sql = `
-INSERT INTO ` + u.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
   IS_DELETED,
   ID,
   URL,
@@ -630,7 +642,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 			return err
 		}
 	} else {
-		_, err = u.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+u.dbName)
+		_, err = u.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(u.dbName))
 		if err != nil {
 			return err
 		}
@@ -674,14 +686,14 @@ SELECT
   THUMBNAIL_IMAGE,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + u.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
 WHERE
 `
 
 	dataType := "urlog"
 
-	tableName := u.dbName
-	tableNameAlias := u.dbName
+	tableName := sqlite3impl.QuoteIdent(u.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -768,6 +780,10 @@ WHERE
 			urlogs = append(urlogs, urlog)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return urlogs, nil
 }
 
@@ -800,7 +816,7 @@ SELECT
   THUMBNAIL_IMAGE,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + u.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
 WHERE
 `
 
@@ -814,8 +830,8 @@ WHERE
 	}
 	dataType := "urlog"
 
-	tableName := u.dbName
-	tableNameAlias := u.dbName
+	tableName := sqlite3impl.QuoteIdent(u.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -901,6 +917,10 @@ WHERE
 			}
 			urlogs = append(urlogs, urlog)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(urlogs) == 0 {
 		return nil, nil
@@ -937,7 +957,7 @@ SELECT
   THUMBNAIL_IMAGE,
   REP_NAME,
   ? AS DATA_TYPE
-FROM ` + u.dbName + `
+FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
 WHERE
 `
 
@@ -948,8 +968,8 @@ WHERE
 	}
 	dataType := "urlog"
 
-	tableName := u.dbName
-	tableNameAlias := u.dbName
+	tableName := sqlite3impl.QuoteIdent(u.dbName)
+	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -1036,6 +1056,10 @@ WHERE
 			urlogs = append(urlogs, urlog)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return urlogs, nil
 }
 
@@ -1043,7 +1067,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) AddURLogInfo(ctx context.Context, url
 	u.m.Lock()
 	defer u.m.Unlock()
 	sql := `
-INSERT INTO ` + u.dbName + ` (
+INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
   IS_DELETED,
   ID,
   URL,
@@ -1060,7 +1084,7 @@ INSERT INTO ` + u.dbName + ` (
   REP_NAME,
   RELATED_TIME_UNIX,
   CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX 
+  UPDATE_TIME_UNIX
 ) VALUES (
   ?,
   ?,

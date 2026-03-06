@@ -416,6 +416,10 @@ AND DEVICE = ?
 			tags = append(tags, tag)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return tags, nil
 }
 

@@ -80,7 +80,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { type Ref, ref, computed, watch, nextTick, onMounted } from 'vue'
+import { type Ref, ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import PlaingTimeisView from './views/plaing-timeis-view.vue'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
@@ -168,14 +168,12 @@ async function write_errors(errors_: Array<GkillError>) {
         }
     }
     messages.value.push(...received_errors)
-    for (let i = 0; i < received_errors.length; i++) {
-        for (let j = 0; j < received_errors.length; j++) {
-            const auto_close_duration_milli_seconds = received_errors[j].auto_close_duration_milli_seconds
-            if (auto_close_duration_milli_seconds) {
-                sleep(auto_close_duration_milli_seconds).then(() => {
-                    close_message(received_errors[j].id)
-                })
-            }
+    for (let j = 0; j < received_errors.length; j++) {
+        const auto_close_duration_milli_seconds = received_errors[j].auto_close_duration_milli_seconds
+        if (auto_close_duration_milli_seconds) {
+            sleep(auto_close_duration_milli_seconds).then(() => {
+                close_message(received_errors[j].id)
+            })
         }
     }
 }
@@ -196,14 +194,12 @@ async function write_messages(messages_: Array<GkillMessage>) {
         }
     }
     messages.value.push(...received_messages)
-    for (let i = 0; i < received_messages.length; i++) {
-        for (let j = 0; j < received_messages.length; j++) {
-            const auto_close_duration_milli_seconds = received_messages[j].auto_close_duration_milli_seconds
-            if (auto_close_duration_milli_seconds) {
-                sleep(auto_close_duration_milli_seconds).then(() => {
-                    close_message(received_messages[j].id)
-                })
-            }
+    for (let j = 0; j < received_messages.length; j++) {
+        const auto_close_duration_milli_seconds = received_messages[j].auto_close_duration_milli_seconds
+        if (auto_close_duration_milli_seconds) {
+            sleep(auto_close_duration_milli_seconds).then(() => {
+                close_message(received_messages[j].id)
+            })
         }
     }
 }
@@ -212,6 +208,7 @@ function close_message(message_id: string): void {
     for (let i = 0; i < messages.value.length; i++) {
         if (messages.value[i].id === message_id) {
             messages.value.splice(i, 1)
+            return
         }
     }
 }
@@ -223,8 +220,12 @@ watch(() => application_config.value, () => {
     is_loading.value = false
 })
 
-window.addEventListener('resize', () => {
+const onResize = () => {
     resize_content()
+}
+window.addEventListener('resize', onResize)
+onUnmounted(() => {
+    window.removeEventListener('resize', onResize)
 })
 
 resize_content()

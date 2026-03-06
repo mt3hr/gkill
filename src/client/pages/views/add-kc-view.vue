@@ -199,7 +199,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits("updated_kyou", res.added_kyou!)
+        emits("registered_kyou", res.added_kyou!)
         emits('requested_reload_list')
         emits('requested_close_dialog')
         return

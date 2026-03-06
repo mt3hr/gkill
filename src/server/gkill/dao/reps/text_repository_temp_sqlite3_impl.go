@@ -397,6 +397,10 @@ AND DEVICE = ?
 			texts = append(texts, text)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return texts, nil
 }
 

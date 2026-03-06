@@ -24,7 +24,7 @@ type gkillNotificateTargetDAOSQLite3Impl struct {
 
 func NewGkillNotificateTargetDAOSQLite3Impl(ctx context.Context, filename string) (GkillNotificateTargetDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -149,6 +149,10 @@ FROM NOTIFICATION
 			gkillNotificateTargets = append(gkillNotificateTargets, gkillNotificateTarget)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return gkillNotificateTargets, nil
 }
 
@@ -213,6 +217,10 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 			}
 			gkillNotificateTargets = append(gkillNotificateTargets, gkillNotificateTarget)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	return gkillNotificateTargets, nil
 }
@@ -375,12 +383,6 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)

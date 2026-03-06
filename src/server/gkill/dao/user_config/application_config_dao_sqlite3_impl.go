@@ -529,6 +529,10 @@ GROUP BY USER_ID, DEVICE
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
 	return applicationConfigs, nil
 }
 
@@ -885,6 +889,10 @@ HAVING USER_ID = ? AND DEVICE = ?
 
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
 	}
 	if len(applicationConfigs) == 0 {
 		// なかったらデフォ値を返す。
@@ -1396,12 +1404,6 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
