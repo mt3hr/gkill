@@ -134,7 +134,7 @@ FROM ACCOUNT
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get all accounts sql: %w", err)
+		err = fmt.Errorf("error at get all accounts sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -196,7 +196,7 @@ WHERE USER_ID = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get account sql: %w", err)
+		err = fmt.Errorf("error at get account sql: %w", err)
 		return nil, err
 	}
 	defer func() {

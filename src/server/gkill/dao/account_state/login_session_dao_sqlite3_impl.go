@@ -187,13 +187,13 @@ FROM LOGIN_SESSION
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse file upload time %s at %s in LOGIN_SESSION: %w", loginTimeStr, loginSession.ID, err)
+				err = fmt.Errorf("error at parse login time %s at %s in LOGIN_SESSION: %w", loginTimeStr, loginSession.ID, err)
 				return nil, err
 			}
 
 			loginSession.ExpirationTime, err = time.Parse(sqlite3impl.TimeLayout, expriationTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse file upload time %s at %s in LOGIN_SESSION: %w", expriationTimeStr, loginSession.ID, err)
+				err = fmt.Errorf("error at parse expiration time %s at %s in LOGIN_SESSION: %w", expriationTimeStr, loginSession.ID, err)
 				return nil, err
 			}
 
@@ -277,13 +277,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse file upload time %s at %s in LOGIN_SESSION: %w", loginTimeStr, loginSession.ID, err)
+				err = fmt.Errorf("error at parse login time %s at %s in LOGIN_SESSION: %w", loginTimeStr, loginSession.ID, err)
 				return nil, err
 			}
 
 			loginSession.ExpirationTime, err = time.Parse(sqlite3impl.TimeLayout, expriationTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse file upload time %s at %s in LOGIN_SESSION: %w", expriationTimeStr, loginSession.ID, err)
+				err = fmt.Errorf("error at parse expiration time %s at %s in LOGIN_SESSION: %w", expriationTimeStr, loginSession.ID, err)
 				return nil, err
 			}
 
@@ -366,13 +366,13 @@ WHERE SESSION_ID = ?
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse file upload time %s at %s in LOGIN_SESSION: %w", loginTimeStr, loginSession.ID, err)
+				err = fmt.Errorf("error at parse login time %s at %s in LOGIN_SESSION: %w", loginTimeStr, loginSession.ID, err)
 				return nil, err
 			}
 
 			loginSession.ExpirationTime, err = time.Parse(sqlite3impl.TimeLayout, expriationTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse file upload time %s at %s in LOGIN_SESSION: %w", expriationTimeStr, loginSession.ID, err)
+				err = fmt.Errorf("error at parse expiration time %s at %s in LOGIN_SESSION: %w", expriationTimeStr, loginSession.ID, err)
 				return nil, err
 			}
 
@@ -414,7 +414,7 @@ INSERT INTO LOGIN_SESSION (
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at update login sessions sql: %w", err)
+		err = fmt.Errorf("error at add login sessions sql: %w", err)
 		return false, err
 	}
 	defer func() {
@@ -463,7 +463,7 @@ WHERE ID = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add login sessions sql: %w", err)
+		err = fmt.Errorf("error at update login sessions sql: %w", err)
 		return false, err
 	}
 	defer func() {

@@ -709,7 +709,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		err = fmt.Errorf("error at find kmemo sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -864,7 +864,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
+		err = fmt.Errorf("error at get kmemo sql %s: %w", id, err)
 		return nil, err
 	}
 	defer func() {
@@ -877,7 +877,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -1032,7 +1032,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {

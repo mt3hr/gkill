@@ -94,14 +94,14 @@ func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL strin
 
 	thumb := queryURLObj.Query().Get("thumb")
 	if thumb == "" {
-		err = fmt.Errorf("error at get parse thumb size %s: %w", queryURL, err)
+		err = fmt.Errorf("error at get parse thumb size %s: thumb parameter is empty", queryURL)
 		return err
 	}
 
 	// サイズ解析
 	tw, th, ok := parseThumb(thumb)
 	if !ok || tw <= 0 || th <= 0 || tw > t.maxSize || th > t.maxSize {
-		err = fmt.Errorf("error at get parse thumb size %s: %w", queryURL, err)
+		err = fmt.Errorf("error at get parse thumb size %s: invalid thumb dimensions", queryURL)
 		return err
 	}
 

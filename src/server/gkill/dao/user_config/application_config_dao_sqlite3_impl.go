@@ -409,7 +409,7 @@ GROUP BY USER_ID, DEVICE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get all application configs sql: %w", err)
+		err = fmt.Errorf("error at get all application configs sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -764,7 +764,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get application config sql: %w", err)
+		err = fmt.Errorf("error at get application config sql: %w", err)
 		return nil, err
 	}
 	defer func() {

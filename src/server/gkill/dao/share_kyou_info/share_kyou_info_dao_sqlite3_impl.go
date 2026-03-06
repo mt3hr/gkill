@@ -213,7 +213,7 @@ FROM SHARE_KYOU_INFO
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get all kyou share infos sql: %w", err)
+		err = fmt.Errorf("error at get all kyou share infos sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -352,7 +352,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get kyou share infos sql: %w", err)
+		err = fmt.Errorf("error at get kyou share infos sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -495,7 +495,7 @@ WHERE SHARE_ID = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get kyou share infos sql: %w", err)
+		err = fmt.Errorf("error at get kyou share infos sql: %w", err)
 		return nil, err
 	}
 	defer func() {

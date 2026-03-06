@@ -295,7 +295,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
+		err = fmt.Errorf("error at get kyou sql %s: %w", id, err)
 		return nil, err
 	}
 	defer func() {

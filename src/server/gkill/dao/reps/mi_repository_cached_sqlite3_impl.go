@@ -1301,7 +1301,7 @@ INSERT INTO ` + m.dbName + ` (
 	}
 	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("error at commit transaction for add timeiss: %w", err)
+		err = fmt.Errorf("error at commit transaction for add mis: %w", err)
 		return err
 	}
 	isCommitted = true

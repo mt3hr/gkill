@@ -163,7 +163,7 @@ async function save(): Promise<void> {
         // 数値入力チェック
         if (num_value.value === null) {
             const error = new GkillError()
-            error.error_code = GkillErrorCodes.kc_title_is_blank
+            error.error_code = GkillErrorCodes.kc_num_value_is_blank
             error.error_message = i18n.global.t("KC_NUM_VALUE_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
