@@ -173,11 +173,13 @@ type GkillServerAPI struct {
 	RebootServerCh chan (struct{})
 
 	device string
+
+	closeOnce sync.Once
+	closeErr  error
 }
 
-func (g *GkillServerAPI) Serve() error {
+func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	var err error
-	ctx := context.Background()
 	router := g.GkillDAOManager.GetRouter()
 	router.PathPrefix("/files/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
@@ -808,7 +810,23 @@ func (g *GkillServerAPI) Serve() error {
 	port := serverConfig.Address
 
 	g.PrintStartedMessage()
-	g.server = &http.Server{Addr: port, Handler: router}
+	serveCtx, serveCancel := context.WithCancel(ctx)
+	defer serveCancel()
+	g.server = &http.Server{
+		Addr:    port,
+		Handler: router,
+		BaseContext: func(_ net.Listener) context.Context {
+			return serveCtx
+		},
+	}
+
+	go func() {
+		<-serveCtx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		g.server.Shutdown(shutdownCtx)
+	}()
+
 	if serverConfig.EnableTLS && !gkill_options.DisableTLSForce {
 		certFileName, pemFileName, err := g.getTLSFileNames(device)
 		if err != nil {
@@ -826,20 +844,36 @@ func (g *GkillServerAPI) Serve() error {
 }
 
 func (g *GkillServerAPI) Close() error {
-	var err error
-	err = g.GkillDAOManager.Close()
-	if err != nil {
-		err = fmt.Errorf("error at close gkill dbo manager: %w", err)
-		return err
+	g.closeOnce.Do(func() {
+		if g.server != nil {
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := g.server.Shutdown(shutdownCtx); err != nil {
+				slog.Log(context.Background(), gkill_log.Warn, "error at shutdown http server", "error", err)
+			}
+		}
+		if g.GkillDAOManager != nil {
+			if err := g.GkillDAOManager.Close(); err != nil {
+				g.closeErr = fmt.Errorf("error at close gkill dao manager: %w", err)
+			}
+		}
+		if g.RebootServerCh != nil {
+			close(g.RebootServerCh)
+		}
+		g.APIAddress = nil
+		g.GkillDAOManager = nil
+		g.FindFilter = nil
+		g.RebootServerCh = nil
+	})
+	return g.closeErr
+}
+
+func (g *GkillServerAPI) ShutdownHTTPServer() {
+	if g.server != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		g.server.Shutdown(shutdownCtx)
 	}
-
-	close(g.RebootServerCh)
-	g.APIAddress = nil
-	g.GkillDAOManager = nil
-	g.FindFilter = nil
-	g.RebootServerCh = nil
-
-	return nil
 }
 
 func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -8911,7 +8945,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 
 func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *http.Request) {
 	defer func() {
-		go g.server.Shutdown(context.Background())
+		go g.ShutdownHTTPServer()
 	}()
 	func() {
 		w.Header().Set("Content-Type", "application/json")
