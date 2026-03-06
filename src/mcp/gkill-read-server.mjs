@@ -183,6 +183,21 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    name: "gkill_get_application_config",
+    description:
+      "Get application configuration including tag hierarchy (parent-child relationships, default check states, force-hide settings), task board structure, repository structure, and KFTL templates. Call this before gkill_get_kyous to understand the data organization and build better queries.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        locale_name: {
+          type: "string",
+          description: "Locale, e.g. ja/en.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
 ];
 
 class GkillApiError extends Error {
@@ -490,6 +505,24 @@ class McpServer {
           },
           true,
         );
+      case "gkill_get_application_config": {
+        const response = await this.client.callRead(
+          "/api/get_application_config",
+          { locale_name: p.locale_name },
+          true,
+        );
+        const config = response.application_config || {};
+        return {
+          tag_struct: config.tag_struct,
+          mi_board_struct: config.mi_board_struct,
+          rep_struct: config.rep_struct,
+          rep_type_struct: config.rep_type_struct,
+          device_struct: config.device_struct,
+          kftl_template_struct: config.kftl_template_struct,
+          mi_default_board: config.mi_default_board,
+          show_tags_in_list: config.show_tags_in_list,
+        };
+      }
       default:
         throw new GkillApiError(`Unknown tool: ${name}`);
     }
