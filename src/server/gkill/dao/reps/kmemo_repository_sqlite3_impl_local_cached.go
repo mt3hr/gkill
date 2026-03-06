@@ -125,7 +125,7 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 
 	err := k.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at update cache %s", err)
+		err = fmt.Errorf("error at update cache: %w", err)
 		return err
 	}
 
@@ -196,12 +196,12 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error
 	defer k.m.Unlock()
 	err := k.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	err = k.originalRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	return nil

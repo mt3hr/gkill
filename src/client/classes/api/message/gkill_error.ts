@@ -68,7 +68,7 @@ export enum GkillErrorCodes {
     user_id_is_blank = "ERR900067",
     password_is_blank = "ERR900068",
     failed_shared_kyous = "ERR900069",
-    device_is_aleady_exist = "ERR900070",
+    device_is_already_exist = "ERR900070",
     not_found_enable_device = "ERR900071",
     not_found_delete_target_device = "ERR900072",
     password_retype_is_blank = "ERR900073",
@@ -84,7 +84,7 @@ export enum GkillErrorCodes {
     kc_is_no_update = "ERR900083",
     kc_title_is_blank = "ERR900084",
     kc_num_value_is_blank = "ERR900085",
-    requeired_certificate = "ERR900086",
+    required_certificate = "ERR900086",
     copied_local_share_kyou_link = "ERR900087"
 }
 

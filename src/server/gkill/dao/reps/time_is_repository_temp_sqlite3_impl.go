@@ -482,7 +482,7 @@ AND DEVICE = ?
 			}
 			timeis.StartTime, err = time.Parse(sqlite3impl.TimeLayout, startTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", startTimeStr, err)
 				return nil, err
 			}
 			if endTime.Valid {

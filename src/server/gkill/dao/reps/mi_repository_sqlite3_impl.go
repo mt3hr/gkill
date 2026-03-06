@@ -413,7 +413,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get find kyous sql: %w", err)
+		err = fmt.Errorf("error at get mi sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -799,7 +799,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get find kyous sql: %w", err)
+		err = fmt.Errorf("error at get kyou sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -1182,7 +1182,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get find kyous sql: %w", err)
+		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -1614,7 +1614,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get find kyous sql: %w", err)
+		err = fmt.Errorf("error at find mi sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -2025,7 +2025,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get find kyous sql: %w", err)
+		err = fmt.Errorf("error at get mi sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -2438,7 +2438,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get find kyous sql: %w", err)
+		err = fmt.Errorf("error at get mi histories sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -2632,8 +2632,8 @@ INSERT INTO MI (
 		endTimeStr,
 		mi.CreateTime.Format(sqlite3impl.TimeLayout),
 		mi.CreateApp,
-		mi.CreateDevice,
 		mi.CreateUser,
+		mi.CreateDevice,
 		mi.UpdateTime.Format(sqlite3impl.TimeLayout),
 		mi.UpdateApp,
 		mi.UpdateDevice,

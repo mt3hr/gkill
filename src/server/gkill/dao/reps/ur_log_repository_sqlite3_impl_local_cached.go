@@ -125,7 +125,7 @@ func (u *urlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 
 	err := u.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at update cache %s", err)
+		err = fmt.Errorf("error at update cache: %w", err)
 		return err
 	}
 
@@ -196,12 +196,12 @@ func (u *urlogRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error
 	defer u.m.Unlock()
 	err := u.localCachedRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	err = u.originalRep.Close(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at close %s", err)
+		err = fmt.Errorf("error at close: %w", err)
 		return err
 	}
 	return nil

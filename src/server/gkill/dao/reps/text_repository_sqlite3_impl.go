@@ -269,7 +269,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get TEXT histories sql: %w", err)
+		err = fmt.Errorf("error at find texts sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -435,7 +435,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get text histories sql: %w", err)
+		err = fmt.Errorf("error at get text sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -593,7 +593,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get text histories sql: %w", err)
+		err = fmt.Errorf("error at get texts by target id sql: %w", err)
 		return nil, err
 	}
 	defer func() {

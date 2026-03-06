@@ -84,7 +84,7 @@ func (n *notificator) waitAndNotify() {
 	// 送信対象を取得する
 	userID, err := n.gkillReps.GetUserID(notificationCtx)
 	if err != nil {
-		err = fmt.Errorf("get user id from gkill reps. in gkill notificator")
+		err = fmt.Errorf("error at get user id from gkill reps in gkill notificator: %w", err)
 		slog.Log(n.ctx, gkill_log.Error, "error", "error", err)
 		return
 	}
@@ -116,7 +116,10 @@ func (n *notificator) waitAndNotify() {
 
 		subscription := string(notificationTarget.Subscription)
 		s := &webpush.Subscription{}
-		_ = json.Unmarshal([]byte(subscription), s)
+		if err := json.Unmarshal([]byte(subscription), s); err != nil {
+			slog.Log(n.ctx, gkill_log.Warn, "error at unmarshal webpush subscription", "error", err)
+			continue
+		}
 		resp, err := webpush.SendNotification(contentJSONb, s, &webpush.Options{
 			Subscriber:      "example@example.com",
 			VAPIDPublicKey:  currentServerConfig.GkillNotificationPublicKey,
@@ -125,7 +128,7 @@ func (n *notificator) waitAndNotify() {
 		})
 		if err != nil {
 			err = fmt.Errorf("error at send gkill notification: %w", err)
-			slog.Log(n.ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(n.ctx, gkill_log.Warn, "error", "error", err)
 		}
 		if resp.Body != nil {
 			defer func() {

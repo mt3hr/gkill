@@ -594,7 +594,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		err = fmt.Errorf("error at get kyou sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -961,7 +961,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		err = fmt.Errorf("error at get path sql: %w", err)
 		return "", err
 	}
 	defer func() {
@@ -1002,8 +1002,7 @@ WHERE
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan from idf: %w", err)
-				_ = err
-				return "", nil
+				return "", err
 			}
 
 			idf.FileURL = buildIDFFileURL(idf.TargetRepName, idf.TargetFile)
@@ -1139,7 +1138,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at find kyou sql: %w", err)
+		err = fmt.Errorf("error at find idf kyou sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -1397,7 +1396,7 @@ WHERE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get idf histories sql: %w", err)
+		err = fmt.Errorf("error at get idf kyou sql: %w", err)
 		return nil, err
 	}
 	defer func() {

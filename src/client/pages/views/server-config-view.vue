@@ -217,7 +217,7 @@ function add_device(device_name: string): void {
     for (let i = 0; i < cloned_server_configs.value.length; i++) {
         if (cloned_server_configs.value[i].device === device_name) {
             const error = new GkillError()
-            error.error_code = GkillErrorCodes.device_is_aleady_exist
+            error.error_code = GkillErrorCodes.device_is_already_exist
             error.error_message = i18n.global.t("ALEADY_EXISTS_PROFILE_MESSAGE")
             emits('received_errors', [error])
             return

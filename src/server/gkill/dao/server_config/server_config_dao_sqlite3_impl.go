@@ -339,7 +339,7 @@ GROUP BY DEVICE
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get all server configs sql: %w", err)
+		err = fmt.Errorf("error at get all server configs sql: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -604,7 +604,7 @@ HAVING DEVICE = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get server config sql: %w", err)
+		err = fmt.Errorf("error at get server config sql: %w", err)
 		return nil, err
 	}
 	defer func() {

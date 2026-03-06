@@ -584,7 +584,7 @@ INSERT INTO ` + l.dbName + ` (
 	}
 	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("error at commit transaction for add timeiss: %w", err)
+		err = fmt.Errorf("error at commit transaction for add lantanas: %w", err)
 		return err
 	}
 	isCommitted = true
@@ -813,7 +813,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {
@@ -933,7 +933,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at query ")
+		err = fmt.Errorf("error at query: %w", err)
 		return nil, err
 	}
 	defer func() {
