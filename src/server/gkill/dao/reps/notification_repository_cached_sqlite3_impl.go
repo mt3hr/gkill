@@ -6,7 +6,6 @@ import (
 	sqllib "database/sql"
 	"fmt"
 	"log/slog"
-	"math"
 	"sync"
 	"time"
 
@@ -22,6 +21,8 @@ type notificationRepositoryCachedSQLite3Impl struct {
 	notificationRep NotificationRepository
 	cachedDB        *sqllib.DB
 	m               *sync.RWMutex
+	addNotificationInfoSQL  string
+	addNotificationInfoStmt *sqllib.Stmt
 }
 
 func NewNotificationRepositoryCachedSQLite3Impl(ctx context.Context, notificationRep NotificationRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (NotificationRepository, error) {
@@ -88,11 +89,54 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	addNotificationInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED,
+  ID,
+  CONTENT,
+  TARGET_ID,
+  IS_NOTIFICATED,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  NOTIFICATION_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addNotificationInfoSQL)
+	addNotificationInfoStmt, err := cacheDB.PrepareContext(ctx, addNotificationInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add notification info sql: %w", err)
+		return nil, err
+	}
+
 	return &notificationRepositoryCachedSQLite3Impl{
-		dbName:          dbName,
-		cachedDB:        cacheDB,
-		notificationRep: notificationRep,
-		m:               m,
+		dbName:                  dbName,
+		cachedDB:                cacheDB,
+		notificationRep:         notificationRep,
+		m:                       m,
+		addNotificationInfoSQL:  addNotificationInfoSQL,
+		addNotificationInfoStmt: addNotificationInfoStmt,
 	}, nil
 }
 func (n *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]Notification, error) {
@@ -232,6 +276,9 @@ WHERE
 func (n *notificationRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	n.m.Lock()
 	defer n.m.Unlock()
+	if n.addNotificationInfoStmt != nil {
+		n.addNotificationInfoStmt.Close()
+	}
 	err := n.notificationRep.Close(ctx)
 	if err != nil {
 		return err
@@ -648,12 +695,12 @@ WHERE
 }
 
 func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	if err := n.notificationRep.UpdateCache(ctx); err != nil {
-		repName, _ := n.GetRepName(ctx)
-		return fmt.Errorf("error at update inner cache before rebuild %s: %w", repName, err)
+	query := &find.FindQuery{
+		UpdateCache:    true,
+		OnlyLatestData: false,
 	}
 
-	allNotifications, err := n.notificationRep.GetNotificationsBetweenNotificationTime(ctx, time.Unix(0, 0), time.Unix(math.MaxInt64, 0))
+	allNotifications, err := n.notificationRep.FindNotifications(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("error at get all notifications at update cache: %w", err)
 		return err
@@ -932,53 +979,6 @@ WHERE
 func (n *notificationRepositoryCachedSQLite3Impl) AddNotificationInfo(ctx context.Context, notification Notification) error {
 	n.m.Lock()
 	defer n.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
-  IS_DELETED,
-  ID,
-  CONTENT,
-  TARGET_ID,
-  IS_NOTIFICATED,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  NOTIFICATION_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add NOTIFICATION sql %s: %w", notification.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
 	queryArgs := []interface{}{
 		notification.IsDeleted,
 		notification.ID,
@@ -996,8 +996,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
 		notification.CreateTime.Unix(),
 		notification.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", n.addNotificationInfoSQL, queryArgs)
+	_, err := n.addNotificationInfoStmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
 		err = fmt.Errorf("error at insert in to NOTIFICATION %s: %w", notification.ID, err)

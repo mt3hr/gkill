@@ -22,6 +22,9 @@ type timeIsRepositoryCachedSQLite3Impl struct {
 	timeisRep TimeIsRepository
 	cachedDB  *sqllib.DB
 	m         *sync.RWMutex
+
+	addTimeIsInfoSQL  string
+	addTimeIsInfoStmt *sqllib.Stmt
 }
 
 func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (TimeIsRepository, error) {
@@ -88,11 +91,52 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	addTimeIsInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + `(
+  IS_DELETED,
+  ID,
+  TITLE,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  START_TIME_UNIX,
+  END_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addTimeIsInfoSQL)
+	addTimeIsInfoStmt, err := cacheDB.PrepareContext(ctx, addTimeIsInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add timeis info sql: %w", err)
+		return nil, err
+	}
+
 	return &timeIsRepositoryCachedSQLite3Impl{
-		timeisRep: timeisRep,
-		dbName:    dbName,
-		cachedDB:  cacheDB,
-		m:         m,
+		timeisRep:         timeisRep,
+		dbName:            dbName,
+		cachedDB:          cacheDB,
+		m:                 m,
+		addTimeIsInfoSQL:  addTimeIsInfoSQL,
+		addTimeIsInfoStmt: addTimeIsInfoStmt,
 	}, nil
 }
 func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
@@ -694,6 +738,9 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (str
 func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	t.m.Lock()
 	defer t.m.Unlock()
+	if t.addTimeIsInfoStmt != nil {
+		t.addTimeIsInfoStmt.Close()
+	}
 	err := t.timeisRep.Close(ctx)
 	if err != nil {
 		return err
@@ -1196,50 +1243,6 @@ WHERE
 func (t *timeIsRepositoryCachedSQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis TimeIs) error {
 	t.m.Lock()
 	defer t.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
-  IS_DELETED,
-  ID,
-  TITLE,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  START_TIME_UNIX,
-  END_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
 	var endTimeUnix interface{}
 	if timeis.EndTime == nil {
@@ -1264,8 +1267,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
 		timeis.CreateTime.Unix(),
 		timeis.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", t.addTimeIsInfoSQL, queryArgs)
+	_, err := t.addTimeIsInfoStmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
 		err = fmt.Errorf("error at insert in to timeis %s: %w", timeis.ID, err)

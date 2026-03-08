@@ -3,7 +3,7 @@ package reps
 import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
-	"database/sql"
+	sqllib "database/sql"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -18,11 +18,11 @@ import (
 type gitCommitLogRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	gitRep   GitCommitLogRepository
-	cachedDB *sql.DB
+	cachedDB *sqllib.DB
 	m        *sync.RWMutex
 }
 
-func NewGitRepCachedSQLite3Impl(ctx context.Context, gitRep GitCommitLogRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (GitCommitLogRepository, error) {
+func NewGitRepCachedSQLite3Impl(ctx context.Context, gitRep GitCommitLogRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (GitCommitLogRepository, error) {
 	if m == nil {
 		m = &sync.RWMutex{}
 	}

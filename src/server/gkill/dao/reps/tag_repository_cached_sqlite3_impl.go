@@ -3,7 +3,7 @@ package reps
 import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
-	"database/sql"
+	sqllib "database/sql"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -18,14 +18,18 @@ import (
 
 type tagRepositoryCachedSQLite3Impl struct {
 	tagRep                TagRepository
-	cachedDB              *sql.DB
+	cachedDB              *sqllib.DB
 	dbName                string
 	getTagsByTargetIDSQL  string
-	getTagsByTargetIDStmt *sql.Stmt
+	getTagsByTargetIDStmt *sqllib.Stmt
+	addTagInfoSQL         string
+	addTagInfoStmt        *sqllib.Stmt
+	getAllTagNamesSQL     string
+	getAllTagNamesStmt    *sqllib.Stmt
 	m                     *sync.RWMutex
 }
 
-func NewTagRepositoryCachedSQLite3Impl(ctx context.Context, tagRep TagRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (TagRepository, error) {
+func NewTagRepositoryCachedSQLite3Impl(ctx context.Context, tagRep TagRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (TagRepository, error) {
 	if m == nil {
 		m = &sync.RWMutex{}
 	}
@@ -143,12 +147,68 @@ ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 		return nil, err
 	}
 
+	addTagInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED,
+  ID,
+  TAG,
+  TARGET_ID,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addTagInfoSQL)
+	addTagInfoStmt, err := cacheDB.PrepareContext(ctx, addTagInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add tag info sql: %w", err)
+		return nil, err
+	}
+
+	getAllTagNamesTableName := sqlite3impl.QuoteIdent(dbName)
+	getAllTagNamesSQL := `
+SELECT
+  DISTINCT TAG
+FROM ` + getAllTagNamesTableName + `
+` + fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", getAllTagNamesTableName, getAllTagNamesTableName) + " GROUP BY TAG "
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", getAllTagNamesSQL)
+	getAllTagNamesStmt, err := cacheDB.PrepareContext(ctx, getAllTagNamesSQL)
+	if err != nil {
+		err = fmt.Errorf("error at get all tag names sql: %w", err)
+		return nil, err
+	}
+
 	cachedTagrepository := &tagRepositoryCachedSQLite3Impl{
 		tagRep:                tagRep,
 		dbName:                dbName,
 		cachedDB:              cacheDB,
 		getTagsByTargetIDSQL:  getTagsByTargetIDSQL,
 		getTagsByTargetIDStmt: getTagsByTargetIDStmt,
+		addTagInfoSQL:         addTagInfoSQL,
+		addTagInfoStmt:        addTagInfoStmt,
+		getAllTagNamesSQL:     getAllTagNamesSQL,
+		getAllTagNamesStmt:    getAllTagNamesStmt,
 		m:                     m,
 	}
 	return cachedTagrepository, nil
@@ -285,6 +345,15 @@ WHERE
 func (t *tagRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	t.m.Lock()
 	defer t.m.Unlock()
+	if t.addTagInfoStmt != nil {
+		t.addTagInfoStmt.Close()
+	}
+	if t.getAllTagNamesStmt != nil {
+		t.getAllTagNamesStmt.Close()
+	}
+	if t.getTagsByTargetIDStmt != nil {
+		t.getTagsByTargetIDStmt.Close()
+	}
 	err := t.tagRep.Close(ctx)
 	if err != nil {
 		return err
@@ -628,12 +697,12 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	if err := t.tagRep.UpdateCache(ctx); err != nil {
-		repName, _ := t.GetRepName(ctx)
-		return fmt.Errorf("error at update inner cache before rebuild %s: %w", repName, err)
+	query := &find.FindQuery{
+		UpdateCache:    true,
+		OnlyLatestData: false,
 	}
 
-	allTags, err := t.tagRep.GetAllTags(ctx)
+	allTags, err := t.tagRep.FindTags(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags at update cache: %w", err)
 		return err
@@ -902,51 +971,6 @@ WHERE
 func (t *tagRepositoryCachedSQLite3Impl) AddTagInfo(ctx context.Context, tag Tag) error {
 	t.m.Lock()
 	defer t.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
-  IS_DELETED,
-  ID,
-  TAG,
-  TARGET_ID,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  RELATED_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add tag sql %s: %w", tag.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
 	queryArgs := []interface{}{
 		tag.IsDeleted,
 		tag.ID,
@@ -963,8 +987,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
 		tag.CreateTime.Unix(),
 		tag.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", t.addTagInfoSQL, queryArgs)
+	_, err := t.addTagInfoStmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
 		return err
@@ -977,31 +1001,8 @@ func (t *tagRepositoryCachedSQLite3Impl) GetAllTagNames(ctx context.Context) ([]
 	defer t.m.RUnlock()
 	var err error
 
-	sql := `
-SELECT
-  DISTINCT TAG
-FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
-`
-	tableName := sqlite3impl.QuoteIdent(t.dbName)
-	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
-	sql += fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
-	sql += " GROUP BY TAG "
-
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get all tag names sql: %w", err)
-		return nil, err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	rows, err := stmt.QueryContext(ctx)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", t.getAllTagNamesSQL)
+	rows, err := t.getAllTagNamesStmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select all tag names from TAG: %w", err)
 		return nil, err
