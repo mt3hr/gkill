@@ -480,30 +480,9 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	ctx, cancelFunc = context.WithCancel(ctx)
 	g.cancelPreFunc = cancelFunc
 
-	existErr := false
 	var err error
-	wg := &sync.WaitGroup{}
-	kyousCh := make(chan map[string][]Kyou, len(g.Reps))
-	tagsCh := make(chan []Tag, len(g.TagReps))
-	textsCh := make(chan []Text, len(g.TextReps))
-	notificationsCh := make(chan []Notification, len(g.NotificationReps))
-	rekyousCh := make(chan []Kyou, len(g.ReKyouReps.ReKyouRepositories))
-	errch := make(chan error, len(g.Reps)+len(g.TagReps)+len(g.TextReps)+len(g.NotificationReps))
-	rekyouErrch := make(chan error, len(g.ReKyouReps.ReKyouRepositories))
-	defer close(kyousCh)
-	defer close(tagsCh)
-	defer close(textsCh)
-	defer close(notificationsCh)
-	defer close(errch)
-	defer close(rekyousCh)
-	defer close(rekyouErrch)
 
-	allKyousMap := map[string][]Kyou{}
-	allTags := []Tag{}
-	allTexts := []Text{}
-	allNotifications := []Notification{}
-
-	// UpdateCacheは逐次実行する。並列にするとcachedDBのmutexでデッドロックが発生するため、意図的に逐次処理にしている。
+	// Phase 1: UpdateCacheは逐次実行する。並列にするとcachedDBのmutexでデッドロックが発生するため、意図的に逐次処理にしている。
 	updateCacheTargets := []interface {
 		UpdateCache(ctx context.Context) error
 	}{}
@@ -512,309 +491,40 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	updateCacheTargets = append(updateCacheTargets, g.TextReps)
 	updateCacheTargets = append(updateCacheTargets, g.NotificationReps)
 	for _, rep := range updateCacheTargets {
-		func(rep interface {
-			UpdateCache(ctx context.Context) error
-		}) {
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
-	}
-
-	// kyouを集める
-	for _, rep := range g.Reps {
-		rep := rep
-		err := threads.Go(ctx, wg, func() {
-			select {
-			case <-ctx.Done():
-				e := ctx.Err()
-				if e != nil {
-					err = fmt.Errorf("error at update cache: %w", e)
-					errch <- err
-					return
-				}
-			default:
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					errch <- err
-					return
-				}
-
-				reps := []string{repName}
-				kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: reps})
-				if err != nil {
-					repName, _ := rep.GetRepName(ctx)
-					err = fmt.Errorf("error at %s: %w", repName, err)
-					errch <- err
-					return
-				}
-				kyousCh <- kyous
-			}
-		})
+		err = rep.UpdateCache(ctx)
 		if err != nil {
-			errch <- err
+			return err
 		}
 	}
 
-	// tagを集める
-	for _, rep := range g.TagReps {
-		rep := rep
-		err := threads.Go(ctx, wg, func() {
-			select {
-			case <-ctx.Done():
-				e := ctx.Err()
-				if e != nil {
-					err = fmt.Errorf("error at update cache: %w", e)
-					errch <- err
-					return
-				}
-			default:
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					errch <- err
-					return
-				}
+	// Phase 2: GetLatestDataRepositoryAddressで最新データアドレスを収集
+	allLatestDataRepositoryAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{}
+	now := time.Now()
 
-				reps := []string{repName}
-				tags, err := rep.FindTags(ctx, &find.FindQuery{Reps: reps})
-				if err != nil {
-					errch <- err
-					return
-				}
-				tagsCh <- tags
-			}
-		})
+	getAddrTargets := []interface {
+		GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
+	}{}
+	getAddrTargets = append(getAddrTargets, g.Reps)
+	getAddrTargets = append(getAddrTargets, g.TagReps)
+	getAddrTargets = append(getAddrTargets, g.TextReps)
+	getAddrTargets = append(getAddrTargets, g.NotificationReps)
+
+	for _, target := range getAddrTargets {
+		addrs, err := target.GetLatestDataRepositoryAddress(ctx, false)
 		if err != nil {
-			errch <- err
+			return err
 		}
-	}
-
-	// textを集める
-	for _, rep := range g.TextReps {
-		rep := rep
-		err := threads.Go(ctx, wg, func() {
-			select {
-			case <-ctx.Done():
-				e := ctx.Err()
-				if e != nil {
-					err = fmt.Errorf("error at update cache: %w", e)
-					errch <- err
-					return
-				}
-			default:
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					errch <- err
-					return
-				}
-
-				reps := []string{repName}
-				texts, err := rep.FindTexts(ctx, &find.FindQuery{Reps: reps})
-				if err != nil {
-					errch <- err
-					return
-				}
-				textsCh <- texts
-			}
-		})
-		if err != nil {
-			errch <- err
-		}
-	}
-
-	// notificationを集める
-	for _, rep := range g.NotificationReps {
-		rep := rep
-		err := threads.Go(ctx, wg, func() {
-			select {
-			case <-ctx.Done():
-				e := ctx.Err()
-				if e != nil {
-					err = fmt.Errorf("error at update cache: %w", e)
-					errch <- err
-					return
-				}
-			default:
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					errch <- err
-					return
-				}
-
-				reps := []string{repName}
-				notifications, err := rep.FindNotifications(ctx, &find.FindQuery{Reps: reps})
-				if err != nil {
-					errch <- err
-					return
-				}
-				notificationsCh <- notifications
-			}
-		})
-		if err != nil {
-			errch <- err
-		}
-	}
-
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
-			existErr = true
-		default:
-			break errloop
-		}
-	}
-	if existErr {
-		return err
-	}
-
-	// kyou集約
-kyousloop:
-	for {
-		select {
-		case kyouMaps := <-kyousCh:
-			for id, kyouMap := range kyouMaps {
-				if _, exist := allKyousMap[id]; !exist {
-					allKyousMap[id] = []Kyou{}
-				}
-				allKyousMap[id] = append(allKyousMap[id], kyouMap...)
-			}
-		default:
-			break kyousloop
-		}
-	}
-
-	// tag集約
-tagsloop:
-	for {
-		select {
-		case tags := <-tagsCh:
-			allTags = append(allTags, tags...)
-		default:
-			break tagsloop
-		}
-	}
-
-	// text集約
-textsloop:
-	for {
-		select {
-		case texts := <-textsCh:
-			allTexts = append(allTexts, texts...)
-		default:
-			break textsloop
-		}
-	}
-
-	// notification集約
-notificationsloop:
-	for {
-		select {
-		case notifications := <-notificationsCh:
-			allNotifications = append(allNotifications, notifications...)
-		default:
-			break notificationsloop
-		}
-	}
-
-	// 最新のKyou, tag, textのみにする
-	latestKyousMap := map[string]Kyou{}
-	for id, kyousMap := range allKyousMap {
-		for _, kyou := range kyousMap {
-			if existKyou, exist := latestKyousMap[id]; exist {
-				if kyou.UpdateTime.After(existKyou.UpdateTime) {
-					latestKyousMap[kyou.ID] = kyou
-				}
-			} else {
-				latestKyousMap[kyou.ID] = kyou
+		for _, addr := range addrs {
+			if existing, exist := allLatestDataRepositoryAddresses[addr.TargetID]; !exist || existing.DataUpdateTime.Before(addr.DataUpdateTime) {
+				addr.LatestDataRepositoryAddressUpdatedTime = now
+				allLatestDataRepositoryAddresses[addr.TargetID] = addr
 			}
 		}
 	}
-	latestTagsMap := map[string]Tag{}
-	for _, tag := range allTags {
-		if existTag, exist := latestTagsMap[tag.ID]; exist {
-			if tag.UpdateTime.After(existTag.UpdateTime) {
-				latestTagsMap[tag.ID] = tag
-			}
-		} else {
-			latestTagsMap[tag.ID] = tag
-		}
-	}
-	latestTextsMap := map[string]Text{}
-	for _, text := range allTexts {
-		if existText, exist := latestTextsMap[text.ID]; exist {
-			if text.UpdateTime.After(existText.UpdateTime) {
-				latestTextsMap[text.ID] = text
-			}
-		} else {
-			latestTextsMap[text.ID] = text
-		}
-	}
-	latestNotificationsMap := map[string]Notification{}
-	for _, notification := range allNotifications {
-		if existNotification, exist := latestNotificationsMap[notification.ID]; exist {
-			if notification.UpdateTime.After(existNotification.UpdateTime) {
-				latestNotificationsMap[notification.ID] = notification
-			}
-		} else {
-			latestNotificationsMap[notification.ID] = notification
-		}
-	}
 
-	// 最新のKyou, Tag, Text, Notificationの状態をLatestDataRepositoryAddressにいれる
-	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestKyousMap)+len(latestTagsMap)+len(latestTextsMap)+len(latestNotificationsMap))
-	for _, kyou := range latestKyousMap {
-		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
-			IsDeleted:                              kyou.IsDeleted,
-			TargetID:                               kyou.ID,
-			LatestDataRepositoryName:               kyou.RepName,
-			DataUpdateTime:                         kyou.UpdateTime,
-			LatestDataRepositoryAddressUpdatedTime: time.Now(),
-		}
-		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
-	}
-	for _, tag := range latestTagsMap {
-		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
-			IsDeleted:                              tag.IsDeleted,
-			TargetID:                               tag.ID,
-			TargetIDInData:                         &tag.TargetID,
-			LatestDataRepositoryName:               tag.RepName,
-			DataUpdateTime:                         tag.UpdateTime,
-			LatestDataRepositoryAddressUpdatedTime: time.Now(),
-		}
-		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
-	}
-	for _, text := range latestTextsMap {
-		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
-			IsDeleted:                              text.IsDeleted,
-			TargetID:                               text.ID,
-			TargetIDInData:                         &text.TargetID,
-			LatestDataRepositoryName:               text.RepName,
-			DataUpdateTime:                         text.UpdateTime,
-			LatestDataRepositoryAddressUpdatedTime: time.Now(),
-		}
-		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
-	}
-	for _, notification := range latestNotificationsMap {
-		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
-			IsDeleted:                              notification.IsDeleted,
-			TargetID:                               notification.ID,
-			TargetIDInData:                         &notification.TargetID,
-			LatestDataRepositoryName:               notification.RepName,
-			DataUpdateTime:                         notification.UpdateTime,
-			LatestDataRepositoryAddressUpdatedTime: time.Now(),
-		}
-		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
+	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(allLatestDataRepositoryAddresses))
+	for _, addr := range allLatestDataRepositoryAddresses {
+		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
 	}
 
 	updatedLatestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)

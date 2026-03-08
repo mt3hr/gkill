@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
@@ -584,6 +585,10 @@ func (i *idfKyouRepositoryTempSQLite3Impl) GenerateVideoCache(ctx context.Contex
 
 func (i *idfKyouRepositoryTempSQLite3Impl) ClearVideoCache() error {
 	return nil
+}
+
+func (i *idfKyouRepositoryTempSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	return nil, fmt.Errorf("not implements idfKyouRepositoryTempSQLite3Impl.GetLatestDataRepositoryAddress")
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) UnWrapTyped() ([]IDFKyouTempRepository, error) {

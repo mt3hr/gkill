@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
@@ -1200,6 +1201,90 @@ func (r *reKyouRepositorySQLite3Impl) UnWrapTyped() ([]ReKyouRepository, error) 
 
 func (r *reKyouRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{r}, nil
+}
+
+func (r *reKyouRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+
+	if updateCache {
+		err = r.UpdateCache(ctx)
+		if err != nil {
+			repName, _ := r.GetRepName(ctx)
+			err = fmt.Errorf("error at update cache %s: %w", repName, err)
+			return nil, err
+		}
+	}
+	r.m.RLock()
+	defer r.m.RUnlock()
+
+	repName, err := r.GetRepName(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	sql := `
+SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
+       ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME AS DATA_UPDATE_TIME
+FROM REKYOU
+`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, repName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	latestDataRepositoryAddressMap := map[string]gkill_cache.LatestDataRepositoryAddress{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			addr := gkill_cache.LatestDataRepositoryAddress{}
+			var isDeletedStr string
+			var dataUpdateTimeStr string
+			var targetIDInData *string
+			err := rows.Scan(&isDeletedStr, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
+			if err != nil {
+				return nil, err
+			}
+			addr.IsDeleted = isDeletedStr == "TRUE"
+			addr.TargetIDInData = targetIDInData
+			addr.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
+			if err != nil {
+				return nil, err
+			}
+			if existing, exist := latestDataRepositoryAddressMap[addr.TargetID]; !exist || existing.DataUpdateTime.Before(addr.DataUpdateTime) {
+				latestDataRepositoryAddressMap[addr.TargetID] = addr
+			}
+		}
+	}
+	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestDataRepositoryAddressMap))
+	for _, addr := range latestDataRepositoryAddressMap {
+		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+	}
+	return latestDataRepositoryAddresses, nil
 }
 
 func checkAndResolveDataSchemaReKyouRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO ReKyouRepository, err error) {

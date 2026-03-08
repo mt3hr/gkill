@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"io"
 	"log/slog"
@@ -246,4 +247,19 @@ func (k *kcRepositorySQLite3ImplLocalCached) UnWrapTyped() ([]KCRepository, erro
 
 func (k *kcRepositorySQLite3ImplLocalCached) UnWrap() ([]Repository, error) {
 	return []Repository{k.originalRep}, nil
+}
+
+func (k *kcRepositorySQLite3ImplLocalCached) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	addrs, err := k.localCachedRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	repName, err := k.GetRepName(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for idx := range addrs {
+		addrs[idx].LatestDataRepositoryName = repName
+	}
+	return addrs, nil
 }
