@@ -144,11 +144,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			gkillErr, err = f.getAllTags(ctx, findKyouContext)
 			if err != nil {
 				err = fmt.Errorf("error at get all tags: %w", err)
-				errch <- err
-				gkillErrch <- gkillErr
-				return
+			} else {
+				slog.Log(ctx, gkill_log.Trace, "finish getAllTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			slog.Log(ctx, gkill_log.Trace, "finish getAllTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+			errch <- err
+			gkillErrch <- gkillErr
 		}()
 
 		wg.Add(1)
@@ -158,11 +158,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
 			if err != nil {
 				err = fmt.Errorf("error at get hide tags when unchecked tags: %w", err)
-				errch <- err
-				gkillErrch <- gkillErr
-				return
+			} else {
+				slog.Log(ctx, gkill_log.Trace, "finish getAllHideTagsWhenUnChecked", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			slog.Log(ctx, gkill_log.Trace, "finish getAllHideTagsWhenUnChecked", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+			errch <- err
+			gkillErrch <- gkillErr
 		}()
 
 		wg.Add(1)
@@ -172,11 +172,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			gkillErr, err = f.findTags(ctx, findKyouContext)
 			if err != nil {
 				err = fmt.Errorf("error at find tags: %w", err)
-				errch <- err
-				gkillErrch <- gkillErr
-				return
+			} else {
+				slog.Log(ctx, gkill_log.Trace, "finish findTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			slog.Log(ctx, gkill_log.Trace, "finish findTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+			errch <- err
+			gkillErrch <- gkillErr
 		}()
 	}
 
@@ -188,11 +188,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		gkillErr, err = f.findTexts(ctx, findKyouContext)
 		if err != nil {
 			err = fmt.Errorf("error at find texts: %w", err)
-			errch <- err
-			gkillErrch <- gkillErr
-			return
+		} else {
+			slog.Log(ctx, gkill_log.Trace, "finish findTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 		}
-		slog.Log(ctx, gkill_log.Trace, "finish findTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+		errch <- err
+		gkillErrch <- gkillErr
 	}()
 
 	if findQuery.UseTimeIs {
@@ -204,11 +204,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext)
 			if err != nil {
 				err = fmt.Errorf("error at find timeis texts: %w", err)
-				errch <- err
-				gkillErrch <- gkillErr
-				return
+			} else {
+				slog.Log(ctx, gkill_log.Trace, "finish findTimeIsTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			slog.Log(ctx, gkill_log.Trace, "finish findTimeIsTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+			errch <- err
+			gkillErrch <- gkillErr
 		}()
 
 		wg.Add(1)
@@ -219,11 +219,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
 			if err != nil {
 				err = fmt.Errorf("error at find timeis tags: %w", err)
-				errch <- err
-				gkillErrch <- gkillErr
-				return
+			} else {
+				slog.Log(ctx, gkill_log.Trace, "finish findTimeIsTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			slog.Log(ctx, gkill_log.Trace, "finish findTimeIsTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+			errch <- err
+			gkillErrch <- gkillErr
 		}()
 	}
 
@@ -1777,8 +1777,17 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	latestKyousMap := map[string][]reps.Kyou{}
 
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
-		if !findCtx.DisableLatestDataRepositoryCache {
+		if findCtx.DisableLatestDataRepositoryCache {
 			sort.Slice(currentKyou, func(i, j int) bool { return currentKyou[i].UpdateTime.After(currentKyou[j].UpdateTime) })
+
+			// UsePlaing時はLatestDataRepositoryAddressと一致するもののみ残す
+			if findCtx.ParsedFindQuery.UsePlaing {
+				latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[id]
+				if !exist || !currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) {
+					continue
+				}
+			}
+
 			latestKyousMap[id] = []reps.Kyou{currentKyou[0]}
 			continue
 		}

@@ -1439,8 +1439,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx 
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
-FROM IDF
-WHERE UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM IDF AS INNER_TABLE WHERE INNER_TABLE.ID = IDF.ID)
+FROM ` + sqlite3impl.QuoteIdent(i.dbName) + ` AS T
+WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.QuoteIdent(i.dbName) + ` AS INNER_TABLE WHERE INNER_TABLE.ID = T.ID)
 `
 	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
