@@ -97,6 +97,11 @@ func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, filename st
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := l.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	l.m.RLock()
 	defer l.m.RUnlock()
 	return l.localCachedRep.FindKyous(ctx, query)
@@ -209,6 +214,11 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) Close(ctx context.Context) err
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error) {
+	if query.UpdateCache {
+		if err := l.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	l.m.RLock()
 	defer l.m.RUnlock()
 	return l.localCachedRep.FindLantana(ctx, query)

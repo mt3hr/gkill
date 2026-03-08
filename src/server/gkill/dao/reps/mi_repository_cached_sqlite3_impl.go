@@ -1219,8 +1219,13 @@ func (m *miRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 
 func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 
+	err := m.miRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying mi rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 

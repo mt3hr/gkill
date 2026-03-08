@@ -109,6 +109,11 @@ type idfKyouRepositorySQLite3ImplLocalCached struct {
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := i.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.FindKyous(ctx, query)
@@ -221,6 +226,11 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) Close(ctx context.Context) err
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]IDFKyou, error) {
+	if query.UpdateCache {
+		if err := i.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.FindIDFKyou(ctx, query)

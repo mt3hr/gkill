@@ -695,8 +695,13 @@ WHERE
 }
 
 func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	err := n.notificationRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying notification rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 
