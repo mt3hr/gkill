@@ -1176,8 +1176,8 @@ func (t *tagRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx cont
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, TARGET_ID AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
-FROM TAG
-WHERE UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM TAG AS INNER_TABLE WHERE INNER_TABLE.ID = TAG.ID)
+FROM ` + sqlite3impl.QuoteIdent(t.dbName) + ` AS T
+WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.QuoteIdent(t.dbName) + ` AS INNER_TABLE WHERE INNER_TABLE.ID = T.ID)
 `
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
