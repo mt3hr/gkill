@@ -17,11 +17,13 @@ import (
 )
 
 type reKyouRepositoryCachedSQLite3Impl struct {
-	dbName            string
-	rekyouRep         ReKyouRepository
-	cachedDB          *sqllib.DB
-	m                 *sync.RWMutex
-	gkillRepositories *GkillRepositories
+	dbName             string
+	rekyouRep          ReKyouRepository
+	cachedDB           *sqllib.DB
+	m                  *sync.RWMutex
+	gkillRepositories  *GkillRepositories
+	addReKyouInfoSQL   string
+	addReKyouInfoStmt  *sqllib.Stmt
 }
 
 func NewReKyouRepositoryCachedSQLite3Impl(ctx context.Context, rekyouRep ReKyouRepository, gkillRepositories *GkillRepositories, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (ReKyouRepository, error) {
@@ -93,12 +95,51 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	addReKyouInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED,
+  ID,
+  TARGET_ID,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addReKyouInfoSQL)
+	addReKyouInfoStmt, err := cacheDB.PrepareContext(ctx, addReKyouInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add rekyou info sql: %w", err)
+		return nil, err
+	}
+
 	return &reKyouRepositoryCachedSQLite3Impl{
 		dbName:            dbName,
 		rekyouRep:         rekyouRep,
 		cachedDB:          cacheDB,
 		m:                 m,
 		gkillRepositories: gkillRepositories,
+		addReKyouInfoSQL:  addReKyouInfoSQL,
+		addReKyouInfoStmt: addReKyouInfoStmt,
 	}, nil
 }
 func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
@@ -573,7 +614,9 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (str
 func (r *reKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	r.m.Lock()
 	defer r.m.Unlock()
-
+	if r.addReKyouInfoStmt != nil {
+		r.addReKyouInfoStmt.Close()
+	}
 	if gkill_options.CacheReKyouReps != nil && *gkill_options.CacheReKyouReps {
 		_, err := r.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(r.dbName))
 		return err
@@ -877,49 +920,6 @@ WHERE
 func (r *reKyouRepositoryCachedSQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou ReKyou) error {
 	r.m.Lock()
 	defer r.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(r.dbName) + ` (
-  IS_DELETED,
-  ID,
-  TARGET_ID,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  RELATED_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX 
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add rekyou sql %s: %w", rekyou.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
 	queryArgs := []interface{}{
 		rekyou.IsDeleted,
 		rekyou.ID,
@@ -935,8 +935,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(r.dbName) + ` (
 		rekyou.CreateTime.Unix(),
 		rekyou.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", r.addReKyouInfoSQL, queryArgs)
+	_, err := r.addReKyouInfoStmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to REKYOU %s: %w", rekyou.ID, err)
 		return err

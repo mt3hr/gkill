@@ -18,10 +18,14 @@ import (
 )
 
 type miRepositoryCachedSQLite3Impl struct {
-	dbName   string
-	miRep    MiRepository
-	cachedDB *sqllib.DB
-	m        *sync.RWMutex
+	dbName            string
+	miRep             MiRepository
+	cachedDB          *sqllib.DB
+	m                 *sync.RWMutex
+	addMiInfoSQL      string
+	addMiInfoStmt     *sqllib.Stmt
+	getBoardNamesSQL  string
+	getBoardNamesStmt *sqllib.Stmt
 }
 
 func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (MiRepository, error) {
@@ -91,11 +95,72 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	addMiInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED,
+  ID,
+  TITLE,
+  IS_CHECKED,
+  BOARD_NAME,
+  CREATE_APP,
+  CREATE_USER,
+  CREATE_DEVICE,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  LIMIT_TIME_UNIX,
+  ESTIMATE_START_TIME_UNIX,
+  ESTIMATE_END_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addMiInfoSQL)
+	addMiInfoStmt, err := cacheDB.PrepareContext(ctx, addMiInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add mi info sql: %w", err)
+		return nil, err
+	}
+
+	getBoardNamesSQL := `
+SELECT
+  DISTINCT BOARD_NAME
+FROM ` + sqlite3impl.QuoteIdent(dbName) + `
+` + fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", dbName, dbName) + " GROUP BY BOARD_NAME"
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", getBoardNamesSQL)
+	getBoardNamesStmt, err := cacheDB.PrepareContext(ctx, getBoardNamesSQL)
+	if err != nil {
+		err = fmt.Errorf("error at get board names sql: %w", err)
+		return nil, err
+	}
+
 	return &miRepositoryCachedSQLite3Impl{
-		dbName:   dbName,
-		miRep:    miRep,
-		cachedDB: cacheDB,
-		m:        m,
+		dbName:            dbName,
+		miRep:             miRep,
+		cachedDB:          cacheDB,
+		m:                 m,
+		addMiInfoSQL:      addMiInfoSQL,
+		addMiInfoStmt:     addMiInfoStmt,
+		getBoardNamesSQL:  getBoardNamesSQL,
+		getBoardNamesStmt: getBoardNamesStmt,
 	}, nil
 }
 func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
@@ -1328,6 +1393,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string,
 func (m *miRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	m.m.Lock()
 	defer m.m.Unlock()
+	if m.addMiInfoStmt != nil {
+		m.addMiInfoStmt.Close()
+	}
+	if m.getBoardNamesStmt != nil {
+		m.getBoardNamesStmt.Close()
+	}
 	err := m.miRep.Close(ctx)
 	if err != nil {
 		return err
@@ -2492,56 +2563,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 func (m *miRepositoryCachedSQLite3Impl) AddMiInfo(ctx context.Context, mi Mi) error {
 	m.m.Lock()
 	defer m.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(m.dbName) + ` (
-  IS_DELETED,
-  ID,
-  TITLE,
-  IS_CHECKED,
-  BOARD_NAME,
-  CREATE_APP,
-  CREATE_USER,
-  CREATE_DEVICE,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  LIMIT_TIME_UNIX,
-  ESTIMATE_START_TIME_UNIX,
-  ESTIMATE_END_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
 	var limitTimeUnix interface{}
 	if mi.LimitTime == nil {
@@ -2581,8 +2602,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(m.dbName) + ` (
 		mi.CreateTime.Unix(),
 		mi.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", m.addMiInfoSQL, queryArgs)
+	_, err := m.addMiInfoStmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to mi %s: %w", mi.ID, err)
 		return err
@@ -2595,31 +2616,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetBoardNames(ctx context.Context) ([]st
 	defer m.m.RUnlock()
 	var err error
 
-	sql := `
-SELECT 
-  DISTINCT BOARD_NAME
-FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
-`
-	tableName := m.dbName
-	tableNameAlias := m.dbName
-	sql += fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
-	sql += " GROUP BY BOARD_NAME"
-
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get board names sql: %w", err)
-		return nil, err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	rows, err := stmt.QueryContext(ctx)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", m.getBoardNamesSQL)
+	rows, err := m.getBoardNamesStmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select board names from MI: %w", err)
 		return nil, err
@@ -2631,24 +2629,31 @@ FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		}
 	}()
 
-	boardNames := []string{}
+	boardNamesMap := map[string]struct{}{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
 			boardName := ""
-			err = rows.Scan(&boardName)
+			err = rows.Scan(
+				&boardName,
+			)
 			if err != nil {
-				err = fmt.Errorf("error at scan rows at get board names in MI: %w", err)
+				err = fmt.Errorf("error at read rows at get board names: %w", err)
 				return nil, err
 			}
-			boardNames = append(boardNames, boardName)
+
+			boardNamesMap[boardName] = struct{}{}
 		}
 	}
 	if err := rows.Err(); err != nil {
 		err = fmt.Errorf("error at iterate rows: %w", err)
 		return nil, err
+	}
+	boardNames := []string{}
+	for boardName := range boardNamesMap {
+		boardNames = append(boardNames, boardName)
 	}
 	return boardNames, nil
 }
