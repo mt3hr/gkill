@@ -113,6 +113,8 @@ type GkillRepositories struct {
 	CacheMemoryDB      *sql.DB
 	TempMemoryDBMutex  *sync.RWMutex
 	TempMemoryDB       *sql.DB
+
+	SkipUpdateCache *bool // fsnotifyによるUpdateCacheの再帰トリガーを防止するためのフラグ。GkillDAOManagerのskipUpdateCacheと同じポインタを共有する。
 }
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
@@ -465,6 +467,12 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	g.updateCacheMutex.Lock()
 	defer g.updateCacheMutex.Unlock()
 
+	// UpdateCache実行中にfsnotifyがファイル変更を検出してUpdateCacheを再帰的にトリガーするのを防ぐ
+	if g.SkipUpdateCache != nil {
+		*g.SkipUpdateCache = true
+		defer func() { *g.SkipUpdateCache = false }()
+	}
+
 	var cancelFunc context.CancelFunc
 
 	// 一個前でUpdateCacheしてるやつをキャンセルする
@@ -495,7 +503,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	allTexts := []Text{}
 	allNotifications := []Notification{}
 
-	// UpdateCache並列処理
+	// UpdateCacheは逐次実行する。並列にするとcachedDBのmutexでデッドロックが発生するため、意図的に逐次処理にしている。
 	updateCacheTargets := []interface {
 		UpdateCache(ctx context.Context) error
 	}{}
@@ -514,7 +522,6 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			}
 		}(rep)
 	}
-	wg.Wait()
 
 	// kyouを集める
 	for _, rep := range g.Reps {
