@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 )
 
 type TagRepository interface {
@@ -19,6 +20,8 @@ type TagRepository interface {
 	GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error)
 
 	UpdateCache(ctx context.Context) error
+
+	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
 
 	GetPath(ctx context.Context, id string) (string, error)
 

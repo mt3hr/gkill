@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 )
 
 type Repository interface {
@@ -19,6 +20,8 @@ type Repository interface {
 	GetRepName(ctx context.Context) (string, error)
 
 	UpdateCache(ctx context.Context) error
+
+	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
 
 	Close(ctx context.Context) error
 

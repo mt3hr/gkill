@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -521,4 +522,8 @@ func (l *lantanaTempRepositorySQLite3Impl) UnWrapTyped() ([]LantanaTempRepositor
 
 func (l *lantanaTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{l}, nil
+}
+
+func (l *lantanaTempRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	return nil, fmt.Errorf("not implements lantanaTempRepositorySQLite3Impl.GetLatestDataRepositoryAddress")
 }

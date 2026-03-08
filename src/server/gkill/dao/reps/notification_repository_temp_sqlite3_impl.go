@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -400,4 +401,8 @@ AND DEVICE = ?
 
 func (n *notificationTempRepositorySQLite3Impl) UnWrapTyped() ([]NotificationTempRepository, error) {
 	return []NotificationTempRepository{n}, nil
+}
+
+func (n *notificationTempRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	return nil, fmt.Errorf("not implements notificationTempRepositorySQLite3Impl.GetLatestDataRepositoryAddress")
 }

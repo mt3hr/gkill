@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -509,4 +510,8 @@ func (k *kmemoTempRepositorySQLite3Impl) UnWrapTyped() ([]KmemoTempRepository, e
 
 func (k *kmemoTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{k}, nil
+}
+
+func (k *kmemoTempRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	return nil, fmt.Errorf("not implements kmemoTempRepositorySQLite3Impl.GetLatestDataRepositoryAddress")
 }
