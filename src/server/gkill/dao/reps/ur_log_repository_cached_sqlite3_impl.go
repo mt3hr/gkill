@@ -1165,8 +1165,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx co
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
-FROM URLOG
-WHERE UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM URLOG AS INNER_TABLE WHERE INNER_TABLE.ID = URLOG.ID)
+FROM ` + sqlite3impl.QuoteIdent(u.dbName) + ` AS T
+WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.QuoteIdent(u.dbName) + ` AS INNER_TABLE WHERE INNER_TABLE.ID = T.ID)
 `
 	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
