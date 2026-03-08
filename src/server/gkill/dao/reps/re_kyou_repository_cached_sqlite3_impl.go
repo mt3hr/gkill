@@ -1115,8 +1115,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx c
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
-FROM REKYOU
-WHERE UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM REKYOU AS INNER_TABLE WHERE INNER_TABLE.ID = REKYOU.ID)
+FROM ` + sqlite3impl.QuoteIdent(r.dbName) + ` AS T
+WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.QuoteIdent(r.dbName) + ` AS INNER_TABLE WHERE INNER_TABLE.ID = T.ID)
 `
 	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {

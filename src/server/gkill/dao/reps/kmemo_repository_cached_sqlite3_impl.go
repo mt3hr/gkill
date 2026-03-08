@@ -1085,8 +1085,8 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx co
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
-FROM KMEMO
-WHERE UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM KMEMO AS INNER_TABLE WHERE INNER_TABLE.ID = KMEMO.ID)
+FROM ` + sqlite3impl.QuoteIdent(k.dbName) + ` AS T
+WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.QuoteIdent(k.dbName) + ` AS INNER_TABLE WHERE INNER_TABLE.ID = T.ID)
 `
 	stmt, err := k.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
