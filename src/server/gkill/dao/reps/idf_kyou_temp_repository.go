@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 )
 
 type IDFKyouTempRepository interface {
@@ -18,6 +19,8 @@ type IDFKyouTempRepository interface {
 	GetPath(ctx context.Context, id string) (string, error)
 
 	UpdateCache(ctx context.Context) error
+
+	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
 
 	GetRepName(ctx context.Context) (string, error)
 

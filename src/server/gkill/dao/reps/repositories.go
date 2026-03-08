@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"sort"
 	"sync"
@@ -432,4 +433,16 @@ func (r Repositories) UnWrap() ([]Repository, error) {
 		repositories = append(repositories, unwraped...)
 	}
 	return repositories, nil
+}
+
+func (r Repositories) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	allAddrs := []gkill_cache.LatestDataRepositoryAddress{}
+	for _, rep := range r {
+		addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
+		if err != nil {
+			return nil, fmt.Errorf("error at get latest data repository address: %w", err)
+		}
+		allAddrs = append(allAddrs, addrs...)
+	}
+	return allAddrs, nil
 }

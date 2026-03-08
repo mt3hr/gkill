@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -545,4 +546,8 @@ func (t *timeIsTempRepositorySQLite3Impl) UnWrapTyped() ([]TimeIsTempRepository,
 
 func (t *timeIsTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{t}, nil
+}
+
+func (t *timeIsTempRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	return nil, fmt.Errorf("not implements timeIsTempRepositorySQLite3Impl.GetLatestDataRepositoryAddress")
 }

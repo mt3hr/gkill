@@ -14,6 +14,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
@@ -1242,6 +1243,90 @@ func (n *nlogRepositorySQLite3Impl) UnWrapTyped() ([]NlogRepository, error) {
 
 func (n *nlogRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{n}, nil
+}
+
+func (n *nlogRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	var err error
+	var db *sql.DB
+	if n.fullConnect {
+		db = n.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+
+	if updateCache {
+		err = n.UpdateCache(ctx)
+		if err != nil {
+			repName, _ := n.GetRepName(ctx)
+			err = fmt.Errorf("error at update cache %s: %w", repName, err)
+			return nil, err
+		}
+	}
+	n.m.RLock()
+	defer n.m.RUnlock()
+
+	repName, err := n.GetRepName(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	sql := `
+SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
+       ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME AS DATA_UPDATE_TIME
+FROM NLOG
+`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, repName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	latestDataRepositoryAddressMap := map[string]gkill_cache.LatestDataRepositoryAddress{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			addr := gkill_cache.LatestDataRepositoryAddress{}
+			var isDeletedStr string
+			var dataUpdateTimeStr string
+			var targetIDInData *string
+			err := rows.Scan(&isDeletedStr, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
+			if err != nil {
+				return nil, err
+			}
+			addr.IsDeleted = isDeletedStr == "TRUE"
+			addr.TargetIDInData = targetIDInData
+			addr.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
+			if err != nil {
+				return nil, err
+			}
+			if existing, exist := latestDataRepositoryAddressMap[addr.TargetID]; !exist || existing.DataUpdateTime.Before(addr.DataUpdateTime) {
+				latestDataRepositoryAddressMap[addr.TargetID] = addr
+			}
+		}
+	}
+	latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestDataRepositoryAddressMap))
+	for _, addr := range latestDataRepositoryAddressMap {
+		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+	}
+	return latestDataRepositoryAddresses, nil
 }
 
 func checkAndResolveDataSchemaNlogRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO NlogRepository, err error) {
