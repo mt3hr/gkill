@@ -2,9 +2,9 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	sqllib "database/sql"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
 	"sync"
 	"time"
@@ -17,13 +17,13 @@ import (
 )
 
 type reKyouRepositoryCachedSQLite3Impl struct {
-	dbName             string
-	rekyouRep          ReKyouRepository
-	cachedDB           *sqllib.DB
-	m                  *sync.RWMutex
-	gkillRepositories  *GkillRepositories
-	addReKyouInfoSQL   string
-	addReKyouInfoStmt  *sqllib.Stmt
+	dbName            string
+	rekyouRep         ReKyouRepository
+	cachedDB          *sqllib.DB
+	m                 *sync.RWMutex
+	gkillRepositories *GkillRepositories
+	addReKyouInfoSQL  string
+	addReKyouInfoStmt *sqllib.Stmt
 }
 
 func NewReKyouRepositoryCachedSQLite3Impl(ctx context.Context, rekyouRep ReKyouRepository, gkillRepositories *GkillRepositories, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (ReKyouRepository, error) {
@@ -470,9 +470,20 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	if r.rekyouRep == nil {
+		return fmt.Errorf("underlying rekyou rep is nil")
+	}
+	if hasRecursiveReKyouRepReference(r.rekyouRep, r, map[*ReKyouRepositories]struct{}{}) {
+		return fmt.Errorf("detected recursive rekyou cache reference")
+	}
+
+	err := r.rekyouRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying rekyou rep cache: %w", err)
+	}
 
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 
@@ -605,6 +616,24 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(r.dbName) + ` (
 	}
 	isCommitted = true
 	return nil
+}
+
+func hasRecursiveReKyouRepReference(rep ReKyouRepository, self *reKyouRepositoryCachedSQLite3Impl, visited map[*ReKyouRepositories]struct{}) bool {
+	switch typed := rep.(type) {
+	case *reKyouRepositoryCachedSQLite3Impl:
+		return typed == self
+	case *ReKyouRepositories:
+		if _, exist := visited[typed]; exist {
+			return false
+		}
+		visited[typed] = struct{}{}
+		for _, nested := range typed.ReKyouRepositories {
+			if hasRecursiveReKyouRepReference(nested, self, visited) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

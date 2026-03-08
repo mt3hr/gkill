@@ -97,6 +97,11 @@ func NewURLogRepositorySQLite3ImplLocalCached(ctx context.Context, filename stri
 }
 
 func (u *urlogRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := u.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	u.m.RLock()
 	defer u.m.RUnlock()
 	return u.localCachedRep.FindKyous(ctx, query)
@@ -209,6 +214,11 @@ func (u *urlogRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error
 }
 
 func (u *urlogRepositorySQLite3ImplLocalCached) FindURLog(ctx context.Context, query *find.FindQuery) ([]URLog, error) {
+	if query.UpdateCache {
+		if err := u.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	u.m.RLock()
 	defer u.m.RUnlock()
 	return u.localCachedRep.FindURLog(ctx, query)

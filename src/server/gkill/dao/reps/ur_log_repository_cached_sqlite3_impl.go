@@ -527,8 +527,13 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 
 func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 
+	err := u.urlogRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying urlog rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 

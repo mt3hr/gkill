@@ -585,8 +585,13 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 
 func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 
+	err := t.timeisRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying timeis rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 

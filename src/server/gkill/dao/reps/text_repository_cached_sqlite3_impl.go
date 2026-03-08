@@ -582,8 +582,13 @@ func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context
 }
 
 func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	err := t.textRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying text rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 

@@ -99,6 +99,11 @@ func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename str
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := r.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	r.m.RLock()
 	defer r.m.RUnlock()
 	return r.localCachedRep.FindKyous(ctx, query)
@@ -211,6 +216,11 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) Close(ctx context.Context) erro
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) FindReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
+	if query.UpdateCache {
+		if err := r.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	r.m.RLock()
 	defer r.m.RUnlock()
 	return r.localCachedRep.FindReKyou(ctx, query)

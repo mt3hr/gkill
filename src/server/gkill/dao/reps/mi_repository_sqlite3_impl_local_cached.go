@@ -97,6 +97,11 @@ func NewMiRepositorySQLite3ImplLocalCached(ctx context.Context, filename string,
 }
 
 func (m *miRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := m.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.localCachedRep.FindKyous(ctx, query)
@@ -209,6 +214,11 @@ func (m *miRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
 }
 
 func (m *miRepositorySQLite3ImplLocalCached) FindMi(ctx context.Context, query *find.FindQuery) ([]Mi, error) {
+	if query.UpdateCache {
+		if err := m.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.localCachedRep.FindMi(ctx, query)

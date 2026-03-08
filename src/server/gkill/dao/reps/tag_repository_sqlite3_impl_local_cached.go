@@ -96,6 +96,11 @@ func NewTagRepositorySQLite3ImplLocalCached(ctx context.Context, filename string
 	return cachedRep, nil
 }
 func (t *tagRepositorySQLite3ImplLocalCached) FindTags(ctx context.Context, query *find.FindQuery) ([]Tag, error) {
+	if query.UpdateCache {
+		if err := t.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.FindTags(ctx, query)
