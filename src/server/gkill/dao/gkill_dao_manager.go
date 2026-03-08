@@ -888,7 +888,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.NotificationReps = []reps.NotificationRepository{cachedNotificationRep}
 		}
 		if *gkill_options.CacheReKyouReps {
-			rekyouRepositories := reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{&repositories.ReKyouReps}, GkillRepositories: repositories}
+			// キャッシュ差し替え前の実体を固定化して自己参照を防ぐ
+			originalReKyouReps := append([]reps.ReKyouRepository(nil), repositories.ReKyouReps.ReKyouRepositories...)
+			rekyouRepositories := reps.ReKyouRepositories{ReKyouRepositories: originalReKyouReps, GkillRepositories: repositories}
 			cachedReKyouRep, err := reps.NewReKyouRepositoryCachedSQLite3Impl(ctx, &rekyouRepositories, repositories, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_REKYOU")
 			if err != nil {
 				err = fmt.Errorf("error at new cached rekyou rep: %w", err)

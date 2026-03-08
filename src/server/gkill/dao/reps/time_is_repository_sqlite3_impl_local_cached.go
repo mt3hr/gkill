@@ -96,6 +96,11 @@ func NewTimeIsRepositorySQLite3ImplLocalCached(ctx context.Context, filename str
 	return cachedRep, nil
 }
 func (i *timeIsRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := i.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.FindKyous(ctx, query)
@@ -208,6 +213,11 @@ func (i *timeIsRepositorySQLite3ImplLocalCached) Close(ctx context.Context) erro
 }
 
 func (i *timeIsRepositorySQLite3ImplLocalCached) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]TimeIs, error) {
+	if query.UpdateCache {
+		if err := i.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.FindTimeIs(ctx, query)

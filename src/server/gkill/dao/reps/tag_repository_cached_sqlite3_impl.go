@@ -697,8 +697,13 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	err := t.tagRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying tag rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 

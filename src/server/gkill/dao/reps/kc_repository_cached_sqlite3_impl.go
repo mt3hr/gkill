@@ -510,8 +510,13 @@ func (k *kcRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 
 func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 
+	err := k.kcRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying kc rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 

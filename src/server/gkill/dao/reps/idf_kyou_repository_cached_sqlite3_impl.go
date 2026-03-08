@@ -704,8 +704,13 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	err := i.idfRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying idf kyou rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 
