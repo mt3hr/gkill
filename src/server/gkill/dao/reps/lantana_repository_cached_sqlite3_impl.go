@@ -3,7 +3,7 @@ package reps
 import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
-	"database/sql"
+	sqllib "database/sql"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -17,13 +17,15 @@ import (
 )
 
 type lantanaRepositoryCachedSQLite3Impl struct {
-	dbName     string
-	lantanaRep LantanaRepository
-	cachedDB   *sql.DB
-	m          *sync.RWMutex
+	dbName             string
+	lantanaRep         LantanaRepository
+	cachedDB           *sqllib.DB
+	m                  *sync.RWMutex
+	addLantanaInfoSQL  string
+	addLantanaInfoStmt *sqllib.Stmt
 }
 
-func NewLantanaRepositoryCachedSQLite3Impl(ctx context.Context, lantanaRep LantanaRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (LantanaRepository, error) {
+func NewLantanaRepositoryCachedSQLite3Impl(ctx context.Context, lantanaRep LantanaRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (LantanaRepository, error) {
 	if m == nil {
 		m = &sync.RWMutex{}
 	}
@@ -85,11 +87,50 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	addLantanaInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED,
+  ID,
+  MOOD,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addLantanaInfoSQL)
+	addLantanaInfoStmt, err := cacheDB.PrepareContext(ctx, addLantanaInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add lantana info sql: %w", err)
+		return nil, err
+	}
+
 	return &lantanaRepositoryCachedSQLite3Impl{
-		dbName:     dbName,
-		lantanaRep: lantanaRep,
-		cachedDB:   cacheDB,
-		m:          m,
+		dbName:             dbName,
+		lantanaRep:         lantanaRep,
+		cachedDB:           cacheDB,
+		m:                  m,
+		addLantanaInfoSQL:  addLantanaInfoSQL,
+		addLantanaInfoStmt: addLantanaInfoStmt,
 	}, nil
 }
 func (l *lantanaRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
@@ -611,6 +652,9 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (st
 func (l *lantanaRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	l.m.Lock()
 	defer l.m.Unlock()
+	if l.addLantanaInfoStmt != nil {
+		l.addLantanaInfoStmt.Close()
+	}
 	err := l.lantanaRep.Close(ctx)
 	if err != nil {
 		return err
@@ -1009,49 +1053,6 @@ WHERE
 func (l *lantanaRepositoryCachedSQLite3Impl) AddLantanaInfo(ctx context.Context, lantana Lantana) error {
 	l.m.Lock()
 	defer l.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(l.dbName) + ` (
-  IS_DELETED,
-  ID,
-  MOOD,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  RELATED_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX 
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := l.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add lantana sql %s: %w", lantana.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
 	queryArgs := []interface{}{
 		lantana.IsDeleted,
 		lantana.ID,
@@ -1067,8 +1068,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.dbName) + ` (
 		lantana.CreateTime.Unix(),
 		lantana.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", l.addLantanaInfoSQL, queryArgs)
+	_, err := l.addLantanaInfoStmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
 		err = fmt.Errorf("error at insert in to LANTANA %s: %w", lantana.ID, err)

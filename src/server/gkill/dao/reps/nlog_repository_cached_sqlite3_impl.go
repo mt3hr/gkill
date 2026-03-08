@@ -19,10 +19,12 @@ import (
 )
 
 type nlogRepositoryCachedSQLite3Impl struct {
-	dbName   string
-	nlogRep  NlogRepository
-	cachedDB *sqllib.DB
-	m        *sync.RWMutex
+	dbName          string
+	nlogRep         NlogRepository
+	cachedDB        *sqllib.DB
+	m               *sync.RWMutex
+	addNlogInfoSQL  string
+	addNlogInfoStmt *sqllib.Stmt
 }
 
 func NewNlogRepositoryCachedSQLite3Impl(ctx context.Context, nlogRep NlogRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (NlogRepository, error) {
@@ -96,11 +98,54 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	addNlogInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED,
+  ID,
+  SHOP,
+  TITLE,
+  AMOUNT,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addNlogInfoSQL)
+	addNlogInfoStmt, err := cacheDB.PrepareContext(ctx, addNlogInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add nlog info sql: %w", err)
+		return nil, err
+	}
+
 	return &nlogRepositoryCachedSQLite3Impl{
-		dbName:   dbName,
-		nlogRep:  nlogRep,
-		cachedDB: cacheDB,
-		m:        m,
+		dbName:          dbName,
+		nlogRep:         nlogRep,
+		cachedDB:        cacheDB,
+		m:               m,
+		addNlogInfoSQL:  addNlogInfoSQL,
+		addNlogInfoStmt: addNlogInfoStmt,
 	}, nil
 }
 func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
@@ -631,6 +676,9 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (strin
 func (n *nlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	n.m.Lock()
 	defer n.m.Unlock()
+	if n.addNlogInfoStmt != nil {
+		n.addNlogInfoStmt.Close()
+	}
 	err := n.nlogRep.Close(ctx)
 	if err != nil {
 		return err
@@ -1042,53 +1090,6 @@ WHERE
 func (n *nlogRepositoryCachedSQLite3Impl) AddNlogInfo(ctx context.Context, nlog Nlog) error {
 	n.m.Lock()
 	defer n.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
-  IS_DELETED,
-  ID,
-  SHOP,
-  TITLE,
-  AMOUNT,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  RELATED_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX 
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add nlog sql %s: %w", nlog.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
 	queryArgs := []interface{}{
 		nlog.IsDeleted,
 		nlog.ID,
@@ -1106,8 +1107,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
 		nlog.CreateTime.Unix(),
 		nlog.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", n.addNlogInfoSQL, queryArgs)
+	_, err := n.addNlogInfoStmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
 		err = fmt.Errorf("error at insert in to NLOG %s: %w", nlog.ID, err)
