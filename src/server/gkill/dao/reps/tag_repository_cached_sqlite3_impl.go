@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -1163,4 +1164,48 @@ WHERE
 
 func (t *tagRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TagRepository, error) {
 	return []TagRepository{t.tagRep}, nil
+}
+
+func (t *tagRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	repName, err := t.GetRepName(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	sql := `
+SELECT IS_DELETED, ID AS TARGET_ID, TARGET_ID AS TARGET_ID_IN_DATA,
+       ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
+FROM TAG
+WHERE UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM TAG AS INNER_TABLE WHERE INNER_TABLE.ID = TAG.ID)
+`
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, repName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	latestDataRepositoryAddresses := []gkill_cache.LatestDataRepositoryAddress{}
+	for rows.Next() {
+		addr := gkill_cache.LatestDataRepositoryAddress{}
+		var isDeletedInt int
+		var dataUpdateTimeUnix int64
+		var targetIDInData *string
+		err := rows.Scan(&isDeletedInt, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeUnix)
+		if err != nil {
+			return nil, err
+		}
+		addr.IsDeleted = isDeletedInt != 0
+		addr.DataUpdateTime = time.Unix(dataUpdateTimeUnix, 0)
+		if targetIDInData != nil {
+			addr.TargetID = *targetIDInData
+		}
+		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+	}
+	return latestDataRepositoryAddresses, nil
 }

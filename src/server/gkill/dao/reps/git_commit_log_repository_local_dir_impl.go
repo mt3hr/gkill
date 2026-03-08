@@ -12,6 +12,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
 
@@ -529,6 +530,43 @@ loop:
 		}
 	}
 	return matchGitCommitLog, nil
+}
+
+func (g *gitCommitLogRepositoryLocalImpl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	g.m.RLock()
+	defer g.m.RUnlock()
+
+	repName, err := g.GetRepName(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	latestDataRepositoryAddresses := []gkill_cache.LatestDataRepositoryAddress{}
+
+	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
+	if err != nil {
+		return latestDataRepositoryAddresses, nil
+	}
+	defer logs.Close()
+
+	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
+		if err != nil {
+			return nil, err
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			addr := gkill_cache.LatestDataRepositoryAddress{
+				IsDeleted:                false,
+				TargetID:                 commit.Hash.String(),
+				LatestDataRepositoryName: repName,
+				DataUpdateTime:           commit.Committer.When,
+			}
+			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+		}
+	}
+	return latestDataRepositoryAddresses, nil
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) UnWrapTyped() ([]GitCommitLogRepository, error) {
