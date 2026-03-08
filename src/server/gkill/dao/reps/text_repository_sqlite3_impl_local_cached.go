@@ -96,6 +96,11 @@ func NewTextRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 	return cachedRep, nil
 }
 func (t *textRepositorySQLite3ImplLocalCached) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
+	if query.UpdateCache {
+		if err := t.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.localCachedRep.FindTexts(ctx, query)

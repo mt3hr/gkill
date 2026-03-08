@@ -96,6 +96,11 @@ func NewNlogRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 	return cachedRep, nil
 }
 func (n *nlogRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := n.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.FindKyous(ctx, query)
@@ -208,6 +213,11 @@ func (n *nlogRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error 
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) FindNlog(ctx context.Context, query *find.FindQuery) ([]Nlog, error) {
+	if query.UpdateCache {
+		if err := n.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.FindNlog(ctx, query)
