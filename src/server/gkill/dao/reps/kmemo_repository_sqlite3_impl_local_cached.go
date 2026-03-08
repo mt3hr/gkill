@@ -97,6 +97,11 @@ func NewKmemoRepositorySQLite3ImplLocalCached(ctx context.Context, filename stri
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := k.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.FindKyous(ctx, query)
@@ -209,6 +214,11 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) FindKmemo(ctx context.Context, query *find.FindQuery) ([]Kmemo, error) {
+	if query.UpdateCache {
+		if err := k.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.FindKmemo(ctx, query)

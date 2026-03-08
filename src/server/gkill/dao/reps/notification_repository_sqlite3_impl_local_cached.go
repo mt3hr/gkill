@@ -96,6 +96,11 @@ func NewNotificationRepositorySQLite3ImplLocalCached(ctx context.Context, filena
 	return cachedRep, nil
 }
 func (n *notificationRepositorySQLite3ImplLocalCached) FindNotifications(ctx context.Context, query *find.FindQuery) ([]Notification, error) {
+	if query.UpdateCache {
+		if err := n.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.localCachedRep.FindNotifications(ctx, query)

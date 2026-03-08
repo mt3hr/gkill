@@ -462,8 +462,13 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, i
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	err := g.gitRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying git commit log rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 

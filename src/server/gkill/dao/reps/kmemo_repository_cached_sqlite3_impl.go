@@ -504,8 +504,13 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 
 func (k *kmemoRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 
+	err := k.kmemoRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying kmemo rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 

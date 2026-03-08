@@ -2,11 +2,12 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"sort"
 	"sync"
 	"time"
+
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
@@ -16,6 +17,17 @@ import (
 type Repositories []Repository
 
 func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	// update_cache=trueの場合、並列dispatch前に逐次UpdateCacheする。
+	// threads.Goのネスト（FindKyous並列→UpdateCache内の並列）でスレッドプールが枯渇しデッドロックするのを防止する。
+	if query.UpdateCache {
+		if err := r.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+		clonedQuery := *query
+		clonedQuery.UpdateCache = false
+		query = &clonedQuery
+	}
+
 	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
@@ -437,12 +449,58 @@ func (r Repositories) UnWrap() ([]Repository, error) {
 
 func (r Repositories) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
 	allAddrs := []gkill_cache.LatestDataRepositoryAddress{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []gkill_cache.LatestDataRepositoryAddress, len(r))
+	errch := make(chan error, len(r))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
 	for _, rep := range r {
-		addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- addrs
+		})
 		if err != nil {
-			return nil, fmt.Errorf("error at get latest data repository address: %w", err)
+			errch <- err
 		}
-		allAddrs = append(allAddrs, addrs...)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// 集約
+loop:
+	for {
+		select {
+		case addrs := <-ch:
+			if addrs == nil {
+				continue loop
+			}
+			allAddrs = append(allAddrs, addrs...)
+		default:
+			break loop
+		}
 	}
 	return allAddrs, nil
 }

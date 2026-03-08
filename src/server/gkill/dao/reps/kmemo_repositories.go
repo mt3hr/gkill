@@ -254,43 +254,13 @@ func (k KmemoRepositories) GetPath(ctx context.Context, id string) (string, erro
 }
 
 func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
-	existErr := false
-	var err error
-	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(k))
-	defer close(errch)
-
-	// 並列処理
+	// CacheMemoryDB（インメモリSQLite）を共有しているため逐次実行
 	for _, rep := range k {
-		rep := rep
-		err := threads.Go(ctx, wg, func() {
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		})
+		err := rep.UpdateCache(ctx)
 		if err != nil {
-			errch <- err
+			return fmt.Errorf("error at update cache: %w", err)
 		}
 	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
-			existErr = true
-		default:
-			break errloop
-		}
-	}
-	if existErr {
-		return err
-	}
-
 	return nil
 }
 

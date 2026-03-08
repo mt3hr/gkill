@@ -97,6 +97,11 @@ func NewKCRepositorySQLite3ImplLocalCached(ctx context.Context, filename string,
 }
 
 func (k *kcRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	if query.UpdateCache {
+		if err := k.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.FindKyous(ctx, query)
@@ -207,6 +212,11 @@ func (k *kcRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
 }
 
 func (k *kcRepositorySQLite3ImplLocalCached) FindKC(ctx context.Context, query *find.FindQuery) ([]KC, error) {
+	if query.UpdateCache {
+		if err := k.UpdateCache(ctx); err != nil {
+			return nil, fmt.Errorf("error at update cache: %w", err)
+		}
+	}
 	k.m.RLock()
 	defer k.m.RUnlock()
 	return k.localCachedRep.FindKC(ctx, query)

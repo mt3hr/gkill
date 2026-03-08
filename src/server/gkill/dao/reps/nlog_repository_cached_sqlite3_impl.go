@@ -525,8 +525,13 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string
 
 func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 
+	err := n.nlogRep.UpdateCache(ctx)
+	if err != nil {
+		return fmt.Errorf("error at update underlying nlog rep cache: %w", err)
+	}
+
 	query := &find.FindQuery{
-		UpdateCache:    true,
+		UpdateCache:    false,
 		OnlyLatestData: false,
 	}
 
