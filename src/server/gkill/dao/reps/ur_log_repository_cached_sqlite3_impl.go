@@ -3,7 +3,7 @@ package reps
 import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
-	"database/sql"
+	sqllib "database/sql"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -17,13 +17,15 @@ import (
 )
 
 type urlogRepositoryCachedSQLite3Impl struct {
-	dbName   string
-	urlogRep URLogRepository
-	cachedDB *sql.DB
-	m        *sync.RWMutex
+	dbName           string
+	urlogRep         URLogRepository
+	cachedDB         *sqllib.DB
+	addURLogInfoSQL  string
+	addURLogInfoStmt *sqllib.Stmt
+	m                *sync.RWMutex
 }
 
-func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository URLogRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (URLogRepository, error) {
+func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository URLogRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (URLogRepository, error) {
 	if m == nil {
 		m = &sync.RWMutex{}
 	}
@@ -90,11 +92,58 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	addURLogInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED,
+  ID,
+  URL,
+  TITLE,
+  DESCRIPTION,
+  FAVICON_IMAGE,
+  THUMBNAIL_IMAGE,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addURLogInfoSQL)
+	addURLogInfoStmt, err := cacheDB.PrepareContext(ctx, addURLogInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add urlog info sql: %w", err)
+		return nil, err
+	}
+
 	return &urlogRepositoryCachedSQLite3Impl{
-		dbName:   dbName,
-		urlogRep: urlogRepository,
-		cachedDB: cacheDB,
-		m:        m,
+		dbName:           dbName,
+		urlogRep:         urlogRepository,
+		cachedDB:         cacheDB,
+		addURLogInfoSQL:  addURLogInfoSQL,
+		addURLogInfoStmt: addURLogInfoStmt,
+		m:                m,
 	}, nil
 }
 
@@ -633,6 +682,9 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (stri
 func (u *urlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	u.m.Lock()
 	defer u.m.Unlock()
+	if u.addURLogInfoStmt != nil {
+		u.addURLogInfoStmt.Close()
+	}
 	err := u.urlogRep.Close(ctx)
 	if err != nil {
 		return err
@@ -1067,57 +1119,6 @@ WHERE
 func (u *urlogRepositoryCachedSQLite3Impl) AddURLogInfo(ctx context.Context, urlog URLog) error {
 	u.m.Lock()
 	defer u.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
-  IS_DELETED,
-  ID,
-  URL,
-  TITLE,
-  DESCRIPTION,
-  FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  RELATED_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add urlog sql %s: %w", urlog.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
 	queryArgs := []interface{}{
 		urlog.IsDeleted,
 		urlog.ID,
@@ -1137,8 +1138,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
 		urlog.CreateTime.Unix(),
 		urlog.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", u.addURLogInfoSQL, queryArgs)
+	_, err := u.addURLogInfoStmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
 		err = fmt.Errorf("error at insert in to URLog %s: %w", urlog.ID, err)

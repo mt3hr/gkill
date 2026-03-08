@@ -3,7 +3,7 @@ package reps
 import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
-	"database/sql"
+	sqllib "database/sql"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -19,13 +19,15 @@ import (
 type textRepositoryCachedSQLite3Impl struct {
 	dbName                 string
 	textRep                TextRepository
-	cachedDB               *sql.DB
+	cachedDB               *sqllib.DB
 	getTextsByTargetIDSQL  string
-	getTextsByTargetIDStmt *sql.Stmt
+	getTextsByTargetIDStmt *sqllib.Stmt
+	addTextInfoSQL         string
+	addTextInfoStmt        *sqllib.Stmt
 	m                      *sync.RWMutex
 }
 
-func NewTextRepositoryCachedSQLite3Impl(ctx context.Context, textRep TextRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (TextRepository, error) {
+func NewTextRepositoryCachedSQLite3Impl(ctx context.Context, textRep TextRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (TextRepository, error) {
 	if m == nil {
 		m = &sync.RWMutex{}
 	}
@@ -165,12 +167,53 @@ ORDER BY TEXT1.UPDATE_TIME_UNIX DESC
 		return nil, err
 	}
 
+	addTextInfoSQL := `
+INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED,
+  ID,
+  TEXT,
+  TARGET_ID,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addTextInfoSQL)
+	addTextInfoStmt, err := cacheDB.PrepareContext(ctx, addTextInfoSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add text info sql: %w", err)
+		return nil, err
+	}
+
 	return &textRepositoryCachedSQLite3Impl{
 		dbName:                 dbName,
 		textRep:                textRep,
 		cachedDB:               cacheDB,
 		getTextsByTargetIDSQL:  getTextsByTargetIDSQL,
 		getTextsByTargetIDStmt: getTextsByTargetIDStmt,
+		addTextInfoSQL:         addTextInfoSQL,
+		addTextInfoStmt:        addTextInfoStmt,
 		m:                      m,
 	}, nil
 }
@@ -314,6 +357,12 @@ WHERE
 func (t *textRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	t.m.Lock()
 	defer t.m.Unlock()
+	if t.addTextInfoStmt != nil {
+		t.addTextInfoStmt.Close()
+	}
+	if t.getTextsByTargetIDStmt != nil {
+		t.getTextsByTargetIDStmt.Close()
+	}
 	err := t.textRep.Close(ctx)
 	if err != nil {
 		return err
@@ -533,11 +582,6 @@ func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context
 }
 
 func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	if err := t.textRep.UpdateCache(ctx); err != nil {
-		repName, _ := t.GetRepName(ctx)
-		return fmt.Errorf("error at update inner cache before rebuild %s: %w", repName, err)
-	}
-
 	query := &find.FindQuery{
 		UpdateCache:    true,
 		OnlyLatestData: false,
@@ -813,51 +857,6 @@ WHERE
 func (t *textRepositoryCachedSQLite3Impl) AddTextInfo(ctx context.Context, text Text) error {
 	t.m.Lock()
 	defer t.m.Unlock()
-	sql := `
-INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
-  IS_DELETED,
-  ID,
-  TEXT,
-  TARGET_ID,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  RELATED_TIME_UNIX,
-  CREATE_TIME_UNIX,
-  UPDATE_TIME_UNIX
-) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-)`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add text sql %s: %w", text.ID, err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
-
 	queryArgs := []interface{}{
 		text.IsDeleted,
 		text.ID,
@@ -874,8 +873,8 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
 		text.CreateTime.Unix(),
 		text.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", t.addTextInfoSQL, queryArgs)
+	_, err := t.addTextInfoStmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
 		err = fmt.Errorf("error at insert in to TEXT %s: %w", text.ID, err)
