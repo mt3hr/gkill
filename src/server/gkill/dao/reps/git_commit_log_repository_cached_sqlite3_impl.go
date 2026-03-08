@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -894,4 +895,8 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UnWrapTyped() ([]GitCommitLogR
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 	return g.gitRep.UnWrap()
+}
+
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	return g.gitRep.GetLatestDataRepositoryAddress(ctx, updateCache)
 }

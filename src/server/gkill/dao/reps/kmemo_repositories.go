@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"sort"
 	"sync"
@@ -678,4 +679,62 @@ func (k KmemoRepositories) UnWrap() ([]Repository, error) {
 		repositories = append(repositories, unwraped...)
 	}
 	return repositories, nil
+}
+
+func (k KmemoRepositories) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	allAddrs := []gkill_cache.LatestDataRepositoryAddress{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []gkill_cache.LatestDataRepositoryAddress, len(k))
+	errch := make(chan error, len(k))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range k {
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- addrs
+		})
+		if err != nil {
+			errch <- err
+		}
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// 集約
+loop:
+	for {
+		select {
+		case addrs := <-ch:
+			if addrs == nil {
+				continue loop
+			}
+			allAddrs = append(allAddrs, addrs...)
+		default:
+			break loop
+		}
+	}
+	return allAddrs, nil
 }
