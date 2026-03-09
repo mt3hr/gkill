@@ -20,6 +20,7 @@ type NotificationRepository interface {
 	GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]Notification, error)
 
 	UpdateCache(ctx context.Context) error
+	LastUpdateCacheChanged() bool
 
 	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
 

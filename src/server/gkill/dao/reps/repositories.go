@@ -216,15 +216,16 @@ func (r Repositories) UpdateCache(ctx context.Context) error {
 	errch := make(chan error, len(r))
 	defer close(errch)
 
-	// UpdateCache並列処理
+	// UpdateCache並列処理（threads.Goは内部でネストするためセマフォデッドロック回避のため素のgoroutineを使用）
 	for _, rep := range r {
-		func(rep Repository) {
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
+		rep := rep
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if e := rep.UpdateCache(ctx); e != nil {
+				errch <- e
 			}
-		}(rep)
+		}()
 	}
 	wg.Wait()
 

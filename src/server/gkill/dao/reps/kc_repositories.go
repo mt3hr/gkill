@@ -263,6 +263,15 @@ func (k KCRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (k KCRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range k {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (k KCRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "KCReps", nil
 }

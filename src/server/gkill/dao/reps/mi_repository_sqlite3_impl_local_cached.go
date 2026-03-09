@@ -25,6 +25,8 @@ type miRepositorySQLite3ImplLocalCached struct {
 	m                    sync.RWMutex
 
 	fullConnect bool
+
+	lastUpdateCacheChanged bool
 }
 
 func NewMiRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (MiRepository, error) {
@@ -153,6 +155,7 @@ func (m *miRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) er
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(m.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	m.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(m.originalDBFileName)
 		if err != nil {
@@ -191,6 +194,10 @@ func (m *miRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) er
 	}
 	m.localCachedRep = newLocalCachedRep
 	return nil
+}
+
+func (m *miRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return m.lastUpdateCacheChanged
 }
 
 func (m *miRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

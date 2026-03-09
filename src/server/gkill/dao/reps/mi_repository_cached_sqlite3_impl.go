@@ -1224,6 +1224,11 @@ func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		return fmt.Errorf("error at update underlying mi rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !m.miRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -1389,6 +1394,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(m.dbName) + ` (
 	}
 	isCommitted = true
 	return nil
+}
+
+func (m *miRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
