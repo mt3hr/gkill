@@ -590,6 +590,11 @@ func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		return fmt.Errorf("error at update underlying timeis rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !t.timeisRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -734,6 +739,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
 	}
 	isCommitted = true
 	return nil
+}
+
+func (t *timeIsRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

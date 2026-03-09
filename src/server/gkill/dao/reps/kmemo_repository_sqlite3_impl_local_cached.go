@@ -25,6 +25,8 @@ type kmemoRepositorySQLite3ImplLocalCached struct {
 	m                    sync.RWMutex
 
 	fullConnect bool
+
+	lastUpdateCacheChanged bool
 }
 
 func NewKmemoRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (KmemoRepository, error) {
@@ -153,6 +155,7 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(k.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	k.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(k.originalDBFileName)
 		if err != nil {
@@ -191,6 +194,10 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 	}
 	k.localCachedRep = newLocalCachedRep
 	return nil
+}
+
+func (k *kmemoRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return k.lastUpdateCacheChanged
 }
 
 func (k *kmemoRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

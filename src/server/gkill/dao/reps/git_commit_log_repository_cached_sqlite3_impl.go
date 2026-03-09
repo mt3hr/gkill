@@ -467,6 +467,11 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		return fmt.Errorf("error at update underlying git commit log rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !g.gitRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -605,6 +610,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
 	}
 	isCommitted = true
 	return nil
+}
+
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

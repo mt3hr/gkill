@@ -264,6 +264,15 @@ func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (r *ReKyouRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range r.ReKyouRepositories {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *ReKyouRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "ReKyou", nil
 }

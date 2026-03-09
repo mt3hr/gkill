@@ -20,6 +20,7 @@ type TagRepository interface {
 	GetTagsByTargetID(ctx context.Context, target_id string) ([]Tag, error)
 
 	UpdateCache(ctx context.Context) error
+	LastUpdateCacheChanged() bool
 
 	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
 

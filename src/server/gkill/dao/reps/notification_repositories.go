@@ -358,14 +358,49 @@ loop:
 }
 
 func (t NotificationRepositories) UpdateCache(ctx context.Context) error {
-	// CacheMemoryDB（インメモリSQLite）を共有しているため逐次実行
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	errch := make(chan error, len(t))
+	defer close(errch)
+
+	// UpdateCache並列処理（threads.Goは内部でネストするためセマフォデッドロック回避のため素のgoroutineを使用）
 	for _, rep := range t {
-		err := rep.UpdateCache(ctx)
-		if err != nil {
-			return fmt.Errorf("error at update cache: %w", err)
+		rep := rep
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if e := rep.UpdateCache(ctx); e != nil {
+				errch <- e
+			}
+		}()
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at update cache: %w", e)
+			existErr = true
+		default:
+			break errloop
 		}
 	}
+	if existErr {
+		return err
+	}
 	return nil
+}
+
+func (t NotificationRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range t {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
 }
 
 func (t NotificationRepositories) GetPath(ctx context.Context, id string) (string, error) {

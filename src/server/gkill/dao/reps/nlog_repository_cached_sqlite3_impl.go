@@ -530,6 +530,11 @@ func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 		return fmt.Errorf("error at update underlying nlog rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !n.nlogRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -670,6 +675,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
 	}
 	isCommitted = true
 	return nil
+}
+
+func (n *nlogRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

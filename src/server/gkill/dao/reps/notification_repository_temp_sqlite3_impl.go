@@ -140,6 +140,10 @@ func (n *notificationTempRepositorySQLite3Impl) GetPath(ctx context.Context, id 
 	return "", fmt.Errorf("not implemented")
 }
 
+func (n *notificationTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (n *notificationTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "notification_temp", nil
 }

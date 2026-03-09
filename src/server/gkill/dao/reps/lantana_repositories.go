@@ -264,6 +264,15 @@ func (l LantanaRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (l LantanaRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range l {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (l LantanaRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "LantanaReps", nil
 }

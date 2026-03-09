@@ -24,7 +24,8 @@ type tagRepositorySQLite3ImplLocalCached struct {
 	localCachedRep       TagRepository
 	m                    sync.RWMutex
 
-	fullConnect bool
+	fullConnect            bool
+	lastUpdateCacheChanged bool
 }
 
 func NewTagRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (TagRepository, error) {
@@ -168,6 +169,7 @@ func (t *tagRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) e
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(t.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	t.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(t.originalDBFileName)
 		if err != nil {
@@ -212,6 +214,10 @@ func (t *tagRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id st
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.originalRep.GetPath(ctx, id)
+}
+
+func (t *tagRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return t.lastUpdateCacheChanged
 }
 
 func (t *tagRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

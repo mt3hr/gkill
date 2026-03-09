@@ -845,6 +845,10 @@ func (t *tagRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (stri
 	return filepath.Abs(t.filename)
 }
 
+func (t *tagRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (t *tagRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	path, err := t.GetPath(ctx, "")
 	if err != nil {

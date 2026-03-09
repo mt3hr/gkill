@@ -702,6 +702,11 @@ func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error 
 		return fmt.Errorf("error at update underlying tag rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !t.tagRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -843,6 +848,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
 
 func (t *tagRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
 	return t.tagRep.GetPath(ctx, id)
+}
+
+func (t *tagRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

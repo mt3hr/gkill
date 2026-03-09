@@ -1057,6 +1057,10 @@ func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (i *idfKyouRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (i *idfKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return filepath.Base(i.contentDir), nil
 }
