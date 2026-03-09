@@ -129,6 +129,10 @@ func (u *urlogTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error 
 	return impl.UpdateCache(ctx)
 }
 
+func (u *urlogTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (u *urlogTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "urlog_temp", nil
 }

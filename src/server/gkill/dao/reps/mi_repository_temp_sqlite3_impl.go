@@ -131,6 +131,10 @@ func (m *miTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return impl.UpdateCache(ctx)
 }
 
+func (m *miTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (m *miTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "mi_temp", nil
 }

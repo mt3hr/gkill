@@ -254,6 +254,15 @@ func (g GitCommitLogRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (g GitCommitLogRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range g {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (g GitCommitLogRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "GitCommitLogReps", nil
 }

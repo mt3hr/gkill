@@ -628,6 +628,10 @@ func (u *urlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (u *urlogRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (u *urlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	path, err := u.GetPath(ctx, "")
 	if err != nil {

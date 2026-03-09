@@ -129,6 +129,10 @@ func (n *nlogTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return impl.UpdateCache(ctx)
 }
 
+func (n *nlogTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (n *nlogTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "nlog_temp", nil
 }

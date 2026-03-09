@@ -540,6 +540,10 @@ func (r *reKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (r *reKyouRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (r *reKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	path, err := r.GetPath(ctx, "")
 	if err != nil {

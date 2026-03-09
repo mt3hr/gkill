@@ -811,6 +811,10 @@ func (n *notificationRepositorySQLite3Impl) GetPath(ctx context.Context, id stri
 	return filepath.Abs(n.filename)
 }
 
+func (n *notificationRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (n *notificationRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	path, err := n.GetPath(ctx, "")
 	if err != nil {

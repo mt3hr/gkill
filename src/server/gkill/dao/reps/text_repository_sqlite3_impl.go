@@ -693,6 +693,10 @@ func (t *textRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (str
 	return filepath.Abs(t.filename)
 }
 
+func (t *textRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (t *textRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	path, err := t.GetPath(ctx, "")
 	if err != nil {

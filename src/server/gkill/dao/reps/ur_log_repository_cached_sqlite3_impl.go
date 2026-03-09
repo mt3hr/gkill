@@ -532,6 +532,11 @@ func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		return fmt.Errorf("error at update underlying urlog rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !u.urlogRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -678,6 +683,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
 	}
 	isCommitted = true
 	return nil
+}
+
+func (u *urlogRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

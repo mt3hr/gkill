@@ -700,6 +700,11 @@ func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		return fmt.Errorf("error at update underlying notification rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !n.notificationRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -842,6 +847,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
 
 func (n *notificationRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
 	return n.notificationRep.GetPath(ctx, id)
+}
+
+func (n *notificationRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (n *notificationRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

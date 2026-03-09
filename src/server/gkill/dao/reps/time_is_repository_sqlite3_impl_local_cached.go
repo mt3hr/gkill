@@ -25,6 +25,8 @@ type timeIsRepositorySQLite3ImplLocalCached struct {
 	m                    sync.RWMutex
 
 	fullConnect bool
+
+	lastUpdateCacheChanged bool
 }
 
 func NewTimeIsRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (TimeIsRepository, error) {
@@ -152,6 +154,7 @@ func (t *timeIsRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(t.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	t.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(t.originalDBFileName)
 		if err != nil {
@@ -190,6 +193,10 @@ func (t *timeIsRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	}
 	t.localCachedRep = newLocalCachedRep
 	return nil
+}
+
+func (t *timeIsRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return t.lastUpdateCacheChanged
 }
 
 func (i *timeIsRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

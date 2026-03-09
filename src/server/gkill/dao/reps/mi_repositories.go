@@ -265,6 +265,15 @@ func (m MiRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (m MiRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range m {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (m MiRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "MiReps", nil
 }

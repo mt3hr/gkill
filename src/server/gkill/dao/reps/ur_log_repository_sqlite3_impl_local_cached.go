@@ -25,6 +25,8 @@ type urlogRepositorySQLite3ImplLocalCached struct {
 	m                    sync.RWMutex
 
 	fullConnect bool
+
+	lastUpdateCacheChanged bool
 }
 
 func NewURLogRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (URLogRepository, error) {
@@ -153,6 +155,7 @@ func (u *urlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(u.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	u.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(u.originalDBFileName)
 		if err != nil {
@@ -191,6 +194,10 @@ func (u *urlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 	}
 	u.localCachedRep = newLocalCachedRep
 	return nil
+}
+
+func (u *urlogRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return u.lastUpdateCacheChanged
 }
 
 func (u *urlogRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

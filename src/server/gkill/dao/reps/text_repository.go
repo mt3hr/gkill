@@ -18,6 +18,7 @@ type TextRepository interface {
 	GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error)
 
 	UpdateCache(ctx context.Context) error
+	LastUpdateCacheChanged() bool
 
 	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
 

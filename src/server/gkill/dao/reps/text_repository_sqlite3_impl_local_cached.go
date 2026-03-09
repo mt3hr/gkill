@@ -24,7 +24,8 @@ type textRepositorySQLite3ImplLocalCached struct {
 	localCachedRep       TextRepository
 	m                    sync.RWMutex
 
-	fullConnect bool
+	fullConnect            bool
+	lastUpdateCacheChanged bool
 }
 
 func NewTextRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (TextRepository, error) {
@@ -162,6 +163,7 @@ func (t *textRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(t.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	t.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(t.originalDBFileName)
 		if err != nil {
@@ -206,6 +208,10 @@ func (t *textRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id s
 	t.m.RLock()
 	defer t.m.RUnlock()
 	return t.originalRep.GetPath(ctx, id)
+}
+
+func (t *textRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return t.lastUpdateCacheChanged
 }
 
 func (t *textRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

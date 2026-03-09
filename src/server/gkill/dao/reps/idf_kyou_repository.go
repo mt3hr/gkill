@@ -19,6 +19,7 @@ type IDFKyouRepository interface {
 	GetPath(ctx context.Context, id string) (string, error)
 
 	UpdateCache(ctx context.Context) error
+	LastUpdateCacheChanged() bool
 
 	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error)
 
