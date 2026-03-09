@@ -124,6 +124,10 @@ func (l *lantanaTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) erro
 	return impl.UpdateCache(ctx)
 }
 
+func (l *lantanaTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (l *lantanaTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "lantana_temp", nil
 }

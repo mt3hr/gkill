@@ -126,6 +126,10 @@ func (r *reKyouTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error
 	return impl.UpdateCache(ctx)
 }
 
+func (r *reKyouTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (r *reKyouTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "rekyou_temp", nil
 }

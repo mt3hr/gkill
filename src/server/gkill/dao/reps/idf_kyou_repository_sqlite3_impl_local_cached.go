@@ -104,8 +104,9 @@ type idfKyouRepositorySQLite3ImplLocalCached struct {
 	r               *mux.Router
 	contentDir      string
 	fullConnect     bool
-	autoIDF         bool
-	idfIgnore       *[]string
+	autoIDF                bool
+	idfIgnore              *[]string
+	lastUpdateCacheChanged bool
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
@@ -165,6 +166,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(i.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	i.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(i.originalDBFileName)
 		if err != nil {
@@ -203,6 +205,10 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 	}
 	i.localCachedRep = newLocalCachedRep
 	return nil
+}
+
+func (i *idfKyouRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return i.lastUpdateCacheChanged
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

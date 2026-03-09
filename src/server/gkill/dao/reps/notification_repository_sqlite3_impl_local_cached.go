@@ -24,7 +24,8 @@ type notificationRepositorySQLite3ImplLocalCached struct {
 	localCachedRep       NotificationRepository
 	m                    sync.RWMutex
 
-	fullConnect bool
+	fullConnect            bool
+	lastUpdateCacheChanged bool
 }
 
 func NewNotificationRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (NotificationRepository, error) {
@@ -168,6 +169,7 @@ func (n *notificationRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.C
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(n.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	n.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(n.originalDBFileName)
 		if err != nil {
@@ -212,6 +214,10 @@ func (n *notificationRepositorySQLite3ImplLocalCached) GetPath(ctx context.Conte
 	n.m.RLock()
 	defer n.m.RUnlock()
 	return n.originalRep.GetPath(ctx, id)
+}
+
+func (n *notificationRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return n.lastUpdateCacheChanged
 }
 
 func (n *notificationRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

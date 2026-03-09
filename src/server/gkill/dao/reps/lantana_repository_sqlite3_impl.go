@@ -622,6 +622,10 @@ func (l *lantanaRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (l *lantanaRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (l *lantanaRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	path, err := l.GetPath(ctx, "")
 	if err != nil {

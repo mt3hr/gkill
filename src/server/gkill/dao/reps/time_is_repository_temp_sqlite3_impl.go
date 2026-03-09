@@ -126,6 +126,10 @@ func (t *timeIsTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error
 	return impl.UpdateCache(ctx)
 }
 
+func (t *timeIsTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (t *timeIsTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "timeis_temp", nil
 }

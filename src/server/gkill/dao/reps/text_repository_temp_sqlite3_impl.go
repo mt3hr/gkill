@@ -188,6 +188,10 @@ func (t *textTempRepositorySQLite3Impl) GetPath(ctx context.Context, id string) 
 	return "", fmt.Errorf("text_temp repository does not support GetPath")
 }
 
+func (t *textTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (t *textTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "text_temp", nil
 }

@@ -132,6 +132,10 @@ func (i *idfKyouRepositoryTempSQLite3Impl) UpdateCache(ctx context.Context) erro
 	return impl.UpdateCache(ctx)
 }
 
+func (i *idfKyouRepositoryTempSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (i *idfKyouRepositoryTempSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "IDF_TEMP", nil
 }

@@ -687,6 +687,10 @@ func (t *timeIsRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (t *timeIsRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (t *timeIsRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	path, err := t.GetPath(ctx, "")
 	if err != nil {

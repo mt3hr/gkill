@@ -17,9 +17,10 @@ import (
 )
 
 type gitCommitLogRepositoryLocalImpl struct {
-	gitrep   *git.Repository
-	filename string
-	m        sync.RWMutex
+	gitrep                 *git.Repository
+	filename               string
+	m                      sync.RWMutex
+	lastUpdateCacheChanged bool
 }
 
 func NewGitRep(reppath string) (GitCommitLogRepository, error) {
@@ -295,6 +296,10 @@ func (g *gitCommitLogRepositoryLocalImpl) GetPath(ctx context.Context, id string
 
 func (g *gitCommitLogRepositoryLocalImpl) UpdateCache(ctx context.Context) error {
 	return nil
+}
+
+func (g *gitCommitLogRepositoryLocalImpl) LastUpdateCacheChanged() bool {
+	return g.lastUpdateCacheChanged
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetRepName(ctx context.Context) (string, error) {

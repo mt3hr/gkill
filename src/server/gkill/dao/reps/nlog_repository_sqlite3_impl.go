@@ -624,6 +624,10 @@ func (n *nlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (n *nlogRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (n *nlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	path, err := n.GetPath(ctx, "")
 	if err != nil {

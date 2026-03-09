@@ -261,6 +261,15 @@ func (i IDFKyouRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (i IDFKyouRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range i {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (i IDFKyouRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "IDFKyouReps", nil
 }

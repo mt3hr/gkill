@@ -300,6 +300,15 @@ func (t TimeIsRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (t TimeIsRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range t {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (t TimeIsRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "TimeIsReps", nil
 }

@@ -515,6 +515,11 @@ func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		return fmt.Errorf("error at update underlying kc rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !k.kcRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -651,6 +656,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(k.dbName) + ` (
 	}
 	isCommitted = true
 	return nil
+}
+
+func (k *kcRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

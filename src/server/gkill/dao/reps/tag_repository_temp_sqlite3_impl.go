@@ -194,6 +194,10 @@ func (t *tagTempRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (
 	return "", fmt.Errorf("GetPath not implemented for tag_temp repository")
 }
 
+func (t *tagTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (t *tagTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "tag_temp", nil
 }

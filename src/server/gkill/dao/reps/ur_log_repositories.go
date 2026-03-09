@@ -264,6 +264,15 @@ func (u URLogRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (u URLogRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range u {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (u URLogRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "URLogReps", nil
 }
