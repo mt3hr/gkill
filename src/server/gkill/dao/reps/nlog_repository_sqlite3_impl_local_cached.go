@@ -25,6 +25,8 @@ type nlogRepositorySQLite3ImplLocalCached struct {
 	m                    sync.RWMutex
 
 	fullConnect bool
+
+	lastUpdateCacheChanged bool
 }
 
 func NewNlogRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (NlogRepository, error) {
@@ -152,6 +154,7 @@ func (n *nlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(n.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	n.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(n.originalDBFileName)
 		if err != nil {
@@ -190,6 +193,10 @@ func (n *nlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 	}
 	n.localCachedRep = newLocalCachedRep
 	return nil
+}
+
+func (n *nlogRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return n.lastUpdateCacheChanged
 }
 
 func (n *nlogRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

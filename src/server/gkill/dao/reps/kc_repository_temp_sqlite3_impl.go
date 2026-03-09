@@ -129,6 +129,10 @@ func (k *kcTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return impl.UpdateCache(ctx)
 }
 
+func (k *kcTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (k *kcTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "KC_TEMP", nil
 }

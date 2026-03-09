@@ -264,6 +264,15 @@ func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (k KmemoRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range k {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (k KmemoRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "KmemoReps", nil
 }

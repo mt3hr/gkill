@@ -117,6 +117,10 @@ func (k *kmemoTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error 
 	return impl.UpdateCache(ctx)
 }
 
+func (k *kmemoTempRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (k *kmemoTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	return "KmemoTemp", nil
 }

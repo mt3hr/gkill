@@ -482,6 +482,11 @@ func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		return fmt.Errorf("error at update underlying rekyou rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !r.rekyouRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -634,6 +639,10 @@ func hasRecursiveReKyouRepReference(rep ReKyouRepository, self *reKyouRepository
 		}
 	}
 	return false
+}
+
+func (r *reKyouRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

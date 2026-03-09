@@ -709,6 +709,11 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		return fmt.Errorf("error at update underlying idf kyou rep cache: %w", err)
 	}
 
+	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	if !i.idfRep.LastUpdateCacheChanged() {
+		return nil
+	}
+
 	query := &find.FindQuery{
 		UpdateCache:    false,
 		OnlyLatestData: false,
@@ -849,6 +854,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
 	}
 	isCommitted = true
 	return nil
+}
+
+func (i *idfKyouRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {

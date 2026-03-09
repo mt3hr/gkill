@@ -264,6 +264,15 @@ func (n NlogRepositories) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (n NlogRepositories) LastUpdateCacheChanged() bool {
+	for _, rep := range n {
+		if rep.LastUpdateCacheChanged() {
+			return true
+		}
+	}
+	return false
+}
+
 func (n NlogRepositories) GetRepName(ctx context.Context) (string, error) {
 	return "NlogReps", nil
 }

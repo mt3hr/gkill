@@ -1287,6 +1287,10 @@ func (m *miRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
+func (m *miRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
+	return true
+}
+
 func (m *miRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
 	m.m.RLock()
 	defer m.m.RUnlock()

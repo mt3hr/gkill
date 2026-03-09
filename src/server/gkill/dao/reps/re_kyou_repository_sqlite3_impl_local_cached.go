@@ -24,8 +24,9 @@ type reKyouRepositorySQLite3ImplLocalCached struct {
 	localCachedRep       ReKyouRepository
 	m                    sync.RWMutex
 
-	fullConnect bool
-	reps        *GkillRepositories
+	fullConnect            bool
+	reps                   *GkillRepositories
+	lastUpdateCacheChanged bool
 }
 
 func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool, reps *GkillRepositories) (ReKyouRepository, error) {
@@ -155,6 +156,7 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(r.originalDBFileName)
 	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
+	r.lastUpdateCacheChanged = updateCache
 	if updateCache {
 		originalDBFile, err := os.Open(r.originalDBFileName)
 		if err != nil {
@@ -193,6 +195,10 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	}
 	r.localCachedRep = newLocalCachedRep
 	return nil
+}
+
+func (r *reKyouRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
+	return r.lastUpdateCacheChanged
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {
