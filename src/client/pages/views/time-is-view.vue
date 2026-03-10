@@ -10,20 +10,20 @@
             format_time(kyou.typed_timeis?.end_time) }}</span></div>
         <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time && show_timeis_elapsed_time">{{
             i18n.global.t("PLAING_TITLE")
-        }}</div>
+            }}</div>
         <v-row v-if="show_timeis_plaing_end_button && kyou.typed_timeis && !kyou.typed_timeis.end_time"
             class="pa-0 ma-0">
             <v-spacer cols="auto" />
-            <v-col cols="auto" class="pa-0 ma-0 pr-4">
+            <v-col cols="auto" class="pa-0 ma-0 pa-0">
                 <v-btn dark color="primary" @click="show_end_timeis_dialog()">{{ i18n.global.t("END_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" ref="context_menu"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+            @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
             @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
             @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
             @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
@@ -33,8 +33,8 @@
             @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
             @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
             @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
@@ -42,9 +42,9 @@
         <EndTimeIsPlaingDialog :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
             ref="end_timeis_plaing_dialog" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+            @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
             @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
             @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
             @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
@@ -54,8 +54,8 @@
             @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
             @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
             @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
