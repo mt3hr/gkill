@@ -364,16 +364,15 @@ func (t NotificationRepositories) UpdateCache(ctx context.Context) error {
 	errch := make(chan error, len(t))
 	defer close(errch)
 
-	// UpdateCache並列処理（threads.Goは内部でネストするためセマフォデッドロック回避のため素のgoroutineを使用）
 	for _, rep := range t {
 		rep := rep
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		if e := threads.Go(ctx, wg, func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
 			}
-		}()
+		}); e != nil {
+			errch <- e
+		}
 	}
 	wg.Wait()
 
