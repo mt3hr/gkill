@@ -20,6 +20,7 @@ type gitCommitLogRepositoryLocalImpl struct {
 	gitrep                 *git.Repository
 	filename               string
 	m                      sync.RWMutex
+	lastHeadHashes         map[string]string
 	lastUpdateCacheChanged bool
 }
 
@@ -295,11 +296,47 @@ func (g *gitCommitLogRepositoryLocalImpl) GetPath(ctx context.Context, id string
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) UpdateCache(ctx context.Context) error {
+	currentHeadHashes := map[string]string{}
+
+	refs, err := g.gitrep.References()
+	if err != nil {
+		return fmt.Errorf("error at get references: %w", err)
+	}
+	defer refs.Close()
+
+	err = refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Type() == plumbing.HashReference {
+			currentHeadHashes[ref.Name().String()] = ref.Hash().String()
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("error at iterate references: %w", err)
+	}
+
+	// 前回と比較
+	changed := false
+	if len(currentHeadHashes) != len(g.lastHeadHashes) {
+		changed = true
+	} else {
+		for name, hash := range currentHeadHashes {
+			if g.lastHeadHashes[name] != hash {
+				changed = true
+				break
+			}
+		}
+	}
+
+	g.lastUpdateCacheChanged = changed
+	if changed {
+		g.lastHeadHashes = currentHeadHashes
+	}
+
 	return nil
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) LastUpdateCacheChanged() bool {
-	return true
+	return g.lastUpdateCacheChanged
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetRepName(ctx context.Context) (string, error) {
