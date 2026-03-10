@@ -389,10 +389,6 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   max-width: unset;
 }
 
-.kyou_list_view .kyou_in_list {
-  width: 400px;
-}
-
 .gkill-floating-dialog.is-transparent {
   opacity: 0.75;
 }
