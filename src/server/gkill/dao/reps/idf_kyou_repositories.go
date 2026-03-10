@@ -251,12 +251,36 @@ func (i IDFKyouRepositories) GetPath(ctx context.Context, id string) (string, er
 }
 
 func (i IDFKyouRepositories) UpdateCache(ctx context.Context) error {
-	// CacheMemoryDB（インメモリSQLite）を共有しているため逐次実行
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	errch := make(chan error, len(i))
+	defer close(errch)
+
 	for _, rep := range i {
-		err := rep.UpdateCache(ctx)
-		if err != nil {
-			return fmt.Errorf("error at update cache: %w", err)
+		rep := rep
+		if e := threads.Go(ctx, wg, func() {
+			if e := rep.UpdateCache(ctx); e != nil {
+				errch <- e
+			}
+		}); e != nil {
+			errch <- e
 		}
+	}
+	wg.Wait()
+
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at update cache: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return err
 	}
 	return nil
 }
