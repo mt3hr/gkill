@@ -299,7 +299,7 @@ func (g *gitCommitLogRepositoryLocalImpl) UpdateCache(ctx context.Context) error
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) LastUpdateCacheChanged() bool {
-	return g.lastUpdateCacheChanged
+	return true
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetRepName(ctx context.Context) (string, error) {
