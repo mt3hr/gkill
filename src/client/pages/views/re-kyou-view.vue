@@ -1,7 +1,7 @@
 <template>
     <v-card @contextmenu.prevent.stop="() => {/*show_context_menu*/ }" :width="width" :height="height">
         <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="false"
-            :is_image_view="false" :kyou="target_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
+            :is_image_view="false" :kyou="target_kyou" :show_checkbox="false"
             :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
             :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
             :show_timeis_plaing_end_button="true" :height="height" :width="width" :is_readonly_mi_check="false"
@@ -28,7 +28,7 @@
             @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
             @dblclick.prevent.stop="() => { }" />
         <ReKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" ref="context_menu"
+            :highlight_targets="highlight_targets" :kyou="kyou" ref="context_menu"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

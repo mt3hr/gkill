@@ -5,7 +5,6 @@
     :item="item"
     :application_config="application_config"
     :gkill_api="gkill_api"
-    :last_added_tag="last_added_tag"
     :enable_context_menu="enable_context_menu"
     :enable_dialog="enable_dialog"
     @closed="(...id: any[]) => emits('closed', id[0] as string)"
@@ -46,7 +45,6 @@ import RykvDialogHostItem from './rykv-dialog-host-item.vue'
 
 interface RykvDialogHostProps extends GkillPropsBase {
   dialogs: Array<OpenedRykvDialog>
-  last_added_tag: string
   enable_context_menu: boolean
   enable_dialog: boolean
 }
