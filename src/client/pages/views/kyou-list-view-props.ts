@@ -6,7 +6,6 @@ import type { GkillPropsBase } from './gkill-props-base'
 
 export interface KyouListViewProps extends GkillPropsBase {
     is_focused_list: boolean
-    last_added_tag: string
     query: FindKyouQuery
     matched_kyous: Array<Kyou>
     list_height: Number

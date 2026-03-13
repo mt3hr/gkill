@@ -1,7 +1,7 @@
 <template>
     <NotificationView class="notification_history" v-for="notification in cloned_notification.attached_histories"
         :key="notification.id" :application_config="application_config" :gkill_api="gkill_api"
-        :notification="notification" :kyou="kyou" :last_added_tag="last_added_tag"
+        :notification="notification" :kyou="kyou"
         :highlight_targets="highlight_targets" @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
         @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
         @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"

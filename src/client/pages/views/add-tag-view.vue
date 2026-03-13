@@ -25,7 +25,7 @@
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
                 :is_image_request_to_thumb_size="false" :highlight_targets="highlight_targets" :is_image_view="false"
-                :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+                :kyou="kyou" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
@@ -51,6 +51,24 @@
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
         </v-card>
+        <v-dialog v-model="show_confirm_unknown_tag_dialog" max-width="500">
+            <v-card>
+                <v-card-title>{{ i18n.global.t("CONFIRM_UNKNOWN_TAG_TITLE") }}</v-card-title>
+                <v-card-text>
+                    {{ i18n.global.t("CONFIRM_UNKNOWN_TAG_MESSAGE") }}
+                    <v-list density="compact">
+                        <v-list-item v-for="tag in unknown_tags" :key="tag">
+                            <v-list-item-title>{{ tag }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn @click="cancel_save()">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
+                    <v-btn color="primary" @click="confirm_save()">{{ i18n.global.t("SAVE_TITLE") }}</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-card>
 </template>
 <script lang="ts" setup>
@@ -61,6 +79,7 @@ import { Tag } from '@/classes/datas/tag'
 import { Text } from '@/classes/datas/text'
 import { Notification } from '@/classes/datas/notification'
 import { type Ref, ref } from 'vue'
+import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import KyouView from './kyou-view.vue'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -77,6 +96,18 @@ const emits = defineEmits<KyouViewEmits>()
 
 const show_kyou: Ref<boolean> = ref(false)
 const tag_name: Ref<string> = ref("")
+const show_confirm_unknown_tag_dialog: Ref<boolean> = ref(false)
+const unknown_tags: Ref<string[]> = ref([])
+
+function tag_exists_in_struct(tag_name: string, struct: TagStructElementData): boolean {
+    if (struct.tag_name === tag_name) return true
+    if (struct.children) {
+        for (const child of struct.children) {
+            if (tag_exists_in_struct(tag_name, child)) return true
+        }
+    }
+    return false
+}
 
 async function save(): Promise<void> {
     try {
@@ -92,6 +123,35 @@ async function save(): Promise<void> {
             return
         }
 
+        // TagStructに存在しないタグを検出
+        const tag_names = tag_name.value.split("、")
+        const not_found = tag_names.filter(t => !tag_exists_in_struct(t, props.application_config.tag_struct))
+        if (not_found.length > 0) {
+            unknown_tags.value = not_found
+            show_confirm_unknown_tag_dialog.value = true
+            return
+        }
+
+        await execute_save()
+    } finally {
+        is_requested_submit.value = false
+    }
+}
+
+function cancel_save(): void {
+    show_confirm_unknown_tag_dialog.value = false
+    unknown_tags.value = []
+}
+
+async function confirm_save(): Promise<void> {
+    show_confirm_unknown_tag_dialog.value = false
+    unknown_tags.value = []
+    await execute_save()
+}
+
+async function execute_save(): Promise<void> {
+    try {
+        is_requested_submit.value = true
         const tag_names = tag_name.value.split("、")
         for (let i = 0; i < tag_names.length; i++) {
             const tag = tag_names[i]
@@ -128,6 +188,7 @@ async function save(): Promise<void> {
         }
         emits('requested_reload_kyou', props.kyou)
         props.gkill_api.set_saved_last_added_tag(tag_name.value)
+        props.gkill_api.push_tag_to_history(tag_name.value)
         emits('requested_close_dialog')
         return
     } finally {

@@ -2,7 +2,7 @@
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
             <AttachedText :text="text" :application_config="application_config" :gkill_api="gkill_api" :kyou="kyou"
-                :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                :highlight_targets="highlight_targets"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

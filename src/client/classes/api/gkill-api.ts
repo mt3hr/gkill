@@ -2695,6 +2695,25 @@ export class GkillAPI {
                 }
                 return last_added_tag
         }
+        private tag_history_localstorage_key = "tag_history"
+        private tag_history_max = 10
+        push_tag_to_history(tag: string): void {
+                const history = this.get_saved_tag_history()
+                const filtered = history.filter(t => t !== tag)
+                filtered.unshift(tag)
+                const trimmed = filtered.slice(0, this.tag_history_max)
+                window.localStorage.setItem(this.tag_history_localstorage_key, JSON.stringify(trimmed))
+        }
+        get_saved_tag_history(): string[] {
+                const raw = window.localStorage.getItem(this.tag_history_localstorage_key)
+                if (!raw) {
+                        const old = this.get_saved_last_added_tag()
+                        if (old) return [old]
+                        return []
+                }
+                try { return JSON.parse(raw) as string[] }
+                catch { return [] }
+        }
         private use_dark_theme_cookie_key = "use_dark_theme"
 
         get_use_dark_theme(): boolean {

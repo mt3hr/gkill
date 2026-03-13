@@ -19,7 +19,7 @@
         <v-card class="edit_dnote_dialog_view">
           <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" :query="new FindKyouQuery()"
-            :checked_kyous="[]" :last_added_tag="''" :editable="true"
+            :checked_kyous="[]" :editable="true"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_apply_dnote="(...dnote_data: any[]) => { emits('requested_apply_dnote', dnote_data[0]) }"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
