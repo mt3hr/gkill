@@ -1,0 +1,208 @@
+import { computed, watch, type Ref, ref, nextTick, onUnmounted } from 'vue'
+import { format_time } from '@/classes/format-date-time'
+import { Kyou } from '@/classes/datas/kyou'
+import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
+import type { KyouViewProps } from '@/pages/views/kyou-view-props'
+import type { Tag } from '@/classes/datas/tag'
+import type { Text } from '@/classes/datas/text'
+import type { Notification } from '@/classes/datas/notification'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
+import type KmemoView from '@/pages/views/kmemo-view.vue'
+import type KCView from '@/pages/views/kc-view.vue'
+import type MiKyouView from '@/pages/views/mi-kyou-view.vue'
+import type NlogView from '@/pages/views/nlog-view.vue'
+import type LantanaView from '@/pages/views/lantana-view.vue'
+import type TimeIsView from '@/pages/views/time-is-view.vue'
+import type UrLogView from '@/pages/views/ur-log-view.vue'
+import type IdfKyouView from '@/pages/views/idf-kyou-view.vue'
+import type ReKyouView from '@/pages/views/re-kyou-view.vue'
+import type GitCommitLogView from '@/pages/views/git-commit-log-view.vue'
+
+export function useKyouView(options: {
+    props: KyouViewProps,
+    emits: KyouViewEmits,
+}) {
+    const { props, emits } = options
+
+    // ── Template refs ──
+    const kmemo_view = ref<InstanceType<typeof KmemoView> | null>(null)
+    const kc_view = ref<InstanceType<typeof KCView> | null>(null)
+    const mi_view = ref<InstanceType<typeof MiKyouView> | null>(null)
+    const nlog_view = ref<InstanceType<typeof NlogView> | null>(null)
+    const lantana_view = ref<InstanceType<typeof LantanaView> | null>(null)
+    const timeis_view = ref<InstanceType<typeof TimeIsView> | null>(null)
+    const urlog_view = ref<InstanceType<typeof UrLogView> | null>(null)
+    const idf_kyou_view = ref<InstanceType<typeof IdfKyouView> | null>(null)
+    const rekyou_view = ref<InstanceType<typeof ReKyouView> | null>(null)
+    const git_commit_log_view = ref<InstanceType<typeof GitCommitLogView> | null>(null)
+
+    // ── State refs ──
+    const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
+
+    // ── Lifecycle ──
+    onUnmounted(() => {
+        cloned_kyou.value.abort_controller.abort()
+        cloned_kyou.value.abort_controller = new AbortController()
+    })
+
+    // ── Computed ──
+    const related_time = computed(() => format_time(props.kyou.related_time))
+    const update_time = computed(() => format_time(props.kyou.update_time))
+    const rep_name = computed(() => props.kyou.rep_name)
+
+    const kyou_class = computed(() => {
+        let highlighted = false
+        for (let i = 0; i < props.highlight_targets.length; i++) {
+            if (props.highlight_targets[i].id === props.kyou.id
+                && props.highlight_targets[i].create_time.getTime() === props.kyou.create_time.getTime()
+                && props.highlight_targets[i].update_time.getTime() === props.kyou.update_time.getTime()) {
+                highlighted = true
+                break
+            }
+        }
+        if (highlighted) {
+            return "highlighted_kyou"
+        }
+        return ""
+    })
+
+    // ── Watchers ──
+    watch(() => props.kyou, async () => {
+        cloned_kyou.value.abort_controller.abort()
+        cloned_kyou.value = props.kyou.clone()
+        cloned_kyou.value.abort_controller = new AbortController()
+        if (props.force_show_latest_kyou_info) {
+            await cloned_kyou.value.reload(true, props.force_show_latest_kyou_info);//最新を読み込むためにReload
+        }
+        (() => load_attached_infos())(); //非同期で実行してほしい
+    })
+
+    // ── Initialization (IIFE) ──
+    ;(async () => {
+        if (props.force_show_latest_kyou_info) {
+            await cloned_kyou.value.reload(true, props.force_show_latest_kyou_info);//最新を読み込むためにReload
+        }
+        load_attached_infos()
+    })(); //非同期で実行してほしい
+
+    // ── Internal helpers ──
+    async function load_attached_infos(): Promise<void> {
+        try {
+            const awaitPromises = new Array<Promise<any>>()
+            try {
+                awaitPromises.push(cloned_kyou.value.load_typed_datas())
+                if (props.show_attached_tags) {
+                    awaitPromises.push(cloned_kyou.value.load_attached_tags())
+                }
+                if (props.show_attached_texts) {
+                    awaitPromises.push(cloned_kyou.value.load_attached_texts())
+                }
+                if (props.show_attached_notifications) {
+                    awaitPromises.push(cloned_kyou.value.load_attached_notifications())
+                }
+                if (props.show_attached_timeis) {
+                    awaitPromises.push(cloned_kyou.value.load_attached_timeis())
+                }
+                await Promise.all(awaitPromises)
+            } catch (err: any) {
+                // abortは握りつぶす
+                if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+                    // abort以外はエラー出力する
+                    console.error(err)
+                }
+            }
+        } catch (err: any) {
+            // abortは握りつぶす
+            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+                // abort以外はエラー出力する
+                console.error(err)
+            }
+        }
+    }
+
+    // ── Business logic ──
+    async function show_context_menu(e: PointerEvent): Promise<void> {
+        if (!props.enable_context_menu) {
+            return
+        }
+        kmemo_view.value?.show_context_menu(e)
+        kc_view.value?.show_context_menu(e)
+        mi_view.value?.show_context_menu(e)
+        nlog_view.value?.show_context_menu(e)
+        lantana_view.value?.show_context_menu(e)
+        timeis_view.value?.show_context_menu(e)
+        urlog_view.value?.show_context_menu(e)
+        idf_kyou_view.value?.show_context_menu(e)
+        rekyou_view.value?.show_context_menu(e)
+        git_commit_log_view.value?.show_context_menu(e)
+    }
+
+    function show_kyou_dialog(): void {
+        if (props.enable_dialog) {
+            emits('requested_open_rykv_dialog', 'kyou', cloned_kyou.value)
+        }
+    }
+
+    // ── Event relay objects ──
+    const crudRelayHandlers = {
+        'deleted_kyou': (...args: any[]) => emits('deleted_kyou', args[0]),
+        'deleted_tag': (...args: any[]) => emits('deleted_tag', args[0] as Tag),
+        'deleted_text': (...args: any[]) => emits('deleted_text', args[0] as Text),
+        'deleted_notification': (...args: any[]) => emits('deleted_notification', args[0] as Notification),
+        'registered_kyou': (...args: any[]) => emits('registered_kyou', args[0] as Kyou),
+        'registered_tag': (...args: any[]) => emits('registered_tag', args[0] as Tag),
+        'registered_text': (...args: any[]) => emits('registered_text', args[0] as Text),
+        'registered_notification': (...args: any[]) => emits('registered_notification', args[0] as Notification),
+        'updated_kyou': (...args: any[]) => emits('updated_kyou', args[0] as Kyou),
+        'updated_tag': (...args: any[]) => emits('updated_tag', args[0] as Tag),
+        'updated_text': (...args: any[]) => emits('updated_text', args[0] as Text),
+        'updated_notification': (...args: any[]) => emits('updated_notification', args[0] as Notification),
+        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
+        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
+        'requested_reload_kyou': (...args: any[]) => emits('requested_reload_kyou', args[0] as Kyou),
+        'requested_reload_list': () => emits('requested_reload_list'),
+        'requested_update_check_kyous': (...args: any[]) => emits('requested_update_check_kyous', args[0] as Array<Kyou>, args[1] as boolean),
+        'requested_open_rykv_dialog': (...args: any[]) => emits('requested_open_rykv_dialog', args[0], args[1], args[2]),
+    }
+
+    // ── Template event handlers ──
+    function onRootClick(): void {
+        nextTick(() => {
+            emits('focused_kyou', cloned_kyou.value)
+            emits('clicked_kyou', cloned_kyou.value)
+        })
+    }
+
+    // ── Return ──
+    return {
+        // Template refs
+        kmemo_view,
+        kc_view,
+        mi_view,
+        nlog_view,
+        lantana_view,
+        timeis_view,
+        urlog_view,
+        idf_kyou_view,
+        rekyou_view,
+        git_commit_log_view,
+
+        // State
+        cloned_kyou,
+
+        // Computed
+        related_time,
+        update_time,
+        rep_name,
+        kyou_class,
+
+        // Business logic
+        show_context_menu,
+        show_kyou_dialog,
+        onRootClick,
+
+        // Event relay objects
+        crudRelayHandlers,
+    }
+}

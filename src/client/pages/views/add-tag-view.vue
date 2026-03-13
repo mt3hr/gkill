@@ -33,23 +33,7 @@
                 :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false"
                 :show_related_time="true" :show_attached_tags="true" :show_attached_texts="true"
                 :show_attached_notifications="true"
-                @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
-                @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-                @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-                @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
-                @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-                @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-                @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-                @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
-                @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-                @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-                @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
-                @requested_reload_list="emits('requested_reload_list')"
-                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
+                v-on="crudRelayHandlers" />
         </v-card>
     </v-card>
     <Teleport to="body" v-if="show_confirm_unknown_tag_dialog">
@@ -105,130 +89,29 @@
 import { i18n } from '@/i18n'
 import type { AddTagViewProps } from './add-tag-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { Tag } from '@/classes/datas/tag'
-import { Text } from '@/classes/datas/text'
-import { Notification } from '@/classes/datas/notification'
-import { type Ref, ref } from 'vue'
-import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import KyouView from './kyou-view.vue'
-import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
-import { GkillError } from '@/classes/api/gkill-error'
-
-import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { Kyou } from '@/classes/datas/kyou'
-import { useFloatingDialog } from '@/classes/use-floating-dialog'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-
-const is_requested_submit = ref(false)
+import { useAddTagView } from '@/classes/use-add-tag-view'
 
 const props = defineProps<AddTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const show_kyou: Ref<boolean> = ref(false)
-const tag_name: Ref<string> = ref("")
-const show_confirm_unknown_tag_dialog: Ref<boolean> = ref(false)
-const unknown_tags: Ref<string[]> = ref([])
-useDialogHistoryStack(show_confirm_unknown_tag_dialog)
-const confirm_dialog_ui = useFloatingDialog("confirm-unknown-tag-dialog", {
-    centerMode: "always",
-})
+const {
+    // State
+    is_requested_submit,
+    show_kyou,
+    tag_name,
+    show_confirm_unknown_tag_dialog,
+    unknown_tags,
 
-function tag_exists_in_struct(tag_name: string, struct: TagStructElementData): boolean {
-    if (struct.tag_name === tag_name) return true
-    if (struct.children) {
-        for (const child of struct.children) {
-            if (tag_exists_in_struct(tag_name, child)) return true
-        }
-    }
-    return false
-}
+    // Dialog UI
+    confirm_dialog_ui,
 
-async function save(): Promise<void> {
-    try {
-        is_requested_submit.value = true
-        // 値がなかったらエラーメッセージを出力する
-        if (tag_name.value === "") {
-            const error = new GkillError()
-            error.error_code = GkillErrorCodes.tag_is_blank
-            error.error_message = i18n.global.t("TAG_IS_BLANK_MESSAGE")
-            const errors = new Array<GkillError>()
-            errors.push(error)
-            emits('received_errors', errors)
-            return
-        }
+    // Business logic / template handlers
+    save,
+    cancel_save,
+    confirm_save,
 
-        // TagStructに存在しないタグを検出
-        const tag_names = tag_name.value.split("、")
-        const not_found = tag_names.filter(t => !tag_exists_in_struct(t, props.application_config.tag_struct))
-        if (not_found.length > 0) {
-            unknown_tags.value = not_found
-            show_confirm_unknown_tag_dialog.value = true
-            return
-        }
-
-        await execute_save()
-    } finally {
-        is_requested_submit.value = false
-    }
-}
-
-function cancel_save(): void {
-    show_confirm_unknown_tag_dialog.value = false
-    unknown_tags.value = []
-}
-
-async function confirm_save(): Promise<void> {
-    show_confirm_unknown_tag_dialog.value = false
-    unknown_tags.value = []
-    await execute_save()
-}
-
-async function execute_save(): Promise<void> {
-    try {
-        is_requested_submit.value = true
-        const tag_names = tag_name.value.split("、")
-        for (let i = 0; i < tag_names.length; i++) {
-            const tag = tag_names[i]
-            // タグ情報を用意する
-            const new_tag = new Tag()
-            new_tag.tag = tag
-            new_tag.id = props.gkill_api.generate_uuid()
-            new_tag.is_deleted = false
-            new_tag.target_id = props.kyou.id
-            new_tag.related_time = new Date(Date.now())
-            new_tag.create_app = "gkill"
-            new_tag.create_device = props.application_config.device
-            new_tag.create_time = new Date(Date.now())
-            new_tag.create_user = props.application_config.user_id
-            new_tag.update_app = "gkill"
-            new_tag.update_device = props.application_config.device
-            new_tag.update_time = new Date(Date.now())
-            new_tag.update_user = props.application_config.user_id
-
-            // 追加リクエストを飛ばす
-            await delete_gkill_kyou_cache(new_tag.id)
-            await delete_gkill_kyou_cache(new_tag.target_id)
-            const req = new AddTagRequest()
-            req.tag = new_tag
-            const res = await props.gkill_api.add_tag(req)
-            if (res.errors && res.errors.length !== 0) {
-                emits('received_errors', res.errors)
-                return
-            }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
-            }
-            emits('registered_tag', res.added_tag)
-        }
-        emits('requested_reload_kyou', props.kyou)
-        props.gkill_api.set_saved_last_added_tag(tag_name.value)
-        props.gkill_api.push_tag_to_history(tag_name.value)
-        emits('requested_close_dialog')
-        return
-    } finally {
-        is_requested_submit.value = false
-    }
-}
+    // Event relay objects
+    crudRelayHandlers,
+} = useAddTagView({ props, emits })
 </script>

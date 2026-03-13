@@ -8,14 +8,14 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
         <v-card class="edit_dnote_dialog_view">
           <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" :query="new FindKyouQuery()"
@@ -32,7 +32,7 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { nextTick, type Ref, ref } from 'vue'
+import { ref } from 'vue'
 import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { type EditDnoteDialogProps } from './edit-dnote-dialog-props'
@@ -40,29 +40,16 @@ import { type EditDnoteDialogEmits } from './edit-dnote-dialog-emits'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
-const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
-
-defineProps<EditDnoteDialogProps>()
-const emits = defineEmits<EditDnoteDialogEmits>()
-defineExpose({ show, hide })
-
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { useEditDnoteDialog } from '@/classes/use-edit-dnote-dialog'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("edit-dnote-dialog", {
-  centerMode: "always",
-})
 
+const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
+const props = defineProps<EditDnoteDialogProps>()
+const emits = defineEmits<EditDnoteDialogEmits>()
 
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-  nextTick(() => dnote_view.value?.reload([], new FindKyouQuery()))
-}
-async function hide(): Promise<void> {
-  is_show_dialog.value = false
-}
+const { is_show_dialog, ui, show, hide } = useEditDnoteDialog({ props, emits, dnote_view })
+
+defineExpose({ show, hide })
 </script>
 
 <style lang="css" scoped>

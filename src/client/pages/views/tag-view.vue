@@ -47,7 +47,11 @@ import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 import type { Kyou } from '@/classes/datas/kyou';
+import { useTagView } from '@/classes/use-tag-view'
 
-defineProps<TagViewProps>()
+const props = defineProps<TagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+
+const {
+} = useTagView({ props, emits })
 </script>

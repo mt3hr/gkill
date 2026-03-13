@@ -8,14 +8,14 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
         <v-card>
           <FindQueryEditorView v-if="model_value" :application_config="received_application_config"
             :gkill_api="gkill_api" :find_kyou_query="model_value" :inited="inited"
@@ -32,52 +32,21 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch, type Ref } from 'vue'
-import FindQueryEditorView from '../views/find-query-editor-view.vue';
-import type FindQueryEditorDialogProps from './find-query-editor-dialog-props';
-import type FindQueryEditorDialogEmits from './find-query-editor-dialog-emits';
-import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
-import { ApplicationConfig } from '@/classes/datas/config/application-config';
-import type { GkillError } from '@/classes/api/gkill-error';
-import type { GkillMessage } from '@/classes/api/gkill-message';
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import FindQueryEditorView from '../views/find-query-editor-view.vue'
+import type FindQueryEditorDialogProps from './find-query-editor-dialog-props'
+import type FindQueryEditorDialogEmits from './find-query-editor-dialog-emits'
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("find-query-editor-dialog", {
-  centerMode: "always",
-})
-
-const inited = ref(false)
+import { useFindQueryEditorDialog } from '@/classes/use-find-query-editor-dialog'
 
 const model_value = defineModel<FindKyouQuery>()
-defineExpose({ show, hide })
 const props = defineProps<FindQueryEditorDialogProps>()
 const emits = defineEmits<FindQueryEditorDialogEmits>()
-const cloned_find_kyou_query = ref<FindKyouQuery | null>(null)
 
-watch(() => inited.value, () => {
-  if (inited.value) {
-    return nextTick(async () => {
-      model_value.value = cloned_find_kyou_query.value!
-    })
-  }
-})
+const { is_show_dialog, ui, inited, received_application_config, show, hide } = useFindQueryEditorDialog({ props, emits, model_value })
 
-const received_application_config = ref(new ApplicationConfig())
-
-async function show(find_kyou_query: FindKyouQuery): Promise<void> {
-  return nextTick(async () => {
-    cloned_find_kyou_query.value = find_kyou_query
-    cloned_find_kyou_query.value.query_id = props.gkill_api.generate_uuid()
-    is_show_dialog.value = true
-    received_application_config.value = new ApplicationConfig()
-    await nextTick(() => received_application_config.value = props.application_config) // TODO なんかApplicationConfigが切り替わったタイミングでQueryEditorが読み込まれるっぽい・・・
-  })
-}
-async function hide(): Promise<void> {
-  is_show_dialog.value = false
-}
+defineExpose({ show, hide })
 </script>
 

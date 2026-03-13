@@ -12,28 +12,20 @@
 </template>
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-import { computed, ref, type Ref } from 'vue';
 import type { DnoteListQueryContextMenuEmits } from './dnote-list-query-context-menu-emits';
 import type { DnoteListQueryContextMenuProps } from './dnote-list-query-context-menu-props';
+import { useDnoteListQueryContextMenu } from '@/classes/use-dnote-list-query-context-menu';
 
-defineProps<DnoteListQueryContextMenuProps>()
+const props = defineProps<DnoteListQueryContextMenuProps>()
 const emits = defineEmits<DnoteListQueryContextMenuEmits>()
+
+const {
+    id,
+    is_show,
+    context_menu_style,
+    show,
+    hide,
+} = useDnoteListQueryContextMenu({ props, emits })
+
 defineExpose({ show, hide })
-
-const id: Ref<string> = ref("")
-const is_show: Ref<boolean> = ref(false)
-const position_x: Ref<Number> = ref(0)
-const position_y: Ref<Number> = ref(0)
-const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * 2))), position_y.value.valueOf())}px; }`)
-
-async function show(e: MouseEvent, dnote_list_query_id: string): Promise<void> {
-    id.value = dnote_list_query_id
-    position_x.value = e.clientX
-    position_y.value = e.clientY
-    is_show.value = true
-}
-
-async function hide(): Promise<void> {
-    is_show.value = false
-}
 </script>
