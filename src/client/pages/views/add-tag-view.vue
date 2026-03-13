@@ -51,25 +51,55 @@
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
         </v-card>
-        <v-dialog v-model="show_confirm_unknown_tag_dialog" max-width="500">
-            <v-card>
-                <v-card-title>{{ i18n.global.t("CONFIRM_UNKNOWN_TAG_TITLE") }}</v-card-title>
-                <v-card-text>
-                    {{ i18n.global.t("CONFIRM_UNKNOWN_TAG_MESSAGE") }}
-                    <v-list density="compact">
-                        <v-list-item v-for="tag in unknown_tags" :key="tag">
-                            <v-list-item-title>{{ tag }}</v-list-item-title>
-                        </v-list-item>
-                    </v-list>
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer />
-                    <v-btn @click="cancel_save()">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
-                    <v-btn color="primary" @click="confirm_save()">{{ i18n.global.t("SAVE_TITLE") }}</v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
     </v-card>
+    <Teleport to="body" v-if="show_confirm_unknown_tag_dialog">
+        <div class="gkill-float-scrim" :class="confirm_dialog_ui.isTransparent.value ? 'is-transparent' : ''" />
+        <div :ref="confirm_dialog_ui.containerRef" :style="confirm_dialog_ui.fixedStyle.value"
+            class="gkill-floating-dialog"
+            :class="confirm_dialog_ui.isTransparent.value ? 'is-transparent' : ''">
+            <div class="gkill-floating-dialog__header pa-0 ma-0"
+                @mousedown="confirm_dialog_ui.onHeaderPointerDown"
+                @touchstart="confirm_dialog_ui.onHeaderPointerDown">
+                <div class="gkill-floating-dialog__title"></div>
+                <div class="gkill-floating-dialog__spacer"></div>
+                <v-checkbox v-model="confirm_dialog_ui.isTransparent.value" color="white" size="small" variant="flat"
+                    :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="cancel_save()" hide-details
+                    :color="'primary'" variant="flat">
+                    <v-icon>mdi-close</v-icon>
+                </v-btn>
+            </div>
+            <div class="gkill-floating-dialog__body">
+                <v-card class="pa-2">
+                    <v-card-title>
+                        <v-row class="pa-0 ma-0">
+                            <v-col cols="auto" class="pa-0 ma-0">
+                                <span>{{ i18n.global.t("CONFIRM_UNKNOWN_TAG_TITLE") }}</span>
+                            </v-col>
+                        </v-row>
+                    </v-card-title>
+                    <v-card-text>
+                        {{ i18n.global.t("CONFIRM_UNKNOWN_TAG_MESSAGE") }}
+                        <v-list density="compact">
+                            <v-list-item v-for="tag in unknown_tags" :key="tag">
+                                <v-list-item-title>{{ tag }}</v-list-item-title>
+                            </v-list-item>
+                        </v-list>
+                    </v-card-text>
+                    <v-row class="pa-0 ma-0">
+                        <v-spacer />
+                        <v-col cols="auto" class="pa-0 ma-0">
+                            <v-btn @click="cancel_save()">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
+                        </v-col>
+                        <v-col cols="auto" class="pa-0 ma-0">
+                            <v-btn dark color="primary" @click="confirm_save()">{{ i18n.global.t("SAVE_TITLE")
+                                }}</v-btn>
+                        </v-col>
+                    </v-row>
+                </v-card>
+            </div>
+        </div>
+    </Teleport>
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
@@ -88,6 +118,8 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
+import { useFloatingDialog } from '@/classes/use-floating-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 
 const is_requested_submit = ref(false)
 
@@ -98,6 +130,10 @@ const show_kyou: Ref<boolean> = ref(false)
 const tag_name: Ref<string> = ref("")
 const show_confirm_unknown_tag_dialog: Ref<boolean> = ref(false)
 const unknown_tags: Ref<string[]> = ref([])
+useDialogHistoryStack(show_confirm_unknown_tag_dialog)
+const confirm_dialog_ui = useFloatingDialog("confirm-unknown-tag-dialog", {
+    centerMode: "always",
+})
 
 function tag_exists_in_struct(tag_name: string, struct: TagStructElementData): boolean {
     if (struct.tag_name === tag_name) return true
