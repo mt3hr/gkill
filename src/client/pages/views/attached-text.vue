@@ -30,7 +30,6 @@
 <script setup lang="ts">
 import type { AttachedTextProps } from './attached-text-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { computed, ref } from 'vue'
 import AttachedTextContextMenu from './attached-text-context-menu.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
@@ -38,34 +37,16 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
 import type { Notification } from '@/classes/datas/notification';
-
-const context_menu = ref<InstanceType<typeof AttachedTextContextMenu> | null>(null);
+import { useAttachedText } from '@/classes/use-attached-text'
 
 const props = defineProps<AttachedTextProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const text_class = computed(() => {
-    let highlighted = false;
-    for (let i = 0; i < props.highlight_targets.length; i++) {
-        if (props.highlight_targets[i].id === props.text.id
-            && props.highlight_targets[i].create_time.getTime() === props.text.create_time.getTime()
-            && props.highlight_targets[i].update_time.getTime() === props.text.update_time.getTime()) {
-            highlighted = true
-            break
-        }
-    }
-    if (highlighted) {
-        return "highlighted_text"
-    }
-    return "text"
-})
-
-
-async function show_context_menu(e: PointerEvent): Promise<void> {
-    if (props.enable_context_menu) {
-        context_menu.value?.show(e)
-    }
-}
+const {
+    context_menu,
+    text_class,
+    show_context_menu,
+} = useAttachedText({ props, emits })
 </script>
 <style lang="css" scoped>
 .text {

@@ -34,38 +34,22 @@ import type { ShareKyouFooterProps } from './share-kyou-footer-props'
 import ManageShareKyousListDialog from '../dialogs/manage-share-task-list-dialog.vue'
 import ShareKyousListDialog from '../dialogs/share-kyou-list-dialog.vue'
 import ShareKyousListLinkDialog from '../dialogs/share-kyou-list-link-dialog.vue'
-import { ref } from 'vue'
 import type { ShareKyousInfo } from '@/classes/datas/share-kyous-info'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { useShareKyouFooter } from '@/classes/use-share-kyou-footer'
 
-const share_kyou_list_dialog = ref<InstanceType<typeof ShareKyousListDialog> | null>(null);
-const share_kyou_list_link_dialog = ref<InstanceType<typeof ShareKyousListLinkDialog> | null>(null);
-const manage_share_kyou_list_dialog = ref<InstanceType<typeof ManageShareKyousListDialog> | null>(null);
-
-defineProps<ShareKyouFooterProps>()
+const props = defineProps<ShareKyouFooterProps>()
 const emits = defineEmits<ShareKyouFooterEmits>()
 
-function show_share_kyou_list_dialog() {
-    const dialog = share_kyou_list_dialog.value
-    if (dialog) {
-        dialog.show()
-    }
-}
-
-function show_share_kyou_list_link_dialog(share_kyou_list_info: ShareKyousInfo) {
-    const dialog = share_kyou_list_link_dialog.value
-    if (dialog) {
-        dialog.show(share_kyou_list_info)
-    }
-}
-
-function show_manage_share_kyou_dialog() {
-    const dialog = manage_share_kyou_list_dialog.value
-    if (dialog) {
-        dialog.show()
-    }
-}
+const {
+    share_kyou_list_dialog,
+    share_kyou_list_link_dialog,
+    manage_share_kyou_list_dialog,
+    show_share_kyou_list_dialog,
+    show_share_kyou_list_link_dialog,
+    show_manage_share_kyou_dialog,
+} = useShareKyouFooter({ props, emits })
 
 </script>
 <style lang="css" scoped>

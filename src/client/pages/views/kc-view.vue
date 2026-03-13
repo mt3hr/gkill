@@ -27,7 +27,6 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
 import KCContextMenu from './kc-context-menu.vue'
 import type { KCViewProps } from './kc-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
@@ -37,17 +36,15 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
 import type { Notification } from '@/classes/datas/notification';
+import { useKCView } from '@/classes/use-kc-view'
 
 const props = defineProps<KCViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+
+const {
+    context_menu,
+    show_context_menu,
+} = useKCView({ props, emits })
+
 defineExpose({ show_context_menu })
-
-const context_menu = ref<InstanceType<typeof KCContextMenu> | null>(null);
-
-async function show_context_menu(e: PointerEvent): Promise<void> {
-    if (props.enable_context_menu) {
-        context_menu.value?.show(e)
-    }
-}
-
 </script>
