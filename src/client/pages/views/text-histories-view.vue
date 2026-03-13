@@ -1,7 +1,7 @@
 <template>
     <TextView class="text_history" v-for="text in cloned_text.attached_histories" :key="text.id"
         :application_config="application_config" :gkill_api="gkill_api" :text="text" :kyou="kyou"
-        :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+        :highlight_targets="highlight_targets"
         @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
         @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
         @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"

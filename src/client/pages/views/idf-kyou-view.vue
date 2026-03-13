@@ -13,7 +13,7 @@
         <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio" :src="kyou.typed_idf_kyou.file_url"
             class="kyou_audio" controls></audio>
         <IDFKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+            :highlight_targets="highlight_targets" :kyou="kyou"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" ref="context_menu"
             @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

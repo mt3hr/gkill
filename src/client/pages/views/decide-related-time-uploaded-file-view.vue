@@ -8,7 +8,7 @@
                     :list_height="app_content_height.valueOf() - 200" :query="new FindKyouQuery()"
                     :is_focused_list="false" :closable="false"
                     @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                    :last_added_tag="last_added_tag" :is_readonly_mi_check="true"
+                    :is_readonly_mi_check="true"
                     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                     :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false" :show_rep_name="true"
                     :force_show_latest_kyou_info="true"
@@ -35,7 +35,7 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <div class="edit_idf_kyou_view_wrap">
                     <EditIDFKyouView v-if="focused_kyou" :application_config="application_config" :gkill_api="gkill_api"
-                        :highlight_targets="[]" :kyou="focused_kyou" :last_added_tag="last_added_tag"
+                        :highlight_targets="[]" :kyou="focused_kyou"
                         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                         @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                         @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

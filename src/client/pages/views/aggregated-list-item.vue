@@ -25,7 +25,7 @@
             </v-col>
         </v-row>
         <KyouListViewDialog v-model="aggregated_item.match_kyous" :kyou_height="180" :width="400"
-            :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''" :is_focused_list="true"
+            :application_config="application_config" :gkill_api="gkill_api" :is_focused_list="true"
             :closable="false" :highlight_targets="[]" :list_height="list_height" :enable_context_menu="true"
             :enable_dialog="true" :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="false"
             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"

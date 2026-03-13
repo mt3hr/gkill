@@ -3,7 +3,7 @@
         <LantanaFlowersView v-if="kyou.typed_lantana" :application_config="application_config" :gkill_api="gkill_api"
             :editable="false" :mood="kyou.typed_lantana.mood" />
         <LantanaContextMenu :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+            :highlight_targets="highlight_targets" :kyou="kyou"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" ref="context_menu"
             @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

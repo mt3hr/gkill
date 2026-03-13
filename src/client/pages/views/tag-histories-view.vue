@@ -2,7 +2,6 @@
     <TagView class="tag_history" v-for="tag in cloned_tag.attached_histories" :key="tag.update_time.getTime()"
         :application_config="application_config" :highlight_targets="highlight_targets" :gkill_api="gkill_api"
         :tag="tag" :kyou="kyou" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-        :last_added_tag="last_added_tag"
         @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
         @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
         @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"

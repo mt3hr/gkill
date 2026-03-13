@@ -59,7 +59,7 @@
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 ref="add_ryuu_item_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
-                :last_added_tag="''" :enable_context_menu="true" :enable_dialog="true"
+                :enable_context_menu="true" :enable_dialog="true"
                 @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

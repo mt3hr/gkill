@@ -7,7 +7,6 @@ import type { Notification } from "@/classes/datas/notification"
 
 export interface NotificationViewProps extends GkillPropsBase {
     notification : Notification
-    last_added_tag: string
     kyou: Kyou
     highlight_targets: Array<InfoIdentifier>
     enable_context_menu: boolean

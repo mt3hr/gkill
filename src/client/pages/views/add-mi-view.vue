@@ -188,7 +188,7 @@
                     <v-col cols="auto" class="pa-0 ma-0">
                         <AddNotificationForAddMiView :application_config="application_config" :gkill_api="gkill_api"
                             :enable_context_menu="false" :enable_dialog="true" :highlight_targets="[]" :kyou="kyou"
-                            :last_added_tag="''" :default_notification="notification" ref="add_notification_views"
+                            :default_notification="notification" ref="add_notification_views"
                             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
                     </v-col>

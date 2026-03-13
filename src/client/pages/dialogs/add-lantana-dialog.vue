@@ -17,7 +17,7 @@
 
       <div class="gkill-floating-dialog__body"> 
         <AddLantanaView :application_config="application_config" :gkill_api="gkill_api"
-          :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+          :highlight_targets="highlight_targets" :kyou="kyou"
           @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
           @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
           @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"

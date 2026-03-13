@@ -43,7 +43,7 @@
         </v-card>
         <DecideRelatedTimeUploadedFileDialog :app_content_height="app_content_height"
             :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
-            :uploaded_kyous="uploaded_kyous" :last_added_tag="last_added_tag"
+            :uploaded_kyous="uploaded_kyous"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"

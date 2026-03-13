@@ -20,7 +20,6 @@
           :app_content_height="app_content_height" :app_content_width="app_content_width"
           :uploaded_kyous="uploaded_kyous"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          :last_added_tag="last_added_tag"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
           @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
           @requested_reload_list="emits('requested_reload_list')"
