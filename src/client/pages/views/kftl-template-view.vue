@@ -30,25 +30,19 @@
 
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { type Ref, ref } from 'vue'
 import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import KFTLTemplateDialog from '../dialogs/kftl-template-dialog.vue'
 import type { KFTLTemplateViewProps } from './kftl-template-view-props'
 import type { KFTLTemplateViewEmits } from './kftl-template-view-emits'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { useKFTLTemplateView } from '@/classes/use-kftl-template-view'
 
-const child_template_dialogs: Ref<Array<any>> = ref(new Array<any>())
-
-defineProps<KFTLTemplateViewProps>()
+const props = defineProps<KFTLTemplateViewProps>()
 const emits = defineEmits<KFTLTemplateViewEmits>()
 
-function clicked_template_button(template: KFTLTemplateElementData, index: number): void {
-  if (!template.children) {
-    emits('clicked_template_element_leaf', template)
-    emits('requested_close_dialog')
-    return
-  }
-  child_template_dialogs.value[index].show()
-}
+const {
+    child_template_dialogs,
+    clicked_template_button,
+} = useKFTLTemplateView({ props, emits })
 </script>

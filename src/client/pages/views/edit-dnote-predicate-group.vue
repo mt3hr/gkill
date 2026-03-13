@@ -21,23 +21,14 @@ import PredicateCard from './edit-dnote-card.vue'
 import PredicateGroup from './edit-dnote-predicate-group.vue'
 import type Predicate from '../../classes/dnote/predicate'
 import type PredicateGroupType from '../../classes/dnote/predicate-group-type'
-import predicate_menu_items from '@/classes/dnote/pulldown-menu/predicate-menu-items'
+import { useEditDnotePredicateGroup } from '@/classes/use-edit-dnote-predicate-group'
 
 const group = defineModel<PredicateGroupType>()!
 
-function is_group(p: Predicate | PredicateGroupType): p is PredicateGroupType {
-    return 'logic' in p && Array.isArray(p.predicates)
-}
-
-function add_predicate() {
-    group.value!.predicates.push({ type: predicate_menu_items[0].value, value: "" })
-}
-
-function add_group() {
-    group.value!.predicates.push({ logic: 'AND', predicates: [] })
-}
-
-function remove_predicate(index: number) {
-    group.value!.predicates.splice(index, 1)
-}
+const {
+    is_group,
+    add_predicate,
+    add_group,
+    remove_predicate,
+} = useEditDnotePredicateGroup({ group })
 </script>

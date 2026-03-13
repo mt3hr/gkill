@@ -18,16 +18,14 @@
 </template>
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-const emits = defineEmits(['remove'])
-import { ref, type Ref } from 'vue'
-import { defineModel } from 'vue'
+import { useEditDnoteCard } from '@/classes/use-edit-dnote-card'
 import type Predicate from '../../classes/dnote/predicate'
-import predicate_menu_items from '@/classes/dnote/pulldown-menu/predicate-menu-items'
-import rep_type_menu_items from '@/classes/dnote/pulldown-menu/rep-type-menu-items'
-import type DnoteSelectItem from '../../classes/dnote/dnote-select-item'
 
+const emits = defineEmits(['remove'])
 const model_value = defineModel<Predicate>()
 
-const predicate_types: Ref<Array<DnoteSelectItem>> = ref(predicate_menu_items)
-const rep_type_items: Ref<Array<DnoteSelectItem>> = ref(rep_type_menu_items)
+const {
+    predicate_types,
+    rep_type_items,
+} = useEditDnoteCard()
 </script>

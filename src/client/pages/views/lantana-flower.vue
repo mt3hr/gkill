@@ -19,20 +19,15 @@ import type { LantanaFlowerEmits } from './lantana-flower-emits'
 import type { LantanaFlowerProps } from './lantana-flower-props'
 import { LantanaFlowerState } from '@/classes/lantana/lantana-flower-state';
 import lantana_icon from '/public/lantana_icon.png'
+import { useLantanaFlower } from '@/classes/use-lantana-flower'
 
 const props = defineProps<LantanaFlowerProps>()
 const emits = defineEmits<LantanaFlowerEmits>()
 
-function emit_clicked_left() {
-    if (props.editable) {
-        emits('clicked_left')
-    }
-}
-function emit_clicked_right() {
-    if (props.editable) {
-        emits('clicked_right')
-    }
-}
+const {
+    emit_clicked_left,
+    emit_clicked_right,
+} = useLantanaFlower({ props, emits })
 </script>
 
 <style scoped>

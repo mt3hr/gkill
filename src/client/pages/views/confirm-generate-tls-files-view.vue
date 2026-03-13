@@ -46,25 +46,14 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { GenerateTLSFileRequest } from '@/classes/api/req_res/generate-tls-file-request';
 import type { ConfirmGenerateTLSFilesViewEmits } from './confirm-generate-tls-files-view-emits'
 import type { ConfirmGenerateTLSFilesViewProps } from './confirm-generate-tls-files-view-props'
-import type { GenerateTLSFileResponse } from '@/classes/api/req_res/generate-tls-file-response';
+import { useConfirmGenerateTlsFilesView } from '@/classes/use-confirm-generate-tls-files-view'
 
 const props = defineProps<ConfirmGenerateTLSFilesViewProps>()
 const emits = defineEmits<ConfirmGenerateTLSFilesViewEmits>()
 
-async function generate_tls_files(): Promise<void> {
-    const req = new GenerateTLSFileRequest()
-    const res: GenerateTLSFileResponse = await props.gkill_api.generate_tls_file(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('generated_tls_files')
-    emits('requested_close_dialog')
-}
+const {
+    generate_tls_files,
+} = useConfirmGenerateTlsFilesView({ props, emits })
 </script>

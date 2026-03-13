@@ -8,14 +8,14 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
         <ConfirmReKyouView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -44,38 +44,24 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { ConfirmReKyouDialogProps } from './confirm-re-kyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import ConfirmReKyouView from '../views/confirm-re-kyou-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { Tag } from '@/classes/datas/tag';
-import type { Text } from '@/classes/datas/text';
-import type { Notification } from '@/classes/datas/notification';
+import type { Tag } from '@/classes/datas/tag'
+import type { Text } from '@/classes/datas/text'
+import type { Notification } from '@/classes/datas/notification'
+import { i18n } from '@/i18n'
+import { useConfirmReKyouDialog } from '@/classes/use-confirm-re-kyou-dialog'
 
 defineProps<ConfirmReKyouDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
+
+const { is_show_dialog, ui, show, hide } = useConfirmReKyouDialog({ emits })
+
 defineExpose({ show, hide })
-
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-re-kyou-dialog", {
-  centerMode: "always",
-})
-
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  is_show_dialog.value = false
-  emits('closed')
-}
 </script>
 
 

@@ -27,32 +27,19 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 import type { KeywordQueryEmits } from './keyword-query-emits'
 import type { KeywordQueryProps } from './keyword-query-props'
-import { ref, watch, type Ref } from 'vue'
+import { useKeywordQuery } from '@/classes/use-keyword-query'
 
 const props = defineProps<KeywordQueryProps>()
 const emits = defineEmits<KeywordQueryEmits>()
+
+const {
+    cloned_find_query,
+    get_keywords,
+    get_use_words,
+    get_use_word_and_search,
+} = useKeywordQuery({ props, emits })
+
 defineExpose({ get_keywords, get_use_words, get_use_word_and_search })
-
-const cloned_find_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
-
-watch(() => props.find_kyou_query, () => {
-    if (!props.find_kyou_query) {
-        return
-    }
-    cloned_find_query.value = props.find_kyou_query.clone()
-    emits('inited')
-})
-
-function get_keywords(): string {
-    return cloned_find_query.value.keywords
-}
-function get_use_words(): boolean {
-    return cloned_find_query.value.use_words
-}
-function get_use_word_and_search(): boolean {
-    return cloned_find_query.value.words_and
-}
 </script>

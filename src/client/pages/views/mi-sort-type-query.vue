@@ -17,66 +17,19 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { nextTick, type Ref, ref, watch } from 'vue'
-import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import type { miSortTypeQueryEmits } from './mi-sort-type-query-emits'
 import type { miSortTypeQueryProps } from './mi-sort-type-query-props'
+import { useMiSortTypeQuery } from '@/classes/use-mi-sort-type-query'
 
 const props = defineProps<miSortTypeQueryProps>()
 const emits = defineEmits<miSortTypeQueryEmits>()
 
-const query = ref(props.find_kyou_query.clone())
+const {
+    use_sort_type,
+    sort_type,
+    sort_types,
+    get_sort_type,
+} = useMiSortTypeQuery({ props, emits })
+
 defineExpose({ get_sort_type })
-
-watch(() => props.find_kyou_query, () => {
-    if (!props.find_kyou_query) {
-        return
-    }
-    query.value = props.find_kyou_query.clone()
-    load_sort_type()
-})
-
-nextTick(() => {
-    load_sort_type()
-    emits('inited')
-})
-
-const use_sort_type = ref(true)
-const sort_type: Ref<MiSortType> = ref(MiSortType.create_time)
-
-watch(() => sort_type.value, () => {
-    emits('request_update_sort_type', sort_type.value)
-})
-
-function load_sort_type(): void {
-    for (let i = 0; i < sort_types.value.length; i++) {
-        if (sort_types.value[i].value === query.value.mi_sort_type) {
-            sort_type.value = sort_types.value[i].value
-            break
-        }
-    }
-}
-
-const sort_types: Ref<Array<{ name: string, value: MiSortType }>> = ref([
-    {
-        name: i18n.global.t("MI_CREATE_DATE_TIME_TITLE"),
-        value: MiSortType.create_time,
-    },
-    {
-        name: i18n.global.t("MI_START_DATE_TIME_TITLE"),
-        value: MiSortType.estimate_start_time,
-    },
-    {
-        name: i18n.global.t("MI_END_DATE_TIME_TITLE"),
-        value: MiSortType.estimate_end_time,
-    },
-    {
-        name: i18n.global.t("MI_LIMIT_DATE_TIME_TITLE"),
-        value: MiSortType.limit_time,
-    }
-])
-
-function get_sort_type(): MiSortType {
-    return sort_type.value
-}
 </script>

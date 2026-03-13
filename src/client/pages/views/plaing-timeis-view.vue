@@ -7,213 +7,59 @@
             :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="true" :show_content_only="true"
             :show_rep_name="true" :force_show_latest_kyou_info="true" :is_show_doc_image_toggle_button="false"
             :is_show_arrow_button="false"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="reload_list(false)" @requested_reload_list="reload_list(false)"
+            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykvDialogHandler }"
             @requested_search="search(false)"
-            @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])"
             ref="kyou_list_views" />
         <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            v-on="crudRelayHandlers"
             ref="add_kc_dialog" />
         <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-            @requested_reload_list="() => reload_list(false)" ref="add_timeis_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            ref="add_timeis_dialog" />
         <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-            @requested_reload_list="() => reload_list(false)" ref="add_lantana_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            ref="add_lantana_dialog" />
         <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-            @requested_reload_list="() => reload_list(false)" ref="add_urlog_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            ref="add_urlog_dialog" />
         <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-            @requested_reload_list="() => reload_list(false)" ref="add_mi_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            ref="add_mi_dialog" />
         <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-            @requested_reload_list="() => reload_list(false)" ref="add_nlog_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            ref="add_nlog_dialog" />
         <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :app_content_height="app_content_height"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             :app_content_width="app_content_width"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-            @requested_reload_list="() => reload_list(false)" ref="kftl_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            ref="kftl_dialog" />
         <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :app_content_height="app_content_height"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             :app_content_width="app_content_width"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-            @requested_reload_list="() => reload_list(false)" ref="mkfl_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            ref="mkfl_dialog" />
         <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            v-on="crudRelayHandlers"
             ref="upload_file_dialog" />
         <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
-            @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-            @registered_kyou="(...registered_kyou: any[]) => { reload_list(false); emits('registered_kyou', registered_kyou[0] as Kyou) }"
-            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-            @updated_kyou="(...updated_kyou: any[]) => { reload_list(false); emits('updated_kyou', updated_kyou[0] as Kyou) }"
-            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_kyou="reload_list(false)" @requested_reload_list="reload_list(false)"
-            @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])" />
+            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykvDialogHandler }" />
         <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
             <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
@@ -255,8 +101,6 @@
 </template>
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
-import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from '../dialogs/add-kc-dialog.vue'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
@@ -264,276 +108,68 @@ import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
 import KyouListView from './kyou-list-view.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
 import mkflDialog from '../dialogs/mkfl-dialog.vue'
-import type KftlDialog from '../dialogs/kftl-dialog.vue'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
-import moment from 'moment'
 import type { PlaingTimeIsViewProps } from './plaing-timeis-view-props'
 import type { PlaingTimeIsViewEmits } from './plaing-timeis-emits'
-import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
-import generate_get_plaing_timeis_kyous_query from '@/classes/api/generate-get-plaing-timeis-kyous-query'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import { Tag } from '@/classes/datas/tag'
 import RykvDialogHost from './rykv-dialog-host.vue'
-import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from './rykv-dialog-kind'
-
-const enable_context_menu = ref(true)
-const enable_dialog = ref(true)
-
-const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
-const add_nlog_dialog = ref<InstanceType<typeof AddNlogDialog> | null>(null);
-const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(null);
-const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
-const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
-const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
-const add_kc_dialog = ref<InstanceType<typeof AddKCDialog> | null>(null);
-const mkfl_dialog = ref<InstanceType<typeof mkflDialog> | null>(null);
-const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
-const kyou_list_views = ref();
-const opened_dialogs: Ref<Array<OpenedRykvDialog>> = ref([])
-
-const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
-
-const match_kyous_list: Ref<Array<Kyou>> = ref(new Array<Kyou>())
-const focused_column_index: Ref<number> = ref(0)
-const focused_kyous_list: Ref<Array<Kyou>> = ref(new Array<Kyou>())
-const focused_kyou: Ref<Kyou | null> = ref(null)
-const focused_time: Ref<Date> = ref(moment().toDate())
-const kyou_list_view_height = computed(() => props.app_content_height)
-const last_added_request_time: Ref<Date | null> = ref(null)
-
-const position_x: Ref<Number> = ref(0)
-const position_y: Ref<Number> = ref(0)
+import { usePlaingTimeisView } from '@/classes/use-plaing-timeis-view'
 
 const props = defineProps<PlaingTimeIsViewProps>()
 const emits = defineEmits<PlaingTimeIsViewEmits>()
+
+const {
+    // Template refs
+    add_mi_dialog,
+    add_nlog_dialog,
+    add_lantana_dialog,
+    add_timeis_dialog,
+    add_urlog_dialog,
+    kftl_dialog,
+    add_kc_dialog,
+    mkfl_dialog,
+    upload_file_dialog,
+    kyou_list_views,
+
+    // State
+    enable_context_menu,
+    enable_dialog,
+    opened_dialogs,
+    query,
+    match_kyous_list,
+
+    // Computed
+    kyou_list_view_height,
+    add_kyou_menu_style,
+
+    // Business logic
+    reload_list,
+    search,
+    set_last_added_request_time,
+    close_rykv_dialog,
+
+    // Dialog show methods
+    show_kftl_dialog,
+    show_mkfl_dialog,
+    show_add_kc_dialog,
+    show_urlog_dialog,
+    show_timeis_dialog,
+    show_mi_dialog,
+    show_nlog_dialog,
+    show_lantana_dialog,
+    show_upload_file_dialog,
+    floatingActionButtonStyle,
+
+    // Event relay objects
+    crudRelayHandlers,
+    reloadListRequestHandlers,
+    dialogReloadRequestHandlers,
+    rykvDialogHandler,
+} = usePlaingTimeisView({ props, emits })
+
 defineExpose({ reload_list, set_last_added_request_time })
-
-const skip_search_this_tick = ref(false)
-
-if (props.application_config.is_loaded) {
-    nextTick(() => {
-        search(false)
-    })
-}
-watch(() => props.application_config.is_loaded, () => {
-    nextTick(async () => {
-        await nextTick(async () => {
-            const kyou_list_view = kyou_list_views.value as any
-            if (!kyou_list_view) {
-                return
-            }
-            kyou_list_view.set_loading(true)
-            return nextTick(() => { }) // loading表記切り替え待ち
-        })
-        search(false)
-    })
-})
-
-watch(() => focused_time.value, () => {
-    if (!kyou_list_views.value) {
-        return
-    }
-    const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
-    if (!kyou_list_view) {
-        return
-    }
-    kyou_list_view.scroll_to_time(focused_time.value)
-});
-
-function removeKyouFromListById(list: Array<Kyou>, deletedId: string): void {
-    for (let i = list.length - 1; i >= 0; i--) {
-        if (list[i].id === deletedId) {
-            list.splice(i, 1)
-        }
-    }
-}
-
-function onDeletedKyou(deletedKyou: Kyou): void {
-    removeKyouFromListById(match_kyous_list.value, deletedKyou.id)
-    removeKyouFromListById(focused_kyous_list.value, deletedKyou.id)
-    if (focused_kyou.value?.id === deletedKyou.id) {
-        focused_kyou.value = null
-    }
-    emits('deleted_kyou', deletedKyou)
-}
-
-async function reload_kyou(kyou: Kyou): Promise<void> {
-    const kyous_list = match_kyous_list.value
-    for (let j = 0; j < kyous_list.length; j++) {
-        const kyou_in_list = kyous_list[j]
-        if (kyou.id === kyou_in_list.id) {
-            const updated_kyou = kyou.clone()
-            await updated_kyou.reload(false, true)
-            await updated_kyou.load_all()
-            kyous_list.splice(j, 1, updated_kyou)
-        }
-    }
-    if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
-        const updated_kyou = kyou.clone()
-        await updated_kyou.reload(false, false)
-        await updated_kyou.load_all()
-        focused_kyou.value = updated_kyou
-    }
-}
-
-const is_loading = ref(false)
-const abort_controller: Ref<AbortController> = ref(new AbortController())
-async function search(update_cache: boolean): Promise<void> {
-    if (is_loading.value) {
-        return
-    }
-    is_loading.value = true
-    // 検索する。Tickでまとめる
-    query.value = generate_get_plaing_timeis_kyous_query(last_added_request_time.value)
-    try {
-        if (abort_controller.value) {
-            abort_controller.value.abort()
-            abort_controller.value = new AbortController()
-        }
-
-        if (match_kyous_list.value) {
-            match_kyous_list.value.splice(0)
-        }
-
-        match_kyous_list.value.splice(0)
-        focused_kyous_list.value.splice(0)
-
-        await nextTick(async () => {
-            const kyou_list_view = kyou_list_views.value as any
-            if (!kyou_list_view) {
-                return
-            }
-            kyou_list_view.set_loading(true)
-            return nextTick(() => { }) // loading表記切り替え待ち
-        })
-
-        const req = new GetKyousRequest()
-        abort_controller.value = req.abort_controller
-        req.query = query.value.clone()
-        req.query.parse_words_and_not_words()
-        if (update_cache) {
-            req.query.update_cache = true
-        }
-
-        await props.gkill_api.delete_updated_gkill_caches()
-        const res = await props.gkill_api.get_kyous(req)
-        if (res.errors && res.errors.length !== 0) {
-            emits('received_errors', res.errors)
-            return
-        }
-        if (res.messages && res.messages.length !== 0) {
-            emits('received_messages', res.messages)
-        }
-        match_kyous_list.value.push(...res.kyous)
-        focused_kyous_list.value.push(...res.kyous)
-
-        const kyou_list_view = kyou_list_views.value as any
-        if (kyou_list_view) {
-            kyou_list_view.scroll_to(1)
-        }
-        await nextTick(() => {
-            const kyou_list_view = kyou_list_views.value as any
-            if (!kyou_list_view) {
-                return
-            }
-            kyou_list_view.scroll_to(0)
-            kyou_list_view.set_loading(false)
-            skip_search_this_tick.value = false
-        })
-    } catch (err: any) {
-        // abortは握りつぶす
-        if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
-            // abort以外はエラー出力する
-            console.error(err)
-        }
-    } finally {
-        is_loading.value = false
-    }
-}
-
-async function reload_list(update_cache: boolean): Promise<void> {
-    // nextTickでまとめる
-    match_kyous_list.value.splice(0)
-
-    await search(update_cache)
-    if (!kyou_list_views.value) {
-        return
-    }
-    kyou_list_views.value.scroll_to(0)
-}
-
-function floatingActionButtonStyle() {
-    return {
-        'bottom': '60px',
-        'right': '10px',
-        'height': '50px',
-        'width': '50px'
-    }
-}
-
-const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
-
-function show_kftl_dialog(): void {
-    kftl_dialog.value?.show()
-}
-
-function show_add_kc_dialog(): void {
-    add_kc_dialog.value?.show()
-}
-
-function show_mkfl_dialog(): void {
-    mkfl_dialog.value?.show()
-}
-
-function show_timeis_dialog(): void {
-    add_timeis_dialog.value?.show()
-}
-function show_mi_dialog(): void {
-    add_mi_dialog.value?.show()
-}
-
-function show_nlog_dialog(): void {
-    add_nlog_dialog.value?.show()
-}
-
-function show_lantana_dialog(): void {
-    add_lantana_dialog.value?.show()
-}
-
-function show_urlog_dialog(): void {
-    add_urlog_dialog.value?.show()
-}
-
-function show_upload_file_dialog(): void {
-    upload_file_dialog.value?.show()
-}
-
-function set_last_added_request_time(time: Date): void {
-    last_added_request_time.value = time
-}
-
-function open_rykv_dialog(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void {
-    opened_dialogs.value.push({
-        id: props.gkill_api.generate_uuid(),
-        kind,
-        kyou: kyou.clone(),
-        payload: payload ?? null,
-        opened_at: Date.now(),
-    })
-}
-
-function close_rykv_dialog(dialog_id: string): void {
-    for (let i = 0; i < opened_dialogs.value.length; i++) {
-        if (opened_dialogs.value[i].id === dialog_id) {
-            opened_dialogs.value.splice(i, 1)
-            break
-        }
-    }
-}
 </script>
 <style lang="css" scoped>
 .plaing_timeis_view_table {

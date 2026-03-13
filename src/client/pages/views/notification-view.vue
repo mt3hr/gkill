@@ -47,7 +47,11 @@ import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 import type { Kyou } from '@/classes/datas/kyou';
+import { useNotificationView } from '@/classes/use-notification-view'
 
-defineProps<NotificationViewProps>()
+const props = defineProps<NotificationViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+
+const {
+} = useNotificationView({ props, emits })
 </script>
