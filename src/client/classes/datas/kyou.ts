@@ -619,6 +619,9 @@ export class Kyou extends InfoBase {
             return res.errors
         }
         const latest_kyou = res.kyou_histories[0]
+        if (!latest_kyou) {
+            return new Array<GkillError>()
+        }
         this.is_deleted = latest_kyou.is_deleted
         this.id = latest_kyou.id
         if (!content_only) {
