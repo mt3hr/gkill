@@ -20,27 +20,23 @@
         @requested_reload_list="emits('requested_reload_list')" />
 </template>
 <script lang="ts" setup>
-import { type Ref, nextTick, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TextHistoriesViewProps } from './text-histories-view-props'
 import TextView from './text-view.vue'
 import type { Tag } from '@/classes/datas/tag';
-import { Text } from '@/classes/datas/text';
+import type { Text } from '@/classes/datas/text';
 import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
+import { useTextHistoriesView } from '@/classes/use-text-histories-view'
 
 const props = defineProps<TextHistoriesViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const cloned_text: Ref<Text> = ref(props.text.clone())
-watch(() => props.text, () => {
-    cloned_text.value = props.text.clone()
-    nextTick(() => cloned_text.value.load_attached_histories())
-})
-nextTick(() => cloned_text.value.load_attached_histories())
-
+const {
+    cloned_text,
+} = useTextHistoriesView({ props, emits })
 </script>
 <style lang="css">
 .text_history .highlighted_text,

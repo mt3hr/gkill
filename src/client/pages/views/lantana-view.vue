@@ -28,7 +28,6 @@
 <script setup lang="ts">
 import type { LantanaViewProps } from './lantana-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { ref } from 'vue'
 import LantanaContextMenu from './lantana-context-menu.vue'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 import type { Tag } from '@/classes/datas/tag';
@@ -37,16 +36,15 @@ import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
-
-const context_menu = ref<InstanceType<typeof LantanaContextMenu> | null>(null);
+import { useLantanaView } from '@/classes/use-lantana-view'
 
 const props = defineProps<LantanaViewProps>()
 const emits = defineEmits<KyouViewEmits>()
-defineExpose({ show_context_menu })
 
-function show_context_menu(e: PointerEvent): void {
-    if (props.enable_context_menu) {
-        context_menu.value?.show(e)
-    }
-}
+const {
+    context_menu,
+    show_context_menu,
+} = useLantanaView({ props, emits })
+
+defineExpose({ show_context_menu })
 </script>

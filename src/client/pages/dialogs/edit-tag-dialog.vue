@@ -8,14 +8,14 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
         <EditTagView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="tag_highlight_targets" :kyou="kyou" :tag="tag"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -43,44 +43,24 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { computed, type Ref, ref } from 'vue'
 import type { EditTagDialogProps } from './edit-tag-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditTagView from '../views/edit-tag-view.vue'
-import type { InfoIdentifier } from '@/classes/datas/info-identifier';
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { Tag } from '@/classes/datas/tag';
-import type { Text } from '@/classes/datas/text';
-import type { Notification } from '@/classes/datas/notification';
+import type { Tag } from '@/classes/datas/tag'
+import type { Text } from '@/classes/datas/text'
+import type { Notification } from '@/classes/datas/notification'
+import { i18n } from '@/i18n'
+import { useEditTagDialog } from '@/classes/use-edit-tag-dialog'
 
 const props = defineProps<EditTagDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
+
+const { is_show_dialog, ui, tag_highlight_targets, show, hide } = useEditTagDialog({ props, emits })
+
 defineExpose({ show, hide })
-
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("edit-tag-dialog", {
-  centerMode: "always",
-})
-
-
-const tag_highlight_targets = computed<Array<InfoIdentifier>>(() => {
-  const info_identifer = props.tag.generate_info_identifer()
-  return [info_identifer]
-})
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  is_show_dialog.value = false
-  emits('closed')
-}
 </script>
 
 

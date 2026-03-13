@@ -51,13 +51,14 @@ import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
 import type { Text } from "@/classes/datas/text"
 import type { Notification } from "@/classes/datas/notification"
+import { useMkflView } from '@/classes/use-mkfl-view'
 
 const plaing_timeis_view = ref<InstanceType<typeof PlaingTimeisView> | null>(null);
 
 defineProps<MKFLProps>()
 const emits = defineEmits<MKFLViewEmits>()
 
-async function reload_plaing_timeis_view(): Promise<void> {
-    plaing_timeis_view.value?.reload_list(false)
-}
+const {
+    reload_plaing_timeis_view,
+} = useMkflView({ emits, plaing_timeis_view })
 </script>

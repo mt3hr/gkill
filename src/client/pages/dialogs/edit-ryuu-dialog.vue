@@ -8,14 +8,14 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
         <v-card class="edit_ryuu_dialog_view">
           <RyuuListView v-model="model_value" :application_config="application_config" :gkill_api="gkill_api"
             :editable="true" :find_kyou_query_default="new FindKyouQuery()" :target_kyou="new Kyou()"
@@ -29,7 +29,7 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { nextTick, type Ref, ref } from 'vue'
+import { ref } from 'vue'
 import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import RyuuListView from '../views/ryuu-list-view.vue'
@@ -39,30 +39,17 @@ import type { EditRyuuDialogProps } from './edit-ryuu-dialog-props'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { Kyou } from "@/classes/datas/kyou";
-const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
-
-const model_value = defineModel<ApplicationConfig>()
-defineProps<EditRyuuDialogProps>()
-const emits = defineEmits<EditRyuuDialogEmits>()
-defineExpose({ show, hide })
-
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { useEditRyuuDialog } from '@/classes/use-edit-ryuu-dialog'
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("edit-ryuu-dialog", {
-  centerMode: "always",
-})
 
+const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
+const model_value = defineModel<ApplicationConfig>()
+const props = defineProps<EditRyuuDialogProps>()
+const emits = defineEmits<EditRyuuDialogEmits>()
 
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-  nextTick(() => dnote_view.value?.reload([], new FindKyouQuery()))
-}
-async function hide(): Promise<void> {
-  is_show_dialog.value = false
-}
+const { is_show_dialog, ui, show, hide } = useEditRyuuDialog({ props, emits, dnote_view })
+
+defineExpose({ show, hide })
 </script>
 
 <style scoped lang="css">

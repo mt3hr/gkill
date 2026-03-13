@@ -21,28 +21,16 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { type Ref, ref } from 'vue';
 import type { EditKFTLTemplateStructElementViewEmits } from './edit-kftl-template-struct-element-view-emits'
 import type { EditKFTLTemplateStructElementViewProps } from './edit-kftl-template-struct-element-view-props'
-    ;
-import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data';
+import { useEditKFTLTemplateStructElementView } from '@/classes/use-edit-kftl-template-struct-element-view'
 
 const props = defineProps<EditKFTLTemplateStructElementViewProps>()
 const emits = defineEmits<EditKFTLTemplateStructElementViewEmits>()
 
-const title: Ref<string> = ref(props.struct_obj.title)
-const template: Ref<string | null> = ref(props.struct_obj.template)
-
-async function apply(): Promise<void> {
-    const kftl_template_struct = new KFTLTemplateStructElementData()
-    kftl_template_struct.id = props.struct_obj.id
-    kftl_template_struct.title = title.value
-    kftl_template_struct.template = template.value ? template.value : ""
-    kftl_template_struct.key = title.value
-    kftl_template_struct.name = title.value
-    kftl_template_struct.is_dir = props.struct_obj.is_dir
-    kftl_template_struct.children = props.struct_obj.children
-    emits('requested_update_kftl_template_struct', kftl_template_struct)
-    emits('requested_close_dialog')
-}
+const {
+    title,
+    template,
+    apply,
+} = useEditKFTLTemplateStructElementView({ props, emits })
 </script>

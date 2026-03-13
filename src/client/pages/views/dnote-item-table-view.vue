@@ -31,101 +31,32 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, ref } from "vue"
 import DnoteItemListView from "./dnote-item-list-view.vue"
-import type DnoteItem from "@/classes/dnote/dnote-item"
-import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query"
-import type { Kyou } from "@/classes/datas/kyou"
 import type DnoteItemTableViewEmits from "./dnote-item-table-view-emits"
 import type DnoteItemTableViewProps from "./dnote-item-table-view-props"
+import type DnoteItem from "@/classes/dnote/dnote-item"
+import { useDnoteItemTableView } from '@/classes/use-dnote-item-table-view'
 
 const props = defineProps<DnoteItemTableViewProps>()
 const emits = defineEmits<DnoteItemTableViewEmits>()
-defineExpose({ load_aggregated_value, reset })
 
 const model_value = defineModel<Array<Array<DnoteItem>>>({ default: () => [] })
-const dnote_item_list_views = ref<any>(null)
 
-async function load_aggregated_value(
-    abort_controller: AbortController,
-    kyous: Array<Kyou>,
-    query: FindKyouQuery,
-    kyou_is_loaded: boolean
-) {
-    if (!dnote_item_list_views.value) return
-    const waitPromises: Array<Promise<any>> = []
-    for (let i = 0; i < dnote_item_list_views.value.length; i++) {
-        const v = dnote_item_list_views.value[i]
-        if (!v) continue
-        waitPromises.push(v.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded))
-    }
-    await Promise.all(waitPromises)
-}
+const {
+    // Template refs
+    dnote_item_list_views,
 
-async function reset(): Promise<void> {
-    if (!dnote_item_list_views.value || dnote_item_list_views.value.length === 0) return
-    return nextTick(async () => {
-        for (let i = 0; i < dnote_item_list_views.value.length; i++) {
-            await dnote_item_list_views.value[i].reset()
-        }
-    })
-}
+    // Methods used in template
+    handle_move_dnote_item,
+    on_cell_dragover,
+    on_cell_drop,
 
-function handle_move_dnote_item(
-    srcId: string,
-    srcListIndex: number,
-    targetId: string | null,
-    targetListIndex: number,
-    dropType: "up" | "down"
-): void {
-    if (!props.editable) return
+    // Exposed methods
+    load_aggregated_value,
+    reset,
+} = useDnoteItemTableView({ props, emits, model_value })
 
-    const srcList = model_value.value[srcListIndex]
-    const targetList = model_value.value[targetListIndex]
-    if (!srcList || !targetList) return
-
-    const srcPos = srcList.findIndex((x) => x.id === srcId)
-    if (srcPos < 0) return
-    const [moved] = srcList.splice(srcPos, 1)
-
-    let insertPos = 0
-    if (targetId) {
-        const targetPos = targetList.findIndex((x) => x.id === targetId)
-        insertPos = targetPos < 0 ? (dropType === "up" ? 0 : targetList.length) : (dropType === "up" ? targetPos : targetPos + 1)
-    } else {
-        insertPos = dropType === "up" ? 0 : targetList.length
-    }
-
-    if (srcListIndex === targetListIndex && srcPos < insertPos) insertPos -= 1
-    if (insertPos < 0) insertPos = 0
-    if (insertPos > targetList.length) insertPos = targetList.length
-    targetList.splice(insertPos, 0, moved)
-}
-
-function on_cell_dragover(e: DragEvent): void {
-    if (!props.editable) return
-    e.preventDefault()
-    if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
-}
-
-function on_cell_drop(e: DragEvent, targetListIndex: number): void {
-    if (!props.editable) return
-
-    const srcId = e.dataTransfer?.getData("gkill_dnote_item_id")
-    const srcListIndexStr = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
-    if (!srcId || srcListIndexStr === undefined || srcListIndexStr === null || srcListIndexStr === "") return
-
-    const srcListIndex = Number(srcListIndexStr)
-    const el = e.currentTarget as HTMLElement | null
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const y = e.clientY - rect.top
-    const dropType: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
-
-    handle_move_dnote_item(srcId, srcListIndex, null, targetListIndex, dropType)
-    e.preventDefault()
-    e.stopPropagation()
-}
+defineExpose({ load_aggregated_value, reset })
 </script>
 
 <style scoped>

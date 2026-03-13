@@ -30,74 +30,30 @@
             :enable_dialog="true" :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="false"
             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
             :show_rep_name="true" :force_show_latest_kyou_info="true" :show_timeis_plaing_end_button="false"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
-            @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
-            @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
-            @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
-            @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
-            @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
-            @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
-            @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
-            @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
-            @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
-            @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
-            @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
-            @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
-            @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
-            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
+            v-on="crudRelayHandlers"
             ref="kyou_list_view_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
-import type AggregatedListItemProps from './aggregated-list-item-props';
-import type AggregatedListItemViewEmits from './aggregated-list-item-view-emits';
-import KyouListViewDialog from '../dialogs/kyou-list-view-dialog.vue';
-import LantanaFlowersView from './lantana-flowers-view.vue';
-import type { Kyou } from '@/classes/datas/kyou';
-import type { Text } from '@/classes/datas/text';
-import type { Tag } from '@/classes/datas/tag';
-import type { Notification } from '@/classes/datas/notification';
-import type { GkillError } from '@/classes/api/gkill-error';
-import type { GkillMessage } from '@/classes/api/gkill-message';
+import { ref } from 'vue'
+import type AggregatedListItemProps from './aggregated-list-item-props'
+import type AggregatedListItemViewEmits from './aggregated-list-item-view-emits'
+import KyouListViewDialog from '../dialogs/kyou-list-view-dialog.vue'
+import LantanaFlowersView from './lantana-flowers-view.vue'
+import { useAggregatedListItem } from '@/classes/use-aggregated-list-item'
 
-const kyou_list_view_dialog = ref<InstanceType<typeof KyouListViewDialog> | null>(null);
+const kyou_list_view_dialog = ref<InstanceType<typeof KyouListViewDialog> | null>(null)
 
 const props = defineProps<AggregatedListItemProps>()
 const emits = defineEmits<AggregatedListItemViewEmits>()
-const list_height = computed(() => window.screen.height * 7 / 10)
 
-const aggregate_target_type = computed(() => props.dnote_list_query.aggregate_target.to_json().type.toString())
-const is_lantana_type = computed(() => aggregate_target_type.value.includes("Lantana"))
-const is_plus_number_value = computed(() => {
-    if (aggregate_target_type.value.includes("Git") || aggregate_target_type.value.includes("Nlog")) {
-        if (props.aggregated_item.value.toString().startsWith("-")) {
-            return false
-        } else {
-            return true
-        }
-    }
-    return false
-})
-const is_minus_number_value = computed(() => {
-    if (aggregate_target_type.value.includes("Git") || aggregate_target_type.value.includes("Nlog")) {
-        if (props.aggregated_item.value.toString().startsWith("-")) {
-            return true
-        }
-    }
-    return false
-})
-const value_class = computed(() => {
-    if (is_plus_number_value.value) {
-        return "plus_value"
-    } else if (is_minus_number_value.value) {
-        return "minus_value"
-    }
-    return ""
-})
-const mood_value = computed(() => Number(props.aggregated_item.value).valueOf())
+const {
+    list_height,
+    is_lantana_type,
+    value_class,
+    mood_value,
+    crudRelayHandlers,
+} = useAggregatedListItem({ props, emits })
 </script>
 <style lang="css" scoped>
 .aggregated_list_item {

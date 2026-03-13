@@ -38,7 +38,6 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { computed, type Ref, ref } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { MKFLDialogEmits } from './mkfl-dialog-emits'
@@ -48,28 +47,13 @@ import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
 import type { Text } from "@/classes/datas/text"
 import type { Notification } from "@/classes/datas/notification"
+import { useMKFLDialog } from '@/classes/use-mkfl-dialog'
+import { i18n } from '@/i18n'
 
 const props = defineProps<MKFLDialogProps>()
 const emits = defineEmits<MKFLDialogEmits>()
+
+const { is_show_dialog, ui, view_width, view_height, show, hide } = useMKFLDialog({ props, emits })
+
 defineExpose({ show, hide })
-
-const view_width = computed(() => Math.min(props.app_content_width.valueOf() * 0.85, 600))
-const view_height = computed(() => props.app_content_height.valueOf() * 0.85)
-
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("mkfl-dialog", {
-  centerMode: "always",
-})
-
-
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  is_show_dialog.value = false
-}
 </script>

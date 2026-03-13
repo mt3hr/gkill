@@ -21,7 +21,6 @@
 </template>
 <script lang="ts" setup>
 import NotificationView from './notification-view.vue';
-import { type Ref, nextTick, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { NotificationHistoriesViewProps } from './notification-histories-view-props';
 import type { Tag } from '@/classes/datas/tag';
@@ -30,17 +29,14 @@ import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 import type { Kyou } from '@/classes/datas/kyou';
+import { useNotificationHistoriesView } from '@/classes/use-notification-histories-view'
 
 const props = defineProps<NotificationHistoriesViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const cloned_notification: Ref<Notification> = ref(props.notification.clone())
-watch(() => props.notification, () => {
-    cloned_notification.value = props.notification.clone()
-    nextTick(() => cloned_notification.value.load_attached_histories())
-})
-nextTick(() => cloned_notification.value.load_attached_histories())
-
+const {
+    cloned_notification,
+} = useNotificationHistoriesView({ props, emits })
 </script>
 <style lang="css">
 .notification_history .highlighted_notification,
