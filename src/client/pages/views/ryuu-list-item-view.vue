@@ -44,7 +44,7 @@
                                             v-if="!(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana) && !(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
                                             :application_config="application_config" :gkill_api="gkill_api"
                                             :highlight_targets="[]" :is_image_view="false" :kyou="match_kyou"
-                                            :last_added_tag="''" :show_checkbox="false" :show_content_only="true"
+                                            :show_checkbox="false" :show_content_only="true"
                                             :show_mi_create_time="false" :show_mi_estimate_end_time="false"
                                             :show_mi_estimate_start_time="false" :show_mi_limit_time="false"
                                             :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="false"
@@ -73,7 +73,7 @@
         </table>
 
         <KyouDialog v-if="match_kyou" :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="[]" :kyou="match_kyou" :last_added_tag="''" :enable_context_menu="enable_context_menu"
+            :highlight_targets="[]" :kyou="match_kyou" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog" :is_readonly_mi_check="false" :show_timeis_plaing_end_button="true"
             @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

@@ -1,10 +1,17 @@
 <template>
-    <v-menu v-model="is_show" :style="context_menu_style">
+    <v-menu v-model="is_show" :style="context_menu_style" :close-on-content-click="false">
         <v-list class="gkill_context_menu_list">
-            <v-list-item v-if="gkill_api.get_saved_last_added_tag() !== ''" @click="add_last_added_tag()">
-                <v-list-item-title>{{ i18n.global.t("ADD_TAG_TITLE") }} 「{{ gkill_api.get_saved_last_added_tag()
-                    }}」</v-list-item-title>
-            </v-list-item>
+            <v-list-group v-if="tag_history.length > 0">
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-list-item v-bind="activatorProps">
+                        <v-list-item-title>{{ i18n.global.t("ADD_TAG_FROM_HISTORY_TITLE") }}</v-list-item-title>
+                    </v-list-item>
+                </template>
+                <v-list-item v-for="(history_tag, index) in tag_history" :key="index"
+                    @click="add_tag_from_history(history_tag)">
+                    <v-list-item-title>{{ history_tag }}</v-list-item-title>
+                </v-list-item>
+            </v-list-group>
             <v-list-item @click="show_add_tag_dialog()">
                 <v-list-item-title>{{ i18n.global.t("ADD_TAG_TITLE") }}</v-list-item-title>
             </v-list-item>
@@ -61,9 +68,10 @@ defineExpose({ show })
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
-const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - (+ 8 + (48 * (8 + (props.gkill_api.get_saved_last_added_tag() !== "" ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
+const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - (+ 8 + (48 * (8 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
 
 async function show(e: PointerEvent): Promise<void> {
+    tag_history.value = props.gkill_api.get_saved_tag_history()
     position_x.value = e.clientX
     position_y.value = e.clientY
     is_show.value = true
@@ -131,11 +139,14 @@ async function open_file(): Promise<void> {
     }
 }
 
-async function add_last_added_tag(): Promise<void> {
-    const tag_names = props.gkill_api.get_saved_last_added_tag().split("、")
+const tag_history: Ref<string[]> = ref([])
+
+async function add_tag_from_history(tag_value: string): Promise<void> {
+    is_show.value = false
+    props.gkill_api.push_tag_to_history(tag_value)
+    const tag_names = tag_value.split("、")
     for (let i = 0; i < tag_names.length; i++) {
         const tag = tag_names[i]
-        // タグ情報を用意する
         const new_tag = new Tag()
         new_tag.tag = tag
         new_tag.id = props.gkill_api.generate_uuid()
@@ -151,7 +162,6 @@ async function add_last_added_tag(): Promise<void> {
         new_tag.update_time = new Date(Date.now())
         new_tag.update_user = props.application_config.user_id
 
-        // 追加リクエストを飛ばす
         await delete_gkill_kyou_cache(new_tag.id)
         await delete_gkill_kyou_cache(new_tag.target_id)
         const req = new AddTagRequest()

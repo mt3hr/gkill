@@ -24,7 +24,7 @@
             @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
             @requested_reload_application_config="load_application_config" ref="application_config_dialog" />
         <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag" />
+            :application_config="application_config" :gkill_api="gkill_api" />
         <div class="alert_container">
             <v-slide-y-transition group>
                 <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
@@ -75,7 +75,6 @@ const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
-const last_added_tag: Ref<string> = ref("")
 
 onMounted(async () => {
     await resetDialogHistory()

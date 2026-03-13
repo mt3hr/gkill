@@ -30,7 +30,7 @@
             </v-row>
           </v-card-title>
           <NotificationHistoriesView :application_config="application_config" :gkill_api="gkill_api"
-            :notification="notification" :kyou="kyou" :last_added_tag="last_added_tag"
+            :notification="notification" :kyou="kyou"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             :highlight_targets="notification_highlight_targets" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
@@ -55,7 +55,7 @@
           <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
               :is_image_request_to_thumb_size="false" :highlight_targets="notification_highlight_targets"
-              :is_image_view="false" :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
+              :is_image_view="false" :kyou="kyou" :show_checkbox="false"
               :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
               :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
               :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"

@@ -17,7 +17,7 @@
                             <KyouListView :kyou_height="56 + 35" :width="400" :show_timeis_plaing_end_button="false"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
-                                :matched_kyous="match_kyous" :query="new FindKyouQuery()" :last_added_tag="''"
+                                :matched_kyous="match_kyous" :query="new FindKyouQuery()"
                                 :is_focused_list="true" :closable="false" :is_readonly_mi_check="true"
                                 :show_checkbox="false" :show_footer="false" :enable_context_menu="false"
                                 :enable_dialog="false" :show_content_only="false"
@@ -60,7 +60,7 @@
                                         <KyouView v-if="focused_kyou && is_show_kyou_detail_view" :is_image_request_to_thumb_size="false"
                                             :application_config="application_config" :gkill_api="gkill_api"
                                             :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
-                                            :last_added_tag="''" :show_checkbox="false" :show_content_only="false"
+                                            :show_checkbox="false" :show_content_only="false"
                                             :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                                             :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                                             :show_attached_timeis="true" :show_timeis_elapsed_time="false"
@@ -81,7 +81,7 @@
                 </tr>
             </table>
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
-                :last_added_tag="''" :enable_context_menu="false" :enable_dialog="false"
+                :enable_context_menu="false" :enable_dialog="false"
                 @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
                 @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
