@@ -1,34 +1,57 @@
 <template>
     <v-card>
         <div v-if="target_kyou" class="ryuu_views">
-            <RyuuListItemView v-for="(related_kyou_query, index) in related_kyou_queries" :key="related_kyou_query.id"
-                v-model="related_kyou_queries[index]" :gkill_api="gkill_api" :application_config="application_config"
-                :enable_dialog="true" :enable_context_menu="true" :target_kyou="target_kyou"
-                :abort_controller="abort_controler" :find_kyou_query_default="find_kyou_query_default"
-                :editable="editable"
-                @requested_move_related_kyou_query="(...id: any[]) => handle_move_related_kyou_query(id[0] as string, id[1] as string, id[2] as 'up' | 'down')"
-                @requested_delete_related_kyou_list_query="(...id: any[]) => delete_related_kyou_query(id[0] as string)"
-                @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
-                @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0])"
-                @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-                @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
-                @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-                @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-                @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-                @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
-                @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-                @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-                @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                @requested_reload_kyou="(...cloned_kyou: any[]) => emits('requested_reload_kyou', cloned_kyou[0] as Kyou)"
-                @requested_reload_list="emits('requested_reload_list')"
-                @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
-                @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
-                @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
-                @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])"
-                ref="related_kyou_list_item_views" />
+            <v-tabs v-if="ryuu_definitions.length > 1 || editable" v-model="current_definition_index" show-arrows>
+                <v-tab v-for="(def, i) in ryuu_definitions" :key="i" :value="i">
+                    {{ def.name }}
+                </v-tab>
+                <v-btn v-if="editable" icon="mdi-plus" size="small" variant="text" class="align-self-center ml-1"
+                    @click="add_definition" :title="i18n.global.t('ADD_RYUU_DEFINITION_TITLE')" />
+            </v-tabs>
+            <v-row v-if="editable && ryuu_definitions.length > 0" class="pa-2 ma-0" align="center">
+                <v-col class="pa-0 ma-0">
+                    <v-text-field v-model="ryuu_definitions[current_definition_index].name"
+                        :label="i18n.global.t('RYUU_DEFINITION_NAME_LABEL')" density="compact" hide-details />
+                </v-col>
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn v-if="ryuu_definitions.length > 1" icon="mdi-delete" size="small" variant="text"
+                        @click="delete_current_definition"
+                        :title="i18n.global.t('DELETE_RYUU_DEFINITION_TITLE')" />
+                </v-col>
+            </v-row>
+
+            <v-window v-model="current_definition_index">
+                <v-window-item v-for="(def, i) in ryuu_definitions" :key="i" :value="i">
+                    <RyuuListItemView v-for="(query, qIdx) in def.queries" :key="query.id"
+                        v-model="def.queries[qIdx]" :gkill_api="gkill_api" :application_config="application_config"
+                        :enable_dialog="true" :enable_context_menu="true" :target_kyou="target_kyou"
+                        :abort_controller="abort_controler" :find_kyou_query_default="find_kyou_query_default"
+                        :editable="editable"
+                        @requested_move_related_kyou_query="(...id: any[]) => handle_move_related_kyou_query(id[0] as string, id[1] as string, id[2] as 'up' | 'down')"
+                        @requested_delete_related_kyou_list_query="(...id: any[]) => delete_related_kyou_query(id[0] as string)"
+                        @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
+                        @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
+                        @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0])"
+                        @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
+                        @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
+                        @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
+                        @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
+                        @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
+                        @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
+                        @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
+                        @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
+                        @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
+                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                        @requested_reload_kyou="(...cloned_kyou: any[]) => emits('requested_reload_kyou', cloned_kyou[0] as Kyou)"
+                        @requested_reload_list="emits('requested_reload_list')"
+                        @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
+                        @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+                        @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
+                        @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])"
+                        ref="related_kyou_list_item_views" />
+                </v-window-item>
+            </v-window>
 
             <AddRyuuItemDialog :gkill_api="gkill_api" :application_config="application_config"
                 @requested_add_related_kyou_query="(...related_kyou_query: any[]) => add_related_kyou_query(related_kyou_query[0] as RelatedKyouQuery)"
@@ -85,7 +108,7 @@
 
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { ref, type Ref, watch, nextTick, onUnmounted } from 'vue';
+import { ref, computed, type Ref, watch, nextTick, onUnmounted } from 'vue';
 import AddRyuuItemDialog from '../dialogs/add-ryuu-item-dialog.vue';
 import RyuuListItemView from './ryuu-list-item-view.vue';
 import RelatedKyouQuery from '../../classes/dnote/related-kyou-query';
@@ -103,6 +126,11 @@ import type { GkillMessage } from '@/classes/api/gkill-message';
 import RykvDialogHost from './rykv-dialog-host.vue';
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from './rykv-dialog-kind';
 
+interface RyuuDefinition {
+    name: string
+    queries: Array<RelatedKyouQuery>
+}
+
 const add_ryuu_item_dialog = ref<InstanceType<typeof AddRyuuItemDialog> | null>(null);
 const related_kyou_list_item_views = ref()
 
@@ -110,7 +138,31 @@ const model_value = defineModel<ApplicationConfig>()
 const props = defineProps<RyuuListViewProps>()
 const emits = defineEmits<RyuuListViewEmits>()
 
-const related_kyou_queries: Ref<Array<RelatedKyouQuery>> = ref(new Array<RelatedKyouQuery>())
+const ryuu_definitions: Ref<Array<RyuuDefinition>> = ref([])
+const current_definition_index = ref(0)
+watch(current_definition_index, (newIdx, oldIdx) => {
+    if (newIdx === oldIdx) return
+    if (!props.editable) {
+        abort_controler.value.abort()
+        abort_controler.value = new AbortController()
+        nextTick(() => load_related_kyou())
+    }
+})
+const related_kyou_queries = computed({
+    get: () => {
+        if (ryuu_definitions.value.length === 0) return [] as Array<RelatedKyouQuery>
+        const idx = current_definition_index.value
+        const safeIdx = (idx >= 0 && idx < ryuu_definitions.value.length) ? idx : 0
+        return ryuu_definitions.value[safeIdx].queries
+    },
+    set: (val: Array<RelatedKyouQuery>) => {
+        if (ryuu_definitions.value.length === 0) return
+        const idx = current_definition_index.value
+        if (idx >= 0 && idx < ryuu_definitions.value.length) {
+            ryuu_definitions.value[idx].queries = val
+        }
+    }
+})
 const opened_dialogs: Ref<Array<OpenedRykvDialog>> = ref([])
 const abort_controler: Ref<AbortController> = ref(new AbortController())
 
@@ -146,15 +198,13 @@ async function load_related_kyou(): Promise<void> {
 
 async function load_from_application_config(): Promise<void> {
     nextTick(() => {
-        related_kyou_queries.value.splice(0)
-        related_kyou_queries.value.push(...load_from_json(props.application_config.ryuu_json_data))
+        from_json(props.application_config.ryuu_json_data)
     })
 }
 
-function load_from_json(json: any): Array<RelatedKyouQuery> {
-    const related_kyou_queries = new Array<RelatedKyouQuery>()
-    if (!json) return related_kyou_queries
-
+function parse_single_definition_queries(json: any): Array<RelatedKyouQuery> {
+    const queries = new Array<RelatedKyouQuery>()
+    if (!json) return queries
     for (let i = 0; i < json.length; i++) {
         const related_kyou_query = new RelatedKyouQuery()
         related_kyou_query.id = json[i].id
@@ -165,15 +215,33 @@ function load_from_json(json: any): Array<RelatedKyouQuery> {
         related_kyou_query.related_time_match_type = json[i].related_time_match_type
         related_kyou_query.find_kyou_query = json[i].find_kyou_query ? FindKyouQuery.parse_find_kyou_query(json[i].find_kyou_query) : null
         related_kyou_query.find_duration_hour = json[i].find_duration_hour
-        related_kyou_queries.push(related_kyou_query)
+        queries.push(related_kyou_query)
     }
-    return related_kyou_queries
+    return queries
 }
 
-function to_json(related_kyou_queries: Array<RelatedKyouQuery>): any {
+function from_json(json: any): void {
+    let definitions_json: any[]
+    if (Array.isArray(json) && json.length > 0 && json[0] !== null && typeof json[0] === 'object' && 'name' in json[0] && 'queries' in json[0]) {
+        definitions_json = json
+    } else if (Array.isArray(json)) {
+        definitions_json = [{ name: i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME'), queries: json }]
+    } else {
+        definitions_json = [{ name: i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME'), queries: [] }]
+    }
+    ryuu_definitions.value = definitions_json.map((def_json: any) => ({
+        name: def_json.name || i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME'),
+        queries: parse_single_definition_queries(def_json.queries),
+    }))
+    if (current_definition_index.value >= ryuu_definitions.value.length) {
+        current_definition_index.value = 0
+    }
+}
+
+function serialize_single_definition(def: RyuuDefinition): any {
     const json = []
-    for (let i = 0; i < related_kyou_queries.length; i++) {
-        const related_kyou_query = related_kyou_queries[i]
+    for (let i = 0; i < def.queries.length; i++) {
+        const related_kyou_query = def.queries[i]
         json.push({
             id: related_kyou_query.id,
             title: related_kyou_query.title,
@@ -185,7 +253,33 @@ function to_json(related_kyou_queries: Array<RelatedKyouQuery>): any {
             find_duration_hour: related_kyou_query.find_duration_hour,
         })
     }
-    return json
+    return { name: def.name, queries: json }
+}
+
+function to_json(): any {
+    return ryuu_definitions.value.map(serialize_single_definition)
+}
+
+function add_definition(): void {
+    const new_def: RyuuDefinition = {
+        name: i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME') + " " + (ryuu_definitions.value.length + 1),
+        queries: new Array<RelatedKyouQuery>(),
+    }
+    ryuu_definitions.value.push(new_def)
+    current_definition_index.value = ryuu_definitions.value.length - 1
+}
+
+function delete_current_definition(): void {
+    if (ryuu_definitions.value.length <= 1) return
+    ryuu_definitions.value.splice(current_definition_index.value, 1)
+    if (current_definition_index.value >= ryuu_definitions.value.length) {
+        current_definition_index.value = ryuu_definitions.value.length - 1
+    }
+    if (!props.editable) {
+        abort_controler.value.abort()
+        abort_controler.value = new AbortController()
+        nextTick(() => load_related_kyou())
+    }
 }
 
 function add_related_kyou_query(related_kyou_query: RelatedKyouQuery): void {
@@ -194,7 +288,7 @@ function add_related_kyou_query(related_kyou_query: RelatedKyouQuery): void {
 
 async function apply(): Promise<void> {
     if (!model_value.value) return
-    const ryuu_json_data = to_json(related_kyou_queries.value)
+    const ryuu_json_data = to_json()
     model_value.value.ryuu_json_data = ryuu_json_data
     emits('requested_apply_ryuu_struct', ryuu_json_data)
     nextTick(() => emits('requested_close_dialog'))

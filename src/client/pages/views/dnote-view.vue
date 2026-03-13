@@ -22,6 +22,24 @@
                 }}</div>
             </div>
         </v-overlay>
+        <v-tabs v-if="dnote_definitions.length > 1 || editable" v-model="current_definition_index" show-arrows>
+            <v-tab v-for="(def, i) in dnote_definitions" :key="i" :value="i">
+                {{ def.name }}
+            </v-tab>
+            <v-btn v-if="editable" icon="mdi-plus" size="small" variant="text" class="align-self-center ml-1"
+                @click="add_definition" :title="i18n.global.t('ADD_DNOTE_DEFINITION_TITLE')" />
+        </v-tabs>
+        <v-row v-if="editable && dnote_definitions.length > 0" class="pa-2 ma-0" align="center">
+            <v-col class="pa-0 ma-0">
+                <v-text-field v-model="dnote_definitions[current_definition_index].name"
+                    :label="i18n.global.t('DNOTE_DEFINITION_NAME_LABEL')" density="compact" hide-details />
+            </v-col>
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn v-if="dnote_definitions.length > 1" icon="mdi-delete" size="small" variant="text"
+                    @click="delete_current_definition"
+                    :title="i18n.global.t('DELETE_DNOTE_DEFINITION_TITLE')" />
+            </v-col>
+        </v-row>
         <h1>
             <v-row>
                 <v-col cols="auto">
@@ -37,42 +55,46 @@
                 </v-col>
             </v-row>
         </h1>
-        <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-            v-model="dnote_item_table_view_data"
-            @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
-            @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
-            @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
-            @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
-            @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
-            @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
-            @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
-            @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
-            @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
-            @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
-            @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
-            @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
-            @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
-            @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
-            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
-            @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_item_table_view" />
-        <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-            v-if="dnote_list_item_table_view_data" v-model="dnote_list_item_table_view_data"
-            @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
-            @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
-            @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
-            @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
-            @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
-            @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
-            @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
-            @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
-            @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
-            @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
-            @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
-            @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
-            @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
-            @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
-            @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
-            @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_list_table_view" />
+        <v-window v-model="current_definition_index">
+            <v-window-item v-for="(def, i) in dnote_definitions" :key="i" :value="i" :eager="true">
+                <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
+                    v-model="dnote_definitions[i].items"
+                    @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
+                    @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
+                    @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
+                    @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
+                    @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
+                    @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
+                    @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
+                    @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
+                    @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
+                    @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
+                    @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
+                    @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
+                    @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+                    @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
+                    @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
+                    @finish_a_aggregate_task="finished_aggregate_task++" :ref="(el: any) => set_item_table_ref(i, el)" />
+                <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
+                    v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
+                    @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
+                    @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
+                    @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
+                    @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
+                    @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
+                    @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
+                    @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
+                    @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
+                    @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
+                    @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
+                    @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
+                    @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
+                    @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
+                    @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
+                    @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
+                    @finish_a_aggregate_task="finished_aggregate_task++" :ref="(el: any) => set_list_table_ref(i, el)" />
+            </v-window-item>
+        </v-window>
         <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-dnote">
             <v-menu transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
@@ -141,8 +163,23 @@ import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { toExportKyouDto } from '@/classes/dto/export_dto';
 import { pruneEmpty } from '@/classes/dto/export_prune';
 
-const dnote_item_table_view = ref<InstanceType<typeof DnoteItemTableView> | null>(null);
-const dnote_list_table_view = ref<InstanceType<typeof DnoteListTableView> | null>(null);
+interface DnoteDefinition {
+    name: string
+    items: Array<Array<DnoteItem>>
+    lists: Array<DnoteListQuery>
+}
+
+const item_view_refs = new Map<number, InstanceType<typeof DnoteItemTableView>>()
+const list_view_refs = new Map<number, InstanceType<typeof DnoteListTableView>>()
+
+function set_item_table_ref(i: number, el: any): void {
+    if (el) item_view_refs.set(i, el)
+    else item_view_refs.delete(i)
+}
+function set_list_table_ref(i: number, el: any): void {
+    if (el) list_view_refs.set(i, el)
+    else list_view_refs.delete(i)
+}
 const add_dnote_list_dialog = ref<InstanceType<typeof AddDnoteListDialog> | null>(null);
 const add_dnote_item_dialog = ref<InstanceType<typeof AddDnoteItemDialog> | null>(null);
 
@@ -158,8 +195,44 @@ nextTick(() => {
     load_from_application_config()
 })
 
-const dnote_item_table_view_data: Ref<Array<Array<DnoteItem>>> = ref(new Array<Array<DnoteItem>>())
-const dnote_list_item_table_view_data: Ref<Array<DnoteListQuery>> = ref(new Array<DnoteListQuery>())
+const dnote_definitions: Ref<Array<DnoteDefinition>> = ref([])
+const current_definition_index = ref(0)
+watch(current_definition_index, async (newIdx, oldIdx) => {
+    if (newIdx === oldIdx) return
+    if (!props.editable && loaded_kyous.value && loaded_kyous.value.length > 0) {
+        await re_aggregate_current_definition()
+    }
+})
+const dnote_item_table_view_data = computed({
+    get: () => {
+        if (dnote_definitions.value.length === 0) return [[]] as Array<Array<DnoteItem>>
+        const idx = current_definition_index.value
+        const safeIdx = (idx >= 0 && idx < dnote_definitions.value.length) ? idx : 0
+        return dnote_definitions.value[safeIdx].items
+    },
+    set: (val: Array<Array<DnoteItem>>) => {
+        if (dnote_definitions.value.length === 0) return
+        const idx = current_definition_index.value
+        if (idx >= 0 && idx < dnote_definitions.value.length) {
+            dnote_definitions.value[idx].items = val
+        }
+    }
+})
+const dnote_list_item_table_view_data = computed({
+    get: () => {
+        if (dnote_definitions.value.length === 0) return [] as Array<DnoteListQuery>
+        const idx = current_definition_index.value
+        const safeIdx = (idx >= 0 && idx < dnote_definitions.value.length) ? idx : 0
+        return dnote_definitions.value[safeIdx].lists
+    },
+    set: (val: Array<DnoteListQuery>) => {
+        if (dnote_definitions.value.length === 0) return
+        const idx = current_definition_index.value
+        if (idx >= 0 && idx < dnote_definitions.value.length) {
+            dnote_definitions.value[idx].lists = val
+        }
+    }
+})
 const abort_controller = ref(new AbortController())
 const is_loading = ref(true)
 
@@ -174,10 +247,12 @@ const start_date_str: Ref<string> = computed(() => props.query.use_calendar ? (m
 const end_date_str: Ref<string> = computed(() => props.query.use_calendar ? (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")) : last_kyou_date_str.value)
 
 const loaded_kyous: Ref<Array<Kyou> | null> = ref(null)
+const last_reload_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     loaded_kyous.value = null
     is_loading.value = true
+    last_reload_query.value = query
     first_kyou_date_str.value = kyous && kyous.length > 0 ? moment(kyous[kyous.length - 1].related_time).format("YYYY-MM-DD") : ""
     last_kyou_date_str.value = kyous && kyous.length > 0 ? moment(kyous[0].related_time).format("YYYY-MM-DD") : ""
 
@@ -215,11 +290,12 @@ async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
 
 async function reset_view(): Promise<void> {
     return nextTick(async () => {
-        dnote_item_table_view_data.value = new Array<Array<DnoteItem>>()
-        dnote_list_item_table_view_data.value = new Array<DnoteListQuery>()
-        load_from_application_config()
-        await dnote_item_table_view.value?.reset()
-        await dnote_list_table_view.value?.reset()
+        for (const ref of item_view_refs.values()) {
+            await ref.reset()
+        }
+        for (const ref of list_view_refs.values()) {
+            await ref.reset()
+        }
     })
 }
 
@@ -230,18 +306,50 @@ async function abort(): Promise<any> {
 }
 
 async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean) {
-    return dnote_item_table_view.value?.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded)
+    return item_view_refs.get(current_definition_index.value)?.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded)
 }
 
 async function load_aggregate_grouping_list(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<void> {
-    return await dnote_list_table_view.value?.load_aggregate_grouping_list(abort_controller, kyous, find_kyou_query, kyou_is_loaded)
+    return await list_view_refs.get(current_definition_index.value)?.load_aggregate_grouping_list(abort_controller, kyous, find_kyou_query, kyou_is_loaded)
 }
 
-function to_json(): any {
-    const dnote_item_table_view_data_seliarized = []
-    for (let i = 0; i < dnote_item_table_view_data.value.length; i++) {
+function parse_single_definition_json(def_json: any): DnoteDefinition {
+    regist_dictionary()
+    const name = def_json.name || i18n.global.t('DNOTE_DEFINITION_DEFAULT_NAME')
+    const items: Array<Array<DnoteItem>> = ((def_json && def_json.dnote_item_table_view_data ? def_json.dnote_item_table_view_data : []) || []).map((col: any[]) =>
+        col.map((itemJson: any) => {
+            const item = new DnoteItem()
+            item.id = itemJson.id
+            item.prefix = itemJson.prefix
+            item.suffix = itemJson.suffix
+            item.title = itemJson.title
+            item.agregate_target = build_dnote_aggregate_target_from_json(itemJson.aggregate_target)
+            item.predicate = build_dnote_predicate_from_json(itemJson.predicate)
+            return item
+        })
+    )
+    const lists: Array<DnoteListQuery> = ((def_json && def_json.dnote_list_item_table_view_data ? def_json.dnote_list_item_table_view_data : []) || []).map((queryJson: any) => {
+        const query = new DnoteListQuery()
+        query.id = queryJson.id
+        query.prefix = queryJson.prefix
+        query.suffix = queryJson.suffix
+        query.title = queryJson.title
+        query.aggregate_target = build_dnote_aggregate_target_from_json(queryJson.aggregate_target)
+        query.predicate = build_dnote_predicate_from_json(queryJson.predicate)
+        query.key_getter = build_dnote_key_getter_from_json(queryJson.key_getter)
+        return query
+    })
+    if (items.length === 0) {
+        items.push(new Array<DnoteItem>())
+    }
+    return { name, items, lists }
+}
+
+function serialize_single_definition(def: DnoteDefinition): any {
+    const dnote_item_table_view_data_serialized = []
+    for (let i = 0; i < def.items.length; i++) {
         const list = []
-        const dnote_item_col = dnote_item_table_view_data.value[i]
+        const dnote_item_col = def.items[i]
         for (let j = 0; j < dnote_item_col.length; j++) {
             const dnote_item = dnote_item_col[j]
             const record = {
@@ -254,12 +362,12 @@ function to_json(): any {
             }
             list.push(record)
         }
-        dnote_item_table_view_data_seliarized.push(list)
+        dnote_item_table_view_data_serialized.push(list)
     }
 
-    const dnote_list_item_table_view_data_seliarized = []
-    for (let i = 0; i < dnote_list_item_table_view_data.value.length; i++) {
-        const list_find_query = dnote_list_item_table_view_data.value[i]
+    const dnote_list_item_table_view_data_serialized = []
+    for (let i = 0; i < def.lists.length; i++) {
+        const list_find_query = def.lists[i]
         const record = {
             id: list_find_query.id,
             prefix: list_find_query.prefix,
@@ -269,50 +377,85 @@ function to_json(): any {
             predicate: list_find_query.predicate.predicate_struct_to_json(),
             key_getter: list_find_query.key_getter.to_json(),
         }
-        dnote_list_item_table_view_data_seliarized.push(record)
+        dnote_list_item_table_view_data_serialized.push(record)
     }
 
     return {
-        dnote_item_table_view_data: dnote_item_table_view_data_seliarized,
-        dnote_list_item_table_view_data: dnote_list_item_table_view_data_seliarized,
+        name: def.name,
+        dnote_item_table_view_data: dnote_item_table_view_data_serialized,
+        dnote_list_item_table_view_data: dnote_list_item_table_view_data_serialized,
     }
+}
+
+function to_json(): any {
+    return dnote_definitions.value.map(serialize_single_definition)
 }
 
 function from_json(json: any): void {
     regist_dictionary()
-    const items: Array<Array<DnoteItem>> = ((json && json.dnote_item_table_view_data ? json.dnote_item_table_view_data : []) || []).map((col: any[]) =>
-        col.map((itemJson: any) => {
-            const item = new DnoteItem()
-            item.id = itemJson.id
-            item.prefix = itemJson.prefix
-            item.suffix = itemJson.suffix
-            item.title = itemJson.title
-            item.agregate_target = build_dnote_aggregate_target_from_json(itemJson.aggregate_target)
-            item.predicate = build_dnote_predicate_from_json(itemJson.predicate)
-            return item
-        })
-    )
-    dnote_item_table_view_data.value = items
-
-    const queries: Array<DnoteListQuery> = ((json && json.dnote_list_item_table_view_data ? json.dnote_list_item_table_view_data : []) || []).map((queryJson: any) => {
-        const query = new DnoteListQuery()
-        query.id = queryJson.id
-        query.prefix = queryJson.prefix
-        query.suffix = queryJson.suffix
-        query.title = queryJson.title
-        query.aggregate_target = build_dnote_aggregate_target_from_json(queryJson.aggregate_target)
-        query.predicate = build_dnote_predicate_from_json(queryJson.predicate)
-        query.key_getter = build_dnote_key_getter_from_json(queryJson.key_getter)
-        return query
-    })
-    dnote_list_item_table_view_data.value = queries
-    if (dnote_item_table_view_data.value.length === 0) {
-        dnote_item_table_view_data.value.push(new Array<DnoteItem>())
+    let definitions_json: any[]
+    if (Array.isArray(json)) {
+        definitions_json = json
+    } else if (json && (json.dnote_item_table_view_data || json.dnote_list_item_table_view_data)) {
+        definitions_json = [json]
+    } else {
+        definitions_json = []
+    }
+    if (definitions_json.length === 0) {
+        definitions_json = [{ name: i18n.global.t('DNOTE_DEFINITION_DEFAULT_NAME'), dnote_item_table_view_data: [[]], dnote_list_item_table_view_data: [] }]
+    }
+    dnote_definitions.value = definitions_json.map(parse_single_definition_json)
+    if (current_definition_index.value >= dnote_definitions.value.length) {
+        current_definition_index.value = 0
     }
 }
 
 function load_from_application_config(): void {
     from_json(props.application_config.dnote_json_data)
+}
+
+async function re_aggregate_current_definition(): Promise<void> {
+    if (!loaded_kyous.value) return
+    is_loading.value = true
+    finished_aggregate_task.value = 0
+    estimate_aggregate_task.value = 0
+    for (let i = 0; i < dnote_item_table_view_data.value.length; i++) {
+        estimate_aggregate_task.value += dnote_item_table_view_data.value[i].length
+    }
+    estimate_aggregate_task.value += dnote_list_item_table_view_data.value.length
+    target_kyous_count.value = loaded_kyous.value.length
+    getted_kyous_count.value = loaded_kyous.value.length
+
+    abort_controller.value.abort()
+    abort_controller.value = new AbortController()
+    await nextTick()
+    await item_view_refs.get(current_definition_index.value)?.reset()
+    await list_view_refs.get(current_definition_index.value)?.reset()
+
+    const kyou_is_loaded = true
+    const waitPromises = new Array<Promise<any>>()
+    waitPromises.push(load_aggregated_value(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
+    waitPromises.push(load_aggregate_grouping_list(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
+    await Promise.all(waitPromises)
+    is_loading.value = false
+}
+
+function add_definition(): void {
+    const new_def: DnoteDefinition = {
+        name: i18n.global.t('DNOTE_DEFINITION_DEFAULT_NAME') + " " + (dnote_definitions.value.length + 1),
+        items: [new Array<DnoteItem>()],
+        lists: new Array<DnoteListQuery>(),
+    }
+    dnote_definitions.value.push(new_def)
+    current_definition_index.value = dnote_definitions.value.length - 1
+}
+
+function delete_current_definition(): void {
+    if (dnote_definitions.value.length <= 1) return
+    dnote_definitions.value.splice(current_definition_index.value, 1)
+    if (current_definition_index.value >= dnote_definitions.value.length) {
+        current_definition_index.value = dnote_definitions.value.length - 1
+    }
 }
 
 function floatingActionButtonStyle() {
