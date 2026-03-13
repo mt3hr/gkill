@@ -5,7 +5,7 @@
         {{ timeis_kyou.typed_timeis.title }}
     </span>
     <AttachedTimeIsPlaingContextMenu :application_config="application_config" :gkill_api="gkill_api" :target_kyou="kyou"
-        v-if="timeis_kyou.typed_timeis" :timeis_kyou="timeis_kyou" :last_added_tag="last_added_tag"
+        v-if="timeis_kyou.typed_timeis" :timeis_kyou="timeis_kyou"
         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :highlight_targets="highlight_targets"
         @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
         @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

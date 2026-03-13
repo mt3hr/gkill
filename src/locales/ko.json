@@ -736,5 +736,8 @@
     "COPIED_KYOU_ID_MESSAGE": "ID를 복사했습니다",
     "DELETE_DEVICE_STRUCT_TITLE": "프로필 구조 삭제",
     "KC_RELATED_TIME_BLANK_MESSAGE": "날짜 또는 시각이 입력되지 않았습니다",
-    "SUCCESS_OPEN_FOLDER_MESSAGE": "폴더를 열었습니다"
+    "SUCCESS_OPEN_FOLDER_MESSAGE": "폴더를 열었습니다",
+    "ADD_TAG_FROM_HISTORY_TITLE": "태그 기록에서 추가",
+    "CONFIRM_UNKNOWN_TAG_TITLE": "확인",
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "다음 태그는 태그 구조에 없습니다. 정말 추가하시겠습니까?"
 }

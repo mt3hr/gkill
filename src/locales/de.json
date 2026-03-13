@@ -736,5 +736,8 @@
     "COPIED_KYOU_ID_MESSAGE": "ID kopiert",
     "DELETE_DEVICE_STRUCT_TITLE": "Profilstruktur löschen",
     "KC_RELATED_TIME_BLANK_MESSAGE": "Datum oder Uhrzeit ist nicht eingegeben",
-    "SUCCESS_OPEN_FOLDER_MESSAGE": "Ordner geöffnet"
+    "SUCCESS_OPEN_FOLDER_MESSAGE": "Ordner geöffnet",
+    "ADD_TAG_FROM_HISTORY_TITLE": "Tag aus Verlauf hinzufügen",
+    "CONFIRM_UNKNOWN_TAG_TITLE": "Bestätigung",
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "Die folgenden Tags sind nicht in der Tag-Struktur vorhanden. Möchten Sie sie wirklich hinzufügen?"
 }

@@ -736,5 +736,8 @@
     "COPIED_KYOU_ID_MESSAGE": "ID copied",
     "DELETE_DEVICE_STRUCT_TITLE": "Delete Profile Structure",
     "KC_RELATED_TIME_BLANK_MESSAGE": "Date or time is not entered",
-    "SUCCESS_OPEN_FOLDER_MESSAGE": "Folder opened"
+    "SUCCESS_OPEN_FOLDER_MESSAGE": "Folder opened",
+    "ADD_TAG_FROM_HISTORY_TITLE": "Add tag from history",
+    "CONFIRM_UNKNOWN_TAG_TITLE": "Confirmation",
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "The following tags are not in the tag structure. Are you sure you want to add them?"
 }

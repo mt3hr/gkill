@@ -7,7 +7,6 @@ import type { InfoIdentifier } from "@/classes/datas/info-identifier"
 
 export interface TextViewProps extends GkillPropsBase {
     text: Text
-    last_added_tag: string
     kyou: Kyou
     highlight_targets: Array<InfoIdentifier>
     enable_context_menu: boolean

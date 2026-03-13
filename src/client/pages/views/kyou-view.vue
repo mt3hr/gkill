@@ -4,7 +4,7 @@
         <div v-if="!show_content_only">
             <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag" :key="attached_tag.id"
                 :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
-                :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                :highlight_targets="highlight_targets"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -28,7 +28,7 @@
                 <AttachedTimeIsPlaing v-for="attached_timeis_plaing in cloned_kyou.attached_timeis_kyou"
                     :key="attached_timeis_plaing.id" :timeis_kyou="attached_timeis_plaing"
                     :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
-                    :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                    :highlight_targets="highlight_targets"
                     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                     @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                     @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -66,7 +66,7 @@
         <div :class="kyou_class">
             <KmemoView v-if="cloned_kyou.typed_kmemo" :kmemo="cloned_kyou.typed_kmemo" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width" :max-width="width"
+                :kyou="cloned_kyou" :height="height" :width="width" :max-width="width"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -89,7 +89,7 @@
                 ref="kmemo_view" />
             <KCView v-if="cloned_kyou.typed_kc" :kc="cloned_kyou.typed_kc" :application_config="application_config"
                 :draggable=draggable :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
-                :last_added_tag="last_added_tag" :height="height" :width="width"
+                :height="height" :width="width"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -112,7 +112,6 @@
                 ref="kc_view" />
             <miKyouView v-if="cloned_kyou.typed_mi" :mi="cloned_kyou.typed_mi" :application_config="application_config"
                 :draggable=draggable :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
-                :last_added_tag="last_added_tag"
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -136,7 +135,7 @@
                 ref="mi_view" />
             <NlogView v-if="cloned_kyou.typed_nlog" :nlog="cloned_kyou.typed_nlog" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :kyou="cloned_kyou" :height="height" :width="width"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -159,7 +158,7 @@
                 ref="nlog_view" />
             <LantanaView v-if="cloned_kyou.typed_lantana" :lantana="cloned_kyou.typed_lantana" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :kyou="cloned_kyou" :height="height" :width="width"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -184,7 +183,7 @@
                 :show_timeis_elapsed_time="show_timeis_elapsed_time"
                 :show_timeis_plaing_end_button="show_timeis_plaing_end_button" :application_config="application_config"
                 :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
-                :last_added_tag="last_added_tag" :height="height" :width="width"
+                :height="height" :width="width"
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
@@ -207,7 +206,7 @@
                 ref="timeis_view" />
             <URLogView v-if="cloned_kyou.typed_urlog" :urlog="cloned_kyou.typed_urlog" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :kyou="cloned_kyou" :height="height" :width="width"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -230,7 +229,7 @@
                 ref="urlog_view" />
             <IDFKyouView v-if="cloned_kyou.typed_idf_kyou" :idf_kyou="cloned_kyou.typed_idf_kyou" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :kyou="cloned_kyou" :height="height" :width="width"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_image_request_to_thumb_size="is_image_request_to_thumb_size"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -253,7 +252,7 @@
                 ref="idf_kyou_view" />
             <ReKyouView v-if="cloned_kyou.typed_rekyou" :rekyou="cloned_kyou.typed_rekyou" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :kyou="cloned_kyou" :height="height" :width="width"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -276,7 +275,7 @@
                 ref="rekyou_view" />
             <GitCommitLogView v-if="cloned_kyou.typed_git_commit_log" :git_commit_log="cloned_kyou.typed_git_commit_log"
                 :draggable=draggable :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+                :highlight_targets="highlight_targets" :kyou="cloned_kyou"
                 :height="height" :width="width" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
@@ -302,7 +301,7 @@
         <div v-if="!show_content_only">
             <AttachedText v-for="attached_text in cloned_kyou.attached_texts" :text="attached_text"
                 :key="attached_text.id" :application_config="application_config" :gkill_api="gkill_api"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                :kyou="cloned_kyou" :highlight_targets="highlight_targets"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -327,7 +326,7 @@
             <AttachedNotification v-for="attached_notification in cloned_kyou.attached_notifications"
                 :key="attached_notification.id" :notification="attached_notification"
                 :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
-                :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                :highlight_targets="highlight_targets"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"

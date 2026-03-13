@@ -736,5 +736,8 @@
     "COPIED_KYOU_ID_MESSAGE": "已复制ID",
     "DELETE_DEVICE_STRUCT_TITLE": "删除配置文件结构",
     "KC_RELATED_TIME_BLANK_MESSAGE": "日期或时间未输入",
-    "SUCCESS_OPEN_FOLDER_MESSAGE": "已打开文件夹"
+    "SUCCESS_OPEN_FOLDER_MESSAGE": "已打开文件夹",
+    "ADD_TAG_FROM_HISTORY_TITLE": "从标签历史中添加",
+    "CONFIRM_UNKNOWN_TAG_TITLE": "确认",
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "以下标签不在标签结构中。确定要添加吗？"
 }

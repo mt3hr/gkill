@@ -6,7 +6,7 @@
             <div class="notification_time">{{ format_time(notification.notification_time) }}</div>
         </div>
         <AttachedNotificationContextMenu :application_config="application_config" :gkill_api="gkill_api"
-            :notification="notification" :kyou="kyou" :last_added_tag="last_added_tag"
+            :notification="notification" :kyou="kyou"
             :highlight_targets="highlight_targets" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
             @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"

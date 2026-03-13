@@ -736,5 +736,8 @@
     "COPIED_KYOU_ID_MESSAGE": "IDをコピーしました",
     "DELETE_DEVICE_STRUCT_TITLE": "プロファイル構造削除",
     "KC_RELATED_TIME_BLANK_MESSAGE": "日付または時刻が入力されていません",
-    "SUCCESS_OPEN_FOLDER_MESSAGE": "フォルダを開きました"
+    "SUCCESS_OPEN_FOLDER_MESSAGE": "フォルダを開きました",
+    "ADD_TAG_FROM_HISTORY_TITLE": "タグ履歴から追加",
+    "CONFIRM_UNKNOWN_TAG_TITLE": "確認",
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "以下のタグはタグ構造に存在しません。本当に追加しますか？"
 }
