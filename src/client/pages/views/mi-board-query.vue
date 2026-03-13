@@ -17,24 +17,24 @@
 import { i18n } from '@/i18n'
 import type { miBoardQueryEmits } from './mi-board-query-emits'
 import type { miBoardQueryProps } from './mi-board-query-props'
-import { computed, nextTick, type Ref, ref } from 'vue'
+import { ref } from 'vue'
 import FoldableStruct from './foldable-struct.vue'
 import { CheckState } from './check-state'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { useMiBoardQuery } from '@/classes/use-mi-board-query'
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 
 const props = defineProps<miBoardQueryProps>()
 const emits = defineEmits<miBoardQueryEmits>()
+
+const {
+    mi_board_struct,
+    board_name,
+    use_board,
+    get_board_name,
+} = useMiBoardQuery({ props, emits })
+
 defineExpose({ get_board_name })
-const mi_board_struct = computed(() => props.application_config.mi_board_struct)
-
-const board_name: Ref<string> = ref(i18n.global.t("MI_ALL_TITLE"))
-nextTick(() => emits('inited'))
-
-const use_board = ref(true)
-function get_board_name(): string {
-    return board_name.value
-}
 </script>

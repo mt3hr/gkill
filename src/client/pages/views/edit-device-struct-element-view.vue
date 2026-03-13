@@ -21,27 +21,15 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { type Ref, ref } from 'vue';
 import type { EditDeviceStructElementViewEmits } from './edit-device-struct-element-view-emits'
 import type { EditDeviceStructElementViewProps } from './edit-device-struct-element-view-props'
-import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data';
+import { useEditDeviceStructElementView } from '@/classes/use-edit-device-struct-element-view'
 
 const props = defineProps<EditDeviceStructElementViewProps>()
 const emits = defineEmits<EditDeviceStructElementViewEmits>()
 
-const check_when_inited: Ref<boolean> = ref(props.struct_obj.check_when_inited)
-
-async function apply(): Promise<void> {
-    const device_struct = new DeviceStructElementData()
-    device_struct.id = props.struct_obj.id
-    device_struct.check_when_inited = check_when_inited.value
-    device_struct.children = props.struct_obj.children
-    device_struct.indeterminate = false
-    device_struct.is_dir = props.struct_obj.is_dir
-    device_struct.key = props.struct_obj.device_name
-    device_struct.device_name = props.struct_obj.device_name
-    device_struct.name = props.struct_obj.device_name
-    emits('requested_update_device_struct', device_struct)
-    emits('requested_close_dialog')
-}
+const {
+    check_when_inited,
+    apply,
+} = useEditDeviceStructElementView({ props, emits })
 </script>

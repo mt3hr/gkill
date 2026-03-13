@@ -1,5 +1,5 @@
 <template>
-    <v-card class="kyou_list_view_card_wrap" :ripple="false" :link="false" @click.prevent="emits('clicked_list_view')">
+    <v-card class="kyou_list_view_card_wrap" :ripple="false" :link="false" @click.prevent="onClickedListView">
         <v-card class="kyou_list_view_card" :ripple="false" :link="false">
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
@@ -8,7 +8,7 @@
                 class="kyou_list_view" :items="matched_kyous" :item-height="kyou_height_px"
                 :height="list_height.valueOf() - footer_height.valueOf()" :width="width.valueOf() + 8"
                 ref="kyou_list_view"
-                @scrollend.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }">
+                @scrollend.prevent="onScrollEnd">
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                         :draggable="draggable" :key="item.id" :highlight_targets="[]" :is_image_view="false"
@@ -22,35 +22,18 @@
                         :show_update_time="false" :is_image_request_to_thumb_size="true"
                         :show_related_time="!(query.for_mi && item.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
                         :enable_dialog="enable_dialog"
-                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                         :height="kyou_height.valueOf()" :show_attached_tags="application_config.show_tags_in_list"
                         :show_attached_texts="false" :show_attached_notifications="false"
-                        @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
-                        @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
-                        @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
-                        @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                        @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-                        @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-                        @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
-                        @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-                        @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-                        @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-                        @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
-                        @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-                        @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-                        @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                        @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
-                        @requested_reload_list="emits('requested_reload_list')"
-                        @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
-                        @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
+                        @focused_kyou="onFocusedKyou"
+                        @clicked_kyou="onClickedKyou"
+                        v-on="crudRelayHandlers" />
                 </template>
             </v-virtual-scroll>
             <v-virtual-scroll v-if="query.is_image_only" :id="query.query_id.concat('_kyou_image_list_view')"
                 class="kyou_list_view_image" :items="match_kyous_for_image" :item-height="kyou_height_px"
                 :height="list_height.valueOf() - footer_height.valueOf()"
                 :width="(200 * application_config.rykv_image_list_column_number.valueOf()) + 8"
-                @scrollend.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }"
+                @scrollend.prevent="onScrollEnd"
                 ref="kyou_list_image_view">
                 <template v-slot:default="{ item }">
                     <table>
@@ -69,26 +52,9 @@
                                     :show_related_time="!(query.for_mi && kyou.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
                                     :show_attached_tags="false" :show_attached_texts="false"
                                     :show_attached_notifications="false" :is_image_request_to_thumb_size="true"
-                                    @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
-                                    @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                                    @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
-                                    @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
-                                    @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
-                                    @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
-                                    @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
-                                    @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
-                                    @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
-                                    @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
-                                    @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
-                                    @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                                    @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                                    @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
-                                    @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
-                                    @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                                    @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
-                                    @requested_reload_list="emits('requested_reload_list')"
-                                    @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
-                                    @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
+                                    @focused_kyou="onFocusedKyou"
+                                    @clicked_kyou="onClickedKyou"
+                                    v-on="crudRelayHandlers" />
                             </td>
                         </tr>
                     </table>
@@ -103,14 +69,14 @@
                 <v-spacer />
 
                 <v-col cols="auto" class="pa-0">
-                    <v-btn class="rounded-sm mx-auto" icon @click.prevent="emits('requested_search')" variant="text">
+                    <v-btn class="rounded-sm mx-auto" icon @click.prevent="onRequestedSearch" variant="text">
                         <v-icon>mdi-reload</v-icon>
                     </v-btn>
                 </v-col>
 
                 <v-col cols="auto" class="pa-0" v-if="is_show_doc_image_toggle_button">
                     <v-btn class="rounded-sm mx-auto" icon
-                        @click.prevent="emits('requested_change_is_image_only_view', !query.is_image_only)"
+                        @click.prevent="onRequestedChangeImageOnly"
                         variant="text">
                         <v-icon v-show="!query.is_image_only">mdi-file-document-outline</v-icon>
                         <v-icon v-show="query.is_image_only">mdi-image</v-icon>
@@ -119,7 +85,7 @@
 
                 <v-col cols="auto" class="pa-0" v-if="is_show_arrow_button">
                     <v-btn class="rounded-sm mx-auto" icon variant="text"
-                        @click.prevent="emits('requested_change_focus_kyou', !query.is_focus_kyou_in_list_view)">
+                        @click.prevent="onRequestedChangeFocusKyou">
                         <v-icon v-show="!query.is_focus_kyou_in_list_view">mdi-arrow-down</v-icon>
                         <v-icon v-show="query.is_focus_kyou_in_list_view">mdi-arrow-right</v-icon>
                     </v-btn>
@@ -127,7 +93,7 @@
 
                 <v-col cols="auto" class="pa-0">
                     <v-btn class="rounded-sm mx-auto" icon
-                        @click.prevent="() => { if (closable) { emits('requested_close_column') } }"
+                        @click.prevent="onRequestedCloseColumn"
                         :disabled="!closable" variant="text">
                         <v-icon v-show="closable">mdi-close</v-icon>
                     </v-btn>
@@ -140,128 +106,49 @@
 import { i18n } from '@/i18n'
 import type { KyouListViewEmits } from './kyou-list-view-emits'
 import type { KyouListViewProps } from './kyou-list-view-props'
-import { Kyou } from '@/classes/datas/kyou'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import KyouView from './kyou-view.vue'
-import type { VVirtualScroll } from 'vuetify/components'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { Tag } from '@/classes/datas/tag';
-import type { Text } from '@/classes/datas/text';
-import type { Notification } from '@/classes/datas/notification';
-
-const kyou_list_view = ref<InstanceType<typeof VVirtualScroll> | null>(null);
-const kyou_list_image_view = ref<InstanceType<typeof VVirtualScroll> | null>(null);
+import { useKyouListView } from '@/classes/use-kyou-list-view'
 
 const props = defineProps<KyouListViewProps>()
 const emits = defineEmits<KyouListViewEmits>()
-defineExpose({ scroll_to_kyou, scroll_to_time, set_loading, scroll_to, get_is_loading, get_query_id })
 
-const match_kyous_for_image: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
-const is_loading: Ref<boolean> = ref(false)
-const kyou_height_px = computed(() => props.kyou_height ? props.kyou_height.toString().concat("px") : "0px")
+const {
+    // Template refs
+    kyou_list_view,
+    kyou_list_image_view,
 
-const footer_height = computed(() => props.show_footer ? 48 : 0)
+    // State
+    match_kyous_for_image,
+    is_loading,
 
-watch(() => props.query, () => reload())
-watch(() => props.matched_kyous, () => reload())
+    // Computed
+    kyou_height_px,
+    footer_height,
+    footer_class,
 
-async function reload(): Promise<void> {
-    if (props.query.is_image_only) {
-        match_kyous_for_image.value.splice(0)
-        update_match_kyous_for_image()
-    } else {
-        match_kyous_for_image.value.splice(0)
-    }
-}
+    // Exposed methods
+    scroll_to,
+    scroll_to_kyou,
+    scroll_to_time,
+    set_loading,
+    get_is_loading,
+    get_query_id,
 
-async function scroll_to(scroll_top: number): Promise<void> {
-    return nextTick(async () => {
-        const target_element_id = props.query.query_id.concat(props.query.is_image_only ? "_kyou_image_list_view" : "_kyou_list_view")
-        const kyou_list_view_element = document.getElementById(target_element_id)
-        const scroll_height = kyou_list_view_element?.querySelector(".v-virtual-scroll__container")?.scrollHeight
-        if (!kyou_list_view_element || !scroll_height || scroll_height < scroll_top) {
-            nextTick(async () => { // nextTickじゃ動かんかったのでsleepで対応
-                await sleep(50)
-                scroll_to(scroll_top)
-            })
-            return
-        }
-        kyou_list_view_element.scrollTop = (scroll_top)
-    })
-}
+    // Template event handlers
+    onScrollEnd,
+    onClickedListView,
+    onFocusedKyou,
+    onClickedKyou,
+    onRequestedSearch,
+    onRequestedChangeImageOnly,
+    onRequestedChangeFocusKyou,
+    onRequestedCloseColumn,
 
-const footer_class = computed(() => {
-    return props.is_focused_list ? 'focused_list' : ''
-})
+    // Event relay objects
+    crudRelayHandlers,
+} = useKyouListView({ props, emits })
 
-async function update_match_kyous_for_image(): Promise<void> {
-    match_kyous_for_image.value.splice(0)
-    const match_kyous_for_image_result = new Array<Array<Kyou>>()
-    for (let i = 0; props.matched_kyous && i < props.matched_kyous.length;) {
-        const kyou_row_list = new Array<Kyou>()
-        for (let j = 0; props.matched_kyous && j < props.application_config.rykv_image_list_column_number.valueOf(); j++) {
-            if (i < props.matched_kyous.length) {
-                const kyou = props.matched_kyous[i]
-                kyou_row_list.push(kyou)
-                i++
-            }
-        }
-        match_kyous_for_image_result.push(kyou_row_list)
-    }
-    for (let i = 0; i < match_kyous_for_image_result.length; i++) {
-        match_kyous_for_image.value.push(match_kyous_for_image_result[i])
-    }
-}
-
-async function scroll_to_kyou(kyou: Kyou): Promise<boolean> {
-    let index = -1;
-    for (let i = 0; i < props.matched_kyous.length; i++) {
-        const kyou_in_list = props.matched_kyous[i]
-        if (kyou_in_list.id === kyou.id) {
-            index = i
-            break
-        }
-    }
-
-    if (index === -1) {
-        return false
-    }
-    kyou_list_view.value?.scrollToIndex(index)
-    kyou_list_image_view.value?.scrollToIndex(index / props.application_config.rykv_image_list_column_number.valueOf())
-    return true
-}
-async function scroll_to_time(time: Date): Promise<boolean> {
-    let index = -1;
-    for (let i = 0; i < props.matched_kyous.length; i++) {
-        const kyou = props.matched_kyous[i]
-        if (kyou.related_time.getTime() <= time.getTime()) {
-            index = i
-            break
-        }
-    }
-
-    if (index === -1) {
-        return false
-    }
-    kyou_list_view.value?.scrollToIndex(index)
-    kyou_list_image_view.value?.scrollToIndex(index / props.application_config.rykv_image_list_column_number.valueOf())
-    return true
-}
-
-function set_loading(loading: boolean): void {
-    is_loading.value = loading
-}
-
-function get_is_loading(): boolean {
-    return is_loading.value
-}
-
-function get_query_id(): string {
-    return props.query.query_id
-}
-
-const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
+defineExpose({ scroll_to, scroll_to_kyou, scroll_to_time, set_loading, get_is_loading, get_query_id })
 </script>
 
 <style lang="css" scoped>

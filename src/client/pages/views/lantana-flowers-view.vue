@@ -25,49 +25,25 @@
     </table>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
 import type { LantanaFlowersViewEmits } from './lantana-flowers-view-emits'
 import type { LantanaFlowersViewProps } from './lantana-flowers-view-props'
 import LantanaFlower from './lantana-flower.vue'
-import { LantanaFlowerState } from '@/classes/lantana/lantana-flower-state'
+import { useLantanaFlowersView } from '@/classes/use-lantana-flowers-view'
 
 const props = defineProps<LantanaFlowersViewProps>()
 const emits = defineEmits<LantanaFlowersViewEmits>()
+
+const {
+    flower_state_1,
+    flower_state_2,
+    flower_state_3,
+    flower_state_4,
+    flower_state_5,
+    set_mood,
+    get_mood,
+} = useLantanaFlowersView({ props, emits })
+
 defineExpose({ set_mood, get_mood })
-
-const mood: Ref<Number> = ref(props.mood)
-
-const flower_state_1: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 2 ? LantanaFlowerState.full : (mood.value.valueOf() >= 1 ? LantanaFlowerState.half : LantanaFlowerState.none))
-const flower_state_2: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 4 ? LantanaFlowerState.full : (mood.value.valueOf() >= 3 ? LantanaFlowerState.half : LantanaFlowerState.none))
-const flower_state_3: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 6 ? LantanaFlowerState.full : (mood.value.valueOf() >= 5 ? LantanaFlowerState.half : LantanaFlowerState.none))
-const flower_state_4: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 8 ? LantanaFlowerState.full : (mood.value.valueOf() >= 7 ? LantanaFlowerState.half : LantanaFlowerState.none))
-const flower_state_5: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 10 ? LantanaFlowerState.full : (mood.value.valueOf() >= 9 ? LantanaFlowerState.half : LantanaFlowerState.none))
-
-watch(() => props.mood, () => {
-    mood.value = props.mood
-})
-
-watch(() => mood.value, () => {
-    flower_state_1.value = (mood.value.valueOf() >= 2 ? LantanaFlowerState.full : (mood.value.valueOf() >= 1 ? LantanaFlowerState.half : LantanaFlowerState.none))
-    flower_state_2.value = (mood.value.valueOf() >= 4 ? LantanaFlowerState.full : (mood.value.valueOf() >= 3 ? LantanaFlowerState.half : LantanaFlowerState.none))
-    flower_state_3.value = (mood.value.valueOf() >= 6 ? LantanaFlowerState.full : (mood.value.valueOf() >= 5 ? LantanaFlowerState.half : LantanaFlowerState.none))
-    flower_state_4.value = (mood.value.valueOf() >= 8 ? LantanaFlowerState.full : (mood.value.valueOf() >= 7 ? LantanaFlowerState.half : LantanaFlowerState.none))
-    flower_state_5.value = (mood.value.valueOf() >= 10 ? LantanaFlowerState.full : (mood.value.valueOf() >= 9 ? LantanaFlowerState.half : LantanaFlowerState.none))
-    emit_updated_mood()
-})
-
-async function get_mood(): Promise<Number> {
-    return mood.value
-}
-async function set_mood(mood_value: Number): Promise<void> {
-    if (!props.editable) {
-        return
-    }
-    mood.value = mood_value
-}
-async function emit_updated_mood(): Promise<void> {
-    emits('updated_mood', mood.value)
-}
 </script>
 
 <style scoped>

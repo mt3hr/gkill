@@ -8,14 +8,14 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
         <ConfirmDeleteKyouView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" @requested_close_dialog="hide()"
@@ -40,7 +40,6 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
 import ConfirmDeleteKyouView from '../views/confirm-delete-kyou-view.vue';
 import type { ConfirmDeleteIDFKyouDialogEmits } from './confirm-delete-idf-kyou-dialog-emits';
 import type { ConfirmDeleteIDFKyouDialogProps } from './confirm-delete-idf-kyou-dialog-props';
@@ -50,27 +49,14 @@ import type { GkillMessage } from '@/classes/api/gkill-message';
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
 import type { Notification } from '@/classes/datas/notification';
-
-defineProps<ConfirmDeleteIDFKyouDialogProps>()
-const emits = defineEmits<ConfirmDeleteIDFKyouDialogEmits>()
-defineExpose({ show, hide })
-
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { useConfirmDeleteIDFKyouDialog } from '@/classes/use-confirm-delete-idf-kyou-dialog';
 import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-delete-idf-kyou-dialog", {
-  centerMode: "always",
-})
 
+const props = defineProps<ConfirmDeleteIDFKyouDialogProps>()
+const emits = defineEmits<ConfirmDeleteIDFKyouDialogEmits>()
 
-async function show(): Promise<void> {
-  is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-  is_show_dialog.value = false
-  emits('closed')
-}
+const { is_show_dialog, ui, show, hide } = useConfirmDeleteIDFKyouDialog({ props, emits })
+
+defineExpose({ show, hide })
 </script>
 
