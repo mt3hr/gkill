@@ -14,6 +14,9 @@ import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.TileBuilders
 import androidx.wear.tiles.TileService
 import com.google.common.util.concurrent.ListenableFuture
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.EXTRA_MODE
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_PLAING
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MODE_RECORD
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.MainActivity
 
 class GkillTileService : TileService() {
@@ -41,13 +44,36 @@ class GkillTileService : TileService() {
     }
 
     private fun buildLayout(deviceParams: DeviceParametersBuilders.DeviceParameters): LayoutElementBuilders.LayoutElement {
-        val launchMain = ModifiersBuilders.Clickable.Builder()
+        val launchRecord = ModifiersBuilders.Clickable.Builder()
             .setOnClick(
                 ActionBuilders.LaunchAction.Builder()
                     .setAndroidActivity(
                         ActionBuilders.AndroidActivity.Builder()
                             .setPackageName(packageName)
                             .setClassName(MainActivity::class.java.name)
+                            .addKeyToExtraMapping(
+                                EXTRA_MODE,
+                                ActionBuilders.AndroidStringExtra.Builder()
+                                    .setValue(MODE_RECORD)
+                                    .build()
+                            )
+                            .build()
+                    ).build()
+            ).build()
+
+        val launchPlaing = ModifiersBuilders.Clickable.Builder()
+            .setOnClick(
+                ActionBuilders.LaunchAction.Builder()
+                    .setAndroidActivity(
+                        ActionBuilders.AndroidActivity.Builder()
+                            .setPackageName(packageName)
+                            .setClassName(MainActivity::class.java.name)
+                            .addKeyToExtraMapping(
+                                EXTRA_MODE,
+                                ActionBuilders.AndroidStringExtra.Builder()
+                                    .setValue(MODE_PLAING)
+                                    .build()
+                            )
                             .build()
                     ).build()
             ).build()
@@ -65,8 +91,17 @@ class GkillTileService : TileService() {
 
         return PrimaryLayout.Builder(deviceParams)
             .setContent(
-                Chip.Builder(this, launchMain, deviceParams)
-                    .setPrimaryLabelContent("📝 記録する")
+                LayoutElementBuilders.Column.Builder()
+                    .addContent(
+                        Chip.Builder(this, launchRecord, deviceParams)
+                            .setPrimaryLabelContent("📝 記録する")
+                            .build()
+                    )
+                    .addContent(
+                        Chip.Builder(this, launchPlaing, deviceParams)
+                            .setPrimaryLabelContent("▶ 実行中")
+                            .build()
+                    )
                     .build()
             )
             .setPrimaryChipContent(

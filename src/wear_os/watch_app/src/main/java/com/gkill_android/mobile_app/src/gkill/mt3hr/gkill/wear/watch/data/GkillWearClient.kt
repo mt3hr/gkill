@@ -2,6 +2,7 @@ package com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data
 
 import android.content.Context
 import android.util.Log
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlaingTimeIsNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
@@ -13,8 +14,12 @@ private const val TAG = "GkillWearClient"
 // Message paths (must match phone_companion GkillWearableListenerService)
 private const val PATH_GET_TEMPLATES = "/gkill/get_templates"
 private const val PATH_TEMPLATES     = "/gkill/templates"
-private const val PATH_SUBMIT        = "/gkill/submit"
-private const val PATH_SUBMIT_RESULT = "/gkill/submit_result"
+private const val PATH_SUBMIT              = "/gkill/submit"
+private const val PATH_SUBMIT_RESULT       = "/gkill/submit_result"
+private const val PATH_GET_PLAING_TIMEIS   = "/gkill/get_plaing_timeis"
+private const val PATH_PLAING_TIMEIS       = "/gkill/plaing_timeis"
+private const val PATH_END_TIMEIS          = "/gkill/end_timeis"
+private const val PATH_END_TIMEIS_RESULT   = "/gkill/end_timeis_result"
 
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -71,6 +76,36 @@ class GkillWearClient(private val context: Context) {
     }
 
     /**
+     * Sends a request to get the list of currently playing TimeIs.
+     * Returns the nodeId if sent successfully, null otherwise.
+     */
+    suspend fun sendGetPlaingTimeisRequest(): String? {
+        val nodeId = getPhoneNodeId() ?: return null
+        return try {
+            messageClient.sendMessage(nodeId, PATH_GET_PLAING_TIMEIS, ByteArray(0)).await()
+            nodeId
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send get_plaing_timeis request", e)
+            null
+        }
+    }
+
+    /**
+     * Sends an end-timeis request to the phone.
+     * Returns the nodeId if sent successfully, null otherwise.
+     */
+    suspend fun sendEndTimeisRequest(timeisJson: String): String? {
+        val nodeId = getPhoneNodeId() ?: return null
+        return try {
+            messageClient.sendMessage(nodeId, PATH_END_TIMEIS, timeisJson.toByteArray(Charsets.UTF_8)).await()
+            nodeId
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send end_timeis request", e)
+            null
+        }
+    }
+
+    /**
      * Sends a KFTL text submission request to the phone.
      * Returns the nodeId if sent successfully, null otherwise.
      */
@@ -86,8 +121,20 @@ class GkillWearClient(private val context: Context) {
     }
 
     companion object {
-        const val RESPONSE_PATH_TEMPLATES    = PATH_TEMPLATES
-        const val RESPONSE_PATH_SUBMIT_RESULT = PATH_SUBMIT_RESULT
+        const val RESPONSE_PATH_TEMPLATES          = PATH_TEMPLATES
+        const val RESPONSE_PATH_SUBMIT_RESULT      = PATH_SUBMIT_RESULT
+        const val RESPONSE_PATH_PLAING_TIMEIS      = PATH_PLAING_TIMEIS
+        const val RESPONSE_PATH_END_TIMEIS_RESULT  = PATH_END_TIMEIS_RESULT
+
+        fun parsePlaingTimeisList(jsonStr: String): List<PlaingTimeIsNode> {
+            return try {
+                if (jsonStr.startsWith("ERROR:")) return emptyList()
+                json.decodeFromString<List<PlaingTimeIsNode>>(jsonStr)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to parse plaing timeis JSON: ${e.message}", e)
+                emptyList()
+            }
+        }
 
         fun parseTemplates(json_str: String): List<TemplateNode> {
             return try {
