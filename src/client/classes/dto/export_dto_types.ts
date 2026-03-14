@@ -12,6 +12,7 @@ export type ExportKyouDTO = {
     tags?: string[]
     texts?: TextDTO[]
     notifications?: NotificationDTO[]
+    timeis?: AttachedTimeIsDTO[]
 
     payload:
     | TimeIsDTO
@@ -100,4 +101,9 @@ export type ReKyouDTO = {
     kind: "rekyou"
     from_id: string
     to_id: string
+}
+
+export type AttachedTimeIsDTO = {
+    title: string
+    tags?: string[]
 }
