@@ -12,7 +12,14 @@ type KyouMCPDTO struct {
 	Tags          []string             `json:"tags,omitempty"`
 	Texts         []string             `json:"texts,omitempty"`
 	Notifications []NotificationMCPDTO `json:"notifications,omitempty"`
+	TimeIs        []TimeIsMCPDTO       `json:"timeis,omitempty"`
 	Payload       interface{}          `json:"payload,omitempty"`
+}
+
+// TimeIsMCPDTO は attached TimeIs（Plaing TimeIs）用DTO
+type TimeIsMCPDTO struct {
+	Title string   `json:"title"`
+	Tags  []string `json:"tags,omitempty"`
 }
 
 type NotificationMCPDTO struct {
