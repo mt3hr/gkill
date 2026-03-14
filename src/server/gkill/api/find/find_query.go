@@ -58,4 +58,5 @@ type FindQuery struct {
 	MiCheckState                MiCheckState `json:"mi_check_state"`
 	MiSortType                  MiSortType   `json:"mi_sort_type"`
 	OnlyLatestData              bool         `json:"only_latest_data"`
+	IncludeDeletedData          bool         `json:"include_deleted_data"`
 }
