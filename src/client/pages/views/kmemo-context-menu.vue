@@ -1,9 +1,9 @@
 <template>
-    <v-menu v-model="is_show" :style="context_menu_style" :close-on-content-click="false">
+    <v-menu v-model="is_show" :style="context_menu_style">
         <v-list class="gkill_context_menu_list">
             <v-list-group v-if="tag_history.length > 0">
                 <template v-slot:activator="{ props: activatorProps }">
-                    <v-list-item v-bind="activatorProps">
+                    <v-list-item v-bind="activatorProps" @click.stop>
                         <v-list-item-title>{{ i18n.global.t("ADD_TAG_FROM_HISTORY_TITLE") }}</v-list-item-title>
                     </v-list-item>
                 </template>

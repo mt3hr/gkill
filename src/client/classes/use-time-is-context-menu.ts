@@ -96,7 +96,6 @@ export function useTimeIsContextMenu(options: {
     }
 
     async function add_tag_from_history(tag_value: string): Promise<void> {
-        is_show.value = false
         props.gkill_api.push_tag_to_history(tag_value)
         const tag_names = tag_value.split("\u3001")
         for (let i = 0; i < tag_names.length; i++) {
