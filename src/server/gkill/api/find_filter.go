@@ -1788,7 +1788,14 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 				}
 			}
 
-			latestKyousMap[id] = []reps.Kyou{currentKyou[0]}
+			// TimeIsやMiは複数Kyou（start/end等）を持つのでそのまま保持する
+			isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFindQuery.ForMi
+			isTimeIsData := strings.HasPrefix(currentKyou[0].DataType, "timeis")
+			if isTimeIsData || isMiData {
+				latestKyousMap[id] = currentKyou
+			} else {
+				latestKyousMap[id] = []reps.Kyou{currentKyou[0]}
+			}
 			continue
 		}
 
