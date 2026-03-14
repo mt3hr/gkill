@@ -4,7 +4,6 @@ import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
-	"log/slog"
 	"sort"
 	"sync"
 	"time"
@@ -346,12 +345,10 @@ loop:
 	tagHistoriesList := []Tag{}
 	for _, tag := range matchTags {
 		if tag.IsDeleted {
-			slog.Info("DEBUG GetTagsByTargetID: 削除済みタグを除外", "tag_id", tag.ID, "tag_name", tag.Tag, "target_id", tag.TargetID, "update_time", tag.UpdateTime, "rep_name", tag.RepName)
 			continue
 		}
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
-	slog.Info("DEBUG GetTagsByTargetID: 結果", "target_id", target_id, "total_from_repos", len(matchTags), "after_filter", len(tagHistoriesList))
 	return tagHistoriesList, nil
 }
 
@@ -620,7 +617,6 @@ func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 
 	for _, tag := range latestTags {
 		if tag.IsDeleted {
-			slog.Info("DEBUG GetAllTagNames: 削除済みタグを除外", "tag_id", tag.ID, "tag_name", tag.Tag, "update_time", tag.UpdateTime, "rep_name", tag.RepName)
 			continue
 		}
 		tagNamesMap[tag.Tag] = struct{}{}
@@ -628,7 +624,6 @@ func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 	for tag := range tagNamesMap {
 		tagNames = append(tagNames, tag)
 	}
-	slog.Info("DEBUG GetAllTagNames: 結果", "total_tags_from_GetAllTags", len(tags), "latest_unique_tags", len(latestTags), "after_deleted_filter", len(tagNames))
 	return tagNames, nil
 }
 
@@ -697,15 +692,12 @@ loop:
 	}
 
 	allTagsList := []Tag{}
-	deletedCount := 0
 	for _, tag := range allTags {
 		if tag.IsDeleted {
-			deletedCount++
 			continue
 		}
 		allTagsList = append(allTagsList, tag)
 	}
-	slog.Info("DEBUG GetAllTags: 結果", "total_from_repos", len(allTags), "deleted_filtered", deletedCount, "after_filter", len(allTagsList))
 
 	return allTagsList, nil
 }
