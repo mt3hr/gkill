@@ -158,7 +158,7 @@ javascript: (function () {
 			url: location.href,
 			title: document.title,
 			time: new Date().toISOString(),
-			favicon_url: 'http://www.google.com/s2/favicons?domain=' + new URL(location.href).host,
+			favicon_url: 'https://www.google.com/s2/favicons?domain=' + new URL(location.href).host,
 			description: description,
 			image_url: image_url,
 			session_id: '`+ props.application_config.urlog_bookmarklet_session + `',
