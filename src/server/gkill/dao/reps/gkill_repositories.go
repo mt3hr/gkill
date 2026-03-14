@@ -933,7 +933,6 @@ func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id str
 	tagHistoriesList := []Tag{}
 	for _, tag := range matchTags {
 		if tag.IsDeleted {
-			slog.Info("DEBUG GkillRepositories.GetTagsByTargetID: TagRepsから削除済みタグが漏れている！", "tag_id", tag.ID, "tag_name", tag.Tag, "target_id", tag.TargetID, "update_time", tag.UpdateTime, "rep_name", tag.RepName)
 			continue
 		}
 		tagHistoriesList = append(tagHistoriesList, tag)
@@ -943,7 +942,6 @@ func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id str
 		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
 	})
 
-	slog.Info("DEBUG GkillRepositories.GetTagsByTargetID: 結果", "target_id", target_id, "from_TagReps", len(matchTags), "after_filter", len(tagHistoriesList))
 	return tagHistoriesList, nil
 }
 
