@@ -11,7 +11,7 @@
             <tr>
                 <td>
                     <img v-if="kyou.typed_urlog" class="urlog_favicon"
-                        :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : 'data:image;base64,' + (kyou.typed_urlog.favicon_image)" />
+                        :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.favicon_image)" />
                 </td>
                 <td>
                     <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link"
@@ -24,7 +24,7 @@
             <tr>
                 <td>
                     <img v-if="kyou.typed_urlog" class="urlog_thumbnail"
-                        :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : 'data:image;base64,' + (kyou.typed_urlog.thumbnail_image)" />
+                        :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.thumbnail_image)" />
                 </td>
                 <td>
                     <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>
@@ -69,6 +69,14 @@ const {
     open_urlog_link,
     crudRelayHandlers,
 } = useURLogView({ props, emits })
+
+function base64ToDataURI(base64: string): string {
+    if (base64.startsWith('/9j/')) return 'data:image/jpeg;base64,' + base64
+    if (base64.startsWith('iVBOR')) return 'data:image/png;base64,' + base64
+    if (base64.startsWith('R0lG')) return 'data:image/gif;base64,' + base64
+    if (base64.startsWith('UklG')) return 'data:image/webp;base64,' + base64
+    return 'data:image/png;base64,' + base64
+}
 
 defineExpose({ show_context_menu })
 </script>

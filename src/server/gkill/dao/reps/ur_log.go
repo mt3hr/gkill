@@ -186,7 +186,7 @@ func getFavicon(urlstr string) (image io.ReadCloser, err error) {
 		err = fmt.Errorf("failed parse url %s: %w", urlstr, err)
 		return nil, err
 	}
-	res, err := http.Get(`http://www.google.com/s2/favicons?domain=` + u.Hostname())
+	res, err := http.Get(`https://www.google.com/s2/favicons?domain=` + u.Hostname())
 	if err != nil {
 		err = fmt.Errorf("failed to get favicon by google api. hostname = %s: %w", u.Hostname(), err)
 		return nil, err
