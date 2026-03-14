@@ -218,6 +218,13 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	// attached TimeIs を一括取得
+	var allTimeIs []reps.TimeIs
+	if request.ShouldIncludeTimeIs() {
+		findAllTimeIsQuery := &find.FindQuery{OnlyLatestData: true, IncludeEndTimeIs: true}
+		allTimeIs, _ = repositories.TimeIsReps.FindTimeIs(r.Context(), findAllTimeIsQuery)
+	}
+
 	// DTO構築ループ（サイズ監視）
 	maxBytes := int64(request.MaxSizeMB * 1024 * 1024)
 	runningSize := int64(0)
@@ -249,6 +256,28 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 				NotificationTime: n.NotificationTime,
 				IsNotificated:    n.IsNotificated,
 			})
+		}
+
+		// attached TimeIs 取得
+		var timeisDTOs []req_res.TimeIsMCPDTO
+		if request.ShouldIncludeTimeIs() && len(allTimeIs) > 0 {
+			for _, ti := range allTimeIs {
+				inRange := kyou.RelatedTime.After(ti.StartTime)
+				if ti.EndTime != nil {
+					inRange = inRange && kyou.RelatedTime.Before(*ti.EndTime)
+				}
+				if inRange {
+					tiTags, _ := repositories.TagReps.GetTagsByTargetID(r.Context(), ti.ID)
+					tiTagStrings := make([]string, 0, len(tiTags))
+					for _, tag := range tiTags {
+						tiTagStrings = append(tiTagStrings, tag.Tag)
+					}
+					timeisDTOs = append(timeisDTOs, req_res.TimeIsMCPDTO{
+						Title: ti.Title,
+						Tags:  tiTagStrings,
+					})
+				}
+			}
 		}
 
 		// ペイロード構築
@@ -338,6 +367,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			Tags:          tagStrings,
 			Texts:         textStrings,
 			Notifications: notificationDTOs,
+			TimeIs:        timeisDTOs,
 			Payload:       payload,
 		}
 

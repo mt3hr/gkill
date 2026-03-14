@@ -97,7 +97,7 @@ const TOOLS = [
     name: "gkill_get_kyous",
     description:
       "Search life-log entries (kyou) with optional filters and return enriched results including tags, texts, notifications, and typed payload inline. " +
-      "Each result contains data_type, related_time, tags[], texts[], notifications[], and payload (type-specific fields). " +
+      "Each result contains data_type, related_time, tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
       "Available data_type values: kmemo, kc, timeis, nlog, lantana, urlog, idf, git_commit_log, mi. " +
@@ -125,6 +125,10 @@ const TOOLS = [
           type: "number",
           description: "Max response size in MB. Default: 1.0.",
           default: 1.0,
+        },
+        is_include_timeis: {
+          type: "boolean",
+          description: "Include attached TimeIs (plaing) data for each kyou. Default: true.",
         },
       },
       additionalProperties: false,
@@ -484,6 +488,7 @@ class McpServer {
             limit: p.limit,
             cursor: p.cursor,
             max_size_mb: p.max_size_mb,
+            is_include_timeis: p.is_include_timeis,
           },
           true,
         );

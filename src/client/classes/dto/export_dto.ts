@@ -23,6 +23,12 @@ export function toExportKyouDto(kyou: any) {
             is_notificated: n.is_notificated,
         }))
 
+    const timeis =
+        kyou.attached_timeis_kyou?.map((tk: any) => ({
+            title: tk.typed_timeis?.title,
+            tags: tk.attached_tags?.map((t: any) => t.tag),
+        }))
+
     const payload =
         kyou.typed_timeis ? {
             kind: "timeis",
@@ -85,6 +91,7 @@ export function toExportKyouDto(kyou: any) {
         tags,
         texts,
         notifications,
+        timeis,
         payload,
     })
 }
