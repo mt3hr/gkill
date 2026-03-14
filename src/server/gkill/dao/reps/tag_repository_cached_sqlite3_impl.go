@@ -708,8 +708,9 @@ func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error 
 	}
 
 	query := &find.FindQuery{
-		UpdateCache:    false,
-		OnlyLatestData: false,
+		UpdateCache:        false,
+		OnlyLatestData:     false,
+		IncludeDeletedData: true,
 	}
 
 	allTags, err := t.tagRep.FindTags(ctx, query)

@@ -706,8 +706,9 @@ func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 	}
 
 	query := &find.FindQuery{
-		UpdateCache:    false,
-		OnlyLatestData: false,
+		UpdateCache:        false,
+		OnlyLatestData:     false,
+		IncludeDeletedData: true,
 	}
 
 	allNotifications, err := n.notificationRep.FindNotifications(ctx, query)

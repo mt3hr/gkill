@@ -86,7 +86,7 @@ loop:
 
 	matchTextsList := []Text{}
 	for _, text := range matchTexts {
-		if text.IsDeleted {
+		if !query.IncludeDeletedData && text.IsDeleted {
 			continue
 		}
 		matchTextsList = append(matchTextsList, text)

@@ -86,7 +86,7 @@ loop:
 
 	matchNotificationsList := []Notification{}
 	for _, notification := range matchNotifications {
-		if notification.IsDeleted {
+		if !query.IncludeDeletedData && notification.IsDeleted {
 			continue
 		}
 		matchNotificationsList = append(matchNotificationsList, notification)
