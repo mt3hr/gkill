@@ -17,8 +17,12 @@ private const val TAG = "GkillWearSvc"
 // Message paths (must match watch_app GkillWearClient)
 private const val PATH_GET_TEMPLATES  = "/gkill/get_templates"
 private const val PATH_TEMPLATES      = "/gkill/templates"
-private const val PATH_SUBMIT         = "/gkill/submit"
-private const val PATH_SUBMIT_RESULT  = "/gkill/submit_result"
+private const val PATH_SUBMIT              = "/gkill/submit"
+private const val PATH_SUBMIT_RESULT       = "/gkill/submit_result"
+private const val PATH_GET_PLAING_TIMEIS   = "/gkill/get_plaing_timeis"
+private const val PATH_PLAING_TIMEIS       = "/gkill/plaing_timeis"
+private const val PATH_END_TIMEIS          = "/gkill/end_timeis"
+private const val PATH_END_TIMEIS_RESULT   = "/gkill/end_timeis_result"
 
 /**
  * Runs on the phone, listens for messages from the watch.
@@ -36,9 +40,11 @@ class GkillWearableListenerService : WearableListenerService() {
 
         scope.launch {
             when (event.path) {
-                PATH_GET_TEMPLATES -> handleGetTemplates(event, store, apiClient)
-                PATH_SUBMIT        -> handleSubmit(event, store, apiClient)
-                else               -> Log.w(TAG, "Unknown path: ${event.path}")
+                PATH_GET_TEMPLATES     -> handleGetTemplates(event, store, apiClient)
+                PATH_SUBMIT            -> handleSubmit(event, store, apiClient)
+                PATH_GET_PLAING_TIMEIS -> handleGetPlaingTimeis(event, store, apiClient)
+                PATH_END_TIMEIS        -> handleEndTimeis(event, store, apiClient)
+                else                   -> Log.w(TAG, "Unknown path: ${event.path}")
             }
         }
     }
@@ -78,6 +84,63 @@ class GkillWearableListenerService : WearableListenerService() {
         val result = if (error == null) "OK" else "ERROR:$error"
         Log.d(TAG, "handleSubmit result=$result")
         sendMessage(event.sourceNodeId, PATH_SUBMIT_RESULT, result.toByteArray(Charsets.UTF_8))
+    }
+
+    private suspend fun handleGetPlaingTimeis(
+        event: MessageEvent,
+        store: GkillCredentialStore,
+        apiClient: GkillApiClient
+    ) {
+        try {
+            Log.d(TAG, "handleGetPlaingTimeis: start")
+            val sessionId = getOrRefreshSessionId(store, apiClient)
+            if (sessionId == null) {
+                Log.e(TAG, "handleGetPlaingTimeis: login failed")
+                sendMessage(event.sourceNodeId, PATH_PLAING_TIMEIS, "ERROR:login_failed".toByteArray())
+                return
+            }
+            Log.d(TAG, "handleGetPlaingTimeis: sessionId obtained")
+            val result = apiClient.getPlaingTimeis(sessionId)
+            Log.d(TAG, "handleGetPlaingTimeis: result=${result?.take(100)}")
+            if (result == null) {
+                sendMessage(event.sourceNodeId, PATH_PLAING_TIMEIS, "ERROR:get_plaing_timeis_failed".toByteArray())
+                return
+            }
+            sendMessage(event.sourceNodeId, PATH_PLAING_TIMEIS, result.toByteArray(Charsets.UTF_8))
+        } catch (e: Exception) {
+            Log.e(TAG, "handleGetPlaingTimeis: exception", e)
+            sendMessage(event.sourceNodeId, PATH_PLAING_TIMEIS, "ERROR:${e.message}".toByteArray())
+        }
+    }
+
+    private suspend fun handleEndTimeis(
+        event: MessageEvent,
+        store: GkillCredentialStore,
+        apiClient: GkillApiClient
+    ) {
+        val data = String(event.data, Charsets.UTF_8)
+        Log.d(TAG, "handleEndTimeis data=${data.take(80)}")
+
+        // data format: "id\nrep_name"
+        val parts = data.split("\n", limit = 2)
+        val timeisId = parts.getOrNull(0) ?: ""
+        val repName = parts.getOrNull(1) ?: ""
+
+        if (timeisId.isEmpty()) {
+            sendMessage(event.sourceNodeId, PATH_END_TIMEIS_RESULT, "ERROR:empty_timeis_id".toByteArray())
+            return
+        }
+
+        val sessionId = getOrRefreshSessionId(store, apiClient)
+        if (sessionId == null) {
+            sendMessage(event.sourceNodeId, PATH_END_TIMEIS_RESULT, "ERROR:login_failed".toByteArray())
+            return
+        }
+
+        val error = apiClient.endTimeis(sessionId, timeisId, repName)
+        val result = if (error == null) "OK" else "ERROR:$error"
+        Log.d(TAG, "handleEndTimeis result=$result")
+        sendMessage(event.sourceNodeId, PATH_END_TIMEIS_RESULT, result.toByteArray(Charsets.UTF_8))
     }
 
     /**

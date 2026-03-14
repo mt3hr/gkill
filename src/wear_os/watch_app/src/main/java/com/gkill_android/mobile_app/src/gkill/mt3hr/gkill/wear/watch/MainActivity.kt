@@ -5,15 +5,31 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.Text
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.GkillWearClient
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.PlaingTimeIsNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.tile.TemplateCacheManager
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.ConfirmScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.LoadingScreen
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.PlaingEndConfirmScreen
+import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.PlaingTimeIsListScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.ResultScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.screens.TemplateListScreen
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.presentation.theme.GkillWearTheme
@@ -27,8 +43,15 @@ import kotlinx.coroutines.withTimeout
 private const val TAG = "GkillWatchMain"
 private const val TEMPLATE_TIMEOUT_MS = 20_000L
 private const val SUBMIT_TIMEOUT_MS = 30_000L
+private const val PLAING_TIMEOUT_MS = 20_000L
+private const val END_TIMEIS_TIMEOUT_MS = 30_000L
+
+const val EXTRA_MODE = "mode"
+const val MODE_RECORD = "record"
+const val MODE_PLAING = "plaing"
 
 private sealed class Screen {
+    object HomeMenu : Screen()
     object Loading : Screen()
     data class TemplateList(
         val nodes: List<TemplateNode>,
@@ -38,28 +61,49 @@ private sealed class Screen {
     data class Confirm(val node: TemplateNode, val parentList: TemplateList) : Screen()
     data class Submitting(val node: TemplateNode) : Screen()
     data class Result(val success: Boolean, val error: String) : Screen()
+    // Plaing screens
+    object PlaingLoading : Screen()
+    data class PlaingList(val nodes: List<PlaingTimeIsNode>) : Screen()
+    data class PlaingEndConfirm(val node: PlaingTimeIsNode) : Screen()
+    data class PlaingEnding(val node: PlaingTimeIsNode) : Screen()
 }
 
 class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener {
 
     private lateinit var wearClient: GkillWearClient
 
-    private var screenState by mutableStateOf<Screen>(Screen.Loading)
+    private var screenState by mutableStateOf<Screen>(Screen.HomeMenu)
 
     // CompletableDeferred for awaiting phone responses with timeout
     private var pendingTemplatesDeferred: CompletableDeferred<String>? = null
     private var pendingSubmitDeferred: CompletableDeferred<String>? = null
+    private var pendingPlaingTimeisDeferred: CompletableDeferred<String>? = null
+    private var pendingEndTimeisDeferred: CompletableDeferred<String>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         wearClient = GkillWearClient(this)
 
+        // Check intent extra for direct mode navigation
+        val mode = intent?.getStringExtra(EXTRA_MODE)
+        screenState = when (mode) {
+            MODE_RECORD -> Screen.Loading
+            MODE_PLAING -> Screen.PlaingLoading
+            else -> Screen.HomeMenu
+        }
+
         setContent {
             GkillWearTheme {
                 when (val s = screenState) {
+                    is Screen.HomeMenu -> {
+                        HomeMenuScreen(
+                            onRecord = { screenState = Screen.Loading },
+                            onPlaing = { screenState = Screen.PlaingLoading }
+                        )
+                    }
+
                     is Screen.Loading -> {
                         LoadingScreen()
-                        // LaunchedEffect(Unit) fires once per composition entry — correct Compose pattern
                         LaunchedEffect(Unit) {
                             requestTemplates()
                         }
@@ -118,9 +162,60 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                             success = s.success,
                             errorMessage = s.error,
                             onDismiss = {
-                                screenState = Screen.Loading
+                                screenState = Screen.HomeMenu
                             }
                         )
+                    }
+
+                    // ─── Plaing screens ─────────────────────────────────────
+                    is Screen.PlaingLoading -> {
+                        LoadingScreen("実行中を取得中...")
+                        LaunchedEffect(Unit) {
+                            requestPlaingTimeis()
+                        }
+                    }
+
+                    is Screen.PlaingList -> {
+                        BackHandler {
+                            screenState = Screen.HomeMenu
+                        }
+                        PlaingTimeIsListScreen(
+                            nodes = s.nodes,
+                            onNodeSelected = { node ->
+                                screenState = Screen.PlaingEndConfirm(node)
+                            },
+                            onRefresh = {
+                                screenState = Screen.PlaingLoading
+                            }
+                        )
+                    }
+
+                    is Screen.PlaingEndConfirm -> {
+                        BackHandler {
+                            screenState = Screen.PlaingList(
+                                // Go back to the list; we need to re-fetch or keep state
+                                // For simplicity, go to PlaingLoading to refresh
+                                emptyList()
+                            )
+                            screenState = Screen.PlaingLoading
+                        }
+                        PlaingEndConfirmScreen(
+                            title = s.node.title.ifEmpty { s.node.id.take(8) },
+                            startTime = s.node.start_time,
+                            onConfirm = {
+                                screenState = Screen.PlaingEnding(s.node)
+                            },
+                            onCancel = {
+                                screenState = Screen.PlaingLoading
+                            }
+                        )
+                    }
+
+                    is Screen.PlaingEnding -> {
+                        LoadingScreen("終了中...")
+                        LaunchedEffect(s.node) {
+                            endTimeis(s.node)
+                        }
                     }
                 }
             }
@@ -151,10 +246,18 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                 pendingSubmitDeferred?.complete(data)
                 pendingSubmitDeferred = null
             }
+            GkillWearClient.RESPONSE_PATH_PLAING_TIMEIS -> {
+                pendingPlaingTimeisDeferred?.complete(data)
+                pendingPlaingTimeisDeferred = null
+            }
+            GkillWearClient.RESPONSE_PATH_END_TIMEIS_RESULT -> {
+                pendingEndTimeisDeferred?.complete(data)
+                pendingEndTimeisDeferred = null
+            }
         }
     }
 
-    // ─── Private helpers ───────────────────────────────────────────────────────
+    // ─── Private helpers (record) ───────────────────────────────────────────────
 
     private suspend fun requestTemplates() {
         Log.i(TAG, "requestTemplates: start")
@@ -232,5 +335,121 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         } else {
             screenState = Screen.Result(success = false, error = result.removePrefix("ERROR:"))
         }
+    }
+
+    // ─── Private helpers (plaing) ───────────────────────────────────────────────
+
+    private suspend fun requestPlaingTimeis() {
+        Log.i(TAG, "requestPlaingTimeis: start")
+
+        val sent = wearClient.sendGetPlaingTimeisRequest()
+        if (sent == null) {
+            Log.e(TAG, "requestPlaingTimeis: no phone node found")
+            screenState = Screen.Result(
+                success = false,
+                error = "スマホに接続できません。\nPixel Watch 2とスマホのペアリングを確認してください。"
+            )
+            return
+        }
+        Log.i(TAG, "requestPlaingTimeis: message sent to $sent, waiting...")
+
+        val deferred = CompletableDeferred<String>()
+        pendingPlaingTimeisDeferred = deferred
+
+        val json = try {
+            withTimeout(PLAING_TIMEOUT_MS) { deferred.await() }
+        } catch (e: TimeoutCancellationException) {
+            Log.e(TAG, "requestPlaingTimeis: timeout after ${PLAING_TIMEOUT_MS}ms")
+            pendingPlaingTimeisDeferred = null
+            screenState = Screen.Result(
+                success = false,
+                error = "スマホからの応答がタイムアウトしました。"
+            )
+            return
+        }
+
+        Log.i(TAG, "requestPlaingTimeis: received (${json.take(60)})")
+        if (json.startsWith("ERROR:")) {
+            screenState = Screen.Result(success = false, error = json.removePrefix("ERROR:"))
+            return
+        }
+
+        val nodes = GkillWearClient.parsePlaingTimeisList(json)
+        screenState = Screen.PlaingList(nodes = nodes)
+    }
+
+    private suspend fun endTimeis(node: PlaingTimeIsNode) {
+        Log.i(TAG, "endTimeis: ${node.id}")
+        // Send "id\nrep_name" format
+        val payload = "${node.id}\n${node.rep_name}"
+        val sent = wearClient.sendEndTimeisRequest(payload)
+        if (sent == null) {
+            Log.e(TAG, "endTimeis: no phone node found")
+            screenState = Screen.Result(success = false, error = "スマホに接続できません。")
+            return
+        }
+
+        val deferred = CompletableDeferred<String>()
+        pendingEndTimeisDeferred = deferred
+
+        val result = try {
+            withTimeout(END_TIMEIS_TIMEOUT_MS) { deferred.await() }
+        } catch (e: TimeoutCancellationException) {
+            Log.e(TAG, "endTimeis: timeout")
+            pendingEndTimeisDeferred = null
+            screenState = Screen.Result(
+                success = false,
+                error = "終了タイムアウト。スマホの状態を確認してください。"
+            )
+            return
+        }
+
+        if (result == "OK") {
+            // 終了成功 → 一覧を再取得
+            screenState = Screen.PlaingLoading
+        } else {
+            screenState = Screen.Result(success = false, error = result.removePrefix("ERROR:"))
+        }
+    }
+}
+
+/**
+ * トップメニュー画面。「記録する」「再生中」の2つの選択肢を表示する。
+ */
+@Composable
+private fun HomeMenuScreen(
+    onRecord: () -> Unit,
+    onPlaing: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "gkill",
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        )
+        Chip(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            label = { Text("📝 記録する") },
+            onClick = onRecord,
+            colors = ChipDefaults.primaryChipColors()
+        )
+        Chip(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            label = { Text("▶ 実行中") },
+            onClick = onPlaing,
+            colors = ChipDefaults.secondaryChipColors()
+        )
     }
 }
