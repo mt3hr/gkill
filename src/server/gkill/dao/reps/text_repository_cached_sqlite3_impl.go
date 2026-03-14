@@ -593,8 +593,9 @@ func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 	}
 
 	query := &find.FindQuery{
-		UpdateCache:    false,
-		OnlyLatestData: false,
+		UpdateCache:        false,
+		OnlyLatestData:     false,
+		IncludeDeletedData: true,
 	}
 
 	allTexts, err := t.textRep.FindTexts(ctx, query)

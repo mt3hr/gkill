@@ -1126,10 +1126,10 @@ func (t *tagRepositorySQLite3Impl) GetAllTagNames(ctx context.Context) ([]string
 	}
 
 	sql := `
-SELECT 
+SELECT
   DISTINCT TAG
 FROM TAG
-WHERE IS_DELETED = FALSE
+WHERE 0 = 0
 
 `
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
