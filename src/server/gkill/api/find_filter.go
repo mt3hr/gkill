@@ -1804,7 +1804,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
 		// Miもそのままいれる
 		if ((currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) || isMiData || isTimeIsData) && !isUsePlaing) ||
-			(currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) && isUsePlaing) {
+			((currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) || isTimeIsData) && isUsePlaing) {
 			latestKyousMap[id] = currentKyou
 			continue
 		} else if isUsePlaing {
