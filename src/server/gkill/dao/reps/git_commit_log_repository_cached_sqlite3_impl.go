@@ -2,24 +2,28 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	sqllib "database/sql"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 type gitCommitLogRepositoryCachedSQLite3Impl struct {
-	dbName   string
-	gitRep   GitCommitLogRepository
-	cachedDB *sqllib.DB
-	m        *sync.RWMutex
+	dbName          string
+	gitRep          GitCommitLogRepository
+	cachedDB        *sqllib.DB
+	m               *sync.RWMutex
+	ownDB           bool // trueの場合、永続ファイルDBを自前で管理する
+	backgroundUpdate bool // trueの場合、初回フルリビルドをバックグラウンドで実行する
+	lastUpdateCacheChanged bool
 }
 
 func NewGitRepCachedSQLite3Impl(ctx context.Context, gitRep GitCommitLogRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (GitCommitLogRepository, error) {
@@ -43,7 +47,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   REP_NAME NOT NULL,
   RELATED_TIME_UNIX NOT NULL,
   CREATE_TIME_UNIX NOT NULL,
-  UPDATE_TIME_UNIX NOT NULL 
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -93,6 +97,76 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		m:        m,
 	}, nil
 }
+
+// NewGitRepCachedSQLite3ImplPersistent Phase 1: GitCommitLog専用の永続ファイルベースSQLite DBを使うコンストラクタ
+func NewGitRepCachedSQLite3ImplPersistent(ctx context.Context, gitRep GitCommitLogRepository, cacheDBPath string, dbName string, backgroundUpdate bool) (GitCommitLogRepository, error) {
+	m := &sync.RWMutex{}
+
+	db, err := sqllib.Open("sqlite3", cacheDBPath+"?_busy_timeout=6000&_txlock=immediate&_journal_mode=WAL&_synchronous=NORMAL")
+	if err != nil {
+		return nil, fmt.Errorf("error at open persistent git commit log cache db: %w", err)
+	}
+
+	// キャッシュテーブル作成
+	createSQL := `
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
+  IS_DELETED NOT NULL,
+  ID NOT NULL,
+  COMMIT_MESSAGE NOT NULL,
+  ADDITION NOT NULL,
+  DELETION NOT NULL,
+  CREATE_APP NOT NULL,
+  CREATE_USER NOT NULL,
+  CREATE_DEVICE NOT NULL,
+  UPDATE_APP NOT NULL,
+  UPDATE_DEVICE NOT NULL,
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL,
+  RELATED_TIME_UNIX NOT NULL,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
+);`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createSQL)
+	_, err = db.ExecContext(ctx, createSQL)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("error at create git commit log cache table: %w", err)
+	}
+
+	// インデックス作成
+	indexSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexSQL)
+	_, err = db.ExecContext(ctx, indexSQL)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("error at create git commit log cache index: %w", err)
+	}
+
+	// REF_HASHESテーブル作成（ref hashの永続化用）
+	refHashesSQL := `
+CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName+"_REF_HASHES") + ` (
+  REP_NAME TEXT NOT NULL,
+  REF_NAME TEXT NOT NULL,
+  REF_HASH TEXT NOT NULL,
+  PRIMARY KEY (REP_NAME, REF_NAME)
+);`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", refHashesSQL)
+	_, err = db.ExecContext(ctx, refHashesSQL)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("error at create ref hashes table: %w", err)
+	}
+
+	return &gitCommitLogRepositoryCachedSQLite3Impl{
+		dbName:           dbName,
+		gitRep:           gitRep,
+		cachedDB:         db,
+		m:                m,
+		ownDB:            true,
+		backgroundUpdate: backgroundUpdate,
+	}, nil
+}
+
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
@@ -108,7 +182,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context,
 	defer g.m.RUnlock()
 
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   RELATED_TIME_UNIX,
@@ -223,7 +297,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, i
 	g.m.RLock()
 	defer g.m.RUnlock()
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   RELATED_TIME_UNIX,
@@ -238,7 +312,7 @@ SELECT
   REP_NAME,
   ? AS DATA_TYPE
 FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
-WHERE 
+WHERE
 `
 	dataType := "git_commit_log"
 
@@ -345,7 +419,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.C
 	g.m.RLock()
 	defer g.m.RUnlock()
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   RELATED_TIME_UNIX,
@@ -360,7 +434,7 @@ SELECT
   REP_NAME,
   ? AS DATA_TYPE
 FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
-WHERE 
+WHERE
 `
 	dataType := "git_commit_log"
 
@@ -461,26 +535,108 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, i
 	return g.gitRep.GetPath(ctx, id)
 }
 
+// UpdateCache Phase 1+2: 永続キャッシュ＋差分更新
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	// Step 1: 下層リポジトリのref追跡を更新
 	err := g.gitRep.UpdateCache(ctx)
 	if err != nil {
 		return fmt.Errorf("error at update underlying git commit log rep cache: %w", err)
 	}
 
-	// 下層リポジトリに変更がなければフルリビルドをスキップ
+	// Step 2: 下層リポジトリに変更がなければスキップ
 	if !g.gitRep.LastUpdateCacheChanged() {
+		g.lastUpdateCacheChanged = false
 		return nil
 	}
 
-	query := &find.FindQuery{
-		UpdateCache:    false,
-		OnlyLatestData: false,
+	// Step 3: Phase 1 永続DB — 永続化されたref hashesと現在のref hashesを比較
+	// 再起動後でも下層のLastUpdateCacheChangedは常にtrueを返すが、
+	// 永続化されたref hashesが一致すればリビルドをスキップできる
+	if g.ownDB {
+		currentRefHashes := g.getCurrentRefHashes(ctx)
+		persistedRefHashes, err := g.loadPersistedRefHashes(ctx)
+		if err == nil && refHashesEqual(currentRefHashes, persistedRefHashes) {
+			g.lastUpdateCacheChanged = false
+			return nil
+		}
 	}
 
-	allGitCommitLogs, err := g.gitRep.FindGitCommitLog(ctx, query)
+	// Step 4: Phase 2 差分更新 — キャッシュ済みIDと現在のIDを比較
+	cachedIDs, err := g.getCachedCommitIDs(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get all git commit log at update cache: %w", err)
+		return fmt.Errorf("error at get cached commit ids: %w", err)
+	}
+
+	// 現在のコミットIDを高速に取得（StatsContextなし、FindKyousを使用）
+	currentKyous, err := g.gitRep.FindKyous(ctx, &find.FindQuery{UpdateCache: false, OnlyLatestData: false})
+	if err != nil {
+		return fmt.Errorf("error at get current commit ids: %w", err)
+	}
+	currentIDs := make(map[string]bool, len(currentKyous))
+	for id := range currentKyous {
+		currentIDs[id] = true
+	}
+
+	// 差分計算: 新規コミット = 現在 - キャッシュ済み、削除コミット = キャッシュ済み - 現在
+	var newIDs []string
+	for id := range currentIDs {
+		if !cachedIDs[id] {
+			newIDs = append(newIDs, id)
+		}
+	}
+	var deletedIDs []string
+	for id := range cachedIDs {
+		if !currentIDs[id] {
+			deletedIDs = append(deletedIDs, id)
+		}
+	}
+
+	// データ変更がなければref hashesだけ更新
+	if len(newIDs) == 0 && len(deletedIDs) == 0 {
+		g.lastUpdateCacheChanged = false
+		if g.ownDB {
+			g.saveRefHashes(ctx, g.getCurrentRefHashes(ctx))
+		}
+		return nil
+	}
+
+	// Phase 4: 初回フルリビルド（キャッシュ空）の場合はバックグラウンドで実行
+	if g.backgroundUpdate && len(cachedIDs) == 0 && len(newIDs) > 0 {
+		slog.Log(ctx, gkill_log.Info, "git commit log cache build starting in background", "numCommits", len(newIDs))
+		currentRefHashes := g.getCurrentRefHashes(ctx)
+		go func() {
+			bgCtx := context.Background()
+			err := g.doIncrementalUpdate(bgCtx, newIDs, deletedIDs, currentRefHashes)
+			if err != nil {
+				slog.Log(bgCtx, gkill_log.Warn, "error at background git commit log cache build", "error", err)
+			} else {
+				slog.Log(bgCtx, gkill_log.Info, "git commit log cache build completed", "numCommits", len(newIDs))
+			}
+		}()
+		g.lastUpdateCacheChanged = true
+		return nil
+	}
+
+	// 差分更新を実行
+	currentRefHashes := g.getCurrentRefHashes(ctx)
+	err = g.doIncrementalUpdate(ctx, newIDs, deletedIDs, currentRefHashes)
+	if err != nil {
 		return err
+	}
+	g.lastUpdateCacheChanged = true
+	return nil
+}
+
+// doIncrementalUpdate 新規コミットのINSERTと削除コミットのDELETEを実行する
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) doIncrementalUpdate(ctx context.Context, newIDs []string, deletedIDs []string, currentRefHashes map[string]map[string]string) error {
+	// 新規コミットのGitCommitLogを取得（StatsContext付き、Phase 3で並列実行）
+	var newLogs []GitCommitLog
+	if len(newIDs) > 0 {
+		var err error
+		newLogs, err = g.gitRep.FindGitCommitLogByIDs(ctx, newIDs)
+		if err != nil {
+			return fmt.Errorf("error at find git commit log by ids for incremental update: %w", err)
+		}
 	}
 
 	g.m.Lock()
@@ -488,38 +644,38 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 
 	tx, err := g.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
-		err = fmt.Errorf("error at begin transaction for add git commit log: %w", err)
-		return err
+		return fmt.Errorf("error at begin transaction for incremental update: %w", err)
 	}
 	isCommitted := false
 	defer func() {
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at incremental update", "error", err)
 			}
 		}
 	}()
 
-	sql := `DELETE FROM ` + sqlite3impl.QuoteIdent(g.dbName)
-	stmt, err := tx.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at create git commit log table statement %s: %w", "memory", err)
-		return err
-	}
-	defer func() {
-		err := stmt.Close()
+	// 削除コミットをDELETE
+	if len(deletedIDs) > 0 {
+		deleteSQL := `DELETE FROM ` + sqlite3impl.QuoteIdent(g.dbName) + ` WHERE ID = ?`
+		deleteStmt, err := tx.PrepareContext(ctx, deleteSQL)
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			return fmt.Errorf("error at prepare delete statement: %w", err)
 		}
-	}()
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at delete git commit log table: %w", err)
-		return err
+		defer deleteStmt.Close()
+
+		for _, id := range deletedIDs {
+			_, err = deleteStmt.ExecContext(ctx, id)
+			if err != nil {
+				return fmt.Errorf("error at delete git commit log %s: %w", id, err)
+			}
+		}
 	}
 
-	sql = `
+	// 新規コミットをINSERT
+	if len(newLogs) > 0 {
+		insertSQL := `
 INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
   IS_DELETED,
   ID,
@@ -553,27 +709,19 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	insertStmt, err := tx.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add git commit log sql: %w", err)
-		return err
-	}
-	defer func() {
-		err := insertStmt.Close()
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
+		insertStmt, err := tx.PrepareContext(ctx, insertSQL)
 		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			return fmt.Errorf("error at prepare insert statement: %w", err)
 		}
-	}()
+		defer insertStmt.Close()
 
-	for _, gitCommitLog := range allGitCommitLogs {
-		select {
-		case <-ctx.Done():
-			err = ctx.Err()
-			return err
-		default:
-		}
-		err = func() error {
+		for _, gitCommitLog := range newLogs {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+			}
 			queryArgs := []interface{}{
 				gitCommitLog.IsDeleted,
 				gitCommitLog.ID,
@@ -591,29 +739,163 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
 				gitCommitLog.CreateTime.Unix(),
 				gitCommitLog.UpdateTime.Unix(),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", insertSQL, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
-				err = fmt.Errorf("error at insert in to git commit log %s: %w", gitCommitLog.ID, err)
-				return err
+				return fmt.Errorf("error at insert git commit log %s: %w", gitCommitLog.ID, err)
 			}
-			return nil
-		}()
-		if err != nil {
-			return err
 		}
 	}
+
 	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("error at commit transaction for add git commit log: %w", err)
-		return err
+		return fmt.Errorf("error at commit transaction for incremental update: %w", err)
 	}
 	isCommitted = true
+
+	// ref hashesを永続化
+	if g.ownDB {
+		g.saveRefHashes(ctx, currentRefHashes)
+	}
+
 	return nil
 }
 
-func (g *gitCommitLogRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+// getCurrentRefHashes 下層のlocal implから現在のref hashesを取得する
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) getCurrentRefHashes(ctx context.Context) map[string]map[string]string {
+	result := map[string]map[string]string{}
+	unwrapped, err := g.gitRep.UnWrapTyped()
+	if err != nil {
+		return result
+	}
+	for _, rep := range unwrapped {
+		if localImpl, ok := rep.(*gitCommitLogRepositoryLocalImpl); ok {
+			repName, _ := localImpl.GetRepName(ctx)
+			if localImpl.lastHeadHashes != nil {
+				result[repName] = localImpl.lastHeadHashes
+			}
+		}
+	}
+	return result
+}
+
+// loadPersistedRefHashes 永続DBからref hashesを読み込む
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) loadPersistedRefHashes(ctx context.Context) (map[string]map[string]string, error) {
+	result := map[string]map[string]string{}
+	tableName := sqlite3impl.QuoteIdent(g.dbName + "_REF_HASHES")
+
+	rows, err := g.cachedDB.QueryContext(ctx, "SELECT REP_NAME, REF_NAME, REF_HASH FROM "+tableName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var repName, refName, refHash string
+		if err := rows.Scan(&repName, &refName, &refHash); err != nil {
+			return nil, err
+		}
+		if result[repName] == nil {
+			result[repName] = map[string]string{}
+		}
+		result[repName][refName] = refHash
+	}
+	return result, rows.Err()
+}
+
+// saveRefHashes ref hashesを永続DBに保存する
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) saveRefHashes(ctx context.Context, refHashes map[string]map[string]string) {
+	tableName := sqlite3impl.QuoteIdent(g.dbName + "_REF_HASHES")
+
+	tx, err := g.cachedDB.BeginTx(ctx, nil)
+	if err != nil {
+		slog.Log(ctx, gkill_log.Warn, "error at begin transaction for save ref hashes", "error", err)
+		return
+	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			tx.Rollback()
+		}
+	}()
+
+	_, err = tx.ExecContext(ctx, "DELETE FROM "+tableName)
+	if err != nil {
+		slog.Log(ctx, gkill_log.Warn, "error at delete ref hashes", "error", err)
+		return
+	}
+
+	insertSQL := "INSERT INTO " + tableName + " (REP_NAME, REF_NAME, REF_HASH) VALUES (?, ?, ?)"
+	stmt, err := tx.PrepareContext(ctx, insertSQL)
+	if err != nil {
+		slog.Log(ctx, gkill_log.Warn, "error at prepare insert ref hashes", "error", err)
+		return
+	}
+	defer stmt.Close()
+
+	for repName, refs := range refHashes {
+		for refName, refHash := range refs {
+			_, err = stmt.ExecContext(ctx, repName, refName, refHash)
+			if err != nil {
+				slog.Log(ctx, gkill_log.Warn, "error at insert ref hash", "error", err)
+				return
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		slog.Log(ctx, gkill_log.Warn, "error at commit ref hashes", "error", err)
+		return
+	}
+	isCommitted = true
+}
+
+// getCachedCommitIDs キャッシュDBから全コミットIDを取得する
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) getCachedCommitIDs(ctx context.Context) (map[string]bool, error) {
+	g.m.RLock()
+	defer g.m.RUnlock()
+
+	rows, err := g.cachedDB.QueryContext(ctx, "SELECT ID FROM "+sqlite3impl.QuoteIdent(g.dbName))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	ids := make(map[string]bool)
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids[id] = true
+	}
+	return ids, rows.Err()
+}
+
+// refHashesEqual 2つのref hashesマップが同一かどうかを判定する
+func refHashesEqual(a, b map[string]map[string]string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for repName, aRefs := range a {
+		bRefs, ok := b[repName]
+		if !ok {
+			return false
+		}
+		if len(aRefs) != len(bRefs) {
+			return false
+		}
+		for refName, aHash := range aRefs {
+			if bRefs[refName] != aHash {
+				return false
+			}
+		}
+	}
 	return true
+}
+
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) LastUpdateCacheChanged() bool {
+	return g.lastUpdateCacheChanged
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
@@ -626,6 +908,10 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) Close(ctx context.Context) err
 	err := g.gitRep.Close(ctx)
 	if err != nil {
 		return err
+	}
+	// 永続DBの場合はDBをクローズするだけ（テーブルは永続化する）
+	if g.ownDB {
+		return g.cachedDB.Close()
 	}
 	if gkill_options.CacheGitCommitLogReps == nil || !*gkill_options.CacheGitCommitLogReps {
 		err = g.cachedDB.Close()
@@ -658,7 +944,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindGitCommitLog(ctx context.C
 	defer g.m.RUnlock()
 
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   RELATED_TIME_UNIX,
@@ -774,11 +1060,96 @@ WHERE
 	return gitCommitLogs, nil
 }
 
+// FindGitCommitLogByIDs キャッシュDBから指定IDのGitCommitLogを取得する
+func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindGitCommitLogByIDs(ctx context.Context, ids []string) ([]GitCommitLog, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	g.m.RLock()
+	defer g.m.RUnlock()
+
+	placeholders := make([]string, len(ids))
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	sql := `
+SELECT
+  IS_DELETED,
+  ID,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  COMMIT_MESSAGE,
+  ADDITION,
+  DELETION,
+  REP_NAME,
+  'git_commit_log' AS DATA_TYPE
+FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
+WHERE ID IN (` + strings.Join(placeholders, ",") + `)`
+
+	rows, err := g.cachedDB.QueryContext(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("error at find git commit log by ids: %w", err)
+	}
+	defer rows.Close()
+
+	var gitCommitLogs []GitCommitLog
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			gitCommitLog := GitCommitLog{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
+			err = rows.Scan(&gitCommitLog.IsDeleted,
+				&gitCommitLog.ID,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&gitCommitLog.CreateApp,
+				&gitCommitLog.CreateDevice,
+				&gitCommitLog.CreateUser,
+				&updateTimeUnix,
+				&gitCommitLog.UpdateApp,
+				&gitCommitLog.UpdateDevice,
+				&gitCommitLog.UpdateUser,
+				&gitCommitLog.CommitMessage,
+				&gitCommitLog.Addition,
+				&gitCommitLog.Deletion,
+				&gitCommitLog.RepName,
+				&gitCommitLog.DataType,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("error at scan git commit log by ids: %w", err)
+			}
+
+			gitCommitLog.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			gitCommitLog.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			gitCommitLog.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			gitCommitLogs = append(gitCommitLogs, gitCommitLog)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error at iterate rows: %w", err)
+	}
+	return gitCommitLogs, nil
+}
+
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
 	g.m.RLock()
 	defer g.m.RUnlock()
 	sql := `
-SELECT 
+SELECT
   IS_DELETED,
   ID,
   RELATED_TIME_UNIX,
@@ -796,7 +1167,7 @@ SELECT
   REP_NAME,
   ? AS DATA_TYPE
 FROM ` + sqlite3impl.QuoteIdent(g.dbName) + `
-WHERE 
+WHERE
 `
 
 	ids := []string{id}
