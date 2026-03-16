@@ -33,6 +33,29 @@ registerRoute(
   }),
 )
 
+/** レスポンスがキャッシュすべきかを判定する。responseのbodyは消費しない（cloneで読む） */
+async function shouldCacheResponse(response: Response, checkHistories: boolean): Promise<boolean> {
+  if (!response.ok) return false
+  try {
+    const json = await response.clone().json()
+    // errorsが存在し、空でなければキャッシュしない
+    if (json.errors && json.errors.length > 0) return false
+    // Kyou系: *_historiesフィールドが長さ0ならキャッシュしない
+    if (checkHistories) {
+      for (const key of Object.keys(json)) {
+        if (key.endsWith('_histories')) {
+          if (Array.isArray(json[key]) && json[key].length === 0) return false
+          break
+        }
+      }
+    }
+  } catch {
+    // JSONパースに失敗した場合もキャッシュしない（安全側に倒す）
+    return false
+  }
+  return true
+}
+
 function parseBoolLoose(value: unknown): boolean {
   if (typeof value === "boolean") return value
   if (typeof value === "number") return value !== 0
@@ -108,7 +131,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           }
 
           const response = await fetch(reqClone2)
-          kyou_cache.put(cacheKey, response.clone())
+          if (await shouldCacheResponse(response, true)) {
+            kyou_cache.put(cacheKey, response.clone())
+          }
           return response
 
         } catch (err: any) {
@@ -147,7 +172,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           }
 
           const response = await fetch(reqClone1)
-          config_cache.put(cacheKey, response.clone())
+          if (await shouldCacheResponse(response, false)) {
+            config_cache.put(cacheKey, response.clone())
+          }
           return response
         } catch (err: any) {
           if ((err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
