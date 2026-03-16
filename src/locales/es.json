@@ -268,6 +268,7 @@
     "APPLICATION_CONFIG_TITLE": "Configuración",
     "RELOAD_TITLE": "Recargar",
     "LOGOUT_TITLE": "Cerrar sesión",
+    "CONFIRM_LOGOUT_MESSAGE": "¿Está seguro de que desea cerrar sesión?",
     "DARK_THEME_TITLE": "Tema oscuro",
     "HOT_RELOAD_TITLE": "Recarga en caliente",
     "RYKV_DEFAULT_PERIOD_TITLE": "Días de visualización del registro de vida",
