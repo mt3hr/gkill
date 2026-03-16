@@ -268,6 +268,7 @@
     "APPLICATION_CONFIG_TITLE": "설정",
     "RELOAD_TITLE": "새로고침",
     "LOGOUT_TITLE": "로그아웃",
+    "CONFIRM_LOGOUT_MESSAGE": "로그아웃하시겠습니까?",
     "DARK_THEME_TITLE": "다크 테마",
     "HOT_RELOAD_TITLE": "핫 리로드",
     "RYKV_DEFAULT_PERIOD_TITLE": "라이프로그 뷰 표시 일수",

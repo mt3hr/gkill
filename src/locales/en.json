@@ -268,6 +268,7 @@
     "APPLICATION_CONFIG_TITLE": "Settings",
     "RELOAD_TITLE": "Reload",
     "LOGOUT_TITLE": "Logout",
+    "CONFIRM_LOGOUT_MESSAGE": "Are you sure you want to logout?",
     "DARK_THEME_TITLE": "Dark Theme",
     "HOT_RELOAD_TITLE": "Hot Reload",
     "RYKV_DEFAULT_PERIOD_TITLE": "Life Log View Display Days",
