@@ -1,6 +1,8 @@
 package api
 
 import (
+	"time"
+
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
@@ -18,7 +20,7 @@ type FindKyouContext struct {
 	AllHideTagsWhenUnchecked         map[string]reps.Tag        `json:"all_hide_tags_when_unchecked"`
 	MatchHideTagsWhenUncheckedKyou   map[string]reps.Tag
 	MatchHideTagsWhenUncheckedTimeIs map[string]reps.Tag
-	RelatedTagIDs                    map[string]interface{}
+	RelatedTagIDs                    map[string]struct{}
 	MatchTags                        map[string]reps.Tag    `json:"match_tags"`
 	MatchTexts                       map[string]reps.Text   `json:"match_texts"`
 	MatchTimeIssAtFindTimeIs         map[string]reps.TimeIs `json:"match_time_iss_at_find_time_is"`
@@ -27,11 +29,17 @@ type FindKyouContext struct {
 	MatchTimeIsTags                  map[string]reps.Tag    `json:"match_time_is_tags"`
 	MatchTimeIsTexts                 map[string]reps.Text   `json:"match_time_is_texts"`
 	MatchKyousCurrent                map[string][]reps.Kyou `json:"match_kyous_current"`
-	MatchKyousAtFindKyou             map[string][]reps.Kyou `json:"match_kyous_at_find_kyou"`
-	MatchKyousAtFilterMi             map[string][]reps.Kyou `json:"match_kyous_at_filter_mi"`
-	MatchKyousAtFilterTags           map[string][]reps.Kyou `json:"match_kyous_at_filter_tags"`
-	MatchKyousAtFilterTimeIs         map[string][]reps.Kyou `json:"match_kyous_at_filter_time_is"`
-	MatchKyousAtFilterLocation       map[string][]reps.Kyou `json:"match_kyous_at_filter_location"`
-	MatchKyousAtFilterImage          map[string][]reps.Kyou `json:"match_kyous_at_filter_image"`
 	ResultKyous                      []reps.Kyou            `json:"result_kyous"`
+}
+
+// isLatestData はキャッシュが無効か、IDのデータが最新かを判定する
+func (c *FindKyouContext) isLatestData(id string, updateTime time.Time) bool {
+	if c.DisableLatestDataRepositoryCache {
+		return true
+	}
+	latestData, exist := c.Repositories.LatestDataRepositoryAddresses[id]
+	if !exist {
+		return false
+	}
+	return latestData.DataUpdateTime.Equal(updateTime)
 }

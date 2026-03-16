@@ -20,7 +20,6 @@ import (
 
 const (
 	NoTags = "no tags"
-	R      = math.Pi / 180
 )
 
 type FindFilter struct {
@@ -39,7 +38,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.AllHideTagsWhenUnchecked = map[string]reps.Tag{}
 	findKyouContext.MatchHideTagsWhenUncheckedKyou = map[string]reps.Tag{}
 	findKyouContext.MatchHideTagsWhenUncheckedTimeIs = map[string]reps.Tag{}
-	findKyouContext.RelatedTagIDs = map[string]interface{}{}
+	findKyouContext.RelatedTagIDs = map[string]struct{}{}
 	findKyouContext.MatchTags = map[string]reps.Tag{}
 	findKyouContext.MatchTexts = map[string]reps.Text{}
 	findKyouContext.MatchTimeIssAtFindTimeIs = map[string]reps.TimeIs{}
@@ -47,12 +46,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.MatchTimeIsTags = map[string]reps.Tag{}
 	findKyouContext.MatchTimeIsTexts = map[string]reps.Text{}
 	findKyouContext.MatchKyousCurrent = map[string][]reps.Kyou{}
-	findKyouContext.MatchKyousAtFindKyou = map[string][]reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterMi = map[string][]reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterTags = map[string][]reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterTimeIs = map[string][]reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterLocation = map[string][]reps.Kyou{}
-	findKyouContext.MatchKyousAtFilterImage = map[string][]reps.Kyou{}
 	// メモリキャッシュ有効の場合、型につき1つのDBに全部のデータがある。
 	// だから、LatestDataRepositoryAddressを知る必要がない
 	findKyouContext.DisableLatestDataRepositoryCache = gkill_options.IsCacheInMemory
@@ -121,7 +114,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 					errs = append(errs, err)
 				}
 				gkillErr := <-gkillErrch
-				if len(gkillErr) == 0 {
+				if len(gkillErr) != 0 {
 					gkillErrors = append(gkillErrors, gkillErr...)
 				}
 			default:
@@ -141,42 +134,42 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
-			gkillErr, err = f.getAllTags(ctx, findKyouContext)
-			if err != nil {
-				err = fmt.Errorf("error at get all tags: %w", err)
+			ge, e := f.getAllTags(ctx, findKyouContext)
+			if e != nil {
+				e = fmt.Errorf("error at get all tags: %w", e)
 			} else {
 				slog.Log(ctx, gkill_log.Trace, "finish getAllTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			errch <- err
-			gkillErrch <- gkillErr
+			errch <- e
+			gkillErrch <- ge
 		}()
 
 		wg.Add(1)
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
-			gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
-			if err != nil {
-				err = fmt.Errorf("error at get hide tags when unchecked tags: %w", err)
+			ge, e := f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
+			if e != nil {
+				e = fmt.Errorf("error at get hide tags when unchecked tags: %w", e)
 			} else {
 				slog.Log(ctx, gkill_log.Trace, "finish getAllHideTagsWhenUnChecked", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			errch <- err
-			gkillErrch <- gkillErr
+			errch <- e
+			gkillErrch <- ge
 		}()
 
 		wg.Add(1)
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
-			gkillErr, err = f.findTags(ctx, findKyouContext)
-			if err != nil {
-				err = fmt.Errorf("error at find tags: %w", err)
+			ge, e := f.findTags(ctx, findKyouContext)
+			if e != nil {
+				e = fmt.Errorf("error at find tags: %w", e)
 			} else {
 				slog.Log(ctx, gkill_log.Trace, "finish findTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			errch <- err
-			gkillErrch <- gkillErr
+			errch <- e
+			gkillErrch <- ge
 		}()
 	}
 
@@ -185,14 +178,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	go func() {
 		defer func() { doneCh <- struct{}{} }()
 		defer wg.Done()
-		gkillErr, err = f.findTexts(ctx, findKyouContext)
-		if err != nil {
-			err = fmt.Errorf("error at find texts: %w", err)
+		ge, e := f.findTexts(ctx, findKyouContext)
+		if e != nil {
+			e = fmt.Errorf("error at find texts: %w", e)
 		} else {
 			slog.Log(ctx, gkill_log.Trace, "finish findTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 		}
-		errch <- err
-		gkillErrch <- gkillErr
+		errch <- e
+		gkillErrch <- ge
 	}()
 
 	if findQuery.UseTimeIs {
@@ -200,30 +193,28 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
-
-			gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext)
-			if err != nil {
-				err = fmt.Errorf("error at find timeis texts: %w", err)
+			ge, e := f.findTimeIsTexts(ctx, findKyouContext)
+			if e != nil {
+				e = fmt.Errorf("error at find timeis texts: %w", e)
 			} else {
 				slog.Log(ctx, gkill_log.Trace, "finish findTimeIsTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			errch <- err
-			gkillErrch <- gkillErr
+			errch <- e
+			gkillErrch <- ge
 		}()
 
 		wg.Add(1)
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
-
-			gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
-			if err != nil {
-				err = fmt.Errorf("error at find timeis tags: %w", err)
+			ge, e := f.findTimeIsTags(ctx, findKyouContext)
+			if e != nil {
+				e = fmt.Errorf("error at find timeis tags: %w", e)
 			} else {
 				slog.Log(ctx, gkill_log.Trace, "finish findTimeIsTags", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 			}
-			errch <- err
-			gkillErrch <- gkillErr
+			errch <- e
+			gkillErrch <- ge
 		}()
 	}
 
@@ -513,70 +504,25 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 }
 
 func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	var err error
-
-	lenOfTagReps := len(findCtx.Repositories.TagReps)
-
 	// 全タグ取得用検索クエリ
 	findTagsQuery := &find.FindQuery{IsDeleted: false}
 
-	existErr := false
-	wg := &sync.WaitGroup{}
-	tagsCh := make(chan []reps.Tag, lenOfTagReps)
-	errch := make(chan error, lenOfTagReps)
-	defer close(tagsCh)
-	defer close(errch)
+	allTagsList, err := collectFromRepos([]reps.TagRepository(findCtx.Repositories.TagReps), func(tagRep reps.TagRepository) ([]reps.Tag, error) {
+		return tagRep.FindTags(ctx, findTagsQuery)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error at get all tags: %w", err)
+	}
 
-	// 並列処理
-	for _, rep := range findCtx.Repositories.TagReps {
-		wg.Add(1)
-		go func(tagRep reps.TagRepository) {
-			defer wg.Done()
-			tags, err := tagRep.FindTags(ctx, findTagsQuery)
-			if err != nil {
-				errch <- err
-				return
-			}
-			tagsCh <- tags
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range lenOfTagReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at get all tags: %w: %w", e, err)
-			existErr = true
-		}
-	}
-	if existErr {
-		return nil, err
-	}
 	// Tag集約
-	for range lenOfTagReps {
-		matchTags := <-tagsCh
-		for _, tag := range matchTags {
-			if existTag, exist := findCtx.AllTags[tag.ID]; exist {
-				if tag.UpdateTime.After(existTag.UpdateTime) {
-					findCtx.AllTags[tag.ID] = tag
-				}
-			} else {
-				findCtx.AllTags[tag.ID] = tag
-			}
-		}
+	for _, tag := range allTagsList {
+		upsertIfNewer(findCtx.AllTags, tag.ID, tag, func(t reps.Tag) time.Time { return t.UpdateTime })
 	}
 
 	// タグの対象をリスト
 	for _, tag := range findCtx.AllTags {
-		if !findCtx.DisableLatestDataRepositoryCache {
-			latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[tag.ID]
-			if !exist {
-				continue
-			}
-			if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
-				continue
-			}
+		if !findCtx.isLatestData(tag.ID, tag.UpdateTime) {
+			continue
 		}
 		if tag.IsDeleted {
 			continue
@@ -600,14 +546,8 @@ func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *F
 			return nil, err
 		}
 		for _, hideTag := range hideTagsInReps {
-			if !findCtx.DisableLatestDataRepositoryCache {
-				latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[hideTag.ID]
-				if !exist {
-					continue
-				}
-				if !latestData.DataUpdateTime.Equal(hideTag.UpdateTime) {
-					continue
-				}
+			if !findCtx.isLatestData(hideTag.ID, hideTag.UpdateTime) {
+				continue
 			}
 			if hideTag.IsDeleted {
 				continue
@@ -618,38 +558,28 @@ func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *F
 	return nil, nil
 }
 
+func (f *FindFilter) getMatchHideTagsWhenUnchecked(
+	findCtx *FindKyouContext,
+	checkedTagNames []string,
+	output map[string]reps.Tag,
+) {
+	for _, hideTag := range findCtx.AllHideTagsWhenUnchecked {
+		if !containsString(checkedTagNames, hideTag.Tag) {
+			output[hideTag.ID] = hideTag
+		}
+	}
+}
+
 func (f *FindFilter) getMatchHideTagsWhenUnckedKyou(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	if findCtx.ParsedFindQuery.Tags == nil {
 		return nil, nil
 	}
-	for _, hideTag := range findCtx.AllHideTagsWhenUnchecked {
-		isCheckedByUser := false
-		for _, tagname := range findCtx.ParsedFindQuery.Tags {
-			if hideTag.Tag == tagname {
-				isCheckedByUser = true
-				break
-			}
-		}
-		if !isCheckedByUser {
-			findCtx.MatchHideTagsWhenUncheckedKyou[hideTag.ID] = hideTag
-		}
-	}
+	f.getMatchHideTagsWhenUnchecked(findCtx, findCtx.ParsedFindQuery.Tags, findCtx.MatchHideTagsWhenUncheckedKyou)
 	return nil, nil
 }
 
 func (f *FindFilter) getMatchHideTagsWhenUnckedTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	for _, hideTag := range findCtx.AllHideTagsWhenUnchecked {
-		isCheckedByUser := false
-		for _, tagname := range findCtx.ParsedFindQuery.TimeIsTags {
-			if hideTag.Tag == tagname {
-				isCheckedByUser = true
-				break
-			}
-		}
-		if !isCheckedByUser {
-			findCtx.MatchHideTagsWhenUncheckedTimeIs[hideTag.ID] = hideTag
-		}
-	}
+	f.getMatchHideTagsWhenUnchecked(findCtx, findCtx.ParsedFindQuery.TimeIsTags, findCtx.MatchHideTagsWhenUncheckedTimeIs)
 	return nil, nil
 }
 
@@ -666,14 +596,8 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 			return nil, err
 		}
 		for _, tag := range matchTags {
-			if !findCtx.DisableLatestDataRepositoryCache {
-				latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[tag.ID]
-				if !exist {
-					continue
-				}
-				if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
-					continue
-				}
+			if !findCtx.isLatestData(tag.ID, tag.UpdateTime) {
+				continue
 			}
 			if tag.IsDeleted {
 				continue
@@ -698,14 +622,8 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 		return nil, err
 	}
 	for _, tag := range matchTags {
-		if !findCtx.DisableLatestDataRepositoryCache {
-			latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[tag.ID]
-			if !exist {
-				continue
-			}
-			if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
-				continue
-			}
+		if !findCtx.isLatestData(tag.ID, tag.UpdateTime) {
+			continue
 		}
 		if tag.IsDeleted {
 			continue
@@ -770,8 +688,7 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	for _, deleteTargetID := range deleteTargetIDs {
 		delete(kyousMap, deleteTargetID)
 	}
-	findCtx.MatchKyousAtFindKyou = kyousMap
-	findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFindKyou
+	findCtx.MatchKyousCurrent = kyousMap
 	return nil, nil
 }
 
@@ -874,16 +791,17 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 		}
 	}
 
-	// 対象MiのKyouのみを中有出する
+	// 対象MiのKyouのみを抽出する
+	filteredKyous := map[string][]reps.Kyou{}
 	for _, mi := range targetMis {
 		kyous, exist := findCtx.MatchKyousCurrent[mi.ID]
 		if exist {
-			findCtx.MatchKyousAtFilterMi[mi.ID] = kyous
+			filteredKyous[mi.ID] = kyous
 		}
 	}
 
 	findCtx.MatchMisAtFilterMi = allMis
-	findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterMi
+	findCtx.MatchKyousCurrent = filteredKyous
 	return nil, nil
 }
 
@@ -924,22 +842,23 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 		}
 
-		// タグフィルタしたものをCtxに収める
+		// タグフィルタしたものを収める
+		filteredByTags := map[string][]reps.Kyou{}
 		for id, kyou := range matchOrTagKyousMap {
-			findCtx.MatchKyousAtFilterTags[id] = kyou
+			filteredByTags[id] = kyou
 		}
 		if existNoTags {
 			for id, kyou := range noTagKyous {
-				findCtx.MatchKyousAtFilterTags[id] = kyou
+				filteredByTags[id] = kyou
 			}
 		}
 
 		// 非表示タグの対象を消す
 		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
-			delete(findCtx.MatchKyousAtFilterTags, hideTag.TargetID)
+			delete(filteredByTags, hideTag.TargetID)
 		}
 
-		findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTags
+		findCtx.MatchKyousCurrent = filteredByTags
 	} else if findCtx.ParsedFindQuery.TagsAnd {
 		// ANDの場合のフィルタリング処理
 		tagNameMap := map[string]map[string][]reps.Kyou{} // map[タグ名][kyou.ID（tagTargetID）] = reps.kyou
@@ -1036,19 +955,19 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			hasAllMatchTagsKyousMap = matchThisLoopKyousMap
 		}
 
-		findCtx.MatchKyousAtFilterTags = map[string][]reps.Kyou{}
+		filteredByTags := map[string][]reps.Kyou{}
 		for _, matchTagsKyousMap := range hasAllMatchTagsKyousMap {
 			for kyouID, kyous := range matchTagsKyousMap {
-				findCtx.MatchKyousAtFilterTags[kyouID] = kyous
+				filteredByTags[kyouID] = kyous
 			}
 		}
 
 		// 非表示タグの対象を消す
 		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
-			delete(findCtx.MatchKyousAtFilterTags, hideTag.TargetID)
+			delete(filteredByTags, hideTag.TargetID)
 		}
 
-		findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTags
+		findCtx.MatchKyousCurrent = filteredByTags
 	}
 
 	return nil, nil
@@ -1203,19 +1122,19 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 		return nil, nil
 	}
 
+	filteredByTimeIs := map[string][]reps.Kyou{}
 	for _, timeis := range findCtx.MatchTimeIssAtFilterTags {
 		for id, kyous := range findCtx.MatchKyousCurrent {
 			if (timeis.EndTime != nil && kyous[0].RelatedTime.After(timeis.StartTime) && kyous[0].RelatedTime.Before(*timeis.EndTime)) || (timeis.EndTime == nil && kyous[0].RelatedTime.After(timeis.StartTime)) {
-				findCtx.MatchKyousAtFilterTimeIs[id] = kyous
+				filteredByTimeIs[id] = kyous
 			}
 		}
 	}
-	findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTimeIs
+	findCtx.MatchKyousCurrent = filteredByTimeIs
 	return nil, nil
 }
 
 func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	var err error
 	if !findCtx.ParsedFindQuery.UseTimeIs {
 		return nil, nil
 	}
@@ -1242,74 +1161,30 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		IDs:    targetIDs,
 	}
 
-	lenOfReps := len(findCtx.Repositories.TimeIsReps)
-
-	existErr := false
-	wg := &sync.WaitGroup{}
-	timeIssCh := make(chan []reps.TimeIs, lenOfReps)
-	errch := make(chan error, lenOfReps)
-	defer close(timeIssCh)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range findCtx.Repositories.TimeIsReps {
-		wg.Add(1)
-		go func(rep reps.TimeIsRepository) {
-			defer wg.Done()
-			timeiss, err := rep.FindTimeIs(ctx, timeisFindKyouQuery)
-			if err != nil {
-				errch <- err
-				return
-			}
-
-			if len(targetIDs) != 0 {
-				// textでマッチしたものをID検索
-				textMatchTimeiss, err := rep.FindTimeIs(ctx, matchTextFindByIDQuery)
-				if err != nil {
-					errch <- err
-					return
-				}
-				timeiss = append(timeiss, textMatchTimeiss...)
-			}
-			timeIssCh <- timeiss
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range lenOfReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at find timeiss: %w: %w", e, err)
-			existErr = true
+	allTimeIss, err := collectFromRepos([]reps.TimeIsRepository(findCtx.Repositories.TimeIsReps), func(rep reps.TimeIsRepository) ([]reps.TimeIs, error) {
+		timeiss, err := rep.FindTimeIs(ctx, timeisFindKyouQuery)
+		if err != nil {
+			return nil, err
 		}
-	}
-
-	if existErr {
-		return nil, err
+		if len(targetIDs) != 0 {
+			textMatchTimeiss, err := rep.FindTimeIs(ctx, matchTextFindByIDQuery)
+			if err != nil {
+				return nil, err
+			}
+			timeiss = append(timeiss, textMatchTimeiss...)
+		}
+		return timeiss, nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error at find timeiss: %w", err)
 	}
 
 	// TimeIs集約
-	for range lenOfReps {
-		matchtimeissInRep := <-timeIssCh
-		for _, timeis := range matchtimeissInRep {
-			if existtimeis, exist := findCtx.MatchTimeIssAtFindTimeIs[timeis.ID]; exist {
-				if !findCtx.DisableLatestDataRepositoryCache {
-					latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[timeis.ID]
-					if !exist {
-						continue
-					}
-					if !latestData.DataUpdateTime.Equal(timeis.UpdateTime) {
-						continue
-					}
-				}
-				if timeis.UpdateTime.After(existtimeis.UpdateTime) {
-					findCtx.MatchTimeIssAtFindTimeIs[timeis.ID] = timeis
-				}
-			} else {
-				findCtx.MatchTimeIssAtFindTimeIs[timeis.ID] = timeis
-			}
+	for _, timeis := range allTimeIss {
+		if !findCtx.isLatestData(timeis.ID, timeis.UpdateTime) {
+			continue
 		}
+		upsertIfNewer(findCtx.MatchTimeIssAtFindTimeIs, timeis.ID, timeis, func(t reps.TimeIs) time.Time { return t.UpdateTime })
 	}
 
 	deletedIDs := []string{}
@@ -1331,7 +1206,6 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	}
 
 	matchKyous := map[string][]reps.Kyou{}
-	var err error
 
 	// 開始日を取得
 	startTime := findCtx.ParsedFindQuery.CalendarStartDate
@@ -1364,52 +1238,14 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		isAllDays = true
 	}
 	// GPSLogを取得する
-	matchGPSLogs := []reps.GPSLog{}
-	lenOfReps := len(findCtx.Repositories.GPSLogReps)
-
-	existErr := false
-	wg := &sync.WaitGroup{}
-	gpsLogsCh := make(chan []reps.GPSLog, lenOfReps)
-	errch := make(chan error, lenOfReps)
-	defer close(gpsLogsCh)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range findCtx.Repositories.GPSLogReps {
-		wg.Add(1)
-		go func(rep reps.GPSLogRepository) {
-			defer wg.Done()
-			// repで検索
-			var gpsLogs []reps.GPSLog
-			if isAllDays {
-				gpsLogs, err = rep.GetAllGPSLogs(ctx)
-			} else {
-				gpsLogs, err = rep.GetGPSLogs(ctx, startTime, endTime)
-			}
-			if err != nil {
-				errch <- err
-				return
-			}
-			gpsLogsCh <- gpsLogs
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range lenOfReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at filter gpslogs: %w: %w", e, err)
-			existErr = true
+	matchGPSLogs, err := collectFromRepos([]reps.GPSLogRepository(findCtx.Repositories.GPSLogReps), func(rep reps.GPSLogRepository) ([]reps.GPSLog, error) {
+		if isAllDays {
+			return rep.GetAllGPSLogs(ctx)
 		}
-	}
-	if existErr {
-		return nil, err
-	}
-
-	// GPSLog集約
-	for range lenOfReps {
-		matchGPSLogs = append(matchGPSLogs, <-gpsLogsCh...)
+		return rep.GetGPSLogs(ctx, startTime, endTime)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error at filter gpslogs: %w", err)
 	}
 
 	// 並び替え
@@ -1427,7 +1263,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 			})
 		}
 
-		if calcDistance(latitude, longitude, matchGPSLogs[i].Latitude, matchGPSLogs[i].Longitude) <= radius {
+		if calcDistanceKm(latitude, longitude, matchGPSLogs[i].Latitude, matchGPSLogs[i].Longitude) <= radius {
 			preTrue = true
 		} else {
 			preTrue = false
@@ -1443,7 +1279,6 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		}
 	}
 
-	findCtx.MatchKyousAtFilterLocation = matchKyous
 	findCtx.MatchKyousCurrent = matchKyous
 	return nil, nil
 }
@@ -1582,89 +1417,51 @@ func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext
 }
 
 func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	var err error
+	return f.findTextsGeneric(ctx, findCtx,
+		findCtx.ParsedFindQuery.Words, findCtx.ParsedFindQuery.NotWords, findCtx.ParsedFindQuery.WordsAnd,
+		findCtx.MatchTexts)
+}
 
-	lenOfTextReps := 0
-	for range findCtx.Repositories.TextReps {
-		lenOfTextReps++
-	}
-
+func (f *FindFilter) findTextsGeneric(
+	ctx context.Context, findCtx *FindKyouContext,
+	words, notWords []string, wordsAnd bool,
+	targetMap map[string]reps.Text,
+) ([]*message.GkillError, error) {
 	// words, notWordsをパースする
-	words := []string{}
-	notWords := []string{}
-	if findCtx.ParsedFindQuery.Words != nil {
-		words = findCtx.ParsedFindQuery.Words
+	w := []string{}
+	nw := []string{}
+	if words != nil {
+		w = words
 	}
-	if findCtx.ParsedFindQuery.NotWords != nil {
-		notWords = findCtx.ParsedFindQuery.NotWords
+	if notWords != nil {
+		nw = notWords
 	}
-
-	// 対象タグ取得用検索クエリ
 
 	findTextsQuery := &find.FindQuery{
-		// IsDeleted: false, // TextReps.FindTexts内に考慮があるため削除
 		UseWords: true,
-		Words:    words,
-		NotWords: notWords,
-		WordsAnd: findCtx.ParsedFindQuery.WordsAnd,
+		Words:    w,
+		NotWords: nw,
+		WordsAnd: wordsAnd,
 	}
 
-	existErr := false
-	wg := &sync.WaitGroup{}
-	textsCh := make(chan []reps.Text, lenOfTextReps)
-	errch := make(chan error, lenOfTextReps)
-	defer close(textsCh)
-	defer close(errch)
-
-	// 並列処理
+	repos := make([]reps.TextRepository, 0, len(findCtx.Repositories.TextReps))
 	for _, rep := range findCtx.Repositories.TextReps {
-		wg.Add(1)
-		go func(textRep reps.TextRepository) {
-			defer wg.Done()
-			texts, err := textRep.FindTexts(ctx, findTextsQuery)
-			if err != nil {
-				errch <- err
-				return
-			}
-			textsCh <- texts
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range lenOfTextReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at find  texts: %w: %w", e, err)
-			existErr = true
-		}
+		repos = append(repos, rep)
 	}
 
-	if existErr {
-		return nil, err
+	allTexts, err := collectFromRepos(repos, func(textRep reps.TextRepository) ([]reps.Text, error) {
+		return textRep.FindTexts(ctx, findTextsQuery)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error at find texts: %w", err)
 	}
 
 	// Text集約
-	for range lenOfTextReps {
-		matchTexts := <-textsCh
-		for _, text := range matchTexts {
-			if !findCtx.DisableLatestDataRepositoryCache {
-				latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[text.ID]
-				if !exist {
-					continue
-				}
-				if !latestData.DataUpdateTime.Equal(text.UpdateTime) {
-					continue
-				}
-			}
-			if existText, exist := findCtx.MatchTexts[text.ID]; exist {
-				if text.UpdateTime.After(existText.UpdateTime) {
-					findCtx.MatchTexts[text.ID] = text
-				}
-			} else {
-				findCtx.MatchTexts[text.ID] = text
-			}
+	for _, text := range allTexts {
+		if !findCtx.isLatestData(text.ID, text.UpdateTime) {
+			continue
 		}
+		upsertIfNewer(targetMap, text.ID, text, func(t reps.Text) time.Time { return t.UpdateTime })
 	}
 
 	return nil, nil
@@ -1686,92 +1483,9 @@ func (f *FindFilter) filterImageKyous(ctx context.Context, findCtx *FindKyouCont
 }
 
 func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	var err error
-
-	lenOfTextReps := 0
-	for range findCtx.Repositories.TextReps {
-		lenOfTextReps++
-	}
-
-	// words, notWordsをパースする
-	words := []string{}
-	notWords := []string{}
-	if findCtx.ParsedFindQuery.TimeIsWords != nil {
-		words = findCtx.ParsedFindQuery.TimeIsWords
-	}
-	if findCtx.ParsedFindQuery.TimeIsNotWords != nil {
-		notWords = findCtx.ParsedFindQuery.TimeIsNotWords
-	}
-
-	// 対象タグ取得用検索クエリ
-
-	findTextsQuery := &find.FindQuery{
-		// IsDeleted: false, // TextReps.FindTexts内に考慮があるため削除
-		UseWords: true,
-		Words:    words,
-		NotWords: notWords,
-		WordsAnd: findCtx.ParsedFindQuery.TimeIsWordsAnd,
-	}
-
-	existErr := false
-	wg := &sync.WaitGroup{}
-	textsCh := make(chan []reps.Text, lenOfTextReps)
-	errch := make(chan error, lenOfTextReps)
-	defer close(textsCh)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range findCtx.Repositories.TextReps {
-		wg.Add(1)
-		go func(textRep reps.TextRepository) {
-			defer wg.Done()
-			texts, err := textRep.FindTexts(ctx, findTextsQuery)
-			if err != nil {
-				errch <- err
-				return
-			}
-			textsCh <- texts
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range lenOfTextReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at find  texts: %w: %w", e, err)
-			existErr = true
-		}
-	}
-
-	if existErr {
-		return nil, err
-	}
-
-	// Text集約
-	for range lenOfTextReps {
-		matchTexts := <-textsCh
-		for _, text := range matchTexts {
-			if !findCtx.DisableLatestDataRepositoryCache {
-				latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[text.ID]
-				if !exist {
-					continue
-				}
-				if !latestData.DataUpdateTime.Equal(text.UpdateTime) {
-					continue
-				}
-			}
-			if existText, exist := findCtx.MatchTimeIsTexts[text.ID]; exist {
-				if text.UpdateTime.After(existText.UpdateTime) {
-					findCtx.MatchTimeIsTexts[text.ID] = text
-				}
-			} else {
-				findCtx.MatchTimeIsTexts[text.ID] = text
-			}
-		}
-	}
-
-	return nil, nil
+	return f.findTextsGeneric(ctx, findCtx,
+		findCtx.ParsedFindQuery.TimeIsWords, findCtx.ParsedFindQuery.TimeIsNotWords, findCtx.ParsedFindQuery.TimeIsWordsAnd,
+		findCtx.MatchTimeIsTexts)
 }
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	latestKyousMap := map[string][]reps.Kyou{}
@@ -1841,10 +1555,3 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	return nil, nil
 }
 
-func calcDistance(lat1 float64, lng1 float64, lat2 float64, lng2 float64) float64 {
-	lat1 *= R
-	lng1 *= R
-	lat2 *= R
-	lng2 *= R
-	return float64(6371.0) * math.Acos(math.Cos(lat1)*math.Cos(lat2)*math.Cos(lng2-lng1)+math.Sin(lat1)*math.Sin(lat2))
-}
