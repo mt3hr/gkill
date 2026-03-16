@@ -12,6 +12,10 @@ import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useRoute } from 'vue-router'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { LogoutRequest } from '@/classes/api/req_res/logout-request'
+import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-repositories-request'
+import { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 export function useSaihatePage() {
     const theme = useTheme()
@@ -26,6 +30,7 @@ export function useSaihatePage() {
     const add_kc_dialog = ref<any>(null)
     const mkfl_dialog = ref<any>(null)
     const upload_file_dialog = ref<any>(null)
+    const confirm_logout_dialog = ref<any>(null)
     const saihate_root = ref<HTMLElement | null>(null)
 
     // ── State refs ──
@@ -268,6 +273,10 @@ export function useSaihatePage() {
         upload_file_dialog.value?.show()
     }
 
+    function show_confirm_logout_dialog(close_database: boolean): void {
+        confirm_logout_dialog.value?.show(close_database)
+    }
+
     function parseBoolLoose(value: unknown): boolean {
         if (typeof value === "boolean") return value
         if (typeof value === "number") return value !== 0
@@ -277,6 +286,58 @@ export function useSaihatePage() {
             if (["false", "0", "no", "n"].includes(v)) return false
         }
         throw new SyntaxError(`Boolean expected, got ${JSON.stringify(value)}`)
+    }
+
+    async function reload_repositories(clear_thumb_cache: boolean): Promise<void> {
+        const requested_reload_message = new GkillMessage()
+        requested_reload_message.message = i18n.global.t("REQUESTED_RELOAD_TITLE")
+        requested_reload_message.message_code = GkillMessageCodes.requested_reload
+        requested_reload_message.show_keep = true
+        write_messages([requested_reload_message])
+
+        is_loading.value = true
+
+        const req = new ReloadRepositoriesRequest()
+        req.clear_thumb_cache = clear_thumb_cache
+        const res = await gkill_api.value.reload_repositories(req)
+
+        await delete_gkill_config_cache()
+        await delete_gkill_kyou_cache(null)
+
+        if (res.errors && res.errors.length !== 0) {
+            write_errors(res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            write_messages(res.messages)
+        }
+
+        is_loading.value = false
+
+        const page_reload_message = new GkillMessage()
+        page_reload_message.message = i18n.global.t("DO_RELOAD_TITLE")
+        page_reload_message.message_code = GkillMessageCodes.do_reload
+        write_messages([page_reload_message])
+        await sleep(1500)
+
+        location.reload()
+    }
+
+    async function logout(close_database: boolean): Promise<void> {
+        const req = new LogoutRequest()
+        req.close_database = close_database
+        const res = await gkill_api.value.logout(req)
+        if (res.errors && res.errors.length !== 0) {
+            write_errors(res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            write_messages(res.messages)
+        }
+        await sleep(1500)
+        gkill_api.value.set_session_id("")
+        await resetDialogHistory()
+        router.replace("/")
     }
 
     // ── Initialize ──
@@ -300,6 +361,7 @@ export function useSaihatePage() {
         add_kc_dialog,
         mkfl_dialog,
         upload_file_dialog,
+        confirm_logout_dialog,
 
         // State
         enable_context_menu,
@@ -330,5 +392,12 @@ export function useSaihatePage() {
         show_nlog_dialog,
         show_lantana_dialog,
         show_upload_file_dialog,
+        show_confirm_logout_dialog,
+
+        // Reload
+        reload_repositories,
+
+        // Logout
+        logout,
     }
 }

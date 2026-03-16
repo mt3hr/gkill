@@ -268,6 +268,7 @@
     "APPLICATION_CONFIG_TITLE": "Einstellungen",
     "RELOAD_TITLE": "Neu laden",
     "LOGOUT_TITLE": "Abmelden",
+    "CONFIRM_LOGOUT_MESSAGE": "Möchten Sie sich wirklich abmelden?",
     "DARK_THEME_TITLE": "Dunkles Thema",
     "HOT_RELOAD_TITLE": "Hot Reload",
     "RYKV_DEFAULT_PERIOD_TITLE": "Lebenslog-Ansicht Anzeigetage",

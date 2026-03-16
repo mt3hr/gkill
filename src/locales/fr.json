@@ -268,6 +268,7 @@
     "APPLICATION_CONFIG_TITLE": "Paramètres",
     "RELOAD_TITLE": "Recharger",
     "LOGOUT_TITLE": "Déconnexion",
+    "CONFIRM_LOGOUT_MESSAGE": "Êtes-vous sûr de vouloir vous déconnecter ?",
     "DARK_THEME_TITLE": "Thème sombre",
     "HOT_RELOAD_TITLE": "Rechargement à chaud",
     "RYKV_DEFAULT_PERIOD_TITLE": "Jours d'affichage du journal de vie",
