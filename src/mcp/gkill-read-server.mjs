@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 import crypto from "node:crypto";
+import http from "node:http";
 import process from "node:process";
 
 const SERVER_NAME = "gkill-read-mcp";
-const SERVER_VERSION = "0.2.0";
+const SERVER_VERSION = "0.3.2";
 
 const AUTH_ERROR_CODES = new Set([
   "ERR000002", // AccountNotFoundError
@@ -17,14 +18,19 @@ const ISO_DATETIME_DESC = "ISO-8601 datetime string, e.g. 2026-02-25T10:30:00+09
 const FIND_QUERY_SCHEMA = {
   type: "object",
   description:
-    "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings.",
+    "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings. Recommended filtering strategy: fetch ApplicationConfig and all tag names first, build a visible-tag allowlist by removing force-hidden or unchecked tags, then pass that allowlist via tags/timeis_tags with use_tags/use_timeis_tags=true. For repositories, prefer checked leaf rep_types from ApplicationConfig and treat unchecked leaf rep_type leaves as inferred hidden sources.",
   properties: {
     update_cache: { type: "boolean" },
     is_deleted: { type: "boolean" },
     use_tags: { type: "boolean" },
     use_reps: { type: "boolean" },
     use_rep_types: { type: "boolean" },
-    rep_types: { type: "array", items: { type: "string" } },
+    rep_types: {
+      type: "array",
+      description:
+        "Allowed rep-type names. These values are backend-specific and may be case-sensitive. Do not assume ApplicationConfig display labels map 1:1 to accepted query values. In some deployments, lower-case values such as \"kmemo\" work where title-case labels such as \"Kmemo\" do not. If unsure, omit use_rep_types first, confirm the search works, then add rep_types gradually.",
+      items: { type: "string" },
+    },
     use_ids: { type: "boolean" },
     use_include_id: { type: "boolean" },
     ids: { type: "array", items: { type: "string" } },
@@ -32,17 +38,42 @@ const FIND_QUERY_SCHEMA = {
     words: { type: "array", items: { type: "string" } },
     words_and: { type: "boolean" },
     not_words: { type: "array", items: { type: "string" } },
-    reps: { type: "array", items: { type: "string" } },
-    tags: { type: "array", items: { type: "string" } },
-    hide_tags: { type: "array", items: { type: "string" } },
+    reps: {
+      type: "array",
+      description:
+        "Allowed rep names. Use this as an allowlist when you already know the visible repos to include. If rep_struct is unavailable, infer hidden repos from unchecked rep_type leaves and keep this list aligned with visible sources only.",
+      items: { type: "string" },
+    },
+    tags: {
+      type: "array",
+      description:
+        "Allowed tag names. For ordinary browsing, you may build a visible-tag allowlist from ApplicationConfig. If you intentionally need a hidden tag, you can pass it here directly with use_tags=true instead of excluding it from the query.",
+      items: { type: "string" },
+    },
+    hide_tags: {
+      type: "array",
+      description:
+        "Explicit tag exclusion list. Prefer a visible-tag allowlist in tags when you need to exclude hidden tags reliably.",
+      items: { type: "string" },
+    },
     tags_and: { type: "boolean" },
     use_timeis: { type: "boolean" },
     timeis_words: { type: "array", items: { type: "string" } },
     timeis_not_words: { type: "array", items: { type: "string" } },
     timeis_words_and: { type: "boolean" },
     use_timeis_tags: { type: "boolean" },
-    timeis_tags: { type: "array", items: { type: "string" } },
-    hide_timeis_tags: { type: "array", items: { type: "string" } },
+    timeis_tags: {
+      type: "array",
+      description:
+        "Allowed TimeIs tag names. For ordinary browsing, you may use the same visible-tag allowlist strategy as tags. If you intentionally need a hidden tag, you can pass it here directly with use_timeis_tags=true.",
+      items: { type: "string" },
+    },
+    hide_timeis_tags: {
+      type: "array",
+      description:
+        "Explicit TimeIs tag exclusion list. Prefer a visible-tag allowlist in timeis_tags when you need to exclude hidden tags reliably.",
+      items: { type: "string" },
+    },
     timeis_tags_and: { type: "boolean" },
     use_calendar: { type: "boolean" },
     calendar_start_date: { type: "string", description: ISO_DATETIME_DESC },
@@ -101,6 +132,8 @@ const TOOLS = [
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
       "Available data_type values: kmemo, kc, timeis, nlog, lantana, urlog, idf, git_commit_log, mi. " +
+      "Practical recommendation: start with a minimal query, keep limit small, and add filters gradually. Hidden tags can be searched intentionally by passing them directly in query.tags or query.timeis_tags. rep_types are backend-specific and may be case-sensitive, so do not assume ApplicationConfig display labels map 1:1 to accepted query values. " +
+      "If a query fails, first retry with fewer query fields, a smaller limit, and is_include_timeis=false; then add rep_types or TimeIs expansion back step by step. " +
       "The server always applies only_latest_data=true. " +
       "Response fields: kyous[], total_count, returned_count, has_more, next_cursor.",
     inputSchema: {
@@ -128,7 +161,7 @@ const TOOLS = [
         },
         is_include_timeis: {
           type: "boolean",
-          description: "Include attached TimeIs (plaing) data for each kyou. Default: true.",
+          description: "Include attached TimeIs (plaing) data for each kyou. Default: true. Useful for enrichment, but when debugging a failing query it is often simpler to retry once with this set to false first.",
         },
       },
       additionalProperties: false,
@@ -190,7 +223,7 @@ const TOOLS = [
   {
     name: "gkill_get_application_config",
     description:
-      "Get application configuration including tag hierarchy (parent-child relationships, default check states, force-hide settings), task board structure, repository structure, and KFTL templates. Call this before gkill_get_kyous to understand the data organization and build better queries.",
+      "Get application configuration including tag hierarchy (parent-child relationships, default check states, force-hide settings), task board structure, repository structure, and KFTL templates. Call this before gkill_get_kyous to understand the data organization and build better queries, but note that display labels in this config may not map 1:1 to accepted rep_types query values.",
     inputSchema: {
       type: "object",
       properties: {
@@ -258,6 +291,7 @@ class GkillReadClient {
 
   async post(pathname, body) {
     const url = this.buildApiUrl(pathname);
+    const timeoutMs = parseInt(process.env.GKILL_FETCH_TIMEOUT_MS || "120000", 10);
     let response;
     try {
       response = await fetch(url, {
@@ -266,6 +300,7 @@ class GkillReadClient {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (error) {
       throw new GkillApiError(`Network error at ${pathname}.`, {
@@ -351,35 +386,11 @@ class GkillReadClient {
   }
 }
 
+// McpServer: transport-independent JSON-RPC handler.
+// handleMessage() returns a response object (or null for notifications).
 class McpServer {
   constructor(client) {
     this.client = client;
-    this.buffer = Buffer.alloc(0);
-    process.stdin.on("data", (chunk) => this.onData(chunk));
-    process.stdin.on("error", (error) => this.logError("stdin error", error));
-  }
-
-  logError(message, error) {
-    process.stderr.write(`${message}: ${String(error)}\n`);
-  }
-
-  writeMessage(message) {
-    // Claude Desktop (current build) expects line-delimited JSON-RPC messages.
-    // Do not use LSP "Content-Length" framing on output.
-    const json = JSON.stringify(message);
-    process.stdout.write(`${json}\n`);
-  }
-
-  sendResult(id, result) {
-    this.writeMessage({ jsonrpc: "2.0", id, result });
-  }
-
-  sendError(id, code, message, data = undefined) {
-    this.writeMessage({
-      jsonrpc: "2.0",
-      id,
-      error: { code, message, data },
-    });
   }
 
   toolResultText(text, isError = false) {
@@ -387,86 +398,6 @@ class McpServer {
       content: [{ type: "text", text }],
       isError,
     };
-  }
-
-  onData(chunk) {
-    this.buffer = Buffer.concat([this.buffer, chunk]);
-
-    while (true) {
-      // LSP-style framing: "Content-Length: N\r\n\r\n{...}"
-      const headerEnd = this.buffer.indexOf("\r\n\r\n");
-      if (headerEnd !== -1) {
-        const headerText = this.buffer.subarray(0, headerEnd).toString("utf8");
-        const headers = headerText.split("\r\n");
-        let contentLength = null;
-        for (const line of headers) {
-          const idx = line.indexOf(":");
-          if (idx === -1) {
-            continue;
-          }
-          const key = line.slice(0, idx).trim().toLowerCase();
-          const value = line.slice(idx + 1).trim();
-          if (key === "content-length") {
-            contentLength = Number.parseInt(value, 10);
-          }
-        }
-
-        if (!Number.isFinite(contentLength) || contentLength < 0) {
-          this.logError("invalid content-length header", headerText);
-          this.buffer = Buffer.alloc(0);
-          return;
-        }
-
-        const totalLength = headerEnd + 4 + contentLength;
-        if (this.buffer.length < totalLength) {
-          return;
-        }
-
-        const bodyBuffer = this.buffer.subarray(headerEnd + 4, totalLength);
-        this.buffer = this.buffer.subarray(totalLength);
-
-        let message;
-        try {
-          message = JSON.parse(bodyBuffer.toString("utf8"));
-        } catch (error) {
-          this.logError("invalid json body", error);
-          continue;
-        }
-
-        this.handleMessage(message).catch((error) => {
-          this.logError("unhandled request error", error);
-          if (message && Object.prototype.hasOwnProperty.call(message, "id")) {
-            this.sendError(message.id, -32603, "Internal error");
-          }
-        });
-        continue;
-      }
-
-      // NDJSON-style framing: one JSON-RPC message per line.
-      const lf = this.buffer.indexOf("\n");
-      if (lf === -1) {
-        return;
-      }
-      const line = this.buffer.subarray(0, lf).toString("utf8").trim();
-      this.buffer = this.buffer.subarray(lf + 1);
-      if (line.length === 0) {
-        continue;
-      }
-
-      let message;
-      try {
-        message = JSON.parse(line);
-      } catch (_error) {
-        // If this is not NDJSON, wait for more bytes (likely partial header/body).
-        continue;
-      }
-      this.handleMessage(message).catch((error) => {
-        this.logError("unhandled request error", error);
-        if (message && Object.prototype.hasOwnProperty.call(message, "id")) {
-          this.sendError(message.id, -32603, "Internal error");
-        }
-      });
-    }
   }
 
   async handleToolCall(name, args) {
@@ -536,9 +467,9 @@ class McpServer {
   async handleMessage(message) {
     if (!message || message.jsonrpc !== "2.0" || !message.method) {
       if (message && Object.prototype.hasOwnProperty.call(message, "id")) {
-        this.sendError(message.id, -32600, "Invalid Request");
+        return { jsonrpc: "2.0", id: message.id, error: { code: -32600, message: "Invalid Request" } };
       }
-      return;
+      return null;
     }
 
     const hasId = Object.prototype.hasOwnProperty.call(message, "id");
@@ -547,76 +478,333 @@ class McpServer {
     const params = message.params || {};
 
     if (method === "notifications/initialized") {
-      return;
+      return null;
     }
 
     if (method === "initialize") {
-      if (!hasId) {
-        return;
-      }
-      this.sendResult(id, {
-        protocolVersion: "2024-11-05",
-        capabilities: {
-          tools: {},
+      if (!hasId) return null;
+      return {
+        jsonrpc: "2.0",
+        id,
+        result: {
+          protocolVersion: "2024-11-05",
+          capabilities: { tools: {} },
+          serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
         },
-        serverInfo: {
-          name: SERVER_NAME,
-          version: SERVER_VERSION,
-        },
-      });
-      return;
+      };
     }
 
     if (method === "ping") {
-      if (!hasId) {
-        return;
-      }
-      this.sendResult(id, {});
-      return;
+      if (!hasId) return null;
+      return { jsonrpc: "2.0", id, result: {} };
     }
 
     if (method === "tools/list") {
-      if (!hasId) {
-        return;
-      }
-      this.sendResult(id, { tools: TOOLS });
-      return;
+      if (!hasId) return null;
+      return { jsonrpc: "2.0", id, result: { tools: TOOLS } };
     }
 
     if (method === "tools/call") {
-      if (!hasId) {
-        return;
-      }
+      if (!hasId) return null;
       try {
         const toolName = params.name;
         const toolArgs = params.arguments || {};
         const response = await this.handleToolCall(toolName, toolArgs);
-        this.sendResult(id, this.toolResultText(JSON.stringify(response), false));
+        return { jsonrpc: "2.0", id, result: this.toolResultText(JSON.stringify(response), false) };
       } catch (error) {
         const detail = error instanceof GkillApiError ? error.detail : null;
         const messageText = error instanceof Error ? error.message : "Unknown tool error";
-        this.sendResult(
+        return {
+          jsonrpc: "2.0",
           id,
-          this.toolResultText(
-            JSON.stringify({
-              error: messageText,
-              detail,
-            }),
-            true,
-          ),
-        );
+          result: this.toolResultText(JSON.stringify({ error: messageText, detail }), true),
+        };
       }
-      return;
     }
 
-    if (!hasId) {
-      return;
-    }
-    this.sendError(id, -32601, `Method not found: ${method}`);
+    if (!hasId) return null;
+    return { jsonrpc: "2.0", id, error: { code: -32601, message: `Method not found: ${method}` } };
   }
 }
 
+// StdioTransport: reads JSON-RPC from stdin (LSP or NDJSON framing), writes NDJSON to stdout.
+class StdioTransport {
+  constructor(server) {
+    this.server = server;
+    this.buffer = Buffer.alloc(0);
+  }
+
+  start() {
+    process.stdin.on("data", (chunk) => this.onData(chunk));
+    process.stdin.on("error", (e) => this.logError("stdin error", e));
+    process.stdin.resume();
+  }
+
+  logError(message, error) {
+    process.stderr.write(`${message}: ${String(error)}\n`);
+  }
+
+  writeMessage(message) {
+    const json = JSON.stringify(message);
+    process.stdout.write(`${json}\n`);
+  }
+
+  async dispatch(message) {
+    try {
+      const response = await this.server.handleMessage(message);
+      if (response) this.writeMessage(response);
+    } catch (error) {
+      this.logError("unhandled request error", error);
+      if (message && Object.prototype.hasOwnProperty.call(message, "id")) {
+        this.writeMessage({ jsonrpc: "2.0", id: message.id, error: { code: -32603, message: "Internal error" } });
+      }
+    }
+  }
+
+  onData(chunk) {
+    this.buffer = Buffer.concat([this.buffer, chunk]);
+
+    while (true) {
+      // LSP-style framing: "Content-Length: N\r\n\r\n{...}"
+      const headerEnd = this.buffer.indexOf("\r\n\r\n");
+      if (headerEnd !== -1) {
+        const headerText = this.buffer.subarray(0, headerEnd).toString("utf8");
+        const headers = headerText.split("\r\n");
+        let contentLength = null;
+        for (const line of headers) {
+          const idx = line.indexOf(":");
+          if (idx === -1) continue;
+          const key = line.slice(0, idx).trim().toLowerCase();
+          const value = line.slice(idx + 1).trim();
+          if (key === "content-length") {
+            contentLength = Number.parseInt(value, 10);
+          }
+        }
+
+        if (!Number.isFinite(contentLength) || contentLength < 0) {
+          this.logError("invalid content-length header", headerText);
+          this.buffer = Buffer.alloc(0);
+          return;
+        }
+
+        const totalLength = headerEnd + 4 + contentLength;
+        if (this.buffer.length < totalLength) return;
+
+        const bodyBuffer = this.buffer.subarray(headerEnd + 4, totalLength);
+        this.buffer = this.buffer.subarray(totalLength);
+
+        let message;
+        try {
+          message = JSON.parse(bodyBuffer.toString("utf8"));
+        } catch (error) {
+          this.logError("invalid json body", error);
+          continue;
+        }
+
+        this.dispatch(message);
+        continue;
+      }
+
+      // NDJSON-style framing: one JSON-RPC message per line.
+      const lf = this.buffer.indexOf("\n");
+      if (lf === -1) return;
+      const line = this.buffer.subarray(0, lf).toString("utf8").trim();
+      this.buffer = this.buffer.subarray(lf + 1);
+      if (line.length === 0) continue;
+
+      let message;
+      try {
+        message = JSON.parse(line);
+      } catch (_error) {
+        continue;
+      }
+      this.dispatch(message);
+    }
+  }
+}
+
+// API key verification using timing-safe comparison.
+// Accepts either:
+//   1. Authorization: Bearer <key> header (Claude.ai Connectors)
+//   2. Path segment: POST /mcp/<key> (ChatGPT — no-auth mode with URL-embedded key)
+function checkApiKey(req, pathKey) {
+  const expected = process.env.MCP_API_KEY;
+  if (!expected) return false;
+
+  // Try Authorization header first
+  const auth = req.headers["authorization"] || "";
+  let token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+
+  // Fall back to path segment key
+  if (!token && pathKey) {
+    token = pathKey;
+  }
+
+  if (token.length !== expected.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(token, "utf8"), Buffer.from(expected, "utf8"));
+  } catch {
+    return false;
+  }
+}
+
+// HttpTransport: Streamable HTTP transport (MCP spec 2024-11-05).
+// Supports POST /mcp (requests), GET /mcp (SSE stream), DELETE /mcp (session end).
+class HttpTransport {
+  constructor(server, port) {
+    this.server = server;
+    this.port = port;
+    this.sessions = new Map(); // sessionId -> { createdAt }
+  }
+
+  generateSessionId() {
+    return crypto.randomUUID();
+  }
+
+  start() {
+    if (!process.env.MCP_API_KEY) {
+      process.stderr.write("ERROR: MCP_API_KEY environment variable is required for HTTP transport.\n");
+      process.exit(1);
+    }
+
+    const httpServer = http.createServer((req, res) => this.handleRequest(req, res));
+    httpServer.listen(this.port, "0.0.0.0", () => {
+      process.stderr.write(`MCP HTTP server listening on http://0.0.0.0:${this.port}/mcp\n`);
+    });
+  }
+
+  parseRoute(req) {
+    const pathname = new URL(req.url, "http://localhost").pathname;
+    let pathKey = null;
+    if (pathname === "/mcp") {
+      // key from Authorization header only
+    } else if (pathname.startsWith("/mcp/")) {
+      pathKey = pathname.slice("/mcp/".length);
+    } else {
+      return null;
+    }
+    return { pathname, pathKey };
+  }
+
+  handleRequest(req, res) {
+    const route = this.parseRoute(req);
+    if (!route) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Not Found. Use POST /mcp" }));
+      return;
+    }
+
+    if (!checkApiKey(req, route.pathKey)) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Unauthorized" }));
+      return;
+    }
+
+    switch (req.method) {
+      case "POST":
+        return this.handlePost(req, res);
+      case "GET":
+        return this.handleGet(req, res);
+      case "DELETE":
+        return this.handleDelete(req, res);
+      default:
+        res.writeHead(405, { "Content-Type": "application/json", Allow: "GET, POST, DELETE" });
+        res.end(JSON.stringify({ error: "Method Not Allowed" }));
+    }
+  }
+
+  handlePost(req, res) {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", async () => {
+      let message;
+      try {
+        message = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+      } catch {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } }));
+        return;
+      }
+
+      try {
+        const response = await this.server.handleMessage(message);
+
+        // If this is an initialize response, create a new session
+        if (message && message.method === "initialize" && response) {
+          const sessionId = this.generateSessionId();
+          this.sessions.set(sessionId, { createdAt: Date.now() });
+          if (response === null) {
+            res.writeHead(202, { "Mcp-Session-Id": sessionId });
+            res.end();
+          } else {
+            res.writeHead(200, { "Content-Type": "application/json", "Mcp-Session-Id": sessionId });
+            res.end(JSON.stringify(response));
+          }
+          return;
+        }
+
+        if (response === null) {
+          // Notification (no id) — acknowledge with 202
+          res.writeHead(202);
+          res.end();
+        } else {
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(response));
+        }
+      } catch (error) {
+        process.stderr.write(`HTTP handler error: ${String(error)}\n`);
+        const id = message && Object.prototype.hasOwnProperty.call(message, "id") ? message.id : null;
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ jsonrpc: "2.0", id, error: { code: -32603, message: "Internal error" } }));
+      }
+    });
+  }
+
+  handleGet(req, res) {
+    // SSE endpoint for server-initiated notifications.
+    // Currently gkill has no server-push notifications, so just hold the connection open.
+    const accept = req.headers["accept"] || "";
+    if (!accept.includes("text/event-stream")) {
+      res.writeHead(406, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Not Acceptable. Use Accept: text/event-stream" }));
+      return;
+    }
+
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+    // Keep connection alive with periodic comments
+    const keepAlive = setInterval(() => {
+      res.write(": keepalive\n\n");
+    }, 30000);
+    req.on("close", () => clearInterval(keepAlive));
+  }
+
+  handleDelete(req, res) {
+    // Session termination
+    const sessionId = req.headers["mcp-session-id"];
+    if (sessionId && this.sessions.has(sessionId)) {
+      this.sessions.delete(sessionId);
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
+  }
+}
+
+// Skip TLS certificate verification for self-signed certs on gkill_server
+if (process.env.GKILL_INSECURE === "true" || process.env.GKILL_INSECURE === "1") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
+// Entry point
 const client = new GkillReadClient();
 const server = new McpServer(client);
 
-process.stdin.resume();
+const transport = (process.env.MCP_TRANSPORT || "stdio").toLowerCase();
+if (transport === "http") {
+  new HttpTransport(server, parseInt(process.env.MCP_PORT || "8808", 10)).start();
+} else {
+  new StdioTransport(server).start();
+}
