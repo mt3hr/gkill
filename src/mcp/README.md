@@ -2,7 +2,11 @@
 gkill の Read API を MCP サーバとして公開できます。
 この実装は `R` のみ対応で、`Add/Update/Delete` は公開しません。
 
-### 起動
+2つのトランスポートモードに対応：
+- **stdio** (デフォルト): Claude Desktop等のローカルMCPクライアント向け
+- **HTTP** (Streamable HTTP): Claude.ai、ChatGPT等のリモートMCPクライアント向け
+
+### stdioモード（デフォルト）
 1. gkill_server を起動（例: `http://127.0.0.1:9999`）
 2. 環境変数を設定
 3. MCP サーバを起動
@@ -14,12 +18,80 @@ $env:GKILL_PASSWORD_SHA256="<sha256 hex>"  # または GKILL_PASSWORD
 npm run mcp:gkill-read
 ```
 
+### HTTPモード（リモート接続）
+APIキー認証付きのHTTPサーバとして起動します。Claude.ai Connectors、ChatGPT等からリモート接続可能です。
+
+```powershell
+$env:GKILL_BASE_URL="http://127.0.0.1:9999"
+$env:GKILL_USER="admin"
+$env:GKILL_PASSWORD_SHA256="<sha256 hex>"
+$env:MCP_TRANSPORT="http"
+$env:MCP_API_KEY="your-secret-api-key"
+$env:MCP_PORT="8808"  # 省略可（デフォルト: 8808）
+npm run mcp:gkill-read-http
+```
+
+```bash
+# Linux/macOS
+GKILL_BASE_URL=http://127.0.0.1:9999 \
+GKILL_USER=admin \
+GKILL_PASSWORD_SHA256="<sha256 hex>" \
+MCP_TRANSPORT=http \
+MCP_API_KEY=your-secret-api-key \
+MCP_PORT=8808 \
+node src/mcp/gkill-read-server.mjs
+```
+
+エンドポイント: `POST /mcp`（Streamable HTTP仕様準拠）
+
+認証: `Authorization: Bearer <MCP_API_KEY>` ヘッダが必須
+
+#### 動作確認（curl）
+```bash
+# 認証失敗（401）
+curl -X POST http://localhost:8808/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+
+# 認証成功（200）
+curl -X POST http://localhost:8808/mcp \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-secret-api-key" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+```
+
+#### Claude.ai Connectorsでの設定
+1. HTTPモードで起動（グローバルIPまたはトンネル経由でアクセス可能にする）
+2. Claude.ai → Settings → Connectors → Add MCP Server
+3. URL: `http://<your-host>:8808/mcp`
+4. Authentication: Bearer Token → MCP_API_KEY の値を入力
+
+#### ChatGPTでの設定
+ChatGPTはOAuthまたは認証なしのみ対応のため、URLパスにキーを埋め込む方式で接続します。
+
+1. HTTPモードで起動
+2. ChatGPT → Settings → Actions or MCP → Add MCP Server
+3. Authentication: 「None」を選択
+4. URL: `http://<your-host>:8808/mcp/<MCP_API_KEY の値>`
+
+サーバー側は以下の2つの認証方式を受け付けます:
+- `Authorization: Bearer <key>` ヘッダー（Claude.ai Connectors向け）
+- パスセグメント `POST /mcp/<key>`（ChatGPT向け）
+
 ### 主な環境変数
+
+#### gkill接続
 - `GKILL_BASE_URL` (default: `http://127.0.0.1:9999`)
 - `GKILL_USER`
 - `GKILL_PASSWORD_SHA256` または `GKILL_PASSWORD`
 - `GKILL_SESSION_ID` (任意。指定時はログインをスキップ)
 - `GKILL_LOCALE` (default: `ja`)
+- `GKILL_INSECURE` — `true` or `1` でgkill_serverへの接続時にTLS証明書検証をスキップ（自己署名証明書用）
+
+#### トランスポート
+- `MCP_TRANSPORT` (default: `stdio`) — `stdio` or `http`
+- `MCP_PORT` (default: `8808`) — HTTPサーバのポート番号
+- `MCP_API_KEY` — HTTPモード時必須。Bearer認証用APIキー
 
 ### 提供ツール（6つ）
 | ツール名 | 説明 |

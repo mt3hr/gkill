@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "mcp:gkill-read": "node mcp/gkill-read-server.mjs",
+    "mcp:gkill-read-http": "node src/mcp/gkill-read-server.mjs",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
