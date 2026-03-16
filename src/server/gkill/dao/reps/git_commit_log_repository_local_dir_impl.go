@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -363,13 +364,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	g.m.RLock()
 	defer g.m.RUnlock()
 
-	repName, err := g.GetRepName(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// 判定OKであればGitCommitLogを作る
-	gitCommitLogs := []GitCommitLog{}
+	// Phase 1: フィルタに一致するコミットを収集（StatsContextなし）
+	var matchedCommits []*object.Commit
 	var logs object.CommitIter
 	if query.UseIDs && len(query.IDs) == 1 {
 		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((query.IDs)[0])})
@@ -456,44 +452,133 @@ loop:
 				continue
 			}
 
-			addition, deletion := 0, 0
-			stats, err := commit.StatsContext(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get stat from commit: %w", err)
-				return nil, err
-			}
-
-			for _, stat := range stats {
-				addition += stat.Addition
-				deletion += stat.Deletion
-			}
-
-			gitCommitLog := GitCommitLog{}
-			gitCommitLog.IsDeleted = false
-			gitCommitLog.ID = commit.Hash.String()
-			gitCommitLog.RepName = repName
-			gitCommitLog.RelatedTime = commit.Committer.When
-			gitCommitLog.DataType = "git_commit_log"
-			gitCommitLog.CreateTime = commit.Committer.When
-			gitCommitLog.CreateApp = "git"
-			gitCommitLog.CreateDevice = ""
-			gitCommitLog.CreateUser = commit.Author.Name
-			gitCommitLog.UpdateTime = commit.Committer.When
-			gitCommitLog.UpdateApp = "git"
-			gitCommitLog.UpdateDevice = ""
-			gitCommitLog.UpdateUser = commit.Author.Name
-			gitCommitLog.CommitMessage = commit.Message
-			gitCommitLog.Addition = addition
-			gitCommitLog.Deletion = deletion
-
-			gitCommitLogs = append(gitCommitLogs, gitCommitLog)
+			matchedCommits = append(matchedCommits, commit)
 
 			if query.UseIDs && len(query.IDs) == 1 {
 				break loop
 			}
 		}
 	}
-	return gitCommitLogs, nil
+
+	// Phase 2: StatsContextを並列実行してGitCommitLogを構築
+	return g.buildGitCommitLogsParallel(ctx, matchedCommits)
+}
+
+// FindGitCommitLogByIDs 指定されたIDのコミットだけをStatsContext付きで取得する（差分更新用）
+func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLogByIDs(ctx context.Context, ids []string) ([]GitCommitLog, error) {
+	g.m.RLock()
+	defer g.m.RUnlock()
+
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	idSet := make(map[string]bool, len(ids))
+	for _, id := range ids {
+		idSet[id] = true
+	}
+
+	// 全コミットをイテレートし、指定IDに一致するものだけ収集
+	var matchedCommits []*object.Commit
+	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
+	if err != nil {
+		return nil, nil
+	}
+	defer logs.Close()
+
+	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
+		if err != nil {
+			return nil, err
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+		if idSet[commit.Hash.String()] {
+			matchedCommits = append(matchedCommits, commit)
+			delete(idSet, commit.Hash.String())
+			if len(idSet) == 0 {
+				break
+			}
+		}
+	}
+
+	// StatsContextを並列実行
+	return g.buildGitCommitLogsParallel(ctx, matchedCommits)
+}
+
+// buildGitCommitLogsParallel コミットのStatsContextをワーカープールで並列実行してGitCommitLogスライスを構築する
+func (g *gitCommitLogRepositoryLocalImpl) buildGitCommitLogsParallel(ctx context.Context, commits []*object.Commit) ([]GitCommitLog, error) {
+	if len(commits) == 0 {
+		return nil, nil
+	}
+
+	repName, _ := g.GetRepName(ctx)
+
+	results := make([]GitCommitLog, len(commits))
+	var firstErr error
+	var errOnce sync.Once
+	var wg sync.WaitGroup
+
+	numWorkers := runtime.NumCPU()
+	if numWorkers > len(commits) {
+		numWorkers = len(commits)
+	}
+	sem := make(chan struct{}, numWorkers)
+
+	for i, commit := range commits {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+
+		wg.Add(1)
+		go func(idx int, c *object.Commit) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			addition, deletion := 0, 0
+			stats, err := c.StatsContext(ctx)
+			if err != nil {
+				errOnce.Do(func() {
+					firstErr = fmt.Errorf("error at get stat from commit: %w", err)
+				})
+				return
+			}
+			for _, stat := range stats {
+				addition += stat.Addition
+				deletion += stat.Deletion
+			}
+
+			results[idx] = GitCommitLog{
+				IsDeleted:     false,
+				ID:            c.Hash.String(),
+				RepName:       repName,
+				RelatedTime:   c.Committer.When,
+				DataType:      "git_commit_log",
+				CreateTime:    c.Committer.When,
+				CreateApp:     "git",
+				CreateDevice:  "",
+				CreateUser:    c.Author.Name,
+				UpdateTime:    c.Committer.When,
+				UpdateApp:     "git",
+				UpdateDevice:  "",
+				UpdateUser:    c.Author.Name,
+				CommitMessage: c.Message,
+				Addition:      addition,
+				Deletion:      deletion,
+			}
+		}(i, commit)
+	}
+	wg.Wait()
+
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	return results, nil
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
