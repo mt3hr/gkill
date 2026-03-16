@@ -408,6 +408,82 @@ loop:
 	return matchGitCommitLogsList, nil
 }
 
+// FindGitCommitLogByIDs 指定IDのGitCommitLogを全リポジトリから並列取得する
+func (g GitCommitLogRepositories) FindGitCommitLogByIDs(ctx context.Context, ids []string) ([]GitCommitLog, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	matchGitCommitLogs := map[string]GitCommitLog{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []GitCommitLog, len(g))
+	errch := make(chan error, len(g))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range g {
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			logs, err := rep.FindGitCommitLogByIDs(ctx, ids)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- logs
+		})
+		if err != nil {
+			errch <- err
+		}
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find git commit log by ids: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// GitCommitLog集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case logsInRep := <-ch:
+			if logsInRep == nil {
+				continue loop
+			}
+			for _, log := range logsInRep {
+				if existLog, exist := matchGitCommitLogs[log.ID]; exist {
+					if log.UpdateTime.After(existLog.UpdateTime) {
+						matchGitCommitLogs[log.ID] = log
+					}
+				} else {
+					matchGitCommitLogs[log.ID] = log
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	result := make([]GitCommitLog, 0, len(matchGitCommitLogs))
+	for _, log := range matchGitCommitLogs {
+		result = append(result, log)
+	}
+	return result, nil
+}
+
 func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
 	var matchGitCommitLog *GitCommitLog
 	existErr := false
