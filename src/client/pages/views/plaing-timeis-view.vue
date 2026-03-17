@@ -1,5 +1,5 @@
 <template>
-    <div class="plaing_timeis_view_wrap">
+    <div class="plaing_timeis_view_wrap" ref="plaing_timeis_root">
         <KyouListView :kyou_height="180" :width="app_content_width" :list_height="kyou_list_view_height"
             :show_timeis_plaing_end_button="true" :application_config="application_config" :gkill_api="gkill_api"
             :matched_kyous="match_kyous_list" :query="query" :is_focused_list="true"
@@ -122,6 +122,7 @@ const emits = defineEmits<PlaingTimeIsViewEmits>()
 
 const {
     // Template refs
+    plaing_timeis_root,
     add_mi_dialog,
     add_nlog_dialog,
     add_lantana_dialog,
