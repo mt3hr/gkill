@@ -245,10 +245,16 @@ var (
 				return
 			}
 
-			httpClient := &http.Client{
-				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-				},
+			var httpClient *http.Client
+			if scheme == "https" {
+				// localhostの自己署名証明書への接続のためTLS検証をスキップする
+				httpClient = &http.Client{
+					Transport: &http.Transport{
+						TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+					},
+				}
+			} else {
+				httpClient = &http.Client{}
 			}
 			resp, err := httpClient.Post(address, "application/json", bytes.NewReader(jsonBody))
 			if err != nil {
