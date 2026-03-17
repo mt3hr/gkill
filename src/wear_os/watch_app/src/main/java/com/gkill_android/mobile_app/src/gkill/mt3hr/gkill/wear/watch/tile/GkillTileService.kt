@@ -6,9 +6,9 @@ import androidx.wear.protolayout.DeviceParametersBuilders
 import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.ModifiersBuilders
 import androidx.wear.protolayout.TimelineBuilders
+import androidx.wear.protolayout.DimensionBuilders
 import androidx.wear.protolayout.material.Chip
 import androidx.wear.protolayout.material.CompactChip
-import androidx.wear.protolayout.material.layouts.PrimaryLayout
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.TileBuilders
@@ -89,23 +89,32 @@ class GkillTileService : TileService() {
                     ).build()
             ).build()
 
-        return PrimaryLayout.Builder(deviceParams)
-            .setContent(
+        val chipWidth = DimensionBuilders.dp(140f)
+
+        return LayoutElementBuilders.Box.Builder()
+            .setWidth(DimensionBuilders.expand())
+            .setHeight(DimensionBuilders.expand())
+            .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+            .setVerticalAlignment(LayoutElementBuilders.VERTICAL_ALIGN_CENTER)
+            .addContent(
                 LayoutElementBuilders.Column.Builder()
+                    .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
                     .addContent(
                         Chip.Builder(this, launchRecord, deviceParams)
                             .setPrimaryLabelContent("📝 記録する")
+                            .setWidth(chipWidth)
                             .build()
                     )
                     .addContent(
                         Chip.Builder(this, launchPlaing, deviceParams)
                             .setPrimaryLabelContent("▶ 実行中")
+                            .setWidth(chipWidth)
                             .build()
                     )
-                    .build()
-            )
-            .setPrimaryChipContent(
-                CompactChip.Builder(this, "🔄 更新", launchRefresh, deviceParams)
+                    .addContent(
+                        CompactChip.Builder(this, "🔄 更新", launchRefresh, deviceParams)
+                            .build()
+                    )
                     .build()
             )
             .build()
