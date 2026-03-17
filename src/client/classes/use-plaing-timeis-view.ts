@@ -10,6 +10,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { Tag } from '@/classes/datas/tag'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
+import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 
 export function usePlaingTimeisView(options: {
     props: PlaingTimeIsViewProps,
@@ -18,6 +19,7 @@ export function usePlaingTimeisView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
+    const plaing_timeis_root = ref<HTMLElement | null>(null)
     const add_mi_dialog = ref<any>(null)
     const add_nlog_dialog = ref<any>(null)
     const add_lantana_dialog = ref<any>(null)
@@ -228,6 +230,10 @@ export function usePlaingTimeisView(options: {
         }
     }
 
+    // ── Enter key → KFTL dialog ──
+    const enable_enter_shortcut = ref(true)
+    useScopedEnterForKFTL(plaing_timeis_root, show_kftl_dialog, enable_enter_shortcut)
+
     // ── Dialog show methods ──
     function show_kftl_dialog(): void {
         kftl_dialog.value?.show()
@@ -310,6 +316,7 @@ export function usePlaingTimeisView(options: {
     // ── Return ──
     return {
         // Template refs
+        plaing_timeis_root,
         add_mi_dialog,
         add_nlog_dialog,
         add_lantana_dialog,
