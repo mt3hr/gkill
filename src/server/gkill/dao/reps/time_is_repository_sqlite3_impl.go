@@ -261,6 +261,9 @@ FROM TIMEIS
 	ignoreCase = true
 
 	onlyLatestData = query.OnlyLatestData
+	if query.UsePlaing {
+		onlyLatestData = true
+	}
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
@@ -814,6 +817,9 @@ FROM TIMEIS
 	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
+	if query.UsePlaing {
+		onlyLatestData = true
+	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err

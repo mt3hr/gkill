@@ -850,6 +850,9 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
+	if query.UsePlaing {
+		onlyLatestData = true
+	}
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
