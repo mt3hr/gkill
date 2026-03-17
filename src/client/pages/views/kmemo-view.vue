@@ -29,5 +29,6 @@ defineExpose({ show_context_menu })
 <style lang="css" scoped>
 .kmemo_text_content {
     white-space: pre-line;
+    overflow-wrap: anywhere;
 }
 </style>

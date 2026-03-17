@@ -15,7 +15,7 @@
                 </td>
                 <td>
                     <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link"
-                        style="white-space: nowrap;">{{
+                        class="urlog_url">{{
                             kyou.typed_urlog.url }}</a>
                 </td>
             </tr>
@@ -106,6 +106,13 @@ defineExpose({ show_context_menu })
     min-width: 75px;
     max-width: 75px;
     object-fit: cover;
+}
+
+.urlog_url {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
 }
 
 .urlog_description {
