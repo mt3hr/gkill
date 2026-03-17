@@ -132,7 +132,7 @@ td {
 
 /* dialog: image/video 共通 */
 .kyou_dialog :is(.kyou_image, .kyou_video) {
-  width: unset !important;
+  width: -webkit-fill-available !important;
   height: unset !important;
   max-width: 80vw !important;
   max-height: 85vh !important;
@@ -375,6 +375,10 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   border-radius: 12px;
   max-width: 85vw;
   box-shadow: 0 0 8px silver;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
 .gkill-floating-dialog__body .plaing_timeis_view_wrap {
@@ -403,11 +407,13 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   touch-action: none;
   background: rgb(var(--v-theme-primary));
   color: white;
+  height: 40px;
 }
 
 .gkill-floating-dialog__header:active {
   cursor: grabbing;
   background: rgb(var(--v-theme-primary));
+  height: 40px;
 }
 
 .gkill-floating-dialog__title {
@@ -445,5 +451,38 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   overflow: auto;
   overflow-x: hidden;
   background-color: rgba(var(--v-theme-background));
+}
+
+.gkill-floating-dialog.is-user-resized .gkill-floating-dialog__body {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.gkill-floating-dialog__resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 2;
+  background: linear-gradient(135deg,
+      transparent 30%,
+      rgba(0, 0, 0, 0.15) 30%,
+      rgba(0, 0, 0, 0.15) 35%,
+      transparent 35%,
+      transparent 50%,
+      rgba(0, 0, 0, 0.15) 50%,
+      rgba(0, 0, 0, 0.15) 55%,
+      transparent 55%,
+      transparent 70%,
+      rgba(0, 0, 0, 0.15) 70%,
+      rgba(0, 0, 0, 0.15) 75%,
+      transparent 75%);
+  border-radius: 0 0 12px 0;
 }
 </style>
