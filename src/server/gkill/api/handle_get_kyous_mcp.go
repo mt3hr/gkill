@@ -54,8 +54,11 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 
 	// デフォルト設定
+	const maxLimit = 1000
 	if request.Limit <= 0 {
 		request.Limit = 50
+	} else if request.Limit > maxLimit {
+		request.Limit = maxLimit
 	}
 	if request.MaxSizeMB <= 0 {
 		request.MaxSizeMB = 1.0
