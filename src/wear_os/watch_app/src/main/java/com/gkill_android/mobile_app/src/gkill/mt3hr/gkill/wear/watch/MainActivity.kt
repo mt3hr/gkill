@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
     private lateinit var wearClient: GkillWearClient
 
+    private var launchedFromTile = false
     private var screenState by mutableStateOf<Screen>(Screen.HomeMenu)
 
     // CompletableDeferred for awaiting phone responses with timeout
@@ -84,8 +85,9 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         super.onCreate(savedInstanceState)
         wearClient = GkillWearClient(this)
 
-        // Check intent extra for direct mode navigation
+        // Check intent extra for direct mode navigation (tile sets EXTRA_MODE)
         val mode = intent?.getStringExtra(EXTRA_MODE)
+        launchedFromTile = (mode != null)
         screenState = when (mode) {
             MODE_RECORD -> Screen.Loading
             MODE_PLAING -> Screen.PlaingLoading
@@ -110,13 +112,17 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                     }
 
                     is Screen.TemplateList -> {
-                        BackHandler(enabled = s.breadcrumb.isNotEmpty()) {
-                            val (prevTitle, prevNodes) = s.breadcrumb.last()
-                            screenState = Screen.TemplateList(
-                                nodes = prevNodes,
-                                title = prevTitle,
-                                breadcrumb = s.breadcrumb.dropLast(1)
-                            )
+                        BackHandler {
+                            if (s.breadcrumb.isNotEmpty()) {
+                                val (prevTitle, prevNodes) = s.breadcrumb.last()
+                                screenState = Screen.TemplateList(
+                                    nodes = prevNodes,
+                                    title = prevTitle,
+                                    breadcrumb = s.breadcrumb.dropLast(1)
+                                )
+                            } else {
+                                navigateBackToTopOrFinish()
+                            }
                         }
                         TemplateListScreen(
                             nodes = s.nodes,
@@ -158,11 +164,14 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                     }
 
                     is Screen.Result -> {
+                        BackHandler {
+                            navigateBackToTopOrFinish()
+                        }
                         ResultScreen(
                             success = s.success,
                             errorMessage = s.error,
                             onDismiss = {
-                                screenState = Screen.HomeMenu
+                                navigateBackToTopOrFinish()
                             }
                         )
                     }
@@ -177,7 +186,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
                     is Screen.PlaingList -> {
                         BackHandler {
-                            screenState = Screen.HomeMenu
+                            navigateBackToTopOrFinish()
                         }
                         PlaingTimeIsListScreen(
                             nodes = s.nodes,
@@ -232,6 +241,14 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         Wearable.getMessageClient(this).removeListener(this)
     }
 
+    private fun navigateBackToTopOrFinish() {
+        if (launchedFromTile) {
+            finish()
+        } else {
+            screenState = Screen.HomeMenu
+        }
+    }
+
     // ─── MessageClient callback ────────────────────────────────────────────────
 
     override fun onMessageReceived(event: MessageEvent) {
@@ -261,6 +278,17 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
     private suspend fun requestTemplates() {
         Log.i(TAG, "requestTemplates: start")
+
+        // キャッシュがある場合はキャッシュを使用
+        val cached = TemplateCacheManager.loadTemplates(this)
+        if (cached.isNotEmpty()) {
+            Log.i(TAG, "requestTemplates: using cache (${cached.size} root nodes)")
+            screenState = Screen.TemplateList(nodes = cached, title = "テンプレート", breadcrumb = emptyList())
+            return
+        }
+
+        // キャッシュがない場合のみスマホから取得
+        Log.i(TAG, "requestTemplates: no cache, fetching from phone")
         screenState = Screen.Loading
 
         val sent = wearClient.sendGetTemplatesRequest()
