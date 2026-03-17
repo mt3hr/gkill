@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 import http from "node:http";
 import process from "node:process";
+import { Agent } from "undici";
 
 const SERVER_NAME = "gkill-read-mcp";
 const SERVER_VERSION = "0.3.2";
@@ -253,6 +254,8 @@ class GkillReadClient {
     this.password = process.env.GKILL_PASSWORD || "";
     this.defaultLocale = process.env.GKILL_LOCALE || "ja";
     this.sessionId = process.env.GKILL_SESSION_ID || "";
+    const insecure = process.env.GKILL_INSECURE === "true" || process.env.GKILL_INSECURE === "1";
+    this.dispatcher = insecure ? new Agent({ connect: { rejectUnauthorized: false } }) : null;
   }
 
   resolvePasswordSha256() {
@@ -294,14 +297,18 @@ class GkillReadClient {
     const timeoutMs = parseInt(process.env.GKILL_FETCH_TIMEOUT_MS || "120000", 10);
     let response;
     try {
-      response = await fetch(url, {
+      const fetchOptions = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(timeoutMs),
-      });
+      };
+      if (this.dispatcher) {
+        fetchOptions.dispatcher = this.dispatcher;
+      }
+      response = await fetch(url, fetchOptions);
     } catch (error) {
       throw new GkillApiError(`Network error at ${pathname}.`, {
         url,
@@ -791,11 +798,6 @@ class HttpTransport {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ ok: true }));
   }
-}
-
-// Skip TLS certificate verification for self-signed certs on gkill_server
-if (process.env.GKILL_INSECURE === "true" || process.env.GKILL_INSECURE === "1") {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 }
 
 // Entry point
