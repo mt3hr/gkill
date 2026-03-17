@@ -938,9 +938,7 @@ WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.Qu
 		}
 		addr.IsDeleted = isDeletedInt != 0
 		addr.DataUpdateTime = time.Unix(dataUpdateTimeUnix, 0)
-		if targetIDInData != nil {
-			addr.TargetID = *targetIDInData
-		}
+		addr.TargetIDInData = targetIDInData
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
 	}
 	return latestDataRepositoryAddresses, nil
