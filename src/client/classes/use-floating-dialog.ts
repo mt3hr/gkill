@@ -5,10 +5,12 @@
 // - containerRef が v-if で後から生える前提で ResizeObserver を attach
 // - 初回/毎回の中央寄せをオプションで制御
 // - ヘッダー内の操作要素（checkbox / btn 等）タップ時はドラッグを開始しない（モバイル対策）
+// - 右下コーナーのリサイズハンドルでユーザがダイアログサイズを変更可能
 
 import { computed, onBeforeUnmount, onMounted, ref, watch, type ComputedRef, type Ref } from "vue"
 
 type Point = { x: number; y: number }
+type Size = { w: number; h: number }
 
 export type UseFloatingDialogResult = {
   // template: :ref="ui.containerRef"
@@ -25,6 +27,9 @@ export type UseFloatingDialogResult = {
 
   // 「中央へ戻す」ボタンなどから呼ぶ
   resetToCenter: () => void
+
+  // ユーザ設定サイズをリセットしてCSS既定サイズに戻す
+  resetSize: () => void
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -82,6 +87,13 @@ function safeSet(key: string, val: string): void {
     // noop
   }
 }
+function safeRemove(key: string): void {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // noop
+  }
+}
 
 function loadBool(key: string, defaultValue: boolean): boolean {
   const raw = safeGet(key)
@@ -107,6 +119,21 @@ function savePoint(key: string, p: Point): void {
   safeSet(key, JSON.stringify(p))
 }
 
+function loadSize(key: string): Size | null {
+  try {
+    const raw = safeGet(key)
+    if (!raw) return null
+    const s = JSON.parse(raw) as Size
+    if (typeof s?.w !== "number" || typeof s?.h !== "number") return null
+    return s
+  } catch {
+    return null
+  }
+}
+function saveSize(key: string, s: Size): void {
+  safeSet(key, JSON.stringify(s))
+}
+
 export function useFloatingDialog(
   storageKey: string,
   opts?: {
@@ -121,6 +148,10 @@ export function useFloatingDialog(
     centerMode?: "first" | "always" | "never"
     // centerMode="always" で「中央に出しても保存しない」方が良い場合 true
     dontPersistWhenAlwaysCenter?: boolean
+    // リサイズ可能にするか（デフォルト true）
+    resizable?: boolean
+    // 最小サイズ（デフォルト { w: 200, h: 150 }）
+    minSize?: Size
   }
 ): UseFloatingDialogResult {
   const margin = opts?.margin ?? 8
@@ -128,9 +159,13 @@ export function useFloatingDialog(
   const zIndex = opts?.zIndex ?? 1100
   const centerMode = opts?.centerMode ?? "first"
   const dontPersistWhenAlwaysCenter = opts?.dontPersistWhenAlwaysCenter ?? false
+  const resizable = opts?.resizable ?? true
+  const minW = opts?.minSize?.w ?? 200
+  const minH = opts?.minSize?.h ?? 150
 
   const posKey = `${storageKey}:pos`
   const transparentKey = `${storageKey}:transparent`
+  const sizeKey = `${storageKey}:size`
 
   const containerRef = ref<HTMLElement | null>(null)
 
@@ -145,6 +180,9 @@ export function useFloatingDialog(
   const pos = ref<Point>(
     loadPoint(posKey, opts?.defaultPos ?? { x: 16, y: 72 }),
   )
+
+  // ユーザ設定サイズ（null = 未リサイズ、CSS既定サイズを使用）
+  const userSize = ref<Size | null>(resizable ? loadSize(sizeKey) : null)
 
   // 内容の変化でサイズが変わるので observer で追従
   const lastRect = ref<{ w: number; h: number }>({ w: 0, h: 0 })
@@ -179,14 +217,30 @@ export function useFloatingDialog(
     savePoint(posKey, pos.value)
   }
 
+  // is-user-resized クラスの管理
+  function updateResizedClass(): void {
+    const el = containerRef.value
+    if (!el) return
+    if (userSize.value) {
+      el.classList.add("is-user-resized")
+    } else {
+      el.classList.remove("is-user-resized")
+    }
+  }
+
   const fixedStyle = computed<Record<string, string>>(() => {
-    return {
+    const s: Record<string, string> = {
       position: "fixed",
       left: `${Math.round(pos.value.x)}px`,
       top: `${Math.round(pos.value.y)}px`,
       zIndex: String(zIndex),
       willChange: "left, top",
     }
+    if (userSize.value) {
+      s.width = `${Math.round(userSize.value.w)}px`
+      s.height = `${Math.round(userSize.value.h)}px`
+    }
+    return s
   })
 
   // drag state
@@ -194,7 +248,25 @@ export function useFloatingDialog(
   let startPointer: Point = { x: 0, y: 0 }
   let startPos: Point = { x: 0, y: 0 }
 
+  // resize state
+  let resizing = false
+  let resizeStartPointer: Point = { x: 0, y: 0 }
+  let resizeStartSize: Size = { w: 0, h: 0 }
+
   function onMove(e: MouseEvent | TouchEvent): void {
+    if (resizing) {
+      if ("touches" in e) e.preventDefault()
+      const p = getPointerXY(e)
+      const maxW = window.innerWidth * 0.95
+      const maxH = window.innerHeight * 0.95
+      userSize.value = {
+        w: clamp(resizeStartSize.w + (p.x - resizeStartPointer.x), minW, maxW),
+        h: clamp(resizeStartSize.h + (p.y - resizeStartPointer.y), minH, maxH),
+      }
+      updateResizedClass()
+      return
+    }
+
     if (!dragging) return
 
     // touch でのページスクロールを抑制
@@ -209,6 +281,11 @@ export function useFloatingDialog(
   }
 
   function onUp(): void {
+    if (resizing) {
+      resizing = false
+      if (userSize.value) saveSize(sizeKey, userSize.value)
+      return
+    }
     if (!dragging) return
     dragging = false
     persistPos()
@@ -228,6 +305,18 @@ export function useFloatingDialog(
 
     // touchstart を抑制しないと「タップ→スクロール」判定が混ざって変な挙動になりがち
     if ("touches" in e) e.preventDefault()
+  }
+
+  function onResizePointerDown(e: MouseEvent | TouchEvent): void {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const rect = containerRef.value?.getBoundingClientRect()
+    if (!rect) return
+
+    resizing = true
+    resizeStartPointer = getPointerXY(e)
+    resizeStartSize = { w: rect.width, h: rect.height }
   }
 
   function resetToCenter(): void {
@@ -254,6 +343,12 @@ export function useFloatingDialog(
         persistPos()
       }
     })
+  }
+
+  function resetSize(): void {
+    userSize.value = null
+    safeRemove(sizeKey)
+    updateResizedClass()
   }
 
   // 初回中央寄せの実行フラグ
@@ -302,8 +397,30 @@ export function useFloatingDialog(
     persistPos()
   }
 
+  // リサイズハンドル要素の管理
+  let resizeHandle: HTMLElement | null = null
+
+  function createResizeHandle(parent: HTMLElement): void {
+    if (!resizable || resizeHandle) return
+    resizeHandle = document.createElement("div")
+    resizeHandle.className = "gkill-floating-dialog__resize-handle"
+    resizeHandle.addEventListener("mousedown", onResizePointerDown as any)
+    resizeHandle.addEventListener("touchstart", onResizePointerDown as any, { passive: false })
+    parent.appendChild(resizeHandle)
+  }
+
+  function removeResizeHandle(): void {
+    if (!resizeHandle) return
+    resizeHandle.removeEventListener("mousedown", onResizePointerDown as any)
+    resizeHandle.removeEventListener("touchstart", onResizePointerDown as any)
+    resizeHandle.remove()
+    resizeHandle = null
+  }
+
   onMounted(() => {
     ro = new ResizeObserver(() => {
+      // リサイズ中はユーザ操作を優先し、clamp を抑制
+      if (resizing) return
       // 内容サイズ変化 → 画面外に出ないように補正
       readRect()
       clampToViewport()
@@ -318,6 +435,7 @@ export function useFloatingDialog(
   })
 
   onBeforeUnmount(() => {
+    removeResizeHandle()
     detachObserver()
     if (ro) ro.disconnect()
     ro = null
@@ -329,16 +447,23 @@ export function useFloatingDialog(
     window.removeEventListener("touchend", onUp as any)
   })
 
-  // ✅ Teleport の v-if で DOM が生えた瞬間に observer attach & 中央寄せ
+  // ✅ Teleport の v-if で DOM が生えた瞬間に observer attach & 中央寄せ & リサイズハンドル注入
   watch(
     containerRef,
     (el) => {
       if (!el) {
+        removeResizeHandle()
         detachObserver()
         return
       }
 
       if (ro) attachObserver(el)
+
+      // リサイズハンドルを注入
+      createResizeHandle(el)
+
+      // is-user-resized クラスを反映
+      updateResizedClass()
 
       // 出現直後は rect が 0 のことがあるので次フレームで処理
       requestAnimationFrame(() => {
@@ -361,5 +486,6 @@ export function useFloatingDialog(
     onHeaderPointerDown,
     isTransparent,
     resetToCenter,
+    resetSize,
   }
 }
