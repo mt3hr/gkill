@@ -11,7 +11,7 @@
             <tr>
                 <td>
                     <img v-if="kyou.typed_urlog" class="urlog_favicon"
-                        :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.favicon_image)" />
+                        :src="kyou.typed_urlog.favicon_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.favicon_image)" />
                 </td>
                 <td>
                     <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link"
