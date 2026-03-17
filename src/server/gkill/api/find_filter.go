@@ -257,14 +257,12 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish findKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-
 	gkillErr, err = f.sortAndTrimKyousMap(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at sort and trim kyousMap: %w", err)
 		return nil, gkillErr, err
 	}
-	slog.Log(ctx, gkill_log.Trace, "finish findKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-
+	slog.Log(ctx, gkill_log.Trace, "finish sortAndTrimKyousMap", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
 	gkillErr, err = f.filterMiForMi(ctx, findKyouContext) //miの場合のみ
 	if err != nil {
 		err = fmt.Errorf("error at filter mi for mi: %w", err)
@@ -314,7 +312,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish replaceLatestKyouInfos", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-
 	for _, kyous := range findKyouContext.MatchKyousCurrent {
 		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
 	}
@@ -1525,7 +1522,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
 		// Miもそのままいれる
 		if ((currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) || isMiData || isTimeIsData) && !isUsePlaing) ||
-			((currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) || isTimeIsData) && isUsePlaing) {
+			(currentKyou[0].UpdateTime.Unix() == latestData.DataUpdateTime.Unix() && isUsePlaing) {
 			latestKyousMap[id] = currentKyou
 			continue
 		} else if isUsePlaing {
