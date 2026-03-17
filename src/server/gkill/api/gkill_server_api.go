@@ -10853,12 +10853,12 @@ func GenerateNewID() string {
 }
 
 func (g *GkillServerAPI) resolveFileName(repDir string, filename string, behavior req_res.FileUploadConflictBehavior) (string, error) {
-	fullFilename := filepath.Join(repDir, filename)
-	// パストラバーサル対策: repDir外へのアクセスを禁止する
-	repDirClean := filepath.Clean(repDir)
-	if !strings.HasPrefix(filepath.Clean(fullFilename), repDirClean+string(os.PathSeparator)) {
+	// パストラバーサル対策: ファイル名をサニタイズしてrepDir外へのアクセスを禁止する
+	cleanFilename := filepath.Clean(filename)
+	if filepath.IsAbs(cleanFilename) || cleanFilename == ".." || strings.HasPrefix(cleanFilename, ".."+string(os.PathSeparator)) {
 		return "", fmt.Errorf("invalid filename: path traversal detected")
 	}
+	fullFilename := filepath.Join(repDir, cleanFilename)
 	_, err := os.Stat(fullFilename)
 	if err != nil {
 		return fullFilename, nil
