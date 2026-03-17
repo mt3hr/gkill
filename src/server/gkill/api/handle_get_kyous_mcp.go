@@ -145,7 +145,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	if candidateCount > len(batch) {
 		candidateCount = len(batch)
 	}
-	candidateIDs := make([]string, 0, candidateCount)
+	candidateIDs := make([]string, 0)
 	for i := 0; i < candidateCount; i++ {
 		candidateIDs = append(candidateIDs, batch[i].ID)
 	}
