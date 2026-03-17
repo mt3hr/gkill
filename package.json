@@ -55,6 +55,10 @@
     "vue3-google-map": "^0.21.0",
     "vuetify": "^3.11.1"
   },
+  "overrides": {
+    "serialize-javascript": ">=7.0.3",
+    "esbuild": ">=0.24.3"
+  },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",
     "@tsconfig/node20": "^20.1.4",
