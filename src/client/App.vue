@@ -439,7 +439,7 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
 
 .gkill-floating-dialog__body {
   box-sizing: border-box;
-  width: fit-content;
+  width: min(500px, 85vw);
   max-width: 85vw;
   max-height: 92vh;
   overflow: auto;
