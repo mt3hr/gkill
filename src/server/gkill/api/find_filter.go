@@ -1122,7 +1122,7 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 	filteredByTimeIs := map[string][]reps.Kyou{}
 	for _, timeis := range findCtx.MatchTimeIssAtFilterTags {
 		for id, kyous := range findCtx.MatchKyousCurrent {
-			if (timeis.EndTime != nil && kyous[0].RelatedTime.After(timeis.StartTime) && kyous[0].RelatedTime.Before(*timeis.EndTime)) || (timeis.EndTime == nil && kyous[0].RelatedTime.After(timeis.StartTime)) {
+			if (timeis.EndTime != nil && !kyous[0].RelatedTime.Before(timeis.StartTime) && !kyous[0].RelatedTime.After(*timeis.EndTime)) || (timeis.EndTime == nil && !kyous[0].RelatedTime.Before(timeis.StartTime)) {
 				filteredByTimeIs[id] = kyous
 			}
 		}
