@@ -130,9 +130,10 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 |---|---|---|
 | `query` | object | FindQuery（後述） |
 | `locale_name` | string | ロケール（例: ja, en） |
-| `limit` | integer | 最大取得件数（default: 50） |
-| `cursor` | string | 前回レスポンスの `next_cursor` を指定してページング |
-| `max_size_mb` | number | レスポンスの最大サイズMB（default: 1.0） |
+| `limit` | integer | 最大取得件数（default: 20） |
+| `cursor` | string | 前回レスポンスの `next_cursor` を指定してページング。ISO-8601推奨 |
+| `max_size_mb` | number | レスポンスの最大サイズMB（default: 0.25） |
+| `is_include_timeis` | boolean | 各Kyouに付随する TimeIs を含めるか（default: false） |
 
 レスポンスフィールド:
 - `kyous[]`: Kyou DTOの配列（各要素に `data_type`, `related_time`, `tags[]`, `texts[]`, `notifications[]`, `payload` を含む）
@@ -159,6 +160,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 #### 5) 日時フォーマット
 - 日時は ISO-8601 を推奨
 - 例: `2026-02-25T10:30:00+09:00`
+- 一部パラメータは `YYYY-MM-DD` も受け付け、自動で RFC3339 に補正されます
 - `gkill_get_gps_log` の `start_date` / `end_date` は必須
 
 #### 6) `gkill_get_kyous` の実用クエリ例
@@ -248,6 +250,7 @@ Mi抽出:
 
 #### 9) 大量データ取得時の運用
 - `limit` と `max_size_mb` を適切に設定してレスポンスサイズを制御する
+- ChatGPTではまず `limit=20` 前後、`max_size_mb=0.25` 前後、`is_include_timeis=false` で試す
 - `has_more: true` の場合は `next_cursor` を使って続きを取得する
 - まず期間を絞り込んでから取得する（`use_calendar` 推奨）
 - 同一条件の連打を避け、必要最小限のクエリにする

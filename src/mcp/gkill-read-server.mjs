@@ -6,7 +6,7 @@ import process from "node:process";
 import { Agent } from "undici";
 
 const SERVER_NAME = "gkill-read-mcp";
-const SERVER_VERSION = "0.3.2";
+const SERVER_VERSION = "0.4.0";
 
 const AUTH_ERROR_CODES = new Set([
   "ERR000002", // AccountNotFoundError
@@ -15,6 +15,70 @@ const AUTH_ERROR_CODES = new Set([
 ]);
 
 const ISO_DATETIME_DESC = "ISO-8601 datetime string, e.g. 2026-02-25T10:30:00+09:00";
+const DATE_ONLY_DESC = "YYYY-MM-DD date string";
+const DEFAULT_KYOUS_LIMIT = 20;
+const DEFAULT_KYOUS_MAX_SIZE_MB = 0.25;
+const DEFAULT_KYOUS_INCLUDE_TIMEIS = false;
+const RFC3339_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const KYOUS_TOP_LEVEL_FIELDS = new Set(["query", "locale_name", "limit", "cursor", "max_size_mb", "is_include_timeis"]);
+const KYOUS_QUERY_BOOLEAN_FIELDS = new Set([
+  "update_cache",
+  "is_deleted",
+  "use_tags",
+  "use_reps",
+  "use_rep_types",
+  "use_ids",
+  "use_include_id",
+  "use_words",
+  "words_and",
+  "tags_and",
+  "use_timeis",
+  "timeis_words_and",
+  "use_timeis_tags",
+  "timeis_tags_and",
+  "use_calendar",
+  "use_map",
+  "include_create_mi",
+  "include_check_mi",
+  "include_limit_mi",
+  "include_start_mi",
+  "include_end_mi",
+  "include_end_timeis",
+  "use_plaing",
+  "use_update_time",
+  "is_image_only",
+  "for_mi",
+  "use_mi_board_name",
+  "use_period_of_time",
+  "only_latest_data",
+]);
+const KYOUS_QUERY_STRING_ARRAY_FIELDS = new Set([
+  "rep_types",
+  "ids",
+  "words",
+  "not_words",
+  "reps",
+  "tags",
+  "hide_tags",
+  "timeis_words",
+  "timeis_not_words",
+  "timeis_tags",
+  "hide_timeis_tags",
+]);
+const KYOUS_QUERY_NUMBER_FIELDS = new Set(["map_radius", "map_latitude", "map_longitude"]);
+const KYOUS_QUERY_INTEGER_FIELDS = new Map([
+  ["period_of_time_start_time_second", { min: 0, max: 86399 }],
+  ["period_of_time_end_time_second", { min: 0, max: 86399 }],
+]);
+const KYOUS_QUERY_DATETIME_FIELDS = new Map([
+  ["calendar_start_date", { allowDateOnly: true, endOfDay: false }],
+  ["calendar_end_date", { allowDateOnly: true, endOfDay: true }],
+  ["plaing_time", { allowDateOnly: true, endOfDay: false }],
+  ["update_time", { allowDateOnly: true, endOfDay: false }],
+]);
+const MI_CHECK_STATES = new Set(["all", "checked", "uncheck"]);
+const MI_SORT_TYPES = new Set(["create_time", "estimate_start_time", "estimate_end_time", "limit_time"]);
 
 const FIND_QUERY_SCHEMA = {
   type: "object",
@@ -77,8 +141,8 @@ const FIND_QUERY_SCHEMA = {
     },
     timeis_tags_and: { type: "boolean" },
     use_calendar: { type: "boolean" },
-    calendar_start_date: { type: "string", description: ISO_DATETIME_DESC },
-    calendar_end_date: { type: "string", description: ISO_DATETIME_DESC },
+    calendar_start_date: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
+    calendar_end_date: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
     use_map: { type: "boolean" },
     map_radius: { type: "number" },
     map_latitude: { type: "number" },
@@ -90,9 +154,9 @@ const FIND_QUERY_SCHEMA = {
     include_end_mi: { type: "boolean" },
     include_end_timeis: { type: "boolean" },
     use_plaing: { type: "boolean" },
-    plaing_time: { type: "string", description: ISO_DATETIME_DESC },
+    plaing_time: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
     use_update_time: { type: "boolean" },
-    update_time: { type: "string", description: ISO_DATETIME_DESC },
+    update_time: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
     is_image_only: { type: "boolean" },
     for_mi: { type: "boolean" },
     use_mi_board_name: { type: "boolean" },
@@ -124,6 +188,310 @@ const FIND_QUERY_SCHEMA = {
   additionalProperties: true,
 };
 
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function describeValueType(value) {
+  if (value === null) return "null";
+  if (Array.isArray(value)) return "array";
+  return typeof value;
+}
+
+function previewValue(value) {
+  if (typeof value === "string") {
+    return value.length > 120 ? `${value.slice(0, 117)}...` : value;
+  }
+  if (typeof value === "number" || typeof value === "boolean" || value === null) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return `array(${value.length})`;
+  }
+  if (isPlainObject(value)) {
+    return "object";
+  }
+  return describeValueType(value);
+}
+
+function invalidArgument(field, message, value, extra = {}) {
+  return new GkillApiError(`Invalid argument '${field}': ${message}.`, {
+    field,
+    actualType: describeValueType(value),
+    actualValue: previewValue(value),
+    ...extra,
+  });
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatLocalRfc3339(date) {
+  const offsetMinutes = -date.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
+  const offsetRemainder = Math.abs(offsetMinutes) % 60;
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}${sign}${pad2(offsetHours)}:${pad2(offsetRemainder)}`;
+}
+
+function normalizeDateOnlyToRfc3339(value, { endOfDay = false } = {}) {
+  const match = DATE_ONLY_REGEX.exec(value);
+  if (!match) {
+    return null;
+  }
+  const year = Number.parseInt(match[0].slice(0, 4), 10);
+  const month = Number.parseInt(match[0].slice(5, 7), 10);
+  const day = Number.parseInt(match[0].slice(8, 10), 10);
+  const date = endOfDay
+    ? new Date(year, month - 1, day, 23, 59, 59, 0)
+    : new Date(year, month - 1, day, 0, 0, 0, 0);
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+  return formatLocalRfc3339(date);
+}
+
+function assertObject(value, field, { allowUndefined = false } = {}) {
+  if (value === undefined && allowUndefined) {
+    return undefined;
+  }
+  if (!isPlainObject(value)) {
+    throw invalidArgument(field, "must be an object", value);
+  }
+  return value;
+}
+
+function assertBoolean(value, field) {
+  if (typeof value !== "boolean") {
+    throw invalidArgument(field, "must be a boolean", value);
+  }
+  return value;
+}
+
+function assertNumber(value, field, { minExclusive = null, min = null, max = null } = {}) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw invalidArgument(field, "must be a finite number", value);
+  }
+  if (minExclusive !== null && value <= minExclusive) {
+    throw invalidArgument(field, `must be greater than ${minExclusive}`, value);
+  }
+  if (min !== null && value < min) {
+    throw invalidArgument(field, `must be greater than or equal to ${min}`, value);
+  }
+  if (max !== null && value > max) {
+    throw invalidArgument(field, `must be less than or equal to ${max}`, value);
+  }
+  return value;
+}
+
+function assertInteger(value, field, { min = null, max = null } = {}) {
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    throw invalidArgument(field, "must be an integer", value);
+  }
+  if (min !== null && value < min) {
+    throw invalidArgument(field, `must be greater than or equal to ${min}`, value);
+  }
+  if (max !== null && value > max) {
+    throw invalidArgument(field, `must be less than or equal to ${max}`, value);
+  }
+  return value;
+}
+
+function assertTrimmedString(value, field) {
+  if (typeof value !== "string") {
+    throw invalidArgument(field, "must be a string", value);
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    throw invalidArgument(field, "must not be empty", value);
+  }
+  return trimmed;
+}
+
+function assertStringArray(value, field) {
+  if (!Array.isArray(value)) {
+    throw invalidArgument(field, "must be an array of strings", value);
+  }
+  return value.map((item, index) => assertTrimmedString(item, `${field}[${index}]`));
+}
+
+function assertIntegerArray(value, field, { min = null, max = null } = {}) {
+  if (!Array.isArray(value)) {
+    throw invalidArgument(field, "must be an array of integers", value);
+  }
+  return value.map((item, index) => assertInteger(item, `${field}[${index}]`, { min, max }));
+}
+
+function normalizeDateTimeString(value, field, { allowDateOnly = false, endOfDay = false } = {}) {
+  const trimmed = assertTrimmedString(value, field);
+  if (RFC3339_REGEX.test(trimmed) && Number.isFinite(Date.parse(trimmed))) {
+    return trimmed;
+  }
+  if (allowDateOnly && DATE_ONLY_REGEX.test(trimmed)) {
+    const normalized = normalizeDateOnlyToRfc3339(trimmed, { endOfDay });
+    if (normalized) {
+      return normalized;
+    }
+  }
+  const allowedFormat = allowDateOnly ? `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` : ISO_DATETIME_DESC;
+  throw invalidArgument(field, `must be ${allowedFormat}`, value);
+}
+
+function assertKnownKeys(value, allowedKeys, field) {
+  for (const key of Object.keys(value)) {
+    if (!allowedKeys.has(key)) {
+      throw invalidArgument(`${field}.${key}`, "is not supported", value[key], {
+        allowed: Array.from(allowedKeys).sort(),
+      });
+    }
+  }
+}
+
+function normalizeKyouQuery(query) {
+  const source = assertObject(query, "query");
+  const normalized = {};
+
+  for (const [key, value] of Object.entries(source)) {
+    const field = `query.${key}`;
+    if (KYOUS_QUERY_BOOLEAN_FIELDS.has(key)) {
+      normalized[key] = assertBoolean(value, field);
+      continue;
+    }
+    if (KYOUS_QUERY_STRING_ARRAY_FIELDS.has(key)) {
+      normalized[key] = assertStringArray(value, field);
+      continue;
+    }
+    if (KYOUS_QUERY_NUMBER_FIELDS.has(key)) {
+      normalized[key] = assertNumber(value, field);
+      continue;
+    }
+    if (KYOUS_QUERY_INTEGER_FIELDS.has(key)) {
+      normalized[key] = assertInteger(value, field, KYOUS_QUERY_INTEGER_FIELDS.get(key));
+      continue;
+    }
+    if (KYOUS_QUERY_DATETIME_FIELDS.has(key)) {
+      normalized[key] = normalizeDateTimeString(value, field, KYOUS_QUERY_DATETIME_FIELDS.get(key));
+      continue;
+    }
+    if (key === "period_of_time_week_of_days") {
+      normalized[key] = assertIntegerArray(value, field, { min: 0, max: 6 });
+      continue;
+    }
+    if (key === "mi_board_name") {
+      normalized[key] = assertTrimmedString(value, field);
+      continue;
+    }
+    if (key === "mi_check_state") {
+      const state = assertTrimmedString(value, field);
+      if (!MI_CHECK_STATES.has(state)) {
+        throw invalidArgument(field, `must be one of: ${Array.from(MI_CHECK_STATES).join(", ")}`, value);
+      }
+      normalized[key] = state;
+      continue;
+    }
+    if (key === "mi_sort_type") {
+      const sortType = assertTrimmedString(value, field);
+      if (!MI_SORT_TYPES.has(sortType)) {
+        throw invalidArgument(field, `must be one of: ${Array.from(MI_SORT_TYPES).join(", ")}`, value);
+      }
+      normalized[key] = sortType;
+      continue;
+    }
+    normalized[key] = value;
+  }
+
+  normalized.only_latest_data = true;
+  return normalized;
+}
+
+function normalizeKyouArgs(args) {
+  const source = args == null ? {} : assertObject(args, "arguments");
+  assertKnownKeys(source, KYOUS_TOP_LEVEL_FIELDS, "arguments");
+
+  const normalized = {
+    query: normalizeKyouQuery(Object.prototype.hasOwnProperty.call(source, "query") ? source.query : {}),
+    limit: DEFAULT_KYOUS_LIMIT,
+    max_size_mb: DEFAULT_KYOUS_MAX_SIZE_MB,
+    is_include_timeis: DEFAULT_KYOUS_INCLUDE_TIMEIS,
+  };
+
+  if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
+    normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "limit") && source.limit !== undefined) {
+    normalized.limit = assertInteger(source.limit, "limit", { min: 1, max: 1000 });
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "cursor") && source.cursor !== undefined) {
+    normalized.cursor = normalizeDateTimeString(source.cursor, "cursor", { allowDateOnly: true, endOfDay: false });
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "max_size_mb") && source.max_size_mb !== undefined) {
+    normalized.max_size_mb = assertNumber(source.max_size_mb, "max_size_mb", { minExclusive: 0 });
+  }
+  if (Object.prototype.hasOwnProperty.call(source, "is_include_timeis") && source.is_include_timeis !== undefined) {
+    normalized.is_include_timeis = assertBoolean(source.is_include_timeis, "is_include_timeis");
+  }
+
+  return normalized;
+}
+
+function normalizeLocaleOnlyArgs(args) {
+  const source = args == null ? {} : assertObject(args, "arguments");
+  assertKnownKeys(source, new Set(["locale_name"]), "arguments");
+  if (!Object.prototype.hasOwnProperty.call(source, "locale_name") || source.locale_name === undefined) {
+    return {};
+  }
+  return { locale_name: assertTrimmedString(source.locale_name, "locale_name") };
+}
+
+function normalizeGpsArgs(args) {
+  const source = args == null ? {} : assertObject(args, "arguments");
+  assertKnownKeys(source, new Set(["start_date", "end_date", "locale_name"]), "arguments");
+  return {
+    start_date: normalizeDateTimeString(source.start_date, "start_date", { allowDateOnly: true, endOfDay: false }),
+    end_date: normalizeDateTimeString(source.end_date, "end_date", { allowDateOnly: true, endOfDay: true }),
+    ...(Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined
+      ? { locale_name: assertTrimmedString(source.locale_name, "locale_name") }
+      : {}),
+  };
+}
+
+function summarizeToolPayload(name, payload) {
+  switch (name) {
+    case "gkill_get_kyous": {
+      const returnedCount = payload.returned_count ?? 0;
+      const totalCount = payload.total_count ?? returnedCount;
+      const suffix = payload.has_more && payload.next_cursor ? ` More results are available via next_cursor ${payload.next_cursor}.` : "";
+      return `Returned ${returnedCount} of ${totalCount} kyou entries.${suffix}`;
+    }
+    case "gkill_get_mi_board_list":
+      return `Fetched ${Array.isArray(payload.boards) ? payload.boards.length : 0} Mi boards.`;
+    case "gkill_get_all_tag_names":
+      return `Fetched ${Array.isArray(payload.tag_names) ? payload.tag_names.length : 0} tag names.`;
+    case "gkill_get_all_rep_names":
+      return `Fetched ${Array.isArray(payload.rep_names) ? payload.rep_names.length : 0} repository names.`;
+    case "gkill_get_gps_log":
+      return `Fetched ${Array.isArray(payload.gps_logs) ? payload.gps_logs.length : 0} GPS log entries.`;
+    case "gkill_get_application_config":
+      return "Fetched application configuration.";
+    default:
+      return "Tool call completed.";
+  }
+}
+
+function summarizeToolError(name, error, detail) {
+  const prefix = name ? `${name} failed` : "Tool call failed";
+  if (detail && detail.field) {
+    return `${prefix}: ${error} (field: ${detail.field})`;
+  }
+  return `${prefix}: ${error}`;
+}
+
 const TOOLS = [
   {
     name: "gkill_get_kyous",
@@ -147,22 +515,23 @@ const TOOLS = [
         },
         limit: {
           type: "integer",
-          description: "Max number of entries to return. Default: 50.",
-          default: 50,
+          description: `Max number of entries to return. Default: ${DEFAULT_KYOUS_LIMIT}.`,
+          default: DEFAULT_KYOUS_LIMIT,
         },
         cursor: {
           type: "string",
           description:
-            `Pagination cursor. Pass the next_cursor value from the previous response to fetch the next page. ${ISO_DATETIME_DESC}`,
+            `Pagination cursor. Pass the next_cursor value from the previous response to fetch the next page. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
         },
         max_size_mb: {
           type: "number",
-          description: "Max response size in MB. Default: 1.0.",
-          default: 1.0,
+          description: `Max response size in MB. Default: ${DEFAULT_KYOUS_MAX_SIZE_MB}.`,
+          default: DEFAULT_KYOUS_MAX_SIZE_MB,
         },
         is_include_timeis: {
           type: "boolean",
-          description: "Include attached TimeIs (plaing) data for each kyou. Default: true. Useful for enrichment, but when debugging a failing query it is often simpler to retry once with this set to false first.",
+          description: `Include attached TimeIs (plaing) data for each kyou. Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. Useful for enrichment, but ChatGPT is usually more stable when this stays false unless you explicitly need TimeIs context.`,
+          default: DEFAULT_KYOUS_INCLUDE_TIMEIS,
         },
       },
       additionalProperties: false,
@@ -209,11 +578,11 @@ const TOOLS = [
       properties: {
         start_date: {
           type: "string",
-          description: `Required ${ISO_DATETIME_DESC}`,
+          description: `Required ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
         },
         end_date: {
           type: "string",
-          description: `Required ${ISO_DATETIME_DESC}`,
+          description: `Required ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
         },
         locale_name: { type: "string" },
       },
@@ -400,58 +769,102 @@ class McpServer {
     this.client = client;
   }
 
-  toolResultText(text, isError = false) {
-    return {
-      content: [{ type: "text", text }],
+  buildToolResult(name, payload, isError = false) {
+    const summary = isError
+      ? summarizeToolError(name, payload?.error || "Unknown tool error", payload?.detail || null)
+      : summarizeToolPayload(name, payload);
+    const result = {
+      content: [{ type: "text", text: summary }],
       isError,
     };
+    if (payload !== undefined) {
+      result.structuredContent = payload;
+    }
+    return result;
+  }
+
+  async handlePayload(payload) {
+    if (!Array.isArray(payload)) {
+      return this.handleMessage(payload);
+    }
+    if (payload.length === 0) {
+      return { jsonrpc: "2.0", id: null, error: { code: -32600, message: "Invalid Request" } };
+    }
+    const responses = [];
+    for (const message of payload) {
+      const response = await this.handleMessage(message);
+      if (response !== null) {
+        responses.push(response);
+      }
+    }
+    return responses.length === 0 ? null : responses;
   }
 
   async handleToolCall(name, args) {
-    const p = args || {};
-    const requireString = (key) => {
-      if (typeof p[key] !== "string" || p[key].trim() === "") {
-        throw new GkillApiError(`Missing required string argument: ${key}`);
-      }
-      return p[key];
-    };
-
     switch (name) {
-      case "gkill_get_kyous":
-        return this.client.callRead(
+      case "gkill_get_kyous": {
+        const normalized = normalizeKyouArgs(args);
+        const response = await this.client.callRead(
           "/api/get_kyous_mcp",
           {
-            query: p.query || {},
-            locale_name: p.locale_name,
-            limit: p.limit,
-            cursor: p.cursor,
-            max_size_mb: p.max_size_mb,
-            is_include_timeis: p.is_include_timeis,
+            query: normalized.query,
+            locale_name: normalized.locale_name,
+            limit: normalized.limit,
+            cursor: normalized.cursor,
+            max_size_mb: normalized.max_size_mb,
+            is_include_timeis: normalized.is_include_timeis,
           },
           true,
         );
-      case "gkill_get_mi_board_list":
-        return this.client.callRead("/api/get_mi_board_list", { locale_name: p.locale_name }, true);
-      case "gkill_get_all_tag_names":
-        return this.client.callRead("/api/get_all_tag_names", { locale_name: p.locale_name }, true);
-      case "gkill_get_all_rep_names":
-        return this.client.callRead("/api/get_all_rep_names", { locale_name: p.locale_name }, true);
-      case "gkill_get_gps_log":
-        requireString("start_date");
-        requireString("end_date");
-        return this.client.callRead(
+        return {
+          kyous: Array.isArray(response.kyous) ? response.kyous : [],
+          total_count: response.total_count ?? 0,
+          returned_count: response.returned_count ?? 0,
+          has_more: Boolean(response.has_more),
+          ...(response.next_cursor ? { next_cursor: response.next_cursor } : {}),
+        };
+      }
+      case "gkill_get_mi_board_list": {
+        const normalized = normalizeLocaleOnlyArgs(args);
+        const response = await this.client.callRead("/api/get_mi_board_list", normalized, true);
+        return {
+          boards: Array.isArray(response.boards) ? response.boards : [],
+        };
+      }
+      case "gkill_get_all_tag_names": {
+        const normalized = normalizeLocaleOnlyArgs(args);
+        const response = await this.client.callRead("/api/get_all_tag_names", normalized, true);
+        return {
+          tag_names: Array.isArray(response.tag_names) ? response.tag_names : [],
+        };
+      }
+      case "gkill_get_all_rep_names": {
+        const normalized = normalizeLocaleOnlyArgs(args);
+        const response = await this.client.callRead("/api/get_all_rep_names", normalized, true);
+        return {
+          rep_names: Array.isArray(response.rep_names) ? response.rep_names : [],
+        };
+      }
+      case "gkill_get_gps_log": {
+        const normalized = normalizeGpsArgs(args);
+        const response = await this.client.callRead(
           "/api/get_gps_log",
           {
-            start_date: p.start_date,
-            end_date: p.end_date,
-            locale_name: p.locale_name,
+            start_date: normalized.start_date,
+            end_date: normalized.end_date,
+            locale_name: normalized.locale_name,
           },
           true,
         );
+        return {
+          gps_logs: Array.isArray(response.gps_logs) ? response.gps_logs : [],
+        };
+      }
       case "gkill_get_application_config": {
+        const normalized = normalizeLocaleOnlyArgs(args);
         const response = await this.client.callRead(
           "/api/get_application_config",
-          { locale_name: p.locale_name },
+          normalized,
           true,
         );
         const config = response.application_config || {};
@@ -473,16 +886,17 @@ class McpServer {
 
   async handleMessage(message) {
     if (!message || message.jsonrpc !== "2.0" || !message.method) {
-      if (message && Object.prototype.hasOwnProperty.call(message, "id")) {
-        return { jsonrpc: "2.0", id: message.id, error: { code: -32600, message: "Invalid Request" } };
-      }
-      return null;
+      return {
+        jsonrpc: "2.0",
+        id: message && Object.prototype.hasOwnProperty.call(message, "id") ? message.id : null,
+        error: { code: -32600, message: "Invalid Request" },
+      };
     }
 
     const hasId = Object.prototype.hasOwnProperty.call(message, "id");
     const id = message.id;
     const method = message.method;
-    const params = message.params || {};
+    const params = Object.prototype.hasOwnProperty.call(message, "params") ? message.params : {};
 
     if (method === "notifications/initialized") {
       return null;
@@ -514,17 +928,20 @@ class McpServer {
     if (method === "tools/call") {
       if (!hasId) return null;
       try {
-        const toolName = params.name;
-        const toolArgs = params.arguments || {};
+        if (!isPlainObject(params)) {
+          throw invalidArgument("params", "must be an object", params);
+        }
+        const toolName = assertTrimmedString(params.name, "name");
+        const toolArgs = Object.prototype.hasOwnProperty.call(params, "arguments") ? params.arguments : {};
         const response = await this.handleToolCall(toolName, toolArgs);
-        return { jsonrpc: "2.0", id, result: this.toolResultText(JSON.stringify(response), false) };
+        return { jsonrpc: "2.0", id, result: this.buildToolResult(toolName, response, false) };
       } catch (error) {
         const detail = error instanceof GkillApiError ? error.detail : null;
         const messageText = error instanceof Error ? error.message : "Unknown tool error";
         return {
           jsonrpc: "2.0",
           id,
-          result: this.toolResultText(JSON.stringify({ error: messageText, detail }), true),
+          result: this.buildToolResult(params.name, { error: messageText, detail }, true),
         };
       }
     }
@@ -558,11 +975,11 @@ class StdioTransport {
 
   async dispatch(message) {
     try {
-      const response = await this.server.handleMessage(message);
+      const response = await this.server.handlePayload(message);
       if (response) this.writeMessage(response);
     } catch (error) {
       this.logError("unhandled request error", error);
-      if (message && Object.prototype.hasOwnProperty.call(message, "id")) {
+      if (message && !Array.isArray(message) && Object.prototype.hasOwnProperty.call(message, "id")) {
         this.writeMessage({ jsonrpc: "2.0", id: message.id, error: { code: -32603, message: "Internal error" } });
       }
     }
@@ -661,11 +1078,6 @@ class HttpTransport {
   constructor(server, port) {
     this.server = server;
     this.port = port;
-    this.sessions = new Map(); // sessionId -> { createdAt }
-  }
-
-  generateSessionId() {
-    return crypto.randomUUID();
   }
 
   start() {
@@ -693,17 +1105,49 @@ class HttpTransport {
     return { pathname, pathKey };
   }
 
+  logRequest(req, extra = {}) {
+    const payload = {
+      method: req.method,
+      path: req.url,
+      sessionId: req.headers["mcp-session-id"] || null,
+      ...extra,
+    };
+    process.stderr.write(`[${new Date().toISOString()}] MCP HTTP ${JSON.stringify(payload)}\n`);
+  }
+
+  sendJson(res, statusCode, payload, headers = {}) {
+    const body = payload === undefined ? "" : JSON.stringify(payload);
+    const baseHeaders = body
+      ? { "Content-Type": "application/json" }
+      : {};
+    res.writeHead(statusCode, { ...baseHeaders, ...headers });
+    res.end(body);
+    return Buffer.byteLength(body, "utf8");
+  }
+
+  summarizeJsonRpcMethods(payload) {
+    if (Array.isArray(payload)) {
+      return payload
+        .map((item) => (item && typeof item === "object" && "method" in item ? item.method : "invalid"))
+        .join(",");
+    }
+    if (payload && typeof payload === "object" && "method" in payload) {
+      return payload.method;
+    }
+    return "invalid";
+  }
+
   handleRequest(req, res) {
     const route = this.parseRoute(req);
     if (!route) {
-      res.writeHead(404, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Not Found. Use POST /mcp" }));
+      this.logRequest(req, { statusCode: 404, reason: "route_not_found" });
+      this.sendJson(res, 404, { error: "Not Found. Use POST /mcp" });
       return;
     }
 
     if (!checkApiKey(req, route.pathKey)) {
-      res.writeHead(401, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Unauthorized" }));
+      this.logRequest(req, { statusCode: 401, reason: "unauthorized" });
+      this.sendJson(res, 401, { error: "Unauthorized" });
       return;
     }
 
@@ -715,8 +1159,8 @@ class HttpTransport {
       case "DELETE":
         return this.handleDelete(req, res);
       default:
-        res.writeHead(405, { "Content-Type": "application/json", Allow: "GET, POST, DELETE" });
-        res.end(JSON.stringify({ error: "Method Not Allowed" }));
+        this.logRequest(req, { statusCode: 405, reason: "method_not_allowed" });
+        this.sendJson(res, 405, { error: "Method Not Allowed" }, { Allow: "GET, POST, DELETE" });
     }
   }
 
@@ -724,45 +1168,42 @@ class HttpTransport {
     const chunks = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", async () => {
-      let message;
+      let payload;
       try {
-        message = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        payload = JSON.parse(Buffer.concat(chunks).toString("utf8"));
       } catch {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } }));
+        this.logRequest(req, { statusCode: 400, reason: "parse_error" });
+        this.sendJson(res, 400, { jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } });
         return;
       }
 
       try {
-        const response = await this.server.handleMessage(message);
-
-        // If this is an initialize response, create a new session
-        if (message && message.method === "initialize" && response) {
-          const sessionId = this.generateSessionId();
-          this.sessions.set(sessionId, { createdAt: Date.now() });
-          if (response === null) {
-            res.writeHead(202, { "Mcp-Session-Id": sessionId });
-            res.end();
-          } else {
-            res.writeHead(200, { "Content-Type": "application/json", "Mcp-Session-Id": sessionId });
-            res.end(JSON.stringify(response));
-          }
-          return;
-        }
+        const response = await this.server.handlePayload(payload);
+        const methods = this.summarizeJsonRpcMethods(payload);
 
         if (response === null) {
-          // Notification (no id) — acknowledge with 202
+          this.logRequest(req, { methods, statusCode: 202, responseBytes: 0 });
           res.writeHead(202);
           res.end();
-        } else {
-          res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify(response));
+          return;
         }
+        const responseBytes = this.sendJson(res, 200, response);
+        this.logRequest(req, { methods, statusCode: 200, responseBytes });
       } catch (error) {
         process.stderr.write(`HTTP handler error: ${String(error)}\n`);
-        const id = message && Object.prototype.hasOwnProperty.call(message, "id") ? message.id : null;
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ jsonrpc: "2.0", id, error: { code: -32603, message: "Internal error" } }));
+        const id =
+          payload && !Array.isArray(payload) && Object.prototype.hasOwnProperty.call(payload, "id") ? payload.id : null;
+        const responseBytes = this.sendJson(res, 200, {
+          jsonrpc: "2.0",
+          id,
+          error: { code: -32603, message: "Internal error" },
+        });
+        this.logRequest(req, {
+          methods: this.summarizeJsonRpcMethods(payload),
+          statusCode: 200,
+          responseBytes,
+          reason: "internal_error",
+        });
       }
     });
   }
@@ -772,8 +1213,8 @@ class HttpTransport {
     // Currently gkill has no server-push notifications, so just hold the connection open.
     const accept = req.headers["accept"] || "";
     if (!accept.includes("text/event-stream")) {
-      res.writeHead(406, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Not Acceptable. Use Accept: text/event-stream" }));
+      this.logRequest(req, { statusCode: 406, reason: "missing_sse_accept_header" });
+      this.sendJson(res, 406, { error: "Not Acceptable. Use Accept: text/event-stream" });
       return;
     }
 
@@ -786,17 +1227,17 @@ class HttpTransport {
     const keepAlive = setInterval(() => {
       res.write(": keepalive\n\n");
     }, 30000);
-    req.on("close", () => clearInterval(keepAlive));
+    this.logRequest(req, { statusCode: 200, reason: "sse_open" });
+    req.on("close", () => {
+      clearInterval(keepAlive);
+      this.logRequest(req, { statusCode: 200, reason: "sse_closed" });
+    });
   }
 
   handleDelete(req, res) {
-    // Session termination
-    const sessionId = req.headers["mcp-session-id"];
-    if (sessionId && this.sessions.has(sessionId)) {
-      this.sessions.delete(sessionId);
-    }
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true }));
+    // Stateless mode: DELETE is accepted as a no-op for clients that still send session cleanup.
+    const responseBytes = this.sendJson(res, 200, { ok: true });
+    this.logRequest(req, { statusCode: 200, responseBytes, reason: "stateless_delete_noop" });
   }
 }
 
