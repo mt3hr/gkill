@@ -20,29 +20,23 @@ stateDiagram-v2
 
     終了済み --> 論理削除: UpdateTimeis<br>(IS_DELETED=true)
 
-    state 実行中 {
-        note right of 実行中
-            END_TIME = null
-            /plaing ページに表示される
-            終了操作が可能
-        end note
-    }
+    note right of 実行中
+        END_TIME = null
+        /plaing ページに表示される
+        終了操作が可能
+    end note
 
-    state 終了済み {
-        note right of 終了済み
-            END_TIME != null
-            rykv/dnote で閲覧可能
-            経過時間 = END_TIME - START_TIME
-        end note
-    }
+    note right of 終了済み
+        END_TIME != null
+        rykv/dnote で閲覧可能
+        経過時間 = END_TIME - START_TIME
+    end note
 
-    state 論理削除 {
-        note right of 論理削除
-            IS_DELETED = true
-            検索結果から除外
-            履歴からは参照可能
-        end note
-    }
+    note right of 論理削除
+        IS_DELETED = true
+        検索結果から除外
+        履歴からは参照可能
+    end note
 ```
 
 ### KFTL での TimeIs 状態遷移
@@ -75,21 +69,17 @@ stateDiagram-v2
     未完了 --> 論理削除: UpdateMi<br>(IS_DELETED=true)
     完了 --> 論理削除: UpdateMi<br>(IS_DELETED=true)
 
-    state 未完了 {
-        note right of 未完了
-            IS_CHECKED = false
-            Mi画面のボードに表示
-            チェック操作が可能
-        end note
-    }
+    note right of 未完了
+        IS_CHECKED = false
+        Mi画面のボードに表示
+        チェック操作が可能
+    end note
 
-    state 完了 {
-        note right of 完了
-            IS_CHECKED = true
-            CHECK_TIME が記録される
-            フィルタで表示/非表示切替可能
-        end note
-    }
+    note right of 完了
+        IS_CHECKED = true
+        CHECK_TIME が記録される
+        フィルタで表示/非表示切替可能
+    end note
 ```
 
 ### Mi の表示フィルタ（MiCheckState）
@@ -126,29 +116,23 @@ stateDiagram-v2
 
     認証済み --> 認証済み: API呼び出し<br>(session_id検証OK)
 
-    state 未認証 {
-        note right of 未認証
-            ログイン画面を表示
-            /shared_page, /shared_mi は
-            認証なしでアクセス可能
-        end note
-    }
+    note right of 未認証
+        ログイン画面を表示
+        /shared_page, /shared_mi は
+        認証なしでアクセス可能
+    end note
 
-    state 認証済み {
-        note right of 認証済み
-            session_id をCookieに保持
-            全API呼び出しにsession_idを付与
-            IS_LOCAL_APP_USERフラグで
-            ローカルアクセスかを区別
-        end note
-    }
+    note right of 認証済み
+        session_id をCookieに保持
+        全API呼び出しにsession_idを付与
+        IS_LOCAL_APP_USERフラグで
+        ローカルアクセスかを区別
+    end note
 
-    state 期限切れ {
-        note right of 期限切れ
-            EXPIRATION_TIME < 現在時刻
-            API呼び出しが認証エラーになる
-        end note
-    }
+    note right of 期限切れ
+        EXPIRATION_TIME < 現在時刻
+        API呼び出しが認証エラーになる
+    end note
 ```
 
 ### セッション特殊ケース
@@ -171,22 +155,18 @@ stateDiagram-v2
     データ行 --> メタ情報行: 区切り行「、」<br>(新ステートメント開始)
     データ行 --> データ行: データ型固有の後続行<br>(タイトル, 数値, URL等)
 
-    state メタ情報行 {
-        note right of メタ情報行
-            prevLineIsMetaInfo = true
-            次の行がメタ情報かデータかを
-            プレフィックスで判定
-        end note
-    }
+    note right of メタ情報行
+        prevLineIsMetaInfo = true
+        次の行がメタ情報かデータかを
+        プレフィックスで判定
+    end note
 
-    state データ行 {
-        note right of データ行
-            prevLineIsMetaInfo = false
-            現在のデータ型に応じた
-            後続行を処理
-            (KC:タイトル→数値, Mi:タイトル→期限, etc.)
-        end note
-    }
+    note right of データ行
+        prevLineIsMetaInfo = false
+        現在のデータ型に応じた
+        後続行を処理
+        (KC:タイトル→数値, Mi:タイトル→期限, etc.)
+    end note
 ```
 
 ### データ型別の行シーケンス
@@ -289,12 +269,10 @@ stateDiagram-v2
         end note
     }
 
-    state 論理削除 {
-        note right of 論理削除
-            IS_DELETED = true の
-            レコードがINSERTされる
-            検索結果から除外される
-            履歴ダイアログからは参照可能
-        end note
-    }
+    note right of 論理削除
+        IS_DELETED = true の
+        レコードがINSERTされる
+        検索結果から除外される
+        履歴ダイアログからは参照可能
+    end note
 ```
