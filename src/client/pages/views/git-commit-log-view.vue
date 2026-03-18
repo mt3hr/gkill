@@ -1,5 +1,5 @@
 <template>
-    <v-card v-if="kyou.typed_git_commit_log" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
+    <v-card elevation="0" v-if="kyou.typed_git_commit_log" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <div>
             <span class="git_commit_addition"> + {{ kyou.typed_git_commit_log.addition }} </span>
             <span class="git_commit_deletion"> - {{ kyou.typed_git_commit_log.deletion }} </span>

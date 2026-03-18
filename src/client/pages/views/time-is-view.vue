@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
+    <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <div>{{ kyou.typed_timeis?.title }}</div>
         <div class="duration" v-if="kyou.typed_timeis && kyou.typed_timeis.start_time && show_timeis_elapsed_time">{{
             duration }}</div>

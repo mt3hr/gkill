@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <EditKFTLTemplateStructView :application_config="application_config" :gkill_api="gkill_api"
           :kftl_template_struct="application_config.kftl_template_struct"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
@@ -23,7 +25,8 @@
           @requested_reload_application_config="emits('requested_reload_application_config')"
           @requested_apply_kftl_template_struct="(...kftl_template_struct_element_data: any[]) => emits('requested_apply_kftl_template_struct', kftl_template_struct_element_data[0] as KFTLTemplateStructElementData)"
           @requested_close_dialog="hide" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

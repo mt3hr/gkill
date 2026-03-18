@@ -10,7 +10,7 @@
                 i18n.global.t("CLEAR_TITLE") }}</v-btn>
         </v-col>
     </v-row>
-    <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"
+    <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="312" :model-value="dates"
         :multible="true" :color="'primary'" :multiple="'range'" :year="calendar_year" :month="calendar_month"
         @wheel.prevent.stop="(e: any) => on_wheel(e)" @update:model-value="clicked_date" ref="calendar" />
 </template>

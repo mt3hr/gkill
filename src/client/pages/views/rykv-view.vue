@@ -40,7 +40,7 @@
                 @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
         <v-navigation-drawer v-if="!is_shared_rykv_view" v-model="drawer" app :height="app_content_height"
-            :touchless="!inited" :mobile="drawer_mode_is_mobile" :width="312">
+            :touchless="!inited" :mobile="drawer_mode_is_mobile" :width="318">
             <RykvQueryEditorSideBar v-show="inited" class="rykv_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
@@ -346,13 +346,26 @@ const {
     subViewFocusHandlers,
     rykvDialogHandler,
 } = useRykvView({ props, emits })
+
+import { computed } from 'vue'
+const is_ryuu_empty = computed(() => {
+    const data = props.application_config.ryuu_json_data
+    if (!data || !Array.isArray(data) || data.length === 0) return true
+    return data.every((item: any) => {
+        if (Array.isArray(item)) return item.length === 0
+        if (item && typeof item === 'object' && 'queries' in item) {
+            return !item.queries || !Array.isArray(item.queries) || item.queries.length === 0
+        }
+        return false
+    })
+})
 </script>
 <style lang="css" scoped>
 .kyou_detail_view.dummy {
     resize: horizontal;
     overflow-x: hidden;
     overflow-y: scroll;
-    height: calc(v-bind('app_content_height.toString().concat("px")') - v-bind('(!props.application_config.ryuu_json_data || props.application_config.ryuu_json_data.length === 0) ? "0px" : "100vh * 0.2"'));
+    height: calc(v-bind('app_content_height.toString().concat("px")') - v-bind('is_ryuu_empty ? "0px" : "100vh * 0.2"'));
     width: 400px;
     min-width: 400px;
 }
@@ -361,7 +374,7 @@ const {
     overflow-x: hidden;
     overflow-y: auto;
     height: calc(100vh * 0.2);
-    height: calc(v-bind('(!props.application_config.ryuu_json_data || props.application_config.ryuu_json_data.length === 0) ? "0px" : "100vh * 0.2"'));
+    height: calc(v-bind('is_ryuu_empty ? "0px" : "100vh * 0.2"'));
 }
 
 .scroll_snap_container {

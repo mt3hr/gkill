@@ -51,9 +51,3 @@ const { is_show_dialog, ui, show, hide } = useEditDnoteDialog({ props, emits, dn
 
 defineExpose({ show, hide })
 </script>
-
-<style lang="css" scoped>
-.edit_dnote_dialog_view {
-  overflow-x: scroll;
-}
-</style>
