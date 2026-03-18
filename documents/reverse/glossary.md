@@ -185,4 +185,63 @@ DNote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **FindQuery** | 検索クエリ。キーワード・日時範囲・タグ・データ型・デバイス等の複合条件で Kyou を検索する |
 | **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す |
 | **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する |
-| **MCP サーバ** | gkill-read-server.mjs。AI 統合用の読み取り専用 MCP サーバ（5ツール提供） |
+| **MCP サーバ** | gkill-read-server.mjs。AI 統合用の読み取り専用 MCP サーバ（6ツール提供: gkill_get_kyous, gkill_get_mi_board_list, gkill_get_all_tag_names, gkill_get_all_rep_names, gkill_get_gps_log, gkill_get_application_config） |
+
+## 10. 主要ファイルパス相互参照
+
+用語・概念と実装コードの対応表。
+
+### バックエンド（Go）
+
+| 概念 | ファイルパス | 説明 |
+|------|-----------|------|
+| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api_address.go` | 全77エンドポイントのパス・メソッド定義 |
+| APIハンドラ（メイン） | `src/server/gkill/api/gkill_server_api.go` | ルーティング登録・ハンドラ実装（~12,300行） |
+| APIハンドラ（個別） | `src/server/gkill/api/handle_*.go` | 個別エンドポイントのハンドラ |
+| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（150+ファイル） |
+| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000372 の定数定義 |
+| GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
+| KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |
+| Embed（SPA埋め込み） | `src/server/gkill/api/embed.go` | `//go:embed embed` ディレクティブ |
+| GkillDAOManager | `src/server/gkill/dao/gkill_dao_manager.go` | 全DAOの中央管理 |
+| Repository インタフェース | `src/server/gkill/dao/reps/*_repository.go` | 各データ型のリポジトリインタフェース |
+| SQLite3実装 | `src/server/gkill/dao/reps/*_repository_sqlite3_impl.go` | SQLite3直接アクセス層 |
+| キャッシュ実装 | `src/server/gkill/dao/reps/*_repository_cached_sqlite3_impl.go` | インメモリキャッシュ層 |
+| Temp実装 | `src/server/gkill/dao/reps/*_repository_temp_sqlite3_impl.go` | トランザクション用一時層 |
+| CLIコマンド・初期化 | `src/server/gkill/main/common/common.go` | Cobra サブコマンド・サーバー起動処理 |
+| CLIフラグ定義 | `src/server/gkill/main/common/gkill_options/option.go` | --gkill_home_dir 等のフラグとディレクトリ構成 |
+| gkill_server エントリ | `src/server/gkill/main/gkill_server/main.go` | サーバーモード main() |
+| gkill デスクトップ エントリ | `src/server/gkill/main/gkill/main.go` | デスクトップアプリ main() |
+| Go モジュール定義 | `src/server/go.mod` | Go 1.26.0、モジュールパス |
+
+### フロントエンド（TypeScript / Vue 3）
+
+| 概念 | ファイルパス | 説明 |
+|------|-----------|------|
+| エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
+| ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
+| ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（~2,900行） |
+| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（150+ファイル） |
+| データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
+| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（35+ステートメント型） |
+| DNote ユーティリティ | `src/client/classes/dnote/` | 集計機能ユーティリティ |
+| Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
+| Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
+| i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（~743キー/言語） |
+
+### その他
+
+| 概念 | ファイルパス | 説明 |
+|------|-----------|------|
+| MCP サーバー | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（6ツール、stdio/HTTP） |
+| Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
+| Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |
+| ビルド設定 | `package.json` | npm scripts、依存関係、バージョン (1.1.0-dev) |
+| Vite 設定 | `vite.config.ts` | ビルド設定・PWA・エイリアス |
+| TypeScript 設定 | `tsconfig.app.json` | フロントエンド TypeScript 設定 |
+| ESLint 設定 | `.eslintrc.cjs` | リンター設定 |
+| リバースドキュメント | `documents/reverse/` | 設計・仕様のリバースエンジニアリング文書群 |
+| UML モデル | `documents/gkill_model.asta` | Astah UML モデル（ユースケース・クラス・ER等） |
+| ユーザードキュメント | `documents/gkill_user_document.pdf` | エンドユーザー向けマニュアル |

@@ -434,3 +434,138 @@ sequenceDiagram
         API-->>UI: {messages: "破棄成功"}
     end
 ```
+
+---
+
+## 異常系シーケンス
+
+以下は正常系シーケンスに対応するエラーパターン。全エンドポイント共通のエラー処理パターンも含む。
+
+### E1. 認証失敗（ログイン）
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant UI as Vue フロントエンド
+    participant API as GkillServerAPI
+    participant AccDAO as AccountDAO
+
+    User->>UI: ユーザID・パスワード入力
+    UI->>API: POST /api/login<br>{user_id, password_sha256}
+
+    alt JSONパースエラー
+        API-->>UI: {errors: [{error_code: "ERR000001"}]}
+        UI-->>User: リクエストデータ不正エラー表示
+    else アカウント未存在
+        API->>AccDAO: GetAccount(user_id)
+        AccDAO-->>API: nil
+        API-->>UI: {errors: [{error_code: "ERR000002"}]}
+        UI-->>User: アカウント未存在エラー表示
+    else アカウント無効
+        API->>AccDAO: GetAccount(user_id)
+        AccDAO-->>API: Account (IsEnable=false)
+        API-->>UI: {errors: [{error_code: "ERR000003"}]}
+        UI-->>User: アカウント無効エラー表示
+    else パスワードリセット中
+        API-->>UI: {errors: [{error_code: "ERR000004"}]}
+        UI-->>User: パスワードリセット中エラー表示
+    else パスワード不一致
+        API->>API: SHA256比較 → 不一致
+        API-->>UI: {errors: [{error_code: "ERR000005"}]}
+        UI-->>User: パスワード不正エラー表示
+    end
+```
+
+### E2. セッション検証失敗（全認証済みエンドポイント共通）
+
+```mermaid
+sequenceDiagram
+    participant UI as Vue フロントエンド
+    participant API as GkillServerAPI
+    participant SesDAO as LoginSessionDAO
+    participant AccDAO as AccountDAO
+
+    UI->>API: POST /api/xxx<br>{session_id: "invalid-or-expired"}
+    API->>SesDAO: GetLoginSession(session_id)
+
+    alt セッション未存在
+        SesDAO-->>API: nil
+        API-->>UI: {errors: [{error_code: "ERR000013",<br>error_message: "セッションが見つかりません"}]}
+        UI-->>User: ログイン画面へリダイレクト
+    else アカウント無効化（セッション有効だが）
+        SesDAO-->>API: LoginSession
+        API->>AccDAO: GetAccount(session.UserID)
+        AccDAO-->>API: Account (IsEnable=false)
+        API-->>UI: {errors: [{error_code: "ERR000238"}]}
+        UI-->>User: アカウント無効エラー表示
+    end
+```
+
+### E3. データ操作時のバリデーションエラー
+
+```mermaid
+sequenceDiagram
+    participant UI as Vue フロントエンド
+    participant API as GkillServerAPI
+    participant Reps as Repositories
+
+    UI->>API: POST /api/add_xxx または update_xxx<br>{session_id, ...data}
+
+    alt JSONパースエラー
+        API-->>UI: {errors: [{error_code: "ERR000xxx",<br>error_message: "リクエストデータ不正"}]}
+    else デバイス取得失敗
+        API->>API: getDevice()
+        API-->>UI: {errors: [{error_code: "ERR000220",<br>error_message: "デバイス情報取得失敗"}]}
+    else リポジトリ取得失敗
+        API->>Reps: GetRepositories(user_id)
+        Reps-->>API: error
+        API-->>UI: {errors: [{error_code: "ERR000yyy",<br>error_message: "内部サーバーエラー"}]}
+    else DB書き込みエラー
+        API->>Reps: AddXxxInfo(data)
+        Reps-->>API: error
+        API-->>UI: {errors: [{error_code: "ERR000zzz",<br>error_message: "保存失敗"}]}
+    end
+
+    Note over UI: errors配列の内容をUIに表示
+```
+
+### E4. ローカルアクセス制限
+
+```mermaid
+sequenceDiagram
+    participant Client as リモートクライアント
+    participant API as GkillServerAPI
+    participant Config as ServerConfig
+
+    Client->>API: POST /api/open_directory<br>(リモートIPから)
+    API->>Config: IsLocalOnlyAccess?
+    Config-->>API: true
+
+    API->>API: filterLocalOnly()<br>r.RemoteAddr = "192.168.1.100:xxxxx"
+    API->>API: ホスト判定:<br>localhost / 127.0.0.1 / [::1] に不一致
+
+    API-->>Client: HTTP 403 Forbidden
+```
+
+### E5. KFTL テキスト送信エラー
+
+```mermaid
+sequenceDiagram
+    participant UI as Vue フロントエンド
+    participant API as GkillServerAPI
+    participant KFTL as KFTLParser
+
+    UI->>API: POST /api/submit_kftl_text<br>{session_id, kftl_text}
+
+    alt JSONパースエラー
+        API-->>UI: {errors: [{error_code: "ERR000350"}]}
+    else セッション検証失敗
+        API-->>UI: {errors: [{error_code: "ERR000013"}]}
+    else デバイス取得失敗
+        API-->>UI: {errors: [{error_code: "ERR000220"}]}
+    else パース/保存エラー
+        API->>KFTL: GenerateAndExecuteRequests(kftl_text)
+        KFTL-->>API: error
+        API-->>UI: {errors: [{error_code: "ERR000351",<br>error_message: "KFTLテキスト処理エラー"}]}
+    end
+```
