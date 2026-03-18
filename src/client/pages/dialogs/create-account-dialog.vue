@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <CreateAccountView :application_config="application_config" :gkill_api="gkill_api"
           :server_configs="server_configs"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
@@ -23,7 +25,8 @@
           @created_account="(...account: any[]) => emits('added_account', account[0] as Account)"
           @requested_reload_server_config="() => emits('requested_reload_server_config')"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

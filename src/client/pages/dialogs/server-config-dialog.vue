@@ -16,12 +16,14 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <ServerConfigView v-show="server_configs.length !== 0" :application_config="application_config"
+        <v-card class="pa-2">
+       <ServerConfigView v-show="server_configs.length !== 0" :application_config="application_config"
           :gkill_api="gkill_api" :server_configs="server_configs"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
           @requested_reload_server_config="load_server_configs()" @requested_close_dialog="hide" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
+    <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <table>
             <tr>
                 <td>

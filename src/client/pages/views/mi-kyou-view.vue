@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height" :draggable="props.draggable"
+    <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height" :draggable="props.draggable"
         @dragstart="(...args: any[]) => on_drag_start(args[0] as DragEvent)">
         <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0" :style="mi_title_style">

@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <AddDnoteListView :application_config="application_config" :gkill_api="gkill_api"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
@@ -23,7 +25,8 @@
           @requested_close_dialog="hide()" />
 
 
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

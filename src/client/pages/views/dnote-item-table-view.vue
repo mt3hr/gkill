@@ -63,6 +63,6 @@ defineExpose({ load_aggregated_value, reset })
 .dnote_item_table_td {
     vertical-align: top;
     min-width: 210px;
-    padding: 4px;
+    padding: 0px;
 }
 </style>

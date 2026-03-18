@@ -1,6 +1,6 @@
 <template>
-    <v-card class="kyou_list_view_card_wrap" :ripple="false" :link="false" @click.prevent="onClickedListView">
-        <v-card class="kyou_list_view_card" :ripple="false" :link="false">
+    <v-card elevation="0" class="kyou_list_view_card_wrap" :ripple="false" :link="false" @click.prevent="onClickedListView">
+        <v-card elevation="0" class="kyou_list_view_card" :ripple="false" :link="false">
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>

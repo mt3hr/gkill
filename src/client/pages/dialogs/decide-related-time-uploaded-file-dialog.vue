@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <DecideRelatedTimeUploadedFileView :application_config="application_config" :gkill_api="gkill_api"
           :app_content_height="app_content_height" :app_content_width="app_content_width"
           :uploaded_kyous="uploaded_kyous"
@@ -26,7 +28,8 @@
           @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
           @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
           @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>
