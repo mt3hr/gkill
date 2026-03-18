@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
+    <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <a v-if="kyou.typed_idf_kyou && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio"
             :href="kyou.typed_idf_kyou.file_url" @click="open_link">
             {{ kyou.typed_idf_kyou.file_name }}

@@ -15,14 +15,17 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <EditDnoteListView :application_config="application_config" :gkill_api="gkill_api"
           :dnote_list_query="dnote_list_query"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @requested_update_dnote_list_query="(...dnote_list_query: any[]) => emits('requested_update_dnote_list_query', dnote_list_query[0] as DnoteListQuery)"
           @requested_close_dialog="hide()" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

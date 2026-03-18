@@ -15,13 +15,16 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <AddNewKFTLTemplateStructElementView :application_config="application_config" :gkill_api="gkill_api"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
           @requested_close_dialog="hide()"
           @requested_add_kftl_template_struct_element="(...kftl_template_struct_element: any[]) => emits('requested_add_kftl_template_struct_element', kftl_template_struct_element[0] as KFTLTemplateStructElementData)" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

@@ -381,14 +381,6 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   position: relative;
 }
 
-.gkill-floating-dialog__body .plaing_timeis_view_wrap {
-  width: unset;
-}
-
-.plaing_timeis_view_wrap {
-  width: 100vw;
-}
-
 .v-virtual-scroll {
   max-width: unset;
 }
@@ -451,6 +443,16 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
   overflow: auto;
   overflow-x: hidden;
   background-color: rgba(var(--v-theme-background));
+  display: flex;
+  flex-direction: column;
+}
+
+.gkill-floating-dialog__body .v-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
 }
 
 .gkill-floating-dialog.is-user-resized .gkill-floating-dialog__body {

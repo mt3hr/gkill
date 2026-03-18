@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <EditTagStructView :application_config="application_config" :gkill_api="gkill_api"
           :tag_struct="application_config.tag_struct"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
@@ -23,7 +25,8 @@
           @requested_apply_tag_struct="(...tag_struct_element_data: any[]) => emits('requested_apply_tag_struct', tag_struct_element_data[0] as TagStructElementData)"
           @requested_reload_application_config="emits('requested_reload_application_config')"
           @requested_close_dialog="hide" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

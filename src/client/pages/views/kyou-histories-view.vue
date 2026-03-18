@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card elevation="0">
         <div>
             <KyouView v-for="kyou in cloned_kyou.attached_histories" :application_config="application_config" :is_image_request_to_thumb_size="false"
                 :key="kyou.update_time.getTime()" :gkill_api="gkill_api" :highlight_targets="highlight_targets"

@@ -17,7 +17,8 @@
             </div>
 
             <div class="gkill-floating-dialog__body">
-                <ManageShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
+              <v-card class="pa-2">
+               <ManageShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
                     :share_kyou_list_infos="share_kyou_list_infos"
                     @requested_show_confirm_delete_share_kyou_list_dialog="show_confirm_delete_share_kyou_list_dialog"
                     @requested_show_share_kyou_link_dialog="show_share_kyou_list_link_dialog" />
@@ -33,7 +34,8 @@
                     @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                     @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                     ref="confirm_delete_share_kyou_list_dialog" />
-            </div>
+              </v-card>
+</div>
         </div>
     </Teleport>
 </template>
