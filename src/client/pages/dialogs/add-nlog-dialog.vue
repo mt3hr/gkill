@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <AddNlogView :application_config="application_config" :gkill_api="gkill_api"
           @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
           @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -37,7 +39,8 @@
           @requested_reload_list="emits('requested_reload_list')"
           @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
           @requested_close_dialog="hide()" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

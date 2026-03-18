@@ -16,7 +16,8 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <AddTagView :application_config="application_config" :gkill_api="gkill_api"
+        <v-card class="pa-2">
+       <AddTagView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="highlight_targets" :kyou="kyou"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
           @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
@@ -39,7 +40,8 @@
           @requested_reload_list="emits('requested_reload_list')"
           @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
           @requested_close_dialog="hide()" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

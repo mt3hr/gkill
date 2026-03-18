@@ -61,12 +61,12 @@ defineExpose({ load_aggregate_grouping_list, reset })
 <style scoped>
 .dnote_list_table_root {
   overflow-x: auto;
-  padding: 4px;
+  padding: 0px;
 }
 
 .dnote_list_table_row {
   display: flex;
-  gap: 8px;
+  gap: 0px;
   align-items: flex-start;
   min-height: 81px;
 }

@@ -15,14 +15,17 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <EditRepTypeStructElementView :application_config="application_config" :gkill_api="gkill_api"
           :struct_obj="rep_type_struct"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
           @requested_update_rep_type_struct="(...rep_type_struct: any[]) => emits('requested_update_rep_type_struct', rep_type_struct[0] as RepTypeStructElementData)"
           @requested_close_dialog="hide" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

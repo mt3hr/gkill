@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <ShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
           :find_kyou_query="find_kyou_query"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
@@ -24,7 +26,8 @@
             emits('regestered_share_kyou_list_info', share_kyou_info[0] as ShareKyousInfo)
             emits('requested_show_share_kyou_link_dialog', share_kyou_info[0] as ShareKyousInfo)
           }" @requested_close_dialog="hide()" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

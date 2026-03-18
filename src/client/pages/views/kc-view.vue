@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
+    <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <div v-if="kyou.typed_kc">{{ kyou.typed_kc.title }}</div>
         <div v-if="kyou.typed_kc">{{ kyou.typed_kc.num_value }}</div>
         <KCContextMenu :application_config="application_config" :gkill_api="gkill_api"

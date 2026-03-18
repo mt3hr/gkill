@@ -8,7 +8,7 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
+        <v-checkbox v-model="ui.isTransparent.value" color="white" size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
         <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'"
           variant="flat">
@@ -16,7 +16,7 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body">
+      <div class="gkill-floating-dialog__body" :ref="(el: any) => { dialog_body_ref = el }">
         <MKFLView :app_content_height="view_height" :app_content_width="view_width"
           :application_config="application_config" :gkill_api="gkill_api"
           @deleted_kyou="(...deleted_kyou: any[]) => { emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
@@ -53,7 +53,7 @@ import { i18n } from '@/i18n'
 const props = defineProps<MKFLDialogProps>()
 const emits = defineEmits<MKFLDialogEmits>()
 
-const { is_show_dialog, ui, view_width, view_height, show, hide } = useMKFLDialog({ props, emits })
+const { is_show_dialog, ui, dialog_body_ref, view_width, view_height, show, hide } = useMKFLDialog({ props, emits })
 
 defineExpose({ show, hide })
 </script>

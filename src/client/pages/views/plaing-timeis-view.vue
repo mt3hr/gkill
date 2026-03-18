@@ -1,60 +1,41 @@
 <template>
     <div class="plaing_timeis_view_wrap" ref="plaing_timeis_root">
-        <KyouListView :kyou_height="180" :width="app_content_width" :list_height="kyou_list_view_height"
+        <KyouListView :kyou_height="180" :width="timeis_kyou_list_view_width" :list_height="kyou_list_view_height"
             :show_timeis_plaing_end_button="true" :application_config="application_config" :gkill_api="gkill_api"
-            :matched_kyous="match_kyous_list" :query="query" :is_focused_list="true"
-            :closable="false" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="true" :show_content_only="true"
-            :show_rep_name="true" :force_show_latest_kyou_info="true" :is_show_doc_image_toggle_button="false"
-            :is_show_arrow_button="false"
+            :matched_kyous="match_kyous_list" :query="query" :is_focused_list="true" :closable="false"
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="false"
+            :show_checkbox="true" :show_footer="true" :show_content_only="true" :show_rep_name="true"
+            :force_show_latest_kyou_info="true" :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
             v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykvDialogHandler }"
-            @requested_search="search(false)"
-            ref="kyou_list_views" />
+            @requested_search="search(false)" ref="kyou_list_views" />
         <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog"
-            v-on="crudRelayHandlers"
-            ref="add_kc_dialog" />
+            :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            v-on="crudRelayHandlers" ref="add_kc_dialog" />
         <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
-            ref="add_timeis_dialog" />
+            :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="add_timeis_dialog" />
         <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
-            ref="add_lantana_dialog" />
+            :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="add_lantana_dialog" />
         <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
-            ref="add_urlog_dialog" />
+            :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="add_urlog_dialog" />
         <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
-            ref="add_mi_dialog" />
+            :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="add_mi_dialog" />
         <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
-            ref="add_nlog_dialog" />
+            :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="add_nlog_dialog" />
         <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :kyou="new Kyou()" :app_content_height="app_content_height"
-            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            :app_content_width="app_content_width"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
-            ref="kftl_dialog" />
+            :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
+            :enable_dialog="enable_dialog" :app_content_width="app_content_width"
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="kftl_dialog" />
         <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :kyou="new Kyou()" :app_content_height="app_content_height"
-            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            :app_content_width="app_content_width"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
-            ref="mkfl_dialog" />
+            :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
+            :enable_dialog="enable_dialog" :app_content_width="app_content_width"
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="mkfl_dialog" />
         <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api"
-            v-on="crudRelayHandlers"
+            :application_config="application_config" :gkill_api="gkill_api" v-on="crudRelayHandlers"
             ref="upload_file_dialog" />
         <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -144,6 +125,7 @@ const {
     // Computed
     kyou_list_view_height,
     add_kyou_menu_style,
+    timeis_kyou_list_view_width,
 
     // Business logic
     reload_list,
@@ -172,28 +154,3 @@ const {
 
 defineExpose({ reload_list, set_last_added_request_time })
 </script>
-<style lang="css" scoped>
-.plaing_timeis_view_table {
-    padding-top: 0px;
-}
-
-.kyou_detail_view .kyou_image {
-    width: -webkit-fill-available !important;
-    height: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
-    max-height: 100vh !important;
-    object-fit: contain;
-}
-
-.kyou_detail_view .kyou_video {
-    width: -webkit-fill-available !important;
-    height: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
-    max-height: 100vh !important;
-    object-fit: contain;
-}
-
-.plaing_timeis_view_wrap {
-    overflow-y: hidden;
-}
-</style>
