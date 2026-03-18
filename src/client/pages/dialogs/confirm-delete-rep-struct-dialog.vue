@@ -15,14 +15,17 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <ConfirmDeleteRepStructView :application_config="application_config" :gkill_api="gkill_api"
           :rep_struct="rep_struct"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
           @requested_close_dialog="hide"
           @requested_delete_rep="(...id: any[]) => { if (id) emits('requested_delete_rep', id[0] as string); hide() }"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

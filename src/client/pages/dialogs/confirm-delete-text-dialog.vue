@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <ConfirmDeleteTextView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="[text.generate_info_identifer()]" :kyou="kyou"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :text="text"
@@ -37,7 +39,8 @@
           @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
           @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
           @requested_reload_list="emits('requested_reload_list')" @requested_close_dialog="hide()" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

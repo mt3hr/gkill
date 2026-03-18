@@ -52,6 +52,13 @@ export function usePlaingTimeisView(options: {
     // ── Computed ──
     const kyou_list_view_height = computed(() => props.app_content_height)
     const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
+    const timeis_kyou_list_view_width = computed(() => {
+        const app_content_width = props.app_content_width
+        if ((typeof app_content_width) !== "number") {
+            return app_content_width
+        }
+        return app_content_width.valueOf() - 8/* --gkill-scrollbar-size */
+    })
 
     // ── Watchers ──
     if (props.application_config.is_loaded) {
@@ -340,6 +347,7 @@ export function usePlaingTimeisView(options: {
         // Computed
         kyou_list_view_height,
         add_kyou_menu_style,
+        timeis_kyou_list_view_width,
 
         // Business logic
         reload_list,

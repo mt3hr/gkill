@@ -16,17 +16,19 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body">
-        <KFTLView :app_content_height="view_height" :app_content_width="view_width"
+      <div class="gkill-floating-dialog__body" ref="dialog_body_ref">
+        <v-card style="overflow: hidden">
+       <KFTLView :app_content_height="view_height" :app_content_width="view_width"
           :application_config="application_config" :gkill_api="gkill_api"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)" ref="kftl_view" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { computed, nextTick, type Ref, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLDialogEmits } from './kftl-dialog-emits'
@@ -34,13 +36,47 @@ import type { KFTLDialogProps } from './kftl-dialog-props'
 import KFTLView from '../views/kftl-view.vue'
 
 const kftl_view = ref<InstanceType<typeof KFTLView> | null>(null);
+const dialog_body_ref = ref<HTMLElement | null>(null)
 
 const props = defineProps<KFTLDialogProps>()
 const emits = defineEmits<KFTLDialogEmits>()
 defineExpose({ show, hide })
 
-const view_width = computed(() => Math.min(props.app_content_width.valueOf() * 0.85, 600))
-const view_height = computed(() => props.app_content_height.valueOf() * 0.75)
+const default_view_width = computed(() => Math.min(props.app_content_width.valueOf() * 0.85, 600))
+const default_view_height = computed(() => props.app_content_height.valueOf() * 0.75)
+
+const observed_body_width = ref(0)
+const observed_body_height = ref(0)
+
+const view_width = computed(() => {
+  if (observed_body_width.value > 0) {
+    return observed_body_width.value
+  }
+  return default_view_width.value
+})
+const view_height = computed(() => {
+  if (observed_body_height.value > 0) {
+    return observed_body_height.value
+  }
+  return default_view_height.value
+})
+
+let body_ro: ResizeObserver | null = null
+watch(dialog_body_ref, (el, oldEl) => {
+  if (body_ro && oldEl) { try { body_ro.unobserve(oldEl) } catch { /* noop */ } }
+  if (el) {
+    if (!body_ro) {
+      body_ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          observed_body_width.value = entry.contentRect.width
+          observed_body_height.value = entry.contentRect.height
+        }
+      })
+    }
+    body_ro.observe(el)
+  }
+}, { flush: 'post' })
+onBeforeUnmount(() => { body_ro?.disconnect(); body_ro = null })
 
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'

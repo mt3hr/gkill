@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <EditIDFKyouView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="[kyou.generate_info_identifer()]" :idf_kyou="kyou.typed_idf_kyou" :kyou="kyou"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -38,7 +40,8 @@
           @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
           @requested_reload_list="emits('requested_reload_list')" @requested_close_dialog="hide()"
           @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

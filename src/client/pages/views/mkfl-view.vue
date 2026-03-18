@@ -21,7 +21,7 @@
                 reload_plaing_timeis_view()
             }" ref="kftl_view" />
         <PlaingTimeisView :application_config="application_config" :gkill_api="gkill_api"
-            :app_content_height="app_content_height.valueOf() / 2" :app_content_width="app_content_width"
+            :app_content_height="(app_content_height.valueOf() / 2) + 4" :app_content_width="app_content_width"
             @deleted_kyou="(...deleted_kyou: any[]) => { reload_plaing_timeis_view(); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
             @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"

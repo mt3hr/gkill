@@ -15,13 +15,16 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <EditFolderView :application_config="application_config" :folder_name="folder_name" :gkill_api="gkill_api"
           :struct_obj="struct_obj"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
           @requested_update_folder="(...folder: any[]) => emits('requested_update_folder', folder[0] as FolderStructElementData)" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

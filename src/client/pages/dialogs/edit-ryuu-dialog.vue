@@ -51,9 +51,3 @@ const { is_show_dialog, ui, show, hide } = useEditRyuuDialog({ props, emits, dno
 
 defineExpose({ show, hide })
 </script>
-
-<style scoped lang="css">
-.edit_ryuu_dialog_view {
-  overflow-x: scroll;
-}
-</style>

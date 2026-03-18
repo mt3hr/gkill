@@ -16,7 +16,8 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <ConfirmDeleteKyouView :application_config="application_config" :gkill_api="gkill_api"
+        <v-card class="pa-2">
+       <ConfirmDeleteKyouView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" @requested_close_dialog="hide()"
           @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
@@ -35,7 +36,8 @@
           @requested_reload_list="emits('requested_reload_list')"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

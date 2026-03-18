@@ -15,7 +15,9 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body"> 
+      <div class="gkill-floating-dialog__body">
+        <v-card class="pa-2">
+
         <UploadFileView :app_content_height="app_content_height" :app_content_width="app_content_width"
           :application_config="application_config" :gkill_api="gkill_api"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
@@ -23,7 +25,8 @@
           @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
           @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
           @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
-      </div>
+        </v-card>
+</div>
     </div>
   </Teleport>
 </template>

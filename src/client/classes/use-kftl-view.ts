@@ -110,6 +110,10 @@ export function useKftlView(options: {
         update_line_labels()
     }
     window.addEventListener("resize", on_resize)
+    watch(() => [props.app_content_width, props.app_content_height], () => {
+        resize()
+        update_line_labels()
+    })
     onMounted(() => resize())
     onUnmounted(() => window.removeEventListener("resize", on_resize))
 
