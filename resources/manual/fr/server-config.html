@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration du serveur - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Configuration du serveur</h1>
+  <p>Cet &eacute;cran configure le comportement du serveur. Seuls les administrateurs peuvent y acc&eacute;der.</p>
+
+  <h2>Bouton sup&eacute;rieur</h2>
+  <p>Appuyez sur le bouton <strong>Gestion des comptes</strong> pour ouvrir l'&eacute;cran de gestion des comptes.</p>
+
+  <h2>Param&egrave;tres</h2>
+  <table>
+    <tr><th>Param&egrave;tre</th><th>Type</th><th>Description</th></tr>
+    <tr><td>Profil</td><td>Liste d&eacute;roulante + Ajouter/Supprimer</td><td>S&eacute;lectionner le profil actif, en cr&eacute;er un nouveau ou en supprimer un existant</td></tr>
+    <tr><td>Acc&egrave;s local uniquement</td><td>Case &agrave; cocher</td><td>Restreindre les connexions &agrave; l'acc&egrave;s local uniquement</td></tr>
+    <tr><td>Service de notifications</td><td>Case &agrave; cocher</td><td>Activer le service de notifications push</td></tr>
+    <tr><td>Activer TLS</td><td>Case &agrave; cocher</td><td>Activer HTTPS</td></tr>
+    <tr><td>G&eacute;n&eacute;rer TLS auto-sign&eacute;</td><td>Bouton</td><td>Cr&eacute;er des fichiers de certificat TLS auto-sign&eacute;s</td></tr>
+    <tr><td>Adresse</td><td>Texte</td><td>Adresse d'&eacute;coute du serveur (ex. : :9999)</td></tr>
+    <tr><td>Fichier TLS CERT</td><td>Texte</td><td>Chemin vers le fichier de certificat TLS</td></tr>
+    <tr><td>Fichier TLS KEY</td><td>Texte</td><td>Chemin vers le fichier de cl&eacute; priv&eacute;e TLS</td></tr>
+    <tr><td>Commande d'ouverture de r&eacute;pertoire</td><td>Texte</td><td>Commande du syst&egrave;me d'exploitation pour ouvrir un r&eacute;pertoire</td></tr>
+    <tr><td>Commande d'ouverture de fichier</td><td>Texte</td><td>Commande du syst&egrave;me d'exploitation pour ouvrir un fichier</td></tr>
+    <tr><td>D&eacute;lai d'attente des favoris</td><td>Nombre (min : 5)</td><td>D&eacute;lai d'attente en secondes pour la r&eacute;cup&eacute;ration des favoris</td></tr>
+    <tr><td>Agent utilisateur des favoris</td><td>Texte</td><td>Cha&icirc;ne User-Agent pour la r&eacute;cup&eacute;ration des favoris</td></tr>
+    <tr><td>R&eacute;pertoire de donn&eacute;es utilisateur</td><td>Texte</td><td>Chemin vers le r&eacute;pertoire de stockage des donn&eacute;es utilisateur</td></tr>
+  </table>
+
+  <h2>Boutons inf&eacute;rieurs</h2>
+  <p><strong>Appliquer</strong> : Enregistrer les param&egrave;tres.<br><strong>Annuler</strong> : Annuler les modifications et fermer l'&eacute;cran.</p>
+
+  <div class="tip">Les modifications n&eacute;cessitent un red&eacute;marrage du serveur pour prendre effet.</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

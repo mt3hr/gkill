@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pantalla de inicio de sesion - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Pantalla de inicio de sesion</h1>
+  <p>Pantalla de autenticacion para iniciar sesion en gkill. Introduzca su ID de usuario y contrasena para acceder a la aplicacion.</p>
+
+  <h2>Elementos de la pantalla</h2>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Campo de ID de usuario</td>
+      <td>Introduzca el ID de usuario de su cuenta gkill.</td>
+    </tr>
+    <tr>
+      <td>Campo de contrasena</td>
+      <td>Introduzca la contrasena de la cuenta.</td>
+    </tr>
+    <tr>
+      <td>Boton de inicio de sesion</td>
+      <td>Ejecuta el inicio de sesion con las credenciales introducidas.</td>
+    </tr>
+    <tr>
+      <td>Indicador de version</td>
+      <td>Muestra el numero de version actual de gkill en la esquina superior derecha.</td>
+    </tr>
+  </table>
+
+  <h2>Procedimiento</h2>
+  <ol>
+    <li>Introduzca el ID de usuario de su cuenta en el campo correspondiente.</li>
+    <li>Introduzca la contrasena en el campo correspondiente.</li>
+    <li>Haga clic en el boton "Iniciar sesion" o pulse Enter para autenticarse.</li>
+    <li>Tras una autenticacion exitosa, sera redirigido a la pagina predeterminada configurada en los ajustes.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Consejo:</strong> En la primera ejecucion, puede iniciar sesion con el usuario <code>admin</code> (sin contrasena). Por seguridad, se recomienda establecer una contrasena despues de iniciar sesion.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Tambien puede iniciar sesion pulsando Enter, lo que permite enviar directamente despues de introducir la contrasena.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

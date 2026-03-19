@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>さいはて画面 - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>さいはて画面</h1>
+  <p>ホーム画面です。各種記録をすばやく追加するためのハブとして機能します。</p>
+
+  <h2>ツールバーボタン</h2>
+  <table>
+    <tr>
+      <th>ボタン</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128260;</span> 再読み込み</td>
+      <td>データを再読み込みします。長押しすると強制再読み込みを実行します。</td>
+    </tr>
+    <tr>
+      <td>ログアウト</td>
+      <td>ログアウトします。長押しするとオプションが表示されます。</td>
+    </tr>
+  </table>
+
+  <h2>フローティングアクションボタン（+）</h2>
+  <p>画面右下の「+」ボタンをタップすると、各種記録の追加メニューが表示されます。</p>
+
+  <table>
+    <tr>
+      <th>メニュー項目</th>
+      <th>内容</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>メモ帳</td>
+      <td>テキスト入力</td>
+      <td>メモ帳構文でメモや各種記録を入力する画面を開きます。</td>
+    </tr>
+    <tr>
+      <td>打刻メモ帳</td>
+      <td>テキスト＋打刻</td>
+      <td>メモ入力と進行中の打刻を同時に管理する画面を開きます。</td>
+    </tr>
+    <tr>
+      <td>数値記録</td>
+      <td>数値を記録</td>
+      <td>任意の数値データを記録します。</td>
+    </tr>
+    <tr>
+      <td>ブックマーク</td>
+      <td>URLを記録</td>
+      <td>WebページのURLをブックマークとして保存します。</td>
+    </tr>
+    <tr>
+      <td>打刻帳</td>
+      <td>時間計測を開始</td>
+      <td>新しい打刻セッションを開始します。</td>
+    </tr>
+    <tr>
+      <td>タスク</td>
+      <td>タスクを追加</td>
+      <td>新しいタスクを作成します。</td>
+    </tr>
+    <tr>
+      <td>支出</td>
+      <td>金額を記録</td>
+      <td>支出金額と内容を記録します。</td>
+    </tr>
+    <tr>
+      <td>気分</td>
+      <td>気分値（0〜10）を記録</td>
+      <td>現在の気分を0〜10の数値で記録します。</td>
+    </tr>
+    <tr>
+      <td>アップロード</td>
+      <td>ファイルをアップロード</td>
+      <td>画像やドキュメントなどのファイルをアップロードして記録します。</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 「+」ボタンを長押しすると、メモ帳が直接開きます。素早くメモを取りたいときに便利です。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> ログイン後に最初に表示される画面は、設定画面の「デフォルト表示画面」で変更できます。
+  </div>
+
+  <div class="tip">
+    <strong>ショートカット:</strong> この画面でEnterキーを押すと、メモ帳ダイアログが開きます。すばやく記録を追加したいときに便利です。
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

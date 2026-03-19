@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기록 화면 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>기록 화면</h1>
+  <p>개별 기록의 상세 정보를 표시하는 화면입니다. 다양한 기록 유형의 상세 정보를 확인할 수 있습니다.</p>
+
+  <h2>툴바 버튼</h2>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> 설정</td>
+      <td>애플리케이션 설정 화면을 엽니다.</td>
+    </tr>
+  </table>
+
+  <h2>표시되는 기록 유형</h2>
+  <table>
+    <tr>
+      <th>기록 유형</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>메모(Kmemo)</td>
+      <td>텍스트 메모의 내용을 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>북마크</td>
+      <td>저장된 URL과 제목을 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>작업</td>
+      <td>작업의 상태, 마감일, 보드 정보를 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>기분값</td>
+      <td>0~10의 기분값을 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>지출</td>
+      <td>금액과 지출 내용을 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>타임로그</td>
+      <td>시작/종료 시간과 경과 시간을 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>파일(IDFKyou)</td>
+      <td>업로드된 파일의 미리보기를 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>Git 커밋 로그</td>
+      <td>Git 저장소의 커밋 정보를 표시합니다.</td>
+    </tr>
+  </table>
+
+  <h2>공통 표시 정보</h2>
+  <p>모든 기록 유형에서 다음 정보가 표시됩니다:</p>
+  <ul>
+    <li><strong>태그:</strong> 기록에 부여된 태그 목록</li>
+    <li><strong>관련 시간:</strong> 기록과 관련된 날짜/시간 정보</li>
+    <li><strong>저장소 이름:</strong> 데이터가 저장된 저장소의 이름</li>
+  </ul>
+
+  <h2>컨텍스트 메뉴</h2>
+  <p>기록을 우클릭(또는 길게 누르기)하면 컨텍스트 메뉴가 표시되어 편집, 삭제, 공유 등의 작업을 수행할 수 있습니다.</p>
+
+  <div class="tip">
+    <strong>팁:</strong> 기록 상세 화면에서 직접 태그를 추가하거나 편집할 수 있습니다.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

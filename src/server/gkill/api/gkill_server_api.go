@@ -650,6 +650,18 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 		g.HandleUpdateCache(w, r)
 	}).Methods(g.APIAddress.UpdateCacheMethod)
 
+	manualPage, err := fs.Sub(EmbedFS, "embed/manual")
+	if err != nil {
+		return err
+	}
+	router.PathPrefix("/resources/manual/").Handler(http.StripPrefix("/resources/manual/",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
+			http.FileServer(http.FS(manualPage)).ServeHTTP(w, r)
+		})))
+
 	gkillPage, err := fs.Sub(EmbedFS, "embed/html")
 	if err != nil {
 		return err

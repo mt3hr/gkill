@@ -740,5 +740,14 @@
     "SUCCESS_OPEN_FOLDER_MESSAGE": "フォルダを開きました",
     "ADD_TAG_FROM_HISTORY_TITLE": "タグ履歴から追加",
     "CONFIRM_UNKNOWN_TAG_TITLE": "確認",
-    "CONFIRM_UNKNOWN_TAG_MESSAGE": "以下のタグはタグ構造に存在しません。本当に追加しますか？"
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "新しいタグです。追加しますか？",
+    "HELP_TITLE": "ヘルプ",
+    "TOOLTIP_HELP": "ヘルプを表示",
+    "TOOLTIP_SETTINGS": "設定",
+    "TOOLTIP_TOGGLE_DETAIL_VIEW": "詳細表示切替",
+    "TOOLTIP_TOGGLE_CALENDAR": "カレンダー表示切替",
+    "TOOLTIP_TOGGLE_DNOTE": "Dnote表示切替",
+    "TOOLTIP_TOGGLE_MAP": "地図表示切替",
+    "TOOLTIP_TOGGLE_SIDEBAR": "サイドバー表示切替",
+    "TOOLTIP_RELOAD": "再読み込み"
 }

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuraci&oacute;n del servidor - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Configuraci&oacute;n del servidor</h1>
+  <p>Esta pantalla configura el comportamiento del servidor. Solo los administradores pueden acceder.</p>
+
+  <h2>Bot&oacute;n superior</h2>
+  <p>Pulse el bot&oacute;n <strong>Gesti&oacute;n de cuentas</strong> para abrir la pantalla de gesti&oacute;n de cuentas.</p>
+
+  <h2>Configuraciones</h2>
+  <table>
+    <tr><th>Configuraci&oacute;n</th><th>Tipo</th><th>Descripci&oacute;n</th></tr>
+    <tr><td>Perfil</td><td>Desplegable + A&ntilde;adir/Eliminar</td><td>Seleccionar el perfil activo, crear uno nuevo o eliminar uno existente</td></tr>
+    <tr><td>Solo acceso local</td><td>Casilla</td><td>Restringir las conexiones solo a acceso local</td></tr>
+    <tr><td>Servicio de notificaciones</td><td>Casilla</td><td>Activar el servicio de notificaciones push</td></tr>
+    <tr><td>Activar TLS</td><td>Casilla</td><td>Activar HTTPS</td></tr>
+    <tr><td>Generar TLS autofirmado</td><td>Bot&oacute;n</td><td>Crear archivos de certificado TLS autofirmados</td></tr>
+    <tr><td>Direcci&oacute;n</td><td>Texto</td><td>Direcci&oacute;n de escucha del servidor (ej.: :9999)</td></tr>
+    <tr><td>Archivo TLS CERT</td><td>Texto</td><td>Ruta al archivo de certificado TLS</td></tr>
+    <tr><td>Archivo TLS KEY</td><td>Texto</td><td>Ruta al archivo de clave privada TLS</td></tr>
+    <tr><td>Comando para abrir directorio</td><td>Texto</td><td>Comando del sistema operativo para abrir un directorio</td></tr>
+    <tr><td>Comando para abrir archivo</td><td>Texto</td><td>Comando del sistema operativo para abrir un archivo</td></tr>
+    <tr><td>Tiempo l&iacute;mite de marcadores</td><td>N&uacute;mero (m&iacute;n: 5)</td><td>Tiempo l&iacute;mite en segundos para la obtenci&oacute;n de marcadores</td></tr>
+    <tr><td>Agente de usuario de marcadores</td><td>Texto</td><td>Cadena User-Agent para la obtenci&oacute;n de marcadores</td></tr>
+    <tr><td>Directorio de datos de usuario</td><td>Texto</td><td>Ruta al directorio de almacenamiento de datos de usuario</td></tr>
+  </table>
+
+  <h2>Botones inferiores</h2>
+  <p><strong>Aplicar</strong>: Guardar la configuraci&oacute;n.<br><strong>Cancelar</strong>: Descartar los cambios y cerrar la pantalla.</p>
+
+  <div class="tip">Los cambios requieren reiniciar el servidor para que surtan efecto.</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>
