@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>打刻メモ帳画面 - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>打刻メモ帳画面</h1>
+  <p>メモ入力と進行中の打刻を同時に表示するハイブリッド画面です。メモの記録と時間計測を1つの画面で効率的に管理できます。</p>
+
+  <h2>ツールバーボタン</h2>
+  <table>
+    <tr>
+      <th>ボタン</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> 設定</td>
+      <td>アプリケーション設定画面を開きます。</td>
+    </tr>
+  </table>
+
+  <h2>画面レイアウト</h2>
+  <table>
+    <tr>
+      <th>領域</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>上半分: メモ帳入力エリア</td>
+      <td>メモ帳画面と同じテキスト入力エリアです。メモ帳構文でデータを入力し、テンプレートの挿入や保存ができます。</td>
+    </tr>
+    <tr>
+      <td>下半分: 実行中の打刻一覧</td>
+      <td>現在アクティブな打刻帳セッションの一覧が表示されます。各セッションの停止操作もここから行えます。</td>
+    </tr>
+  </table>
+
+  <h2>主な特徴</h2>
+  <ul>
+    <li><strong>自動更新:</strong> メモ帳入力で記録を保存すると、下半分の打刻一覧が自動的に更新されます。新しく開始した打刻がすぐに一覧に反映されます。</li>
+    <li><strong>同時操作:</strong> メモを書きながら、進行中の打刻を確認・停止できます。</li>
+    <li><strong>メモ帳連携:</strong> メモ帳構文で打刻の開始・停止を記述すると、下の一覧にリアルタイムで反映されます。</li>
+  </ul>
+
+  <h2>操作手順</h2>
+  <ol>
+    <li>上半分のテキストエリアにメモ帳構文で記録を入力します。</li>
+    <li>保存ボタンで記録を送信します。</li>
+    <li>打刻の開始を記述した場合、下半分の一覧に新しいセッションが表示されます。</li>
+    <li>下半分の一覧から、進行中のセッションを停止できます。</li>
+  </ol>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 日常的な記録では、この画面が最も効率的です。メモを書きながら作業時間も管理できます。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 上半分のメモ帳入力はメモ帳画面と同じ機能を持っています。テンプレートも利用可能です。
+  </div>
+
+  <h2>関連ドキュメント</h2><p><a href="kftl-syntax.html">メモ帳記法リファレンス →</a></p>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

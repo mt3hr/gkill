@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Screen - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Login Screen</h1>
+  <p>
+    The login screen is the entry point for gkill. You must authenticate with a valid user account before accessing any features.
+  </p>
+
+  <h2>Screen Elements</h2>
+  <table>
+    <tr><th>Element</th><th>Description</th></tr>
+    <tr><td>User ID</td><td>Enter your registered user ID. This is case-sensitive.</td></tr>
+    <tr><td>Password</td><td>Enter your password. The password is hashed (SHA-256) before being sent to the server.</td></tr>
+    <tr><td>Login Button</td><td>Submit your credentials to authenticate. On success, you will be redirected to your default page.</td></tr>
+    <tr><td>Version Display</td><td>Shows the current gkill version number and build information at the bottom of the screen.</td></tr>
+  </table>
+
+  <h2>Login Flow</h2>
+  <ol>
+    <li>Enter your User ID in the first field.</li>
+    <li>Enter your Password in the second field.</li>
+    <li>Click the <strong>Login</strong> button or press Enter.</li>
+    <li>If authentication succeeds, you will be taken to your configured default page (typically Home Hub).</li>
+    <li>If authentication fails, an error message will be displayed.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>First-time setup:</strong> On the very first run of gkill, an <code>admin</code> user is automatically created with no password. Log in with user ID <code>admin</code> and leave the password field empty. You should set a password after your first login via the Settings screen.
+  </div>
+
+  <h2>Session Management</h2>
+  <p>
+    After a successful login, a session is created that lasts for <strong>30 days</strong> by default. You do not need to log in again until the session expires or you explicitly log out.
+  </p>
+
+  <div class="tip">
+    <strong>Tip:</strong> If you are having trouble logging in, verify that the server is running and that you are connecting to the correct address and port (default: <code>:9999</code>).
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

@@ -8,9 +8,12 @@
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
         <div class="gkill-floating-dialog__spacer"></div>
-  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
+  <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -25,6 +28,7 @@
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
           @requested_close_dialog="hide" />
         </v-card>
+        <HelpDialog screen_name="manage-account" ref="help_dialog" />
 </div>
     </div>
   </Teleport>
@@ -34,8 +38,11 @@ import { type Ref, ref } from 'vue'
 import type { ManageAccountDialogEmits } from './manage-account-dialog-emits'
 import type { ManageAccountDialogProps } from './manage-account-dialog-props'
 import ManageAccountView from '../views/manage-account-view.vue'
+import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 defineProps<ManageAccountDialogProps>()
 const emits = defineEmits<ManageAccountDialogEmits>()

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeitstempel-Notizblock - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Zeitstempel-Notizblock</h1>
+  <p>Bildschirm, der Notizblock-Eingabe und aktive Sitzungsverwaltung kombiniert. Der obere Teil ist der Notizblock-Eingabebereich und der untere Teil zeigt die Liste der aktiven Sitzungen.</p>
+
+  <h2>Symbolleistenschaltflaechen</h2>
+  <table>
+    <tr>
+      <th>Schaltflaeche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> Einstellungen</td>
+      <td>Oeffnet den Einstellungsbildschirm der Anwendung.</td>
+    </tr>
+  </table>
+
+  <h2>Bildschirmlayout</h2>
+  <table>
+    <tr>
+      <th>Bereich</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Oberer Teil (Notizblock)</td>
+      <td>Texteingabebereich fuer die Eingabe von Datensaetzen mit Notizblock-Syntax.</td>
+    </tr>
+    <tr>
+      <td>Unterer Teil (Aktive Sitzungen)</td>
+      <td>Zeigt die Liste der laufenden Zeiterfassungssitzungen an.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Nach dem Speichern des Notizblock-Textes wird die Liste der aktiven Sitzungen automatisch aktualisiert, sodass neu erstellte Sitzungen sofort angezeigt werden.
+  </div>
+
+  <h2>Verwandte Dokumente</h2><p><a href="kftl-syntax.html">Notizblock-Syntaxreferenz →</a></p>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

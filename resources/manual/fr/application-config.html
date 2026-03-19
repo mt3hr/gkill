@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parametres de l'application - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Parametres de l'application</h1>
+  <p>Ecran de gestion des parametres globaux de l'application et de la structure des donnees. Vous pouvez ajuster les preferences d'affichage, les options de comportement et les integrations externes.</p>
+
+  <h2>Boutons d'action superieurs</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Parametres du serveur (administrateurs uniquement)</td>
+      <td>Ouvre l'ecran de configuration du serveur pour le port, TLS, les restrictions d'acces, etc. Visible uniquement pour les comptes administrateurs.</td>
+    </tr>
+    <tr>
+      <td>Recharger</td>
+      <td>Actualise les donnees depuis le serveur. Appui long pour forcer un rechargement complet.</td>
+    </tr>
+    <tr>
+      <td>Deconnexion</td>
+      <td>Termine la session en cours et se deconnecte. Appui long pour des options supplementaires.</td>
+    </tr>
+  </table>
+
+  <h2>Parametres generaux</h2>
+  <table>
+    <tr>
+      <th>Parametre</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Langue</td>
+      <td>Liste deroulante</td>
+      <td>Choisir la langue de l'interface : ja (japonais), en (anglais), zh (chinois), ko (coreen), es (espagnol), fr (francais), de (allemand).</td>
+    </tr>
+    <tr>
+      <td>Theme sombre</td>
+      <td>Case a cocher</td>
+      <td>Active ou desactive le mode sombre. Adapte aux environnements peu eclaires.</td>
+    </tr>
+    <tr>
+      <td>Rechargement a chaud</td>
+      <td>Case a cocher</td>
+      <td>Lorsqu'il est active, la vue du journal de vie se rafraichit automatiquement lorsque des changements de donnees sont detectes.</td>
+    </tr>
+    <tr>
+      <td>Afficher les etiquettes dans la liste</td>
+      <td>Case a cocher</td>
+      <td>Controle si les etiquettes sont affichees sur les fiches d'enregistrement dans les vues en liste.</td>
+    </tr>
+    <tr>
+      <td>Afficher le pied de page de partage</td>
+      <td>Case a cocher</td>
+      <td>Controle si les options de partage sont affichees dans la zone du pied de page.</td>
+    </tr>
+  </table>
+
+  <h2>Parametres d'affichage</h2>
+  <table>
+    <tr>
+      <th>Parametre</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Periode d'affichage du journal de vie</td>
+      <td>Case a cocher + Nombre</td>
+      <td>Definit le nombre de jours d'enregistrements a afficher dans la vue du journal de vie. -1 pour illimite. Une periode plus courte charge plus rapidement.</td>
+    </tr>
+    <tr>
+      <td>Page par defaut</td>
+      <td>Liste deroulante</td>
+      <td>Choisir la page affichee apres la connexion.</td>
+    </tr>
+    <tr>
+      <td>Colonnes d'images du journal de vie</td>
+      <td>Nombre (1-10)</td>
+      <td>Definit le nombre de colonnes de la grille de miniatures dans la vue du journal de vie. Ajustez en fonction de la taille de votre ecran.</td>
+    </tr>
+    <tr>
+      <td>Tableau de taches par defaut</td>
+      <td>Liste deroulante + Bouton ajouter</td>
+      <td>Definit le tableau par defaut dans l'ecran des taches. Utilisez le bouton d'ajout pour creer de nouveaux tableaux.</td>
+    </tr>
+  </table>
+
+  <h2>Integration externe</h2>
+  <table>
+    <tr>
+      <th>Parametre</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Adresse du bookmarklet</td>
+      <td>Lecture seule</td>
+      <td>URL du bookmarklet JavaScript pour la barre de favoris du navigateur. Permet d'enregistrer des favoris dans gkill en un clic depuis n'importe quelle page web.</td>
+    </tr>
+    <tr>
+      <td>Cle API Google Maps</td>
+      <td>Saisie de texte</td>
+      <td>Entrez votre cle API Google Maps pour activer les fonctions de carte GPS. La vue carte necessite cette cle pour fonctionner.</td>
+    </tr>
+  </table>
+
+  <h2>Gestion de la structure des donnees</h2>
+  <p>Ces boutons ouvrent des editeurs dedies pour gerer l'organisation de vos donnees.</p>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Structure des etiquettes</td>
+      <td>Gere la hierarchie des etiquettes et leurs regroupements. Vous pouvez creer, renommer, reorganiser et organiser les etiquettes en relations parent-enfant.</td>
+    </tr>
+    <tr>
+      <td>Structure des depots</td>
+      <td>Gere les emplacements de stockage des donnees et les depots. Vous pouvez ajouter, supprimer ou configurer les emplacements de stockage des enregistrements.</td>
+    </tr>
+    <tr>
+      <td>Structure des profils</td>
+      <td>Gere les configurations des appareils et des profils. Permet de modifier les parametres par appareil.</td>
+    </tr>
+    <tr>
+      <td>Structure des types d'enregistrement</td>
+      <td>Gere quels types d'enregistrement sont stockes dans quels depots.</td>
+    </tr>
+    <tr>
+      <td>Structure des modeles</td>
+      <td>Gere les modeles de texte du bloc-notes pour la saisie rapide. Vous pouvez creer et modifier des textes predefinies.</td>
+    </tr>
+    <tr>
+      <td>Vue de synthese</td>
+      <td>Gere l'agregation des donnees et les configurations des vues de synthese.</td>
+    </tr>
+    <tr>
+      <td>Informations associees</td>
+      <td>Gere les structures d'informations associees.</td>
+    </tr>
+  </table>
+
+  <h2>Boutons d'action inferieurs</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Appliquer</td>
+      <td>Enregistre toutes les modifications.</td>
+    </tr>
+    <tr>
+      <td>Annuler</td>
+      <td>Annule les modifications et ferme l'ecran.</td>
+    </tr>
+  </table>
+
+  <h2>Pied de page</h2>
+  <p>Le bas de l'ecran affiche les informations de l'application :</p>
+  <ul>
+    <li><strong>Numero de version</strong> — Lien cliquable vers la page du projet.</li>
+    <li><strong>Horodatage de compilation</strong> — Date et heure de compilation de l'application.</li>
+    <li><strong>Hash du commit</strong> — Le commit Git a partir duquel la compilation a ete creee.</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Apres avoir modifie les parametres, appuyez sur "Appliquer" pour enregistrer. Appuyez sur "Annuler" pour annuler toutes les modifications.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Pour les smartphones, definissez les colonnes d'images sur 1-2. Pour les ecrans de bureau, 3-5 colonnes convient bien.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Pour utiliser les fonctions de carte GPS, activez l'API Maps JavaScript dans Google Cloud Console et entrez la cle API dans Integration externe.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

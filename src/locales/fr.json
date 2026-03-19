@@ -740,5 +740,14 @@
     "SUCCESS_OPEN_FOLDER_MESSAGE": "Dossier ouvert",
     "ADD_TAG_FROM_HISTORY_TITLE": "Ajouter un tag depuis l'historique",
     "CONFIRM_UNKNOWN_TAG_TITLE": "Confirmation",
-    "CONFIRM_UNKNOWN_TAG_MESSAGE": "Les tags suivants ne sont pas dans la structure des tags. Êtes-vous sûr de vouloir les ajouter ?"
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "C'est un nouveau tag. Voulez-vous l'ajouter ?",
+    "HELP_TITLE": "Aide",
+    "TOOLTIP_HELP": "Afficher l'aide",
+    "TOOLTIP_SETTINGS": "Paramètres",
+    "TOOLTIP_TOGGLE_DETAIL_VIEW": "Basculer la vue détaillée",
+    "TOOLTIP_TOGGLE_CALENDAR": "Basculer le calendrier",
+    "TOOLTIP_TOGGLE_DNOTE": "Basculer Dnote",
+    "TOOLTIP_TOGGLE_MAP": "Basculer la carte",
+    "TOOLTIP_TOGGLE_SIDEBAR": "Basculer la barre latérale",
+    "TOOLTIP_RELOAD": "Recharger"
 }

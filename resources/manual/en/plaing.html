@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Active Sessions - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Active Sessions</h1>
+  <p>
+    The Active Sessions screen shows all currently running time tracking sessions (Time Log). Use it to monitor what you are currently doing and to stop sessions when activities end.
+  </p>
+
+  <h2>Toolbar</h2>
+  <table>
+    <tr><th>Icon</th><th>Action</th></tr>
+    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+  </table>
+
+  <h2>Active Session List</h2>
+  <p>Each active session is displayed as a card showing:</p>
+  <ul>
+    <li><strong>Session name:</strong> The title of the time tracking session.</li>
+    <li><strong>Start time:</strong> When the session began.</li>
+    <li><strong>Elapsed time:</strong> How long the session has been running.</li>
+    <li><strong>Tags:</strong> Any tags associated with the session.</li>
+  </ul>
+
+  <h2>Stop Button</h2>
+  <p>Each active session card has a stop button. Pressing it ends the session by recording the current time as the end time. The session then becomes a completed Time Log record viewable in the Life Log View and Record views.</p>
+
+  <h2>FAB Quick-Add Menu</h2>
+  <p>The floating action button (FAB) at the bottom-right provides quick access to create new records of any type:</p>
+  <table>
+    <tr><th>Type</th><th>Description</th></tr>
+    <tr><td>Memo</td><td>Create a new text memo.</td></tr>
+    <tr><td>Time + Memo</td><td>Start a new Time Log session and attach a memo.</td></tr>
+    <tr><td>Numeric</td><td>Record a numeric counter value.</td></tr>
+    <tr><td>Bookmark</td><td>Save a URL bookmark.</td></tr>
+    <tr><td>Time Log</td><td>Start a new time tracking session.</td></tr>
+    <tr><td>Task</td><td>Create a new task on a board.</td></tr>
+    <tr><td>Expense</td><td>Log a financial expense.</td></tr>
+    <tr><td>Mood</td><td>Record your current mood (0-10 scale).</td></tr>
+    <tr><td>Upload</td><td>Upload a file or image.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> You can have multiple time tracking sessions running simultaneously. This is useful when activities overlap, such as working on a project while in a meeting.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Check the Active Sessions screen regularly to make sure you have not forgotten to stop a session. Forgotten sessions can lead to inaccurate time records.
+  </div>
+
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

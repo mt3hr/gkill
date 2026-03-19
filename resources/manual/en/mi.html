@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Board - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Task Board</h1>
+  <p>
+    The Tasks screen provides a Kanban-style task board for managing tasks. Tasks are organized into boards and displayed as cards that can be tracked, checked off, and completed.
+  </p>
+
+  <h2>Toolbar</h2>
+  <table>
+    <tr><th>Icon</th><th>Action</th></tr>
+    <tr><td><span class="icon">&#9776;</span> Sidebar Toggle</td><td>Show or hide the filter sidebar for narrowing down displayed tasks.</td></tr>
+    <tr><td><span class="icon">&#128196;</span> Detail View Toggle</td><td>Show or hide the detail panel that displays full information for the selected task.</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendar Toggle</td><td>Show or hide the calendar heatmap showing task activity over time.</td></tr>
+    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+  </table>
+
+  <h2>Board Columns</h2>
+  <p>Tasks are organized into named boards (columns). Each board represents a category or project. You can configure boards in the application settings.</p>
+  <ul>
+    <li>Tasks appear as cards within their assigned board column.</li>
+    <li>Each card shows the task title, status, limit date, and tags.</li>
+    <li>The default board can be set in the application settings.</li>
+  </ul>
+
+  <h2>Task Status</h2>
+  <table>
+    <tr><th>Status</th><th>Description</th></tr>
+    <tr><td>Open</td><td>The task is active and not yet started or in progress.</td></tr>
+    <tr><td>Checked</td><td>The task has been marked as in-progress or acknowledged.</td></tr>
+    <tr><td>Completed</td><td>The task is finished and done.</td></tr>
+  </table>
+
+  <h2>Sidebar Filters</h2>
+  <p>The sidebar provides filtering options to narrow down the tasks displayed:</p>
+  <ul>
+    <li><strong>Board filter:</strong> Select which boards to show.</li>
+    <li><strong>Tag filter:</strong> Filter tasks by their assigned tags.</li>
+    <li><strong>Status filter:</strong> Show only open, checked, or completed tasks.</li>
+    <li><strong>Date range:</strong> Filter tasks by their creation or limit date.</li>
+  </ul>
+
+  <h2>Detail Panel</h2>
+  <p>When enabled, the detail panel shows full information for the currently selected task, including:</p>
+  <ul>
+    <li>Task title and full description</li>
+    <li>Board assignment</li>
+    <li>Status and limit date</li>
+    <li>All associated tags</li>
+    <li>Related timestamps (Time Log sessions)</li>
+    <li>Edit and management controls</li>
+  </ul>
+
+  <h2>Calendar Heatmap</h2>
+  <p>The calendar view shows a heatmap of task activity over time. Darker cells indicate more task activity on that day. Click on a date to filter tasks to that specific day.</p>
+
+  <div class="tip">
+    <strong>Tip:</strong> Set your most frequently used board as the default board in Settings so it opens automatically when you visit the Tasks screen.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Use tags to cross-reference tasks with other record types. For example, tag a task and related memos with the same tag to easily find all related items.
+  </div>
+
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

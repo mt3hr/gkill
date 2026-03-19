@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KFTL Syntax Reference</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+
+<div class="back-link"><a href="kftl.html">&larr; Back to Memo Pad Help</a></div>
+
+<h1>KFTL Syntax Reference</h1>
+
+<p>KFTL is a text-based recording format used in gkill. By using line prefixes, you can input various types of data at once. Below are all 18 statement types.</p>
+
+<h2>Statement Overview</h2>
+
+<table>
+  <tr><th>Prefix</th><th>Type</th><th>Description</th></tr>
+  <tr><td>(none)</td><td>Memo</td><td>Record a text memo</td></tr>
+  <tr><td><code>。</code></td><td>Tag</td><td>Attach tags</td></tr>
+  <tr><td><code>ーー</code></td><td>Text Block</td><td>Preserve multiline text as-is</td></tr>
+  <tr><td><code>、</code></td><td>Separator</td><td>Split into a new record</td></tr>
+  <tr><td><code>、、</code></td><td>Separator (+1 sec)</td><td>Split and increment timestamp by 1 second</td></tr>
+  <tr><td><code>？</code></td><td>Related Time</td><td>Set a related date/time</td></tr>
+  <tr><td><code>ーか</code></td><td>Numeric Record</td><td>Record a numeric value</td></tr>
+  <tr><td><code>ーみ</code></td><td>Task</td><td>Create a task</td></tr>
+  <tr><td><code>ーら</code></td><td>Mood</td><td>Record mood value (0-10)</td></tr>
+  <tr><td><code>ーん</code></td><td>Expense</td><td>Record expense information</td></tr>
+  <tr><td><code>ーち</code></td><td>Time Log (Full)</td><td>Log time with start and end</td></tr>
+  <tr><td><code>ーた</code></td><td>Time Log Start</td><td>Start a time log</td></tr>
+  <tr><td><code>ーえ</code></td><td>Time Log End</td><td>End a matching time log</td></tr>
+  <tr><td><code>ーいえ</code></td><td>Time Log End (if exists)</td><td>End a matching time log if it exists (no error)</td></tr>
+  <tr><td><code>ーたえ</code></td><td>End Time Log by Tag</td><td>End a time log by tag name</td></tr>
+  <tr><td><code>ーいたえ</code></td><td>End Time Log by Tag (if exists)</td><td>End a time log by tag if it exists</td></tr>
+  <tr><td><code>ーう</code></td><td>Bookmark</td><td>Record a URL bookmark</td></tr>
+  <tr><td><code>！</code></td><td>Save</td><td>Terminate document and trigger save</td></tr>
+</table>
+
+<h2>Statement Details</h2>
+
+<h3>1. Memo (no prefix)</h3>
+<p>Lines without any prefix become memo text. Multiple consecutive lines are combined into one memo.</p>
+<pre>The weather was nice today
+I went for a walk</pre>
+
+<h3>2. Tag: <code>。</code></h3>
+<p>Prefix with <code>。</code> to specify tags. Separate multiple tags with <code>、</code>.</p>
+<pre>。diary、weather</pre>
+
+<h3>3. Text Block: <code>ーー</code></h3>
+<p>Start and end with <code>ーー</code>. Everything between is preserved as-is.</p>
+<pre>ーー
+This is a
+multiline text block
+ーー</pre>
+
+<h3>4. Separator: <code>、</code></h3>
+<p>Splits into a new record. Everything after this line belongs to a new record.</p>
+<pre>First memo
+、
+Second memo</pre>
+
+<h3>5. Separator (+1 second): <code>、、</code></h3>
+<p>Same as separator but increments the timestamp by 1 second.</p>
+<pre>First memo
+、、
+Memo one second later</pre>
+
+<h3>6. Related Time: <code>？</code></h3>
+<p>Sets a related time. Format: <code>？YYYY-MM-DD</code>, <code>？YYYY-MM-DD HH:MM</code>, or <code>？YYYY-MM-DD HH:MM:SS</code></p>
+<pre>？2025-03-15 14:30</pre>
+
+<h3>7. Numeric Record: <code>ーか</code></h3>
+<p>Next line: title, then next line: numeric value.</p>
+<pre>ーか
+Weight
+65.5</pre>
+
+<h3>8. Task: <code>ーみ</code></h3>
+<p>Following lines: title, board name, deadline, estimated start time, estimated end time (all optional after title).</p>
+<pre>ーみ
+Write report
+Work
+2025-03-20</pre>
+
+<h3>9. Mood: <code>ーら</code></h3>
+<p>Next line: mood value (integer 0-10).</p>
+<pre>ーら
+7</pre>
+
+<h3>10. Expense: <code>ーん</code></h3>
+<p>Next line: shop name, then pairs of (item name, amount) repeating.</p>
+<pre>ーん
+Convenience store
+Rice ball
+150
+Tea
+120</pre>
+
+<h3>11. Time Log (Full): <code>ーち</code></h3>
+<p>Next lines: title, start time, end time.</p>
+<pre>ーち
+Meeting
+2025-03-15 10:00
+2025-03-15 11:30</pre>
+
+<h3>12. Time Log Start: <code>ーた</code></h3>
+<p>Next lines: title, start time.</p>
+<pre>ーた
+Start work
+2025-03-15 09:00</pre>
+
+<h3>13. Time Log End: <code>ーえ</code></h3>
+<p>Next line: title. Finds a matching started time log and ends it.</p>
+<pre>ーえ
+Start work</pre>
+
+<h3>14. Time Log End (if exists): <code>ーいえ</code></h3>
+<p>Same as Time Log End but does not produce an error if no matching time log exists.</p>
+<pre>ーいえ
+Start work</pre>
+
+<h3>15. End Time Log by Tag: <code>ーたえ</code></h3>
+<p>Next line: tag name. Finds and ends a time log by its tag.</p>
+<pre>ーたえ
+work</pre>
+
+<h3>16. End Time Log by Tag (if exists): <code>ーいたえ</code></h3>
+<p>Same as End Time Log by Tag but does not produce an error if no matching time log exists.</p>
+<pre>ーいたえ
+work</pre>
+
+<h3>17. Bookmark: <code>ーう</code></h3>
+<p>Next line: URL, then next line: title.</p>
+<pre>ーう
+https://example.com
+Favorite site</pre>
+
+<h3>18. Save: <code>！</code></h3>
+<p>Terminates the document and triggers the save process.</p>
+<pre>！</pre>
+
+<h2>Comprehensive Example</h2>
+
+<p>Below is a complete KFTL document combining multiple statement types.</p>
+
+<pre>Today's diary
+。diary、weather
+？2025-03-15
+、
+ーみ
+Go shopping
+Personal
+、
+ーん
+Supermarket
+Apples
+200
+Milk
+180
+、
+ーた
+Reading
+、
+ーら
+8
+！</pre>
+
+<div class="tip">
+  <strong>Tip:</strong> Use <code>、</code> to separate multiple records within a single document. Adding <code>！</code> at the end triggers automatic saving.
+</div>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

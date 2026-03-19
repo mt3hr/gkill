@@ -27,7 +27,16 @@
             </v-toolbar-title>
             <v-spacer />
             <v-divider vertical />
-            <v-btn icon="mdi-cog" :disabled="!application_config.is_loaded" @click="show_application_config_dialog()" />
+            <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-help-circle-outline" @click="help_dialog?.show()" />
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_SETTINGS')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-cog" :disabled="!application_config.is_loaded" @click="show_application_config_dialog()" />
+                </template>
+            </v-tooltip>
         </v-app-bar>
         <v-main class="main">
             <div class="overlay_target">
@@ -46,6 +55,7 @@
                 @received_errors="onReceivedErrors"
                 @received_messages="onReceivedMessages"
                 @requested_reload_application_config="onRequestedReloadApplicationConfig" ref="application_config_dialog" />
+            <HelpDialog screen_name="kftl" ref="help_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -64,12 +74,16 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import router from '@/router'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
+import HelpDialog from './dialogs/help-dialog.vue'
 import kftlView from './views/kftl-view.vue'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 import { useKftlPage } from '@/classes/use-kftl-page'
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const {
     // Template refs

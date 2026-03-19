@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vista de registro - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Vista de registro</h1>
+  <p>Pantalla que muestra los detalles de un registro individual. Puede consultar la informacion detallada de varios tipos de registros.</p>
+
+  <h2>Botones de la barra de herramientas</h2>
+  <table>
+    <tr>
+      <th>Boton</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> Ajustes</td>
+      <td>Abre la pantalla de ajustes de la aplicacion.</td>
+    </tr>
+  </table>
+
+  <h2>Tipos de registro mostrados</h2>
+  <table>
+    <tr>
+      <th>Tipo de registro</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Memo (Kmemo)</td>
+      <td>Muestra el contenido de notas de texto.</td>
+    </tr>
+    <tr>
+      <td>Marcadores</td>
+      <td>Muestra las URLs y titulos guardados.</td>
+    </tr>
+    <tr>
+      <td>Tareas</td>
+      <td>Muestra el estado, fecha limite e informacion del tablero de la tarea.</td>
+    </tr>
+    <tr>
+      <td>Estado de animo</td>
+      <td>Muestra el valor de animo de 0 a 10.</td>
+    </tr>
+    <tr>
+      <td>Gastos</td>
+      <td>Muestra el monto y el contenido del gasto.</td>
+    </tr>
+    <tr>
+      <td>Registro de tiempo</td>
+      <td>Muestra la hora de inicio/fin y el tiempo transcurrido.</td>
+    </tr>
+    <tr>
+      <td>Archivo (IDFKyou)</td>
+      <td>Muestra una vista previa del archivo subido.</td>
+    </tr>
+    <tr>
+      <td>Registro de commit Git</td>
+      <td>Muestra la informacion de commits del repositorio Git.</td>
+    </tr>
+  </table>
+
+  <h2>Informacion comun mostrada</h2>
+  <p>En todos los tipos de registro se muestra la siguiente informacion:</p>
+  <ul>
+    <li><strong>Etiquetas:</strong> Lista de etiquetas asignadas al registro</li>
+    <li><strong>Tiempo relacionado:</strong> Informacion de fecha y hora relacionada con el registro</li>
+    <li><strong>Nombre del repositorio:</strong> Nombre del repositorio donde se almacenan los datos</li>
+  </ul>
+
+  <h2>Menu contextual</h2>
+  <p>Al hacer clic derecho (o mantener pulsado) en un registro, se muestra un menu contextual que permite editar, eliminar, compartir y otras operaciones.</p>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Puede agregar o editar etiquetas directamente desde la pantalla de detalles del registro.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

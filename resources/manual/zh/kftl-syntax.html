@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KFTL语法参考</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+
+<div class="back-link"><a href="kftl.html">&larr; 返回记事本帮助</a></div>
+
+<h1>KFTL语法参考</h1>
+
+<p>KFTL是gkill中使用的文本记录格式。通过行首前缀，可以一次性输入各种类型的数据。以下介绍全部18种语句类型。</p>
+
+<h2>语句一览</h2>
+
+<table>
+  <tr><th>前缀</th><th>类型</th><th>说明</th></tr>
+  <tr><td>（无）</td><td>备忘录</td><td>记录文本备忘</td></tr>
+  <tr><td><code>。</code></td><td>标签</td><td>添加标签</td></tr>
+  <tr><td><code>ーー</code></td><td>文本块</td><td>原样保留多行文本</td></tr>
+  <tr><td><code>、</code></td><td>分隔符</td><td>分割为新记录</td></tr>
+  <tr><td><code>、、</code></td><td>分隔符（+1秒）</td><td>分割并将时间戳增加1秒</td></tr>
+  <tr><td><code>？</code></td><td>关联时间</td><td>设置关联日期/时间</td></tr>
+  <tr><td><code>ーか</code></td><td>数值记录</td><td>记录数值数据</td></tr>
+  <tr><td><code>ーみ</code></td><td>任务</td><td>创建任务</td></tr>
+  <tr><td><code>ーら</code></td><td>心情</td><td>记录心情值（0-10）</td></tr>
+  <tr><td><code>ーん</code></td><td>支出</td><td>记录支出信息</td></tr>
+  <tr><td><code>ーち</code></td><td>打卡（完整）</td><td>指定开始和结束时间打卡</td></tr>
+  <tr><td><code>ーた</code></td><td>打卡开始</td><td>开始打卡</td></tr>
+  <tr><td><code>ーえ</code></td><td>打卡结束</td><td>结束匹配的打卡</td></tr>
+  <tr><td><code>ーいえ</code></td><td>打卡结束（如果存在）</td><td>如果匹配的打卡存在则结束（无错误）</td></tr>
+  <tr><td><code>ーたえ</code></td><td>按标签结束打卡</td><td>通过标签名结束打卡</td></tr>
+  <tr><td><code>ーいたえ</code></td><td>按标签结束打卡（如果存在）</td><td>通过标签名结束打卡（如果存在）</td></tr>
+  <tr><td><code>ーう</code></td><td>书签</td><td>记录URL书签</td></tr>
+  <tr><td><code>！</code></td><td>保存</td><td>终止文档并执行保存</td></tr>
+</table>
+
+<h2>各语句详情</h2>
+
+<h3>1. 备忘录（无前缀）</h3>
+<p>没有前缀的行将成为备忘录文本。连续的多行会合并为一条备忘录。</p>
+<pre>今天天气很好
+去散步了</pre>
+
+<h3>2. 标签: <code>。</code></h3>
+<p>在行首加<code>。</code>来指定标签。多个标签用<code>、</code>分隔。</p>
+<pre>。日记、天气</pre>
+
+<h3>3. 文本块: <code>ーー</code></h3>
+<p>以<code>ーー</code>开始和结束。中间的内容将原样保留。</p>
+<pre>ーー
+这是一个
+多行文本块
+ーー</pre>
+
+<h3>4. 分隔符: <code>、</code></h3>
+<p>分割为新记录。此行之后的内容属于新记录。</p>
+<pre>第一条备忘
+、
+第二条备忘</pre>
+
+<h3>5. 分隔符（+1秒）: <code>、、</code></h3>
+<p>与分隔符相同，但时间戳增加1秒。</p>
+<pre>第一条备忘
+、、
+一秒后的备忘</pre>
+
+<h3>6. 关联时间: <code>？</code></h3>
+<p>设置关联的日期时间。格式：<code>？YYYY-MM-DD</code>、<code>？YYYY-MM-DD HH:MM</code>、<code>？YYYY-MM-DD HH:MM:SS</code></p>
+<pre>？2025-03-15 14:30</pre>
+
+<h3>7. 数值记录: <code>ーか</code></h3>
+<p>下一行输入标题，再下一行输入数值。</p>
+<pre>ーか
+体重
+65.5</pre>
+
+<h3>8. 任务: <code>ーみ</code></h3>
+<p>后续行依次输入标题、看板名、截止时间、预计开始时间、预计结束时间（标题以外均可省略）。</p>
+<pre>ーみ
+写报告
+工作
+2025-03-20</pre>
+
+<h3>9. 心情: <code>ーら</code></h3>
+<p>下一行输入心情值（整数0-10）。</p>
+<pre>ーら
+7</pre>
+
+<h3>10. 支出: <code>ーん</code></h3>
+<p>下一行输入店名，之后交替输入商品名和金额。</p>
+<pre>ーん
+便利店
+饭团
+150
+茶
+120</pre>
+
+<h3>11. 打卡（完整）: <code>ーち</code></h3>
+<p>后续行依次输入标题、开始时间、结束时间。</p>
+<pre>ーち
+会议
+2025-03-15 10:00
+2025-03-15 11:30</pre>
+
+<h3>12. 打卡开始: <code>ーた</code></h3>
+<p>后续行依次输入标题和开始时间。</p>
+<pre>ーた
+开始工作
+2025-03-15 09:00</pre>
+
+<h3>13. 打卡结束: <code>ーえ</code></h3>
+<p>下一行输入标题。查找匹配的已开始打卡并结束。</p>
+<pre>ーえ
+开始工作</pre>
+
+<h3>14. 打卡结束（如果存在）: <code>ーいえ</code></h3>
+<p>与打卡结束相同，但如果没有匹配的打卡也不会报错。</p>
+<pre>ーいえ
+开始工作</pre>
+
+<h3>15. 按标签结束打卡: <code>ーたえ</code></h3>
+<p>下一行输入标签名。查找带有该标签的打卡并结束。</p>
+<pre>ーたえ
+工作</pre>
+
+<h3>16. 按标签结束打卡（如果存在）: <code>ーいたえ</code></h3>
+<p>与按标签结束打卡相同，但如果没有匹配的打卡也不会报错。</p>
+<pre>ーいたえ
+工作</pre>
+
+<h3>17. 书签: <code>ーう</code></h3>
+<p>下一行输入URL，再下一行输入标题。</p>
+<pre>ーう
+https://example.com
+收藏网站</pre>
+
+<h3>18. 保存: <code>！</code></h3>
+<p>终止文档并执行保存处理。</p>
+<pre>！</pre>
+
+<h2>综合示例</h2>
+
+<p>以下是组合多种语句类型的完整KFTL文档示例。</p>
+
+<pre>今天的日记
+。日记、天气
+？2025-03-15
+、
+ーみ
+去购物
+私人
+、
+ーん
+超市
+苹果
+200
+牛奶
+180
+、
+ーた
+读书
+、
+ーら
+8
+！</pre>
+
+<div class="tip">
+  <strong>提示：</strong>使用<code>、</code>可以在一个文档中分隔多条记录。在末尾添加<code>！</code>会自动触发保存。
+</div>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

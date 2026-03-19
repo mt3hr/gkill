@@ -740,5 +740,14 @@
     "SUCCESS_OPEN_FOLDER_MESSAGE": "已打开文件夹",
     "ADD_TAG_FROM_HISTORY_TITLE": "从标签历史中添加",
     "CONFIRM_UNKNOWN_TAG_TITLE": "确认",
-    "CONFIRM_UNKNOWN_TAG_MESSAGE": "以下标签不在标签结构中。确定要添加吗？"
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "这是一个新标签。要添加吗？",
+    "HELP_TITLE": "帮助",
+    "TOOLTIP_HELP": "显示帮助",
+    "TOOLTIP_SETTINGS": "设置",
+    "TOOLTIP_TOGGLE_DETAIL_VIEW": "切换详细视图",
+    "TOOLTIP_TOGGLE_CALENDAR": "切换日历",
+    "TOOLTIP_TOGGLE_DNOTE": "切换Dnote",
+    "TOOLTIP_TOGGLE_MAP": "切换地图",
+    "TOOLTIP_TOGGLE_SIDEBAR": "切换侧边栏",
+    "TOOLTIP_RELOAD": "重新加载"
 }

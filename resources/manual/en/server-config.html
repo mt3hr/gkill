@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Settings - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Server Settings</h1>
+  <p>This screen configures server behavior. Only administrators can access it.</p>
+
+  <h2>Top Button</h2>
+  <p>Press the <strong>Account Management</strong> button to open the account management screen.</p>
+
+  <h2>Settings</h2>
+  <table>
+    <tr><th>Setting</th><th>Type</th><th>Description</th></tr>
+    <tr><td>Profile</td><td>Dropdown + Add/Delete</td><td>Select the active profile, create a new one, or delete an existing one</td></tr>
+    <tr><td>Local Access Only</td><td>Checkbox</td><td>Restrict connections to local access only</td></tr>
+    <tr><td>Notification Service</td><td>Checkbox</td><td>Enable the push notification service</td></tr>
+    <tr><td>Enable TLS</td><td>Checkbox</td><td>Enable HTTPS</td></tr>
+    <tr><td>Generate Self-signed TLS</td><td>Button</td><td>Create self-signed TLS certificate files</td></tr>
+    <tr><td>Address</td><td>Text</td><td>Server listen address (e.g., :9999)</td></tr>
+    <tr><td>TLS CERT File</td><td>Text</td><td>Path to the TLS certificate file</td></tr>
+    <tr><td>TLS KEY File</td><td>Text</td><td>Path to the TLS private key file</td></tr>
+    <tr><td>Open Directory Command</td><td>Text</td><td>OS command to open a directory</td></tr>
+    <tr><td>Open File Command</td><td>Text</td><td>OS command to open a file</td></tr>
+    <tr><td>Bookmark Timeout</td><td>Number (min: 5)</td><td>Timeout in seconds for bookmark fetching</td></tr>
+    <tr><td>Bookmark User Agent</td><td>Text</td><td>User-Agent string for bookmark fetching</td></tr>
+    <tr><td>User Data Directory</td><td>Text</td><td>Path to the user data storage directory</td></tr>
+  </table>
+
+  <h2>Bottom Buttons</h2>
+  <p><strong>Apply</strong>: Save the settings.<br><strong>Cancel</strong>: Discard changes and close the screen.</p>
+
+  <div class="tip">Changes require a server restart to take effect.</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

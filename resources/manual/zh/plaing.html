@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>进行中 - 帮助</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>进行中</h1>
+  <p>查看当前正在进行的时间跟踪会话的界面。可以管理正在计时的活动。</p>
+
+  <h2>工具栏按钮</h2>
+  <table>
+    <tr>
+      <th>按钮</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> 设置</td>
+      <td>打开应用程序设置界面。</td>
+    </tr>
+  </table>
+
+  <h2>主要功能</h2>
+  <ul>
+    <li><strong>活动会话列表：</strong>显示所有正在进行中的时间跟踪会话。</li>
+    <li><strong>停止：</strong>停止正在进行的会话并记录结束时间。</li>
+    <li><strong>FAB快速添加：</strong>点击浮动操作按钮可快速创建9种类型的记录：备忘录、时间+备忘录、数值、书签、打卡、任务、支出、心情、上传。</li>
+  </ul>
+
+  <div class="tip">
+    <strong>提示：</strong>活动会话会实时显示经过时间，方便了解各项活动的持续时间。
+  </div>
+
+  <div class="tip">
+    <strong>快捷键：</strong> 在此画面按Enter键可打开记事本对话框，方便快速添加记录。
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

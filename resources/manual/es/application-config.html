@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ajustes de la aplicacion - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Ajustes de la aplicacion</h1>
+  <p>Pantalla para gestionar la configuracion general de la aplicacion y la estructura de datos. Puede ajustar las preferencias de visualizacion, opciones de comportamiento e integraciones externas.</p>
+
+  <h2>Botones de accion superiores</h2>
+  <table>
+    <tr>
+      <th>Boton</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Configuracion del servidor (solo administradores)</td>
+      <td>Abre la pantalla de configuracion del servidor para puerto, TLS, restricciones de acceso, etc. Solo visible para cuentas de administrador.</td>
+    </tr>
+    <tr>
+      <td>Recargar</td>
+      <td>Actualiza los datos desde el servidor. Mantenga pulsado para forzar una recarga completa.</td>
+    </tr>
+    <tr>
+      <td>Cerrar sesion</td>
+      <td>Finaliza la sesion actual y cierra sesion. Mantenga pulsado para opciones adicionales.</td>
+    </tr>
+  </table>
+
+  <h2>Configuracion general</h2>
+  <table>
+    <tr>
+      <th>Ajuste</th>
+      <th>Tipo</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Idioma</td>
+      <td>Desplegable</td>
+      <td>Selecciona el idioma de la interfaz: ja (japones), en (ingles), zh (chino), ko (coreano), es (espanol), fr (frances), de (aleman).</td>
+    </tr>
+    <tr>
+      <td>Tema oscuro</td>
+      <td>Casilla de verificacion</td>
+      <td>Activa o desactiva el modo oscuro. Adecuado para entornos con poca luz.</td>
+    </tr>
+    <tr>
+      <td>Recarga en caliente</td>
+      <td>Casilla de verificacion</td>
+      <td>Cuando esta activado, la vista del registro de vida se actualiza automaticamente al detectar cambios en los datos.</td>
+    </tr>
+    <tr>
+      <td>Mostrar etiquetas en la lista</td>
+      <td>Casilla de verificacion</td>
+      <td>Controla si se muestran las etiquetas en las tarjetas de registros en las vistas de lista.</td>
+    </tr>
+    <tr>
+      <td>Mostrar pie de pagina de compartir</td>
+      <td>Casilla de verificacion</td>
+      <td>Controla si se muestran las opciones de compartir en el area del pie de pagina.</td>
+    </tr>
+  </table>
+
+  <h2>Configuracion de visualizacion</h2>
+  <table>
+    <tr>
+      <th>Ajuste</th>
+      <th>Tipo</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Periodo de visualizacion del registro de vida</td>
+      <td>Casilla + Numero</td>
+      <td>Establece el numero de dias de registros a mostrar en la vista del registro de vida. -1 para ilimitado. Un periodo mas corto carga mas rapido.</td>
+    </tr>
+    <tr>
+      <td>Pagina predeterminada</td>
+      <td>Desplegable</td>
+      <td>Elige la pagina que se muestra despues de iniciar sesion.</td>
+    </tr>
+    <tr>
+      <td>Columnas de imagenes del registro de vida</td>
+      <td>Numero (1-10)</td>
+      <td>Establece el numero de columnas de la cuadricula de miniaturas en la vista del registro de vida. Ajuste segun el tamano de su pantalla.</td>
+    </tr>
+    <tr>
+      <td>Tablero de tareas predeterminado</td>
+      <td>Desplegable + Boton agregar</td>
+      <td>Establece el tablero predeterminado en la pantalla de tareas. Use el boton de agregar para crear nuevos tableros.</td>
+    </tr>
+  </table>
+
+  <h2>Integracion externa</h2>
+  <table>
+    <tr>
+      <th>Ajuste</th>
+      <th>Tipo</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Direccion del bookmarklet</td>
+      <td>Solo lectura</td>
+      <td>URL del bookmarklet JavaScript para la barra de marcadores del navegador. Permite guardar marcadores en gkill con un clic desde cualquier pagina web.</td>
+    </tr>
+    <tr>
+      <td>Clave API de Google Maps</td>
+      <td>Entrada de texto</td>
+      <td>Introduce la clave API de Google Maps para habilitar las funciones de mapa GPS. La vista de mapa requiere esta clave para funcionar.</td>
+    </tr>
+  </table>
+
+  <h2>Gestion de estructura de datos</h2>
+  <p>Estos botones abren editores dedicados para gestionar como se organizan sus datos.</p>
+  <table>
+    <tr>
+      <th>Boton</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Estructura de etiquetas</td>
+      <td>Gestiona la jerarquia de etiquetas y sus agrupaciones. Puede crear, renombrar, reordenar y organizar etiquetas en relaciones padre-hijo.</td>
+    </tr>
+    <tr>
+      <td>Estructura de repositorios</td>
+      <td>Gestiona las ubicaciones de almacenamiento de datos y los repositorios. Puede agregar, eliminar o configurar donde se almacenan los registros.</td>
+    </tr>
+    <tr>
+      <td>Estructura de perfiles</td>
+      <td>Gestiona las configuraciones de dispositivos y perfiles. Permite editar ajustes por dispositivo.</td>
+    </tr>
+    <tr>
+      <td>Estructura de tipos de registro</td>
+      <td>Gestiona que tipos de registro se almacenan en que repositorios.</td>
+    </tr>
+    <tr>
+      <td>Estructura de plantillas</td>
+      <td>Gestiona las plantillas de texto del bloc de notas para entrada rapida. Puede crear y editar textos predefinidos.</td>
+    </tr>
+    <tr>
+      <td>Vista de resumen</td>
+      <td>Gestiona la agregacion de datos y las configuraciones de vistas de resumen.</td>
+    </tr>
+    <tr>
+      <td>Informacion relacionada</td>
+      <td>Gestiona las estructuras de informacion relacionada.</td>
+    </tr>
+  </table>
+
+  <h2>Botones de accion inferiores</h2>
+  <table>
+    <tr>
+      <th>Boton</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Aplicar</td>
+      <td>Guarda todos los cambios.</td>
+    </tr>
+    <tr>
+      <td>Cancelar</td>
+      <td>Descarta los cambios y cierra la pantalla.</td>
+    </tr>
+  </table>
+
+  <h2>Pie de pagina</h2>
+  <p>La parte inferior de la pantalla muestra informacion de la aplicacion:</p>
+  <ul>
+    <li><strong>Numero de version</strong> — Enlace clickeable a la pagina del proyecto.</li>
+    <li><strong>Marca de tiempo de compilacion</strong> — Fecha y hora en que se compilo la aplicacion.</li>
+    <li><strong>Hash del commit</strong> — El commit de Git a partir del cual se creo la compilacion.</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Despues de cambiar los ajustes, pulse "Aplicar" para guardar. Pulse "Cancelar" para descartar todos los cambios.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Para telefonos moviles, establezca las columnas de imagenes en 1-2. Para pantallas de escritorio, 3-5 columnas funciona bien.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Para usar las funciones de mapa GPS, habilite la API Maps JavaScript en Google Cloud Console e introduzca la clave API en Integracion externa.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

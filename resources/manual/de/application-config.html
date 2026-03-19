@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anwendungseinstellungen - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Anwendungseinstellungen</h1>
+  <p>Bildschirm zur Verwaltung der globalen Anwendungseinstellungen und der Datenstruktur. Sie koennen Anzeigeeinstellungen, Verhaltensoptionen und externe Integrationen anpassen.</p>
+
+  <h2>Obere Aktionsschaltflaechen</h2>
+  <table>
+    <tr>
+      <th>Schaltflaeche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Servereinstellungen (nur Administratoren)</td>
+      <td>Oeffnet den Serverkonfigurationsbildschirm fuer Port, TLS, Zugriffsbeschraenkungen usw. Nur fuer Administratorkonten sichtbar.</td>
+    </tr>
+    <tr>
+      <td>Neu laden</td>
+      <td>Aktualisiert die Daten vom Server. Langes Druecken erzwingt ein vollstaendiges Neuladen.</td>
+    </tr>
+    <tr>
+      <td>Abmelden</td>
+      <td>Beendet die aktuelle Sitzung und meldet ab. Langes Druecken fuer zusaetzliche Optionen.</td>
+    </tr>
+  </table>
+
+  <h2>Allgemeine Einstellungen</h2>
+  <table>
+    <tr>
+      <th>Einstellung</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Sprache</td>
+      <td>Dropdown</td>
+      <td>Waehlen Sie die Oberflaechensprache: ja (Japanisch), en (Englisch), zh (Chinesisch), ko (Koreanisch), es (Spanisch), fr (Franzoesisch), de (Deutsch).</td>
+    </tr>
+    <tr>
+      <td>Dunkles Thema</td>
+      <td>Kontrollkaestchen</td>
+      <td>Aktiviert oder deaktiviert den Dunkelmodus. Geeignet fuer Umgebungen mit wenig Licht.</td>
+    </tr>
+    <tr>
+      <td>Hot-Reload</td>
+      <td>Kontrollkaestchen</td>
+      <td>Wenn aktiviert, wird die Lebensprotokoll-Ansicht automatisch aktualisiert, wenn Datenaenderungen erkannt werden.</td>
+    </tr>
+    <tr>
+      <td>Tags in der Liste anzeigen</td>
+      <td>Kontrollkaestchen</td>
+      <td>Steuert, ob Tags auf den Datensatzkarten in Listenansichten angezeigt werden.</td>
+    </tr>
+    <tr>
+      <td>Freigabe-Fusszeile anzeigen</td>
+      <td>Kontrollkaestchen</td>
+      <td>Steuert, ob Freigabeoptionen im Fusszeilenbereich angezeigt werden.</td>
+    </tr>
+  </table>
+
+  <h2>Anzeigeeinstellungen</h2>
+  <table>
+    <tr>
+      <th>Einstellung</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Anzeigezeitraum des Lebensprotokolls</td>
+      <td>Kontrollkaestchen + Zahl</td>
+      <td>Legt die Anzahl der Tage fest, die in der Lebensprotokoll-Ansicht angezeigt werden. -1 fuer unbegrenzt. Ein kuerzerer Zeitraum laedt schneller.</td>
+    </tr>
+    <tr>
+      <td>Standardseite</td>
+      <td>Dropdown</td>
+      <td>Waehlen Sie die Seite, die nach der Anmeldung angezeigt wird.</td>
+    </tr>
+    <tr>
+      <td>Bildspalten des Lebensprotokolls</td>
+      <td>Zahl (1-10)</td>
+      <td>Legt die Anzahl der Spalten fuer das Miniaturbildraster in der Lebensprotokoll-Ansicht fest. Passen Sie es an Ihre Bildschirmgroesse an.</td>
+    </tr>
+    <tr>
+      <td>Standard-Aufgabentafel</td>
+      <td>Dropdown + Hinzufuegen-Schaltflaeche</td>
+      <td>Legt die Standardtafel im Aufgabenbildschirm fest. Verwenden Sie die Hinzufuegen-Schaltflaeche, um neue Tafeln zu erstellen.</td>
+    </tr>
+  </table>
+
+  <h2>Externe Integration</h2>
+  <table>
+    <tr>
+      <th>Einstellung</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Bookmarklet-Adresse</td>
+      <td>Schreibgeschuetzt</td>
+      <td>Eine JavaScript-Bookmarklet-URL fuer die Lesezeichenleiste Ihres Browsers. Ermoeglicht das Speichern von Lesezeichen in gkill mit einem Klick von jeder Webseite.</td>
+    </tr>
+    <tr>
+      <td>Google Maps API-Schluessel</td>
+      <td>Texteingabe</td>
+      <td>Geben Sie Ihren Google Maps API-Schluessel ein, um GPS-Kartenfunktionen zu aktivieren. Die Kartenansicht benoetigt diesen Schluessel.</td>
+    </tr>
+  </table>
+
+  <h2>Datenstrukturverwaltung</h2>
+  <p>Diese Schaltflaechen oeffnen spezielle Editoren zur Verwaltung der Organisation Ihrer Daten.</p>
+  <table>
+    <tr>
+      <th>Schaltflaeche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Tag-Struktur</td>
+      <td>Verwaltet die Tag-Hierarchie und Tag-Gruppierungen. Sie koennen Tags erstellen, umbenennen, neu anordnen und in Eltern-Kind-Beziehungen organisieren.</td>
+    </tr>
+    <tr>
+      <td>Repository-Struktur</td>
+      <td>Verwaltet Datenspeicherorte und Repositories. Sie koennen hinzufuegen, entfernen oder konfigurieren, wo Datensaetze gespeichert werden.</td>
+    </tr>
+    <tr>
+      <td>Profilstruktur</td>
+      <td>Verwaltet Geraete- und Profilkonfigurationen. Ermoeglicht die Bearbeitung geraetespezifischer Einstellungen.</td>
+    </tr>
+    <tr>
+      <td>Datensatztyp-Struktur</td>
+      <td>Verwaltet, welche Datensatztypen in welchen Repositories gespeichert werden.</td>
+    </tr>
+    <tr>
+      <td>Vorlagenstruktur</td>
+      <td>Verwaltet Notizblock-Textvorlagen fuer die Schnelleingabe. Sie koennen vorgefertigte Texteintraege erstellen und bearbeiten.</td>
+    </tr>
+    <tr>
+      <td>Zusammenfassungsansicht</td>
+      <td>Verwaltet Datenaggregation und Konfigurationen der Zusammenfassungsansichten.</td>
+    </tr>
+    <tr>
+      <td>Zugehoerige Informationen</td>
+      <td>Verwaltet die Strukturen zugehoeriger Informationen.</td>
+    </tr>
+  </table>
+
+  <h2>Untere Aktionsschaltflaechen</h2>
+  <table>
+    <tr>
+      <th>Schaltflaeche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Anwenden</td>
+      <td>Speichert alle Aenderungen.</td>
+    </tr>
+    <tr>
+      <td>Abbrechen</td>
+      <td>Verwirft Aenderungen und schliesst den Bildschirm.</td>
+    </tr>
+  </table>
+
+  <h2>Fusszeile</h2>
+  <p>Am unteren Bildschirmrand werden Anwendungsinformationen angezeigt:</p>
+  <ul>
+    <li><strong>Versionsnummer</strong> — Klickbarer Link zur Projektseite.</li>
+    <li><strong>Build-Zeitstempel</strong> — Datum und Uhrzeit der Erstellung der Anwendung.</li>
+    <li><strong>Commit-Hash</strong> — Der Git-Commit, aus dem der Build erstellt wurde.</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Druecken Sie nach dem Aendern der Einstellungen auf "Anwenden", um zu speichern. Druecken Sie "Abbrechen", um alle Aenderungen zu verwerfen.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Fuer Smartphones stellen Sie die Bildspalten auf 1-2 ein. Fuer Desktop-Bildschirme eignen sich 3-5 Spalten gut.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Um GPS-Kartenfunktionen zu nutzen, aktivieren Sie die Maps JavaScript API in der Google Cloud Console und geben Sie den API-Schluessel unter Externe Integration ein.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>
