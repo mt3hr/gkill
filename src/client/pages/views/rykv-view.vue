@@ -1,8 +1,12 @@
 <template>
     <div class="rykv_view_wrap" ref="rykv_root">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
-            <v-app-bar-nav-icon v-if="!is_shared_rykv_view" @click.stop="toggleDrawer"
-                :disabled="!inited" />
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_SIDEBAR')">
+                <template v-slot:activator="{ props }">
+                    <v-app-bar-nav-icon v-bind="props" v-if="!is_shared_rykv_view" @click.stop="toggleDrawer"
+                        :disabled="!inited" />
+                </template>
+            </v-tooltip>
             <v-toolbar-title>
                 <div>
                     <span v-if="!is_shared_rykv_view">
@@ -22,22 +26,47 @@
                 </div>
             </v-toolbar-title>
             <v-spacer />
-            <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
-                <v-icon>mdi-file-document</v-icon>
-            </v-btn>
-            <v-btn v-if="!is_shared_rykv_view" icon
-                @click="toggleDnote">
-                <v-icon>mdi-file-chart-outline</v-icon>
-            </v-btn>
-            <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
-                <v-icon>mdi-calendar</v-icon>
-            </v-btn>
-            <v-btn icon @click="is_show_gps_log_map = !is_show_gps_log_map">
-                <v-icon>mdi-map</v-icon>
-            </v-btn>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_DETAIL_VIEW')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
+                        <v-icon>mdi-file-document</v-icon>
+                    </v-btn>
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_DNOTE')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" v-if="!is_shared_rykv_view" icon
+                        @click="toggleDnote">
+                        <v-icon>mdi-file-chart-outline</v-icon>
+                    </v-btn>
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_CALENDAR')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
+                        <v-icon>mdi-calendar</v-icon>
+                    </v-btn>
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_MAP')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon @click="is_show_gps_log_map = !is_show_gps_log_map">
+                        <v-icon>mdi-map</v-icon>
+                    </v-btn>
+                </template>
+            </v-tooltip>
             <v-divider vertical />
-            <v-btn v-if="!is_shared_rykv_view" icon="mdi-cog" :disabled="!application_config.is_loaded"
-                @click="emits('requested_show_application_config_dialog')" />
+            <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-help-circle-outline" v-if="!is_shared_rykv_view" @click="help_dialog?.show()" />
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_SETTINGS')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" v-if="!is_shared_rykv_view" icon="mdi-cog" :disabled="!application_config.is_loaded"
+                        @click="emits('requested_show_application_config_dialog')" />
+                </template>
+            </v-tooltip>
         </v-app-bar>
         <v-navigation-drawer v-if="!is_shared_rykv_view" v-model="drawer" app :height="app_content_height"
             :touchless="!inited" :mobile="drawer_mode_is_mobile" :width="318">
@@ -229,10 +258,12 @@
                     </v-list>
                 </v-menu>
             </v-avatar>
+            <HelpDialog screen_name="rykv" ref="help_dialog" />
         </v-main>
     </div>
 </template>
 <script setup lang="ts">
+import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from '../dialogs/add-kc-dialog.vue'
@@ -256,7 +287,10 @@ import RyuuListView from './ryuu-list-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import RykvDialogHost from './rykv-dialog-host.vue'
+import HelpDialog from '../dialogs/help-dialog.vue'
 import { useRykvView } from '@/classes/use-rykv-view'
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const props = defineProps<rykvViewProps>()
 const emits = defineEmits<rykvViewEmits>()

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Hub - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Home Hub</h1>
+  <p>
+    The Home Hub is the home screen of gkill. It serves as a quick-add dashboard where you can rapidly create any type of record and navigate to other views.
+  </p>
+
+  <h2>Toolbar</h2>
+  <table>
+    <tr><th>Icon / Action</th><th>Description</th></tr>
+    <tr><td><span class="icon">&#128260;</span> Reload</td><td>Tap to reload the current data. <strong>Long-press</strong> to force a full reload, bypassing the cache.</td></tr>
+    <tr><td>Logout</td><td>Tap to log out and return to the login screen. <strong>Long-press</strong> for additional logout options.</td></tr>
+  </table>
+
+  <h2>Navigation</h2>
+  <p>The Home Hub provides navigation links to all main screens:</p>
+  <ul>
+    <li><strong>Memo Pad</strong> &mdash; Open the Memo Pad.</li>
+    <li><strong>Tasks</strong> &mdash; Open the task board.</li>
+    <li><strong>Life Log View</strong> &mdash; Open the life-log browser.</li>
+    <li><strong>Active Sessions</strong> &mdash; View active time sessions.</li>
+    <li><strong>Time Tracking + Memo</strong> &mdash; Open the combined memo + time tracking view.</li>
+  </ul>
+
+  <h2>FAB "+" Quick-Add Menu</h2>
+  <p>The floating action button (FAB) with a "+" icon at the bottom-right opens a quick-add menu for creating new records:</p>
+  <table>
+    <tr><th>Record Type</th><th>Description</th></tr>
+    <tr><td>Memo</td><td>Create a new text memo. Opens the memo creation dialog.</td></tr>
+    <tr><td>Time + Memo</td><td>Start a new time tracking session and simultaneously attach a memo to it.</td></tr>
+    <tr><td>Numeric</td><td>Record a numeric counter value (e.g., counting events or items).</td></tr>
+    <tr><td>Bookmark</td><td>Save a URL with an optional title and notes.</td></tr>
+    <tr><td>Time Log</td><td>Start a new time tracking session.</td></tr>
+    <tr><td>Task</td><td>Create a new task and assign it to a board.</td></tr>
+    <tr><td>Expense</td><td>Log a financial expense with amount and description.</td></tr>
+    <tr><td>Mood</td><td>Record your current mood on a scale of 0 to 10.</td></tr>
+    <tr><td>Upload</td><td>Upload a file or image from your device.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> <strong>Long-press</strong> the "+" FAB button to directly open the Memo Pad for fast batch entry, skipping the quick-add menu entirely.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Home Hub is the default landing page after login. If you prefer a different screen, you can change the default page in Settings.
+  </div>
+
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

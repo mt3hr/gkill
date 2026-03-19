@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KFTL-Syntaxreferenz</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+
+<div class="back-link"><a href="kftl.html">&larr; Zuruck zur Notizblock-Hilfe</a></div>
+
+<h1>KFTL-Syntaxreferenz</h1>
+
+<p>KFTL ist ein textbasiertes Aufzeichnungsformat, das in gkill verwendet wird. Durch Praefixe am Zeilenanfang koennen Sie verschiedene Datentypen auf einmal eingeben. Im Folgenden werden alle 18 Anweisungstypen vorgestellt.</p>
+
+<h2>Anweisungsuebersicht</h2>
+
+<table>
+  <tr><th>Praefix</th><th>Typ</th><th>Beschreibung</th></tr>
+  <tr><td>(keins)</td><td>Memo</td><td>Textnotiz aufzeichnen</td></tr>
+  <tr><td><code>。</code></td><td>Tag</td><td>Tags zuweisen</td></tr>
+  <tr><td><code>ーー</code></td><td>Textblock</td><td>Mehrzeiligen Text unveraendert beibehalten</td></tr>
+  <tr><td><code>、</code></td><td>Trennzeichen</td><td>In einen neuen Datensatz aufteilen</td></tr>
+  <tr><td><code>、、</code></td><td>Trennzeichen (+1 Sek.)</td><td>Aufteilen und Zeitstempel um 1 Sekunde erhoehen</td></tr>
+  <tr><td><code>？</code></td><td>Zugehoerige Zeit</td><td>Zugehoeriges Datum/Uhrzeit festlegen</td></tr>
+  <tr><td><code>ーか</code></td><td>Numerischer Eintrag</td><td>Numerischen Wert aufzeichnen</td></tr>
+  <tr><td><code>ーみ</code></td><td>Aufgabe</td><td>Aufgabe erstellen</td></tr>
+  <tr><td><code>ーら</code></td><td>Stimmung</td><td>Stimmungswert (0-10) aufzeichnen</td></tr>
+  <tr><td><code>ーん</code></td><td>Ausgabe</td><td>Ausgabeninformationen aufzeichnen</td></tr>
+  <tr><td><code>ーち</code></td><td>Zeitprotokoll (vollstaendig)</td><td>Zeit mit Anfang und Ende protokollieren</td></tr>
+  <tr><td><code>ーた</code></td><td>Zeitprotokoll-Start</td><td>Zeitprotokoll starten</td></tr>
+  <tr><td><code>ーえ</code></td><td>Zeitprotokoll-Ende</td><td>Passendes Zeitprotokoll beenden</td></tr>
+  <tr><td><code>ーいえ</code></td><td>Zeitprotokoll-Ende (falls vorhanden)</td><td>Beenden falls vorhanden (kein Fehler)</td></tr>
+  <tr><td><code>ーたえ</code></td><td>Zeitprotokoll per Tag beenden</td><td>Zeitprotokoll nach Tag-Name beenden</td></tr>
+  <tr><td><code>ーいたえ</code></td><td>Zeitprotokoll per Tag beenden (falls vorhanden)</td><td>Per Tag beenden falls vorhanden</td></tr>
+  <tr><td><code>ーう</code></td><td>Lesezeichen</td><td>URL-Lesezeichen aufzeichnen</td></tr>
+  <tr><td><code>！</code></td><td>Speichern</td><td>Dokument beenden und speichern</td></tr>
+</table>
+
+<h2>Details zu jeder Anweisung</h2>
+
+<h3>1. Memo (kein Praefix)</h3>
+<p>Zeilen ohne Praefix werden zu Memotext. Mehrere aufeinanderfolgende Zeilen werden zu einem Memo zusammengefasst.</p>
+<pre>Heute war das Wetter schoen
+Ich bin spazieren gegangen</pre>
+
+<h3>2. Tag: <code>。</code></h3>
+<p>Stellen Sie <code>。</code> voran, um Tags anzugeben. Trennen Sie mehrere Tags mit <code>、</code>.</p>
+<pre>。Tagebuch、Wetter</pre>
+
+<h3>3. Textblock: <code>ーー</code></h3>
+<p>Beginnen und enden Sie mit <code>ーー</code>. Alles dazwischen wird unveraendert beibehalten.</p>
+<pre>ーー
+Dies ist ein
+mehrzeiliger
+Textblock
+ーー</pre>
+
+<h3>4. Trennzeichen: <code>、</code></h3>
+<p>Teilt in einen neuen Datensatz auf. Alles nach dieser Zeile gehoert zu einem neuen Datensatz.</p>
+<pre>Erstes Memo
+、
+Zweites Memo</pre>
+
+<h3>5. Trennzeichen (+1 Sekunde): <code>、、</code></h3>
+<p>Wie das Trennzeichen, aber der Zeitstempel wird um 1 Sekunde erhoeht.</p>
+<pre>Erstes Memo
+、、
+Memo eine Sekunde spaeter</pre>
+
+<h3>6. Zugehoerige Zeit: <code>？</code></h3>
+<p>Legt eine zugehoerige Zeit fest. Format: <code>？YYYY-MM-DD</code>, <code>？YYYY-MM-DD HH:MM</code> oder <code>？YYYY-MM-DD HH:MM:SS</code></p>
+<pre>？2025-03-15 14:30</pre>
+
+<h3>7. Numerischer Eintrag: <code>ーか</code></h3>
+<p>Naechste Zeile: Titel, dann naechste Zeile: numerischer Wert.</p>
+<pre>ーか
+Gewicht
+65.5</pre>
+
+<h3>8. Aufgabe: <code>ーみ</code></h3>
+<p>Folgende Zeilen: Titel, Board-Name, Frist, geschaetzte Startzeit, geschaetzte Endzeit (alles ausser dem Titel ist optional).</p>
+<pre>ーみ
+Bericht schreiben
+Arbeit
+2025-03-20</pre>
+
+<h3>9. Stimmung: <code>ーら</code></h3>
+<p>Naechste Zeile: Stimmungswert (Ganzzahl 0-10).</p>
+<pre>ーら
+7</pre>
+
+<h3>10. Ausgabe: <code>ーん</code></h3>
+<p>Naechste Zeile: Geschaeftsname, dann Paare von (Artikelname, Betrag) wiederholt.</p>
+<pre>ーん
+Supermarkt
+Sandwich
+150
+Getraenk
+120</pre>
+
+<h3>11. Zeitprotokoll (vollstaendig): <code>ーち</code></h3>
+<p>Folgende Zeilen: Titel, Startzeit, Endzeit.</p>
+<pre>ーち
+Besprechung
+2025-03-15 10:00
+2025-03-15 11:30</pre>
+
+<h3>12. Zeitprotokoll-Start: <code>ーた</code></h3>
+<p>Folgende Zeilen: Titel, Startzeit.</p>
+<pre>ーた
+Arbeitsbeginn
+2025-03-15 09:00</pre>
+
+<h3>13. Zeitprotokoll-Ende: <code>ーえ</code></h3>
+<p>Naechste Zeile: Titel. Findet ein passendes gestartetes Zeitprotokoll und beendet es.</p>
+<pre>ーえ
+Arbeitsbeginn</pre>
+
+<h3>14. Zeitprotokoll-Ende (falls vorhanden): <code>ーいえ</code></h3>
+<p>Wie Zeitprotokoll-Ende, erzeugt aber keinen Fehler, wenn kein passendes Zeitprotokoll existiert.</p>
+<pre>ーいえ
+Arbeitsbeginn</pre>
+
+<h3>15. Zeitprotokoll per Tag beenden: <code>ーたえ</code></h3>
+<p>Naechste Zeile: Tag-Name. Findet und beendet ein Zeitprotokoll anhand seines Tags.</p>
+<pre>ーたえ
+Arbeit</pre>
+
+<h3>16. Zeitprotokoll per Tag beenden (falls vorhanden): <code>ーいたえ</code></h3>
+<p>Wie Zeitprotokoll per Tag beenden, erzeugt aber keinen Fehler, wenn kein passendes Zeitprotokoll existiert.</p>
+<pre>ーいたえ
+Arbeit</pre>
+
+<h3>17. Lesezeichen: <code>ーう</code></h3>
+<p>Naechste Zeile: URL, dann naechste Zeile: Titel.</p>
+<pre>ーう
+https://example.com
+Lieblingsseite</pre>
+
+<h3>18. Speichern: <code>！</code></h3>
+<p>Beendet das Dokument und fuehrt den Speichervorgang aus.</p>
+<pre>！</pre>
+
+<h2>Vollstaendiges Beispiel</h2>
+
+<p>Nachfolgend ein vollstaendiges KFTL-Dokument, das mehrere Anweisungstypen kombiniert.</p>
+
+<pre>Tagebuch von heute
+。Tagebuch、Wetter
+？2025-03-15
+、
+ーみ
+Einkaufen gehen
+Persoenlich
+、
+ーん
+Supermarkt
+Aepfel
+200
+Milch
+180
+、
+ーた
+Lesen
+、
+ーら
+8
+！</pre>
+
+<div class="tip">
+  <strong>Tipp:</strong> Verwenden Sie <code>、</code>, um mehrere Datensaetze innerhalb eines Dokuments zu trennen. Das Hinzufuegen von <code>！</code> am Ende loest das automatische Speichern aus.
+</div>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

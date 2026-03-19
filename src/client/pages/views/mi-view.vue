@@ -1,7 +1,11 @@
 <template>
     <div class="mi_view_wrap" ref="mi_root">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
-            <v-app-bar-nav-icon @click.stop="toggleDrawer" :disabled="!inited" />
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_SIDEBAR')">
+                <template v-slot:activator="{ props }">
+                    <v-app-bar-nav-icon v-bind="props" @click.stop="toggleDrawer" :disabled="!inited" />
+                </template>
+            </v-tooltip>
             <v-toolbar-title>
                 <div>
                     <span>
@@ -18,16 +22,33 @@
                 </div>
             </v-toolbar-title>
             <v-spacer />
-            <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
-                <v-icon>mdi-file-document</v-icon>
-            </v-btn>
-            <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
-                <v-icon>mdi-calendar</v-icon>
-            </v-btn>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_DETAIL_VIEW')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
+                        <v-icon>mdi-file-document</v-icon>
+                    </v-btn>
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_CALENDAR')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
+                        <v-icon>mdi-calendar</v-icon>
+                    </v-btn>
+                </template>
+            </v-tooltip>
 
             <v-divider vertical />
-            <v-btn icon="mdi-cog" :disabled="!application_config.is_loaded"
-                @click="emits('requested_show_application_config_dialog')" />
+            <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-help-circle-outline" @click="help_dialog?.show()" />
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_SETTINGS')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-cog" :disabled="!application_config.is_loaded"
+                        @click="emits('requested_show_application_config_dialog')" />
+                </template>
+            </v-tooltip>
         </v-app-bar>
         <v-navigation-drawer v-model="drawer" app :height="app_content_height" :mobile="drawer_mode_is_mobile"
             :touchless="!inited" :width="318">
@@ -201,10 +222,12 @@
                     </v-list>
                 </v-menu>
             </v-avatar>
+            <HelpDialog screen_name="mi" ref="help_dialog" />
         </v-main>
     </div>
 </template>
 <script setup lang="ts">
+import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import MiQueryEditorSidebar from './mi-query-editor-sidebar.vue'
 import { Kyou } from '@/classes/datas/kyou'
@@ -225,7 +248,10 @@ import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import RykvDialogHost from './rykv-dialog-host.vue'
+import HelpDialog from '../dialogs/help-dialog.vue'
 import { useMiView } from '@/classes/use-mi-view'
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const props = defineProps<miViewProps>()
 const emits = defineEmits<miViewEmits>()

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Log View - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Life Log View</h1>
+  <p>
+    The Life Log View is the primary life-log browsing screen. It displays all your recorded events as a timeline of image thumbnails and text entries, allowing you to review and explore your history.
+  </p>
+
+  <h2>Toolbar</h2>
+  <table>
+    <tr><th>Icon</th><th>Action</th></tr>
+    <tr><td><span class="icon">&#9776;</span> Sidebar</td><td>Show or hide the filter sidebar for narrowing down displayed records.</td></tr>
+    <tr><td><span class="icon">&#128196;</span> Detail</td><td>Show or hide the detail panel for the currently selected record.</td></tr>
+    <tr><td><span class="icon">&#128202;</span> Summary View Statistics</td><td>Show or hide the Summary View analytics panel with charts and statistics about your records.</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendar</td><td>Show or hide the calendar heatmap for visual date-based navigation.</td></tr>
+    <tr><td><span class="icon">&#128506;</span> Map</td><td>Show or hide the GPS map view to see records plotted on a geographic map.</td></tr>
+    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+  </table>
+
+  <h2>Thumbnail Grid</h2>
+  <p>Records are displayed as a multi-column grid of thumbnails and text previews. You can configure the number of columns from 1 to 10 in the application settings.</p>
+  <table>
+    <tr><th>Columns</th><th>Best For</th></tr>
+    <tr><td>1-2</td><td>Detailed reading on mobile devices. Shows more text per entry.</td></tr>
+    <tr><td>3-5</td><td>Balanced view on tablets and small desktops.</td></tr>
+    <tr><td>6-10</td><td>Overview browsing on large screens. Shows many records at once.</td></tr>
+  </table>
+
+  <h2>Filter Sidebar</h2>
+  <p>The sidebar provides powerful filtering options:</p>
+  <ul>
+    <li><strong>Date range:</strong> Set start and end dates to narrow the time period.</li>
+    <li><strong>Record type:</strong> Show only specific types (memos, bookmarks, files, etc.).</li>
+    <li><strong>Tags:</strong> Filter by one or more tags.</li>
+    <li><strong>Repository:</strong> Filter by data repository.</li>
+    <li><strong>Text search:</strong> Search within record content.</li>
+  </ul>
+
+  <h2>Detail Panel</h2>
+  <p>When enabled, selecting a record opens the detail panel showing its full content, tags, related timestamps, and edit controls. This is the same information shown in the Record view.</p>
+
+  <h2>Summary View Analytics</h2>
+  <p>The Summary View statistics panel shows charts and aggregate data about your records, including:</p>
+  <ul>
+    <li>Record count trends over time</li>
+    <li>Type distribution breakdowns</li>
+    <li>Tag usage frequency</li>
+    <li>Activity patterns</li>
+  </ul>
+
+  <h2>Calendar Heatmap</h2>
+  <p>The calendar view displays a heatmap where each day is colored according to the number of records. Click any date cell to jump to that day's records.</p>
+
+  <h2>GPS Map View</h2>
+  <p>If GPS data is available (from GPX logs or geotagged files), records are plotted on an interactive map. This requires a Google Maps API key configured in Settings.</p>
+
+  <div class="tip">
+    <strong>Tip:</strong> The Life Log View display period can be configured in Settings. Set a shorter period for faster loading, or a longer period for broader browsing.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Adjust the number of image columns in Settings to match your screen size and browsing style. Fewer columns show more detail; more columns provide a broader overview.
+  </div>
+
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

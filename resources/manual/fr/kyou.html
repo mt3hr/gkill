@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue d'enregistrement - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Vue d'enregistrement</h1>
+  <p>Ecran affichant les details d'un enregistrement individuel. Vous pouvez consulter les informations detaillees de differents types d'enregistrements.</p>
+
+  <h2>Boutons de la barre d'outils</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> Parametres</td>
+      <td>Ouvre l'ecran des parametres de l'application.</td>
+    </tr>
+  </table>
+
+  <h2>Types d'enregistrements affiches</h2>
+  <table>
+    <tr>
+      <th>Type d'enregistrement</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Memo (Kmemo)</td>
+      <td>Affiche le contenu des notes textuelles.</td>
+    </tr>
+    <tr>
+      <td>Signets</td>
+      <td>Affiche les URLs et titres enregistres.</td>
+    </tr>
+    <tr>
+      <td>Taches</td>
+      <td>Affiche l'etat, la date limite et les informations du tableau de la tache.</td>
+    </tr>
+    <tr>
+      <td>Humeur</td>
+      <td>Affiche la valeur d'humeur de 0 a 10.</td>
+    </tr>
+    <tr>
+      <td>Depenses</td>
+      <td>Affiche le montant et le contenu de la depense.</td>
+    </tr>
+    <tr>
+      <td>Journal de temps</td>
+      <td>Affiche l'heure de debut/fin et le temps ecoule.</td>
+    </tr>
+    <tr>
+      <td>Fichier (IDFKyou)</td>
+      <td>Affiche un apercu du fichier telecharge.</td>
+    </tr>
+    <tr>
+      <td>Journal de commit Git</td>
+      <td>Affiche les informations de commits du depot Git.</td>
+    </tr>
+  </table>
+
+  <h2>Informations communes affichees</h2>
+  <p>Les informations suivantes sont affichees pour tous les types d'enregistrements :</p>
+  <ul>
+    <li><strong>Etiquettes :</strong> Liste des etiquettes attribuees a l'enregistrement</li>
+    <li><strong>Temps associe :</strong> Informations de date et heure liees a l'enregistrement</li>
+    <li><strong>Nom du depot :</strong> Nom du depot ou les donnees sont stockees</li>
+  </ul>
+
+  <h2>Menu contextuel</h2>
+  <p>Un clic droit (ou un appui long) sur un enregistrement affiche un menu contextuel permettant de modifier, supprimer, partager et effectuer d'autres operations.</p>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Vous pouvez ajouter ou modifier des etiquettes directement depuis l'ecran de details de l'enregistrement.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

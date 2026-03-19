@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>应用设置 - 帮助</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>应用设置</h1>
+  <p>管理应用程序全局设置和数据结构的界面。您可以调整显示偏好、行为选项和外部集成。</p>
+
+  <h2>顶部操作按钮</h2>
+  <table>
+    <tr>
+      <th>按钮</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>服务器设置（仅管理员）</td>
+      <td>打开服务器配置界面，包括端口、TLS、访问限制等设置。仅对管理员帐户可见。</td>
+    </tr>
+    <tr>
+      <td>重新加载</td>
+      <td>从服务器重新加载数据。长按可执行强制重新加载。</td>
+    </tr>
+    <tr>
+      <td>注销</td>
+      <td>结束当前会话并注销。长按可显示其他选项。</td>
+    </tr>
+  </table>
+
+  <h2>常规设置</h2>
+  <table>
+    <tr>
+      <th>设置项</th>
+      <th>类型</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>语言</td>
+      <td>下拉菜单</td>
+      <td>选择界面语言：ja（日语）、en（英语）、zh（中文）、ko（韩语）、es（西班牙语）、fr（法语）、de（德语）。</td>
+    </tr>
+    <tr>
+      <td>深色主题</td>
+      <td>复选框</td>
+      <td>切换深色模式的开启/关闭。适合在暗光环境下使用。</td>
+    </tr>
+    <tr>
+      <td>热重载</td>
+      <td>复选框</td>
+      <td>启用后，当检测到数据更改时，生活日志视图会自动刷新。</td>
+    </tr>
+    <tr>
+      <td>列表中显示标签</td>
+      <td>复选框</td>
+      <td>控制是否在记录列表中显示标签。</td>
+    </tr>
+    <tr>
+      <td>显示分享页脚</td>
+      <td>复选框</td>
+      <td>控制是否在页脚区域显示分享选项。</td>
+    </tr>
+  </table>
+
+  <h2>显示设置</h2>
+  <table>
+    <tr>
+      <th>设置项</th>
+      <th>类型</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>生活日志视图显示天数</td>
+      <td>复选框 + 数值</td>
+      <td>设置生活日志视图中显示的记录天数。设为-1表示无限制。较短的期间加载更快。</td>
+    </tr>
+    <tr>
+      <td>默认页面</td>
+      <td>下拉菜单</td>
+      <td>选择登录后显示的初始页面。</td>
+    </tr>
+    <tr>
+      <td>生活日志视图图片列数</td>
+      <td>数值（1-10）</td>
+      <td>设置生活日志视图中缩略图网格的列数。请根据屏幕大小进行调整。</td>
+    </tr>
+    <tr>
+      <td>任务默认看板</td>
+      <td>下拉菜单 + 添加按钮</td>
+      <td>设置任务界面默认显示的看板。可使用添加按钮创建新看板。</td>
+    </tr>
+  </table>
+
+  <h2>外部集成</h2>
+  <table>
+    <tr>
+      <th>设置项</th>
+      <th>类型</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>书签小工具地址</td>
+      <td>只读</td>
+      <td>用于浏览器书签栏的JavaScript书签小工具URL。可从任何网页一键保存书签到gkill。</td>
+    </tr>
+    <tr>
+      <td>Google Maps API密钥</td>
+      <td>文本输入</td>
+      <td>输入Google Maps API密钥以启用GPS地图功能。地图视图需要此密钥才能运行。</td>
+    </tr>
+  </table>
+
+  <h2>数据结构管理</h2>
+  <p>这些按钮可打开专用编辑器，用于管理数据的组织方式。</p>
+  <table>
+    <tr>
+      <th>按钮</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>标签结构</td>
+      <td>管理标签层次结构和标签分组。可创建、重命名、重新排序标签，并设置父子关系。</td>
+    </tr>
+    <tr>
+      <td>存储库结构</td>
+      <td>管理数据存储位置和存储库。可添加、删除或配置记录的存储位置。</td>
+    </tr>
+    <tr>
+      <td>配置文件结构</td>
+      <td>管理设备和配置文件设置。可编辑每台设备的配置。</td>
+    </tr>
+    <tr>
+      <td>记录类型结构</td>
+      <td>管理各种记录类型存储在哪些存储库中。</td>
+    </tr>
+    <tr>
+      <td>模板结构</td>
+      <td>管理备忘录文本模板，用于快速输入。可创建和编辑常用文本模板。</td>
+    </tr>
+    <tr>
+      <td>汇总视图</td>
+      <td>管理数据汇总方式和汇总视图配置。</td>
+    </tr>
+    <tr>
+      <td>关联信息</td>
+      <td>管理关联信息结构。</td>
+    </tr>
+  </table>
+
+  <h2>底部操作按钮</h2>
+  <table>
+    <tr>
+      <th>按钮</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>应用</td>
+      <td>保存所有更改。</td>
+    </tr>
+    <tr>
+      <td>取消</td>
+      <td>放弃更改并关闭界面。</td>
+    </tr>
+  </table>
+
+  <h2>页脚</h2>
+  <p>界面底部显示应用程序信息：</p>
+  <ul>
+    <li><strong>版本号</strong> — 可点击链接到项目页面。</li>
+    <li><strong>构建时间戳</strong> — 应用程序的构建日期和时间。</li>
+    <li><strong>提交哈希</strong> — 构建所基于的Git提交。</li>
+  </ul>
+
+  <div class="tip">
+    <strong>提示：</strong>更改设置后，请按"应用"按钮保存。按"取消"将放弃所有更改。
+  </div>
+
+  <div class="tip">
+    <strong>提示：</strong>智能手机上建议将图片列数设为1-2列，电脑上设为3-5列效果更佳。
+  </div>
+
+  <div class="tip">
+    <strong>提示：</strong>要使用GPS地图功能，需要在Google Cloud Console中启用Maps JavaScript API并输入API密钥。
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

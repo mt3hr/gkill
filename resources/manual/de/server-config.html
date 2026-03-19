@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Servereinstellungen - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Servereinstellungen</h1>
+  <p>Dieser Bildschirm konfiguriert das Serververhalten. Nur Administratoren haben Zugriff.</p>
+
+  <h2>Obere Schaltfl&auml;che</h2>
+  <p>Dr&uuml;cken Sie die Schaltfl&auml;che <strong>Kontoverwaltung</strong>, um den Bildschirm zur Kontoverwaltung zu &ouml;ffnen.</p>
+
+  <h2>Einstellungen</h2>
+  <table>
+    <tr><th>Einstellung</th><th>Typ</th><th>Beschreibung</th></tr>
+    <tr><td>Profil</td><td>Dropdown + Hinzuf&uuml;gen/L&ouml;schen</td><td>Aktives Profil ausw&auml;hlen, ein neues erstellen oder ein vorhandenes l&ouml;schen</td></tr>
+    <tr><td>Nur lokaler Zugriff</td><td>Kontrollk&auml;stchen</td><td>Verbindungen auf lokalen Zugriff beschr&auml;nken</td></tr>
+    <tr><td>Benachrichtigungsdienst</td><td>Kontrollk&auml;stchen</td><td>Push-Benachrichtigungsdienst aktivieren</td></tr>
+    <tr><td>TLS aktivieren</td><td>Kontrollk&auml;stchen</td><td>HTTPS aktivieren</td></tr>
+    <tr><td>Selbstsigniertes TLS generieren</td><td>Schaltfl&auml;che</td><td>Selbstsignierte TLS-Zertifikatsdateien erstellen</td></tr>
+    <tr><td>Adresse</td><td>Text</td><td>Server-Lausch-Adresse (z.B.: :9999)</td></tr>
+    <tr><td>TLS-CERT-Datei</td><td>Text</td><td>Pfad zur TLS-Zertifikatsdatei</td></tr>
+    <tr><td>TLS-KEY-Datei</td><td>Text</td><td>Pfad zur TLS-Privatschl&uuml;sseldatei</td></tr>
+    <tr><td>Befehl zum &Ouml;ffnen von Verzeichnissen</td><td>Text</td><td>Betriebssystembefehl zum &Ouml;ffnen eines Verzeichnisses</td></tr>
+    <tr><td>Befehl zum &Ouml;ffnen von Dateien</td><td>Text</td><td>Betriebssystembefehl zum &Ouml;ffnen einer Datei</td></tr>
+    <tr><td>Lesezeichen-Zeitlimit</td><td>Zahl (min: 5)</td><td>Zeitlimit in Sekunden f&uuml;r das Abrufen von Lesezeichen</td></tr>
+    <tr><td>Lesezeichen-Benutzeragent</td><td>Text</td><td>User-Agent-Zeichenkette f&uuml;r das Abrufen von Lesezeichen</td></tr>
+    <tr><td>Benutzerdatenverzeichnis</td><td>Text</td><td>Pfad zum Speicherverzeichnis der Benutzerdaten</td></tr>
+  </table>
+
+  <h2>Untere Schaltfl&auml;chen</h2>
+  <p><strong>&Uuml;bernehmen</strong>: Einstellungen speichern.<br><strong>Abbrechen</strong>: &Auml;nderungen verwerfen und den Bildschirm schlie&szlig;en.</p>
+
+  <div class="tip">&Auml;nderungen erfordern einen Neustart des Servers, um wirksam zu werden.</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

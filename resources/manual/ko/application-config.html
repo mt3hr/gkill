@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>애플리케이션 설정 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>애플리케이션 설정</h1>
+  <p>애플리케이션 전체 설정과 데이터 구조를 관리하는 화면입니다. 표시 환경, 동작 옵션, 외부 연동 등을 조정할 수 있습니다.</p>
+
+  <h2>상단 작업 버튼</h2>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>서버 설정 (관리자 전용)</td>
+      <td>포트, TLS, 접근 제한 등 서버 구성 화면을 엽니다. 관리자 계정에만 표시됩니다.</td>
+    </tr>
+    <tr>
+      <td>다시 불러오기</td>
+      <td>서버에서 데이터를 다시 불러옵니다. 길게 누르면 강제 다시 불러오기를 실행합니다.</td>
+    </tr>
+    <tr>
+      <td>로그아웃</td>
+      <td>현재 세션을 종료하고 로그아웃합니다. 길게 누르면 추가 옵션이 표시됩니다.</td>
+    </tr>
+  </table>
+
+  <h2>일반 설정</h2>
+  <table>
+    <tr>
+      <th>설정 항목</th>
+      <th>유형</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>언어</td>
+      <td>드롭다운</td>
+      <td>인터페이스 언어를 선택합니다: ja(일본어), en(영어), zh(중국어), ko(한국어), es(스페인어), fr(프랑스어), de(독일어).</td>
+    </tr>
+    <tr>
+      <td>다크 테마</td>
+      <td>체크박스</td>
+      <td>다크 모드를 켜거나 끕니다. 어두운 환경에서 사용하기에 적합합니다.</td>
+    </tr>
+    <tr>
+      <td>핫 리로드</td>
+      <td>체크박스</td>
+      <td>활성화하면 데이터 변경이 감지될 때 라이프 로그 뷰가 자동으로 새로고침됩니다.</td>
+    </tr>
+    <tr>
+      <td>목록에 태그 표시</td>
+      <td>체크박스</td>
+      <td>기록 목록에서 태그를 표시할지 여부를 제어합니다.</td>
+    </tr>
+    <tr>
+      <td>공유 푸터 표시</td>
+      <td>체크박스</td>
+      <td>푸터 영역에 공유 옵션을 표시할지 여부를 제어합니다.</td>
+    </tr>
+  </table>
+
+  <h2>표시 설정</h2>
+  <table>
+    <tr>
+      <th>설정 항목</th>
+      <th>유형</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>라이프 로그 뷰 표시 일수</td>
+      <td>체크박스 + 숫자</td>
+      <td>라이프 로그 뷰에서 표시할 기록 일수를 설정합니다. -1로 설정하면 무제한입니다. 짧은 기간은 더 빨리 로드됩니다.</td>
+    </tr>
+    <tr>
+      <td>기본 페이지</td>
+      <td>드롭다운</td>
+      <td>로그인 후 표시되는 초기 페이지를 선택합니다.</td>
+    </tr>
+    <tr>
+      <td>라이프 로그 뷰 이미지 열 수</td>
+      <td>숫자 (1-10)</td>
+      <td>라이프 로그 뷰의 썸네일 그리드 열 수를 설정합니다. 화면 크기에 맞게 조정하세요.</td>
+    </tr>
+    <tr>
+      <td>기본 작업 보드</td>
+      <td>드롭다운 + 추가 버튼</td>
+      <td>작업 화면에서 기본으로 표시되는 보드를 설정합니다. 추가 버튼으로 새 보드를 만들 수 있습니다.</td>
+    </tr>
+  </table>
+
+  <h2>외부 연동</h2>
+  <table>
+    <tr>
+      <th>설정 항목</th>
+      <th>유형</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>북마클릿 주소</td>
+      <td>읽기 전용</td>
+      <td>브라우저 북마크 바에 등록하는 JavaScript 북마클릿 URL입니다. 모든 웹페이지에서 한 번의 클릭으로 북마크를 저장할 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>Google Maps API 키</td>
+      <td>텍스트 입력</td>
+      <td>GPS 지도 기능을 활성화하기 위한 Google Maps API 키를 입력합니다. 지도 뷰에는 이 키가 필요합니다.</td>
+    </tr>
+  </table>
+
+  <h2>데이터 구조 관리</h2>
+  <p>이 버튼들은 데이터 구성 방식을 관리하는 전용 편집기를 엽니다.</p>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>태그 구조</td>
+      <td>태그 계층 구조와 태그 그룹을 관리합니다. 태그를 생성, 이름 변경, 재정렬하고 부모-자식 관계를 구성할 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>저장소 구조</td>
+      <td>데이터 저장 위치와 저장소를 관리합니다. 기록이 저장되는 위치를 추가, 제거 또는 구성할 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>프로필 구조</td>
+      <td>장치 및 프로필 구성을 관리합니다. 장치별 설정을 편집할 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>기록 유형 구조</td>
+      <td>각 기록 유형이 어떤 저장소에 저장되는지 관리합니다.</td>
+    </tr>
+    <tr>
+      <td>템플릿 구조</td>
+      <td>빠른 입력을 위한 메모장 텍스트 템플릿을 관리합니다. 자주 사용하는 텍스트 항목을 생성하고 편집할 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>집계 뷰</td>
+      <td>데이터 집계 방법과 집계 뷰 구성을 관리합니다.</td>
+    </tr>
+    <tr>
+      <td>관련 정보</td>
+      <td>관련 정보 구조를 관리합니다.</td>
+    </tr>
+  </table>
+
+  <h2>하단 작업 버튼</h2>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>적용</td>
+      <td>모든 변경 사항을 저장합니다.</td>
+    </tr>
+    <tr>
+      <td>취소</td>
+      <td>변경 사항을 취소하고 화면을 닫습니다.</td>
+    </tr>
+  </table>
+
+  <h2>푸터</h2>
+  <p>화면 하단에 애플리케이션 정보가 표시됩니다:</p>
+  <ul>
+    <li><strong>버전 번호</strong> — 클릭하면 프로젝트 페이지로 이동합니다.</li>
+    <li><strong>빌드 타임스탬프</strong> — 애플리케이션이 빌드된 날짜와 시간입니다.</li>
+    <li><strong>커밋 해시</strong> — 빌드의 기반이 된 Git 커밋입니다.</li>
+  </ul>
+
+  <div class="tip">
+    <strong>팁:</strong> 설정을 변경한 후 "적용" 버튼을 눌러 저장하세요. "취소"를 누르면 모든 변경 사항이 취소됩니다.
+  </div>
+
+  <div class="tip">
+    <strong>팁:</strong> 스마트폰에서는 이미지 열 수를 1-2열로, PC에서는 3-5열로 설정하면 보기 좋습니다.
+  </div>
+
+  <div class="tip">
+    <strong>팁:</strong> GPS 지도 기능을 사용하려면 Google Cloud Console에서 Maps JavaScript API를 활성화하고 API 키를 입력하세요.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

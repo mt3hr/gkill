@@ -740,5 +740,14 @@
     "SUCCESS_OPEN_FOLDER_MESSAGE": "폴더를 열었습니다",
     "ADD_TAG_FROM_HISTORY_TITLE": "태그 기록에서 추가",
     "CONFIRM_UNKNOWN_TAG_TITLE": "확인",
-    "CONFIRM_UNKNOWN_TAG_MESSAGE": "다음 태그는 태그 구조에 없습니다. 정말 추가하시겠습니까?"
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "새로운 태그입니다. 추가하시겠습니까？",
+    "HELP_TITLE": "도움말",
+    "TOOLTIP_HELP": "도움말 표시",
+    "TOOLTIP_SETTINGS": "설정",
+    "TOOLTIP_TOGGLE_DETAIL_VIEW": "상세 보기 전환",
+    "TOOLTIP_TOGGLE_CALENDAR": "캘린더 전환",
+    "TOOLTIP_TOGGLE_DNOTE": "Dnote 전환",
+    "TOOLTIP_TOGGLE_MAP": "지도 전환",
+    "TOOLTIP_TOGGLE_SIDEBAR": "사이드바 전환",
+    "TOOLTIP_RELOAD": "새로고침"
 }

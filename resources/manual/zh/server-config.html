@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>服务器设置 - 帮助</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>服务器设置</h1>
+  <p>此画面用于配置服务器行为。仅管理员可以访问。</p>
+
+  <h2>顶部按钮</h2>
+  <p>点击<strong>账户管理</strong>按钮可打开账户管理画面。</p>
+
+  <h2>设置项目</h2>
+  <table>
+    <tr><th>设置名称</th><th>类型</th><th>说明</th></tr>
+    <tr><td>配置文件</td><td>下拉菜单 + 添加/删除</td><td>选择活动配置文件、创建新配置或删除现有配置</td></tr>
+    <tr><td>仅限本地访问</td><td>复选框</td><td>将连接限制为仅本地访问</td></tr>
+    <tr><td>通知服务</td><td>复选框</td><td>启用推送通知服务</td></tr>
+    <tr><td>启用TLS</td><td>复选框</td><td>启用HTTPS</td></tr>
+    <tr><td>生成自签名TLS</td><td>按钮</td><td>创建自签名TLS证书文件</td></tr>
+    <tr><td>地址</td><td>文本</td><td>服务器监听地址（例如: :9999）</td></tr>
+    <tr><td>TLS CERT文件</td><td>文本</td><td>TLS证书文件的路径</td></tr>
+    <tr><td>TLS KEY文件</td><td>文本</td><td>TLS私钥文件的路径</td></tr>
+    <tr><td>打开目录命令</td><td>文本</td><td>用于打开目录的操作系统命令</td></tr>
+    <tr><td>打开文件命令</td><td>文本</td><td>用于打开文件的操作系统命令</td></tr>
+    <tr><td>书签超时</td><td>数值（最小: 5）</td><td>获取书签时的超时时间（秒）</td></tr>
+    <tr><td>书签用户代理</td><td>文本</td><td>获取书签时使用的User-Agent字符串</td></tr>
+    <tr><td>用户数据目录</td><td>文本</td><td>用户数据存储目录的路径</td></tr>
+  </table>
+
+  <h2>底部按钮</h2>
+  <p><strong>应用</strong>: 保存设置。<br><strong>取消</strong>: 放弃更改并关闭画面。</p>
+
+  <div class="tip">更改设置后需要重新启动服务器才能生效。</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

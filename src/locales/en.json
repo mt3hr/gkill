@@ -740,5 +740,14 @@
     "SUCCESS_OPEN_FOLDER_MESSAGE": "Folder opened",
     "ADD_TAG_FROM_HISTORY_TITLE": "Add tag from history",
     "CONFIRM_UNKNOWN_TAG_TITLE": "Confirmation",
-    "CONFIRM_UNKNOWN_TAG_MESSAGE": "The following tags are not in the tag structure. Are you sure you want to add them?"
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "This is a new tag. Do you want to add it?",
+    "HELP_TITLE": "Help",
+    "TOOLTIP_HELP": "Show Help",
+    "TOOLTIP_SETTINGS": "Settings",
+    "TOOLTIP_TOGGLE_DETAIL_VIEW": "Toggle Detail View",
+    "TOOLTIP_TOGGLE_CALENDAR": "Toggle Calendar",
+    "TOOLTIP_TOGGLE_DNOTE": "Toggle Dnote",
+    "TOOLTIP_TOGGLE_MAP": "Toggle Map",
+    "TOOLTIP_TOGGLE_SIDEBAR": "Toggle Sidebar",
+    "TOOLTIP_RELOAD": "Reload"
 }
