@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>サーバ設定 - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>サーバ設定</h1>
+  <p>サーバの動作に関する設定を行う画面です。管理者のみアクセスできます。</p>
+
+  <h2>上部ボタン</h2>
+  <p><strong>アカウント管理</strong>ボタンを押すと、アカウント管理画面が開きます。</p>
+
+  <h2>設定項目</h2>
+  <table>
+    <tr><th>設定名</th><th>種類</th><th>説明</th></tr>
+    <tr><td>プロファイル</td><td>ドロップダウン + 追加/削除</td><td>有効なプロファイルを選択、新規作成、または削除します</td></tr>
+    <tr><td>ローカルアクセスのみ許可</td><td>チェックボックス</td><td>ローカル接続のみに制限します</td></tr>
+    <tr><td>通知サービス有効</td><td>チェックボックス</td><td>プッシュ通知サービスを有効にします</td></tr>
+    <tr><td>TLS有効</td><td>チェックボックス</td><td>HTTPSを有効にします</td></tr>
+    <tr><td>オレオレTLSファイル生成</td><td>ボタン</td><td>自己署名TLS証明書ファイルを生成します</td></tr>
+    <tr><td>アドレス</td><td>テキスト</td><td>サーバの待ち受けアドレス（例: :9999）</td></tr>
+    <tr><td>TLS CERTファイル</td><td>テキスト</td><td>TLS証明書ファイルのパス</td></tr>
+    <tr><td>TLS KEYファイル</td><td>テキスト</td><td>TLS秘密鍵ファイルのパス</td></tr>
+    <tr><td>ディレクトリを開くコマンド</td><td>テキスト</td><td>ディレクトリを開くOSコマンド</td></tr>
+    <tr><td>ファイルを開くコマンド</td><td>テキスト</td><td>ファイルを開くOSコマンド</td></tr>
+    <tr><td>ブックマークタイムアウト</td><td>数値（最小: 5）</td><td>ブックマーク取得時のタイムアウト（秒）</td></tr>
+    <tr><td>ブックマークユーザエージェント</td><td>テキスト</td><td>ブックマーク取得時のUser-Agent文字列</td></tr>
+    <tr><td>ユーザデータディレクトリ</td><td>テキスト</td><td>ユーザデータの保存先ディレクトリのパス</td></tr>
+  </table>
+
+  <h2>下部ボタン</h2>
+  <p><strong>適用</strong>: 設定を保存します。<br><strong>キャンセル</strong>: 変更を破棄して画面を閉じます。</p>
+
+  <div class="tip">設定の変更を反映するには、サーバの再起動が必要です。</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des comptes - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Gestion des comptes</h1>
+  <p>Cet &eacute;cran g&egrave;re les comptes utilisateur. Seuls les administrateurs peuvent y acc&eacute;der.</p>
+
+  <h2>Bouton sup&eacute;rieur</h2>
+  <p>Appuyez sur le bouton <strong>Ajouter un compte</strong> pour cr&eacute;er un nouveau compte.</p>
+
+  <h2>Liste des comptes</h2>
+  <p>Les comptes enregistr&eacute;s sont affich&eacute;s dans une liste. Chaque ligne de compte contient les &eacute;l&eacute;ments suivants :</p>
+  <table>
+    <tr><th>&Eacute;l&eacute;ment</th><th>Description</th></tr>
+    <tr><td>Case &agrave; cocher activer/d&eacute;sactiver</td><td>Bascule l'&eacute;tat du compte entre activ&eacute; et d&eacute;sactiv&eacute;</td></tr>
+    <tr><td>ID utilisateur</td><td>Affiche l'ID utilisateur du compte</td></tr>
+    <tr><td>Bouton d'attribution de stockage</td><td>Attribue des d&eacute;p&ocirc;ts de donn&eacute;es &agrave; l'utilisateur</td></tr>
+    <tr><td>Bouton de r&eacute;initialisation du mot de passe</td><td>G&eacute;n&egrave;re un lien de r&eacute;initialisation du mot de passe</td></tr>
+  </table>
+
+  <h2>Bouton inf&eacute;rieur</h2>
+  <p><strong>Fermer</strong> : Ferme l'&eacute;cran de gestion des comptes.</p>
+
+  <div class="tip">Le premier compte cr&eacute;&eacute; devient le compte administrateur.</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

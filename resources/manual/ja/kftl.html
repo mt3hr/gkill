@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メモ帳画面 - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>メモ帳画面</h1>
+  <p>メモ帳構文を使ってライフログを記録する画面です。テキストベースで複数の記録タイプを一括入力できます。</p>
+
+  <h2>ツールバーボタン</h2>
+  <table>
+    <tr>
+      <th>ボタン</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> 設定</td>
+      <td>アプリケーション設定画面を開きます。</td>
+    </tr>
+  </table>
+
+  <h2>画面の要素</h2>
+  <table>
+    <tr>
+      <th>要素</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>テキスト入力エリア</td>
+      <td>メモ帳構文でデータを入力するメインのテキストエリアです。複数行にわたる記録を自由に記述できます。</td>
+    </tr>
+    <tr>
+      <td>テンプレートボタン</td>
+      <td>よく使うメモ帳構文のテンプレートをテキストエリアに挿入します。設定で定義されたテンプレートから選択できます。</td>
+    </tr>
+    <tr>
+      <td>保存ボタン</td>
+      <td>入力内容をサーバーに送信し、記録を作成します。</td>
+    </tr>
+  </table>
+
+  <h2>メモ帳構文の概要</h2>
+  <p>メモ帳構文は、行ごとに構造化されたテキスト形式です。1つのテキスト入力で、以下の記録を一括で作成できます。</p>
+  <ul>
+    <li><strong>メモ:</strong> テキストメモの記録</li>
+    <li><strong>打刻:</strong> 時間計測の開始・停止</li>
+    <li><strong>タスク:</strong> タスクの追加・更新</li>
+    <li><strong>ブックマーク:</strong> URLの保存</li>
+    <li><strong>数値記録:</strong> 数値データの記録</li>
+    <li><strong>支出:</strong> 金額の記録</li>
+    <li><strong>気分値:</strong> 気分（0〜10）の記録</li>
+    <li><strong>タグ付け:</strong> 記録へのタグ追加</li>
+  </ul>
+
+  <h2>操作手順</h2>
+  <ol>
+    <li>テキスト入力エリアにメモ帳構文で記録内容を入力します。</li>
+    <li>必要に応じてテンプレートボタンから定型文を挿入します。</li>
+    <li>保存ボタンをクリックして記録を作成します。</li>
+    <li>正常に保存されると、テキストエリアがクリアされます。</li>
+  </ol>
+
+  <div class="tip">
+    <strong>ヒント:</strong> テンプレートを活用すると効率的に入力できます。よく使う記録パターンはテンプレートとして設定しておくと便利です。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> KFTL構文を覚えなくても、テンプレートを使えばすぐに記録を始められます。
+  </div>
+
+  <h2>関連ドキュメント</h2><p><a href="kftl-syntax.html">メモ帳記法リファレンス →</a></p>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

@@ -740,5 +740,14 @@
     "SUCCESS_OPEN_FOLDER_MESSAGE": "Ordner geöffnet",
     "ADD_TAG_FROM_HISTORY_TITLE": "Tag aus Verlauf hinzufügen",
     "CONFIRM_UNKNOWN_TAG_TITLE": "Bestätigung",
-    "CONFIRM_UNKNOWN_TAG_MESSAGE": "Die folgenden Tags sind nicht in der Tag-Struktur vorhanden. Möchten Sie sie wirklich hinzufügen?"
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "Dies ist ein neues Tag. Möchten Sie es hinzufügen?",
+    "HELP_TITLE": "Hilfe",
+    "TOOLTIP_HELP": "Hilfe anzeigen",
+    "TOOLTIP_SETTINGS": "Einstellungen",
+    "TOOLTIP_TOGGLE_DETAIL_VIEW": "Detailansicht umschalten",
+    "TOOLTIP_TOGGLE_CALENDAR": "Kalender umschalten",
+    "TOOLTIP_TOGGLE_DNOTE": "Dnote umschalten",
+    "TOOLTIP_TOGGLE_MAP": "Karte umschalten",
+    "TOOLTIP_TOGGLE_SIDEBAR": "Seitenleiste umschalten",
+    "TOOLTIP_RELOAD": "Neu laden"
 }

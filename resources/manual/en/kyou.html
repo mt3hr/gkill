@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Record View - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Record View</h1>
+  <p>
+    The Record view displays individual record details. A record is the core entity in gkill, representing any recorded life event. Each record has a type, timestamp, tags, and type-specific data.
+  </p>
+
+  <h2>Toolbar</h2>
+  <table>
+    <tr><th>Icon</th><th>Action</th></tr>
+    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+  </table>
+
+  <h2>Record Types</h2>
+  <table>
+    <tr><th>Type</th><th>Description</th></tr>
+    <tr><td>Memo (kmemo)</td><td>Free-form text notes and memos.</td></tr>
+    <tr><td>Bookmark (urlog)</td><td>Saved URLs with title and optional notes.</td></tr>
+    <tr><td>Task (mi)</td><td>Tasks with board assignment, status (open/checked/completed), and limit date.</td></tr>
+    <tr><td>Mood (lantana)</td><td>Mood values on a scale of 0 to 10.</td></tr>
+    <tr><td>Expense (nlog)</td><td>Financial records with amount and category.</td></tr>
+    <tr><td>Timestamp (timeis)</td><td>Time tracking sessions with start and optional end time.</td></tr>
+    <tr><td>File (idf_kyou)</td><td>Uploaded files and images with thumbnails.</td></tr>
+    <tr><td>Git Commit (git_commit_log)</td><td>Git commit logs pulled from monitored repositories.</td></tr>
+    <tr><td>Numeric (kc)</td><td>Arbitrary numeric counter values.</td></tr>
+    <tr><td>Repost (re_kyou)</td><td>A reference (repost) of another record at a different time.</td></tr>
+  </table>
+
+  <h2>Record Details</h2>
+  <p>Each record view shows:</p>
+  <ul>
+    <li><strong>Timestamp:</strong> When the event occurred.</li>
+    <li><strong>Tags:</strong> Associated tags displayed as chips. Tags help with filtering and organization.</li>
+    <li><strong>Related Timestamps:</strong> Any linked time tracking sessions (Time Log) associated with this record.</li>
+    <li><strong>Repository Name:</strong> The data repository where this record is stored.</li>
+    <li><strong>Type-specific content:</strong> The main data of the record (text, URL, amount, etc.).</li>
+  </ul>
+
+  <h2>Context Menu</h2>
+  <p>Right-click (or long-press on mobile) on a record to access the context menu with options such as:</p>
+  <ul>
+    <li><strong>Edit:</strong> Open the record for editing.</li>
+    <li><strong>Copy:</strong> Copy record information to the clipboard.</li>
+    <li><strong>Add Tag:</strong> Attach a new tag to the record.</li>
+    <li><strong>Repost:</strong> Create a repost of this record at the current time.</li>
+    <li><strong>Delete:</strong> Remove the record (moves to trash).</li>
+    <li><strong>Open in new tab:</strong> View the record detail in a separate browser tab.</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Tip:</strong> Tags are a powerful way to organize your records across types. You can filter by tags in the Life Log View and Tasks views to find related records quickly.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

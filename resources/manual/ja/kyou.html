@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>記録画面 - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>記録画面</h1>
+  <p>個別の記録の詳細を表示する画面です。各種記録タイプの詳細情報を確認できます。</p>
+
+  <h2>ツールバーボタン</h2>
+  <table>
+    <tr>
+      <th>ボタン</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> 設定</td>
+      <td>アプリケーション設定画面を開きます。</td>
+    </tr>
+  </table>
+
+  <h2>表示される記録タイプ</h2>
+  <table>
+    <tr>
+      <th>記録タイプ</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>メモ（Kmemo）</td>
+      <td>テキストメモの内容を表示します。</td>
+    </tr>
+    <tr>
+      <td>ブックマーク</td>
+      <td>保存したURLとタイトルを表示します。</td>
+    </tr>
+    <tr>
+      <td>タスク</td>
+      <td>タスクの状態・期限・ボード情報を表示します。</td>
+    </tr>
+    <tr>
+      <td>気分値</td>
+      <td>0〜10の気分値を表示します。</td>
+    </tr>
+    <tr>
+      <td>支出</td>
+      <td>金額と支出内容を表示します。</td>
+    </tr>
+    <tr>
+      <td>打刻</td>
+      <td>開始・終了時刻と経過時間を表示します。</td>
+    </tr>
+    <tr>
+      <td>ファイル（IDFKyou）</td>
+      <td>アップロードされたファイルのプレビューを表示します。</td>
+    </tr>
+    <tr>
+      <td>Gitコミットログ</td>
+      <td>Gitリポジトリのコミット情報を表示します。</td>
+    </tr>
+  </table>
+
+  <h2>共通の表示情報</h2>
+  <p>すべての記録タイプで以下の情報が表示されます。</p>
+  <ul>
+    <li><strong>タグ:</strong> 記録に付与されたタグの一覧</li>
+    <li><strong>関連時刻:</strong> 記録に関連する日時情報</li>
+    <li><strong>リポジトリ名:</strong> データが保存されているリポジトリの名前</li>
+  </ul>
+
+  <h2>コンテキストメニュー</h2>
+  <p>記録を右クリック（またはロングタップ）すると、コンテキストメニューが表示され、編集・削除・共有などの操作ができます。</p>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 記録の詳細画面から直接タグの追加や編集が可能です。
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

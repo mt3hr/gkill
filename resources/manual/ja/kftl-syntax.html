@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KFTL構文リファレンス</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+
+<div class="back-link"><a href="kftl.html">&larr; メモ帳ヘルプに戻る</a></div>
+
+<h1>KFTL構文リファレンス</h1>
+
+<p>KFTLは、gkillで使用されるテキストベースの記録形式です。行頭のプレフィックスによって、さまざまな種類のデータを一括入力できます。以下に全18種類の文を紹介します。</p>
+
+<h2>文の一覧</h2>
+
+<table>
+  <tr><th>プレフィックス</th><th>種類</th><th>説明</th></tr>
+  <tr><td>(なし)</td><td>メモ</td><td>テキストメモを記録</td></tr>
+  <tr><td><code>。</code></td><td>タグ</td><td>タグを付与</td></tr>
+  <tr><td><code>ーー</code></td><td>テキストブロック</td><td>複数行テキストをそのまま保持</td></tr>
+  <tr><td><code>、</code></td><td>区切り</td><td>新しいレコードに分割</td></tr>
+  <tr><td><code>、、</code></td><td>区切り（+1秒）</td><td>タイムスタンプを1秒進めて分割</td></tr>
+  <tr><td><code>？</code></td><td>関連時刻</td><td>関連する日時を設定</td></tr>
+  <tr><td><code>ーか</code></td><td>数値記録</td><td>数値データを記録</td></tr>
+  <tr><td><code>ーみ</code></td><td>タスク</td><td>タスクを作成</td></tr>
+  <tr><td><code>ーら</code></td><td>気分</td><td>気分値（0〜10）を記録</td></tr>
+  <tr><td><code>ーん</code></td><td>支出</td><td>支出情報を記録</td></tr>
+  <tr><td><code>ーち</code></td><td>打刻(完全)</td><td>開始・終了時刻を指定して打刻</td></tr>
+  <tr><td><code>ーた</code></td><td>打刻開始</td><td>打刻を開始</td></tr>
+  <tr><td><code>ーえ</code></td><td>打刻終了</td><td>一致する打刻を終了</td></tr>
+  <tr><td><code>ーいえ</code></td><td>打刻終了(存在時)</td><td>一致する打刻があれば終了（エラーなし）</td></tr>
+  <tr><td><code>ーたえ</code></td><td>タグで打刻終了</td><td>タグ名で一致する打刻を終了</td></tr>
+  <tr><td><code>ーいたえ</code></td><td>タグで打刻終了(存在時)</td><td>タグ名で一致する打刻があれば終了</td></tr>
+  <tr><td><code>ーう</code></td><td>ブックマーク</td><td>URLブックマークを記録</td></tr>
+  <tr><td><code>！</code></td><td>保存</td><td>ドキュメントを終了し保存を実行</td></tr>
+</table>
+
+<h2>各文の詳細</h2>
+
+<h3>1. メモ（プレフィックスなし）</h3>
+<p>プレフィックスのない行はメモテキストになります。連続する複数行は1つのメモにまとめられます。</p>
+<pre>今日は天気が良かった
+散歩に行った</pre>
+
+<h3>2. タグ: <code>。</code></h3>
+<p>行頭に<code>。</code>を付けてタグを指定します。複数のタグは<code>、</code>で区切ります。</p>
+<pre>。日記、天気</pre>
+
+<h3>3. テキストブロック: <code>ーー</code></h3>
+<p><code>ーー</code>で開始し、<code>ーー</code>で終了します。間の内容はそのまま保持されます。</p>
+<pre>ーー
+これは
+複数行の
+テキストブロックです
+ーー</pre>
+
+<h3>4. 区切り: <code>、</code></h3>
+<p>新しいレコードに分割します。この行以降の内容は新しいレコードに属します。</p>
+<pre>最初のメモ
+、
+次のメモ</pre>
+
+<h3>5. 区切り（+1秒）: <code>、、</code></h3>
+<p>区切りと同じですが、タイムスタンプが1秒進みます。</p>
+<pre>最初のメモ
+、、
+1秒後のメモ</pre>
+
+<h3>6. 関連時刻: <code>？</code></h3>
+<p>関連する日時を設定します。形式: <code>？YYYY-MM-DD</code>、<code>？YYYY-MM-DD HH:MM</code>、<code>？YYYY-MM-DD HH:MM:SS</code></p>
+<pre>？2025-03-15 14:30</pre>
+
+<h3>7. 数値記録: <code>ーか</code></h3>
+<p>次の行にタイトル、その次の行に数値を記入します。</p>
+<pre>ーか
+体重
+65.5</pre>
+
+<h3>8. タスク: <code>ーみ</code></h3>
+<p>次の行以降にタイトル、ボード名、期限、見積開始時刻、見積終了時刻を記入します（タイトル以外は省略可）。</p>
+<pre>ーみ
+レポートを書く
+仕事
+2025-03-20</pre>
+
+<h3>9. 気分: <code>ーら</code></h3>
+<p>次の行に気分値（整数 0〜10）を記入します。</p>
+<pre>ーら
+7</pre>
+
+<h3>10. 支出: <code>ーん</code></h3>
+<p>次の行に店名、その後に品名と金額のペアを繰り返します。</p>
+<pre>ーん
+コンビニ
+おにぎり
+150
+お茶
+120</pre>
+
+<h3>11. 打刻(完全): <code>ーち</code></h3>
+<p>次の行以降にタイトル、開始時刻、終了時刻を記入します。</p>
+<pre>ーち
+会議
+2025-03-15 10:00
+2025-03-15 11:30</pre>
+
+<h3>12. 打刻開始: <code>ーた</code></h3>
+<p>次の行以降にタイトルと開始時刻を記入します。</p>
+<pre>ーた
+作業開始
+2025-03-15 09:00</pre>
+
+<h3>13. 打刻終了: <code>ーえ</code></h3>
+<p>次の行にタイトルを記入します。一致する開始済みの打刻を見つけて終了します。</p>
+<pre>ーえ
+作業開始</pre>
+
+<h3>14. 打刻終了(存在時): <code>ーいえ</code></h3>
+<p>打刻終了と同じですが、一致する打刻が存在しない場合でもエラーになりません。</p>
+<pre>ーいえ
+作業開始</pre>
+
+<h3>15. タグで打刻終了: <code>ーたえ</code></h3>
+<p>次の行にタグ名を記入します。そのタグが付いた打刻を見つけて終了します。</p>
+<pre>ーたえ
+仕事</pre>
+
+<h3>16. タグで打刻終了(存在時): <code>ーいたえ</code></h3>
+<p>タグで打刻終了と同じですが、一致する打刻が存在しない場合でもエラーになりません。</p>
+<pre>ーいたえ
+仕事</pre>
+
+<h3>17. ブックマーク: <code>ーう</code></h3>
+<p>次の行にURL、その次の行にタイトルを記入します。</p>
+<pre>ーう
+https://example.com
+お気に入りサイト</pre>
+
+<h3>18. 保存: <code>！</code></h3>
+<p>ドキュメントを終了し、保存処理を実行します。</p>
+<pre>！</pre>
+
+<h2>総合的な例</h2>
+
+<p>以下は、複数の文を組み合わせた完全なKFTLドキュメントの例です。</p>
+
+<pre>今日の日記
+。日記、天気
+？2025-03-15
+、
+ーみ
+買い物に行く
+プライベート
+、
+ーん
+スーパー
+りんご
+200
+牛乳
+180
+、
+ーた
+読書
+、
+ーら
+8
+！</pre>
+
+<div class="tip">
+  <strong>ヒント:</strong> <code>、</code>で区切ることで、1つのドキュメント内に複数のレコードを効率的に入力できます。<code>！</code>を末尾に付けると自動的に保存されます。
+</div>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

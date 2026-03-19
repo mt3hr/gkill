@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>서버 설정 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>서버 설정</h1>
+  <p>서버 동작을 설정하는 화면입니다. 관리자만 접근할 수 있습니다.</p>
+
+  <h2>상단 버튼</h2>
+  <p><strong>계정 관리</strong> 버튼을 누르면 계정 관리 화면이 열립니다.</p>
+
+  <h2>설정 항목</h2>
+  <table>
+    <tr><th>설정명</th><th>유형</th><th>설명</th></tr>
+    <tr><td>프로필</td><td>드롭다운 + 추가/삭제</td><td>활성 프로필을 선택하거나 새로 만들거나 삭제합니다</td></tr>
+    <tr><td>로컬 접근만 허용</td><td>체크박스</td><td>로컬 연결만 허용하도록 제한합니다</td></tr>
+    <tr><td>알림 서비스</td><td>체크박스</td><td>푸시 알림 서비스를 활성화합니다</td></tr>
+    <tr><td>TLS 활성화</td><td>체크박스</td><td>HTTPS를 활성화합니다</td></tr>
+    <tr><td>자체 서명 TLS 생성</td><td>버튼</td><td>자체 서명 TLS 인증서 파일을 생성합니다</td></tr>
+    <tr><td>주소</td><td>텍스트</td><td>서버 수신 대기 주소 (예: :9999)</td></tr>
+    <tr><td>TLS CERT 파일</td><td>텍스트</td><td>TLS 인증서 파일 경로</td></tr>
+    <tr><td>TLS KEY 파일</td><td>텍스트</td><td>TLS 개인 키 파일 경로</td></tr>
+    <tr><td>디렉토리 열기 명령</td><td>텍스트</td><td>디렉토리를 여는 OS 명령</td></tr>
+    <tr><td>파일 열기 명령</td><td>텍스트</td><td>파일을 여는 OS 명령</td></tr>
+    <tr><td>북마크 타임아웃</td><td>숫자 (최소: 5)</td><td>북마크 가져오기 타임아웃 (초)</td></tr>
+    <tr><td>북마크 사용자 에이전트</td><td>텍스트</td><td>북마크 가져오기에 사용하는 User-Agent 문자열</td></tr>
+    <tr><td>사용자 데이터 디렉토리</td><td>텍스트</td><td>사용자 데이터 저장 디렉토리 경로</td></tr>
+  </table>
+
+  <h2>하단 버튼</h2>
+  <p><strong>적용</strong>: 설정을 저장합니다.<br><strong>취소</strong>: 변경 사항을 취소하고 화면을 닫습니다.</p>
+
+  <div class="tip">설정 변경 사항을 적용하려면 서버를 재시작해야 합니다.</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>
