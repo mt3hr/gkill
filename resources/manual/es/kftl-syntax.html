@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referencia de sintaxis KFTL</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+
+<div class="back-link"><a href="kftl.html">&larr; Volver a la ayuda del bloc de notas</a></div>
+
+<h1>Referencia de sintaxis KFTL</h1>
+
+<p>KFTL es un formato de registro basado en texto utilizado en gkill. Mediante prefijos al inicio de cada linea, puede introducir varios tipos de datos a la vez. A continuacion se presentan los 18 tipos de sentencias.</p>
+
+<h2>Resumen de sentencias</h2>
+
+<table>
+  <tr><th>Prefijo</th><th>Tipo</th><th>Descripcion</th></tr>
+  <tr><td>(ninguno)</td><td>Nota</td><td>Registrar una nota de texto</td></tr>
+  <tr><td><code>。</code></td><td>Etiqueta</td><td>Asignar etiquetas</td></tr>
+  <tr><td><code>ーー</code></td><td>Bloque de texto</td><td>Preservar texto multilinea tal cual</td></tr>
+  <tr><td><code>、</code></td><td>Separador</td><td>Dividir en un nuevo registro</td></tr>
+  <tr><td><code>、、</code></td><td>Separador (+1 seg)</td><td>Dividir e incrementar marca de tiempo en 1 segundo</td></tr>
+  <tr><td><code>？</code></td><td>Hora relacionada</td><td>Establecer fecha/hora relacionada</td></tr>
+  <tr><td><code>ーか</code></td><td>Registro numerico</td><td>Registrar un valor numerico</td></tr>
+  <tr><td><code>ーみ</code></td><td>Tarea</td><td>Crear una tarea</td></tr>
+  <tr><td><code>ーら</code></td><td>Estado de animo</td><td>Registrar valor de animo (0-10)</td></tr>
+  <tr><td><code>ーん</code></td><td>Gasto</td><td>Registrar informacion de gastos</td></tr>
+  <tr><td><code>ーち</code></td><td>Registro de tiempo (completo)</td><td>Registrar tiempo con inicio y fin</td></tr>
+  <tr><td><code>ーた</code></td><td>Inicio de registro de tiempo</td><td>Iniciar un registro de tiempo</td></tr>
+  <tr><td><code>ーえ</code></td><td>Fin de registro de tiempo</td><td>Finalizar un registro de tiempo coincidente</td></tr>
+  <tr><td><code>ーいえ</code></td><td>Fin de registro de tiempo (si existe)</td><td>Finalizar si existe (sin error)</td></tr>
+  <tr><td><code>ーたえ</code></td><td>Finalizar registro por etiqueta</td><td>Finalizar registro de tiempo por nombre de etiqueta</td></tr>
+  <tr><td><code>ーいたえ</code></td><td>Finalizar registro por etiqueta (si existe)</td><td>Finalizar por etiqueta si existe</td></tr>
+  <tr><td><code>ーう</code></td><td>Marcador</td><td>Registrar un marcador de URL</td></tr>
+  <tr><td><code>！</code></td><td>Guardar</td><td>Terminar documento y guardar</td></tr>
+</table>
+
+<h2>Detalle de cada sentencia</h2>
+
+<h3>1. Nota (sin prefijo)</h3>
+<p>Las lineas sin prefijo se convierten en texto de nota. Varias lineas consecutivas se combinan en una sola nota.</p>
+<pre>Hoy hizo buen tiempo
+Fui a pasear</pre>
+
+<h3>2. Etiqueta: <code>。</code></h3>
+<p>Prefije con <code>。</code> para especificar etiquetas. Separe varias etiquetas con <code>、</code>.</p>
+<pre>。diario、clima</pre>
+
+<h3>3. Bloque de texto: <code>ーー</code></h3>
+<p>Comience y termine con <code>ーー</code>. Todo el contenido intermedio se preserva tal cual.</p>
+<pre>ーー
+Este es un
+bloque de texto
+multilinea
+ーー</pre>
+
+<h3>4. Separador: <code>、</code></h3>
+<p>Divide en un nuevo registro. Todo lo que sigue pertenece a un nuevo registro.</p>
+<pre>Primera nota
+、
+Segunda nota</pre>
+
+<h3>5. Separador (+1 segundo): <code>、、</code></h3>
+<p>Igual que el separador pero incrementa la marca de tiempo en 1 segundo.</p>
+<pre>Primera nota
+、、
+Nota un segundo despues</pre>
+
+<h3>6. Hora relacionada: <code>？</code></h3>
+<p>Establece una hora relacionada. Formato: <code>？YYYY-MM-DD</code>, <code>？YYYY-MM-DD HH:MM</code> o <code>？YYYY-MM-DD HH:MM:SS</code></p>
+<pre>？2025-03-15 14:30</pre>
+
+<h3>7. Registro numerico: <code>ーか</code></h3>
+<p>Siguiente linea: titulo, luego siguiente linea: valor numerico.</p>
+<pre>ーか
+Peso
+65.5</pre>
+
+<h3>8. Tarea: <code>ーみ</code></h3>
+<p>Lineas siguientes: titulo, nombre del tablero, fecha limite, hora estimada de inicio, hora estimada de fin (todo opcional excepto el titulo).</p>
+<pre>ーみ
+Escribir informe
+Trabajo
+2025-03-20</pre>
+
+<h3>9. Estado de animo: <code>ーら</code></h3>
+<p>Siguiente linea: valor de animo (entero 0-10).</p>
+<pre>ーら
+7</pre>
+
+<h3>10. Gasto: <code>ーん</code></h3>
+<p>Siguiente linea: nombre de la tienda, luego pares de (nombre del articulo, importe) repetidos.</p>
+<pre>ーん
+Tienda de conveniencia
+Sandwich
+150
+Bebida
+120</pre>
+
+<h3>11. Registro de tiempo (completo): <code>ーち</code></h3>
+<p>Lineas siguientes: titulo, hora de inicio, hora de fin.</p>
+<pre>ーち
+Reunion
+2025-03-15 10:00
+2025-03-15 11:30</pre>
+
+<h3>12. Inicio de registro de tiempo: <code>ーた</code></h3>
+<p>Lineas siguientes: titulo, hora de inicio.</p>
+<pre>ーた
+Inicio de trabajo
+2025-03-15 09:00</pre>
+
+<h3>13. Fin de registro de tiempo: <code>ーえ</code></h3>
+<p>Siguiente linea: titulo. Busca un registro de tiempo iniciado coincidente y lo finaliza.</p>
+<pre>ーえ
+Inicio de trabajo</pre>
+
+<h3>14. Fin de registro de tiempo (si existe): <code>ーいえ</code></h3>
+<p>Igual que Fin de registro de tiempo pero no produce error si no existe un registro coincidente.</p>
+<pre>ーいえ
+Inicio de trabajo</pre>
+
+<h3>15. Finalizar registro por etiqueta: <code>ーたえ</code></h3>
+<p>Siguiente linea: nombre de la etiqueta. Busca y finaliza un registro de tiempo por su etiqueta.</p>
+<pre>ーたえ
+trabajo</pre>
+
+<h3>16. Finalizar registro por etiqueta (si existe): <code>ーいたえ</code></h3>
+<p>Igual que Finalizar registro por etiqueta pero no produce error si no existe un registro coincidente.</p>
+<pre>ーいたえ
+trabajo</pre>
+
+<h3>17. Marcador: <code>ーう</code></h3>
+<p>Siguiente linea: URL, luego siguiente linea: titulo.</p>
+<pre>ーう
+https://example.com
+Sitio favorito</pre>
+
+<h3>18. Guardar: <code>！</code></h3>
+<p>Termina el documento y ejecuta el proceso de guardado.</p>
+<pre>！</pre>
+
+<h2>Ejemplo completo</h2>
+
+<p>A continuacion se muestra un documento KFTL completo que combina varios tipos de sentencias.</p>
+
+<pre>Diario de hoy
+。diario、clima
+？2025-03-15
+、
+ーみ
+Ir de compras
+Personal
+、
+ーん
+Supermercado
+Manzanas
+200
+Leche
+180
+、
+ーた
+Lectura
+、
+ーら
+8
+！</pre>
+
+<div class="tip">
+  <strong>Consejo:</strong> Use <code>、</code> para separar varios registros dentro de un mismo documento. Agregar <code>！</code> al final activa el guardado automatico.
+</div>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

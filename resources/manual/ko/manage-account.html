@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>계정 관리 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>계정 관리</h1>
+  <p>사용자 계정을 관리하는 화면입니다. 관리자만 접근할 수 있습니다.</p>
+
+  <h2>상단 버튼</h2>
+  <p><strong>계정 추가</strong> 버튼을 누르면 새 계정을 만들 수 있습니다.</p>
+
+  <h2>계정 목록</h2>
+  <p>등록된 계정이 목록으로 표시됩니다. 각 계정 행에는 다음 항목이 포함됩니다:</p>
+  <table>
+    <tr><th>항목</th><th>설명</th></tr>
+    <tr><td>활성화/비활성화 체크박스</td><td>계정의 활성화 및 비활성화를 전환합니다</td></tr>
+    <tr><td>사용자 ID</td><td>계정의 사용자 ID를 표시합니다</td></tr>
+    <tr><td>저장소 할당 버튼</td><td>사용자에게 데이터 리포지토리를 할당합니다</td></tr>
+    <tr><td>비밀번호 재설정 버튼</td><td>비밀번호 재설정 링크를 생성합니다</td></tr>
+  </table>
+
+  <h2>하단 버튼</h2>
+  <p><strong>닫기</strong>: 계정 관리 화면을 닫습니다.</p>
+
+  <div class="tip">처음 생성된 계정이 관리자 계정이 됩니다.</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

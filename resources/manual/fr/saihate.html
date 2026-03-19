@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accueil - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Accueil</h1>
+  <p>Ecran d'accueil pour ajouter rapidement divers types d'enregistrements. Fournit des points d'entree pratiques pour la creation d'enregistrements.</p>
+
+  <h2>Boutons de la barre d'outils</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128260;</span> Recharger</td>
+      <td>Recharge l'ecran. Appui long pour forcer le rechargement.</td>
+    </tr>
+    <tr>
+      <td>Deconnexion</td>
+      <td>Se deconnecte du compte actuel et retourne a l'ecran de connexion.</td>
+    </tr>
+  </table>
+
+  <h2>FAB (Bouton d'action flottant) "+"</h2>
+  <p>En cliquant sur le bouton "+", un menu se deploie pour creer rapidement des enregistrements des 9 types suivants :</p>
+  <table>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr><td>Memo</td><td>Cree une note textuelle.</td></tr>
+    <tr><td>Temps+Memo</td><td>Cree une note avec horodatage.</td></tr>
+    <tr><td>Numerique</td><td>Enregistre des donnees numeriques.</td></tr>
+    <tr><td>Signet</td><td>Enregistre un signet URL.</td></tr>
+    <tr><td>Journal de temps</td><td>Demarre une session de suivi du temps.</td></tr>
+    <tr><td>Tache</td><td>Cree une nouvelle tache.</td></tr>
+    <tr><td>Depense</td><td>Enregistre des informations de depense.</td></tr>
+    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
+    <tr><td>Telechargement</td><td>Telecharge un fichier.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'ecran de saisie du bloc-notes, permettant une saisie par lots rapide.
+  </div>
+
+  <div class="tip">
+    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

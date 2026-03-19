@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memo Pad - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Memo Pad</h1>
+  <p>
+    The Memo Pad uses a powerful text-based format for quickly recording multiple life events at once. This screen provides a text input area where you write formatted text and submit it to create records in batch.
+  </p>
+
+  <h2>Toolbar</h2>
+  <table>
+    <tr><th>Icon</th><th>Action</th></tr>
+    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+  </table>
+
+  <h2>Screen Elements</h2>
+  <table>
+    <tr><th>Element</th><th>Description</th></tr>
+    <tr><td>Text Input Area</td><td>The main text area where you write Memo Pad-formatted text. Each line is a statement.</td></tr>
+    <tr><td>Template Button</td><td>Insert a predefined Memo Pad template into the text area. Templates are configured in Settings.</td></tr>
+    <tr><td>Save Button</td><td>Click the Save button to submit the Memo Pad text to the server. All valid statements are parsed and saved as records.</td></tr>
+  </table>
+
+  <h2>Memo Pad Syntax Overview</h2>
+  <p>The Memo Pad uses a line-structured text format. Each line represents a statement that creates or modifies a record. Lines are processed in order from top to bottom.</p>
+
+  <h3>Basic Record Types</h3>
+  <table>
+    <tr><th>Prefix / Syntax</th><th>Creates</th><th>Example</th></tr>
+    <tr><td>(plain text)</td><td>Memo</td><td><code>Had lunch at the new cafe</code></td></tr>
+    <tr><td><code>http://</code> or <code>https://</code></td><td>Bookmark</td><td><code>https://example.com</code></td></tr>
+    <tr><td><code>start </code></td><td>Start Time Log</td><td><code>start Meeting</code></td></tr>
+    <tr><td><code>end </code></td><td>End Time Log</td><td><code>end Meeting</code></td></tr>
+    <tr><td><code>board/</code></td><td>Task</td><td><code>Work/Fix the login bug</code></td></tr>
+    <tr><td><code>lantana </code></td><td>Mood</td><td><code>lantana 7</code></td></tr>
+    <tr><td><code>nlog </code></td><td>Expense</td><td><code>nlog 1500 Lunch</code></td></tr>
+    <tr><td><code>kc </code></td><td>Numeric</td><td><code>kc 3 Cups of coffee</code></td></tr>
+  </table>
+
+  <h3>Modifier Statements</h3>
+  <table>
+    <tr><th>Prefix</th><th>Effect</th><th>Example</th></tr>
+    <tr><td><code>tag </code></td><td>Add tag to previous record</td><td><code>tag work</code></td></tr>
+    <tr><td><code>text </code></td><td>Add text/note to previous record</td><td><code>text Additional details here</code></td></tr>
+    <tr><td><code>+Ns</code></td><td>Advance time by N seconds</td><td><code>+30s</code></td></tr>
+  </table>
+
+  <h3>Example</h3>
+  <pre>start Deep Work
+Had a productive coding session
+tag programming
+tag work
++3600s
+end Deep Work
+nlog 500 Coffee break snack
+lantana 8</pre>
+  <p>This example starts a "Deep Work" timer, records a memo with two tags, advances 1 hour, ends the timer, logs an expense, and records a mood of 8.</p>
+
+  <div class="tip">
+    <strong>Tip:</strong> Use the Template button to insert frequently used Memo Pad patterns. Templates can be configured in the application settings and are a great way to speed up daily logging.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Lines are processed sequentially. Tags and text modifiers always apply to the most recently created record above them.
+  </div>
+
+  <h2>Related Documents</h2><p><a href="kftl-syntax.html">Memo Pad Syntax Reference →</a></p>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

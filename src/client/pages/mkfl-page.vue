@@ -19,7 +19,16 @@
             </v-toolbar-title>
             <v-spacer />
             <v-divider vertical />
-            <v-btn icon="mdi-cog" :disabled="!application_config.is_loaded" @click="show_application_config_dialog()" />
+            <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-help-circle-outline" @click="help_dialog?.show()" />
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_SETTINGS')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-cog" :disabled="!application_config.is_loaded" @click="show_application_config_dialog()" />
+                </template>
+            </v-tooltip>
         </v-app-bar>
         <v-main class="main">
             <div class="overlay_target">
@@ -48,6 +57,7 @@
                 @received_errors="onApplicationConfigReceivedErrors"
                 @received_messages="onApplicationConfigReceivedMessages"
                 @requested_reload_application_config="load_application_config" ref="application_config_dialog" />
+            <HelpDialog screen_name="mkfl" ref="help_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -65,10 +75,14 @@
     </div>
 </template>
 <script lang="ts" setup>
+import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
+import HelpDialog from './dialogs/help-dialog.vue'
 import MkflView from './views/mkfl-view.vue'
 import { useMkflPage } from '@/classes/use-mkfl-page'
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const {
     // Template refs

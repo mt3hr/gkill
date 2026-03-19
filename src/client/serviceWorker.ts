@@ -29,6 +29,7 @@ registerRoute(
       /^\/$/,        // "/" は除外
       /^\/api\/.*/,  // "/api/..." は除外
       /^\/files\/.*/,  // "/files/..." は除外
+      /^\/resources\/manual\/.*/,  // "/resources/manual/..." は除外（ヘルプHTML）
     ],
   }),
 )

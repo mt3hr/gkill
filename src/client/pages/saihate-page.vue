@@ -4,10 +4,19 @@
             <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
             <v-toolbar-title>{{ i18n.global.t("SAIHATE_PAGE_TITLE") }}</v-toolbar-title>
             <v-spacer />
-            <v-btn icon @click="() => reload_repositories(false)" v-long-press="() => reload_repositories(true)"
-                variant="text">
-                <v-icon>mdi-reload</v-icon>
-            </v-btn>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_RELOAD')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon @click="() => reload_repositories(false)" v-long-press="() => reload_repositories(true)"
+                        variant="text">
+                        <v-icon>mdi-reload</v-icon>
+                    </v-btn>
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon="mdi-help-circle-outline" @click="help_dialog?.show()" />
+                </template>
+            </v-tooltip>
             <v-btn dark @click="() => show_confirm_logout_dialog(false)"
                 v-long-press="() => show_confirm_logout_dialog(true)">
                 {{ i18n.global.t("LOGOUT_TITLE") }}
@@ -105,6 +114,7 @@
                 ref="upload_file_dialog" />
             <ConfirmLogoutDialog @requested_logout="(close_database: boolean) => logout(close_database)"
                 ref="confirm_logout_dialog" />
+            <HelpDialog screen_name="saihate" ref="help_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -123,6 +133,7 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from './dialogs/add-kc-dialog.vue'
@@ -135,9 +146,12 @@ import kftlDialog from './dialogs/kftl-dialog.vue'
 import mkflDialog from './dialogs/mkfl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import ConfirmLogoutDialog from './dialogs/confirm-logout-dialog.vue'
+import HelpDialog from './dialogs/help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useSaihatePage } from '@/classes/use-saihate-page'
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const {
     // Template refs

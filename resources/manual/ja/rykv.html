@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ライフログビュー画面 - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>ライフログビュー画面</h1>
+  <p>ライフログ全体を画像サムネイル付きで一覧表示する画面です。複数のフィルター列を使って、さまざまな条件でデータを同時に閲覧できます。</p>
+
+  <h2>ツールバーボタン</h2>
+  <table>
+    <tr>
+      <th>ボタン</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9776;</span> サイドバー</td>
+      <td>検索・フィルター用サイドバーの表示/非表示を切り替えます。</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128196;</span> 詳細表示</td>
+      <td>選択した記録の詳細パネルの表示/非表示を切り替えます。</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128202;</span> 集計ビュー</td>
+      <td>統計・分析ビューの表示/非表示を切り替えます。</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128197;</span> カレンダー</td>
+      <td>記録数カレンダーヒートマップの表示/非表示を切り替えます。</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128506;</span> 地図</td>
+      <td>GPSログの地図表示の表示/非表示を切り替えます。</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> 設定</td>
+      <td>アプリケーション設定画面を開きます。</td>
+    </tr>
+  </table>
+
+  <h2>主な機能</h2>
+
+  <h3>画像サムネイル付き一覧表示</h3>
+  <p>記録を複数列のグリッドレイアウトで表示します。画像やファイルが含まれる記録はサムネイルが表示されます。列数は設定画面で1〜10列に変更可能です。</p>
+
+  <h3>サイドバー（フィルター・検索）</h3>
+  <p>サイドバーで以下の条件を指定して記録を絞り込めます。</p>
+  <ul>
+    <li>テキスト検索（キーワード）</li>
+    <li>タグによるフィルター</li>
+    <li>期間の指定</li>
+    <li>記録タイプの選択</li>
+    <li>リポジトリの選択</li>
+  </ul>
+
+  <h3>フィルター列の追加</h3>
+  <p>「+」ボタンで新しいフィルター列を追加できます。異なるフィルター条件の結果を横に並べて比較できます。</p>
+
+  <h3>詳細パネル</h3>
+  <p>記録を選択すると、詳細パネルにその記録の全情報が表示されます。</p>
+
+  <h3>集計ビュー統計</h3>
+  <p>記録データの統計・分析結果を表示します。記録の傾向やパターンを把握できます。</p>
+
+  <h3>カレンダーヒートマップ</h3>
+  <p>日別の記録数をカレンダー形式で表示します。色の濃さで記録量を直感的に把握できます。</p>
+
+  <h3>GPS地図表示</h3>
+  <p>GPSログデータを地図上に表示します。移動経路や位置情報を視覚的に確認できます。Google Maps APIキーの設定が必要です。</p>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 画像列数は設定画面で変更できます。スマートフォンでは1〜2列、PCでは3〜5列がおすすめです。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> フィルター列を複数追加して、異なる条件の記録を並べて比較すると便利です。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 表示期間のデフォルト値は設定画面の「ライフログビューデフォルト表示期間」で変更できます。
+  </div>
+
+  <div class="tip">
+    <strong>ショートカット:</strong> この画面でEnterキーを押すと、メモ帳ダイアログが開きます。すばやく記録を追加したいときに便利です。
+  </div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

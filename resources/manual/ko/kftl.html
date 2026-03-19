@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메모장 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>메모장</h1>
+  <p>메모장 구문을 사용하여 생활 이벤트를 기록하는 메모장 화면입니다. 메모장 구문은 다양한 기록을 일괄 입력할 수 있는 행 구조 텍스트 형식입니다.</p>
+
+  <h2>툴바 버튼</h2>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> 설정</td>
+      <td>애플리케이션 설정 화면을 엽니다.</td>
+    </tr>
+  </table>
+
+  <h2>화면 요소</h2>
+  <table>
+    <tr>
+      <th>요소</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>텍스트 입력 영역</td>
+      <td>메모장 구문으로 기록 내용을 입력하는 영역입니다.</td>
+    </tr>
+    <tr>
+      <td>템플릿 버튼</td>
+      <td>미리 정의된 메모장 템플릿 텍스트를 삽입합니다.</td>
+    </tr>
+    <tr>
+      <td>저장 버튼</td>
+      <td>저장 버튼을 클릭하여 입력된 메모장 텍스트를 분석하고 저장합니다.</td>
+    </tr>
+  </table>
+
+  <h2>메모장 구문에 대하여</h2>
+  <p>메모장 구문은 gkill 고유의 텍스트 형식으로, 하나의 텍스트에서 여러 기록을 일괄 생성할 수 있습니다. 각 행은 하나의 명령 또는 데이터 항목을 나타냅니다.</p>
+
+  <div class="tip">
+    <strong>팁:</strong> 템플릿 버튼을 사용하면 메모장 구문을 외우지 않아도 자주 사용하는 입력 형식을 빠르게 삽입할 수 있습니다.
+  </div>
+
+  <h2>관련 문서</h2><p><a href="kftl-syntax.html">메모장 구문 참조 →</a></p>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

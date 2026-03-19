@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gesti&oacute;n de cuentas - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Gesti&oacute;n de cuentas</h1>
+  <p>Esta pantalla gestiona las cuentas de usuario. Solo los administradores pueden acceder.</p>
+
+  <h2>Bot&oacute;n superior</h2>
+  <p>Pulse el bot&oacute;n <strong>A&ntilde;adir cuenta</strong> para crear una nueva cuenta.</p>
+
+  <h2>Lista de cuentas</h2>
+  <p>Las cuentas registradas se muestran en una lista. Cada fila de cuenta contiene los siguientes elementos:</p>
+  <table>
+    <tr><th>Elemento</th><th>Descripci&oacute;n</th></tr>
+    <tr><td>Casilla de activar/desactivar</td><td>Alterna el estado de la cuenta entre activada y desactivada</td></tr>
+    <tr><td>ID de usuario</td><td>Muestra el ID de usuario de la cuenta</td></tr>
+    <tr><td>Bot&oacute;n de asignaci&oacute;n de almacenamiento</td><td>Asigna repositorios de datos al usuario</td></tr>
+    <tr><td>Bot&oacute;n de restablecimiento de contrase&ntilde;a</td><td>Genera un enlace de restablecimiento de contrase&ntilde;a</td></tr>
+  </table>
+
+  <h2>Bot&oacute;n inferior</h2>
+  <p><strong>Cerrar</strong>: Cierra la pantalla de gesti&oacute;n de cuentas.</p>
+
+  <div class="tip">La primera cuenta creada se convierte en la cuenta de administrador.</div>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

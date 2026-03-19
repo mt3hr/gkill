@@ -740,5 +740,14 @@
     "SUCCESS_OPEN_FOLDER_MESSAGE": "Carpeta abierta",
     "ADD_TAG_FROM_HISTORY_TITLE": "Agregar etiqueta del historial",
     "CONFIRM_UNKNOWN_TAG_TITLE": "Confirmación",
-    "CONFIRM_UNKNOWN_TAG_MESSAGE": "Las siguientes etiquetas no están en la estructura de etiquetas. ¿Está seguro de que desea agregarlas?"
+    "CONFIRM_UNKNOWN_TAG_MESSAGE": "Es una etiqueta nueva. ¿Desea agregarla?",
+    "HELP_TITLE": "Ayuda",
+    "TOOLTIP_HELP": "Mostrar Ayuda",
+    "TOOLTIP_SETTINGS": "Configuración",
+    "TOOLTIP_TOGGLE_DETAIL_VIEW": "Alternar Vista Detallada",
+    "TOOLTIP_TOGGLE_CALENDAR": "Alternar Calendario",
+    "TOOLTIP_TOGGLE_DNOTE": "Alternar Dnote",
+    "TOOLTIP_TOGGLE_MAP": "Alternar Mapa",
+    "TOOLTIP_TOGGLE_SIDEBAR": "Alternar Barra Lateral",
+    "TOOLTIP_RELOAD": "Recargar"
 }
