@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Tareas</span></nav>
   <h1>Tablero de tareas</h1>
   <p>Pantalla de gestion de tareas estilo Kanban. Permite gestionar visualmente el estado y el progreso de las tareas.</p>
 
@@ -46,7 +52,7 @@
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Calendario</td>
-      <td>Muestra la vista de mapa de calor del calendario.</td>
+      <td>Muestra/oculta la vista de calendario.</td>
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> Ajustes</td>
@@ -59,7 +65,7 @@
     <li><strong>Columnas del tablero:</strong> Las tareas se muestran en columnas por estado; puede cambiar el estado arrastrando y soltando.</li>
     <li><strong>Filtros de la barra lateral:</strong> Filtra tareas por etiquetas, tablero, estado y otras condiciones.</li>
     <li><strong>Panel de detalles:</strong> Al seleccionar una tarea, se muestra la informacion detallada y las opciones de edicion.</li>
-    <li><strong>Mapa de calor del calendario:</strong> Muestra la densidad de actividad de tareas en formato de calendario.</li>
+    <li><strong>Vista de calendario:</strong> Permite navegar por las tareas en formato de calendario.</li>
   </ul>
 
   <div class="tip">
@@ -69,6 +75,11 @@
   <div class="tip">
     <strong>Atajo:</strong> Presione Enter en esta pantalla para abrir el diálogo del bloc de notas. Es conveniente para agregar registros rápidamente.
   </div>
+  <h2>Documentos Relacionados</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a></li>
+    <li><a href="rykv.html">Vista de Registro de Vida</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

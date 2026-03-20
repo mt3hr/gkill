@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>设置</span></nav>
   <h1>应用设置</h1>
   <p>管理应用程序全局设置和数据结构的界面。您可以调整显示偏好、行为选项和外部集成。</p>
 
@@ -46,7 +52,7 @@
     </tr>
     <tr>
       <td>注销</td>
-      <td>结束当前会话并注销。长按可显示其他选项。</td>
+      <td>结束当前会话并注销。</td>
     </tr>
   </table>
 
@@ -204,6 +210,14 @@
   <div class="tip">
     <strong>提示：</strong>要使用GPS地图功能，需要在Google Cloud Console中启用Maps JavaScript API并输入API密钥。
   </div>
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="server-config.html">服务器设置（仅管理员）</a></li>
+    <li><a href="manage-account.html">账户管理（仅管理员）</a></li>
+    <li><a href="dnote.html">统计视图</a></li>
+    <li><a href="ryuu.html">关联信息</a></li>
+    <li><a href="kftl-template-struct.html">模板结构</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

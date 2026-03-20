@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Vue journal de vie</span></nav>
   <h1>Vue du journal de vie</h1>
   <p>Ecran pour parcourir les journaux de vie avec des miniatures. Prend en charge plusieurs modes d'affichage et fonctions de filtrage.</p>
 
@@ -78,6 +84,12 @@
   <div class="tip">
     <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
   </div>
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="kyou.html">Détails de l'enregistrement</a></li>
+    <li><a href="dnote.html">Vue d'agrégation</a></li>
+    <li><a href="ryuu.html">Informations associées</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

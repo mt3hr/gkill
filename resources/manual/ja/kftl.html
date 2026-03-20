@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>メモ帳画面</span></nav>
   <h1>メモ帳画面</h1>
   <p>メモ帳構文を使ってライフログを記録する画面です。テキストベースで複数の記録タイプを一括入力できます。</p>
 
@@ -88,7 +94,7 @@
   </div>
 
   <div class="tip">
-    <strong>ヒント:</strong> KFTL構文を覚えなくても、テンプレートを使えばすぐに記録を始められます。
+    <strong>ヒント:</strong> メモ帳構文を覚えなくても、テンプレートを使えばすぐに記録を始められます。
   </div>
 
   <h2>関連ドキュメント</h2><p><a href="kftl-syntax.html">メモ帳記法リファレンス →</a></p>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorial - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Tutorial</span></nav>
+  <h1>Tutorial</h1>
+  <p>This tutorial explains how to use gkill, divided into a Basics section and an Advanced section. If you are new to gkill, please read through the Basics section first.</p>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Basics</h2>
+
+  <h2>1. Logging In to gkill</h2>
+  <h3>First Launch</h3>
+  <p>When you launch gkill for the first time, the account registration screen will appear automatically.</p>
+  <ol>
+    <li>Enter a user ID (this will be your account name).</li>
+    <li>Enter a password, then enter it again for confirmation.</li>
+    <li>Set an administrator password (used for server management).</li>
+    <li>Press the "Register" button to create your account.</li>
+    <li>You will be redirected to the login screen. Log in with the account you just created.</li>
+  </ol>
+
+  <h3>Regular Login</h3>
+  <ol>
+    <li>Enter your account user ID in the user ID field.</li>
+    <li>Enter your password in the password field.</li>
+    <li>Click the "Login" button or press the Enter key.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> Your login session is valid for 30 days. You do not need to log in again until it expires.
+  </div>
+
+  <h2>2. Adding Records</h2>
+  <p>gkill allows you to record various types of life logs. Add records using the "+" button at the bottom right of the screen.</p>
+
+  <table>
+    <tr><th>Record Type</th><th>Purpose</th><th>Example</th></tr>
+    <tr><td>Memo</td><td>Save a text memo</td><td>"The weather was nice today"</td></tr>
+    <tr><td>Time Stamp</td><td>Record time (start/end)</td><td>"Meeting 10:00-11:30"</td></tr>
+    <tr><td>Task</td><td>Manage things to do</td><td>"Write the report"</td></tr>
+    <tr><td>Expense</td><td>Record spending</td><td>"Convenience store: rice ball 150 yen"</td></tr>
+    <tr><td>Mood</td><td>Record mood as a value from 0 to 10</td><td>"7"</td></tr>
+    <tr><td>Numeric Value</td><td>Record numeric data</td><td>"Weight: 65.5"</td></tr>
+    <tr><td>Bookmark</td><td>Save a URL</td><td>"https://example.com"</td></tr>
+    <tr><td>File</td><td>Upload images or files</td><td>Photos, PDFs, etc.</td></tr>
+  </table>
+
+  <h3>How to Add a Record</h3>
+  <ol>
+    <li>Tap the "+" button at the bottom right of the screen.</li>
+    <li>Select the type of record you want to add.</li>
+    <li>Fill in the input form with the content.</li>
+    <li>Press the "Save" button to save the record.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> Using the Notepad screen, you can enter multiple records at once as text. See "3. Entering Multiple Records at Once with Notepad" below for details.
+  </div>
+
+  <h2>3. Entering Multiple Records at Once with Notepad</h2>
+  <p>On the Notepad screen, you can create multiple records at once simply by writing text.</p>
+
+  <h3>Basic Usage</h3>
+  <ol>
+    <li>Open the Notepad screen (select "Notepad" from the "+" button menu).</li>
+    <li>Enter the content you want to record in the text area.</li>
+    <li>Press the "Save" button (you can also type <code>!</code> and submit).</li>
+  </ol>
+
+  <h3>Entering with Templates</h3>
+  <p>Using templates, you can insert boilerplate text with a single tap.</p>
+  <ol>
+    <li>On the Notepad screen, select a template from the template list.</li>
+    <li>The template content will be inserted into the text area.</li>
+    <li>Edit the content as needed, then save.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> It is convenient to pre-register frequently used record patterns as templates. You can manage them from "Template Structure" in the settings screen.
+  </div>
+
+  <h2>4. Viewing and Searching Records</h2>
+  <p>On the Life Log View screen, you can display and search past records.</p>
+
+  <h3>Basic Operations</h3>
+  <ol>
+    <li>Open the Life Log View screen from the navigation at the top of the screen.</li>
+    <li>Records are displayed in chronological order.</li>
+    <li>Change the date to view records for a specific day.</li>
+  </ol>
+
+  <h3>Search and Filtering</h3>
+  <ul>
+    <li><strong>Filter by tag:</strong> Display only records with a specific tag.</li>
+    <li><strong>Date range:</strong> Narrow down the period by specifying a start and end date.</li>
+    <li><strong>Text search:</strong> Search for records containing specific keywords.</li>
+  </ul>
+  <div class="tip">
+    <strong>Tip:</strong> Reducing the "Life Log View display days" setting will speed up loading.
+  </div>
+
+  <h2>5. Managing Tasks</h2>
+  <p>On the Task screen, you can manage tasks in a Kanban board format.</p>
+
+  <h3>Creating a Task</h3>
+  <ol>
+    <li>Open the Task screen.</li>
+    <li>Add a task from the "+" button.</li>
+    <li>Enter the title, board name, deadline, etc.</li>
+    <li>Once saved, the task will appear on the specified board.</li>
+  </ol>
+
+  <h3>Completing a Task</h3>
+  <ol>
+    <li>Tap a completed task to open its details.</li>
+    <li>Add a checkmark to mark the task as complete.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> Creating multiple boards for categories like "Work," "Personal," and "Shopping" makes it easier to stay organized.
+  </div>
+
+  <h2>6. Changing Settings</h2>
+  <p>You can customize the application behavior from the settings screen.</p>
+
+  <h3>How to Open Settings</h3>
+  <ol>
+    <li>Tap the gear icon in the toolbar at the top of the screen.</li>
+    <li>The settings screen will open.</li>
+  </ol>
+
+  <h3>Common Settings</h3>
+  <table>
+    <tr><th>Setting</th><th>Description</th></tr>
+    <tr><td>Language</td><td>Change the UI display language.</td></tr>
+    <tr><td>Dark Theme</td><td>Switch to a dark color scheme.</td></tr>
+    <tr><td>Startup Screen</td><td>Select the page to display first after login.</td></tr>
+    <tr><td>Life Log View Image Columns</td><td>Adjust the number of image thumbnail columns.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> After changing settings, press the "Apply" button. Pressing "Cancel" will discard your changes.
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Advanced</h2>
+
+  <h2>7. Mastering Notepad Syntax</h2>
+  <p>Using Notepad syntax, you can create various types of records all at once simply by adding a prefix at the beginning of each line.</p>
+
+  <h3>Main Prefixes</h3>
+  <table>
+    <tr><th>Prefix</th><th>Type</th><th>Example</th></tr>
+    <tr><td>(none)</td><td>Memo</td><td><code>The weather was nice today</code></td></tr>
+    <tr><td><code>.</code></td><td>Tag</td><td><code>.diary, weather</code></td></tr>
+    <tr><td><code>-mi</code></td><td>Task</td><td><code>-mi</code> followed by the title on the next line</td></tr>
+    <tr><td><code>-ta</code></td><td>Time Stamp Start</td><td><code>-ta</code> followed by the title on the next line</td></tr>
+    <tr><td><code>-e</code></td><td>Time Stamp End</td><td><code>-e</code> followed by the title on the next line</td></tr>
+    <tr><td><code>-n</code></td><td>Expense</td><td><code>-n</code> followed by store name, item, amount on subsequent lines</td></tr>
+    <tr><td><code>-ra</code></td><td>Mood</td><td><code>-ra</code> followed by a value (0-10) on the next line</td></tr>
+    <tr><td><code>,</code></td><td>Separator</td><td>Splits into the next record</td></tr>
+    <tr><td><code>!</code></td><td>Save</td><td>Finishes input and saves</td></tr>
+  </table>
+
+  <h3>Example of Batch Input for Multiple Records</h3>
+  <pre>Today's diary
+.diary
+,
+-mi
+Go shopping
+,
+-n
+Supermarket
+Apples
+200
+Milk
+180
+,
+-ra
+8
+!</pre>
+  <p>In this example, four records are created at once: a memo, a task, an expense, and a mood entry.</p>
+  <div class="tip">
+    <strong>Tip:</strong> For detailed syntax, see the <a href="kftl-syntax.html">Notepad Syntax Reference</a>.
+  </div>
+
+  <h2>8. Using Templates Effectively</h2>
+  <p>By saving frequently used Notepad syntax patterns as templates, you can save yourself the trouble of typing them every time.</p>
+
+  <h3>Managing Templates</h3>
+  <ol>
+    <li>Open the settings screen.</li>
+    <li>Click the "Template Structure" button.</li>
+    <li>You can add, edit, and delete templates.</li>
+  </ol>
+
+  <h3>Example of Creating a Template</h3>
+  <p>For example, to create a daily diary template:</p>
+  <pre>.diary
+,
+-ra
+</pre>
+  <p>Using this template, a diary framework is inserted with a single tap on the Notepad screen, and you only need to add the memo content and mood value to complete the record.</p>
+  <div class="tip">
+    <strong>Tip:</strong> Using folders to organize templates by category makes them easier to find.
+  </div>
+
+  <h2>9. Recording Time with Time Stamps</h2>
+  <p>Using the time stamp feature, you can accurately record work time and activity durations.</p>
+
+  <h3>Basic Time Stamp Operations</h3>
+  <ol>
+    <li><strong>Start:</strong> Use the <code>-ta</code> prefix in Notepad, or add a time stamp from the "+" menu. Specify a title and start time.</li>
+    <li><strong>End:</strong> Use the <code>-e</code> prefix in Notepad, or enter the end time in the time stamp edit screen. The time stamp with the matching title will be ended.</li>
+  </ol>
+
+  <h3>Managing Active Time Stamps</h3>
+  <p>On the time stamp list screen, you can check currently active time stamps.</p>
+  <ul>
+    <li>Active time stamps are displayed in a list.</li>
+    <li>Tap to set the end time.</li>
+  </ul>
+  <div class="tip">
+    <strong>Tip:</strong> Using the Notepad syntax <code>-ie</code>, no error will occur even if there is no matching time stamp. You can safely end without existence checking.
+  </div>
+
+  <h2>10. Analyzing Data with the Aggregation View</h2>
+  <p>On the Aggregation View screen, you can visualize recorded data with graphs and summary tables.</p>
+
+  <h3>How to Use the Aggregation View</h3>
+  <ol>
+    <li>Open the Aggregation View screen from the navigation.</li>
+    <li>Select the aggregation type and period.</li>
+    <li>Data will be displayed as graphs and tables.</li>
+  </ol>
+
+  <h3>Aggregation Settings</h3>
+  <p>You can manage aggregation methods and view configurations from the "Aggregation View" button in the settings screen.</p>
+  <div class="tip">
+    <strong>Tip:</strong> Viewing the trends of mood values and expense data over time can reveal patterns in your daily life.
+  </div>
+
+  <h2>11. Using External Integrations</h2>
+
+  <h3>Recording URLs with Bookmarklets</h3>
+  <p>By registering a bookmarklet in your browser's bookmark bar, you can save the web page you are viewing to gkill with a single click.</p>
+  <ol>
+    <li>Copy the URL displayed in "Bookmarklet Address" in the settings screen.</li>
+    <li>Register it as a new bookmark in your browser's bookmark bar.</li>
+    <li>When viewing a web page you want to save, click the registered bookmark.</li>
+  </ol>
+
+  <h3>GPS Recording and Map Display</h3>
+  <p>If you are recording GPS logs, you can display your movement history on a map.</p>
+  <ol>
+    <li>Set the "Google Maps API Key" in the settings screen.</li>
+    <li>If GPS data has been recorded, the map display will be available in the Life Log View.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> To obtain a Google Maps API key, enable the Maps JavaScript API in the Google Cloud Console.
+  </div>
+
+  <h2>12. Data Backup and Management</h2>
+
+  <h3>Server Settings (For Administrators)</h3>
+  <p>When logged in with an administrator account, a "Server Settings" button will appear in the settings screen.</p>
+  <ul>
+    <li><strong>Port Number:</strong> Change the port the server listens on (default: 9999).</li>
+    <li><strong>TLS Settings:</strong> Enable HTTPS communication.</li>
+    <li><strong>Access Restriction:</strong> Restrict access to local only.</li>
+  </ul>
+
+  <h3>Account Management</h3>
+  <p>Administrators can add and delete user accounts on the "Account Management" screen.</p>
+
+  <h3>Data Backup</h3>
+  <p>All gkill data is stored in the home directory (default: <code>~/gkill</code>). Backing up this directory will preserve all your data.</p>
+  <div class="tip">
+    <strong>Tip:</strong> It is recommended to back up the home directory regularly. The <code>datas/</code> and <code>configs/</code> directories are particularly important.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="getting-started.html">Getting Started (Initial Setup Guide)</a></li>
+    <li><a href="kftl-syntax.html">Notepad Syntax Reference</a></li>
+    <li><a href="kftl-template-struct.html">Template Structure</a></li>
+    <li><a href="application-config.html">Settings Screen</a></li>
+    <li><a href="mi.html">Task Screen</a></li>
+    <li><a href="rykv.html">Life Log View Screen</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

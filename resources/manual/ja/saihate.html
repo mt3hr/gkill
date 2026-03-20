@@ -24,11 +24,17 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>さいはて画面</span></nav>
   <h1>さいはて画面</h1>
-  <p>ホーム画面です。各種記録をすばやく追加するためのハブとして機能します。</p>
+  <p>ロック画面からでも安全に記録を追加できる画面です。各種記録をすばやく追加するためのハブとして機能します。</p>
 
   <h2>ツールバーボタン</h2>
   <table>
@@ -38,11 +44,11 @@
     </tr>
     <tr>
       <td><span class="icon">&#128260;</span> 再読み込み</td>
-      <td>データを再読み込みします。長押しすると強制再読み込みを実行します。</td>
+      <td>データを再読み込みします。<strong>長押し:</strong> 強制再読み込みを実行します。</td>
     </tr>
     <tr>
       <td>ログアウト</td>
-      <td>ログアウトします。長押しするとオプションが表示されます。</td>
+      <td>ログアウトします。</td>
     </tr>
   </table>
 
@@ -103,7 +109,7 @@
   </table>
 
   <div class="tip">
-    <strong>ヒント:</strong> 「+」ボタンを長押しすると、メモ帳が直接開きます。素早くメモを取りたいときに便利です。
+    <strong>長押し:</strong> 「+」ボタンを長押しすると、メモ帳が直接開きます。素早くメモを取りたいときに便利です。
   </div>
 
   <div class="tip">
@@ -113,6 +119,17 @@
   <div class="tip">
     <strong>ショートカット:</strong> この画面でEnterキーを押すと、メモ帳ダイアログが開きます。すばやく記録を追加したいときに便利です。
   </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="getting-started.html">はじめに</a></li>
+    <li><a href="kftl.html">メモ帳画面</a></li>
+    <li><a href="mkfl.html">打刻メモ帳画面</a></li>
+    <li><a href="mi.html">タスク画面</a></li>
+    <li><a href="rykv.html">ライフログビュー画面</a></li>
+    <li><a href="plaing.html">進行中画面</a></li>
+    <li><a href="application-config.html">設定画面</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Life Log View</span></nav>
   <h1>Life Log View</h1>
   <p>
     The Life Log View is the primary life-log browsing screen. It displays all your recorded events as a timeline of image thumbnails and text entries, allowing you to review and explore your history.
@@ -38,7 +44,7 @@
     <tr><td><span class="icon">&#9776;</span> Sidebar</td><td>Show or hide the filter sidebar for narrowing down displayed records.</td></tr>
     <tr><td><span class="icon">&#128196;</span> Detail</td><td>Show or hide the detail panel for the currently selected record.</td></tr>
     <tr><td><span class="icon">&#128202;</span> Summary View Statistics</td><td>Show or hide the Summary View analytics panel with charts and statistics about your records.</td></tr>
-    <tr><td><span class="icon">&#128197;</span> Calendar</td><td>Show or hide the calendar heatmap for visual date-based navigation.</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendar</td><td>Show or hide the calendar view for date-based navigation.</td></tr>
     <tr><td><span class="icon">&#128506;</span> Map</td><td>Show or hide the GPS map view to see records plotted on a geographic map.</td></tr>
     <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
   </table>
@@ -74,9 +80,6 @@
     <li>Activity patterns</li>
   </ul>
 
-  <h2>Calendar Heatmap</h2>
-  <p>The calendar view displays a heatmap where each day is colored according to the number of records. Click any date cell to jump to that day's records.</p>
-
   <h2>GPS Map View</h2>
   <p>If GPS data is available (from GPX logs or geotagged files), records are plotted on an interactive map. This requires a Google Maps API key configured in Settings.</p>
 
@@ -91,6 +94,13 @@
   <div class="tip">
     <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
   </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="kyou.html">Record Details</a></li>
+    <li><a href="dnote.html">Aggregation View</a></li>
+    <li><a href="ryuu.html">Related Info</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

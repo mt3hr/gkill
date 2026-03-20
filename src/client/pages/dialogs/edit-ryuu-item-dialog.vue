@@ -10,7 +10,10 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -23,6 +26,7 @@
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
           @requested_close_dialog="hide()" />
         </v-card>
+        <HelpDialog screen_name="ryuu" ref="help_dialog" />
 </div>
     </div>
   </Teleport>
@@ -31,6 +35,7 @@
 <script setup lang="ts">
 import { ref, type Ref } from 'vue'
 import EditRyuuItemView from '../views/edit-ryuu-item-view.vue';
+import HelpDialog from './help-dialog.vue'
 import type EditRyuuItemDialogEmits from './edit-ryuu-item-dialog-emits';
 import type EditRyuuItemDialogProps from './edit-ryuu-item-dialog-props';
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query';
@@ -46,6 +51,7 @@ const ui = useFloatingDialog("edit-ryuu-item-dialog", {
 })
 
 
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const model_value = defineModel<RelatedKyouQuery>()
 defineExpose({ show, hide })
 defineProps<EditRyuuItemDialogProps>()

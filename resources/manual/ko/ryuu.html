@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관련 정보 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>관련 정보</span></nav>
+  <h1>관련 정보</h1>
+  <p>라이프로그 기록에 대해 관련된 다른 기록을 자동으로 검색·표시하기 위한 조건을 정의하는 화면입니다. 정의별로 쿼리를 설정하여 기록의 관련성을 시각화할 수 있습니다.</p>
+
+  <h2>정의 관리</h2>
+  <table>
+    <tr>
+      <th>요소</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>탭</td>
+      <td>각 정의가 탭으로 표시됩니다. 탭을 클릭하여 전환합니다.</td>
+    </tr>
+    <tr>
+      <td>정의 이름</td>
+      <td>텍스트 필드에서 정의의 이름을 편집할 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>＋ 버튼(탭 옆)</td>
+      <td>새 정의를 추가합니다.</td>
+    </tr>
+    <tr>
+      <td>삭제 버튼</td>
+      <td>현재 표시 중인 정의를 삭제합니다.</td>
+    </tr>
+  </table>
+
+  <h2>쿼리 목록</h2>
+  <p>각 정의에는 쿼리가 목록으로 표시됩니다. 플로팅 ＋ 버튼으로 새 쿼리를 추가할 수 있습니다.</p>
+
+  <h2>쿼리 설정 항목</h2>
+  <table>
+    <tr>
+      <th>설정 항목</th>
+      <th>종류</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>제목</td>
+      <td>텍스트 입력</td>
+      <td>쿼리의 표시 이름을 설정합니다.</td>
+    </tr>
+    <tr>
+      <td>접두사</td>
+      <td>텍스트 입력</td>
+      <td>매치된 값 앞에 표시할 텍스트입니다.</td>
+    </tr>
+    <tr>
+      <td>접미사</td>
+      <td>텍스트 입력</td>
+      <td>매치된 값 뒤에 표시할 텍스트입니다.</td>
+    </tr>
+    <tr>
+      <td>조건 그룹</td>
+      <td>조건 에디터</td>
+      <td>AND/OR 조건으로 매치 대상을 필터링합니다.</td>
+    </tr>
+    <tr>
+      <td>관련 시각 매치 타입</td>
+      <td>드롭다운</td>
+      <td>시각의 관련성 판정 방법을 선택합니다.</td>
+    </tr>
+    <tr>
+      <td>검색 기간(시간)</td>
+      <td>숫자 입력</td>
+      <td>관련 기록을 검색할 시간 범위를 시간 단위로 지정합니다.</td>
+    </tr>
+    <tr>
+      <td>사용자 지정 검색 쿼리</td>
+      <td>체크박스＋버튼</td>
+      <td>독자적인 검색 쿼리를 사용할 경우 활성화합니다. 버튼으로 검색 쿼리 에디터를 엽니다.</td>
+    </tr>
+  </table>
+
+  <h2>관련 시각 매치 타입</h2>
+  <table>
+    <tr>
+      <th>타입</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>전후 최근 시각</td>
+      <td>대상 기록에 대해 시각이 전후로 가장 가까운 기록을 매치합니다.</td>
+    </tr>
+    <tr>
+      <td>직전 최근 시각</td>
+      <td>대상 기록보다 이전 시각에서 가장 가까운 기록을 매치합니다.</td>
+    </tr>
+    <tr>
+      <td>직후 최근 시각</td>
+      <td>대상 기록보다 이후 시각에서 가장 가까운 기록을 매치합니다.</td>
+    </tr>
+  </table>
+
+  <h2>쿼리 편집 버튼</h2>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>초기화</td>
+      <td>편집 내용을 원래대로 되돌립니다.</td>
+    </tr>
+    <tr>
+      <td>저장</td>
+      <td>쿼리의 변경 사항을 저장합니다.</td>
+    </tr>
+  </table>
+
+  <h2>하단 액션 버튼</h2>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>적용</td>
+      <td>모든 정의와 쿼리의 변경 사항을 저장합니다.</td>
+    </tr>
+    <tr>
+      <td>취소</td>
+      <td>변경 사항을 취소하고 대화상자를 닫습니다.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>팁:</strong> 관련 정보는 라이프로그 뷰 화면에서 기록을 열람할 때 관련된 다른 기록을 자동으로 표시하는 데 사용됩니다.
+  </div>
+
+  <div class="tip">
+    <strong>팁:</strong> 검색 기간을 짧게 설정하면 시간적으로 더 가까운 기록만 매치됩니다.
+  </div>
+
+  <div class="tip">
+    <strong>팁:</strong> 여러 정의를 만들어 다양한 종류의 관련성을 정의할 수 있습니다.
+  </div>
+
+  <div class="tip">
+    <strong>팁:</strong> 사용자 지정 검색 쿼리를 사용하면 더 고급 검색 조건을 설정할 수 있습니다.
+  </div>
+
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="application-config.html">설정 화면</a></li>
+    <li><a href="rykv.html">라이프로그 뷰</a></li>
+    <li><a href="getting-started.html">시작하기</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

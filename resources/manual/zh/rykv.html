@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>生活日志视图</span></nav>
   <h1>生活日志视图</h1>
   <p>以缩略图方式浏览生活日志的界面。支持多种显示模式和筛选功能。</p>
 
@@ -78,6 +84,12 @@
   <div class="tip">
     <strong>快捷键：</strong> 在此画面按Enter键可打开记事本对话框，方便快速添加记录。
   </div>
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="kyou.html">记录详情</a></li>
+    <li><a href="dnote.html">统计视图</a></li>
+    <li><a href="ryuu.html">关联信息</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

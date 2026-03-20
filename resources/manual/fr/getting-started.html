@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premiers pas - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Premiers pas</h1>
+  <p>gkill est une application permettant d'enregistrer et de consulter des journaux de vie quotidiens (life logs).</p>
+
+  <h2>Ce que vous pouvez faire avec gkill</h2>
+  <table>
+    <tr>
+      <th>Type d'enregistrement</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Mémo</td>
+      <td>Enregistre des notes textuelles</td>
+    </tr>
+    <tr>
+      <td>Horodatage</td>
+      <td>Enregistre les heures de debut et de fin</td>
+    </tr>
+    <tr>
+      <td>Tâche</td>
+      <td>Gere les taches sur un tableau Kanban</td>
+    </tr>
+    <tr>
+      <td>Humeur</td>
+      <td>Enregistre votre humeur avec une valeur de 0 a 10</td>
+    </tr>
+    <tr>
+      <td>Dépense</td>
+      <td>Enregistre les montants et les details des depenses</td>
+    </tr>
+    <tr>
+      <td>Signet</td>
+      <td>Sauvegarde des URLs de pages web</td>
+    </tr>
+    <tr>
+      <td>Enregistrement numérique</td>
+      <td>Enregistre des donnees numeriques arbitraires</td>
+    </tr>
+    <tr>
+      <td>Fichier</td>
+      <td>Televerse et enregistre des images ou des documents</td>
+    </tr>
+  </table>
+
+  <h2>Configuration initiale</h2>
+  <ol>
+    <li>Lancez gkill et accedez a <code>http://localhost:9999</code> dans votre navigateur.</li>
+    <li>Connectez-vous avec l'identifiant <code>admin</code> et sans mot de passe.</li>
+    <li>Apres la connexion, il est recommande de definir un mot de passe dans l'ecran de configuration.</li>
+    <li>Configurez les parametres de base tels que la langue et le theme sombre dans l'ecran de configuration.</li>
+  </ol>
+
+  <h2>Liste des ecrans</h2>
+  <table>
+    <tr>
+      <th>Ecran</th>
+      <th>Description</th>
+      <th>Aide detaillee</th>
+    </tr>
+    <tr>
+      <td>Tutoriel</td>
+      <td>Des operations de base aux techniques avancees</td>
+      <td><a href="tutorial.html">Tutoriel (Base + Avance)</a></td>
+    </tr>
+    <tr>
+      <td>Connexion</td>
+      <td>Ecran d'authentification</td>
+      <td><a href="login.html">Aide de connexion</a></td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Écran permettant d'enregistrer en toute sécurité même depuis l'écran de verrouillage. Hub d'ajout d'enregistrements</td>
+      <td><a href="saihate.html">Aide de Saihate</a></td>
+    </tr>
+    <tr>
+      <td>Bloc-notes</td>
+      <td>Saisie de texte avec la syntaxe du bloc-notes</td>
+      <td><a href="kftl.html">Aide du bloc-notes</a></td>
+    </tr>
+    <tr>
+      <td>Bloc-notes d'horodatage</td>
+      <td>Gestion simultanee des notes et de l'horodatage</td>
+      <td><a href="mkfl.html">Aide du bloc-notes d'horodatage</a></td>
+    </tr>
+    <tr>
+      <td>Taches</td>
+      <td>Gestion des taches avec tableau Kanban</td>
+      <td><a href="mi.html">Aide des taches</a></td>
+    </tr>
+    <tr>
+      <td>Vue du journal de vie</td>
+      <td>Liste, recherche et consultation des enregistrements</td>
+      <td><a href="rykv.html">Aide de la vue du journal de vie</a></td>
+    </tr>
+    <tr>
+      <td>En cours</td>
+      <td>Gestion des sessions d'horodatage actives</td>
+      <td><a href="plaing.html">Aide de en cours</a></td>
+    </tr>
+    <tr>
+      <td>Detail de l'enregistrement</td>
+      <td>Vue detaillee des enregistrements individuels</td>
+      <td><a href="kyou.html">Aide du detail de l'enregistrement</a></td>
+    </tr>
+    <tr>
+      <td>Configuration</td>
+      <td>Parametres de l'application</td>
+      <td><a href="application-config.html">Aide de la configuration</a></td>
+    </tr>
+    <tr>
+      <td>Reference syntaxe bloc-notes</td>
+      <td>Reference des symboles et formats de la syntaxe bloc-notes</td>
+      <td><a href="kftl-syntax.html">Aide reference syntaxe</a></td>
+    </tr>
+    <tr>
+      <td>Structure de modele</td>
+      <td>Definitions de structure de modele du bloc-notes</td>
+      <td><a href="kftl-template-struct.html">Aide structure de modele</a></td>
+    </tr>
+    <tr>
+      <td>Vue d'agregation</td>
+      <td>Agregation et visualisation des donnees</td>
+      <td><a href="dnote.html">Aide vue d'agregation</a></td>
+    </tr>
+    <tr>
+      <td>Informations associees</td>
+      <td>Definir la recherche automatique d'enregistrements lies</td>
+      <td><a href="ryuu.html">Aide informations associees</a></td>
+    </tr>
+    <tr>
+      <td>Gestion des comptes</td>
+      <td>Gerer les comptes utilisateur (Admin uniquement)</td>
+      <td><a href="manage-account.html">Aide gestion des comptes</a></td>
+    </tr>
+    <tr>
+      <td>Configuration serveur</td>
+      <td>Parametres de connexion et TLS du serveur (Admin uniquement)</td>
+      <td><a href="server-config.html">Aide configuration serveur</a></td>
+    </tr>
+  </table>
+
+  <h2>Creez votre premier enregistrement</h2>
+  <ol>
+    <li>Après la connexion, l'écran par défaut spécifié dans les paramètres s'affiche.</li>
+    <li>Appuyez sur le bouton "+" en bas a droite de l'ecran.</li>
+    <li>Selectionnez "Bloc-notes".</li>
+    <li>Saisissez ce que vous souhaitez enregistrer dans la zone de texte (par exemple : <code>J'ai mange du curry au dejeuner aujourd'hui</code>).</li>
+    <li>Appuyez sur le bouton "Enregistrer" pour creer l'enregistrement.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement le bloc-notes.
+  </div>
+
+  <h2>Glossaire</h2>
+  <table>
+    <tr>
+      <th>Terme</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Enregistrement</td>
+      <td>Terme general pour les enregistrements dans gkill. Il englobe tous les types d'enregistrement, y compris les memos, les horodatages, les taches, etc.</td>
+    </tr>
+    <tr>
+      <td>Syntaxe bloc-notes</td>
+      <td>Syntaxe de saisie de texte utilisee dans le bloc-notes. En ajoutant des symboles au debut de chaque ligne, vous pouvez creer differents types d'enregistrements en une seule fois</td>
+    </tr>
+    <tr>
+      <td>Horodatage</td>
+      <td>Fonction de suivi du temps. Enregistre les heures de debut et de fin des travaux ou activites</td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Écran permettant d'ajouter des enregistrements en toute sécurité même depuis l'écran de verrouillage. Fonctionne comme un hub d'ajout d'enregistrements</td>
+    </tr>
+    <tr>
+      <td>Syntaxe du bloc-notes</td>
+      <td>Designe le format base sur le texte pour saisir des enregistrements</td>
+    </tr>
+    <tr>
+      <td>Vue du journal de vie</td>
+      <td>Ecran permettant de lister et rechercher des enregistrements</td>
+    </tr>
+    <tr>
+      <td>Vue d'agrégation</td>
+      <td>Fonction d'affichage des agregations et statistiques de donnees</td>
+    </tr>
+    <tr>
+      <td>Informations associées</td>
+      <td>Fonction qui recherche et affiche automatiquement les informations associees</td>
+    </tr>
+    <tr>
+      <td>Depot</td>
+      <td>Emplacement de stockage des enregistrements. Vous pouvez utiliser plusieurs depots pour differents usages</td>
+    </tr>
+    <tr>
+      <td>Profil</td>
+      <td>Ensemble de parametres regroupes par appareil</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

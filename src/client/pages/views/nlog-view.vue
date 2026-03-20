@@ -1,51 +1,27 @@
 <template>
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <table class="ma-0 pa-0">
-            <tr class="ma-0 pa-0">
-                <td v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0" cols="auto" class="ma-0 pa-0">
-                    ↑
-                </td>
-                <td v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() <= 0" cols="auto" class="ma-0 pa-0">
-                    ↓
-                </td>
-                <td v-if="kyou.typed_nlog" cols="auto" class="ma-0 pa-0">
-                    {{ kyou.typed_nlog.title }}
-                </td>
-            </tr>
-        </table>
-        <v-row class="ma-0 pa-0">
-            <v-col v-if="kyou.typed_nlog" cols="auto" class="ma-0 pa-0">
-                {{ "@".concat(kyou.typed_nlog.shop) }}
-            </v-col>
-        </v-row>
-        <v-row class="ma-0 pa-0">
-            <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0" class="ma-0 pa-0 nlog_amount_plus"
-                cols="auto">
-                {{ kyou.typed_nlog.amount }}
-            </v-col>
-            <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() <= 0" class="ma-0 pa-0 nlog_amount_minus"
-                cols="auto">
-                {{ kyou.typed_nlog.amount }}
-            </v-col>
-            <v-col v-if="kyou.typed_nlog" class="ma-0 pa-0">
-                {{ i18n.global.t("YEN_TITLE") }}
-            </v-col>
-            <v-col cols="auto" class="ma-0 pa-0"></v-col>
-        </v-row>
+        <p v-if="kyou.typed_nlog" class="ma-0 pa-0">
+            {{ (kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0) ? "↑" : "↓" }} {{ kyou.typed_nlog.title }}
+        </p>
+        <p v-if="kyou.typed_nlog" class="ma-0 pa-0">
+            {{ "@".concat(kyou.typed_nlog.shop) }}
+        </p>
+        <div v-if="kyou.typed_nlog" class="ma-0 pa-0">
+            <span
+                :class="(kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0) ? 'nlog_amount_plus' : 'nlog_amount_minus'">{{
+                    kyou.typed_nlog.amount }}</span>
+            {{ i18n.global.t("YEN_TITLE") }}
+        </div>
     </v-card>
     <NlogContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="kyou"
-        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" ref="context_menu"
-        @deleted_kyou="crudRelayHandlers['deleted_kyou']"
-        @deleted_tag="crudRelayHandlers['deleted_tag']"
-        @deleted_text="crudRelayHandlers['deleted_text']"
+        :highlight_targets="highlight_targets" :kyou="kyou" :enable_context_menu="enable_context_menu"
+        :enable_dialog="enable_dialog" ref="context_menu" @deleted_kyou="crudRelayHandlers['deleted_kyou']"
+        @deleted_tag="crudRelayHandlers['deleted_tag']" @deleted_text="crudRelayHandlers['deleted_text']"
         @deleted_notification="crudRelayHandlers['deleted_notification']"
-        @registered_kyou="crudRelayHandlers['registered_kyou']"
-        @registered_tag="crudRelayHandlers['registered_tag']"
+        @registered_kyou="crudRelayHandlers['registered_kyou']" @registered_tag="crudRelayHandlers['registered_tag']"
         @registered_text="crudRelayHandlers['registered_text']"
         @registered_notification="crudRelayHandlers['registered_notification']"
-        @updated_kyou="crudRelayHandlers['updated_kyou']"
-        @updated_tag="crudRelayHandlers['updated_tag']"
+        @updated_kyou="crudRelayHandlers['updated_kyou']" @updated_tag="crudRelayHandlers['updated_tag']"
         @updated_text="crudRelayHandlers['updated_text']"
         @updated_notification="crudRelayHandlers['updated_notification']"
         @received_errors="crudRelayHandlers['received_errors']"

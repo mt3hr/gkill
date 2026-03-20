@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>记录详情</span></nav>
   <h1>记录界面</h1>
   <p>显示单条记录详细信息的界面。可以查看各种记录类型的详细信息。</p>
 
@@ -49,7 +55,7 @@
       <th>说明</th>
     </tr>
     <tr>
-      <td>备忘录（Kmemo）</td>
+      <td>备忘录</td>
       <td>显示文本备忘录的内容。</td>
     </tr>
     <tr>
@@ -73,7 +79,7 @@
       <td>显示开始/结束时间和经过时间。</td>
     </tr>
     <tr>
-      <td>文件（IDFKyou）</td>
+      <td>文件</td>
       <td>显示上传文件的预览。</td>
     </tr>
     <tr>
@@ -96,6 +102,11 @@
   <div class="tip">
     <strong>提示：</strong>可以从记录详情界面直接添加或编辑标签。
   </div>
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="rykv.html">生活日志视图</a></li>
+    <li><a href="mi.html">任务</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>라이프로그 뷰</span></nav>
   <h1>라이프로그 뷰</h1>
   <p>썸네일로 생활 로그를 탐색하는 화면입니다. 다양한 표시 모드와 필터 기능을 지원합니다.</p>
 
@@ -78,6 +84,12 @@
   <div class="tip">
     <strong>단축키:</strong> 이 화면에서 Enter 키를 누르면 메모장 대화상자가 열립니다. 빠르게 기록을 추가할 때 편리합니다.
   </div>
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="kyou.html">기록 상세</a></li>
+    <li><a href="dnote.html">집계 뷰</a></li>
+    <li><a href="ryuu.html">관련 정보</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

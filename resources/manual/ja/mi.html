@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>タスク画面</span></nav>
   <h1>タスク画面</h1>
   <p>カンバンボード形式でタスクを管理する画面です。ボードごとにタスクを分類し、進捗を視覚的に把握できます。</p>
 
@@ -46,7 +52,7 @@
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> カレンダー</td>
-      <td>タスク数のカレンダーヒートマップの表示/非表示を切り替えます。</td>
+      <td>カレンダー表示の表示/非表示を切り替えます。</td>
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> 設定</td>
@@ -78,9 +84,6 @@
     <li>関連する記録</li>
   </ul>
 
-  <h3>カレンダーヒートマップ</h3>
-  <p>日別のタスク数をカレンダー形式のヒートマップで俯瞰できます。色の濃さでタスク量を直感的に把握できます。</p>
-
   <div class="tip">
     <strong>ヒント:</strong> デフォルトで表示するボードは、設定画面の「タスクデフォルトボード」で変更できます。
   </div>
@@ -92,6 +95,12 @@
   <div class="tip">
     <strong>ショートカット:</strong> この画面でEnterキーを押すと、メモ帳ダイアログが開きます。すばやく記録を追加したいときに便利です。
   </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">メモ帳構文リファレンス</a></li>
+    <li><a href="rykv.html">ライフログビュー画面</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>
