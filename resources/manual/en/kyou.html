@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Record Details</span></nav>
   <h1>Record View</h1>
   <p>
     The Record view displays individual record details. A record is the core entity in gkill, representing any recorded life event. Each record has a type, timestamp, tags, and type-specific data.
@@ -41,16 +47,16 @@
   <h2>Record Types</h2>
   <table>
     <tr><th>Type</th><th>Description</th></tr>
-    <tr><td>Memo (kmemo)</td><td>Free-form text notes and memos.</td></tr>
-    <tr><td>Bookmark (urlog)</td><td>Saved URLs with title and optional notes.</td></tr>
-    <tr><td>Task (mi)</td><td>Tasks with board assignment, status (open/checked/completed), and limit date.</td></tr>
-    <tr><td>Mood (lantana)</td><td>Mood values on a scale of 0 to 10.</td></tr>
-    <tr><td>Expense (nlog)</td><td>Financial records with amount and category.</td></tr>
-    <tr><td>Timestamp (timeis)</td><td>Time tracking sessions with start and optional end time.</td></tr>
-    <tr><td>File (idf_kyou)</td><td>Uploaded files and images with thumbnails.</td></tr>
-    <tr><td>Git Commit (git_commit_log)</td><td>Git commit logs pulled from monitored repositories.</td></tr>
-    <tr><td>Numeric (kc)</td><td>Arbitrary numeric counter values.</td></tr>
-    <tr><td>Repost (re_kyou)</td><td>A reference (repost) of another record at a different time.</td></tr>
+    <tr><td>Memo</td><td>Free-form text notes and memos.</td></tr>
+    <tr><td>Bookmark</td><td>Saved URLs with title and optional notes.</td></tr>
+    <tr><td>Task</td><td>Tasks with board assignment, status (open/checked/completed), and limit date.</td></tr>
+    <tr><td>Mood</td><td>Mood values on a scale of 0 to 10.</td></tr>
+    <tr><td>Expense</td><td>Financial records with amount and category.</td></tr>
+    <tr><td>Timestamp</td><td>Time tracking sessions with start and optional end time.</td></tr>
+    <tr><td>File</td><td>Uploaded files and images with thumbnails.</td></tr>
+    <tr><td>Git Commit</td><td>Git commit logs pulled from monitored repositories.</td></tr>
+    <tr><td>Numeric</td><td>Arbitrary numeric counter values.</td></tr>
+    <tr><td>Repost</td><td>A reference (repost) of another record at a different time.</td></tr>
   </table>
 
   <h2>Record Details</h2>
@@ -77,6 +83,12 @@
   <div class="tip">
     <strong>Tip:</strong> Tags are a powerful way to organize your records across types. You can filter by tags in the Life Log View and Tasks views to find related records quickly.
   </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="rykv.html">Life Log View</a></li>
+    <li><a href="mi.html">Tasks</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

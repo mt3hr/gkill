@@ -10,7 +10,10 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -26,6 +29,7 @@
 
 
         </v-card>
+        <HelpDialog screen_name="dnote" ref="help_dialog" />
 </div>
     </div>
   </Teleport>
@@ -38,6 +42,7 @@ import type { GkillMessage } from '../../classes/api/gkill-message';
 import type AddDnoteItemDialogEmits from './add-dnote-item-dialog-emits';
 import type AddDnoteItemDialogProps from './add-dnote-item-dialog-props';
 import AddDnoteItemView from '@/pages/views/add-dnote-item-view.vue';
+import HelpDialog from './help-dialog.vue'
 import type DnoteItem from '@/classes/dnote/dnote-item';
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
@@ -48,6 +53,8 @@ const ui = useFloatingDialog("add-dnote-item-dialog", {
   centerMode: "always",
 })
 
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 defineExpose({ show, hide })
 defineProps<AddDnoteItemDialogProps>()

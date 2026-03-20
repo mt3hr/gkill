@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutoriel - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Tutoriel</span></nav>
+  <h1>Tutoriel</h1>
+  <p>Ce guide explique comment utiliser gkill, en deux parties : les bases et les fonctions avancees. Si vous debutez, veuillez lire la partie basique en premier.</p>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Partie basique</h2>
+
+  <h2>1. Se connecter a gkill</h2>
+  <h3>Premier lancement</h3>
+  <p>Lors du premier lancement de gkill, l'ecran d'inscription s'affiche automatiquement.</p>
+  <ol>
+    <li>Saisissez un identifiant utilisateur (ce sera le nom de votre compte).</li>
+    <li>Saisissez un mot de passe, puis confirmez-le en le saisissant une seconde fois.</li>
+    <li>Definissez un mot de passe administrateur (utilise pour la gestion du serveur).</li>
+    <li>Appuyez sur le bouton "Inscription" pour creer votre compte.</li>
+    <li>Vous serez redirige vers l'ecran de connexion. Connectez-vous avec le compte que vous venez de creer.</li>
+  </ol>
+
+  <h3>Connexion habituelle</h3>
+  <ol>
+    <li>Saisissez l'identifiant de votre compte dans le champ prevu a cet effet.</li>
+    <li>Saisissez votre mot de passe dans le champ correspondant.</li>
+    <li>Cliquez sur le bouton "Connexion" ou appuyez sur la touche Entree.</li>
+  </ol>
+  <div class="tip">
+    <strong>Astuce :</strong> La session reste active pendant 30 jours apres la connexion. Vous n'avez pas besoin de vous reconnecter avant l'expiration de ce delai.
+  </div>
+
+  <h2>2. Ajouter un enregistrement</h2>
+  <p>gkill permet d'enregistrer differents types de journaux de vie. Ajoutez un enregistrement en appuyant sur le bouton "+" en bas a droite de l'ecran.</p>
+
+  <table>
+    <tr><th>Type d'enregistrement</th><th>Usage</th><th>Exemple de saisie</th></tr>
+    <tr><td>Memo</td><td>Laisser une note textuelle</td><td>"Il faisait beau aujourd'hui"</td></tr>
+    <tr><td>Pointage</td><td>Enregistrer le temps (debut/fin)</td><td>"Reunion 10h00-11h30"</td></tr>
+    <tr><td>Tache</td><td>Gerer les choses a faire</td><td>"Rediger le rapport"</td></tr>
+    <tr><td>Depense</td><td>Enregistrer les depenses</td><td>"Superette : sandwich 3,50 EUR"</td></tr>
+    <tr><td>Humeur</td><td>Enregistrer l'humeur sur une echelle de 0 a 10</td><td>"7"</td></tr>
+    <tr><td>Valeur numerique</td><td>Enregistrer des donnees numeriques</td><td>"Poids : 65,5"</td></tr>
+    <tr><td>Signet</td><td>Sauvegarder une URL</td><td>"https://example.com"</td></tr>
+    <tr><td>Fichier</td><td>Telecharger des images ou fichiers</td><td>Photos, PDF, etc.</td></tr>
+  </table>
+
+  <h3>Procedure d'ajout d'un enregistrement</h3>
+  <ol>
+    <li>Appuyez sur le bouton "+" en bas a droite de l'ecran.</li>
+    <li>Selectionnez le type d'enregistrement que vous souhaitez ajouter.</li>
+    <li>Remplissez le formulaire de saisie.</li>
+    <li>Appuyez sur le bouton "Enregistrer" pour sauvegarder.</li>
+  </ol>
+  <div class="tip">
+    <strong>Astuce :</strong> En utilisant l'ecran du bloc-notes, vous pouvez saisir plusieurs enregistrements a la fois sous forme de texte. Pour plus de details, consultez la section "3. Saisir plusieurs enregistrements a la fois avec le bloc-notes" ci-dessous.
+  </div>
+
+  <h2>3. Saisir plusieurs enregistrements a la fois avec le bloc-notes</h2>
+  <p>L'ecran du bloc-notes permet de creer plusieurs enregistrements simultanement en ecrivant simplement du texte.</p>
+
+  <h3>Utilisation de base</h3>
+  <ol>
+    <li>Ouvrez l'ecran du bloc-notes (selectionnez "Bloc-notes" dans le menu du bouton "+").</li>
+    <li>Saisissez le contenu que vous souhaitez enregistrer dans la zone de texte.</li>
+    <li>Appuyez sur le bouton "Enregistrer" (vous pouvez egalement saisir <code>!</code> et envoyer).</li>
+  </ol>
+
+  <h3>Saisie a l'aide de modeles</h3>
+  <p>Les modeles vous permettent de saisir des textes predefinis en un seul geste.</p>
+  <ol>
+    <li>Sur l'ecran du bloc-notes, selectionnez un modele dans la liste des modeles.</li>
+    <li>Le contenu du modele est insere dans la zone de texte.</li>
+    <li>Modifiez le contenu si necessaire, puis enregistrez.</li>
+  </ol>
+  <div class="tip">
+    <strong>Astuce :</strong> Il est pratique d'enregistrer a l'avance les schemas d'enregistrement que vous utilisez frequemment en tant que modeles. Vous pouvez les gerer depuis "Structure des modeles" dans l'ecran de configuration.
+  </div>
+
+  <h2>4. Consulter et rechercher des enregistrements</h2>
+  <p>L'ecran de visualisation des journaux de vie vous permet d'afficher et de rechercher vos enregistrements passes.</p>
+
+  <h3>Operations de base</h3>
+  <ol>
+    <li>Ouvrez l'ecran de visualisation des journaux de vie depuis la barre de navigation en haut de l'ecran.</li>
+    <li>Les enregistrements sont affiches par ordre chronologique.</li>
+    <li>Changez la date pour consulter les enregistrements d'un jour specifique.</li>
+  </ol>
+
+  <h3>Recherche et filtrage</h3>
+  <ul>
+    <li><strong>Filtrer par tag :</strong> Vous pouvez afficher uniquement les enregistrements portant un tag specifique.</li>
+    <li><strong>Plage de dates :</strong> Vous pouvez restreindre la periode en specifiant une date de debut et de fin.</li>
+    <li><strong>Recherche textuelle :</strong> Vous pouvez rechercher les enregistrements contenant un mot-cle.</li>
+  </ul>
+  <div class="tip">
+    <strong>Astuce :</strong> Reduire le "nombre de jours affiches dans la vue des journaux de vie" dans l'ecran de configuration accelere le chargement.
+  </div>
+
+  <h2>5. Gerer les taches</h2>
+  <p>L'ecran des taches permet de gerer vos taches sous forme de tableau Kanban.</p>
+
+  <h3>Creation d'une tache</h3>
+  <ol>
+    <li>Ouvrez l'ecran des taches.</li>
+    <li>Ajoutez une tache avec le bouton "+".</li>
+    <li>Saisissez le titre, le nom du tableau, la date limite, etc.</li>
+    <li>Une fois enregistree, la tache apparait dans le tableau specifie.</li>
+  </ol>
+
+  <h3>Achevement d'une tache</h3>
+  <ol>
+    <li>Appuyez sur la tache terminee pour ouvrir les details.</li>
+    <li>Cochez la case pour marquer la tache comme terminee.</li>
+  </ol>
+  <div class="tip">
+    <strong>Astuce :</strong> Creez plusieurs tableaux pour organiser par categorie, comme "Travail", "Personnel", "Courses", etc.
+  </div>
+
+  <h2>6. Modifier les parametres</h2>
+  <p>Vous pouvez personnaliser le comportement de l'application depuis l'ecran de configuration.</p>
+
+  <h3>Comment ouvrir l'ecran de configuration</h3>
+  <ol>
+    <li>Appuyez sur l'icone d'engrenage dans la barre d'outils en haut de l'ecran.</li>
+    <li>L'ecran de configuration s'ouvre.</li>
+  </ol>
+
+  <h3>Parametres frequemment utilises</h3>
+  <table>
+    <tr><th>Parametre</th><th>Description</th></tr>
+    <tr><td>Langue</td><td>Change la langue d'affichage de l'interface.</td></tr>
+    <tr><td>Theme sombre</td><td>Bascule vers un theme aux couleurs sombres.</td></tr>
+    <tr><td>Ecran au demarrage</td><td>Selectionne la page affichee en premier apres la connexion.</td></tr>
+    <tr><td>Nombre de colonnes d'images dans la vue des journaux de vie</td><td>Ajuste le nombre de colonnes des miniatures d'images.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Astuce :</strong> Apres avoir modifie les parametres, appuyez sur le bouton "Appliquer". Si vous appuyez sur "Annuler", les modifications seront ignorees.
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Partie avancee</h2>
+
+  <h2>7. Maitriser la syntaxe du bloc-notes</h2>
+  <p>La syntaxe du bloc-notes permet de creer differents types d'enregistrements en une seule fois, simplement en ajoutant un prefixe en debut de ligne.</p>
+
+  <h3>Principaux prefixes</h3>
+  <table>
+    <tr><th>Prefixe</th><th>Type</th><th>Exemple</th></tr>
+    <tr><td>(aucun)</td><td>Memo</td><td><code>Il faisait beau aujourd'hui</code></td></tr>
+    <tr><td><code>.</code></td><td>Tag</td><td><code>.journal, meteo</code></td></tr>
+    <tr><td><code>-mi</code></td><td>Tache</td><td><code>-mi</code> puis le titre a la ligne suivante</td></tr>
+    <tr><td><code>-ta</code></td><td>Debut de pointage</td><td><code>-ta</code> puis le titre a la ligne suivante</td></tr>
+    <tr><td><code>-e</code></td><td>Fin de pointage</td><td><code>-e</code> puis le titre a la ligne suivante</td></tr>
+    <tr><td><code>-n</code></td><td>Depense</td><td><code>-n</code> puis le nom du magasin, l'article, le montant</td></tr>
+    <tr><td><code>-ra</code></td><td>Humeur</td><td><code>-ra</code> puis une valeur (0 a 10) a la ligne suivante</td></tr>
+    <tr><td><code>,</code></td><td>Separateur</td><td>Separe pour passer a l'enregistrement suivant</td></tr>
+    <tr><td><code>!</code></td><td>Enregistrer</td><td>Termine la saisie et enregistre</td></tr>
+  </table>
+
+  <h3>Exemple de saisie groupee de plusieurs enregistrements</h3>
+  <pre>Journal du jour
+.journal
+,
+-mi
+Aller faire les courses
+,
+-n
+Supermarche
+Pommes
+200
+Lait
+180
+,
+-ra
+8
+!</pre>
+  <p>Dans cet exemple, quatre enregistrements sont crees simultanement : un memo, une tache, des depenses et une humeur.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> Pour la syntaxe detaillee, consultez la <a href="kftl-syntax.html">reference de la syntaxe du bloc-notes</a>.
+  </div>
+
+  <h2>8. Exploiter les modeles</h2>
+  <p>En sauvegardant les schemas de syntaxe du bloc-notes que vous utilisez frequemment en tant que modeles, vous evitez de les saisir a chaque fois.</p>
+
+  <h3>Gestion des modeles</h3>
+  <ol>
+    <li>Ouvrez l'ecran de configuration.</li>
+    <li>Cliquez sur le bouton "Structure des modeles".</li>
+    <li>Vous pouvez ajouter, modifier ou supprimer des modeles.</li>
+  </ol>
+
+  <h3>Exemple de creation de modele</h3>
+  <p>Par exemple, pour creer un modele de journal quotidien :</p>
+  <pre>.journal
+,
+-ra
+</pre>
+  <p>En utilisant ce modele, l'ebauche du journal est saisie en un seul geste sur l'ecran du bloc-notes, et il vous suffit d'ajouter le contenu du memo et la valeur d'humeur pour completer l'enregistrement.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> Utilisez des dossiers pour organiser vos modeles par categorie afin de les retrouver plus facilement.
+  </div>
+
+  <h2>9. Enregistrer le temps avec les pointages</h2>
+  <p>La fonction de pointage vous permet d'enregistrer precisement vos temps de travail et d'activite.</p>
+
+  <h3>Operations de base du pointage</h3>
+  <ol>
+    <li><strong>Debut :</strong> Utilisez le prefixe <code>-ta</code> dans le bloc-notes ou ajoutez un pointage depuis le menu "+". Specifiez le titre et l'heure de debut.</li>
+    <li><strong>Fin :</strong> Utilisez le prefixe <code>-e</code> dans le bloc-notes ou saisissez l'heure de fin dans l'ecran de modification du pointage. Le pointage dont le titre correspond sera cloture.</li>
+  </ol>
+
+  <h3>Gerer les pointages en cours</h3>
+  <p>L'ecran de liste des pointages vous permet de consulter les pointages actuellement en cours.</p>
+  <ul>
+    <li>Les pointages en cours sont affiches dans une liste.</li>
+    <li>Appuyez dessus pour definir l'heure de fin.</li>
+  </ul>
+  <div class="tip">
+    <strong>Astuce :</strong> En utilisant <code>-ie</code> dans la syntaxe du bloc-notes, aucune erreur ne se produit meme s'il n'y a pas de pointage correspondant. Cela permet de cloturer en toute securite sans verification prealable.
+  </div>
+
+  <h2>10. Analyser les donnees avec la vue d'agregation</h2>
+  <p>L'ecran de la vue d'agregation vous permet de visualiser les donnees enregistrees sous forme de graphiques et de tableaux recapitulatifs.</p>
+
+  <h3>Utilisation de la vue d'agregation</h3>
+  <ol>
+    <li>Ouvrez l'ecran de la vue d'agregation depuis la barre de navigation.</li>
+    <li>Selectionnez le type d'agregation et la periode.</li>
+    <li>Les donnees sont affichees sous forme de graphiques et de tableaux.</li>
+  </ol>
+
+  <h3>Configuration de l'agregation</h3>
+  <p>Depuis le bouton "Vue d'agregation" dans l'ecran de configuration, vous pouvez gerer les methodes d'agregation et la composition des vues.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> Suivre l'evolution de l'humeur et des depenses dans le temps permet de mieux comprendre vos habitudes de vie.
+  </div>
+
+  <h2>11. Tirer parti des integrations externes</h2>
+
+  <h3>Enregistrer des URL avec un bookmarklet</h3>
+  <p>En ajoutant un bookmarklet a la barre de favoris de votre navigateur, vous pouvez sauvegarder la page Web consultee dans gkill en un seul clic.</p>
+  <ol>
+    <li>Copiez l'URL affichee dans "Adresse du bookmarklet" dans l'ecran de configuration.</li>
+    <li>Ajoutez-la en tant que nouveau favori dans la barre de favoris de votre navigateur.</li>
+    <li>Lorsque vous consultez une page Web que vous souhaitez sauvegarder, cliquez sur le favori enregistre.</li>
+  </ol>
+
+  <h3>Enregistrement GPS et affichage sur carte</h3>
+  <p>Si vous enregistrez des journaux GPS, vous pouvez afficher votre historique de deplacements sur une carte.</p>
+  <ol>
+    <li>Configurez la "Cle API Google Maps" dans l'ecran de configuration.</li>
+    <li>Si des donnees GPS sont enregistrees, l'affichage cartographique est disponible dans la vue des journaux de vie.</li>
+  </ol>
+  <div class="tip">
+    <strong>Astuce :</strong> Pour obtenir une cle API Google Maps, activez l'API Maps JavaScript dans la console Google Cloud.
+  </div>
+
+  <h2>12. Sauvegarde et gestion des donnees</h2>
+
+  <h3>Configuration du serveur (administrateurs)</h3>
+  <p>En vous connectant avec un compte administrateur, le bouton "Configuration du serveur" apparait dans l'ecran de configuration.</p>
+  <ul>
+    <li><strong>Numero de port :</strong> Vous pouvez modifier le port d'ecoute du serveur (par defaut : 9999).</li>
+    <li><strong>Configuration TLS :</strong> Vous pouvez activer la communication HTTPS.</li>
+    <li><strong>Restriction d'acces :</strong> Vous pouvez limiter l'acces au reseau local uniquement.</li>
+  </ul>
+
+  <h3>Gestion des comptes</h3>
+  <p>L'administrateur peut ajouter ou supprimer des comptes utilisateurs depuis l'ecran "Gestion des comptes".</p>
+
+  <h3>Sauvegarde des donnees</h3>
+  <p>Toutes les donnees de gkill sont stockees dans le repertoire personnel (par defaut : <code>~/gkill</code>). Il suffit de sauvegarder ce repertoire pour preserver l'ensemble de vos donnees.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> Il est recommande de sauvegarder regulierement le repertoire personnel. Les repertoires <code>datas/</code> et <code>configs/</code> sont particulierement importants.
+  </div>
+
+  <h2>Documents associes</h2>
+  <ul>
+    <li><a href="getting-started.html">Premiers pas (guide de configuration initiale)</a></li>
+    <li><a href="kftl-syntax.html">Reference de la syntaxe du bloc-notes</a></li>
+    <li><a href="kftl-template-struct.html">Structure des modeles</a></li>
+    <li><a href="application-config.html">Ecran de configuration</a></li>
+    <li><a href="mi.html">Ecran des taches</a></li>
+    <li><a href="rykv.html">Ecran de visualisation des journaux de vie</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

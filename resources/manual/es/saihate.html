@@ -24,11 +24,17 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Inicio</span></nav>
   <h1>Inicio</h1>
-  <p>Pantalla principal para agregar rapidamente diversos tipos de registros. Proporciona puntos de entrada convenientes para la creacion de registros.</p>
+  <p>Pantalla para registrar de forma segura incluso desde la pantalla de bloqueo. Funciona como centro para añadir rápidamente todo tipo de registros.</p>
 
   <h2>Botones de la barra de herramientas</h2>
   <table>
@@ -71,6 +77,16 @@
   <div class="tip">
     <strong>Atajo:</strong> Presione Enter en esta pantalla para abrir el diálogo del bloc de notas. Es conveniente para agregar registros rápidamente.
   </div>
+  <h2>Documentos Relacionados</h2>
+  <ul>
+    <li><a href="getting-started.html">Primeros Pasos</a></li>
+    <li><a href="kftl.html">Bloc de Notas</a></li>
+    <li><a href="mkfl.html">Memo de Registro</a></li>
+    <li><a href="mi.html">Tareas</a></li>
+    <li><a href="rykv.html">Vista de Registro de Vida</a></li>
+    <li><a href="plaing.html">Sesiones Activas</a></li>
+    <li><a href="application-config.html">Configuración</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

@@ -3,6 +3,8 @@
         <MiView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
             v-on="miViewHandlers" />
+        <TutorialDialog :application_config="application_config" :gkill_api="gkill_api"
+            ref="tutorial_dialog" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             :is_show="is_show_application_config_dialog"
@@ -26,9 +28,13 @@
 </template>
 
 <script lang="ts" setup>
+import { ref, watch, nextTick } from 'vue'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
+import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import MiView from './views/mi-view.vue'
 import { useMiPage } from '@/classes/use-mi-page'
+
+const tutorial_dialog = ref<InstanceType<typeof TutorialDialog> | null>(null)
 
 const {
     // Template refs
@@ -53,6 +59,12 @@ const {
     // CRUD relay
     miViewHandlers,
 } = useMiPage()
+
+watch(application_config, (config) => {
+    if (config.is_loaded && config.show_tutorial_on_startup) {
+        nextTick(() => tutorial_dialog.value?.show())
+    }
+})
 </script>
 <style scoped>
 :root {

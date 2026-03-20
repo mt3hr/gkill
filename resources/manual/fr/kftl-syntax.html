@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reference de syntaxe KFTL</title>
+  <title>Référence de syntaxe du bloc-notes</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
@@ -29,15 +29,21 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <a href="kftl.html">Bloc-notes</a> &gt; <span>Référence syntaxe du bloc-notes</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; Retour a l'aide du bloc-notes</a></div>
 
-<h1>Reference de syntaxe KFTL</h1>
+<h1>Référence de syntaxe du bloc-notes</h1>
 
-<p>KFTL est un format d'enregistrement textuel utilise dans gkill. Grace aux prefixes en debut de ligne, vous pouvez saisir differents types de donnees en une seule fois. Voici les 18 types d'instructions.</p>
+<p>La syntaxe du bloc-notes est un format d'enregistrement textuel utilise dans gkill. Grace aux prefixes en debut de ligne, vous pouvez saisir differents types de donnees en une seule fois. Voici les 18 types d'instructions.</p>
 
 <h2>Apercu des instructions</h2>
 
@@ -170,7 +176,7 @@ Site favori</pre>
 
 <h2>Exemple complet</h2>
 
-<p>Voici un document KFTL complet combinant plusieurs types d'instructions.</p>
+<p>Voici un document complet de syntaxe du bloc-notes combinant plusieurs types d'instructions.</p>
 
 <pre>Journal d'aujourd'hui
 。journal、meteo
@@ -197,6 +203,13 @@ Lecture
 <div class="tip">
   <strong>Astuce :</strong> Utilisez <code>、</code> pour separer plusieurs enregistrements dans un meme document. Ajouter <code>！</code> a la fin declenche la sauvegarde automatique.
 </div>
+
+  <h2>Documents associes</h2>
+  <ul>
+    <li><a href="kftl.html">Bloc-notes</a></li>
+    <li><a href="mkfl.html">Bloc-notes tampon</a></li>
+    <li><a href="kftl-template-struct.html">Structure de modele</a></li>
+  </ul>
 
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aggregationsansicht - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Aggregationsansicht</span></nav>
+  <h1>Aggregationsansicht</h1>
+  <p>Bildschirm zur Aggregation und Visualisierung von Lebensprotokoll-Daten basierend auf Bedingungen. Es können zwei Typen definiert werden: „Elemente" für einzelne Aggregatwerte und „Listen" für gruppierte Aggregationen nach Schlüssel.</p>
+
+  <h2>Definitionsverwaltung</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Registerkarten</td>
+      <td>Jede Aggregationsdefinition wird als Registerkarte angezeigt. Klicken Sie auf eine Registerkarte, um zwischen Definitionen zu wechseln.</td>
+    </tr>
+    <tr>
+      <td>Definitionsname</td>
+      <td>Textfeld zum Bearbeiten des Namens der Aggregationsdefinition.</td>
+    </tr>
+    <tr>
+      <td>＋-Schaltfläche (neben Registerkarten)</td>
+      <td>Fügt eine neue Aggregationsdefinition hinzu.</td>
+    </tr>
+    <tr>
+      <td>Löschen-Schaltfläche</td>
+      <td>Löscht die aktuell angezeigte Aggregationsdefinition.</td>
+    </tr>
+  </table>
+
+  <h2>Bildschirmelemente</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Datumsbereich</td>
+      <td>Zeigt den Zeitraum für die Aggregation an.</td>
+    </tr>
+    <tr>
+      <td>Download-Schaltfläche</td>
+      <td>Lädt die Aggregationsergebnisse im JSON-Format herunter.</td>
+    </tr>
+    <tr>
+      <td>＋-Schaltfläche (schwebend)</td>
+      <td>Zeigt ein Menü zur Auswahl zwischen Element oder Liste hinzufügen an.</td>
+    </tr>
+  </table>
+
+  <h2>Elemente (einzelner Aggregatwert)</h2>
+  <p>Zeigt Aggregatwerte der Daten, die den Bedingungen entsprechen, im Format: „Titel: Präfix [Aggregatergebnis] Suffix" an.</p>
+  <table>
+    <tr>
+      <th>Einstellung</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Titel</td>
+      <td>Texteingabe</td>
+      <td>Legt den Anzeigenamen des Elements fest.</td>
+    </tr>
+    <tr>
+      <td>Präfix</td>
+      <td>Texteingabe</td>
+      <td>Text, der vor dem Aggregatwert angezeigt wird.</td>
+    </tr>
+    <tr>
+      <td>Suffix</td>
+      <td>Texteingabe</td>
+      <td>Text, der nach dem Aggregatwert angezeigt wird.</td>
+    </tr>
+    <tr>
+      <td>Aggregationsziel</td>
+      <td>Dropdown</td>
+      <td>Wählt die Aggregationsmethode (Anzahl, Summe, Durchschnitt, Max, Min usw.).</td>
+    </tr>
+    <tr>
+      <td>Bedingungsgruppe</td>
+      <td>Bedingungseditor</td>
+      <td>Filtert die Aggregationsziele mithilfe von AND/OR-Bedingungen.</td>
+    </tr>
+  </table>
+
+  <h2>Listen (gruppierte Aggregation)</h2>
+  <p>Zeigt Aggregationsergebnisse gruppiert nach Schlüssel in Listenform an.</p>
+  <table>
+    <tr>
+      <th>Einstellung</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Titel / Präfix / Suffix</td>
+      <td>Texteingabe</td>
+      <td>Gleiche Einstellungen wie bei Elementen.</td>
+    </tr>
+    <tr>
+      <td>Aggregationsziel</td>
+      <td>Dropdown</td>
+      <td>Wählt die Aggregationsmethode.</td>
+    </tr>
+    <tr>
+      <td>Gruppierungsschlüssel</td>
+      <td>Dropdown</td>
+      <td>Wählt das Gruppierungskriterium (Titel, Datentyp, Tag, Monat, Wochentag, Datum usw.).</td>
+    </tr>
+    <tr>
+      <td>Bedingungsgruppe</td>
+      <td>Bedingungseditor</td>
+      <td>Filtert die Aggregationsziele mithilfe von AND/OR-Bedingungen.</td>
+    </tr>
+  </table>
+
+  <h2>Bedingungsgruppe bearbeiten</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Verknüpfungslogik</td>
+      <td>Wählen Sie AND / OR / NOT, um festzulegen, wie die Bedingungen kombiniert werden.</td>
+    </tr>
+    <tr>
+      <td>Bedingung hinzufügen</td>
+      <td>Fügt eine neue Bedingung zur Gruppe hinzu.</td>
+    </tr>
+    <tr>
+      <td>Gruppe hinzufügen</td>
+      <td>Fügt eine verschachtelte Bedingungsgruppe hinzu.</td>
+    </tr>
+    <tr>
+      <td>Gruppe löschen</td>
+      <td>Löscht diese Bedingungsgruppe.</td>
+    </tr>
+    <tr>
+      <td>Jede Bedingung</td>
+      <td>Legt den Bedingungstyp und -wert fest (Filtern nach Datentyp, Tag, Titel, Betrag, Stimmungswert usw.).</td>
+    </tr>
+  </table>
+
+  <h2>Operationen</h2>
+  <table>
+    <tr>
+      <th>Operation</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Doppelklick</td>
+      <td>Öffnet den Editor für das Element oder die Liste.</td>
+    </tr>
+    <tr>
+      <td>Rechtsklick</td>
+      <td>Zeigt das Kontextmenü an (Bearbeiten / Löschen).</td>
+    </tr>
+    <tr>
+      <td>Drag & Drop</td>
+      <td>Ändert die Anzeigereihenfolge von Elementen und Listen.</td>
+    </tr>
+  </table>
+
+  <h2>Untere Aktionsschaltflächen</h2>
+  <table>
+    <tr>
+      <th>Schaltfläche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Übernehmen</td>
+      <td>Speichert alle Definitionsänderungen.</td>
+    </tr>
+    <tr>
+      <td>Abbrechen</td>
+      <td>Verwirft die Änderungen und schließt den Dialog.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Elemente sind nützlich für einzelne Aggregatwerte (z.B. monatliche Gesamtausgaben), während Listen für gruppierte Aggregationen nützlich sind (z.B. Ausgaben nach Geschäft).
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Kombinieren Sie Bedingungen, um komplexe Aggregationsabfragen zu erstellen.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Verwenden Sie Drag & Drop, um die Anzeige von Elementen und Listen frei neu zu ordnen.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Aggregationsergebnisse können als JSON heruntergeladen werden, um sie mit externen Tools zu analysieren.
+  </div>
+
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="application-config.html">Einstellungsbildschirm</a></li>
+    <li><a href="rykv.html">Lebenslogansicht</a></li>
+    <li><a href="getting-started.html">Erste Schritte</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

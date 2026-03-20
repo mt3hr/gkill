@@ -10,6 +10,9 @@
         <div class="gkill-floating-dialog__spacer"></div>
         <v-checkbox v-model="ui.isTransparent.value" color="white" size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
         <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'"
           variant="flat">
           <v-icon>mdi-close</v-icon>
@@ -33,22 +36,27 @@
           @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
           @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
           @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)" />
+        <HelpDialog screen_name="mkfl" ref="help_dialog" />
       </div>
     </div>
   </Teleport>
 </template>
 <script lang="ts" setup>
+import { ref } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { MKFLDialogEmits } from './mkfl-dialog-emits'
 import type { MKFLDialogProps } from './mkfl-dialog-props'
 import MKFLView from '../views/mkfl-view.vue'
+import HelpDialog from './help-dialog.vue'
 import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
 import type { Text } from "@/classes/datas/text"
 import type { Notification } from "@/classes/datas/notification"
 import { useMKFLDialog } from '@/classes/use-mkfl-dialog'
 import { i18n } from '@/i18n'
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const props = defineProps<MKFLDialogProps>()
 const emits = defineEmits<MKFLDialogEmits>()

@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Active Sessions</span></nav>
   <h1>Active Sessions</h1>
   <p>
     The Active Sessions screen shows all currently running time tracking sessions (Time Log). Use it to monitor what you are currently doing and to stop sessions when activities end.
@@ -76,6 +82,13 @@
   <div class="tip">
     <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
   </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="mkfl.html">Punch Memo</a></li>
+    <li><a href="kftl.html">Notepad</a></li>
+    <li><a href="saihate.html">Saihate (Quick Record)</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

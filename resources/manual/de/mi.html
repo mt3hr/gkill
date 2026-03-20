@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Aufgaben</span></nav>
   <h1>Aufgaben-Board</h1>
   <p>Kanban-artiger Aufgabenverwaltungsbildschirm. Ermoeglicht die visuelle Verwaltung von Aufgabenstatus und -fortschritt.</p>
 
@@ -46,7 +52,7 @@
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Kalender</td>
-      <td>Zeigt die Kalender-Heatmap-Ansicht an.</td>
+      <td>Zeigt/verbirgt die Kalenderansicht.</td>
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> Einstellungen</td>
@@ -59,7 +65,7 @@
     <li><strong>Board-Spalten:</strong> Aufgaben werden nach Status in Spalten angezeigt; der Status kann per Drag-and-Drop geaendert werden.</li>
     <li><strong>Seitenleistenfilter:</strong> Filtert Aufgaben nach Tags, Board, Status und anderen Kriterien.</li>
     <li><strong>Detailpanel:</strong> Bei Auswahl einer Aufgabe werden detaillierte Informationen und Bearbeitungsoptionen angezeigt.</li>
-    <li><strong>Kalender-Heatmap:</strong> Zeigt die Aufgabenaktivitaetsdichte im Kalenderformat an.</li>
+    <li><strong>Kalenderansicht:</strong> Ermoeglicht das Durchsuchen von Aufgaben im Kalenderformat.</li>
   </ul>
 
   <div class="tip">
@@ -69,6 +75,11 @@
   <div class="tip">
     <strong>Tastenkürzel:</strong> Drücken Sie auf diesem Bildschirm die Eingabetaste, um den Notizblock-Dialog zu öffnen. Dies ist praktisch, um schnell Einträge hinzuzufügen.
   </div>
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a></li>
+    <li><a href="rykv.html">Lebenslogansicht</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

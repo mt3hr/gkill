@@ -10,7 +10,10 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -26,6 +29,7 @@
           @requested_apply_kftl_template_struct="(...kftl_template_struct_element_data: any[]) => emits('requested_apply_kftl_template_struct', kftl_template_struct_element_data[0] as KFTLTemplateStructElementData)"
           @requested_close_dialog="hide" />
         </v-card>
+        <HelpDialog screen_name="kftl-template-struct" ref="help_dialog" />
 </div>
     </div>
   </Teleport>
@@ -35,12 +39,15 @@ import { type Ref, ref } from 'vue'
 import type { EditKFTLTemplateStructDialogEmits } from './edit-kftl-template-struct-dialog-emits.ts'
 import type { EditKFTLTemplateStructDialogProps } from './edit-kftl-template-struct-dialog-props.ts'
 import EditKFTLTemplateStructView from '../views/edit-kftl-template-struct-view.vue'
+import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error.js'
 import type { GkillMessage } from '@/classes/api/gkill-message.js'
 
 defineProps<EditKFTLTemplateStructDialogProps>()
 const emits = defineEmits<EditKFTLTemplateStructDialogEmits>()
 defineExpose({ show, hide })
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data.js'

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入门指南 - 帮助</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>入门指南</h1>
+  <p>gkill是一款用于记录和浏览日常生活日志的应用程序。</p>
+
+  <h2>gkill的功能</h2>
+  <table>
+    <tr>
+      <th>记录类型</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>备忘录</td>
+      <td>记录文本备忘录</td>
+    </tr>
+    <tr>
+      <td>打卡</td>
+      <td>记录开始和结束时间</td>
+    </tr>
+    <tr>
+      <td>任务</td>
+      <td>使用看板管理待办事项</td>
+    </tr>
+    <tr>
+      <td>心情</td>
+      <td>用0到10的数值记录心情</td>
+    </tr>
+    <tr>
+      <td>支出</td>
+      <td>记录支出金额和内容</td>
+    </tr>
+    <tr>
+      <td>书签</td>
+      <td>保存网页URL</td>
+    </tr>
+    <tr>
+      <td>数值记录</td>
+      <td>记录任意数值数据</td>
+    </tr>
+    <tr>
+      <td>文件</td>
+      <td>上传并记录图片或文档</td>
+    </tr>
+  </table>
+
+  <h2>初始设置</h2>
+  <ol>
+    <li>启动gkill，在浏览器中访问 <code>http://localhost:9999</code>。</li>
+    <li>使用用户ID <code>admin</code>，无密码登录。</li>
+    <li>登录后，建议在设置页面中设置密码。</li>
+    <li>在设置页面中配置语言和暗色主题等基本设置。</li>
+  </ol>
+
+  <h2>页面一览</h2>
+  <table>
+    <tr>
+      <th>页面名称</th>
+      <th>说明</th>
+      <th>详细帮助</th>
+    </tr>
+    <tr>
+      <td>教程</td>
+      <td>从基本操作到进阶技巧</td>
+      <td><a href="tutorial.html">教程（基础篇＋进阶篇）</a></td>
+    </tr>
+    <tr>
+      <td>登录</td>
+      <td>认证页面</td>
+      <td><a href="login.html">登录页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>即使在锁定屏幕上也可以安全记录的画面。各种记录的添加中心</td>
+      <td><a href="saihate.html">Saihate页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>记事本</td>
+      <td>使用记事本语法输入文本</td>
+      <td><a href="kftl.html">记事本页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>打卡记事本</td>
+      <td>同时管理备忘录输入和打卡</td>
+      <td><a href="mkfl.html">打卡记事本页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>任务</td>
+      <td>使用看板进行任务管理</td>
+      <td><a href="mi.html">任务页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>生活日志视图</td>
+      <td>记录的列表、搜索和浏览</td>
+      <td><a href="rykv.html">生活日志视图页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>进行中</td>
+      <td>管理正在进行的打卡会话</td>
+      <td><a href="plaing.html">进行中页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>记录详情</td>
+      <td>单条记录的详细显示</td>
+      <td><a href="kyou.html">记录详情页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>设置</td>
+      <td>应用程序设置</td>
+      <td><a href="application-config.html">设置页面帮助</a></td>
+    </tr>
+    <tr>
+      <td>记事本语法参考</td>
+      <td>记事本语法的符号和格式参考</td>
+      <td><a href="kftl-syntax.html">记事本语法参考帮助</a></td>
+    </tr>
+    <tr>
+      <td>模板结构</td>
+      <td>记事本模板结构定义</td>
+      <td><a href="kftl-template-struct.html">模板结构帮助</a></td>
+    </tr>
+    <tr>
+      <td>汇总视图</td>
+      <td>数据汇总和可视化</td>
+      <td><a href="dnote.html">汇总视图帮助</a></td>
+    </tr>
+    <tr>
+      <td>关联信息</td>
+      <td>定义相关记录的自动搜索</td>
+      <td><a href="ryuu.html">关联信息帮助</a></td>
+    </tr>
+    <tr>
+      <td>账户管理</td>
+      <td>管理用户账户（仅管理员）</td>
+      <td><a href="manage-account.html">账户管理帮助</a></td>
+    </tr>
+    <tr>
+      <td>服务器设置</td>
+      <td>服务器连接和TLS设置（仅管理员）</td>
+      <td><a href="server-config.html">服务器设置帮助</a></td>
+    </tr>
+  </table>
+
+  <h2>创建您的第一条记录</h2>
+  <ol>
+    <li>登录后，将显示设置中指定的默认画面。</li>
+    <li>点击屏幕右下角的"+"按钮。</li>
+    <li>选择"记事本"。</li>
+    <li>在文本区域中输入您想要记录的内容（例如：<code>今天午餐吃了咖喱</code>）。</li>
+    <li>按"保存"按钮即可创建记录。</li>
+  </ol>
+
+  <div class="tip">
+    <strong>提示：</strong> 长按"+"按钮可以直接打开记事本。
+  </div>
+
+  <h2>术语表</h2>
+  <table>
+    <tr>
+      <th>术语</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>记录</td>
+      <td>gkill中记录的统称。涵盖备忘录、打卡、任务等所有记录类型</td>
+    </tr>
+    <tr>
+      <td>记事本语法</td>
+      <td>记事本中使用的文本输入语法。通过在每行开头添加符号，可以一次创建不同类型的记录</td>
+    </tr>
+    <tr>
+      <td>打卡</td>
+      <td>时间追踪功能。记录工作或活动的开始和结束时间</td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>即使在锁定屏幕上也可以安全添加记录的画面。作为各种记录的添加中心</td>
+    </tr>
+    <tr>
+      <td>记事本语法</td>
+      <td>记事本语法的别名。指基于文本的记录输入格式</td>
+    </tr>
+    <tr>
+      <td>生活日志视图</td>
+      <td>用于列表显示和搜索记录的页面</td>
+    </tr>
+    <tr>
+      <td>统计视图</td>
+      <td>显示数据汇总和统计的功能</td>
+    </tr>
+    <tr>
+      <td>关联信息</td>
+      <td>自动搜索和显示相关信息的功能</td>
+    </tr>
+    <tr>
+      <td>仓库</td>
+      <td>记录的存储位置。可以根据用途使用多个仓库</td>
+    </tr>
+    <tr>
+      <td>配置文件</td>
+      <td>按设备分组的设置集合</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

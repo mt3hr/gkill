@@ -742,12 +742,19 @@
     "CONFIRM_UNKNOWN_TAG_TITLE": "Bestätigung",
     "CONFIRM_UNKNOWN_TAG_MESSAGE": "Dies ist ein neues Tag. Möchten Sie es hinzufügen?",
     "HELP_TITLE": "Hilfe",
+    "TUTORIAL_TITLE": "Tutorial",
+    "DONT_SHOW_TUTORIAL_AGAIN": "Beim naechsten Start nicht mehr anzeigen",
     "TOOLTIP_HELP": "Hilfe anzeigen",
     "TOOLTIP_SETTINGS": "Einstellungen",
     "TOOLTIP_TOGGLE_DETAIL_VIEW": "Detailansicht umschalten",
     "TOOLTIP_TOGGLE_CALENDAR": "Kalender umschalten",
-    "TOOLTIP_TOGGLE_DNOTE": "Dnote umschalten",
+    "TOOLTIP_TOGGLE_DNOTE": "Aggregationsansicht umschalten",
     "TOOLTIP_TOGGLE_MAP": "Karte umschalten",
     "TOOLTIP_TOGGLE_SIDEBAR": "Seitenleiste umschalten",
-    "TOOLTIP_RELOAD": "Neu laden"
+    "TOOLTIP_RELOAD": "Neu laden",
+    "TOOLTIP_DOWNLOAD": "Herunterladen",
+    "TOOLTIP_TOGGLE_IMAGE_VIEW": "Bildansicht umschalten",
+    "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "Zum angeklickten Zeitraum scrollen",
+    "TOOLTIP_CLOSE_COLUMN": "Spalte schließen",
+    "TOOLTIP_ADD_BOARD": "Board hinzufügen"
 }

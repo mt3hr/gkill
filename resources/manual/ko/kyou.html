@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>기록 상세</span></nav>
   <h1>기록 화면</h1>
   <p>개별 기록의 상세 정보를 표시하는 화면입니다. 다양한 기록 유형의 상세 정보를 확인할 수 있습니다.</p>
 
@@ -49,7 +55,7 @@
       <th>설명</th>
     </tr>
     <tr>
-      <td>메모(Kmemo)</td>
+      <td>메모</td>
       <td>텍스트 메모의 내용을 표시합니다.</td>
     </tr>
     <tr>
@@ -73,7 +79,7 @@
       <td>시작/종료 시간과 경과 시간을 표시합니다.</td>
     </tr>
     <tr>
-      <td>파일(IDFKyou)</td>
+      <td>파일</td>
       <td>업로드된 파일의 미리보기를 표시합니다.</td>
     </tr>
     <tr>
@@ -96,6 +102,11 @@
   <div class="tip">
     <strong>팁:</strong> 기록 상세 화면에서 직접 태그를 추가하거나 편집할 수 있습니다.
   </div>
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="rykv.html">라이프로그 뷰</a></li>
+    <li><a href="mi.html">작업</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

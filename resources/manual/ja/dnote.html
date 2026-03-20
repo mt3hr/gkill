@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>集計ビュー - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>集計ビュー</span></nav>
+  <h1>集計ビュー</h1>
+  <p>ライフログのデータを条件に基づいて集計・可視化する画面です。単一の集計値を表示する「アイテム」と、キーごとにグループ化して集計する「リスト」の2種類を定義できます。</p>
+
+  <h2>定義の管理</h2>
+  <table>
+    <tr>
+      <th>要素</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>タブ</td>
+      <td>各集計定義がタブとして表示されます。タブをクリックして切り替えます。</td>
+    </tr>
+    <tr>
+      <td>定義名</td>
+      <td>テキストフィールドで集計定義の名前を編集できます。</td>
+    </tr>
+    <tr>
+      <td>＋ボタン（タブ横）</td>
+      <td>新しい集計定義を追加します。</td>
+    </tr>
+    <tr>
+      <td>削除ボタン</td>
+      <td>現在表示中の集計定義を削除します。</td>
+    </tr>
+  </table>
+
+  <h2>画面の要素</h2>
+  <table>
+    <tr>
+      <th>要素</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>日付範囲</td>
+      <td>集計対象の期間を表示します。</td>
+    </tr>
+    <tr>
+      <td>ダウンロードボタン</td>
+      <td>集計結果をJSON形式でダウンロードします。</td>
+    </tr>
+    <tr>
+      <td>＋ボタン（フローティング）</td>
+      <td>メニューが表示され、アイテム追加またはリスト追加を選択できます。</td>
+    </tr>
+  </table>
+
+  <h2>アイテム（単一集計値）</h2>
+  <p>条件に一致するデータの集計値を「タイトル: プレフィックス [集計結果] サフィックス」の形式で表示します。</p>
+  <table>
+    <tr>
+      <th>設定項目</th>
+      <th>種類</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>タイトル</td>
+      <td>テキスト入力</td>
+      <td>アイテムの表示名を設定します。</td>
+    </tr>
+    <tr>
+      <td>プレフィックス</td>
+      <td>テキスト入力</td>
+      <td>集計値の前に表示するテキストです。</td>
+    </tr>
+    <tr>
+      <td>サフィックス</td>
+      <td>テキスト入力</td>
+      <td>集計値の後に表示するテキストです。</td>
+    </tr>
+    <tr>
+      <td>集計対象</td>
+      <td>ドロップダウン</td>
+      <td>集計方法を選択します（件数、合計、平均、最大、最小など）。</td>
+    </tr>
+    <tr>
+      <td>条件グループ</td>
+      <td>条件エディタ</td>
+      <td>AND/OR条件で集計対象を絞り込みます。</td>
+    </tr>
+  </table>
+
+  <h2>リスト（グループ集計）</h2>
+  <p>キーごとにグループ化して集計した結果をリスト形式で表示します。</p>
+  <table>
+    <tr>
+      <th>設定項目</th>
+      <th>種類</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>タイトル / プレフィックス / サフィックス</td>
+      <td>テキスト入力</td>
+      <td>アイテムと同様の設定です。</td>
+    </tr>
+    <tr>
+      <td>集計対象</td>
+      <td>ドロップダウン</td>
+      <td>集計方法を選択します。</td>
+    </tr>
+    <tr>
+      <td>グループキー</td>
+      <td>ドロップダウン</td>
+      <td>グループ化の基準を選択します（タイトル、データタイプ、タグ、月、曜日、日付など）。</td>
+    </tr>
+    <tr>
+      <td>条件グループ</td>
+      <td>条件エディタ</td>
+      <td>AND/OR条件で集計対象を絞り込みます。</td>
+    </tr>
+  </table>
+
+  <h2>条件グループの編集</h2>
+  <table>
+    <tr>
+      <th>要素</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>結合ロジック</td>
+      <td>AND / OR / NOT を選択して条件の結合方法を設定します。</td>
+    </tr>
+    <tr>
+      <td>条件追加</td>
+      <td>グループに新しい条件を追加します。</td>
+    </tr>
+    <tr>
+      <td>グループ追加</td>
+      <td>ネストされた条件グループを追加します。</td>
+    </tr>
+    <tr>
+      <td>グループ削除</td>
+      <td>この条件グループを削除します。</td>
+    </tr>
+    <tr>
+      <td>各条件</td>
+      <td>条件タイプと値を設定します（データタイプ、タグ、タイトル、金額、気分値などで絞り込み）。</td>
+    </tr>
+  </table>
+
+  <h2>操作方法</h2>
+  <table>
+    <tr>
+      <th>操作</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>ダブルクリック</td>
+      <td>アイテムまたはリストの編集画面を開きます。</td>
+    </tr>
+    <tr>
+      <td>右クリック</td>
+      <td>コンテキストメニューを表示します（編集・削除）。</td>
+    </tr>
+    <tr>
+      <td>ドラッグ＆ドロップ</td>
+      <td>アイテムやリストの並び順を変更できます。</td>
+    </tr>
+  </table>
+
+  <h2>下部アクションボタン</h2>
+  <table>
+    <tr>
+      <th>ボタン</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>適用</td>
+      <td>すべての定義の変更を保存します。</td>
+    </tr>
+    <tr>
+      <td>キャンセル</td>
+      <td>変更を破棄してダイアログを閉じます。</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>ヒント:</strong> アイテムは単一の集計値（例：今月の支出合計）、リストはグループごとの集計一覧（例：店舗別支出）に使用すると便利です。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 条件を組み合わせることで、複雑な集計条件を作成できます。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> ドラッグ＆ドロップでアイテムやリストの表示順を自由に変更できます。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 集計結果はJSONでダウンロードして外部ツールで分析することもできます。
+  </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="application-config.html">設定画面</a></li>
+    <li><a href="rykv.html">ライフログビュー画面</a></li>
+    <li><a href="getting-started.html">はじめに</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

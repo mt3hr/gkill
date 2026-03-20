@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>設定画面</span></nav>
   <h1>設定画面</h1>
   <p>アプリケーション全体の設定やデータ構造の管理を行う画面です。表示・動作・外部連携に関するさまざまなオプションを調整できます。</p>
 
@@ -42,11 +48,11 @@
     </tr>
     <tr>
       <td>再読込</td>
-      <td>データをサーバーから再読み込みします。長押しすると強制再読み込みを実行します。</td>
+      <td>データをサーバーから再読み込みします。<strong>長押し:</strong> 強制再読み込みを実行します。</td>
     </tr>
     <tr>
       <td>ログアウト</td>
-      <td>現在のセッションを終了してログアウトします。長押しすると追加のオプションが表示されます。</td>
+      <td>現在のセッションを終了してログアウトします。</td>
     </tr>
   </table>
 
@@ -204,6 +210,15 @@
   <div class="tip">
     <strong>ヒント:</strong> GPS地図機能を使うには、Google Cloud ConsoleでMaps JavaScript APIを有効にし、APIキーを取得して設定してください。
   </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="server-config.html">サーバ設定（管理者のみ）</a></li>
+    <li><a href="manage-account.html">アカウント管理（管理者のみ）</a></li>
+    <li><a href="dnote.html">集計ビュー</a></li>
+    <li><a href="ryuu.html">関連情報</a></li>
+    <li><a href="kftl-template-struct.html">テンプレート構造</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

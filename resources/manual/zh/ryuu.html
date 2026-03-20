@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关联信息 - 帮助</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>关联信息</span></nav>
+  <h1>关联信息</h1>
+  <p>定义自动搜索和显示与生活日志记录相关的其他记录的条件的画面。可以为每个定义设置查询，以可视化记录之间的关联性。</p>
+
+  <h2>定义管理</h2>
+  <table>
+    <tr>
+      <th>元素</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>选项卡</td>
+      <td>每个定义以选项卡形式显示。点击选项卡进行切换。</td>
+    </tr>
+    <tr>
+      <td>定义名称</td>
+      <td>可在文本框中编辑定义的名称。</td>
+    </tr>
+    <tr>
+      <td>+按钮（选项卡旁）</td>
+      <td>添加新的定义。</td>
+    </tr>
+    <tr>
+      <td>删除按钮</td>
+      <td>删除当前显示的定义。</td>
+    </tr>
+  </table>
+
+  <h2>查询列表</h2>
+  <p>每个定义会显示查询列表。使用浮动的+按钮可以添加新的查询。</p>
+
+  <h2>查询设置项</h2>
+  <table>
+    <tr>
+      <th>设置项</th>
+      <th>类型</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>标题</td>
+      <td>文本输入</td>
+      <td>设置查询的显示名称。</td>
+    </tr>
+    <tr>
+      <td>前缀</td>
+      <td>文本输入</td>
+      <td>显示在匹配值前面的文本。</td>
+    </tr>
+    <tr>
+      <td>后缀</td>
+      <td>文本输入</td>
+      <td>显示在匹配值后面的文本。</td>
+    </tr>
+    <tr>
+      <td>条件组</td>
+      <td>条件编辑器</td>
+      <td>使用AND/OR条件筛选匹配对象。</td>
+    </tr>
+    <tr>
+      <td>关联时刻匹配类型</td>
+      <td>下拉菜单</td>
+      <td>选择基于时间的关联性判定方法。</td>
+    </tr>
+    <tr>
+      <td>搜索期间（小时）</td>
+      <td>数值输入</td>
+      <td>以小时为单位指定搜索关联记录的时间范围。</td>
+    </tr>
+    <tr>
+      <td>自定义搜索查询</td>
+      <td>复选框+按钮</td>
+      <td>启用后可使用自定义搜索查询。点击按钮打开搜索查询编辑器。</td>
+    </tr>
+  </table>
+
+  <h2>关联时刻匹配类型</h2>
+  <table>
+    <tr>
+      <th>类型</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>前后最近时刻</td>
+      <td>匹配与目标记录时间前后最接近的记录。</td>
+    </tr>
+    <tr>
+      <td>之前最近时刻</td>
+      <td>匹配在目标记录之前时间最接近的记录。</td>
+    </tr>
+    <tr>
+      <td>之后最近时刻</td>
+      <td>匹配在目标记录之后时间最接近的记录。</td>
+    </tr>
+  </table>
+
+  <h2>查询编辑按钮</h2>
+  <table>
+    <tr>
+      <th>按钮</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>重置</td>
+      <td>将编辑内容恢复到原始状态。</td>
+    </tr>
+    <tr>
+      <td>保存</td>
+      <td>保存查询的更改。</td>
+    </tr>
+  </table>
+
+  <h2>底部操作按钮</h2>
+  <table>
+    <tr>
+      <th>按钮</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>应用</td>
+      <td>保存所有定义和查询的更改。</td>
+    </tr>
+    <tr>
+      <td>取消</td>
+      <td>放弃更改并关闭对话框。</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>提示：</strong> 关联信息用于在生活日志视图画面浏览记录时，自动显示相关的其他记录。
+  </div>
+
+  <div class="tip">
+    <strong>提示：</strong> 缩短搜索期间，只会匹配时间上更接近的记录。
+  </div>
+
+  <div class="tip">
+    <strong>提示：</strong> 创建多个定义，可以定义不同类型的关联关系。
+  </div>
+
+  <div class="tip">
+    <strong>提示：</strong> 使用自定义搜索查询可以设置更高级的搜索条件。
+  </div>
+
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="application-config.html">设置画面</a></li>
+    <li><a href="rykv.html">生活日志视图</a></li>
+    <li><a href="getting-started.html">入门指南</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

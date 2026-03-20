@@ -742,12 +742,19 @@
     "CONFIRM_UNKNOWN_TAG_TITLE": "확인",
     "CONFIRM_UNKNOWN_TAG_MESSAGE": "새로운 태그입니다. 추가하시겠습니까？",
     "HELP_TITLE": "도움말",
+    "TUTORIAL_TITLE": "튜토리얼",
+    "DONT_SHOW_TUTORIAL_AGAIN": "다음 시작 시 표시하지 않기",
     "TOOLTIP_HELP": "도움말 표시",
     "TOOLTIP_SETTINGS": "설정",
     "TOOLTIP_TOGGLE_DETAIL_VIEW": "상세 보기 전환",
     "TOOLTIP_TOGGLE_CALENDAR": "캘린더 전환",
-    "TOOLTIP_TOGGLE_DNOTE": "Dnote 전환",
+    "TOOLTIP_TOGGLE_DNOTE": "집계 뷰 전환",
     "TOOLTIP_TOGGLE_MAP": "지도 전환",
     "TOOLTIP_TOGGLE_SIDEBAR": "사이드바 전환",
-    "TOOLTIP_RELOAD": "새로고침"
+    "TOOLTIP_RELOAD": "새로고침",
+    "TOOLTIP_DOWNLOAD": "다운로드",
+    "TOOLTIP_TOGGLE_IMAGE_VIEW": "이미지 보기 전환",
+    "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "클릭한 시기까지 스크롤",
+    "TOOLTIP_CLOSE_COLUMN": "열 닫기",
+    "TOOLTIP_ADD_BOARD": "보드 추가"
 }

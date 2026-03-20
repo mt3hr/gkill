@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>はじめに - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>はじめに</h1>
+  <p>gkillは、日々のライフログ（生活記録）を記録・閲覧するためのアプリケーションです。</p>
+
+  <h2>gkillでできること</h2>
+  <table>
+    <tr>
+      <th>記録タイプ</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>メモ</td>
+      <td>テキストメモを記録します</td>
+    </tr>
+    <tr>
+      <td>打刻</td>
+      <td>時間の開始・終了を記録します</td>
+    </tr>
+    <tr>
+      <td>タスク</td>
+      <td>やるべきことをカンバンボードで管理します</td>
+    </tr>
+    <tr>
+      <td>気分</td>
+      <td>気分を0〜10の数値で記録します</td>
+    </tr>
+    <tr>
+      <td>支出</td>
+      <td>支出金額と内容を記録します</td>
+    </tr>
+    <tr>
+      <td>ブックマーク</td>
+      <td>WebページのURLを保存します</td>
+    </tr>
+    <tr>
+      <td>数値記録</td>
+      <td>任意の数値データを記録します</td>
+    </tr>
+    <tr>
+      <td>ファイル</td>
+      <td>画像やドキュメントをアップロードして記録します</td>
+    </tr>
+  </table>
+
+  <h2>初回セットアップ</h2>
+  <ol>
+    <li>gkillを起動し、ブラウザで <code>http://localhost:9999</code> にアクセスします。</li>
+    <li>ユーザーID <code>admin</code>、パスワードなしでログインします。</li>
+    <li>ログイン後、設定画面でパスワードを設定することを推奨します。</li>
+    <li>設定画面で言語やダークテーマなどの基本設定を行います。</li>
+  </ol>
+
+  <h2>画面一覧</h2>
+  <table>
+    <tr>
+      <th>画面名</th>
+      <th>説明</th>
+      <th>詳細ヘルプ</th>
+    </tr>
+    <tr>
+      <td>チュートリアル</td>
+      <td>gkillの基本操作から応用テクニックまで</td>
+      <td><a href="tutorial.html">チュートリアル（基本編＋応用編）</a></td>
+    </tr>
+    <tr>
+      <td>ログイン</td>
+      <td>認証画面</td>
+      <td><a href="login.html">ログイン画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>さいはて</td>
+      <td>ロック画面からでも安全に記録できる画面。各種記録の追加ハブ</td>
+      <td><a href="saihate.html">さいはて画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>メモ帳</td>
+      <td>メモ帳構文でテキスト入力</td>
+      <td><a href="kftl.html">メモ帳画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>打刻メモ帳</td>
+      <td>メモ入力と打刻の同時管理</td>
+      <td><a href="mkfl.html">打刻メモ帳画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>タスク</td>
+      <td>カンバンボードでタスク管理</td>
+      <td><a href="mi.html">タスク画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>ライフログビュー</td>
+      <td>記録の一覧・検索・閲覧</td>
+      <td><a href="rykv.html">ライフログビュー画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>進行中</td>
+      <td>実行中の打刻セッション管理</td>
+      <td><a href="plaing.html">進行中画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>記録詳細</td>
+      <td>個別記録の詳細表示</td>
+      <td><a href="kyou.html">記録詳細画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>設定</td>
+      <td>アプリケーション設定</td>
+      <td><a href="application-config.html">設定画面ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>メモ帳構文リファレンス</td>
+      <td>メモ帳構文の記号と書式の一覧</td>
+      <td><a href="kftl-syntax.html">メモ帳構文リファレンスヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>テンプレート構造</td>
+      <td>メモ帳テンプレートの構造定義</td>
+      <td><a href="kftl-template-struct.html">テンプレート構造ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>集計ビュー</td>
+      <td>データの集計・可視化</td>
+      <td><a href="dnote.html">集計ビューヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>関連情報</td>
+      <td>関連する記録の自動検索定義</td>
+      <td><a href="ryuu.html">関連情報ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>アカウント管理</td>
+      <td>ユーザーアカウントの管理（管理者のみ）</td>
+      <td><a href="manage-account.html">アカウント管理ヘルプ</a></td>
+    </tr>
+    <tr>
+      <td>サーバ設定</td>
+      <td>サーバの接続・TLS設定（管理者のみ）</td>
+      <td><a href="server-config.html">サーバ設定ヘルプ</a></td>
+    </tr>
+  </table>
+
+  <h2>最初の記録を作ってみよう</h2>
+  <ol>
+    <li>ログイン後、設定で指定されたデフォルト画面が表示されます。</li>
+    <li>画面右下の「+」ボタンをタップします。</li>
+    <li>「メモ帳」を選択します。</li>
+    <li>テキストエリアに記録したい内容を入力します（例: <code>今日のランチはカレーだった</code>）。</li>
+    <li>「保存」ボタンを押すと記録が作成されます。</li>
+  </ol>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 「+」ボタンを長押しすると、メモ帳が直接開きます。
+  </div>
+
+  <h2>用語集</h2>
+  <table>
+    <tr>
+      <th>用語</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>記録</td>
+      <td>gkillにおけるデータの総称です。メモ、打刻、タスクなどすべての記録タイプを包括します</td>
+    </tr>
+    <tr>
+      <td>メモ帳構文</td>
+      <td>メモ帳で使用するテキスト入力構文です。行ごとに記号を付けることで、異なる種類の記録を一括作成できます</td>
+    </tr>
+    <tr>
+      <td>打刻</td>
+      <td>時間計測機能です。作業や活動の開始・終了時刻を記録します</td>
+    </tr>
+    <tr>
+      <td>さいはて</td>
+      <td>ロック画面からでも安全に記録を追加できる画面です。各種記録の追加ハブとして機能します</td>
+    </tr>
+    <tr>
+      <td>メモ帳記法</td>
+      <td>メモ帳構文の別名です。テキストベースで記録を入力する書式を指します</td>
+    </tr>
+    <tr>
+      <td>ライフログビュー</td>
+      <td>記録を一覧表示・検索する画面です</td>
+    </tr>
+    <tr>
+      <td>集計ビュー</td>
+      <td>データの集計・統計を表示する機能です</td>
+    </tr>
+    <tr>
+      <td>関連情報</td>
+      <td>関連する記録を自動検索・表示する機能です</td>
+    </tr>
+    <tr>
+      <td>リポジトリ</td>
+      <td>記録の保存先です。用途に応じて複数のリポジトリを使い分けられます</td>
+    </tr>
+    <tr>
+      <td>プロファイル</td>
+      <td>デバイスごとの設定をまとめたものです</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

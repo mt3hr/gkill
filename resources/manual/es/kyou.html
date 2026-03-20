@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Detalles del Registro</span></nav>
   <h1>Vista de registro</h1>
   <p>Pantalla que muestra los detalles de un registro individual. Puede consultar la informacion detallada de varios tipos de registros.</p>
 
@@ -49,7 +55,7 @@
       <th>Descripcion</th>
     </tr>
     <tr>
-      <td>Memo (Kmemo)</td>
+      <td>Nota</td>
       <td>Muestra el contenido de notas de texto.</td>
     </tr>
     <tr>
@@ -73,7 +79,7 @@
       <td>Muestra la hora de inicio/fin y el tiempo transcurrido.</td>
     </tr>
     <tr>
-      <td>Archivo (IDFKyou)</td>
+      <td>Archivo</td>
       <td>Muestra una vista previa del archivo subido.</td>
     </tr>
     <tr>
@@ -96,6 +102,11 @@
   <div class="tip">
     <strong>Consejo:</strong> Puede agregar o editar etiquetas directamente desde la pantalla de detalles del registro.
   </div>
+  <h2>Documentos Relacionados</h2>
+  <ul>
+    <li><a href="rykv.html">Vista de Registro de Vida</a></li>
+    <li><a href="mi.html">Tareas</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

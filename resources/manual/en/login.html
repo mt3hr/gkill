@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Login</span></nav>
   <h1>Login Screen</h1>
   <p>
     The login screen is the entry point for gkill. You must authenticate with a valid user account before accessing any features.
@@ -51,7 +57,7 @@
   </ol>
 
   <div class="tip">
-    <strong>First-time setup:</strong> On the very first run of gkill, an <code>admin</code> user is automatically created with no password. Log in with user ID <code>admin</code> and leave the password field empty. You should set a password after your first login via the Settings screen.
+    <strong>First-time setup:</strong> On the very first run of gkill, an account registration screen will be displayed automatically. Follow the on-screen instructions to create your user account and set the administrator password.
   </div>
 
   <h2>Session Management</h2>
@@ -62,6 +68,16 @@
   <div class="tip">
     <strong>Tip:</strong> If you are having trouble logging in, verify that the server is running and that you are connecting to the correct address and port (default: <code>:9999</code>).
   </div>
+
+  <div class="tip">
+    <strong>Troubleshooting:</strong> If you cannot log in, verify your user ID and password.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="tutorial.html">Tutorial (Basic + Advanced)</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

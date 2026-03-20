@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zugehörige Informationen - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Verwandte Informationen</span></nav>
+  <h1>Zugehörige Informationen</h1>
+  <p>Bildschirm zur Definition von Bedingungen für die automatische Suche und Anzeige von Einträgen, die mit einem Lebensprotokoll-Eintrag zusammenhängen. Sie können Abfragen pro Definition einrichten, um die Beziehungen zwischen Einträgen zu visualisieren.</p>
+
+  <h2>Definitionsverwaltung</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Registerkarten</td>
+      <td>Jede Definition wird als Registerkarte angezeigt. Klicken Sie auf eine Registerkarte, um zwischen Definitionen zu wechseln.</td>
+    </tr>
+    <tr>
+      <td>Name</td>
+      <td>Textfeld zum Bearbeiten des Namens der Definition.</td>
+    </tr>
+    <tr>
+      <td>＋-Schaltfläche (neben Registerkarten)</td>
+      <td>Fügt eine neue Definition hinzu.</td>
+    </tr>
+    <tr>
+      <td>Löschen-Schaltfläche</td>
+      <td>Löscht die aktuell angezeigte Definition.</td>
+    </tr>
+  </table>
+
+  <h2>Abfrageliste</h2>
+  <p>Jede Definition zeigt eine Liste von Abfragen an. Mit der schwebenden ＋-Schaltfläche können neue Abfragen hinzugefügt werden.</p>
+
+  <h2>Abfrageeinstellungen</h2>
+  <table>
+    <tr>
+      <th>Einstellung</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Titel</td>
+      <td>Texteingabe</td>
+      <td>Legt den Anzeigenamen der Abfrage fest.</td>
+    </tr>
+    <tr>
+      <td>Präfix</td>
+      <td>Texteingabe</td>
+      <td>Text, der vor dem übereinstimmenden Wert angezeigt wird.</td>
+    </tr>
+    <tr>
+      <td>Suffix</td>
+      <td>Texteingabe</td>
+      <td>Text, der nach dem übereinstimmenden Wert angezeigt wird.</td>
+    </tr>
+    <tr>
+      <td>Bedingungsgruppe</td>
+      <td>Bedingungseditor</td>
+      <td>Filtert die Übereinstimmungsziele mithilfe von AND/OR-Bedingungen.</td>
+    </tr>
+    <tr>
+      <td>Zeitlicher Übereinstimmungstyp</td>
+      <td>Dropdown</td>
+      <td>Wählt die Methode der zeitlichen Übereinstimmung.</td>
+    </tr>
+    <tr>
+      <td>Suchzeitraum (Stunden)</td>
+      <td>Numerische Eingabe</td>
+      <td>Gibt den Zeitbereich für die Suche nach zugehörigen Einträgen in Stunden an.</td>
+    </tr>
+    <tr>
+      <td>Benutzerdefinierte Suchabfrage</td>
+      <td>Kontrollkästchen ＋ Schaltfläche</td>
+      <td>Aktivieren Sie diese Option, um eine benutzerdefinierte Suchabfrage zu verwenden. Die Schaltfläche öffnet den Abfrageeditor.</td>
+    </tr>
+  </table>
+
+  <h2>Zeitliche Übereinstimmungstypen</h2>
+  <table>
+    <tr>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Nächstliegende Zeit davor und danach</td>
+      <td>Stimmt mit den Einträgen überein, deren Zeit vor und nach dem Zieleintrag am nächsten liegt.</td>
+    </tr>
+    <tr>
+      <td>Nächstliegende Zeit davor</td>
+      <td>Stimmt mit dem Eintrag überein, dessen Zeit vor dem Zieleintrag am nächsten liegt.</td>
+    </tr>
+    <tr>
+      <td>Nächstliegende Zeit danach</td>
+      <td>Stimmt mit dem Eintrag überein, dessen Zeit nach dem Zieleintrag am nächsten liegt.</td>
+    </tr>
+  </table>
+
+  <h2>Abfragebearbeitungs-Schaltflächen</h2>
+  <table>
+    <tr>
+      <th>Schaltfläche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Zurücksetzen</td>
+      <td>Setzt die Bearbeitungen zurück.</td>
+    </tr>
+    <tr>
+      <td>Speichern</td>
+      <td>Speichert die Änderungen an der Abfrage.</td>
+    </tr>
+  </table>
+
+  <h2>Untere Aktionsschaltflächen</h2>
+  <table>
+    <tr>
+      <th>Schaltfläche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Übernehmen</td>
+      <td>Speichert alle Änderungen an Definitionen und Abfragen.</td>
+    </tr>
+    <tr>
+      <td>Abbrechen</td>
+      <td>Verwirft die Änderungen und schließt den Dialog.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Zugehörige Informationen werden verwendet, um beim Durchsuchen des Lebensprotokolls automatisch verwandte Einträge anzuzeigen.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Ein kürzerer Suchzeitraum liefert nur zeitlich nähere Einträge.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Erstellen Sie mehrere Definitionen, um verschiedene Arten von Beziehungen zu definieren.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Verwenden Sie benutzerdefinierte Suchabfragen für erweiterte Suchbedingungen.
+  </div>
+
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="application-config.html">Einstellungsbildschirm</a></li>
+    <li><a href="rykv.html">Lebenslogansicht</a></li>
+    <li><a href="getting-started.html">Erste Schritte</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

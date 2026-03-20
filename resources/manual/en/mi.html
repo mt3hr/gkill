@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Tasks</span></nav>
   <h1>Task Board</h1>
   <p>
     The Tasks screen provides a Kanban-style task board for managing tasks. Tasks are organized into boards and displayed as cards that can be tracked, checked off, and completed.
@@ -37,7 +43,7 @@
     <tr><th>Icon</th><th>Action</th></tr>
     <tr><td><span class="icon">&#9776;</span> Sidebar Toggle</td><td>Show or hide the filter sidebar for narrowing down displayed tasks.</td></tr>
     <tr><td><span class="icon">&#128196;</span> Detail View Toggle</td><td>Show or hide the detail panel that displays full information for the selected task.</td></tr>
-    <tr><td><span class="icon">&#128197;</span> Calendar Toggle</td><td>Show or hide the calendar heatmap showing task activity over time.</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendar Toggle</td><td>Show or hide the calendar view.</td></tr>
     <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
   </table>
 
@@ -77,9 +83,6 @@
     <li>Edit and management controls</li>
   </ul>
 
-  <h2>Calendar Heatmap</h2>
-  <p>The calendar view shows a heatmap of task activity over time. Darker cells indicate more task activity on that day. Click on a date to filter tasks to that specific day.</p>
-
   <div class="tip">
     <strong>Tip:</strong> Set your most frequently used board as the default board in Settings so it opens automatically when you visit the Tasks screen.
   </div>
@@ -91,6 +94,12 @@
   <div class="tip">
     <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
   </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Memo Pad Syntax Reference</a></li>
+    <li><a href="rykv.html">Life Log View</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

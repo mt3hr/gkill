@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estructura de plantillas - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Estructura de Plantillas</span></nav>
+  <h1>Estructura de plantillas</h1>
+  <p>Pantalla para gestionar la estructura de las plantillas de texto utilizadas en el bloc de notas. Puede organizar las plantillas en carpetas y crear/editar textos predefinidos para entrada rápida.</p>
+
+  <h2>Elementos de la pantalla</h2>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Árbol de plantillas</td>
+      <td>Muestra plantillas y carpetas en estructura jerárquica. Las carpetas se pueden abrir y cerrar con un clic para clasificar y organizar las plantillas.</td>
+    </tr>
+  </table>
+
+  <h2>Operaciones</h2>
+  <table>
+    <tr>
+      <th>Operación</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Doble clic</td>
+      <td>Abre la pantalla de edición de la plantilla seleccionada.</td>
+    </tr>
+    <tr>
+      <td>Clic derecho</td>
+      <td>Muestra el menú contextual (editar/eliminar).</td>
+    </tr>
+  </table>
+
+  <h2>Botones de acción</h2>
+  <table>
+    <tr>
+      <th>Botón</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Añadir plantilla</td>
+      <td>Añade un nuevo elemento de plantilla.</td>
+    </tr>
+    <tr>
+      <td>Añadir carpeta</td>
+      <td>Añade una carpeta para organizar las plantillas.</td>
+    </tr>
+    <tr>
+      <td>Aplicar</td>
+      <td>Guarda los cambios en la estructura de plantillas.</td>
+    </tr>
+    <tr>
+      <td>Cancelar</td>
+      <td>Descarta los cambios y cierra el diálogo.</td>
+    </tr>
+  </table>
+
+  <h2>Edición de elementos de plantilla</h2>
+  <p>Al hacer doble clic en una plantilla o seleccionar «Editar» en el menú contextual, se muestra la pantalla de edición.</p>
+  <table>
+    <tr>
+      <th>Configuración</th>
+      <th>Tipo</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Nombre de plantilla</td>
+      <td>Entrada de texto</td>
+      <td>Establece el nombre visible de la plantilla.</td>
+    </tr>
+    <tr>
+      <td>Contenido de plantilla</td>
+      <td>Área de texto</td>
+      <td>Contenido de texto que se insertará en el bloc de notas. Puede incluir sintaxis del bloc de notas.</td>
+    </tr>
+  </table>
+
+  <h2>Menú contextual</h2>
+  <table>
+    <tr>
+      <th>Elemento del menú</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Editar</td>
+      <td>Abre la pantalla de edición del elemento de plantilla.</td>
+    </tr>
+    <tr>
+      <td>Eliminar</td>
+      <td>Elimina el elemento de plantilla. Se muestra un diálogo de confirmación.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Incluir sintaxis del bloc de notas en las plantillas permite realizar entradas estructuradas rápidamente desde la pantalla del bloc de notas.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Usar carpetas para organizar las plantillas por categoría facilita su búsqueda.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Los cambios en la estructura de plantillas no se guardan hasta pulsar el botón «Aplicar».
+  </div>
+
+  <h2>Documentación relacionada</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a></li>
+    <li><a href="application-config.html">Pantalla de configuración</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>
