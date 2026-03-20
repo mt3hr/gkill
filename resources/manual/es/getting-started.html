@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primeros Pasos - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Primeros Pasos</h1>
+  <p>gkill es una aplicacion para registrar y consultar registros de vida diaria (life logs).</p>
+
+  <h2>Lo que puedes hacer con gkill</h2>
+  <table>
+    <tr>
+      <th>Tipo de registro</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Nota</td>
+      <td>Registra notas de texto</td>
+    </tr>
+    <tr>
+      <td>Marca de tiempo</td>
+      <td>Registra tiempos de inicio y fin</td>
+    </tr>
+    <tr>
+      <td>Tarea</td>
+      <td>Gestiona tareas en un tablero Kanban</td>
+    </tr>
+    <tr>
+      <td>Estado de ánimo</td>
+      <td>Registra tu estado de ánimo con un valor de 0 a 10</td>
+    </tr>
+    <tr>
+      <td>Gasto</td>
+      <td>Registra importes y detalles de gastos</td>
+    </tr>
+    <tr>
+      <td>Marcador</td>
+      <td>Guarda URLs de paginas web</td>
+    </tr>
+    <tr>
+      <td>Registro numérico</td>
+      <td>Registra datos numéricos arbitrarios</td>
+    </tr>
+    <tr>
+      <td>Archivo</td>
+      <td>Sube y registra imagenes o documentos</td>
+    </tr>
+  </table>
+
+  <h2>Configuracion inicial</h2>
+  <ol>
+    <li>Inicia gkill y accede a <code>http://localhost:9999</code> en tu navegador.</li>
+    <li>Inicia sesion con el ID de usuario <code>admin</code> y sin contrasena.</li>
+    <li>Despues de iniciar sesion, se recomienda establecer una contrasena en la pantalla de configuracion.</li>
+    <li>Configura los ajustes basicos como el idioma y el tema oscuro en la pantalla de configuracion.</li>
+  </ol>
+
+  <h2>Lista de pantallas</h2>
+  <table>
+    <tr>
+      <th>Pantalla</th>
+      <th>Descripcion</th>
+      <th>Ayuda detallada</th>
+    </tr>
+    <tr>
+      <td>Tutorial</td>
+      <td>Desde operaciones basicas hasta tecnicas avanzadas</td>
+      <td><a href="tutorial.html">Tutorial (Basico + Avanzado)</a></td>
+    </tr>
+    <tr>
+      <td>Inicio de sesion</td>
+      <td>Pantalla de autenticacion</td>
+      <td><a href="login.html">Ayuda de inicio de sesion</a></td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Pantalla para registrar de forma segura incluso desde la pantalla de bloqueo. Centro de adición de registros</td>
+      <td><a href="saihate.html">Ayuda de Saihate</a></td>
+    </tr>
+    <tr>
+      <td>Bloc de notas</td>
+      <td>Entrada de texto con sintaxis del bloc de notas</td>
+      <td><a href="kftl.html">Ayuda del bloc de notas</a></td>
+    </tr>
+    <tr>
+      <td>Bloc de marcas</td>
+      <td>Gestion simultanea de notas y marcas de tiempo</td>
+      <td><a href="mkfl.html">Ayuda del bloc de marcas</a></td>
+    </tr>
+    <tr>
+      <td>Tareas</td>
+      <td>Gestion de tareas con tablero Kanban</td>
+      <td><a href="mi.html">Ayuda de tareas</a></td>
+    </tr>
+    <tr>
+      <td>Vista de registros</td>
+      <td>Listado, busqueda y consulta de registros</td>
+      <td><a href="rykv.html">Ayuda de vista de registros</a></td>
+    </tr>
+    <tr>
+      <td>En progreso</td>
+      <td>Gestion de sesiones de marca de tiempo activas</td>
+      <td><a href="plaing.html">Ayuda de en progreso</a></td>
+    </tr>
+    <tr>
+      <td>Detalle del registro</td>
+      <td>Vista detallada de registros individuales</td>
+      <td><a href="kyou.html">Ayuda de detalle del registro</a></td>
+    </tr>
+    <tr>
+      <td>Configuracion</td>
+      <td>Configuracion de la aplicacion</td>
+      <td><a href="application-config.html">Ayuda de configuracion</a></td>
+    </tr>
+    <tr>
+      <td>Referencia de sintaxis del bloc de notas</td>
+      <td>Referencia de simbolos y formato de la sintaxis del bloc de notas</td>
+      <td><a href="kftl-syntax.html">Ayuda de referencia de sintaxis</a></td>
+    </tr>
+    <tr>
+      <td>Estructura de plantilla</td>
+      <td>Definiciones de estructura de plantilla del bloc de notas</td>
+      <td><a href="kftl-template-struct.html">Ayuda de estructura de plantilla</a></td>
+    </tr>
+    <tr>
+      <td>Vista de agregacion</td>
+      <td>Agregacion y visualizacion de datos</td>
+      <td><a href="dnote.html">Ayuda de vista de agregacion</a></td>
+    </tr>
+    <tr>
+      <td>Informacion relacionada</td>
+      <td>Definir busqueda automatica de registros relacionados</td>
+      <td><a href="ryuu.html">Ayuda de informacion relacionada</a></td>
+    </tr>
+    <tr>
+      <td>Gestion de cuentas</td>
+      <td>Gestionar cuentas de usuario (Solo admin)</td>
+      <td><a href="manage-account.html">Ayuda de gestion de cuentas</a></td>
+    </tr>
+    <tr>
+      <td>Configuracion del servidor</td>
+      <td>Configuracion de conexion y TLS del servidor (Solo admin)</td>
+      <td><a href="server-config.html">Ayuda de configuracion del servidor</a></td>
+    </tr>
+  </table>
+
+  <h2>Crea tu primer registro</h2>
+  <ol>
+    <li>Después de iniciar sesión, se muestra la pantalla predeterminada especificada en la configuración.</li>
+    <li>Toca el boton "+" en la esquina inferior derecha de la pantalla.</li>
+    <li>Selecciona "Bloc de notas".</li>
+    <li>Escribe lo que quieras registrar en el area de texto (por ejemplo: <code>Hoy almorce curry</code>).</li>
+    <li>Pulsa el boton "Guardar" para crear el registro.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Mantener pulsado el boton "+" abre directamente el bloc de notas.
+  </div>
+
+  <h2>Glosario</h2>
+  <table>
+    <tr>
+      <th>Termino</th>
+      <th>Descripcion</th>
+    </tr>
+    <tr>
+      <td>Registro</td>
+      <td>Termino general para los registros en gkill. Abarca todos los tipos de registro, incluyendo notas, marcas de tiempo, tareas y mas</td>
+    </tr>
+    <tr>
+      <td>Sintaxis del bloc de notas</td>
+      <td>Sintaxis de entrada de texto utilizada en el bloc de notas. Al agregar simbolos al inicio de cada linea, puedes crear diferentes tipos de registros a la vez</td>
+    </tr>
+    <tr>
+      <td>Marca de tiempo</td>
+      <td>Funcion de seguimiento de tiempo. Registra los tiempos de inicio y fin de trabajos o actividades</td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Pantalla para añadir registros de forma segura incluso desde la pantalla de bloqueo. Funciona como centro de adición de registros</td>
+    </tr>
+    <tr>
+      <td>Sintaxis del bloc de notas</td>
+      <td>Se refiere al formato basado en texto para introducir registros</td>
+    </tr>
+    <tr>
+      <td>Vista de registros</td>
+      <td>Pantalla para listar y buscar registros</td>
+    </tr>
+    <tr>
+      <td>Vista de Agregación</td>
+      <td>Funcion para mostrar agregaciones y estadisticas de datos</td>
+    </tr>
+    <tr>
+      <td>Información Relacionada</td>
+      <td>Funcion que busca y muestra automaticamente informacion relacionada</td>
+    </tr>
+    <tr>
+      <td>Repositorio</td>
+      <td>Ubicacion de almacenamiento de registros. Puedes usar multiples repositorios para diferentes propositos</td>
+    </tr>
+    <tr>
+      <td>Perfil</td>
+      <td>Conjunto de configuraciones agrupadas por dispositivo</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

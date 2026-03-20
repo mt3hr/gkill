@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>ライフログビュー画面</span></nav>
   <h1>ライフログビュー画面</h1>
   <p>ライフログ全体を画像サムネイル付きで一覧表示する画面です。複数のフィルター列を使って、さまざまな条件でデータを同時に閲覧できます。</p>
 
@@ -50,7 +56,7 @@
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> カレンダー</td>
-      <td>記録数カレンダーヒートマップの表示/非表示を切り替えます。</td>
+      <td>カレンダー表示の表示/非表示を切り替えます。</td>
     </tr>
     <tr>
       <td><span class="icon">&#128506;</span> 地図</td>
@@ -86,9 +92,6 @@
   <h3>集計ビュー統計</h3>
   <p>記録データの統計・分析結果を表示します。記録の傾向やパターンを把握できます。</p>
 
-  <h3>カレンダーヒートマップ</h3>
-  <p>日別の記録数をカレンダー形式で表示します。色の濃さで記録量を直感的に把握できます。</p>
-
   <h3>GPS地図表示</h3>
   <p>GPSログデータを地図上に表示します。移動経路や位置情報を視覚的に確認できます。Google Maps APIキーの設定が必要です。</p>
 
@@ -107,6 +110,13 @@
   <div class="tip">
     <strong>ショートカット:</strong> この画面でEnterキーを押すと、メモ帳ダイアログが開きます。すばやく記録を追加したいときに便利です。
   </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="kyou.html">記録詳細画面</a></li>
+    <li><a href="dnote.html">集計ビュー</a></li>
+    <li><a href="ryuu.html">関連情報</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

@@ -115,6 +115,8 @@
             <ConfirmLogoutDialog @requested_logout="(close_database: boolean) => logout(close_database)"
                 ref="confirm_logout_dialog" />
             <HelpDialog screen_name="saihate" ref="help_dialog" />
+            <TutorialDialog :application_config="application_config" :gkill_api="gkill_api"
+                ref="tutorial_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -133,7 +135,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { i18n } from '@/i18n'
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from './dialogs/add-kc-dialog.vue'
@@ -147,11 +149,13 @@ import mkflDialog from './dialogs/mkfl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import ConfirmLogoutDialog from './dialogs/confirm-logout-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
+import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useSaihatePage } from '@/classes/use-saihate-page'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
+const tutorial_dialog = ref<InstanceType<typeof TutorialDialog> | null>(null)
 
 const {
     // Template refs
@@ -204,6 +208,12 @@ const {
     // Logout
     logout,
 } = useSaihatePage()
+
+watch(application_config, (config) => {
+    if (config.is_loaded && config.show_tutorial_on_startup) {
+        nextTick(() => tutorial_dialog.value?.show())
+    }
+})
 </script>
 <style lang="css" scoped>
 .overlay_target {

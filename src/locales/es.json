@@ -742,12 +742,19 @@
     "CONFIRM_UNKNOWN_TAG_TITLE": "Confirmación",
     "CONFIRM_UNKNOWN_TAG_MESSAGE": "Es una etiqueta nueva. ¿Desea agregarla?",
     "HELP_TITLE": "Ayuda",
+    "TUTORIAL_TITLE": "Tutorial",
+    "DONT_SHOW_TUTORIAL_AGAIN": "No mostrar en el proximo inicio",
     "TOOLTIP_HELP": "Mostrar Ayuda",
     "TOOLTIP_SETTINGS": "Configuración",
     "TOOLTIP_TOGGLE_DETAIL_VIEW": "Alternar Vista Detallada",
     "TOOLTIP_TOGGLE_CALENDAR": "Alternar Calendario",
-    "TOOLTIP_TOGGLE_DNOTE": "Alternar Dnote",
+    "TOOLTIP_TOGGLE_DNOTE": "Alternar Vista de Agregación",
     "TOOLTIP_TOGGLE_MAP": "Alternar Mapa",
     "TOOLTIP_TOGGLE_SIDEBAR": "Alternar Barra Lateral",
-    "TOOLTIP_RELOAD": "Recargar"
+    "TOOLTIP_RELOAD": "Recargar",
+    "TOOLTIP_DOWNLOAD": "Descargar",
+    "TOOLTIP_TOGGLE_IMAGE_VIEW": "Alternar Vista de Imágenes",
+    "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "Desplazar al Período Seleccionado",
+    "TOOLTIP_CLOSE_COLUMN": "Cerrar Columna",
+    "TOOLTIP_ADD_BOARD": "Agregar Tablero"
 }

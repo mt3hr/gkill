@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>튜토리얼 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>튜토리얼</span></nav>
+  <h1>튜토리얼</h1>
+  <p>gkill 사용법을 기본편과 응용편으로 나누어 설명합니다. 처음 사용하시는 분은 기본편부터 순서대로 읽어주세요.</p>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">기본편</h2>
+
+  <h2>1. gkill에 로그인하기</h2>
+  <h3>최초 실행 시</h3>
+  <p>gkill을 처음 실행하면 계정 등록 화면이 자동으로 표시됩니다.</p>
+  <ol>
+    <li>사용자 ID를 입력합니다 (이것이 계정 이름이 됩니다).</li>
+    <li>비밀번호를 입력하고, 확인을 위해 한 번 더 입력합니다.</li>
+    <li>관리자 비밀번호를 설정합니다 (서버 관리에 사용됩니다).</li>
+    <li>"등록" 버튼을 누르면 계정이 생성됩니다.</li>
+    <li>로그인 화면으로 리다이렉트되므로, 생성한 계정으로 로그인합니다.</li>
+  </ol>
+
+  <h3>일반 로그인</h3>
+  <ol>
+    <li>사용자 ID 입력란에 계정의 사용자 ID를 입력합니다.</li>
+    <li>비밀번호 입력란에 비밀번호를 입력합니다.</li>
+    <li>"로그인" 버튼을 클릭하거나 Enter 키를 누릅니다.</li>
+  </ol>
+  <div class="tip">
+    <strong>힌트:</strong> 로그인 후 세션은 30일간 유효합니다. 기한이 만료될 때까지 재로그인이 필요 없습니다.
+  </div>
+
+  <h2>2. 기록 추가하기</h2>
+  <p>gkill에서는 다양한 종류의 라이프로그를 기록할 수 있습니다. 화면 오른쪽 하단의 "+" 버튼으로 기록을 추가합니다.</p>
+
+  <table>
+    <tr><th>기록 유형</th><th>용도</th><th>입력 예</th></tr>
+    <tr><td>메모</td><td>텍스트 메모를 남기기</td><td>"오늘은 날씨가 좋았다"</td></tr>
+    <tr><td>타임스탬프</td><td>시간 기록 (시작/종료)</td><td>"회의 10:00~11:30"</td></tr>
+    <tr><td>태스크</td><td>해야 할 일을 관리하기</td><td>"보고서 작성하기"</td></tr>
+    <tr><td>지출</td><td>지출 내역을 기록하기</td><td>"편의점: 삼각김밥 1500원"</td></tr>
+    <tr><td>기분</td><td>기분을 0~10 수치로 기록</td><td>"7"</td></tr>
+    <tr><td>수치</td><td>수치 데이터를 기록하기</td><td>"체중: 65.5"</td></tr>
+    <tr><td>북마크</td><td>URL을 저장하기</td><td>"https://example.com"</td></tr>
+    <tr><td>파일</td><td>이미지나 파일 업로드</td><td>사진, PDF 등</td></tr>
+  </table>
+
+  <h3>기록 추가 절차</h3>
+  <ol>
+    <li>화면 오른쪽 하단의 "+" 버튼을 탭합니다.</li>
+    <li>추가하려는 기록 유형을 선택합니다.</li>
+    <li>입력 폼에 내용을 기입합니다.</li>
+    <li>"저장" 버튼을 눌러 기록을 저장합니다.</li>
+  </ol>
+  <div class="tip">
+    <strong>힌트:</strong> 메모장 화면을 사용하면 여러 기록을 텍스트로 한꺼번에 일괄 입력할 수 있습니다. 자세한 내용은 이후의 "3. 메모장으로 여러 기록을 한꺼번에 입력하기"를 참조하세요.
+  </div>
+
+  <h2>3. 메모장으로 여러 기록을 한꺼번에 입력하기</h2>
+  <p>메모장 화면에서는 텍스트를 작성하는 것만으로 여러 기록을 한 번에 생성할 수 있습니다.</p>
+
+  <h3>기본 사용법</h3>
+  <ol>
+    <li>메모장 화면을 엽니다 ("+" 버튼 메뉴에서 "메모장" 선택).</li>
+    <li>텍스트 영역에 기록하고 싶은 내용을 입력합니다.</li>
+    <li>"저장" 버튼 (<code>！</code>을 입력하여 전송도 가능)을 누릅니다.</li>
+  </ol>
+
+  <h3>템플릿을 사용한 입력</h3>
+  <p>템플릿을 사용하면 정형문을 원터치로 입력할 수 있습니다.</p>
+  <ol>
+    <li>메모장 화면에서 템플릿 목록에서 템플릿을 선택합니다.</li>
+    <li>템플릿 내용이 텍스트 영역에 삽입됩니다.</li>
+    <li>필요에 따라 내용을 편집하고 저장합니다.</li>
+  </ol>
+  <div class="tip">
+    <strong>힌트:</strong> 자주 사용하는 기록 패턴을 미리 템플릿으로 등록해 두면 편리합니다. 설정 화면의 "템플릿 구조"에서 관리할 수 있습니다.
+  </div>
+
+  <h2>4. 기록 확인 및 검색하기</h2>
+  <p>라이프로그 뷰 화면에서 과거 기록을 목록 표시하고 검색할 수 있습니다.</p>
+
+  <h3>기본 조작</h3>
+  <ol>
+    <li>화면 상단 내비게이션에서 라이프로그 뷰 화면을 엽니다.</li>
+    <li>기록이 날짜순으로 목록 표시됩니다.</li>
+    <li>날짜를 변경하여 특정 날의 기록을 확인할 수 있습니다.</li>
+  </ol>
+
+  <h3>검색과 필터링</h3>
+  <ul>
+    <li><strong>태그로 필터링:</strong> 특정 태그가 붙은 기록만 표시할 수 있습니다.</li>
+    <li><strong>날짜 범위:</strong> 시작일과 종료일을 지정하여 기간을 좁힐 수 있습니다.</li>
+    <li><strong>텍스트 검색:</strong> 키워드를 포함하는 기록을 검색할 수 있습니다.</li>
+  </ul>
+  <div class="tip">
+    <strong>힌트:</strong> 설정 화면의 "라이프로그 뷰 표시 일수"를 줄이면 로딩이 빨라집니다.
+  </div>
+
+  <h2>5. 태스크 관리하기</h2>
+  <p>태스크 화면에서는 칸반 보드 형식으로 태스크를 관리할 수 있습니다.</p>
+
+  <h3>태스크 생성</h3>
+  <ol>
+    <li>태스크 화면을 엽니다.</li>
+    <li>"+" 버튼으로 태스크를 추가합니다.</li>
+    <li>제목, 보드 이름, 기한 등을 입력합니다.</li>
+    <li>저장하면 지정한 보드에 태스크가 표시됩니다.</li>
+  </ol>
+
+  <h3>태스크 완료</h3>
+  <ol>
+    <li>완료한 태스크를 탭하여 상세 정보를 엽니다.</li>
+    <li>체크 표시를 하여 태스크를 완료 처리합니다.</li>
+  </ol>
+  <div class="tip">
+    <strong>힌트:</strong> 보드를 여러 개 만들어 "업무", "개인", "쇼핑" 등 카테고리별로 관리하면 정리하기 쉬워집니다.
+  </div>
+
+  <h2>6. 설정 변경하기</h2>
+  <p>설정 화면에서 애플리케이션의 동작을 커스터마이즈할 수 있습니다.</p>
+
+  <h3>설정 화면 열기</h3>
+  <ol>
+    <li>화면 상단 툴바에 있는 톱니바퀴 아이콘을 탭합니다.</li>
+    <li>설정 화면이 열립니다.</li>
+  </ol>
+
+  <h3>자주 사용하는 설정</h3>
+  <table>
+    <tr><th>설정 항목</th><th>설명</th></tr>
+    <tr><td>언어</td><td>UI 표시 언어를 변경합니다.</td></tr>
+    <tr><td>다크 테마</td><td>어두운 색상으로 전환합니다.</td></tr>
+    <tr><td>시작 화면</td><td>로그인 후 처음 표시할 페이지를 선택합니다.</td></tr>
+    <tr><td>라이프로그 뷰 이미지 열 수</td><td>이미지 썸네일의 열 수를 조정합니다.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>힌트:</strong> 설정을 변경한 후 "적용" 버튼을 눌러주세요. "취소"를 누르면 변경 사항이 폐기됩니다.
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">응용편</h2>
+
+  <h2>7. 메모장 구문 활용하기</h2>
+  <p>메모장 구문을 사용하면 텍스트 행의 시작 부분에 접두사를 붙이는 것만으로 다양한 종류의 기록을 일괄 입력할 수 있습니다.</p>
+
+  <h3>주요 접두사</h3>
+  <table>
+    <tr><th>접두사</th><th>종류</th><th>예</th></tr>
+    <tr><td>(없음)</td><td>메모</td><td><code>오늘은 날씨가 좋았다</code></td></tr>
+    <tr><td><code>。</code></td><td>태그</td><td><code>。일기、날씨</code></td></tr>
+    <tr><td><code>ーみ</code></td><td>태스크</td><td><code>ーみ</code> → 다음 행에 제목</td></tr>
+    <tr><td><code>ーた</code></td><td>타임스탬프 시작</td><td><code>ーた</code> → 다음 행에 제목</td></tr>
+    <tr><td><code>ーえ</code></td><td>타임스탬프 종료</td><td><code>ーえ</code> → 다음 행에 제목</td></tr>
+    <tr><td><code>ーん</code></td><td>지출</td><td><code>ーん</code> → 다음 행에 상점명, 품목, 금액</td></tr>
+    <tr><td><code>ーら</code></td><td>기분</td><td><code>ーら</code> → 다음 행에 수치(0~10)</td></tr>
+    <tr><td><code>、</code></td><td>구분</td><td>다음 레코드로 분할</td></tr>
+    <tr><td><code>！</code></td><td>저장</td><td>입력을 종료하고 저장</td></tr>
+  </table>
+
+  <h3>여러 레코드 일괄 입력 예</h3>
+  <pre>오늘의 일기
+。일기
+、
+ーみ
+장보러 가기
+、
+ーん
+슈퍼마켓
+사과
+2000
+우유
+1800
+、
+ーら
+8
+！</pre>
+  <p>이 예에서는 메모, 태스크, 지출, 기분의 4가지 기록이 한 번에 생성됩니다.</p>
+  <div class="tip">
+    <strong>힌트:</strong> 자세한 구문은 <a href="kftl-syntax.html">메모장 구문 레퍼런스</a>를 참조하세요.
+  </div>
+
+  <h2>8. 템플릿 활용하기</h2>
+  <p>자주 사용하는 메모장 구문 패턴을 템플릿으로 저장해 두면 매번 입력하는 수고를 줄일 수 있습니다.</p>
+
+  <h3>템플릿 관리</h3>
+  <ol>
+    <li>설정 화면을 엽니다.</li>
+    <li>"템플릿 구조" 버튼을 클릭합니다.</li>
+    <li>템플릿의 추가, 편집, 삭제가 가능합니다.</li>
+  </ol>
+
+  <h3>템플릿 작성 예</h3>
+  <p>예를 들어, 매일의 일기 템플릿을 작성하는 경우:</p>
+  <pre>。일기
+、
+ーら
+</pre>
+  <p>이 템플릿을 사용하면 메모장 화면에서 원터치로 일기 양식이 입력되어, 메모 내용과 기분 수치만 추가하면 기록할 수 있습니다.</p>
+  <div class="tip">
+    <strong>힌트:</strong> 폴더를 사용하여 템플릿을 카테고리별로 정리하면 찾기 쉬워집니다.
+  </div>
+
+  <h2>9. 타임스탬프로 시간 기록하기</h2>
+  <p>타임스탬프 기능을 사용하면 작업 시간이나 활동 시간을 정확하게 기록할 수 있습니다.</p>
+
+  <h3>타임스탬프 기본 조작</h3>
+  <ol>
+    <li><strong>시작:</strong> 메모장에서 <code>ーた</code> 접두사를 사용하거나, "+" 메뉴에서 타임스탬프를 추가합니다. 제목과 시작 시각을 지정합니다.</li>
+    <li><strong>종료:</strong> 메모장에서 <code>ーえ</code> 접두사를 사용하거나, 타임스탬프 편집 화면에서 종료 시각을 입력합니다. 제목이 일치하는 타임스탬프가 종료됩니다.</li>
+  </ol>
+
+  <h3>진행 중인 타임스탬프 관리</h3>
+  <p>타임스탬프 목록 화면에서 현재 진행 중인 타임스탬프를 확인할 수 있습니다.</p>
+  <ul>
+    <li>진행 중인 타임스탬프가 목록으로 표시됩니다.</li>
+    <li>탭하여 종료 시각을 설정할 수 있습니다.</li>
+  </ul>
+  <div class="tip">
+    <strong>힌트:</strong> 메모장 구문의 <code>ーいえ</code>를 사용하면 일치하는 타임스탬프가 없어도 오류가 발생하지 않습니다. 존재 확인 없이 안전하게 종료할 수 있습니다.
+  </div>
+
+  <h2>10. 집계 뷰로 데이터 분석하기</h2>
+  <p>집계 뷰 화면에서는 기록한 데이터를 그래프나 집계표로 시각화할 수 있습니다.</p>
+
+  <h3>집계 뷰 사용법</h3>
+  <ol>
+    <li>내비게이션에서 집계 뷰 화면을 엽니다.</li>
+    <li>집계 종류나 기간을 선택합니다.</li>
+    <li>데이터가 그래프나 표로 표시됩니다.</li>
+  </ol>
+
+  <h3>집계 설정</h3>
+  <p>설정 화면의 "집계 뷰" 버튼에서 집계 방법이나 뷰 구성을 관리할 수 있습니다.</p>
+  <div class="tip">
+    <strong>힌트:</strong> 기분 수치나 지출 데이터의 추이를 시계열로 확인하면 생활 패턴을 파악할 수 있습니다.
+  </div>
+
+  <h2>11. 외부 연동 활용하기</h2>
+
+  <h3>북마클릿으로 URL 기록</h3>
+  <p>브라우저의 북마크 바에 북마클릿을 등록하면, 열람 중인 웹 페이지를 원클릭으로 gkill에 저장할 수 있습니다.</p>
+  <ol>
+    <li>설정 화면의 "북마클릿 주소"에 표시된 URL을 복사합니다.</li>
+    <li>브라우저의 북마크 바에 새 북마크로 등록합니다.</li>
+    <li>저장하고 싶은 웹 페이지를 열고 있을 때, 등록한 북마크를 클릭합니다.</li>
+  </ol>
+
+  <h3>GPS 기록과 지도 표시</h3>
+  <p>GPS 로그를 기록하고 있는 경우, 지도 위에 이동 이력을 표시할 수 있습니다.</p>
+  <ol>
+    <li>설정 화면에서 "Google Maps API 키"를 설정합니다.</li>
+    <li>GPS 데이터가 기록되어 있으면, 라이프로그 뷰에서 지도 표시를 이용할 수 있습니다.</li>
+  </ol>
+  <div class="tip">
+    <strong>힌트:</strong> Google Maps API 키는 Google Cloud Console에서 Maps JavaScript API를 활성화하여 취득하세요.
+  </div>
+
+  <h2>12. 데이터 백업과 관리</h2>
+
+  <h3>서버 설정 (관리자용)</h3>
+  <p>관리자 계정으로 로그인하면, 설정 화면에 "서버 설정" 버튼이 표시됩니다.</p>
+  <ul>
+    <li><strong>포트 번호:</strong> 서버가 수신 대기하는 포트를 변경할 수 있습니다 (기본값: 9999).</li>
+    <li><strong>TLS 설정:</strong> HTTPS 통신을 활성화할 수 있습니다.</li>
+    <li><strong>접근 제한:</strong> 로컬 접근만 허용하도록 제한할 수 있습니다.</li>
+  </ul>
+
+  <h3>계정 관리</h3>
+  <p>관리자는 "계정 관리" 화면에서 사용자 계정의 추가 및 삭제가 가능합니다.</p>
+
+  <h3>데이터 백업</h3>
+  <p>gkill의 데이터는 모두 홈 디렉터리 (기본값: <code>~/gkill</code>)에 저장되어 있습니다. 이 디렉터리를 백업하면 모든 데이터를 보존할 수 있습니다.</p>
+  <div class="tip">
+    <strong>힌트:</strong> 정기적으로 홈 디렉터리를 백업하는 것을 권장합니다. 특히 <code>datas/</code>와 <code>configs/</code> 디렉터리가 중요합니다.
+  </div>
+
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="getting-started.html">시작하기 (초기 설정 가이드)</a></li>
+    <li><a href="kftl-syntax.html">메모장 구문 레퍼런스</a></li>
+    <li><a href="kftl-template-struct.html">템플릿 구조</a></li>
+    <li><a href="application-config.html">설정 화면</a></li>
+    <li><a href="mi.html">태스크 화면</a></li>
+    <li><a href="rykv.html">라이프로그 뷰 화면</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

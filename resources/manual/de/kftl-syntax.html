@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KFTL-Syntaxreferenz</title>
+  <title>Notizblock-Syntaxreferenz</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
@@ -29,15 +29,21 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <a href="kftl.html">Notizblock</a> &gt; <span>Notizblock-Syntaxreferenz</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; Zuruck zur Notizblock-Hilfe</a></div>
 
-<h1>KFTL-Syntaxreferenz</h1>
+<h1>Notizblock-Syntaxreferenz</h1>
 
-<p>KFTL ist ein textbasiertes Aufzeichnungsformat, das in gkill verwendet wird. Durch Praefixe am Zeilenanfang koennen Sie verschiedene Datentypen auf einmal eingeben. Im Folgenden werden alle 18 Anweisungstypen vorgestellt.</p>
+<p>Die Notizblock-Syntax ist ein textbasiertes Aufzeichnungsformat, das in gkill verwendet wird. Durch Praefixe am Zeilenanfang koennen Sie verschiedene Datentypen auf einmal eingeben. Im Folgenden werden alle 18 Anweisungstypen vorgestellt.</p>
 
 <h2>Anweisungsuebersicht</h2>
 
@@ -170,7 +176,7 @@ Lieblingsseite</pre>
 
 <h2>Vollstaendiges Beispiel</h2>
 
-<p>Nachfolgend ein vollstaendiges KFTL-Dokument, das mehrere Anweisungstypen kombiniert.</p>
+<p>Nachfolgend ein vollstaendiges Notizblock-Syntax-Dokument, das mehrere Anweisungstypen kombiniert.</p>
 
 <pre>Tagebuch von heute
 。Tagebuch、Wetter
@@ -197,6 +203,13 @@ Lesen
 <div class="tip">
   <strong>Tipp:</strong> Verwenden Sie <code>、</code>, um mehrere Datensaetze innerhalb eines Dokuments zu trennen. Das Hinzufuegen von <code>！</code> am Ende loest das automatische Speichern aus.
 </div>
+
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="kftl.html">Notizblock</a></li>
+    <li><a href="mkfl.html">Stempel-Notizblock</a></li>
+    <li><a href="kftl-template-struct.html">Vorlagenstruktur</a></li>
+  </ul>
 
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

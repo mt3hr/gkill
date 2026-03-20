@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KFTL構文リファレンス</title>
+  <title>メモ帳構文リファレンス</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
@@ -29,15 +29,21 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <a href="kftl.html">メモ帳画面</a> &gt; <span>メモ帳構文リファレンス</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; メモ帳ヘルプに戻る</a></div>
 
-<h1>KFTL構文リファレンス</h1>
+<h1>メモ帳構文リファレンス</h1>
 
-<p>KFTLは、gkillで使用されるテキストベースの記録形式です。行頭のプレフィックスによって、さまざまな種類のデータを一括入力できます。以下に全18種類の文を紹介します。</p>
+<p>メモ帳構文は、gkillで使用されるテキストベースの記録形式です。行頭のプレフィックスによって、さまざまな種類のデータを一括入力できます。以下に全18種類の文を紹介します。</p>
 
 <h2>文の一覧</h2>
 
@@ -170,7 +176,7 @@ https://example.com
 
 <h2>総合的な例</h2>
 
-<p>以下は、複数の文を組み合わせた完全なKFTLドキュメントの例です。</p>
+<p>以下は、複数の文を組み合わせた完全なメモ帳構文ドキュメントの例です。</p>
 
 <pre>今日の日記
 。日記、天気
@@ -197,6 +203,13 @@ https://example.com
 <div class="tip">
   <strong>ヒント:</strong> <code>、</code>で区切ることで、1つのドキュメント内に複数のレコードを効率的に入力できます。<code>！</code>を末尾に付けると自動的に保存されます。
 </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="kftl.html">メモ帳画面</a></li>
+    <li><a href="mkfl.html">打刻メモ帳画面</a></li>
+    <li><a href="kftl-template-struct.html">テンプレート構造</a></li>
+  </ul>
 
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

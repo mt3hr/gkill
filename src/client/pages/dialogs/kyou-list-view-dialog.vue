@@ -17,7 +17,7 @@
 
             <div class="gkill-floating-dialog__body"> 
 
-                <v-card v-if="is_show_dialog" class="kyou_list_view_dialog_view pa-2" :width="'fit-content'">
+                <v-card v-if="is_show_dialog" class="kyou_list_view_dialog_view pa-2" style="flex: 1; min-height: 0; width: 100%;">
                     <KyouListView :kyou_height="180" :width="400" :list_height="list_height"
                         :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="model_value!"
                         :query="new FindKyouQuery()" :is_focused_list="true"
@@ -43,14 +43,14 @@
                         @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
                         @updated_tag="(...updated_tag: any[]) => { /* intentionally ignored */ }" @updated_text="(...updated_text: any[]) => { /* intentionally ignored */ }"
                         @updated_notification="(...updated_notification: any[]) => { /* intentionally ignored */ }" />
-                    <v-card variant="text" :ripple="false" :link="false">
-                        <v-row no-gutters>
-                            <v-col v-if="model_value && model_value.length" cols="auto" class="py-3">
-                                {{ model_value.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
-                            </v-col>
-                            <v-spacer />
-                        </v-row>
-                    </v-card>
+                </v-card>
+                <v-card variant="text" :ripple="false" :link="false" class="px-2" style="flex-shrink: 0;">
+                    <v-row no-gutters>
+                        <v-col v-if="model_value && model_value.length" cols="auto" class="py-3">
+                            {{ model_value.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
+                        </v-col>
+                        <v-spacer />
+                    </v-row>
                 </v-card>
             </div>
         </div>
@@ -126,6 +126,10 @@ function onDeletedKyou(deletedKyou: Kyou): void {
 .kyou_list_view,
 .v-dialog .v-card {
     overflow-y: hidden !important;
+}
+
+.kyou_list_view_dialog_view :deep(.kyou_list_view) {
+    width: 100% !important;
 }
 </style>
 

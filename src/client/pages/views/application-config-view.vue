@@ -8,13 +8,6 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <span>{{ i18n.global.t("APPLICATION_CONFIG_TITLE") }}</span>
                 </v-col>
-                <v-col cols="auto" class="pa-0 ma-0">
-                    <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
-                        <template v-slot:activator="{ props }">
-                            <v-btn v-bind="props" icon="mdi-help-circle-outline" size="small" variant="text" @click="help_dialog?.show()" />
-                        </template>
-                    </v-tooltip>
-                </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" v-if="cloned_application_config.account_is_admin"
@@ -236,14 +229,12 @@
         <ServerConfigDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             ref="server_config_dialog" />
-        <HelpDialog screen_name="application-config" ref="help_dialog" />
     </v-card>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
 import { i18n } from '@/i18n'
 
-import HelpDialog from '../dialogs/help-dialog.vue'
 import EditDeviceStructDialog from '../dialogs/edit-device-struct-dialog.vue'
 import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-struct-dialog.vue'
 import EditRepStructDialog from '../dialogs/edit-rep-struct-dialog.vue'
@@ -257,8 +248,6 @@ import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
 import type { ApplicationConfigViewEmits } from './application-config-view-emits'
 import type { ApplicationConfigViewProps } from './application-config-view-props'
 import { useApplicationConfigView } from '@/classes/use-application-config-view'
-
-const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()

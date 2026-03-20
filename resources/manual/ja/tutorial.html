@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>チュートリアル - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>チュートリアル</span></nav>
+  <h1>チュートリアル</h1>
+  <p>gkillの使い方を基本編と応用編に分けて解説します。初めての方は基本編から順にお読みください。</p>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">基本編</h2>
+
+  <h2>1. gkillにログインする</h2>
+  <h3>初回起動時</h3>
+  <p>gkillを初めて起動すると、アカウント登録画面が自動的に表示されます。</p>
+  <ol>
+    <li>ユーザーIDを入力します（これがあなたのアカウント名になります）。</li>
+    <li>パスワードを入力し、確認のためもう一度入力します。</li>
+    <li>管理者パスワードを設定します（サーバ管理に使用します）。</li>
+    <li>「登録」ボタンを押すと、アカウントが作成されます。</li>
+    <li>ログイン画面にリダイレクトされるので、作成したアカウントでログインします。</li>
+  </ol>
+
+  <h3>通常のログイン</h3>
+  <ol>
+    <li>ユーザーID入力欄にアカウントのユーザーIDを入力します。</li>
+    <li>パスワード入力欄にパスワードを入力します。</li>
+    <li>「ログイン」ボタンをクリックするか、Enterキーを押します。</li>
+  </ol>
+  <div class="tip">
+    <strong>ヒント:</strong> ログイン後のセッションは30日間有効です。期限が切れるまで再ログインは不要です。
+  </div>
+
+  <h2>2. 記録を追加する</h2>
+  <p>gkillではさまざまな種類のライフログを記録できます。画面右下の「+」ボタンから記録を追加します。</p>
+
+  <table>
+    <tr><th>記録タイプ</th><th>用途</th><th>入力例</th></tr>
+    <tr><td>メモ</td><td>テキストメモを残す</td><td>「今日は天気が良かった」</td></tr>
+    <tr><td>打刻</td><td>時間の記録（開始・終了）</td><td>「会議 10:00〜11:30」</td></tr>
+    <tr><td>タスク</td><td>やるべきことを管理する</td><td>「レポートを書く」</td></tr>
+    <tr><td>支出</td><td>お金の使い方を記録する</td><td>「コンビニ: おにぎり 150円」</td></tr>
+    <tr><td>気分</td><td>気分を0〜10の数値で記録</td><td>「7」</td></tr>
+    <tr><td>数値</td><td>数値データを記録する</td><td>「体重: 65.5」</td></tr>
+    <tr><td>ブックマーク</td><td>URLを保存する</td><td>「https://example.com」</td></tr>
+    <tr><td>ファイル</td><td>画像やファイルをアップロード</td><td>写真、PDF など</td></tr>
+  </table>
+
+  <h3>記録の追加手順</h3>
+  <ol>
+    <li>画面右下の「+」ボタンをタップします。</li>
+    <li>追加したい記録タイプを選択します。</li>
+    <li>入力フォームに内容を記入します。</li>
+    <li>「保存」ボタンを押して記録を保存します。</li>
+  </ol>
+  <div class="tip">
+    <strong>ヒント:</strong> メモ帳画面を使えば、複数の記録をテキストでまとめて一括入力できます。詳しくはこの後の「3. メモ帳で複数記録をまとめて入力する」をご覧ください。
+  </div>
+
+  <h2>3. メモ帳で複数記録をまとめて入力する</h2>
+  <p>メモ帳画面では、テキストを書くだけで複数の記録を一度に作成できます。</p>
+
+  <h3>基本的な使い方</h3>
+  <ol>
+    <li>メモ帳画面を開きます（「+」ボタンのメニューから「メモ帳」を選択）。</li>
+    <li>テキストエリアに記録したい内容を入力します。</li>
+    <li>「保存」ボタン（<code>！</code>を入力して送信でも可）を押します。</li>
+  </ol>
+
+  <h3>テンプレートを使った入力</h3>
+  <p>テンプレートを使えば、定型文をワンタッチで入力できます。</p>
+  <ol>
+    <li>メモ帳画面でテンプレート一覧からテンプレートを選択します。</li>
+    <li>テンプレートの内容がテキストエリアに挿入されます。</li>
+    <li>必要に応じて内容を編集し、保存します。</li>
+  </ol>
+  <div class="tip">
+    <strong>ヒント:</strong> テンプレートはよく使う記録パターンを事前に登録しておくと便利です。設定画面の「テンプレート構造」から管理できます。
+  </div>
+
+  <h2>4. 記録を確認・検索する</h2>
+  <p>ライフログビュー画面で、過去の記録を一覧表示・検索できます。</p>
+
+  <h3>基本操作</h3>
+  <ol>
+    <li>画面上部のナビゲーションからライフログビュー画面を開きます。</li>
+    <li>記録が日付順に一覧表示されます。</li>
+    <li>日付を変更して、特定の日の記録を確認できます。</li>
+  </ol>
+
+  <h3>検索とフィルタリング</h3>
+  <ul>
+    <li><strong>タグで絞り込み:</strong> 特定のタグが付いた記録だけを表示できます。</li>
+    <li><strong>日付範囲:</strong> 開始日と終了日を指定して期間を絞り込めます。</li>
+    <li><strong>テキスト検索:</strong> キーワードを含む記録を検索できます。</li>
+  </ul>
+  <div class="tip">
+    <strong>ヒント:</strong> 設定画面の「ライフログビュー表示日数」を短くすると、読み込みが速くなります。
+  </div>
+
+  <h2>5. タスクを管理する</h2>
+  <p>タスク画面では、カンバンボード形式でタスクを管理できます。</p>
+
+  <h3>タスクの作成</h3>
+  <ol>
+    <li>タスク画面を開きます。</li>
+    <li>「+」ボタンからタスクを追加します。</li>
+    <li>タイトル、ボード名、期限などを入力します。</li>
+    <li>保存すると、指定したボードにタスクが表示されます。</li>
+  </ol>
+
+  <h3>タスクの完了</h3>
+  <ol>
+    <li>完了したタスクをタップして詳細を開きます。</li>
+    <li>チェックマークを付けてタスクを完了にします。</li>
+  </ol>
+  <div class="tip">
+    <strong>ヒント:</strong> ボードを複数作成して、「仕事」「プライベート」「買い物」などカテゴリ別に管理すると整理しやすくなります。
+  </div>
+
+  <h2>6. 設定を変更する</h2>
+  <p>設定画面からアプリケーションの動作をカスタマイズできます。</p>
+
+  <h3>設定画面の開き方</h3>
+  <ol>
+    <li>画面上部のツールバーにある歯車アイコンをタップします。</li>
+    <li>設定画面が開きます。</li>
+  </ol>
+
+  <h3>よく使う設定</h3>
+  <table>
+    <tr><th>設定項目</th><th>説明</th></tr>
+    <tr><td>言語</td><td>UIの表示言語を変更します。</td></tr>
+    <tr><td>ダークテーマ</td><td>暗い配色に切り替えます。</td></tr>
+    <tr><td>起動時の画面</td><td>ログイン後に最初に表示するページを選択します。</td></tr>
+    <tr><td>ライフログビュー画像列数</td><td>画像サムネイルの列数を調整します。</td></tr>
+  </table>
+  <div class="tip">
+    <strong>ヒント:</strong> 設定を変更したら「適用」ボタンを押してください。「キャンセル」を押すと変更が破棄されます。
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">応用編</h2>
+
+  <h2>7. メモ帳構文を使いこなす</h2>
+  <p>メモ帳構文を使うと、テキストの行頭にプレフィックスを付けるだけで、さまざまな種類の記録を一括入力できます。</p>
+
+  <h3>主要なプレフィックス</h3>
+  <table>
+    <tr><th>プレフィックス</th><th>種類</th><th>例</th></tr>
+    <tr><td>(なし)</td><td>メモ</td><td><code>今日は天気が良かった</code></td></tr>
+    <tr><td><code>。</code></td><td>タグ</td><td><code>。日記、天気</code></td></tr>
+    <tr><td><code>ーみ</code></td><td>タスク</td><td><code>ーみ</code> → 次行にタイトル</td></tr>
+    <tr><td><code>ーた</code></td><td>打刻開始</td><td><code>ーた</code> → 次行にタイトル</td></tr>
+    <tr><td><code>ーえ</code></td><td>打刻終了</td><td><code>ーえ</code> → 次行にタイトル</td></tr>
+    <tr><td><code>ーん</code></td><td>支出</td><td><code>ーん</code> → 次行に店名、品名、金額</td></tr>
+    <tr><td><code>ーら</code></td><td>気分</td><td><code>ーら</code> → 次行に数値(0〜10)</td></tr>
+    <tr><td><code>、</code></td><td>区切り</td><td>次のレコードに分割</td></tr>
+    <tr><td><code>！</code></td><td>保存</td><td>入力を終了して保存</td></tr>
+  </table>
+
+  <h3>複数レコードの一括入力例</h3>
+  <pre>今日の日記
+。日記
+、
+ーみ
+買い物に行く
+、
+ーん
+スーパー
+りんご
+200
+牛乳
+180
+、
+ーら
+8
+！</pre>
+  <p>この例では、メモ、タスク、支出、気分の4つの記録が一度に作成されます。</p>
+  <div class="tip">
+    <strong>ヒント:</strong> 詳しい構文は<a href="kftl-syntax.html">メモ帳構文リファレンス</a>をご覧ください。
+  </div>
+
+  <h2>8. テンプレートを活用する</h2>
+  <p>よく使うメモ帳構文のパターンをテンプレートとして保存しておくと、毎回入力する手間が省けます。</p>
+
+  <h3>テンプレートの管理</h3>
+  <ol>
+    <li>設定画面を開きます。</li>
+    <li>「テンプレート構造」ボタンをクリックします。</li>
+    <li>テンプレートの追加・編集・削除ができます。</li>
+  </ol>
+
+  <h3>テンプレートの作成例</h3>
+  <p>例えば、毎日の日記テンプレートを作成する場合：</p>
+  <pre>。日記
+、
+ーら
+</pre>
+  <p>このテンプレートを使えば、メモ帳画面でワンタッチで日記の雛形が入力され、メモ内容と気分値を追記するだけで記録できます。</p>
+  <div class="tip">
+    <strong>ヒント:</strong> フォルダを使ってテンプレートをカテゴリ別に整理すると見つけやすくなります。
+  </div>
+
+  <h2>9. 打刻で時間を記録する</h2>
+  <p>打刻機能を使えば、作業時間や活動時間を正確に記録できます。</p>
+
+  <h3>打刻の基本操作</h3>
+  <ol>
+    <li><strong>開始:</strong> メモ帳で <code>ーた</code> プレフィックスを使うか、「+」メニューから打刻を追加します。タイトルと開始時刻を指定します。</li>
+    <li><strong>終了:</strong> メモ帳で <code>ーえ</code> プレフィックスを使うか、打刻の編集画面で終了時刻を入力します。タイトルが一致する打刻が終了されます。</li>
+  </ol>
+
+  <h3>実行中の打刻を管理する</h3>
+  <p>打刻一覧画面では、現在実行中の打刻を確認できます。</p>
+  <ul>
+    <li>実行中の打刻が一覧表示されます。</li>
+    <li>タップして終了時刻を設定できます。</li>
+  </ul>
+  <div class="tip">
+    <strong>ヒント:</strong> メモ帳構文の <code>ーいえ</code> を使うと、一致する打刻がない場合でもエラーになりません。存在確認なしで安全に終了できます。
+  </div>
+
+  <h2>10. 集計ビューでデータを分析する</h2>
+  <p>集計ビュー画面では、記録したデータをグラフや集計表で可視化できます。</p>
+
+  <h3>集計ビューの使い方</h3>
+  <ol>
+    <li>ナビゲーションから集計ビュー画面を開きます。</li>
+    <li>集計の種類や期間を選択します。</li>
+    <li>データがグラフや表で表示されます。</li>
+  </ol>
+
+  <h3>集計の設定</h3>
+  <p>設定画面の「集計ビュー」ボタンから、集計方法やビューの構成を管理できます。</p>
+  <div class="tip">
+    <strong>ヒント:</strong> 気分値や支出データの推移を時系列で確認すると、生活パターンが見えてきます。
+  </div>
+
+  <h2>11. 外部連携を活用する</h2>
+
+  <h3>ブックマークレットでURLを記録</h3>
+  <p>ブラウザのブックマークバーにブックマークレットを登録すると、閲覧中のWebページをワンクリックでgkillに保存できます。</p>
+  <ol>
+    <li>設定画面の「ブックマークレットアドレス」に表示されているURLをコピーします。</li>
+    <li>ブラウザのブックマークバーに新しいブックマークとして登録します。</li>
+    <li>保存したいWebページを開いているときに、登録したブックマークをクリックします。</li>
+  </ol>
+
+  <h3>GPS記録と地図表示</h3>
+  <p>GPSログを記録している場合、地図上に移動履歴を表示できます。</p>
+  <ol>
+    <li>設定画面で「Google Maps APIキー」を設定します。</li>
+    <li>GPSデータが記録されていれば、ライフログビューで地図表示が利用できます。</li>
+  </ol>
+  <div class="tip">
+    <strong>ヒント:</strong> Google Maps APIキーは、Google Cloud ConsoleでMaps JavaScript APIを有効にして取得してください。
+  </div>
+
+  <h2>12. データのバックアップと管理</h2>
+
+  <h3>サーバ設定（管理者向け）</h3>
+  <p>管理者アカウントでログインすると、設定画面に「サーバ設定」ボタンが表示されます。</p>
+  <ul>
+    <li><strong>ポート番号:</strong> サーバがリッスンするポートを変更できます（デフォルト: 9999）。</li>
+    <li><strong>TLS設定:</strong> HTTPS通信を有効にできます。</li>
+    <li><strong>アクセス制限:</strong> ローカルアクセスのみに制限できます。</li>
+  </ul>
+
+  <h3>アカウント管理</h3>
+  <p>管理者は「アカウント管理」画面で、ユーザーアカウントの追加・削除ができます。</p>
+
+  <h3>データのバックアップ</h3>
+  <p>gkillのデータはすべてホームディレクトリ（デフォルト: <code>~/gkill</code>）に保存されています。このディレクトリをバックアップすれば、すべてのデータを保全できます。</p>
+  <div class="tip">
+    <strong>ヒント:</strong> 定期的にホームディレクトリをバックアップすることを推奨します。特に <code>datas/</code> と <code>configs/</code> ディレクトリが重要です。
+  </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="getting-started.html">はじめに（初回セットアップガイド）</a></li>
+    <li><a href="kftl-syntax.html">メモ帳構文リファレンス</a></li>
+    <li><a href="kftl-template-struct.html">テンプレート構造</a></li>
+    <li><a href="application-config.html">設定画面</a></li>
+    <li><a href="mi.html">タスク画面</a></li>
+    <li><a href="rykv.html">ライフログビュー画面</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

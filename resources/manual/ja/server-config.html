@@ -23,9 +23,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>サーバ設定</span></nav>
   <h1>サーバ設定</h1>
   <p>サーバの動作に関する設定を行う画面です。管理者のみアクセスできます。</p>
 
@@ -54,6 +60,12 @@
   <p><strong>適用</strong>: 設定を保存します。<br><strong>キャンセル</strong>: 変更を破棄して画面を閉じます。</p>
 
   <div class="tip">設定の変更を反映するには、サーバの再起動が必要です。</div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="application-config.html">設定画面</a></li>
+    <li><a href="manage-account.html">アカウント管理</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>
