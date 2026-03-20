@@ -23,9 +23,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Gestion des comptes</span></nav>
   <h1>Gestion des comptes</h1>
   <p>Cet &eacute;cran g&egrave;re les comptes utilisateur. Seuls les administrateurs peuvent y acc&eacute;der.</p>
 
@@ -46,6 +52,11 @@
   <p><strong>Fermer</strong> : Ferme l'&eacute;cran de gestion des comptes.</p>
 
   <div class="tip">Le premier compte cr&eacute;&eacute; devient le compte administrateur.</div>
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="server-config.html">Configuration serveur</a></li>
+    <li><a href="application-config.html">Parametres</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

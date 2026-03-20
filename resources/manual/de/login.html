@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Anmeldung</span></nav>
   <h1>Anmeldebildschirm</h1>
   <p>Authentifizierungsbildschirm zur Anmeldung bei gkill. Geben Sie Ihre Benutzer-ID und Ihr Passwort ein, um auf die Anwendung zuzugreifen.</p>
 
@@ -63,12 +69,18 @@
   </ol>
 
   <div class="tip">
-    <strong>Tipp:</strong> Beim ersten Start koennen Sie sich mit dem Benutzer <code>admin</code> (ohne Passwort) anmelden. Aus Sicherheitsgruenden wird empfohlen, nach der Anmeldung ein Passwort festzulegen.
+    <strong>Tipp:</strong> Beim ersten Start wird automatisch ein Kontoregistrierungsbildschirm angezeigt. Folgen Sie den Anweisungen auf dem Bildschirm, um Ihr Benutzerkonto zu erstellen und das Administratorpasswort festzulegen.
   </div>
 
   <div class="tip">
     <strong>Tipp:</strong> Sie koennen sich auch mit der Eingabetaste anmelden, sodass Sie nach der Passworteingabe direkt absenden koennen.
   </div>
+  <div class="tip"><strong>Fehlerbehebung:</strong> Falls Sie sich nicht anmelden können, überprüfen Sie Ihre Benutzer-ID und Ihr Passwort.</div>
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="getting-started.html">Erste Schritte</a></li>
+    <li><a href="tutorial.html">Tutorial (Grundlagen + Fortgeschritten)</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

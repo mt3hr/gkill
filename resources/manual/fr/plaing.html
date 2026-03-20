@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Sessions actives</span></nav>
   <h1>Sessions actives</h1>
   <p>Ecran pour voir les sessions de suivi du temps en cours. Permet de gerer les activites dont le chronometre est actif.</p>
 
@@ -56,6 +62,12 @@
   <div class="tip">
     <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
   </div>
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="mkfl.html">Mémo pointage</a></li>
+    <li><a href="kftl.html">Bloc-notes</a></li>
+    <li><a href="saihate.html">Saihate (Enregistrement rapide)</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

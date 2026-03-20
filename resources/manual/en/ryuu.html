@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Related Information - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Related Info</span></nav>
+  <h1>Related Information</h1>
+  <p>A screen for defining conditions to automatically search and display records related to a life log entry. You can set up queries per definition to visualize record relationships.</p>
+
+  <h2>Definition Management</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Tabs</td>
+      <td>Each definition is displayed as a tab. Click a tab to switch between definitions.</td>
+    </tr>
+    <tr>
+      <td>Definition Name</td>
+      <td>A text field where you can edit the name of the definition.</td>
+    </tr>
+    <tr>
+      <td>+ Button (next to tabs)</td>
+      <td>Adds a new definition.</td>
+    </tr>
+    <tr>
+      <td>Delete Button</td>
+      <td>Deletes the currently displayed definition.</td>
+    </tr>
+  </table>
+
+  <h2>Query List</h2>
+  <p>Each definition displays a list of queries. Use the floating + button to add a new query.</p>
+
+  <h2>Query Settings</h2>
+  <table>
+    <tr>
+      <th>Setting</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Title</td>
+      <td>Text Input</td>
+      <td>Sets the display name of the query.</td>
+    </tr>
+    <tr>
+      <td>Prefix</td>
+      <td>Text Input</td>
+      <td>Text displayed before the matched value.</td>
+    </tr>
+    <tr>
+      <td>Suffix</td>
+      <td>Text Input</td>
+      <td>Text displayed after the matched value.</td>
+    </tr>
+    <tr>
+      <td>Predicate Group</td>
+      <td>Condition Editor</td>
+      <td>Filters match targets using AND/OR conditions.</td>
+    </tr>
+    <tr>
+      <td>Related Time Match Type</td>
+      <td>Dropdown</td>
+      <td>Selects how time-based relevance is determined.</td>
+    </tr>
+    <tr>
+      <td>Search Duration (hours)</td>
+      <td>Numeric Input</td>
+      <td>Specifies the time range in hours for searching related records.</td>
+    </tr>
+    <tr>
+      <td>Custom Search Query</td>
+      <td>Checkbox + Button</td>
+      <td>Enable to use a custom search query. Click the button to open the search query editor.</td>
+    </tr>
+  </table>
+
+  <h2>Related Time Match Types</h2>
+  <table>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Nearest before and after</td>
+      <td>Matches the record with the closest time both before and after the target record.</td>
+    </tr>
+    <tr>
+      <td>Nearest before</td>
+      <td>Matches the record with the closest time before the target record.</td>
+    </tr>
+    <tr>
+      <td>Nearest after</td>
+      <td>Matches the record with the closest time after the target record.</td>
+    </tr>
+  </table>
+
+  <h2>Query Edit Buttons</h2>
+  <table>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Reset</td>
+      <td>Reverts the edits to their original state.</td>
+    </tr>
+    <tr>
+      <td>Save</td>
+      <td>Saves the query changes.</td>
+    </tr>
+  </table>
+
+  <h2>Bottom Action Buttons</h2>
+  <table>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Apply</td>
+      <td>Saves all definition and query changes.</td>
+    </tr>
+    <tr>
+      <td>Cancel</td>
+      <td>Discards changes and closes the dialog.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> Related information is used to automatically display related records when browsing entries in the life log view.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> A shorter search duration will only match records that are closer in time.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Create multiple definitions to define different types of relationships.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Use custom search queries to set up more advanced search conditions.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="application-config.html">Settings</a></li>
+    <li><a href="rykv.html">Life Log View</a></li>
+    <li><a href="getting-started.html">Getting Started</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

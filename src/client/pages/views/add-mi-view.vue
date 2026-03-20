@@ -21,8 +21,12 @@
                         :readonly="is_requested_submit" />
                 </td>
                 <td>
-                    <v-btn color="secondary" class="pt-1" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
-                        size="small" :disabled="is_requested_submit"></v-btn>
+                    <v-tooltip :text="i18n.global.t('TOOLTIP_ADD_BOARD')">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" color="secondary" class="pt-1" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
+                                size="small" :disabled="is_requested_submit"></v-btn>
+                        </template>
+                    </v-tooltip>
                 </td>
             </tr>
         </table>

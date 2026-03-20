@@ -24,19 +24,25 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Home</span></nav>
   <h1>Home Hub</h1>
   <p>
-    The Home Hub is the home screen of gkill. It serves as a quick-add dashboard where you can rapidly create any type of record and navigate to other views.
+    A screen for safely recording even from the lock screen. It serves as a quick-add hub where you can rapidly create any type of record.
   </p>
 
   <h2>Toolbar</h2>
   <table>
     <tr><th>Icon / Action</th><th>Description</th></tr>
     <tr><td><span class="icon">&#128260;</span> Reload</td><td>Tap to reload the current data. <strong>Long-press</strong> to force a full reload, bypassing the cache.</td></tr>
-    <tr><td>Logout</td><td>Tap to log out and return to the login screen. <strong>Long-press</strong> for additional logout options.</td></tr>
+    <tr><td>Logout</td><td>Tap to log out and return to the login screen.</td></tr>
   </table>
 
   <h2>Navigation</h2>
@@ -75,6 +81,17 @@
   <div class="tip">
     <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
   </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="kftl.html">Notepad</a></li>
+    <li><a href="mkfl.html">Punch Memo</a></li>
+    <li><a href="mi.html">Tasks</a></li>
+    <li><a href="rykv.html">Life Log View</a></li>
+    <li><a href="plaing.html">Active Sessions</a></li>
+    <li><a href="application-config.html">Settings</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

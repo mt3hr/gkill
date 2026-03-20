@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorial - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Tutorial</span></nav>
+  <h1>Tutorial</h1>
+  <p>Hier wird die Verwendung von gkill in einem Grundlagen- und einem Fortgeschrittenenteil erkl&auml;rt. Wenn Sie gkill zum ersten Mal verwenden, lesen Sie bitte zun&auml;chst den Grundlagenteil.</p>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Grundlagen</h2>
+
+  <h2>1. Bei gkill anmelden</h2>
+  <h3>Erster Start</h3>
+  <p>Wenn Sie gkill zum ersten Mal starten, wird automatisch die Kontoregistrierungsseite angezeigt.</p>
+  <ol>
+    <li>Geben Sie eine Benutzer-ID ein (dies wird Ihr Kontoname).</li>
+    <li>Geben Sie ein Passwort ein und best&auml;tigen Sie es durch erneute Eingabe.</li>
+    <li>Legen Sie ein Administratorpasswort fest (wird f&uuml;r die Serververwaltung verwendet).</li>
+    <li>Dr&uuml;cken Sie die Schaltfl&auml;che &bdquo;Registrieren&ldquo;, um das Konto zu erstellen.</li>
+    <li>Sie werden zur Anmeldeseite weitergeleitet. Melden Sie sich mit dem erstellten Konto an.</li>
+  </ol>
+
+  <h3>Normale Anmeldung</h3>
+  <ol>
+    <li>Geben Sie Ihre Benutzer-ID in das Eingabefeld f&uuml;r die Benutzer-ID ein.</li>
+    <li>Geben Sie Ihr Passwort in das Passwortfeld ein.</li>
+    <li>Klicken Sie auf die Schaltfl&auml;che &bdquo;Anmelden&ldquo; oder dr&uuml;cken Sie die Eingabetaste.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tipp:</strong> Die Sitzung nach der Anmeldung ist 30 Tage g&uuml;ltig. Bis zum Ablauf ist keine erneute Anmeldung erforderlich.
+  </div>
+
+  <h2>2. Eintr&auml;ge hinzuf&uuml;gen</h2>
+  <p>In gkill k&ouml;nnen Sie verschiedene Arten von Lebensprotokollen aufzeichnen. F&uuml;gen Sie Eintr&auml;ge &uuml;ber die Schaltfl&auml;che &bdquo;+&ldquo; unten rechts auf dem Bildschirm hinzu.</p>
+
+  <table>
+    <tr><th>Eintragstyp</th><th>Verwendung</th><th>Eingabebeispiel</th></tr>
+    <tr><td>Memo</td><td>Textnotizen hinterlassen</td><td>&bdquo;Heute war das Wetter sch&ouml;n&ldquo;</td></tr>
+    <tr><td>Zeitstempel</td><td>Zeiterfassung (Start/Ende)</td><td>&bdquo;Besprechung 10:00&ndash;11:30&ldquo;</td></tr>
+    <tr><td>Aufgabe</td><td>Aufgaben verwalten</td><td>&bdquo;Bericht schreiben&ldquo;</td></tr>
+    <tr><td>Ausgabe</td><td>Geldausgaben erfassen</td><td>&bdquo;Supermarkt: Brot 2,50 &euro;&ldquo;</td></tr>
+    <tr><td>Stimmung</td><td>Stimmung als Wert von 0&ndash;10 erfassen</td><td>&bdquo;7&ldquo;</td></tr>
+    <tr><td>Zahlenwert</td><td>Numerische Daten erfassen</td><td>&bdquo;Gewicht: 65,5&ldquo;</td></tr>
+    <tr><td>Lesezeichen</td><td>URLs speichern</td><td>&bdquo;https://example.com&ldquo;</td></tr>
+    <tr><td>Datei</td><td>Bilder und Dateien hochladen</td><td>Fotos, PDFs usw.</td></tr>
+  </table>
+
+  <h3>Schritte zum Hinzuf&uuml;gen eines Eintrags</h3>
+  <ol>
+    <li>Tippen Sie auf die Schaltfl&auml;che &bdquo;+&ldquo; unten rechts auf dem Bildschirm.</li>
+    <li>W&auml;hlen Sie den gew&uuml;nschten Eintragstyp aus.</li>
+    <li>F&uuml;llen Sie das Eingabeformular aus.</li>
+    <li>Dr&uuml;cken Sie die Schaltfl&auml;che &bdquo;Speichern&ldquo;, um den Eintrag zu sichern.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tipp:</strong> Mit dem Notizblock-Bildschirm k&ouml;nnen Sie mehrere Eintr&auml;ge als Text auf einmal eingeben. Weitere Informationen finden Sie im folgenden Abschnitt &bdquo;3. Mehrere Eintr&auml;ge mit dem Notizblock auf einmal eingeben&ldquo;.
+  </div>
+
+  <h2>3. Mehrere Eintr&auml;ge mit dem Notizblock auf einmal eingeben</h2>
+  <p>Auf dem Notizblock-Bildschirm k&ouml;nnen Sie durch einfaches Schreiben von Text mehrere Eintr&auml;ge gleichzeitig erstellen.</p>
+
+  <h3>Grundlegende Verwendung</h3>
+  <ol>
+    <li>&Ouml;ffnen Sie den Notizblock-Bildschirm (w&auml;hlen Sie &bdquo;Notizblock&ldquo; aus dem Men&uuml; der Schaltfl&auml;che &bdquo;+&ldquo;).</li>
+    <li>Geben Sie den zu erfassenden Inhalt in das Textfeld ein.</li>
+    <li>Dr&uuml;cken Sie die Schaltfl&auml;che &bdquo;Speichern&ldquo; (alternativ k&ouml;nnen Sie <code>!</code> eingeben und absenden).</li>
+  </ol>
+
+  <h3>Eingabe mit Vorlagen</h3>
+  <p>Mit Vorlagen k&ouml;nnen Sie Standardtexte mit einem Fingertipp eingeben.</p>
+  <ol>
+    <li>W&auml;hlen Sie auf dem Notizblock-Bildschirm eine Vorlage aus der Vorlagenliste aus.</li>
+    <li>Der Inhalt der Vorlage wird in das Textfeld eingef&uuml;gt.</li>
+    <li>Bearbeiten Sie den Inhalt bei Bedarf und speichern Sie ihn.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tipp:</strong> Es ist praktisch, h&auml;ufig verwendete Erfassungsmuster vorab als Vorlagen zu registrieren. Sie k&ouml;nnen diese &uuml;ber &bdquo;Vorlagenstruktur&ldquo; im Einstellungsbildschirm verwalten.
+  </div>
+
+  <h2>4. Eintr&auml;ge anzeigen und suchen</h2>
+  <p>Auf dem Lebensprotokoll-Ansichtsbildschirm k&ouml;nnen Sie vergangene Eintr&auml;ge als Liste anzeigen und durchsuchen.</p>
+
+  <h3>Grundlegende Bedienung</h3>
+  <ol>
+    <li>&Ouml;ffnen Sie den Lebensprotokoll-Ansichtsbildschirm &uuml;ber die Navigation am oberen Bildschirmrand.</li>
+    <li>Die Eintr&auml;ge werden in chronologischer Reihenfolge angezeigt.</li>
+    <li>Durch &Auml;ndern des Datums k&ouml;nnen Sie Eintr&auml;ge eines bestimmten Tages anzeigen.</li>
+  </ol>
+
+  <h3>Suche und Filterung</h3>
+  <ul>
+    <li><strong>Nach Tags filtern:</strong> Sie k&ouml;nnen nur Eintr&auml;ge mit einem bestimmten Tag anzeigen.</li>
+    <li><strong>Datumsbereich:</strong> Sie k&ouml;nnen den Zeitraum durch Angabe von Start- und Enddatum eingrenzen.</li>
+    <li><strong>Textsuche:</strong> Sie k&ouml;nnen nach Eintr&auml;gen suchen, die ein Schl&uuml;sselwort enthalten.</li>
+  </ul>
+  <div class="tip">
+    <strong>Tipp:</strong> Wenn Sie die &bdquo;Anzahl der Lebensprotokoll-Ansichtstage&ldquo; in den Einstellungen verk&uuml;rzen, wird das Laden schneller.
+  </div>
+
+  <h2>5. Aufgaben verwalten</h2>
+  <p>Auf dem Aufgabenbildschirm k&ouml;nnen Sie Aufgaben im Kanban-Board-Format verwalten.</p>
+
+  <h3>Aufgaben erstellen</h3>
+  <ol>
+    <li>&Ouml;ffnen Sie den Aufgabenbildschirm.</li>
+    <li>F&uuml;gen Sie eine Aufgabe &uuml;ber die Schaltfl&auml;che &bdquo;+&ldquo; hinzu.</li>
+    <li>Geben Sie Titel, Board-Name, F&auml;lligkeitsdatum usw. ein.</li>
+    <li>Nach dem Speichern wird die Aufgabe auf dem angegebenen Board angezeigt.</li>
+  </ol>
+
+  <h3>Aufgaben abschlie&szlig;en</h3>
+  <ol>
+    <li>Tippen Sie auf eine erledigte Aufgabe, um die Details zu &ouml;ffnen.</li>
+    <li>Setzen Sie ein H&auml;kchen, um die Aufgabe als abgeschlossen zu markieren.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tipp:</strong> Erstellen Sie mehrere Boards, um Aufgaben nach Kategorien wie &bdquo;Arbeit&ldquo;, &bdquo;Privat&ldquo; oder &bdquo;Einkaufen&ldquo; zu organisieren.
+  </div>
+
+  <h2>6. Einstellungen &auml;ndern</h2>
+  <p>&Uuml;ber den Einstellungsbildschirm k&ouml;nnen Sie das Verhalten der Anwendung anpassen.</p>
+
+  <h3>Einstellungsbildschirm &ouml;ffnen</h3>
+  <ol>
+    <li>Tippen Sie auf das Zahnradsymbol in der Symbolleiste am oberen Bildschirmrand.</li>
+    <li>Der Einstellungsbildschirm wird ge&ouml;ffnet.</li>
+  </ol>
+
+  <h3>H&auml;ufig verwendete Einstellungen</h3>
+  <table>
+    <tr><th>Einstellung</th><th>Beschreibung</th></tr>
+    <tr><td>Sprache</td><td>&Auml;ndert die Anzeigesprache der Benutzeroberfl&auml;che.</td></tr>
+    <tr><td>Dunkles Design</td><td>Wechselt zu einem dunklen Farbschema.</td></tr>
+    <tr><td>Startbildschirm</td><td>W&auml;hlt die Seite aus, die nach der Anmeldung zuerst angezeigt wird.</td></tr>
+    <tr><td>Bildspaltenanzahl der Lebensprotokoll-Ansicht</td><td>Passt die Anzahl der Spalten f&uuml;r Bild-Thumbnails an.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp:</strong> Dr&uuml;cken Sie nach dem &Auml;ndern der Einstellungen die Schaltfl&auml;che &bdquo;&Uuml;bernehmen&ldquo;. Durch Dr&uuml;cken von &bdquo;Abbrechen&ldquo; werden die &Auml;nderungen verworfen.
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Fortgeschritten</h2>
+
+  <h2>7. Notizblock-Syntax beherrschen</h2>
+  <p>Mit der Notizblock-Syntax k&ouml;nnen Sie verschiedene Arten von Eintr&auml;gen auf einmal eingeben, indem Sie einfach Pr&auml;fixe am Zeilenanfang verwenden.</p>
+
+  <h3>Wichtige Pr&auml;fixe</h3>
+  <table>
+    <tr><th>Pr&auml;fix</th><th>Typ</th><th>Beispiel</th></tr>
+    <tr><td>(keins)</td><td>Memo</td><td><code>Heute war das Wetter sch&ouml;n</code></td></tr>
+    <tr><td><code>&#x3002;</code></td><td>Tag</td><td><code>&#x3002;Tagebuch, Wetter</code></td></tr>
+    <tr><td><code>&#x30FC;&#x307F;</code></td><td>Aufgabe</td><td><code>&#x30FC;&#x307F;</code> &rarr; n&auml;chste Zeile: Titel</td></tr>
+    <tr><td><code>&#x30FC;&#x305F;</code></td><td>Zeitstempel Start</td><td><code>&#x30FC;&#x305F;</code> &rarr; n&auml;chste Zeile: Titel</td></tr>
+    <tr><td><code>&#x30FC;&#x3048;</code></td><td>Zeitstempel Ende</td><td><code>&#x30FC;&#x3048;</code> &rarr; n&auml;chste Zeile: Titel</td></tr>
+    <tr><td><code>&#x30FC;&#x3093;</code></td><td>Ausgabe</td><td><code>&#x30FC;&#x3093;</code> &rarr; n&auml;chste Zeile: Gesch&auml;ft, Artikel, Betrag</td></tr>
+    <tr><td><code>&#x30FC;&#x3089;</code></td><td>Stimmung</td><td><code>&#x30FC;&#x3089;</code> &rarr; n&auml;chste Zeile: Wert (0&ndash;10)</td></tr>
+    <tr><td><code>&#x3001;</code></td><td>Trennzeichen</td><td>Trennt in den n&auml;chsten Datensatz</td></tr>
+    <tr><td><code>&#xFF01;</code></td><td>Speichern</td><td>Eingabe beenden und speichern</td></tr>
+  </table>
+
+  <h3>Beispiel f&uuml;r die Eingabe mehrerer Datens&auml;tze auf einmal</h3>
+  <pre>Heutiges Tagebuch
+&#x3002;Tagebuch
+&#x3001;
+&#x30FC;&#x307F;
+Einkaufen gehen
+&#x3001;
+&#x30FC;&#x3093;
+Supermarkt
+&Auml;pfel
+200
+Milch
+180
+&#x3001;
+&#x30FC;&#x3089;
+8
+&#xFF01;</pre>
+  <p>In diesem Beispiel werden vier Eintr&auml;ge gleichzeitig erstellt: ein Memo, eine Aufgabe, eine Ausgabe und eine Stimmung.</p>
+  <div class="tip">
+    <strong>Tipp:</strong> Eine ausf&uuml;hrliche Syntaxbeschreibung finden Sie in der <a href="kftl-syntax.html">Notizblock-Syntax-Referenz</a>.
+  </div>
+
+  <h2>8. Vorlagen nutzen</h2>
+  <p>Wenn Sie h&auml;ufig verwendete Notizblock-Syntaxmuster als Vorlagen speichern, sparen Sie sich die wiederholte Eingabe.</p>
+
+  <h3>Vorlagenverwaltung</h3>
+  <ol>
+    <li>&Ouml;ffnen Sie den Einstellungsbildschirm.</li>
+    <li>Klicken Sie auf die Schaltfl&auml;che &bdquo;Vorlagenstruktur&ldquo;.</li>
+    <li>Sie k&ouml;nnen Vorlagen hinzuf&uuml;gen, bearbeiten und l&ouml;schen.</li>
+  </ol>
+
+  <h3>Beispiel f&uuml;r die Vorlagenerstellung</h3>
+  <p>Zum Beispiel, um eine t&auml;gliche Tagebuchvorlage zu erstellen:</p>
+  <pre>&#x3002;Tagebuch
+&#x3001;
+&#x30FC;&#x3089;
+</pre>
+  <p>Mit dieser Vorlage wird auf dem Notizblock-Bildschirm mit einem Fingertipp die Tagebuchvorlage eingef&uuml;gt, und Sie m&uuml;ssen nur noch den Memoinhalt und den Stimmungswert erg&auml;nzen.</p>
+  <div class="tip">
+    <strong>Tipp:</strong> Verwenden Sie Ordner, um Vorlagen nach Kategorien zu organisieren und sie leichter zu finden.
+  </div>
+
+  <h2>9. Zeit mit Zeitstempeln erfassen</h2>
+  <p>Mit der Zeitstempel-Funktion k&ouml;nnen Sie Arbeitszeiten und Aktivit&auml;tszeiten genau erfassen.</p>
+
+  <h3>Grundlegende Zeitstempel-Bedienung</h3>
+  <ol>
+    <li><strong>Start:</strong> Verwenden Sie das Pr&auml;fix <code>&#x30FC;&#x305F;</code> im Notizblock oder f&uuml;gen Sie einen Zeitstempel &uuml;ber das Men&uuml; &bdquo;+&ldquo; hinzu. Geben Sie Titel und Startzeit an.</li>
+    <li><strong>Ende:</strong> Verwenden Sie das Pr&auml;fix <code>&#x30FC;&#x3048;</code> im Notizblock oder geben Sie die Endzeit im Bearbeitungsbildschirm des Zeitstempels ein. Der Zeitstempel mit dem passenden Titel wird beendet.</li>
+  </ol>
+
+  <h3>Laufende Zeitstempel verwalten</h3>
+  <p>Auf dem Zeitstempel-Listenbildschirm k&ouml;nnen Sie aktuell laufende Zeitstempel einsehen.</p>
+  <ul>
+    <li>Laufende Zeitstempel werden in einer Liste angezeigt.</li>
+    <li>Durch Antippen k&ouml;nnen Sie die Endzeit festlegen.</li>
+  </ul>
+  <div class="tip">
+    <strong>Tipp:</strong> Mit der Notizblock-Syntax <code>&#x30FC;&#x3044;&#x3048;</code> tritt kein Fehler auf, auch wenn kein passender Zeitstempel vorhanden ist. Das Beenden ist ohne Existenzpr&uuml;fung sicher m&ouml;glich.
+  </div>
+
+  <h2>10. Daten in der Aggregationsansicht analysieren</h2>
+  <p>Auf dem Aggregationsansichts-Bildschirm k&ouml;nnen Sie erfasste Daten in Diagrammen und Zusammenfassungstabellen visualisieren.</p>
+
+  <h3>Verwendung der Aggregationsansicht</h3>
+  <ol>
+    <li>&Ouml;ffnen Sie den Aggregationsansichts-Bildschirm &uuml;ber die Navigation.</li>
+    <li>W&auml;hlen Sie Art und Zeitraum der Aggregation aus.</li>
+    <li>Die Daten werden in Diagrammen und Tabellen angezeigt.</li>
+  </ol>
+
+  <h3>Aggregationseinstellungen</h3>
+  <p>&Uuml;ber die Schaltfl&auml;che &bdquo;Aggregationsansicht&ldquo; im Einstellungsbildschirm k&ouml;nnen Sie Aggregationsmethoden und die Ansichtskonfiguration verwalten.</p>
+  <div class="tip">
+    <strong>Tipp:</strong> Wenn Sie die Entwicklung von Stimmungswerten oder Ausgabedaten im Zeitverlauf betrachten, werden Lebensmuster sichtbar.
+  </div>
+
+  <h2>11. Externe Integrationen nutzen</h2>
+
+  <h3>URLs mit Bookmarklet erfassen</h3>
+  <p>Wenn Sie ein Bookmarklet in der Lesezeichenleiste Ihres Browsers registrieren, k&ouml;nnen Sie die aktuell angezeigte Webseite mit einem Klick in gkill speichern.</p>
+  <ol>
+    <li>Kopieren Sie die unter &bdquo;Bookmarklet-Adresse&ldquo; im Einstellungsbildschirm angezeigte URL.</li>
+    <li>Registrieren Sie diese als neues Lesezeichen in der Lesezeichenleiste Ihres Browsers.</li>
+    <li>Klicken Sie auf das registrierte Lesezeichen, w&auml;hrend Sie die zu speichernde Webseite ge&ouml;ffnet haben.</li>
+  </ol>
+
+  <h3>GPS-Aufzeichnung und Kartenanzeige</h3>
+  <p>Wenn GPS-Protokolle aufgezeichnet werden, k&ouml;nnen Sie den Bewegungsverlauf auf einer Karte anzeigen.</p>
+  <ol>
+    <li>Konfigurieren Sie den &bdquo;Google Maps API-Schl&uuml;ssel&ldquo; im Einstellungsbildschirm.</li>
+    <li>Wenn GPS-Daten aufgezeichnet sind, steht die Kartenanzeige in der Lebensprotokoll-Ansicht zur Verf&uuml;gung.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tipp:</strong> Erhalten Sie den Google Maps API-Schl&uuml;ssel, indem Sie die Maps JavaScript API in der Google Cloud Console aktivieren.
+  </div>
+
+  <h2>12. Datensicherung und -verwaltung</h2>
+
+  <h3>Serverkonfiguration (f&uuml;r Administratoren)</h3>
+  <p>Wenn Sie sich mit einem Administratorkonto anmelden, wird im Einstellungsbildschirm die Schaltfl&auml;che &bdquo;Serverkonfiguration&ldquo; angezeigt.</p>
+  <ul>
+    <li><strong>Portnummer:</strong> Sie k&ouml;nnen den Port &auml;ndern, auf dem der Server lauscht (Standard: 9999).</li>
+    <li><strong>TLS-Einstellungen:</strong> Sie k&ouml;nnen HTTPS-Kommunikation aktivieren.</li>
+    <li><strong>Zugriffsbeschr&auml;nkung:</strong> Sie k&ouml;nnen den Zugriff auf lokale Verbindungen beschr&auml;nken.</li>
+  </ul>
+
+  <h3>Kontoverwaltung</h3>
+  <p>Administratoren k&ouml;nnen auf dem Bildschirm &bdquo;Kontoverwaltung&ldquo; Benutzerkonten hinzuf&uuml;gen und l&ouml;schen.</p>
+
+  <h3>Datensicherung</h3>
+  <p>Alle Daten von gkill werden im Home-Verzeichnis gespeichert (Standard: <code>~/gkill</code>). Durch Sichern dieses Verzeichnisses k&ouml;nnen alle Daten bewahrt werden.</p>
+  <div class="tip">
+    <strong>Tipp:</strong> Es wird empfohlen, das Home-Verzeichnis regelm&auml;&szlig;ig zu sichern. Besonders wichtig sind die Verzeichnisse <code>datas/</code> und <code>configs/</code>.
+  </div>
+
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="getting-started.html">Erste Schritte (Ersteinrichtungsanleitung)</a></li>
+    <li><a href="kftl-syntax.html">Notizblock-Syntax-Referenz</a></li>
+    <li><a href="kftl-template-struct.html">Vorlagenstruktur</a></li>
+    <li><a href="application-config.html">Einstellungsbildschirm</a></li>
+    <li><a href="mi.html">Aufgabenbildschirm</a></li>
+    <li><a href="rykv.html">Lebensprotokoll-Ansichtsbildschirm</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

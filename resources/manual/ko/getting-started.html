@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>시작하기 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>시작하기</h1>
+  <p>gkill은 일상의 라이프로그(생활 기록)를 기록하고 열람하기 위한 애플리케이션입니다.</p>
+
+  <h2>gkill로 할 수 있는 것</h2>
+  <table>
+    <tr>
+      <th>기록 유형</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>메모</td>
+      <td>텍스트 메모를 기록합니다</td>
+    </tr>
+    <tr>
+      <td>타임스탬프</td>
+      <td>시작 및 종료 시간을 기록합니다</td>
+    </tr>
+    <tr>
+      <td>작업</td>
+      <td>칸반 보드로 할 일을 관리합니다</td>
+    </tr>
+    <tr>
+      <td>기분</td>
+      <td>기분을 0~10의 수치로 기록합니다</td>
+    </tr>
+    <tr>
+      <td>지출</td>
+      <td>지출 금액과 내용을 기록합니다</td>
+    </tr>
+    <tr>
+      <td>북마크</td>
+      <td>웹 페이지 URL을 저장합니다</td>
+    </tr>
+    <tr>
+      <td>수치 기록</td>
+      <td>임의의 수치 데이터를 기록합니다</td>
+    </tr>
+    <tr>
+      <td>파일</td>
+      <td>이미지나 문서를 업로드하여 기록합니다</td>
+    </tr>
+  </table>
+
+  <h2>초기 설정</h2>
+  <ol>
+    <li>gkill을 실행하고 브라우저에서 <code>http://localhost:9999</code>에 접속합니다.</li>
+    <li>사용자 ID <code>admin</code>, 비밀번호 없이 로그인합니다.</li>
+    <li>로그인 후, 설정 화면에서 비밀번호를 설정하는 것을 권장합니다.</li>
+    <li>설정 화면에서 언어 및 다크 테마 등 기본 설정을 구성합니다.</li>
+  </ol>
+
+  <h2>화면 목록</h2>
+  <table>
+    <tr>
+      <th>화면 이름</th>
+      <th>설명</th>
+      <th>상세 도움말</th>
+    </tr>
+    <tr>
+      <td>튜토리얼</td>
+      <td>기본 조작부터 고급 테크닉까지</td>
+      <td><a href="tutorial.html">튜토리얼（기본편＋응용편）</a></td>
+    </tr>
+    <tr>
+      <td>로그인</td>
+      <td>인증 화면</td>
+      <td><a href="login.html">로그인 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>잠금 화면에서도 안전하게 기록할 수 있는 화면. 각종 기록의 추가 허브</td>
+      <td><a href="saihate.html">Saihate 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>메모장</td>
+      <td>메모장 구문으로 텍스트 입력</td>
+      <td><a href="kftl.html">메모장 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>타임스탬프 메모장</td>
+      <td>메모 입력과 타임스탬프 동시 관리</td>
+      <td><a href="mkfl.html">타임스탬프 메모장 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>작업</td>
+      <td>칸반 보드로 작업 관리</td>
+      <td><a href="mi.html">작업 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>라이프로그 뷰</td>
+      <td>기록의 목록, 검색, 열람</td>
+      <td><a href="rykv.html">라이프로그 뷰 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>진행 중</td>
+      <td>실행 중인 타임스탬프 세션 관리</td>
+      <td><a href="plaing.html">진행 중 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>기록 상세</td>
+      <td>개별 기록의 상세 표시</td>
+      <td><a href="kyou.html">기록 상세 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>설정</td>
+      <td>애플리케이션 설정</td>
+      <td><a href="application-config.html">설정 화면 도움말</a></td>
+    </tr>
+    <tr>
+      <td>메모장 구문 참조</td>
+      <td>메모장 구문의 기호 및 형식 참조</td>
+      <td><a href="kftl-syntax.html">메모장 구문 참조 도움말</a></td>
+    </tr>
+    <tr>
+      <td>템플릿 구조</td>
+      <td>메모장 템플릿 구조 정의</td>
+      <td><a href="kftl-template-struct.html">템플릿 구조 도움말</a></td>
+    </tr>
+    <tr>
+      <td>집계 뷰</td>
+      <td>데이터 집계 및 시각화</td>
+      <td><a href="dnote.html">집계 뷰 도움말</a></td>
+    </tr>
+    <tr>
+      <td>관련 정보</td>
+      <td>관련 기록 자동 검색 정의</td>
+      <td><a href="ryuu.html">관련 정보 도움말</a></td>
+    </tr>
+    <tr>
+      <td>계정 관리</td>
+      <td>사용자 계정 관리 (관리자 전용)</td>
+      <td><a href="manage-account.html">계정 관리 도움말</a></td>
+    </tr>
+    <tr>
+      <td>서버 설정</td>
+      <td>서버 연결 및 TLS 설정 (관리자 전용)</td>
+      <td><a href="server-config.html">서버 설정 도움말</a></td>
+    </tr>
+  </table>
+
+  <h2>첫 번째 기록 만들기</h2>
+  <ol>
+    <li>로그인 후 설정에서 지정된 기본 화면이 표시됩니다.</li>
+    <li>화면 오른쪽 하단의 "+" 버튼을 탭합니다.</li>
+    <li>"메모장"을 선택합니다.</li>
+    <li>텍스트 영역에 기록하고 싶은 내용을 입력합니다 (예: <code>오늘 점심은 카레를 먹었다</code>).</li>
+    <li>"저장" 버튼을 누르면 기록이 생성됩니다.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>팁:</strong> "+" 버튼을 길게 누르면 메모장이 바로 열립니다.
+  </div>
+
+  <h2>용어집</h2>
+  <table>
+    <tr>
+      <th>용어</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>기록</td>
+      <td>gkill에서 기록의 총칭입니다. 메모, 타임스탬프, 작업 등 모든 기록 유형을 포괄합니다</td>
+    </tr>
+    <tr>
+      <td>메모장 구문</td>
+      <td>메모장에서 사용하는 텍스트 입력 구문입니다. 각 줄 앞에 기호를 붙여 다른 종류의 기록을 한 번에 만들 수 있습니다</td>
+    </tr>
+    <tr>
+      <td>타임스탬프</td>
+      <td>시간 추적 기능입니다. 작업이나 활동의 시작 및 종료 시간을 기록합니다</td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>잠금 화면에서도 안전하게 기록을 추가할 수 있는 화면입니다. 각종 기록의 추가 허브로 기능합니다</td>
+    </tr>
+    <tr>
+      <td>메모장 구문</td>
+      <td>메모장 구문의 별명입니다. 텍스트 기반으로 기록을 입력하는 형식을 말합니다</td>
+    </tr>
+    <tr>
+      <td>라이프로그 뷰</td>
+      <td>기록을 목록으로 표시하고 검색하는 화면입니다</td>
+    </tr>
+    <tr>
+      <td>집계 뷰</td>
+      <td>데이터의 집계 및 통계를 표시하는 기능입니다</td>
+    </tr>
+    <tr>
+      <td>관련 정보</td>
+      <td>관련 정보를 자동으로 검색하여 표시하는 기능입니다</td>
+    </tr>
+    <tr>
+      <td>리포지토리</td>
+      <td>기록의 저장 위치입니다. 용도에 따라 여러 리포지토리를 사용할 수 있습니다</td>
+    </tr>
+    <tr>
+      <td>프로필</td>
+      <td>기기별 설정을 모아놓은 것입니다</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

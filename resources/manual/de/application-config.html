@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Einstellungen</span></nav>
   <h1>Anwendungseinstellungen</h1>
   <p>Bildschirm zur Verwaltung der globalen Anwendungseinstellungen und der Datenstruktur. Sie koennen Anzeigeeinstellungen, Verhaltensoptionen und externe Integrationen anpassen.</p>
 
@@ -46,7 +52,7 @@
     </tr>
     <tr>
       <td>Abmelden</td>
-      <td>Beendet die aktuelle Sitzung und meldet ab. Langes Druecken fuer zusaetzliche Optionen.</td>
+      <td>Beendet die aktuelle Sitzung und meldet ab.</td>
     </tr>
   </table>
 
@@ -204,6 +210,14 @@
   <div class="tip">
     <strong>Tipp:</strong> Um GPS-Kartenfunktionen zu nutzen, aktivieren Sie die Maps JavaScript API in der Google Cloud Console und geben Sie den API-Schluessel unter Externe Integration ein.
   </div>
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="server-config.html">Server-Konfiguration (Nur Admin)</a></li>
+    <li><a href="manage-account.html">Kontoverwaltung (Nur Admin)</a></li>
+    <li><a href="dnote.html">Aggregationsansicht</a></li>
+    <li><a href="ryuu.html">Verwandte Informationen</a></li>
+    <li><a href="kftl-template-struct.html">Vorlagenstruktur</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

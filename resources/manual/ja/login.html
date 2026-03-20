@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>ログイン画面</span></nav>
   <h1>ログイン画面</h1>
   <p>gkillにログインするための認証画面です。ユーザーIDとパスワードを入力してアプリケーションにアクセスします。</p>
 
@@ -63,12 +69,22 @@
   </ol>
 
   <div class="tip">
-    <strong>ヒント:</strong> 初回起動時は <code>admin</code> ユーザー（パスワードなし）でログインできます。セキュリティのため、ログイン後にパスワードを設定することを推奨します。
+    <strong>ヒント:</strong> 初回起動時はアカウント登録画面が自動的に表示されます。画面の指示に従って、ユーザーアカウントと管理者パスワードを設定してください。
   </div>
 
   <div class="tip">
     <strong>ヒント:</strong> Enterキーでもログインできるため、パスワード入力後にそのまま送信できます。
   </div>
+
+  <div class="tip">
+    <strong>うまくいかないとき:</strong> ログインできない場合は、ユーザーIDとパスワードが正しいか確認してください。
+  </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="getting-started.html">はじめに（初回セットアップガイド）</a></li>
+    <li><a href="tutorial.html">チュートリアル（基本編＋応用編）</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

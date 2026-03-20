@@ -10,7 +10,10 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -25,6 +28,7 @@
           @requested_update_kftl_template_struct="(...kftl_template_struct: any[]) => emits('requested_update_kftl_template_struct', kftl_template_struct[0] as KFTLTemplateStructElementData)"
           @requested_close_dialog="hide" />
         </v-card>
+        <HelpDialog screen_name="kftl" ref="help_dialog" />
 </div>
     </div>
   </Teleport>
@@ -34,12 +38,15 @@ import { type Ref, ref } from 'vue'
 import type { EditKFTLTemplateStructElementDialogEmits } from './edit-kftl-template-struct-element-dialog-emits'
 import type { EditKFTLTemplateStructElementDialogProps } from './edit-kftl-template-struct-element-dialog-props'
 import EditKFTLTemplateStructElementView from '../views/edit-kftl-template-struct-element-view.vue'
+import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
 defineProps<EditKFTLTemplateStructElementDialogProps>()
 const emits = defineEmits<EditKFTLTemplateStructElementDialogEmits>()
 defineExpose({ show, hide })
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const kftl_template_struct: Ref<KFTLTemplateStructElementData> = ref(new KFTLTemplateStructElementData())
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'

@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Sesiones Activas</span></nav>
   <h1>Sesiones activas</h1>
   <p>Pantalla para ver las sesiones de seguimiento de tiempo en curso. Permite gestionar las actividades con temporizador activo.</p>
 
@@ -56,6 +62,12 @@
   <div class="tip">
     <strong>Atajo:</strong> Presione Enter en esta pantalla para abrir el diálogo del bloc de notas. Es conveniente para agregar registros rápidamente.
   </div>
+  <h2>Documentos Relacionados</h2>
+  <ul>
+    <li><a href="mkfl.html">Memo de Registro</a></li>
+    <li><a href="kftl.html">Bloc de Notas</a></li>
+    <li><a href="saihate.html">Saihate (Registro rápido)</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

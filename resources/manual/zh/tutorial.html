@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教程 - 帮助</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>教程</span></nav>
+  <h1>教程</h1>
+  <p>本教程分为基础篇和进阶篇，介绍gkill的使用方法。初次使用的用户请从基础篇开始依次阅读。</p>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">基础篇</h2>
+
+  <h2>1. 登录gkill</h2>
+  <h3>首次启动时</h3>
+  <p>首次启动gkill时，将自动显示账户注册页面。</p>
+  <ol>
+    <li>输入用户ID（这将成为您的账户名称）。</li>
+    <li>输入密码，然后再次输入以确认。</li>
+    <li>设置管理员密码（用于服务器管理）。</li>
+    <li>点击"注册"按钮，账户即创建完成。</li>
+    <li>页面将重定向到登录页面，请使用刚创建的账户登录。</li>
+  </ol>
+
+  <h3>常规登录</h3>
+  <ol>
+    <li>在用户ID输入框中输入账户的用户ID。</li>
+    <li>在密码输入框中输入密码。</li>
+    <li>点击"登录"按钮，或按回车键。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong> 登录后的会话有效期为30天。在到期之前无需重新登录。
+  </div>
+
+  <h2>2. 添加记录</h2>
+  <p>gkill可以记录各种类型的生活日志。通过页面右下角的"+"按钮来添加记录。</p>
+
+  <table>
+    <tr><th>记录类型</th><th>用途</th><th>输入示例</th></tr>
+    <tr><td>备忘录</td><td>留下文本备忘</td><td>"今天天气很好"</td></tr>
+    <tr><td>打卡</td><td>时间记录（开始/结束）</td><td>"会议 10:00~11:30"</td></tr>
+    <tr><td>任务</td><td>管理待办事项</td><td>"写报告"</td></tr>
+    <tr><td>支出</td><td>记录消费情况</td><td>"便利店：饭团 150日元"</td></tr>
+    <tr><td>心情</td><td>用0~10的数值记录心情</td><td>"7"</td></tr>
+    <tr><td>数值</td><td>记录数值数据</td><td>"体重：65.5"</td></tr>
+    <tr><td>书签</td><td>保存URL</td><td>"https://example.com"</td></tr>
+    <tr><td>文件</td><td>上传图片或文件</td><td>照片、PDF等</td></tr>
+  </table>
+
+  <h3>添加记录的步骤</h3>
+  <ol>
+    <li>点击页面右下角的"+"按钮。</li>
+    <li>选择要添加的记录类型。</li>
+    <li>在输入表单中填写内容。</li>
+    <li>点击"保存"按钮保存记录。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong> 使用记事本页面，可以通过文本批量输入多条记录。详情请参阅后文"3. 使用记事本批量输入多条记录"。
+  </div>
+
+  <h2>3. 使用记事本批量输入多条记录</h2>
+  <p>在记事本页面中，只需输入文本即可一次性创建多条记录。</p>
+
+  <h3>基本使用方法</h3>
+  <ol>
+    <li>打开记事本页面（从"+"按钮的菜单中选择"记事本"）。</li>
+    <li>在文本区域输入要记录的内容。</li>
+    <li>点击"保存"按钮（也可以输入 <code>！</code> 后发送）。</li>
+  </ol>
+
+  <h3>使用模板输入</h3>
+  <p>使用模板可以一键输入固定格式的文本。</p>
+  <ol>
+    <li>在记事本页面从模板列表中选择一个模板。</li>
+    <li>模板内容将被插入到文本区域中。</li>
+    <li>根据需要编辑内容后保存。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong> 将常用的记录模式预先注册为模板会非常方便。可以在设置页面的"模板结构"中进行管理。
+  </div>
+
+  <h2>4. 查看和搜索记录</h2>
+  <p>在生活日志视图页面中，可以列表显示和搜索过去的记录。</p>
+
+  <h3>基本操作</h3>
+  <ol>
+    <li>从页面顶部的导航栏打开生活日志视图页面。</li>
+    <li>记录将按日期顺序列表显示。</li>
+    <li>更改日期可以查看特定日期的记录。</li>
+  </ol>
+
+  <h3>搜索和筛选</h3>
+  <ul>
+    <li><strong>按标签筛选：</strong> 可以仅显示带有特定标签的记录。</li>
+    <li><strong>日期范围：</strong> 指定开始日期和结束日期来筛选时间段。</li>
+    <li><strong>文本搜索：</strong> 搜索包含关键词的记录。</li>
+  </ul>
+  <div class="tip">
+    <strong>提示：</strong> 在设置页面中缩短"生活日志视图显示天数"可以加快加载速度。
+  </div>
+
+  <h2>5. 管理任务</h2>
+  <p>在任务页面中，可以使用看板形式管理任务。</p>
+
+  <h3>创建任务</h3>
+  <ol>
+    <li>打开任务页面。</li>
+    <li>通过"+"按钮添加任务。</li>
+    <li>输入标题、看板名称、截止日期等信息。</li>
+    <li>保存后，任务将显示在指定的看板中。</li>
+  </ol>
+
+  <h3>完成任务</h3>
+  <ol>
+    <li>点击已完成的任务打开详情。</li>
+    <li>勾选复选框将任务标记为已完成。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong> 创建多个看板，按"工作""个人""购物"等类别分类管理，可以更方便地整理任务。
+  </div>
+
+  <h2>6. 更改设置</h2>
+  <p>可以通过设置页面自定义应用程序的行为。</p>
+
+  <h3>打开设置页面</h3>
+  <ol>
+    <li>点击页面顶部工具栏中的齿轮图标。</li>
+    <li>设置页面将会打开。</li>
+  </ol>
+
+  <h3>常用设置</h3>
+  <table>
+    <tr><th>设置项</th><th>说明</th></tr>
+    <tr><td>语言</td><td>更改UI的显示语言。</td></tr>
+    <tr><td>深色主题</td><td>切换为暗色配色方案。</td></tr>
+    <tr><td>启动页面</td><td>选择登录后首先显示的页面。</td></tr>
+    <tr><td>生活日志视图图片列数</td><td>调整图片缩略图的列数。</td></tr>
+  </table>
+  <div class="tip">
+    <strong>提示：</strong> 更改设置后请点击"应用"按钮。点击"取消"将放弃更改。
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">进阶篇</h2>
+
+  <h2>7. 熟练使用记事本语法</h2>
+  <p>使用记事本语法，只需在文本行首添加前缀，即可批量输入各种类型的记录。</p>
+
+  <h3>主要前缀</h3>
+  <table>
+    <tr><th>前缀</th><th>类型</th><th>示例</th></tr>
+    <tr><td>（无）</td><td>备忘录</td><td><code>今天天气很好</code></td></tr>
+    <tr><td><code>。</code></td><td>标签</td><td><code>。日记、天气</code></td></tr>
+    <tr><td><code>ーみ</code></td><td>任务</td><td><code>ーみ</code> → 下一行输入标题</td></tr>
+    <tr><td><code>ーた</code></td><td>打卡开始</td><td><code>ーた</code> → 下一行输入标题</td></tr>
+    <tr><td><code>ーえ</code></td><td>打卡结束</td><td><code>ーえ</code> → 下一行输入标题</td></tr>
+    <tr><td><code>ーん</code></td><td>支出</td><td><code>ーん</code> → 下一行输入店名、商品名、金额</td></tr>
+    <tr><td><code>ーら</code></td><td>心情</td><td><code>ーら</code> → 下一行输入数值（0~10）</td></tr>
+    <tr><td><code>、</code></td><td>分隔符</td><td>分割到下一条记录</td></tr>
+    <tr><td><code>！</code></td><td>保存</td><td>结束输入并保存</td></tr>
+  </table>
+
+  <h3>批量输入多条记录的示例</h3>
+  <pre>今天的日记
+。日记
+、
+ーみ
+去购物
+、
+ーん
+超市
+苹果
+200
+牛奶
+180
+、
+ーら
+8
+！</pre>
+  <p>在此示例中，将一次性创建备忘录、任务、支出和心情共4条记录。</p>
+  <div class="tip">
+    <strong>提示：</strong> 详细语法请参阅<a href="kftl-syntax.html">记事本语法参考</a>。
+  </div>
+
+  <h2>8. 活用模板</h2>
+  <p>将常用的记事本语法模式保存为模板，可以省去每次输入的麻烦。</p>
+
+  <h3>模板管理</h3>
+  <ol>
+    <li>打开设置页面。</li>
+    <li>点击"模板结构"按钮。</li>
+    <li>可以进行模板的添加、编辑和删除。</li>
+  </ol>
+
+  <h3>模板创建示例</h3>
+  <p>例如，创建每日日记模板的情况：</p>
+  <pre>。日记
+、
+ーら
+</pre>
+  <p>使用此模板，在记事本页面即可一键输入日记框架，只需追加备忘录内容和心情值即可完成记录。</p>
+  <div class="tip">
+    <strong>提示：</strong> 使用文件夹按类别整理模板，可以更容易找到所需模板。
+  </div>
+
+  <h2>9. 使用打卡记录时间</h2>
+  <p>使用打卡功能，可以精确记录工作时间和活动时间。</p>
+
+  <h3>打卡的基本操作</h3>
+  <ol>
+    <li><strong>开始：</strong> 在记事本中使用 <code>ーた</code> 前缀，或从"+"菜单添加打卡记录。指定标题和开始时间。</li>
+    <li><strong>结束：</strong> 在记事本中使用 <code>ーえ</code> 前缀，或在打卡编辑页面输入结束时间。标题匹配的打卡将被结束。</li>
+  </ol>
+
+  <h3>管理进行中的打卡</h3>
+  <p>在打卡列表页面中，可以确认当前正在进行的打卡。</p>
+  <ul>
+    <li>正在进行的打卡将以列表显示。</li>
+    <li>点击可以设置结束时间。</li>
+  </ul>
+  <div class="tip">
+    <strong>提示：</strong> 使用记事本语法的 <code>ーいえ</code>，即使没有匹配的打卡也不会报错。可以安全地结束打卡而无需确认是否存在。
+  </div>
+
+  <h2>10. 在汇总视图中分析数据</h2>
+  <p>在汇总视图页面中，可以通过图表和汇总表可视化记录的数据。</p>
+
+  <h3>汇总视图的使用方法</h3>
+  <ol>
+    <li>从导航栏打开汇总视图页面。</li>
+    <li>选择汇总类型和时间段。</li>
+    <li>数据将以图表或表格形式显示。</li>
+  </ol>
+
+  <h3>汇总设置</h3>
+  <p>可以从设置页面的"汇总视图"按钮管理汇总方法和视图配置。</p>
+  <div class="tip">
+    <strong>提示：</strong> 按时间序列查看心情值和支出数据的变化趋势，可以发现生活规律。
+  </div>
+
+  <h2>11. 利用外部集成</h2>
+
+  <h3>使用书签工具记录URL</h3>
+  <p>将书签工具注册到浏览器的书签栏中，可以一键将正在浏览的网页保存到gkill。</p>
+  <ol>
+    <li>复制设置页面中"书签工具地址"显示的URL。</li>
+    <li>将其作为新书签注册到浏览器的书签栏中。</li>
+    <li>在打开想要保存的网页时，点击已注册的书签即可。</li>
+  </ol>
+
+  <h3>GPS记录和地图显示</h3>
+  <p>如果正在记录GPS日志，可以在地图上显示移动轨迹。</p>
+  <ol>
+    <li>在设置页面中设置"Google Maps API密钥"。</li>
+    <li>如果已记录GPS数据，则可以在生活日志视图中使用地图显示功能。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong> Google Maps API密钥需要在Google Cloud Console中启用Maps JavaScript API后获取。
+  </div>
+
+  <h2>12. 数据备份与管理</h2>
+
+  <h3>服务器设置（管理员）</h3>
+  <p>使用管理员账户登录后，设置页面中将显示"服务器设置"按钮。</p>
+  <ul>
+    <li><strong>端口号：</strong> 可以更改服务器监听的端口（默认值：9999）。</li>
+    <li><strong>TLS设置：</strong> 可以启用HTTPS通信。</li>
+    <li><strong>访问限制：</strong> 可以限制为仅本地访问。</li>
+  </ul>
+
+  <h3>账户管理</h3>
+  <p>管理员可以在"账户管理"页面中添加和删除用户账户。</p>
+
+  <h3>数据备份</h3>
+  <p>gkill的所有数据都保存在主目录中（默认值：<code>~/gkill</code>）。备份此目录即可保全所有数据。</p>
+  <div class="tip">
+    <strong>提示：</strong> 建议定期备份主目录。其中 <code>datas/</code> 和 <code>configs/</code> 目录尤为重要。
+  </div>
+
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="getting-started.html">入门指南（初次设置指南）</a></li>
+    <li><a href="kftl-syntax.html">记事本语法参考</a></li>
+    <li><a href="kftl-template-struct.html">模板结构</a></li>
+    <li><a href="application-config.html">设置页面</a></li>
+    <li><a href="mi.html">任务页面</a></li>
+    <li><a href="rykv.html">生活日志视图页面</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

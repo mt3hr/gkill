@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Détails de l'enregistrement</span></nav>
   <h1>Vue d'enregistrement</h1>
   <p>Ecran affichant les details d'un enregistrement individuel. Vous pouvez consulter les informations detaillees de differents types d'enregistrements.</p>
 
@@ -49,7 +55,7 @@
       <th>Description</th>
     </tr>
     <tr>
-      <td>Memo (Kmemo)</td>
+      <td>Mémo</td>
       <td>Affiche le contenu des notes textuelles.</td>
     </tr>
     <tr>
@@ -73,7 +79,7 @@
       <td>Affiche l'heure de debut/fin et le temps ecoule.</td>
     </tr>
     <tr>
-      <td>Fichier (IDFKyou)</td>
+      <td>Fichier</td>
       <td>Affiche un apercu du fichier telecharge.</td>
     </tr>
     <tr>
@@ -96,6 +102,11 @@
   <div class="tip">
     <strong>Astuce :</strong> Vous pouvez ajouter ou modifier des etiquettes directement depuis l'ecran de details de l'enregistrement.
   </div>
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="rykv.html">Vue journal de vie</a></li>
+    <li><a href="mi.html">Tâches</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

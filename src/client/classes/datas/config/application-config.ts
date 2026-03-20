@@ -44,6 +44,7 @@ export class ApplicationConfig {
     rep_type_struct: RepTypeStructElementData
     mi_board_struct: MiBoardStructElementData
     show_tags_in_list: boolean
+    show_tutorial_on_startup!: boolean
     session_is_local: boolean
     urlog_bookmarklet_session: string
 
@@ -75,6 +76,7 @@ export class ApplicationConfig {
         application_config.mi_default_period = this.mi_default_period
         application_config.is_show_share_footer = this.is_show_share_footer
         application_config.show_tags_in_list = this.show_tags_in_list
+        application_config.show_tutorial_on_startup = this.show_tutorial_on_startup
         application_config.default_page = this.default_page
 
         application_config.user_id = this.user_id

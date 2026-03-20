@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorial - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Tutorial</span></nav>
+  <h1>Tutorial</h1>
+  <p>Explicamos el uso de gkill dividido en una parte basica y una parte avanzada. Si es la primera vez que lo usa, lea la parte basica en orden.</p>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Parte basica</h2>
+
+  <h2>1. Iniciar sesion en gkill</h2>
+  <h3>Primer inicio</h3>
+  <p>Cuando inicie gkill por primera vez, se mostrara automaticamente la pantalla de registro de cuenta.</p>
+  <ol>
+    <li>Ingrese un ID de usuario (este sera su nombre de cuenta).</li>
+    <li>Ingrese una contrasena y vuelva a ingresarla para confirmar.</li>
+    <li>Establezca una contrasena de administrador (utilizada para la administracion del servidor).</li>
+    <li>Pulse el boton "Registrar" para crear la cuenta.</li>
+    <li>Sera redirigido a la pantalla de inicio de sesion; inicie sesion con la cuenta que acaba de crear.</li>
+  </ol>
+
+  <h3>Inicio de sesion normal</h3>
+  <ol>
+    <li>Ingrese el ID de usuario de su cuenta en el campo correspondiente.</li>
+    <li>Ingrese su contrasena en el campo de contrasena.</li>
+    <li>Haga clic en el boton "Iniciar sesion" o pulse la tecla Enter.</li>
+  </ol>
+  <div class="tip">
+    <strong>Consejo:</strong> La sesion es valida durante 30 dias despues de iniciar sesion. No necesitara volver a iniciar sesion hasta que expire.
+  </div>
+
+  <h2>2. Agregar registros</h2>
+  <p>En gkill puede registrar diversos tipos de registros de vida. Agregue registros desde el boton "+" en la esquina inferior derecha de la pantalla.</p>
+
+  <table>
+    <tr><th>Tipo de registro</th><th>Uso</th><th>Ejemplo de entrada</th></tr>
+    <tr><td>Memo</td><td>Dejar notas de texto</td><td>"Hoy hizo buen tiempo"</td></tr>
+    <tr><td>Registro de tiempo</td><td>Registrar tiempos (inicio/fin)</td><td>"Reunion 10:00-11:30"</td></tr>
+    <tr><td>Tarea</td><td>Gestionar cosas por hacer</td><td>"Escribir el informe"</td></tr>
+    <tr><td>Gasto</td><td>Registrar gastos</td><td>"Tienda: manzana 150 yenes"</td></tr>
+    <tr><td>Estado de animo</td><td>Registrar el animo con un valor de 0 a 10</td><td>"7"</td></tr>
+    <tr><td>Valor numerico</td><td>Registrar datos numericos</td><td>"Peso: 65.5"</td></tr>
+    <tr><td>Marcador</td><td>Guardar URLs</td><td>"https://example.com"</td></tr>
+    <tr><td>Archivo</td><td>Subir imagenes y archivos</td><td>Fotos, PDF, etc.</td></tr>
+  </table>
+
+  <h3>Pasos para agregar un registro</h3>
+  <ol>
+    <li>Toque el boton "+" en la esquina inferior derecha de la pantalla.</li>
+    <li>Seleccione el tipo de registro que desea agregar.</li>
+    <li>Complete el formulario de entrada con el contenido.</li>
+    <li>Pulse el boton "Guardar" para guardar el registro.</li>
+  </ol>
+  <div class="tip">
+    <strong>Consejo:</strong> Si usa la pantalla del bloc de notas, puede introducir multiples registros a la vez mediante texto. Para mas detalles, consulte "3. Introducir multiples registros a la vez con el bloc de notas" a continuacion.
+  </div>
+
+  <h2>3. Introducir multiples registros a la vez con el bloc de notas</h2>
+  <p>En la pantalla del bloc de notas, puede crear multiples registros a la vez simplemente escribiendo texto.</p>
+
+  <h3>Uso basico</h3>
+  <ol>
+    <li>Abra la pantalla del bloc de notas (seleccione "Bloc de notas" en el menu del boton "+").</li>
+    <li>Introduzca el contenido que desea registrar en el area de texto.</li>
+    <li>Pulse el boton "Guardar" (tambien puede escribir <code>!</code> y enviar).</li>
+  </ol>
+
+  <h3>Entrada con plantillas</h3>
+  <p>Con las plantillas, puede introducir texto predefinido con un solo toque.</p>
+  <ol>
+    <li>En la pantalla del bloc de notas, seleccione una plantilla de la lista de plantillas.</li>
+    <li>El contenido de la plantilla se insertara en el area de texto.</li>
+    <li>Edite el contenido segun sea necesario y guardelo.</li>
+  </ol>
+  <div class="tip">
+    <strong>Consejo:</strong> Es conveniente registrar de antemano los patrones de registro que usa con frecuencia como plantillas. Puede gestionarlos desde "Estructura de plantillas" en la pantalla de configuracion.
+  </div>
+
+  <h2>4. Consultar y buscar registros</h2>
+  <p>En la pantalla de vista de registros de vida, puede ver y buscar registros anteriores en forma de lista.</p>
+
+  <h3>Operacion basica</h3>
+  <ol>
+    <li>Abra la pantalla de vista de registros de vida desde la navegacion en la parte superior de la pantalla.</li>
+    <li>Los registros se muestran en orden cronologico.</li>
+    <li>Puede cambiar la fecha para consultar los registros de un dia especifico.</li>
+  </ol>
+
+  <h3>Busqueda y filtrado</h3>
+  <ul>
+    <li><strong>Filtrar por etiqueta:</strong> Puede mostrar solo los registros con una etiqueta especifica.</li>
+    <li><strong>Rango de fechas:</strong> Puede especificar una fecha de inicio y una fecha de fin para acotar el periodo.</li>
+    <li><strong>Busqueda de texto:</strong> Puede buscar registros que contengan una palabra clave.</li>
+  </ul>
+  <div class="tip">
+    <strong>Consejo:</strong> Si reduce el "Numero de dias de la vista de registros de vida" en la pantalla de configuracion, la carga sera mas rapida.
+  </div>
+
+  <h2>5. Gestionar tareas</h2>
+  <p>En la pantalla de tareas, puede gestionar tareas en formato de tablero kanban.</p>
+
+  <h3>Crear tareas</h3>
+  <ol>
+    <li>Abra la pantalla de tareas.</li>
+    <li>Agregue una tarea desde el boton "+".</li>
+    <li>Introduzca el titulo, el nombre del tablero, la fecha limite, etc.</li>
+    <li>Al guardar, la tarea aparecera en el tablero especificado.</li>
+  </ol>
+
+  <h3>Completar tareas</h3>
+  <ol>
+    <li>Toque la tarea completada para abrir los detalles.</li>
+    <li>Marque la casilla para completar la tarea.</li>
+  </ol>
+  <div class="tip">
+    <strong>Consejo:</strong> Crear varios tableros para categorias como "Trabajo", "Personal", "Compras", etc., facilita la organizacion.
+  </div>
+
+  <h2>6. Cambiar la configuracion</h2>
+  <p>Puede personalizar el comportamiento de la aplicacion desde la pantalla de configuracion.</p>
+
+  <h3>Como abrir la pantalla de configuracion</h3>
+  <ol>
+    <li>Toque el icono de engranaje en la barra de herramientas en la parte superior de la pantalla.</li>
+    <li>Se abrira la pantalla de configuracion.</li>
+  </ol>
+
+  <h3>Configuraciones de uso frecuente</h3>
+  <table>
+    <tr><th>Elemento de configuracion</th><th>Descripcion</th></tr>
+    <tr><td>Idioma</td><td>Cambia el idioma de visualizacion de la interfaz.</td></tr>
+    <tr><td>Tema oscuro</td><td>Cambia a una combinacion de colores oscuros.</td></tr>
+    <tr><td>Pantalla al iniciar</td><td>Selecciona la pagina que se muestra primero despues de iniciar sesion.</td></tr>
+    <tr><td>Columnas de imagenes de la vista de registros de vida</td><td>Ajusta el numero de columnas de las miniaturas de imagenes.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo:</strong> Despues de cambiar la configuracion, pulse el boton "Aplicar". Si pulsa "Cancelar", los cambios se descartaran.
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Parte avanzada</h2>
+
+  <h2>7. Dominar la sintaxis del bloc de notas</h2>
+  <p>Con la sintaxis del bloc de notas, puede introducir de forma masiva diversos tipos de registros simplemente anadiendo un prefijo al inicio de cada linea de texto.</p>
+
+  <h3>Prefijos principales</h3>
+  <table>
+    <tr><th>Prefijo</th><th>Tipo</th><th>Ejemplo</th></tr>
+    <tr><td>(ninguno)</td><td>Memo</td><td><code>Hoy hizo buen tiempo</code></td></tr>
+    <tr><td><code>.</code></td><td>Etiqueta</td><td><code>.diario, clima</code></td></tr>
+    <tr><td><code>-mi</code></td><td>Tarea</td><td><code>-mi</code> → titulo en la siguiente linea</td></tr>
+    <tr><td><code>-ta</code></td><td>Inicio de registro de tiempo</td><td><code>-ta</code> → titulo en la siguiente linea</td></tr>
+    <tr><td><code>-e</code></td><td>Fin de registro de tiempo</td><td><code>-e</code> → titulo en la siguiente linea</td></tr>
+    <tr><td><code>-n</code></td><td>Gasto</td><td><code>-n</code> → nombre de tienda, articulo, monto en las siguientes lineas</td></tr>
+    <tr><td><code>-ra</code></td><td>Estado de animo</td><td><code>-ra</code> → valor numerico (0-10) en la siguiente linea</td></tr>
+    <tr><td><code>,</code></td><td>Separador</td><td>Divide en el siguiente registro</td></tr>
+    <tr><td><code>!</code></td><td>Guardar</td><td>Termina la entrada y guarda</td></tr>
+  </table>
+
+  <h3>Ejemplo de entrada masiva de multiples registros</h3>
+  <pre>Diario de hoy
+.diario
+,
+-mi
+Ir de compras
+,
+-n
+Supermercado
+manzanas
+200
+leche
+180
+,
+-ra
+8
+!</pre>
+  <p>En este ejemplo, se crean cuatro registros a la vez: un memo, una tarea, un gasto y un estado de animo.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> Para la sintaxis detallada, consulte la <a href="kftl-syntax.html">Referencia de la sintaxis del bloc de notas</a>.
+  </div>
+
+  <h2>8. Aprovechar las plantillas</h2>
+  <p>Si guarda los patrones de sintaxis del bloc de notas que usa con frecuencia como plantillas, se ahorrara el esfuerzo de escribirlos cada vez.</p>
+
+  <h3>Gestion de plantillas</h3>
+  <ol>
+    <li>Abra la pantalla de configuracion.</li>
+    <li>Haga clic en el boton "Estructura de plantillas".</li>
+    <li>Puede agregar, editar y eliminar plantillas.</li>
+  </ol>
+
+  <h3>Ejemplo de creacion de plantilla</h3>
+  <p>Por ejemplo, para crear una plantilla de diario diario:</p>
+  <pre>.diario
+,
+-ra
+</pre>
+  <p>Usando esta plantilla, la estructura del diario se introduce con un solo toque en la pantalla del bloc de notas, y solo necesita agregar el contenido del memo y el valor de estado de animo para registrarlo.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> Usar carpetas para organizar las plantillas por categorias facilita encontrarlas.
+  </div>
+
+  <h2>9. Registrar tiempo con registros de tiempo</h2>
+  <p>Con la funcion de registro de tiempo, puede registrar con precision el tiempo de trabajo y actividades.</p>
+
+  <h3>Operacion basica de registros de tiempo</h3>
+  <ol>
+    <li><strong>Inicio:</strong> Use el prefijo <code>-ta</code> en el bloc de notas, o agregue un registro de tiempo desde el menu "+". Especifique el titulo y la hora de inicio.</li>
+    <li><strong>Fin:</strong> Use el prefijo <code>-e</code> en el bloc de notas, o introduzca la hora de fin en la pantalla de edicion del registro de tiempo. Se finalizara el registro de tiempo con el titulo coincidente.</li>
+  </ol>
+
+  <h3>Gestionar registros de tiempo en curso</h3>
+  <p>En la pantalla de lista de registros de tiempo, puede consultar los registros de tiempo actualmente en curso.</p>
+  <ul>
+    <li>Se muestran en lista los registros de tiempo en curso.</li>
+    <li>Puede tocarlos para establecer la hora de fin.</li>
+  </ul>
+  <div class="tip">
+    <strong>Consejo:</strong> Si usa <code>-ie</code> en la sintaxis del bloc de notas, no se producira un error aunque no exista un registro de tiempo coincidente. Puede finalizarlo de forma segura sin verificacion de existencia.
+  </div>
+
+  <h2>10. Analizar datos con la vista de agregacion</h2>
+  <p>En la pantalla de vista de agregacion, puede visualizar los datos registrados mediante graficos y tablas de resumen.</p>
+
+  <h3>Como usar la vista de agregacion</h3>
+  <ol>
+    <li>Abra la pantalla de vista de agregacion desde la navegacion.</li>
+    <li>Seleccione el tipo de agregacion y el periodo.</li>
+    <li>Los datos se mostraran en graficos y tablas.</li>
+  </ol>
+
+  <h3>Configuracion de la agregacion</h3>
+  <p>Puede gestionar los metodos de agregacion y la configuracion de las vistas desde el boton "Vista de agregacion" en la pantalla de configuracion.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> Revisar la evolucion de los valores de estado de animo y los datos de gastos en una serie temporal le permite ver patrones en su vida.
+  </div>
+
+  <h2>11. Aprovechar la integracion externa</h2>
+
+  <h3>Registrar URLs con bookmarklet</h3>
+  <p>Si registra un bookmarklet en la barra de marcadores de su navegador, puede guardar la pagina web que esta viendo en gkill con un solo clic.</p>
+  <ol>
+    <li>Copie la URL que se muestra en "Direccion del bookmarklet" en la pantalla de configuracion.</li>
+    <li>Registrela como un nuevo marcador en la barra de marcadores de su navegador.</li>
+    <li>Cuando tenga abierta la pagina web que desea guardar, haga clic en el marcador registrado.</li>
+  </ol>
+
+  <h3>Registro GPS y visualizacion en mapa</h3>
+  <p>Si esta registrando logs GPS, puede mostrar el historial de movimientos en un mapa.</p>
+  <ol>
+    <li>Configure la "Clave API de Google Maps" en la pantalla de configuracion.</li>
+    <li>Si se han registrado datos GPS, la visualizacion en mapa estara disponible en la vista de registros de vida.</li>
+  </ol>
+  <div class="tip">
+    <strong>Consejo:</strong> Para obtener la clave API de Google Maps, habilite la API Maps JavaScript en Google Cloud Console.
+  </div>
+
+  <h2>12. Copia de seguridad y gestion de datos</h2>
+
+  <h3>Configuracion del servidor (para administradores)</h3>
+  <p>Al iniciar sesion con una cuenta de administrador, se mostrara el boton "Configuracion del servidor" en la pantalla de configuracion.</p>
+  <ul>
+    <li><strong>Numero de puerto:</strong> Puede cambiar el puerto en el que escucha el servidor (predeterminado: 9999).</li>
+    <li><strong>Configuracion TLS:</strong> Puede habilitar la comunicacion HTTPS.</li>
+    <li><strong>Restriccion de acceso:</strong> Puede restringir el acceso solo al acceso local.</li>
+  </ul>
+
+  <h3>Gestion de cuentas</h3>
+  <p>Los administradores pueden agregar y eliminar cuentas de usuario en la pantalla de "Gestion de cuentas".</p>
+
+  <h3>Copia de seguridad de datos</h3>
+  <p>Todos los datos de gkill se almacenan en el directorio de inicio (predeterminado: <code>~/gkill</code>). Si hace una copia de seguridad de este directorio, puede preservar todos los datos.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> Se recomienda hacer copias de seguridad del directorio de inicio periodicamente. Los directorios <code>datas/</code> y <code>configs/</code> son especialmente importantes.
+  </div>
+
+  <h2>Documentos relacionados</h2>
+  <ul>
+    <li><a href="getting-started.html">Primeros Pasos (Guia de configuracion inicial)</a></li>
+    <li><a href="kftl-syntax.html">Referencia de la sintaxis del bloc de notas</a></li>
+    <li><a href="kftl-template-struct.html">Estructura de plantillas</a></li>
+    <li><a href="application-config.html">Pantalla de configuracion</a></li>
+    <li><a href="mi.html">Pantalla de tareas</a></li>
+    <li><a href="rykv.html">Pantalla de vista de registros de vida</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

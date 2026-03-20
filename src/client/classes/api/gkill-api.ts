@@ -1708,6 +1708,7 @@ export class GkillAPI {
                 application_config.rykv_hot_reload = response.application_config.rykv_hot_reload
                 application_config.rykv_image_list_column_number = response.application_config.rykv_image_list_column_number
                 application_config.show_tags_in_list = response.application_config.show_tags_in_list
+                application_config.show_tutorial_on_startup = response.application_config.show_tutorial_on_startup
                 application_config.user_id = response.application_config.user_id
                 application_config.session_is_local = response.application_config.session_is_local
                 application_config.rykv_default_period = response.application_config.rykv_default_period

@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>記録詳細画面</span></nav>
   <h1>記録画面</h1>
   <p>個別の記録の詳細を表示する画面です。各種記録タイプの詳細情報を確認できます。</p>
 
@@ -49,7 +55,7 @@
       <th>説明</th>
     </tr>
     <tr>
-      <td>メモ（Kmemo）</td>
+      <td>メモ</td>
       <td>テキストメモの内容を表示します。</td>
     </tr>
     <tr>
@@ -73,7 +79,7 @@
       <td>開始・終了時刻と経過時間を表示します。</td>
     </tr>
     <tr>
-      <td>ファイル（IDFKyou）</td>
+      <td>ファイル</td>
       <td>アップロードされたファイルのプレビューを表示します。</td>
     </tr>
     <tr>
@@ -96,6 +102,12 @@
   <div class="tip">
     <strong>ヒント:</strong> 記録の詳細画面から直接タグの追加や編集が可能です。
   </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="rykv.html">ライフログビュー画面</a></li>
+    <li><a href="mi.html">タスク画面</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

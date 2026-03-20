@@ -26,8 +26,12 @@
             <v-tab v-for="(def, i) in dnote_definitions" :key="i" :value="i">
                 {{ def.name }}
             </v-tab>
-            <v-btn v-if="editable" icon="mdi-plus" size="small" variant="text" class="align-self-center ml-1"
-                @click="add_definition" :title="i18n.global.t('ADD_DNOTE_DEFINITION_TITLE')" />
+            <v-tooltip :text="i18n.global.t('ADD_DNOTE_DEFINITION_TITLE')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-if="editable" v-bind="props" icon="mdi-plus" size="small" variant="text" class="align-self-center ml-1"
+                        @click="add_definition" />
+                </template>
+            </v-tooltip>
         </v-tabs>
         <v-row v-if="editable && dnote_definitions.length > 0" class="pa-2 ma-0" align="center">
             <v-col class="pa-0 ma-0">
@@ -35,9 +39,12 @@
                     :label="i18n.global.t('DNOTE_DEFINITION_NAME_LABEL')" density="compact" hide-details />
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn v-if="dnote_definitions.length > 1" icon="mdi-delete" size="small" variant="text"
-                    @click="delete_current_definition"
-                    :title="i18n.global.t('DELETE_DNOTE_DEFINITION_TITLE')" />
+                <v-tooltip :text="i18n.global.t('DELETE_DNOTE_DEFINITION_TITLE')">
+                    <template v-slot:activator="{ props }">
+                        <v-btn v-if="dnote_definitions.length > 1" v-bind="props" icon="mdi-delete" size="small" variant="text"
+                            @click="delete_current_definition" />
+                    </template>
+                </v-tooltip>
             </v-col>
         </v-row>
         <h1>
@@ -51,7 +58,11 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" v-if="!editable">
-                    <v-btn :disabled="!loaded_kyous" icon="mdi-download-circle-outline" @click="download_kyous_json" />
+                    <v-tooltip :text="i18n.global.t('TOOLTIP_DOWNLOAD')">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" :disabled="!loaded_kyous" icon="mdi-download-circle-outline" @click="download_kyous_json" />
+                        </template>
+                    </v-tooltip>
                 </v-col>
             </v-row>
         </h1>

@@ -23,9 +23,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>服务器设置</span></nav>
   <h1>服务器设置</h1>
   <p>此画面用于配置服务器行为。仅管理员可以访问。</p>
 
@@ -54,6 +60,11 @@
   <p><strong>应用</strong>: 保存设置。<br><strong>取消</strong>: 放弃更改并关闭画面。</p>
 
   <div class="tip">更改设置后需要重新启动服务器才能生效。</div>
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="application-config.html">设置</a></li>
+    <li><a href="manage-account.html">账户管理</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

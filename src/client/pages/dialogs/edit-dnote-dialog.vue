@@ -10,6 +10,9 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
                 <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
@@ -27,6 +30,7 @@
             @requested_reload_application_config="(...application_config: any[]) => emits('requested_reload_application_config', application_config[0] as ApplicationConfig)"
             ref="dnote_view" />
         </v-card>
+        <HelpDialog screen_name="dnote" ref="help_dialog" />
       </div>
     </div>
   </Teleport>
@@ -35,6 +39,7 @@
 import { ref } from 'vue'
 import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import HelpDialog from './help-dialog.vue'
 import { type EditDnoteDialogProps } from './edit-dnote-dialog-props'
 import { type EditDnoteDialogEmits } from './edit-dnote-dialog-emits'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -44,6 +49,7 @@ import { useEditDnoteDialog } from '@/classes/use-edit-dnote-dialog'
 import { i18n } from '@/i18n'
 
 const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const props = defineProps<EditDnoteDialogProps>()
 const emits = defineEmits<EditDnoteDialogEmits>()
 

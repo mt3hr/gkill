@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>설정</span></nav>
   <h1>애플리케이션 설정</h1>
   <p>애플리케이션 전체 설정과 데이터 구조를 관리하는 화면입니다. 표시 환경, 동작 옵션, 외부 연동 등을 조정할 수 있습니다.</p>
 
@@ -46,7 +52,7 @@
     </tr>
     <tr>
       <td>로그아웃</td>
-      <td>현재 세션을 종료하고 로그아웃합니다. 길게 누르면 추가 옵션이 표시됩니다.</td>
+      <td>현재 세션을 종료하고 로그아웃합니다.</td>
     </tr>
   </table>
 
@@ -204,6 +210,14 @@
   <div class="tip">
     <strong>팁:</strong> GPS 지도 기능을 사용하려면 Google Cloud Console에서 Maps JavaScript API를 활성화하고 API 키를 입력하세요.
   </div>
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="server-config.html">서버 설정 (관리자 전용)</a></li>
+    <li><a href="manage-account.html">계정 관리 (관리자 전용)</a></li>
+    <li><a href="dnote.html">집계 뷰</a></li>
+    <li><a href="ryuu.html">관련 정보</a></li>
+    <li><a href="kftl-template-struct.html">템플릿 구조</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

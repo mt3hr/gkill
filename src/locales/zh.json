@@ -742,12 +742,19 @@
     "CONFIRM_UNKNOWN_TAG_TITLE": "确认",
     "CONFIRM_UNKNOWN_TAG_MESSAGE": "这是一个新标签。要添加吗？",
     "HELP_TITLE": "帮助",
+    "TUTORIAL_TITLE": "教程",
+    "DONT_SHOW_TUTORIAL_AGAIN": "下次启动时不再显示",
     "TOOLTIP_HELP": "显示帮助",
     "TOOLTIP_SETTINGS": "设置",
     "TOOLTIP_TOGGLE_DETAIL_VIEW": "切换详细视图",
     "TOOLTIP_TOGGLE_CALENDAR": "切换日历",
-    "TOOLTIP_TOGGLE_DNOTE": "切换Dnote",
+    "TOOLTIP_TOGGLE_DNOTE": "切换统计视图",
     "TOOLTIP_TOGGLE_MAP": "切换地图",
     "TOOLTIP_TOGGLE_SIDEBAR": "切换侧边栏",
-    "TOOLTIP_RELOAD": "重新加载"
+    "TOOLTIP_RELOAD": "重新加载",
+    "TOOLTIP_DOWNLOAD": "下载",
+    "TOOLTIP_TOGGLE_IMAGE_VIEW": "切换图片视图",
+    "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "滚动到点击的时期",
+    "TOOLTIP_CLOSE_COLUMN": "关闭列",
+    "TOOLTIP_ADD_BOARD": "添加看板"
 }

@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>登录</span></nav>
   <h1>登录界面</h1>
   <p>用于登录gkill的认证界面。输入用户ID和密码以访问应用程序。</p>
 
@@ -63,12 +69,18 @@
   </ol>
 
   <div class="tip">
-    <strong>提示：</strong>首次启动时，可以使用 <code>admin</code> 用户（无密码）登录。为了安全起见，建议登录后设置密码。
+    <strong>提示：</strong>首次启动时，将自动显示账户注册界面。请按照界面提示创建用户账户并设置管理员密码。
   </div>
 
   <div class="tip">
     <strong>提示：</strong>也可以按Enter键登录，输入密码后可以直接提交。
   </div>
+  <div class="tip"><strong>故障排除：</strong>如果无法登录，请确认用户ID和密码。</div>
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="getting-started.html">入门指南</a></li>
+    <li><a href="tutorial.html">教程（基础篇＋进阶篇）</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>
