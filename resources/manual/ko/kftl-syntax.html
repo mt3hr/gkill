@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KFTL 구문 레퍼런스</title>
+  <title>메모장 구문 레퍼런스</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
@@ -29,15 +29,21 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <a href="kftl.html">메모장</a> &gt; <span>메모장 구문 참조</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; 메모장 도움말로 돌아가기</a></div>
 
-<h1>KFTL 구문 레퍼런스</h1>
+<h1>메모장 구문 레퍼런스</h1>
 
-<p>KFTL은 gkill에서 사용하는 텍스트 기반 기록 형식입니다. 줄 앞에 접두사를 붙여 다양한 유형의 데이터를 한 번에 입력할 수 있습니다. 아래에 전체 18가지 문 유형을 소개합니다.</p>
+<p>메모장 구문은 gkill에서 사용하는 텍스트 기반 기록 형식입니다. 줄 앞에 접두사를 붙여 다양한 유형의 데이터를 한 번에 입력할 수 있습니다. 아래에 전체 18가지 문 유형을 소개합니다.</p>
 
 <h2>문 유형 목록</h2>
 
@@ -170,7 +176,7 @@ https://example.com
 
 <h2>종합 예제</h2>
 
-<p>아래는 여러 문 유형을 조합한 완전한 KFTL 문서 예제입니다.</p>
+<p>아래는 여러 문 유형을 조합한 완전한 메모장 구문 문서 예제입니다.</p>
 
 <pre>오늘의 일기
 。일기、날씨
@@ -197,6 +203,13 @@ https://example.com
 <div class="tip">
   <strong>팁:</strong> <code>、</code>를 사용하여 하나의 문서 내에서 여러 레코드를 분리할 수 있습니다. 끝에 <code>！</code>를 추가하면 자동으로 저장됩니다.
 </div>
+
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="kftl.html">메모장 화면</a></li>
+    <li><a href="mkfl.html">타임스탬프 메모장 화면</a></li>
+    <li><a href="kftl-template-struct.html">템플릿 구조</a></li>
+  </ul>
 
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

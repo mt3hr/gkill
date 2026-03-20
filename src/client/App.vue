@@ -263,6 +263,7 @@ div::-webkit-scrollbar-thumb {
   position: relative;
   width: 625px;
   min-width: 625px;
+  overflow: unset !important;
 }
 
 /* Date picker header hidden */
@@ -448,8 +449,6 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
 }
 
 .gkill-floating-dialog__body .v-card {
-  flex: 1 1 auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: auto;

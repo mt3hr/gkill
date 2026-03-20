@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informations associées - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Informations associées</span></nav>
+  <h1>Informations associées</h1>
+  <p>Écran de définition des conditions pour rechercher et afficher automatiquement les enregistrements liés à une entrée du journal de vie. Vous pouvez configurer des requêtes par définition pour visualiser les relations entre les enregistrements.</p>
+
+  <h2>Gestion des définitions</h2>
+  <table>
+    <tr>
+      <th>Élément</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Onglets</td>
+      <td>Chaque définition est affichée sous forme d'onglet. Cliquez sur un onglet pour basculer entre les définitions.</td>
+    </tr>
+    <tr>
+      <td>Nom</td>
+      <td>Champ de texte permettant de modifier le nom de la définition.</td>
+    </tr>
+    <tr>
+      <td>Bouton ＋ (à côté des onglets)</td>
+      <td>Ajoute une nouvelle définition.</td>
+    </tr>
+    <tr>
+      <td>Bouton supprimer</td>
+      <td>Supprime la définition actuellement affichée.</td>
+    </tr>
+  </table>
+
+  <h2>Liste des requêtes</h2>
+  <p>Chaque définition affiche une liste de requêtes. Le bouton flottant ＋ permet d'ajouter une nouvelle requête.</p>
+
+  <h2>Paramètres des requêtes</h2>
+  <table>
+    <tr>
+      <th>Paramètre</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Titre</td>
+      <td>Saisie de texte</td>
+      <td>Définit le nom d'affichage de la requête.</td>
+    </tr>
+    <tr>
+      <td>Préfixe</td>
+      <td>Saisie de texte</td>
+      <td>Texte affiché avant la valeur correspondante.</td>
+    </tr>
+    <tr>
+      <td>Suffixe</td>
+      <td>Saisie de texte</td>
+      <td>Texte affiché après la valeur correspondante.</td>
+    </tr>
+    <tr>
+      <td>Groupe de conditions</td>
+      <td>Éditeur de conditions</td>
+      <td>Filtre les cibles de correspondance à l'aide de conditions AND/OR.</td>
+    </tr>
+    <tr>
+      <td>Type de correspondance temporelle</td>
+      <td>Liste déroulante</td>
+      <td>Sélectionne la méthode de correspondance temporelle.</td>
+    </tr>
+    <tr>
+      <td>Période de recherche (heures)</td>
+      <td>Saisie numérique</td>
+      <td>Spécifie la plage horaire de recherche des enregistrements associés, en heures.</td>
+    </tr>
+    <tr>
+      <td>Requête de recherche personnalisée</td>
+      <td>Case à cocher ＋ bouton</td>
+      <td>Activez cette option pour utiliser une requête de recherche personnalisée. Le bouton ouvre l'éditeur de requête.</td>
+    </tr>
+  </table>
+
+  <h2>Types de correspondance temporelle</h2>
+  <table>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Temps le plus proche avant et après</td>
+      <td>Correspond aux enregistrements dont l'heure est la plus proche, avant et après l'enregistrement cible.</td>
+    </tr>
+    <tr>
+      <td>Temps le plus proche avant</td>
+      <td>Correspond à l'enregistrement dont l'heure est la plus proche avant l'enregistrement cible.</td>
+    </tr>
+    <tr>
+      <td>Temps le plus proche après</td>
+      <td>Correspond à l'enregistrement dont l'heure est la plus proche après l'enregistrement cible.</td>
+    </tr>
+  </table>
+
+  <h2>Boutons d'édition de requête</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Réinitialiser</td>
+      <td>Annule les modifications en cours.</td>
+    </tr>
+    <tr>
+      <td>Enregistrer</td>
+      <td>Enregistre les modifications de la requête.</td>
+    </tr>
+  </table>
+
+  <h2>Boutons d'action inférieurs</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Appliquer</td>
+      <td>Enregistre toutes les modifications des définitions et requêtes.</td>
+    </tr>
+    <tr>
+      <td>Annuler</td>
+      <td>Annule les modifications et ferme le dialogue.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Les informations associées sont utilisées pour afficher automatiquement les enregistrements liés lors de la consultation du journal de vie.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Une période de recherche plus courte ne fait correspondre que les enregistrements temporellement plus proches.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Créez plusieurs définitions pour définir différents types de relations.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Utilisez les requêtes de recherche personnalisées pour définir des conditions avancées.
+  </div>
+
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="application-config.html">Écran de configuration</a></li>
+    <li><a href="rykv.html">Vue journal de vie</a></li>
+    <li><a href="getting-started.html">Premiers pas</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

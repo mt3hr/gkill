@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Template Structure - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Template Structure</span></nav>
+  <h1>Template Structure</h1>
+  <p>A screen for managing the structure of text templates used in the memo pad. You can organize templates into folders and create/edit boilerplate text for quick input.</p>
+
+  <h2>Screen Elements</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Template Tree</td>
+      <td>Displays templates and folders in a hierarchical structure. Folders can be expanded/collapsed by clicking, allowing you to categorize and organize templates.</td>
+    </tr>
+  </table>
+
+  <h2>Operations</h2>
+  <table>
+    <tr>
+      <th>Operation</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Double-click</td>
+      <td>Opens the editing screen for the selected template.</td>
+    </tr>
+    <tr>
+      <td>Right-click</td>
+      <td>Displays the context menu (Edit / Delete).</td>
+    </tr>
+  </table>
+
+  <h2>Action Buttons</h2>
+  <table>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Add Template</td>
+      <td>Adds a new template element.</td>
+    </tr>
+    <tr>
+      <td>Add Folder</td>
+      <td>Adds a folder for organizing templates.</td>
+    </tr>
+    <tr>
+      <td>Apply</td>
+      <td>Saves the changes to the template structure.</td>
+    </tr>
+    <tr>
+      <td>Cancel</td>
+      <td>Discards changes and closes the dialog.</td>
+    </tr>
+  </table>
+
+  <h2>Template Element Editing</h2>
+  <p>Double-click a template or select "Edit" from the context menu to open the editing screen.</p>
+  <table>
+    <tr>
+      <th>Setting</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Template Name</td>
+      <td>Text Input</td>
+      <td>Sets the display name of the template.</td>
+    </tr>
+    <tr>
+      <td>Template Content</td>
+      <td>Text Area</td>
+      <td>The text content that will be inserted into the memo pad. Can include Memo Pad syntax.</td>
+    </tr>
+  </table>
+
+  <h2>Context Menu</h2>
+  <table>
+    <tr>
+      <th>Menu Item</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>Opens the editing screen for the template element.</td>
+    </tr>
+    <tr>
+      <td>Delete</td>
+      <td>Deletes the template element. A confirmation dialog will be displayed.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> Include Memo Pad syntax in templates for quick structured input from the memo pad screen.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Use folders to organize templates by category for easier access.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Changes to the template structure are not saved until the Apply button is pressed.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Memo Pad Syntax Reference</a></li>
+    <li><a href="application-config.html">Settings</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

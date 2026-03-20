@@ -742,12 +742,19 @@
     "CONFIRM_UNKNOWN_TAG_TITLE": "Confirmation",
     "CONFIRM_UNKNOWN_TAG_MESSAGE": "This is a new tag. Do you want to add it?",
     "HELP_TITLE": "Help",
+    "TUTORIAL_TITLE": "Tutorial",
+    "DONT_SHOW_TUTORIAL_AGAIN": "Don't show on next startup",
     "TOOLTIP_HELP": "Show Help",
     "TOOLTIP_SETTINGS": "Settings",
     "TOOLTIP_TOGGLE_DETAIL_VIEW": "Toggle Detail View",
     "TOOLTIP_TOGGLE_CALENDAR": "Toggle Calendar",
-    "TOOLTIP_TOGGLE_DNOTE": "Toggle Dnote",
+    "TOOLTIP_TOGGLE_DNOTE": "Toggle Aggregation View",
     "TOOLTIP_TOGGLE_MAP": "Toggle Map",
     "TOOLTIP_TOGGLE_SIDEBAR": "Toggle Sidebar",
-    "TOOLTIP_RELOAD": "Reload"
+    "TOOLTIP_RELOAD": "Reload",
+    "TOOLTIP_DOWNLOAD": "Download",
+    "TOOLTIP_TOGGLE_IMAGE_VIEW": "Toggle Image View",
+    "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "Scroll to Clicked Period",
+    "TOOLTIP_CLOSE_COLUMN": "Close Column",
+    "TOOLTIP_ADD_BOARD": "Add Board"
 }

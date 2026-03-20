@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aggregation View - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Aggregation View</span></nav>
+  <h1>Aggregation View</h1>
+  <p>A screen for aggregating and visualizing life log data based on conditions. You can define two types: "Items" for single aggregate values and "Lists" for grouped aggregations by key.</p>
+
+  <h2>Definition Management</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Tabs</td>
+      <td>Each aggregation definition is displayed as a tab. Click a tab to switch between definitions.</td>
+    </tr>
+    <tr>
+      <td>Definition Name</td>
+      <td>A text field where you can edit the name of the aggregation definition.</td>
+    </tr>
+    <tr>
+      <td>+ Button (next to tabs)</td>
+      <td>Adds a new aggregation definition.</td>
+    </tr>
+    <tr>
+      <td>Delete Button</td>
+      <td>Deletes the currently displayed aggregation definition.</td>
+    </tr>
+  </table>
+
+  <h2>Screen Elements</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Date Range</td>
+      <td>Displays the time period for aggregation.</td>
+    </tr>
+    <tr>
+      <td>Download Button</td>
+      <td>Downloads the aggregation results in JSON format.</td>
+    </tr>
+    <tr>
+      <td>+ Button (floating)</td>
+      <td>Displays a menu to choose between adding an Item or a List.</td>
+    </tr>
+  </table>
+
+  <h2>Items (Single Aggregate Value)</h2>
+  <p>Displays aggregate values of data matching the conditions in the format: "Title: Prefix [Aggregate Result] Suffix".</p>
+  <table>
+    <tr>
+      <th>Setting</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Title</td>
+      <td>Text Input</td>
+      <td>Sets the display name of the item.</td>
+    </tr>
+    <tr>
+      <td>Prefix</td>
+      <td>Text Input</td>
+      <td>Text displayed before the aggregate value.</td>
+    </tr>
+    <tr>
+      <td>Suffix</td>
+      <td>Text Input</td>
+      <td>Text displayed after the aggregate value.</td>
+    </tr>
+    <tr>
+      <td>Aggregate Target</td>
+      <td>Dropdown</td>
+      <td>Selects the aggregation method (count, sum, average, max, min, etc.).</td>
+    </tr>
+    <tr>
+      <td>Predicate Group</td>
+      <td>Condition Editor</td>
+      <td>Filters the aggregation targets using AND/OR conditions.</td>
+    </tr>
+  </table>
+
+  <h2>Lists (Grouped Aggregation)</h2>
+  <p>Displays aggregation results grouped by key in a list format.</p>
+  <table>
+    <tr>
+      <th>Setting</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Title / Prefix / Suffix</td>
+      <td>Text Input</td>
+      <td>Same settings as Items.</td>
+    </tr>
+    <tr>
+      <td>Aggregate Target</td>
+      <td>Dropdown</td>
+      <td>Selects the aggregation method.</td>
+    </tr>
+    <tr>
+      <td>Group Key</td>
+      <td>Dropdown</td>
+      <td>Selects the grouping criteria (title, data type, tag, month, day of week, date, etc.).</td>
+    </tr>
+    <tr>
+      <td>Predicate Group</td>
+      <td>Condition Editor</td>
+      <td>Filters the aggregation targets using AND/OR conditions.</td>
+    </tr>
+  </table>
+
+  <h2>Predicate Group Editing</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Logic</td>
+      <td>Select AND / OR / NOT to set how conditions are combined.</td>
+    </tr>
+    <tr>
+      <td>Add Predicate</td>
+      <td>Adds a new condition to the group.</td>
+    </tr>
+    <tr>
+      <td>Add Group</td>
+      <td>Adds a nested predicate group.</td>
+    </tr>
+    <tr>
+      <td>Delete Group</td>
+      <td>Deletes this predicate group.</td>
+    </tr>
+    <tr>
+      <td>Each Condition</td>
+      <td>Sets the condition type and value (filter by data type, tag, title, amount, mood value, etc.).</td>
+    </tr>
+  </table>
+
+  <h2>Operations</h2>
+  <table>
+    <tr>
+      <th>Operation</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Double-click</td>
+      <td>Opens the editing screen for the item or list.</td>
+    </tr>
+    <tr>
+      <td>Right-click</td>
+      <td>Displays the context menu (Edit / Delete).</td>
+    </tr>
+    <tr>
+      <td>Drag & Drop</td>
+      <td>Changes the display order of items and lists.</td>
+    </tr>
+  </table>
+
+  <h2>Bottom Action Buttons</h2>
+  <table>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Apply</td>
+      <td>Saves all definition changes.</td>
+    </tr>
+    <tr>
+      <td>Cancel</td>
+      <td>Discards changes and closes the dialog.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> Items are useful for single aggregate values (e.g. monthly total expenses), while Lists are useful for grouped aggregations (e.g. expenses by store).
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Combine conditions to create complex aggregation queries.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Use drag & drop to freely reorder the display of items and lists.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Aggregation results can be downloaded as JSON for analysis with external tools.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="application-config.html">Settings</a></li>
+    <li><a href="rykv.html">Life Log View</a></li>
+    <li><a href="getting-started.html">Getting Started</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>进行中</span></nav>
   <h1>进行中</h1>
   <p>查看当前正在进行的时间跟踪会话的界面。可以管理正在计时的活动。</p>
 
@@ -56,6 +62,12 @@
   <div class="tip">
     <strong>快捷键：</strong> 在此画面按Enter键可打开记事本对话框，方便快速添加记录。
   </div>
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="mkfl.html">打卡记事本</a></li>
+    <li><a href="kftl.html">记事本</a></li>
+    <li><a href="saihate.html">首页（快速记录）</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

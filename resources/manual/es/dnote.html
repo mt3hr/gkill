@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vista de agregación - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Vista de Agregación</span></nav>
+  <h1>Vista de agregación</h1>
+  <p>Pantalla para agregar y visualizar datos del registro de vida según condiciones. Se pueden definir dos tipos: «Elementos» para valores agregados individuales y «Listas» para agregaciones agrupadas por clave.</p>
+
+  <h2>Gestión de definiciones</h2>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Pestañas</td>
+      <td>Cada definición de agregación se muestra como una pestaña. Haga clic en una pestaña para cambiar.</td>
+    </tr>
+    <tr>
+      <td>Nombre de definición</td>
+      <td>Campo de texto para editar el nombre de la definición de agregación.</td>
+    </tr>
+    <tr>
+      <td>Botón ＋ (junto a pestañas)</td>
+      <td>Añade una nueva definición de agregación.</td>
+    </tr>
+    <tr>
+      <td>Botón eliminar</td>
+      <td>Elimina la definición de agregación que se muestra actualmente.</td>
+    </tr>
+  </table>
+
+  <h2>Elementos de la pantalla</h2>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Rango de fechas</td>
+      <td>Muestra el período objetivo de la agregación.</td>
+    </tr>
+    <tr>
+      <td>Botón de descarga</td>
+      <td>Descarga los resultados de agregación en formato JSON.</td>
+    </tr>
+    <tr>
+      <td>Botón ＋ (flotante)</td>
+      <td>Muestra un menú para seleccionar añadir un elemento o añadir una lista.</td>
+    </tr>
+  </table>
+
+  <h2>Elementos (valor agregado individual)</h2>
+  <p>Muestra el valor agregado de los datos que coinciden con las condiciones en el formato «Título: Prefijo [Resultado] Sufijo».</p>
+  <table>
+    <tr>
+      <th>Configuración</th>
+      <th>Tipo</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Título</td>
+      <td>Entrada de texto</td>
+      <td>Establece el nombre visible del elemento.</td>
+    </tr>
+    <tr>
+      <td>Prefijo</td>
+      <td>Entrada de texto</td>
+      <td>Texto que se muestra antes del valor agregado.</td>
+    </tr>
+    <tr>
+      <td>Sufijo</td>
+      <td>Entrada de texto</td>
+      <td>Texto que se muestra después del valor agregado.</td>
+    </tr>
+    <tr>
+      <td>Objetivo de agregación</td>
+      <td>Desplegable</td>
+      <td>Selecciona el método de agregación (cantidad, suma, promedio, máximo, mínimo, etc.).</td>
+    </tr>
+    <tr>
+      <td>Grupo de condiciones</td>
+      <td>Editor de condiciones</td>
+      <td>Filtra los objetivos de agregación con condiciones AND/OR.</td>
+    </tr>
+  </table>
+
+  <h2>Listas (agregación por grupo)</h2>
+  <p>Muestra los resultados agregados agrupados por clave en formato de lista.</p>
+  <table>
+    <tr>
+      <th>Configuración</th>
+      <th>Tipo</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Título / Prefijo / Sufijo</td>
+      <td>Entrada de texto</td>
+      <td>Misma configuración que los elementos.</td>
+    </tr>
+    <tr>
+      <td>Objetivo de agregación</td>
+      <td>Desplegable</td>
+      <td>Selecciona el método de agregación.</td>
+    </tr>
+    <tr>
+      <td>Clave de grupo</td>
+      <td>Desplegable</td>
+      <td>Selecciona el criterio de agrupación (título, tipo de datos, etiqueta, mes, día de la semana, fecha, etc.).</td>
+    </tr>
+    <tr>
+      <td>Grupo de condiciones</td>
+      <td>Editor de condiciones</td>
+      <td>Filtra los objetivos de agregación con condiciones AND/OR.</td>
+    </tr>
+  </table>
+
+  <h2>Edición de grupo de condiciones</h2>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Lógica de unión</td>
+      <td>Seleccione AND / OR / NOT para configurar cómo se combinan las condiciones.</td>
+    </tr>
+    <tr>
+      <td>Añadir condición</td>
+      <td>Añade una nueva condición al grupo.</td>
+    </tr>
+    <tr>
+      <td>Añadir grupo</td>
+      <td>Añade un grupo de condiciones anidado.</td>
+    </tr>
+    <tr>
+      <td>Eliminar grupo</td>
+      <td>Elimina este grupo de condiciones.</td>
+    </tr>
+    <tr>
+      <td>Cada condición</td>
+      <td>Configura el tipo y valor de la condición (filtrar por tipo de datos, etiqueta, título, importe, valor de ánimo, etc.).</td>
+    </tr>
+  </table>
+
+  <h2>Operaciones</h2>
+  <table>
+    <tr>
+      <th>Operación</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Doble clic</td>
+      <td>Abre la pantalla de edición de un elemento o lista.</td>
+    </tr>
+    <tr>
+      <td>Clic derecho</td>
+      <td>Muestra el menú contextual (editar/eliminar).</td>
+    </tr>
+    <tr>
+      <td>Arrastrar y soltar</td>
+      <td>Permite cambiar el orden de visualización de elementos y listas.</td>
+    </tr>
+  </table>
+
+  <h2>Botones de acción inferiores</h2>
+  <table>
+    <tr>
+      <th>Botón</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Aplicar</td>
+      <td>Guarda los cambios de todas las definiciones.</td>
+    </tr>
+    <tr>
+      <td>Cancelar</td>
+      <td>Descarta los cambios y cierra el diálogo.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Los elementos son útiles para valores agregados individuales (ej: gastos totales del mes), y las listas para agregaciones por grupo (ej: gastos por tienda).
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Combinando condiciones se pueden crear criterios de agregación complejos.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Con arrastrar y soltar puede cambiar libremente el orden de visualización de elementos y listas.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Los resultados de agregación se pueden descargar como JSON para analizarlos con herramientas externas.
+  </div>
+
+  <h2>Documentación relacionada</h2>
+  <ul>
+    <li><a href="application-config.html">Pantalla de configuración</a></li>
+    <li><a href="rykv.html">Vista de registro vital</a></li>
+    <li><a href="getting-started.html">Primeros pasos</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

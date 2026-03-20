@@ -10,7 +10,10 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -24,6 +27,7 @@
           @requested_close_dialog="hide()"
           @requested_add_kftl_template_struct_element="(...kftl_template_struct_element: any[]) => emits('requested_add_kftl_template_struct_element', kftl_template_struct_element[0] as KFTLTemplateStructElementData)" />
         </v-card>
+        <HelpDialog screen_name="kftl" ref="help_dialog" />
 </div>
     </div>
   </Teleport>
@@ -33,11 +37,13 @@ import { type Ref, ref } from 'vue'
 import type { AddNewKFTLTemplateStructElementDialogEmits } from './add-new-kftl-template-struct-element-dialog-emits'
 import type { AddNewKFTLTemplateStructElementDialogProps } from './add-new-kftl-template-struct-element-dialog-props'
 import AddNewKFTLTemplateStructElementView from '../views/add-new-kftl_template-struct-element-view.vue'
+import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
 
 const add_new_kftl_template_struct_element_view = ref<InstanceType<typeof AddNewKFTLTemplateStructElementView> | null>(null);
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 defineProps<AddNewKFTLTemplateStructElementDialogProps>()
 const emits = defineEmits<AddNewKFTLTemplateStructElementDialogEmits>()

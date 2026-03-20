@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>템플릿 구조 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>템플릿 구조</span></nav>
+  <h1>템플릿 구조</h1>
+  <p>메모장 화면에서 사용하는 텍스트 템플릿의 구조를 관리하는 화면입니다. 폴더로 템플릿을 정리하고, 빠른 입력을 위한 정형 문구를 작성·편집할 수 있습니다.</p>
+
+  <h2>화면 요소</h2>
+  <table>
+    <tr>
+      <th>요소</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>템플릿 트리</td>
+      <td>템플릿과 폴더를 계층 구조로 표시합니다. 폴더는 클릭하여 열고 닫을 수 있으며, 템플릿을 분류·정리할 수 있습니다.</td>
+    </tr>
+  </table>
+
+  <h2>조작 방법</h2>
+  <table>
+    <tr>
+      <th>조작</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>더블클릭</td>
+      <td>선택한 템플릿의 편집 화면을 엽니다.</td>
+    </tr>
+    <tr>
+      <td>우클릭</td>
+      <td>컨텍스트 메뉴를 표시합니다(편집·삭제).</td>
+    </tr>
+  </table>
+
+  <h2>액션 버튼</h2>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>템플릿 추가</td>
+      <td>새 템플릿 요소를 추가합니다.</td>
+    </tr>
+    <tr>
+      <td>폴더 추가</td>
+      <td>템플릿을 정리하기 위한 폴더를 추가합니다.</td>
+    </tr>
+    <tr>
+      <td>적용</td>
+      <td>템플릿 구조의 변경 사항을 저장합니다.</td>
+    </tr>
+    <tr>
+      <td>취소</td>
+      <td>변경 사항을 취소하고 대화상자를 닫습니다.</td>
+    </tr>
+  </table>
+
+  <h2>템플릿 요소 편집</h2>
+  <p>템플릿을 더블클릭하거나 컨텍스트 메뉴에서 「편집」을 선택하면 편집 화면이 표시됩니다.</p>
+  <table>
+    <tr>
+      <th>설정 항목</th>
+      <th>종류</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>템플릿 이름</td>
+      <td>텍스트 입력</td>
+      <td>템플릿의 표시 이름을 설정합니다.</td>
+    </tr>
+    <tr>
+      <td>템플릿 내용</td>
+      <td>텍스트 영역</td>
+      <td>메모장에 삽입되는 텍스트 내용입니다. 메모장 구문을 포함할 수 있습니다.</td>
+    </tr>
+  </table>
+
+  <h2>컨텍스트 메뉴</h2>
+  <table>
+    <tr>
+      <th>메뉴 항목</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>편집</td>
+      <td>템플릿 요소의 편집 화면을 엽니다.</td>
+    </tr>
+    <tr>
+      <td>삭제</td>
+      <td>템플릿 요소를 삭제합니다. 확인 대화상자가 표시됩니다.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>팁:</strong> 템플릿에 메모장 구문을 포함하면 메모장 화면에서 빠르게 구조화된 기록을 입력할 수 있습니다.
+  </div>
+
+  <div class="tip">
+    <strong>팁:</strong> 폴더를 사용하여 템플릿을 카테고리별로 정리하면 찾기 쉬워집니다.
+  </div>
+
+  <div class="tip">
+    <strong>팁:</strong> 템플릿 구조의 변경 사항은 「적용」 버튼을 누를 때까지 저장되지 않습니다.
+  </div>
+
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">메모장 구문 참조</a></li>
+    <li><a href="application-config.html">설정 화면</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

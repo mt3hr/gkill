@@ -10,7 +10,10 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat" 
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -25,6 +28,7 @@
           @requested_update_dnote_list_query="(...dnote_list_query: any[]) => emits('requested_update_dnote_list_query', dnote_list_query[0] as DnoteListQuery)"
           @requested_close_dialog="hide()" />
         </v-card>
+        <HelpDialog screen_name="dnote" ref="help_dialog" />
 </div>
     </div>
   </Teleport>
@@ -32,6 +36,7 @@
 
 <script setup lang="ts">
 import EditDnoteListView from '@/pages/views/edit-dnote-list-view.vue';
+import HelpDialog from './help-dialog.vue'
 import { ref, type Ref } from 'vue'
 import type { GkillError } from '../../classes/api/gkill-error';
 import type { GkillMessage } from '../../classes/api/gkill-message';
@@ -47,6 +52,8 @@ const ui = useFloatingDialog("edit-dnote-list-dialog", {
   centerMode: "always",
 })
 
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 defineExpose({ show, hide })
 defineProps<EditDnoteListDialogProps>()

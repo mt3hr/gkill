@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KFTL Syntax Reference</title>
+  <title>Memo Pad Syntax Reference</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
@@ -29,15 +29,21 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <a href="kftl.html">Notepad</a> &gt; <span>Memo Pad Syntax Reference</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; Back to Memo Pad Help</a></div>
 
-<h1>KFTL Syntax Reference</h1>
+<h1>Memo Pad Syntax Reference</h1>
 
-<p>KFTL is a text-based recording format used in gkill. By using line prefixes, you can input various types of data at once. Below are all 18 statement types.</p>
+<p>Memo Pad Syntax is a text-based recording format used in gkill. By using line prefixes, you can input various types of data at once. Below are all 18 statement types.</p>
 
 <h2>Statement Overview</h2>
 
@@ -169,7 +175,7 @@ Favorite site</pre>
 
 <h2>Comprehensive Example</h2>
 
-<p>Below is a complete KFTL document combining multiple statement types.</p>
+<p>Below is a complete Memo Pad Syntax document combining multiple statement types.</p>
 
 <pre>Today's diary
 。diary、weather
@@ -196,6 +202,13 @@ Reading
 <div class="tip">
   <strong>Tip:</strong> Use <code>、</code> to separate multiple records within a single document. Adding <code>！</code> at the end triggers automatic saving.
 </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="kftl.html">Notepad Screen</a></li>
+    <li><a href="mkfl.html">Stamp Notepad Screen</a></li>
+    <li><a href="kftl-template-struct.html">Template Structure</a></li>
+  </ul>
 
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

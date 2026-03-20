@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>로그인</span></nav>
   <h1>로그인 화면</h1>
   <p>gkill에 로그인하기 위한 인증 화면입니다. 사용자 ID와 비밀번호를 입력하여 애플리케이션에 접근합니다.</p>
 
@@ -63,12 +69,18 @@
   </ol>
 
   <div class="tip">
-    <strong>팁:</strong> 처음 실행 시 <code>admin</code> 사용자(비밀번호 없음)로 로그인할 수 있습니다. 보안을 위해 로그인 후 비밀번호를 설정하는 것을 권장합니다.
+    <strong>팁:</strong> 처음 실행 시 계정 등록 화면이 자동으로 표시됩니다. 화면의 안내에 따라 사용자 계정을 만들고 관리자 비밀번호를 설정하세요.
   </div>
 
   <div class="tip">
     <strong>팁:</strong> Enter 키로도 로그인할 수 있으므로, 비밀번호 입력 후 바로 제출할 수 있습니다.
   </div>
+  <div class="tip"><strong>문제 해결:</strong> 로그인할 수 없는 경우 사용자 ID와 비밀번호를 확인하세요.</div>
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="getting-started.html">시작하기</a></li>
+    <li><a href="tutorial.html">튜토리얼（기본편＋응용편）</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

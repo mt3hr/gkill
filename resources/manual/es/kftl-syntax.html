@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Referencia de sintaxis KFTL</title>
+  <title>Referencia de sintaxis del bloc de notas</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
@@ -29,15 +29,21 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <a href="kftl.html">Bloc de Notas</a> &gt; <span>Referencia de sintaxis del bloc de notas</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; Volver a la ayuda del bloc de notas</a></div>
 
-<h1>Referencia de sintaxis KFTL</h1>
+<h1>Referencia de sintaxis del bloc de notas</h1>
 
-<p>KFTL es un formato de registro basado en texto utilizado en gkill. Mediante prefijos al inicio de cada linea, puede introducir varios tipos de datos a la vez. A continuacion se presentan los 18 tipos de sentencias.</p>
+<p>La sintaxis del bloc de notas es un formato de registro basado en texto utilizado en gkill. Mediante prefijos al inicio de cada linea, puede introducir varios tipos de datos a la vez. A continuacion se presentan los 18 tipos de sentencias.</p>
 
 <h2>Resumen de sentencias</h2>
 
@@ -170,7 +176,7 @@ Sitio favorito</pre>
 
 <h2>Ejemplo completo</h2>
 
-<p>A continuacion se muestra un documento KFTL completo que combina varios tipos de sentencias.</p>
+<p>A continuacion se muestra un documento completo de sintaxis del bloc de notas que combina varios tipos de sentencias.</p>
 
 <pre>Diario de hoy
 。diario、clima
@@ -197,6 +203,13 @@ Lectura
 <div class="tip">
   <strong>Consejo:</strong> Use <code>、</code> para separar varios registros dentro de un mismo documento. Agregar <code>！</code> al final activa el guardado automatico.
 </div>
+
+  <h2>Documentacion relacionada</h2>
+  <ul>
+    <li><a href="kftl.html">Pantalla de bloc de notas</a></li>
+    <li><a href="mkfl.html">Bloc de notas con sello</a></li>
+    <li><a href="kftl-template-struct.html">Estructura de plantilla</a></li>
+  </ul>
 
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

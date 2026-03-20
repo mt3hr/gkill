@@ -23,9 +23,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Server-Konfiguration</span></nav>
   <h1>Servereinstellungen</h1>
   <p>Dieser Bildschirm konfiguriert das Serververhalten. Nur Administratoren haben Zugriff.</p>
 
@@ -54,6 +60,11 @@
   <p><strong>&Uuml;bernehmen</strong>: Einstellungen speichern.<br><strong>Abbrechen</strong>: &Auml;nderungen verwerfen und den Bildschirm schlie&szlig;en.</p>
 
   <div class="tip">&Auml;nderungen erfordern einen Neustart des Servers, um wirksam zu werden.</div>
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="application-config.html">Einstellungen</a></li>
+    <li><a href="manage-account.html">Kontoverwaltung</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

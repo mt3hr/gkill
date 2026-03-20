@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Datensatzdetails</span></nav>
   <h1>Datensatzansicht</h1>
   <p>Bildschirm zur Anzeige der Details eines einzelnen Datensatzes. Sie koennen die detaillierten Informationen verschiedener Datensatztypen einsehen.</p>
 
@@ -49,7 +55,7 @@
       <th>Beschreibung</th>
     </tr>
     <tr>
-      <td>Memo (Kmemo)</td>
+      <td>Notiz</td>
       <td>Zeigt den Inhalt von Textnotizen an.</td>
     </tr>
     <tr>
@@ -73,7 +79,7 @@
       <td>Zeigt die Start-/Endzeit und die verstrichene Zeit an.</td>
     </tr>
     <tr>
-      <td>Datei (IDFKyou)</td>
+      <td>Datei</td>
       <td>Zeigt eine Vorschau der hochgeladenen Datei an.</td>
     </tr>
     <tr>
@@ -96,6 +102,11 @@
   <div class="tip">
     <strong>Tipp:</strong> Sie koennen Tags direkt aus dem Detailbildschirm des Datensatzes hinzufuegen oder bearbeiten.
   </div>
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="rykv.html">Lebenslogansicht</a></li>
+    <li><a href="mi.html">Aufgaben</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

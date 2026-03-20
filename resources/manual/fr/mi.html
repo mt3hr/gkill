@@ -24,9 +24,15 @@
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
   </style>
 </head>
 <body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Tâches</span></nav>
   <h1>Tableau de taches</h1>
   <p>Ecran de gestion des taches de style Kanban. Permet de gerer visuellement l'etat et la progression des taches.</p>
 
@@ -46,7 +52,7 @@
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Calendrier</td>
-      <td>Affiche la vue carte thermique du calendrier.</td>
+      <td>Affiche/masque la vue calendrier.</td>
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> Parametres</td>
@@ -59,7 +65,7 @@
     <li><strong>Colonnes du tableau :</strong> Les taches sont affichees en colonnes par etat ; vous pouvez changer l'etat par glisser-deposer.</li>
     <li><strong>Filtres de la barre laterale :</strong> Filtre les taches par etiquettes, tableau, etat et autres conditions.</li>
     <li><strong>Panneau de details :</strong> La selection d'une tache affiche les informations detaillees et les options d'edition.</li>
-    <li><strong>Carte thermique du calendrier :</strong> Affiche la densite d'activite des taches sous forme de calendrier.</li>
+    <li><strong>Vue calendrier :</strong> Permet de parcourir les taches sous forme de calendrier.</li>
   </ul>
 
   <div class="tip">
@@ -69,6 +75,11 @@
   <div class="tip">
     <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
   </div>
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Référence syntaxe du bloc-notes</a></li>
+    <li><a href="rykv.html">Vue journal de vie</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

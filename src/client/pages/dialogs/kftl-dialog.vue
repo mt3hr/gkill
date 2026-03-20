@@ -10,6 +10,9 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
         <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'"
           variant="flat">
           <v-icon>mdi-close</v-icon>
@@ -23,6 +26,7 @@
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)" ref="kftl_view" />
         </v-card>
+        <HelpDialog screen_name="kftl" ref="help_dialog" />
 </div>
     </div>
   </Teleport>
@@ -34,8 +38,10 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLDialogEmits } from './kftl-dialog-emits'
 import type { KFTLDialogProps } from './kftl-dialog-props'
 import KFTLView from '../views/kftl-view.vue'
+import HelpDialog from './help-dialog.vue'
 
 const kftl_view = ref<InstanceType<typeof KFTLView> | null>(null);
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const dialog_body_ref = ref<HTMLElement | null>(null)
 
 const props = defineProps<KFTLDialogProps>()

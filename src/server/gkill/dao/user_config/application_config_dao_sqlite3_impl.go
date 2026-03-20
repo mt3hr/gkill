@@ -130,6 +130,7 @@ func GetDefaultApplicationConfig(userID string, device string) *ApplicationConfi
 		IsShowShareFooter:         (applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"]).(bool),
 		DefaultPage:               (applicationConfigDefaultValue["DEFAULT_PAGE"]).(string),
 		ShowTagsInList:            (applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"]).(bool),
+		ShowTutorialOnStartup:    (applicationConfigDefaultValue["SHOW_TUTORIAL_ON_STARTUP"]).(bool),
 		RyuuJSONData:              (applicationConfigDefaultValue["RYUU_JSON_DATA"]).(*json.RawMessage),
 		TagStruct:                 (applicationConfigDefaultValue["TAG_STRUCT"]).(*json.RawMessage),
 		RepStruct:                 (applicationConfigDefaultValue["REP_STRUCT"]).(*json.RawMessage),
@@ -156,6 +157,7 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"IS_SHOW_SHARE_FOOTER":          false,
 	"DEFAULT_PAGE":                  "rykv",
 	"SHOW_TAGS_IN_LIST":             true,
+	"SHOW_TUTORIAL_ON_STARTUP":      true,
 	"RYUU_JSON_DATA":                &emptyArrayJSONStr,
 	"TAG_STRUCT":                    &nullJSONStr,
 	"REP_STRUCT":                    &nullJSONStr,
@@ -306,6 +308,18 @@ SELECT
 	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
 	AND KEY = 'SHOW_TAGS_IN_LIST'
   ) AS SHOW_TAGS_IN_LIST,
+  /* SHOW_TUTORIAL_ON_STARTUP */ (
+    SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
+		THEN VALUE
+		ELSE ?
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'SHOW_TUTORIAL_ON_STARTUP'
+  ) AS SHOW_TUTORIAL_ON_STARTUP,
   /* RYUU_JSON_DATA */ (
     SELECT 
 	  CASE 
@@ -431,6 +445,7 @@ GROUP BY USER_ID, DEVICE
 		applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
 		applicationConfigDefaultValue["DEFAULT_PAGE"],
 		applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"],
+		applicationConfigDefaultValue["SHOW_TUTORIAL_ON_STARTUP"],
 		applicationConfigDefaultValue["RYUU_JSON_DATA"],
 		applicationConfigDefaultValue["TAG_STRUCT"],
 		applicationConfigDefaultValue["REP_STRUCT"],
@@ -480,6 +495,7 @@ GROUP BY USER_ID, DEVICE
 				&applicationConfig.IsShowShareFooter,
 				&applicationConfig.DefaultPage,
 				&applicationConfig.ShowTagsInList,
+				&applicationConfig.ShowTutorialOnStartup,
 				&ryuuJSONData,
 				&tagStrcut,
 				&repStruct,
@@ -665,6 +681,18 @@ SELECT
 	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
 	AND KEY = 'SHOW_TAGS_IN_LIST'
   ) AS SHOW_TAGS_IN_LIST,
+  /* SHOW_TUTORIAL_ON_STARTUP */ (
+    SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
+		THEN VALUE
+		ELSE ?
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'SHOW_TUTORIAL_ON_STARTUP'
+  ) AS SHOW_TUTORIAL_ON_STARTUP,
   /* RYUU_JSON_DATA */ (
     SELECT 
 	  CASE 
@@ -789,6 +817,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 		applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
 		applicationConfigDefaultValue["DEFAULT_PAGE"],
 		applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"],
+		applicationConfigDefaultValue["SHOW_TUTORIAL_ON_STARTUP"],
 		applicationConfigDefaultValue["RYUU_JSON_DATA"],
 		applicationConfigDefaultValue["TAG_STRUCT"],
 		applicationConfigDefaultValue["REP_STRUCT"],
@@ -844,6 +873,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 				&applicationConfig.IsShowShareFooter,
 				&applicationConfig.DefaultPage,
 				&applicationConfig.ShowTagsInList,
+				&applicationConfig.ShowTutorialOnStartup,
 				&ryuuJSONData,
 				&tagStrcut,
 				&repStruct,
@@ -909,6 +939,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 			IsShowShareFooter:         (applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"]).(bool),
 			DefaultPage:               (applicationConfigDefaultValue["DEFAULT_PAGE"]).(string),
 			ShowTagsInList:            (applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"]).(bool),
+			ShowTutorialOnStartup:    (applicationConfigDefaultValue["SHOW_TUTORIAL_ON_STARTUP"]).(bool),
 			RyuuJSONData:              (applicationConfigDefaultValue["RYUU_JSON_DATA"]).(*json.RawMessage),
 			TagStruct:                 (applicationConfigDefaultValue["TAG_STRUCT"]).(*json.RawMessage),
 			RepStruct:                 (applicationConfigDefaultValue["REP_STRUCT"]).(*json.RawMessage),
@@ -981,6 +1012,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
 		"DEFAULT_PAGE":                  applicationConfig.DefaultPage,
 		"SHOW_TAGS_IN_LIST":             applicationConfig.ShowTagsInList,
+		"SHOW_TUTORIAL_ON_STARTUP":      applicationConfig.ShowTutorialOnStartup,
 		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
 		"TAG_STRUCT":                    applicationConfig.TagStruct,
 		"REP_STRUCT":                    applicationConfig.RepStruct,
@@ -1083,6 +1115,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"IS_SHOW_SHARE_FOOTER":          applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
 		"DEFAULT_PAGE":                  applicationConfigDefaultValue["DEFAULT_PAGE"],
 		"SHOW_TAGS_IN_LIST":             applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"],
+		"SHOW_TUTORIAL_ON_STARTUP":      applicationConfigDefaultValue["SHOW_TUTORIAL_ON_STARTUP"],
 		"RYUU_JSON_DATA":                applicationConfigDefaultValue["RYUU_JSON_DATA"],
 		"TAG_STRUCT":                    applicationConfigDefaultValue["TAG_STRUCT"],
 		"REP_STRUCT":                    applicationConfigDefaultValue["REP_STRUCT"],
@@ -1186,6 +1219,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
 		"DEFAULT_PAGE":                  applicationConfig.DefaultPage,
 		"SHOW_TAGS_IN_LIST":             applicationConfig.ShowTagsInList,
+		"SHOW_TUTORIAL_ON_STARTUP":      applicationConfig.ShowTutorialOnStartup,
 		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
 		"TAG_STRUCT":                    applicationConfig.TagStruct,
 		"REP_STRUCT":                    applicationConfig.RepStruct,

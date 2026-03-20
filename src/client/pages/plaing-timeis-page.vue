@@ -60,6 +60,8 @@
                 @received_messages="onApplicationConfigReceivedMessages"
                 @requested_reload_application_config="load_application_config" ref="application_config_dialog" />
             <HelpDialog screen_name="plaing" ref="help_dialog" />
+            <TutorialDialog :application_config="application_config" :gkill_api="gkill_api"
+                ref="tutorial_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -77,14 +79,16 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { i18n } from '@/i18n'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
+import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import PlaingTimeisView from './views/plaing-timeis-view.vue'
 import { usePlaingTimeisPage } from '@/classes/use-plaing-timeis-page'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
+const tutorial_dialog = ref<InstanceType<typeof TutorialDialog> | null>(null)
 
 const {
     // Template refs
@@ -129,6 +133,12 @@ const {
     onApplicationConfigReceivedMessages,
     onAlertClickClose,
 } = usePlaingTimeisPage()
+
+watch(application_config, (config) => {
+    if (config.is_loaded && config.show_tutorial_on_startup) {
+        nextTick(() => tutorial_dialog.value?.show())
+    }
+})
 </script>
 <style lang="css" scoped>
 .overlay_target {

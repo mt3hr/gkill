@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erste Schritte - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <h1>Erste Schritte</h1>
+  <p>gkill ist eine Anwendung zum Aufzeichnen und Durchsuchen von taglichen Lebenslogs.</p>
+
+  <h2>Was Sie mit gkill tun konnen</h2>
+  <table>
+    <tr>
+      <th>Aufzeichnungstyp</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Notiz</td>
+      <td>Zeichnet Textnotizen auf</td>
+    </tr>
+    <tr>
+      <td>Zeitstempel</td>
+      <td>Zeichnet Start- und Endzeiten auf</td>
+    </tr>
+    <tr>
+      <td>Aufgabe</td>
+      <td>Verwaltet Aufgaben auf einem Kanban-Board</td>
+    </tr>
+    <tr>
+      <td>Stimmung</td>
+      <td>Zeichnet die Stimmung als Wert von 0 bis 10 auf</td>
+    </tr>
+    <tr>
+      <td>Ausgabe</td>
+      <td>Zeichnet Ausgabenbetrage und Details auf</td>
+    </tr>
+    <tr>
+      <td>Lesezeichen</td>
+      <td>Speichert URLs von Webseiten</td>
+    </tr>
+    <tr>
+      <td>Numerische Aufzeichnung</td>
+      <td>Zeichnet beliebige numerische Daten auf</td>
+    </tr>
+    <tr>
+      <td>Datei</td>
+      <td>Ladt Bilder oder Dokumente hoch und zeichnet sie auf</td>
+    </tr>
+  </table>
+
+  <h2>Ersteinrichtung</h2>
+  <ol>
+    <li>Starten Sie gkill und rufen Sie <code>http://localhost:9999</code> in Ihrem Browser auf.</li>
+    <li>Melden Sie sich mit der Benutzer-ID <code>admin</code> und ohne Passwort an.</li>
+    <li>Nach der Anmeldung wird empfohlen, im Einstellungsbildschirm ein Passwort festzulegen.</li>
+    <li>Konfigurieren Sie im Einstellungsbildschirm grundlegende Einstellungen wie Sprache und dunkles Design.</li>
+  </ol>
+
+  <h2>Bildschirmliste</h2>
+  <table>
+    <tr>
+      <th>Bildschirm</th>
+      <th>Beschreibung</th>
+      <th>Detaillierte Hilfe</th>
+    </tr>
+    <tr>
+      <td>Tutorial</td>
+      <td>Von Grundlagen bis zu fortgeschrittenen Techniken</td>
+      <td><a href="tutorial.html">Tutorial (Grundlagen + Fortgeschritten)</a></td>
+    </tr>
+    <tr>
+      <td>Anmeldung</td>
+      <td>Authentifizierungsbildschirm</td>
+      <td><a href="login.html">Hilfe zur Anmeldung</a></td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Bildschirm zum sicheren Aufzeichnen auch vom Sperrbildschirm aus. Hub zum Hinzufügen von Aufzeichnungen</td>
+      <td><a href="saihate.html">Hilfe zu Saihate</a></td>
+    </tr>
+    <tr>
+      <td>Notizblock</td>
+      <td>Texteingabe mit Notizblock-Syntax</td>
+      <td><a href="kftl.html">Hilfe zum Notizblock</a></td>
+    </tr>
+    <tr>
+      <td>Stempel-Notizblock</td>
+      <td>Gleichzeitige Verwaltung von Notizen und Zeitstempeln</td>
+      <td><a href="mkfl.html">Hilfe zum Stempel-Notizblock</a></td>
+    </tr>
+    <tr>
+      <td>Aufgaben</td>
+      <td>Aufgabenverwaltung mit Kanban-Board</td>
+      <td><a href="mi.html">Hilfe zu Aufgaben</a></td>
+    </tr>
+    <tr>
+      <td>Lebenslog-Ansicht</td>
+      <td>Auflisten, Suchen und Durchsuchen von Aufzeichnungen</td>
+      <td><a href="rykv.html">Hilfe zur Lebenslog-Ansicht</a></td>
+    </tr>
+    <tr>
+      <td>In Bearbeitung</td>
+      <td>Verwaltung aktiver Zeitstempel-Sitzungen</td>
+      <td><a href="plaing.html">Hilfe zu In Bearbeitung</a></td>
+    </tr>
+    <tr>
+      <td>Aufzeichnungsdetail</td>
+      <td>Detailansicht einzelner Aufzeichnungen</td>
+      <td><a href="kyou.html">Hilfe zum Aufzeichnungsdetail</a></td>
+    </tr>
+    <tr>
+      <td>Einstellungen</td>
+      <td>Anwendungseinstellungen</td>
+      <td><a href="application-config.html">Hilfe zu Einstellungen</a></td>
+    </tr>
+    <tr>
+      <td>Notizblock-Syntaxreferenz</td>
+      <td>Symbol- und Formatreferenz der Notizblock-Syntax</td>
+      <td><a href="kftl-syntax.html">Hilfe zur Notizblock-Syntaxreferenz</a></td>
+    </tr>
+    <tr>
+      <td>Vorlagenstruktur</td>
+      <td>Vorlagenstrukturdefinitionen des Notizblocks</td>
+      <td><a href="kftl-template-struct.html">Hilfe zur Vorlagenstruktur</a></td>
+    </tr>
+    <tr>
+      <td>Aggregationsansicht</td>
+      <td>Datenaggregation und Visualisierung</td>
+      <td><a href="dnote.html">Hilfe zur Aggregationsansicht</a></td>
+    </tr>
+    <tr>
+      <td>Verwandte Informationen</td>
+      <td>Definition der automatischen Suche nach verwandten Eintr&auml;gen</td>
+      <td><a href="ryuu.html">Hilfe zu verwandten Informationen</a></td>
+    </tr>
+    <tr>
+      <td>Kontoverwaltung</td>
+      <td>Benutzerkonten verwalten (Nur Admin)</td>
+      <td><a href="manage-account.html">Hilfe zur Kontoverwaltung</a></td>
+    </tr>
+    <tr>
+      <td>Server-Konfiguration</td>
+      <td>Server-Verbindung und TLS-Einstellungen (Nur Admin)</td>
+      <td><a href="server-config.html">Hilfe zur Server-Konfiguration</a></td>
+    </tr>
+  </table>
+
+  <h2>Erstellen Sie Ihre erste Aufzeichnung</h2>
+  <ol>
+    <li>Nach der Anmeldung wird der in den Einstellungen festgelegte Standardbildschirm angezeigt.</li>
+    <li>Tippen Sie auf die "+"-Schaltflache unten rechts auf dem Bildschirm.</li>
+    <li>Wahlen Sie "Notizblock".</li>
+    <li>Geben Sie im Textbereich ein, was Sie aufzeichnen mochten (z. B.: <code>Heute gab es Curry zum Mittagessen</code>).</li>
+    <li>Drucken Sie die Schaltflache "Speichern", um die Aufzeichnung zu erstellen.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Durch langes Drucken der "+"-Schaltflache wird der Notizblock direkt geoffnet.
+  </div>
+
+  <h2>Glossar</h2>
+  <table>
+    <tr>
+      <th>Begriff</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Datensatz</td>
+      <td>Allgemeiner Begriff fur Aufzeichnungen in gkill. Umfasst alle Aufzeichnungstypen einschliesslich Notizen, Zeitstempel, Aufgaben und mehr</td>
+    </tr>
+    <tr>
+      <td>Notizblock-Syntax</td>
+      <td>Texteingabesyntax, die im Notizblock verwendet wird. Durch Hinzufugen von Symbolen am Anfang jeder Zeile konnen verschiedene Arten von Aufzeichnungen gleichzeitig erstellt werden</td>
+    </tr>
+    <tr>
+      <td>Zeitstempel</td>
+      <td>Zeiterfassungsfunktion. Zeichnet die Start- und Endzeiten von Arbeiten oder Aktivitaten auf</td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Bildschirm zum sicheren Hinzufügen von Aufzeichnungen auch vom Sperrbildschirm aus. Dient als Hub zum Hinzufügen von Aufzeichnungen</td>
+    </tr>
+    <tr>
+      <td>Notizblock-Syntax</td>
+      <td>Bezeichnet das textbasierte Format zur Eingabe von Aufzeichnungen</td>
+    </tr>
+    <tr>
+      <td>Lebenslog-Ansicht</td>
+      <td>Bildschirm zum Auflisten und Suchen von Aufzeichnungen</td>
+    </tr>
+    <tr>
+      <td>Aggregationsansicht</td>
+      <td>Funktion zur Anzeige von Datenaggregationen und Statistiken</td>
+    </tr>
+    <tr>
+      <td>Verwandte Informationen</td>
+      <td>Funktion, die automatisch nach verwandten Informationen sucht und diese anzeigt</td>
+    </tr>
+    <tr>
+      <td>Repository</td>
+      <td>Speicherort fur Aufzeichnungen. Sie konnen mehrere Repositories fur verschiedene Zwecke verwenden</td>
+    </tr>
+    <tr>
+      <td>Profil</td>
+      <td>Eine Sammlung von Einstellungen, die nach Gerat gruppiert sind</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

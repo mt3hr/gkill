@@ -69,34 +69,50 @@
                 <v-spacer />
 
                 <v-col cols="auto" class="pa-0">
-                    <v-btn class="rounded-sm mx-auto" icon @click.prevent="onRequestedSearch" variant="text">
-                        <v-icon>mdi-reload</v-icon>
-                    </v-btn>
+                    <v-tooltip :text="i18n.global.t('TOOLTIP_RELOAD')">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" class="rounded-sm mx-auto" icon @click.prevent="onRequestedSearch" variant="text">
+                                <v-icon>mdi-reload</v-icon>
+                            </v-btn>
+                        </template>
+                    </v-tooltip>
                 </v-col>
 
                 <v-col cols="auto" class="pa-0" v-if="is_show_doc_image_toggle_button">
-                    <v-btn class="rounded-sm mx-auto" icon
-                        @click.prevent="onRequestedChangeImageOnly"
-                        variant="text">
-                        <v-icon v-show="!query.is_image_only">mdi-file-document-outline</v-icon>
-                        <v-icon v-show="query.is_image_only">mdi-image</v-icon>
-                    </v-btn>
+                    <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_IMAGE_VIEW')">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" class="rounded-sm mx-auto" icon
+                                @click.prevent="onRequestedChangeImageOnly"
+                                variant="text">
+                                <v-icon v-show="!query.is_image_only">mdi-file-document-outline</v-icon>
+                                <v-icon v-show="query.is_image_only">mdi-image</v-icon>
+                            </v-btn>
+                        </template>
+                    </v-tooltip>
                 </v-col>
 
                 <v-col cols="auto" class="pa-0" v-if="is_show_arrow_button">
-                    <v-btn class="rounded-sm mx-auto" icon variant="text"
-                        @click.prevent="onRequestedChangeFocusKyou">
-                        <v-icon v-show="!query.is_focus_kyou_in_list_view">mdi-arrow-down</v-icon>
-                        <v-icon v-show="query.is_focus_kyou_in_list_view">mdi-arrow-right</v-icon>
-                    </v-btn>
+                    <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_FOCUS_DIRECTION')">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" class="rounded-sm mx-auto" icon variant="text"
+                                @click.prevent="onRequestedChangeFocusKyou">
+                                <v-icon v-show="!query.is_focus_kyou_in_list_view">mdi-arrow-down</v-icon>
+                                <v-icon v-show="query.is_focus_kyou_in_list_view">mdi-arrow-right</v-icon>
+                            </v-btn>
+                        </template>
+                    </v-tooltip>
                 </v-col>
 
                 <v-col cols="auto" class="pa-0">
-                    <v-btn class="rounded-sm mx-auto" icon
-                        @click.prevent="onRequestedCloseColumn"
-                        :disabled="!closable" variant="text">
-                        <v-icon v-show="closable">mdi-close</v-icon>
-                    </v-btn>
+                    <v-tooltip :text="i18n.global.t('TOOLTIP_CLOSE_COLUMN')">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" class="rounded-sm mx-auto" icon
+                                @click.prevent="onRequestedCloseColumn"
+                                :disabled="!closable" variant="text">
+                                <v-icon v-show="closable">mdi-close</v-icon>
+                            </v-btn>
+                        </template>
+                    </v-tooltip>
                 </v-col>
             </v-row>
         </v-card>

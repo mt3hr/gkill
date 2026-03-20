@@ -10,6 +10,9 @@
         <div class="gkill-floating-dialog__spacer"></div>
   <v-checkbox v-model="ui.isTransparent.value" color="white"    size="small" variant="flat"
           :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
+        <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="help_dialog?.show()" hide-details :color="'primary'" variant="flat">
+          <v-icon>mdi-help-circle-outline</v-icon>
+        </v-btn>
                 <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
@@ -24,6 +27,7 @@
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_close_dialog="hide()" />
         </v-card>
+        <HelpDialog screen_name="ryuu" ref="help_dialog" />
       </div>
     </div>
   </Teleport>
@@ -32,6 +36,7 @@
 import { ref } from 'vue'
 import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import HelpDialog from './help-dialog.vue'
 import RyuuListView from '../views/ryuu-list-view.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { EditRyuuDialogEmits } from './edit-ryuu-dialog-emits'
@@ -43,6 +48,7 @@ import { useEditRyuuDialog } from '@/classes/use-edit-ryuu-dialog'
 import { i18n } from '@/i18n'
 
 const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const model_value = defineModel<ApplicationConfig>()
 const props = defineProps<EditRyuuDialogProps>()
 const emits = defineEmits<EditRyuuDialogEmits>()

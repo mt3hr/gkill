@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vorlagenstruktur - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Vorlagenstruktur</span></nav>
+  <h1>Vorlagenstruktur</h1>
+  <p>Bildschirm zur Verwaltung der Struktur von Textvorlagen, die im Notizblock verwendet werden. Sie können Vorlagen in Ordnern organisieren und Textbausteine für schnelle Eingaben erstellen und bearbeiten.</p>
+
+  <h2>Bildschirmelemente</h2>
+  <table>
+    <tr>
+      <th>Element</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Vorlagenbaum</td>
+      <td>Zeigt Vorlagen und Ordner in einer hierarchischen Struktur an. Ordner können durch Klicken geöffnet und geschlossen werden, um Vorlagen zu klassifizieren und zu organisieren.</td>
+    </tr>
+  </table>
+
+  <h2>Operationen</h2>
+  <table>
+    <tr>
+      <th>Operation</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Doppelklick</td>
+      <td>Öffnet den Editor für die ausgewählte Vorlage.</td>
+    </tr>
+    <tr>
+      <td>Rechtsklick</td>
+      <td>Zeigt das Kontextmenü an (Bearbeiten / Löschen).</td>
+    </tr>
+  </table>
+
+  <h2>Aktionsschaltflächen</h2>
+  <table>
+    <tr>
+      <th>Schaltfläche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Vorlage hinzufügen</td>
+      <td>Fügt ein neues Vorlagenelement hinzu.</td>
+    </tr>
+    <tr>
+      <td>Ordner hinzufügen</td>
+      <td>Fügt einen Ordner zur Organisation von Vorlagen hinzu.</td>
+    </tr>
+    <tr>
+      <td>Übernehmen</td>
+      <td>Speichert die Änderungen an der Vorlagenstruktur.</td>
+    </tr>
+    <tr>
+      <td>Abbrechen</td>
+      <td>Verwirft die Änderungen und schließt den Dialog.</td>
+    </tr>
+  </table>
+
+  <h2>Vorlagenelement bearbeiten</h2>
+  <p>Doppelklicken Sie auf eine Vorlage oder wählen Sie „Bearbeiten" im Kontextmenü, um den Editor zu öffnen.</p>
+  <table>
+    <tr>
+      <th>Einstellung</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Vorlagenname</td>
+      <td>Texteingabe</td>
+      <td>Legt den Anzeigenamen der Vorlage fest.</td>
+    </tr>
+    <tr>
+      <td>Vorlageninhalt</td>
+      <td>Textbereich</td>
+      <td>Der Textinhalt, der in den Notizblock eingefügt wird. Kann Notizblock-Syntax enthalten.</td>
+    </tr>
+  </table>
+
+  <h2>Kontextmenü</h2>
+  <table>
+    <tr>
+      <th>Menüpunkt</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Bearbeiten</td>
+      <td>Öffnet den Editor für das Vorlagenelement.</td>
+    </tr>
+    <tr>
+      <td>Löschen</td>
+      <td>Löscht das Vorlagenelement. Ein Bestätigungsdialog wird angezeigt.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Notizblock-Syntax in Vorlagen einbinden ermöglicht eine schnelle strukturierte Eingabe vom Notizblock-Bildschirm aus.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Verwenden Sie Ordner, um Vorlagen nach Kategorie zu organisieren und den Zugriff zu erleichtern.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Änderungen an der Vorlagenstruktur werden erst beim Klicken auf Übernehmen gespeichert.
+  </div>
+
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a></li>
+    <li><a href="application-config.html">Einstellungsbildschirm</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>
