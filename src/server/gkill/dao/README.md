@@ -155,4 +155,4 @@ API ハンドラ層は `GkillDAOManager` 経由でリポジトリにアクセス
 ### SQLite3 接続
 
 `sqlite3impl/sqlite3impl_util.go` の共通ユーティリティを使用して DB 接続を管理する。
-CGO が必須（`go-sqlite3` ライブラリ依存）。
+`modernc.org/sqlite`（pure Go）を使用しており、CGO は不要。
