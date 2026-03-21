@@ -61,7 +61,12 @@ const view_width = computed(() => {
   return default_view_width.value
 })
 const view_height = computed(() => {
-  if (observed_body_height.value > 0) {
+  // userSize がある場合（ユーザーがリサイズ済み）はコンテナ高さが固定されているため、
+  // observed_body_height をそのまま使っても循環しない。
+  // userSize が null の場合（Cookie消去後等）はコンテナ高さがコンテンツ依存になり、
+  // KFTLView内の action_height(10px) 減算で毎サイクル縮小する循環が発生するため、
+  // default_view_height を使用する。
+  if (ui.userSize.value && observed_body_height.value > 0) {
     return observed_body_height.value
   }
   return default_view_height.value
