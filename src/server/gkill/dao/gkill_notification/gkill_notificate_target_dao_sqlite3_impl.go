@@ -274,7 +274,7 @@ func (m *gkillNotificateTargetDAOSQLite3Impl) UpdateGkillNotificationTarget(ctx 
 	m.m.Lock()
 	defer m.m.Unlock()
 	sql := `
-UPDATE NOTIFICATION
+UPDATE NOTIFICATION SET
   ID = ?,
   USER_ID = ?,
   PUBLIC_KEY = ?,

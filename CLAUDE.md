@@ -42,11 +42,11 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run test_android` | Android Gradle tests |
 | `npm run test_wear_os` | Wear OS Gradle tests |
 
-**Test coverage:**
-- Go: 24 test files (API handlers, KFTL parser, DAO layer — account, session, server config, user config, 12 repository types)
-- Frontend unit: 13 test files via Vitest (API, data models, KFTL parser, utility functions)
-- Frontend E2E: 6 spec files via Playwright (login, mi-board, kyou-list, settings, share-page, kftl-dialog)
-- MCP: 4 test files via Vitest (validation, normalization, constants, tool handlers)
+**Test coverage (~1,400 tests total, all 29 Go packages covered):**
+- Go (~453 tests, 46 files across all 29 packages): API handler integration (CRUD + Update + Get for all 11 data types, session validation, account management, transactions, GetKyous query with complex filters (word/tag/rep/calendar/Mi check state/combined), GetKyousMCP, SubmitKFTLText, UpdateCache, board/tag/rep name lists, tag/text/notification histories, server config read/update, application config update, user repository update, share CRUD), KFTL parser, DAO layer (account, session, server config, user config, share_kyou_info, gkill_notification, 11 SQLite3 repos + 11 cached repos + 11 temp repos, cache address DAO, rep_cache_updater, GkillDAOManager), find package (all filter flags, MiCheckState/MiSortType enum values, nil dates, empty slices, data type filter), req_res package (18 JSON roundtrip tests), message package, sqlite3 utilities, gpslogs parsing, dvnf file management, hide_files, threads pool, gkill_log routing, gkill_options defaults, CLI entry points, fitbit batch, legacy data transformer
+- Frontend unit (669 tests, 48 files): GkillAPI methods (add/update/delete/get for all data types, config, sharing, upload, transactions, notifications, error handling, session management, endpoint address verification), 22 data models (Kmemo, Tag, Kyou, Mi, TimeIs, URLog, Nlog, Lantana, KC, Text, GitCommitLog, GPSLog, IDFKyou, Notification, ReKyou, InfoBase, InfoIdentifier, MetaInfoBase, CircleOptions, LatLng, KftlTemplateElementData, ShareKyousInfo), D-note module (28 predicates, 7 aggregate targets, 9 key getters, DnoteAgregator/DnoteListAggregator, serialization dictionaries), KFTL parser, composition functions (context menus for 10 entity types, add views for Mi/Tag/Nlog/URLog/Lantana/TimeIs/KC, edit views for Kmemo/Mi/Nlog/URLog/TimeIs/Lantana/KC), page composables, query composable patterns, router (12 routes), i18n completeness (7 locales), utility functions (deep-equals, looks-like-url, format-date-time, long-press directive, save-as, delete-gkill-cache, service-worker-utils)
+- Frontend E2E (49 tests, 12 spec files): All 12 routes covered with deepened interaction tests (login session persistence/auth redirect/password masking, KFTL multiline input/template section, Mi board JS error checking/responsive layout/FAB detection, RYKV JS error checking/mobile viewport/URL persistence, settings content/JS error checking/interactive controls)
+- MCP (226 tests, 6 files): validation, normalization, constants, tool handlers, GkillReadClient, McpServer
 
 ## Architecture
 
@@ -209,3 +209,11 @@ Reverse-engineered design documents are in `documents/reverse/`:
 - `folder-structure.md` — Project folder structure reference
 - `program-spec.md` — Program specification details
 - `user-guide.md` — End-user guide
+- `testing-guide.md` — Test execution, architecture, and guidelines (~1,400 tests)
+
+### Test Documentation
+
+Each `src/` subdirectory that has a `README.md` also has an `ABOUT_TEST.md` describing the tests for that area in Japanese. The top-level index is `src/ABOUT_TEST.md`, which links to all 19 subdirectory test specification documents.
+
+- `documents/reverse/testing-guide.md` — Comprehensive test guide (execution, architecture, troubleshooting)
+- `src/ABOUT_TEST.md` — Test specification index (links to all subdirectory ABOUT_TEST.md files)

@@ -2,10 +2,13 @@
 
 import crypto from "node:crypto";
 import http from "node:http";
+import { resolve as _resolvePath } from "node:path";
 import process from "node:process";
+import { fileURLToPath as _fileURLToPath } from "node:url";
 import { Agent } from "undici";
 
-import { GkillApiError } from "./lib/errors.mjs";
+import { GkillApiError, isPlainObject, invalidArgument } from "./lib/errors.mjs";
+import { assertTrimmedString } from "./lib/validation.mjs";
 import {
   ISO_DATETIME_DESC,
   DATE_ONLY_DESC,
@@ -14,6 +17,8 @@ import {
   DEFAULT_KYOUS_INCLUDE_TIMEIS,
 } from "./lib/constants.mjs";
 import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs } from "./lib/normalization.mjs";
+
+const _thisFile = _fileURLToPath(import.meta.url);
 
 const SERVER_NAME = "gkill-read-mcp";
 const SERVER_VERSION = "0.4.0";
@@ -905,13 +910,22 @@ class HttpTransport {
   }
 }
 
-// Entry point
-const client = new GkillReadClient();
-const server = new McpServer(client);
+// Entry point — guarded so importing this module for tests does not start a transport.
+const _isDirectRun =
+  typeof process !== "undefined" &&
+  process.argv[1] &&
+  _resolvePath(process.argv[1]) === _thisFile;
 
-const transport = (process.env.MCP_TRANSPORT || "stdio").toLowerCase();
-if (transport === "http") {
-  new HttpTransport(server, parseInt(process.env.MCP_PORT || "8808", 10)).start();
-} else {
-  new StdioTransport(server).start();
+if (_isDirectRun) {
+  const client = new GkillReadClient();
+  const server = new McpServer(client);
+
+  const transport = (process.env.MCP_TRANSPORT || "stdio").toLowerCase();
+  if (transport === "http") {
+    new HttpTransport(server, parseInt(process.env.MCP_PORT || "8808", 10)).start();
+  } else {
+    new StdioTransport(server).start();
+  }
 }
+
+export { GkillReadClient, McpServer };
