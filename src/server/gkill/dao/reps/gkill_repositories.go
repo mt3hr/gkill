@@ -138,7 +138,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	var TempMemoryDBMutex *sync.RWMutex
 	var TempMemoryDB *sql.DB
 	if gkill_options.IsCacheInMemory {
-		CacheMemoryDB, err = sql.Open("sqlite3", "file:gkill_memory_db_"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
+		CacheMemoryDB, err = sql.Open("sqlite", "file:gkill_memory_db_"+userID+"?mode=memory&cache=shared&_txlock=immediate&_pragma=busy_timeout(6000)&_pragma=journal_mode(MEMORY)&_pragma=synchronous(OFF)")
 		if err != nil {
 			err = fmt.Errorf("error at open memory database: %w", err)
 			slog.Log(ctx, gkill_log.Error, "error", "error", err)
@@ -148,7 +148,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		CacheMemoryDB.SetConnMaxLifetime(0)             // 無限
 		CacheMemoryDB.SetConnMaxIdleTime(0)             // 無限
 
-		TempMemoryDB, err = sql.Open("sqlite3", "file:gkill_temp_db_"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
+		TempMemoryDB, err = sql.Open("sqlite", "file:gkill_temp_db_"+userID+"?mode=memory&cache=shared&_txlock=immediate&_pragma=busy_timeout(6000)&_pragma=journal_mode(MEMORY)&_pragma=synchronous(OFF)")
 		if err != nil {
 			err = fmt.Errorf("error at open memory database: %w", err)
 			slog.Log(ctx, gkill_log.Error, "error", "error", err)
@@ -161,12 +161,12 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		CacheMemoryDBMutex = &sync.RWMutex{}
 		TempMemoryDBMutex = &sync.RWMutex{}
 	} else {
-		TempMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_temp_"+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
+		TempMemoryDB, err = sql.Open("sqlite", "file:"+filepath.ToSlash(os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_temp_.db")))+"?_pragma=busy_timeout(6000)&_pragma=synchronous(FULL)&_pragma=journal_mode(WAL)")
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
 			return nil, err
 		}
-		CacheMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_cache_"+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
+		CacheMemoryDB, err = sql.Open("sqlite", "file:"+filepath.ToSlash(os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_cache_.db")))+"?_pragma=busy_timeout(6000)&_pragma=synchronous(FULL)&_pragma=journal_mode(WAL)")
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
 			return nil, err

@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 func NewGitRepCachedSQLite3ImplPersistent(ctx context.Context, gitRep GitCommitLogRepository, cacheDBPath string, dbName string, backgroundUpdate bool) (GitCommitLogRepository, error) {
 	m := &sync.RWMutex{}
 
-	db, err := sqllib.Open("sqlite3", cacheDBPath+"?_busy_timeout=6000&_txlock=immediate&_journal_mode=WAL&_synchronous=NORMAL")
+	db, err := sqllib.Open("sqlite", cacheDBPath+"?_txlock=immediate&_pragma=busy_timeout(6000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)")
 	if err != nil {
 		return nil, fmt.Errorf("error at open persistent git commit log cache db: %w", err)
 	}

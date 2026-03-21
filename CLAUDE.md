@@ -8,7 +8,7 @@ gkill is a lifelogging application (version 1.1.0-dev) that records and reviews 
 
 ## Build & Development Commands
 
-All commands are npm scripts defined in `package.json`. CGO is required (sqlite3 dependency).
+All commands are npm scripts defined in `package.json`. No CGO required (pure Go SQLite driver).
 
 | Command | Purpose |
 |---|---|
@@ -25,7 +25,6 @@ All commands are npm scripts defined in `package.json`. CGO is required (sqlite3
 
 **Prerequisites:**
 - Go 1.26.0+ (see `src/server/go.mod`)
-- C compiler (CGO required for mattn/go-sqlite3)
 - Node.js 20.15.1+
 - `npm i` (install JS dependencies)
 
@@ -81,7 +80,7 @@ Key packages:
 - `gkill/main/common/` — Shared CLI commands, server initialization, logging
 - `gkill/main/common/gkill_options/` — CLI flag definitions and directory structure
 
-**Key dependencies:** gorilla/mux (router), mattn/go-sqlite3 (DB), spf13/cobra+viper (CLI/config), asticode/go-astilectron (desktop), SherClockHolmes/webpush-go (VAPID), go-git/go-git (git integration), twpayne/go-gpx (GPS), nicksnyder/go-i18n/v2 (i18n), google/uuid
+**Key dependencies:** gorilla/mux (router), modernc.org/sqlite (DB, pure Go), spf13/cobra+viper (CLI/config), asticode/go-astilectron (desktop), SherClockHolmes/webpush-go (VAPID), go-git/go-git (git integration), twpayne/go-gpx (GPS), nicksnyder/go-i18n/v2 (i18n), google/uuid
 
 **Repository pattern:** Each data type has 4 implementation layers:
 1. `*_repository.go` — interface
