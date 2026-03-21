@@ -155,6 +155,8 @@ export function useFloatingDialog(
     resizable?: boolean
     // 最小サイズ（デフォルト { w: 200, h: 150 }）
     minSize?: Size
+    // 高さを保存・復元するか（デフォルト true）
+    persistHeight?: boolean
   }
 ): UseFloatingDialogResult {
   const margin = opts?.margin ?? 8
@@ -165,6 +167,7 @@ export function useFloatingDialog(
   const resizable = opts?.resizable ?? true
   const minW = opts?.minSize?.w ?? 200
   const minH = opts?.minSize?.h ?? 150
+  const persistHeight = opts?.persistHeight ?? true
 
   const posKey = `${storageKey}:pos`
   const transparentKey = `${storageKey}:transparent`
@@ -185,7 +188,10 @@ export function useFloatingDialog(
   )
 
   // ユーザ設定サイズ（null = 未リサイズ、CSS既定サイズを使用）
-  const userSize = ref<Size | null>(resizable ? loadSize(sizeKey) : null)
+  const savedSize = resizable ? loadSize(sizeKey) : null
+  const userSize = ref<Size | null>(
+    savedSize && !persistHeight ? { w: savedSize.w, h: 0 } : savedSize,
+  )
 
   // 内容の変化でサイズが変わるので observer で追従
   const lastRect = ref<{ w: number; h: number }>({ w: 0, h: 0 })
@@ -241,7 +247,9 @@ export function useFloatingDialog(
     }
     if (userSize.value) {
       s.width = `${Math.round(userSize.value.w)}px`
-      s.height = `${Math.round(userSize.value.h)}px`
+      if (userSize.value.h > 0) {
+        s.height = `${Math.round(userSize.value.h)}px`
+      }
     }
     return s
   })
