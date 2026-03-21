@@ -19,6 +19,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run install_app` | Full build: frontend → embed → `go install` (desktop app with go-astilectron window) |
 | `npm run go_install` | Go install only (skip frontend rebuild) |
 | `npm run go_mod` | Regenerate `go.mod` and `go.sum` from scratch |
+| `npm test` | Run all tests (server + client + MCP + Android + Wear OS) |
 | `npm run release` | Cross-compile release for all platforms (Windows, Linux, Android, Wear OS) |
 
 **Build pipeline** (`install_server`): clean embed dir → write `version.json` (commit hash + build time + version) → `vue-tsc` type-check → `vite build` → copy `dist/` to `src/server/gkill/api/embed/html/` → copy `src/locales/` to `src/server/gkill/api/embed/i18n/locales/` → `go install`
@@ -28,7 +29,24 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 - Node.js 20.15.1+
 - `npm i` (install JS dependencies)
 
-**No automated tests exist.** No Go test files or JS test files.
+**Test commands:**
+
+| Command | Purpose |
+|---|---|
+| `npm test` | Run all tests (server + client + MCP + Android + Wear OS) |
+| `npm run test_server` | Go tests (`cd src/server && go test ./...`) |
+| `npm run test_client` | Frontend unit + E2E tests |
+| `npm run test_client_unit` | Vitest unit tests |
+| `npm run test_client_e2e` | Playwright E2E tests |
+| `npm run test_mcp` | MCP server tests (Vitest) |
+| `npm run test_android` | Android Gradle tests |
+| `npm run test_wear_os` | Wear OS Gradle tests |
+
+**Test coverage:**
+- Go: 24 test files (API handlers, KFTL parser, DAO layer — account, session, server config, user config, 12 repository types)
+- Frontend unit: 13 test files via Vitest (API, data models, KFTL parser, utility functions)
+- Frontend E2E: 6 spec files via Playwright (login, mi-board, kyou-list, settings, share-page, kftl-dialog)
+- MCP: 4 test files via Vitest (validation, normalization, constants, tool handlers)
 
 ## Architecture
 
@@ -71,9 +89,9 @@ Both use cobra for CLI with shared subcommands: `version`, `idf`, `dvnf`, `gener
 Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.0)
 
 Key packages:
-- `gkill/api/` — HTTP API handlers via gorilla/mux, **77 POST endpoints** under `/api/`. Main handler: `gkill_server_api.go` (~12,300 lines). Route definitions: `gkill_server_api_address.go`.
+- `gkill/api/` — HTTP API handlers via gorilla/mux, **79 POST endpoints** under `/api/`. Main handler: `gkill_server_api.go` (~13,400 lines). Route definitions: `gkill_server_api_address.go`.
 - `gkill/api/embed.go` — `//go:embed embed` directive serves the compiled Vue SPA at root `/`
-- `gkill/api/req_res/` — Request/response structs for every endpoint (150+ types)
+- `gkill/api/req_res/` — Request/response structs for every endpoint (161 types)
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages)
 - `gkill/dao/` — Data access layer with `GkillDAOManager` managing SQLite3 databases
 - `gkill/dao/reps/` — Repository interfaces and implementations for each data type
@@ -88,7 +106,7 @@ Key packages:
 3. `*_repository_cached_sqlite3_impl.go` — cached variant (in-memory)
 4. `*_repository_temp_sqlite3_impl.go` — temp/transactional variant
 
-**Core entity — "Kyou"** (record). Data types: kmemo (text), timeis (timestamps), lantana (mood 0-10), kc (numeric), nlog (expense), urlog (bookmark), mi (task), idf_kyou (file), re_kyou (repost), tag, text, notification, git_commit_log.
+**Core entity — "Kyou"** (record). Data types: kmemo (text), timeis (timestamps), lantana (mood 0-10), kc (numeric), nlog (expense), urlog (bookmark), mi (task), idf_kyou (file), re_kyou (repost), tag, text, notification, git_commit_log, gps_log (GPS tracks).
 
 **Response structure:** All API responses include `messages []GkillMessage` and `errors []GkillError` (with `error_code` + `error_message`). HTTP 200 for normal responses (check `errors` array), 403 for access denied, 500 for unexpected errors.
 
@@ -130,19 +148,19 @@ $HOME/gkill/
 Stack: Vue 3 + Vuetify 3 + Vue Router + vue-i18n + Vite + PWA (vite-plugin-pwa + Workbox)
 
 - `main.ts` — App entry, registers Vuetify, router, i18n, custom `v-long-press` directive
-- `router/index.ts` — 13 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, set_new_password, regist_first_account, shared_page, shared_mi)
+- `router/index.ts` — 12 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, set_new_password, regist_first_account, shared_page, shared_mi)
 - `pages/` — Route page components
-- `pages/views/` — 200+ view components for add/edit/list operations per data type
-- `pages/dialogs/` — 100+ dialog components
-- `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~2,900 lines), client-side API wrapper
+- `pages/views/` — 175 view components for add/edit/list operations per data type
+- `pages/dialogs/` — 92 dialog components
+- `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,400 lines), client-side API wrapper
 - `classes/datas/` — TypeScript data models mirroring Go structs
-- `classes/kftl/` — KFTL parser (35+ statement types)
+- `classes/kftl/` — KFTL parser (42 statement types)
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target)
 - `plugins/vuetify.ts` — Vuetify config with light (`gkill_theme`) and dark (`gkill_dark_theme`) themes
 
 **State management:** Props/Emit only. No Pinia/Vuex. `GkillAPI` singleton for backend communication.
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. ~743 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. ~758 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 
@@ -171,16 +189,23 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 ## Documentation
 
 Reverse-engineered design documents are in `documents/reverse/`:
-- `glossary.md` — Domain term definitions (80+ terms)
+- `README.md` — Overview and index of reverse-engineered documents
+- `glossary.md` — Domain term definitions (71 terms)
 - `design-philosophy.md` — Architecture decisions and rationale
 - `er-diagram.md` — Entity-relationship diagrams (Mermaid)
 - `class-diagrams.md` — Go/TypeScript class hierarchies
-- `sequence-diagrams.md` — Interaction sequences (16 diagrams)
+- `sequence-diagrams.md` — Interaction sequences (21 diagrams: 16 normal flows + 5 error scenarios)
 - `activity-diagrams.md` — Processing flowcharts
 - `state-machines.md` — Entity state transitions
 - `screen-transition.md` — Page/dialog navigation
-- `usecase.md` — Use case catalog (80+ use cases)
-- `api-endpoints.md` — API endpoint reference (77 endpoints)
+- `screen-specs.md` — Screen specifications and layouts
+- `usecase.md` — Use case catalog (74 use cases)
+- `api-endpoints.md` — API endpoint reference (79 endpoints)
 - `error-handling-and-security.md` — Error handling policy and security design
 - `frontend-architecture.md` — Frontend design guide
 - `operations-guide.md` — Deployment, backup, troubleshooting, logging
+- `dev-setup.md` — Development environment setup guide
+- `dvnf-rep-type-spec.md` — DVNF repository type specification
+- `folder-structure.md` — Project folder structure reference
+- `program-spec.md` — Program specification details
+- `user-guide.md` — End-user guide
