@@ -21,7 +21,7 @@ type repositoryDAOSQLite3Impl struct {
 
 func NewRepositoryDAOSQLite3Impl(ctx context.Context, filename string) (RepositoryDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	db, err := sql.Open("sqlite", "file:"+filename+"?_pragma=busy_timeout(6000)&_pragma=synchronous(NORMAL)&_pragma=journal_mode(DELETE)")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
