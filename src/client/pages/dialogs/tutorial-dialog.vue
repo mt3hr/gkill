@@ -24,7 +24,7 @@
   </Teleport>
 </template>
 <script lang="ts" setup>
-import { computed, type Ref, ref } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import type { TutorialDialogProps } from './tutorial-dialog-props'
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
@@ -58,15 +58,20 @@ async function hide(): Promise<void> {
   is_show_dialog.value = false
 }
 
+watch(dont_show_again, async (checked) => {
+  if (!checked) return
+  const config = props.application_config.clone()
+  config.show_tutorial_on_startup = false
+  const req = new UpdateApplicationConfigRequest()
+  req.session_id = props.gkill_api.get_session_id()
+  req.application_config = config
+  await props.gkill_api.update_application_config(req)
+  // ブラウザ側キャッシュも更新
+  props.application_config.show_tutorial_on_startup = false
+  props.gkill_api.set_saved_application_config(props.application_config)
+})
+
 async function close_dialog(): Promise<void> {
-  if (dont_show_again.value) {
-    const config = props.application_config.clone()
-    config.show_tutorial_on_startup = false
-    const req = new UpdateApplicationConfigRequest()
-    req.session_id = props.gkill_api.get_session_id()
-    req.application_config = config
-    await props.gkill_api.update_application_config(req)
-  }
   await hide()
 }
 </script>
@@ -79,5 +84,6 @@ async function close_dialog(): Promise<void> {
 }
 .tutorial-dialog-footer {
   border-top: 1px solid #e0e0e0;
+  background-color: rgb(var(--v-theme-background));
 }
 </style>
