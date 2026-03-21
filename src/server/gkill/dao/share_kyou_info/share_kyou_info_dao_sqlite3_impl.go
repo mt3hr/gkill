@@ -257,8 +257,8 @@ FROM SHARE_KYOU_INFO
 				&kyouShareInfo.IsShareWithTimeIss,
 				&kyouShareInfo.IsShareWithLocations,
 			)
-			err = fmt.Errorf("error at scan kyou share info: %w", err)
 			if err != nil {
+				err = fmt.Errorf("error at scan kyou share info: %w", err)
 				return nil, err
 			}
 			kyouShareInfos = append(kyouShareInfos, kyouShareInfo)

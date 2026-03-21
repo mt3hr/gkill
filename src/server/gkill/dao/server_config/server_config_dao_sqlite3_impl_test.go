@@ -132,7 +132,7 @@ func TestServerConfigDelete(t *testing.T) {
 
 	got, err := dao.GetServerConfig(ctx, "dev-del")
 	if err != nil {
-		return
+		t.Fatalf("GetServerConfig after delete should not error: %v", err)
 	}
 	if got != nil {
 		t.Error("expected nil after delete")
