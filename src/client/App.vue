@@ -457,7 +457,7 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
 .gkill-floating-dialog.is-user-resized .gkill-floating-dialog__body {
   width: 100%;
   max-width: none;
-  max-height: none;
+  max-height: 95vh;
   flex: 1 1 auto;
   min-width: 0;
 }
