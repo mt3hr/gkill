@@ -11,27 +11,14 @@ gkillの開発・ビルドに必要なソフトウェアは以下の通りです
 | Go | 1.26.0以上 | バックエンドビルド |
 | Node.js | 20.15.1以上 | フロントエンドビルド、ビルドスクリプト実行 |
 | npm | Node.js付属 | パッケージ管理、ビルドスクリプト実行 |
-| Cコンパイラ | — | CGO（mattn/go-sqlite3に必要） |
 | Git | — | ソースコード管理、バージョン情報取得 |
 
-### Cコンパイラのプラットフォーム別設定
-
-CGOが必要なため（SQLite3バインディング）、プラットフォームに応じたCコンパイラが必要です。
-
-| プラットフォーム | 推奨コンパイラ | インストール方法 |
-|---|---|---|
-| Windows | MinGW-w64 または TDM-GCC | [MinGW-w64](https://www.mingw-w64.org/)からインストール。PATHに追加 |
-| Linux (Ubuntu/Debian) | GCC (build-essential) | `sudo apt-get install build-essential` |
-| macOS | Xcode Command Line Tools | `xcode-select --install` |
+> **Note:** SQLite3 ドライバは `modernc.org/sqlite`（pure Go）を使用しているため、CGO およびCコンパイラは不要です。
 
 ### オプション（クロスコンパイル・リリースビルド用）
 
 | ソフトウェア | 用途 |
 |---|---|
-| MinGW-w64 (x86_64-w64-mingw32-gcc) | Linux上でのWindows向けクロスコンパイル |
-| aarch64-linux-gnu-gcc | Linux ARM64向けクロスコンパイル |
-| arm-linux-gnueabihf-gcc | Linux ARM向けクロスコンパイル |
-| Android NDK | Android向けクロスコンパイル |
 | Android SDK | Android APKビルド |
 | Java JDK | Gradleビルド（Android/Wear OS） |
 | 7-Zip (7za) | リリースZIP作成 |
@@ -171,16 +158,18 @@ graph TD
 
 ### 環境変数
 
-全クロスコンパイルで`CGO_ENABLED=1`が必須です（SQLite3のため）。
+SQLite3 ドライバは pure Go 実装（`modernc.org/sqlite`）のため、CGO およびクロスコンパイラ（CC）は不要です。
 
-| ターゲット | GOOS | GOARCH | CC（クロスコンパイラ） |
-|---|---|---|---|
-| Windows x86_64 | windows | amd64 | x86_64-w64-mingw32-gcc |
-| Linux x86_64 | linux | amd64 | （ネイティブgcc） |
-| Linux ARM64 | linux | arm64 | aarch64-linux-gnu-gcc |
-| Linux ARM | linux | arm | arm-linux-gnueabihf-gcc |
-| Android ARM | android | arm | `$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang` |
-| Android ARM64 | android | arm64 | `$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang` |
+| ターゲット | GOOS | GOARCH |
+|---|---|---|
+| Windows x86_64 | windows | amd64 |
+| Linux x86_64 | linux | amd64 |
+| Linux ARM64 | linux | arm64 |
+| Linux ARM | linux | arm |
+| Android ARM | android | arm |
+| Android ARM64 | android | arm64 |
+
+> **Note:** `GOOS=android` の場合、Go がデフォルトで CGO を有効化するため、`CGO_ENABLED=0` を明示的に指定する必要があります。
 
 ### Windows向けビルド時の追加処理
 
@@ -285,11 +274,9 @@ npm run setup_gkill_develop_env
 
 | 症状 | 原因 | 解決方法 |
 |---|---|---|
-| `cgo: C compiler not found` | Cコンパイラ未インストール | プラットフォームに応じたCコンパイラをインストール |
 | `vue-tsc`でメモリ不足 | Node.jsのヒープメモリ制限 | `npm run type-check`は`--max-old-space-size=4096`付きで実行されます |
 | `go.mod`のエラー | モジュール定義の不整合 | `npm run go_mod`で再生成 |
 | Wear OSビルドで`gradlew not found` | Gradleラッパー未コピー | `npm run setup_wear_os_gradle`を実行 |
-| Android NDKエラー | NDK環境変数未設定 | `export NDK=/path/to/ndk`を設定 |
 
 ## 関連資料
 

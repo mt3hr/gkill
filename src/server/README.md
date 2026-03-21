@@ -72,7 +72,7 @@ server/
 | ライブラリ | 用途 |
 |-----------|------|
 | `gorilla/mux` | HTTP ルーティング |
-| `mattn/go-sqlite3` | SQLite3 ドライバ（CGO 必須） |
+| `modernc.org/sqlite` | SQLite3 ドライバ（pure Go） |
 | `spf13/cobra` | CLI コマンド構造 |
 | `spf13/viper` | 設定ファイル管理 |
 | `asticode/go-astilectron` | デスクトップアプリラッパー |
@@ -104,7 +104,6 @@ go build ./...
 
 **前提条件:**
 - Go 1.25.5+
-- C コンパイラ（CGO 必須: go-sqlite3 依存）
 - フロントエンドビルド済み（`npm run build` → `embed/html/` にコピー済み）
 
 ## コード規約
