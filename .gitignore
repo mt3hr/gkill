@@ -50,3 +50,6 @@ src/wear_os/**/build/
 src/wear_os/local.properties
 src/wear_os/gradle.properties
 src/wear_os/phone_companion/src/main/res/raw/wearable_app.apk
+
+test-results
+playwright-report
