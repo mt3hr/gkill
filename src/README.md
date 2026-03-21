@@ -139,7 +139,17 @@ npm run go_install
 
 ### テスト
 
-現在自動テストは存在しない。動作確認は手動で行う。
+約1,400件の自動テストが存在する。詳細は [ABOUT_TEST.md](ABOUT_TEST.md) を参照。
+
+| コマンド | 対象 |
+|---------|------|
+| `npm test` | 全テスト |
+| `npm run test_server` | Go バックエンド (~453テスト) |
+| `npm run test_client_unit` | フロントエンド ユニット (669テスト) |
+| `npm run test_client_e2e` | フロントエンド E2E (49テスト) |
+| `npm run test_mcp` | MCP サーバ (226テスト) |
+| `npm run test_android` | Android |
+| `npm run test_wear_os` | Wear OS (9テスト) |
 
 ### 設計パターン
 
@@ -180,3 +190,29 @@ npm run go_install
 | `wear_os/` | [wear_os/README.md](wear_os/README.md) |
 | `locales/` | [locales/README.md](locales/README.md) |
 | `mcp/` | [mcp/README.md](mcp/README.md)（既存） |
+
+## 各サブディレクトリの ABOUT_TEST.md
+
+テスト仕様書の索引: [ABOUT_TEST.md](ABOUT_TEST.md)
+
+| ディレクトリ | テスト仕様 |
+|-------------|-----------|
+| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) |
+| `client/classes/` | [client/classes/ABOUT_TEST.md](client/classes/ABOUT_TEST.md) |
+| `client/classes/api/` | [client/classes/api/ABOUT_TEST.md](client/classes/api/ABOUT_TEST.md) |
+| `client/classes/datas/` | [client/classes/datas/ABOUT_TEST.md](client/classes/datas/ABOUT_TEST.md) |
+| `client/classes/dnote/` | [client/classes/dnote/ABOUT_TEST.md](client/classes/dnote/ABOUT_TEST.md) |
+| `client/classes/kftl/` | [client/classes/kftl/ABOUT_TEST.md](client/classes/kftl/ABOUT_TEST.md) |
+| `client/pages/` | [client/pages/ABOUT_TEST.md](client/pages/ABOUT_TEST.md) |
+| `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) |
+| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) |
+| `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) |
+| `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) |
+| `server/gkill/api/req_res/` | [server/gkill/api/req_res/ABOUT_TEST.md](server/gkill/api/req_res/ABOUT_TEST.md) |
+| `server/gkill/dao/` | [server/gkill/dao/ABOUT_TEST.md](server/gkill/dao/ABOUT_TEST.md) |
+| `server/gkill/dao/reps/` | [server/gkill/dao/reps/ABOUT_TEST.md](server/gkill/dao/reps/ABOUT_TEST.md) |
+| `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) |
+| `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) |
+| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) |
+| `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) |
+| `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) |

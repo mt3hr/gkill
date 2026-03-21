@@ -121,8 +121,7 @@ func TestAccountDelete(t *testing.T) {
 
 	got, err := dao.GetAccount(ctx, "user-del")
 	if err != nil {
-		// Some implementations return error for not found
-		return
+		t.Fatalf("GetAccount after delete should not error: %v", err)
 	}
 	if got != nil {
 		t.Error("expected nil after delete")
@@ -135,8 +134,7 @@ func TestAccountGetNonExistent(t *testing.T) {
 
 	got, err := dao.GetAccount(ctx, "nonexistent")
 	if err != nil {
-		// Not found may return error, which is acceptable
-		return
+		t.Fatalf("GetAccount for non-existent should not error: %v", err)
 	}
 	if got != nil {
 		t.Error("expected nil for non-existent account")

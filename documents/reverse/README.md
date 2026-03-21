@@ -37,6 +37,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 16. **[error-handling-and-security.md](error-handling-and-security.md)** — エラーハンドリング・セキュリティ設計。エラーコード体系とセキュリティポリシーです。
 17. **[operations-guide.md](operations-guide.md)** — 運用ガイド。デプロイ、バックアップ、トラブルシューティング手順です。
 18. **[dev-setup.md](dev-setup.md)** — 環境構築資料。開発環境のセットアップ手順です。
+19. **[testing-guide.md](testing-guide.md)** — テストガイド。テストの実行方法、アーキテクチャ、追加ガイドラインです。
 
 ### ユーザ向け
 
@@ -64,6 +65,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [error-handling-and-security.md](error-handling-and-security.md) | エラー処理方針・セキュリティ設計 | エラー処理実装、セキュリティレビュー |
 | [operations-guide.md](operations-guide.md) | デプロイ・バックアップ・保守手順 | 運用担当者、環境構築時 |
 | [dev-setup.md](dev-setup.md) | 開発環境構築手順（ビルド、クロスコンパイル） | 新規開発者のオンボーディング |
+| [testing-guide.md](testing-guide.md) | テスト実行・アーキテクチャ・追加ガイドライン | テスト実行、テスト追加時の参照 |
 | [user-guide.md](user-guide.md) | ユーザ向け導入・操作ガイド | エンドユーザ、導入担当者 |
 
 ## 資料間の依存関係
@@ -104,6 +106,7 @@ graph TD
     K --> L
 
     N --> Q[dev-setup.md<br/>環境構築]
+    Q --> T[testing-guide.md<br/>テストガイド]
     N --> R[program-spec.md<br/>プログラム仕様]
     O --> R
     E --> R
@@ -119,6 +122,7 @@ graph TD
     style P fill:#dfd,stroke:#333,stroke-width:2px
     style Q fill:#dfd,stroke:#333,stroke-width:2px
     style R fill:#dfd,stroke:#333,stroke-width:2px
+    style T fill:#dfd,stroke:#333,stroke-width:2px
     style S fill:#ffd,stroke:#333,stroke-width:2px
 ```
 

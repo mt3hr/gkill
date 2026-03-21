@@ -8,6 +8,7 @@ import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { GetApplicationConfigRequest } from './classes/api/req_res/get-application-config-request';
+import { shouldCacheResponse, parseBoolLoose } from './classes/service-worker-utils';
 
 export default null
 
@@ -33,40 +34,6 @@ registerRoute(
     ],
   }),
 )
-
-/** レスポンスがキャッシュすべきかを判定する。responseのbodyは消費しない（cloneで読む） */
-async function shouldCacheResponse(response: Response, checkHistories: boolean): Promise<boolean> {
-  if (!response.ok) return false
-  try {
-    const json = await response.clone().json()
-    // errorsが存在し、空でなければキャッシュしない
-    if (json.errors && json.errors.length > 0) return false
-    // Kyou系: *_historiesフィールドが長さ0ならキャッシュしない
-    if (checkHistories) {
-      for (const key of Object.keys(json)) {
-        if (key.endsWith('_histories')) {
-          if (Array.isArray(json[key]) && json[key].length === 0) return false
-          break
-        }
-      }
-    }
-  } catch {
-    // JSONパースに失敗した場合もキャッシュしない（安全側に倒す）
-    return false
-  }
-  return true
-}
-
-function parseBoolLoose(value: unknown): boolean {
-  if (typeof value === "boolean") return value
-  if (typeof value === "number") return value !== 0
-  if (typeof value === "string") {
-    const v = value.trim().toLowerCase()
-    if (["true", "1", "yes", "y"].includes(v)) return true
-    if (["false", "0", "no", "n"].includes(v)) return false
-  }
-  throw new SyntaxError(`Boolean expected, got ${JSON.stringify(value)}`)
-}
 
 self.addEventListener('push', async function (event: any) {
   const data = event.data.json()

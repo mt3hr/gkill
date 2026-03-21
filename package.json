@@ -48,8 +48,8 @@
     "test_client_unit": "vitest run",
     "test_client_e2e": "npx playwright test",
     "test_mcp": "vitest run --config vitest.config.mcp.ts",
-    "test_android": "cd src/android && gradlew.bat test",
-    "test_wear_os": "cd src/wear_os && gradlew.bat test"
+    "test_android": "cd src/android && bash gradlew test",
+    "test_wear_os": "cd src/wear_os && bash gradlew test"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
