@@ -136,6 +136,7 @@ td {
   height: unset !important;
   max-width: 80vw !important;
   max-height: 85vh !important;
+  object-fit: contain;
 }
 
 /* =========================================================
