@@ -10,7 +10,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch, type ComputedRef, type Ref } from "vue"
 
 type Point = { x: number; y: number }
-type Size = { w: number; h: number }
+export type Size = { w: number; h: number }
 
 export type UseFloatingDialogResult = {
   // template: :ref="ui.containerRef"
@@ -30,6 +30,9 @@ export type UseFloatingDialogResult = {
 
   // ユーザ設定サイズをリセットしてCSS既定サイズに戻す
   resetSize: () => void
+
+  // ユーザがリサイズしたサイズ（null = 未リサイズ）
+  userSize: Readonly<Ref<Size | null>>
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -487,5 +490,6 @@ export function useFloatingDialog(
     isTransparent,
     resetToCenter,
     resetSize,
+    userSize: userSize as Readonly<Ref<Size | null>>,
   }
 }
