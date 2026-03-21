@@ -305,6 +305,7 @@ VALUES (
 		fileUploadHistory.FileName,
 		fileUploadHistory.FileSizeByte,
 		fileUploadHistory.Successed,
+		fileUploadHistory.SourceAddress,
 		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -351,6 +352,7 @@ WHERE ID = ?
 		fileUploadHistory.FileName,
 		fileUploadHistory.FileSizeByte,
 		fileUploadHistory.Successed,
+		fileUploadHistory.SourceAddress,
 		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
 		fileUploadHistory.ID,
 	}
