@@ -6,7 +6,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api_address.go`（パス・メソッド定義）
 - **ハンドラ登録:** `src/server/gkill/api/gkill_server_api.go`（ルーティング・ハンドラ実装）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（150+ 型定義）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（161 型定義）
 
 ## 共通仕様
 
@@ -220,7 +220,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 
 ## 補足
 
-- **合計:** POST エンドポイント 77件 + 非APIルート 3件
+- **合計:** POST エンドポイント 79件（うち77件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 3件
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api.go` および `src/server/gkill/api/handle_*.go`
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体
