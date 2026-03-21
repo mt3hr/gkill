@@ -62,6 +62,37 @@ export function createMockGkillAPI() {
     update_nlog: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
     update_urlog: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
 
+    // Delete operations
+    delete_kmemo: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_tag: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_text: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_mi: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_timeis: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_lantana: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_nlog: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_urlog: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_kc: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+
+    // Notification
+    add_notification: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    update_notification: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    delete_notification: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+
+    // Context menu helpers
+    get_saved_tag_history: vi.fn(() => []),
+    push_tag_to_history: vi.fn(),
+    open_directory: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    open_file: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+
+    // Sharing
+    add_share_kyou_list_info: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    get_shared_kyous: vi.fn().mockResolvedValue({ kyous: [], messages: [], errors: [] }),
+    delete_share_kyou_list_infos: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+
+    // Upload
+    upload_files: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    upload_gps_log_files: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+
     // Endpoint addresses (for verification)
     login_address: '/api/login',
     get_kyous_address: '/api/get_kyous',
