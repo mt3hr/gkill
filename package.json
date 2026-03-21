@@ -41,7 +41,15 @@
     "clean_release_zip_src": "cd release && rimraf android_apk && rimraf android_arm && rimraf android_arm64 && rimraf linux_amd64 && rimraf linux_arm && rimraf linux_arm64 && rimraf windows_amd64 && rimraf gkill_sample_data && rimraf wear_os",
     "install_app": "npm run prepare_install && cd src/server/gkill/main/gkill && go install -ldflags \"-H windowsgui\"",
     "install_server": "npm run prepare_install && npm run go_install",
-    "setup_gkill_develop_env": "node -e \"var x=require('child_process').execSync;if(require('os').platform()!=='linux'){console.error('This script is for Ubuntu/WSL only');process.exit(1)};console.log('[1/3] Installing apt packages...');x('sudo apt-get update && sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf p7zip-full default-jdk',{stdio:'inherit'});console.log('[2/3] Installing Go tools...');x('go install github.com/akavel/rsrc@latest',{stdio:'inherit'});console.log('[3/3] Checking environment...');var ok=true;if(!process.env.NDK){console.warn('WARNING: NDK env var is not set. Set it to your Android NDK root for android cross-compilation.');ok=false};if(!process.env.ANDROID_HOME&&!process.env.ANDROID_SDK_ROOT){console.warn('WARNING: ANDROID_HOME/ANDROID_SDK_ROOT not set. Install Android SDK for APK builds.');ok=false};console.log(ok?'Setup complete! All dependencies are ready.':'Setup complete! See warnings above for optional dependencies.')\""
+    "setup_gkill_develop_env": "node -e \"var x=require('child_process').execSync;if(require('os').platform()!=='linux'){console.error('This script is for Ubuntu/WSL only');process.exit(1)};console.log('[1/3] Installing apt packages...');x('sudo apt-get update && sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf p7zip-full default-jdk',{stdio:'inherit'});console.log('[2/3] Installing Go tools...');x('go install github.com/akavel/rsrc@latest',{stdio:'inherit'});console.log('[3/3] Checking environment...');var ok=true;if(!process.env.NDK){console.warn('WARNING: NDK env var is not set. Set it to your Android NDK root for android cross-compilation.');ok=false};if(!process.env.ANDROID_HOME&&!process.env.ANDROID_SDK_ROOT){console.warn('WARNING: ANDROID_HOME/ANDROID_SDK_ROOT not set. Install Android SDK for APK builds.');ok=false};console.log(ok?'Setup complete! All dependencies are ready.':'Setup complete! See warnings above for optional dependencies.')\"",
+    "test": "npm run test_server && npm run test_client && npm run test_mcp && npm run test_android && npm run test_wear_os",
+    "test_server": "cd src/server && go test ./...",
+    "test_client": "npm run test_client_unit && npm run test_client_e2e",
+    "test_client_unit": "vitest run",
+    "test_client_e2e": "npx playwright test",
+    "test_mcp": "vitest run --config vitest.config.mcp.ts",
+    "test_android": "cd src/android && gradlew.bat test",
+    "test_wear_os": "cd src/wear_os && gradlew.bat test"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
@@ -62,22 +70,26 @@
     "esbuild": ">=0.24.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@rushstack/eslint-patch": "^1.8.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^20.14.5",
     "@vitejs/plugin-vue": "^5.0.5",
     "@vue/eslint-config-typescript": "^13.0.0",
+    "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.5.1",
     "cross-env": "^10.1.0",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.23.0",
+    "jsdom": "^25.0.1",
     "npm-run-all2": "^6.2.0",
     "shx": "^0.4.0",
     "typescript": "~5.4.0",
     "vite": "^5.3.1",
     "vite-plugin-pwa": "^0.21.1",
     "vite-plugin-vue-devtools": "^7.3.1",
+    "vitest": "^3.2.4",
     "vue-tsc": "^2.0.21"
   }
 }
