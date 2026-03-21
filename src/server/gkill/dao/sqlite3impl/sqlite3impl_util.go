@@ -13,7 +13,7 @@ import (
 
 	"database/sql"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 const TimeLayout = "2006-01-02T15:04:05-07:00"
@@ -23,7 +23,7 @@ func EscapeSQLite(str string) string {
 }
 
 func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	db, err := sql.Open("sqlite", "file:"+filename+"?_pragma=busy_timeout(6000)&_pragma=synchronous(NORMAL)&_pragma=journal_mode(DELETE)")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err

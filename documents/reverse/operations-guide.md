@@ -253,19 +253,7 @@ JSON形式。各行に以下のフィールド:
 
 ## 7. トラブルシューティング
 
-### 7.1 CGOビルドエラー
-
-**症状:** `go build` 時に `gcc` 関連のエラー
-
-**原因:** CGOが必要（mattn/go-sqlite3 がC言語バインディング）
-
-**対処:**
-- Windows: MinGW-w64 または TDM-GCC をインストール
-- Linux: `sudo apt install build-essential` (Ubuntu/Debian)
-- macOS: `xcode-select --install`
-- 環境変数 `CGO_ENABLED=1` が設定されていること
-
-### 7.2 ポート競合
+### 7.1 ポート競合
 
 **症状:** `bind: address already in use`
 
