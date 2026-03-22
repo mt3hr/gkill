@@ -1865,6 +1865,7 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: UpdateApplicationConfigResponse = json
                 this.check_auth(response)
+                await delete_gkill_config_cache()
                 return response
         }
 
