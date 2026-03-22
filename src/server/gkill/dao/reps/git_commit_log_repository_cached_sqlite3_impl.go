@@ -23,6 +23,7 @@ type gitCommitLogRepositoryCachedSQLite3Impl struct {
 	m               *sync.RWMutex
 	ownDB           bool // trueの場合、永続ファイルDBを自前で管理する
 	backgroundUpdate bool // trueの場合、初回フルリビルドをバックグラウンドで実行する
+	isCacheBuilding  bool // trueの場合、バックグラウンドキャッシュビルド中
 	lastUpdateCacheChanged bool
 }
 
@@ -177,6 +178,10 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context,
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
+	}
+	// キャッシュビルド中は下層リポジトリにフォールバック
+	if g.isCacheBuilding {
+		return g.gitRep.FindKyous(ctx, query)
 	}
 	g.m.RLock()
 	defer g.m.RUnlock()
@@ -604,6 +609,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 	if g.backgroundUpdate && len(cachedIDs) == 0 && len(newIDs) > 0 {
 		slog.Log(ctx, gkill_log.Info, "git commit log cache build starting in background", "numCommits", len(newIDs))
 		currentRefHashes := g.getCurrentRefHashes(ctx)
+		g.isCacheBuilding = true
 		go func() {
 			bgCtx := context.Background()
 			err := g.doIncrementalUpdate(bgCtx, newIDs, deletedIDs, currentRefHashes)
@@ -612,6 +618,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 			} else {
 				slog.Log(bgCtx, gkill_log.Info, "git commit log cache build completed", "numCommits", len(newIDs))
 			}
+			g.isCacheBuilding = false
 		}()
 		g.lastUpdateCacheChanged = true
 		return nil
@@ -940,6 +947,10 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindGitCommitLog(ctx context.C
 		}
 
 	}
+	// キャッシュビルド中は下層リポジトリにフォールバック
+	if g.isCacheBuilding {
+		return g.gitRep.FindGitCommitLog(ctx, query)
+	}
 	g.m.RLock()
 	defer g.m.RUnlock()
 
@@ -1146,6 +1157,10 @@ WHERE ID IN (` + strings.Join(placeholders, ",") + `)`
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
+	// キャッシュビルド中は下層リポジトリにフォールバック
+	if g.isCacheBuilding {
+		return g.gitRep.GetGitCommitLog(ctx, id, updateTime)
+	}
 	g.m.RLock()
 	defer g.m.RUnlock()
 	sql := `
