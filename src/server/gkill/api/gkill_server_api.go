@@ -6847,6 +6847,14 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	if gitCommitLog == nil {
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetGitCommitLogError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
 
 	response.GitCommitLogHistories = []reps.GitCommitLog{*gitCommitLog}
 	response.Messages = append(response.Messages, &message.GkillMessage{
