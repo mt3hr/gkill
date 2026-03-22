@@ -46,7 +46,8 @@
     "test_server": "cd src/server && go test ./...",
     "test_client": "npm run test_client_unit && npm run test_client_e2e",
     "test_client_unit": "vitest run",
-    "test_client_e2e": "npx playwright test",
+    "test_client_e2e": "node src/client/__tests__/e2e/run-e2e.mjs",
+    "test_e2e_server": "gkill_server --gkill_home_dir \"$HOME/gkill_test\" --disable_tls --log none",
     "test_mcp": "vitest run --config vitest.config.mcp.ts",
     "test_android": "cd src/android && bash gradlew test",
     "test_wear_os": "cd src/wear_os && bash gradlew test"
