@@ -16,7 +16,7 @@ test.describe('Set New Password Page', () => {
   test('set new password page renders app container', async ({ page }) => {
     await page.goto('/set_new_password', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })
@@ -24,7 +24,7 @@ test.describe('Set New Password Page', () => {
   test('set new password page has password input fields', async ({ page }) => {
     await page.goto('/set_new_password', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     // Password change page should have input fields for new password
     const inputs = page.locator('input')
     const inputCount = await inputs.count()

@@ -198,12 +198,12 @@ graph LR
 #### 主な責務
 
 - HTTPサーバーの起動・停止
-- 全77 POSTエンドポイントのハンドリング
+- 全79 POSTエンドポイントのハンドリング
 - GkillDAOManagerの保持・提供
 - セッション検証
 - レスポンス構築
 
-### エンドポイント分類（77 POST）
+### エンドポイント分類（79 POST）
 
 | カテゴリ | エンドポイント数 | 例 |
 |---|---|---|
@@ -448,7 +448,7 @@ sequenceDiagram
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts`（約2,900行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
+`src/client/classes/api/gkill-api.ts`（約3,400行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
 
 #### 主な責務
 

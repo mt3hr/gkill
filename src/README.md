@@ -144,12 +144,12 @@ npm run go_install
 | コマンド | 対象 |
 |---------|------|
 | `npm test` | 全テスト |
-| `npm run test_server` | Go バックエンド (~453テスト) |
-| `npm run test_client_unit` | フロントエンド ユニット (669テスト) |
-| `npm run test_client_e2e` | フロントエンド E2E (49テスト) |
-| `npm run test_mcp` | MCP サーバ (226テスト) |
-| `npm run test_android` | Android |
-| `npm run test_wear_os` | Wear OS (9テスト) |
+| `npm run test_server` | Go バックエンド (~498テスト) |
+| `npm run test_client_unit` | フロントエンド ユニット (~592テスト) |
+| `npm run test_client_e2e` | フロントエンド E2E (187テスト) |
+| `npm run test_mcp` | MCP サーバ (~237テスト) |
+| `npm run test_android` | Android (12テスト) |
+| `npm run test_wear_os` | Wear OS (114テスト) |
 
 ### 設計パターン
 
