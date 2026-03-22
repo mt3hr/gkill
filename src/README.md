@@ -123,7 +123,7 @@ npm run go_install
 6. `go install`
 
 **前提条件:**
-- Go 1.25.5+、Node.js 20.15.1+
+- Go 1.26.0+、Node.js 20.15.1+
 
 ## `tools/` ディレクトリ
 
