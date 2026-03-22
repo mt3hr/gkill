@@ -220,11 +220,11 @@ DNote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 |------|-----------|------|
 | エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
-| ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
-| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（~2,900行） |
+| ルート定義 | `src/client/router/index.ts` | 12ルートの定義 |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（~3,400行） |
 | リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（150+ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
-| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（35+ステートメント型） |
+| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（44ステートメント型） |
 | DNote ユーティリティ | `src/client/classes/dnote/` | 集計機能ユーティリティ |
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |

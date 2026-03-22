@@ -6,7 +6,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api_address.go`（パス・メソッド定義）
 - **ハンドラ登録:** `src/server/gkill/api/gkill_server_api.go`（ルーティング・ハンドラ実装）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（161 型定義）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（172 型定義）
 
 ## 共通仕様
 

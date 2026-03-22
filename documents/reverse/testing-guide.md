@@ -2,19 +2,19 @@
 
 ## 1. 概要
 
-gkill プロジェクトでは約1,400件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
+gkill プロジェクトでは約1,640件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
 
 ### テスト統計
 
 | コンポーネント | テスト数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | ~453 | 46 | Go `testing` |
-| フロントエンド ユニット | 669 | 48 | Vitest |
-| フロントエンド E2E | 49 | 12 | Playwright |
-| MCP サーバ | 226 | 6 | Vitest |
-| Android | 2 | 2 | JUnit 4 |
-| Wear OS | 9 | 9 | JUnit 4 + MockK |
-| **合計** | **~1,400** | **~123** | |
+| Go バックエンド | ~498 | 45 | Go `testing` |
+| フロントエンド ユニット | ~592 | 48 | Vitest |
+| フロントエンド E2E | 187 | 29 | Playwright |
+| MCP サーバ | ~237 | 6 | Vitest |
+| Android | 12 | 2 | JUnit 4 |
+| Wear OS | 114 | 9 | JUnit 4 + MockK |
+| **合計** | **~1,640** | **~139** | |
 
 ### テスト仕様書
 
@@ -37,7 +37,8 @@ npm test
 | `npm run test_server` | Go バックエンド全体 | 数十秒 |
 | `npm run test_client` | フロントエンド（ユニット + E2E） | 1〜2分 |
 | `npm run test_client_unit` | フロントエンド ユニットのみ | 数十秒 |
-| `npm run test_client_e2e` | フロントエンド E2E のみ | 1分前後 |
+| `npm run test_client_e2e` | フロントエンド E2E のみ（gkill_server 自動起動・停止） | 20分前後 |
+| `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
 | `npm run test_mcp` | MCP サーバ | 数秒 |
 | `npm run test_android` | Android | Gradle 依存 |
 | `npm run test_wear_os` | Wear OS | Gradle 依存 |
@@ -73,10 +74,10 @@ npx vitest watch
 ### Playwright E2E テスト
 
 ```bash
-# E2E テスト実行（事前にサーバ起動が必要）
+# E2E テスト実行（gkill_server + Vite を自動起動・停止）
 npm run test_client_e2e
 
-# 特定ファイル
+# 特定ファイル（事前に gkill_server と Vite dev server を手動起動する必要あり）
 npx playwright test src/client/__tests__/e2e/login.spec.ts
 
 # ヘッドフルモード（ブラウザ表示）
@@ -86,7 +87,30 @@ npx playwright test --headed
 npx playwright test --debug
 ```
 
-> **Note:** E2E テストは `localhost:5173` への接続を前提としています。実行前に `npm run dev` でフロントエンド開発サーバを起動してください。
+**E2E テスト環境の仕組み:**
+
+`npm run test_client_e2e` は `src/client/__tests__/e2e/run-e2e.mjs` を実行し、以下を自動で行います：
+
+1. `$HOME/gkill_test` ディレクトリを削除・再作成（クリーン状態）
+2. `gkill_server --gkill_home_dir "$HOME/gkill_test" --disable_tls --log none` を起動
+3. gkill_server がポート 9999 で応答するまで待機（最大 30 秒）
+4. `npx playwright test` を実行（Playwright が Vite dev server を自動起動）
+5. テスト完了後に gkill_server を停止
+
+これにより毎回クリーンな状態（admin アカウント/パスワードなし）でテストが実行されます。初回テスト実行時、`helpers.ts` の `loginAsAdmin()` がサーバから reset_token を取得し、`/regist_first_account` ページで自動的にアカウント登録とパスワード設定を行います。
+
+> **Note:** `npx playwright test` を直接実行する場合は、事前に gkill_server（テスト用 home）と Vite dev server を手動で起動する必要があります：
+> ```bash
+> # ターミナル 1: テスト用サーバ起動
+> rm -rf ~/gkill_test && mkdir -p ~/gkill_test
+> npm run test_e2e_server
+>
+> # ターミナル 2: Vite dev server 起動
+> npm run dev
+>
+> # ターミナル 3: テスト実行
+> npx playwright test
+> ```
 
 ## 3. テストアーキテクチャ
 
@@ -163,26 +187,92 @@ src/client/__tests__/
 
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
-全12ルートを Playwright で検証。各テストでは以下を共通チェック：
+全12ルートを Playwright で検証し、CRUD 操作フローもカバー（29ファイル、187テスト）。各テストでは以下を共通チェック：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
-- **レスポンシブ対応**: デスクトップとモバイルのビューポートで表示確認
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
+- **CRUD フロー**: KFTL 記録 → 画面追加 → 編集 → 削除 → 閲覧の一連操作
+- **レスポンシブ対応**: 一部テスト（rykv.spec.ts, mi-board.spec.ts）でモバイルビューポートの表示確認
+
+#### ページ表示・ナビゲーション系（12 spec files）
 
 | テストファイル | 対象ルート | 主なテスト内容 |
 |-------------|-----------|--------------|
-| `login.spec.ts` | `/login` | セッション永続化、認証リダイレクト、パスワードマスキング |
+| `login.spec.ts` | `/` | セッション永続化、認証リダイレクト、パスワードマスキング |
 | `kftl-dialog.spec.ts` | `/kftl` | KFTL テキスト入力、マルチライン、テンプレート |
 | `mi-board.spec.ts` | `/mi` | タスクボード表示、FAB 検出、レスポンシブ |
 | `rykv.spec.ts` | `/rykv` | モバイルビューポート、URL 永続化 |
 | `mkfl.spec.ts` | `/mkfl` | ファイル管理 |
 | `plaing.spec.ts` | `/plaing` | 計画ビュー |
-| `settings.spec.ts` | `/settings` | 設定コンテンツ、インタラクティブ操作 |
+| `settings.spec.ts` | `/saihate` | 設定コンテンツ、インタラクティブ操作 |
 | `kyou-list.spec.ts` | `/kyou` | レコード一覧 |
-| `share-page.spec.ts` | `/shared` | 共有ページ |
+| `share-page.spec.ts` | `/shared_page` | 共有ページ |
 | `shared-mi.spec.ts` | `/shared_mi` | 共有タスク |
 | `regist-first-account.spec.ts` | `/regist_first_account` | 初回アカウント登録 |
 | `set-new-password.spec.ts` | `/set_new_password` | パスワード再設定 |
+
+#### CRUD 操作フロー系（7 spec files）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `kftl-crud.spec.ts` | KFTL テキスト経由で各データ型（Kmemo/Lantana/Mi/TimeIs/Nlog/URLog）を記録 → 画面表示確認 |
+| `add-dialog-crud.spec.ts` | FAB(+)→追加ダイアログ→フォーム入力→保存 (Mi/Lantana/Nlog/TimeIs/URLog/KC/Tag/Text) + Mi最小入力、TimeIs/URLog全項目入力 |
+| `edit-dialog-crud.spec.ts` | 右クリック→編集→変更→保存 (Kmemo/Mi/Lantana/Nlog/URLog/TimeIs/Tag + 空内容バリデーション) + 実行中TimeIs終了ボタン、ReKyou編集、Text編集 |
+| `delete-crud.spec.ts` | 右クリック→削除→確認→表示消失確認 (Kmemo/Mi/Lantana/Nlog/URLog/TimeIs/Tag/Text/ReKyou) |
+| `view-browse.spec.ts` | 履歴ダイアログ表示、混合データ型表示、Mi ボード/Plaing ページの表示確認 |
+| `notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴ダイアログ |
+| `search-and-summary.spec.ts` | RYKV キーワード検索、Mi キーワード検索、D-note サマリパネルトグル |
+
+#### KFTL TimeIs終了系（1 spec file）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `kftl-timeis-end.spec.ts` | TimeIs終了の全4バリエーション: タイトル指定(ーえ)、タイトル存在すれば(ーいえ)、タグ指定(ーたえ)、タグ存在すれば(ーいたえ) |
+
+#### 閲覧・履歴系（1 spec file）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `view-history.spec.ts` | Lantana/Mi/Nlog/URLog/ReKyou/Tag/Text の閲覧+履歴ダイアログ+リポスト+NoImage確認 |
+
+#### 認証フロー系（1 spec file）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `auth-flow.spec.ts` | ログアウト→ログイン画面遷移、パスワード未設定ログイン不可、ログイン後Rep全チェック確認 |
+
+#### Mi（タスク）操作系（1 spec file）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `mi-operations.spec.ts` | タスク板間移動、完了状態トグル、共有状況閲覧+スクロール確認、共有停止 |
+
+#### 設定機能テスト系（3 spec files）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `settings-crud.spec.ts` | サーバ設定/ユーザ設定/タグ構造/Rep 構造/Device 構造/KFTL テンプレート構造の表示確認 |
+| `server-config-crud.spec.ts` | プロファイル追加・変更、TLS有効化・無効化・生成、アドレス変更、アカウント管理(追加/有効化/無効化/パスワードリセット)、Rep管理(追加/設定変更/有効化/無効化/削除/書き込み制御/ID自動割当/デバイス割当/RepType編集) |
+| `user-config-crud.spec.ts` | GoogleMapAPIキー、画像ビューア列数、miデフォルト板名、ホットリロード、タグ/Rep/Device/RepType/KFTLテンプレート構造(フォルダ追加/並替/適用) |
+
+#### 回帰テスト・その他（3 spec files）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `regression-fixes.spec.ts` | 修正済みバグの回帰テスト: Kmemo必須チェック、ローカルアクセス設定、タグ/Device/RepType構造追加、ApplicationConfig適用、ファイルアップロード |
+| `misc-features.spec.ts` | Notification/Text 見た目区別、TimeIs 履歴終了ボタン非表示、コンテキストメニュー重複チェック |
+| `misc-operations.spec.ts` | ブックマークレット確認、GPSログアップロード、無効共有リンクエラー表示、サーバコンフィグ適用で再起動 |
+
+#### ヘルパーファイル
+
+| ファイル | 用途 |
+|---------|------|
+| `run-e2e.mjs` | E2E テストランナー（gkill_server 自動起動・停止、`$HOME/gkill_test` クリーン） |
+| `helpers.ts` | `loginAsAdmin()` — 初回起動時の自動登録（reset_token取得→regist_first_account）+ テストユーザでのログイン |
+| `check-server.ts` | `checkGkillServer()`, `checkGkillApiViaVite()` — サーバヘルスチェック |
+| `crud-helpers.ts` | KFTL 送信（`#kftl_text_area` + 保存ボタン有効化待機）、ページナビゲーション（フローティングダイアログ自動閉じ）、コンテキストメニュー操作（`force: true`）、FAB クリック（`.position-fixed button`） |
+| `global-setup.ts` | Playwright グローバルセットアップ（no-op — サーバ管理は `run-e2e.mjs` が担当） |
+| `global-teardown.ts` | Playwright グローバルティアダウン（no-op — Playwright が自動停止） |
 
 ### 3.4 MCP サーバ（`src/mcp/__tests__/`）
 
@@ -211,7 +301,8 @@ src/client/__tests__/
 |---------|------|
 | `vitest.config.ts` | フロントエンドユニットテスト設定（jsdom, Vue 3, パスエイリアス） |
 | `vitest.config.mcp.ts` | MCP サーバテスト設定（Node.js 環境, shebang 除去） |
-| `playwright.config.ts` | E2E テスト設定（baseURL, タイムアウト, ブラウザ設定） |
+| `playwright.config.ts` | E2E テスト設定（baseURL, タイムアウト, Vite webServer, globalSetup/Teardown） |
+| `src/client/__tests__/e2e/run-e2e.mjs` | E2E テストランナー（gkill_server 自動起動・停止、`$HOME/gkill_test` クリーン） |
 | `src/server/go.mod` | Go テストの依存管理 |
 | `src/android/app/build.gradle.kts` | Android テスト設定 |
 | `src/wear_os/phone_companion/build.gradle.kts` | Wear OS phone_companion テスト設定 |
@@ -329,9 +420,19 @@ npm install
 # Playwright ブラウザのインストール（初回のみ）
 npx playwright install
 
-# フロントエンド開発サーバの起動
-npm run dev
+# gkill_server のビルド（初回 or サーバコード変更時）
+cd src/server/gkill/main/gkill_server && go install
+
+# 自動実行（推奨）— サーバ起動・クリーン・停止を自動で行う
+npm run test_client_e2e
+
+# 手動実行 — 事前に gkill_server と Vite dev server を起動してから実行
+npm run test_e2e_server  # ターミナル 1
+npm run dev              # ターミナル 2
+npx playwright test      # ターミナル 3
 ```
+
+E2E テストは `$HOME/gkill_test` をテスト専用のホームディレクトリとして使用します。毎回クリーンな状態（admin アカウント/パスワードなし）で実行されます。
 
 ### Android テスト
 
@@ -367,9 +468,13 @@ cd src/wear_os && ./gradlew test
 
 ### フロントエンド E2E テスト
 
-- テストファイルは `src/client/__tests__/e2e/` 配下に `{route-name}.spec.ts` 形式で配置
-- `helpers.ts` の共通ユーティリティを利用
+- テストファイルは `src/client/__tests__/e2e/` 配下に `{feature-name}.spec.ts` 形式で配置
+- `helpers.ts` の `loginAsAdmin()` でログイン、`crud-helpers.ts` の CRUD ヘルパーを利用
+- `check-server.ts` でサーバ疎通確認し、未起動時は `test.skip()` でスキップ
+- CRUD テストでは `makeUniqueLabel()` で一意なテストデータを生成（並列実行対応）
 - 各テストで JS コンソールエラーの検出を組み込む
+- `test.setTimeout(120000)` で API 通信を伴うテストのタイムアウトを延長
+- テスト環境: `$HOME/gkill_test` を使用し、本番データに影響しない
 
 ### MCP サーバ テスト
 
@@ -414,12 +519,23 @@ npx vitest run --reporter=verbose --no-cache
 # ブラウザの再インストール
 npx playwright install --force
 
-# 開発サーバが起動しているか確認
+# gkill_server が起動しているか確認
+curl http://localhost:9999
+
+# Vite dev server が起動しているか確認
 curl http://localhost:5173
+
+# API プロキシが機能しているか確認
+curl -X POST -H "Content-Type: application/json" -d '{}' http://localhost:5173/api/login
+
+# テスト用ホームディレクトリを手動クリーン
+rm -rf ~/gkill_test && mkdir -p ~/gkill_test
 
 # スクリーンショット付きデバッグ
 npx playwright test --debug --trace on
 ```
+
+> **Note:** E2E テストの大部分は gkill_server への API 通信を必要とします。`npm run test_client_e2e` で自動起動するか、手動で `npm run test_e2e_server` を実行してください。サーバ未起動時はテストがスキップされます。
 
 ### Android / Wear OS テストが失敗する
 

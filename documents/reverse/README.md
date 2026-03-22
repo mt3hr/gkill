@@ -47,10 +47,10 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 
 | ファイル | 内容 | 主な読者・用途 |
 |---|---|---|
-| [glossary.md](glossary.md) | ドメイン用語の定義（80+項目） | 全員。用語確認時に随時参照 |
+| [glossary.md](glossary.md) | ドメイン用語の定義（71項目） | 全員。用語確認時に随時参照 |
 | [design-philosophy.md](design-philosophy.md) | アーキテクチャ決定と設計思想 | 設計判断の背景を知りたいとき |
 | [folder-structure.md](folder-structure.md) | プロジェクトのフォルダ構成 | 初回参照、ファイル探索時 |
-| [usecase.md](usecase.md) | ユースケース一覧（80+件） | 機能仕様の把握、テスト設計 |
+| [usecase.md](usecase.md) | ユースケース一覧（74件） | 機能仕様の把握、テスト設計 |
 | [er-diagram.md](er-diagram.md) | エンティティ関連図（Mermaid） | DB設計・データモデルの理解 |
 | [class-diagrams.md](class-diagrams.md) | Go/TSクラス階層（Mermaid） | コード構造の理解、実装時の参照 |
 | [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) | DVNF命名規則・RepType仕様 | リポジトリ管理、データ型の理解 |

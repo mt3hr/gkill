@@ -7,7 +7,7 @@ import http from 'node:http'
 export function checkGkillServer(): Promise<boolean> {
   return new Promise((resolve) => {
     const req = http.request(
-      { hostname: '127.0.0.1', port: 9999, path: '/', method: 'HEAD', timeout: 3000 },
+      { hostname: '127.0.0.1', port: 9999, path: '/', method: 'GET', timeout: 10000 },
       () => resolve(true),
     )
     req.on('error', () => resolve(false))

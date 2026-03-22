@@ -28,7 +28,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **372件** のエラーコードが存在する。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **371件** のエラーコードが存在する。
 
 #### 認証系（ERR000001〜ERR000017）
 

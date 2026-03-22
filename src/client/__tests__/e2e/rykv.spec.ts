@@ -21,7 +21,7 @@ test.describe('RYKV Page', () => {
   test('RYKV page renders app container', async ({ page }) => {
     await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })
@@ -29,7 +29,7 @@ test.describe('RYKV Page', () => {
   test('RYKV page has interactive elements', async ({ page }) => {
     await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     // RYKV is a record viewer; check for buttons or navigation elements
     const buttons = page.locator('button')
     const buttonsCount = await buttons.count()
@@ -41,7 +41,7 @@ test.describe('RYKV Page', () => {
     page.on('pageerror', (err) => errors.push(err.message))
     await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(5000)
+    await page.waitForTimeout(2000)
     // Filter out known benign errors
     const criticalErrors = errors.filter(e =>
       !e.includes('ResizeObserver') &&
@@ -56,7 +56,7 @@ test.describe('RYKV Page', () => {
   test('RYKV page app content is substantial', async ({ page }) => {
     await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(5000)
+    await page.waitForTimeout(2000)
     const textContent = await page.locator('#app').textContent()
     expect(textContent!.length).toBeGreaterThan(0)
   })
@@ -64,7 +64,7 @@ test.describe('RYKV Page', () => {
   test('RYKV page responds to mobile viewport', async ({ page }) => {
     await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     await page.setViewportSize({ width: 375, height: 812 })
     await page.waitForTimeout(1000)
     const app = page.locator('#app')

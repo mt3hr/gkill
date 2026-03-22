@@ -21,7 +21,7 @@ test.describe('Mi Board', () => {
   test('Mi board displays task list', async ({ page }) => {
     await page.goto('/mi', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
     const textContent = await app.textContent()
@@ -31,7 +31,7 @@ test.describe('Mi Board', () => {
   test('mi board page has task-related UI elements', async ({ page }) => {
     await page.goto('/mi', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     // Check for task board or task list related elements (buttons, lists, cards)
     const buttons = page.locator('button')
     const buttonsCount = await buttons.count()
@@ -47,7 +47,7 @@ test.describe('Mi Board', () => {
     page.on('pageerror', (err) => errors.push(err.message))
     await page.goto('/mi', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(5000)
+    await page.waitForTimeout(2000)
     // Filter out known benign errors
     const criticalErrors = errors.filter(e =>
       !e.includes('ResizeObserver') &&
@@ -62,7 +62,7 @@ test.describe('Mi Board', () => {
   test('Mi page app container has substantial content', async ({ page }) => {
     await page.goto('/mi', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(5000)
+    await page.waitForTimeout(2000)
     // Check that the page rendered more than just a blank container
     const textContent = await page.locator('#app').textContent()
     expect(textContent!.length).toBeGreaterThan(0)
@@ -71,7 +71,7 @@ test.describe('Mi Board', () => {
   test('Mi page has add button or FAB', async ({ page }) => {
     await page.goto('/mi', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     // Look for an add/plus button (FAB or toolbar button)
     const addButton = page.locator('button').filter({ hasText: /追加|add|\+/i })
     const fabButton = page.locator('.v-btn--fab, [class*="fab"]')
@@ -84,7 +84,7 @@ test.describe('Mi Board', () => {
   test('Mi page responds to window resize', async ({ page }) => {
     await page.goto('/mi', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     // Resize to mobile width
     await page.setViewportSize({ width: 375, height: 812 })
     await page.waitForTimeout(1000)
