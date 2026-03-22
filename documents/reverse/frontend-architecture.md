@@ -28,7 +28,7 @@ src/client/
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~2,900行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,400行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
 │   │   └── req_res/                # リクエスト/レスポンス型 (150+)
@@ -40,7 +40,7 @@ src/client/
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
 │   └── use-*.ts                     # Composition関数群（コンテキストメニュー等）
-├── pages/                           # ルートページコンポーネント (13ファイル)
+├── pages/                           # ルートページコンポーネント (14ファイル)
 │   ├── login-page.vue
 │   ├── kftl-page.vue
 │   ├── kyou-page.vue
@@ -53,8 +53,8 @@ src/client/
 │   ├── regist-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
-│   ├── views/                       # Viewコンポーネント (200+)
-│   └── dialogs/                     # ダイアログコンポーネント (100+)
+│   ├── views/                       # Viewコンポーネント (175)
+│   └── dialogs/                     # ダイアログコンポーネント (92)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -119,7 +119,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約2,900行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,400行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
 - 全77エンドポイントに対応するメソッドを持つ

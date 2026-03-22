@@ -271,3 +271,333 @@ func TestStatement_ConstructionOnly(t *testing.T) {
 		t.Errorf("expected StatementText='test', got %q", stmt.StatementText)
 	}
 }
+
+// ─── Phase 1: Data type KFTL statement tests (項番12-22) ───────────────────
+
+func TestStatement_LantanaLine(t *testing.T) {
+	// "ーら" triggers lantana, next line is mood value (項番13)
+	text := "ーら\n5"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "lantana" {
+		t.Errorf("line 0: expected lantana, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "lantanaMood" {
+		t.Errorf("line 1: expected lantanaMood, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_LantanaWithTag(t *testing.T) {
+	// Tag + lantana with mood (項番13 variant with tag)
+	text := "。myTag\nーら\n7"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "tag" {
+		t.Errorf("line 0: expected tag, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "lantana" {
+		t.Errorf("line 1: expected lantana, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "lantanaMood" {
+		t.Errorf("line 2: expected lantanaMood, got %s", lines[2].GetLabelName())
+	}
+}
+
+func TestStatement_LantanaWithRelatedTime(t *testing.T) {
+	// Related time + lantana (項番13 variant with time)
+	text := "？2025-06-01T10:00:00+09:00\nーら\n3"
+	lines := helperGenerateLines(t, text)
+	if len(lines) < 3 {
+		t.Fatalf("expected at least 3 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "relatedTime" {
+		t.Errorf("line 0: expected relatedTime, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "lantana" {
+		t.Errorf("line 1: expected lantana, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_MiLine(t *testing.T) {
+	// "ーみ" triggers mi, next line is title (項番14)
+	text := "ーみ\nテストタスク"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "mi" {
+		t.Errorf("line 0: expected mi, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "miTitle" {
+		t.Errorf("line 1: expected miTitle, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_MiWithTag(t *testing.T) {
+	// Tag + mi (項番14 variant with tag)
+	text := "。taskTag\nーみ\nマイタスク"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "tag" {
+		t.Errorf("line 0: expected tag, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "mi" {
+		t.Errorf("line 1: expected mi, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "miTitle" {
+		t.Errorf("line 2: expected miTitle, got %s", lines[2].GetLabelName())
+	}
+}
+
+func TestStatement_NlogLine(t *testing.T) {
+	// "ーん" triggers nlog, next lines are shop name then amount (項番15)
+	text := "ーん\n500\nテスト店"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "nlog" {
+		t.Errorf("line 0: expected nlog, got %s", lines[0].GetLabelName())
+	}
+}
+
+func TestStatement_TimeIsLine(t *testing.T) {
+	// "ーち" triggers timeis (start+end), next line is title (項番16)
+	text := "ーち\n作業テスト"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIs" {
+		t.Errorf("line 0: expected timeIs, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "timeIsTitle" {
+		t.Errorf("line 1: expected timeIsTitle, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_TimeIsStartLine(t *testing.T) {
+	// "ーた" triggers timeis start (項番17)
+	text := "ーた\n開始作業"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsStart" {
+		t.Errorf("line 0: expected timeIsStart, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "timeIsStartTitle" {
+		t.Errorf("line 1: expected timeIsStartTitle, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_TimeIsEndLine(t *testing.T) {
+	// "ーえ" triggers timeis end by title (項番18)
+	text := "ーえ\n終了作業"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsEnd" {
+		t.Errorf("line 0: expected timeIsEnd, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "timeIsEndTitle" {
+		t.Errorf("line 1: expected timeIsEndTitle, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_TimeIsEndIfExistLine(t *testing.T) {
+	// "ーいえ" triggers timeis end if exist by title (項番19)
+	text := "ーいえ\n終了作業"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsEndIfExist" {
+		t.Errorf("line 0: expected timeIsEndIfExist, got %s", lines[0].GetLabelName())
+	}
+}
+
+func TestStatement_TimeIsEndByTagLine(t *testing.T) {
+	// "ーたえ" triggers timeis end by tag (項番20)
+	text := "ーたえ\nテストタグ"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsEndByTag" {
+		t.Errorf("line 0: expected timeIsEndByTag, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "timeIsEndByTagTag" {
+		t.Errorf("line 1: expected timeIsEndByTagTag, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_TimeIsEndByTagIfExistLine(t *testing.T) {
+	// "ーいたえ" triggers timeis end by tag if exist (項番21)
+	text := "ーいたえ\nテストタグ"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsEndByTagIfExist" {
+		t.Errorf("line 0: expected timeIsEndByTagIfExist, got %s", lines[0].GetLabelName())
+	}
+}
+
+func TestStatement_URLogLine(t *testing.T) {
+	// "ーう" triggers urlog, next line is URL (項番22)
+	text := "ーう\nhttps://example.com"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "urlog" {
+		t.Errorf("line 0: expected urlog, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "urlogURL" {
+		t.Errorf("line 1: expected urlogURL, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_URLogWithTagAndTitle(t *testing.T) {
+	// Tag + urlog with title (項番22 variant)
+	text := "。linkTag\nーう\nhttps://example.com\nリンクタイトル"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 4 {
+		t.Fatalf("expected 4 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "tag" {
+		t.Errorf("line 0: expected tag, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "urlog" {
+		t.Errorf("line 1: expected urlog, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "urlogURL" {
+		t.Errorf("line 2: expected urlogURL, got %s", lines[2].GetLabelName())
+	}
+	if lines[3].GetLabelName() != "urlogTitle" {
+		t.Errorf("line 3: expected urlogTitle, got %s", lines[3].GetLabelName())
+	}
+}
+
+func TestStatement_KCLine(t *testing.T) {
+	// "ーか" triggers KC, next lines are title then num value
+	text := "ーか\nカウンター\n42"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "kc" {
+		t.Errorf("line 0: expected kc, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "kcTitle" {
+		t.Errorf("line 1: expected kcTitle, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "kcNumValue" {
+		t.Errorf("line 2: expected kcNumValue, got %s", lines[2].GetLabelName())
+	}
+}
+
+func TestStatement_KmemoWithTextBlock(t *testing.T) {
+	// Kmemo content + text block attachment (項番12 variant)
+	text := "メモ内容\nーー\nテキスト本文\nーー"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 4 {
+		t.Fatalf("expected 4 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "kmemo" {
+		t.Errorf("line 0: expected kmemo, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "startText" {
+		t.Errorf("line 1: expected startText, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "text" {
+		t.Errorf("line 2: expected text, got %s", lines[2].GetLabelName())
+	}
+	if lines[3].GetLabelName() != "endText" {
+		t.Errorf("line 3: expected endText, got %s", lines[3].GetLabelName())
+	}
+}
+
+// ─── Request map tests for data types ───────────────────────────────────────
+
+func TestStatement_LantanaAppliedToRequestMap(t *testing.T) {
+	text := "ーら\n5"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+}
+
+func TestStatement_MiAppliedToRequestMap(t *testing.T) {
+	text := "ーみ\nテストタスク"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+}
+
+func TestStatement_NlogAppliedToRequestMap(t *testing.T) {
+	text := "ーん\n500\nテスト店"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+}
+
+func TestStatement_TimeIsStartAppliedToRequestMap(t *testing.T) {
+	text := "ーた\n開始作業"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+}
+
+func TestStatement_URLogAppliedToRequestMap(t *testing.T) {
+	text := "ーう\nhttps://example.com"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+}
+
+func TestStatement_KCAppliedToRequestMap(t *testing.T) {
+	text := "ーか\nカウンター\n42"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+}
+
+func TestStatement_LantanaWithTagAppliedToRequestMap(t *testing.T) {
+	// Tag should be inherited by the lantana request
+	text := "。moodTag\nーら\n8"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	tags := all[0].GetTags()
+	found := false
+	for _, tag := range tags {
+		if tag == "moodTag" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected tag 'moodTag' in lantana request, got tags %v", tags)
+	}
+}

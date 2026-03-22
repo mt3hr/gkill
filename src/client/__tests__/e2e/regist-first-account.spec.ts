@@ -16,7 +16,7 @@ test.describe('Register First Account Page', () => {
   test('register first account page renders app container', async ({ page }) => {
     await page.goto('/regist_first_account', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })
@@ -24,7 +24,7 @@ test.describe('Register First Account Page', () => {
   test('register first account page has input fields', async ({ page }) => {
     await page.goto('/regist_first_account', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     // Registration page should have input fields for account creation
     const inputs = page.locator('input')
     const inputCount = await inputs.count()
