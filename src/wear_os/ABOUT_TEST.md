@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（4テスト）とウォッチ側アプリ（5テスト）の合計9テストで構成される。
+Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（4ファイル、56テスト）とウォッチ側アプリ（5ファイル、58テスト）の合計114テスト（9ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -10,24 +10,24 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 
 ## テストファイル一覧
 
-### phone_companion（スマホ側コンパニオン）
+### phone_companion（スマホ側コンパニオン）— 56テスト
 
-| ファイル | テスト内容 |
-|---------|-----------|
-| `phone_companion/src/test/java/.../GkillCredentialStoreTest.kt` | SharedPreferences を使用した認証情報ストアの保存・取得・削除（MockK使用） |
-| `phone_companion/src/test/java/.../MainActivityTest.kt` | コンパニオンアプリの Activity ライフサイクル |
-| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得） |
-| `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | ウォッチ→スマホ間メッセージパスのハンドリング |
+| ファイル | テスト数 | テスト内容 |
+|---------|---------|-----------|
+| `phone_companion/src/test/java/.../GkillCredentialStoreTest.kt` | 14 | SharedPreferences を使用した認証情報ストアの保存・取得・削除（MockK使用） |
+| `phone_companion/src/test/java/.../MainActivityTest.kt` | 8 | コンパニオンアプリの Activity ライフサイクル |
+| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 15 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得） |
+| `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |
 
-### watch_app（ウォッチ側アプリ）
+### watch_app（ウォッチ側アプリ）— 58テスト
 
-| ファイル | テスト内容 |
-|---------|-----------|
-| `watch_app/src/test/java/.../MainActivityTest.kt` | ウォッチアプリの Activity テスト |
-| `watch_app/src/test/java/.../TemplateCacheManagerTest.kt` | ウォッチ上のテンプレートキャッシュ管理 |
-| `watch_app/src/test/java/.../GkillWearClientTest.kt` | Wearable Data Layer クライアント |
-| `watch_app/src/test/java/.../data/model/TemplateNodeTest.kt` | テンプレートツリー構造のデータモデル |
-| `watch_app/src/test/java/.../data/model/PlaingTimeIsNodeTest.kt` | Plaing（計画）UIノードモデル |
+| ファイル | テスト数 | テスト内容 |
+|---------|---------|-----------|
+| `watch_app/src/test/java/.../MainActivityTest.kt` | 18 | ウォッチアプリの Activity テスト |
+| `watch_app/src/test/java/.../TemplateCacheManagerTest.kt` | 6 | ウォッチ上のテンプレートキャッシュ管理 |
+| `watch_app/src/test/java/.../GkillWearClientTest.kt` | 11 | Wearable Data Layer クライアント |
+| `watch_app/src/test/java/.../data/model/TemplateNodeTest.kt` | 10 | テンプレートツリー構造のデータモデル |
+| `watch_app/src/test/java/.../data/model/PlaingTimeIsNodeTest.kt` | 13 | Plaing（計画）UIノードモデル |
 
 ## テスト内容
 

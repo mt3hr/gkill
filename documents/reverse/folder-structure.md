@@ -61,13 +61,13 @@ src/client/
 │   ├── regist-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
-│   ├── views/              # ビューコンポーネント（170+ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（90+ファイル）
+│   ├── views/              # ビューコンポーネント（175ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（92ファイル）
 ├── classes/
 │   ├── api/
-│   │   └── gkill-api.ts    # GkillAPI シングルトン（~2,900行、全API呼び出しを集約）
+│   │   └── gkill-api.ts    # GkillAPI シングルトン（~3,400行、全API呼び出しを集約）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）
-│   └── kftl/               # KFTLパーサー（35+ステートメント型）
+│   └── kftl/               # KFTLパーサー（44ステートメント型）
 └── plugins/
     └── vuetify.ts          # Vuetify設定（ライト/ダークテーマ）
 ```
@@ -83,7 +83,7 @@ src/server/
 └── gkill/
     ├── api/                        # HTTPハンドラ層
     │   ├── gkill_server_api.go     # メインAPIハンドラ（~12,300行）
-    │   ├── gkill_server_api_address.go  # ルーティング定義（77 POSTエンドポイント）
+    │   ├── gkill_server_api_address.go  # ルーティング定義（79 POSTエンドポイント）
     │   ├── handle_*.go             # 個別ハンドラ関数群
     │   ├── embed.go                # go:embed によるSPA埋め込み
     │   ├── embed/                  # 埋め込みリソース（ビルド時生成）
@@ -201,9 +201,9 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（80+項目）
+│   ├── glossary.md                   # 用語集（71項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（80+件）
+│   ├── usecase.md                    # ユースケース一覧（74件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
 │   ├── sequence-diagrams.md          # シーケンス図（16本）

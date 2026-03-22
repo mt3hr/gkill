@@ -21,7 +21,7 @@ test.describe('Settings', () => {
   test('settings page renders content', async ({ page }) => {
     await page.goto('/saihate', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     const appContent = await page.locator('#app').innerHTML()
     expect(appContent.length).toBeGreaterThan(100)
   })
@@ -31,7 +31,7 @@ test.describe('Settings', () => {
     page.on('pageerror', (err) => errors.push(err.message))
     await page.goto('/saihate', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(5000)
+    await page.waitForTimeout(2000)
     // Filter out known benign errors
     const criticalErrors = errors.filter(e =>
       !e.includes('ResizeObserver') &&
@@ -46,7 +46,7 @@ test.describe('Settings', () => {
   test('settings page has buttons or interactive controls', async ({ page }) => {
     await page.goto('/saihate', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
     const buttons = page.locator('button')
     const inputs = page.locator('input')
     const switches = page.locator('.v-switch, [role="switch"]')

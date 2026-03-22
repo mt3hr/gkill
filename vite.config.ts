@@ -53,6 +53,11 @@ export default defineConfig(() => {
         },
       }),
     ],
+    server: {
+      proxy: {
+        '/api': 'http://localhost:9999',
+      },
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src/client', import.meta.url))
