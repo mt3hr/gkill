@@ -48,25 +48,25 @@
 <h2>文の一覧</h2>
 
 <table>
-  <tr><th>プレフィックス</th><th>種類</th><th>説明</th></tr>
-  <tr><td>(なし)</td><td>メモ</td><td>テキストメモを記録</td></tr>
-  <tr><td><code>。</code></td><td>タグ</td><td>タグを付与</td></tr>
-  <tr><td><code>ーー</code></td><td>テキストブロック</td><td>複数行テキストをそのまま保持</td></tr>
-  <tr><td><code>、</code></td><td>区切り</td><td>新しいレコードに分割</td></tr>
-  <tr><td><code>、、</code></td><td>区切り（+1秒）</td><td>タイムスタンプを1秒進めて分割</td></tr>
-  <tr><td><code>？</code></td><td>関連時刻</td><td>関連する日時を設定</td></tr>
-  <tr><td><code>ーか</code></td><td>数値記録</td><td>数値データを記録</td></tr>
-  <tr><td><code>ーみ</code></td><td>タスク</td><td>タスクを作成</td></tr>
-  <tr><td><code>ーら</code></td><td>気分</td><td>気分値（0〜10）を記録</td></tr>
-  <tr><td><code>ーん</code></td><td>支出</td><td>支出情報を記録</td></tr>
-  <tr><td><code>ーち</code></td><td>打刻(完全)</td><td>開始・終了時刻を指定して打刻</td></tr>
-  <tr><td><code>ーた</code></td><td>打刻開始</td><td>打刻を開始</td></tr>
-  <tr><td><code>ーえ</code></td><td>打刻終了</td><td>一致する打刻を終了</td></tr>
-  <tr><td><code>ーいえ</code></td><td>打刻終了(存在時)</td><td>一致する打刻があれば終了（エラーなし）</td></tr>
-  <tr><td><code>ーたえ</code></td><td>タグで打刻終了</td><td>タグ名で一致する打刻を終了</td></tr>
-  <tr><td><code>ーいたえ</code></td><td>タグで打刻終了(存在時)</td><td>タグ名で一致する打刻があれば終了</td></tr>
-  <tr><td><code>ーう</code></td><td>ブックマーク</td><td>URLブックマークを記録</td></tr>
-  <tr><td><code>！</code></td><td>保存</td><td>ドキュメントを終了し保存を実行</td></tr>
+  <tr><th>プレフィックス</th><th>ASCII代替</th><th>種類</th><th>説明</th></tr>
+  <tr><td>(なし)</td><td>(なし)</td><td>メモ</td><td>テキストメモを記録</td></tr>
+  <tr><td><code>。</code></td><td><code>#</code></td><td>タグ</td><td>タグを付与</td></tr>
+  <tr><td><code>ーー</code></td><td><code>--</code></td><td>テキストブロック</td><td>複数行テキストをそのまま保持</td></tr>
+  <tr><td><code>、</code></td><td><code>,</code></td><td>区切り</td><td>新しいレコードに分割</td></tr>
+  <tr><td><code>、、</code></td><td><code>,,</code></td><td>区切り（+1秒）</td><td>タイムスタンプを1秒進めて分割</td></tr>
+  <tr><td><code>？</code></td><td><code>?</code></td><td>関連時刻</td><td>関連する日時を設定</td></tr>
+  <tr><td><code>ーか</code></td><td><code>/num</code></td><td>数値記録</td><td>数値データを記録</td></tr>
+  <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>タスク</td><td>タスクを作成</td></tr>
+  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>気分</td><td>気分値（0〜10）を記録</td></tr>
+  <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>支出</td><td>支出情報を記録</td></tr>
+  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>打刻(完全)</td><td>開始・終了時刻を指定して打刻</td></tr>
+  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>打刻開始</td><td>打刻を開始</td></tr>
+  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>打刻終了</td><td>一致する打刻を終了</td></tr>
+  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>打刻終了(存在時)</td><td>一致する打刻があれば終了（エラーなし）</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>タグで打刻終了</td><td>タグ名で一致する打刻を終了</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>タグで打刻終了(存在時)</td><td>タグ名で一致する打刻があれば終了</td></tr>
+  <tr><td><code>ーう</code></td><td><code>/url</code></td><td>ブックマーク</td><td>URLブックマークを記録</td></tr>
+  <tr><td><code>！</code></td><td><code>!</code></td><td>保存</td><td>ドキュメントを終了し保存を実行</td></tr>
 </table>
 
 <h2>各文の詳細</h2>
@@ -103,6 +103,10 @@
 <h3>6. 関連時刻: <code>？</code></h3>
 <p>関連する日時を設定します。形式: <code>？YYYY-MM-DD</code>、<code>？YYYY-MM-DD HH:MM</code>、<code>？YYYY-MM-DD HH:MM:SS</code></p>
 <pre>？2025-03-15 14:30</pre>
+
+<div class="tip">
+  <strong>注意:</strong> 行頭の <code>#</code> はタグ、<code>?</code> は日時として解釈されます。自由テキストに含めたい場合はテキストブロック (<code>--</code>) を使用してください。
+</div>
 
 <h3>7. 数値記録: <code>ーか</code></h3>
 <p>次の行にタイトル、その次の行に数値を記入します。</p>

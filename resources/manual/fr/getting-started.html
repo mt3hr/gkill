@@ -76,12 +76,29 @@
   </table>
 
   <h2>Configuration initiale</h2>
+  <h3>Comment demarrer</h3>
+  <table>
+    <tr><th>Environnement</th><th>Methode de lancement</th></tr>
+    <tr><td>Windows</td><td>Executer <code>gkill.exe</code> ou <code>gkill_server.exe</code></td></tr>
+    <tr><td>Navigateur / PWA</td><td>Demarrer <code>gkill_server</code> et acceder a <code>http://localhost:9999</code> dans le navigateur</td></tr>
+    <tr><td>Android</td><td>Installer l'APK et lancer l'application</td></tr>
+  </table>
+
+  <h3>Premier enregistrement de compte</h3>
   <ol>
-    <li>Lancez gkill et accedez a <code>http://localhost:9999</code> dans votre navigateur.</li>
-    <li>Connectez-vous avec l'identifiant <code>admin</code> et sans mot de passe.</li>
-    <li>Apres la connexion, il est recommande de definir un mot de passe dans l'ecran de configuration.</li>
-    <li>Configurez les parametres de base tels que la langue et le theme sombre dans l'ecran de configuration.</li>
+    <li>Lors du premier lancement de gkill, l'ecran d'enregistrement de compte s'affiche automatiquement.</li>
+    <li>Entrez un identifiant utilisateur (ce sera le nom de votre compte).</li>
+    <li>Entrez un mot de passe, puis entrez-le a nouveau pour confirmer.</li>
+    <li>Definissez un mot de passe administrateur (utilise pour la gestion du serveur).</li>
+    <li>Appuyez sur le bouton "Enregistrer" pour creer le compte.</li>
+    <li>Vous serez redirige vers l'ecran de connexion. Connectez-vous avec le compte que vous venez de creer.</li>
   </ol>
+
+  <div class="tip">
+    <strong>Conseil :</strong> Le compte <code>admin</code> est cree automatiquement lors du premier demarrage du serveur. Le compte que vous creez ici est un compte utilisateur normal.
+  </div>
+
+  <p>Apres la connexion, l'ecran par defaut (Vue du journal de vie par defaut) s'affiche. Configurez les parametres de base tels que la langue et le theme sombre dans l'ecran de configuration.</p>
 
   <h2>Liste des ecrans</h2>
   <table>
@@ -102,17 +119,17 @@
     </tr>
     <tr>
       <td>Saihate</td>
-      <td>Écran permettant d'enregistrer en toute sécurité même depuis l'écran de verrouillage. Hub d'ajout d'enregistrements</td>
+      <td>Écran léger spécialisé dans l'ajout d'enregistrements. Pratique pour noter rapidement des mémos ou horodatages</td>
       <td><a href="saihate.html">Aide de Saihate</a></td>
     </tr>
     <tr>
       <td>Bloc-notes</td>
-      <td>Saisie de texte avec la syntaxe du bloc-notes</td>
+      <td>Ajouter des enregistrements en lot par saisie de texte</td>
       <td><a href="kftl.html">Aide du bloc-notes</a></td>
     </tr>
     <tr>
       <td>Bloc-notes d'horodatage</td>
-      <td>Gestion simultanee des notes et de l'horodatage</td>
+      <td>Saisir des notes avec horodatage</td>
       <td><a href="mkfl.html">Aide du bloc-notes d'horodatage</a></td>
     </tr>
     <tr>
@@ -127,7 +144,7 @@
     </tr>
     <tr>
       <td>En cours</td>
-      <td>Gestion des sessions d'horodatage actives</td>
+      <td>G&eacute;rer les sessions de suivi du temps en cours</td>
       <td><a href="plaing.html">Aide de en cours</a></td>
     </tr>
     <tr>
@@ -151,14 +168,9 @@
       <td><a href="kftl-template-struct.html">Aide structure de modele</a></td>
     </tr>
     <tr>
-      <td>Vue d'agregation</td>
-      <td>Agregation et visualisation des donnees</td>
-      <td><a href="dnote.html">Aide vue d'agregation</a></td>
-    </tr>
-    <tr>
-      <td>Informations associees</td>
-      <td>Definir la recherche automatique d'enregistrements lies</td>
-      <td><a href="ryuu.html">Aide informations associees</a></td>
+      <td colspan="3" style="font-size: 0.9em; color: #666;">
+        ※ <a href="dnote.html">Vue d'agrégation</a> et <a href="ryuu.html">Informations associées</a> sont des fonctionnalités intégrées à la vue journal de vie. Activez-les depuis la barre d'outils.
+      </td>
     </tr>
     <tr>
       <td>Gestion des comptes</td>
@@ -171,6 +183,18 @@
       <td><a href="server-config.html">Aide configuration serveur</a></td>
     </tr>
   </table>
+
+  <h2>Votre premier enregistrement en 60 secondes</h2>
+  <ol>
+    <li>Connectez-vous.</li>
+    <li>Maintenez le bouton "+" en bas a droite de l'ecran.</li>
+    <li>Selectionnez "Bloc-notes".</li>
+    <li>Saisissez une ligne de texte et appuyez sur Entree.</li>
+    <li>Ouvrez "Vue du journal de vie" depuis le menu de navigation pour voir votre enregistrement.</li>
+  </ol>
+  <div class="tip">
+    <strong>Astuce :</strong> C'est tout ce qu'il faut pour votre premier enregistrement ! Une fois la syntaxe du bloc-notes maitrisee, vous pourrez enregistrer des taches, des valeurs d'humeur et plus encore de la meme maniere.
+  </div>
 
   <h2>Creez votre premier enregistrement</h2>
   <ol>

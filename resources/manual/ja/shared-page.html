@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>共有ページ - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>共有ページ</span></nav>
+  <h1>共有ページ</h1>
+  <p>このページは、gkillユーザーが共有リンクを通じて公開した記録を閲覧するためのページです。gkillのアカウントがなくてもアクセスできます。</p>
+
+  <h2>このページについて</h2>
+  <ul>
+    <li>共有リンクを持つすべての人がこのページを閲覧できます。</li>
+    <li>gkillへのログインは不要です。</li>
+    <li>共有された記録の閲覧のみが可能で、編集や削除はできません。</li>
+  </ul>
+
+  <h2>表示されるデータ</h2>
+  <p>共有リンクの設定に応じて、以下のいずれかのビューで記録が表示されます。</p>
+  <table>
+    <tr>
+      <th>ビュータイプ</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>ライフログビュー</td>
+      <td>共有された記録を時系列で閲覧できます。</td>
+    </tr>
+    <tr>
+      <td>タスクビュー</td>
+      <td>共有されたタスクをボード形式で閲覧できます。</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>ヒント:</strong> 表示される記録の範囲は、共有リンクを作成したユーザーの設定によって決まります。
+  </div>
+
+  <h2>問題が起きた場合</h2>
+  <table>
+    <tr>
+      <th>症状</th>
+      <th>対処方法</th>
+    </tr>
+    <tr>
+      <td>ページが表示されない</td>
+      <td>共有リンクが正しいか確認してください。リンクの有効期限が切れている場合があります。</td>
+    </tr>
+    <tr>
+      <td>データが表示されない</td>
+      <td>共有設定が変更された可能性があります。リンクを送ってくれた方に確認してください。</td>
+    </tr>
+    <tr>
+      <td>エラーメッセージが表示される</td>
+      <td>gkillサーバーに接続できない場合があります。しばらく待ってから再度アクセスしてください。</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

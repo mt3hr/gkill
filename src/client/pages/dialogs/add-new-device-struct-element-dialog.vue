@@ -50,6 +50,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("add-new-device-struct-element-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 

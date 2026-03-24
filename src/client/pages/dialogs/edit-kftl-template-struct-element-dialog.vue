@@ -57,6 +57,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("edit-kftl-template-struct-element-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 

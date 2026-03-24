@@ -24,7 +24,7 @@ src/client/
 ├── App.vue                          # ルートコンポーネント
 ├── main.ts                          # エントリポイント
 ├── i18n.ts                          # i18n設定
-├── serviceWorker.ts                 # PWA Service Worker (~309行)
+├── serviceWorker.ts                 # PWA Service Worker (~279行)
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
@@ -54,7 +54,7 @@ src/client/
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
 │   ├── views/                       # Viewコンポーネント (175)
-│   └── dialogs/                     # ダイアログコンポーネント (92)
+│   └── dialogs/                     # ダイアログコンポーネント (92, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -82,6 +82,24 @@ Page（ルートページ）
 - Page: `{機能名}-page.vue`（例: `kftl-page.vue`, `mi-page.vue`）
 - View: データ型 + 操作で命名（例: `add-kmemo-view.vue`, `kyou-list-view.vue`）
 - Dialog: 操作内容で命名（例: `confirm-delete-dialog.vue`）
+
+### ダイアログ アクセシビリティ
+
+全92ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
+
+| 機能 | 説明 |
+|------|------|
+| **Escape キー閉じ** | Escape キーで `onEscape` コールバックを呼び出しダイアログを閉じる |
+| **ARIA属性** | `role="dialog"`, `aria-modal="true"`, `aria-labelledby`（`.gkill-floating-dialog__title` 要素を参照、見つからない場合は `aria-label` にフォールバック） |
+
+※ v1.1.0でフォーカストラップ（Tab循環）、自動フォーカス、フォーカス復帰は削除された。
+
+### アラート アクセシビリティ
+
+各ページの `v-alert` コンポーネントは `message.is_error` に応じてスクリーンリーダーへの通知方式を切り替える:
+
+- **エラーメッセージ**: `role="alert"`（暗黙的に `aria-live="assertive"`）— 即座に読み上げ
+- **通常メッセージ**: `role` なし — コンテナの `aria-live="polite"` に従い、現在の操作を中断せずに読み上げ
 
 ## 4. ルート一覧
 
@@ -130,7 +148,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 
 ### Service Worker
 
-定義: `src/client/serviceWorker.ts`（~309行）
+定義: `src/client/serviceWorker.ts`（~279行）
 
 **Workbox設定:**
 - `registerType: 'autoUpdate'`（自動更新）
@@ -252,3 +270,40 @@ Service Worker が `/share-target` POSTを処理：
 - extends: `plugin:vue/vue3-essential`, `eslint:recommended`, `@vue/eslint-config-typescript`
 - `@typescript-eslint/no-unused-vars`: warn（`_` プレフィックスは無視）
 - 実行: `npm run lint`
+
+## 7. UX改善
+
+### オフラインバナー
+
+`App.vue` に `navigator.onLine` と `online`/`offline` イベントを監視するバナーを追加。ネットワーク切断時に `v-banner` でユーザーに通知する。
+
+### ダイアログ＋ブラウザ履歴
+
+`use-dialog-history-stack.ts` でダイアログの開閉をブラウザ履歴と連動：
+- ダイアログ表示時に `history.pushState` で depth 付きエントリを追加
+- ブラウザバックで最上位ダイアログを閉じる（depth比較でback/forwardを判別）
+- ブラウザフォワードではダイアログを閉じない
+- プログラマティック閉じ（Escape含む）時は履歴を巻き戻し
+
+### 日付・数値のロケール対応
+
+- `format_time()`: `Intl.DateTimeFormat` ベースでロケール別フォーマット + 曜日表示
+- `format_number()`: `Intl.NumberFormat` ベースでロケール別桁区切り
+
+### 空状態メッセージ
+
+リスト表示（kyou-list-view, dnote-list-view 等）でデータ0件時に「表示できるデータがありません」メッセージを表示。
+
+### フォームバリデーション
+
+各追加ビュー（add-nlog, add-mi, add-urlog, add-timeis, add-kc, add-tag, add-text, add-notification 等）の必須フィールドに `:rules` バリデーションを追加。Vuetify の `v-text-field` / `v-textarea` の `:rules` prop で空チェックを実装。
+
+### レスポンシブデザイン
+
+- `rykv-view.vue` / `mi-view.vue`: ナビゲーションドロワーの幅を `$vuetify.display.smAndDown` で画面幅に応じて切替（スマートフォンでは `100vw`）
+- `rykv-view.vue`: 詳細ビュー（`.kyou_detail_view`）の `min-width` を `0` に変更し `max-width: 100vw` を追加。600px以下でフルワイド表示
+- `kyou-list-view.vue`: `v-virtual-scroll` に `max-width: 100vw` を追加し、画像リスト幅が画面を超えないように制限
+
+### 未保存データ警告
+
+KFTL テキストエリアに内容がある状態でページ離脱しようとすると `beforeunload` イベントで警告を表示。加えて、各ページ composable（use-rykv-page, use-mi-page, use-mkfl-page, use-plaing-timeis-page, use-kyou-page, use-saihate-page）にも `beforeunload` ガードを追加し、ダイアログ表示中やロード中のページ離脱を防止。

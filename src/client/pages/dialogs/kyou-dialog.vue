@@ -78,6 +78,7 @@ import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("kyou-dialog", {
   centerMode: "always",
   persistHeight: false,
+  onEscape: () => hide(),
 })
 
 

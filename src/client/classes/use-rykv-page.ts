@@ -332,16 +332,25 @@ export function useRykvPage() {
         'requested_reload_application_config': () => onRequestedReloadApplicationConfig(),
     }
 
+    // ── beforeunload guard ──
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+        if (is_show_application_config_dialog.value) {
+            e.preventDefault()
+        }
+    }
+
     // ── Lifecycle ──
     const onResize = () => {
         resize_content()
     }
     window.addEventListener('resize', onResize)
+    window.addEventListener('beforeunload', handleBeforeUnload)
     onMounted(async () => {
         await resetDialogHistory()
     })
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)
+        window.removeEventListener('beforeunload', handleBeforeUnload)
     })
 
     // ── Init ──

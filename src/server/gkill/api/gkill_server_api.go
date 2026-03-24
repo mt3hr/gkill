@@ -155,10 +155,11 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 	}
 
 	return &GkillServerAPI{
-		APIAddress:      NewGKillAPIAddress(),
-		GkillDAOManager: gkillDAOManager,
-		FindFilter:      &FindFilter{},
-		RebootServerCh:  make(chan struct{}),
+		APIAddress:       NewGKillAPIAddress(),
+		GkillDAOManager:  gkillDAOManager,
+		FindFilter:       &FindFilter{},
+		RebootServerCh:   make(chan struct{}),
+		loginRateLimiter: newLoginRateLimiter(),
 	}, nil
 }
 
@@ -174,6 +175,8 @@ type GkillServerAPI struct {
 	RebootServerCh chan (struct{})
 
 	device string
+
+	loginRateLimiter *loginRateLimiter
 
 	closeOnce sync.Once
 	closeErr  error
@@ -922,6 +925,16 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidLoginRequestDataError,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	ip := extractIP(r.RemoteAddr)
+	if !g.loginRateLimiter.allow(ip) {
+		gkillError := &message.GkillError{
+			ErrorCode:    message.LoginRateLimitError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "LOGIN_RATE_LIMITED_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10822,6 +10835,16 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 		}
 		return nil, gkillError, err
 	}
+	if time.Now().After(loginSession.ExpirationTime) {
+		err = fmt.Errorf("session expired for session id = %s", sessionID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountSessionExpiredError,
+			ErrorMessage: GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "SESSION_EXPIRED_MESSAGE"}),
+		}
+		return nil, gkillError, err
+	}
+
 	if loginSession.ApplicationName != applicationName {
 		err = fmt.Errorf("error at get account user id = %s: %w", loginSession.UserID, err)
 		gkillError := &message.GkillError{

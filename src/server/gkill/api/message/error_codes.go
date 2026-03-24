@@ -372,4 +372,6 @@ const (
 	UpdateKCError                                                    = "ERR000370"
 	UpdateNotificationError                                          = "ERR000371"
 	InvalidURLogBookmarkletRequestDataError                          = "ERR000372"
+	AccountSessionExpiredError                                       = "ERR000373"
+	LoginRateLimitError                                              = "ERR000374"
 )

@@ -13,8 +13,10 @@ describe('format_time', () => {
     // 2025-03-15 09:05:07 (Saturday)
     const date = new Date(2025, 2, 15, 9, 5, 7)
     const result = format_time(date)
-    // Expected: 2025/03/15(土) 09:05:07
-    expect(result).toBe('2025/03/15(土) 09:05:07')
+    // Intl.DateTimeFormat locale-based format with day-of-week appended
+    expect(result).toContain('2025')
+    expect(result).toContain('09:05:07')
+    expect(result).toContain('(土)')
   })
 
   test('pads single-digit months and days', () => {
@@ -35,13 +37,13 @@ describe('format_time', () => {
   test('handles midnight correctly', () => {
     const date = new Date(2025, 5, 1, 0, 0, 0)
     const result = format_time(date)
-    expect(result).toMatch(/00:00:00$/)
+    expect(result).toContain('00:00:00')
   })
 
   test('handles end of day correctly', () => {
     const date = new Date(2025, 5, 1, 23, 59, 59)
     const result = format_time(date)
-    expect(result).toMatch(/23:59:59$/)
+    expect(result).toContain('23:59:59')
   })
 })
 

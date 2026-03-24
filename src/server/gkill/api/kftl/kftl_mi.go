@@ -181,7 +181,8 @@ func newKFTLMiLimitTimeStatementLine(lineText string, ctx *KFTLStatementLineCont
 }
 
 func (l *kftlMiLimitTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	s := strings.TrimPrefix(l.lineText, "？")
+	s := strings.TrimPrefix(l.lineText, splitterRelatedTime)
+	s = strings.TrimPrefix(s, splitterRelatedTimeAscii)
 	if s == "" {
 		return nil // optional
 	}
@@ -214,7 +215,8 @@ func newKFTLMiEstimateStartTimeStatementLine(lineText string, ctx *KFTLStatement
 }
 
 func (l *kftlMiEstimateStartTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	s := strings.TrimPrefix(l.lineText, "？")
+	s := strings.TrimPrefix(l.lineText, splitterRelatedTime)
+	s = strings.TrimPrefix(s, splitterRelatedTimeAscii)
 	if s == "" {
 		return nil
 	}
@@ -248,7 +250,8 @@ func newKFTLMiEstimateEndTimeStatementLine(lineText string, ctx *KFTLStatementLi
 }
 
 func (l *kftlMiEstimateEndTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	s := strings.TrimPrefix(l.lineText, "？")
+	s := strings.TrimPrefix(l.lineText, splitterRelatedTime)
+	s = strings.TrimPrefix(s, splitterRelatedTimeAscii)
 	if s == "" {
 		return nil
 	}

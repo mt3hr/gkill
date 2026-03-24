@@ -76,12 +76,29 @@
   </table>
 
   <h2>초기 설정</h2>
+  <h3>실행 방법</h3>
+  <table>
+    <tr><th>환경</th><th>실행 방법</th></tr>
+    <tr><td>Windows</td><td><code>gkill.exe</code> 또는 <code>gkill_server.exe</code> 실행</td></tr>
+    <tr><td>브라우저 / PWA</td><td><code>gkill_server</code>를 시작하고 브라우저에서 <code>http://localhost:9999</code>에 접속</td></tr>
+    <tr><td>Android</td><td>APK를 설치하고 앱 실행</td></tr>
+  </table>
+
+  <h3>첫 계정 등록</h3>
   <ol>
-    <li>gkill을 실행하고 브라우저에서 <code>http://localhost:9999</code>에 접속합니다.</li>
-    <li>사용자 ID <code>admin</code>, 비밀번호 없이 로그인합니다.</li>
-    <li>로그인 후, 설정 화면에서 비밀번호를 설정하는 것을 권장합니다.</li>
-    <li>설정 화면에서 언어 및 다크 테마 등 기본 설정을 구성합니다.</li>
+    <li>gkill을 처음 실행하면 계정 등록 화면이 자동으로 표시됩니다.</li>
+    <li>사용자 ID를 입력합니다(이것이 계정 이름이 됩니다).</li>
+    <li>비밀번호를 입력하고, 확인을 위해 한 번 더 입력합니다.</li>
+    <li>관리자 비밀번호를 설정합니다(서버 관리에 사용됩니다).</li>
+    <li>"등록" 버튼을 눌러 계정을 생성합니다.</li>
+    <li>로그인 화면으로 리디렉션되며, 방금 생성한 계정으로 로그인합니다.</li>
   </ol>
+
+  <div class="tip">
+    <strong>힌트:</strong> <code>admin</code> 계정은 서버 첫 실행 시 자동으로 생성됩니다. 여기서 생성하는 것은 일반 사용자 계정입니다.
+  </div>
+
+  <p>로그인 후, 기본 화면(초기 설정에서는 라이프로그 뷰)이 표시됩니다. 설정 화면에서 언어 및 다크 테마 등 기본 설정을 구성하세요.</p>
 
   <h2>화면 목록</h2>
   <table>
@@ -102,17 +119,17 @@
     </tr>
     <tr>
       <td>Saihate</td>
-      <td>잠금 화면에서도 안전하게 기록할 수 있는 화면. 각종 기록의 추가 허브</td>
+      <td>기록 추가에 특화된 경량 화면. 빠르게 메모나 타임스탬프를 남기고 싶을 때 편리</td>
       <td><a href="saihate.html">Saihate 화면 도움말</a></td>
     </tr>
     <tr>
       <td>메모장</td>
-      <td>메모장 구문으로 텍스트 입력</td>
+      <td>텍스트 입력으로 기록을 일괄 추가하는 화면</td>
       <td><a href="kftl.html">메모장 화면 도움말</a></td>
     </tr>
     <tr>
       <td>타임스탬프 메모장</td>
-      <td>메모 입력과 타임스탬프 동시 관리</td>
+      <td>타임스탬프와 함께 메모를 입력하는 화면</td>
       <td><a href="mkfl.html">타임스탬프 메모장 화면 도움말</a></td>
     </tr>
     <tr>
@@ -127,7 +144,7 @@
     </tr>
     <tr>
       <td>진행 중</td>
-      <td>실행 중인 타임스탬프 세션 관리</td>
+      <td>진행 중인 시간 추적 세션을 관리하는 화면</td>
       <td><a href="plaing.html">진행 중 화면 도움말</a></td>
     </tr>
     <tr>
@@ -151,14 +168,9 @@
       <td><a href="kftl-template-struct.html">템플릿 구조 도움말</a></td>
     </tr>
     <tr>
-      <td>집계 뷰</td>
-      <td>데이터 집계 및 시각화</td>
-      <td><a href="dnote.html">집계 뷰 도움말</a></td>
-    </tr>
-    <tr>
-      <td>관련 정보</td>
-      <td>관련 기록 자동 검색 정의</td>
-      <td><a href="ryuu.html">관련 정보 도움말</a></td>
+      <td colspan="3" style="font-size: 0.9em; color: #666;">
+        ※ <a href="dnote.html">집계 뷰</a>와 <a href="ryuu.html">관련 정보</a>는 라이프로그 뷰 화면 내의 기능입니다. 도구 모음에서 전환할 수 있습니다.
+      </td>
     </tr>
     <tr>
       <td>계정 관리</td>
@@ -171,6 +183,18 @@
       <td><a href="server-config.html">서버 설정 도움말</a></td>
     </tr>
   </table>
+
+  <h2>60초 만에 첫 번째 기록</h2>
+  <ol>
+    <li>로그인합니다.</li>
+    <li>화면 오른쪽 하단의 "+" 버튼을 길게 누릅니다.</li>
+    <li>"메모장"을 선택합니다.</li>
+    <li>텍스트를 한 줄 입력하고 Enter 키를 누릅니다.</li>
+    <li>탐색 메뉴에서 "라이프로그 뷰"를 열면 입력한 기록이 표시됩니다.</li>
+  </ol>
+  <div class="tip">
+    <strong>팁:</strong> 이것만으로 첫 번째 기록이 완료됩니다! 메모장 구문을 익히면 작업, 기분 값 등도 같은 방법으로 기록할 수 있습니다.
+  </div>
 
   <h2>첫 번째 기록 만들기</h2>
   <ol>
