@@ -34,6 +34,7 @@ const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 const ui = useFloatingDialog("help-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 const theme = useTheme()

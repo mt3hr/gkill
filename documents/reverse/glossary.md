@@ -196,7 +196,7 @@ DNote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api_address.go` | 全77エンドポイントのパス・メソッド定義 |
-| APIハンドラ（メイン） | `src/server/gkill/api/gkill_server_api.go` | ルーティング登録・ハンドラ実装（~12,300行） |
+| APIハンドラ（メイン） | `src/server/gkill/api/gkill_server_api.go` | ルーティング登録・ハンドラ実装（~14,000行） |
 | APIハンドラ（個別） | `src/server/gkill/api/handle_*.go` | 個別エンドポイントのハンドラ |
 | リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（150+ファイル） |
 | エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000372 の定数定義 |

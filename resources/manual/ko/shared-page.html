@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>공유 페이지 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>공유 페이지</span></nav>
+  <h1>공유 페이지</h1>
+  <p>이 페이지는 gkill 사용자가 공유 링크를 통해 공개한 기록을 열람하기 위한 페이지입니다. gkill 계정이 없어도 접근할 수 있습니다.</p>
+
+  <h2>이 페이지에 대하여</h2>
+  <ul>
+    <li>공유 링크를 가진 모든 사람이 이 페이지를 볼 수 있습니다.</li>
+    <li>gkill 로그인이 필요하지 않습니다.</li>
+    <li>공유된 기록의 열람만 가능하며, 편집이나 삭제는 할 수 없습니다.</li>
+  </ul>
+
+  <h2>표시되는 데이터</h2>
+  <p>공유 링크의 설정에 따라 다음 뷰 중 하나로 기록이 표시됩니다.</p>
+  <table>
+    <tr>
+      <th>뷰 유형</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>라이프로그 뷰</td>
+      <td>공유된 기록을 시간순으로 열람할 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>작업 뷰</td>
+      <td>공유된 작업을 보드 형식으로 열람할 수 있습니다.</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>팁:</strong> 표시되는 기록의 범위는 공유 링크를 생성한 사용자의 설정에 따라 결정됩니다.
+  </div>
+
+  <h2>문제 해결</h2>
+  <table>
+    <tr>
+      <th>증상</th>
+      <th>해결 방법</th>
+    </tr>
+    <tr>
+      <td>페이지가 로드되지 않음</td>
+      <td>공유 링크가 올바른지 확인하세요. 링크가 만료되었을 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>데이터가 표시되지 않음</td>
+      <td>공유 설정이 변경되었을 수 있습니다. 링크를 보내준 사람에게 확인하세요.</td>
+    </tr>
+    <tr>
+      <td>오류 메시지가 표시됨</td>
+      <td>gkill 서버에 연결할 수 없을 수 있습니다. 잠시 후 다시 시도해 주세요.</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

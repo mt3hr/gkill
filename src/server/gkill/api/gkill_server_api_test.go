@@ -8643,3 +8643,56 @@ func TestHandleUpdateUserReps_DuplicateWriteDetected(t *testing.T) {
 		t.Logf("duplicate write request rejected with status %d (expected behavior)", resp.StatusCode)
 	}
 }
+
+func TestGetAccountFromSessionID_Expired(t *testing.T) {
+	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+
+	// Expire the session by updating ExpirationTime to the past
+	ctx := context.Background()
+	session, err := api.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
+	if err != nil || session == nil {
+		t.Fatalf("failed to get session: %v", err)
+	}
+	session.ExpirationTime = time.Now().Add(-1 * time.Hour)
+	_, err = api.GkillDAOManager.ConfigDAOs.LoginSessionDAO.UpdateLoginSession(ctx, session)
+	if err != nil {
+		t.Fatalf("failed to update session expiration: %v", err)
+	}
+
+	// Try to use the expired session — should get ERR000373
+	addReq := &req_res.AddKmemoRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		Kmemo: reps.Kmemo{
+			ID:          GenerateNewID(),
+			Content:     "should fail",
+			RelatedTime: time.Now().Truncate(time.Second),
+			DataType:    "kmemo",
+			CreateTime:  time.Now().Truncate(time.Second),
+			UpdateTime:  time.Now().Truncate(time.Second),
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/add_kmemo", addReq)
+	defer resp.Body.Close()
+
+	var addResp req_res.AddKmemoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(addResp.Errors) == 0 {
+		t.Fatal("expected error for expired session, got none")
+	}
+	foundExpired := false
+	for _, e := range addResp.Errors {
+		if e.ErrorCode == message.AccountSessionExpiredError {
+			foundExpired = true
+		}
+	}
+	if !foundExpired {
+		t.Errorf("expected ERR000373 (AccountSessionExpiredError), got errors: %+v", addResp.Errors)
+	}
+}

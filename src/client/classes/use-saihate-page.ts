@@ -54,6 +54,13 @@ export function useSaihatePage() {
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 
+    // ── beforeunload guard ──
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+        if (is_loading.value) {
+            e.preventDefault()
+        }
+    }
+
     // ── Lifecycle ──
     onMounted(async () => {
         await resetDialogHistory()
@@ -63,8 +70,10 @@ export function useSaihatePage() {
         resize_content()
     }
     window.addEventListener('resize', onResize)
+    window.addEventListener('beforeunload', handleBeforeUnload)
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)
+        window.removeEventListener('beforeunload', handleBeforeUnload)
     })
 
     // ── Watchers ──

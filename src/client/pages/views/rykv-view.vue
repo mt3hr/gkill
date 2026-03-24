@@ -401,7 +401,14 @@ const is_ryuu_empty = computed(() => {
     overflow-y: scroll;
     height: calc(v-bind('app_content_height.toString().concat("px")') - v-bind('is_ryuu_empty ? "0px" : "100vh * 0.2"'));
     width: 400px;
-    min-width: 400px;
+    min-width: 0;
+    max-width: 100vw;
+}
+
+@media (max-width: 600px) {
+    .kyou_detail_view.dummy {
+        width: 100vw;
+    }
 }
 
 .ryuu_view.dummy {
@@ -412,14 +419,13 @@ const is_ryuu_empty = computed(() => {
 }
 
 .scroll_snap_container {
-    overflow-x: auto;
     scroll-snap-type: x proximity;
-    width: 100vw;
+    width: 100%;
 }
 
 .scroll_snap_area {
     scroll-snap-align: start;
-    width: 100vw;
+    width: 100%;
 }
 </style>
 <style lang="css" scoped>

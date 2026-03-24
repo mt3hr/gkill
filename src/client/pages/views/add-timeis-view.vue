@@ -9,7 +9,7 @@
             </v-row>
         </v-card-title>
         <v-text-field class="input text" type="text" v-model="timeis_title" :label="i18n.global.t('TIMEIS_TITLE_TITLE')"
-            autofocus :readonly="is_requested_submit" />
+            autofocus :readonly="is_requested_submit" :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>

@@ -39,6 +39,57 @@
   <h1>Tutorial</h1>
   <p>Hier wird die Verwendung von gkill in einem Grundlagen- und einem Fortgeschrittenenteil erkl&auml;rt. Wenn Sie gkill zum ersten Mal verwenden, lesen Sie bitte zun&auml;chst den Grundlagenteil.</p>
 
+  <div class="tip">
+    <strong>&Uuml;ber diesen Dialog:</strong> Dieser Hilfedialog l&auml;sst Mausklicks und Touch-Interaktionen zum Bildschirm dahinter durch. Sie k&ouml;nnen die Anwendung bedienen, w&auml;hrend dieser Dialog ge&ouml;ffnet bleibt.
+  </div>
+
+  <div class="tip">
+    <strong>Nutzung auf dem Smartphone:</strong> gkill funktioniert als PWA (Progressive Web App). W&auml;hlen Sie &bdquo;Zum Startbildschirm hinzuf&uuml;gen&ldquo; (iOS Safari) oder &bdquo;App installieren&ldquo; (Android Chrome) aus dem Browser-Men&uuml;, um die App direkt vom Startbildschirm zu starten.
+  </div>
+
+  <h2>Terminologie</h2>
+  <p>In gkill werden Datentypen als &bdquo;Datensatztypen&ldquo; (Memo, Zeitstempel, Aufgabe usw.) und die Bedienoberfl&auml;chen als &bdquo;Bildschirmnamen&ldquo; (Notizblock, Zeitstempel-Notizblock, Aufgaben usw.) bezeichnet. Beispielsweise bezieht sich &bdquo;Memo&ldquo; auf den Datentyp Textnotiz, w&auml;hrend &bdquo;Notizblock&ldquo; den Eingabebildschirm bezeichnet. Die im Men&uuml; der &bdquo;+&ldquo;-Taste angezeigten Eintr&auml;ge sind Bildschirmnamen zum Hinzuf&uuml;gen der jeweiligen Datensatztypen.</p>
+
+  <h2>Zwischen Bildschirmen wechseln</h2>
+  <p>Tippen Sie auf den <strong>Seitentitel</strong> in der Symbolleiste am oberen Bildschirmrand (z.B. &bdquo;Lebenslog-Ansicht&ldquo;, &bdquo;Aufgaben&ldquo; usw.), um ein Dropdown-Men&uuml; zu &ouml;ffnen und zu den verschiedenen Bildschirmen zu navigieren.</p>
+  <table>
+    <tr><th>Bildschirmname</th><th>Beschreibung</th></tr>
+    <tr><td>Saihate</td><td>Hub zum Hinzuf&uuml;gen verschiedener Datens&auml;tze. Abmeldung ebenfalls hier</td></tr>
+    <tr><td>Notizblock</td><td>Texteingabe mit Notizblock-Syntax</td></tr>
+    <tr><td>Zeitstempel-Notizblock</td><td>Gleichzeitige Verwaltung von Notizen und aktiven Zeitstempeln</td></tr>
+    <tr><td>Lebenslog-Ansicht</td><td>Datens&auml;tze durchsuchen, suchen und anzeigen</td></tr>
+    <tr><td>Aufgaben</td><td>Aufgabenverwaltung im Kanban-Board</td></tr>
+    <tr><td>Laufend</td><td>Verwaltung aktiver Zeitstempel-Sitzungen</td></tr>
+    <tr><td>Datensatz</td><td>Detailansicht eines einzelnen Datensatzes</td></tr>
+  </table>
+
+  <h2>Symbolleisten-Buttons</h2>
+  <p>Die Buttons auf der rechten Seite der Symbolleiste schalten Ansichten innerhalb des aktuellen Bildschirms um.</p>
+  <table>
+    <tr><th>Button</th><th>Funktion</th><th>Verf&uuml;gbar auf</th></tr>
+    <tr><td><span class="icon">&#9776;</span> Seitenleiste</td><td>Such- und Filter-Seitenleiste ein-/ausblenden</td><td>Lebenslog-Ansicht, Aufgaben</td></tr>
+    <tr><td><span class="icon">&#128196;</span> Detailansicht</td><td>Detailpanel des ausgew&auml;hlten Datensatzes ein-/ausblenden</td><td>Lebenslog-Ansicht, Aufgaben</td></tr>
+    <tr><td><span class="icon">&#128202;</span> Aggregation</td><td>Statistik- und Analyseansicht ein-/ausblenden</td><td>Lebenslog-Ansicht</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Kalender</td><td>Kalenderansicht ein-/ausblenden</td><td>Lebenslog-Ansicht, Aufgaben</td></tr>
+    <tr><td><span class="icon">&#128506;</span> Karte</td><td>GPS-Kartenanzeige ein-/ausblenden</td><td>Lebenslog-Ansicht</td></tr>
+    <tr><td>&#10068; Hilfe</td><td>Hilfe f&uuml;r den aktuellen Bildschirm anzeigen</td><td>Alle</td></tr>
+    <tr><td><span class="icon">&#9881;</span> Einstellungen</td><td>Einstellungsbildschirm &ouml;ffnen</td><td>Alle</td></tr>
+  </table>
+
+  <h2>Bildschirm-Kurzreferenz</h2>
+  <table>
+    <tr><th>Bildschirm</th><th>Hauptzweck</th><th>Wann verwenden</th></tr>
+    <tr><td>Saihate</td><td>Hub zum Hinzufugen von Aufzeichnungen</td><td>Wenn Sie schnell etwas aufzeichnen mochten</td></tr>
+    <tr><td>Notizblock</td><td>Text-Batch-Eingabe</td><td>Wenn Sie mehrere Aufzeichnungen auf einmal eingeben mochten</td></tr>
+    <tr><td>Zeitstempel-Notizblock</td><td>Notizen + Zeitstempel-Verwaltung</td><td>Wenn Sie Notizen und Zeit gleichzeitig aufzeichnen mochten</td></tr>
+    <tr><td>Lebensprotokoll-Ansicht</td><td>Aufzeichnungen durchsuchen</td><td>Wenn Sie vergangene Aufzeichnungen uberprufen oder suchen mochten</td></tr>
+    <tr><td>Aufgaben</td><td>Kanban-Board Aufgabenverwaltung</td><td>Wenn Sie Aufgaben organisieren und verwalten mochten</td></tr>
+    <tr><td>Laufend</td><td>Aktive Zeitstempel-Verwaltung</td><td>Wenn Sie aktive Zeitstempel uberprufen oder beenden mochten</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp fur Anfanger:</strong> Beginnen Sie damit, Aufzeichnungen in "Saihate" hinzuzufugen und sie in der "Lebensprotokoll-Ansicht" zu uberprufen.
+  </div>
+
   <hr class="section-divider">
   <h2 style="color: #1976D2;">Grundlagen</h2>
 
@@ -235,6 +286,24 @@ Milch
   </div>
 
   <h2>9. Zeit mit Zeitstempeln erfassen</h2>
+  <table>
+    <tr>
+      <th>Bildschirmname</th>
+      <th>Verwendung</th>
+    </tr>
+    <tr>
+      <td>Stempel-Notizblock</td>
+      <td>Notizen mit Zeitstempeln eingeben. Datei-Uploads sind ebenfalls m&ouml;glich.</td>
+    </tr>
+    <tr>
+      <td>Laufend</td>
+      <td>Liste der aktuell aktiven Zeiterfassungssitzungen. Hier k&ouml;nnen Sitzungen beendet werden.</td>
+    </tr>
+    <tr>
+      <td>Notizblock</td>
+      <td>Zeiterfassung per Text mit Notizblock-Syntax starten und beenden. Kann mit anderen Eintr&auml;gen kombiniert werden.</td>
+    </tr>
+  </table>
   <p>Mit der Zeitstempel-Funktion k&ouml;nnen Sie Arbeitszeiten und Aktivit&auml;tszeiten genau erfassen.</p>
 
   <h3>Grundlegende Zeitstempel-Bedienung</h3>
@@ -254,11 +323,11 @@ Milch
   </div>
 
   <h2>10. Daten in der Aggregationsansicht analysieren</h2>
-  <p>Auf dem Aggregationsansichts-Bildschirm k&ouml;nnen Sie erfasste Daten in Diagrammen und Zusammenfassungstabellen visualisieren.</p>
+  <p>Die Aggregationsansicht innerhalb der LifeLog-Ansicht erm&ouml;glicht es Ihnen, erfasste Daten in Zusammenfassungstabellen zu visualisieren.</p>
 
   <h3>Verwendung der Aggregationsansicht</h3>
   <ol>
-    <li>&Ouml;ffnen Sie den Aggregationsansichts-Bildschirm &uuml;ber die Navigation.</li>
+    <li>Klicken Sie auf das Aggregationssymbol in der Symbolleiste der LifeLog-Ansicht, um die Aggregationsansicht anzuzeigen.</li>
     <li>W&auml;hlen Sie Art und Zeitraum der Aggregation aus.</li>
     <li>Die Daten werden in Diagrammen und Tabellen angezeigt.</li>
   </ol>
@@ -289,7 +358,46 @@ Milch
     <strong>Tipp:</strong> Erhalten Sie den Google Maps API-Schl&uuml;ssel, indem Sie die Maps JavaScript API in der Google Cloud Console aktivieren.
   </div>
 
-  <h2>12. Datensicherung und -verwaltung</h2>
+  <h2>12. Aufzeichnungen teilen</h2>
+  <p>In gkill k&ouml;nnen Sie Freigabelinks erstellen, um Aufzeichnungen mit anderen Personen zu teilen.</p>
+
+  <h3>Freigabelink erstellen</h3>
+  <ol>
+    <li>&Ouml;ffnen Sie die Detailansicht oder das Kontextmen&uuml; der Aufzeichnung, die Sie teilen m&ouml;chten.</li>
+    <li>W&auml;hlen Sie &bdquo;Teilen&ldquo;.</li>
+    <li>Eine Freigabe-URL wird generiert. Verwenden Sie die passende URL je nach Bedarf:</li>
+  </ol>
+  <table>
+    <tr><th>URL-Typ</th><th>Verwendung</th></tr>
+    <tr><td>Lokale URL</td><td>Zugriff vom selben Ger&auml;t (localhost)</td></tr>
+    <tr><td>LAN-URL</td><td>Zugriff von anderen Ger&auml;ten im selben Netzwerk</td></tr>
+    <tr><td>WAN-URL</td><td>Externer Zugriff &uuml;ber das Internet</td></tr>
+  </table>
+
+  <h3>Kontrolle der geteilten Daten</h3>
+  <p>Beim Teilen k&ouml;nnen Sie w&auml;hlen, welche Daten einbezogen werden sollen.</p>
+  <table>
+    <tr><th>Option</th><th>Beschreibung</th></tr>
+    <tr><td>Tags</td><td>An die Aufzeichnung angeh&auml;ngte Tags einbeziehen</td></tr>
+    <tr><td>Text</td><td>Textinhalt der Aufzeichnung einbeziehen</td></tr>
+    <tr><td>Zeitstempel</td><td>Zeitstempel-Informationen einbeziehen</td></tr>
+    <tr><td>Standort</td><td>GPS-Standortinformationen einbeziehen</td></tr>
+    <tr><td>Nur Uhrzeit</td><td>Nur Uhrzeitinformationen einbeziehen</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Um LAN- oder WAN-URLs zu verwenden, m&uuml;ssen Sie die Server-IP-Adresse in den Anwendungseinstellungen konfigurieren.
+  </div>
+
+  <h3>Fur Empfanger von Freigabelinks</h3>
+  <p>Durch Offnen eines Freigabelinks konnen Sie Aufzeichnungen ohne ein gkill-Konto einsehen.</p>
+  <ul>
+    <li>Der Umfang der angezeigten Aufzeichnungen wird durch die Einstellungen des Link-Erstellers bestimmt.</li>
+    <li>Sie konnen Aufzeichnungen nicht bearbeiten oder loschen (nur Ansicht).</li>
+    <li>Wenn der Link nicht mehr gultig ist, wenden Sie sich bitte an den Absender.</li>
+  </ul>
+
+  <h2>13. Datensicherung und -verwaltung</h2>
 
   <h3>Serverkonfiguration (f&uuml;r Administratoren)</h3>
   <p>Wenn Sie sich mit einem Administratorkonto anmelden, wird im Einstellungsbildschirm die Schaltfl&auml;che &bdquo;Serverkonfiguration&ldquo; angezeigt.</p>
@@ -300,7 +408,7 @@ Milch
   </ul>
 
   <h3>Kontoverwaltung</h3>
-  <p>Administratoren k&ouml;nnen auf dem Bildschirm &bdquo;Kontoverwaltung&ldquo; Benutzerkonten hinzuf&uuml;gen und l&ouml;schen.</p>
+  <p>Administratoren k&ouml;nnen auf dem Bildschirm &bdquo;Kontoverwaltung&ldquo; Benutzerkonten hinzuf&uuml;gen, aktivieren und deaktivieren.</p>
 
   <h3>Datensicherung</h3>
   <p>Alle Daten von gkill werden im Home-Verzeichnis gespeichert (Standard: <code>~/gkill</code>). Durch Sichern dieses Verzeichnisses k&ouml;nnen alle Daten bewahrt werden.</p>

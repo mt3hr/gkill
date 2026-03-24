@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
@@ -43,7 +45,13 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 	if len(r.amounts) < count {
 		count = len(r.amounts)
 	}
+	if len(r.titles) != len(r.amounts) {
+		slog.Log(ctx, gkill_log.Warn, "nlog title/amount count mismatch",
+			"titles", len(r.titles), "amounts", len(r.amounts), "using", count)
+	}
 
+	// Note: Transaction safety is provided by the KFTL submit flow's temp repositories.
+	// Each nlog is inserted independently; if any fails, the entire KFTL submit rolls back.
 	for i := 0; i < count; i++ {
 		id := r.RequestID
 		if i > 0 {

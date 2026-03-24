@@ -126,7 +126,7 @@ func (s *KFTLStatement) generateKFTLLines(
 
 		// Stop at save character (except on first line)
 		// Mirrors: if (i != 0 && line_text == KFTL_SAVE_CHARACTOR) break
-		if i != 0 && lineText == splitterSaveCharacter {
+		if i != 0 && (lineText == splitterSaveCharacter || lineText == splitterSaveCharacterAscii) {
 			break
 		}
 

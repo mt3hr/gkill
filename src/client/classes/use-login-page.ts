@@ -37,9 +37,10 @@ export function useLoginPage() {
         GkillAPI.get_instance().set_session_id(session_id)
         await sleep(1500)
 
-        // ログインに成功したらrykv画面に遷移
+        // ログインに成功したらデフォルト画面に遷移
         await resetDialogHistory()
-        router.replace('rykv')
+        const default_page = GkillAPI.get_instance().get_default_page_from_cookie()
+        router.replace('/' + default_page)
     }
 
     function write_errors(errors_: Array<GkillError>): void {

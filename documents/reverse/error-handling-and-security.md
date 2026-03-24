@@ -28,7 +28,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **371件** のエラーコードが存在する。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **373件** のエラーコードが存在する。
 
 #### 認証系（ERR000001〜ERR000017）
 
@@ -247,9 +247,27 @@ sequenceDiagram
 4. エラーあり → UIにエラーメッセージ表示
 5. 正常 → データをコンポーネントに返却
 
-### 3.2 Service Worker のキャッシュエラー処理
+### 3.2 ネットワークエラーハンドリング
+
+`GkillAPI` クラスに `gkill_fetch()` ヘルパーを導入し、全API呼び出しのネットワークエラーを統一的に処理：
+- `navigator.onLine` が false、または `TypeError`（fetch失敗）を検出
+- エラーコード `NETWORK_ERROR` の `GkillError` を含むモックレスポンスを返却
+- 呼び出し元の既存エラーハンドリングパスでユーザーに通知
+
+`App.vue` にオフラインバナーを追加（`navigator.onLine` + `online`/`offline` イベント監視）。
+
+### 3.3 Share Target エラーハンドリング
+
+`serviceWorker.ts` の share-target POST ハンドラを try-catch で囲み、例外発生時は `is_saved=false` でリダイレクト。
+
+### 3.4 Service Worker のキャッシュエラー処理
 
 `src/client/serviceWorker.ts` では：
 - キャッシュヒット時: `_histories` フィールドの存在と `errors` 配列の空チェックでキャッシュの有効性を検証
 - `force_reget` パラメータでキャッシュバイパス可能
 - キャッシュ名: `gkill-post-kyou-cache`（データ系）、`gkill-post-config-cache`（設定系）
+
+### 3.5 セッション有効期限・レート制限
+
+- **セッション有効期限**: API呼び出し時にセッションの `ExpirationTime` を検証。期限切れの場合は `ERR000373`（`AccountSessionExpiredError`）を返し、クライアント側でログイン画面にリダイレクト
+- **ログインレート制限**: IP単位で15分間に10回までのログイン試行を許可。超過時は `ERR000374`（`LoginRateLimitError`）を返却。`loginRateLimiter` 構造体でスライディングウィンドウ方式を実装

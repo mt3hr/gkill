@@ -9,7 +9,7 @@
             </v-row>
         </v-card-title>
         <v-text-field v-model="title" :label="i18n.global.t('KC_TITLE_TITLE')" autofocus
-            :readonly="is_requested_submit" />
+            :readonly="is_requested_submit" :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
         <v-text-field type="number" v-model="num_value" :label="i18n.global.t('KC_NUM_VALUE_TITLE')"
             :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">

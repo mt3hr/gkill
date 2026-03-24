@@ -48,6 +48,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("show-password-reset-link-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 const cloned_account: Ref<Account> = ref(new Account())

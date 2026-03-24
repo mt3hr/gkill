@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freigegebene Seite - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Freigegebene Seite</span></nav>
+  <h1>Freigegebene Seite</h1>
+  <p>Diese Seite dient zum Anzeigen von Eintr&auml;gen, die ein gkill-Benutzer &uuml;ber einen Freigabelink ver&ouml;ffentlicht hat. Sie k&ouml;nnen ohne ein gkill-Konto darauf zugreifen.</p>
+
+  <h2>&Uuml;ber diese Seite</h2>
+  <ul>
+    <li>Jeder mit dem Freigabelink kann diese Seite anzeigen.</li>
+    <li>Eine Anmeldung bei gkill ist nicht erforderlich.</li>
+    <li>Sie k&ouml;nnen freigegebene Eintr&auml;ge nur anzeigen; Bearbeiten oder L&ouml;schen ist nicht m&ouml;glich.</li>
+  </ul>
+
+  <h2>Angezeigte Daten</h2>
+  <p>Je nach Einstellungen des Freigabelinks werden die Eintr&auml;ge in einer der folgenden Ansichten angezeigt.</p>
+  <table>
+    <tr>
+      <th>Ansichtstyp</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Lebenslog-Ansicht</td>
+      <td>Freigegebene Eintr&auml;ge in chronologischer Reihenfolge anzeigen.</td>
+    </tr>
+    <tr>
+      <td>Aufgaben-Ansicht</td>
+      <td>Freigegebene Aufgaben im Board-Format anzeigen.</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Hinweis:</strong> Der Umfang der angezeigten Eintr&auml;ge wird durch die Einstellungen des Benutzers bestimmt, der den Freigabelink erstellt hat.
+  </div>
+
+  <h2>Fehlerbehebung</h2>
+  <table>
+    <tr>
+      <th>Symptom</th>
+      <th>L&ouml;sung</th>
+    </tr>
+    <tr>
+      <td>Seite wird nicht geladen</td>
+      <td>&Uuml;berpr&uuml;fen Sie, ob der Freigabelink korrekt ist. Der Link ist m&ouml;glicherweise abgelaufen.</td>
+    </tr>
+    <tr>
+      <td>Keine Daten werden angezeigt</td>
+      <td>Die Freigabeeinstellungen wurden m&ouml;glicherweise ge&auml;ndert. Bitte fragen Sie die Person, die Ihnen den Link gesendet hat.</td>
+    </tr>
+    <tr>
+      <td>Eine Fehlermeldung wird angezeigt</td>
+      <td>Der gkill-Server ist m&ouml;glicherweise nicht erreichbar. Bitte warten Sie einen Moment und versuchen Sie es erneut.</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

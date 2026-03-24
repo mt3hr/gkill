@@ -601,3 +601,381 @@ func TestStatement_LantanaWithTagAppliedToRequestMap(t *testing.T) {
 		t.Errorf("expected tag 'moodTag' in lantana request, got tags %v", tags)
 	}
 }
+
+// ─── Phase 2: ASCII prefix tests (P23) ─────────────────────────────────────
+
+func TestStatement_AsciiSaveCharacter(t *testing.T) {
+	// ASCII "!" on a non-first line should stop processing
+	text := "memo content\n!\nthis should be ignored"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 1 {
+		t.Fatalf("expected 1 line (stop at ASCII save character), got %d", len(lines))
+	}
+	if lines[0].GetStatementLineText() != "memo content" {
+		t.Errorf("expected 'memo content', got %q", lines[0].GetStatementLineText())
+	}
+}
+
+func TestStatement_AsciiTag(t *testing.T) {
+	text := "#tag1\nhello"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "tag" {
+		t.Errorf("line 0: expected tag, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "kmemo" {
+		t.Errorf("line 1: expected kmemo, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiSplit(t *testing.T) {
+	text := "first memo\n,\nsecond memo"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[1].GetLabelName() != "split" {
+		t.Errorf("line 1: expected split, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiSplitNextSecond(t *testing.T) {
+	text := "first\n,,\nsecond"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[1].GetLabelName() != "split+1s" {
+		t.Errorf("line 1: expected split+1s, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetContext().AddSecond != 1 {
+		t.Errorf("expected AddSecond=1 after split+1s, got %d", lines[2].GetContext().AddSecond)
+	}
+}
+
+func TestStatement_AsciiStartText(t *testing.T) {
+	text := "memo\n--\nblock content\n--"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 4 {
+		t.Fatalf("expected 4 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "kmemo" {
+		t.Errorf("line 0: expected kmemo, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "startText" {
+		t.Errorf("line 1: expected startText, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "text" {
+		t.Errorf("line 2: expected text, got %s", lines[2].GetLabelName())
+	}
+	if lines[3].GetLabelName() != "endText" {
+		t.Errorf("line 3: expected endText, got %s", lines[3].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiRelatedTime(t *testing.T) {
+	text := "?2025-06-01T10:00:00+09:00\nhello"
+	lines := helperGenerateLines(t, text)
+	if len(lines) < 2 {
+		t.Fatalf("expected at least 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "relatedTime" {
+		t.Errorf("line 0: expected relatedTime, got %s", lines[0].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiMi(t *testing.T) {
+	text := "/mi\nTask title"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "mi" {
+		t.Errorf("line 0: expected mi, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "miTitle" {
+		t.Errorf("line 1: expected miTitle, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiLantana(t *testing.T) {
+	text := "/mood\n7"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "lantana" {
+		t.Errorf("line 0: expected lantana, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "lantanaMood" {
+		t.Errorf("line 1: expected lantanaMood, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiNlog(t *testing.T) {
+	text := "/expense\n500\nShop"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "nlog" {
+		t.Errorf("line 0: expected nlog, got %s", lines[0].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiKC(t *testing.T) {
+	text := "/num\nTitle\n42"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "kc" {
+		t.Errorf("line 0: expected kc, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "kcTitle" {
+		t.Errorf("line 1: expected kcTitle, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "kcNumValue" {
+		t.Errorf("line 2: expected kcNumValue, got %s", lines[2].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiURLog(t *testing.T) {
+	text := "/url\nhttps://example.com"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "urlog" {
+		t.Errorf("line 0: expected urlog, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "urlogURL" {
+		t.Errorf("line 1: expected urlogURL, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiTimeIsStart(t *testing.T) {
+	text := "/start\nWork"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsStart" {
+		t.Errorf("line 0: expected timeIsStart, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "timeIsStartTitle" {
+		t.Errorf("line 1: expected timeIsStartTitle, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiTimeIsEnd(t *testing.T) {
+	text := "/end\nWork"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsEnd" {
+		t.Errorf("line 0: expected timeIsEnd, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "timeIsEndTitle" {
+		t.Errorf("line 1: expected timeIsEndTitle, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiTimeIs(t *testing.T) {
+	text := "/timeis\nMeeting"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIs" {
+		t.Errorf("line 0: expected timeIs, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "timeIsTitle" {
+		t.Errorf("line 1: expected timeIsTitle, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiTimeIsEndIfExist(t *testing.T) {
+	text := "/end?\nWork"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsEndIfExist" {
+		t.Errorf("line 0: expected timeIsEndIfExist, got %s", lines[0].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiTimeIsEndByTag(t *testing.T) {
+	text := "/endt\n#work"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsEndByTag" {
+		t.Errorf("line 0: expected timeIsEndByTag, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "timeIsEndByTagTag" {
+		t.Errorf("line 1: expected timeIsEndByTagTag, got %s", lines[1].GetLabelName())
+	}
+}
+
+func TestStatement_AsciiTimeIsEndByTagIfExist(t *testing.T) {
+	text := "/endt?\n#work"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "timeIsEndByTagIfExist" {
+		t.Errorf("line 0: expected timeIsEndByTagIfExist, got %s", lines[0].GetLabelName())
+	}
+}
+
+// helperApplyToRequestMapAllowError is like helperApplyToRequestMap but returns
+// the first error from ApplyThisLineToRequestMap instead of calling t.Fatal.
+func helperApplyToRequestMapAllowError(t *testing.T, text string) (*KFTLRequestMap, error) {
+	t.Helper()
+	lines := helperGenerateLines(t, text)
+	requestMap := NewKFTLRequestMap()
+	for _, line := range lines {
+		if err := line.ApplyThisLineToRequestMap(context.Background(), requestMap); err != nil {
+			return requestMap, err
+		}
+	}
+	return requestMap, nil
+}
+
+// ─── H4: Mi ASCII ? time fields ─────────────────────────────────────────────
+
+func TestApply_AsciiMiLimitTime(t *testing.T) {
+	// /mi + title + board(empty) + ?2025-01-01 → limitTime should be parsed
+	text := "/mi\nTest Task\n\n?2025-01-01"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	miReq, ok := all[0].(*kftlMiRequest)
+	if !ok {
+		t.Fatalf("expected *kftlMiRequest, got %T", all[0])
+	}
+	if miReq.limitTime == nil {
+		t.Fatal("expected limitTime to be set, got nil")
+	}
+}
+
+func TestApply_AsciiMiEstimateStartTime(t *testing.T) {
+	// /mi + title + board(empty) + limitTime(empty) + ?2025-06-01 10:00
+	text := "/mi\nTest Task\n\n\n?2025-06-01 10:00"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	miReq, ok := all[0].(*kftlMiRequest)
+	if !ok {
+		t.Fatalf("expected *kftlMiRequest, got %T", all[0])
+	}
+	if miReq.estimateStartTime == nil {
+		t.Fatal("expected estimateStartTime to be set, got nil")
+	}
+}
+
+func TestApply_AsciiMiEstimateEndTime(t *testing.T) {
+	// /mi + title + board(empty) + limitTime(empty) + estimateStartTime(empty) + ?2025-06-01 18:00
+	text := "/mi\nTest Task\n\n\n\n?2025-06-01 18:00"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	miReq, ok := all[0].(*kftlMiRequest)
+	if !ok {
+		t.Fatalf("expected *kftlMiRequest, got %T", all[0])
+	}
+	if miReq.estimateEndTime == nil {
+		t.Fatal("expected estimateEndTime to be set, got nil")
+	}
+}
+
+// ─── M10: Nlog title/amount mismatch ────────────────────────────────────────
+
+func TestApply_NlogTitleAmountMismatch(t *testing.T) {
+	// 2 titles + 1 amount → should not error, creates 1 nlog (min of counts)
+	text := "ーん\nTestShop\nTitle1\n100\nTitle2"
+	requestMap, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+}
+
+// ─── M11: Lantana mood range validation ─────────────────────────────────────
+
+func TestApply_LantanaMood0(t *testing.T) {
+	text := "ーら\n0"
+	_, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("mood 0 should be valid, got error: %v", err)
+	}
+}
+
+func TestApply_LantanaMood10(t *testing.T) {
+	text := "ーら\n10"
+	_, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("mood 10 should be valid, got error: %v", err)
+	}
+}
+
+func TestApply_LantanaMood5(t *testing.T) {
+	text := "ーら\n5"
+	_, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("mood 5 should be valid, got error: %v", err)
+	}
+}
+
+func TestApply_LantanaMood11(t *testing.T) {
+	text := "ーら\n11"
+	_, err := helperApplyToRequestMapAllowError(t, text)
+	if err == nil {
+		t.Fatal("mood 11 should be rejected, got no error")
+	}
+}
+
+func TestApply_LantanaMoodNeg1(t *testing.T) {
+	text := "ーら\n-1"
+	_, err := helperApplyToRequestMapAllowError(t, text)
+	if err == nil {
+		t.Fatal("mood -1 should be rejected, got no error")
+	}
+}
+
+func TestStatement_AsciiMixed(t *testing.T) {
+	// Japanese tag + ASCII split + ASCII save character
+	text := "。myTag\nhello\n,\nworld\n!\nignored"
+	lines := helperGenerateLines(t, text)
+	// tag + kmemo("hello") + split + kmemo("world") = 4 lines, "!" stops processing
+	if len(lines) != 4 {
+		t.Fatalf("expected 4 lines (mixed Japanese+ASCII), got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "tag" {
+		t.Errorf("line 0: expected tag, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "kmemo" {
+		t.Errorf("line 1: expected kmemo, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "split" {
+		t.Errorf("line 2: expected split, got %s", lines[2].GetLabelName())
+	}
+	if lines[3].GetLabelName() != "kmemo" {
+		t.Errorf("line 3: expected kmemo, got %s", lines[3].GetLabelName())
+	}
+}

@@ -756,5 +756,12 @@
     "TOOLTIP_TOGGLE_IMAGE_VIEW": "Bildansicht umschalten",
     "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "Zum angeklickten Zeitraum scrollen",
     "TOOLTIP_CLOSE_COLUMN": "Spalte schließen",
-    "TOOLTIP_ADD_BOARD": "Board hinzufügen"
+    "TOOLTIP_ADD_BOARD": "Board hinzufügen",
+    "SESSION_EXPIRED_MESSAGE": "Die Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+    "LOGIN_RATE_LIMITED_MESSAGE": "Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut.",
+    "NETWORK_OFFLINE_MESSAGE": "Keine Netzwerkverbindung",
+    "NETWORK_ERROR_MESSAGE": "Ein Netzwerkfehler ist aufgetreten. Bitte prüfen Sie Ihre Verbindung.",
+    "NO_RESULTS_MESSAGE": "Keine Elemente",
+    "REQUIRED_FIELD_MESSAGE": "Dieses Feld ist erforderlich",
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "Es gibt nicht gespeicherte Änderungen. Seite verlassen?"
 }

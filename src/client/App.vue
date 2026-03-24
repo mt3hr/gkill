@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-import { type Ref, ref } from 'vue';
+import { type Ref, ref, onMounted } from 'vue';
 import { RouterView } from 'vue-router'
 import { VLocaleProvider } from 'vuetify/components';
 import { useTheme } from 'vuetify'
@@ -19,6 +19,12 @@ if (use_dark_theme) {
 }
 
 const locale: Ref<string> = ref(i18n.global.locale)
+
+const isOnline = ref(navigator.onLine)
+onMounted(() => {
+  window.addEventListener('online', () => { isOnline.value = true })
+  window.addEventListener('offline', () => { isOnline.value = false })
+})
 </script>
 
 
@@ -33,6 +39,12 @@ const locale: Ref<string> = ref(i18n.global.locale)
         </td>
         <td>
           <v-app>
+            <v-banner v-if="!isOnline" color="warning" stacked
+                :text="$t('NETWORK_OFFLINE_MESSAGE')">
+              <template #prepend>
+                <v-icon>mdi-wifi-off</v-icon>
+              </template>
+            </v-banner>
             <VLocaleProvider :locale="locale">
               <RouterView />
             </VLocaleProvider>
@@ -262,8 +274,8 @@ div::-webkit-scrollbar-thumb {
 
 .dnote_view {
   position: relative;
-  width: 625px;
-  min-width: 625px;
+  max-width: 625px;
+  width: 100%;
   overflow: unset !important;
 }
 

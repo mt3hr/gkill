@@ -13,7 +13,7 @@
             </v-row>
         </v-card-title>
         <v-text-field v-model="tag_name" :label="i18n.global.t('TAG_TITLE')" autofocus
-            :readonly="is_requested_submit" />
+            :readonly="is_requested_submit" :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">

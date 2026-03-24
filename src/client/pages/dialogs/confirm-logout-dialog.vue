@@ -42,6 +42,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("confirm-logout-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 const close_database_value: Ref<boolean> = ref(false)

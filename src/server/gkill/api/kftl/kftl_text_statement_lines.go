@@ -57,8 +57,8 @@ func newKFTLTextStatementLine(lineText string, ctx *KFTLStatementLineContext, te
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
 
-	// If next line is "ーー", it ends the text block; otherwise continue accumulating
-	if ctx.NextStatementLineText == splitterStartText {
+	// If next line is "ーー" or "--", it ends the text block; otherwise continue accumulating
+	if ctx.NextStatementLineText == splitterStartText || ctx.NextStatementLineText == splitterStartTextAscii {
 		ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLEndTextStatementLine(lt, c, prevLineIsMetaInfo)
 		}

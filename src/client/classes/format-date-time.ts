@@ -3,19 +3,24 @@ import moment from "moment"
 
 export function format_time(time: Date): string {
     time = moment(time).toDate()
-    const year: string | number = time.getFullYear()
-    let month: string | number = time.getMonth() + 1
-    let date: string | number = time.getDate()
-    let hour: string | number = time.getHours()
-    let minute: string | number = time.getMinutes()
-    let second: string | number = time.getSeconds()
-    const day_of_week = [i18n.global.t("SUNDAY_TITLE"), i18n.global.t("MONDAY_TITLE"), i18n.global.t("TUESDAY_TITLE"), i18n.global.t("WEDNESDAY_TITLE"), i18n.global.t("THURSDAY_TITLE"), i18n.global.t("FRIDAY_TITLE"), i18n.global.t("SATURDAY_TITLE")][time.getDay()]
-    month = ('0' + month).slice(-2)
-    date = ('0' + date).slice(-2)
-    hour = ('0' + hour).slice(-2)
-    minute = ('0' + minute).slice(-2)
-    second = ('0' + second).slice(-2)
-    return year + '/' + month + '/' + date + '(' + day_of_week + ')' + ' ' + hour + ':' + minute + ':' + second
+    const locale = (i18n.global.locale as any).value || i18n.global.locale || 'ja'
+    const formatted = new Intl.DateTimeFormat(locale, {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+    }).format(time)
+    const day_of_week = [
+        i18n.global.t("SUNDAY_TITLE"), i18n.global.t("MONDAY_TITLE"),
+        i18n.global.t("TUESDAY_TITLE"), i18n.global.t("WEDNESDAY_TITLE"),
+        i18n.global.t("THURSDAY_TITLE"), i18n.global.t("FRIDAY_TITLE"),
+        i18n.global.t("SATURDAY_TITLE")
+    ][time.getDay()]
+    return `${formatted}(${day_of_week})`
+}
+
+export function format_number(n: number): string {
+    const locale = (i18n.global.locale as any).value || i18n.global.locale || 'ja'
+    return new Intl.NumberFormat(locale).format(n)
 }
 
 export function format_duration(duration_milli_second: any | null): string {

@@ -756,5 +756,12 @@
     "TOOLTIP_TOGGLE_IMAGE_VIEW": "切换图片视图",
     "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "滚动到点击的时期",
     "TOOLTIP_CLOSE_COLUMN": "关闭列",
-    "TOOLTIP_ADD_BOARD": "添加看板"
+    "TOOLTIP_ADD_BOARD": "添加看板",
+    "SESSION_EXPIRED_MESSAGE": "会话已过期，请重新登录",
+    "LOGIN_RATE_LIMITED_MESSAGE": "登录尝试次数过多，请稍后再试",
+    "NETWORK_OFFLINE_MESSAGE": "网络未连接",
+    "NETWORK_ERROR_MESSAGE": "发生网络错误，请检查连接",
+    "NO_RESULTS_MESSAGE": "无对象",
+    "REQUIRED_FIELD_MESSAGE": "此字段为必填项",
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "有未保存的更改。要离开页面吗？"
 }

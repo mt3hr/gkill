@@ -96,6 +96,11 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("kftl-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
+})
+watch(ui.isTransparent, () => {
+  ui.resetSize()
+  nextTick(() => ui.resetToCenter())
 })
 
 

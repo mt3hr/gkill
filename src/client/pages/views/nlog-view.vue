@@ -9,7 +9,7 @@
         <div v-if="kyou.typed_nlog" class="ma-0 pa-0">
             <span
                 :class="(kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0) ? 'nlog_amount_plus' : 'nlog_amount_minus'">{{
-                    kyou.typed_nlog.amount }}</span>
+                    format_number(kyou.typed_nlog.amount.valueOf()) }}</span>
             {{ i18n.global.t("YEN_TITLE") }}
         </div>
     </v-card>
@@ -37,6 +37,7 @@ import type { NlogViewProps } from './nlog-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import NlogContextMenu from './nlog-context-menu.vue'
 import { useNlogView } from '@/classes/use-nlog-view'
+import { format_number } from '@/classes/format-date-time'
 
 const props = defineProps<NlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()

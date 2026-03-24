@@ -48,25 +48,25 @@
 <h2>Anweisungsuebersicht</h2>
 
 <table>
-  <tr><th>Praefix</th><th>Typ</th><th>Beschreibung</th></tr>
-  <tr><td>(keins)</td><td>Memo</td><td>Textnotiz aufzeichnen</td></tr>
-  <tr><td><code>。</code></td><td>Tag</td><td>Tags zuweisen</td></tr>
-  <tr><td><code>ーー</code></td><td>Textblock</td><td>Mehrzeiligen Text unveraendert beibehalten</td></tr>
-  <tr><td><code>、</code></td><td>Trennzeichen</td><td>In einen neuen Datensatz aufteilen</td></tr>
-  <tr><td><code>、、</code></td><td>Trennzeichen (+1 Sek.)</td><td>Aufteilen und Zeitstempel um 1 Sekunde erhoehen</td></tr>
-  <tr><td><code>？</code></td><td>Zugehoerige Zeit</td><td>Zugehoeriges Datum/Uhrzeit festlegen</td></tr>
-  <tr><td><code>ーか</code></td><td>Numerischer Eintrag</td><td>Numerischen Wert aufzeichnen</td></tr>
-  <tr><td><code>ーみ</code></td><td>Aufgabe</td><td>Aufgabe erstellen</td></tr>
-  <tr><td><code>ーら</code></td><td>Stimmung</td><td>Stimmungswert (0-10) aufzeichnen</td></tr>
-  <tr><td><code>ーん</code></td><td>Ausgabe</td><td>Ausgabeninformationen aufzeichnen</td></tr>
-  <tr><td><code>ーち</code></td><td>Zeitprotokoll (vollstaendig)</td><td>Zeit mit Anfang und Ende protokollieren</td></tr>
-  <tr><td><code>ーた</code></td><td>Zeitprotokoll-Start</td><td>Zeitprotokoll starten</td></tr>
-  <tr><td><code>ーえ</code></td><td>Zeitprotokoll-Ende</td><td>Passendes Zeitprotokoll beenden</td></tr>
-  <tr><td><code>ーいえ</code></td><td>Zeitprotokoll-Ende (falls vorhanden)</td><td>Beenden falls vorhanden (kein Fehler)</td></tr>
-  <tr><td><code>ーたえ</code></td><td>Zeitprotokoll per Tag beenden</td><td>Zeitprotokoll nach Tag-Name beenden</td></tr>
-  <tr><td><code>ーいたえ</code></td><td>Zeitprotokoll per Tag beenden (falls vorhanden)</td><td>Per Tag beenden falls vorhanden</td></tr>
-  <tr><td><code>ーう</code></td><td>Lesezeichen</td><td>URL-Lesezeichen aufzeichnen</td></tr>
-  <tr><td><code>！</code></td><td>Speichern</td><td>Dokument beenden und speichern</td></tr>
+  <tr><th>Praefix</th><th>ASCII</th><th>Typ</th><th>Beschreibung</th></tr>
+  <tr><td>(keins)</td><td>(keins)</td><td>Memo</td><td>Textnotiz aufzeichnen</td></tr>
+  <tr><td><code>。</code></td><td><code>#</code></td><td>Tag</td><td>Tags zuweisen</td></tr>
+  <tr><td><code>ーー</code></td><td><code>--</code></td><td>Textblock</td><td>Mehrzeiligen Text unveraendert beibehalten</td></tr>
+  <tr><td><code>、</code></td><td><code>,</code></td><td>Trennzeichen</td><td>In einen neuen Datensatz aufteilen</td></tr>
+  <tr><td><code>、、</code></td><td><code>,,</code></td><td>Trennzeichen (+1 Sek.)</td><td>Aufteilen und Zeitstempel um 1 Sekunde erhoehen</td></tr>
+  <tr><td><code>？</code></td><td><code>?</code></td><td>Zugehoerige Zeit</td><td>Zugehoeriges Datum/Uhrzeit festlegen</td></tr>
+  <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Numerischer Eintrag</td><td>Numerischen Wert aufzeichnen</td></tr>
+  <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Aufgabe</td><td>Aufgabe erstellen</td></tr>
+  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Stimmung</td><td>Stimmungswert (0-10) aufzeichnen</td></tr>
+  <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>Ausgabe</td><td>Ausgabeninformationen aufzeichnen</td></tr>
+  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>Zeitprotokoll (vollstaendig)</td><td>Zeit mit Anfang und Ende protokollieren</td></tr>
+  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>Zeitprotokoll-Start</td><td>Zeitprotokoll starten</td></tr>
+  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>Zeitprotokoll-Ende</td><td>Passendes Zeitprotokoll beenden</td></tr>
+  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>Zeitprotokoll-Ende (falls vorhanden)</td><td>Beenden falls vorhanden (kein Fehler)</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Zeitprotokoll per Tag beenden</td><td>Zeitprotokoll nach Tag-Name beenden</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Zeitprotokoll per Tag beenden (falls vorhanden)</td><td>Per Tag beenden falls vorhanden</td></tr>
+  <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Lesezeichen</td><td>URL-Lesezeichen aufzeichnen</td></tr>
+  <tr><td><code>！</code></td><td><code>!</code></td><td>Speichern</td><td>Dokument beenden und speichern</td></tr>
 </table>
 
 <h2>Details zu jeder Anweisung</h2>
@@ -76,132 +76,136 @@
 <pre>Heute war das Wetter schoen
 Ich bin spazieren gegangen</pre>
 
-<h3>2. Tag: <code>。</code></h3>
-<p>Stellen Sie <code>。</code> voran, um Tags anzugeben. Trennen Sie mehrere Tags mit <code>、</code>.</p>
-<pre>。Tagebuch、Wetter</pre>
+<h3>2. Tag: <code>#</code></h3>
+<p>Stellen Sie <code>#</code> voran, um Tags anzugeben. Trennen Sie mehrere Tags mit <code>,</code>.</p>
+<pre>#Tagebuch,Wetter</pre>
 
-<h3>3. Textblock: <code>ーー</code></h3>
-<p>Beginnen und enden Sie mit <code>ーー</code>. Alles dazwischen wird unveraendert beibehalten.</p>
-<pre>ーー
+<h3>3. Textblock: <code>--</code></h3>
+<p>Beginnen und enden Sie mit <code>--</code>. Alles dazwischen wird unveraendert beibehalten.</p>
+<pre>--
 Dies ist ein
 mehrzeiliger
 Textblock
-ーー</pre>
+--</pre>
 
-<h3>4. Trennzeichen: <code>、</code></h3>
+<h3>4. Trennzeichen: <code>,</code></h3>
 <p>Teilt in einen neuen Datensatz auf. Alles nach dieser Zeile gehoert zu einem neuen Datensatz.</p>
 <pre>Erstes Memo
-、
+,
 Zweites Memo</pre>
 
-<h3>5. Trennzeichen (+1 Sekunde): <code>、、</code></h3>
+<h3>5. Trennzeichen (+1 Sekunde): <code>,,</code></h3>
 <p>Wie das Trennzeichen, aber der Zeitstempel wird um 1 Sekunde erhoeht.</p>
 <pre>Erstes Memo
-、、
+,,
 Memo eine Sekunde spaeter</pre>
 
-<h3>6. Zugehoerige Zeit: <code>？</code></h3>
-<p>Legt eine zugehoerige Zeit fest. Format: <code>？YYYY-MM-DD</code>, <code>？YYYY-MM-DD HH:MM</code> oder <code>？YYYY-MM-DD HH:MM:SS</code></p>
-<pre>？2025-03-15 14:30</pre>
+<h3>6. Zugehoerige Zeit: <code>?</code></h3>
+<p>Legt eine zugehoerige Zeit fest. Format: <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code> oder <code>?YYYY-MM-DD HH:MM:SS</code></p>
+<pre>?2025-03-15 14:30</pre>
 
-<h3>7. Numerischer Eintrag: <code>ーか</code></h3>
+<div class="tip">
+  <strong>Hinweis:</strong> <code>#</code> am Zeilenanfang wird als Tag-Präfix interpretiert, <code>?</code> als Datum/Uhrzeit. Um diese Zeichen als normalen Text zu verwenden, umschließen Sie sie mit einem Textblock (<code>--</code>).
+</div>
+
+<h3>7. Numerischer Eintrag: <code>/num</code></h3>
 <p>Naechste Zeile: Titel, dann naechste Zeile: numerischer Wert.</p>
-<pre>ーか
+<pre>/num
 Gewicht
 65.5</pre>
 
-<h3>8. Aufgabe: <code>ーみ</code></h3>
+<h3>8. Aufgabe: <code>/mi</code></h3>
 <p>Folgende Zeilen: Titel, Board-Name, Frist, geschaetzte Startzeit, geschaetzte Endzeit (alles ausser dem Titel ist optional).</p>
-<pre>ーみ
+<pre>/mi
 Bericht schreiben
 Arbeit
 2025-03-20</pre>
 
-<h3>9. Stimmung: <code>ーら</code></h3>
+<h3>9. Stimmung: <code>/mood</code></h3>
 <p>Naechste Zeile: Stimmungswert (Ganzzahl 0-10).</p>
-<pre>ーら
+<pre>/mood
 7</pre>
 
-<h3>10. Ausgabe: <code>ーん</code></h3>
+<h3>10. Ausgabe: <code>/expense</code></h3>
 <p>Naechste Zeile: Geschaeftsname, dann Paare von (Artikelname, Betrag) wiederholt.</p>
-<pre>ーん
+<pre>/expense
 Supermarkt
 Sandwich
 150
 Getraenk
 120</pre>
 
-<h3>11. Zeitprotokoll (vollstaendig): <code>ーち</code></h3>
+<h3>11. Zeitprotokoll (vollstaendig): <code>/timeis</code></h3>
 <p>Folgende Zeilen: Titel, Startzeit, Endzeit.</p>
-<pre>ーち
+<pre>/timeis
 Besprechung
 2025-03-15 10:00
 2025-03-15 11:30</pre>
 
-<h3>12. Zeitprotokoll-Start: <code>ーた</code></h3>
+<h3>12. Zeitprotokoll-Start: <code>/start</code></h3>
 <p>Folgende Zeilen: Titel, Startzeit.</p>
-<pre>ーた
+<pre>/start
 Arbeitsbeginn
 2025-03-15 09:00</pre>
 
-<h3>13. Zeitprotokoll-Ende: <code>ーえ</code></h3>
+<h3>13. Zeitprotokoll-Ende: <code>/end</code></h3>
 <p>Naechste Zeile: Titel. Findet ein passendes gestartetes Zeitprotokoll und beendet es.</p>
-<pre>ーえ
+<pre>/end
 Arbeitsbeginn</pre>
 
-<h3>14. Zeitprotokoll-Ende (falls vorhanden): <code>ーいえ</code></h3>
+<h3>14. Zeitprotokoll-Ende (falls vorhanden): <code>/end?</code></h3>
 <p>Wie Zeitprotokoll-Ende, erzeugt aber keinen Fehler, wenn kein passendes Zeitprotokoll existiert.</p>
-<pre>ーいえ
+<pre>/end?
 Arbeitsbeginn</pre>
 
-<h3>15. Zeitprotokoll per Tag beenden: <code>ーたえ</code></h3>
+<h3>15. Zeitprotokoll per Tag beenden: <code>/endt</code></h3>
 <p>Naechste Zeile: Tag-Name. Findet und beendet ein Zeitprotokoll anhand seines Tags.</p>
-<pre>ーたえ
+<pre>/endt
 Arbeit</pre>
 
-<h3>16. Zeitprotokoll per Tag beenden (falls vorhanden): <code>ーいたえ</code></h3>
+<h3>16. Zeitprotokoll per Tag beenden (falls vorhanden): <code>/endt?</code></h3>
 <p>Wie Zeitprotokoll per Tag beenden, erzeugt aber keinen Fehler, wenn kein passendes Zeitprotokoll existiert.</p>
-<pre>ーいたえ
+<pre>/endt?
 Arbeit</pre>
 
-<h3>17. Lesezeichen: <code>ーう</code></h3>
+<h3>17. Lesezeichen: <code>/url</code></h3>
 <p>Naechste Zeile: URL, dann naechste Zeile: Titel.</p>
-<pre>ーう
+<pre>/url
 https://example.com
 Lieblingsseite</pre>
 
-<h3>18. Speichern: <code>！</code></h3>
+<h3>18. Speichern: <code>!</code></h3>
 <p>Beendet das Dokument und fuehrt den Speichervorgang aus.</p>
-<pre>！</pre>
+<pre>!</pre>
 
 <h2>Vollstaendiges Beispiel</h2>
 
 <p>Nachfolgend ein vollstaendiges Notizblock-Syntax-Dokument, das mehrere Anweisungstypen kombiniert.</p>
 
 <pre>Tagebuch von heute
-。Tagebuch、Wetter
-？2025-03-15
-、
-ーみ
+#Tagebuch,Wetter
+?2025-03-15
+,
+/mi
 Einkaufen gehen
 Persoenlich
-、
-ーん
+,
+/expense
 Supermarkt
 Aepfel
 200
 Milch
 180
-、
-ーた
+,
+/start
 Lesen
-、
-ーら
+,
+/mood
 8
-！</pre>
+!</pre>
 
 <div class="tip">
-  <strong>Tipp:</strong> Verwenden Sie <code>、</code>, um mehrere Datensaetze innerhalb eines Dokuments zu trennen. Das Hinzufuegen von <code>！</code> am Ende loest das automatische Speichern aus.
+  <strong>Tipp:</strong> Verwenden Sie <code>,</code>, um mehrere Datensaetze innerhalb eines Dokuments zu trennen. Das Hinzufuegen von <code>!</code> am Ende loest das automatische Speichern aus.
 </div>
 
   <h2>Verwandte Dokumente</h2>

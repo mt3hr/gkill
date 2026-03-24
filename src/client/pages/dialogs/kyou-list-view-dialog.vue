@@ -79,6 +79,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("kyou-list-view-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 async function show(): Promise<void> {
