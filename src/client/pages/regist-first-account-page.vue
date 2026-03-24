@@ -3,12 +3,18 @@
         <v-toolbar-title>{{ i18n.global.t("REGIST_FIRST_ACCOUNT_TITLE") }}</v-toolbar-title>
         <v-spacer />
         <span class="gkill_version">{{ i18n.global.t("VERSION_TITLE") }}: {{ gkill_version }}</span>
+        <v-tooltip :text="i18n.global.t('TOOLTIP_HELP')">
+            <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" icon="mdi-help-circle-outline" @click="help_dialog?.show()" />
+            </template>
+        </v-tooltip>
     </v-app-bar>
     <v-main class="main">
         <RegistFirstAccountView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="new ApplicationConfig()" :gkill_api="gkill_api"
             @received_errors="onReceivedErrors"
             @received_messages="onReceivedMessages" />
+        <HelpDialog screen_name="getting-started" ref="help_dialog" />
         <div class="alert_container" role="status" aria-live="polite">
             <v-slide-y-transition group>
                 <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
@@ -27,10 +33,14 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import { i18n } from '@/i18n'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import RegistFirstAccountView from './views/regist-first-account-view.vue'
+import HelpDialog from './dialogs/help-dialog.vue'
 import { useRegistFirstAccountPage } from '@/classes/use-regist-first-account-page'
+
+const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const {
     // State
