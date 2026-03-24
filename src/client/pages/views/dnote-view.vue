@@ -48,8 +48,8 @@
             </v-col>
         </v-row>
         <h1>
-            <v-row>
-                <v-col cols="auto">
+            <v-row class="pa-0 ma-0">
+                <v-col cols="auto pa-0 ma-0">
                     <span>{{ start_date_str }}</span>
                     <span v-if="end_date_str !== '' && start_date_str != end_date_str">～</span>
                     <span v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span>
@@ -57,7 +57,7 @@
                         i18n.global.t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
-                <v-col cols="auto" v-if="!editable">
+                <v-col cols="auto pa-0 ma-0" v-if="!editable">
                     <v-tooltip :text="i18n.global.t('TOOLTIP_DOWNLOAD')">
                         <template v-slot:activator="{ props }">
                             <v-btn v-bind="props" :disabled="!loaded_kyous" icon="mdi-download-circle-outline" @click="download_kyous_json" />
