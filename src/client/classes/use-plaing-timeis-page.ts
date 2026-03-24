@@ -47,6 +47,13 @@ export function usePlaingTimeisPage() {
         { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
     ])
 
+    // ── beforeunload guard ──
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+        if (is_show_application_config_dialog.value) {
+            e.preventDefault()
+        }
+    }
+
     // ── Lifecycle ──
     onMounted(async () => {
         await resetDialogHistory()
@@ -56,8 +63,10 @@ export function usePlaingTimeisPage() {
         resize_content()
     }
     window.addEventListener('resize', onResize)
+    window.addEventListener('beforeunload', handleBeforeUnload)
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)
+        window.removeEventListener('beforeunload', handleBeforeUnload)
     })
 
     // ── Watchers ──

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page partag&eacute;e - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Page partag&eacute;e</span></nav>
+  <h1>Page partag&eacute;e</h1>
+  <p>Cette page permet de consulter les enregistrements qu'un utilisateur de gkill a publi&eacute;s via un lien de partage. Vous pouvez y acc&eacute;der sans compte gkill.</p>
+
+  <h2>&Agrave; propos de cette page</h2>
+  <ul>
+    <li>Toute personne disposant du lien de partage peut consulter cette page.</li>
+    <li>Aucune connexion &agrave; gkill n'est requise.</li>
+    <li>Vous pouvez uniquement consulter les enregistrements partag&eacute;s ; la modification et la suppression ne sont pas possibles.</li>
+  </ul>
+
+  <h2>Donn&eacute;es affich&eacute;es</h2>
+  <p>Selon les param&egrave;tres du lien de partage, les enregistrements sont affich&eacute;s dans l'une des vues suivantes.</p>
+  <table>
+    <tr>
+      <th>Type de vue</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Vue journal de vie</td>
+      <td>Consulter les enregistrements partag&eacute;s par ordre chronologique.</td>
+    </tr>
+    <tr>
+      <td>Vue des t&acirc;ches</td>
+      <td>Consulter les t&acirc;ches partag&eacute;es sous forme de tableau.</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Conseil :</strong> L'&eacute;tendue des enregistrements affich&eacute;s est d&eacute;termin&eacute;e par les param&egrave;tres de l'utilisateur qui a cr&eacute;&eacute; le lien de partage.
+  </div>
+
+  <h2>D&eacute;pannage</h2>
+  <table>
+    <tr>
+      <th>Sympt&ocirc;me</th>
+      <th>Solution</th>
+    </tr>
+    <tr>
+      <td>La page ne se charge pas</td>
+      <td>V&eacute;rifiez que le lien de partage est correct. Le lien a peut-&ecirc;tre expir&eacute;.</td>
+    </tr>
+    <tr>
+      <td>Aucune donn&eacute;e n'est affich&eacute;e</td>
+      <td>Les param&egrave;tres de partage ont peut-&ecirc;tre &eacute;t&eacute; modifi&eacute;s. Veuillez v&eacute;rifier aupr&egrave;s de la personne qui vous a envoy&eacute; le lien.</td>
+    </tr>
+    <tr>
+      <td>Un message d'erreur s'affiche</td>
+      <td>Le serveur gkill est peut-&ecirc;tre inaccessible. Veuillez patienter un instant et r&eacute;essayer.</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

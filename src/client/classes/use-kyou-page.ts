@@ -59,6 +59,13 @@ export function useKyouPage() {
         is_loading.value = false
     })
 
+    // ── beforeunload guard ──
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+        if (is_loading.value) {
+            e.preventDefault()
+        }
+    }
+
     // ── Lifecycle ──
     onMounted(async () => {
         await resetDialogHistory()
@@ -68,8 +75,10 @@ export function useKyouPage() {
         resize_content()
     }
     window.addEventListener('resize', onResize)
+    window.addEventListener('beforeunload', handleBeforeUnload)
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)
+        window.removeEventListener('beforeunload', handleBeforeUnload)
     })
 
     // ── Internal helpers ──

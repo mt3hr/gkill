@@ -68,6 +68,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("add-lantana-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 

@@ -82,7 +82,7 @@ src/server/
 ├── go.sum                          # 依存パッケージのチェックサム
 └── gkill/
     ├── api/                        # HTTPハンドラ層
-    │   ├── gkill_server_api.go     # メインAPIハンドラ（~12,300行）
+    │   ├── gkill_server_api.go     # メインAPIハンドラ（~14,000行）
     │   ├── gkill_server_api_address.go  # ルーティング定義（79 POSTエンドポイント）
     │   ├── handle_*.go             # 個別ハンドラ関数群
     │   ├── embed.go                # go:embed によるSPA埋め込み

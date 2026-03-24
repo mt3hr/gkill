@@ -1,6 +1,6 @@
 {
     "RESET_PASSWORD_TITLE": "비밀번호 설정",
-    "SAIHATE_PAGE_TITLE": "사이하테",
+    "SAIHATE_PAGE_TITLE": "허브",
     "UPLOAD_APP_NAME": "업로드",
     "LOGIN_TITLE": "로그인",
     "ADD_TAG_TITLE": "태그 추가",
@@ -309,7 +309,7 @@
     "PLAING_TIMEIS_APP_NAME": "진행 중",
     "RYKV_APP_TITLE": "라이프로그 뷰",
     "RYKV_APP_NAME": "라이프로그 뷰",
-    "SAIHATE_APP_NAME": "사이하테",
+    "SAIHATE_APP_NAME": "허브",
     "TIMEIS_APP_NAME": "타임 트래커",
     "URLOG_APP_NAME": "북마크",
     "VERSION_TITLE": "gkill 버전",
@@ -756,5 +756,12 @@
     "TOOLTIP_TOGGLE_IMAGE_VIEW": "이미지 보기 전환",
     "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "클릭한 시기까지 스크롤",
     "TOOLTIP_CLOSE_COLUMN": "열 닫기",
-    "TOOLTIP_ADD_BOARD": "보드 추가"
+    "TOOLTIP_ADD_BOARD": "보드 추가",
+    "SESSION_EXPIRED_MESSAGE": "세션이 만료되었습니다. 다시 로그인해 주세요",
+    "LOGIN_RATE_LIMITED_MESSAGE": "로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해 주세요",
+    "NETWORK_OFFLINE_MESSAGE": "네트워크에 연결되어 있지 않습니다",
+    "NETWORK_ERROR_MESSAGE": "네트워크 오류가 발생했습니다. 연결을 확인해 주세요",
+    "NO_RESULTS_MESSAGE": "대상 없음",
+    "REQUIRED_FIELD_MESSAGE": "이 항목은 필수입니다",
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "저장되지 않은 변경 사항이 있습니다. 페이지를 떠나시겠습니까？"
 }

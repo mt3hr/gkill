@@ -33,6 +33,8 @@ func TestErrorCodes_NonEmpty(t *testing.T) {
 		"InvalidURLogBookmarkletRequestDataError": InvalidURLogBookmarkletRequestDataError,
 		"UpdateCacheError":                     UpdateCacheError,
 		"CommitTxGetKmemoError":                CommitTxGetKmemoError,
+		"AccountSessionExpiredError":           AccountSessionExpiredError,
+		"LoginRateLimitError":                  LoginRateLimitError,
 	}
 
 	for name, code := range errorCodes {
@@ -68,6 +70,8 @@ func TestErrorCodes_UniqueValues(t *testing.T) {
 		NotImplementsError,
 		UpdateCacheError,
 		CommitTxGetKmemoError,
+		AccountSessionExpiredError,
+		LoginRateLimitError,
 	}
 
 	seen := make(map[string]bool)
@@ -103,6 +107,8 @@ func TestErrorCodes_Format(t *testing.T) {
 		"UpdateTagError":                      UpdateTagError,
 		"UpdateNotificationError":             UpdateNotificationError,
 		"GetKyousMCPError":                    GetKyousMCPError,
+		"AccountSessionExpiredError":          AccountSessionExpiredError,
+		"LoginRateLimitError":                 LoginRateLimitError,
 	}
 
 	for name, code := range codes {

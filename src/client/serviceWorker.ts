@@ -164,6 +164,8 @@ self.addEventListener('fetch', event => {
     new URL(req.url).pathname === '/share-target') {
 
     event.respondWith((async () => {
+      let is_saved = false
+      try {
       const form = await req.formData();
       const shared_url = form.get('url') as string | null;
       const shared_text = form.get('text') as string | null;
@@ -176,8 +178,6 @@ self.addEventListener('fetch', event => {
       const application_config_req = new GetApplicationConfigRequest()
       application_config_req.session_id = session_id
       const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
-
-      let is_saved = false
 
       if (isUrl(shared_url)) {
         const req = new AddURLogRequest()
@@ -270,7 +270,10 @@ self.addEventListener('fetch', event => {
           is_saved = true
         }
       }
-
+      } catch (e) {
+        console.error('[SW] share-target error:', e)
+        is_saved = false
+      }
       return Response.redirect('/saihate?is_saved=' + is_saved, 303);
     })());
   }

@@ -32,6 +32,9 @@
         />
       </template>
     </v-virtual-scroll>
+    <v-col v-if="aggregated_items && aggregated_items.length === 0" cols="12" class="text-center text-grey py-6">
+      {{ i18n.global.t('NO_RESULTS_MESSAGE') }}
+    </v-col>
 
     <v-card variant="text" :ripple="false" :link="false">
       <v-row no-gutters>

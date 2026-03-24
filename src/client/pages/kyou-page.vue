@@ -57,12 +57,13 @@
                 @requested_reload_application_config="load_application_config" ref="application_config_dialog" />
             <HelpDialog screen_name="kyou" ref="help_dialog" />
         </v-main>
-        <div class="alert_container">
+        <div class="alert_container" role="status" aria-live="polite">
             <v-slide-y-transition group>
                 <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
                     v-for="message in messages" :key="message.id">
                     <template v-slot:activator="{ props }">
                         <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
+                            :role="message.is_error ? 'alert' : undefined"
                             :closable="message.closable" @click:close="close_message(message.id)">
                             {{ message.message }}
                         </v-alert>

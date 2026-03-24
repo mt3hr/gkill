@@ -756,5 +756,12 @@
     "TOOLTIP_TOGGLE_IMAGE_VIEW": "Alternar Vista de Imágenes",
     "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "Desplazar al Período Seleccionado",
     "TOOLTIP_CLOSE_COLUMN": "Cerrar Columna",
-    "TOOLTIP_ADD_BOARD": "Agregar Tablero"
+    "TOOLTIP_ADD_BOARD": "Agregar Tablero",
+    "SESSION_EXPIRED_MESSAGE": "La sesión ha expirado. Inicie sesión de nuevo.",
+    "LOGIN_RATE_LIMITED_MESSAGE": "Demasiados intentos de inicio de sesión. Inténtelo de nuevo más tarde.",
+    "NETWORK_OFFLINE_MESSAGE": "No hay conexión a la red",
+    "NETWORK_ERROR_MESSAGE": "Se produjo un error de red. Compruebe su conexión.",
+    "NO_RESULTS_MESSAGE": "Sin elementos",
+    "REQUIRED_FIELD_MESSAGE": "Este campo es obligatorio",
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "Tiene cambios sin guardar. ¿Desea salir de la página?"
 }

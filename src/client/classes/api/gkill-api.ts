@@ -530,7 +530,7 @@ export class GkillAPI {
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
-                const res = await fetch(this.login_address, {
+                const res = await this.gkill_fetch(this.login_address, {
                         'method': this.login_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -546,7 +546,7 @@ export class GkillAPI {
         async logout(req: LogoutRequest): Promise<LogoutResponse> {
                 await delete_gkill_config_cache()
                 await delete_gkill_kyou_cache(null)
-                const res = await fetch(this.logout_address, {
+                const res = await this.gkill_fetch(this.logout_address, {
                         'method': this.logout_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -560,7 +560,7 @@ export class GkillAPI {
         }
 
         async reset_password(req: ResetPasswordRequest): Promise<ResetPasswordResponse> {
-                const res = await fetch(this.reset_password_address, {
+                const res = await this.gkill_fetch(this.reset_password_address, {
                         'method': this.reset_password_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -575,7 +575,7 @@ export class GkillAPI {
         }
 
         async set_new_password(req: SetNewPasswordRequest): Promise<SetNewPasswordResponse> {
-                const res = await fetch(this.set_new_password_address, {
+                const res = await this.gkill_fetch(this.set_new_password_address, {
                         'method': this.set_new_password_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -590,7 +590,7 @@ export class GkillAPI {
         }
 
         async add_tag(req: AddTagRequest): Promise<AddTagResponse> {
-                const res = await fetch(this.add_tag_address, {
+                const res = await this.gkill_fetch(this.add_tag_address, {
                         'method': this.add_tag_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -606,7 +606,7 @@ export class GkillAPI {
         }
 
         async add_text(req: AddTextRequest): Promise<AddTextResponse> {
-                const res = await fetch(this.add_text_address, {
+                const res = await this.gkill_fetch(this.add_text_address, {
                         'method': this.add_text_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -622,7 +622,7 @@ export class GkillAPI {
         }
 
         async add_notification(req: AddNotificationRequest): Promise<AddNotificationResponse> {
-                const res = await fetch(this.add_notification_address, {
+                const res = await this.gkill_fetch(this.add_notification_address, {
                         'method': this.add_notification_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -638,7 +638,7 @@ export class GkillAPI {
         }
 
         async add_kmemo(req: AddKmemoRequest): Promise<AddKmemoResponse> {
-                const res = await fetch(this.add_kmemo_address, {
+                const res = await this.gkill_fetch(this.add_kmemo_address, {
                         'method': this.add_kmemo_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -654,7 +654,7 @@ export class GkillAPI {
         }
 
         async add_kc(req: AddKCRequest): Promise<AddKCResponse> {
-                const res = await fetch(this.add_kc_address, {
+                const res = await this.gkill_fetch(this.add_kc_address, {
                         'method': this.add_kc_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -670,7 +670,7 @@ export class GkillAPI {
         }
 
         async add_urlog(req: AddURLogRequest): Promise<AddURLogResponse> {
-                const res = await fetch(this.add_urlog_address, {
+                const res = await this.gkill_fetch(this.add_urlog_address, {
                         'method': this.add_urlog_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -686,7 +686,7 @@ export class GkillAPI {
         }
 
         async add_nlog(req: AddNlogRequest): Promise<AddNlogResponse> {
-                const res = await fetch(this.add_nlog_address, {
+                const res = await this.gkill_fetch(this.add_nlog_address, {
                         'method': this.add_nlog_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -702,7 +702,7 @@ export class GkillAPI {
         }
 
         async add_timeis(req: AddTimeisRequest): Promise<AddTimeisResponse> {
-                const res = await fetch(this.add_timeis_address, {
+                const res = await this.gkill_fetch(this.add_timeis_address, {
                         'method': this.add_timeis_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -718,7 +718,7 @@ export class GkillAPI {
         }
 
         async add_mi(req: AddMiRequest): Promise<AddMiResponse> {
-                const res = await fetch(this.add_mi_address, {
+                const res = await this.gkill_fetch(this.add_mi_address, {
                         'method': this.add_mi_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -734,7 +734,7 @@ export class GkillAPI {
         }
 
         async add_lantana(req: AddLantanaRequest): Promise<AddLantanaResponse> {
-                const res = await fetch(this.add_lantana_address, {
+                const res = await this.gkill_fetch(this.add_lantana_address, {
                         'method': this.add_lantana_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -750,7 +750,7 @@ export class GkillAPI {
         }
 
         async add_rekyou(req: AddReKyouRequest): Promise<AddReKyouResponse> {
-                const res = await fetch(this.add_rekyou_address, {
+                const res = await this.gkill_fetch(this.add_rekyou_address, {
                         'method': this.add_rekyou_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -766,7 +766,7 @@ export class GkillAPI {
         }
 
         async update_tag(req: UpdateTagRequest): Promise<UpdateTagResponse> {
-                const res = await fetch(this.update_tag_address, {
+                const res = await this.gkill_fetch(this.update_tag_address, {
                         'method': this.update_tag_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -782,7 +782,7 @@ export class GkillAPI {
         }
 
         async update_text(req: UpdateTextRequest): Promise<UpdateTextResponse> {
-                const res = await fetch(this.update_text_address, {
+                const res = await this.gkill_fetch(this.update_text_address, {
                         'method': this.update_text_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -798,7 +798,7 @@ export class GkillAPI {
         }
 
         async update_notification(req: UpdateNotificationRequest): Promise<UpdateNotificationResponse> {
-                const res = await fetch(this.update_notification_address, {
+                const res = await this.gkill_fetch(this.update_notification_address, {
                         'method': this.update_notification_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -814,7 +814,7 @@ export class GkillAPI {
         }
 
         async update_kmemo(req: UpdateKmemoRequest): Promise<UpdateKmemoResponse> {
-                const res = await fetch(this.update_kmemo_address, {
+                const res = await this.gkill_fetch(this.update_kmemo_address, {
                         'method': this.update_kmemo_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -830,7 +830,7 @@ export class GkillAPI {
         }
 
         async update_kc(req: UpdateKCRequest): Promise<UpdateKCResponse> {
-                const res = await fetch(this.update_kc_address, {
+                const res = await this.gkill_fetch(this.update_kc_address, {
                         'method': this.update_kc_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -846,7 +846,7 @@ export class GkillAPI {
         }
 
         async update_urlog(req: UpdateURLogRequest): Promise<UpdateURLogResponse> {
-                const res = await fetch(this.update_urlog_address, {
+                const res = await this.gkill_fetch(this.update_urlog_address, {
                         'method': this.update_urlog_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -862,7 +862,7 @@ export class GkillAPI {
         }
 
         async update_nlog(req: UpdateNlogRequest): Promise<UpdateNlogResponse> {
-                const res = await fetch(this.update_nlog_address, {
+                const res = await this.gkill_fetch(this.update_nlog_address, {
                         'method': this.update_nlog_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -878,7 +878,7 @@ export class GkillAPI {
         }
 
         async update_timeis(req: UpdateTimeisRequest): Promise<UpdateTimeisResponse> {
-                const res = await fetch(this.update_timeis_address, {
+                const res = await this.gkill_fetch(this.update_timeis_address, {
                         'method': this.update_timeis_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -894,7 +894,7 @@ export class GkillAPI {
         }
 
         async update_mi(req: UpdateMiRequest): Promise<UpdateMiResponse> {
-                const res = await fetch(this.update_mi_address, {
+                const res = await this.gkill_fetch(this.update_mi_address, {
                         'method': this.update_mi_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -910,7 +910,7 @@ export class GkillAPI {
         }
 
         async update_lantana(req: UpdateLantanaRequest): Promise<UpdateLantanaResponse> {
-                const res = await fetch(this.update_lantana_address, {
+                const res = await this.gkill_fetch(this.update_lantana_address, {
                         'method': this.update_lantana_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -926,7 +926,7 @@ export class GkillAPI {
         }
 
         async update_idf_kyou(req: UpdateIDFKyouRequest): Promise<UpdateIDFKyouResponse> {
-                const res = await fetch(this.update_idf_kyou_address, {
+                const res = await this.gkill_fetch(this.update_idf_kyou_address, {
                         'method': this.update_idf_kyou_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -942,7 +942,7 @@ export class GkillAPI {
         }
 
         async update_rekyou(req: UpdateReKyouRequest): Promise<UpdateReKyouResponse> {
-                const res = await fetch(this.update_rekyou_address, {
+                const res = await this.gkill_fetch(this.update_rekyou_address, {
                         'method': this.update_rekyou_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -958,7 +958,7 @@ export class GkillAPI {
         }
 
         async get_kyous(req: GetKyousRequest): Promise<GetKyousResponse> {
-                const res = await fetch(this.get_kyous_address, {
+                const res = await this.gkill_fetch(this.get_kyous_address, {
                         'method': this.get_kyous_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1005,7 +1005,7 @@ export class GkillAPI {
         }
 
         async get_kyou(req: GetKyouRequest): Promise<GetKyouResponse> {
-                const res = await fetch(this.get_kyou_address, {
+                const res = await this.gkill_fetch(this.get_kyou_address, {
                         'method': this.get_kyou_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1038,7 +1038,7 @@ export class GkillAPI {
         }
 
         async get_kmemo(req: GetKmemoRequest): Promise<GetKmemoResponse> {
-                const res = await fetch(this.get_kmemo_address, {
+                const res = await this.gkill_fetch(this.get_kmemo_address, {
                         'method': this.get_kmemo_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1076,7 +1076,7 @@ export class GkillAPI {
         }
 
         async get_kc(req: GetKCRequest): Promise<GetKCResponse> {
-                const res = await fetch(this.get_kc_address, {
+                const res = await this.gkill_fetch(this.get_kc_address, {
                         'method': this.get_kc_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1114,7 +1114,7 @@ export class GkillAPI {
         }
 
         async get_urlog(req: GetURLogRequest): Promise<GetURLogResponse> {
-                const res = await fetch(this.get_urlog_address, {
+                const res = await this.gkill_fetch(this.get_urlog_address, {
                         'method': this.get_urlog_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1152,7 +1152,7 @@ export class GkillAPI {
         }
 
         async get_nlog(req: GetNlogRequest): Promise<GetNlogResponse> {
-                const res = await fetch(this.get_nlog_address, {
+                const res = await this.gkill_fetch(this.get_nlog_address, {
                         'method': this.get_nlog_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1190,7 +1190,7 @@ export class GkillAPI {
         }
 
         async get_timeis(req: GetTimeisRequest): Promise<GetTimeisResponse> {
-                const res = await fetch(this.get_timeis_address, {
+                const res = await this.gkill_fetch(this.get_timeis_address, {
                         'method': this.get_timeis_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1228,7 +1228,7 @@ export class GkillAPI {
         }
 
         async get_mi(req: GetMiRequest): Promise<GetMiResponse> {
-                const res = await fetch(this.get_mi_address, {
+                const res = await this.gkill_fetch(this.get_mi_address, {
                         'method': this.get_mi_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1266,7 +1266,7 @@ export class GkillAPI {
         }
 
         async get_lantana(req: GetLantanaRequest): Promise<GetLantanaResponse> {
-                const res = await fetch(this.get_lantana_address, {
+                const res = await this.gkill_fetch(this.get_lantana_address, {
                         'method': this.get_lantana_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1304,7 +1304,7 @@ export class GkillAPI {
         }
 
         async get_rekyou(req: GetReKyouRequest): Promise<GetReKyouResponse> {
-                const res = await fetch(this.get_rekyou_address, {
+                const res = await this.gkill_fetch(this.get_rekyou_address, {
                         'method': this.get_rekyou_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1342,7 +1342,7 @@ export class GkillAPI {
         }
 
         async get_git_commit_log(req: GetGitCommitLogRequest): Promise<GetGitCommitLogResponse> {
-                const res = await fetch(this.get_git_commit_log_address, {
+                const res = await this.gkill_fetch(this.get_git_commit_log_address, {
                         'method': this.get_git_commit_log_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1380,7 +1380,7 @@ export class GkillAPI {
         }
 
         async get_idf_kyou(req: GetIDFKyouRequest): Promise<GetIDFKyouResponse> {
-                const res = await fetch(this.get_idf_kyou_address, {
+                const res = await this.gkill_fetch(this.get_idf_kyou_address, {
                         'method': this.get_idf_kyou_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1418,7 +1418,7 @@ export class GkillAPI {
         }
 
         async get_mi_board_list(req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
-                const res = await fetch(this.get_mi_board_list_address, {
+                const res = await this.gkill_fetch(this.get_mi_board_list_address, {
                         'method': this.get_mi_board_list_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1433,7 +1433,7 @@ export class GkillAPI {
         }
 
         async get_all_tag_names(req: GetAllTagNamesRequest): Promise<GetAllTagNamesResponse> {
-                const res = await fetch(this.get_all_tag_names_address, {
+                const res = await this.gkill_fetch(this.get_all_tag_names_address, {
                         'method': this.get_all_tag_names_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1448,7 +1448,7 @@ export class GkillAPI {
         }
 
         async get_all_rep_names(req: GetAllRepNamesRequest): Promise<GetAllRepNamesResponse> {
-                const res = await fetch(this.get_all_rep_names_address, {
+                const res = await this.gkill_fetch(this.get_all_rep_names_address, {
                         'method': this.get_all_rep_names_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1463,7 +1463,7 @@ export class GkillAPI {
         }
 
         async get_tags_by_target_id(req: GetTagsByTargetIDRequest): Promise<GetTagsByTargetIDResponse> {
-                const res = await fetch(this.get_tags_by_target_id_address, {
+                const res = await this.gkill_fetch(this.get_tags_by_target_id_address, {
                         'method': this.get_tags_by_target_id_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1499,7 +1499,7 @@ export class GkillAPI {
         }
 
         async get_tag_histories_by_tag_id(req: GetTagHistoryByTagIDRequest): Promise<GetTagHistoryByTagIDResponse> {
-                const res = await fetch(this.get_tag_histories_by_tag_id_address, {
+                const res = await this.gkill_fetch(this.get_tag_histories_by_tag_id_address, {
                         'method': this.get_tag_histories_by_tag_id_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1535,7 +1535,7 @@ export class GkillAPI {
         }
 
         async get_texts_by_target_id(req: GetTextsByTargetIDRequest): Promise<GetTextsByTargetIDResponse> {
-                const res = await fetch(this.get_texts_by_target_id_address, {
+                const res = await this.gkill_fetch(this.get_texts_by_target_id_address, {
                         'method': this.get_texts_by_target_id_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1572,7 +1572,7 @@ export class GkillAPI {
         }
 
         async get_notifications_by_target_id(req: GetNotificationsByTargetIDRequest): Promise<GetNotificationsByTargetIDResponse> {
-                const res = await fetch(this.get_notifications_by_target_id_address, {
+                const res = await this.gkill_fetch(this.get_notifications_by_target_id_address, {
                         'method': this.get_notifications_by_target_id_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1609,7 +1609,7 @@ export class GkillAPI {
         }
 
         async get_text_history_by_text_id(req: GetTextHistoryByTextIDRequest): Promise<GetTextHistoryByTextIDResponse> {
-                const res = await fetch(this.get_text_histories_by_text_id_address, {
+                const res = await this.gkill_fetch(this.get_text_histories_by_text_id_address, {
                         'method': this.get_text_histories_by_text_id_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1646,7 +1646,7 @@ export class GkillAPI {
         }
 
         async get_notification_history_by_notification_id(req: GetNotificationHistoryByNotificationIDRequest): Promise<GetNotificationHistoryByNotificationIDResponse> {
-                const res = await fetch(this.get_notification_histories_by_notification_id_address, {
+                const res = await this.gkill_fetch(this.get_notification_histories_by_notification_id_address, {
                         'method': this.get_notification_histories_by_notification_id_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1685,7 +1685,7 @@ export class GkillAPI {
 
 
         async get_application_config(req: GetApplicationConfigRequest, not_load_all?: boolean): Promise<GetApplicationConfigResponse> {
-                const res = await fetch(this.get_application_config_address, {
+                const res = await this.gkill_fetch(this.get_application_config_address, {
                         'method': this.get_application_config_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1787,7 +1787,7 @@ export class GkillAPI {
         }
 
         async get_server_configs(req: GetServerConfigsRequest): Promise<GetServerConfigsResponse> {
-                const res = await fetch(this.get_server_configs_address, {
+                const res = await this.gkill_fetch(this.get_server_configs_address, {
                         'method': this.get_server_configs_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1805,7 +1805,7 @@ export class GkillAPI {
         }
 
         async upload_files(req: UploadFilesRequest): Promise<UploadFilesResponse> {
-                const res = await fetch(this.upload_files_address, {
+                const res = await this.gkill_fetch(this.upload_files_address, {
                         'method': this.upload_files_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1838,7 +1838,7 @@ export class GkillAPI {
         }
 
         async upload_gpslog_files(req: UploadGPSLogFilesRequest): Promise<UploadGPSLogFilesResponse> {
-                const res = await fetch(this.upload_gpslog_files_address, {
+                const res = await this.gkill_fetch(this.upload_gpslog_files_address, {
                         'method': this.upload_gpslog_files_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1854,7 +1854,7 @@ export class GkillAPI {
 
         async update_application_config(req: UpdateApplicationConfigRequest): Promise<UpdateApplicationConfigResponse> {
                 this.set_use_dark_theme(req.application_config.use_dark_theme)
-                const res = await fetch(this.update_application_config_address, {
+                const res = await this.gkill_fetch(this.update_application_config_address, {
                         'method': this.update_application_config_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1870,7 +1870,7 @@ export class GkillAPI {
         }
 
         async update_account_status(req: UpdateAccountStatusRequest): Promise<UpdateAccountStatusResponse> {
-                const res = await fetch(this.update_account_status_address, {
+                const res = await this.gkill_fetch(this.update_account_status_address, {
                         'method': this.update_account_status_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1885,7 +1885,7 @@ export class GkillAPI {
         }
 
         async update_user_reps(req: UpdateUserRepsRequest): Promise<UpdateUserRepsResponse> {
-                const res = await fetch(this.update_user_reps_address, {
+                const res = await this.gkill_fetch(this.update_user_reps_address, {
                         'method': this.update_user_reps_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1900,7 +1900,7 @@ export class GkillAPI {
         }
 
         async update_server_config(req: UpdateServerConfigsRequest): Promise<UpdateServerConfigsResponse> {
-                const res = await fetch(this.update_server_configs_address, {
+                const res = await this.gkill_fetch(this.update_server_configs_address, {
                         'method': this.update_server_config_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1915,7 +1915,7 @@ export class GkillAPI {
         }
 
         async add_account(req: AddAccountRequest): Promise<AddAccountResponse> {
-                const res = await fetch(this.add_account_address, {
+                const res = await this.gkill_fetch(this.add_account_address, {
                         'method': this.add_account_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1931,7 +1931,7 @@ export class GkillAPI {
         }
 
         async generate_tls_file(req: GenerateTLSFileRequest): Promise<GenerateTLSFileResponse> {
-                const res = await fetch(this.generate_tls_file_address, {
+                const res = await this.gkill_fetch(this.generate_tls_file_address, {
                         'method': this.generate_tls_file_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1946,7 +1946,7 @@ export class GkillAPI {
         }
 
         async get_gps_log(req: GetGPSLogRequest): Promise<GetGPSLogResponse> {
-                const res = await fetch(this.get_gps_log_address, {
+                const res = await this.gkill_fetch(this.get_gps_log_address, {
                         'method': this.get_gps_log_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1984,7 +1984,7 @@ export class GkillAPI {
         }
 
         async get_share_kyou_list_infos(req: GetShareKyouListInfosRequest): Promise<GetShareKyouListInfosResponse> {
-                const res = await fetch(this.get_share_kyou_list_infos_address, {
+                const res = await this.gkill_fetch(this.get_share_kyou_list_infos_address, {
                         'method': this.get_share_kyou_list_infos_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2010,7 +2010,7 @@ export class GkillAPI {
         }
 
         async add_share_kyou_list_info(req: AddShareKyouListInfoRequest): Promise<AddShareKyouListInfoResponse> {
-                const res = await fetch(this.add_share_kyou_list_info_address, {
+                const res = await this.gkill_fetch(this.add_share_kyou_list_info_address, {
                         'method': this.add_share_kyou_list_info_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2035,7 +2035,7 @@ export class GkillAPI {
         }
 
         async update_share_kyou_list_info(req: UpdateShareKyouListInfoRequest): Promise<UpdateShareKyouListInfoResponse> {
-                const res = await fetch(this.update_share_kyou_list_info_address, {
+                const res = await this.gkill_fetch(this.update_share_kyou_list_info_address, {
                         'method': this.update_share_kyou_list_info_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2059,7 +2059,7 @@ export class GkillAPI {
         }
 
         async delete_share_kyou_list_infos(req: DeleteShareKyouListInfosRequest): Promise<DeleteShareKyouListInfosResponse> {
-                const res = await fetch(this.delete_share_kyou_list_infos_address, {
+                const res = await this.gkill_fetch(this.delete_share_kyou_list_infos_address, {
                         'method': this.delete_share_kyou_list_infos_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2078,7 +2078,7 @@ export class GkillAPI {
         }
 
         async get_shared_kyous(req: GetSharedKyousRequest): Promise<GetSharedKyousResponse> {
-                const res = await fetch(this.get_shared_kyous_address, {
+                const res = await this.gkill_fetch(this.get_shared_kyous_address, {
                         'method': this.get_shared_kyous_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2351,7 +2351,7 @@ export class GkillAPI {
         }
 
         async get_repositories(req: GetRepositoriesRequest): Promise<GetRepositoriesResponse> {
-                const res = await fetch(this.get_repositories_address, {
+                const res = await this.gkill_fetch(this.get_repositories_address, {
                         'method': this.get_repositories_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2366,7 +2366,7 @@ export class GkillAPI {
         }
 
         async get_gkill_notification_public_key(req: GetGkillNotificationPublicKeyRequest): Promise<GetGkillNotificationPublicKeyResponse> {
-                const res = await fetch(this.get_gkill_notification_public_key_address, {
+                const res = await this.gkill_fetch(this.get_gkill_notification_public_key_address, {
                         'method': this.get_gkill_notification_public_key_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2381,7 +2381,7 @@ export class GkillAPI {
         }
 
         async register_gkill_notification(req: RegisterGkillNotificationRequest): Promise<RegisterGkillNotificationResponse> {
-                const res = await fetch(this.register_gkill_notification_address, {
+                const res = await this.gkill_fetch(this.register_gkill_notification_address, {
                         'method': this.register_gkill_notification_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2396,7 +2396,7 @@ export class GkillAPI {
         }
 
         async open_directory(req: OpenDirectoryRequest): Promise<OpenDirectoryResponse> {
-                const res = await fetch(this.open_directory_address, {
+                const res = await this.gkill_fetch(this.open_directory_address, {
                         'method': this.open_directory_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2411,7 +2411,7 @@ export class GkillAPI {
         }
 
         async open_file(req: OpenFileRequest): Promise<OpenFileResponse> {
-                const res = await fetch(this.open_file_address, {
+                const res = await this.gkill_fetch(this.open_file_address, {
                         'method': this.open_file_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2428,7 +2428,7 @@ export class GkillAPI {
         async reload_repositories(req: ReloadRepositoriesRequest): Promise<ReloadRepositoriesResponse> {
                 await delete_gkill_kyou_cache(null)
                 this.set_last_cache_update_time(null)
-                const res = await fetch(this.reload_repositories_address, {
+                const res = await this.gkill_fetch(this.reload_repositories_address, {
                         'method': this.reload_repositories_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2443,7 +2443,7 @@ export class GkillAPI {
         }
 
         async get_updated_datas_by_time(req: GetUpdatedDatasByTimeRequest): Promise<GetUpdatedDatasByTimeResponse> {
-                const res = await fetch(this.get_updated_datas_by_time_address, {
+                const res = await this.gkill_fetch(this.get_updated_datas_by_time_address, {
                         'method': this.get_updated_datas_by_time_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2458,7 +2458,7 @@ export class GkillAPI {
         }
 
         async commit_tx(req: CommitTXRequest): Promise<CommitTXResponse> {
-                const res = await fetch(this.commit_tx_address, {
+                const res = await this.gkill_fetch(this.commit_tx_address, {
                         'method': this.commit_tx_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2473,7 +2473,7 @@ export class GkillAPI {
         }
 
         async discard_tx(req: DiscardTXRequest): Promise<DiscardTXResponse> {
-                const res = await fetch(this.discard_tx_address, {
+                const res = await this.gkill_fetch(this.discard_tx_address, {
                         'method': this.discard_tx_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -2552,6 +2552,28 @@ export class GkillAPI {
                 return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
         }
 
+        private async gkill_fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+                try {
+                        return await fetch(input, init)
+                } catch (e) {
+                        if (!navigator.onLine || (e instanceof TypeError)) {
+                                console.error('[GkillAPI] network error:', e)
+                                const body = {
+                                        errors: [{
+                                                error_code: "NETWORK_ERROR",
+                                                error_message: i18n.global.t('NETWORK_ERROR_MESSAGE')
+                                        }],
+                                        messages: []
+                                }
+                                return new Response(JSON.stringify(body), {
+                                        status: 200,
+                                        headers: { 'Content-Type': 'application/json' }
+                                })
+                        }
+                        throw e
+                }
+        }
+
         // 認証が通っていなかったらログイン画面に遷移する
         check_auth(res: GkillAPIResponse): void {
                 if (!res.errors || res.errors.length == 0) {
@@ -2566,6 +2588,7 @@ export class GkillAPI {
                                 case "ERR000013": // AccountSessionNotFoundError
                                 case "ERR000002": // AccountNotFoundError
                                 case "ERR000238": // AccountDisabledError
+                                case "ERR000373": // AccountSessionExpiredError
                                         if (has_document) {
                                                 this.set_session_id("")
                                         }

@@ -48,25 +48,25 @@
 <h2>Resumen de sentencias</h2>
 
 <table>
-  <tr><th>Prefijo</th><th>Tipo</th><th>Descripcion</th></tr>
-  <tr><td>(ninguno)</td><td>Nota</td><td>Registrar una nota de texto</td></tr>
-  <tr><td><code>。</code></td><td>Etiqueta</td><td>Asignar etiquetas</td></tr>
-  <tr><td><code>ーー</code></td><td>Bloque de texto</td><td>Preservar texto multilinea tal cual</td></tr>
-  <tr><td><code>、</code></td><td>Separador</td><td>Dividir en un nuevo registro</td></tr>
-  <tr><td><code>、、</code></td><td>Separador (+1 seg)</td><td>Dividir e incrementar marca de tiempo en 1 segundo</td></tr>
-  <tr><td><code>？</code></td><td>Hora relacionada</td><td>Establecer fecha/hora relacionada</td></tr>
-  <tr><td><code>ーか</code></td><td>Registro numerico</td><td>Registrar un valor numerico</td></tr>
-  <tr><td><code>ーみ</code></td><td>Tarea</td><td>Crear una tarea</td></tr>
-  <tr><td><code>ーら</code></td><td>Estado de animo</td><td>Registrar valor de animo (0-10)</td></tr>
-  <tr><td><code>ーん</code></td><td>Gasto</td><td>Registrar informacion de gastos</td></tr>
-  <tr><td><code>ーち</code></td><td>Registro de tiempo (completo)</td><td>Registrar tiempo con inicio y fin</td></tr>
-  <tr><td><code>ーた</code></td><td>Inicio de registro de tiempo</td><td>Iniciar un registro de tiempo</td></tr>
-  <tr><td><code>ーえ</code></td><td>Fin de registro de tiempo</td><td>Finalizar un registro de tiempo coincidente</td></tr>
-  <tr><td><code>ーいえ</code></td><td>Fin de registro de tiempo (si existe)</td><td>Finalizar si existe (sin error)</td></tr>
-  <tr><td><code>ーたえ</code></td><td>Finalizar registro por etiqueta</td><td>Finalizar registro de tiempo por nombre de etiqueta</td></tr>
-  <tr><td><code>ーいたえ</code></td><td>Finalizar registro por etiqueta (si existe)</td><td>Finalizar por etiqueta si existe</td></tr>
-  <tr><td><code>ーう</code></td><td>Marcador</td><td>Registrar un marcador de URL</td></tr>
-  <tr><td><code>！</code></td><td>Guardar</td><td>Terminar documento y guardar</td></tr>
+  <tr><th>Prefijo</th><th>ASCII</th><th>Tipo</th><th>Descripcion</th></tr>
+  <tr><td>(ninguno)</td><td>(ninguno)</td><td>Nota</td><td>Registrar una nota de texto</td></tr>
+  <tr><td><code>。</code></td><td><code>#</code></td><td>Etiqueta</td><td>Asignar etiquetas</td></tr>
+  <tr><td><code>ーー</code></td><td><code>--</code></td><td>Bloque de texto</td><td>Preservar texto multilinea tal cual</td></tr>
+  <tr><td><code>、</code></td><td><code>,</code></td><td>Separador</td><td>Dividir en un nuevo registro</td></tr>
+  <tr><td><code>、、</code></td><td><code>,,</code></td><td>Separador (+1 seg)</td><td>Dividir e incrementar marca de tiempo en 1 segundo</td></tr>
+  <tr><td><code>？</code></td><td><code>?</code></td><td>Hora relacionada</td><td>Establecer fecha/hora relacionada</td></tr>
+  <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Registro numerico</td><td>Registrar un valor numerico</td></tr>
+  <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Tarea</td><td>Crear una tarea</td></tr>
+  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Estado de animo</td><td>Registrar valor de animo (0-10)</td></tr>
+  <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>Gasto</td><td>Registrar informacion de gastos</td></tr>
+  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>Registro de tiempo (completo)</td><td>Registrar tiempo con inicio y fin</td></tr>
+  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>Inicio de registro de tiempo</td><td>Iniciar un registro de tiempo</td></tr>
+  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>Fin de registro de tiempo</td><td>Finalizar un registro de tiempo coincidente</td></tr>
+  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>Fin de registro de tiempo (si existe)</td><td>Finalizar si existe (sin error)</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Finalizar registro por etiqueta</td><td>Finalizar registro de tiempo por nombre de etiqueta</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Finalizar registro por etiqueta (si existe)</td><td>Finalizar por etiqueta si existe</td></tr>
+  <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Marcador</td><td>Registrar un marcador de URL</td></tr>
+  <tr><td><code>！</code></td><td><code>!</code></td><td>Guardar</td><td>Terminar documento y guardar</td></tr>
 </table>
 
 <h2>Detalle de cada sentencia</h2>
@@ -76,132 +76,136 @@
 <pre>Hoy hizo buen tiempo
 Fui a pasear</pre>
 
-<h3>2. Etiqueta: <code>。</code></h3>
-<p>Prefije con <code>。</code> para especificar etiquetas. Separe varias etiquetas con <code>、</code>.</p>
-<pre>。diario、clima</pre>
+<h3>2. Etiqueta: <code>#</code></h3>
+<p>Prefije con <code>#</code> para especificar etiquetas. Separe varias etiquetas con <code>,</code>.</p>
+<pre>#diario,clima</pre>
 
-<h3>3. Bloque de texto: <code>ーー</code></h3>
-<p>Comience y termine con <code>ーー</code>. Todo el contenido intermedio se preserva tal cual.</p>
-<pre>ーー
+<h3>3. Bloque de texto: <code>--</code></h3>
+<p>Comience y termine con <code>--</code>. Todo el contenido intermedio se preserva tal cual.</p>
+<pre>--
 Este es un
 bloque de texto
 multilinea
-ーー</pre>
+--</pre>
 
-<h3>4. Separador: <code>、</code></h3>
+<h3>4. Separador: <code>,</code></h3>
 <p>Divide en un nuevo registro. Todo lo que sigue pertenece a un nuevo registro.</p>
 <pre>Primera nota
-、
+,
 Segunda nota</pre>
 
-<h3>5. Separador (+1 segundo): <code>、、</code></h3>
+<h3>5. Separador (+1 segundo): <code>,,</code></h3>
 <p>Igual que el separador pero incrementa la marca de tiempo en 1 segundo.</p>
 <pre>Primera nota
-、、
+,,
 Nota un segundo despues</pre>
 
-<h3>6. Hora relacionada: <code>？</code></h3>
-<p>Establece una hora relacionada. Formato: <code>？YYYY-MM-DD</code>, <code>？YYYY-MM-DD HH:MM</code> o <code>？YYYY-MM-DD HH:MM:SS</code></p>
-<pre>？2025-03-15 14:30</pre>
+<h3>6. Hora relacionada: <code>?</code></h3>
+<p>Establece una hora relacionada. Formato: <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code> o <code>?YYYY-MM-DD HH:MM:SS</code></p>
+<pre>?2025-03-15 14:30</pre>
 
-<h3>7. Registro numerico: <code>ーか</code></h3>
+<div class="tip">
+  <strong>Nota:</strong> <code>#</code> al inicio de una línea se interpreta como prefijo de etiqueta, y <code>?</code> como fecha/hora. Para incluir estos caracteres como texto literal, envuélvalos en un bloque de texto (<code>--</code>).
+</div>
+
+<h3>7. Registro numerico: <code>/num</code></h3>
 <p>Siguiente linea: titulo, luego siguiente linea: valor numerico.</p>
-<pre>ーか
+<pre>/num
 Peso
 65.5</pre>
 
-<h3>8. Tarea: <code>ーみ</code></h3>
+<h3>8. Tarea: <code>/mi</code></h3>
 <p>Lineas siguientes: titulo, nombre del tablero, fecha limite, hora estimada de inicio, hora estimada de fin (todo opcional excepto el titulo).</p>
-<pre>ーみ
+<pre>/mi
 Escribir informe
 Trabajo
 2025-03-20</pre>
 
-<h3>9. Estado de animo: <code>ーら</code></h3>
+<h3>9. Estado de animo: <code>/mood</code></h3>
 <p>Siguiente linea: valor de animo (entero 0-10).</p>
-<pre>ーら
+<pre>/mood
 7</pre>
 
-<h3>10. Gasto: <code>ーん</code></h3>
+<h3>10. Gasto: <code>/expense</code></h3>
 <p>Siguiente linea: nombre de la tienda, luego pares de (nombre del articulo, importe) repetidos.</p>
-<pre>ーん
+<pre>/expense
 Tienda de conveniencia
 Sandwich
 150
 Bebida
 120</pre>
 
-<h3>11. Registro de tiempo (completo): <code>ーち</code></h3>
+<h3>11. Registro de tiempo (completo): <code>/timeis</code></h3>
 <p>Lineas siguientes: titulo, hora de inicio, hora de fin.</p>
-<pre>ーち
+<pre>/timeis
 Reunion
 2025-03-15 10:00
 2025-03-15 11:30</pre>
 
-<h3>12. Inicio de registro de tiempo: <code>ーた</code></h3>
+<h3>12. Inicio de registro de tiempo: <code>/start</code></h3>
 <p>Lineas siguientes: titulo, hora de inicio.</p>
-<pre>ーた
+<pre>/start
 Inicio de trabajo
 2025-03-15 09:00</pre>
 
-<h3>13. Fin de registro de tiempo: <code>ーえ</code></h3>
+<h3>13. Fin de registro de tiempo: <code>/end</code></h3>
 <p>Siguiente linea: titulo. Busca un registro de tiempo iniciado coincidente y lo finaliza.</p>
-<pre>ーえ
+<pre>/end
 Inicio de trabajo</pre>
 
-<h3>14. Fin de registro de tiempo (si existe): <code>ーいえ</code></h3>
+<h3>14. Fin de registro de tiempo (si existe): <code>/end?</code></h3>
 <p>Igual que Fin de registro de tiempo pero no produce error si no existe un registro coincidente.</p>
-<pre>ーいえ
+<pre>/end?
 Inicio de trabajo</pre>
 
-<h3>15. Finalizar registro por etiqueta: <code>ーたえ</code></h3>
+<h3>15. Finalizar registro por etiqueta: <code>/endt</code></h3>
 <p>Siguiente linea: nombre de la etiqueta. Busca y finaliza un registro de tiempo por su etiqueta.</p>
-<pre>ーたえ
+<pre>/endt
 trabajo</pre>
 
-<h3>16. Finalizar registro por etiqueta (si existe): <code>ーいたえ</code></h3>
+<h3>16. Finalizar registro por etiqueta (si existe): <code>/endt?</code></h3>
 <p>Igual que Finalizar registro por etiqueta pero no produce error si no existe un registro coincidente.</p>
-<pre>ーいたえ
+<pre>/endt?
 trabajo</pre>
 
-<h3>17. Marcador: <code>ーう</code></h3>
+<h3>17. Marcador: <code>/url</code></h3>
 <p>Siguiente linea: URL, luego siguiente linea: titulo.</p>
-<pre>ーう
+<pre>/url
 https://example.com
 Sitio favorito</pre>
 
-<h3>18. Guardar: <code>！</code></h3>
+<h3>18. Guardar: <code>!</code></h3>
 <p>Termina el documento y ejecuta el proceso de guardado.</p>
-<pre>！</pre>
+<pre>!</pre>
 
 <h2>Ejemplo completo</h2>
 
 <p>A continuacion se muestra un documento completo de sintaxis del bloc de notas que combina varios tipos de sentencias.</p>
 
 <pre>Diario de hoy
-。diario、clima
-？2025-03-15
-、
-ーみ
+#diario,clima
+?2025-03-15
+,
+/mi
 Ir de compras
 Personal
-、
-ーん
+,
+/expense
 Supermercado
 Manzanas
 200
 Leche
 180
-、
-ーた
+,
+/start
 Lectura
-、
-ーら
+,
+/mood
 8
-！</pre>
+!</pre>
 
 <div class="tip">
-  <strong>Consejo:</strong> Use <code>、</code> para separar varios registros dentro de un mismo documento. Agregar <code>！</code> al final activa el guardado automatico.
+  <strong>Consejo:</strong> Use <code>,</code> para separar varios registros dentro de un mismo documento. Agregar <code>!</code> al final activa el guardado automatico.
 </div>
 
   <h2>Documentacion relacionada</h2>

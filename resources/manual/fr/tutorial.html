@@ -39,6 +39,57 @@
   <h1>Tutoriel</h1>
   <p>Ce guide explique comment utiliser gkill, en deux parties : les bases et les fonctions avancees. Si vous debutez, veuillez lire la partie basique en premier.</p>
 
+  <div class="tip">
+    <strong>A propos de cette boite de dialogue :</strong> Cette boite de dialogue d'aide laisse passer les clics de souris et les interactions tactiles vers l'ecran situe en arriere-plan. Vous pouvez interagir avec l'application tout en gardant cette boite de dialogue ouverte.
+  </div>
+
+  <div class="tip">
+    <strong>Utilisation sur smartphone :</strong> gkill fonctionne comme une PWA (Progressive Web App). Selectionnez &laquo; Ajouter a l'ecran d'accueil &raquo; (iOS Safari) ou &laquo; Installer l'application &raquo; (Android Chrome) depuis le menu de votre navigateur pour le lancer directement depuis votre ecran d'accueil.
+  </div>
+
+  <h2>Terminologie</h2>
+  <p>Dans gkill, les types de donnees sont appeles &laquo; types d'enregistrement &raquo; (Memo, Horodatage, Tache, etc.) et les ecrans de travail sont appeles &laquo; noms d'ecran &raquo; (Bloc-notes, Bloc-notes d'horodatage, Taches, etc.). Par exemple, &laquo; Memo &raquo; designe le type de donnee textuelle, tandis que &laquo; Bloc-notes &raquo; designe l'ecran de saisie. Les elements affiches dans le menu du bouton &laquo; + &raquo; sont des noms d'ecran pour ajouter chaque type d'enregistrement.</p>
+
+  <h2>Changer d'ecran</h2>
+  <p>Appuyez sur le <strong>titre de la page</strong> affiche dans la barre d'outils en haut de l'ecran pour ouvrir un menu deroulant et naviguer vers chaque ecran.</p>
+  <table>
+    <tr><th>Nom de l'ecran</th><th>Description</th></tr>
+    <tr><td>Saihate</td><td>Hub pour ajouter divers enregistrements. Deconnexion egalement disponible ici</td></tr>
+    <tr><td>Bloc-notes</td><td>Ecran de saisie de texte avec la syntaxe Bloc-notes</td></tr>
+    <tr><td>Bloc-notes d'horodatage</td><td>Gestion simultanee des memos et des horodatages actifs</td></tr>
+    <tr><td>Vue du journal de vie</td><td>Parcourir, rechercher et consulter les enregistrements</td></tr>
+    <tr><td>Taches</td><td>Gestion des taches en tableau Kanban</td></tr>
+    <tr><td>En cours</td><td>Gestion des sessions d'horodatage actives</td></tr>
+    <tr><td>Enregistrement</td><td>Vue detaillee d'un enregistrement individuel</td></tr>
+  </table>
+
+  <h2>Guide des boutons de la barre d'outils</h2>
+  <p>Les boutons a droite de la barre d'outils basculent l'affichage dans l'ecran actuel.</p>
+  <table>
+    <tr><th>Bouton</th><th>Fonction</th><th>Disponible sur</th></tr>
+    <tr><td><span class="icon">&#9776;</span> Barre laterale</td><td>Afficher/masquer la barre laterale de recherche et filtrage</td><td>Vue du journal, Taches</td></tr>
+    <tr><td><span class="icon">&#128196;</span> Vue detaillee</td><td>Afficher/masquer le panneau de details de l'enregistrement selectionne</td><td>Vue du journal, Taches</td></tr>
+    <tr><td><span class="icon">&#128202;</span> Agregation</td><td>Afficher/masquer la vue statistiques et analyses</td><td>Vue du journal</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendrier</td><td>Afficher/masquer la vue calendrier</td><td>Vue du journal, Taches</td></tr>
+    <tr><td><span class="icon">&#128506;</span> Carte</td><td>Afficher/masquer la carte GPS</td><td>Vue du journal</td></tr>
+    <tr><td>&#10068; Aide</td><td>Afficher l'aide de l'ecran actuel</td><td>Tous</td></tr>
+    <tr><td><span class="icon">&#9881;</span> Parametres</td><td>Ouvrir l'ecran des parametres</td><td>Tous</td></tr>
+  </table>
+
+  <h2>Reference rapide des ecrans</h2>
+  <table>
+    <tr><th>Ecran</th><th>Usage principal</th><th>Quand l'utiliser</th></tr>
+    <tr><td>Saihate</td><td>Centre d'ajout d'enregistrements</td><td>Quand vous voulez enregistrer quelque chose rapidement</td></tr>
+    <tr><td>Bloc-notes</td><td>Saisie de texte par lots</td><td>Quand vous voulez saisir plusieurs enregistrements a la fois</td></tr>
+    <tr><td>Bloc-notes horodatage</td><td>Notes + gestion d'horodatage</td><td>Quand vous voulez enregistrer des notes et du temps simultanement</td></tr>
+    <tr><td>Vue du journal de vie</td><td>Parcourir et rechercher</td><td>Quand vous voulez consulter ou rechercher des enregistrements passes</td></tr>
+    <tr><td>Taches</td><td>Gestion des taches Kanban</td><td>Quand vous voulez organiser et gerer les choses a faire</td></tr>
+    <tr><td>En cours</td><td>Gestion des horodatages actifs</td><td>Quand vous voulez verifier ou terminer des horodatages actifs</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Conseil pour debutants :</strong> Commencez par ajouter des enregistrements dans "Saihate" et consultez-les dans "Vue du journal de vie."
+  </div>
+
   <hr class="section-divider">
   <h2 style="color: #1976D2;">Partie basique</h2>
 
@@ -235,6 +286,24 @@ Lait
   </div>
 
   <h2>9. Enregistrer le temps avec les pointages</h2>
+  <table>
+    <tr>
+      <th>Nom de l'&eacute;cran</th>
+      <th>Usage</th>
+    </tr>
+    <tr>
+      <td>Bloc-notes d'horodatage</td>
+      <td>Saisir des notes avec horodatage. Le t&eacute;l&eacute;versement de fichiers est &eacute;galement possible.</td>
+    </tr>
+    <tr>
+      <td>En cours</td>
+      <td>Liste des sessions de suivi du temps actives. Vous pouvez terminer des sessions ici.</td>
+    </tr>
+    <tr>
+      <td>Bloc-notes</td>
+      <td>D&eacute;marrer et terminer le suivi du temps par texte avec la syntaxe du bloc-notes. Peut &ecirc;tre combin&eacute; avec d'autres enregistrements en lot.</td>
+    </tr>
+  </table>
   <p>La fonction de pointage vous permet d'enregistrer precisement vos temps de travail et d'activite.</p>
 
   <h3>Operations de base du pointage</h3>
@@ -254,11 +323,11 @@ Lait
   </div>
 
   <h2>10. Analyser les donnees avec la vue d'agregation</h2>
-  <p>L'ecran de la vue d'agregation vous permet de visualiser les donnees enregistrees sous forme de graphiques et de tableaux recapitulatifs.</p>
+  <p>La vue d'agrégation intégrée à la vue journal de vie vous permet de visualiser les données enregistrées sous forme de tableaux récapitulatifs.</p>
 
   <h3>Utilisation de la vue d'agregation</h3>
   <ol>
-    <li>Ouvrez l'ecran de la vue d'agregation depuis la barre de navigation.</li>
+    <li>Cliquez sur l'icône d'agrégation dans la barre d'outils de la vue journal de vie pour afficher la vue d'agrégation.</li>
     <li>Selectionnez le type d'agregation et la periode.</li>
     <li>Les donnees sont affichees sous forme de graphiques et de tableaux.</li>
   </ol>
@@ -289,7 +358,46 @@ Lait
     <strong>Astuce :</strong> Pour obtenir une cle API Google Maps, activez l'API Maps JavaScript dans la console Google Cloud.
   </div>
 
-  <h2>12. Sauvegarde et gestion des donnees</h2>
+  <h2>12. Partager des enregistrements</h2>
+  <p>Dans gkill, vous pouvez generer des liens de partage pour partager des enregistrements avec d'autres personnes.</p>
+
+  <h3>Comment generer un lien de partage</h3>
+  <ol>
+    <li>Ouvrez la vue detaillee ou le menu contextuel de l'enregistrement que vous souhaitez partager.</li>
+    <li>Selectionnez "Partager".</li>
+    <li>Une URL de partage sera generee. Utilisez l'URL appropriee selon votre besoin :</li>
+  </ol>
+  <table>
+    <tr><th>Type d'URL</th><th>Usage</th></tr>
+    <tr><td>URL locale</td><td>Acces depuis le meme appareil (localhost)</td></tr>
+    <tr><td>URL LAN</td><td>Acces depuis d'autres appareils sur le meme reseau</td></tr>
+    <tr><td>URL WAN</td><td>Acces externe via Internet</td></tr>
+  </table>
+
+  <h3>Controle des donnees partagees</h3>
+  <p>Lors du partage, vous pouvez choisir quelles donnees inclure.</p>
+  <table>
+    <tr><th>Option</th><th>Description</th></tr>
+    <tr><td>Tags</td><td>Inclure les tags attaches a l'enregistrement</td></tr>
+    <tr><td>Texte</td><td>Inclure le contenu texte de l'enregistrement</td></tr>
+    <tr><td>Horodatages</td><td>Inclure les informations d'horodatage</td></tr>
+    <tr><td>Localisation</td><td>Inclure les informations de localisation GPS</td></tr>
+    <tr><td>Heure uniquement</td><td>Inclure uniquement les informations d'heure</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Conseil :</strong> Pour utiliser les URLs LAN ou WAN, vous devez configurer l'adresse IP du serveur dans les parametres de l'application.
+  </div>
+
+  <h3>Pour les destinataires de liens partages</h3>
+  <p>En ouvrant un lien partage, vous pouvez consulter les enregistrements sans avoir de compte gkill.</p>
+  <ul>
+    <li>L'etendue des enregistrements affiches est determinee par les parametres du createur du lien.</li>
+    <li>Vous ne pouvez ni modifier ni supprimer les enregistrements (consultation uniquement).</li>
+    <li>Si le lien n'est plus valide, veuillez contacter l'expediteur.</li>
+  </ul>
+
+  <h2>13. Sauvegarde et gestion des donnees</h2>
 
   <h3>Configuration du serveur (administrateurs)</h3>
   <p>En vous connectant avec un compte administrateur, le bouton "Configuration du serveur" apparait dans l'ecran de configuration.</p>
@@ -300,7 +408,7 @@ Lait
   </ul>
 
   <h3>Gestion des comptes</h3>
-  <p>L'administrateur peut ajouter ou supprimer des comptes utilisateurs depuis l'ecran "Gestion des comptes".</p>
+  <p>L'administrateur peut ajouter, activer et desactiver des comptes utilisateurs depuis l'ecran "Gestion des comptes".</p>
 
   <h3>Sauvegarde des donnees</h3>
   <p>Toutes les donnees de gkill sont stockees dans le repertoire personnel (par defaut : <code>~/gkill</code>). Il suffit de sauvegarder ce repertoire pour preserver l'ensemble de vos donnees.</p>

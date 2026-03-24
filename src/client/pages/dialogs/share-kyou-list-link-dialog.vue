@@ -49,6 +49,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("share-kyou-list-link-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 const share_kyou_list_info: Ref<ShareKyousInfo | null> = ref(null)

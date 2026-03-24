@@ -56,6 +56,8 @@ test.describe('Auth Flow Tests', () => {
   // 項番9: パスワード未設定アカウントでログイン不可
   test('cannot login with account that has no password set', async ({ page }) => {
     test.setTimeout(120000)
+    // Clear auth cookies so we see the login page, not an authenticated route
+    await page.context().clearCookies()
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
     await page.waitForTimeout(2000)

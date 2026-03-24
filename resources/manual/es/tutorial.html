@@ -39,6 +39,57 @@
   <h1>Tutorial</h1>
   <p>Explicamos el uso de gkill dividido en una parte basica y una parte avanzada. Si es la primera vez que lo usa, lea la parte basica en orden.</p>
 
+  <div class="tip">
+    <strong>Acerca de este dialogo:</strong> Este dialogo de ayuda permite que los clics del raton y las interacciones tactiles pasen a la pantalla de fondo. Puede interactuar con la aplicacion mientras mantiene este dialogo abierto.
+  </div>
+
+  <div class="tip">
+    <strong>Uso en smartphones:</strong> gkill funciona como una PWA (Progressive Web App). Seleccione "Agregar a la pantalla de inicio" (iOS Safari) o "Instalar aplicacion" (Android Chrome) desde el menu del navegador para iniciarlo directamente desde la pantalla de inicio como una aplicacion nativa.
+  </div>
+
+  <h2>Terminologia</h2>
+  <p>En gkill, los tipos de datos se llaman "tipos de registro" (Memo, Marca de tiempo, Tarea, etc.) y las pantallas de operacion se llaman "nombres de pantalla" (Bloc de notas, Bloc de notas de marcas de tiempo, Tareas, etc.). Por ejemplo, "Memo" se refiere al tipo de datos de nota de texto, mientras que "Bloc de notas" se refiere a la pantalla utilizada para ingresar esos datos. Los elementos mostrados en el menu del boton "+" son nombres de pantalla para agregar cada tipo de registro.</p>
+
+  <h2>Cambiar entre pantallas</h2>
+  <p>Toque el <strong>titulo de la pagina</strong> mostrado en la barra de herramientas en la parte superior de la pantalla para abrir un menu desplegable y navegar a cada pantalla.</p>
+  <table>
+    <tr><th>Nombre de pantalla</th><th>Descripcion</th></tr>
+    <tr><td>Saihate</td><td>Centro para agregar diversos registros. Cerrar sesion tambien disponible aqui</td></tr>
+    <tr><td>Bloc de notas</td><td>Pantalla de entrada de texto con sintaxis de Bloc de notas</td></tr>
+    <tr><td>Bloc de notas de marcas</td><td>Gestion simultanea de memos y marcas de tiempo activas</td></tr>
+    <tr><td>Vista de registro de vida</td><td>Explorar, buscar y ver registros</td></tr>
+    <tr><td>Tareas</td><td>Gestion de tareas en tablero Kanban</td></tr>
+    <tr><td>En ejecucion</td><td>Gestion de sesiones de marcas de tiempo activas</td></tr>
+    <tr><td>Registro</td><td>Vista detallada de un registro individual</td></tr>
+  </table>
+
+  <h2>Guia de botones de la barra de herramientas</h2>
+  <p>Los botones en el lado derecho de la barra de herramientas alternan las vistas dentro de la pantalla actual.</p>
+  <table>
+    <tr><th>Boton</th><th>Funcion</th><th>Disponible en</th></tr>
+    <tr><td><span class="icon">&#9776;</span> Barra lateral</td><td>Mostrar/ocultar barra lateral de busqueda y filtros</td><td>Vista de registro, Tareas</td></tr>
+    <tr><td><span class="icon">&#128196;</span> Vista detallada</td><td>Mostrar/ocultar panel de detalles del registro seleccionado</td><td>Vista de registro, Tareas</td></tr>
+    <tr><td><span class="icon">&#128202;</span> Agregacion</td><td>Mostrar/ocultar vista de estadisticas y analisis</td><td>Vista de registro</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendario</td><td>Mostrar/ocultar vista de calendario</td><td>Vista de registro, Tareas</td></tr>
+    <tr><td><span class="icon">&#128506;</span> Mapa</td><td>Mostrar/ocultar mapa GPS</td><td>Vista de registro</td></tr>
+    <tr><td>&#10068; Ayuda</td><td>Mostrar ayuda de la pantalla actual</td><td>Todos</td></tr>
+    <tr><td><span class="icon">&#9881;</span> Configuracion</td><td>Abrir pantalla de configuracion</td><td>Todos</td></tr>
+  </table>
+
+  <h2>Referencia rapida de pantallas</h2>
+  <table>
+    <tr><th>Pantalla</th><th>Uso principal</th><th>Cuando usar</th></tr>
+    <tr><td>Saihate</td><td>Centro de adicion de registros</td><td>Cuando quieras registrar algo rapidamente</td></tr>
+    <tr><td>Bloc de notas</td><td>Entrada de texto por lotes</td><td>Cuando quieras ingresar multiples registros a la vez</td></tr>
+    <tr><td>Bloc de notas con marca de tiempo</td><td>Notas + gestion de marcas de tiempo</td><td>Cuando quieras registrar notas y tiempo simultaneamente</td></tr>
+    <tr><td>Vista de registro de vida</td><td>Buscar y explorar registros</td><td>Cuando quieras revisar o buscar registros pasados</td></tr>
+    <tr><td>Tareas</td><td>Gestion de tareas con tablero Kanban</td><td>Cuando quieras organizar y gestionar cosas por hacer</td></tr>
+    <tr><td>En progreso</td><td>Gestion de marcas de tiempo activas</td><td>Cuando quieras verificar o finalizar marcas de tiempo activas</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo para principiantes:</strong> Comience agregando registros en "Saihate" y revistandolos en "Vista de registro de vida."
+  </div>
+
   <hr class="section-divider">
   <h2 style="color: #1976D2;">Parte basica</h2>
 
@@ -235,6 +286,24 @@ leche
   </div>
 
   <h2>9. Registrar tiempo con registros de tiempo</h2>
+  <table>
+    <tr>
+      <th>Nombre de pantalla</th>
+      <th>Uso</th>
+    </tr>
+    <tr>
+      <td>Bloc de marcas</td>
+      <td>Introducir notas con marcas de tiempo. Tambien permite subir archivos.</td>
+    </tr>
+    <tr>
+      <td>En progreso</td>
+      <td>Lista de sesiones de seguimiento de tiempo activas. Puede finalizar sesiones aqui.</td>
+    </tr>
+    <tr>
+      <td>Bloc de notas</td>
+      <td>Iniciar y finalizar seguimiento de tiempo mediante texto con sintaxis del bloc de notas. Se puede combinar con otros registros en lote.</td>
+    </tr>
+  </table>
   <p>Con la funcion de registro de tiempo, puede registrar con precision el tiempo de trabajo y actividades.</p>
 
   <h3>Operacion basica de registros de tiempo</h3>
@@ -254,11 +323,11 @@ leche
   </div>
 
   <h2>10. Analizar datos con la vista de agregacion</h2>
-  <p>En la pantalla de vista de agregacion, puede visualizar los datos registrados mediante graficos y tablas de resumen.</p>
+  <p>La vista de agregación dentro de la vista de registro de vida permite visualizar los datos registrados mediante tablas de resumen.</p>
 
   <h3>Como usar la vista de agregacion</h3>
   <ol>
-    <li>Abra la pantalla de vista de agregacion desde la navegacion.</li>
+    <li>Haga clic en el icono de agregación en la barra de herramientas de la vista de registro de vida para mostrar la vista de agregación.</li>
     <li>Seleccione el tipo de agregacion y el periodo.</li>
     <li>Los datos se mostraran en graficos y tablas.</li>
   </ol>
@@ -289,7 +358,46 @@ leche
     <strong>Consejo:</strong> Para obtener la clave API de Google Maps, habilite la API Maps JavaScript en Google Cloud Console.
   </div>
 
-  <h2>12. Copia de seguridad y gestion de datos</h2>
+  <h2>12. Compartir registros</h2>
+  <p>En gkill, puede generar enlaces de compartir para compartir registros con otros.</p>
+
+  <h3>Como generar un enlace de compartir</h3>
+  <ol>
+    <li>Abra la vista detallada o el menu contextual del registro que desea compartir.</li>
+    <li>Seleccione "Compartir".</li>
+    <li>Se generara una URL de compartir. Use la URL apropiada segun su proposito:</li>
+  </ol>
+  <table>
+    <tr><th>Tipo de URL</th><th>Proposito</th></tr>
+    <tr><td>URL local</td><td>Acceso desde el mismo dispositivo (localhost)</td></tr>
+    <tr><td>URL LAN</td><td>Acceso desde otros dispositivos en la misma red</td></tr>
+    <tr><td>URL WAN</td><td>Acceso externo a traves de internet</td></tr>
+  </table>
+
+  <h3>Control de datos compartidos</h3>
+  <p>Al compartir, puede elegir que datos incluir.</p>
+  <table>
+    <tr><th>Opcion</th><th>Descripcion</th></tr>
+    <tr><td>Etiquetas</td><td>Incluir las etiquetas adjuntas al registro</td></tr>
+    <tr><td>Texto</td><td>Incluir el contenido de texto del registro</td></tr>
+    <tr><td>Marcas de tiempo</td><td>Incluir informacion de marcas de tiempo</td></tr>
+    <tr><td>Ubicacion</td><td>Incluir informacion de ubicacion GPS</td></tr>
+    <tr><td>Solo hora</td><td>Incluir solo la informacion de hora del registro</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Para usar URLs LAN o WAN, necesita configurar la direccion IP del servidor en la configuracion de la aplicacion.
+  </div>
+
+  <h3>Para los destinatarios de enlaces compartidos</h3>
+  <p>Al abrir un enlace compartido, puede ver los registros sin necesidad de tener una cuenta de gkill.</p>
+  <ul>
+    <li>El alcance de los registros mostrados esta determinado por la configuracion del creador del enlace.</li>
+    <li>No puede editar ni eliminar registros (solo lectura).</li>
+    <li>Si el enlace ya no es valido, pongase en contacto con el remitente.</li>
+  </ul>
+
+  <h2>13. Copia de seguridad y gestion de datos</h2>
 
   <h3>Configuracion del servidor (para administradores)</h3>
   <p>Al iniciar sesion con una cuenta de administrador, se mostrara el boton "Configuracion del servidor" en la pantalla de configuracion.</p>
@@ -300,7 +408,7 @@ leche
   </ul>
 
   <h3>Gestion de cuentas</h3>
-  <p>Los administradores pueden agregar y eliminar cuentas de usuario en la pantalla de "Gestion de cuentas".</p>
+  <p>Los administradores pueden agregar, habilitar y deshabilitar cuentas de usuario en la pantalla de "Gestion de cuentas".</p>
 
   <h3>Copia de seguridad de datos</h3>
   <p>Todos los datos de gkill se almacenan en el directorio de inicio (predeterminado: <code>~/gkill</code>). Si hace una copia de seguridad de este directorio, puede preservar todos los datos.</p>

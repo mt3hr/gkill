@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer } from './check-server'
 
+// This spec tests unauthenticated flows — clear storageState from setup project
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
   test.skip(!alive, 'gkill server (localhost:9999) is not running')

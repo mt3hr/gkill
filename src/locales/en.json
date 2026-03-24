@@ -756,5 +756,12 @@
     "TOOLTIP_TOGGLE_IMAGE_VIEW": "Toggle Image View",
     "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "Scroll to Clicked Period",
     "TOOLTIP_CLOSE_COLUMN": "Close Column",
-    "TOOLTIP_ADD_BOARD": "Add Board"
+    "TOOLTIP_ADD_BOARD": "Add Board",
+    "SESSION_EXPIRED_MESSAGE": "Session has expired. Please log in again.",
+    "LOGIN_RATE_LIMITED_MESSAGE": "Too many login attempts. Please try again later.",
+    "NETWORK_OFFLINE_MESSAGE": "You are offline",
+    "NETWORK_ERROR_MESSAGE": "A network error occurred. Please check your connection.",
+    "NO_RESULTS_MESSAGE": "No items",
+    "REQUIRED_FIELD_MESSAGE": "This field is required",
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "You have unsaved changes. Leave page?"
 }

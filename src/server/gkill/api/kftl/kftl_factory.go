@@ -24,6 +24,27 @@ const (
 	splitterSaveCharacter         = "！"
 )
 
+// ASCII alternatives for non-Japanese locales.
+const (
+	splitterTagAscii                   = "#"
+	splitterStartTextAscii             = "--"
+	splitterRelatedTimeAscii           = "?"
+	splitterSplitAscii                 = ","
+	splitterSplitNextSecondAscii       = ",,"
+	splitterKCAscii                    = "/num"
+	splitterMiAscii                    = "/mi"
+	splitterLantanaAscii               = "/mood"
+	splitterNlogAscii                  = "/expense"
+	splitterTimeIsStartAscii           = "/start"
+	splitterTimeIsEndAscii             = "/end"
+	splitterTimeIsAscii                = "/timeis"
+	splitterTimeIsEndIfExistAscii      = "/end?"
+	splitterTimeIsEndByTagAscii        = "/endt"
+	splitterTimeIsEndByTagIfExistAscii = "/endt?"
+	splitterURLogAscii                 = "/url"
+	splitterSaveCharacterAscii         = "!"
+)
+
 // kftlFactory tracks the prev_line_is_meta_info state across lines.
 // Mirrors: KFTLStatementLineConstructorFactory in TS (singleton with state).
 // In Go we use a per-statement instance to avoid global state.
@@ -76,79 +97,79 @@ func (f *kftlFactory) generateNlogConstructor(req *kftlNlogRequest) StatementLin
 // Mirrors: KFTLStatementLineConstructorFactory.generate_default_constructor()
 func (f *kftlFactory) generateDefaultConstructor(nextLineText string, lastFunc StatementLineConstructorFunc) StatementLineConstructorFunc {
 	switch {
-	case strings.HasPrefix(nextLineText, splitterTag):
+	case strings.HasPrefix(nextLineText, splitterTag) || strings.HasPrefix(nextLineText, splitterTagAscii):
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLTagStatementLine(lineText, ctx, f.prevLineIsMetaInfo)
 		}
-	case nextLineText == splitterStartText:
+	case nextLineText == splitterStartText || nextLineText == splitterStartTextAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLStartTextStatementLine(lineText, ctx, f.prevLineIsMetaInfo)
 		}
-	case strings.HasPrefix(nextLineText, splitterRelatedTime):
+	case strings.HasPrefix(nextLineText, splitterRelatedTime) || strings.HasPrefix(nextLineText, splitterRelatedTimeAscii):
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			return newKFTLRelatedTimeStatementLine(lineText, ctx, f.prevLineIsMetaInfo)
 		}
-	case nextLineText == splitterSplitNextSecond:
+	case nextLineText == splitterSplitNextSecond || nextLineText == splitterSplitNextSecondAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			f.prevLineIsMetaInfo = true
 			return newKFTLSplitAndNextSecondStatementLine(lineText, ctx)
 		}
-	case nextLineText == splitterSplit:
+	case nextLineText == splitterSplit || nextLineText == splitterSplitAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			f.prevLineIsMetaInfo = true
 			return newKFTLSplitStatementLine(lineText, ctx)
 		}
-	case nextLineText == splitterKC:
+	case nextLineText == splitterKC || nextLineText == splitterKCAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			f.prevLineIsMetaInfo = false
 			return newKFTLStartKCStatementLine(lineText, ctx)
 		}
-	case nextLineText == splitterMi:
+	case nextLineText == splitterMi || nextLineText == splitterMiAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			f.prevLineIsMetaInfo = false
 			return newKFTLStartMiStatementLine(lineText, ctx)
 		}
-	case nextLineText == splitterLantana:
+	case nextLineText == splitterLantana || nextLineText == splitterLantanaAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			f.prevLineIsMetaInfo = false
 			return newKFTLStartLantanaStatementLine(lineText, ctx)
 		}
-	case nextLineText == splitterNlog:
+	case nextLineText == splitterNlog || nextLineText == splitterNlogAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			f.prevLineIsMetaInfo = false
 			return newKFTLStartNlogStatementLine(lineText, ctx)
 		}
-	case nextLineText == splitterTimeIsStart:
-		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
-			f.prevLineIsMetaInfo = false
-			return newKFTLStartTimeIsStartStatementLine(lineText, ctx)
-		}
-	case nextLineText == splitterTimeIsEnd:
-		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
-			f.prevLineIsMetaInfo = false
-			return newKFTLStartTimeIsEndStatementLine(lineText, ctx)
-		}
-	case nextLineText == splitterTimeIs:
-		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
-			f.prevLineIsMetaInfo = false
-			return newKFTLStartTimeIsStatementLine(lineText, ctx)
-		}
-	case nextLineText == splitterTimeIsEndIfExist:
-		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
-			f.prevLineIsMetaInfo = false
-			return newKFTLStartTimeIsEndIfExistStatementLine(lineText, ctx)
-		}
-	case nextLineText == splitterTimeIsEndByTag:
-		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
-			f.prevLineIsMetaInfo = false
-			return newKFTLStartTimeIsEndByTagStatementLine(lineText, ctx)
-		}
-	case nextLineText == splitterTimeIsEndByTagIfExist:
+	case nextLineText == splitterTimeIsEndByTagIfExist || nextLineText == splitterTimeIsEndByTagIfExistAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			f.prevLineIsMetaInfo = false
 			return newKFTLStartTimeIsEndByTagIfExistStatementLine(lineText, ctx)
 		}
-	case nextLineText == splitterURLog:
+	case nextLineText == splitterTimeIsEndByTag || nextLineText == splitterTimeIsEndByTagAscii:
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			f.prevLineIsMetaInfo = false
+			return newKFTLStartTimeIsEndByTagStatementLine(lineText, ctx)
+		}
+	case nextLineText == splitterTimeIsEndIfExist || nextLineText == splitterTimeIsEndIfExistAscii:
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			f.prevLineIsMetaInfo = false
+			return newKFTLStartTimeIsEndIfExistStatementLine(lineText, ctx)
+		}
+	case nextLineText == splitterTimeIsStart || nextLineText == splitterTimeIsStartAscii:
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			f.prevLineIsMetaInfo = false
+			return newKFTLStartTimeIsStartStatementLine(lineText, ctx)
+		}
+	case nextLineText == splitterTimeIsEnd || nextLineText == splitterTimeIsEndAscii:
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			f.prevLineIsMetaInfo = false
+			return newKFTLStartTimeIsEndStatementLine(lineText, ctx)
+		}
+	case nextLineText == splitterTimeIs || nextLineText == splitterTimeIsAscii:
+		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+			f.prevLineIsMetaInfo = false
+			return newKFTLStartTimeIsStatementLine(lineText, ctx)
+		}
+	case nextLineText == splitterURLog || nextLineText == splitterURLogAscii:
 		return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 			f.prevLineIsMetaInfo = false
 			return newKFTLStartURLogStatementLine(lineText, ctx)

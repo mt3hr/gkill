@@ -344,14 +344,13 @@ const {
 }
 
 .scroll_snap_container {
-    overflow-x: auto;
     scroll-snap-type: x proximity;
-    width: 100vw;
+    width: 100%;
 }
 
 .scroll_snap_area {
     scroll-snap-align: start;
-    width: 100vw;
+    width: 100%;
 }
 </style>
 <style lang="css" scoped>

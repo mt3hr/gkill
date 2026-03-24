@@ -76,12 +76,29 @@
   </table>
 
   <h2>Configuracion inicial</h2>
+  <h3>Como iniciar</h3>
+  <table>
+    <tr><th>Entorno</th><th>Metodo de inicio</th></tr>
+    <tr><td>Windows</td><td>Ejecutar <code>gkill.exe</code> o <code>gkill_server.exe</code></td></tr>
+    <tr><td>Navegador / PWA</td><td>Iniciar <code>gkill_server</code> y acceder a <code>http://localhost:9999</code> en el navegador</td></tr>
+    <tr><td>Android</td><td>Instalar el APK e iniciar la aplicacion</td></tr>
+  </table>
+
+  <h3>Primer registro de cuenta</h3>
   <ol>
-    <li>Inicia gkill y accede a <code>http://localhost:9999</code> en tu navegador.</li>
-    <li>Inicia sesion con el ID de usuario <code>admin</code> y sin contrasena.</li>
-    <li>Despues de iniciar sesion, se recomienda establecer una contrasena en la pantalla de configuracion.</li>
-    <li>Configura los ajustes basicos como el idioma y el tema oscuro en la pantalla de configuracion.</li>
+    <li>Al iniciar gkill por primera vez, la pantalla de registro de cuenta aparecera automaticamente.</li>
+    <li>Ingrese un ID de usuario (este sera el nombre de su cuenta).</li>
+    <li>Ingrese una contrasena y vuelva a ingresarla para confirmar.</li>
+    <li>Establezca una contrasena de administrador (utilizada para la gestion del servidor).</li>
+    <li>Presione el boton "Registrar" para crear la cuenta.</li>
+    <li>Sera redirigido a la pantalla de inicio de sesion. Inicie sesion con la cuenta que acaba de crear.</li>
   </ol>
+
+  <div class="tip">
+    <strong>Consejo:</strong> La cuenta <code>admin</code> se crea automaticamente cuando el servidor se inicia por primera vez. La cuenta que crea aqui es una cuenta de usuario normal.
+  </div>
+
+  <p>Despues de iniciar sesion, se mostrara la pantalla predeterminada (Vista de registro de vida por defecto). Configure los ajustes basicos como el idioma y el tema oscuro en la pantalla de configuracion.</p>
 
   <h2>Lista de pantallas</h2>
   <table>
@@ -102,17 +119,17 @@
     </tr>
     <tr>
       <td>Saihate</td>
-      <td>Pantalla para registrar de forma segura incluso desde la pantalla de bloqueo. Centro de adición de registros</td>
+      <td>Pantalla ligera especializada en agregar registros. Práctica para anotar notas o entradas de tiempo rápidamente</td>
       <td><a href="saihate.html">Ayuda de Saihate</a></td>
     </tr>
     <tr>
       <td>Bloc de notas</td>
-      <td>Entrada de texto con sintaxis del bloc de notas</td>
+      <td>Agregar registros en lote mediante entrada de texto</td>
       <td><a href="kftl.html">Ayuda del bloc de notas</a></td>
     </tr>
     <tr>
       <td>Bloc de marcas</td>
-      <td>Gestion simultanea de notas y marcas de tiempo</td>
+      <td>Introducir notas con marcas de tiempo</td>
       <td><a href="mkfl.html">Ayuda del bloc de marcas</a></td>
     </tr>
     <tr>
@@ -127,7 +144,7 @@
     </tr>
     <tr>
       <td>En progreso</td>
-      <td>Gestion de sesiones de marca de tiempo activas</td>
+      <td>Gestionar sesiones de seguimiento de tiempo en curso</td>
       <td><a href="plaing.html">Ayuda de en progreso</a></td>
     </tr>
     <tr>
@@ -151,14 +168,9 @@
       <td><a href="kftl-template-struct.html">Ayuda de estructura de plantilla</a></td>
     </tr>
     <tr>
-      <td>Vista de agregacion</td>
-      <td>Agregacion y visualizacion de datos</td>
-      <td><a href="dnote.html">Ayuda de vista de agregacion</a></td>
-    </tr>
-    <tr>
-      <td>Informacion relacionada</td>
-      <td>Definir busqueda automatica de registros relacionados</td>
-      <td><a href="ryuu.html">Ayuda de informacion relacionada</a></td>
+      <td colspan="3" style="font-size: 0.9em; color: #666;">
+        ※ <a href="dnote.html">Vista de agregación</a> e <a href="ryuu.html">Información relacionada</a> son funciones dentro de la vista de registro de vida. Se pueden alternar desde la barra de herramientas.
+      </td>
     </tr>
     <tr>
       <td>Gestion de cuentas</td>
@@ -171,6 +183,18 @@
       <td><a href="server-config.html">Ayuda de configuracion del servidor</a></td>
     </tr>
   </table>
+
+  <h2>Tu primer registro en 60 segundos</h2>
+  <ol>
+    <li>Inicia sesion.</li>
+    <li>Manten pulsado el boton "+" en la esquina inferior derecha de la pantalla.</li>
+    <li>Selecciona "Bloc de notas".</li>
+    <li>Escribe una linea de texto y pulsa Enter.</li>
+    <li>Abre "Vista de registros" desde el menu de navegacion para ver tu registro.</li>
+  </ol>
+  <div class="tip">
+    <strong>Consejo:</strong> ¡Eso es todo lo que necesitas para tu primer registro! Una vez que aprendas la sintaxis del bloc de notas, podras registrar tareas, valores de estado de animo y mas de la misma manera.
+  </div>
 
   <h2>Crea tu primer registro</h2>
   <ol>
