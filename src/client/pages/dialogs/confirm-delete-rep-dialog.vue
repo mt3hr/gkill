@@ -49,6 +49,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("confirm-delete-rep-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 const cloned_repository: Ref<Repository> = ref(new Repository())

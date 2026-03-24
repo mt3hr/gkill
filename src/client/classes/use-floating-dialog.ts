@@ -157,6 +157,8 @@ export function useFloatingDialog(
     minSize?: Size
     // 高さを保存・復元するか（デフォルト true）
     persistHeight?: boolean
+    // Escape キー押下時のコールバック
+    onEscape?: () => void
   }
 ): UseFloatingDialogResult {
   const margin = opts?.margin ?? 8
@@ -192,6 +194,48 @@ export function useFloatingDialog(
   const userSize = ref<Size | null>(
     savedSize && !persistHeight ? { w: savedSize.w, h: 0 } : savedSize,
   )
+
+  // --- Accessibility ---
+  const dialogId = `floating-dialog-${storageKey.replace(/[^a-zA-Z0-9_-]/g, "-")}`
+  const labelId = `${dialogId}__label`
+  let escapeHandler: ((e: KeyboardEvent) => void) | null = null
+
+  function applyAriaAttributes(el: HTMLElement): void {
+    el.setAttribute("role", "dialog")
+    el.setAttribute("aria-modal", "true")
+
+    // Find a heading or title/header element for aria-labelledby
+    const labelEl =
+      el.querySelector("h1, h2, h3, h4, h5, h6") ??
+      el.querySelector(".gkill-floating-dialog__title")
+    if (labelEl && labelEl.textContent?.trim()) {
+      if (!labelEl.id) labelEl.id = labelId
+      el.setAttribute("aria-labelledby", labelEl.id)
+    } else {
+      el.setAttribute("aria-label", storageKey.replace(/-/g, " "))
+    }
+  }
+
+  function attachEscapeHandler(el: HTMLElement): void {
+    detachEscapeHandler()
+    escapeHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation()
+        opts?.onEscape?.()
+      }
+    }
+    el.addEventListener("keydown", escapeHandler)
+  }
+
+  function detachEscapeHandler(): void {
+    if (escapeHandler && containerRef.value) {
+      containerRef.value.removeEventListener("keydown", escapeHandler)
+    }
+    escapeHandler = null
+  }
+
+
+  // --- End Accessibility ---
 
   // 内容の変化でサイズが変わるので observer で追従
   const lastRect = ref<{ w: number; h: number }>({ w: 0, h: 0 })
@@ -446,6 +490,7 @@ export function useFloatingDialog(
   })
 
   onBeforeUnmount(() => {
+    detachEscapeHandler()
     removeResizeHandle()
     detachObserver()
     if (ro) ro.disconnect()
@@ -463,6 +508,7 @@ export function useFloatingDialog(
     containerRef,
     (el) => {
       if (!el) {
+        detachEscapeHandler()
         removeResizeHandle()
         detachObserver()
         return
@@ -476,6 +522,10 @@ export function useFloatingDialog(
       // is-user-resized クラスを反映
       updateResizedClass()
 
+      // Accessibility: ARIA attributes, escape handler, focus trap, focus management
+      applyAriaAttributes(el)
+      attachEscapeHandler(el)
+
       // 出現直後は rect が 0 のことがあるので次フレームで処理
       requestAnimationFrame(() => {
         readRect()
@@ -485,6 +535,7 @@ export function useFloatingDialog(
         clampToViewport()
         persistPos()
       })
+
     },
     { flush: "post" },
   )

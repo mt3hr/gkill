@@ -114,8 +114,21 @@ export function useKftlView(options: {
         resize()
         update_line_labels()
     })
+
+    // ── beforeunload guard ──
+    // テキストエリアに未保存の内容がある場合、ページ離脱時に警告を表示する
+    function on_beforeunload(e: BeforeUnloadEvent) {
+        if (text_area_content.value.trim() !== "") {
+            e.preventDefault()
+        }
+    }
+    window.addEventListener("beforeunload", on_beforeunload)
+
     onMounted(() => resize())
-    onUnmounted(() => window.removeEventListener("resize", on_resize))
+    onUnmounted(() => {
+        window.removeEventListener("resize", on_resize)
+        window.removeEventListener("beforeunload", on_beforeunload)
+    })
 
     // ── Internal helpers ──
     async function restore_content_from_localstorage(): Promise<void> {

@@ -76,12 +76,29 @@
   </table>
 
   <h2>初始设置</h2>
+  <h3>启动方式</h3>
+  <table>
+    <tr><th>环境</th><th>启动方式</th></tr>
+    <tr><td>Windows</td><td>运行 <code>gkill.exe</code> 或 <code>gkill_server.exe</code></td></tr>
+    <tr><td>浏览器 / PWA</td><td>启动 <code>gkill_server</code>，在浏览器中访问 <code>http://localhost:9999</code></td></tr>
+    <tr><td>Android</td><td>安装APK并启动应用</td></tr>
+  </table>
+
+  <h3>首次账户注册</h3>
   <ol>
-    <li>启动gkill，在浏览器中访问 <code>http://localhost:9999</code>。</li>
-    <li>使用用户ID <code>admin</code>，无密码登录。</li>
-    <li>登录后，建议在设置页面中设置密码。</li>
-    <li>在设置页面中配置语言和暗色主题等基本设置。</li>
+    <li>首次启动gkill时，账户注册页面会自动显示。</li>
+    <li>输入用户ID（这将成为您的账户名称）。</li>
+    <li>输入密码，然后再次输入进行确认。</li>
+    <li>设置管理员密码（用于服务器管理）。</li>
+    <li>点击"注册"按钮创建账户。</li>
+    <li>页面将重定向到登录页面，使用刚创建的账户登录。</li>
   </ol>
+
+  <div class="tip">
+    <strong>提示:</strong> <code>admin</code> 账户在服务器首次启动时自动创建。您在此创建的是普通用户账户。
+  </div>
+
+  <p>登录后，将显示默认页面（默认为生活日志视图）。请在设置页面中配置语言和暗色主题等基本设置。</p>
 
   <h2>页面一览</h2>
   <table>
@@ -102,17 +119,17 @@
     </tr>
     <tr>
       <td>Saihate</td>
-      <td>即使在锁定屏幕上也可以安全记录的画面。各种记录的添加中心</td>
+      <td>专用于添加记录的轻量级画面。方便快速记录备忘或时间戳</td>
       <td><a href="saihate.html">Saihate页面帮助</a></td>
     </tr>
     <tr>
       <td>记事本</td>
-      <td>使用记事本语法输入文本</td>
+      <td>通过文本输入批量添加记录的页面</td>
       <td><a href="kftl.html">记事本页面帮助</a></td>
     </tr>
     <tr>
       <td>打卡记事本</td>
-      <td>同时管理备忘录输入和打卡</td>
+      <td>带时间戳输入备忘录的页面</td>
       <td><a href="mkfl.html">打卡记事本页面帮助</a></td>
     </tr>
     <tr>
@@ -127,7 +144,7 @@
     </tr>
     <tr>
       <td>进行中</td>
-      <td>管理正在进行的打卡会话</td>
+      <td>管理正在进行的时间追踪会话</td>
       <td><a href="plaing.html">进行中页面帮助</a></td>
     </tr>
     <tr>
@@ -151,14 +168,9 @@
       <td><a href="kftl-template-struct.html">模板结构帮助</a></td>
     </tr>
     <tr>
-      <td>汇总视图</td>
-      <td>数据汇总和可视化</td>
-      <td><a href="dnote.html">汇总视图帮助</a></td>
-    </tr>
-    <tr>
-      <td>关联信息</td>
-      <td>定义相关记录的自动搜索</td>
-      <td><a href="ryuu.html">关联信息帮助</a></td>
+      <td colspan="3" style="font-size: 0.9em; color: #666;">
+        ※ <a href="dnote.html">汇总视图</a>和<a href="ryuu.html">关联信息</a>是生活日志视图画面内的功能。可以从工具栏切换显示。
+      </td>
     </tr>
     <tr>
       <td>账户管理</td>
@@ -171,6 +183,18 @@
       <td><a href="server-config.html">服务器设置帮助</a></td>
     </tr>
   </table>
+
+  <h2>60秒内创建您的第一条记录</h2>
+  <ol>
+    <li>登录。</li>
+    <li>长按屏幕右下角的"+"按钮。</li>
+    <li>选择"记事本"。</li>
+    <li>输入一行文字，然后按回车键。</li>
+    <li>从导航菜单打开"生活日志视图"，即可看到您输入的记录。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong> 这就是创建第一条记录所需的全部操作！学会记事本语法后，您可以用同样的方式记录任务、心情值等。
+  </div>
 
   <h2>创建您的第一条记录</h2>
   <ol>

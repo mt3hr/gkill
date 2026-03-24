@@ -115,6 +115,9 @@ func (l *kftlLantanaMoodStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 	if err != nil {
 		return fmt.Errorf("invalid lantana mood %q: %w", l.lineText, err)
 	}
+	if n < 0 || n > 10 {
+		return fmt.Errorf("lantana mood must be 0-10, got %d", n)
+	}
 	l.req.mood = n
 	return nil
 }

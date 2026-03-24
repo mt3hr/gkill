@@ -124,6 +124,7 @@
                     v-for="message in messages" :key="message.id">
                     <template v-slot:activator="{ props }">
                         <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
+                            :role="message.is_error ? 'alert' : undefined"
                             :closable="message.closable" @click:close="close_message(message.id)">
                             {{ message.message }}
                         </v-alert>

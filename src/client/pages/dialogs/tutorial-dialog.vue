@@ -39,6 +39,7 @@ const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 const ui = useFloatingDialog("tutorial-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 const theme = useTheme()

@@ -48,25 +48,25 @@
 <h2>문 유형 목록</h2>
 
 <table>
-  <tr><th>접두사</th><th>유형</th><th>설명</th></tr>
-  <tr><td>(없음)</td><td>메모</td><td>텍스트 메모 기록</td></tr>
-  <tr><td><code>。</code></td><td>태그</td><td>태그 부여</td></tr>
-  <tr><td><code>ーー</code></td><td>텍스트 블록</td><td>여러 줄 텍스트를 그대로 유지</td></tr>
-  <tr><td><code>、</code></td><td>구분자</td><td>새로운 레코드로 분할</td></tr>
-  <tr><td><code>、、</code></td><td>구분자(+1초)</td><td>타임스탬프를 1초 증가시키고 분할</td></tr>
-  <tr><td><code>？</code></td><td>관련 시각</td><td>관련 날짜/시간 설정</td></tr>
-  <tr><td><code>ーか</code></td><td>수치 기록</td><td>수치 데이터 기록</td></tr>
-  <tr><td><code>ーみ</code></td><td>작업</td><td>작업 생성</td></tr>
-  <tr><td><code>ーら</code></td><td>기분</td><td>기분 값(0-10) 기록</td></tr>
-  <tr><td><code>ーん</code></td><td>지출</td><td>지출 정보 기록</td></tr>
-  <tr><td><code>ーち</code></td><td>타임로그(전체)</td><td>시작/종료 시각을 지정하여 기록</td></tr>
-  <tr><td><code>ーた</code></td><td>타임로그 시작</td><td>타임로그 시작</td></tr>
-  <tr><td><code>ーえ</code></td><td>타임로그 종료</td><td>일치하는 타임로그 종료</td></tr>
-  <tr><td><code>ーいえ</code></td><td>타임로그 종료(존재 시)</td><td>일치하는 타임로그가 있으면 종료(오류 없음)</td></tr>
-  <tr><td><code>ーたえ</code></td><td>태그로 타임로그 종료</td><td>태그 이름으로 타임로그 종료</td></tr>
-  <tr><td><code>ーいたえ</code></td><td>태그로 타임로그 종료(존재 시)</td><td>태그 이름으로 타임로그 종료(존재 시)</td></tr>
-  <tr><td><code>ーう</code></td><td>북마크</td><td>URL 북마크 기록</td></tr>
-  <tr><td><code>！</code></td><td>저장</td><td>문서를 종료하고 저장 실행</td></tr>
+  <tr><th>접두사</th><th>ASCII</th><th>유형</th><th>설명</th></tr>
+  <tr><td>(없음)</td><td>(없음)</td><td>메모</td><td>텍스트 메모 기록</td></tr>
+  <tr><td><code>。</code></td><td><code>#</code></td><td>태그</td><td>태그 부여</td></tr>
+  <tr><td><code>ーー</code></td><td><code>--</code></td><td>텍스트 블록</td><td>여러 줄 텍스트를 그대로 유지</td></tr>
+  <tr><td><code>、</code></td><td><code>,</code></td><td>구분자</td><td>새로운 레코드로 분할</td></tr>
+  <tr><td><code>、、</code></td><td><code>,,</code></td><td>구분자(+1초)</td><td>타임스탬프를 1초 증가시키고 분할</td></tr>
+  <tr><td><code>？</code></td><td><code>?</code></td><td>관련 시각</td><td>관련 날짜/시간 설정</td></tr>
+  <tr><td><code>ーか</code></td><td><code>/num</code></td><td>수치 기록</td><td>수치 데이터 기록</td></tr>
+  <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>작업</td><td>작업 생성</td></tr>
+  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>기분</td><td>기분 값(0-10) 기록</td></tr>
+  <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>지출</td><td>지출 정보 기록</td></tr>
+  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>타임로그(전체)</td><td>시작/종료 시각을 지정하여 기록</td></tr>
+  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>타임로그 시작</td><td>타임로그 시작</td></tr>
+  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>타임로그 종료</td><td>일치하는 타임로그 종료</td></tr>
+  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>타임로그 종료(존재 시)</td><td>일치하는 타임로그가 있으면 종료(오류 없음)</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>태그로 타임로그 종료</td><td>태그 이름으로 타임로그 종료</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>태그로 타임로그 종료(존재 시)</td><td>태그 이름으로 타임로그 종료(존재 시)</td></tr>
+  <tr><td><code>ーう</code></td><td><code>/url</code></td><td>북마크</td><td>URL 북마크 기록</td></tr>
+  <tr><td><code>！</code></td><td><code>!</code></td><td>저장</td><td>문서를 종료하고 저장 실행</td></tr>
 </table>
 
 <h2>각 문 유형 상세</h2>
@@ -76,132 +76,136 @@
 <pre>오늘 날씨가 좋았다
 산책을 갔다</pre>
 
-<h3>2. 태그: <code>。</code></h3>
-<p>줄 앞에 <code>。</code>를 붙여 태그를 지정합니다. 여러 태그는 <code>、</code>로 구분합니다.</p>
-<pre>。일기、날씨</pre>
+<h3>2. 태그: <code>#</code></h3>
+<p>줄 앞에 <code>#</code>를 붙여 태그를 지정합니다. 여러 태그는 <code>,</code>로 구분합니다.</p>
+<pre>#일기,날씨</pre>
 
-<h3>3. 텍스트 블록: <code>ーー</code></h3>
-<p><code>ーー</code>로 시작하고 <code>ーー</code>로 끝냅니다. 사이의 내용은 그대로 유지됩니다.</p>
-<pre>ーー
+<h3>3. 텍스트 블록: <code>--</code></h3>
+<p><code>--</code>로 시작하고 <code>--</code>로 끝냅니다. 사이의 내용은 그대로 유지됩니다.</p>
+<pre>--
 이것은
 여러 줄
 텍스트 블록입니다
-ーー</pre>
+--</pre>
 
-<h3>4. 구분자: <code>、</code></h3>
+<h3>4. 구분자: <code>,</code></h3>
 <p>새로운 레코드로 분할합니다. 이 줄 이후의 내용은 새 레코드에 속합니다.</p>
 <pre>첫 번째 메모
-、
+,
 두 번째 메모</pre>
 
-<h3>5. 구분자(+1초): <code>、、</code></h3>
+<h3>5. 구분자(+1초): <code>,,</code></h3>
 <p>구분자와 동일하지만 타임스탬프가 1초 증가합니다.</p>
 <pre>첫 번째 메모
-、、
+,,
 1초 후 메모</pre>
 
-<h3>6. 관련 시각: <code>？</code></h3>
-<p>관련 날짜/시간을 설정합니다. 형식: <code>？YYYY-MM-DD</code>, <code>？YYYY-MM-DD HH:MM</code>, <code>？YYYY-MM-DD HH:MM:SS</code></p>
-<pre>？2025-03-15 14:30</pre>
+<h3>6. 관련 시각: <code>?</code></h3>
+<p>관련 날짜/시간을 설정합니다. 형식: <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code>, <code>?YYYY-MM-DD HH:MM:SS</code></p>
+<pre>?2025-03-15 14:30</pre>
 
-<h3>7. 수치 기록: <code>ーか</code></h3>
+<div class="tip">
+  <strong>주의:</strong> 줄 시작 부분의 <code>#</code>은 태그, <code>?</code>는 날짜/시간으로 해석됩니다. 일반 텍스트로 사용하려면 텍스트 블록 (<code>--</code>)으로 감싸주세요.
+</div>
+
+<h3>7. 수치 기록: <code>/num</code></h3>
 <p>다음 줄에 제목, 그다음 줄에 수치를 입력합니다.</p>
-<pre>ーか
+<pre>/num
 체중
 65.5</pre>
 
-<h3>8. 작업: <code>ーみ</code></h3>
+<h3>8. 작업: <code>/mi</code></h3>
 <p>이후 줄에 제목, 보드 이름, 마감일, 예상 시작 시각, 예상 종료 시각을 입력합니다(제목 이외는 생략 가능).</p>
-<pre>ーみ
+<pre>/mi
 보고서 작성
 업무
 2025-03-20</pre>
 
-<h3>9. 기분: <code>ーら</code></h3>
+<h3>9. 기분: <code>/mood</code></h3>
 <p>다음 줄에 기분 값(정수 0-10)을 입력합니다.</p>
-<pre>ーら
+<pre>/mood
 7</pre>
 
-<h3>10. 지출: <code>ーん</code></h3>
+<h3>10. 지출: <code>/expense</code></h3>
 <p>다음 줄에 가게 이름, 이후 상품명과 금액 쌍을 반복합니다.</p>
-<pre>ーん
+<pre>/expense
 편의점
 삼각김밥
 150
 차
 120</pre>
 
-<h3>11. 타임로그(전체): <code>ーち</code></h3>
+<h3>11. 타임로그(전체): <code>/timeis</code></h3>
 <p>이후 줄에 제목, 시작 시각, 종료 시각을 입력합니다.</p>
-<pre>ーち
+<pre>/timeis
 회의
 2025-03-15 10:00
 2025-03-15 11:30</pre>
 
-<h3>12. 타임로그 시작: <code>ーた</code></h3>
+<h3>12. 타임로그 시작: <code>/start</code></h3>
 <p>이후 줄에 제목과 시작 시각을 입력합니다.</p>
-<pre>ーた
+<pre>/start
 작업 시작
 2025-03-15 09:00</pre>
 
-<h3>13. 타임로그 종료: <code>ーえ</code></h3>
+<h3>13. 타임로그 종료: <code>/end</code></h3>
 <p>다음 줄에 제목을 입력합니다. 일치하는 시작된 타임로그를 찾아 종료합니다.</p>
-<pre>ーえ
+<pre>/end
 작업 시작</pre>
 
-<h3>14. 타임로그 종료(존재 시): <code>ーいえ</code></h3>
+<h3>14. 타임로그 종료(존재 시): <code>/end?</code></h3>
 <p>타임로그 종료와 동일하지만 일치하는 타임로그가 없어도 오류가 발생하지 않습니다.</p>
-<pre>ーいえ
+<pre>/end?
 작업 시작</pre>
 
-<h3>15. 태그로 타임로그 종료: <code>ーたえ</code></h3>
+<h3>15. 태그로 타임로그 종료: <code>/endt</code></h3>
 <p>다음 줄에 태그 이름을 입력합니다. 해당 태그가 있는 타임로그를 찾아 종료합니다.</p>
-<pre>ーたえ
+<pre>/endt
 업무</pre>
 
-<h3>16. 태그로 타임로그 종료(존재 시): <code>ーいたえ</code></h3>
+<h3>16. 태그로 타임로그 종료(존재 시): <code>/endt?</code></h3>
 <p>태그로 타임로그 종료와 동일하지만 일치하는 타임로그가 없어도 오류가 발생하지 않습니다.</p>
-<pre>ーいたえ
+<pre>/endt?
 업무</pre>
 
-<h3>17. 북마크: <code>ーう</code></h3>
+<h3>17. 북마크: <code>/url</code></h3>
 <p>다음 줄에 URL, 그다음 줄에 제목을 입력합니다.</p>
-<pre>ーう
+<pre>/url
 https://example.com
 즐겨찾기 사이트</pre>
 
-<h3>18. 저장: <code>！</code></h3>
+<h3>18. 저장: <code>!</code></h3>
 <p>문서를 종료하고 저장 처리를 실행합니다.</p>
-<pre>！</pre>
+<pre>!</pre>
 
 <h2>종합 예제</h2>
 
 <p>아래는 여러 문 유형을 조합한 완전한 메모장 구문 문서 예제입니다.</p>
 
 <pre>오늘의 일기
-。일기、날씨
-？2025-03-15
-、
-ーみ
+#일기,날씨
+?2025-03-15
+,
+/mi
 장보러 가기
 개인
-、
-ーん
+,
+/expense
 슈퍼마켓
 사과
 200
 우유
 180
-、
-ーた
+,
+/start
 독서
-、
-ーら
+,
+/mood
 8
-！</pre>
+!</pre>
 
 <div class="tip">
-  <strong>팁:</strong> <code>、</code>를 사용하여 하나의 문서 내에서 여러 레코드를 분리할 수 있습니다. 끝에 <code>！</code>를 추가하면 자동으로 저장됩니다.
+  <strong>팁:</strong> <code>,</code>를 사용하여 하나의 문서 내에서 여러 레코드를 분리할 수 있습니다. 끝에 <code>!</code>를 추가하면 자동으로 저장됩니다.
 </div>
 
   <h2>관련 문서</h2>

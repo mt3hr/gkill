@@ -298,8 +298,8 @@ export function useMiView(options: {
                 Promise.all(waitPromises).then(async () => {
                     focused_column_index.value = 0
                     inited.value = true
-                    drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 430)
-                    drawer.value = props.app_content_width.valueOf() >= 430
+                    drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 760)
+                    drawer.value = props.app_content_width.valueOf() >= 760
                     is_loading.value = false
                     skip_search_this_tick.value = false
                 })

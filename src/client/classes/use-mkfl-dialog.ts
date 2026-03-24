@@ -1,6 +1,6 @@
 'use strict'
 
-import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import type { MKFLDialogProps } from '@/pages/dialogs/mkfl-dialog-props'
 import type { MKFLDialogEmits } from '@/pages/dialogs/mkfl-dialog-emits'
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
@@ -59,6 +59,11 @@ export function useMKFLDialog(options: {
         }
     }, { flush: 'post' })
     onBeforeUnmount(() => { body_ro?.disconnect(); body_ro = null })
+
+    watch(ui.isTransparent, () => {
+        ui.resetSize()
+        nextTick(() => ui.resetToCenter())
+    })
 
     async function show(): Promise<void> {
         is_show_dialog.value = true

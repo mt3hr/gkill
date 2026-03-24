@@ -48,25 +48,25 @@
 <h2>Apercu des instructions</h2>
 
 <table>
-  <tr><th>Prefixe</th><th>Type</th><th>Description</th></tr>
-  <tr><td>(aucun)</td><td>Memo</td><td>Enregistrer une note textuelle</td></tr>
-  <tr><td><code>。</code></td><td>Etiquette</td><td>Attribuer des etiquettes</td></tr>
-  <tr><td><code>ーー</code></td><td>Bloc de texte</td><td>Conserver le texte multiligne tel quel</td></tr>
-  <tr><td><code>、</code></td><td>Separateur</td><td>Diviser en un nouvel enregistrement</td></tr>
-  <tr><td><code>、、</code></td><td>Separateur (+1 sec)</td><td>Diviser et incrementer l'horodatage d'1 seconde</td></tr>
-  <tr><td><code>？</code></td><td>Heure associee</td><td>Definir une date/heure associee</td></tr>
-  <tr><td><code>ーか</code></td><td>Enregistrement numerique</td><td>Enregistrer une valeur numerique</td></tr>
-  <tr><td><code>ーみ</code></td><td>Tache</td><td>Creer une tache</td></tr>
-  <tr><td><code>ーら</code></td><td>Humeur</td><td>Enregistrer une valeur d'humeur (0-10)</td></tr>
-  <tr><td><code>ーん</code></td><td>Depense</td><td>Enregistrer des informations de depense</td></tr>
-  <tr><td><code>ーち</code></td><td>Journal de temps (complet)</td><td>Enregistrer le temps avec debut et fin</td></tr>
-  <tr><td><code>ーた</code></td><td>Debut du journal de temps</td><td>Demarrer un journal de temps</td></tr>
-  <tr><td><code>ーえ</code></td><td>Fin du journal de temps</td><td>Terminer un journal de temps correspondant</td></tr>
-  <tr><td><code>ーいえ</code></td><td>Fin du journal de temps (si existant)</td><td>Terminer si existant (sans erreur)</td></tr>
-  <tr><td><code>ーたえ</code></td><td>Terminer journal par etiquette</td><td>Terminer un journal de temps par nom d'etiquette</td></tr>
-  <tr><td><code>ーいたえ</code></td><td>Terminer journal par etiquette (si existant)</td><td>Terminer par etiquette si existant</td></tr>
-  <tr><td><code>ーう</code></td><td>Signet</td><td>Enregistrer un signet URL</td></tr>
-  <tr><td><code>！</code></td><td>Sauvegarder</td><td>Terminer le document et sauvegarder</td></tr>
+  <tr><th>Prefixe</th><th>ASCII</th><th>Type</th><th>Description</th></tr>
+  <tr><td>(aucun)</td><td>(aucun)</td><td>Memo</td><td>Enregistrer une note textuelle</td></tr>
+  <tr><td><code>。</code></td><td><code>#</code></td><td>Etiquette</td><td>Attribuer des etiquettes</td></tr>
+  <tr><td><code>ーー</code></td><td><code>--</code></td><td>Bloc de texte</td><td>Conserver le texte multiligne tel quel</td></tr>
+  <tr><td><code>、</code></td><td><code>,</code></td><td>Separateur</td><td>Diviser en un nouvel enregistrement</td></tr>
+  <tr><td><code>、、</code></td><td><code>,,</code></td><td>Separateur (+1 sec)</td><td>Diviser et incrementer l'horodatage d'1 seconde</td></tr>
+  <tr><td><code>？</code></td><td><code>?</code></td><td>Heure associee</td><td>Definir une date/heure associee</td></tr>
+  <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Enregistrement numerique</td><td>Enregistrer une valeur numerique</td></tr>
+  <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Tache</td><td>Creer une tache</td></tr>
+  <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Humeur</td><td>Enregistrer une valeur d'humeur (0-10)</td></tr>
+  <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>Depense</td><td>Enregistrer des informations de depense</td></tr>
+  <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>Journal de temps (complet)</td><td>Enregistrer le temps avec debut et fin</td></tr>
+  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>Debut du journal de temps</td><td>Demarrer un journal de temps</td></tr>
+  <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>Fin du journal de temps</td><td>Terminer un journal de temps correspondant</td></tr>
+  <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>Fin du journal de temps (si existant)</td><td>Terminer si existant (sans erreur)</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Terminer journal par etiquette</td><td>Terminer un journal de temps par nom d'etiquette</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Terminer journal par etiquette (si existant)</td><td>Terminer par etiquette si existant</td></tr>
+  <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Signet</td><td>Enregistrer un signet URL</td></tr>
+  <tr><td><code>！</code></td><td><code>!</code></td><td>Sauvegarder</td><td>Terminer le document et sauvegarder</td></tr>
 </table>
 
 <h2>Detail de chaque instruction</h2>
@@ -76,132 +76,136 @@
 <pre>Il a fait beau aujourd'hui
 Je suis alle me promener</pre>
 
-<h3>2. Etiquette : <code>。</code></h3>
-<p>Prefixez avec <code>。</code> pour specifier des etiquettes. Separez plusieurs etiquettes avec <code>、</code>.</p>
-<pre>。journal、meteo</pre>
+<h3>2. Etiquette : <code>#</code></h3>
+<p>Prefixez avec <code>#</code> pour specifier des etiquettes. Separez plusieurs etiquettes avec <code>,</code>.</p>
+<pre>#journal,meteo</pre>
 
-<h3>3. Bloc de texte : <code>ーー</code></h3>
-<p>Commencez et terminez avec <code>ーー</code>. Tout le contenu entre les deux est preserve tel quel.</p>
-<pre>ーー
+<h3>3. Bloc de texte : <code>--</code></h3>
+<p>Commencez et terminez avec <code>--</code>. Tout le contenu entre les deux est preserve tel quel.</p>
+<pre>--
 Ceci est un
 bloc de texte
 multiligne
-ーー</pre>
+--</pre>
 
-<h3>4. Separateur : <code>、</code></h3>
+<h3>4. Separateur : <code>,</code></h3>
 <p>Divise en un nouvel enregistrement. Tout ce qui suit appartient a un nouvel enregistrement.</p>
 <pre>Premier memo
-、
+,
 Deuxieme memo</pre>
 
-<h3>5. Separateur (+1 seconde) : <code>、、</code></h3>
+<h3>5. Separateur (+1 seconde) : <code>,,</code></h3>
 <p>Identique au separateur mais incremente l'horodatage d'1 seconde.</p>
 <pre>Premier memo
-、、
+,,
 Memo une seconde plus tard</pre>
 
-<h3>6. Heure associee : <code>？</code></h3>
-<p>Definit une heure associee. Format : <code>？YYYY-MM-DD</code>, <code>？YYYY-MM-DD HH:MM</code> ou <code>？YYYY-MM-DD HH:MM:SS</code></p>
-<pre>？2025-03-15 14:30</pre>
+<h3>6. Heure associee : <code>?</code></h3>
+<p>Definit une heure associee. Format : <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code> ou <code>?YYYY-MM-DD HH:MM:SS</code></p>
+<pre>?2025-03-15 14:30</pre>
 
-<h3>7. Enregistrement numerique : <code>ーか</code></h3>
+<div class="tip">
+  <strong>Note :</strong> <code>#</code> en début de ligne est interprété comme préfixe de tag, et <code>?</code> comme date/heure. Pour inclure ces caractères comme texte littéral, encadrez-les dans un bloc de texte (<code>--</code>).
+</div>
+
+<h3>7. Enregistrement numerique : <code>/num</code></h3>
 <p>Ligne suivante : titre, puis ligne suivante : valeur numerique.</p>
-<pre>ーか
+<pre>/num
 Poids
 65.5</pre>
 
-<h3>8. Tache : <code>ーみ</code></h3>
+<h3>8. Tache : <code>/mi</code></h3>
 <p>Lignes suivantes : titre, nom du tableau, date limite, heure de debut estimee, heure de fin estimee (tout est optionnel sauf le titre).</p>
-<pre>ーみ
+<pre>/mi
 Rediger le rapport
 Travail
 2025-03-20</pre>
 
-<h3>9. Humeur : <code>ーら</code></h3>
+<h3>9. Humeur : <code>/mood</code></h3>
 <p>Ligne suivante : valeur d'humeur (entier 0-10).</p>
-<pre>ーら
+<pre>/mood
 7</pre>
 
-<h3>10. Depense : <code>ーん</code></h3>
+<h3>10. Depense : <code>/expense</code></h3>
 <p>Ligne suivante : nom du magasin, puis paires de (nom de l'article, montant) repetees.</p>
-<pre>ーん
+<pre>/expense
 Superette
 Sandwich
 150
 Boisson
 120</pre>
 
-<h3>11. Journal de temps (complet) : <code>ーち</code></h3>
+<h3>11. Journal de temps (complet) : <code>/timeis</code></h3>
 <p>Lignes suivantes : titre, heure de debut, heure de fin.</p>
-<pre>ーち
+<pre>/timeis
 Reunion
 2025-03-15 10:00
 2025-03-15 11:30</pre>
 
-<h3>12. Debut du journal de temps : <code>ーた</code></h3>
+<h3>12. Debut du journal de temps : <code>/start</code></h3>
 <p>Lignes suivantes : titre, heure de debut.</p>
-<pre>ーた
+<pre>/start
 Debut du travail
 2025-03-15 09:00</pre>
 
-<h3>13. Fin du journal de temps : <code>ーえ</code></h3>
+<h3>13. Fin du journal de temps : <code>/end</code></h3>
 <p>Ligne suivante : titre. Trouve un journal de temps demarre correspondant et le termine.</p>
-<pre>ーえ
+<pre>/end
 Debut du travail</pre>
 
-<h3>14. Fin du journal de temps (si existant) : <code>ーいえ</code></h3>
+<h3>14. Fin du journal de temps (si existant) : <code>/end?</code></h3>
 <p>Identique a Fin du journal de temps mais ne produit pas d'erreur si aucun journal correspondant n'existe.</p>
-<pre>ーいえ
+<pre>/end?
 Debut du travail</pre>
 
-<h3>15. Terminer journal par etiquette : <code>ーたえ</code></h3>
+<h3>15. Terminer journal par etiquette : <code>/endt</code></h3>
 <p>Ligne suivante : nom de l'etiquette. Trouve et termine un journal de temps par son etiquette.</p>
-<pre>ーたえ
+<pre>/endt
 travail</pre>
 
-<h3>16. Terminer journal par etiquette (si existant) : <code>ーいたえ</code></h3>
+<h3>16. Terminer journal par etiquette (si existant) : <code>/endt?</code></h3>
 <p>Identique a Terminer journal par etiquette mais ne produit pas d'erreur si aucun journal correspondant n'existe.</p>
-<pre>ーいたえ
+<pre>/endt?
 travail</pre>
 
-<h3>17. Signet : <code>ーう</code></h3>
+<h3>17. Signet : <code>/url</code></h3>
 <p>Ligne suivante : URL, puis ligne suivante : titre.</p>
-<pre>ーう
+<pre>/url
 https://example.com
 Site favori</pre>
 
-<h3>18. Sauvegarder : <code>！</code></h3>
+<h3>18. Sauvegarder : <code>!</code></h3>
 <p>Termine le document et execute le processus de sauvegarde.</p>
-<pre>！</pre>
+<pre>!</pre>
 
 <h2>Exemple complet</h2>
 
 <p>Voici un document complet de syntaxe du bloc-notes combinant plusieurs types d'instructions.</p>
 
 <pre>Journal d'aujourd'hui
-。journal、meteo
-？2025-03-15
-、
-ーみ
+#journal,meteo
+?2025-03-15
+,
+/mi
 Faire les courses
 Personnel
-、
-ーん
+,
+/expense
 Supermarche
 Pommes
 200
 Lait
 180
-、
-ーた
+,
+/start
 Lecture
-、
-ーら
+,
+/mood
 8
-！</pre>
+!</pre>
 
 <div class="tip">
-  <strong>Astuce :</strong> Utilisez <code>、</code> pour separer plusieurs enregistrements dans un meme document. Ajouter <code>！</code> a la fin declenche la sauvegarde automatique.
+  <strong>Astuce :</strong> Utilisez <code>,</code> pour separer plusieurs enregistrements dans un meme document. Ajouter <code>!</code> a la fin declenche la sauvegarde automatique.
 </div>
 
   <h2>Documents associes</h2>

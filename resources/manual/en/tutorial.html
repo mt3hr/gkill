@@ -39,6 +39,57 @@
   <h1>Tutorial</h1>
   <p>This tutorial explains how to use gkill, divided into a Basics section and an Advanced section. If you are new to gkill, please read through the Basics section first.</p>
 
+  <div class="tip">
+    <strong>About this dialog:</strong> This help dialog allows mouse clicks and touch events to pass through to the screen behind it. You can interact with the app while keeping this dialog open.
+  </div>
+
+  <div class="tip">
+    <strong>Using on smartphones:</strong> gkill works as a PWA (Progressive Web App). Select "Add to Home Screen" (iOS Safari) or "Install App" (Android Chrome) from your browser menu to launch it directly from your home screen like a native app.
+  </div>
+
+  <h2>Terminology</h2>
+  <p>In gkill, data types are called "record types" (Memo, Time Stamp, Task, etc.) and the screens where you operate are called "screen names" (Notepad, Timestamp Notepad, Task, etc.). For example, "Memo" refers to the type of text memo data, while "Notepad" refers to the screen used to input that data. Items shown in the "+" button menu such as "Notepad" and "Time Stamp" are screen names for adding each type of record.</p>
+
+  <h2>Switching Between Screens</h2>
+  <p>Tap the <strong>page title</strong> displayed in the toolbar at the top of the screen (e.g., "Life Log View", "Task", etc.) to open a dropdown menu and navigate to each screen.</p>
+  <table>
+    <tr><th>Screen Name</th><th>Description</th></tr>
+    <tr><td>Saihate</td><td>Hub for adding various records. Logout is also available here</td></tr>
+    <tr><td>Notepad</td><td>Text input screen using Notepad syntax</td></tr>
+    <tr><td>Timestamp Notepad</td><td>Screen for memo input and active timestamp management</td></tr>
+    <tr><td>Life Log View</td><td>Browse, search, and view records</td></tr>
+    <tr><td>Task</td><td>Kanban board task management</td></tr>
+    <tr><td>Running</td><td>Active timestamp session management</td></tr>
+    <tr><td>Record</td><td>Detailed view of an individual record</td></tr>
+  </table>
+
+  <h2>Toolbar Button Guide</h2>
+  <p>The buttons on the right side of the toolbar toggle views within the current screen.</p>
+  <table>
+    <tr><th>Button</th><th>Function</th><th>Available On</th></tr>
+    <tr><td><span class="icon">&#9776;</span> Sidebar</td><td>Show/hide search and filter sidebar</td><td>Life Log View, Task</td></tr>
+    <tr><td><span class="icon">&#128196;</span> Detail View</td><td>Show/hide the detail panel for a selected record</td><td>Life Log View, Task</td></tr>
+    <tr><td><span class="icon">&#128202;</span> Aggregation</td><td>Show/hide statistics and analysis view</td><td>Life Log View</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendar</td><td>Show/hide calendar view</td><td>Life Log View, Task</td></tr>
+    <tr><td><span class="icon">&#128506;</span> Map</td><td>Show/hide GPS map display</td><td>Life Log View</td></tr>
+    <tr><td>&#10068; Help</td><td>Show help for the current screen</td><td>All</td></tr>
+    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open settings screen</td><td>All</td></tr>
+  </table>
+
+  <h2>Screen Quick Reference</h2>
+  <table>
+    <tr><th>Screen</th><th>Main Purpose</th><th>When to Use</th></tr>
+    <tr><td>Saihate</td><td>Record adding hub</td><td>When you want to quickly record something</td></tr>
+    <tr><td>Notepad</td><td>Batch text input</td><td>When you want to enter multiple records at once</td></tr>
+    <tr><td>Timestamp Notepad</td><td>Memo + timestamp management</td><td>When you want to record memos and time simultaneously</td></tr>
+    <tr><td>Life Log View</td><td>Browse and search records</td><td>When you want to review or search past records</td></tr>
+    <tr><td>Task</td><td>Kanban board task management</td><td>When you want to organize and manage things to do</td></tr>
+    <tr><td>Running</td><td>Active timestamp management</td><td>When you want to check or end active timestamps</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tip for beginners:</strong> Start by adding records in "Saihate" and reviewing them in "Life Log View."
+  </div>
+
   <hr class="section-divider">
   <h2 style="color: #1976D2;">Basics</h2>
 
@@ -235,6 +286,24 @@ Milk
   </div>
 
   <h2>9. Recording Time with Time Stamps</h2>
+  <table>
+    <tr>
+      <th>Screen Name</th>
+      <th>Purpose</th>
+    </tr>
+    <tr>
+      <td>Stamp Notepad</td>
+      <td>Enter memos with timestamps. File uploads are also possible.</td>
+    </tr>
+    <tr>
+      <td>In Progress</td>
+      <td>List of currently active time tracking sessions. You can end sessions here.</td>
+    </tr>
+    <tr>
+      <td>Notepad</td>
+      <td>Start and end time tracking via text using notepad syntax. Can be combined with other records in bulk.</td>
+    </tr>
+  </table>
   <p>Using the time stamp feature, you can accurately record work time and activity durations.</p>
 
   <h3>Basic Time Stamp Operations</h3>
@@ -254,11 +323,11 @@ Milk
   </div>
 
   <h2>10. Analyzing Data with the Aggregation View</h2>
-  <p>On the Aggregation View screen, you can visualize recorded data with graphs and summary tables.</p>
+  <p>The Aggregation View within the LifeLog View screen lets you visualize recorded data with summary tables.</p>
 
   <h3>How to Use the Aggregation View</h3>
   <ol>
-    <li>Open the Aggregation View screen from the navigation.</li>
+    <li>Click the aggregation icon in the LifeLog View toolbar to show the Aggregation View.</li>
     <li>Select the aggregation type and period.</li>
     <li>Data will be displayed as graphs and tables.</li>
   </ol>
@@ -289,7 +358,46 @@ Milk
     <strong>Tip:</strong> To obtain a Google Maps API key, enable the Maps JavaScript API in the Google Cloud Console.
   </div>
 
-  <h2>12. Data Backup and Management</h2>
+  <h2>12. Sharing Records</h2>
+  <p>In gkill, you can generate share links to share records with others.</p>
+
+  <h3>How to Generate a Share Link</h3>
+  <ol>
+    <li>Open the detail view or context menu for the record you want to share.</li>
+    <li>Select "Share."</li>
+    <li>A share URL will be generated. Use the appropriate URL for your purpose:</li>
+  </ol>
+  <table>
+    <tr><th>URL Type</th><th>Purpose</th></tr>
+    <tr><td>Local URL</td><td>Access from the same device (localhost)</td></tr>
+    <tr><td>LAN URL</td><td>Access from other devices on the same network</td></tr>
+    <tr><td>WAN URL</td><td>External access via the internet</td></tr>
+  </table>
+
+  <h3>Shared Data Control</h3>
+  <p>When sharing, you can choose which data to include.</p>
+  <table>
+    <tr><th>Option</th><th>Description</th></tr>
+    <tr><td>Tags</td><td>Include tags attached to the record</td></tr>
+    <tr><td>Text</td><td>Include the text content of the record</td></tr>
+    <tr><td>Time Stamps</td><td>Include time stamp information</td></tr>
+    <tr><td>Location</td><td>Include GPS location information</td></tr>
+    <tr><td>Time Only</td><td>Include only the time information of the record</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> To use LAN or WAN URLs, you need to configure the server IP address in the application settings.
+  </div>
+
+  <h3>For Recipients of Shared Links</h3>
+  <p>Opening a shared link lets you view records without a gkill account.</p>
+  <ul>
+    <li>The range of displayed records is determined by the link creator's settings.</li>
+    <li>You cannot edit or delete records (view only).</li>
+    <li>If the link is no longer valid, please contact the sender.</li>
+  </ul>
+
+  <h2>13. Data Backup and Management</h2>
 
   <h3>Server Settings (For Administrators)</h3>
   <p>When logged in with an administrator account, a "Server Settings" button will appear in the settings screen.</p>
@@ -300,7 +408,7 @@ Milk
   </ul>
 
   <h3>Account Management</h3>
-  <p>Administrators can add and delete user accounts on the "Account Management" screen.</p>
+  <p>Administrators can add, enable, and disable user accounts on the "Account Management" screen.</p>
 
   <h3>Data Backup</h3>
   <p>All gkill data is stored in the home directory (default: <code>~/gkill</code>). Backing up this directory will preserve all your data.</p>

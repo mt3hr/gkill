@@ -67,6 +67,7 @@ useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("confirm-delete-text-dialog", {
   centerMode: "always",
+  onEscape: () => hide(),
 })
 
 

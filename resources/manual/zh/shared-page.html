@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>共享页面 - 帮助</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>共享页面</span></nav>
+  <h1>共享页面</h1>
+  <p>此页面用于查看 gkill 用户通过共享链接发布的记录。无需 gkill 账户即可访问。</p>
+
+  <h2>关于此页面</h2>
+  <ul>
+    <li>拥有共享链接的任何人都可以查看此页面。</li>
+    <li>无需登录 gkill。</li>
+    <li>只能查看共享的记录，无法进行编辑或删除。</li>
+  </ul>
+
+  <h2>显示的数据</h2>
+  <p>根据共享链接的设置，记录将以以下视图之一显示。</p>
+  <table>
+    <tr>
+      <th>视图类型</th>
+      <th>说明</th>
+    </tr>
+    <tr>
+      <td>生活日志视图</td>
+      <td>按时间顺序查看共享的记录。</td>
+    </tr>
+    <tr>
+      <td>任务视图</td>
+      <td>以看板形式查看共享的任务。</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>提示：</strong>显示的记录范围由创建共享链接的用户的设置决定。
+  </div>
+
+  <h2>故障排除</h2>
+  <table>
+    <tr>
+      <th>症状</th>
+      <th>解决方法</th>
+    </tr>
+    <tr>
+      <td>页面无法加载</td>
+      <td>请确认共享链接是否正确。链接可能已过期。</td>
+    </tr>
+    <tr>
+      <td>未显示数据</td>
+      <td>共享设置可能已更改。请与发送链接的人确认。</td>
+    </tr>
+    <tr>
+      <td>显示错误消息</td>
+      <td>可能无法连接到 gkill 服务器。请稍候再试。</td>
+    </tr>
+  </table>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

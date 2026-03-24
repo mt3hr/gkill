@@ -76,12 +76,29 @@
   </table>
 
   <h2>Ersteinrichtung</h2>
+  <h3>So starten Sie</h3>
+  <table>
+    <tr><th>Umgebung</th><th>Startmethode</th></tr>
+    <tr><td>Windows</td><td><code>gkill.exe</code> oder <code>gkill_server.exe</code> ausfuhren</td></tr>
+    <tr><td>Browser / PWA</td><td><code>gkill_server</code> starten und <code>http://localhost:9999</code> im Browser aufrufen</td></tr>
+    <tr><td>Android</td><td>APK installieren und App starten</td></tr>
+  </table>
+
+  <h3>Erste Kontoregistrierung</h3>
   <ol>
-    <li>Starten Sie gkill und rufen Sie <code>http://localhost:9999</code> in Ihrem Browser auf.</li>
-    <li>Melden Sie sich mit der Benutzer-ID <code>admin</code> und ohne Passwort an.</li>
-    <li>Nach der Anmeldung wird empfohlen, im Einstellungsbildschirm ein Passwort festzulegen.</li>
-    <li>Konfigurieren Sie im Einstellungsbildschirm grundlegende Einstellungen wie Sprache und dunkles Design.</li>
+    <li>Beim ersten Start von gkill wird der Kontoregistrierungsbildschirm automatisch angezeigt.</li>
+    <li>Geben Sie eine Benutzer-ID ein (dies wird Ihr Kontoname).</li>
+    <li>Geben Sie ein Passwort ein und geben Sie es zur Bestatigung erneut ein.</li>
+    <li>Legen Sie ein Administratorpasswort fest (wird fur die Serververwaltung verwendet).</li>
+    <li>Drucken Sie die Schaltflache "Registrieren", um das Konto zu erstellen.</li>
+    <li>Sie werden zum Anmeldebildschirm weitergeleitet. Melden Sie sich mit dem gerade erstellten Konto an.</li>
   </ol>
+
+  <div class="tip">
+    <strong>Hinweis:</strong> Das <code>admin</code>-Konto wird beim ersten Serverstart automatisch erstellt. Das Konto, das Sie hier erstellen, ist ein normales Benutzerkonto.
+  </div>
+
+  <p>Nach der Anmeldung wird der Standardbildschirm angezeigt (standardmassig die Lebensprotokoll-Ansicht). Konfigurieren Sie im Einstellungsbildschirm grundlegende Einstellungen wie Sprache und dunkles Design.</p>
 
   <h2>Bildschirmliste</h2>
   <table>
@@ -102,17 +119,17 @@
     </tr>
     <tr>
       <td>Saihate</td>
-      <td>Bildschirm zum sicheren Aufzeichnen auch vom Sperrbildschirm aus. Hub zum Hinzufügen von Aufzeichnungen</td>
+      <td>Kompakte Ansicht zum schnellen Hinzufügen von Einträgen. Praktisch für schnelle Notizen oder Zeitstempel</td>
       <td><a href="saihate.html">Hilfe zu Saihate</a></td>
     </tr>
     <tr>
       <td>Notizblock</td>
-      <td>Texteingabe mit Notizblock-Syntax</td>
+      <td>Eintr&auml;ge per Texteingabe gesammelt hinzuf&uuml;gen</td>
       <td><a href="kftl.html">Hilfe zum Notizblock</a></td>
     </tr>
     <tr>
       <td>Stempel-Notizblock</td>
-      <td>Gleichzeitige Verwaltung von Notizen und Zeitstempeln</td>
+      <td>Notizen mit Zeitstempeln eingeben</td>
       <td><a href="mkfl.html">Hilfe zum Stempel-Notizblock</a></td>
     </tr>
     <tr>
@@ -127,7 +144,7 @@
     </tr>
     <tr>
       <td>In Bearbeitung</td>
-      <td>Verwaltung aktiver Zeitstempel-Sitzungen</td>
+      <td>Laufende Zeiterfassungssitzungen verwalten</td>
       <td><a href="plaing.html">Hilfe zu In Bearbeitung</a></td>
     </tr>
     <tr>
@@ -151,14 +168,9 @@
       <td><a href="kftl-template-struct.html">Hilfe zur Vorlagenstruktur</a></td>
     </tr>
     <tr>
-      <td>Aggregationsansicht</td>
-      <td>Datenaggregation und Visualisierung</td>
-      <td><a href="dnote.html">Hilfe zur Aggregationsansicht</a></td>
-    </tr>
-    <tr>
-      <td>Verwandte Informationen</td>
-      <td>Definition der automatischen Suche nach verwandten Eintr&auml;gen</td>
-      <td><a href="ryuu.html">Hilfe zu verwandten Informationen</a></td>
+      <td colspan="3" style="font-size: 0.9em; color: #666;">
+        ※ <a href="dnote.html">Aggregationsansicht</a> und <a href="ryuu.html">Verwandte Infos</a> sind Funktionen innerhalb der LifeLog-Ansicht. Sie können über die Symbolleiste umgeschaltet werden.
+      </td>
     </tr>
     <tr>
       <td>Kontoverwaltung</td>
@@ -171,6 +183,18 @@
       <td><a href="server-config.html">Hilfe zur Server-Konfiguration</a></td>
     </tr>
   </table>
+
+  <h2>Ihre erste Aufzeichnung in 60 Sekunden</h2>
+  <ol>
+    <li>Melden Sie sich an.</li>
+    <li>Halten Sie die "+"-Taste unten rechts auf dem Bildschirm lange gedruckt.</li>
+    <li>Wahlen Sie "Notizblock".</li>
+    <li>Geben Sie eine Zeile Text ein und drucken Sie die Eingabetaste.</li>
+    <li>Offnen Sie "Lebenslog-Ansicht" uber das Navigationsmenu, um Ihre Aufzeichnung zu sehen.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tipp:</strong> Das ist alles, was fur Ihre erste Aufzeichnung notig ist! Sobald Sie die Notizblock-Syntax erlernt haben, konnen Sie Aufgaben, Stimmungswerte und mehr auf die gleiche Weise aufzeichnen.
+  </div>
 
   <h2>Erstellen Sie Ihre erste Aufzeichnung</h2>
   <ol>

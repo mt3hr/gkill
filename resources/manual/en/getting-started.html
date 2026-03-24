@@ -76,12 +76,29 @@
   </table>
 
   <h2>Initial Setup</h2>
+  <h3>How to Launch</h3>
+  <table>
+    <tr><th>Environment</th><th>Launch Method</th></tr>
+    <tr><td>Windows</td><td>Run <code>gkill.exe</code> or <code>gkill_server.exe</code></td></tr>
+    <tr><td>Browser / PWA</td><td>Start <code>gkill_server</code> and access <code>http://localhost:9999</code> in your browser</td></tr>
+    <tr><td>Android</td><td>Install the APK and launch the app</td></tr>
+  </table>
+
+  <h3>First Account Registration</h3>
   <ol>
-    <li>Launch gkill and access <code>http://localhost:9999</code> in your browser.</li>
-    <li>Log in with user ID <code>admin</code> and no password.</li>
-    <li>After logging in, it is recommended to set a password in the settings screen.</li>
-    <li>Configure basic settings such as language and dark theme in the settings screen.</li>
+    <li>When you launch gkill for the first time, the account registration screen will appear automatically.</li>
+    <li>Enter a user ID (this will be your account name).</li>
+    <li>Enter a password, then enter it again for confirmation.</li>
+    <li>Set an administrator password (used for server management).</li>
+    <li>Press the "Register" button to create your account.</li>
+    <li>You will be redirected to the login screen. Log in with the account you just created.</li>
   </ol>
+
+  <div class="tip">
+    <strong>Tip:</strong> The <code>admin</code> account is automatically created when the server starts for the first time. The account you create here is a regular user account.
+  </div>
+
+  <p>After login, the default screen (Life Log View by default) will be displayed. Configure basic settings such as language and dark theme in the settings screen.</p>
 
   <h2>Screen List</h2>
   <table>
@@ -102,17 +119,17 @@
     </tr>
     <tr>
       <td>Saihate</td>
-      <td>A screen for safely recording even from the lock screen. Hub for adding various records</td>
+      <td>Lightweight screen specialized for adding records. Convenient for quickly jotting down notes or time entries</td>
       <td><a href="saihate.html">Saihate Screen Help</a></td>
     </tr>
     <tr>
       <td>Notepad</td>
-      <td>Text input using notepad syntax</td>
+      <td>Add records in bulk via text input</td>
       <td><a href="kftl.html">Notepad Screen Help</a></td>
     </tr>
     <tr>
       <td>Stamp Notepad</td>
-      <td>Simultaneous memo input and time stamping</td>
+      <td>Enter memos with timestamps</td>
       <td><a href="mkfl.html">Stamp Notepad Screen Help</a></td>
     </tr>
     <tr>
@@ -127,7 +144,7 @@
     </tr>
     <tr>
       <td>In Progress</td>
-      <td>Manage active time stamp sessions</td>
+      <td>Manage running time tracking sessions</td>
       <td><a href="plaing.html">In Progress Screen Help</a></td>
     </tr>
     <tr>
@@ -151,14 +168,9 @@
       <td><a href="kftl-template-struct.html">Template Structure Help</a></td>
     </tr>
     <tr>
-      <td>Aggregation View</td>
-      <td>Data aggregation and visualization</td>
-      <td><a href="dnote.html">Aggregation View Help</a></td>
-    </tr>
-    <tr>
-      <td>Related Info</td>
-      <td>Define automatic search for related records</td>
-      <td><a href="ryuu.html">Related Info Help</a></td>
+      <td colspan="3" style="font-size: 0.9em; color: #666;">
+        ※ <a href="dnote.html">Aggregation View</a> and <a href="ryuu.html">Related Info</a> are features within the LifeLog View screen. Toggle them from the toolbar.
+      </td>
     </tr>
     <tr>
       <td>Account Management</td>
@@ -171,6 +183,18 @@
       <td><a href="server-config.html">Server Config Help</a></td>
     </tr>
   </table>
+
+  <h2>Your First Record in 60 Seconds</h2>
+  <ol>
+    <li>Log in.</li>
+    <li>Long-press the "+" button at the bottom right of the screen.</li>
+    <li>Select "Notepad."</li>
+    <li>Type a line of text and press Enter.</li>
+    <li>Open "Life Log View" from the navigation menu to see your record.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> That's all it takes for your first record! Once you learn the notepad syntax, you can record tasks, mood values, and more the same way.
+  </div>
 
   <h2>Create Your First Record</h2>
   <ol>

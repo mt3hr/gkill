@@ -692,11 +692,11 @@
     "SUCCESS_GET_ALL_TAG_NAMES_MESSAGE": "取得完了",
     "SUCCESS_GET_ALL_REP_NAMES_MESSAGE": "取得完了",
     "LOCALE_JA_TITLE": "日本語",
-    "LOCALE_EN_TITLE": "english",
+    "LOCALE_EN_TITLE": "English",
     "LOCALE_ZH_TITLE": "中文",
     "LOCALE_KO_TITLE": "조선어",
-    "LOCALE_ES_TITLE": "español",
-    "LOCALE_FR_TITLE": "français",
+    "LOCALE_ES_TITLE": "Español",
+    "LOCALE_FR_TITLE": "Français",
     "LOCALE_DE_TITLE": "Deutsch",
     "LOCALE_TITLE": "言語",
     "SUCCESS_GET_APPLICATION_CONFIG_MESSAGE": "設定取得完了",
@@ -756,5 +756,12 @@
     "TOOLTIP_TOGGLE_IMAGE_VIEW": "画像表示切替",
     "TOOLTIP_TOGGLE_FOCUS_DIRECTION": "クリックされた時期までスクロール",
     "TOOLTIP_CLOSE_COLUMN": "列を閉じる",
-    "TOOLTIP_ADD_BOARD": "ボードを追加"
+    "TOOLTIP_ADD_BOARD": "ボードを追加",
+    "SESSION_EXPIRED_MESSAGE": "セッションの有効期限が切れています。再度ログインしてください",
+    "LOGIN_RATE_LIMITED_MESSAGE": "ログイン試行回数の上限を超えました。しばらくしてからお試しください",
+    "NETWORK_OFFLINE_MESSAGE": "ネットワークに接続されていません",
+    "NETWORK_ERROR_MESSAGE": "ネットワークエラーが発生しました。接続を確認してください",
+    "NO_RESULTS_MESSAGE": "対象なし",
+    "REQUIRED_FIELD_MESSAGE": "この項目は必須です",
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "未保存の変更があります。ページを離れますか？"
 }

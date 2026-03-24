@@ -11,12 +11,13 @@
             @received_errors="onReceivedErrors"
             @received_messages="onReceivedMessages"
             @requested_reload_application_config="onRequestedReloadApplicationConfig" ref="application_config_dialog" />
-        <div class="alert_container">
+        <div class="alert_container" role="status" aria-live="polite">
             <v-slide-y-transition group>
                 <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
                     v-for="message in messages" :key="message.id">
                     <template v-slot:activator="{ props }">
                         <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
+                            :role="message.is_error ? 'alert' : undefined"
                             :closable="message.closable" @click:close="onCloseMessage(message.id)">
                             {{ message.message }}
                         </v-alert>

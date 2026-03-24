@@ -60,6 +60,9 @@
                     </table>
                 </template>
             </v-virtual-scroll>
+            <v-col v-if="!is_loading && matched_kyous && matched_kyous.length === 0" cols="12" class="text-center text-grey py-6">
+                {{ i18n.global.t('NO_RESULTS_MESSAGE') }}
+            </v-col>
         </v-card>
         <v-card v-if="show_footer" :class="footer_class" variant="text" :ripple="false" :link="false">
             <v-row no-gutters>
@@ -170,6 +173,8 @@ defineExpose({ scroll_to, scroll_to_kyou, scroll_to_time, set_loading, get_is_lo
 <style lang="css" scoped>
 .kyou_in_list {
     overflow-y: hidden !important;
+    overflow-x: hidden !important;
+    max-width: 100%;
     height: v-bind(kyou_height_px) !important;
     min-height: v-bind(kyou_height_px) !important;
     max-height: v-bind(kyou_height_px) !important;
@@ -188,5 +193,10 @@ defineExpose({ scroll_to, scroll_to_kyou, scroll_to_time, set_loading, get_is_lo
 <style lang="css" scoped>
 .kyou_list_view_card_wrap .kyou_list_view_card {
     overflow-y: hidden !important;
+}
+
+.kyou_list_view_card_wrap .v-virtual-scroll {
+    max-width: 100vw;
+    overflow-x: hidden !important;
 }
 </style>

@@ -139,7 +139,7 @@ export function resetDialogHistory(): Promise<void> {
       entries[i].dialog.value = false
     }
 
-    pendingNav = depth
+    pendingNav += depth
     history.go(-depth)
   })
 }
@@ -161,10 +161,12 @@ function ensurePopListenerInstalled() {
     (e) => {
       // A) If this popstate was caused by our own history.go(+/-), swallow it.
       if (pendingNav > 0) {
-        pendingNav = 0
-        if (stack.length === 0) clearDialogKeysFromCurrentState()
-        flushQueuedOpens()
-        resolveResetWaiters()
+        pendingNav--
+        if (pendingNav === 0) {
+          if (stack.length === 0) clearDialogKeysFromCurrentState()
+          flushQueuedOpens()
+          resolveResetWaiters()
+        }
         return
       }
 
@@ -174,21 +176,29 @@ function ensurePopListenerInstalled() {
         return
       }
 
-      // C) Block forward into dialog states while stack is empty
+      // C) Forward into dialog state while stack is empty: strip markers
       if (stack.length === 0 && isDialogState((e as PopStateEvent).state)) {
-        pendingNav = 1
-        history.go(-1)
+        history.replaceState(stripDialogKeys((e as PopStateEvent).state), "")
         return
       }
 
-      // D) If any dialog is open, back/forward closes the topmost.
+      // D) If any dialog is open
       if (stack.length > 0) {
-        try {
-          (e as any).stopImmediatePropagation?.()
-        } catch {
-          // ignore
+        const newDepth = isDialogState((e as PopStateEvent).state)
+          ? ((e as PopStateEvent).state as AnyObj)[DEPTH] as number
+          : 0
+
+        // Forward: depth in new state >= current stack → don't close
+        if (newDepth >= stack.length) {
+          history.replaceState(
+            withDialogMarkers(stripDialogKeys((e as PopStateEvent).state), stack.length),
+            ""
+          )
+          return
         }
 
+        // Back: close topmost dialog
+        try { (e as any).stopImmediatePropagation?.() } catch {}
         const top = stack[stack.length - 1]
         closingFromPop.add(top.dialog as any)
         top.dialog.value = false
@@ -304,7 +314,7 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
       const delta = prevDepth - stack.length
 
       if (delta > 0) {
-        pendingNav = delta
+        pendingNav += delta
         history.go(-delta)
       } else if (stack.length === 0) {
         clearDialogKeysFromCurrentState()

@@ -9,6 +9,15 @@ import http from 'node:http'
 const home = process.env.HOME || process.env.USERPROFILE || ''
 const testHome = path.join(home, 'gkill_test')
 
+// 0. Kill any leftover gkill_server from previous runs (Windows: taskkill, others: pkill)
+if (process.platform === 'win32') {
+  try { execSync('taskkill /F /IM gkill_server.exe', { stdio: 'ignore' }) } catch { /* no process */ }
+} else {
+  try { execSync('pkill -f gkill_server', { stdio: 'ignore' }) } catch { /* no process */ }
+}
+// Wait for file locks to release after killing
+await new Promise(r => setTimeout(r, 2000))
+
 // 1. Clean test home directory
 try {
   if (fs.existsSync(testHome)) {

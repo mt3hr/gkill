@@ -18,6 +18,7 @@ Vitest
 | `src/client/__tests__/unit/classes/long-press.test.ts` | `v-long-press` ディレクティブ |
 | `src/client/__tests__/unit/classes/save-as.test.ts` | ファイル保存ユーティリティ |
 | `src/client/__tests__/unit/classes/delete-gkill-cache.test.ts` | gkill キャッシュ削除処理 |
+| `src/client/__tests__/unit/classes/use-dialog-history-stack.test.ts` | ダイアログ＋ブラウザ履歴スタック管理 |
 
 ## テスト内容
 
@@ -27,6 +28,7 @@ Vitest
 - **long-press**: Vue カスタムディレクティブの登録・発火タイミング
 - **save-as**: Blob ダウンロードの処理フロー
 - **delete-gkill-cache**: Service Worker キャッシュのクリア処理
+- **use-dialog-history-stack**: ブラウザバックでダイアログ閉じ、フォワードでダイアログ維持、複数ダイアログの順次閉じ、プログラマティック閉じ、Escape閉じ、Branch C/D ロジック
 
 ## 実行方法
 

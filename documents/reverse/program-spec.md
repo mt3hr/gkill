@@ -193,7 +193,7 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api.go`（約12,300行）がAPIの中心です。
+`gkill/api/gkill_server_api.go`（約14,000行）がAPIの中心です。
 
 #### 主な責務
 
@@ -328,6 +328,12 @@ KFTLは以下のステートメント型をサポートしています。
 | テキスト | text | テキスト付与 |
 | 通知 | notification | 通知設定 |
 | 制御 | template, time_set | テンプレート展開、時刻設定 |
+
+### プレフィックスの二重対応
+
+サーバ側パーサ（`kftl_factory.go`）は、日本語プレフィックスと ASCII プレフィックスの**両方**を常に受理する。例: タグは `。tag` でも `#tag` でも受理される。セーブ文字は `！` でも `!` でも受理される。これにより非日本語ロケールのユーザも問題なく KFTL を使用できる。
+
+Mi の時間フィールド（limitTime, estimateStartTime, estimateEndTime）でも、全角 `？` と ASCII `?` の両方を関連時刻プレフィックスとして受理する。
 
 ### nowFromCtx
 
