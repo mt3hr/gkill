@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import crypto from "node:crypto";
+import { readFileSync } from "node:fs";
 import http from "node:http";
-import { resolve as _resolvePath } from "node:path";
+import { dirname as _dirname, resolve as _resolvePath } from "node:path";
 import process from "node:process";
 import { fileURLToPath as _fileURLToPath } from "node:url";
 import { Agent } from "undici";
@@ -19,9 +20,11 @@ import {
 import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs } from "./lib/normalization.mjs";
 
 const _thisFile = _fileURLToPath(import.meta.url);
+const _thisDir = _dirname(_thisFile);
+const _pkg = JSON.parse(readFileSync(_resolvePath(_thisDir, "../../package.json"), "utf8"));
 
 const SERVER_NAME = "gkill-read-mcp";
-const SERVER_VERSION = "0.4.0";
+const SERVER_VERSION = _pkg.version;
 
 const AUTH_ERROR_CODES = new Set([
   "ERR000002", // AccountNotFoundError
