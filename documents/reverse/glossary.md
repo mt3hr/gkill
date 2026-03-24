@@ -238,7 +238,7 @@ DNote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | MCP サーバー | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（6ツール、stdio/HTTP） |
 | Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
 | Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |
-| ビルド設定 | `package.json` | npm scripts、依存関係、バージョン (1.1.0-dev) |
+| ビルド設定 | `package.json` | npm scripts、依存関係、バージョン (1.1.0) |
 | Vite 設定 | `vite.config.ts` | ビルド設定・PWA・エイリアス |
 | TypeScript 設定 | `tsconfig.app.json` | フロントエンド TypeScript 設定 |
 | ESLint 設定 | `.eslintrc.cjs` | リンター設定 |
