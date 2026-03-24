@@ -17,18 +17,16 @@ import java.net.URL
 
 class MainActivity : AppCompatActivity() {
     private fun copyServerBinary(): File {
-        val input = assets.open("gkill_server")
         val outputFile = File(filesDir, "gkill_server")
 
-        if (!outputFile.exists()) {
-            input.use { inStream ->
-                outputFile.outputStream().use { outStream ->
-                    inStream.copyTo(outStream)
-                }
+        // バージョン更新時にバイナリを上書きするため、毎回コピーする
+        assets.open("gkill_server").use { inStream ->
+            outputFile.outputStream().use { outStream ->
+                inStream.copyTo(outStream)
             }
-            outputFile.setReadable(true, true)
-            outputFile.setExecutable(true, true)
         }
+        outputFile.setReadable(true, true)
+        outputFile.setExecutable(true, true)
 
         return outputFile
     }
@@ -36,25 +34,42 @@ class MainActivity : AppCompatActivity() {
     private fun startGkillServer() {
         val gkillBinary = copyServerBinary()
 
+        Log.i("gkill", "バイナリパス: ${gkillBinary.absolutePath}")
+        Log.i("gkill", "バイナリサイズ: ${gkillBinary.length()} bytes")
+        Log.i("gkill", "実行可能: ${gkillBinary.canExecute()}")
+        Log.i("gkill", "読み取り可能: ${gkillBinary.canRead()}")
+
         Thread {
             try {
-                Thread.sleep(1000) // 応急措置
                 val homeDir = filesDir.parentFile?.absolutePath ?: filesDir.absolutePath
-                val pb = ProcessBuilder(gkillBinary.absolutePath)
+                Log.i("gkill", "HOME: $homeDir")
 
+                // nativeLibraryDirからの実行を試みる（W^X制限回避）
+                val nativeDir = applicationInfo.nativeLibraryDir
+                Log.i("gkill", "nativeLibraryDir: $nativeDir")
+
+                val pb = ProcessBuilder(gkillBinary.absolutePath)
                 pb.environment()["HOME"] = homeDir
                 pb.redirectErrorStream(true)
                 val process = pb.start()
 
+                // stdoutを別スレッドで読み続ける（バッファフルによるハング防止）
+                Thread {
+                    try {
+                        process.inputStream.bufferedReader().forEachLine {
+                            Log.d("gkill_server_stdout", it)
+                        }
+                    } catch (_: Exception) {}
+                }.start()
+
                 val exitCode = process.waitFor()
-                process.inputStream.bufferedReader().forEachLine {
-                    Log.d("gkill_server_stdout", it)
-                }
-                process.errorStream.bufferedReader().forEachLine {
-                    Log.e("gkill_server_stderr", it)
-                }
                 Log.e("gkill", "プロセス終了コード: $exitCode")
-            } catch (e: IOException) {
+                runOnUiThread {
+                    if (exitCode != 0) {
+                        Toast.makeText(this, "gkill_server 異常終了 (code=$exitCode)", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
                 runOnUiThread {
                     Toast.makeText(this, "gkill_server 起動失敗：${e.message}", Toast.LENGTH_LONG).show()
                     Log.e("gkill", "起動失敗", e)
@@ -102,7 +117,7 @@ class MainActivity : AppCompatActivity() {
     fun waitUntilServerStarts(onReady: () -> Unit) {
         Thread {
             var connected = false
-            while(true) { // 最大10秒待つ（500ms * 20）
+            for (i in 1..60) { // 最大30秒待つ（500ms * 60）
                 try {
                     val socket = Socket()
                     socket.connect(InetSocketAddress("localhost", 9999), 500)
