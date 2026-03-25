@@ -19,14 +19,14 @@ npm run mcp:gkill-read
 ```
 
 ### HTTPモード（リモート接続）
-APIキー認証付きのHTTPサーバとして起動します。Claude.ai Connectors、ChatGPT等からリモート接続可能です。
+OAuth 2.1認証付きのHTTPサーバとして起動します。Claude.ai、ChatGPT等のMCPクライアントからOAuth認証で接続できます。
 
 ```powershell
 $env:GKILL_BASE_URL="http://127.0.0.1:9999"
 $env:GKILL_USER="admin"
 $env:GKILL_PASSWORD_SHA256="<sha256 hex>"
 $env:MCP_TRANSPORT="http"
-$env:MCP_API_KEY="your-secret-api-key"
+$env:MCP_OAUTH_ISSUER="https://<your-host>"  # リモート接続時は必須（クライアントがアクセス可能な公開URL）
 $env:MCP_PORT="8808"  # 省略可（デフォルト: 8808）
 npm run mcp:gkill-read-http
 ```
@@ -37,46 +37,82 @@ GKILL_BASE_URL=http://127.0.0.1:9999 \
 GKILL_USER=admin \
 GKILL_PASSWORD_SHA256="<sha256 hex>" \
 MCP_TRANSPORT=http \
-MCP_API_KEY=your-secret-api-key \
+MCP_OAUTH_ISSUER="https://<your-host>" \
 MCP_PORT=8808 \
 node src/mcp/gkill-read-server.mjs
 ```
 
+> **重要**: `MCP_OAUTH_ISSUER` はリモート接続時に必須です。未設定の場合 `http://localhost:<port>` がデフォルトになり、Claude.ai/ChatGPT等のクラウドサービスからOAuthエンドポイントに到達できません。Cloudflare Tunnel等を使う場合は公開URL（例: `https://example.com`）を設定してください。
+
 エンドポイント: `POST /mcp`（Streamable HTTP仕様準拠）
 
-認証: `Authorization: Bearer <MCP_API_KEY>` ヘッダが必須
-
-#### 動作確認（curl）
-```bash
-# 認証失敗（401）
-curl -X POST http://localhost:8808/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
-
-# 認証成功（200）
-curl -X POST http://localhost:8808/mcp \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your-secret-api-key" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
-```
+認証: OAuth 2.1 (Authorization Code + PKCE)。MCPクライアントが自動的にOAuthエンドポイントを検出し、ユーザーに認証を要求します。
 
 #### Claude.ai Connectorsでの設定
 1. HTTPモードで起動（グローバルIPまたはトンネル経由でアクセス可能にする）
-2. Claude.ai → Settings → Connectors → Add MCP Server
-3. URL: `http://<your-host>:8808/mcp`
-4. Authentication: Bearer Token → MCP_API_KEY の値を入力
+2. Claude.ai → Settings → Connectors → カスタムコネクタを追加
+3. リモートMCPサーバーURL: `http://<your-host>:8808/mcp`
+4. OAuth Client ID / シークレット: 空欄のまま（DCRで自動登録）
+5. 「追加」→ ログイン画面でgkillのユーザーID・パスワードを入力
 
 #### ChatGPTでの設定
-ChatGPTはOAuthまたは認証なしのみ対応のため、URLパスにキーを埋め込む方式で接続します。
 
-1. HTTPモードで起動
-2. ChatGPT → Settings → Actions or MCP → Add MCP Server
-3. Authentication: 「None」を選択
-4. URL: `http://<your-host>:8808/mcp/<MCP_API_KEY の値>`
+> **既知の制限**: ChatGPTのMCP統合はベータ版であり、OAuth認証・初回のデータ取得は成功するものの、**cursorを使ったページング継続時にChatGPTプラットフォーム側でMCPリソース参照が失われ「Resource not found」エラーが発生する**不具合が確認されています。この問題はgkill側ではなくChatGPTプラットフォーム内部の問題であり、ページングリクエストがgkillサーバーに到達しません。1ページに収まる小規模クエリは正常に動作します。
 
-サーバー側は以下の2つの認証方式を受け付けます:
-- `Authorization: Bearer <key>` ヘッダー（Claude.ai Connectors向け）
-- パスセグメント `POST /mcp/<key>`（ChatGPT向け）
+1. ChatGPT → Settings → MCP → 新しいアプリ
+2. MCPサーバーのURL: `http://<your-host>:8808/mcp`
+3. 認証: 「OAuth」を選択
+4. 高度な設定 → OAuthエンドポイントが自動検出される
+5. 「作成する」→ ログイン画面でgkillのユーザーID・パスワードを入力
+
+### OAuth 2.1 認証
+
+HTTPモードではOAuth 2.1が常に有効です。MCP仕様に準拠し、ChatGPTとClaude.aiの両方で動作します。
+
+#### OAuthエンドポイント
+| エンドポイント | メソッド | 説明 |
+|---|---|---|
+| `/.well-known/oauth-protected-resource` | GET | Protected Resource Metadata (RFC 9728) |
+| `/.well-known/oauth-authorization-server` | GET | OAuthサーバーメタデータ (RFC 8414) |
+| `/oauth/authorize` (`/authorize`) | GET/POST | 認可エンドポイント（ログインフォーム表示・認証） |
+| `/oauth/token` (`/token`) | POST | トークンエンドポイント（コード交換・リフレッシュ） |
+| `/oauth/register` (`/register`) | POST | 動的クライアント登録 (RFC 7591) |
+
+※ 括弧内はClaude.aiフォールバック用の短縮パス（既知のバグ対応）
+
+#### 認証フロー
+1. MCPクライアントが `POST /mcp` を送信 → 401 + `WWW-Authenticate` ヘッダーで検出情報取得
+2. `/.well-known/oauth-protected-resource` から認可サーバーURLを取得
+3. `/.well-known/oauth-authorization-server` からOAuthメタデータを取得
+4. `/oauth/register` で動的クライアント登録（DCR）
+5. `/oauth/authorize` にリダイレクト（PKCE + `resource` パラメータ付き）
+6. ユーザーがgkillログイン画面で認証 → 認可コード発行
+7. `/oauth/token` でコード交換 → アクセストークン取得
+8. 以降は `Authorization: Bearer <access_token>` でMCPエンドポイントにアクセス
+
+#### トークン仕様
+- アクセストークン有効期間: 1時間（インメモリ、再起動で消失→リフレッシュトークンで再発行）
+- リフレッシュトークン有効期間: 30日（ローテーション方式）
+- リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_state.json` に自動永続化。サーバー再起動後も再認証不要
+
+#### 動作確認（curl）
+```bash
+# Protected Resource Metadata
+curl http://localhost:8808/.well-known/oauth-protected-resource
+
+# OAuth Authorization Server Metadata
+curl http://localhost:8808/.well-known/oauth-authorization-server
+
+# 動的クライアント登録
+curl -X POST http://localhost:8808/oauth/register \
+  -H "Content-Type: application/json" \
+  -d '{"redirect_uris": ["http://localhost/callback"], "client_name": "My App"}'
+
+# MCP (未認証 → 401 + WWW-Authenticate)
+curl -v -X POST http://localhost:8808/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+```
 
 ### 主な環境変数
 
@@ -91,7 +127,7 @@ ChatGPTはOAuthまたは認証なしのみ対応のため、URLパスにキー�
 #### トランスポート
 - `MCP_TRANSPORT` (default: `stdio`) — `stdio` or `http`
 - `MCP_PORT` (default: `8808`) — HTTPサーバのポート番号
-- `MCP_API_KEY` — HTTPモード時必須。Bearer認証用APIキー
+- `MCP_OAUTH_ISSUER` (default: `http://localhost:<MCP_PORT>`) — OAuthメタデータのissuer URL。**リモート接続時は必須**。クライアントがアクセス可能な公開URL（例: `https://example.com`）を設定。未設定だとClaude.ai/ChatGPTからOAuth認証が失敗する
 
 ### 提供ツール（6つ）
 | ツール名 | 説明 |
