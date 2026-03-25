@@ -20,6 +20,7 @@ import (
 	"log"
 	"log/slog"
 	"math/big"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -13752,9 +13753,16 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			}
 		case "idf":
 			if idfk, ok := idfKyouMap[kyou.ID]; ok {
+				mimeType := mime.TypeByExtension(filepath.Ext(idfk.TargetFile))
+				repName := kyou.RepName
 				payload = req_res.IDFPayloadMCPDTO{
 					Kind:     "idf",
 					FileName: idfk.TargetFile,
+					IsImage:  idfk.IsImage,
+					IsVideo:  idfk.IsVideo,
+					IsAudio:  idfk.IsAudio,
+					RepName:  repName,
+					MimeType: mimeType,
 				}
 			}
 		case "git_commit_log":
