@@ -14,7 +14,8 @@ import { McpServer } from "../gkill-read-server.mjs";
 function createMockClient(overrides = {}) {
   return {
     callRead: vi.fn().mockResolvedValue({ errors: [], messages: [] }),
-    login: vi.fn().mockResolvedValue(undefined),
+    fetchFile: vi.fn().mockResolvedValue({ buffer: Buffer.from("test"), contentType: "application/octet-stream" }),
+    login: vi.fn().mockResolvedValue("mock-session-id"),
     defaultLocale: "ja",
     ...overrides,
   };
@@ -225,11 +226,12 @@ describe("handleMessage", () => {
     expect(response.jsonrpc).toBe("2.0");
     expect(response.id).toBe(2);
     expect(Array.isArray(response.result.tools)).toBe(true);
-    expect(response.result.tools.length).toBe(6);
+    expect(response.result.tools.length).toBe(7);
 
     const toolNames = response.result.tools.map((t) => t.name);
     expect(toolNames).toContain("gkill_get_kyous");
     expect(toolNames).toContain("gkill_get_all_tag_names");
+    expect(toolNames).toContain("gkill_get_idf_file");
   });
 
   test("responds to tools/call with tool result", async () => {
@@ -291,5 +293,108 @@ describe("handleMessage", () => {
 
     expect(response.error.code).toBe(-32600);
     expect(response.error.message).toBe("Invalid Request");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// gkill_get_idf_file tool
+// ---------------------------------------------------------------------------
+describe("gkill_get_idf_file", () => {
+  let mockClient;
+  let server;
+
+  beforeEach(() => {
+    mockClient = createMockClient();
+    server = new McpServer(mockClient);
+  });
+
+  test("dispatches to fetchFile with correct path", async () => {
+    const fileContent = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+    mockClient.fetchFile.mockResolvedValue({ buffer: fileContent, contentType: "image/png" });
+    server.currentSessionId = "test-session";
+
+    const result = await server.handleToolCall("gkill_get_idf_file", {
+      rep_name: "my_repo",
+      file_name: "photo.png",
+    });
+
+    expect(mockClient.fetchFile).toHaveBeenCalledWith("/files/my_repo/photo.png", "test-session");
+    expect(result.file_name).toBe("photo.png");
+    expect(result.mime_type).toBe("image/png");
+    expect(result.file_size_bytes).toBe(4);
+    expect(result.is_image).toBe(true);
+    expect(result.file_content_base64).toBe(fileContent.toString("base64"));
+  });
+
+  test("returns is_image false for non-image files", async () => {
+    mockClient.fetchFile.mockResolvedValue({ buffer: Buffer.from("data"), contentType: "application/pdf" });
+    server.currentSessionId = "sess";
+
+    const result = await server.handleToolCall("gkill_get_idf_file", {
+      rep_name: "repo",
+      file_name: "doc.pdf",
+    });
+
+    expect(result.is_image).toBe(false);
+    expect(result.mime_type).toBe("application/pdf");
+  });
+
+  test("handles nested file paths", async () => {
+    mockClient.fetchFile.mockResolvedValue({ buffer: Buffer.from("x"), contentType: "text/plain" });
+    server.currentSessionId = "sess";
+
+    await server.handleToolCall("gkill_get_idf_file", {
+      rep_name: "repo",
+      file_name: "sub/dir/file.txt",
+    });
+
+    expect(mockClient.fetchFile).toHaveBeenCalledWith("/files/repo/sub/dir/file.txt", "sess");
+  });
+
+  test("uses login when currentSessionId is not set", async () => {
+    mockClient.fetchFile.mockResolvedValue({ buffer: Buffer.from("x"), contentType: "text/plain" });
+    server.currentSessionId = null;
+
+    await server.handleToolCall("gkill_get_idf_file", {
+      rep_name: "repo",
+      file_name: "file.txt",
+    });
+
+    expect(mockClient.login).toHaveBeenCalled();
+    expect(mockClient.fetchFile).toHaveBeenCalledWith("/files/repo/file.txt", "mock-session-id");
+  });
+
+  test("buildToolResult includes image content block for images", () => {
+    const payload = {
+      file_name: "img.jpg",
+      mime_type: "image/jpeg",
+      file_size_bytes: 100,
+      is_image: true,
+      file_content_base64: "base64data",
+    };
+
+    const result = server.buildToolResult("gkill_get_idf_file", payload, false);
+
+    expect(result.isError).toBe(false);
+    expect(result.content).toHaveLength(2);
+    expect(result.content[0].type).toBe("text");
+    expect(result.content[1].type).toBe("image");
+    expect(result.content[1].data).toBe("base64data");
+    expect(result.content[1].mimeType).toBe("image/jpeg");
+  });
+
+  test("buildToolResult does not include image block for non-images", () => {
+    const payload = {
+      file_name: "doc.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: 200,
+      is_image: false,
+      file_content_base64: "pdfdata",
+    };
+
+    const result = server.buildToolResult("gkill_get_idf_file", payload, false);
+
+    expect(result.content).toHaveLength(1);
+    expect(result.content[0].type).toBe("text");
   });
 });

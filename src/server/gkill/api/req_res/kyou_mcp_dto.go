@@ -77,6 +77,11 @@ type LantanaPayloadMCPDTO struct {
 type IDFPayloadMCPDTO struct {
 	Kind     string `json:"kind"` // "idf"
 	FileName string `json:"file_name"`
+	IsImage  bool   `json:"is_image"`
+	IsVideo  bool   `json:"is_video"`
+	IsAudio  bool   `json:"is_audio"`
+	RepName  string `json:"rep_name"`
+	MimeType string `json:"mime_type,omitempty"`
 }
 
 type GitPayloadMCPDTO struct {

@@ -46,7 +46,7 @@ src/server/gkill/
 |---------|----------------|------|
 | API 統合 | 5 | 全11データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント |
 | KFTL パーサ | 3 | Factory、Statement、Request Map |
-| req_res | 1 | 16種の JSON 往復テスト |
+| req_res | 1 | 18種の JSON 往復テスト（IDFPayloadMCPDTO含む） |
 | DAO 管理 | 1 | GkillDAOManager ライフサイクル |
 | アカウント | 3 | アカウント CRUD、セッション、アップロード履歴 |
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
