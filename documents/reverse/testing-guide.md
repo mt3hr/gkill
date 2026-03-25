@@ -11,10 +11,10 @@ gkill プロジェクトでは約1,757件の自動テストを整備していま
 | Go バックエンド | ~531 | 47 | Go `testing` |
 | フロントエンド ユニット | ~676 | 49 | Vitest |
 | フロントエンド E2E | 187 | 29 | Playwright |
-| MCP サーバ | ~237 | 6 | Vitest |
+| MCP サーバ | ~367 | 9 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 114 | 9 | JUnit 4 + MockK |
-| **合計** | **~1,757** | **~142** | |
+| **合計** | **~1,887** | **~145** | |
 
 ### テスト仕様書
 
@@ -283,7 +283,7 @@ src/client/__tests__/
 | `constants.test.mjs` | ツール名、エラーコード、デフォルト設定値 |
 | `tool-handlers.test.mjs` | 各ツールのハンドラ実行ロジック |
 | `client.test.mjs` | GkillReadClient（fetch モック、認証、レスポンスパース） |
-| `server.test.mjs` | McpServer ライフサイクル、トランスポート管理 |
+| `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール（ディスパッチ/画像image block/非画像/ネストパス/セッションフォールバック） |
 
 ### 3.5 Android / Wear OS
 

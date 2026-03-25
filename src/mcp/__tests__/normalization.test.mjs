@@ -8,6 +8,7 @@ import {
   normalizeKyouArgs,
   normalizeLocaleOnlyArgs,
   normalizeGpsArgs,
+  normalizeIdfFileArgs,
 } from "../lib/normalization.mjs";
 
 // ---------------------------------------------------------------------------
@@ -458,5 +459,52 @@ describe("normalizeGpsArgs", () => {
     const result = normalizeGpsArgs({ start_date: "2026-06-15", end_date: "2026-06-15" });
     expect(result.start_date).toMatch(/T00:00:00/);
     expect(result.end_date).toMatch(/T23:59:59/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// normalizeIdfFileArgs
+// ---------------------------------------------------------------------------
+describe("normalizeIdfFileArgs", () => {
+  test("accepts valid rep_name and file_name", () => {
+    const result = normalizeIdfFileArgs({ rep_name: "my_repo", file_name: "photo.jpg" });
+    expect(result.rep_name).toBe("my_repo");
+    expect(result.file_name).toBe("photo.jpg");
+    expect(result.locale_name).toBeUndefined();
+  });
+
+  test("includes locale_name when provided", () => {
+    const result = normalizeIdfFileArgs({ rep_name: "repo", file_name: "f.txt", locale_name: "en" });
+    expect(result.locale_name).toBe("en");
+  });
+
+  test("throws when rep_name is missing", () => {
+    expect(() => normalizeIdfFileArgs({ file_name: "f.txt" })).toThrow();
+  });
+
+  test("throws when file_name is missing", () => {
+    expect(() => normalizeIdfFileArgs({ rep_name: "repo" })).toThrow();
+  });
+
+  test("throws when rep_name is empty", () => {
+    expect(() => normalizeIdfFileArgs({ rep_name: "  ", file_name: "f.txt" })).toThrow();
+  });
+
+  test("throws when file_name is empty", () => {
+    expect(() => normalizeIdfFileArgs({ rep_name: "repo", file_name: "" })).toThrow();
+  });
+
+  test("trims whitespace from strings", () => {
+    const result = normalizeIdfFileArgs({ rep_name: "  repo  ", file_name: "  file.txt  " });
+    expect(result.rep_name).toBe("repo");
+    expect(result.file_name).toBe("file.txt");
+  });
+
+  test("rejects unknown keys", () => {
+    expect(() => normalizeIdfFileArgs({ rep_name: "r", file_name: "f", unknown: 1 })).toThrow();
+  });
+
+  test("accepts null args as empty object and throws for missing required", () => {
+    expect(() => normalizeIdfFileArgs(null)).toThrow();
   });
 });
