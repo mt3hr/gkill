@@ -114,8 +114,20 @@ gkill_server version
 | コマンド | 説明 |
 |---|---|
 | `npm run setup_gkill_develop_env` | Ubuntu/WSL用の開発環境一括セットアップ |
-| `npm run mcp:gkill-read` | MCPサーバー起動（stdioモード） |
-| `npm run mcp:gkill-read-http` | MCPサーバー起動（HTTPモード） |
+| `npm run mcp:gkill-read` | MCPサーバー起動（stdioモード、ローカル用） |
+| `npm run mcp:gkill-read-http` | MCPサーバー起動（HTTPモード、OAuth 2.1認証付き） |
+
+### MCP HTTPモード開発用環境変数
+
+```bash
+export GKILL_BASE_URL=http://127.0.0.1:9999
+export GKILL_USER=admin
+export GKILL_PASSWORD_SHA256="<sha256 hex>"  # or GKILL_PASSWORD
+export MCP_TRANSPORT=http
+export MCP_PORT=8808
+export MCP_OAUTH_ISSUER=http://localhost:8808  # リモート時は公開URL
+# export GKILL_INSECURE=true  # 自己署名証明書使用時
+```
 
 ## 4. ビルドパイプライン詳細
 

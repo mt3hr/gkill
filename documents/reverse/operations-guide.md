@@ -394,3 +394,57 @@ gkill_server generate_video_cache --user ユーザーID
 | `gkill_server generate_video_cache --user ユーザーID` | 動画キャッシュ生成 |
 | `gkill_server optimize --user ユーザーID` | データベース最適化（VACUUM） |
 | `gkill_server update_cache` | HTTP API経由でキャッシュ更新 |
+
+## 10. MCP HTTPサーバーのデプロイ
+
+gkill MCP サーバー（`src/mcp/gkill-read-server.mjs`）は、Claude.ai / ChatGPT 等のAI MCPクライアントからgkillデータを読み取るためのHTTPサーバー。OAuth 2.1認証で保護されている。
+
+### 10.1 起動
+
+```bash
+# 環境変数を設定して起動
+GKILL_BASE_URL=http://127.0.0.1:9999 \
+GKILL_USER=admin \
+GKILL_PASSWORD_SHA256="<sha256 hex>" \
+MCP_TRANSPORT=http \
+MCP_OAUTH_ISSUER="https://<公開ホスト名>" \
+MCP_PORT=8808 \
+node src/mcp/gkill-read-server.mjs
+```
+
+### 10.2 環境変数
+
+| 変数 | デフォルト | 説明 |
+|---|---|---|
+| `GKILL_BASE_URL` | `http://127.0.0.1:9999` | gkillバックエンドURL |
+| `GKILL_USER` | — | gkillログインユーザーID |
+| `GKILL_PASSWORD_SHA256` | — | パスワードのSHA-256ハッシュ（`GKILL_PASSWORD`でも可） |
+| `MCP_TRANSPORT` | `stdio` | `http` でHTTPモード起動 |
+| `MCP_PORT` | `8808` | HTTPサーバーポート |
+| `MCP_OAUTH_ISSUER` | `http://localhost:<port>` | OAuthメタデータのissuer URL。**リモートアクセス時は必須**（公開URL）|
+| `GKILL_INSECURE` | `false` | `true` でgkillバックエンドへのTLS証明書検証をスキップ |
+
+### 10.3 リモートアクセス（Cloudflare Tunnel等）
+
+MCPサーバーをリモートから利用するには、外部からアクセス可能にする必要がある。
+
+```yaml
+# .cloudflared/config.yml 例
+ingress:
+  - hostname: example.com
+    service: http://localhost:8808
+    originRequest:
+      noTLSVerify: true
+  - service: http_status:404
+```
+
+**重要**: `MCP_OAUTH_ISSUER` を公開URL（例: `https://example.com`）に設定すること。未設定だと OAuthメタデータ内のURLが `http://localhost` になり、Claude.ai/ChatGPT から認可エンドポイントに到達できない。
+
+### 10.4 トークン永続化
+
+リフレッシュトークン（30日TTL）とDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_state.json` に自動保存される。サーバー再起動後も再認証不要。
+
+### 10.5 既知の制限
+
+- **ChatGPT**: OAuth認証・初回データ取得は成功するが、cursorベースのページング継続時にChatGPTプラットフォーム側で「Resource not found」が発生する（2026-03時点、ベータ版の制限）
+- **Claude.ai**: 正常動作。OAuth自動検出・DCR・データ取得すべて安定
