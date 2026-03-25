@@ -54,25 +54,25 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 ## ダウンロード・インストール
 [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
 
-【⭐️gkill体験】  
+### ⭐️gkill体験  
 Windows用の利用例サンプルデータがありあります。  
 まず [gkill_sample_data_v1.1.0.zip](https://github.com/mt3hr/gkill/releases/latest) で軽く試して体験してほしいです。  
 ダウンロード/展開後、LAUNCH_GKILL_SAMPLE_DATA.batを起動してください。  
 [説明書](documents/gkill_user_document.pdf)に利用イメージのドキュメントがあります。   
 
-【💻️Windowsユーザ向け】  
+### 💻️Windowsユーザ向け  
 ①Assetsから「windows_amd64_gkill_v1.1.0.zip」をダウンロード  
 ②zipを解凍して「gkill.exe」を実行  
 ※初回起動には時間がかかります。コーヒーでも淹れてお待ち下さい。  
 
-【📱Androidユーザ向け】  
+### 📱Androidユーザ向け  
 ①Assetsから「gkill_v1.1.0.apk」をダウンロード  
 ②インストール  
 ③ホーム画面から起動  
 ※インストール時に警告が出ますが、「詳細」からインストールできます  
 ⇛警告理由：古いAndroidAPIを利用しているため  
 
-【😎上級者・サーバ構築派向け】  
+### 😎上級者・サーバ構築派向け  
 ①あなたの環境の「gkill_server_v1.1.0.zip」をダウンロード  
 ②適当な場所に展開して「gkill_server.exe」を実行  
 ③その後「[http://localhost:9999](http://localhost:9999)」にアクセス  
