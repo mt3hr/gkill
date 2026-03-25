@@ -18,6 +18,7 @@ import {
   DEFAULT_KYOUS_INCLUDE_TIMEIS,
 } from "./lib/constants.mjs";
 import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs } from "./lib/normalization.mjs";
+import { OAuthServer } from "./lib/oauth-server.mjs";
 
 const _thisFile = _fileURLToPath(import.meta.url);
 const _thisDir = _dirname(_thisFile);
@@ -35,30 +36,33 @@ const AUTH_ERROR_CODES = new Set([
 const FIND_QUERY_SCHEMA = {
   type: "object",
   description:
-    "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings. Recommended filtering strategy: fetch ApplicationConfig and all tag names first, build a visible-tag allowlist by removing force-hidden or unchecked tags, then pass that allowlist via tags/timeis_tags with use_tags/use_timeis_tags=true. For repositories, prefer checked leaf rep_types from ApplicationConfig and treat unchecked leaf rep_type leaves as inferred hidden sources.",
+    "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings. " +
+    "General rule: each filter group requires its use_X flag set to true to activate (e.g., use_calendar:true activates calendar_start/end_date; use_words:true activates words). Without the flag, the related fields are ignored. " +
+    "Recommended filtering strategy: fetch ApplicationConfig and all tag names first, then build a visible-tag allowlist — a tag is visible when is_force_hide=false AND check_when_inited=true in ApplicationConfig tag_struct. Pass visible tags via tags/timeis_tags with use_tags/use_timeis_tags=true. For repositories, prefer checked leaf rep_types from ApplicationConfig and treat unchecked leaf rep_type leaves as inferred hidden sources. " +
+    "Payload varies by data_type: kmemo body is in texts[], lantana has mood (0-10), nlog has title/shop/amount, timeis has title/start_time/end_time, mi has title/is_checked/board_name/limit_time, urlog has title/url, kc has title/num_value, idf has file_name, git_commit_log has commit_message.",
   properties: {
-    update_cache: { type: "boolean" },
-    is_deleted: { type: "boolean" },
-    use_tags: { type: "boolean" },
-    use_reps: { type: "boolean" },
-    use_rep_types: { type: "boolean" },
+    update_cache: { type: "boolean", description: "Force cache refresh before query." },
+    is_deleted: { type: "boolean", description: "Include soft-deleted entries." },
+    use_tags: { type: "boolean", description: "Activate tag filtering (tags, hide_tags, tags_and)." },
+    use_reps: { type: "boolean", description: "Activate repository name filtering (reps)." },
+    use_rep_types: { type: "boolean", description: "Activate rep-type filtering (rep_types)." },
     rep_types: {
       type: "array",
       description:
         "Allowed rep-type names. These values are backend-specific and may be case-sensitive. Do not assume ApplicationConfig display labels map 1:1 to accepted query values. In some deployments, lower-case values such as \"kmemo\" work where title-case labels such as \"Kmemo\" do not. If unsure, omit use_rep_types first, confirm the search works, then add rep_types gradually.",
       items: { type: "string" },
     },
-    use_ids: { type: "boolean" },
-    use_include_id: { type: "boolean" },
-    ids: { type: "array", items: { type: "string" } },
-    use_words: { type: "boolean" },
-    words: { type: "array", items: { type: "string" } },
-    words_and: { type: "boolean" },
-    not_words: { type: "array", items: { type: "string" } },
+    use_ids: { type: "boolean", description: "Activate ID filtering (ids)." },
+    use_include_id: { type: "boolean", description: "When true, ids is an include-list; when false, an exclude-list." },
+    ids: { type: "array", description: "Entry IDs to include or exclude.", items: { type: "string" } },
+    use_words: { type: "boolean", description: "Activate keyword filtering (words, not_words, words_and)." },
+    words: { type: "array", description: "Keywords to match.", items: { type: "string" } },
+    words_and: { type: "boolean", description: "AND logic for words (true=all must match, false=any)." },
+    not_words: { type: "array", description: "Keywords to exclude.", items: { type: "string" } },
     reps: {
       type: "array",
       description:
-        "Allowed rep names. Use this as an allowlist when you already know the visible repos to include. If rep_struct is unavailable, infer hidden repos from unchecked rep_type leaves and keep this list aligned with visible sources only.",
+        "Allowed rep names. Use this as an allowlist when you already know the visible repos to include. If rep_struct (from ApplicationConfig) is unavailable, infer hidden repos from unchecked rep_type leaves and keep this list aligned with visible sources only.",
       items: { type: "string" },
     },
     tags: {
@@ -73,12 +77,12 @@ const FIND_QUERY_SCHEMA = {
         "Explicit tag exclusion list. Prefer a visible-tag allowlist in tags when you need to exclude hidden tags reliably.",
       items: { type: "string" },
     },
-    tags_and: { type: "boolean" },
-    use_timeis: { type: "boolean" },
-    timeis_words: { type: "array", items: { type: "string" } },
-    timeis_not_words: { type: "array", items: { type: "string" } },
-    timeis_words_and: { type: "boolean" },
-    use_timeis_tags: { type: "boolean" },
+    tags_and: { type: "boolean", description: "AND logic for tags (true=all must match, false=any)." },
+    use_timeis: { type: "boolean", description: "Activate TimeIs keyword filtering (timeis_words, timeis_not_words)." },
+    timeis_words: { type: "array", description: "Keywords to match in TimeIs titles.", items: { type: "string" } },
+    timeis_not_words: { type: "array", description: "Keywords to exclude from TimeIs titles.", items: { type: "string" } },
+    timeis_words_and: { type: "boolean", description: "AND logic for timeis_words." },
+    use_timeis_tags: { type: "boolean", description: "Activate TimeIs tag filtering." },
     timeis_tags: {
       type: "array",
       description:
@@ -91,51 +95,53 @@ const FIND_QUERY_SCHEMA = {
         "Explicit TimeIs tag exclusion list. Prefer a visible-tag allowlist in timeis_tags when you need to exclude hidden tags reliably.",
       items: { type: "string" },
     },
-    timeis_tags_and: { type: "boolean" },
-    use_calendar: { type: "boolean" },
+    timeis_tags_and: { type: "boolean", description: "AND logic for timeis_tags." },
+    use_calendar: { type: "boolean", description: "Activate date range filtering (calendar_start/end_date)." },
     calendar_start_date: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
     calendar_end_date: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
-    use_map: { type: "boolean" },
-    map_radius: { type: "number" },
-    map_latitude: { type: "number" },
-    map_longitude: { type: "number" },
-    include_create_mi: { type: "boolean" },
-    include_check_mi: { type: "boolean" },
-    include_limit_mi: { type: "boolean" },
-    include_start_mi: { type: "boolean" },
-    include_end_mi: { type: "boolean" },
-    include_end_timeis: { type: "boolean" },
-    use_plaing: { type: "boolean" },
-    plaing_time: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
-    use_update_time: { type: "boolean" },
-    update_time: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
-    is_image_only: { type: "boolean" },
-    for_mi: { type: "boolean" },
-    use_mi_board_name: { type: "boolean" },
-    use_period_of_time: { type: "boolean" },
+    use_map: { type: "boolean", description: "Activate geographic filtering (map_latitude, map_longitude, map_radius)." },
+    map_radius: { type: "number", description: "Search radius in meters." },
+    map_latitude: { type: "number", description: "Center latitude." },
+    map_longitude: { type: "number", description: "Center longitude." },
+    include_create_mi: { type: "boolean", description: "Include Mi tasks in 'created' state. Effective only when for_mi=true." },
+    include_check_mi: { type: "boolean", description: "Include Mi tasks in 'checked' (completed) state. Effective only when for_mi=true." },
+    include_limit_mi: { type: "boolean", description: "Include Mi tasks that have a deadline (limit_time). Effective only when for_mi=true." },
+    include_start_mi: { type: "boolean", description: "Include Mi tasks that have an estimate_start_time. Effective only when for_mi=true." },
+    include_end_mi: { type: "boolean", description: "Include Mi tasks that have an estimate_end_time. Effective only when for_mi=true." },
+    include_end_timeis: { type: "boolean", description: "Include TimeIs entries that have ended (have end_time)." },
+    use_plaing: { type: "boolean", description: "Activate plaing time filtering — shows what was happening at a specific moment (e.g., which TimeIs was running, which records existed). Unlike calendar range, this is a point-in-time snapshot." },
+    plaing_time: { type: "string", description: `Target time for plaing view. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
+    use_update_time: { type: "boolean", description: "Activate update-time filtering (records updated after this time)." },
+    update_time: { type: "string", description: `Filter by last update time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
+    is_image_only: { type: "boolean", description: "Return only entries that have images attached." },
+    for_mi: { type: "boolean", description: "Query Mi (task) entries specifically." },
+    use_mi_board_name: { type: "boolean", description: "Activate Mi board filtering (mi_board_name)." },
+    use_period_of_time: { type: "boolean", description: "Activate time-of-day/weekday filtering." },
     period_of_time_start_time_second: {
       type: "integer",
-      description: "Seconds from 00:00:00 (0-86399).",
+      description: "Start of time-of-day window, seconds from 00:00:00 (0-86399).",
     },
     period_of_time_end_time_second: {
       type: "integer",
-      description: "Seconds from 00:00:00 (0-86399).",
+      description: "End of time-of-day window, seconds from 00:00:00 (0-86399).",
     },
     period_of_time_week_of_days: {
       type: "array",
-      description: "Weekdays: Sunday=0 ... Saturday=6",
+      description: "Weekdays to include: Sunday=0 ... Saturday=6.",
       items: { type: "integer", minimum: 0, maximum: 6 },
     },
-    mi_board_name: { type: "string" },
+    mi_board_name: { type: "string", description: "Filter Mi tasks by board name." },
     mi_check_state: {
       type: "string",
+      description: "Filter Mi tasks by check state.",
       enum: ["all", "checked", "uncheck"],
     },
     mi_sort_type: {
       type: "string",
+      description: "Sort order for Mi tasks.",
       enum: ["create_time", "estimate_start_time", "estimate_end_time", "limit_time"],
     },
-    only_latest_data: { type: "boolean" },
+    only_latest_data: { type: "boolean", description: "Return only the latest version of each entry (server default: true)." },
   },
   additionalProperties: true,
 };
@@ -146,8 +152,11 @@ function summarizeToolPayload(name, payload) {
     case "gkill_get_kyous": {
       const returnedCount = payload.returned_count ?? 0;
       const totalCount = payload.total_count ?? returnedCount;
-      const suffix = payload.has_more && payload.next_cursor ? ` More results are available via next_cursor ${payload.next_cursor}.` : "";
-      return `Returned ${returnedCount} of ${totalCount} kyou entries.${suffix}`;
+      const remaining = totalCount - returnedCount;
+      if (payload.has_more && payload.next_cursor) {
+        return `Returned ${returnedCount} of ${totalCount} kyou entries (${remaining} remaining). Next page: cursor="${payload.next_cursor}".`;
+      }
+      return `Returned ${returnedCount} of ${totalCount} kyou entries (all results returned).`;
     }
     case "gkill_get_mi_board_list":
       return `Fetched ${Array.isArray(payload.boards) ? payload.boards.length : 0} Mi boards.`;
@@ -180,7 +189,13 @@ const TOOLS = [
       "Each result contains data_type, related_time, tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
-      "Available data_type values: kmemo, kc, timeis, nlog, lantana, urlog, idf, git_commit_log, mi. " +
+      "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image), git_commit_log (git commit), mi (task). " +
+      "Most used query fields: use_calendar + calendar_start/end_date, use_words + words, use_tags + tags, for_mi. Advanced: use_map, use_plaing, use_period_of_time, use_update_time. " +
+      "Common query patterns: " +
+      "Date range: {use_calendar:true, calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}. " +
+      "Keyword search: {use_words:true, words:[\"keyword\"]}. " +
+      "Tag filter: {use_tags:true, tags:[\"tagname\"]}. " +
+      "Mi tasks: {for_mi:true, mi_check_state:\"uncheck\"}. " +
       "Practical recommendation: start with a minimal query, keep limit small, and add filters gradually. Hidden tags can be searched intentionally by passing them directly in query.tags or query.timeis_tags. rep_types are backend-specific and may be case-sensitive, so do not assume ApplicationConfig display labels map 1:1 to accepted query values. " +
       "If a query fails, first retry with fewer query fields, a smaller limit, and is_include_timeis=false; then add rep_types or TimeIs expansion back step by step. " +
       "The server always applies only_latest_data=true. " +
@@ -210,7 +225,7 @@ const TOOLS = [
         },
         is_include_timeis: {
           type: "boolean",
-          description: `Include attached TimeIs (plaing) data for each kyou. Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. Useful for enrichment, but ChatGPT is usually more stable when this stays false unless you explicitly need TimeIs context.`,
+          description: `Include attached TimeIs (plaing) data for each kyou — i.e., which TimeIs was running when each record was created. Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. Note: this does NOT filter out TimeIs-type kyous from results; those always appear regardless of this flag. Only controls inline plaing attachment on other data types.`,
           default: DEFAULT_KYOUS_INCLUDE_TIMEIS,
         },
       },
@@ -223,36 +238,36 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        locale_name: { type: "string" },
+        locale_name: { type: "string", description: "Locale, e.g. ja/en." },
       },
       additionalProperties: false,
     },
   },
   {
     name: "gkill_get_all_tag_names",
-    description: "Get all tag names defined in gkill. Use this to discover available tags for filtering.",
+    description: "Get all tag names defined in gkill. Use this to discover available tags for filtering in gkill_get_kyous via query.tags (with use_tags:true) or query.timeis_tags (with use_timeis_tags:true).",
     inputSchema: {
       type: "object",
       properties: {
-        locale_name: { type: "string" },
+        locale_name: { type: "string", description: "Locale, e.g. ja/en." },
       },
       additionalProperties: false,
     },
   },
   {
     name: "gkill_get_all_rep_names",
-    description: "Get all repository names configured in gkill. Use this to discover rep names for filtering.",
+    description: "Get all repository names configured in gkill. Use this to discover rep names for filtering in gkill_get_kyous via query.reps (with use_reps:true).",
     inputSchema: {
       type: "object",
       properties: {
-        locale_name: { type: "string" },
+        locale_name: { type: "string", description: "Locale, e.g. ja/en." },
       },
       additionalProperties: false,
     },
   },
   {
     name: "gkill_get_gps_log",
-    description: "Get GPS log entries in a date range. Read-only.",
+    description: "Get GPS log entries in a date range. Returns array of GPS log objects with latitude, longitude, timestamp, and related metadata. Read-only.",
     inputSchema: {
       type: "object",
       properties: {
@@ -264,7 +279,7 @@ const TOOLS = [
           type: "string",
           description: `Required ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}`,
         },
-        locale_name: { type: "string" },
+        locale_name: { type: "string", description: "Locale, e.g. ja/en." },
       },
       required: ["start_date", "end_date"],
       additionalProperties: false,
@@ -273,7 +288,7 @@ const TOOLS = [
   {
     name: "gkill_get_application_config",
     description:
-      "Get application configuration including tag hierarchy (parent-child relationships, default check states, force-hide settings), task board structure, repository structure, and KFTL templates. Call this before gkill_get_kyous to understand the data organization and build better queries, but note that display labels in this config may not map 1:1 to accepted rep_types query values.",
+      "Get application configuration including tag hierarchy (parent-child relationships, default check states, force-hide settings), task board structure, repository structure, and KFTL templates. Recommended first call: use this before gkill_get_kyous to understand the data organization, visible tags, and board names. Note that display labels in this config may not map 1:1 to accepted rep_types query values.",
     inputSchema: {
       type: "object",
       properties: {
@@ -409,7 +424,7 @@ class GkillReadClient {
     return this.sessionId;
   }
 
-  async callRead(pathname, requestBody, requiresAuth) {
+  async callRead(pathname, requestBody, requiresAuth, sessionIdOverride = null) {
     const localeName = requestBody.locale_name || this.defaultLocale;
     const body = {
       ...requestBody,
@@ -417,7 +432,7 @@ class GkillReadClient {
     };
 
     if (requiresAuth) {
-      body.session_id = body.session_id || (await this.login());
+      body.session_id = sessionIdOverride || body.session_id || (await this.login());
     }
 
     let response = await this.post(pathname, body);
@@ -439,6 +454,8 @@ class GkillReadClient {
 class McpServer {
   constructor(client) {
     this.client = client;
+    /** @type {string|null} Per-request session override set by HttpTransport for OAuth. */
+    this.currentSessionId = null;
   }
 
   buildToolResult(name, payload, isError = false) {
@@ -473,6 +490,7 @@ class McpServer {
   }
 
   async handleToolCall(name, args) {
+    const sid = this.currentSessionId;
     switch (name) {
       case "gkill_get_kyous": {
         const normalized = normalizeKyouArgs(args);
@@ -487,6 +505,7 @@ class McpServer {
             is_include_timeis: normalized.is_include_timeis,
           },
           true,
+          sid,
         );
         return {
           kyous: Array.isArray(response.kyous) ? response.kyous : [],
@@ -498,21 +517,21 @@ class McpServer {
       }
       case "gkill_get_mi_board_list": {
         const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await this.client.callRead("/api/get_mi_board_list", normalized, true);
+        const response = await this.client.callRead("/api/get_mi_board_list", normalized, true, sid);
         return {
           boards: Array.isArray(response.boards) ? response.boards : [],
         };
       }
       case "gkill_get_all_tag_names": {
         const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await this.client.callRead("/api/get_all_tag_names", normalized, true);
+        const response = await this.client.callRead("/api/get_all_tag_names", normalized, true, sid);
         return {
           tag_names: Array.isArray(response.tag_names) ? response.tag_names : [],
         };
       }
       case "gkill_get_all_rep_names": {
         const normalized = normalizeLocaleOnlyArgs(args);
-        const response = await this.client.callRead("/api/get_all_rep_names", normalized, true);
+        const response = await this.client.callRead("/api/get_all_rep_names", normalized, true, sid);
         return {
           rep_names: Array.isArray(response.rep_names) ? response.rep_names : [],
         };
@@ -527,6 +546,7 @@ class McpServer {
             locale_name: normalized.locale_name,
           },
           true,
+          sid,
         );
         return {
           gps_logs: Array.isArray(response.gps_logs) ? response.gps_logs : [],
@@ -538,6 +558,7 @@ class McpServer {
           "/api/get_application_config",
           normalized,
           true,
+          sid,
         );
         const config = response.application_config || {};
         return {
@@ -719,62 +740,61 @@ class StdioTransport {
   }
 }
 
-// API key verification using timing-safe comparison.
-// Accepts either:
-//   1. Authorization: Bearer <key> header (Claude.ai Connectors)
-//   2. Path segment: POST /mcp/<key> (ChatGPT — no-auth mode with URL-embedded key)
-function checkApiKey(req, pathKey) {
-  const expected = process.env.MCP_API_KEY;
-  if (!expected) return false;
-
-  // Try Authorization header first
-  const auth = req.headers["authorization"] || "";
-  let token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-
-  // Fall back to path segment key
-  if (!token && pathKey) {
-    token = pathKey;
-  }
-
-  if (token.length !== expected.length) return false;
-  try {
-    return crypto.timingSafeEqual(Buffer.from(token, "utf8"), Buffer.from(expected, "utf8"));
-  } catch {
-    return false;
-  }
-}
-
 // HttpTransport: Streamable HTTP transport (MCP spec 2024-11-05).
 // Supports POST /mcp (requests), GET /mcp (SSE stream), DELETE /mcp (session end).
+// OAuth 2.1 endpoints for ChatGPT and Claude.ai MCP connectors.
 class HttpTransport {
-  constructor(server, port) {
+  /**
+   * @param {McpServer} server
+   * @param {number} port
+   * @param {OAuthServer} oauthServer
+   */
+  constructor(server, port, oauthServer) {
     this.server = server;
     this.port = port;
+    this.oauthServer = oauthServer;
   }
 
   start() {
-    if (!process.env.MCP_API_KEY) {
-      process.stderr.write("ERROR: MCP_API_KEY environment variable is required for HTTP transport.\n");
-      process.exit(1);
-    }
-
     const httpServer = http.createServer((req, res) => this.handleRequest(req, res));
     httpServer.listen(this.port, "0.0.0.0", () => {
-      process.stderr.write(`MCP HTTP server listening on http://0.0.0.0:${this.port}/mcp\n`);
+      process.stderr.write(`MCP HTTP server listening on http://0.0.0.0:${this.port}/mcp [OAuth issuer: ${this.oauthServer.issuer}]\n`);
     });
   }
 
   parseRoute(req) {
-    const pathname = new URL(req.url, "http://localhost").pathname;
-    let pathKey = null;
-    if (pathname === "/mcp") {
-      // key from Authorization header only
-    } else if (pathname.startsWith("/mcp/")) {
-      pathKey = pathname.slice("/mcp/".length);
-    } else {
-      return null;
+    const url = new URL(req.url, "http://localhost");
+    const pathname = url.pathname;
+    const query = Object.fromEntries(url.searchParams);
+
+    // Protected Resource Metadata (RFC 9728)
+    if (pathname === "/.well-known/oauth-protected-resource" ||
+        pathname === "/.well-known/oauth-protected-resource/mcp") {
+      return { type: "oauth-protected-resource", pathname };
     }
-    return { pathname, pathKey };
+
+    // OAuth Authorization Server Metadata (RFC 8414)
+    if (pathname === "/.well-known/oauth-authorization-server") {
+      return { type: "oauth-metadata", pathname, query };
+    }
+
+    // OAuth endpoints — /oauth/* canonical, /* fallback for Claude.ai (known bug: ignores metadata endpoints)
+    if (pathname === "/oauth/authorize" || pathname === "/authorize") {
+      return { type: "oauth-authorize", pathname, query };
+    }
+    if (pathname === "/oauth/token" || pathname === "/token") {
+      return { type: "oauth-token", pathname };
+    }
+    if (pathname === "/oauth/register" || pathname === "/register") {
+      return { type: "oauth-register", pathname };
+    }
+
+    // MCP endpoint
+    if (pathname === "/mcp") {
+      return { type: "mcp", pathname };
+    }
+
+    return null;
   }
 
   logRequest(req, extra = {}) {
@@ -817,15 +837,42 @@ class HttpTransport {
       return;
     }
 
-    if (!checkApiKey(req, route.pathKey)) {
+    // OAuth discovery/auth endpoints — no Bearer auth required
+    if (route.type === "oauth-protected-resource") {
+      return this.handleProtectedResourceMetadata(req, res);
+    }
+    if (route.type === "oauth-metadata") {
+      return this.handleOAuthMetadata(req, res);
+    }
+    if (route.type === "oauth-authorize") {
+      return this.handleOAuthAuthorize(req, res, route.query);
+    }
+    if (route.type === "oauth-token") {
+      return this.handleOAuthToken(req, res);
+    }
+    if (route.type === "oauth-register") {
+      return this.handleOAuthRegister(req, res);
+    }
+
+    // MCP endpoint — require OAuth Bearer token
+    const bearerToken = OAuthServer.extractBearerToken(req.headers["authorization"] || "");
+    const tokenData = bearerToken ? this.oauthServer.validateAccessToken(bearerToken) : null;
+
+    if (!tokenData) {
       this.logRequest(req, { statusCode: 401, reason: "unauthorized" });
-      this.sendJson(res, 401, { error: "Unauthorized" });
+      const resourceMetadataUrl = `${this.oauthServer.issuer}/.well-known/oauth-protected-resource`;
+      this.sendJson(res, 401, {
+        error: "Unauthorized",
+        error_description: "Bearer token required",
+      }, {
+        "WWW-Authenticate": `Bearer resource_metadata="${resourceMetadataUrl}"`,
+      });
       return;
     }
 
     switch (req.method) {
       case "POST":
-        return this.handlePost(req, res);
+        return this.handlePost(req, res, tokenData.gkillSessionId);
       case "GET":
         return this.handleGet(req, res);
       case "DELETE":
@@ -836,7 +883,7 @@ class HttpTransport {
     }
   }
 
-  handlePost(req, res) {
+  handlePost(req, res, oauthSessionId = null) {
     const chunks = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", async () => {
@@ -850,7 +897,10 @@ class HttpTransport {
       }
 
       try {
+        // Set session override for OAuth-authenticated requests
+        this.server.currentSessionId = oauthSessionId;
         const response = await this.server.handlePayload(payload);
+        this.server.currentSessionId = null;
         const methods = this.summarizeJsonRpcMethods(payload);
 
         if (response === null) {
@@ -862,6 +912,7 @@ class HttpTransport {
         const responseBytes = this.sendJson(res, 200, response);
         this.logRequest(req, { methods, statusCode: 200, responseBytes });
       } catch (error) {
+        this.server.currentSessionId = null;
         process.stderr.write(`HTTP handler error: ${String(error)}\n`);
         const id =
           payload && !Array.isArray(payload) && Object.prototype.hasOwnProperty.call(payload, "id") ? payload.id : null;
@@ -911,6 +962,126 @@ class HttpTransport {
     const responseBytes = this.sendJson(res, 200, { ok: true });
     this.logRequest(req, { statusCode: 200, responseBytes, reason: "stateless_delete_noop" });
   }
+
+  // --- OAuth endpoint handlers ---
+
+  handleProtectedResourceMetadata(req, res) {
+    if (req.method !== "GET") {
+      this.sendJson(res, 405, { error: "Method Not Allowed" }, { Allow: "GET" });
+      return;
+    }
+    const issuer = this.oauthServer.issuer;
+    const body = {
+      resource: `${issuer}/mcp`,
+      authorization_servers: [issuer],
+      scopes_supported: ["gkill:read"],
+      bearer_methods_supported: ["header"],
+    };
+    this.sendJson(res, 200, body);
+    this.logRequest(req, { statusCode: 200, reason: "oauth_protected_resource" });
+  }
+
+  handleOAuthMetadata(req, res) {
+    if (req.method !== "GET") {
+      this.sendJson(res, 405, { error: "Method Not Allowed" }, { Allow: "GET" });
+      return;
+    }
+    const meta = this.oauthServer.getMetadata();
+    this.sendJson(res, 200, meta);
+    this.logRequest(req, { statusCode: 200, reason: "oauth_metadata" });
+  }
+
+  handleOAuthAuthorize(req, res, query) {
+    if (req.method === "GET") {
+      const result = this.oauthServer.handleAuthorizeGet(query);
+      this._sendOAuthResult(req, res, result, "oauth_authorize_get");
+      return;
+    }
+    if (req.method === "POST") {
+      const chunks = [];
+      req.on("data", (chunk) => chunks.push(chunk));
+      req.on("end", async () => {
+        try {
+          const bodyStr = Buffer.concat(chunks).toString("utf8");
+          const formData = Object.fromEntries(new URLSearchParams(bodyStr));
+          const result = await this.oauthServer.handleAuthorizePost(formData);
+          this._sendOAuthResult(req, res, result, "oauth_authorize_post");
+        } catch (error) {
+          process.stderr.write(`OAuth authorize error: ${String(error)}\n`);
+          this.sendJson(res, 500, { error: "Internal Server Error" });
+        }
+      });
+      return;
+    }
+    this.sendJson(res, 405, { error: "Method Not Allowed" }, { Allow: "GET, POST" });
+  }
+
+  handleOAuthToken(req, res) {
+    if (req.method !== "POST") {
+      this.sendJson(res, 405, { error: "Method Not Allowed" }, { Allow: "POST" });
+      return;
+    }
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => {
+      try {
+        const bodyStr = Buffer.concat(chunks).toString("utf8");
+        // Token endpoint accepts both application/x-www-form-urlencoded and application/json
+        let body;
+        const contentType = req.headers["content-type"] || "";
+        if (contentType.includes("application/json")) {
+          body = JSON.parse(bodyStr);
+        } else {
+          body = Object.fromEntries(new URLSearchParams(bodyStr));
+        }
+        const result = this.oauthServer.handleTokenRequest(body);
+        this.sendJson(res, result.status, result.body);
+        this.logRequest(req, { statusCode: result.status, reason: "oauth_token" });
+      } catch (error) {
+        process.stderr.write(`OAuth token error: ${String(error)}\n`);
+        this.sendJson(res, 500, { error: "server_error", error_description: "Internal Server Error" });
+      }
+    });
+  }
+
+  handleOAuthRegister(req, res) {
+    if (req.method !== "POST") {
+      this.sendJson(res, 405, { error: "Method Not Allowed" }, { Allow: "POST" });
+      return;
+    }
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => {
+      try {
+        const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        const result = this.oauthServer.handleRegister(body);
+        this.sendJson(res, result.status, result.body);
+        this.logRequest(req, { statusCode: result.status, reason: "oauth_register" });
+      } catch (error) {
+        process.stderr.write(`OAuth register error: ${String(error)}\n`);
+        this.sendJson(res, 400, { error: "invalid_client_metadata", error_description: "Invalid JSON" });
+      }
+    });
+  }
+
+  /** Send an OAuth result (HTML, redirect, or JSON). */
+  _sendOAuthResult(req, res, result, reason) {
+    if (result.redirect) {
+      res.writeHead(result.status, { Location: result.redirect });
+      res.end();
+      this.logRequest(req, { statusCode: result.status, reason, redirect: result.redirect });
+      return;
+    }
+    if (result.contentType === "text/html") {
+      const body = result.body;
+      res.writeHead(result.status, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(body);
+      this.logRequest(req, { statusCode: result.status, reason });
+      return;
+    }
+    this.sendJson(res, result.status, result.body);
+    this.logRequest(req, { statusCode: result.status, reason });
+  }
 }
 
 // Entry point — guarded so importing this module for tests does not start a transport.
@@ -925,10 +1096,31 @@ if (_isDirectRun) {
 
   const transport = (process.env.MCP_TRANSPORT || "stdio").toLowerCase();
   if (transport === "http") {
-    new HttpTransport(server, parseInt(process.env.MCP_PORT || "8808", 10)).start();
+    const port = parseInt(process.env.MCP_PORT || "8808", 10);
+    const issuer = process.env.MCP_OAUTH_ISSUER || `http://localhost:${port}`;
+    const gkillHome = process.env.GKILL_HOME || _resolvePath(process.env.HOME || process.env.USERPROFILE || ".", "gkill");
+    const persistPath = _resolvePath(gkillHome, "configs", "mcp_oauth_state.json");
+    const oauthServer = new OAuthServer({
+      issuer,
+      persistPath,
+      authenticateUser: async (userId, passwordSha256) => {
+        try {
+          const response = await client.post("/api/login", {
+            user_id: userId,
+            password_sha256: passwordSha256,
+            locale_name: client.defaultLocale,
+          });
+          if (client.hasErrors(response) || !response.session_id) return null;
+          return { sessionId: response.session_id };
+        } catch {
+          return null;
+        }
+      },
+    });
+    new HttpTransport(server, port, oauthServer).start();
   } else {
     new StdioTransport(server).start();
   }
 }
 
-export { GkillReadClient, McpServer };
+export { GkillReadClient, McpServer, OAuthServer };

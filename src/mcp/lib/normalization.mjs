@@ -101,6 +101,7 @@ export function normalizeKyouQuery(query) {
       continue;
     }
     if (KYOUS_QUERY_DATETIME_FIELDS.has(key)) {
+      if (value === "") continue; // skip empty datetime strings (ChatGPT sends "" for unused fields)
       normalized[key] = normalizeDateTimeString(value, field, KYOUS_QUERY_DATETIME_FIELDS.get(key));
       continue;
     }

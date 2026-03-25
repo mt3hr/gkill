@@ -2,7 +2,7 @@
 
 ## 概要
 
-gkill プロジェクト全体で約1,757件のテストが存在する。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
+gkill プロジェクト全体で約1,872件のテストが存在する。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
 
 ## テスト統計
 
@@ -11,10 +11,10 @@ gkill プロジェクト全体で約1,757件のテストが存在する。Go バ
 | Go バックエンド (`server/`) | ~531 | Go `testing` |
 | フロントエンド ユニット (`client/`) | ~676 | Vitest |
 | フロントエンド E2E (`client/`) | 187 | Playwright |
-| MCP サーバ (`mcp/`) | ~237 | Vitest |
+| MCP サーバ (`mcp/`) | ~352 | Vitest |
 | Android (`android/`) | 12 | JUnit 4 |
 | Wear OS (`wear_os/`) | 114 | JUnit 4 + MockK |
-| **合計** | **~1,757** | |
+| **合計** | **~1,872** | |
 
 ## テスト実行コマンド
 
@@ -49,6 +49,6 @@ gkill プロジェクト全体で約1,757件のテストが存在する。Go バ
 | `server/gkill/dao/reps/` | [server/gkill/dao/reps/ABOUT_TEST.md](server/gkill/dao/reps/ABOUT_TEST.md) | 11リポジトリ実装 |
 | `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) | DVNF ファイル管理 |
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) | CLI エントリポイント |
-| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（~237テスト） |
+| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（~352テスト） |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（114テスト） |
