@@ -100,28 +100,6 @@ Windows用の利用例サンプルデータがありあります。
 | 利用説明書（PDF） | 全ユーザー | 機能の網羅的な説明 |
 | リバース資料 | 開発者 | アーキテクチャ・設計・API |
 
-<details>
-<summary>開発者向け</summary>
-
-### 開発環境
-
-### セットアップ
-1. Golang バージョン1.26.0の開発環境を用意する
-2. Node.js バージョン20.15.1の開発環境を用意する
-4. 以下のコマンドを実行する  
-```
-npm i
-```
-
-### ビルド・インストール
-
-```
-npm run go_mod
-npm run install_server
-```
-</details>
-
-<details>
 <summary>かいはつすけじゅーる（完了）</summary>
 【開発フェーズ】（2025-02-01 リスケ）  
 
@@ -136,7 +114,6 @@ npm run install_server
 100% 2025-02-28 対応完了 05.トライアルテスト フィードバック対応  
 
 100% 2025-03-01 完了目標 06.リリース  
-[gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
 
 </details>
 
@@ -157,7 +134,7 @@ npm run install_server
 </details>
 
 <details>
-<summary>2026年中対応スケジュール（対応中）</summary>
+<summary>2026年中対応スケジュール（完了）</summary>
 【内部保守性向上/導線整備/クローズフェーズ】  
 
 100% イマイチ設計やイマイチ実装の内部改修  
@@ -170,7 +147,7 @@ npm run install_server
 
 100% 全体テスト実施（自動化）  
 
-000% gkill v1.1.0リリース  
+100% gkill v1.1.0リリース  
 
 </details>
 
