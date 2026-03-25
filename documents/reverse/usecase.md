@@ -227,6 +227,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1104 | URLog ブックマークレットアドレスを取得する | `URLogBookmarklet` |
 | UC-1105 | キャッシュを更新する | `UpdateCache` |
 | UC-1106 | MCP 経由で Kyou を取得する | `GetKyousMCP` |
+| UC-1111 | MCP 経由で IDF ファイルの実データを取得する | `GetIDFFile` |
 | UC-1107 | トランザクションをコミットする | `CommitTX` |
 | UC-1108 | トランザクションを破棄する | `DiscardTX` |
 | UC-1109 | ディレクトリを開く | `OpenDirectory` |

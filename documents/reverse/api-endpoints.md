@@ -188,11 +188,13 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_gps_log` | GPSログ取得（日付範囲指定） |
 
-## MCP連携（1件）
+## MCP連携（1件 + MCPツール7つ）
 
 | パス | 説明 |
 |---|---|
-| `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得 |
+| `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む） |
+
+MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_idf_file`）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。
 
 ## TLS・セキュリティ（1件）
 
