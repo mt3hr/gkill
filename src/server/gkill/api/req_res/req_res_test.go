@@ -502,3 +502,74 @@ func TestGetKyousMCPRequest_JSONRoundTrip(t *testing.T) {
 		t.Error("ShouldIncludeTimeIs() should return false")
 	}
 }
+
+func TestIDFPayloadMCPDTO_JSONRoundTrip(t *testing.T) {
+	original := IDFPayloadMCPDTO{
+		Kind:     "idf",
+		FileName: "photo.jpg",
+		IsImage:  true,
+		IsVideo:  false,
+		IsAudio:  false,
+		RepName:  "images_repo",
+		MimeType: "image/jpeg",
+	}
+
+	data, err := json.Marshal(original)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	var decoded IDFPayloadMCPDTO
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+
+	if decoded.Kind != original.Kind {
+		t.Errorf("Kind = %q, want %q", decoded.Kind, original.Kind)
+	}
+	if decoded.FileName != original.FileName {
+		t.Errorf("FileName = %q, want %q", decoded.FileName, original.FileName)
+	}
+	if decoded.IsImage != original.IsImage {
+		t.Errorf("IsImage = %v, want %v", decoded.IsImage, original.IsImage)
+	}
+	if decoded.RepName != original.RepName {
+		t.Errorf("RepName = %q, want %q", decoded.RepName, original.RepName)
+	}
+	if decoded.MimeType != original.MimeType {
+		t.Errorf("MimeType = %q, want %q", decoded.MimeType, original.MimeType)
+	}
+
+	// Verify JSON field names
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal to map: %v", err)
+	}
+	for _, field := range []string{"kind", "file_name", "is_image", "is_video", "is_audio", "rep_name", "mime_type"} {
+		if _, ok := raw[field]; !ok {
+			t.Errorf("JSON missing expected field %q", field)
+		}
+	}
+}
+
+func TestIDFPayloadMCPDTO_OmitsEmptyMimeType(t *testing.T) {
+	original := IDFPayloadMCPDTO{
+		Kind:     "idf",
+		FileName: "data.bin",
+		RepName:  "files_repo",
+	}
+
+	data, err := json.Marshal(original)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal to map: %v", err)
+	}
+
+	if _, ok := raw["mime_type"]; ok {
+		t.Error("mime_type should be omitted when empty")
+	}
+}

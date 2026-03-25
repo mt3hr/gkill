@@ -129,7 +129,7 @@ curl -v -X POST http://localhost:8808/mcp \
 - `MCP_PORT` (default: `8808`) — HTTPサーバのポート番号
 - `MCP_OAUTH_ISSUER` (default: `http://localhost:<MCP_PORT>`) — OAuthメタデータのissuer URL。**リモート接続時は必須**。クライアントがアクセス可能な公開URL（例: `https://example.com`）を設定。未設定だとClaude.ai/ChatGPTからOAuth認証が失敗する
 
-### 提供ツール（6つ）
+### 提供ツール（7つ）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
@@ -138,6 +138,7 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_all_rep_names` | 全リポジトリ名を取得 |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得 |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
+| `gkill_get_idf_file` | IDFファイルの実データを取得（`gkill_get_kyous`のIDFペイロードの`rep_name`と`file_name`を指定。画像はMCP image blockで返却） |
 
 ### AI用運用ガイド（MCP）
 AIが安定して呼び出せるよう、以下のルールを推奨します。
@@ -189,7 +190,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `nlog` | title, shop, amount |
 | `lantana` | mood |
 | `urlog` | title, url |
-| `idf` | file_name |
+| `idf` | file_name, is_image, is_video, is_audio, rep_name, mime_type |
 | `git_commit_log` | commit_message, addition, deletion |
 | `mi` | title, is_checked, board_name, limit_time, estimate_start_time, estimate_end_time |
 

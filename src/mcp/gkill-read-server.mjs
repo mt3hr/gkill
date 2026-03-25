@@ -17,7 +17,7 @@ import {
   DEFAULT_KYOUS_MAX_SIZE_MB,
   DEFAULT_KYOUS_INCLUDE_TIMEIS,
 } from "./lib/constants.mjs";
-import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs } from "./lib/normalization.mjs";
+import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs } from "./lib/normalization.mjs";
 import { OAuthServer } from "./lib/oauth-server.mjs";
 
 const _thisFile = _fileURLToPath(import.meta.url);
@@ -39,7 +39,7 @@ const FIND_QUERY_SCHEMA = {
     "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings. " +
     "General rule: each filter group requires its use_X flag set to true to activate (e.g., use_calendar:true activates calendar_start/end_date; use_words:true activates words). Without the flag, the related fields are ignored. " +
     "Recommended filtering strategy: fetch ApplicationConfig and all tag names first, then build a visible-tag allowlist — a tag is visible when is_force_hide=false AND check_when_inited=true in ApplicationConfig tag_struct. Pass visible tags via tags/timeis_tags with use_tags/use_timeis_tags=true. For repositories, prefer checked leaf rep_types from ApplicationConfig and treat unchecked leaf rep_type leaves as inferred hidden sources. " +
-    "Payload varies by data_type: kmemo body is in texts[], lantana has mood (0-10), nlog has title/shop/amount, timeis has title/start_time/end_time, mi has title/is_checked/board_name/limit_time, urlog has title/url, kc has title/num_value, idf has file_name, git_commit_log has commit_message.",
+    "Payload varies by data_type: kmemo body is in texts[], lantana has mood (0-10), nlog has title/shop/amount, timeis has title/start_time/end_time, mi has title/is_checked/board_name/limit_time, urlog has title/url, kc has title/num_value, idf has file_name/is_image/is_video/is_audio/rep_name/mime_type (use gkill_get_idf_file tool with rep_name and file_name to fetch actual file content), git_commit_log has commit_message.",
   properties: {
     update_cache: { type: "boolean", description: "Force cache refresh before query." },
     is_deleted: { type: "boolean", description: "Include soft-deleted entries." },
@@ -168,6 +168,8 @@ function summarizeToolPayload(name, payload) {
       return `Fetched ${Array.isArray(payload.gps_logs) ? payload.gps_logs.length : 0} GPS log entries.`;
     case "gkill_get_application_config":
       return "Fetched application configuration.";
+    case "gkill_get_idf_file":
+      return `Retrieved file: ${payload.file_name} (${payload.file_size_bytes} bytes, ${payload.mime_type})`;
     default:
       return "Tool call completed.";
   }
@@ -189,7 +191,7 @@ const TOOLS = [
       "Each result contains data_type, related_time, tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
-      "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image), git_commit_log (git commit), mi (task). " +
+      "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), mi (task). " +
       "Most used query fields: use_calendar + calendar_start/end_date, use_words + words, use_tags + tags, for_mi. Advanced: use_map, use_plaing, use_period_of_time, use_update_time. " +
       "Common query patterns: " +
       "Date range: {use_calendar:true, calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}. " +
@@ -297,6 +299,33 @@ const TOOLS = [
           description: "Locale, e.g. ja/en.",
         },
       },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "gkill_get_idf_file",
+    description:
+      "Retrieve actual file content for an IDF (file/image/video/audio) kyou entry. " +
+      "First use gkill_get_kyous to find IDF entries (data_type 'idf'), then call this tool " +
+      "with the rep_name and file_name from the IDF payload to get the file content as base64. " +
+      "For images, the content is returned as an MCP image content block that AI can view directly.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        rep_name: {
+          type: "string",
+          description: "Repository name from the IDF payload's rep_name field.",
+        },
+        file_name: {
+          type: "string",
+          description: "File name from the IDF payload's file_name field.",
+        },
+        locale_name: {
+          type: "string",
+          description: "Locale, e.g. ja/en.",
+        },
+      },
+      required: ["rep_name", "file_name"],
       additionalProperties: false,
     },
   },
@@ -447,6 +476,38 @@ class GkillReadClient {
     }
     return response;
   }
+
+  async fetchFile(filePath, sessionId) {
+    const url = this.buildApiUrl(filePath);
+    const timeoutMs = parseInt(process.env.GKILL_FETCH_TIMEOUT_MS || "120000", 10);
+    const fetchOptions = {
+      method: "GET",
+      headers: {
+        Cookie: `gkill_session_id=${sessionId}`,
+      },
+      signal: AbortSignal.timeout(timeoutMs),
+    };
+    if (this.dispatcher) {
+      fetchOptions.dispatcher = this.dispatcher;
+    }
+    let response;
+    try {
+      response = await fetch(url, fetchOptions);
+    } catch (error) {
+      throw new GkillApiError(`Network error fetching file ${filePath}.`, {
+        url,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+    if (!response.ok) {
+      throw new GkillApiError(`HTTP ${response.status} fetching file ${filePath}.`, {
+        status: response.status,
+      });
+    }
+    const contentType = response.headers.get("content-type") || "application/octet-stream";
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return { buffer, contentType };
+  }
 }
 
 // McpServer: transport-independent JSON-RPC handler.
@@ -462,10 +523,36 @@ class McpServer {
     const summary = isError
       ? summarizeToolError(name, payload?.error || "Unknown tool error", payload?.detail || null)
       : summarizeToolPayload(name, payload);
+
+    // For gkill_get_idf_file, exclude file_content_base64 from the text representation
+    // to avoid bloating the text content (binary data is sent via image block instead).
+    let jsonText;
+    if (payload !== undefined) {
+      if (name === "gkill_get_idf_file" && !isError && payload.file_content_base64) {
+        const { file_content_base64, ...rest } = payload;
+        jsonText = JSON.stringify(rest, null, 2);
+      } else {
+        jsonText = JSON.stringify(payload, null, 2);
+      }
+    }
+
     const result = {
-      content: [{ type: "text", text: summary }],
+      content: [{ type: "text", text: jsonText ? `${summary}\n\n${jsonText}` : summary }],
       isError,
     };
+    if (
+      name === "gkill_get_idf_file" &&
+      !isError &&
+      payload &&
+      payload.is_image &&
+      payload.file_content_base64
+    ) {
+      result.content.push({
+        type: "image",
+        data: payload.file_content_base64,
+        mimeType: payload.mime_type,
+      });
+    }
     if (payload !== undefined) {
       result.structuredContent = payload;
     }
@@ -570,6 +657,26 @@ class McpServer {
           kftl_template_struct: config.kftl_template_struct,
           mi_default_board: config.mi_default_board,
           show_tags_in_list: config.show_tags_in_list,
+        };
+      }
+      case "gkill_get_idf_file": {
+        const normalized = normalizeIdfFileArgs(args);
+        const filePath =
+          "/files/" +
+          encodeURIComponent(normalized.rep_name) +
+          "/" +
+          normalized.file_name
+            .split("/")
+            .map((s) => encodeURIComponent(s))
+            .join("/");
+        const sid = this.currentSessionId || (await this.client.login());
+        const { buffer, contentType } = await this.client.fetchFile(filePath, sid);
+        return {
+          file_name: normalized.file_name,
+          mime_type: contentType,
+          file_size_bytes: buffer.length,
+          is_image: contentType.startsWith("image/"),
+          file_content_base64: buffer.toString("base64"),
         };
       }
       default:

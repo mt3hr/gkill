@@ -186,3 +186,16 @@ export function normalizeGpsArgs(args) {
       : {}),
   };
 }
+
+export function normalizeIdfFileArgs(args) {
+  const source = args == null ? {} : assertObject(args, "arguments");
+  assertKnownKeys(source, new Set(["rep_name", "file_name", "locale_name"]), "arguments");
+  const normalized = {
+    rep_name: assertTrimmedString(source.rep_name, "rep_name"),
+    file_name: assertTrimmedString(source.file_name, "file_name"),
+  };
+  if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
+    normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
+  }
+  return normalized;
+}
