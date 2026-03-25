@@ -144,6 +144,40 @@ describe("handleToolCall", () => {
       "Unknown tool: nonexistent_tool",
     );
   });
+
+  test("passes currentSessionId as sessionIdOverride to callRead", async () => {
+    mockClient.callRead.mockResolvedValue({
+      tag_names: ["t1"],
+      errors: [],
+    });
+    server.currentSessionId = "oauth-session-xyz";
+
+    await server.handleToolCall("gkill_get_all_tag_names", {});
+
+    // 4th argument should be the session override
+    expect(mockClient.callRead).toHaveBeenCalledWith(
+      "/api/get_all_tag_names",
+      expect.any(Object),
+      true,
+      "oauth-session-xyz",
+    );
+  });
+
+  test("passes null sessionIdOverride when currentSessionId is not set", async () => {
+    mockClient.callRead.mockResolvedValue({
+      tag_names: ["t1"],
+      errors: [],
+    });
+
+    await server.handleToolCall("gkill_get_all_tag_names", {});
+
+    expect(mockClient.callRead).toHaveBeenCalledWith(
+      "/api/get_all_tag_names",
+      expect.any(Object),
+      true,
+      null,
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -201,6 +201,25 @@ describe("normalizeKyouQuery", () => {
     expect(result.calendar_end_date).toMatch(/^2026-12-31T23:59:59[+-]\d{2}:\d{2}$/);
   });
 
+  test("skips empty string datetime fields", () => {
+    const result = normalizeKyouQuery({ plaing_time: "", update_time: "" });
+    expect(result).not.toHaveProperty("plaing_time");
+    expect(result).not.toHaveProperty("update_time");
+  });
+
+  test("skips empty string datetime alongside valid fields", () => {
+    const result = normalizeKyouQuery({
+      use_calendar: true,
+      calendar_start_date: "2026-03-18",
+      plaing_time: "",
+      update_time: "",
+    });
+    expect(result.use_calendar).toBe(true);
+    expect(result.calendar_start_date).toBeTruthy();
+    expect(result).not.toHaveProperty("plaing_time");
+    expect(result).not.toHaveProperty("update_time");
+  });
+
   test("validates period_of_time_week_of_days as integer array", () => {
     const result = normalizeKyouQuery({ period_of_time_week_of_days: [0, 3, 6] });
     expect(result.period_of_time_week_of_days).toEqual([0, 3, 6]);
