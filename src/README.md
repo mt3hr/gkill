@@ -139,15 +139,15 @@ npm run go_install
 
 ### テスト
 
-約1,887件の自動テストが存在する。詳細は [ABOUT_TEST.md](ABOUT_TEST.md) を参照。
+約1,904件の自動テストが存在する。詳細は [ABOUT_TEST.md](ABOUT_TEST.md) を参照。
 
 | コマンド | 対象 |
 |---------|------|
 | `npm test` | 全テスト |
-| `npm run test_server` | Go バックエンド (~531テスト) |
+| `npm run test_server` | Go バックエンド (~534テスト) |
 | `npm run test_client_unit` | フロントエンド ユニット (~676テスト) |
 | `npm run test_client_e2e` | フロントエンド E2E (187テスト) |
-| `npm run test_mcp` | MCP サーバ (~367テスト) |
+| `npm run test_mcp` | MCP サーバ (~381テスト) |
 | `npm run test_android` | Android (12テスト) |
 | `npm run test_wear_os` | Wear OS (114テスト) |
 

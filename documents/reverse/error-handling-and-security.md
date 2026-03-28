@@ -84,7 +84,7 @@ type GkillMessage struct {
 
 **ログライブラリ:** Go 標準 `slog`（構造化ログ）
 
-**ログレベル:** `trace_sql` > `trace` > `debug` > `info` > `warn` > `error` > `none`
+**ログレベル:** `trace_sql` > `trace` > `debug` > `access` > `info` > `warn` > `error` > `none`
 
 **ログファイル:**（`$HOME/gkill/logs/` 配下）
 
@@ -93,10 +93,12 @@ type GkillMessage struct {
 | `gkill_error.log` | ERRORレベル |
 | `gkill_warn.log` | WARNレベル |
 | `gkill_info.log` | INFOレベル |
+| `gkill_access.log` | ACCESSレベル（HTTPアクセスログ: リモートIP、メソッド、パス、ステータス、所要時間、ユーザID） |
 | `gkill_debug.log` | DEBUGレベル |
 | `gkill_trace.log` | TRACEレベル |
 | `gkill_trace_sql.log` | SQL文トレース |
 | `gkill.log` | 全レベル統合 |
+| `gkill_mcp_access.log` | MCPサーバのアクセスログ（全HTTPリクエスト、認証成功/失敗、ツールコール、トークン検証。`MCP_LOG`環境変数で制御） |
 
 **ログフォーマット:** JSON形式、ソース位置追跡有効、静的フィールド `{"app": "gkill"}`
 

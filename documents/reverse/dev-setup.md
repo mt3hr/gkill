@@ -126,6 +126,7 @@ export GKILL_PASSWORD_SHA256="<sha256 hex>"  # or GKILL_PASSWORD
 export MCP_TRANSPORT=http
 export MCP_PORT=8808
 export MCP_OAUTH_ISSUER=http://localhost:8808  # リモート時は公開URL
+# export MCP_LOG=info          # MCPアクセスログレベル（デフォルト: info）
 # export GKILL_INSECURE=true  # 自己署名証明書使用時
 ```
 
@@ -215,7 +216,7 @@ go run .
 | `--cache_in_memory` | `true` | インメモリキャッシュ有効化 |
 | `--cache_reps_local` | `false` | ローカルキャッシュ有効化 |
 | `--goroutine_pool` | `runtime.NumCPU()` | ゴルーチンプール数 |
-| `--log` | （なし） | ログレベル: none/error/warn/info/debug/trace/trace_sql |
+| `--log` | （なし） | ログレベル: none/error/warn/info/access/debug/trace/trace_sql |
 
 ### フロント＋バック同時開発
 

@@ -90,6 +90,7 @@ src/server/
     │   │   ├── html/              # フロントエンドビルド成果物
     │   │   ├── i18n/locales/      # i18nリソース
     │   │   └── version.json       # バージョン情報
+    │   ├── gkill_server_api_access_log.go  # アクセスログミドルウェア（gorilla/mux Use()）
     │   ├── find_filter.go          # 検索フィルタロジック
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
@@ -168,7 +169,12 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-└── gkill-read-server.mjs   # 読み取り専用MCPサーバー（7ツール提供）
+├── gkill-read-server.mjs   # 読み取り専用MCPサーバー（7ツール提供）
+└── lib/
+    ├── access-log.mjs      # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
+    ├── oauth-server.mjs    # OAuth 2.1サーバー
+    ├── oauth-store.mjs     # トークン/コード永続化
+    └── ...                 # その他ライブラリ
 ```
 
 トランスポート: stdio（デフォルト）またはHTTP。
@@ -245,10 +251,12 @@ $HOME/gkill/
 │   ├── gkill_error.log
 │   ├── gkill_warn.log
 │   ├── gkill_info.log
+│   ├── gkill_access.log    # HTTPアクセスログ（--log access以上で出力）
 │   ├── gkill_debug.log
 │   ├── gkill_trace.log
 │   ├── gkill_trace_sql.log
-│   └── gkill.log           # 統合ログ
+│   ├── gkill.log           # 統合ログ
+│   └── gkill_mcp_access.log # MCPサーバアクセスログ（MCP_LOG環境変数で制御）
 ├── lib/base_directory/     # ライブラリファイル
 └── tls/                    # TLS証明書（オプション）
     ├── cert.cer

@@ -24,6 +24,8 @@ func Init() {
 		logLevel = Trace
 	case "debug":
 		logLevel = Debug
+	case "access":
+		logLevel = Access
 	case "info":
 		logLevel = Info
 	case "warn":
@@ -33,7 +35,7 @@ func Init() {
 	case "none":
 		logLevel = None
 	default:
-		log.Fatal("invalid log level. log level [none, error, warn, info, debug, trace, trace_sql]")
+		log.Fatal("invalid log level. log level [none, error, warn, info, access, debug, trace, trace_sql]")
 	}
 
 	logRootDir := os.ExpandEnv(gkill_options.LogDir)
@@ -61,6 +63,10 @@ func Init() {
 		panic(err)
 	}
 	err = router.SetSplitFile(Debug, filepath.Join(logRootDir, "gkill_debug.log"))
+	if err != nil {
+		panic(err)
+	}
+	err = router.SetSplitFile(Access, filepath.Join(logRootDir, "gkill_access.log"))
 	if err != nil {
 		panic(err)
 	}
@@ -93,5 +99,5 @@ func SetMode(mode SplitMode) {
 }
 
 func SetStdoutMirror(isStdoutMirror bool) {
-	router.SetStdoutMirror(true)
+	router.SetStdoutMirror(isStdoutMirror)
 }
