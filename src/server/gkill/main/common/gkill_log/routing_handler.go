@@ -98,6 +98,8 @@ func normalizeSplitLevel(l slog.Level) slog.Level {
 		return Trace
 	case l <= Debug:
 		return Debug
+	case l <= Access:
+		return Access
 	case l <= Info:
 		return Info
 	case l <= Warn:

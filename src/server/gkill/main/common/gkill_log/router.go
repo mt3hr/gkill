@@ -71,6 +71,7 @@ func NewRouter(opts Options) *Router {
 	r.byLevel[TraceSQL] = NewFileSink(os.Stdout)
 	r.byLevel[Trace] = NewFileSink(os.Stdout)
 	r.byLevel[Debug] = NewFileSink(os.Stdout)
+	r.byLevel[Access] = NewFileSink(os.Stdout)
 	r.byLevel[Info] = NewFileSink(os.Stdout)
 	r.byLevel[Warn] = NewFileSink(os.Stdout)
 	r.byLevel[Error] = NewFileSink(os.Stdout)

@@ -8,6 +8,7 @@ var (
 	TraceSQL slog.Level = Trace - 4
 	Trace    slog.Level = slog.LevelDebug - 4
 	Debug    slog.Level = slog.LevelDebug
+	Access   slog.Level = slog.LevelDebug + 2
 	Info     slog.Level = slog.LevelInfo
 	Warn     slog.Level = slog.LevelWarn
 	Error    slog.Level = slog.LevelError
@@ -22,6 +23,8 @@ func LevelName(l slog.Level) string {
 		return "TRACE"
 	case l == Debug:
 		return "DEBUG"
+	case l == Access:
+		return "ACCESS"
 	case l == Info:
 		return "INFO"
 	case l == Warn:
