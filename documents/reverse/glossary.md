@@ -198,6 +198,7 @@ DNote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api_address.go` | 全79エンドポイントのパス・メソッド定義 |
 | APIハンドラ（メイン） | `src/server/gkill/api/gkill_server_api.go` | ルーティング登録・ハンドラ実装（~14,000行） |
 | APIハンドラ（個別） | `src/server/gkill/api/handle_*.go` | 個別エンドポイントのハンドラ |
+| アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
 | リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（164ファイル） |
 | エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000374 の定数定義 |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
@@ -236,6 +237,7 @@ DNote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | MCP サーバー | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（7ツール、stdio/HTTP） |
+| MCP アクセスログ | `src/mcp/lib/access-log.mjs` | MCPサーバのアクセスログモジュール。`MCP_LOG` 環境変数で制御 |
 | Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
 | Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |
 | ビルド設定 | `package.json` | npm scripts、依存関係、バージョン (1.1.0) |

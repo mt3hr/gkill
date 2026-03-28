@@ -19,10 +19,12 @@ $HOME/gkill/
 │   ├── gkill_error.log
 │   ├── gkill_warn.log
 │   ├── gkill_info.log
+│   ├── gkill_access.log            # HTTPアクセスログ（--log access 以上で出力）
 │   ├── gkill_debug.log
 │   ├── gkill_trace.log
 │   ├── gkill_trace_sql.log
-│   └── gkill.log                   # 全レベル統合
+│   ├── gkill.log                   # 全レベル統合
+│   └── gkill_mcp_access.log        # MCPサーバアクセスログ（MCP_LOG環境変数で制御）
 ├── lib/base_directory/              # ライブラリファイル
 └── tls/                             # TLS証明書（オプション）
     ├── cert.cer
@@ -231,10 +233,13 @@ gkill_server --log trace_sql # SQL文も含め全出力
 | `error` | エラーのみ | `gkill_error.log` |
 | `warn` | 警告以上 | `gkill_warn.log` |
 | `info` | 情報以上 | `gkill_info.log` |
+| `access` | アクセスログ以上（INFO含む） | `gkill_access.log` |
 | `debug` | デバッグ以上 | `gkill_debug.log` |
 | `trace` | トレース以上 | `gkill_trace.log` |
 | `trace_sql` | SQL文含む全て | `gkill_trace_sql.log` |
 | `none` | ログ出力なし | — |
+
+`--log access` を指定すると、全HTTPリクエストのアクセスログ（リモートIP、メソッド、パス、ステータスコード、所要時間、ユーザID）が `gkill_access.log` に記録されます。
 
 ### 6.2 ログフォーマット
 
@@ -423,6 +428,25 @@ node src/mcp/gkill-read-server.mjs
 | `MCP_PORT` | `8808` | HTTPサーバーポート |
 | `MCP_OAUTH_ISSUER` | `http://localhost:<port>` | OAuthメタデータのissuer URL。**リモートアクセス時は必須**（公開URL）|
 | `GKILL_INSECURE` | `false` | `true` でgkillバックエンドへのTLS証明書検証をスキップ |
+| `MCP_LOG` | `info` | MCPアクセスログレベル（`none`/`error`/`warn`/`info`/`debug`/`trace`）。`gkill_mcp_access.log` に出力 |
+
+#### MCPアクセスログのイベント一覧
+
+`gkill_mcp_access.log` に記録されるイベント:
+
+| msg | レベル | 記録内容 | 発生タイミング |
+|---|---|---|---|
+| `http_request` | INFO/WARN | remote_addr, method, path, status, reason, response_bytes | 全HTTPリクエスト（400以上はWARN） |
+| `tool_call` | INFO | tool, user_id, remote_addr, duration | MCP ツールコール成功 |
+| `tool_call_error` | ERROR | tool, user_id, remote_addr, duration, error | MCP ツールコール失敗 |
+| `auth_success` | INFO | user_id | OAuth 認証成功 |
+| `auth_failure` | WARN | user_id | OAuth 認証失敗 |
+| `token_rejected` | WARN | remote_addr, method, path | Bearer トークン検証失敗 |
+| `server_start` | INFO | transport, log_level, port | サーバ起動 |
+
+> **注:** `POST /mcp` でツールが呼ばれた場合、`http_request`（HTTPレベル）と `tool_call`（ツールレベル）の2行が出力されます。`http_request` はステータスコードとレスポンスサイズ、`tool_call` はツール名と所要時間をそれぞれ記録します。
+
+> **注:** Go バックエンドのアクセスログでは、認証不要のエンドポイント（`/files/` 等）や認証失敗リクエストの場合、`user_id` は空文字になります。
 
 ### 11.3 リモートアクセス（Cloudflare Tunnel等）
 

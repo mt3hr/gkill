@@ -19,6 +19,7 @@ import {
 } from "./lib/constants.mjs";
 import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs } from "./lib/normalization.mjs";
 import { OAuthServer } from "./lib/oauth-server.mjs";
+import { McpAccessLog, parseMcpLogLevel } from "./lib/access-log.mjs";
 
 const _thisFile = _fileURLToPath(import.meta.url);
 const _thisDir = _dirname(_thisFile);
@@ -513,10 +514,15 @@ class GkillReadClient {
 // McpServer: transport-independent JSON-RPC handler.
 // handleMessage() returns a response object (or null for notifications).
 class McpServer {
-  constructor(client) {
+  constructor(client, accessLog = null) {
     this.client = client;
+    this.accessLog = accessLog || { info() {}, warn() {}, error() {}, debug() {}, trace() {} };
     /** @type {string|null} Per-request session override set by HttpTransport for OAuth. */
     this.currentSessionId = null;
+    /** @type {string|null} Per-request user id set by HttpTransport for OAuth. */
+    this.currentUserId = null;
+    /** @type {string|null} Per-request remote address set by HttpTransport. */
+    this.currentRemoteAddr = null;
   }
 
   buildToolResult(name, payload, isError = false) {
@@ -727,6 +733,7 @@ class McpServer {
 
     if (method === "tools/call") {
       if (!hasId) return null;
+      const toolStart = Date.now();
       try {
         if (!isPlainObject(params)) {
           throw invalidArgument("params", "must be an object", params);
@@ -734,10 +741,23 @@ class McpServer {
         const toolName = assertTrimmedString(params.name, "name");
         const toolArgs = Object.prototype.hasOwnProperty.call(params, "arguments") ? params.arguments : {};
         const response = await this.handleToolCall(toolName, toolArgs);
+        this.accessLog.info("tool_call", {
+          tool: toolName,
+          user_id: this.currentUserId || null,
+          remote_addr: this.currentRemoteAddr || null,
+          duration: `${Date.now() - toolStart}ms`,
+        });
         return { jsonrpc: "2.0", id, result: this.buildToolResult(toolName, response, false) };
       } catch (error) {
         const detail = error instanceof GkillApiError ? error.detail : null;
         const messageText = error instanceof Error ? error.message : "Unknown tool error";
+        this.accessLog.error("tool_call_error", {
+          tool: params.name,
+          user_id: this.currentUserId || null,
+          remote_addr: this.currentRemoteAddr || null,
+          duration: `${Date.now() - toolStart}ms`,
+          error: messageText,
+        });
         return {
           jsonrpc: "2.0",
           id,
@@ -912,6 +932,19 @@ class HttpTransport {
       ...extra,
     };
     process.stderr.write(`[${new Date().toISOString()}] MCP HTTP ${JSON.stringify(payload)}\n`);
+
+    // Also write to access log file
+    const statusCode = extra.statusCode || 0;
+    const level = statusCode >= 400 ? "warn" : "info";
+    this.server.accessLog[level]("http_request", {
+      remote_addr: req.socket?.remoteAddress || null,
+      method: req.method,
+      path: req.url,
+      status: statusCode,
+      ...(extra.methods ? { methods: extra.methods } : {}),
+      ...(extra.reason ? { reason: extra.reason } : {}),
+      ...(extra.responseBytes !== undefined ? { response_bytes: extra.responseBytes } : {}),
+    });
   }
 
   sendJson(res, statusCode, payload, headers = {}) {
@@ -967,6 +1000,10 @@ class HttpTransport {
 
     if (!tokenData) {
       this.logRequest(req, { statusCode: 401, reason: "unauthorized" });
+      this.server.accessLog.warn("token_rejected", {
+        remote_addr: req.socket?.remoteAddress || null,
+        method: req.method, path: req.url,
+      });
       const resourceMetadataUrl = `${this.oauthServer.issuer}/.well-known/oauth-protected-resource`;
       this.sendJson(res, 401, {
         error: "Unauthorized",
@@ -977,6 +1014,9 @@ class HttpTransport {
       return;
     }
 
+    // NOTE: _lastTokenUserId は handlePost 内で server.currentUserId に転記される。
+    // HTTP/1.1 直列処理を前提としており、HTTP/2 並行リクエスト時はリクエスト間でリークする可能性がある。
+    this._lastTokenUserId = tokenData.userId || null;
     switch (req.method) {
       case "POST":
         return this.handlePost(req, res, tokenData.gkillSessionId);
@@ -1006,8 +1046,12 @@ class HttpTransport {
       try {
         // Set session override for OAuth-authenticated requests
         this.server.currentSessionId = oauthSessionId;
+        this.server.currentUserId = this._lastTokenUserId || null;
+        this.server.currentRemoteAddr = req.socket?.remoteAddress || null;
         const response = await this.server.handlePayload(payload);
         this.server.currentSessionId = null;
+        this.server.currentUserId = null;
+        this.server.currentRemoteAddr = null;
         const methods = this.summarizeJsonRpcMethods(payload);
 
         if (response === null) {
@@ -1020,6 +1064,8 @@ class HttpTransport {
         this.logRequest(req, { methods, statusCode: 200, responseBytes });
       } catch (error) {
         this.server.currentSessionId = null;
+        this.server.currentUserId = null;
+        this.server.currentRemoteAddr = null;
         process.stderr.write(`HTTP handler error: ${String(error)}\n`);
         const id =
           payload && !Array.isArray(payload) && Object.prototype.hasOwnProperty.call(payload, "id") ? payload.id : null;
@@ -1199,13 +1245,20 @@ const _isDirectRun =
 
 if (_isDirectRun) {
   const client = new GkillReadClient();
-  const server = new McpServer(client);
 
   const transport = (process.env.MCP_TRANSPORT || "stdio").toLowerCase();
+  const gkillHome = process.env.GKILL_HOME || _resolvePath(process.env.HOME || process.env.USERPROFILE || ".", "gkill");
+  const mcpLogLevel = parseMcpLogLevel(process.env.MCP_LOG);
+  const accessLog = new McpAccessLog(
+    _resolvePath(gkillHome, "logs", "gkill_mcp_access.log"),
+    mcpLogLevel,
+  );
+
+  const server = new McpServer(client, accessLog);
+
   if (transport === "http") {
     const port = parseInt(process.env.MCP_PORT || "8808", 10);
     const issuer = process.env.MCP_OAUTH_ISSUER || `http://localhost:${port}`;
-    const gkillHome = process.env.GKILL_HOME || _resolvePath(process.env.HOME || process.env.USERPROFILE || ".", "gkill");
     const persistPath = _resolvePath(gkillHome, "configs", "mcp_oauth_state.json");
     const oauthServer = new OAuthServer({
       issuer,
@@ -1217,15 +1270,27 @@ if (_isDirectRun) {
             password_sha256: passwordSha256,
             locale_name: client.defaultLocale,
           });
-          if (client.hasErrors(response) || !response.session_id) return null;
+          if (client.hasErrors(response) || !response.session_id) {
+            accessLog.warn("auth_failure", { user_id: userId });
+            return null;
+          }
+          accessLog.info("auth_success", { user_id: userId });
           return { sessionId: response.session_id };
         } catch {
+          accessLog.warn("auth_failure", { user_id: userId });
           return null;
         }
       },
     });
+    accessLog.info("server_start", {
+      transport, log_level: mcpLogLevel, port,
+    });
     new HttpTransport(server, port, oauthServer).start();
   } else {
+    server.currentUserId = client.userId || null;
+    accessLog.info("server_start", {
+      transport, log_level: mcpLogLevel,
+    });
     new StdioTransport(server).start();
   }
 }
