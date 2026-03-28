@@ -55,7 +55,7 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
 
 ### ⭐️gkill体験  
-Windows用の利用例サンプルデータがありあります。  
+Windows用の利用例サンプルデータがあります。  
 まず [gkill_sample_data_v1.1.0.zip](https://github.com/mt3hr/gkill/releases/latest) で軽く試して体験してほしいです。  
 ダウンロード/展開後、LAUNCH_GKILL_SAMPLE_DATA.batを起動してください。  
 [説明書](documents/gkill_user_document.pdf)に利用イメージのドキュメントがあります。   
@@ -92,7 +92,7 @@ Windows用の利用例サンプルデータがありあります。
 [アプリ内ヘルプ（HTML）](resources/manual/ja/getting-started.html)  
 [開発者向け起点要件書・設計書](documents/gkill_develop_document.xlsx)  
 [開発者向けリバース資料（ソース対応済）](documents/reverse/README.md)  
-[開発者向け実装資料資料（ソース対応済）](src/README.md)  
+[開発者向け実装資料（ソース対応済）](src/README.md)  
 
 | 資料                              | 対象読者         | 内容                      |
 | --------------------------------- | ---------------- | ------------------------- |
@@ -133,7 +133,7 @@ Windows用の利用例サンプルデータがありあります。
 
 100% 2025-08-16 対応完了 マニュアル用サンプルデータ取得  
 
-100% 2025-11-28 対応完了 <del>ニュアル&ヘルプ同梱版リリース</del> ユーザ導入用資料の作成作成  
+100% 2025-11-28 対応完了 <del>マニュアル&ヘルプ同梱版リリース</del> ユーザ導入用資料の作成  
 
 </details>
 

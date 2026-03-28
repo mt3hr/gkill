@@ -267,7 +267,7 @@ JSON形式。各行に以下のフィールド:
    ```
 2. 該当プロセスを停止、または `server_config.db` でポートを変更
 
-### 7.3 TLS証明書問題
+### 7.2 TLS証明書問題
 
 **症状:** HTTPS接続エラー、証明書関連エラー
 
@@ -277,7 +277,7 @@ JSON形式。各行に以下のフィールド:
 3. ブラウザで自己署名証明書の例外を許可
 4. `--disable_tls` フラグでHTTPにフォールバック
 
-### 7.4 Wear OS接続問題
+### 7.3 Wear OS接続問題
 
 **症状:** ウォッチからテンプレート取得やKFTL送信ができない
 
@@ -288,7 +288,7 @@ JSON形式。各行に以下のフィールド:
 4. Wearable Data Layer の接続状態を確認（Wear OS設定）
 5. phone_companion のログイン情報（URL, ユーザーID, パスワード）が正しいか
 
-### 7.5 キャッシュ問題
+### 7.4 キャッシュ問題
 
 **症状:** 古いデータが表示される、メモリ使用量が大きい
 
@@ -299,7 +299,7 @@ JSON形式。各行に以下のフィールド:
 - API経由でキャッシュ更新: `POST /api/update_cache`
 - CLI: `gkill_server update_cache` サブコマンド
 
-### 7.6 フロントエンドが表示されない
+### 7.5 フロントエンドが表示されない
 
 **症状:** `http://localhost:9999` にアクセスしても空白
 
@@ -309,7 +309,7 @@ JSON形式。各行に以下のフィールド:
 3. Go再ビルド: `npm run go_install` でembedを含めて再コンパイル
 4. フルリビルド: `npm run install_server` で全工程をやり直す
 
-### 7.7 SQLite3データベース破損
+### 7.6 SQLite3データベース破損
 
 **症状:** 起動時やデータアクセス時に `database disk image is malformed`
 
@@ -395,11 +395,11 @@ gkill_server generate_video_cache --user ユーザーID
 | `gkill_server optimize --user ユーザーID` | データベース最適化（VACUUM） |
 | `gkill_server update_cache` | HTTP API経由でキャッシュ更新 |
 
-## 10. MCP HTTPサーバーのデプロイ
+## 11. MCP HTTPサーバーのデプロイ
 
 gkill MCP サーバー（`src/mcp/gkill-read-server.mjs`）は、Claude.ai / ChatGPT 等のAI MCPクライアントからgkillデータを読み取るためのHTTPサーバー。OAuth 2.1認証で保護されている。
 
-### 10.1 起動
+### 11.1 起動
 
 ```bash
 # 環境変数を設定して起動
@@ -412,7 +412,7 @@ MCP_PORT=8808 \
 node src/mcp/gkill-read-server.mjs
 ```
 
-### 10.2 環境変数
+### 11.2 環境変数
 
 | 変数 | デフォルト | 説明 |
 |---|---|---|
@@ -424,7 +424,7 @@ node src/mcp/gkill-read-server.mjs
 | `MCP_OAUTH_ISSUER` | `http://localhost:<port>` | OAuthメタデータのissuer URL。**リモートアクセス時は必須**（公開URL）|
 | `GKILL_INSECURE` | `false` | `true` でgkillバックエンドへのTLS証明書検証をスキップ |
 
-### 10.3 リモートアクセス（Cloudflare Tunnel等）
+### 11.3 リモートアクセス（Cloudflare Tunnel等）
 
 MCPサーバーをリモートから利用するには、外部からアクセス可能にする必要がある。
 
@@ -440,11 +440,11 @@ ingress:
 
 **重要**: `MCP_OAUTH_ISSUER` を公開URL（例: `https://example.com`）に設定すること。未設定だと OAuthメタデータ内のURLが `http://localhost` になり、Claude.ai/ChatGPT から認可エンドポイントに到達できない。
 
-### 10.4 トークン永続化
+### 11.4 トークン永続化
 
 リフレッシュトークン（30日TTL）とDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_state.json` に自動保存される。サーバー再起動後も再認証不要。
 
-### 10.5 既知の制限
+### 11.5 既知の制限
 
 - **ChatGPT**: OAuth認証・初回データ取得は成功するが、cursorベースのページング継続時にChatGPTプラットフォーム側で「Resource not found」が発生する（2026-03時点、ベータ版の制限）
 - **Claude.ai**: 正常動作。OAuth自動検出・DCR・データ取得すべて安定

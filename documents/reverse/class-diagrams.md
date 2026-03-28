@@ -42,7 +42,7 @@ classDiagram
         +bool IsDeleted
         +string ID
         +string Title
-        +string NumValue
+        +json.Number NumValue
         +time.Time RelatedTime
         ..共通メタフィールド省略..
     }
@@ -50,7 +50,7 @@ classDiagram
     class Lantana {
         +bool IsDeleted
         +string ID
-        +string Mood
+        +int Mood
         +time.Time RelatedTime
         ..共通メタフィールド省略..
     }
@@ -72,7 +72,7 @@ classDiagram
         +string ID
         +string Shop
         +string Title
-        +string Amount
+        +json.Number Amount
         +time.Time RelatedTime
         ..共通メタフィールド省略..
     }
@@ -160,7 +160,7 @@ classDiagram
 | `IsDeleted` | bool | 論理削除フラグ |
 | `ID` | string | UUID（主キーではない） |
 | `RepName` | string | 所属リポジトリ名 |
-| `RelatedTime` | time.Time | 関連日時（時系列表示用） |
+| `RelatedTime` | time.Time | 関連日時（時系列表示用）。Mi/TimeIs/NotificationではDBカラムとして存在せず動的導出 |
 | `CreateTime` | time.Time | 作成日時 |
 | `CreateApp` | string | 作成アプリケーション名 |
 | `CreateDevice` | string | 作成デバイス名 |
@@ -275,6 +275,10 @@ classDiagram
 | GitCommitLog | GitCommitLogRepository | GitCommitLogRepositoryLocalDirImpl | GitCommitLogRepositoryCachedSqlite3Impl | — |
 | GPSLog | GPSLogRepository | GPSLogRepositoryGpxDirImpl | — | — |
 
+> **注意:** GitCommitLog と GPSLog は他のデータ型と異なるパターンです。
+> - **GitCommitLog**: SQLite3ではなくローカルGitリポジトリから直接読み取る実装（`LocalDirImpl`）。キャッシュ層あり、Tempリポジトリなし（KFTL経由の追加がないため）。
+> - **GPSLog**: GPXファイルから直接読み取る実装（`GpxDirImpl`）。キャッシュ層・Tempリポジトリともになし（読み取り専用）。
+
 ## 3. GkillRepositories 集約構造
 
 ```mermaid
@@ -339,7 +343,7 @@ classDiagram
         +HandleAddKmemo(w, r)
         +HandleUpdateKmemo(w, r)
         +HandleGetKyous(w, r)
-        ..76エンドポイント..
+        ..79エンドポイント..
     }
 
     GkillServerAPI --> GkillDAOManager : uses
@@ -522,11 +526,11 @@ classDiagram
 
     class KC {
         +string title
-        +string num_value
+        +number num_value
     }
 
     class Lantana {
-        +string mood
+        +Number mood
     }
 
     class Mi {
@@ -541,7 +545,7 @@ classDiagram
     class Nlog {
         +string shop
         +string title
-        +string amount
+        +number amount
     }
 
     class URLog {
@@ -633,6 +637,8 @@ classDiagram
 命名規則: Go は PascalCase、TypeScript は snake_case。JSON シリアライズ時のキー名で対応。
 
 ## 6. DNote 集計システム（TypeScript フロントエンド）
+
+> **スペルについて:** コードベースでは `Agregate`（正しくは `Aggregate`）が一貫して使用されています（`DnoteAgregateTarget`, `AgregateAverageKcNumValue` 等）。本資料ではコードの命名をそのまま記載しています。
 
 ```mermaid
 classDiagram

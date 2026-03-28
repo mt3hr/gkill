@@ -161,6 +161,8 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 削除は編集エンドポイントで `IS_DELETED=true` を設定することで実現。
 専用の Delete エンドポイントは存在しない（Append-Only 方式）。
 
+> **注:** UC-05xx は欠番です。削除操作は専用エンドポイントを持たず、UC-04xx（編集）の `IS_DELETED=true` 設定として実現されるため、独立したユースケースIDを付与していません。
+
 ### 2.6 メタデータ操作
 
 | UC-ID | ユースケース名 | API エンドポイント |
@@ -227,11 +229,11 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1104 | URLog ブックマークレットアドレスを取得する | `URLogBookmarklet` |
 | UC-1105 | キャッシュを更新する | `UpdateCache` |
 | UC-1106 | MCP 経由で Kyou を取得する | `GetKyousMCP` |
-| UC-1111 | MCP 経由で IDF ファイルの実データを取得する | `GetIDFFile` |
 | UC-1107 | トランザクションをコミットする | `CommitTX` |
 | UC-1108 | トランザクションを破棄する | `DiscardTX` |
 | UC-1109 | ディレクトリを開く | `OpenDirectory` |
 | UC-1110 | ファイルを開く | `OpenFile` |
+| UC-1111 | MCP 経由で IDF ファイルの実データを取得する | `GetIDFFile` |
 
 ## 3. ユースケース記述（astah モデルから抽出）
 
@@ -346,7 +348,7 @@ Excel の「現状・改修案」シートの改修後 CRUD + コードの実装
 
 | 画面 | Tag | Text | Kmemo | URLog | Mi | Lantana | Nlog | TimeIs |
 |------|-----|------|-------|-------|-----|---------|------|--------|
-| **KFTL (mkfl)** | C | C | C | C | C | C | C | C(開始/終了) |
+| **KFTL** | C | C | C | C | C | C | C | C(開始/終了) |
 | **Rykv** | CRUD | CRUD | RUD | RUD | RUD | RUD | RUD | RUD |
 | **DNote** | CRUD | CRUD | RUD | RUD | RUD | RUD | RUD | RUD |
 | **Mi** | CRUD | CRUD | - | - | CRUD | - | - | - |

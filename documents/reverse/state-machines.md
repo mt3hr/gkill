@@ -77,7 +77,6 @@ stateDiagram-v2
 
     note right of 完了
         IS_CHECKED = true
-        CHECK_TIME が記録される
         フィルタで表示/非表示切替可能
     end note
 ```
@@ -179,7 +178,7 @@ stateDiagram-v2
 | KC | `ーか` → タイトル → 数値 |
 | Lantana | `ーら` → 気分値(0-10) |
 | Mi | `ーみ` → タイトル → [ボード名] → [期限] → [開始予定] → [終了予定] |
-| Nlog | `ーん` → タイトル → 店名 → 金額 |
+| Nlog | `ーん` → 店名 → タイトル → 金額 |
 | URLog | `ーう` → タイトル → URL |
 | TimeIs | `ーち` → タイトル → [開始時刻] → [終了時刻] |
 | TimeIs Start | `ーた` → タイトル |

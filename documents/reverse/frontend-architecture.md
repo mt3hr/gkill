@@ -31,10 +31,10 @@ src/client/
 │   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,400行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (150+)
+│   │   └── req_res/                # リクエスト/レスポンス型 (150ファイル、サーバー側は164ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
-│   ├── kftl/                        # KFTLパーサー (35+ ステートメント型)
+│   ├── kftl/                        # KFTLパーサー (44 ステートメント型)
 │   ├── dnote/                       # DNote集計ユーティリティ
 │   ├── lantana/                     # 気分値関連クラス
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
@@ -73,9 +73,9 @@ Page（ルートページ）
 
 | 層 | 配置 | 件数 | 責務 |
 |---|---|---|---|
-| **Page** | `pages/*.vue` | 13 | ルーティング先。ページ全体のレイアウト |
-| **View** | `pages/views/*.vue` | 200+ | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 100+ | モーダル操作（確認、詳細編集等） |
+| **Page** | `pages/*.vue` | 14 | ルーティング先。ページ全体のレイアウト（12ルート＋共有用2ページ） |
+| **View** | `pages/views/*.vue` | 175 | データ型ごとの追加/編集/一覧表示 |
+| **Dialog** | `pages/dialogs/*.vue` | 92 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -103,7 +103,7 @@ Page（ルートページ）
 
 ## 4. ルート一覧
 
-定義: `src/client/router/index.ts`（Web History モード）
+定義: `src/client/router/index.ts`（Web History モード）。各ルートの詳細は [screen-transition.md](screen-transition.md) および [screen-specs.md](screen-specs.md) を参照。
 
 | パス | 名前 | コンポーネント | 説明 |
 |---|---|---|---|
@@ -112,9 +112,9 @@ Page（ルートページ）
 | `/mi` | `mi` | mi-page.vue | タスク管理 |
 | `/rykv` | `rykv` | rykv-page.vue | 関連情報ビュー |
 | `/kyou` | `kyou` | kyou-page.vue | ライフイベント一覧 |
-| `/mkfl` | `mkfl` | mkfl-page.vue | KFTL管理 |
+| `/mkfl` | `mkfl` | mkfl-page.vue | 打刻メモ帳（KFTL入力+TimeIs表示） |
 | `/plaing` | `plaing` | plaing-timeis-page.vue | アクティブ打刻一覧 |
-| `/saihate` | `saihate` | saihate-page.vue | ランディング/概要 |
+| `/saihate` | `saihate` | saihate-page.vue | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | `set_new_password` | set-new-password-page.vue | パスワード設定 |
 | `/regist_first_account` | `regist_first_account` | regist-first-account-page.vue | 初回アカウント登録 |
 | `/shared_page` | `shared_page` | shared-page.vue | 共有ページ |
@@ -133,14 +133,14 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（50+ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（211ファイル） |
 
 ### GkillAPI シングルトン
 
 `src/client/classes/api/gkill-api.ts` に定義。約3,400行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- 全77エンドポイントに対応するメソッドを持つ
+- 全79エンドポイントに対応するメソッドを持つ
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 
@@ -232,13 +232,13 @@ Service Worker が `/share-target` POSTを処理：
 
 | コード | 言語 | キー数 |
 |---|---|---|
-| `ja` | 日本語 | ~743 |
-| `en` | 英語 | ~744 |
-| `zh` | 中国語 | ~743 |
-| `ko` | 韓国語 | ~743 |
-| `es` | スペイン語 | ~743 |
-| `fr` | フランス語 | ~743 |
-| `de` | ドイツ語 | ~743 |
+| `ja` | 日本語 | ~765 |
+| `en` | 英語 | ~765 |
+| `zh` | 中国語 | ~765 |
+| `ko` | 韓国語 | ~765 |
+| `es` | スペイン語 | ~765 |
+| `fr` | フランス語 | ~765 |
+| `de` | ドイツ語 | ~765 |
 
 ### ロケールファイル
 
@@ -271,7 +271,7 @@ Service Worker が `/share-target` POSTを処理：
 - `@typescript-eslint/no-unused-vars`: warn（`_` プレフィックスは無視）
 - 実行: `npm run lint`
 
-## 7. UX改善
+## 10. UX改善
 
 ### オフラインバナー
 
