@@ -46,6 +46,10 @@
       <td><span class="icon">&#9881;</span> 設定</td>
       <td>アプリケーション設定画面を開きます。</td>
     </tr>
+    <tr>
+      <td>&#10068; ヘルプ</td>
+      <td>現在の画面のヘルプを表示します。</td>
+    </tr>
   </table>
 
   <h2>画面レイアウト</h2>
@@ -79,6 +83,55 @@
     <li>下半分の一覧から、進行中のセッションを停止できます。</li>
   </ol>
 
+  <h2>フローティングアクションボタン（+）</h2>
+  <p>画面右下の「+」ボタンをタップすると、各種記録の追加メニューが表示されます。</p>
+  <table>
+    <tr>
+      <th>メニュー項目</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>メモ帳</td>
+      <td>メモ帳形式でテキストメモを入力します。</td>
+    </tr>
+    <tr>
+      <td>打刻メモ帳</td>
+      <td>メモ入力と打刻一覧のハイブリッド画面を開きます。</td>
+    </tr>
+    <tr>
+      <td>数値記録</td>
+      <td>数値データを記録します。</td>
+    </tr>
+    <tr>
+      <td>ブックマーク</td>
+      <td>URLを保存します。</td>
+    </tr>
+    <tr>
+      <td>打刻帳</td>
+      <td>新しい打刻セッションを開始します。</td>
+    </tr>
+    <tr>
+      <td>タスク</td>
+      <td>新しいタスクを追加します。</td>
+    </tr>
+    <tr>
+      <td>支出</td>
+      <td>金額を記録します。</td>
+    </tr>
+    <tr>
+      <td>気分</td>
+      <td>気分値（0〜10）を記録します。</td>
+    </tr>
+    <tr>
+      <td>アップロード</td>
+      <td>ファイルをアップロードして記録します。</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>長押し:</strong> 「+」ボタンを長押しすると、メモ帳が直接開きます。素早くメモを取りたいときに便利です。
+  </div>
+
   <div class="tip">
     <strong>ヒント:</strong> 日常的な記録では、この画面が最も効率的です。メモを書きながら作業時間も管理できます。
   </div>
@@ -87,7 +140,16 @@
     <strong>ヒント:</strong> 上半分のメモ帳入力はメモ帳画面と同じ機能を持っています。テンプレートも利用可能です。
   </div>
 
-  <h2>関連ドキュメント</h2><p><a href="kftl-syntax.html">メモ帳記法リファレンス →</a></p>
+  <div class="tip">
+    <strong>ショートカット:</strong> この画面でEnterキーを押すと、メモ帳ダイアログが開きます。すばやく記録を追加したいときに便利です。
+  </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">メモ帳構文リファレンス</a></li>
+    <li><a href="plaing.html">実行中画面</a></li>
+    <li><a href="kftl.html">メモ帳画面</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>
