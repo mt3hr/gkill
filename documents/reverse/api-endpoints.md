@@ -6,7 +6,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api_address.go`（パス・メソッド定義）
 - **ハンドラ登録:** `src/server/gkill/api/gkill_server_api.go`（ルーティング・ハンドラ実装）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（172 型定義）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（164ファイル）
 
 ## 共通仕様
 
@@ -157,13 +157,19 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/open_directory` | ディレクトリを開く（OS コマンド実行） |
 | `/api/open_file` | ファイルを開く（OS コマンド実行） |
 
-## KFTL（3件）
+## KFTL（2件）
 
 | パス | 説明 |
 |---|---|
+| `/api/get_kftl_template` | KFTLテンプレート構造取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。テンプレートは `get_application_config` 経由で取得する） |
 | `/api/submit_kftl_text` | KFTLテキスト送信・パース・保存 |
-| `/api/commit_tx` | KFTLトランザクションコミット |
-| `/api/discard_tx` | KFTLトランザクション破棄 |
+
+## トランザクション（2件）
+
+| パス | 説明 |
+|---|---|
+| `/api/commit_tx` | トランザクションコミット（一時リポジトリ → 本リポジトリに反映） |
+| `/api/discard_tx` | トランザクション破棄（一時リポジトリを破棄） |
 
 ## 共有（5件）
 
@@ -206,9 +212,9 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 
 | パス | 説明 |
 |---|---|
-| `/api/urlog_bookmarklet` | URLogブックマークレット用エンドポイント |
+| `/api/urlog_bookmarklet` | URLogブックマークレット用エンドポイント。ブラウザのブックマークレットから現在のページのURL・タイトルをURLogとして直接追加する。ログイン時にブックマークレット専用セッション（`ApplicationName="urlog_bookmarklet"`）が自動作成され、通常のセッションとは分離される |
 | `/api/update_cache` | キャッシュ更新トリガー |
-| `/api/get_gkill_info` | アプリケーション情報取得（※アドレス定義のみ、ハンドラ未確認） |
+| `/api/get_gkill_info` | アプリケーション情報取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。将来の拡張用と推定） |
 
 ## 非APIルート
 
@@ -225,5 +231,5 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 - **合計:** POST エンドポイント 79件（うち77件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 3件
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api.go` および `src/server/gkill/api/handle_*.go`
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体
-- `get_kftl_template` と `get_gkill_info` はアドレス定義が存在するが、`HandleFunc` 登録は `gkill_server_api.go` のメイン登録ブロックでは確認されていない（別箇所で登録されている可能性あり）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（164ファイル）
+- `get_kftl_template` と `get_gkill_info` はアドレス定義（`gkill_server_api_address.go`）が存在するが、`HandleFunc` 登録もハンドラ関数実装も存在しない。コードベース全体を調査した結果、これらは**未実装のエンドポイント**であることが確認された。リクエストは404となる

@@ -27,13 +27,13 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 6. **[class-diagrams.md](class-diagrams.md)** — クラス図。Go/TypeScriptのコード構造とクラス階層を理解します。
 7. **[dvnf-rep-type-spec.md](dvnf-rep-type-spec.md)** — DVNF/RepType仕様。データバージョニングとリポジトリ種別の仕様です。
 8. **[program-spec.md](program-spec.md)** — 主要プログラム仕様。初期化フロー、DAO構成、APIハンドラ、キャッシュシステム等の詳細です。
-9. **[sequence-diagrams.md](sequence-diagrams.md)** — シーケンス図。主要な処理フロー（ログイン、データ登録等）を理解します。
+9. **[sequence-diagrams.md](sequence-diagrams.md)** — シーケンス図。主要な処理フロー（ログイン、データ登録、MCP OAuth等）を理解します。
 10. **[activity-diagrams.md](activity-diagrams.md)** — アクティビティ図。詳細な処理ロジックのフローチャートです。
 11. **[state-machines.md](state-machines.md)** — ステートマシン図。エンティティの状態遷移を理解します。
 12. **[screen-transition.md](screen-transition.md)** — 画面遷移図。UIのページ・ダイアログ遷移を理解します。
 13. **[screen-specs.md](screen-specs.md)** — 画面仕様。各画面の項目定義・コンポーネント構成の詳細です。
 14. **[frontend-architecture.md](frontend-architecture.md)** — フロントエンド設計ガイド。Vue 3 + TypeScript実装の詳細です。
-15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全77エンドポイントのリファレンスです。
+15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全79エンドポイントのリファレンスです。
 16. **[error-handling-and-security.md](error-handling-and-security.md)** — エラーハンドリング・セキュリティ設計。エラーコード体系とセキュリティポリシーです。
 17. **[operations-guide.md](operations-guide.md)** — 運用ガイド。デプロイ、バックアップ、トラブルシューティング手順です。
 18. **[dev-setup.md](dev-setup.md)** — 環境構築資料。開発環境のセットアップ手順です。
@@ -55,7 +55,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [class-diagrams.md](class-diagrams.md) | Go/TSクラス階層（Mermaid） | コード構造の理解、実装時の参照 |
 | [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) | DVNF命名規則・RepType仕様 | リポジトリ管理、データ型の理解 |
 | [program-spec.md](program-spec.md) | 主要プログラム仕様（初期化、DAO、API、キャッシュ） | アーキテクチャの深い理解 |
-| [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（16本） | 処理フローの理解、デバッグ |
+| [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（22本: 正常系17 + 異常系5） | 処理フローの理解、デバッグ |
 | [activity-diagrams.md](activity-diagrams.md) | 処理ロジックのフローチャート | 詳細な処理手順の確認 |
 | [state-machines.md](state-machines.md) | エンティティ状態遷移図 | 状態管理ロジックの理解 |
 | [screen-transition.md](screen-transition.md) | ページ・ダイアログ遷移図 | UI実装・改修時の参照 |
