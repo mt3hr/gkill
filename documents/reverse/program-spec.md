@@ -202,6 +202,7 @@ graph LR
 - GkillDAOManagerの保持・提供
 - セッション検証
 - レスポンス構築
+- アクセスログミドルウェア（gorilla/mux `Use()` で全ルートに適用。リモートIP・メソッド・パス・ステータス・所要時間・ユーザIDを `ACCESS` レベルで記録。実装: `gkill_server_api_access_log.go`）
 
 ### エンドポイント分類（79 POST）
 

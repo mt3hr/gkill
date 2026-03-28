@@ -2,7 +2,7 @@
 
 ## 概要
 
-MCP (Model Context Protocol) サーバのテスト。~367テストで入力バリデーション、データ正規化、定数定義、ツールハンドラ（gkill_get_idf_file含む7ツール）、API クライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）をカバーする。
+MCP (Model Context Protocol) サーバのテスト。~381テスト（10ファイル）で入力バリデーション、データ正規化、定数定義、ツールハンドラ（gkill_get_idf_file含む7ツール）、API クライアント、サーバライフサイクル、OAuth 2.1認証（RFC 9728/8707/7591対応）、アクセスログ（McpAccessLog のレベルフィルタリング・JSON形式・lazy open・close）をカバーする。
 
 ## テストフレームワーク
 
