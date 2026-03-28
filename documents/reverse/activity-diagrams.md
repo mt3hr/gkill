@@ -14,6 +14,8 @@ flowchart TD
     CheckSave -->|Yes| LoopEnd[行ループ終了]
     CheckSave -->|No| CheckPrefix{行頭プレフィックス判定}
 
+    LoopStart -->|No| LoopEnd
+
     CheckPrefix -->|「。」| TagLine[Tag行として処理]
     CheckPrefix -->|「ーー」| TextLine[Text行として処理]
     CheckPrefix -->|「？」| RelTimeLine[関連時刻行として処理]
@@ -25,6 +27,9 @@ flowchart TD
     CheckPrefix -->|「ーん」| NlogLine[Nlog開始行]
     CheckPrefix -->|「ーた」| TimeIsStartLine[TimeIs開始行]
     CheckPrefix -->|「ーえ」| TimeIsEndLine[TimeIs終了行]
+    CheckPrefix -->|「ーいえ」| TimeIsEndIfExistLine[TimeIs終了行<br>存在時のみ]
+    CheckPrefix -->|「ーたえ」| TimeIsEndByTagLine[TimeIs終了行<br>タグ指定]
+    CheckPrefix -->|「ーいたえ」| TimeIsEndByTagIfExistLine[TimeIs終了行<br>タグ指定・存在時のみ]
     CheckPrefix -->|「ーち」| TimeIsLine[TimeIs行]
     CheckPrefix -->|「ーう」| URLogLine[URLog開始行]
     CheckPrefix -->|その他| KmemoLine[Kmemo行<br>デフォルト]
@@ -40,14 +45,17 @@ flowchart TD
     NlogLine --> ApplyToMap
     TimeIsStartLine --> ApplyToMap
     TimeIsEndLine --> ApplyToMap
+    TimeIsEndIfExistLine --> ApplyToMap
+    TimeIsEndByTagLine --> ApplyToMap
+    TimeIsEndByTagIfExistLine --> ApplyToMap
     TimeIsLine --> ApplyToMap
     URLogLine --> ApplyToMap
     KmemoLine --> ApplyToMap
 
     ApplyToMap --> LoopStart
 
-    LoopEnd --> ExecStart{リクエストマップに<br>リクエストがある?}
-    ExecStart -->|Yes| ExecReq[各リクエストの DoRequest 実行<br>Repository へ保存]
+    LoopEnd --> ExecStart{次の未実行<br>リクエストがある?}
+    ExecStart -->|Yes| ExecReq[リクエストの DoRequest 実行<br>Repository へ保存]
     ExecReq --> ExecCheck{エラー発生?}
     ExecCheck -->|Yes| Error([エラー返却])
     ExecCheck -->|No| ExecStart
@@ -178,7 +186,9 @@ flowchart TD
 ```mermaid
 flowchart TD
     Start([ログインリクエスト受信]) --> DecodeReq[JSONリクエストデコード]
-    DecodeReq --> GetAccount[AccountDAO.GetAccount<br>user_idで検索]
+    DecodeReq --> RateLimit{レート制限チェック<br>IP単位15分間10回}
+    RateLimit -->|超過| ErrorRate([ERR000374<br>レート制限エラー])
+    RateLimit -->|OK| GetAccount[AccountDAO.GetAccount<br>user_idで検索]
 
     GetAccount --> AccountExists{アカウント存在?}
     AccountExists -->|No| Error401([認証エラー])
@@ -219,14 +229,14 @@ flowchart TD
     UseTempRep --> InsertTemp[TempRepository<br>.AddXxxInfo<br>一時テーブルにINSERT]
     UseMainRep --> InsertMain[WriteXxxRep<br>.AddXxxInfo<br>メインテーブルにINSERT]
 
-    InsertTemp --> Done
+    InsertTemp --> ResponseCheck{レスポンス要求?<br>want_response_kyou}
     InsertMain --> UpdateCache{キャッシュ更新<br>必要?}
 
     UpdateCache -->|Yes| DoCache[キャッシュ更新<br>LatestDataRepositoryAddress更新]
-    UpdateCache -->|No| Done
+    UpdateCache -->|No| ResponseCheck
 
-    DoCache --> Done{レスポンス要求?<br>want_response_kyou}
-    Done -->|Yes| FetchResult[更新後データ取得<br>GetXxx + GetKyou]
-    Done -->|No| Return([成功レスポンス])
+    DoCache --> ResponseCheck
+    ResponseCheck -->|Yes| FetchResult[更新後データ取得<br>GetXxx + GetKyou]
+    ResponseCheck -->|No| Return([成功レスポンス])
     FetchResult --> Return
 ```

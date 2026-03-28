@@ -409,3 +409,13 @@ erDiagram
 テーブルにはデータ型を示すカラムが存在しない。
 データ型は**どのテーブルに格納されているか**で暗黙的に決まる（KMEMO テーブルのレコードは Kmemo 型）。
 API レスポンスでは `DataType` フィールドとしてコード側で付与される。
+
+### RELATED_TIME の導出ルール
+
+多くのデータ型は `RELATED_TIME` カラムをテーブルに持つが、以下の3型は **DBカラムとして存在せず、SQLクエリ内で他カラムから動的に導出**される。
+
+| データ型 | 導出元カラム | 説明 |
+|---|---|---|
+| **Mi** | `CREATE_TIME`, `UPDATE_TIME`, `LIMIT_TIME`, `ESTIMATE_START_TIME`, `ESTIMATE_END_TIME` | 5つのカラムからそれぞれ `AS RELATED_TIME` でエイリアスし、UNION で結合。作成日時・チェック日時・期限・開始予定・終了予定の各観点で検索・表示される |
+| **TimeIs** | `START_TIME`, `END_TIME` | 2つのカラムからそれぞれ `AS RELATED_TIME` でエイリアスし、UNION で結合。開始時刻と終了時刻の両方でタイムライン上に表示される |
+| **Notification** | `UPDATE_TIME`（通常検索）, `NOTIFICATION_TIME`（日時範囲検索） | コンテキストに応じて使い分け。通常のfindでは `UPDATE_TIME`、通知日時の範囲指定では `NOTIFICATION_TIME` を使用 |

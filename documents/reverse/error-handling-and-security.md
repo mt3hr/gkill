@@ -28,7 +28,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **373件** のエラーコードが存在する。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **373件** のエラーコードが存在する（ERR000001〜ERR000374、ERR000243は欠番）。
 
 #### 認証系（ERR000001〜ERR000017）
 
@@ -145,6 +145,8 @@ sequenceDiagram
 | 初期状態 | `nil`（パスワード未設定 → パスワードなしでログイン可） |
 | 比較方式 | 文字列直接比較（`!=`） |
 
+> **セキュリティ上の注記:** SHA256（ソルトなし）はパスワードハッシュとしては脆弱であり、レインボーテーブル攻撃のリスクがあります。gkillはスタンドアロン利用を前提とした設計のため現状の実装となっていますが、リモート公開環境で運用する場合は、bcrypt/scrypt/Argon2等のソルト付きハッシュへの移行を検討すべきです。
+
 ### 2.3 セッション管理
 
 **セッション作成時の情報:**
@@ -164,9 +166,10 @@ sequenceDiagram
 
 1. `SessionID` で `LoginSession` を検索
 2. 見つからない → `ERR000013` (AccountSessionNotFoundError)
-3. `ApplicationName` が `"gkill"` であることを確認
-4. `UserID` でアカウント検索
-5. アカウント有効チェック → 無効なら `ERR000238` (AccountDisabledError)
+3. `ExpirationTime` が現在時刻を超過していないか検証 → 期限切れなら `ERR000373` (AccountSessionExpiredError)
+4. `ApplicationName` が `"gkill"` であることを確認
+5. `UserID` でアカウント検索
+6. アカウント有効チェック → 無効なら `ERR000238` (AccountDisabledError)
 
 **ストレージ:** インメモリキャッシュ + SQLite3 (`account_state.db`)
 
@@ -222,6 +225,7 @@ sequenceDiagram
 - 同一オリジン（`http://localhost:9999`）からのアクセスは問題なし
 - クロスオリジンアクセスはブラウザにブロックされる
 - デスクトップアプリ（go-astilectron）は同一オリジンで動作
+- MCP HTTPサーバー（`src/mcp/gkill-read-server.mjs`）は別プロセスで動作するため、gkill_server APIへのアクセスはサーバー間通信（fetch）であり、ブラウザのCORS制約は適用されない。ただし、MCP HTTPサーバー自体がOAuth 2.1の認可エンドポイントを提供する際、Claude.ai/ChatGPT等のクライアントからのリダイレクトはブラウザ経由で行われるため、CORS設定は不要（リダイレクトベースのフローのため）
 
 ### 2.8 初期セットアップのセキュリティ
 
@@ -270,4 +274,4 @@ sequenceDiagram
 ### 3.5 セッション有効期限・レート制限
 
 - **セッション有効期限**: API呼び出し時にセッションの `ExpirationTime` を検証。期限切れの場合は `ERR000373`（`AccountSessionExpiredError`）を返し、クライアント側でログイン画面にリダイレクト
-- **ログインレート制限**: IP単位で15分間に10回までのログイン試行を許可。超過時は `ERR000374`（`LoginRateLimitError`）を返却。`loginRateLimiter` 構造体でスライディングウィンドウ方式を実装
+- **ログインレート制限**: IP単位で15分間に10回までのログイン試行を許可。超過時は `ERR000374`（`LoginRateLimitError`）を返却。`loginRateLimiter` 構造体でスライディングウィンドウ方式を実装。インメモリのみで永続化されないため、サーバー再起動でリセットされる
