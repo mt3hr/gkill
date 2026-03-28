@@ -88,11 +88,11 @@ gkill_server version
 
 | コマンド | ターゲット |
 |---|---|
-| `npm run build_windows_amd64` | Windows x86_64（gkill_server.exe） |
-| `npm run build_windows_amd64_app` | Windows x86_64（gkill.exe、デスクトップアプリ） |
-| `npm run build_linux_amd64` | Linux x86_64 |
-| `npm run build_linux_arm64` | Linux ARM64（aarch64-linux-gnu-gcc必須） |
-| `npm run build_linux_arm` | Linux ARM（arm-linux-gnueabihf-gcc必須） |
+| `npm run build_windows_amd64` | Windows x86_64（gkill_server.exe、CGO_ENABLED=0） |
+| `npm run build_windows_amd64_app` | Windows x86_64（gkill.exe、デスクトップアプリ、CGO_ENABLED=0） |
+| `npm run build_linux_amd64` | Linux x86_64（CGO_ENABLED=0） |
+| `npm run build_linux_arm64` | Linux ARM64（CGO_ENABLED=0、クロスコンパイラ不要） |
+| `npm run build_linux_arm` | Linux ARM（CGO_ENABLED=0、クロスコンパイラ不要） |
 | `npm run build_android_arm` | Android ARM（NDK環境変数必須） |
 | `npm run build_android_arm64` | Android ARM64（NDK環境変数必須） |
 | `npm run build_android_apk` | Android APKビルド（Gradle） |
@@ -181,7 +181,7 @@ SQLite3 ドライバは pure Go 実装（`modernc.org/sqlite`）のため、CGO 
 | Android ARM | android | arm |
 | Android ARM64 | android | arm64 |
 
-> **Note:** `GOOS=android` の場合、Go がデフォルトで CGO を有効化するため、`CGO_ENABLED=0` を明示的に指定する必要があります。
+> **Note:** `GOOS=android` の場合、CGO が有効（`CGO_ENABLED=1`）で NDK の clang をクロスコンパイラ（CC）として使用します。環境変数 `NDK` に Android NDK のパスを設定してください。
 
 ### Windows向けビルド時の追加処理
 
@@ -276,9 +276,9 @@ npm run setup_gkill_develop_env
 
 このスクリプトは以下を実行します。
 
-1. aptパッケージのインストール: `build-essential`, `gcc-mingw-w64-x86-64`, `gcc-aarch64-linux-gnu`, `gcc-arm-linux-gnueabihf`, `p7zip-full`, `default-jdk`
+1. aptパッケージのインストール: `p7zip-full`, `default-jdk`
 2. Goツールのインストール: `rsrc`（Windowsリソース埋め込み用）
-3. 環境変数チェック: `NDK`, `ANDROID_HOME`/`ANDROID_SDK_ROOT`の設定確認
+3. 環境変数チェック: `ANDROID_HOME`/`ANDROID_SDK_ROOT`の設定確認
 
 ## 10. トラブルシューティング
 

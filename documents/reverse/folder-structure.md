@@ -93,13 +93,13 @@ src/server/
     │   ├── find_filter.go          # 検索フィルタロジック
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
-    │   ├── req_res/                # リクエスト/レスポンス構造体（150+型）
+    │   ├── req_res/                # リクエスト/レスポンス構造体（164ファイル）
     │   └── kftl/                   # KFTLパーサー（バックエンド側）
     │       ├── kftl_factory.go     # ファクトリ（ステートメント生成）
     │       └── *.go                # 各ステートメント型実装
     ├── dao/                        # データアクセス層
     │   ├── gkill_dao_manager.go    # DAOマネージャ（ConfigDAOs + GkillRepositories管理）
-    │   ├── config_daos.go          # ConfigDAOs構造体（8つの設定DAO）
+    │   ├── config_da_os.go          # ConfigDAOs構造体（8つの設定DAO）
     │   ├── reps/                   # リポジトリインターフェース・実装
     │   │   ├── *_repository.go             # インターフェース定義
     │   │   ├── *_repository_sqlite3_impl.go        # SQLite3実装
@@ -168,7 +168,7 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-└── gkill-read-server.mjs   # 読み取り専用MCPサーバー（6ツール提供）
+└── gkill-read-server.mjs   # 読み取り専用MCPサーバー（7ツール提供）
 ```
 
 トランスポート: stdio（デフォルト）またはHTTP。
@@ -186,7 +186,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-~743キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+~765キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
@@ -206,19 +206,20 @@ documents/
 │   ├── usecase.md                    # ユースケース一覧（74件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
-│   ├── sequence-diagrams.md          # シーケンス図（16本）
+│   ├── sequence-diagrams.md          # シーケンス図（21本: 正常系16 + 異常系5）
 │   ├── activity-diagrams.md          # アクティビティ図
 │   ├── state-machines.md             # ステートマシン図
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（77件）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（79件）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド
 │   ├── dvnf-rep-type-spec.md         # DVNF/RepType仕様
 │   ├── program-spec.md               # 主要プログラム仕様
 │   ├── folder-structure.md           # フォルダ構成説明（本資料）
 │   ├── dev-setup.md                  # 環境構築資料
+│   ├── testing-guide.md              # テストガイド（実行・構成・トラブルシューティング）
 │   └── user-guide.md                 # ユーザ向け導入資料
 ├── resources/                        # 画像リソース等
 ├── gkill_user_document.pdf           # ユーザ利用説明書
@@ -246,6 +247,7 @@ $HOME/gkill/
 │   ├── gkill_info.log
 │   ├── gkill_debug.log
 │   ├── gkill_trace.log
+│   ├── gkill_trace_sql.log
 │   └── gkill.log           # 統合ログ
 ├── lib/base_directory/     # ライブラリファイル
 └── tls/                    # TLS証明書（オプション）

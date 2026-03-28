@@ -1,6 +1,6 @@
 # gkill シーケンス図
 
-コードの API ハンドラ実装（`gkill_server_api.go`）から抽出した主要フローのシーケンス図。
+コードの API ハンドラ実装（`gkill_server_api.go`）およびMCPサーバ実装（`gkill-read-server.mjs`）から抽出した主要フローのシーケンス図。
 
 ## 1. ログイン
 
@@ -395,7 +395,7 @@ sequenceDiagram
     participant MCPServer as gkill-read-server.mjs
     participant Server as gkill_server
 
-    MCP->>MCPServer: search_kyous(query, session_id)
+    MCP->>MCPServer: gkill_get_kyous(query, session_id)
     MCPServer->>Server: POST /api/get_kyous_mcp<br>{session_id, query}
     Server->>Server: getAccountFromSessionID
     Server->>Server: FindKyous(query)
@@ -404,7 +404,73 @@ sequenceDiagram
     MCPServer-->>MCP: 検索結果
 ```
 
-## 16. トランザクション（CommitTX / DiscardTX）
+## 16. MCP OAuth 2.1 認可フロー（HTTP モード）
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ（ブラウザ）
+    participant Client as MCP クライアント<br>(Claude.ai等)
+    participant MCP as gkill-read-server.mjs<br>(MCP HTTPサーバ)
+    participant Server as gkill_server
+
+    Note over Client,MCP: 1. ディスカバリ（RFC 9728 + RFC 8414）
+
+    Client->>MCP: POST /mcp（トークンなし）
+    MCP-->>Client: 401 + WWW-Authenticate: Bearer<br>resource_metadata="/.well-known/oauth-protected-resource"
+    Client->>MCP: GET /.well-known/oauth-protected-resource
+    MCP-->>Client: {resource, authorization_servers, scopes_supported}
+    Client->>MCP: GET /.well-known/oauth-authorization-server
+    MCP-->>Client: {issuer, authorization_endpoint,<br>token_endpoint, registration_endpoint,<br>code_challenge_methods_supported: ["S256","plain"]}
+
+    Note over Client,MCP: 2. 動的クライアント登録（RFC 7591）
+
+    Client->>MCP: POST /oauth/register<br>{client_name, redirect_uris}
+    MCP->>MCP: client_id生成・永続化<br>(mcp_oauth_state.json)
+    MCP-->>Client: {client_id, client_id_issued_at}
+
+    Note over Client,MCP: 3. 認可コード取得（PKCE + RFC 8707）
+
+    Client->>Client: PKCE生成<br>verifier = random(43-128文字)<br>challenge = BASE64URL(SHA256(verifier))
+    Client->>MCP: GET /oauth/authorize<br>?response_type=code&client_id=...&redirect_uri=...<br>&code_challenge=...&code_challenge_method=S256<br>&scope=gkill:read&resource=...&state=xyz
+    MCP-->>User: HTMLログインフォーム表示
+    User->>MCP: POST /oauth/authorize<br>{user_id, password_sha256, ...}
+    MCP->>Server: POST /api/login<br>{user_id, password_sha256}
+    Server-->>MCP: {session_id}
+    MCP->>MCP: 認可コード生成（TTL=5分）<br>session_idをコードに紐づけ
+    MCP-->>User: HTMLリダイレクトページ
+    User->>Client: redirect_uri?code=...&state=xyz
+
+    Note over Client,MCP: 4. トークン交換（PKCE検証）
+
+    Client->>MCP: POST /oauth/token<br>{grant_type=authorization_code,<br>code, code_verifier, client_id,<br>redirect_uri, resource}
+    MCP->>MCP: 認可コード消費（ワンタイム）<br>PKCE検証: SHA256(verifier)==challenge<br>resource/redirect_uri/client_id一致確認
+    MCP->>MCP: アクセストークン生成（TTL=1時間）<br>リフレッシュトークン生成（TTL=30日）<br>session_idをトークンに紐づけ・永続化
+    MCP-->>Client: {access_token, refresh_token,<br>token_type: "Bearer", expires_in: 3600}
+
+    Note over Client,MCP: 5. データアクセス
+
+    Client->>MCP: POST /mcp<br>Authorization: Bearer <access_token><br>{jsonrpc: "2.0", method: "tools/call",<br>params: {name: "gkill_get_kyous", ...}}
+    MCP->>MCP: Bearerトークン検証<br>session_id抽出
+    MCP->>Server: POST /api/get_kyous_mcp<br>{session_id, query}
+    Server-->>MCP: {kyous_mcp: [...]}
+    MCP-->>Client: {jsonrpc: "2.0", result: {...}}
+
+    Note over Client,MCP: 6. トークンリフレッシュ（ローテーション）
+
+    Client->>MCP: POST /oauth/token<br>{grant_type=refresh_token,<br>refresh_token, client_id}
+    MCP->>MCP: 旧リフレッシュトークン削除<br>新アクセストークン + 新リフレッシュトークン発行<br>永続化(mcp_oauth_state.json)
+    MCP-->>Client: {access_token: "new",<br>refresh_token: "new", expires_in: 3600}
+```
+
+### 補足
+
+- **トークン永続化:** リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_state.json` に保存。サーバ再起動後も再認証不要
+- **アクセストークン:** インメモリのみ（サーバ再起動で失効、リフレッシュトークンで再発行可能）
+- **PKCE:** S256（SHA-256）と plain の両方をサポート。S256 推奨
+- **RFC 8707（Resource Indicators）:** 認可〜トークン交換で `resource` パラメータを引き回し、一致を検証
+- **既知の制限:** ChatGPT はOAuth認証・初回データ取得は成功するが、cursorベースのページング継続時にプラットフォーム側で問題が発生する（2026-03時点）
+
+## 17. トランザクション（CommitTX / DiscardTX）
 
 ```mermaid
 sequenceDiagram
@@ -492,6 +558,11 @@ sequenceDiagram
         SesDAO-->>API: nil
         API-->>UI: {errors: [{error_code: "ERR000013",<br>error_message: "セッションが見つかりません"}]}
         UI-->>User: ログイン画面へリダイレクト
+    else セッション有効期限切れ
+        SesDAO-->>API: LoginSession
+        API->>API: ExpirationTime < 現在時刻
+        API-->>UI: {errors: [{error_code: "ERR000373",<br>error_message: "セッションの有効期限が切れています"}]}
+        UI-->>User: ログイン画面へリダイレクト
     else アカウント無効化（セッション有効だが）
         SesDAO-->>API: LoginSession
         API->>AccDAO: GetAccount(session.UserID)
@@ -512,18 +583,20 @@ sequenceDiagram
     UI->>API: POST /api/add_xxx または update_xxx<br>{session_id, ...data}
 
     alt JSONパースエラー
-        API-->>UI: {errors: [{error_code: "ERR000xxx",<br>error_message: "リクエストデータ不正"}]}
+        API-->>UI: {errors: [{error_code: "ERR000097等",<br>error_message: "リクエストデータ不正"}]}
+        Note right of API: データ型ごとに固有コード<br>例: Kmemo=ERR000097<br>TimeIs=ERR000039<br>Mi=ERR000085
     else デバイス取得失敗
         API->>API: getDevice()
         API-->>UI: {errors: [{error_code: "ERR000220",<br>error_message: "デバイス情報取得失敗"}]}
     else リポジトリ取得失敗
         API->>Reps: GetRepositories(user_id)
         Reps-->>API: error
-        API-->>UI: {errors: [{error_code: "ERR000yyy",<br>error_message: "内部サーバーエラー"}]}
+        API-->>UI: {errors: [{error_code: "ERR000018",<br>error_message: "リポジトリ取得失敗"}]}
     else DB書き込みエラー
         API->>Reps: AddXxxInfo(data)
         Reps-->>API: error
-        API-->>UI: {errors: [{error_code: "ERR000zzz",<br>error_message: "保存失敗"}]}
+        API-->>UI: {errors: [{error_code: "ERR000023等",<br>error_message: "保存失敗"}]}
+        Note right of API: データ型ごとに固有コード<br>例: Kmemo=ERR000023<br>TimeIs=ERR000037<br>Mi=ERR000083
     end
 
     Note over UI: errors配列の内容をUIに表示

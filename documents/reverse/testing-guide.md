@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-gkill プロジェクトでは約1,757件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
+gkill プロジェクトでは約1,887件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
 
 ### テスト統計
 
@@ -276,14 +276,19 @@ src/client/__tests__/
 
 ### 3.4 MCP サーバ（`src/mcp/__tests__/`）
 
+MCP テストは全てモック/スタブベースで動作し、実行中の gkill_server は不要です。OAuth テスト（`oauth-server.test.mjs`, `oauth-store.test.mjs`）もインメモリストアを使用するため、外部環境変数（`GKILL_BASE_URL` 等）の設定は不要です。
+
 | テストファイル | テスト内容 |
 |-------------|-----------|
-| `validation.test.mjs` | 6ツールの入力パラメータ検証（必須/型/範囲） |
+| `validation.test.mjs` | 7ツールの入力パラメータ検証（必須/型/範囲） |
 | `normalization.test.mjs` | 日付・文字列・デフォルト値の正規化 |
 | `constants.test.mjs` | ツール名、エラーコード、デフォルト設定値 |
 | `tool-handlers.test.mjs` | 各ツールのハンドラ実行ロジック |
 | `client.test.mjs` | GkillReadClient（fetch モック、認証、レスポンスパース） |
 | `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール（ディスパッチ/画像image block/非画像/ネストパス/セッションフォールバック） |
+| `pkce.test.mjs` | PKCE検証（S256/plain） |
+| `oauth-store.test.mjs` | OAuth ストア（トークン/コード/クライアント CRUD、TTL 有効期限、JSON ファイル永続化） |
+| `oauth-server.test.mjs` | OAuth サーバ（メタデータ、認可、トークン交換、PKCE、リフレッシュトークンローテーション、DCR、RFC 8707 resource パラメータ、redirect_uri 検証、E2E フロー） |
 
 ### 3.5 Android / Wear OS
 

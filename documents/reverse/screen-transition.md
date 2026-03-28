@@ -53,9 +53,9 @@ stateDiagram-v2
 | `/mi` | MiPage | 要 | タスク管理（ボード形式） |
 | `/rykv` | RykvPage | 要 | ライフログ閲覧・検索・編集 |
 | `/kyou` | KyouPage | 要 | Kyou 記録一覧 |
-| `/mkfl` | MkflPage | 要 | ファイル管理 |
+| `/mkfl` | MkflPage | 要 | 打刻メモ帳（KFTL入力+TimeIs表示） |
 | `/plaing` | PlaingPage | 要 | 稼働中 TimeIs 一覧 |
-| `/saihate` | SaihatePage | 要 | 特殊ビュー |
+| `/saihate` | SaihatePage | 要 | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | SetNewPasswordPage | 不要 | 新パスワード設定 |
 | `/regist_first_account` | RegistFirstAccountPage | 不要 | 初回アカウント登録 |
 | `/shared_page` | SharedPage | 不要 | 共有 Kyou 閲覧 |
