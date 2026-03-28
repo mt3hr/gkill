@@ -32,7 +32,7 @@
   </style>
 </head>
 <body>
-  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Datensatzdetails</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Datens&auml;tze</span></nav>
   <h1>Datensatzansicht</h1>
   <p>Bildschirm zur Anzeige der Details eines einzelnen Datensatzes. Sie koennen die detaillierten Informationen verschiedener Datensatztypen einsehen.</p>
 
@@ -46,6 +46,7 @@
       <td><span class="icon">&#9881;</span> Einstellungen</td>
       <td>Oeffnet den Einstellungsbildschirm der Anwendung.</td>
     </tr>
+    <tr><td>&#10068; Hilfe</td><td>Zeigt die Hilfe fuer den aktuellen Bildschirm an.</td></tr>
   </table>
 
   <h2>Angezeigte Datensatztypen</h2>
@@ -68,7 +69,7 @@
     </tr>
     <tr>
       <td>Stimmung</td>
-      <td>Zeigt den Stimmungswert von 0 bis 10 an.</td>
+      <td>Zeigt die Stimmung von 0 bis 10 an.</td>
     </tr>
     <tr>
       <td>Ausgaben</td>
@@ -83,8 +84,24 @@
       <td>Zeigt eine Vorschau der hochgeladenen Datei an.</td>
     </tr>
     <tr>
+      <td>Numerische Datensätze</td>
+      <td>Zeigt Titel und numerische Daten an.</td>
+    </tr>
+    <tr>
+      <td>Repost</td>
+      <td>Zeigt Einträge an, die zu einem anderen Datum/Uhrzeit erneut gepostet wurden.</td>
+    </tr>
+    <tr>
+      <td>GPS-Log</td>
+      <td>Zeigt GPS-Standortlogdaten an.</td>
+    </tr>
+    <tr>
       <td>Git-Commit-Protokoll</td>
       <td>Zeigt die Commit-Informationen des Git-Repositories an.</td>
+    </tr>
+    <tr>
+      <td>Benachrichtigung</td>
+      <td>Zeigt Erinnerungsbenachrichtigungen an, die fuer ein bestimmtes Datum und eine bestimmte Uhrzeit geplant sind.</td>
     </tr>
   </table>
 
@@ -93,11 +110,21 @@
   <ul>
     <li><strong>Tags:</strong> Liste der dem Datensatz zugewiesenen Tags</li>
     <li><strong>Zugehoerige Zeit:</strong> Datums- und Zeitinformationen zum Datensatz</li>
-    <li><strong>Repository-Name:</strong> Name des Repositories, in dem die Daten gespeichert sind</li>
+    <li><strong>Ablagename:</strong> Name der Ablage, in der die Daten gespeichert sind</li>
   </ul>
 
   <h2>Kontextmenue</h2>
-  <p>Ein Rechtsklick (oder langes Druecken) auf einen Datensatz zeigt ein Kontextmenue an, ueber das Sie Bearbeitungen, Loeschungen, Freigaben und andere Aktionen durchfuehren koennen.</p>
+  <p>Ein Rechtsklick (oder langes Druecken) auf einen Datensatz zeigt ein Kontextmenue an. Die folgenden Aktionen sind verfuegbar:</p>
+  <ul>
+    <li><strong>Bearbeiten:</strong> Den Inhalt des Datensatzes bearbeiten.</li>
+    <li><strong>Loeschen:</strong> Den Datensatz loeschen.</li>
+    <li><strong>Teilen:</strong> Einen Freigabelink erstellen.</li>
+    <li><strong>Tag hinzufuegen / Tag bearbeiten:</strong> Tags hinzufuegen oder bearbeiten.</li>
+    <li><strong>Text hinzufuegen / Text bearbeiten:</strong> Ergaenzenden Text hinzufuegen oder bearbeiten.</li>
+    <li><strong>Benachrichtigung hinzufuegen / Benachrichtigung bearbeiten:</strong> Erinnerungsbenachrichtigungen hinzufuegen oder bearbeiten.</li>
+    <li><strong>Verlauf:</strong> Den Aenderungsverlauf von Tags, Texten und Benachrichtigungen einsehen.</li>
+    <li><strong>ID kopieren:</strong> Die ID des Datensatzes in die Zwischenablage kopieren.</li>
+  </ul>
 
   <div class="tip">
     <strong>Tipp:</strong> Sie koennen Tags direkt aus dem Detailbildschirm des Datensatzes hinzufuegen oder bearbeiten.

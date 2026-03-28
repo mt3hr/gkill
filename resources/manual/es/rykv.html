@@ -66,12 +66,21 @@
       <td><span class="icon">&#9881;</span> Ajustes</td>
       <td>Abre la pantalla de ajustes de la aplicacion.</td>
     </tr>
+    <tr><td>&#10068; Ayuda</td><td>Muestra la ayuda de la pantalla actual.</td></tr>
   </table>
 
   <h2>Funciones principales</h2>
   <ul>
     <li><strong>Miniaturas multicolumna:</strong> Puede mostrar miniaturas en 1 a 10 columnas.</li>
-    <li><strong>Funcion de filtrado:</strong> Filtra registros por tipo, etiqueta, rango de fechas, etc. desde la barra lateral.</li>
+    <li><strong>Funcion de filtrado:</strong> Filtra registros desde la barra lateral por:
+      <ul>
+        <li>Busqueda de texto (palabra clave)</li>
+        <li>Filtro por etiqueta</li>
+        <li>Rango de fechas</li>
+        <li>Tipo de registro</li>
+        <li>Repositorio</li>
+      </ul>
+    </li>
     <li><strong>Panel de detalles:</strong> Al seleccionar un registro, se muestra la informacion detallada.</li>
     <li><strong>Analisis estadistico:</strong> Consulta datos estadisticos y tendencias de los registros.</li>
     <li><strong>Visualizacion en mapa:</strong> Consulta registros con informacion de ubicacion en el mapa.</li>
@@ -79,6 +88,29 @@
 
   <div class="tip">
     <strong>Consejo:</strong> Puede ajustar el numero de columnas de miniaturas (1-10) en los ajustes para adaptarse a diferentes tamanos de pantalla.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> El valor predeterminado del período de visualización se puede cambiar en la configuración con la opción «Días de visualización del registro de vida».
+  </div>
+
+  <h2>FAB (Boton de accion flotante) "+"</h2>
+  <p>Al hacer clic en el boton "+", se despliega un menu para crear rapidamente registros:</p>
+  <table>
+    <tr><th>Tipo</th><th>Descripcion</th></tr>
+    <tr><td>Memo</td><td>Crea una nota de texto.</td></tr>
+    <tr><td>Tiempo+Memo</td><td>Crea una nota con marca de tiempo.</td></tr>
+    <tr><td>Numerico</td><td>Registra datos numericos.</td></tr>
+    <tr><td>Marcador</td><td>Guarda un marcador de URL.</td></tr>
+    <tr><td>Registro de tiempo</td><td>Inicia una sesion de seguimiento de tiempo.</td></tr>
+    <tr><td>Tarea</td><td>Crea una nueva tarea.</td></tr>
+    <tr><td>Gasto</td><td>Registra informacion de gastos.</td></tr>
+    <tr><td>Animo</td><td>Registra un valor de animo (0-10).</td></tr>
+    <tr><td>Subir archivo</td><td>Sube un archivo.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Mantenga pulsado el boton "+" para abrir directamente la pantalla de entrada del bloc de notas, lo que permite una entrada masiva rapida.
   </div>
 
   <div class="tip">

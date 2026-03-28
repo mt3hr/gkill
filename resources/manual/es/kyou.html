@@ -32,7 +32,7 @@
   </style>
 </head>
 <body>
-  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Detalles del Registro</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Registros</span></nav>
   <h1>Vista de registro</h1>
   <p>Pantalla que muestra los detalles de un registro individual. Puede consultar la informacion detallada de varios tipos de registros.</p>
 
@@ -46,6 +46,7 @@
       <td><span class="icon">&#9881;</span> Ajustes</td>
       <td>Abre la pantalla de ajustes de la aplicacion.</td>
     </tr>
+    <tr><td>&#10068; Ayuda</td><td>Muestra la ayuda de la pantalla actual.</td></tr>
   </table>
 
   <h2>Tipos de registro mostrados</h2>
@@ -67,8 +68,8 @@
       <td>Muestra el estado, fecha limite e informacion del tablero de la tarea.</td>
     </tr>
     <tr>
-      <td>Estado de animo</td>
-      <td>Muestra el valor de animo de 0 a 10.</td>
+      <td>Estado de ánimo</td>
+      <td>Muestra el valor de ánimo de 0 a 10.</td>
     </tr>
     <tr>
       <td>Gastos</td>
@@ -83,6 +84,22 @@
       <td>Muestra una vista previa del archivo subido.</td>
     </tr>
     <tr>
+      <td>Registros numéricos</td>
+      <td>Muestra el título y los datos numéricos.</td>
+    </tr>
+    <tr>
+      <td>Notificación</td>
+      <td>Muestra las notificaciones asociadas a un registro.</td>
+    </tr>
+    <tr>
+      <td>Repost</td>
+      <td>Muestra registros republicados en otra fecha/hora.</td>
+    </tr>
+    <tr>
+      <td>Registro GPS</td>
+      <td>Muestra datos de registro de ubicación GPS.</td>
+    </tr>
+    <tr>
       <td>Registro de commit Git</td>
       <td>Muestra la informacion de commits del repositorio Git.</td>
     </tr>
@@ -93,11 +110,21 @@
   <ul>
     <li><strong>Etiquetas:</strong> Lista de etiquetas asignadas al registro</li>
     <li><strong>Tiempo relacionado:</strong> Informacion de fecha y hora relacionada con el registro</li>
-    <li><strong>Nombre del repositorio:</strong> Nombre del repositorio donde se almacenan los datos</li>
+    <li><strong>Repositorio:</strong> Nombre del repositorio donde se almacenan los datos</li>
   </ul>
 
   <h2>Menu contextual</h2>
-  <p>Al hacer clic derecho (o mantener pulsado) en un registro, se muestra un menu contextual que permite editar, eliminar, compartir y otras operaciones.</p>
+  <p>Al hacer clic derecho (o mantener pulsado) en un registro, se muestra un menu contextual con las siguientes opciones:</p>
+  <ul>
+    <li>Editar</li>
+    <li>Eliminar</li>
+    <li>Compartir</li>
+    <li>Agregar/Editar etiqueta</li>
+    <li>Agregar/Editar texto</li>
+    <li>Agregar/Editar notificación</li>
+    <li>Historial</li>
+    <li>Copiar ID</li>
+  </ul>
 
   <div class="tip">
     <strong>Consejo:</strong> Puede agregar o editar etiquetas directamente desde la pantalla de detalles del registro.

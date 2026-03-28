@@ -99,7 +99,7 @@
   <ol>
     <li>Enter a user ID (this will be your account name).</li>
     <li>Enter a password, then enter it again for confirmation.</li>
-    <li>Set an administrator password (used for server management).</li>
+    <li>Enter an Admin Password and confirm it (this sets the password for the auto-created <code>admin</code> account, used for server management).</li>
     <li>Press the "Register" button to create your account.</li>
     <li>You will be redirected to the login screen. Log in with the account you just created.</li>
   </ol>
@@ -124,7 +124,7 @@
     <tr><td>Task</td><td>Manage things to do</td><td>"Write the report"</td></tr>
     <tr><td>Expense</td><td>Record spending</td><td>"Convenience store: rice ball 150 yen"</td></tr>
     <tr><td>Mood</td><td>Record mood as a value from 0 to 10</td><td>"7"</td></tr>
-    <tr><td>Numeric Value</td><td>Record numeric data</td><td>"Weight: 65.5"</td></tr>
+    <tr><td>Numeric Records</td><td>Record numeric data</td><td>"Weight: 65.5"</td></tr>
     <tr><td>Bookmark</td><td>Save a URL</td><td>"https://example.com"</td></tr>
     <tr><td>File</td><td>Upload images or files</td><td>Photos, PDFs, etc.</td></tr>
   </table>
@@ -304,7 +304,7 @@ Milk
       <td>Start and end time tracking via text using notepad syntax. Can be combined with other records in bulk.</td>
     </tr>
   </table>
-  <p>Using the time stamp feature, you can accurately record work time and activity durations.</p>
+  <p>Using the time stamp feature, you can accurately record work time and activity durations. "Stamp Notepad" is a dedicated screen for memo input combined with active session management, while "Notepad" lets you start/end time tracking via prefixes alongside other records in bulk.</p>
 
   <h3>Basic Time Stamp Operations</h3>
   <ol>
@@ -329,7 +329,7 @@ Milk
   <ol>
     <li>Click the aggregation icon in the LifeLog View toolbar to show the Aggregation View.</li>
     <li>Select the aggregation type and period.</li>
-    <li>Data will be displayed as graphs and tables.</li>
+    <li>Data will be displayed in summary tables.</li>
   </ol>
 
   <h3>Aggregation Settings</h3>
@@ -343,7 +343,7 @@ Milk
   <h3>Recording URLs with Bookmarklets</h3>
   <p>By registering a bookmarklet in your browser's bookmark bar, you can save the web page you are viewing to gkill with a single click.</p>
   <ol>
-    <li>Copy the URL displayed in "Bookmarklet Address" in the settings screen.</li>
+    <li>Copy the URL displayed in "Bookmarklet" in the settings screen.</li>
     <li>Register it as a new bookmark in your browser's bookmark bar.</li>
     <li>When viewing a web page you want to save, click the registered bookmark.</li>
   </ol>
@@ -351,11 +351,11 @@ Milk
   <h3>GPS Recording and Map Display</h3>
   <p>If you are recording GPS logs, you can display your movement history on a map.</p>
   <ol>
-    <li>Set the "Google Maps API Key" in the settings screen.</li>
+    <li>Set the "Google Map API Key" in the settings screen.</li>
     <li>If GPS data has been recorded, the map display will be available in the Life Log View.</li>
   </ol>
   <div class="tip">
-    <strong>Tip:</strong> To obtain a Google Maps API key, enable the Maps JavaScript API in the Google Cloud Console.
+    <strong>Tip:</strong> To obtain a Google Map API key, enable the Maps JavaScript API in the Google Cloud Console.
   </div>
 
   <h2>12. Sharing Records</h2>
@@ -386,7 +386,7 @@ Milk
   </table>
 
   <div class="tip">
-    <strong>Tip:</strong> To use LAN or WAN URLs, you need to configure the server IP address in the application settings.
+    <strong>Tip:</strong> To use LAN or WAN URLs, you need to configure the server address in the server settings.
   </div>
 
   <h3>For Recipients of Shared Links</h3>

@@ -143,10 +143,13 @@ Besprechung
 2025-03-15 11:30</pre>
 
 <h3>12. Zeitprotokoll-Start: <code>/start</code></h3>
-<p>Folgende Zeilen: Titel, Startzeit.</p>
+<p>N&auml;chste Zeile: Titel. Die Startzeit ist die aktuelle Zeit (oder die zuvor mit dem <code>?</code>-Pr&auml;fix f&uuml;r die zugeordnete Zeit angegebene Zeit).</p>
 <pre>/start
-Arbeitsbeginn
-2025-03-15 09:00</pre>
+Arbeitsbeginn</pre>
+<p>Um zu einer bestimmten Zeit zu starten, geben Sie die zugeordnete Zeit vorher an.</p>
+<pre>?2025-03-15 09:00
+/start
+Arbeitsbeginn</pre>
 
 <h3>13. Zeitprotokoll-Ende: <code>/end</code></h3>
 <p>Naechste Zeile: Titel. Findet ein passendes gestartetes Zeitprotokoll und beendet es.</p>

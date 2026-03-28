@@ -32,7 +32,7 @@
   </style>
 </head>
 <body>
-  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>记录详情</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>记录</span></nav>
   <h1>记录界面</h1>
   <p>显示单条记录详细信息的界面。可以查看各种记录类型的详细信息。</p>
 
@@ -46,6 +46,7 @@
       <td><span class="icon">&#9881;</span> 设置</td>
       <td>打开应用程序设置界面。</td>
     </tr>
+    <tr><td>&#10068; 帮助</td><td>显示当前画面的帮助。</td></tr>
   </table>
 
   <h2>显示的记录类型</h2>
@@ -67,8 +68,8 @@
       <td>显示任务的状态、截止日期和看板信息。</td>
     </tr>
     <tr>
-      <td>心情值</td>
-      <td>显示0到10的心情值。</td>
+      <td>心情</td>
+      <td>显示0到10的心情数据。</td>
     </tr>
     <tr>
       <td>支出</td>
@@ -83,8 +84,24 @@
       <td>显示上传文件的预览。</td>
     </tr>
     <tr>
+      <td>数值记录</td>
+      <td>显示标题和数值数据。</td>
+    </tr>
+    <tr>
+      <td>转发</td>
+      <td>显示转发到其他日期/时间的记录。</td>
+    </tr>
+    <tr>
+      <td>GPS日志</td>
+      <td>显示GPS位置日志数据。</td>
+    </tr>
+    <tr>
       <td>Git提交日志</td>
-      <td>显示Git仓库的提交信息。</td>
+      <td>显示Git存储库的提交信息。</td>
+    </tr>
+    <tr>
+      <td>通知</td>
+      <td>显示通知的内容和相关设置。</td>
     </tr>
   </table>
 
@@ -93,11 +110,21 @@
   <ul>
     <li><strong>标签：</strong>记录上附加的标签列表</li>
     <li><strong>相关时间：</strong>与记录相关的日期时间信息</li>
-    <li><strong>仓库名称：</strong>数据保存所在仓库的名称</li>
+    <li><strong>存储库名称：</strong>数据保存所在存储库的名称</li>
   </ul>
 
   <h2>上下文菜单</h2>
-  <p>右键点击（或长按）记录，会显示上下文菜单，可以执行编辑、删除、分享等操作。</p>
+  <p>右键点击（或长按）记录，会显示上下文菜单，可以执行以下操作：</p>
+  <ul>
+    <li>编辑</li>
+    <li>删除</li>
+    <li>分享</li>
+    <li>添加/编辑标签</li>
+    <li>添加/编辑文本</li>
+    <li>添加/编辑通知</li>
+    <li>历史记录</li>
+    <li>复制ID</li>
+  </ul>
 
   <div class="tip">
     <strong>提示：</strong>可以从记录详情界面直接添加或编辑标签。

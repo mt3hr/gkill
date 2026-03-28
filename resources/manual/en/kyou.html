@@ -32,7 +32,7 @@
   </style>
 </head>
 <body>
-  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Record Details</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Records</span></nav>
   <h1>Record View</h1>
   <p>
     The Record view displays individual record details. A record is the core entity in gkill, representing any recorded life event. Each record has a type, timestamp, tags, and type-specific data.
@@ -42,6 +42,7 @@
   <table>
     <tr><th>Icon</th><th>Action</th></tr>
     <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+    <tr><td>&#10068; Help</td><td>Display help for the current screen.</td></tr>
   </table>
 
   <h2>Record Types</h2>
@@ -54,9 +55,11 @@
     <tr><td>Expense</td><td>Financial records with amount and category.</td></tr>
     <tr><td>Timestamp</td><td>Time tracking sessions with start and optional end time.</td></tr>
     <tr><td>File</td><td>Uploaded files and images with thumbnails.</td></tr>
-    <tr><td>Git Commit</td><td>Git commit logs pulled from monitored repositories.</td></tr>
-    <tr><td>Numeric</td><td>Arbitrary numeric counter values.</td></tr>
-    <tr><td>Repost</td><td>A reference (repost) of another record at a different time.</td></tr>
+    <tr><td>Numeric</td><td>Displays the title and numeric data.</td></tr>
+    <tr><td>Repost</td><td>Displays records reposted to a different date/time.</td></tr>
+    <tr><td>GPS Log</td><td>Displays GPS location log data.</td></tr>
+    <tr><td>Git Commit</td><td>Git commit logs pulled from monitored storages.</td></tr>
+    <tr><td>Notification</td><td>A record that sends a reminder notification at a specified date and time.</td></tr>
   </table>
 
   <h2>Record Details</h2>
@@ -65,19 +68,21 @@
     <li><strong>Timestamp:</strong> When the event occurred.</li>
     <li><strong>Tags:</strong> Associated tags displayed as chips. Tags help with filtering and organization.</li>
     <li><strong>Related Timestamps:</strong> Any linked time tracking sessions (Time Log) associated with this record.</li>
-    <li><strong>Repository Name:</strong> The data repository where this record is stored.</li>
+    <li><strong>Storage Name:</strong> The data storage where this record is stored.</li>
     <li><strong>Type-specific content:</strong> The main data of the record (text, URL, amount, etc.).</li>
   </ul>
 
   <h2>Context Menu</h2>
-  <p>Right-click (or long-press on mobile) on a record to access the context menu with options such as:</p>
+  <p>Right-click (or long-press on mobile) on a record to access the context menu with the following operations:</p>
   <ul>
     <li><strong>Edit:</strong> Open the record for editing.</li>
-    <li><strong>Copy:</strong> Copy record information to the clipboard.</li>
-    <li><strong>Add Tag:</strong> Attach a new tag to the record.</li>
-    <li><strong>Repost:</strong> Create a repost of this record at the current time.</li>
     <li><strong>Delete:</strong> Remove the record (moves to trash).</li>
-    <li><strong>Open in new tab:</strong> View the record detail in a separate browser tab.</li>
+    <li><strong>Share:</strong> Share the record via a shareable link.</li>
+    <li><strong>Add Tag / Edit Tag:</strong> Attach a new tag or edit existing tags on the record.</li>
+    <li><strong>Add Text / Edit Text:</strong> Attach a supplementary text note or edit existing text on the record.</li>
+    <li><strong>Add Notification / Edit Notification:</strong> Set a reminder notification for this record, or edit an existing notification.</li>
+    <li><strong>History:</strong> View the edit history of the record.</li>
+    <li><strong>Copy ID:</strong> Copy the record ID to the clipboard.</li>
   </ul>
 
   <div class="tip">
