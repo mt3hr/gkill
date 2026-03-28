@@ -32,8 +32,8 @@
   </style>
 </head>
 <body>
-  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Détails de l'enregistrement</span></nav>
-  <h1>Vue d'enregistrement</h1>
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Enregistrements</span></nav>
+  <h1>Enregistrements</h1>
   <p>Ecran affichant les details d'un enregistrement individuel. Vous pouvez consulter les informations detaillees de differents types d'enregistrements.</p>
 
   <h2>Boutons de la barre d'outils</h2>
@@ -46,6 +46,7 @@
       <td><span class="icon">&#9881;</span> Parametres</td>
       <td>Ouvre l'ecran des parametres de l'application.</td>
     </tr>
+    <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
   </table>
 
   <h2>Types d'enregistrements affiches</h2>
@@ -83,8 +84,24 @@
       <td>Affiche un apercu du fichier telecharge.</td>
     </tr>
     <tr>
+      <td>Enregistrements numériques</td>
+      <td>Affiche le titre et les données numériques.</td>
+    </tr>
+    <tr>
+      <td>Repost</td>
+      <td>Affiche les enregistrements republiés à une autre date/heure.</td>
+    </tr>
+    <tr>
+      <td>Journal GPS</td>
+      <td>Affiche les données de journal de localisation GPS.</td>
+    </tr>
+    <tr>
       <td>Journal de commit Git</td>
-      <td>Affiche les informations de commits du depot Git.</td>
+      <td>Affiche les informations de commits du dépôt Git.</td>
+    </tr>
+    <tr>
+      <td>Notification</td>
+      <td>Affiche les notifications et rappels.</td>
     </tr>
   </table>
 
@@ -93,11 +110,21 @@
   <ul>
     <li><strong>Etiquettes :</strong> Liste des etiquettes attribuees a l'enregistrement</li>
     <li><strong>Temps associe :</strong> Informations de date et heure liees a l'enregistrement</li>
-    <li><strong>Nom du depot :</strong> Nom du depot ou les donnees sont stockees</li>
+    <li><strong>Dépôt :</strong> Nom du dépôt ou les donnees sont stockees</li>
   </ul>
 
   <h2>Menu contextuel</h2>
-  <p>Un clic droit (ou un appui long) sur un enregistrement affiche un menu contextuel permettant de modifier, supprimer, partager et effectuer d'autres operations.</p>
+  <p>Un clic droit (ou un appui long) sur un enregistrement affiche un menu contextuel avec les options suivantes :</p>
+  <ul>
+    <li>Modifier</li>
+    <li>Supprimer</li>
+    <li>Partager</li>
+    <li>Ajouter/Modifier une étiquette</li>
+    <li>Ajouter/Modifier un texte</li>
+    <li>Ajouter/Modifier une notification</li>
+    <li>Historique</li>
+    <li>Copier l'ID</li>
+  </ul>
 
   <div class="tip">
     <strong>Astuce :</strong> Vous pouvez ajouter ou modifier des etiquettes directement depuis l'ecran de details de l'enregistrement.

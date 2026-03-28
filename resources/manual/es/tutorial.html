@@ -59,8 +59,8 @@
     <tr><td>Bloc de notas de marcas</td><td>Gestion simultanea de memos y marcas de tiempo activas</td></tr>
     <tr><td>Vista de registro de vida</td><td>Explorar, buscar y ver registros</td></tr>
     <tr><td>Tareas</td><td>Gestion de tareas en tablero Kanban</td></tr>
-    <tr><td>En ejecucion</td><td>Gestion de sesiones de marcas de tiempo activas</td></tr>
-    <tr><td>Registro</td><td>Vista detallada de un registro individual</td></tr>
+    <tr><td>En curso</td><td>Gestion de sesiones de marcas de tiempo activas</td></tr>
+    <tr><td>Registros</td><td>Vista detallada de un registro individual</td></tr>
   </table>
 
   <h2>Guia de botones de la barra de herramientas</h2>
@@ -84,7 +84,7 @@
     <tr><td>Bloc de notas con marca de tiempo</td><td>Notas + gestion de marcas de tiempo</td><td>Cuando quieras registrar notas y tiempo simultaneamente</td></tr>
     <tr><td>Vista de registro de vida</td><td>Buscar y explorar registros</td><td>Cuando quieras revisar o buscar registros pasados</td></tr>
     <tr><td>Tareas</td><td>Gestion de tareas con tablero Kanban</td><td>Cuando quieras organizar y gestionar cosas por hacer</td></tr>
-    <tr><td>En progreso</td><td>Gestion de marcas de tiempo activas</td><td>Cuando quieras verificar o finalizar marcas de tiempo activas</td></tr>
+    <tr><td>En curso</td><td>Gestion de marcas de tiempo activas</td><td>Cuando quieras verificar o finalizar marcas de tiempo activas</td></tr>
   </table>
   <div class="tip">
     <strong>Consejo para principiantes:</strong> Comience agregando registros en "Saihate" y revistandolos en "Vista de registro de vida."
@@ -99,7 +99,7 @@
   <ol>
     <li>Ingrese un ID de usuario (este sera su nombre de cuenta).</li>
     <li>Ingrese una contrasena y vuelva a ingresarla para confirmar.</li>
-    <li>Establezca una contrasena de administrador (utilizada para la administracion del servidor).</li>
+    <li>Ingrese una contrasena de administrador y confirmela (establece la contrasena de la cuenta <code>admin</code> creada automaticamente, utilizada para la administracion del servidor).</li>
     <li>Pulse el boton "Registrar" para crear la cuenta.</li>
     <li>Sera redirigido a la pantalla de inicio de sesion; inicie sesion con la cuenta que acaba de crear.</li>
   </ol>
@@ -124,7 +124,7 @@
     <tr><td>Tarea</td><td>Gestionar cosas por hacer</td><td>"Escribir el informe"</td></tr>
     <tr><td>Gasto</td><td>Registrar gastos</td><td>"Tienda: manzana 150 yenes"</td></tr>
     <tr><td>Estado de animo</td><td>Registrar el animo con un valor de 0 a 10</td><td>"7"</td></tr>
-    <tr><td>Valor numerico</td><td>Registrar datos numericos</td><td>"Peso: 65.5"</td></tr>
+    <tr><td>Registros num&eacute;ricos</td><td>Registrar datos numericos</td><td>"Peso: 65.5"</td></tr>
     <tr><td>Marcador</td><td>Guardar URLs</td><td>"https://example.com"</td></tr>
     <tr><td>Archivo</td><td>Subir imagenes y archivos</td><td>Fotos, PDF, etc.</td></tr>
   </table>
@@ -304,7 +304,7 @@ leche
       <td>Iniciar y finalizar seguimiento de tiempo mediante texto con sintaxis del bloc de notas. Se puede combinar con otros registros en lote.</td>
     </tr>
   </table>
-  <p>Con la funcion de registro de tiempo, puede registrar con precision el tiempo de trabajo y actividades.</p>
+  <p>Con la funcion de registro de tiempo, puede registrar con precision el tiempo de trabajo y actividades. "Bloc de marcas" es una pantalla dedicada para entrada de notas con gestion simultanea de sesiones activas, mientras que "Bloc de notas" permite iniciar/finalizar seguimiento de tiempo mediante prefijos junto con otros registros en lote.</p>
 
   <h3>Operacion basica de registros de tiempo</h3>
   <ol>
@@ -329,7 +329,7 @@ leche
   <ol>
     <li>Haga clic en el icono de agregación en la barra de herramientas de la vista de registro de vida para mostrar la vista de agregación.</li>
     <li>Seleccione el tipo de agregacion y el periodo.</li>
-    <li>Los datos se mostraran en graficos y tablas.</li>
+    <li>Los datos se mostraran en tablas de resumen.</li>
   </ol>
 
   <h3>Configuracion de la agregacion</h3>
@@ -343,7 +343,7 @@ leche
   <h3>Registrar URLs con bookmarklet</h3>
   <p>Si registra un bookmarklet en la barra de marcadores de su navegador, puede guardar la pagina web que esta viendo en gkill con un solo clic.</p>
   <ol>
-    <li>Copie la URL que se muestra en "Direccion del bookmarklet" en la pantalla de configuracion.</li>
+    <li>Copie la URL que se muestra en "Bookmarklet" en la pantalla de configuracion.</li>
     <li>Registrela como un nuevo marcador en la barra de marcadores de su navegador.</li>
     <li>Cuando tenga abierta la pagina web que desea guardar, haga clic en el marcador registrado.</li>
   </ol>
@@ -351,11 +351,11 @@ leche
   <h3>Registro GPS y visualizacion en mapa</h3>
   <p>Si esta registrando logs GPS, puede mostrar el historial de movimientos en un mapa.</p>
   <ol>
-    <li>Configure la "Clave API de Google Maps" en la pantalla de configuracion.</li>
+    <li>Configure la "Clave API de Google Map" en la pantalla de configuracion.</li>
     <li>Si se han registrado datos GPS, la visualizacion en mapa estara disponible en la vista de registros de vida.</li>
   </ol>
   <div class="tip">
-    <strong>Consejo:</strong> Para obtener la clave API de Google Maps, habilite la API Maps JavaScript en Google Cloud Console.
+    <strong>Consejo:</strong> Para obtener la clave API de Google Map, habilite la API Maps JavaScript en Google Cloud Console.
   </div>
 
   <h2>12. Compartir registros</h2>
@@ -386,7 +386,7 @@ leche
   </table>
 
   <div class="tip">
-    <strong>Consejo:</strong> Para usar URLs LAN o WAN, necesita configurar la direccion IP del servidor en la configuracion de la aplicacion.
+    <strong>Consejo:</strong> Para usar URLs LAN o WAN, necesita configurar la direccion IP del servidor en la configuracion del servidor.
   </div>
 
   <h3>Para los destinatarios de enlaces compartidos</h3>
