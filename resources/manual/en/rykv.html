@@ -47,6 +47,7 @@
     <tr><td><span class="icon">&#128197;</span> Calendar</td><td>Show or hide the calendar view for date-based navigation.</td></tr>
     <tr><td><span class="icon">&#128506;</span> Map</td><td>Show or hide the GPS map view to see records plotted on a geographic map.</td></tr>
     <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+    <tr><td>&#10068; Help</td><td>Display help for the current screen.</td></tr>
   </table>
 
   <h2>Thumbnail Grid</h2>
@@ -64,7 +65,7 @@
     <li><strong>Date range:</strong> Set start and end dates to narrow the time period.</li>
     <li><strong>Record type:</strong> Show only specific types (memos, bookmarks, files, etc.).</li>
     <li><strong>Tags:</strong> Filter by one or more tags.</li>
-    <li><strong>Repository:</strong> Filter by data repository.</li>
+    <li><strong>Storage:</strong> Filter by data storage.</li>
     <li><strong>Text search:</strong> Search within record content.</li>
   </ul>
 
@@ -84,11 +85,30 @@
   <p>If GPS data is available (from GPX logs or geotagged files), records are plotted on an interactive map. This requires a Google Maps API key configured in Settings.</p>
 
   <div class="tip">
-    <strong>Tip:</strong> The Life Log View display period can be configured in Settings. Set a shorter period for faster loading, or a longer period for broader browsing.
+    <strong>Tip:</strong> The "Life Log View Display Days" can be configured in Settings. Set a shorter period for faster loading, or a longer period for broader browsing.
   </div>
 
   <div class="tip">
     <strong>Tip:</strong> Adjust the number of image columns in Settings to match your screen size and browsing style. Fewer columns show more detail; more columns provide a broader overview.
+  </div>
+
+  <h2>FAB "+" Quick-Add Menu</h2>
+  <p>The floating action button (FAB) with a "+" icon at the bottom-right opens a quick-add menu for creating new records:</p>
+  <table>
+    <tr><th>Record Type</th><th>Description</th></tr>
+    <tr><td>Memo</td><td>Create a new text memo. Opens the memo creation dialog.</td></tr>
+    <tr><td>Time + Memo</td><td>Start a new time tracking session and simultaneously attach a memo to it.</td></tr>
+    <tr><td>Numeric</td><td>Record a numeric counter value (e.g., counting events or items).</td></tr>
+    <tr><td>Bookmark</td><td>Save a URL with an optional title and notes.</td></tr>
+    <tr><td>Time Log</td><td>Start a new time tracking session.</td></tr>
+    <tr><td>Task</td><td>Create a new task and assign it to a board.</td></tr>
+    <tr><td>Expense</td><td>Log a financial expense with amount and description.</td></tr>
+    <tr><td>Mood</td><td>Record your current mood on a scale of 0 to 10.</td></tr>
+    <tr><td>Upload</td><td>Upload a file or image from your device.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> <strong>Long-press</strong> the "+" FAB button to directly open the Memo Pad for fast batch entry, skipping the quick-add menu entirely.
   </div>
 
   <div class="tip">
@@ -97,7 +117,7 @@
 
   <h2>Related Documents</h2>
   <ul>
-    <li><a href="kyou.html">Record Details</a></li>
+    <li><a href="kyou.html">Records</a></li>
     <li><a href="dnote.html">Aggregation View</a></li>
     <li><a href="ryuu.html">Related Info</a></li>
   </ul>

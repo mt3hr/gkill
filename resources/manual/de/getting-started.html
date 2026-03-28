@@ -89,13 +89,13 @@
     <li>Beim ersten Start von gkill wird der Kontoregistrierungsbildschirm automatisch angezeigt.</li>
     <li>Geben Sie eine Benutzer-ID ein (dies wird Ihr Kontoname).</li>
     <li>Geben Sie ein Passwort ein und geben Sie es zur Bestatigung erneut ein.</li>
-    <li>Legen Sie ein Administratorpasswort fest (wird fur die Serververwaltung verwendet).</li>
+    <li>Geben Sie ein Admin-Passwort ein und bestatigen Sie es (dies setzt das Passwort des automatisch erstellten <code>admin</code>-Kontos, das fur die Serververwaltung verwendet wird).</li>
     <li>Drucken Sie die Schaltflache "Registrieren", um das Konto zu erstellen.</li>
     <li>Sie werden zum Anmeldebildschirm weitergeleitet. Melden Sie sich mit dem gerade erstellten Konto an.</li>
   </ol>
 
   <div class="tip">
-    <strong>Hinweis:</strong> Das <code>admin</code>-Konto wird beim ersten Serverstart automatisch erstellt. Das Konto, das Sie hier erstellen, ist ein normales Benutzerkonto.
+    <strong>Hinweis:</strong> Das <code>admin</code>-Konto wird beim ersten Serverstart automatisch erstellt. Dieser Bildschirm setzt das <code>admin</code>-Passwort und erstellt gleichzeitig Ihr normales Benutzerkonto.
   </div>
 
   <p>Nach der Anmeldung wird der Standardbildschirm angezeigt (standardmassig die Lebensprotokoll-Ansicht). Konfigurieren Sie im Einstellungsbildschirm grundlegende Einstellungen wie Sprache und dunkles Design.</p>
@@ -129,7 +129,7 @@
     </tr>
     <tr>
       <td>Stempel-Notizblock</td>
-      <td>Notizen mit Zeitstempeln eingeben</td>
+      <td>Hybridbildschirm f&uuml;r Notizeingabe und Zeiterfassungsverwaltung</td>
       <td><a href="mkfl.html">Hilfe zum Stempel-Notizblock</a></td>
     </tr>
     <tr>
@@ -143,14 +143,14 @@
       <td><a href="rykv.html">Hilfe zur Lebenslog-Ansicht</a></td>
     </tr>
     <tr>
-      <td>In Bearbeitung</td>
+      <td>Laufend</td>
       <td>Laufende Zeiterfassungssitzungen verwalten</td>
-      <td><a href="plaing.html">Hilfe zu In Bearbeitung</a></td>
+      <td><a href="plaing.html">Hilfe zu Laufend</a></td>
     </tr>
     <tr>
-      <td>Aufzeichnungsdetail</td>
+      <td>Datens&auml;tze</td>
       <td>Detailansicht einzelner Aufzeichnungen</td>
-      <td><a href="kyou.html">Hilfe zum Aufzeichnungsdetail</a></td>
+      <td><a href="kyou.html">Hilfe zu Datens&auml;tze</a></td>
     </tr>
     <tr>
       <td>Einstellungen</td>
@@ -187,26 +187,17 @@
   <h2>Ihre erste Aufzeichnung in 60 Sekunden</h2>
   <ol>
     <li>Melden Sie sich an.</li>
-    <li>Halten Sie die "+"-Taste unten rechts auf dem Bildschirm lange gedruckt.</li>
-    <li>Wahlen Sie "Notizblock".</li>
-    <li>Geben Sie eine Zeile Text ein und drucken Sie die Eingabetaste.</li>
-    <li>Offnen Sie "Lebenslog-Ansicht" uber das Navigationsmenu, um Ihre Aufzeichnung zu sehen.</li>
-  </ol>
-  <div class="tip">
-    <strong>Tipp:</strong> Das ist alles, was fur Ihre erste Aufzeichnung notig ist! Sobald Sie die Notizblock-Syntax erlernt haben, konnen Sie Aufgaben, Stimmungswerte und mehr auf die gleiche Weise aufzeichnen.
-  </div>
-
-  <h2>Erstellen Sie Ihre erste Aufzeichnung</h2>
-  <ol>
-    <li>Nach der Anmeldung wird der in den Einstellungen festgelegte Standardbildschirm angezeigt.</li>
-    <li>Tippen Sie auf die "+"-Schaltflache unten rechts auf dem Bildschirm.</li>
+    <li>Tippen Sie auf die "+"-Schaltfl&auml;che unten rechts auf dem Bildschirm.</li>
     <li>Wahlen Sie "Notizblock".</li>
     <li>Geben Sie im Textbereich ein, was Sie aufzeichnen mochten (z. B.: <code>Heute gab es Curry zum Mittagessen</code>).</li>
     <li>Drucken Sie die Schaltflache "Speichern", um die Aufzeichnung zu erstellen.</li>
+    <li>Offnen Sie "Lebenslog-Ansicht" uber das Navigationsmenu, um Ihre Aufzeichnung zu sehen.</li>
   </ol>
-
   <div class="tip">
-    <strong>Tipp:</strong> Durch langes Drucken der "+"-Schaltflache wird der Notizblock direkt geoffnet.
+    <strong>Tipp:</strong> Das ist alles, was fur Ihre erste Aufzeichnung notig ist! Sobald Sie die Notizblock-Syntax erlernt haben, konnen Sie Aufgaben, Stimmungswerte und mehr auf die gleiche Weise aufzeichnen. Weitere Details finden Sie im <a href="tutorial.html">Tutorial</a>.
+  </div>
+  <div class="tip">
+    <strong>Tipp:</strong> Durch Tippen auf die "+"-Schaltflache offnet sich ein Menu; langes Drucken offnet direkt den Notizblock.
   </div>
 
   <h2>Glossar</h2>
@@ -232,10 +223,6 @@
       <td>Bildschirm zum sicheren Hinzufügen von Aufzeichnungen auch vom Sperrbildschirm aus. Dient als Hub zum Hinzufügen von Aufzeichnungen</td>
     </tr>
     <tr>
-      <td>Notizblock-Syntax</td>
-      <td>Bezeichnet das textbasierte Format zur Eingabe von Aufzeichnungen</td>
-    </tr>
-    <tr>
       <td>Lebenslog-Ansicht</td>
       <td>Bildschirm zum Auflisten und Suchen von Aufzeichnungen</td>
     </tr>
@@ -248,8 +235,8 @@
       <td>Funktion, die automatisch nach verwandten Informationen sucht und diese anzeigt</td>
     </tr>
     <tr>
-      <td>Repository</td>
-      <td>Speicherort fur Aufzeichnungen. Sie konnen mehrere Repositories fur verschiedene Zwecke verwenden</td>
+      <td>Ablage</td>
+      <td>Speicherort fur Aufzeichnungen. Sie konnen mehrere Ablagen fur verschiedene Zwecke verwenden</td>
     </tr>
     <tr>
       <td>Profil</td>

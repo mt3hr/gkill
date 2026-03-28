@@ -46,6 +46,7 @@
       <td><span class="icon">&#9881;</span> 설정</td>
       <td>애플리케이션 설정 화면을 엽니다.</td>
     </tr>
+    <tr><td>&#10068; 도움말</td><td>현재 화면의 도움말을 표시합니다.</td></tr>
   </table>
 
   <h2>화면 레이아웃</h2>
@@ -68,7 +69,35 @@
     <strong>팁:</strong> 메모장 텍스트를 저장하면 활성 세션 목록이 자동으로 새로고침되어 새로 생성된 세션이 바로 반영됩니다.
   </div>
 
-  <h2>관련 문서</h2><p><a href="kftl-syntax.html">메모장 구문 참조 →</a></p>
+  <h2>FAB(플로팅 액션 버튼) "+"</h2>
+  <p>"+" 버튼을 클릭하면 메뉴가 펼쳐지며, 다음 유형의 기록을 빠르게 생성할 수 있습니다:</p>
+  <table>
+    <tr><th>유형</th><th>설명</th></tr>
+    <tr><td>메모</td><td>텍스트 메모를 작성합니다.</td></tr>
+    <tr><td>시간+메모</td><td>타임스탬프가 포함된 메모를 작성합니다.</td></tr>
+    <tr><td>수치 기록</td><td>수치 데이터를 기록합니다.</td></tr>
+    <tr><td>북마크</td><td>URL 북마크를 저장합니다.</td></tr>
+    <tr><td>타임 트래커</td><td>시간 추적 세션을 시작합니다.</td></tr>
+    <tr><td>작업</td><td>새 작업을 생성합니다.</td></tr>
+    <tr><td>지출</td><td>지출 정보를 기록합니다.</td></tr>
+    <tr><td>기분</td><td>기분값(0-10)을 기록합니다.</td></tr>
+    <tr><td>업로드</td><td>파일을 업로드합니다.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>팁:</strong> "+" 버튼을 길게 누르면 메모장 입력 화면이 직접 열려 빠른 일괄 입력이 가능합니다.
+  </div>
+
+  <div class="tip">
+    <strong>단축키:</strong> 이 화면에서 Enter 키를 누르면 메모장 대화상자가 열립니다. 빠르게 기록을 추가할 때 편리합니다.
+  </div>
+
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">메모장 구문 참조</a></li>
+    <li><a href="kftl.html">메모장</a></li>
+    <li><a href="plaing.html">진행 중</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>
