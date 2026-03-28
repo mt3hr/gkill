@@ -32,7 +32,7 @@
   </style>
 </head>
 <body>
-  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>기록 상세</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>기록</span></nav>
   <h1>기록 화면</h1>
   <p>개별 기록의 상세 정보를 표시하는 화면입니다. 다양한 기록 유형의 상세 정보를 확인할 수 있습니다.</p>
 
@@ -46,6 +46,7 @@
       <td><span class="icon">&#9881;</span> 설정</td>
       <td>애플리케이션 설정 화면을 엽니다.</td>
     </tr>
+    <tr><td>&#10068; 도움말</td><td>현재 화면의 도움말을 표시합니다.</td></tr>
   </table>
 
   <h2>표시되는 기록 유형</h2>
@@ -67,8 +68,8 @@
       <td>작업의 상태, 마감일, 보드 정보를 표시합니다.</td>
     </tr>
     <tr>
-      <td>기분값</td>
-      <td>0~10의 기분값을 표시합니다.</td>
+      <td>기분</td>
+      <td>0~10의 기분을 표시합니다.</td>
     </tr>
     <tr>
       <td>지출</td>
@@ -83,8 +84,24 @@
       <td>업로드된 파일의 미리보기를 표시합니다.</td>
     </tr>
     <tr>
+      <td>수치 기록</td>
+      <td>제목과 수치 데이터를 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>리포스트</td>
+      <td>다른 날짜/시간에 다시 게시된 기록을 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>GPS 로그</td>
+      <td>GPS 위치 로그 데이터를 표시합니다.</td>
+    </tr>
+    <tr>
       <td>Git 커밋 로그</td>
       <td>Git 저장소의 커밋 정보를 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>알림</td>
+      <td>알림 정보를 표시합니다.</td>
     </tr>
   </table>
 
@@ -93,11 +110,21 @@
   <ul>
     <li><strong>태그:</strong> 기록에 부여된 태그 목록</li>
     <li><strong>관련 시간:</strong> 기록과 관련된 날짜/시간 정보</li>
-    <li><strong>저장소 이름:</strong> 데이터가 저장된 저장소의 이름</li>
+    <li><strong>저장소:</strong> 데이터가 저장된 저장소의 이름</li>
   </ul>
 
   <h2>컨텍스트 메뉴</h2>
-  <p>기록을 우클릭(또는 길게 누르기)하면 컨텍스트 메뉴가 표시되어 편집, 삭제, 공유 등의 작업을 수행할 수 있습니다.</p>
+  <p>기록을 우클릭(또는 길게 누르기)하면 컨텍스트 메뉴가 표시됩니다. 다음 항목을 사용할 수 있습니다:</p>
+  <ul>
+    <li>편집</li>
+    <li>삭제</li>
+    <li>공유</li>
+    <li>태그 추가/편집</li>
+    <li>텍스트 추가/편집</li>
+    <li>알림 추가/편집</li>
+    <li>이력</li>
+    <li>ID 복사</li>
+  </ul>
 
   <div class="tip">
     <strong>팁:</strong> 기록 상세 화면에서 직접 태그를 추가하거나 편집할 수 있습니다.

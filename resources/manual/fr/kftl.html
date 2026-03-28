@@ -46,6 +46,7 @@
       <td><span class="icon">&#9881;</span> Parametres</td>
       <td>Ouvre l'ecran des parametres de l'application.</td>
     </tr>
+    <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
   </table>
 
   <h2>Elements de l'ecran</h2>
@@ -75,7 +76,35 @@
     <strong>Astuce :</strong> En utilisant le bouton de modele, vous pouvez inserer rapidement des formats de saisie couramment utilises sans avoir a memoriser la syntaxe du bloc-notes.
   </div>
 
-  <h2>Documents associés</h2><p><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes →</a></p>
+  <h2>FAB (Bouton d'action flottant) "+"</h2>
+  <p>En cliquant sur le bouton "+", un menu se deploie pour creer rapidement des enregistrements :</p>
+  <table>
+    <tr><th>Type</th><th>Description</th></tr>
+    <tr><td>Mémo</td><td>Cree une note textuelle.</td></tr>
+    <tr><td>Bloc-notes d'entrées de temps</td><td>Cree une note avec horodatage.</td></tr>
+    <tr><td>Enregistrements numériques</td><td>Enregistre des donnees numeriques.</td></tr>
+    <tr><td>Signets</td><td>Enregistre un signet URL.</td></tr>
+    <tr><td>Suivi du temps</td><td>Demarre une session de suivi du temps.</td></tr>
+    <tr><td>Tâches</td><td>Cree une nouvelle tache.</td></tr>
+    <tr><td>Dépenses</td><td>Enregistre des informations de depense.</td></tr>
+    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
+    <tr><td>Téléverser</td><td>Televerse un fichier.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'ecran de saisie du bloc-notes, permettant une saisie par lots rapide.
+  </div>
+
+  <div class="tip">
+    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
+  </div>
+
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a></li>
+    <li><a href="mkfl.html">Bloc-notes d'horodatage</a></li>
+    <li><a href="rykv.html">Vue journal de vie</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

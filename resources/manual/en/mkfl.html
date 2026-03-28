@@ -42,6 +42,7 @@
   <table>
     <tr><th>Icon</th><th>Action</th></tr>
     <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+    <tr><td>&#10068; Help</td><td>Display help for the current screen.</td></tr>
   </table>
 
   <h2>Layout</h2>
@@ -62,6 +63,29 @@
   <h2>Auto-Refresh</h2>
   <p>After each save, the active sessions list refreshes automatically. This ensures the bottom half always reflects the latest state, including any sessions started or ended by the Memo Pad text you just submitted.</p>
 
+  <h2>FAB "+" Quick-Add Menu</h2>
+  <p>The floating action button (FAB) with a "+" icon at the bottom-right opens a quick-add menu for creating new records:</p>
+  <table>
+    <tr><th>Record Type</th><th>Description</th></tr>
+    <tr><td>Memo</td><td>Create a new text memo. Opens the memo creation dialog.</td></tr>
+    <tr><td>Time + Memo</td><td>Start a new time tracking session and simultaneously attach a memo to it.</td></tr>
+    <tr><td>Numeric</td><td>Record a numeric counter value (e.g., counting events or items).</td></tr>
+    <tr><td>Bookmark</td><td>Save a URL with an optional title and notes.</td></tr>
+    <tr><td>Time Log</td><td>Start a new time tracking session.</td></tr>
+    <tr><td>Task</td><td>Create a new task and assign it to a board.</td></tr>
+    <tr><td>Expense</td><td>Log a financial expense with amount and description.</td></tr>
+    <tr><td>Mood</td><td>Record your current mood on a scale of 0 to 10.</td></tr>
+    <tr><td>Upload</td><td>Upload a file or image from your device.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> <strong>Long-press</strong> the "+" FAB button to directly open the Memo Pad for fast batch entry, skipping the quick-add menu entirely.
+  </div>
+
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+  </div>
+
   <div class="tip">
     <strong>Tip:</strong> Time Tracking + Memo is ideal as your daily driver screen. Set it as your default page in Settings so it opens automatically after login. You can quickly jot down memos and manage time tracking from a single view.
   </div>
@@ -70,7 +94,12 @@
     <strong>Tip:</strong> Use Memo Pad commands like <code>start Meeting</code> and <code>end Meeting</code> in the top area to control time sessions. They will immediately appear (or disappear) in the active sessions list below after saving.
   </div>
 
-  <h2>Related Documents</h2><p><a href="kftl-syntax.html">Memo Pad Syntax Reference →</a></p>
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="kftl-syntax.html">Memo Pad Syntax Reference</a></li>
+    <li><a href="plaing.html">In Progress</a></li>
+    <li><a href="kftl.html">Memo Pad</a></li>
+  </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

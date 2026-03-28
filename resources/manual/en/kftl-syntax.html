@@ -142,10 +142,13 @@ Meeting
 2025-03-15 11:30</pre>
 
 <h3>12. Time Log Start: <code>/start</code></h3>
-<p>Next lines: title, start time.</p>
+<p>Next line: title. The start time is the current time (or the time specified by a preceding <code>?</code> related time prefix).</p>
 <pre>/start
-Start work
-2025-03-15 09:00</pre>
+Start work</pre>
+<p>To start at a specific time, specify the related time beforehand.</p>
+<pre>?2025-03-15 09:00
+/start
+Start work</pre>
 
 <h3>13. Time Log End: <code>/end</code></h3>
 <p>Next line: title. Finds a matching started time log and ends it.</p>

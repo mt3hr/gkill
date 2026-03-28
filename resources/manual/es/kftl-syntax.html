@@ -143,10 +143,13 @@ Reunion
 2025-03-15 11:30</pre>
 
 <h3>12. Inicio de registro de tiempo: <code>/start</code></h3>
-<p>Lineas siguientes: titulo, hora de inicio.</p>
+<p>Siguiente l&iacute;nea: t&iacute;tulo. La hora de inicio es la hora actual (o la hora especificada previamente con el prefijo <code>?</code> de hora relacionada).</p>
 <pre>/start
-Inicio de trabajo
-2025-03-15 09:00</pre>
+Inicio de trabajo</pre>
+<p>Para iniciar a una hora espec&iacute;fica, especifique la hora relacionada de antemano.</p>
+<pre>?2025-03-15 09:00
+/start
+Inicio de trabajo</pre>
 
 <h3>13. Fin de registro de tiempo: <code>/end</code></h3>
 <p>Siguiente linea: titulo. Busca un registro de tiempo iniciado coincidente y lo finaliza.</p>
