@@ -2,19 +2,19 @@
 
 ## 概要
 
-gkill プロジェクト全体で約1,887件のテストが存在する。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
+gkill プロジェクト全体で約1,904件のテストが存在する。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
 
 ## テスト統計
 
 | コンポーネント | テスト数 | フレームワーク |
 |--------------|---------|---------------|
-| Go バックエンド (`server/`) | ~531 | Go `testing` |
+| Go バックエンド (`server/`) | ~534 | Go `testing` |
 | フロントエンド ユニット (`client/`) | ~676 | Vitest |
 | フロントエンド E2E (`client/`) | 187 | Playwright |
-| MCP サーバ (`mcp/`) | ~367 | Vitest |
+| MCP サーバ (`mcp/`) | ~381 | Vitest |
 | Android (`android/`) | 12 | JUnit 4 |
 | Wear OS (`wear_os/`) | 114 | JUnit 4 + MockK |
-| **合計** | **~1,887** | |
+| **合計** | **~1,904** | |
 
 ## テスト実行コマンド
 
@@ -41,7 +41,7 @@ gkill プロジェクト全体で約1,887件のテストが存在する。Go バ
 | `client/classes/kftl/` | [client/classes/kftl/ABOUT_TEST.md](client/classes/kftl/ABOUT_TEST.md) | KFTL パーサ (TypeScript) |
 | `client/pages/` | [client/pages/ABOUT_TEST.md](client/pages/ABOUT_TEST.md) | E2E + Composable + Router |
 | `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) | i18n 完全性検証（7言語） |
-| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（~531テスト） |
+| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（~534テスト） |
 | `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) | API ハンドラ統合テスト |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) | KFTL パーサ (Go) |
 | `server/gkill/api/req_res/` | [server/gkill/api/req_res/ABOUT_TEST.md](server/gkill/api/req_res/ABOUT_TEST.md) | JSON 往復テスト |
@@ -49,6 +49,6 @@ gkill プロジェクト全体で約1,887件のテストが存在する。Go バ
 | `server/gkill/dao/reps/` | [server/gkill/dao/reps/ABOUT_TEST.md](server/gkill/dao/reps/ABOUT_TEST.md) | 11リポジトリ実装 |
 | `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) | DVNF ファイル管理 |
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) | CLI エントリポイント |
-| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（~367テスト） |
+| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（~381テスト） |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（114テスト） |

@@ -2,19 +2,19 @@
 
 ## 1. 概要
 
-gkill プロジェクトでは約1,887件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
+gkill プロジェクトでは約1,904件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
 
 ### テスト統計
 
 | コンポーネント | テスト数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | ~531 | 47 | Go `testing` |
+| Go バックエンド | ~534 | 47 | Go `testing` |
 | フロントエンド ユニット | ~676 | 49 | Vitest |
 | フロントエンド E2E | 187 | 29 | Playwright |
-| MCP サーバ | ~367 | 9 | Vitest |
+| MCP サーバ | ~381 | 10 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 114 | 9 | JUnit 4 + MockK |
-| **合計** | **~1,887** | **~145** | |
+| **合計** | **~1,904** | **~146** | |
 
 ### テスト仕様書
 
@@ -289,6 +289,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `pkce.test.mjs` | PKCE検証（S256/plain） |
 | `oauth-store.test.mjs` | OAuth ストア（トークン/コード/クライアント CRUD、TTL 有効期限、JSON ファイル永続化） |
 | `oauth-server.test.mjs` | OAuth サーバ（メタデータ、認可、トークン交換、PKCE、リフレッシュトークンローテーション、DCR、RFC 8707 resource パラメータ、redirect_uri 検証、E2E フロー） |
+| `access-log.test.mjs` | McpAccessLog（レベルフィルタリング、JSON形式検証、lazy open、close/reopen、noneレベルno-op、コンテキストフィールド） |
 
 ### 3.5 Android / Wear OS
 

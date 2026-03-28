@@ -186,6 +186,7 @@ type GkillServerAPI struct {
 func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	var err error
 	router := g.GkillDAOManager.GetRouter()
+	router.Use(g.accessLogMiddleware)
 	router.PathPrefix("/files/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -10883,6 +10884,10 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 			ErrorMessage: GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "ACCOUNT_DISABLED_MESSAGE"}),
 		}
 		return nil, gkillError, err
+	}
+
+	if info := accessLogInfoFromContext(ctx); info != nil {
+		info.UserID = account.UserID
 	}
 
 	return account, nil, nil
