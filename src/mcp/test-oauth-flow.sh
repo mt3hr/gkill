@@ -4,7 +4,7 @@
 # ChatGPT/Claude.ai接続デバッグ用
 #
 # 使い方:
-#   export MCP_HOST="https://example.com"
+#   export MCP_HOST="https://<your-mcp-host>"
 #   bash src/mcp/test-oauth-flow.sh
 #
 # サーバー側のstderrログと合わせて確認してください。
