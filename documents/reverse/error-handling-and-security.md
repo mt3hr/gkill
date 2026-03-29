@@ -28,7 +28,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **373件** のエラーコードが存在する（ERR000001〜ERR000374、ERR000243は欠番）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **375件** のエラーコードが存在する（ERR000001〜ERR000376、ERR000243は欠番）。
 
 #### 認証系（ERR000001〜ERR000017）
 
@@ -57,6 +57,8 @@ type GkillMessage struct {
 | `ERR000348` | GetAccountSessionsError | セッション取得失敗 |
 | `ERR000350` | InvalidSubmitKFTLTextRequestDataError | KFTLテキスト送信リクエストパースエラー |
 | `ERR000351` | SubmitKFTLTextError | KFTLテキスト処理エラー |
+| `ERR000375` | InvalidBrowseZipContentsRequestDataError | ZIP内容閲覧リクエストパースエラー |
+| `ERR000376` | BrowseZipContentsError | ZIP内容閲覧処理エラー（展開失敗、パストラバーサル検出、ZIPボム検出等） |
 
 ### 1.3 HTTPステータスコードの使い分け
 
@@ -229,7 +231,20 @@ sequenceDiagram
 - デスクトップアプリ（go-astilectron）は同一オリジンで動作
 - MCP HTTPサーバー（`src/mcp/gkill-read-server.mjs`）は別プロセスで動作するため、gkill_server APIへのアクセスはサーバー間通信（fetch）であり、ブラウザのCORS制約は適用されない。ただし、MCP HTTPサーバー自体がOAuth 2.1の認可エンドポイントを提供する際、Claude.ai/ChatGPT等のクライアントからのリダイレクトはブラウザ経由で行われるため、CORS設定は不要（リダイレクトベースのフローのため）
 
-### 2.8 初期セットアップのセキュリティ
+### 2.8 ZIPファイル展開のセキュリティ
+
+`/api/browse_zip_contents` エンドポイントは、IDFKyouのZIPファイルを展開してブラウジングする機能を提供する。以下のセキュリティ対策が実装されている。
+
+| 脅威 | 対策 |
+|------|------|
+| **パストラバーサル** | 展開先パスが `zip_cache/{sha1}/` 配下に収まることを検証。`../` 等を含むエントリは拒否し `ERR000376` を返す |
+| **ZIPボム** | 展開時のファイルサイズ・エントリ数に上限を設け、超過時は展開を中止し `ERR000376` を返す |
+| **Shift_JISファイル名** | ZIP内のファイル名がShift_JISでエンコードされている場合にUTF-8にデコードして正しく表示する |
+| **アトミック展開** | 一時ディレクトリに展開後、成功時のみ最終パスにリネームする。展開途中で失敗した場合は中間ファイルが残らない |
+| **認証** | `/zip_cache/` ファイルサーバーはセッション認証付きでアクセスを制御する |
+| **キャッシュパス** | ファイルのSHA1ハッシュをキーとして `$HOME/gkill/caches/zip_cache/{sha1}/` に展開。同一ファイルの再展開を回避する |
+
+### 2.9 初期セットアップのセキュリティ
 
 初回起動時：
 1. `admin` アカウントが自動作成される（`PasswordSha256 = nil`）

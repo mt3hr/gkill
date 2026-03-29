@@ -148,7 +148,7 @@ src/server/gkill/
 
 - **インメモリ SQLite3**: 全 DAO テストはインメモリデータベースを使用し、テスト間の隔離を保証
 - **4層リポジトリパターン**: interface → SQLite3 実装 → キャッシュ実装 → 一時実装の各層をそれぞれテスト
-- **統合テスト**: `gkill_server_api_test.go` が全11データ型の CRUD を HTTP ハンドラレベルで検証
+- **統合テスト**: `gkill_server_api_test.go` が全11データ型の CRUD を HTTP ハンドラレベルで検証（ZIP内容閲覧含む）
 - **テストヘルパー**: `reps/testhelper_test.go` が共通のテストデータ生成・DB セットアップを提供
 
 ### 3.2 フロントエンド ユニット（`src/client/__tests__/unit/`）

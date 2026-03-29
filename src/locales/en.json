@@ -763,5 +763,8 @@
     "NETWORK_ERROR_MESSAGE": "A network error occurred. Please check your connection.",
     "NO_RESULTS_MESSAGE": "No items",
     "REQUIRED_FIELD_MESSAGE": "This field is required",
-    "UNSAVED_CHANGES_WARNING_MESSAGE": "You have unsaved changes. Leave page?"
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "You have unsaved changes. Leave page?",
+    "BROWSE_ZIP_CONTENTS_TITLE": "Browse ZIP contents",
+    "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "Failed to browse ZIP contents",
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP contents retrieved"
 }

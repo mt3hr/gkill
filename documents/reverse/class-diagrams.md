@@ -139,6 +139,7 @@ classDiagram
         +string ID
         +string TargetRepName
         +string TargetFile
+        +bool IsZip
         +time.Time RelatedTime
         ..共通メタフィールド省略..
     }
@@ -579,6 +580,7 @@ classDiagram
     class IDFKyou {
         +string target_rep_name
         +string target_file
+        +boolean is_zip
     }
 
     class GkillAPI {
@@ -622,6 +624,14 @@ classDiagram
     note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n~171KB"
 ```
 
+### ZIP閲覧関連の構造体
+
+| 構造体 (Go) | 説明 |
+|-------------|------|
+| `ZipEntry` | ZIP内のファイルエントリ情報。ファイル名（`Name`）、サイズ（`Size`）、パス（`Path`）等を含む |
+| `BrowseZipContentsRequest` | `/api/browse_zip_contents` のリクエスト構造体。`SessionID`、対象IDFKyouのID等を含む |
+| `BrowseZipContentsResponse` | `/api/browse_zip_contents` のレスポンス構造体。`ZipEntries []ZipEntry`、共通の `Messages`/`Errors` を含む |
+
 ### Go ↔ TypeScript の対応関係
 
 | Go struct | TypeScript class | 備考 |
@@ -629,6 +639,7 @@ classDiagram
 | `reps.Kyou` | `Kyou` | TS 側は `typed_xxx` で型付きデータを保持 |
 | `reps.Kmemo` | `Kmemo` | `content` ↔ `Content` |
 | `reps.KC` | `KC` | `num_value` ↔ `NumValue` |
+| `reps.IDFKyou` | `IDFKyou` | `is_zip` ↔ `IsZip` |
 | `reps.Mi` | `Mi` | `is_checked` ↔ `IsChecked` |
 | `reps.TimeIs` | `TimeIs` | `start_time` / `end_time` |
 | `reps.Tag` | `Tag` | `target_id` ↔ `TargetID` |

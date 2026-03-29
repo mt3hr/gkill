@@ -374,4 +374,6 @@ const (
 	InvalidURLogBookmarkletRequestDataError                          = "ERR000372"
 	AccountSessionExpiredError                                       = "ERR000373"
 	LoginRateLimitError                                              = "ERR000374"
+	InvalidBrowseZipContentsRequestDataError                         = "ERR000375"
+	BrowseZipContentsError                                           = "ERR000376"
 )

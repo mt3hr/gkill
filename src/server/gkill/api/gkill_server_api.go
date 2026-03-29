@@ -193,6 +193,12 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 		}
 		g.HandleFileServe(w, r)
 	})
+	router.PathPrefix("/zip_cache/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleZipCacheFileServe(w, r)
+	})
 	router.HandleFunc(g.APIAddress.LoginAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -655,6 +661,12 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 		}
 		g.HandleUpdateCache(w, r)
 	}).Methods(g.APIAddress.UpdateCacheMethod)
+	router.HandleFunc(g.APIAddress.BrowseZipContentsAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleBrowseZipContents(w, r)
+	}).Methods(g.APIAddress.BrowseZipContentsMethod)
 
 	manualPage, err := fs.Sub(EmbedFS, "embed/manual")
 	if err != nil {

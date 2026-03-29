@@ -31,6 +31,7 @@ export type RykvDialogKind =
   | 'edit_notification'
   | 'confirm_delete_notification'
   | 'notification_histories'
+  | 'browse_zip_contents'
 
 export type RykvDialogPayload = Tag | Text | Notification | null
 
