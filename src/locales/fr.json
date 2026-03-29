@@ -765,6 +765,7 @@
     "REQUIRED_FIELD_MESSAGE": "Ce champ est obligatoire",
     "UNSAVED_CHANGES_WARNING_MESSAGE": "Vous avez des modifications non enregistrées. Quitter la page ?",
     "BROWSE_ZIP_CONTENTS_TITLE": "Parcourir le contenu ZIP",
+    "BROWSE_ZIP_CONTENTS_EMPTY": "Ce dossier est vide",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "Échec de la consultation du contenu ZIP",
     "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "Contenu ZIP récupéré"
 }

@@ -161,12 +161,16 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		CacheMemoryDBMutex = &sync.RWMutex{}
 		TempMemoryDBMutex = &sync.RWMutex{}
 	} else {
-		TempMemoryDB, err = sql.Open("sqlite", "file:"+filepath.ToSlash(os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_temp_.db")))+"?_pragma=busy_timeout(6000)&_pragma=synchronous(FULL)&_pragma=journal_mode(WAL)")
+		tempCacheSubDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "temp_cache"))
+		os.MkdirAll(tempCacheSubDir, os.ModePerm)
+		TempMemoryDB, err = sql.Open("sqlite", "file:"+filepath.ToSlash(filepath.Join(tempCacheSubDir, userID+"_temp_.db"))+"?_pragma=busy_timeout(6000)&_pragma=synchronous(FULL)&_pragma=journal_mode(WAL)")
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
 			return nil, err
 		}
-		CacheMemoryDB, err = sql.Open("sqlite", "file:"+filepath.ToSlash(os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_cache_.db")))+"?_pragma=busy_timeout(6000)&_pragma=synchronous(FULL)&_pragma=journal_mode(WAL)")
+		latestDataRepAddrCacheSubDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "latest_data_repository_address_cache"))
+		os.MkdirAll(latestDataRepAddrCacheSubDir, os.ModePerm)
+		CacheMemoryDB, err = sql.Open("sqlite", "file:"+filepath.ToSlash(filepath.Join(latestDataRepAddrCacheSubDir, userID+"_cache_.db"))+"?_pragma=busy_timeout(6000)&_pragma=synchronous(FULL)&_pragma=journal_mode(WAL)")
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
 			return nil, err

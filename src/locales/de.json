@@ -765,6 +765,7 @@
     "REQUIRED_FIELD_MESSAGE": "Dieses Feld ist erforderlich",
     "UNSAVED_CHANGES_WARNING_MESSAGE": "Es gibt nicht gespeicherte Änderungen. Seite verlassen?",
     "BROWSE_ZIP_CONTENTS_TITLE": "ZIP-Inhalt durchsuchen",
+    "BROWSE_ZIP_CONTENTS_EMPTY": "Dieser Ordner ist leer",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP-Inhalt konnte nicht durchsucht werden",
     "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP-Inhalt abgerufen"
 }

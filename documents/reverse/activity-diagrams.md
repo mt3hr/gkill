@@ -188,7 +188,7 @@ flowchart TD
     Start([ZIP内容閲覧リクエスト]) --> Auth[セッション認証]
     Auth --> GetIDFKyou[IDFKyou取得<br>ファイルパス特定]
     GetIDFKyou --> CalcHash[ZIPファイルのSHA1ハッシュ計算]
-    CalcHash --> CacheCheck{zip_cache/{sha1}/<br>が存在する?}
+    CalcHash --> CacheCheck{zip_cache/{rep_name}/{sha1}/<br>が存在する?}
 
     CacheCheck -->|Yes| BuildEntries[ZipEntryリスト生成<br>キャッシュから]
     CacheCheck -->|No| ExtractToTemp[一時ディレクトリに展開開始]
@@ -196,16 +196,17 @@ flowchart TD
     ExtractToTemp --> LoopEntries{次のZIPエントリがある?}
     LoopEntries -->|Yes| TraversalCheck{パストラバーサル<br>チェック}
 
-    TraversalCheck -->|../含む| ErrorTraversal([ERR000376<br>パストラバーサル検出])
-    TraversalCheck -->|OK| BombCheck{ZIPボム<br>制限チェック}
+    TraversalCheck -->|../含む| SkipEntry[エントリをスキップ]
+    SkipEntry --> LoopEntries
+    TraversalCheck -->|OK| SymlinkCheck{シンボリックリンク?}
 
-    BombCheck -->|超過| ErrorBomb([ERR000376<br>ZIPボム検出])
-    BombCheck -->|OK| DecodeFilename[Shift_JISファイル名<br>デコード（必要な場合）]
+    SymlinkCheck -->|Yes| SkipEntry
+    SymlinkCheck -->|No| DecodeFilename[Shift_JISファイル名<br>デコード（必要な場合）]
 
     DecodeFilename --> WriteFile[ファイルを一時ディレクトリに書き込み]
     WriteFile --> LoopEntries
 
-    LoopEntries -->|No| AtomicRename[一時ディレクトリ→<br>zip_cache/{sha1}/ にリネーム<br>（アトミック展開）]
+    LoopEntries -->|No| AtomicRename[一時ディレクトリ→<br>zip_cache/{rep_name}/{sha1}/ にリネーム<br>（アトミック展開）]
     AtomicRename --> BuildEntries
 
     BuildEntries --> ReturnEntries([ZipEntryリスト返却<br>MSG000080])

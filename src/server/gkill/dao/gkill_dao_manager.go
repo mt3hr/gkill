@@ -902,7 +902,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			// Phase 1: GitCommitLog専用の永続ファイルベースSQLite DBを使用
 			// Phase 4: 初回フルリビルドはバックグラウンドで実行
 			cacheDir := os.ExpandEnv(gkill_options.CacheDir)
-			gitCommitLogCacheDBPath := filepath.Join(cacheDir, userID+"_git_commit_log_cache.db")
+			gitCommitLogCacheSubDir := filepath.Join(cacheDir, "git_commit_log_cache")
+			os.MkdirAll(gitCommitLogCacheSubDir, os.ModePerm)
+			gitCommitLogCacheDBPath := filepath.Join(gitCommitLogCacheSubDir, userID+"_git_commit_log_cache.db")
 			cachedGitCommitLogRep, err := reps.NewGitRepCachedSQLite3ImplPersistent(ctx, repositories.GitCommitLogReps, gitCommitLogCacheDBPath, userID+"_GIT_COMMIT_LOG", true)
 			if err != nil {
 				err = fmt.Errorf("error at new cached git commit log rep: %w", err)
