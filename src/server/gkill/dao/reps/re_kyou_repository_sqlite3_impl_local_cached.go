@@ -30,7 +30,7 @@ type reKyouRepositorySQLite3ImplLocalCached struct {
 }
 
 func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool, reps *GkillRepositories) (ReKyouRepository, error) {
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(filename, ":", ""))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(filename, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -144,7 +144,7 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(r.originalDBFileName, ":", ""))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(r.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

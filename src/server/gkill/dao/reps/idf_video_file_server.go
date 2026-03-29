@@ -231,7 +231,7 @@ func ffprobeVideoCodec(ctx context.Context, inputPath string) (string, error) {
 func (v *IDFVideoFileServer) compatPathFor(rel string, st os.FileInfo) (string, error) {
 	hh := sha1.Sum([]byte(rel))
 	key := hex.EncodeToString(hh[:])
-	ver := fmt.Sprintf("%d_%d", st.ModTime().Unix(), st.Size())
+	ver := fmt.Sprintf("%d", st.Size())
 	// include maxHeight in name to avoid collisions if policy changes
 	name := fmt.Sprintf("%s_%s_compat_%dp.mp4", key, ver, v.maxHeight)
 	return filepath.Join(v.cacheDir, name), nil

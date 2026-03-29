@@ -183,7 +183,7 @@ DNote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **オレオレTLS** | 自己署名 TLS 証明書の生成機能。サーバ設定画面から生成できる |
 | **ホットリロード** | データの自動再読み込み機能 |
 | **FindQuery** | 検索クエリ。キーワード・日時範囲・タグ・データ型・デバイス等の複合条件で Kyou を検索する |
-| **ZIPキャッシュ** | IDFKyouのZIPファイルを展開したキャッシュ。`$HOME/gkill/caches/zip_cache/{sha1}/` に保存される。ファイルのSHA1ハッシュをキーとし、同一ファイルの再展開を回避する |
+| **ZIPキャッシュ** | IDFKyouのZIPファイルを展開したキャッシュ。`$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に保存される。リポジトリ名とファイルのSHA1ハッシュをキーとし、同一ファイルの再展開を回避する |
 | **ZipEntry** | ZIP内のファイルエントリ情報。ファイル名・サイズ・パス等を含む。`/api/browse_zip_contents` のレスポンスとして返却される |
 | **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す |
 | **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する |

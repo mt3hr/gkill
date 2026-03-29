@@ -30,7 +30,7 @@ type miRepositorySQLite3ImplLocalCached struct {
 }
 
 func NewMiRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (MiRepository, error) {
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(filename, ":", ""))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(filename, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -143,7 +143,7 @@ func (m *miRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) er
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(m.originalDBFileName, ":", ""))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(m.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

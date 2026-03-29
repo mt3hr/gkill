@@ -30,7 +30,7 @@ type kmemoRepositorySQLite3ImplLocalCached struct {
 }
 
 func NewKmemoRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (KmemoRepository, error) {
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(filename, ":", ""))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(filename, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -143,7 +143,7 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(k.originalDBFileName, ":", ""))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(k.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

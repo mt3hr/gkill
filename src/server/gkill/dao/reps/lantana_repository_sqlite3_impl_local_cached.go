@@ -30,7 +30,7 @@ type lantanaRepositorySQLite3ImplLocalCached struct {
 }
 
 func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (LantanaRepository, error) {
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(filename, ":", ""))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(filename, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -143,7 +143,7 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(l.originalDBFileName, ":", ""))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(l.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
