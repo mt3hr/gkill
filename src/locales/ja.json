@@ -763,5 +763,8 @@
     "NETWORK_ERROR_MESSAGE": "ネットワークエラーが発生しました。接続を確認してください",
     "NO_RESULTS_MESSAGE": "対象なし",
     "REQUIRED_FIELD_MESSAGE": "この項目は必須です",
-    "UNSAVED_CHANGES_WARNING_MESSAGE": "未保存の変更があります。ページを離れますか？"
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "未保存の変更があります。ページを離れますか？",
+    "BROWSE_ZIP_CONTENTS_TITLE": "ZIP内容を閲覧",
+    "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP内容の閲覧に失敗しました",
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP内容を取得しました"
 }

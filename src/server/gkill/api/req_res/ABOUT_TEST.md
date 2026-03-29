@@ -17,7 +17,7 @@ Go `testing` パッケージ
 ## テスト内容
 
 - **JSON Roundtrip**: 構造体 → JSON → 構造体 の往復変換で値が保持されることを検証
-- **対象**: 全 API エンドポイントで使用される主要なリクエスト/レスポンス型（18種、IDFPayloadMCPDTO の新フィールドと omitempty 動作含む）
+- **対象**: 全 API エンドポイントで使用される主要なリクエスト/レスポンス型（18種、IDFPayloadMCPDTO の新フィールドと omitempty 動作含む、BrowseZipContentsRequest/BrowseZipContentsResponse含む）
 - **検証項目**: フィールド名のマッピング、null/空配列の扱い、ネストされた構造体の正確な変換
 
 ## 実行方法

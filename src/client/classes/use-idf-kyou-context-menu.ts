@@ -23,7 +23,7 @@ export function useIDFKyouContextMenu(options: {
     const tag_history: Ref<string[]> = ref([])
 
     // ── Computed ──
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * (8 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
+    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * (8 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0) + (props.kyou.typed_idf_kyou?.is_zip ? 1 : 0))))), position_y.value.valueOf())}px; }`)
 
     // ── Business logic ──
     async function show(e: PointerEvent): Promise<void> {
@@ -69,6 +69,10 @@ export function useIDFKyouContextMenu(options: {
 
     async function show_kyou_histories_dialog(): Promise<void> {
         emits('requested_open_rykv_dialog', 'kyou_histories', props.kyou)
+    }
+
+    async function show_browse_zip_contents_dialog(): Promise<void> {
+        emits('requested_open_rykv_dialog', 'browse_zip_contents', props.kyou)
     }
 
     async function open_folder(): Promise<void> {
@@ -153,5 +157,6 @@ export function useIDFKyouContextMenu(options: {
         open_folder,
         open_file,
         add_tag_from_history,
+        show_browse_zip_contents_dialog,
     }
 }

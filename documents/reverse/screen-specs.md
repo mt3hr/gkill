@@ -11,8 +11,8 @@
 | ルート | 12 |
 | ページコンポーネント | 14 |
 | ビューコンポーネント | 175 |
-| ダイアログコンポーネント | 92 |
-| **コンポーネント合計** | **281**（ルートを除く） |
+| ダイアログコンポーネント | 93 |
+| **コンポーネント合計** | **282**（ルートを除く） |
 
 ## 1. ルート定義
 
@@ -575,6 +575,27 @@ Teleport to body
 | `confirm-delete-share-kyou-list-dialog.vue` | 共有削除確認 |
 | `manage-share-task-list-dialog.vue` | 共有タスク管理 |
 
+#### ZIP閲覧ダイアログ
+
+| ダイアログ | 対象 |
+|---|---|
+| `browse-zip-contents-dialog.vue` | ZIPファイル内容閲覧 |
+
+### ZIP閲覧ダイアログ仕様
+
+**コンポーネント:** `browse-zip-contents-dialog.vue`
+
+IDFKyouのZIPファイルの内容を閲覧するフローティングダイアログです。
+
+| 項目 | 種別 | 説明 |
+|---|---|---|
+| ZIPエントリリスト | 表示 | ZIP内のファイル一覧（ファイル名・サイズ） |
+| 画像プレビュー | 表示 | ZIP内の画像ファイルをプレビュー表示（ページ送り対応） |
+| ファイルリンク | 操作 | ZIP内のファイルを `/zip_cache/` 経由で開く |
+| ページ送り | 操作 | 画像ファイル間の前後ナビゲーション |
+
+**表示条件:** IDFKyouのコンテキストメニューで「ZIP内容を閲覧」を選択した場合に表示される。`is_zip=true` のIDFKyouに対してのみコンテキストメニュー項目が有効化される。
+
 ## 7. イベント伝播パターン
 
 コンポーネント間のイベント伝播は以下のパターンで統一されています。
@@ -609,7 +630,7 @@ CRUDリレーイベント:
 | `nlog-context-menu.vue` | 支出 |
 | `ur-log-context-menu.vue` | ブックマーク |
 | `kc-context-menu.vue` | 数値 |
-| `idf-kyou-context-menu.vue` | ファイル |
+| `idf-kyou-context-menu.vue` | ファイル（`is_zip=true` 時に「ZIP内容を閲覧」メニュー追加） |
 | `re-kyou-context-menu.vue` | リポスト |
 | `git-commit-log-context-menu.vue` | Gitコミット |
 | `attached-tag-context-menu.vue` | 付帯タグ |

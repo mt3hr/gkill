@@ -148,7 +148,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_user_reps` | リポジトリパス更新 |
 | `/api/reload_repositories` | リポジトリ再読み込み |
 
-## ファイル操作（4件）
+## ファイル操作（5件）
 
 | パス | 説明 |
 |---|---|
@@ -156,6 +156,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/upload_gpslog_files` | GPSログファイルアップロード |
 | `/api/open_directory` | ディレクトリを開く（OS コマンド実行） |
 | `/api/open_file` | ファイルを開く（OS コマンド実行） |
+| `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{sha1}/` に展開し、ZipEntry リスト（ファイル名・サイズ・パス等）を返却する。セッション認証必須。パストラバーサル防止、ZIPボム制限、Shift_JISファイル名デコード、アトミック展開に対応 |
 
 ## KFTL（2件）
 
@@ -221,6 +222,7 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 | パス | メソッド | 説明 |
 |---|---|---|
 | `/files/*` | GET | アップロードファイル配信 |
+| `/zip_cache/*` | GET | ZIP展開済みファイル配信。`/api/browse_zip_contents` で展開されたファイルをセッション認証付きで配信する。`$HOME/gkill/caches/zip_cache/` 配下のファイルを提供 |
 | `/serviceWorker.js` | GET | PWA Service Worker 配信 |
 | `/` | GET | Vue SPA（embed された index.html） |
 
@@ -228,7 +230,7 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 
 ## 補足
 
-- **合計:** POST エンドポイント 79件（うち77件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 3件
+- **合計:** POST エンドポイント 80件（うち78件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 4件
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api.go` および `src/server/gkill/api/handle_*.go`
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（164ファイル）

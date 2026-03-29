@@ -17,6 +17,7 @@ Vitest
 ## テスト内容
 
 - **データ型別 CRUD**: Kmemo, Mi, TimeIs, URLog, Nlog, Lantana, KC, Tag, Text, Notification, ReKyou の追加・更新・削除・取得
+- **ZIPブラウズ**: `browse_zip_contents()` メソッドのテスト（BrowseZipContentsRequest/Response の送受信）
 - **設定操作**: アプリケーション設定、サーバ設定の読み書き
 - **共有機能**: Kyou の共有設定 CRUD
 - **アップロード**: ファイルアップロード処理

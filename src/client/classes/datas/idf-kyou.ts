@@ -16,6 +16,8 @@ export class IDFKyou extends InfoBase {
 
     is_audio: boolean
 
+    is_zip: boolean
+
     attached_histories: Array<IDFKyou>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
@@ -72,6 +74,7 @@ export class IDFKyou extends InfoBase {
         idf_kyou.is_image = this.is_image
         idf_kyou.is_video = this.is_video
         idf_kyou.is_audio = this.is_audio
+        idf_kyou.is_zip = this.is_zip
         return idf_kyou
     }
 
@@ -90,6 +93,7 @@ export class IDFKyou extends InfoBase {
         this.is_image = false
         this.is_video = false
         this.is_audio = false
+        this.is_zip = false
         this.attached_histories = new Array<IDFKyou>()
     }
 

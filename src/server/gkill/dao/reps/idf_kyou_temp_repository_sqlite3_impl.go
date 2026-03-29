@@ -361,6 +361,7 @@ AND DEVICE = ?
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -512,6 +513,7 @@ AND DEVICE = ?
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
