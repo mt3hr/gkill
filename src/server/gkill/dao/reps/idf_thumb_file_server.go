@@ -310,14 +310,13 @@ func secureJoin(rootDir, rel string) (string, bool) {
 }
 
 func (t *thumbFileServer) thumbPathFor(rel string, st os.FileInfo, w, h int) (thumbPath string, etag string, err error) {
-	// rel + mtime + size + w/h でキー化（元更新で別サムネになる）
+	// rel + size + w/h でキー化
 	hh := sha1.Sum([]byte(rel))
 	key := hex.EncodeToString(hh[:])
 
-	ver := fmt.Sprintf("%d_%d", st.ModTime().Unix(), st.Size())
+	ver := fmt.Sprintf("%d", st.Size())
 	name := fmt.Sprintf("%s_%s_%dx%d.jpg", key, ver, w, h)
 
-	// 同じverなら同じETag（thumb=... のURLは変わらないので、ETagで整合を取る）
 	etag = fmt.Sprintf(`W/"%s"`, name)
 
 	return filepath.Join(t.cacheDir, name), etag, nil
