@@ -39,7 +39,7 @@
 | `src/client/__tests__/e2e/add-dialog-crud.spec.ts` | FAB→追加ダイアログ (Mi/Lantana/Nlog/TimeIs/URLog/KC/Tag/Text + 最小入力/全項目入力) |
 | `src/client/__tests__/e2e/edit-dialog-crud.spec.ts` | 右クリック→編集 (Kmemo/Mi/Nlog/URLog/TimeIs/Lantana/Tag + TimeIs終了/ReKyou/Text編集) |
 | `src/client/__tests__/e2e/delete-crud.spec.ts` | 右クリック→削除 (Kmemo/Mi/Lantana/Nlog/URLog/TimeIs/Tag/Text/ReKyou) |
-| `src/client/__tests__/e2e/view-browse.spec.ts` | 履歴ダイアログ、混合データ型、Mi ボード/Plaing 表示 |
+| `src/client/__tests__/e2e/view-browse.spec.ts` | 履歴ダイアログ、混合データ型、Mi ボード/Plaing 表示、ZIPブラウズ |
 | `src/client/__tests__/e2e/view-history.spec.ts` | Lantana/Mi/Nlog/URLog/ReKyou/Tag/Text の履歴+リポスト+NoImage確認 |
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 
@@ -62,7 +62,7 @@
 |---------|-----------|
 | `src/client/__tests__/unit/composables/add-views.test.ts` | Mi, Tag, Nlog, URLog, Lantana, TimeIs, KC の追加ビュー Composable |
 | `src/client/__tests__/unit/composables/edit-views.test.ts` | Kmemo, Mi, Nlog, URLog, TimeIs, Lantana, KC の編集ビュー Composable |
-| `src/client/__tests__/unit/composables/context-menus.test.ts` | 10エンティティ型のコンテキストメニュー Composable |
+| `src/client/__tests__/unit/composables/context-menus.test.ts` | 10エンティティ型のコンテキストメニュー Composable（ZIPブラウズ項目含む） |
 | `src/client/__tests__/unit/composables/confirm-delete.test.ts` | 削除確認ダイアログ Composable |
 | `src/client/__tests__/unit/composables/page-composables.test.ts` | ページレベル Composable |
 | `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン |

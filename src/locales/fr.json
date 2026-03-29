@@ -763,5 +763,8 @@
     "NETWORK_ERROR_MESSAGE": "Une erreur réseau s'est produite. Vérifiez votre connexion.",
     "NO_RESULTS_MESSAGE": "Aucun élément",
     "REQUIRED_FIELD_MESSAGE": "Ce champ est obligatoire",
-    "UNSAVED_CHANGES_WARNING_MESSAGE": "Vous avez des modifications non enregistrées. Quitter la page ?"
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "Vous avez des modifications non enregistrées. Quitter la page ?",
+    "BROWSE_ZIP_CONTENTS_TITLE": "Parcourir le contenu ZIP",
+    "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "Échec de la consultation du contenu ZIP",
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "Contenu ZIP récupéré"
 }

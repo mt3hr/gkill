@@ -80,6 +80,7 @@ stateDiagram-v2
     KyouCtx --> EditLantana: 編集選択(Lantana)
     KyouCtx --> EditIDFKyou: 編集選択(IDFKyou)
     KyouCtx --> EditReKyou: 編集選択(ReKyou)
+    KyouCtx --> BrowseZipContents: ZIP内容閲覧(IDFKyou, is_zip=true)
     KyouCtx --> DeleteKyou: 削除選択
     KyouCtx --> ConfirmReKyou: リポスト選択
     KyouCtx --> KyouHistory: 履歴選択
@@ -98,6 +99,8 @@ stateDiagram-v2
 **コンテキストメニュー:** KyouCtx（Kyou用）、TagCtx（タグ用）、TextCtx（テキスト用）
 
 **編集ダイアログ:** データ型ごとに EditKmemo, EditKC, EditURLog, EditMi, EditNlog, EditTimeIs, EditLantana, EditIDFKyou, EditReKyou
+
+**ZIP閲覧ダイアログ:** BrowseZipContents（IDFKyouの `is_zip=true` の場合にコンテキストメニューに表示）
 
 **メタデータダイアログ:** AddTag, EditTag, DeleteTag, AddText, EditText, DeleteText
 
