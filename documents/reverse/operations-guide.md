@@ -15,7 +15,13 @@ $HOME/gkill/
 │   └── gkill_notification_target.db # プッシュ通知ターゲット
 ├── datas/                           # ユーザーデータ（デフォルトデータディレクトリ）
 ├── caches/                          # キャッシュファイル
-│   └── zip_cache/                  # ZIP展開キャッシュ（{sha1}/ ディレクトリ単位）
+│   ├── thumb_cache/{rep_name}/     # サムネイル画像キャッシュ（リポジトリ単位）
+│   ├── video_cache/{rep_name}/     # 互換動画キャッシュ（リポジトリ単位）
+│   ├── zip_cache/{rep_name}/{sha1}/ # ZIP展開キャッシュ（リポジトリ＋ハッシュ単位）
+│   ├── local_rep_cache/            # ローカルリポジトリキャッシュDB
+│   ├── git_commit_log_cache/       # Gitコミットログキャッシュ DB
+│   ├── temp_cache/                 # 一時キャッシュDB（非メモリモード時のみ）
+│   └── latest_data_repository_address_cache/ # 最新データリポジトリアドレスキャッシュDB（非メモリモード時のみ）
 ├── logs/                            # ログファイル（JSON形式）
 │   ├── gkill_error.log
 │   ├── gkill_warn.log

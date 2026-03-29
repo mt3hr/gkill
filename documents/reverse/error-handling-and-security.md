@@ -58,7 +58,7 @@ type GkillMessage struct {
 | `ERR000350` | InvalidSubmitKFTLTextRequestDataError | KFTLテキスト送信リクエストパースエラー |
 | `ERR000351` | SubmitKFTLTextError | KFTLテキスト処理エラー |
 | `ERR000375` | InvalidBrowseZipContentsRequestDataError | ZIP内容閲覧リクエストパースエラー |
-| `ERR000376` | BrowseZipContentsError | ZIP内容閲覧処理エラー（展開失敗、パストラバーサル検出、ZIPボム検出等） |
+| `ERR000376` | BrowseZipContentsError | ZIP内容閲覧処理エラー（展開失敗、パストラバーサル検出等） |
 
 ### 1.3 HTTPステータスコードの使い分け
 
@@ -237,12 +237,12 @@ sequenceDiagram
 
 | 脅威 | 対策 |
 |------|------|
-| **パストラバーサル** | 展開先パスが `zip_cache/{sha1}/` 配下に収まることを検証。`../` 等を含むエントリは拒否し `ERR000376` を返す |
-| **ZIPボム** | 展開時のファイルサイズ・エントリ数に上限を設け、超過時は展開を中止し `ERR000376` を返す |
+| **パストラバーサル** | 展開先パスが `zip_cache/{rep_name}/{sha1}/` 配下に収まることを検証。`../` 等を含むエントリは拒否しスキップする |
+| **シンボリックリンク** | シンボリックリンクエントリはスキップする |
 | **Shift_JISファイル名** | ZIP内のファイル名がShift_JISでエンコードされている場合にUTF-8にデコードして正しく表示する |
 | **アトミック展開** | 一時ディレクトリに展開後、成功時のみ最終パスにリネームする。展開途中で失敗した場合は中間ファイルが残らない |
 | **認証** | `/zip_cache/` ファイルサーバーはセッション認証付きでアクセスを制御する |
-| **キャッシュパス** | ファイルのSHA1ハッシュをキーとして `$HOME/gkill/caches/zip_cache/{sha1}/` に展開。同一ファイルの再展開を回避する |
+| **キャッシュパス** | リポジトリ名とファイルのSHA1ハッシュをキーとして `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に展開。同一ファイルの再展開を回避する |
 
 ### 2.9 初期セットアップのセキュリティ
 

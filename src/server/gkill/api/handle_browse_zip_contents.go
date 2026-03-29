@@ -27,10 +27,7 @@ import (
 )
 
 const (
-	zipCacheSubDir         = "zip_cache"
-	zipMaxEntries          = 10000
-	zipMaxTotalSize  int64 = 1 << 30 // 1 GB
-	zipMaxSingleFile int64 = 500 << 20 // 500 MB
+	zipCacheSubDir = "zip_cache"
 )
 
 var (
@@ -148,8 +145,9 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	}
 
 	// キャッシュディレクトリを決定
+	repName := idfKyou.RepName
 	hash := fmt.Sprintf("%x", sha1.Sum([]byte(zipFilePath)))
-	cacheRootDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, zipCacheSubDir))
+	cacheRootDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, zipCacheSubDir, repName))
 	cacheDir := filepath.Join(cacheRootDir, hash)
 
 	// singleflight的に一度だけ展開
@@ -166,7 +164,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	}
 
 	// キャッシュディレクトリをwalkしてエントリを構築
-	entries, err := buildZipEntries(cacheDir, hash)
+	entries, err := buildZipEntries(cacheDir, repName, hash)
 	if err != nil {
 		err = fmt.Errorf("error at build zip entries from cache dir %s: %w", cacheDir, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
@@ -214,23 +212,6 @@ func extractZip(zipFilePath string, cacheDir string) error {
 		return fmt.Errorf("error at open zip file %s: %w", zipFilePath, err)
 	}
 	defer reader.Close()
-
-	// エントリ数チェック
-	if len(reader.File) > zipMaxEntries {
-		return fmt.Errorf("zip file has too many entries: %d (max %d)", len(reader.File), zipMaxEntries)
-	}
-
-	// 合計サイズチェック
-	var totalSize int64
-	for _, f := range reader.File {
-		totalSize += int64(f.UncompressedSize64)
-		if int64(f.UncompressedSize64) > zipMaxSingleFile {
-			return fmt.Errorf("zip entry %s is too large: %d bytes (max %d)", f.Name, f.UncompressedSize64, zipMaxSingleFile)
-		}
-	}
-	if totalSize > zipMaxTotalSize {
-		return fmt.Errorf("zip file total size is too large: %d bytes (max %d)", totalSize, zipMaxTotalSize)
-	}
 
 	// 一時ディレクトリに展開してからリネーム（原子的展開）
 	tmpDir := cacheDir + ".tmp"
@@ -327,8 +308,7 @@ func extractZipFile(f *zip.File, destPath string) error {
 	}
 	defer outFile.Close()
 
-	// サイズ制限付きコピー
-	_, err = io.Copy(outFile, io.LimitReader(rc, zipMaxSingleFile+1))
+	_, err = io.Copy(outFile, rc)
 	if err != nil {
 		return fmt.Errorf("error at write file %s: %w", destPath, err)
 	}
@@ -336,7 +316,7 @@ func extractZipFile(f *zip.File, destPath string) error {
 	return nil
 }
 
-func buildZipEntries(cacheDir string, hash string) ([]*req_res.ZipEntry, error) {
+func buildZipEntries(cacheDir string, repName string, hash string) ([]*req_res.ZipEntry, error) {
 	var entries []*req_res.ZipEntry
 
 	err := filepath.Walk(cacheDir, func(path string, info os.FileInfo, err error) error {
@@ -361,7 +341,7 @@ func buildZipEntries(cacheDir string, hash string) ([]*req_res.ZipEntry, error) 
 		for i, seg := range segments {
 			escapedSegments[i] = url.PathEscape(seg)
 		}
-		fileURL := "/zip_cache/" + hash + "/" + strings.Join(escapedSegments, "/")
+		fileURL := "/zip_cache/" + url.PathEscape(repName) + "/" + hash + "/" + strings.Join(escapedSegments, "/")
 
 		entry := &req_res.ZipEntry{
 			Path:    rel,
