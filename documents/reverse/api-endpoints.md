@@ -156,7 +156,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/upload_gpslog_files` | GPSログファイルアップロード |
 | `/api/open_directory` | ディレクトリを開く（OS コマンド実行） |
 | `/api/open_file` | ファイルを開く（OS コマンド実行） |
-| `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{sha1}/` に展開し、ZipEntry リスト（ファイル名・サイズ・パス等）を返却する。セッション認証必須。パストラバーサル防止、ZIPボム制限、Shift_JISファイル名デコード、アトミック展開に対応 |
+| `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（ファイル名・サイズ・パス等）を返却する。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
 
 ## KFTL（2件）
 

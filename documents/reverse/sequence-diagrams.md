@@ -489,11 +489,11 @@ sequenceDiagram
     API->>IDFRep: GetIDFKyou(idf_kyou_id)
     IDFRep-->>API: IDFKyou（ファイルパス取得）
     API->>API: SHA1ハッシュ計算
-    API->>FS: キャッシュ確認<br>$HOME/gkill/caches/zip_cache/{sha1}/
+    API->>FS: キャッシュ確認<br>$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/
 
     alt キャッシュ未存在
         API->>FS: 一時ディレクトリに展開
-        API->>API: パストラバーサル検証<br>ZIPボム制限チェック<br>Shift_JISファイル名デコード
+        API->>API: パストラバーサル検証<br>シンボリックリンクスキップ<br>Shift_JISファイル名デコード
         alt 検証失敗
             API-->>GkillAPI: {errors: [{error_code: "ERR000376"}]}
             GkillAPI-->>UI: エラー表示
@@ -504,10 +504,10 @@ sequenceDiagram
     API->>API: ZipEntryリスト生成
     API-->>GkillAPI: {zip_entries: [...], messages}
     GkillAPI-->>UI: ZipEntryリスト
-    UI-->>User: browse-zip-contents-dialog表示<br>（画像プレビュー・ページ送り・ファイルリンク）
+    UI-->>User: browse-zip-contents-dialog表示<br>（階層ナビゲーション・画像プレビュー・ページ送り・ファイルリンク）
 
     User->>UI: ZIP内のファイルをクリック
-    UI->>API: GET /zip_cache/{sha1}/{path}<br>（セッション認証付き）
+    UI->>API: GET /zip_cache/{rep_name}/{sha1}/{path}<br>（セッション認証付き）
     API->>FS: ファイル読み取り
     FS-->>API: ファイルデータ
     API-->>UI: ファイルデータ
@@ -517,7 +517,7 @@ sequenceDiagram
 ### 補足
 
 - **MSG000080**: ZIP内容の閲覧成功時に返されるメッセージコード
-- **キャッシュ**: 展開済みZIPはSHA1ハッシュベースで `$HOME/gkill/caches/zip_cache/` に永続化される。同一ZIPファイルの再アクセス時は展開をスキップしてキャッシュから直接返却する
+- **キャッシュ**: 展開済みZIPはリポジトリ名とSHA1ハッシュベースで `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に永続化される。同一ZIPファイルの再アクセス時は展開をスキップしてキャッシュから直接返却する
 - **Service Worker**: `/zip_cache/.*` は Service Worker の denylist に追加されており、キャッシュされない
 
 ## 18. トランザクション（CommitTX / DiscardTX）

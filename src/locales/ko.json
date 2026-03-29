@@ -765,6 +765,7 @@
     "REQUIRED_FIELD_MESSAGE": "이 항목은 필수입니다",
     "UNSAVED_CHANGES_WARNING_MESSAGE": "저장되지 않은 변경 사항이 있습니다. 페이지를 떠나시겠습니까？",
     "BROWSE_ZIP_CONTENTS_TITLE": "ZIP 내용 탐색",
+    "BROWSE_ZIP_CONTENTS_EMPTY": "이 폴더는 비어 있습니다",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP 내용 탐색에 실패했습니다",
     "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP 내용을 가져왔습니다"
 }
