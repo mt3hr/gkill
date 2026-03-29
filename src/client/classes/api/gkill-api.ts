@@ -166,6 +166,8 @@ import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
 import type { DiscardTXResponse } from "./req_res/discard-tx-response"
+import type { BrowseZipContentsRequest } from "./req_res/browse-zip-contents-request"
+import type { BrowseZipContentsResponse } from "./req_res/browse-zip-contents-response"
 import { i18n } from "@/i18n"
 import { TagStructElementData } from "../datas/config/tag-struct-element-data"
 import { DeviceStructElementData } from "../datas/config/device-struct-element-data"
@@ -275,6 +277,7 @@ export class GkillAPI {
         get_updated_datas_by_time_address: string
         commit_tx_address: string
         discard_tx_address: string
+        browse_zip_contents_address: string
 
         login_method: string
         logout_method: string
@@ -359,6 +362,7 @@ export class GkillAPI {
         get_updated_datas_by_time_method: string
         commit_tx_method: string
         discard_tx_method: string
+        browse_zip_contents_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -444,6 +448,7 @@ export class GkillAPI {
                 this.get_updated_datas_by_time_address = "/api/get_updated_datas_by_time"
                 this.commit_tx_address = "/api/commit_tx"
                 this.discard_tx_address = "/api/discard_tx"
+                this.browse_zip_contents_address = "/api/browse_zip_contents"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -527,6 +532,7 @@ export class GkillAPI {
                 this.get_updated_datas_by_time_method = "POST"
                 this.commit_tx_method = "POST"
                 this.discard_tx_method = "POST"
+                this.browse_zip_contents_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -2483,6 +2489,21 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: DiscardTXResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async browse_zip_contents(req: BrowseZipContentsRequest): Promise<BrowseZipContentsResponse> {
+                const res = await this.gkill_fetch(this.browse_zip_contents_address, {
+                        'method': this.browse_zip_contents_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: BrowseZipContentsResponse = json
                 this.check_auth(response)
                 return response
         }

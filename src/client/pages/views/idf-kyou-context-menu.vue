@@ -33,6 +33,9 @@
             <v-list-item @click="copy_id()">
                 <v-list-item-title>{{ i18n.global.t("COPY_ID_TITLE") }}</v-list-item-title>
             </v-list-item>
+            <v-list-item v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_zip" @click="show_browse_zip_contents_dialog()">
+                <v-list-item-title>{{ i18n.global.t("BROWSE_ZIP_CONTENTS_TITLE") }}</v-list-item-title>
+            </v-list-item>
             <v-list-item v-if="application_config.session_is_local" @click="open_folder()">
                 <v-list-item-title>{{ i18n.global.t("OPEN_FOLDER_TITLE") }}</v-list-item-title>
             </v-list-item>
@@ -73,6 +76,7 @@ const {
     open_folder,
     open_file,
     add_tag_from_history,
+    show_browse_zip_contents_dialog,
 } = useIDFKyouContextMenu({ props, emits })
 
 defineExpose({ show })

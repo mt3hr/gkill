@@ -40,6 +40,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 
 - **CRUD 操作**: 各データ型の Create / Read / Update / Delete
 - **検索・フィルタ**: ID 検索、日付範囲検索、全件取得
+- **IDFKyou 拡張**: IsZip フィールド、isZip() 判定関数、IsImagePublic() エクスポート関数のテスト
 - **4層リポジトリパターン**: interface → SQLite3 実装 → キャッシュ実装 → 一時実装の各層
 - **キャッシュ管理**: キャッシュアドレスの解決、キャッシュの更新とクリア
 

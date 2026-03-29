@@ -286,6 +286,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
@@ -512,6 +513,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
@@ -667,6 +669,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
@@ -1030,6 +1033,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
@@ -1231,6 +1235,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
@@ -1368,6 +1373,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()

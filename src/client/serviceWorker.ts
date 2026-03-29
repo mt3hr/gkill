@@ -30,6 +30,7 @@ registerRoute(
       /^\/$/,        // "/" は除外
       /^\/api\/.*/,  // "/api/..." は除外
       /^\/files\/.*/,  // "/files/..." は除外
+      /^\/zip_cache\/.*/,  // "/zip_cache/..." は除外（ZIP展開キャッシュ）
       /^\/resources\/manual\/.*/,  // "/resources/manual/..." は除外（ヘルプHTML）
     ],
   }),

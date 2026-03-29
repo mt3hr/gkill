@@ -62,7 +62,7 @@ src/client/
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
 │   ├── views/              # ビューコンポーネント（175ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（92ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（93ファイル、browse-zip-contents-dialog.vue 含む）
 ├── classes/
 │   ├── api/
 │   │   └── gkill-api.ts    # GkillAPI シングルトン（~3,400行、全API呼び出しを集約）
@@ -83,8 +83,8 @@ src/server/
 └── gkill/
     ├── api/                        # HTTPハンドラ層
     │   ├── gkill_server_api.go     # メインAPIハンドラ（~14,000行）
-    │   ├── gkill_server_api_address.go  # ルーティング定義（79 POSTエンドポイント）
-    │   ├── handle_*.go             # 個別ハンドラ関数群
+    │   ├── gkill_server_api_address.go  # ルーティング定義（80 POSTエンドポイント）
+    │   ├── handle_*.go             # 個別ハンドラ関数群（handle_browse_zip_contents.go 含む）
     │   ├── embed.go                # go:embed によるSPA埋め込み
     │   ├── embed/                  # 埋め込みリソース（ビルド時生成）
     │   │   ├── html/              # フロントエンドビルド成果物
@@ -212,13 +212,13 @@ documents/
 │   ├── usecase.md                    # ユースケース一覧（74件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
-│   ├── sequence-diagrams.md          # シーケンス図（21本: 正常系16 + 異常系5）
+│   ├── sequence-diagrams.md          # シーケンス図（22本: 正常系17 + 異常系5）
 │   ├── activity-diagrams.md          # アクティビティ図
 │   ├── state-machines.md             # ステートマシン図
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（79件）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（80件）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド
 │   ├── dvnf-rep-type-spec.md         # DVNF/RepType仕様
@@ -246,7 +246,7 @@ $HOME/gkill/
 │   ├── share_kyou_info.db  # 共有設定
 │   └── gkill_notification_target.db  # プッシュ通知ターゲット
 ├── datas/                  # ユーザーデータ（デフォルトデータディレクトリ）
-├── caches/                 # キャッシュファイル
+├── caches/                 # キャッシュファイル（zip_cache/ 含む）
 ├── logs/                   # ログファイル（JSON形式、レベル別分割）
 │   ├── gkill_error.log
 │   ├── gkill_warn.log
