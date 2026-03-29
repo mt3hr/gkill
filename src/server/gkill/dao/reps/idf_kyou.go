@@ -41,5 +41,7 @@ type IDFKyou struct {
 
 	IsAudio bool `json:"is_audio"`
 
+	IsZip bool `json:"is_zip"`
+
 	ContentPath string `json:"-"`
 }

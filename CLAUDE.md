@@ -44,8 +44,8 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run test_wear_os` | Wear OS Gradle tests |
 
 **Test coverage (~1,904 tests total, all 29 Go packages covered):**
-- Go (~534 tests, 47 files across all 29 packages): API handler integration (CRUD + Update + Get for all 11 data types, session validation, account management, transactions, session expiry detection (ERR000373), login rate limiting (ERR000374, IP-based sliding window), GetKyous query with complex filters (word/tag/rep/calendar/Mi check state/combined), GetKyousMCP, SubmitKFTLText for all data types (Kmemo/Lantana/Mi/Nlog/TimeIs/URLog/KC + tag/time combos + TimeIsEnd variants), UpdateCache, board/tag/rep name lists, tag/text/notification histories, server config read/update + TLS path change, application config update + search state preservation + structure deletion timeout, user repository update + duplicate write detection, share CRUD, Notification edit/soft-delete/history regression, Tag/Text delete with Kyou persistence, local access restriction, TLS file generation), KFTL parser (81 tests: all data type line generation + request map application for Lantana/Mi/Nlog/TimeIs variants/URLog/KC/text blocks/tags, ASCII prefix variants for all data types including !/,/,,/#/?/--//mi//mood//expense//num//url//start//end//timeis//end?//endt//endt?, Mi ASCII ? time field parsing, Nlog title/amount mismatch handling, Lantana mood 0-10 range validation), DAO layer (account, session, server config, user config, share_kyou_info, gkill_notification, 11 SQLite3 repos + 11 cached repos + 11 temp repos, cache address DAO, rep_cache_updater, GkillDAOManager), find package (all filter flags, MiCheckState/MiSortType enum values, nil dates, empty slices, data type filter), req_res package (18 JSON roundtrip tests including IDFPayloadMCPDTO), message package, sqlite3 utilities, gpslogs parsing, dvnf file management, hide_files, threads pool, gkill_log routing, gkill_options defaults, CLI entry points, fitbit batch, legacy data transformer
-- Frontend unit (~676 tests, 49 files): GkillAPI methods (add/update/delete/get for all data types, config, sharing, upload, transactions, notifications, error handling, session management, endpoint address verification), 22 data models (Kmemo, Tag, Kyou, Mi, TimeIs, URLog, Nlog, Lantana, KC, Text, GitCommitLog, GPSLog, IDFKyou, Notification, ReKyou, InfoBase, InfoIdentifier, MetaInfoBase, CircleOptions, LatLng, KftlTemplateElementData, ShareKyousInfo), D-note module (52 predicates, 17 aggregate targets, 12 key getters, DnoteAgregator/DnoteListAggregator, serialization dictionaries), KFTL parser, composition functions (context menus for 10 entity types, add views for Mi/Tag/Nlog/URLog/Lantana/TimeIs/KC, edit views for Kmemo/Mi/Nlog/URLog/TimeIs/Lantana/KC), page composables, query composable patterns, router (12 routes), i18n completeness (7 locales), utility functions (deep-equals, looks-like-url, format-date-time, long-press directive, save-as, delete-gkill-cache, service-worker-utils, use-dialog-history-stack)
+- Go (~534 tests, 47 files across all 29 packages): API handler integration (CRUD + Update + Get for all 11 data types, session validation, account management, transactions, session expiry detection (ERR000373), login rate limiting (ERR000374, IP-based sliding window), GetKyous query with complex filters (word/tag/rep/calendar/Mi check state/combined), GetKyousMCP, SubmitKFTLText for all data types (Kmemo/Lantana/Mi/Nlog/TimeIs/URLog/KC + tag/time combos + TimeIsEnd variants), UpdateCache, board/tag/rep name lists, tag/text/notification histories, server config read/update + TLS path change, application config update + search state preservation + structure deletion timeout, user repository update + duplicate write detection, share CRUD, Notification edit/soft-delete/history regression, Tag/Text delete with Kyou persistence, local access restriction, TLS file generation, BrowseZipContents endpoint (ZIP extraction, IsZip detection, path traversal prevention, ZIP bomb limits, error codes ERR000375/ERR000376)), KFTL parser (81 tests: all data type line generation + request map application for Lantana/Mi/Nlog/TimeIs variants/URLog/KC/text blocks/tags, ASCII prefix variants for all data types including !/,/,,/#/?/--//mi//mood//expense//num//url//start//end//timeis//end?//endt//endt?, Mi ASCII ? time field parsing, Nlog title/amount mismatch handling, Lantana mood 0-10 range validation), DAO layer (account, session, server config, user config, share_kyou_info, gkill_notification, 11 SQLite3 repos + 11 cached repos + 11 temp repos, cache address DAO, rep_cache_updater, GkillDAOManager), find package (all filter flags, MiCheckState/MiSortType enum values, nil dates, empty slices, data type filter), req_res package (18 JSON roundtrip tests including IDFPayloadMCPDTO), message package, sqlite3 utilities, gpslogs parsing, dvnf file management, hide_files, threads pool, gkill_log routing, gkill_options defaults, CLI entry points, fitbit batch, legacy data transformer
+- Frontend unit (~676 tests, 49 files): GkillAPI methods (add/update/delete/get for all data types, config, sharing, upload, transactions, notifications, error handling, session management, endpoint address verification, browse_zip_contents), 22 data models (Kmemo, Tag, Kyou, Mi, TimeIs, URLog, Nlog, Lantana, KC, Text, GitCommitLog, GPSLog, IDFKyou (including is_zip field), Notification, ReKyou, InfoBase, InfoIdentifier, MetaInfoBase, CircleOptions, LatLng, KftlTemplateElementData, ShareKyousInfo), D-note module (52 predicates, 17 aggregate targets, 12 key getters, DnoteAgregator/DnoteListAggregator, serialization dictionaries), KFTL parser, composition functions (context menus for 10 entity types including IDF ZIP browse, add views for Mi/Tag/Nlog/URLog/Lantana/TimeIs/KC, edit views for Kmemo/Mi/Nlog/URLog/TimeIs/Lantana/KC), page composables, query composable patterns, router (12 routes), i18n completeness (7 locales), utility functions (deep-equals, looks-like-url, format-date-time, long-press directive, save-as, delete-gkill-cache, service-worker-utils, use-dialog-history-stack)
 - Frontend E2E (187 tests, 29 spec files): All 12 routes covered + CRUD interaction flows. Login session persistence/auth redirect/password masking/logout/no-password-login-rejection/Rep check state. KFTL CRUD flows (submit all data types via KFTL, verify in RYKV/Mi/Plaing) + KFTL TimeIs End flows (end by title/title-if-exist/tag/tag-if-exist). GUI add dialog flows (Mi/Lantana/Nlog/TimeIs/URLog/KC via FAB, Tag/Text via context menu) + minimal-input Mi add, full-field TimeIs/URLog add. GUI edit dialog flows (Kmemo/Mi/Nlog/URLog/Lantana/TimeIs/Tag content editing + empty content validation) + running TimeIs end button, ReKyou edit, Text edit. GUI delete flows (Kmemo/Mi/Lantana/Nlog/URLog/TimeIs/Tag/Text deletion + ReKyou add/delete). View/browse history flows (Lantana/Mi/Nlog/URLog/ReKyou/Tag/Text history + repost + NoImage fallback). Notification CRUD (add/edit/delete/view/history via context menu). Search & summary (keyword search on RYKV/Mi, D-note toggle). Settings page CRUD (server config/user config/tag/rep/device/KFTL template structure sections) + server config functional tests (profile/TLS/address/account/rep management) + user config functional tests (GoogleMap API/image viewer/board names/hot reload/tag/rep/device/reptype/KFTL template structure CRUD). Mi operations (board move/completion state/share view/share stop). Regression tests (Kmemo required field/local access/tag/device/reptype structure add/ApplicationConfig apply/file upload). Misc (Notification/Text visual distinction, TimeIs history, context menu deduplication, bookmarklet, GPS upload, invalid share link, server restart)
 - MCP (~381 tests, 10 files): validation, normalization (including normalizeIdfFileArgs), constants, tool handlers, GkillReadClient (including fetchFile), McpServer (including gkill_get_idf_file tool dispatch/image content block), PKCE (S256/plain verification), OAuth store (token/code/client CRUD, TTL expiration, JSON file persistence), OAuth server (metadata, authorize, token exchange, PKCE, refresh token rotation, DCR with client_id_issued_at, RFC 8707 resource parameter, redirect_uri validation, full E2E flow), access-log (level filtering, JSON format validation, lazy file open, close/reopen, none-level no-op, context fields)
 - Android (12 tests, 2 files): unit tests (server URL/port/binary name/socket timeout/retry interval/PID extraction regex/process line filter), instrumented tests (package name/app context validation with filesDir/assets/cacheDir)
@@ -94,9 +94,9 @@ Both use cobra for CLI with shared subcommands: `version`, `idf`, `dvnf`, `gener
 Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.0)
 
 Key packages:
-- `gkill/api/` — HTTP API handlers via gorilla/mux, **79 POST endpoints** under `/api/`. Main handler: `gkill_server_api.go` (~14,000 lines). Route definitions: `gkill_server_api_address.go`.
+- `gkill/api/` — HTTP API handlers via gorilla/mux, **80 POST endpoints** under `/api/`, plus `/zip_cache/` file server for extracted ZIP contents. Main handler: `gkill_server_api.go` (~14,000 lines). Route definitions: `gkill_server_api_address.go`. ZIP browsing: `handle_browse_zip_contents.go` (extraction with path traversal prevention, ZIP bomb limits, Shift_JIS→UTF-8 filename conversion, singleflight dedup).
 - `gkill/api/embed.go` — `//go:embed embed` directive serves the compiled Vue SPA at root `/`
-- `gkill/api/req_res/` — Request/response structs for every endpoint (171 types)
+- `gkill/api/req_res/` — Request/response structs for every endpoint (173 types)
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
 - `gkill/dao/` — Data access layer with `GkillDAOManager` managing SQLite3 databases
 - `gkill/dao/reps/` — Repository interfaces and implementations for each data type
@@ -111,7 +111,7 @@ Key packages:
 3. `*_repository_cached_sqlite3_impl.go` — cached variant (in-memory)
 4. `*_repository_temp_sqlite3_impl.go` — temp/transactional variant
 
-**Core entity — "Kyou"** (record). Data types: kmemo (text), timeis (timestamps), lantana (mood 0-10), kc (numeric), nlog (expense), urlog (bookmark), mi (task), idf_kyou (file), re_kyou (repost), tag, text, notification, git_commit_log, gps_log (GPS tracks).
+**Core entity — "Kyou"** (record). Data types: kmemo (text), timeis (timestamps), lantana (mood 0-10), kc (numeric), nlog (expense), urlog (bookmark), mi (task), idf_kyou (file, with `is_zip` flag for .zip/.cbz), re_kyou (repost), tag, text, notification, git_commit_log, gps_log (GPS tracks).
 
 **Response structure:** All API responses include `messages []GkillMessage` and `errors []GkillError` (with `error_code` + `error_message`). HTTP 200 for normal responses (check `errors` array), 403 for access denied, 500 for unexpected errors.
 
@@ -128,6 +128,7 @@ $HOME/gkill/
 │   └── gkill_notification_target.db  # Push notification targets
 ├── datas/            # User data (default data directory)
 ├── caches/           # Cache files
+│   └── zip_cache/{sha1}/  # Extracted ZIP contents for browsing
 ├── logs/             # Log files (JSON format, split by level)
 │   ├── gkill_error.log / gkill_warn.log / gkill_info.log / ...
 │   └── gkill.log               # Merged log file
@@ -155,17 +156,17 @@ Stack: Vue 3 + Vuetify 3 + Vue Router + vue-i18n + Vite + PWA (vite-plugin-pwa +
 - `main.ts` — App entry, registers Vuetify, router, i18n, custom `v-long-press` directive
 - `router/index.ts` — 12 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, set_new_password, regist_first_account, shared_page, shared_mi)
 - `pages/` — Route page components
-- `pages/views/` — 175 view components for add/edit/list operations per data type
-- `pages/dialogs/` — 92 dialog components (Escape key closes via `useFloatingDialog`)
+- `pages/views/` — 176 view components for add/edit/list operations per data type
+- `pages/dialogs/` — 93 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser with inline image viewer
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,400 lines), client-side API wrapper
 - `classes/datas/` — TypeScript data models mirroring Go structs
 - `classes/kftl/` — KFTL parser (44 statement types)
-- `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target)
+- `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 - `plugins/vuetify.ts` — Vuetify config with light (`gkill_theme`) and dark (`gkill_dark_theme`) themes
 
 **State management:** Props/Emit only. No Pinia/Vuex. `GkillAPI` singleton for backend communication.
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. ~765 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. ~768 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 
@@ -206,7 +207,7 @@ Reverse-engineered design documents are in `documents/reverse/`:
 - `screen-transition.md` — Page/dialog navigation
 - `screen-specs.md` — Screen specifications and layouts
 - `usecase.md` — Use case catalog (74 use cases)
-- `api-endpoints.md` — API endpoint reference (79 endpoints)
+- `api-endpoints.md` — API endpoint reference (80 endpoints)
 - `error-handling-and-security.md` — Error handling policy and security design
 - `frontend-architecture.md` — Frontend design guide
 - `operations-guide.md` — Deployment, backup, troubleshooting, logging

@@ -384,6 +384,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -667,6 +668,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -861,6 +863,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -1024,6 +1027,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 			idfKyous = append(idfKyous, idf)
 		}
 	}
@@ -1237,6 +1241,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -1489,6 +1494,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -1665,6 +1671,7 @@ WHERE
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -2072,6 +2079,21 @@ func isAudio(filename string) bool {
 		return true
 	}
 	return false
+}
+
+func isZip(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case ".zip",
+		".cbz":
+		return true
+	}
+	return false
+}
+
+// IsImagePublic は外部パッケージからisImage判定を利用するための公開関数
+func IsImagePublic(filename string) bool {
+	return isImage(filename)
 }
 
 func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) error {

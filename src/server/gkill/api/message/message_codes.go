@@ -82,4 +82,5 @@ const (
 	GetKyousMCPSuccessMessage              = "MSG000077"
 	UpdateCacheSuccessMessage              = "MSG000078"
 	RegisterGkillNotificationSuccessMessage = "MSG000079"
+	BrowseZipContentsSuccessMessage         = "MSG000080"
 )

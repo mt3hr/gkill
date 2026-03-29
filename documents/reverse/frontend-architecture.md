@@ -75,7 +75,7 @@ Page（ルートページ）
 |---|---|---|---|
 | **Page** | `pages/*.vue` | 14 | ルーティング先。ページ全体のレイアウト（12ルート＋共有用2ページ） |
 | **View** | `pages/views/*.vue` | 175 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 92 | モーダル操作（確認、詳細編集等） |
+| **Dialog** | `pages/dialogs/*.vue` | 93 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -85,7 +85,7 @@ Page（ルートページ）
 
 ### ダイアログ アクセシビリティ
 
-全92ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
+全93ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
 
 | 機能 | 説明 |
 |------|------|
@@ -140,7 +140,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 `src/client/classes/api/gkill-api.ts` に定義。約3,400行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- 全79エンドポイントに対応するメソッドを持つ
+- 全80エンドポイントに対応するメソッドを持つ
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 
@@ -168,7 +168,8 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 - `force_reget` パラメータでキャッシュバイパス可能
 
 **SPAフォールバック:**
-- `/`、`/api/*`、`/files/*` 以外の全パスを `index.html` にフォールバック
+- `/`、`/api/*`、`/files/*`、`/zip_cache/*` 以外の全パスを `index.html` にフォールバック
+- `/zip_cache/.*` パターンは Service Worker の denylist に追加されており、キャッシュされない
 
 ### Web Share Target
 

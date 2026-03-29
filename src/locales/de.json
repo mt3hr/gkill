@@ -763,5 +763,8 @@
     "NETWORK_ERROR_MESSAGE": "Ein Netzwerkfehler ist aufgetreten. Bitte prüfen Sie Ihre Verbindung.",
     "NO_RESULTS_MESSAGE": "Keine Elemente",
     "REQUIRED_FIELD_MESSAGE": "Dieses Feld ist erforderlich",
-    "UNSAVED_CHANGES_WARNING_MESSAGE": "Es gibt nicht gespeicherte Änderungen. Seite verlassen?"
+    "UNSAVED_CHANGES_WARNING_MESSAGE": "Es gibt nicht gespeicherte Änderungen. Seite verlassen?",
+    "BROWSE_ZIP_CONTENTS_TITLE": "ZIP-Inhalt durchsuchen",
+    "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP-Inhalt konnte nicht durchsucht werden",
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP-Inhalt abgerufen"
 }

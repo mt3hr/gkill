@@ -470,7 +470,57 @@ sequenceDiagram
 - **RFC 8707（Resource Indicators）:** 認可〜トークン交換で `resource` パラメータを引き回し、一致を検証
 - **既知の制限:** ChatGPT はOAuth認証・初回データ取得は成功するが、cursorベースのページング継続時にプラットフォーム側で問題が発生する（2026-03時点）
 
-## 17. トランザクション（CommitTX / DiscardTX）
+## 17. ZIPファイル内容閲覧
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant UI as Vue フロントエンド
+    participant GkillAPI as GkillAPI (TS)
+    participant API as GkillServerAPI (Go)
+    participant IDFRep as IDFKyouRepository
+    participant FS as ファイルシステム
+
+    User->>UI: IDFKyou コンテキストメニュー<br>「ZIP内容を閲覧」選択
+    Note right of UI: is_zip=true の<br>IDFKyouのみ表示
+    UI->>GkillAPI: browseZipContents(session_id, idf_kyou_id)
+    GkillAPI->>API: POST /api/browse_zip_contents<br>{session_id, idf_kyou_id}
+    API->>API: getAccountFromSessionID(session_id)
+    API->>IDFRep: GetIDFKyou(idf_kyou_id)
+    IDFRep-->>API: IDFKyou（ファイルパス取得）
+    API->>API: SHA1ハッシュ計算
+    API->>FS: キャッシュ確認<br>$HOME/gkill/caches/zip_cache/{sha1}/
+
+    alt キャッシュ未存在
+        API->>FS: 一時ディレクトリに展開
+        API->>API: パストラバーサル検証<br>ZIPボム制限チェック<br>Shift_JISファイル名デコード
+        alt 検証失敗
+            API-->>GkillAPI: {errors: [{error_code: "ERR000376"}]}
+            GkillAPI-->>UI: エラー表示
+        end
+        API->>FS: 一時ディレクトリ→最終パスにリネーム<br>（アトミック展開）
+    end
+
+    API->>API: ZipEntryリスト生成
+    API-->>GkillAPI: {zip_entries: [...], messages}
+    GkillAPI-->>UI: ZipEntryリスト
+    UI-->>User: browse-zip-contents-dialog表示<br>（画像プレビュー・ページ送り・ファイルリンク）
+
+    User->>UI: ZIP内のファイルをクリック
+    UI->>API: GET /zip_cache/{sha1}/{path}<br>（セッション認証付き）
+    API->>FS: ファイル読み取り
+    FS-->>API: ファイルデータ
+    API-->>UI: ファイルデータ
+    UI-->>User: ファイル表示/ダウンロード
+```
+
+### 補足
+
+- **MSG000080**: ZIP内容の閲覧成功時に返されるメッセージコード
+- **キャッシュ**: 展開済みZIPはSHA1ハッシュベースで `$HOME/gkill/caches/zip_cache/` に永続化される。同一ZIPファイルの再アクセス時は展開をスキップしてキャッシュから直接返却する
+- **Service Worker**: `/zip_cache/.*` は Service Worker の denylist に追加されており、キャッシュされない
+
+## 18. トランザクション（CommitTX / DiscardTX）
 
 ```mermaid
 sequenceDiagram

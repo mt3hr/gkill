@@ -161,6 +161,8 @@ type GkillServerAPIAddress struct {
 
 	UpdateCacheAddress string
 
+	BrowseZipContentsAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -318,6 +320,8 @@ type GkillServerAPIAddress struct {
 	GetKyousMCPMethod string
 
 	UpdateCacheMethod string
+
+	BrowseZipContentsMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -482,5 +486,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetKyousMCPMethod = "POST"
 	gkillAPIAddress.UpdateCacheAddress = "/api/update_cache"
 	gkillAPIAddress.UpdateCacheMethod = "POST"
+	gkillAPIAddress.BrowseZipContentsAddress = "/api/browse_zip_contents"
+	gkillAPIAddress.BrowseZipContentsMethod = "POST"
 	return gkillAPIAddress
 }

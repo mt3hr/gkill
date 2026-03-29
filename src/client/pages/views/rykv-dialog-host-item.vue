@@ -107,6 +107,17 @@
     :enable_dialog="enable_dialog"
     v-on="dialog_events"
   />
+  <BrowseZipContentsDialog
+    v-else-if="item.kind === 'browse_zip_contents'"
+    ref="dialog"
+    :application_config="application_config"
+    :gkill_api="gkill_api"
+    :highlight_targets="[]"
+    :kyou="item.kyou"
+    :enable_context_menu="enable_context_menu"
+    :enable_dialog="enable_dialog"
+    v-on="dialog_events"
+  />
   <NotificationHistoriesDialog
     v-else-if="item.kind === 'notification_histories' && payload_notification"
     ref="dialog"
@@ -122,6 +133,7 @@
 </template>
 
 <script setup lang="ts">
+import BrowseZipContentsDialog from '../dialogs/browse-zip-contents-dialog.vue'
 import AddNotificationDialog from '../dialogs/add-notification-dialog.vue'
 import AddTagDialog from '../dialogs/add-tag-dialog.vue'
 import AddTextDialog from '../dialogs/add-text-dialog.vue'
