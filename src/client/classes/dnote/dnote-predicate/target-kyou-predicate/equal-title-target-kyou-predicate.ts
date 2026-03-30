@@ -8,7 +8,7 @@ export default class EqualTitleTargetKyouPredicate implements DnotePredicate {
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
-        const title = json.data_type_prefix as string
+        const title = json.value as string
         return new EqualTitleTargetKyouPredicate(title)
     }
     async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
