@@ -22,10 +22,10 @@ export default class NotPredicate implements DnotePredicate {
         }
         for (const predicate of this.predicates) {
             if ((await predicate.is_match(loaded_kyou, target_kyou))) {
-                return true
+                return false
             }
         }
-        return false
+        return true
     }
     predicate_struct_to_json(): Record<string, unknown> {
         return {

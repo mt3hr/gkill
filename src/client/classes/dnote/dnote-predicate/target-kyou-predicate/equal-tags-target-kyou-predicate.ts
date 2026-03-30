@@ -51,7 +51,7 @@ export default class EqualTagsTargetKyouPredicate implements DnotePredicate {
     predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "EqualTagsTargetKyouPredicate",
-            value: this.and,
+            and: this.and,
         }
     }
 }

@@ -16,7 +16,7 @@ export default class TextContentEqualPredicate implements DnotePredicate {
             for (let i = 0; i < loaded_kyou.attached_texts.length; i++) {
                 const text_content = loaded_kyou.attached_texts[i].text
                 if (text_content) {
-                    if (text_content == this.text_content_equal_target) {
+                    if (text_content === this.text_content_equal_target) {
                         return true
                     }
                 }

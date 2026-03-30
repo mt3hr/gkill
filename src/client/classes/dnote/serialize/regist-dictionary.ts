@@ -15,6 +15,9 @@ import AgregateSumLantanaMood from "../dnote-agregate-target/agregate-sum-lantan
 import AgregateSumNlogAmount from "../dnote-agregate-target/agregate-sum-nlog-amount"
 import AgregateSumTimeIsTime from "../dnote-agregate-target/agregate-sum-timeis-time"
 import AgregateSumKCNumValue from "../dnote-agregate-target/agregate-sum-kc-num-value"
+import AgregateAverageKCNumValue from "../dnote-agregate-target/agregate-average-kc-num-value"
+import AgregateMaxKCNumValue from "../dnote-agregate-target/agregate-max-kc-num-value"
+import AgregateMinKCNumValue from "../dnote-agregate-target/agregate-min-kc-num-value"
 import type DnoteKeyGetter from "../dnote-key-getter"
 import DataTypeGetter from "../dnote-key-getter/data-type-getter"
 import LantanaMoodGetter from "../dnote-key-getter/lantana-mood-getter"
@@ -129,9 +132,9 @@ export default function regist_dictionary(): void {
     AgregateTargetDictionary.set("AgregateSumLantanaMood", AgregateSumLantanaMood)
     AgregateTargetDictionary.set("AgregateSumNlogAmount", AgregateSumNlogAmount)
     AgregateTargetDictionary.set("AgregateSumTimeIsTime", AgregateSumTimeIsTime)
-    AgregateTargetDictionary.set("AgregateAverageKCNumValue", AgregateSumKCNumValue)
-    AgregateTargetDictionary.set("AgregateMaxKCNumValue", AgregateSumKCNumValue)
-    AgregateTargetDictionary.set("AgregateMinKCNumValue", AgregateSumKCNumValue)
+    AgregateTargetDictionary.set("AgregateAverageKCNumValue", AgregateAverageKCNumValue)
+    AgregateTargetDictionary.set("AgregateMaxKCNumValue", AgregateMaxKCNumValue)
+    AgregateTargetDictionary.set("AgregateMinKCNumValue", AgregateMinKCNumValue)
     AgregateTargetDictionary.set("AgregateSumKCNumValue", AgregateSumKCNumValue)
     DnoteKyouFilterDictionary.set("FilterTopKyous", FilterTopKyous)
     DnoteKyouFilterDictionary.set("FilterBottomKyous", FilterBottomKyous)

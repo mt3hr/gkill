@@ -129,7 +129,7 @@ td {
   padding-bottom: 0px;
 }
 
-h2 {
+h1,h2 {
   margin: 0px;
 }
 
