@@ -61,7 +61,7 @@ func TestQuoteIdent_WithDoubleQuotes(t *testing.T) {
 
 func TestGenerateNewID_Unique(t *testing.T) {
 	ids := make(map[string]bool)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		id := GenerateNewID()
 		if id == "" {
 			t.Fatal("GenerateNewID returned empty string")
@@ -87,7 +87,7 @@ func TestTimeLayout_IsValid(t *testing.T) {
 func TestGenerateFindSQLCommon_EmptyQuery(t *testing.T) {
 	query := &find.FindQuery{}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -113,7 +113,7 @@ func TestGenerateFindSQLCommon_UseIDs(t *testing.T) {
 		IDs:    []string{"id-1", "id-2", "id-3"},
 	}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -144,7 +144,7 @@ func TestGenerateFindSQLCommon_UseIDsEmpty(t *testing.T) {
 		IDs:    []string{},
 	}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -168,7 +168,7 @@ func TestGenerateFindSQLCommon_UseWords(t *testing.T) {
 		WordsAnd: true,
 	}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -199,7 +199,7 @@ func TestGenerateFindSQLCommon_UseWordsOr(t *testing.T) {
 		WordsAnd: false,
 	}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -228,7 +228,7 @@ func TestGenerateFindSQLCommon_UseCalendar(t *testing.T) {
 		CalendarEndDate:   &end,
 	}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -256,7 +256,7 @@ func TestGenerateFindSQLCommon_UseCalendar(t *testing.T) {
 func TestGenerateFindSQLCommon_OnlyLatestData(t *testing.T) {
 	query := &find.FindQuery{}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -275,7 +275,7 @@ func TestGenerateFindSQLCommon_OnlyLatestData(t *testing.T) {
 func TestGenerateFindSQLCommon_AppendOrderBy(t *testing.T) {
 	query := &find.FindQuery{}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -298,7 +298,7 @@ func TestGenerateFindSQLCommon_IgnoreCase(t *testing.T) {
 		WordsAnd: true,
 	}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,
@@ -320,7 +320,7 @@ func TestGenerateFindSQLCommon_NotWords(t *testing.T) {
 		NotWords: []string{"exclude"},
 	}
 	whereCounter := 0
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	sql, err := GenerateFindSQLCommon(
 		query, "MY_TABLE", "T", &whereCounter,

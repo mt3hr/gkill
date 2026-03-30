@@ -25,7 +25,7 @@ export class KFTLLantanaMoodStatementLine extends KFTLStatementLine {
         try {
             this.parse_mood()
             return i18n.global.t("KFTL_LANTANA_MOOD_VALUE_TITLE")
-        } catch (e: any) {
+        } catch (_e: unknown) {
             return i18n.global.t("KFTL_LANTANA_INVALID_MOOD_VALUE_TITLE")
         }
     }
@@ -39,7 +39,7 @@ export class KFTLLantanaMoodStatementLine extends KFTLStatementLine {
                 throw new Error(i18n.global.t("KFTL_LANTANA_OUT_OF_RANGE_MOOD_VALUE_MESSAGE_TITLE"))
             }
             return mood
-        } catch (e: any) {
+        } catch (_e: unknown) {
             throw new Error(i18n.global.t("KFTL_LANTANA_INVALID_MOOD_VALUE_MESSAGE_TITLE"))
         }
     }

@@ -65,7 +65,7 @@ describe('deepEquals', () => {
     })
 
     test('array does not equal non-array object', () => {
-      expect(deepEquals([1, 2] as any, { 0: 1, 1: 2 } as any)).toBe(false)
+      expect(deepEquals([1, 2] as never, { 0: 1, 1: 2 } as never)).toBe(false)
     })
   })
 
@@ -83,14 +83,14 @@ describe('deepEquals', () => {
     })
 
     test('objects with different keys return false', () => {
-      const a = { x: 1 } as any
-      const b = { x: 1, y: 2 } as any
+      const a = { x: 1 } as never
+      const b = { x: 1, y: 2 } as never
       expect(deepEquals(a, b)).toBe(false)
     })
 
     test('objects with same keys but missing property return false', () => {
-      const a = { x: 1, y: 2 } as any
-      const b = { x: 1, z: 2 } as any
+      const a = { x: 1, y: 2 } as never
+      const b = { x: 1, z: 2 } as never
       expect(deepEquals(a, b)).toBe(false)
     })
   })
@@ -111,7 +111,7 @@ describe('deepEquals', () => {
     test('date does not equal non-date object', () => {
       const d = new Date('2024-01-01T00:00:00Z')
       const obj = { getTime: () => d.getTime() }
-      expect(deepEquals(d as any, obj as any)).toBe(false)
+      expect(deepEquals(d as never, obj as never)).toBe(false)
     })
   })
 

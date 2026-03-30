@@ -11,7 +11,7 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 
 export class KFTLLantanaRequest extends KFTLRequest {
 
-    private mood: Number
+    private mood: number
 
     constructor(request_id: string, context: KFTLStatementLineContext) {
         super(request_id, context)
@@ -22,7 +22,7 @@ export class KFTLLantanaRequest extends KFTLRequest {
         let errors = new Array<GkillError>()
         await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
 
-        const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
+        const time = this.get_related_time() ? this.get_related_time()! : new Date(Date.now())
         const req = new AddLantanaRequest()
         const now = new Date(Date.now())
         req.tx_id = this.get_tx_id()
@@ -49,7 +49,7 @@ export class KFTLLantanaRequest extends KFTLRequest {
         return errors
     }
 
-    set_mood(mood: Number): void {
+    set_mood(mood: number): void {
         this.mood = mood
     }
 }

@@ -55,9 +55,9 @@ export class KFTLStatement {
         for (let cnt = 0, line = lines[lines.length - 1]; cnt < KFTLStatement.lookahead_line_count && line.get_context().get_next_statement_line_constructor() != null; cnt++) {
             const line_text = ""
             const next_line_text = ""
-            const target_id: string = (prev_context != null && prev_context.get_next_statement_line_target_id() != null) ? prev_context.get_next_statement_line_target_id()!! : GkillAPI.get_gkill_api().generate_uuid()!!
+            const target_id: string = (prev_context != null && prev_context.get_next_statement_line_target_id() != null) ? prev_context.get_next_statement_line_target_id()! : GkillAPI.get_gkill_api().generate_uuid()!
             const context = new KFTLStatementLineContext(tx_id, line_text, next_line_text, target_id, lines, false)
-            line = line.get_context().get_next_statement_line_constructor()!!(context.get_this_statement_line_target_id(), context)
+            line = line.get_context().get_next_statement_line_constructor()!(context.get_this_statement_line_target_id(), context)
             const label_data = new LineLabelData()
             label_data.lines = line.get_count_line_in_textarea(text_area_info).valueOf()
             label_data.label = line.get_label_name(line.get_context())
@@ -96,7 +96,7 @@ export class KFTLStatement {
         for (let i = 0; i < line_texts.length; i++) {
             const line_text = line_texts[i]
             const next_line_text = i < line_texts.length - 1 ? line_texts[i + 1] : ""
-            const target_id: string = (prev_context != null && prev_context.get_next_statement_line_target_id() != null) ? prev_context.get_next_statement_line_target_id()!! : GkillAPI.get_gkill_api().generate_uuid()
+            const target_id: string = (prev_context != null && prev_context.get_next_statement_line_target_id() != null) ? prev_context.get_next_statement_line_target_id()! : GkillAPI.get_gkill_api().generate_uuid()
             const prototype_flag: boolean = (prev_context != null && prev_context.is_this_prototype() != null) ? prev_context?.is_next_prototype() : true
             const context: KFTLStatementLineContext = new KFTLStatementLineContext(tx_id, line_text, target_id, next_line_text, lines.slice(0, i), prototype_flag)
             context.set_add_second(prev_add_second)
@@ -124,7 +124,7 @@ export class KFTLStatement {
             const line = lines[i]
             try {
                 await line.apply_this_line_to_request_map(map)
-            } catch (e: any) {
+            } catch (_e: unknown) {
                 invalid_line_indexs.push(i)
             }
         }

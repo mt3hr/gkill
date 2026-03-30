@@ -1,4 +1,5 @@
 import { nextTick, type Ref, ref } from 'vue'
+import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { UploadFileViewProps } from '@/pages/views/upload-file-view-props'
 import type { UploadFileViewEmits } from '@/pages/views/upload-file-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -136,7 +137,7 @@ export function useUploadFileView(options: {
         gps_log_files.value = null
     }
 
-    async function to_base64(file: any): Promise<string> {
+    async function to_base64(file: File): Promise<string> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -168,11 +169,11 @@ export function useUploadFileView(options: {
 
     // ── CRUD relay handlers ──
     const crudRelayHandlers = {
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
-        'requested_reload_kyou': (...kyou: any[]) => reload_kyou(kyou[0] as Kyou),
-        'deleted_kyou': (...deleted_kyou: any[]) => removeUploadedKyou(deleted_kyou[0] as Kyou),
-        'requested_open_rykv_dialog': (...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2]),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
+        'deleted_kyou': (kyou: Kyou) => removeUploadedKyou(kyou),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
     // ── Return ──

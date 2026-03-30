@@ -9,23 +9,24 @@ import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useKftlPage() {
     const theme = useTheme()
 
     // ── Template refs ──
-    const application_config_dialog = ref<any>(null)
-    const kftl_view = ref<any>(null)
+    const application_config_dialog = ref<ComponentRef | null>(null)
+    const kftl_view = ref<ComponentRef | null>(null)
 
     // ── State refs ──
-    const actual_height: Ref<Number> = ref(0)
-    const element_height: Ref<Number> = ref(0)
-    const browser_url_bar_height: Ref<Number> = ref(0)
-    const app_title_bar_height: Ref<Number> = ref(50)
+    const actual_height: Ref<number> = ref(0)
+    const element_height: Ref<number> = ref(0)
+    const browser_url_bar_height: Ref<number> = ref(0)
+    const app_title_bar_height: Ref<number> = ref(50)
     const gkill_api = computed(() => GkillAPI.get_instance())
     const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
-    const app_content_height: Ref<Number> = ref(0)
-    const app_content_width: Ref<Number> = ref(0)
+    const app_content_height: Ref<number> = ref(0)
+    const app_content_width: Ref<number> = ref(0)
     const is_show_application_config_dialog: Ref<boolean> = ref(false)
     const is_loading = ref(true)
 
@@ -156,7 +157,8 @@ export function useKftlPage() {
             .then(function (registration) {
                 return registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as any,
                 });
             })
             .then(async function (subscription) {
@@ -202,12 +204,12 @@ export function useKftlPage() {
     }
 
     // ── Event handlers ──
-    function onReceivedErrors(...errors: any[]): void {
-        write_errors(errors[0] as Array<GkillError>)
+    function onReceivedErrors(errors: Array<GkillError>): void {
+        write_errors(errors)
     }
 
-    function onReceivedMessages(...messages_args: any[]): void {
-        write_messages(messages_args[0] as Array<GkillMessage>)
+    function onReceivedMessages(messages: Array<GkillMessage>): void {
+        write_messages(messages)
     }
 
     function onRequestedReloadApplicationConfig(): void {

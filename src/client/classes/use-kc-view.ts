@@ -7,7 +7,7 @@ export function useKCView(options: {
     props: KCViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits } = options
+    const { props, emits: _emits } = options
 
     const context_menu = ref<InstanceType<typeof KCContextMenu> | null>(null)
 

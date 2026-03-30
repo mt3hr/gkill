@@ -14,7 +14,7 @@
         </div>
 
         <v-calendar :width="350" :model-value="date"
-            @update:model-value="(...updated_date: any[]) => { date = new Date(updated_date[0]) }"
+            @update:model-value="(updated_date: string) => { date = new Date(updated_date) }"
             ref="kyou_counter_calendar" :events="events" @wheel.prevent.stop="on_wheel">
             <template v-slot:event="{ event }">
                 <div class="kyou_count">

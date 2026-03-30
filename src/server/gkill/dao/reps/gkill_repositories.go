@@ -9,7 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"cmp"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -25,7 +26,7 @@ import (
 
 var (
 	// 全体で1つだけ起動されるように考慮。
-	updateCacheThreadPool = make(chan interface{}, 1)
+	updateCacheThreadPool = make(chan any, 1)
 )
 
 func init() {
@@ -665,8 +666,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b Kyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil
@@ -776,8 +777,8 @@ loop:
 		matchTagsList = append(matchTagsList, tag)
 	}
 
-	sort.Slice(matchTagsList, func(i, j int) bool {
-		return matchTagsList[i].RelatedTime.After(matchTagsList[j].RelatedTime)
+	slices.SortFunc(matchTagsList, func(a, b Tag) int {
+		return b.RelatedTime.Compare(a.RelatedTime)
 	})
 	return matchTagsList, nil
 }
@@ -919,8 +920,8 @@ loop:
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
-	sort.Slice(tagHistoriesList, func(i, j int) bool {
-		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
+	slices.SortFunc(tagHistoriesList, func(a, b Tag) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return tagHistoriesList, nil
@@ -942,8 +943,8 @@ func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id str
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
-	sort.Slice(tagHistoriesList, func(i, j int) bool {
-		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
+	slices.SortFunc(tagHistoriesList, func(a, b Tag) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return tagHistoriesList, nil
@@ -1021,8 +1022,8 @@ loop:
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
-	sort.Slice(tagHistoriesList, func(i, j int) bool {
-		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
+	slices.SortFunc(tagHistoriesList, func(a, b Tag) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return tagHistoriesList, nil
@@ -1096,8 +1097,8 @@ loop:
 		repNamesList = append(repNamesList, repName)
 	}
 
-	sort.Slice(repNamesList, func(i, j int) bool {
-		return repNamesList[i] < repNamesList[j]
+	slices.SortFunc(repNamesList, func(a, b string) int {
+		return cmp.Compare(a, b)
 	})
 
 	return repNamesList, nil
@@ -1209,8 +1210,8 @@ loop:
 		matchTextsList = append(matchTextsList, text)
 	}
 
-	sort.Slice(matchTextsList, func(i, j int) bool {
-		return matchTextsList[i].RelatedTime.After(matchTextsList[j].RelatedTime)
+	slices.SortFunc(matchTextsList, func(a, b Text) int {
+		return b.RelatedTime.Compare(a.RelatedTime)
 	})
 	return matchTextsList, nil
 }
@@ -1417,8 +1418,8 @@ loop:
 		textHistoriesList = append(textHistoriesList, text)
 	}
 
-	sort.Slice(textHistoriesList, func(i, j int) bool {
-		return textHistoriesList[i].UpdateTime.After(textHistoriesList[j].UpdateTime)
+	slices.SortFunc(textHistoriesList, func(a, b Text) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return textHistoriesList, nil
@@ -1496,8 +1497,8 @@ loop:
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
-	sort.Slice(notificationHistoriesList, func(i, j int) bool {
-		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
+	slices.SortFunc(notificationHistoriesList, func(a, b Notification) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return notificationHistoriesList, nil
@@ -1575,8 +1576,8 @@ loop:
 		textHistoriesList = append(textHistoriesList, text)
 	}
 
-	sort.Slice(textHistoriesList, func(i, j int) bool {
-		return textHistoriesList[i].UpdateTime.After(textHistoriesList[j].UpdateTime)
+	slices.SortFunc(textHistoriesList, func(a, b Text) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return textHistoriesList, nil
@@ -1654,8 +1655,8 @@ loop:
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
-	sort.Slice(notificationHistoriesList, func(i, j int) bool {
-		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
+	slices.SortFunc(notificationHistoriesList, func(a, b Notification) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return notificationHistoriesList, nil

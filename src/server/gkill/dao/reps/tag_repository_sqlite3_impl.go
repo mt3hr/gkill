@@ -239,7 +239,7 @@ WHERE
 		return nil, err
 	}
 	dataType := "tag"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -410,7 +410,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -572,7 +572,7 @@ WHERE
 		UseWords: true,
 		Words:    words,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -730,7 +730,7 @@ WHERE
 		UseWords: true,
 		Words:    targetIDs,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -914,7 +914,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -1081,7 +1081,7 @@ INSERT INTO TAG (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		tag.IsDeleted,
 		tag.ID,
 		tag.Tag,
@@ -1232,7 +1232,7 @@ WHERE
 	dataType := "tag"
 
 	query := &find.FindQuery{}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -1496,7 +1496,7 @@ WHERE KEY = ?
 		}
 	}()
 	dbSchemaVersion := ""
-	queryArgs := []interface{}{schemaVersionKey}
+	queryArgs := []any{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
@@ -1518,7 +1518,7 @@ VALUES(?, ?)`
 					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 				}
 			}()
-			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
+			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
@@ -1527,7 +1527,7 @@ VALUES(?, ?)`
 				return false, nil, err
 			}
 
-			queryArgs = []interface{}{schemaVersionKey}
+			queryArgs = []any{schemaVersionKey}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {

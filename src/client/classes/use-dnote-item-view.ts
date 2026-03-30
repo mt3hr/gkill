@@ -1,4 +1,5 @@
 import { computed, ref, type Ref } from 'vue'
+import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type DnoteItemProps from '@/pages/views/dnote-item-props'
 import type DnoteItemViewEmits from '@/pages/views/dnote-item-view-emits'
 import { DnoteAgregator } from '@/classes/dnote/dnote-aggregator'
@@ -10,6 +11,7 @@ import type { Text } from '@/classes/datas/text'
 import type { Notification } from '@/classes/datas/notification'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useDnoteItemView(options: {
     props: DnoteItemProps,
@@ -19,10 +21,10 @@ export function useDnoteItemView(options: {
     const { props, emits, model_value } = options
 
     // ── Template refs ──
-    const contextmenu = ref<any>(null)
-    const confirm_delete_dnote_item_list_dialog = ref<any>(null)
-    const edit_dnote_item_dialog = ref<any>(null)
-    const kyou_list_view_dialog = ref<any>(null)
+    const contextmenu = ref<ComponentRef | null>(null)
+    const confirm_delete_dnote_item_list_dialog = ref<ComponentRef | null>(null)
+    const edit_dnote_item_dialog = ref<ComponentRef | null>(null)
+    const kyou_list_view_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const value = ref("")
@@ -30,7 +32,7 @@ export function useDnoteItemView(options: {
     const list_height = computed(() => (window.screen.height * 7) / 10)
 
     // ── Computed ──
-    const aggregate_target_type = computed(() => model_value.value?.agregate_target?.to_json().type.toString() ?? "")
+    const aggregate_target_type = computed(() => (model_value.value?.agregate_target?.to_json().type as string)?.toString() ?? "")
     const is_lantana_type = computed(() => aggregate_target_type.value.includes("Lantana"))
 
     const is_plus_number_value = computed(() => {
@@ -54,7 +56,7 @@ export function useDnoteItemView(options: {
         kyous: Array<Kyou>,
         query: FindKyouQuery,
         kyou_is_loaded: boolean
-    ): Promise<any> {
+    ): Promise<void> {
         related_kyous.value.splice(0)
         const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.agregate_target)
         const aggregate_result = await dnote_aggregator.agregate(abort_controller, kyous, query, kyou_is_loaded)
@@ -113,7 +115,7 @@ export function useDnoteItemView(options: {
     }
 
     // ── Template event handlers ──
-    function onContextmenu(e: any): void {
+    function onContextmenu(e: MouseEvent): void {
         if (props.editable) {
             contextmenu.value?.show(e, model_value.value!.id)
         }
@@ -133,42 +135,42 @@ export function useDnoteItemView(options: {
 
     // ── CRUD relay handlers ──
     const kyouListViewDialogHandlers = {
-        'deleted_kyou': (...kyou: any[]) => emits('deleted_kyou', kyou[0]),
-        'deleted_tag': (...tag: any[]) => emits('deleted_tag', tag[0]),
-        'deleted_text': (...text: any[]) => emits('deleted_text', text[0]),
-        'deleted_notification': (...n: any[]) => emits('deleted_notification', n[0]),
-        'registered_kyou': (...kyou: any[]) => emits('registered_kyou', kyou[0]),
-        'registered_tag': (...tag: any[]) => emits('registered_tag', tag[0]),
-        'registered_text': (...text: any[]) => emits('registered_text', text[0]),
-        'registered_notification': (...n: any[]) => emits('registered_notification', n[0]),
-        'updated_kyou': (...kyou: any[]) => emits('updated_kyou', kyou[0]),
-        'updated_tag': (...tag: any[]) => emits('updated_tag', tag[0]),
-        'updated_text': (...text: any[]) => emits('updated_text', text[0]),
-        'updated_notification': (...n: any[]) => emits('updated_notification', n[0]),
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0]),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0]),
-        'focused_kyou': (...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou),
-        'clicked_kyou': (...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) },
-        'requested_open_rykv_dialog': (...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2]),
+        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'focused_kyou': (kyou: Kyou) => emits('focused_kyou', kyou),
+        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
     const contextMenuHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0]),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0]),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
         'requested_delete_dnote_item_list': () => onRequestedDeleteDnoteItemList(),
         'requested_edit_dnote_item_list': () => onRequestedEditDnoteItemList(),
     }
 
     const confirmDeleteHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0]),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0]),
-        'requested_delete_dnote_list_item': (...id: any[]) => emits('requested_delete_dnote_item', id[0] as string),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_delete_dnote_list_item': (value: string) => emits('requested_delete_dnote_item', value),
     }
 
     const editDnoteItemHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0]),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0]),
-        'requested_update_dnote_item': (...d: any[]) => emits('requested_update_dnote_item', d[0]),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_update_dnote_item': (item: DnoteItem) => emits('requested_update_dnote_item', item),
     }
 
     return {

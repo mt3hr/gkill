@@ -7,7 +7,7 @@ import { vLongPress } from '@/classes/long-press'
 
 // jsdom doesn't have PointerEvent; polyfill it
 if (typeof globalThis.PointerEvent === 'undefined') {
-  (globalThis as any).PointerEvent = class PointerEvent extends MouseEvent {
+  (globalThis as unknown as Record<string, unknown>).PointerEvent = class PointerEvent extends MouseEvent {
     constructor(type: string, init?: PointerEventInit) {
       super(type, init)
     }
@@ -20,12 +20,12 @@ function createEl(): HTMLElement {
   return el
 }
 
-function mountDirective(el: HTMLElement, value: any) {
-  vLongPress.mounted!(el, { value } as any, null as any, null as any)
+function mountDirective(el: HTMLElement, value: () => void) {
+  vLongPress.mounted!(el, { value } as never, null as never, null as never)
 }
 
 function unmountDirective(el: HTMLElement) {
-  vLongPress.unmounted!(el, {} as any, null as any, null as any)
+  vLongPress.unmounted!(el, {} as never, null as never, null as never)
 }
 
 function firePointerDown(el: HTMLElement, button = 0) {

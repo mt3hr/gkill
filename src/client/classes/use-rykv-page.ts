@@ -12,22 +12,23 @@ import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-
 import { Tag } from '@/classes/datas/tag'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useRykvPage() {
     const theme = useTheme()
 
     // ── Template refs ──
-    const application_config_dialog = ref<any>(null)
+    const application_config_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
-    const actual_height: Ref<Number> = ref(0)
-    const element_height: Ref<Number> = ref(0)
-    const browser_url_bar_height: Ref<Number> = ref(0)
-    const app_title_bar_height: Ref<Number> = ref(50)
+    const actual_height: Ref<number> = ref(0)
+    const element_height: Ref<number> = ref(0)
+    const browser_url_bar_height: Ref<number> = ref(0)
+    const app_title_bar_height: Ref<number> = ref(50)
     const gkill_api = computed(() => GkillAPI.get_instance())
     const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
-    const app_content_height: Ref<Number> = ref(0)
-    const app_content_width: Ref<Number> = ref(0)
+    const app_content_height: Ref<number> = ref(0)
+    const app_content_width: Ref<number> = ref(0)
     const is_show_application_config_dialog: Ref<boolean> = ref(false)
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
@@ -203,7 +204,8 @@ export function useRykvPage() {
             .then(function (registration) {
                 return registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as any,
                 });
             })
             .then(async function (subscription) {
@@ -297,12 +299,12 @@ export function useRykvPage() {
         show_application_config_dialog()
     }
 
-    function onReceivedErrors(...errors: any[]): void {
-        write_errors(errors[0] as Array<GkillError>)
+    function onReceivedErrors(errors: Array<GkillError>): void {
+        write_errors(errors)
     }
 
-    function onReceivedMessages(...messages_args: any[]): void {
-        write_messages(messages_args[0] as Array<GkillMessage>)
+    function onReceivedMessages(messages: Array<GkillMessage>): void {
+        write_messages(messages)
     }
 
     function onRequestedReloadApplicationConfig(): void {
@@ -315,20 +317,20 @@ export function useRykvPage() {
 
     // ── CRUD relay for RykvView ──
     const rykvViewHandlers = {
-        'deleted_kyou': (..._args: any[]) => onDeletedKyou(),
-        'deleted_tag': (..._args: any[]) => onDeletedTag(),
-        'deleted_text': (..._args: any[]) => onDeletedText(),
-        'deleted_notification': (..._args: any[]) => onDeletedNotification(),
-        'registered_kyou': (..._args: any[]) => onRegisteredKyou(),
-        'registered_tag': (...args: any[]) => onRegisteredTag(args[0] as Tag),
-        'registered_text': (..._args: any[]) => onRegisteredText(),
-        'registered_notification': (..._args: any[]) => onRegisteredNotification(),
-        'updated_kyou': (..._args: any[]) => onUpdatedKyou(),
-        'updated_tag': (...args: any[]) => onUpdatedTag(args[0] as Tag),
-        'updated_text': (..._args: any[]) => onUpdatedText(),
+        'deleted_kyou': () => onDeletedKyou(),
+        'deleted_tag': () => onDeletedTag(),
+        'deleted_text': () => onDeletedText(),
+        'deleted_notification': () => onDeletedNotification(),
+        'registered_kyou': () => onRegisteredKyou(),
+        'registered_tag': (tag: Tag) => onRegisteredTag(tag),
+        'registered_text': () => onRegisteredText(),
+        'registered_notification': () => onRegisteredNotification(),
+        'updated_kyou': () => onUpdatedKyou(),
+        'updated_tag': (tag: Tag) => onUpdatedTag(tag),
+        'updated_text': () => onUpdatedText(),
         'requested_show_application_config_dialog': () => onRequestedShowApplicationConfigDialog(),
-        'received_errors': (...args: any[]) => onReceivedErrors(...args),
-        'received_messages': (...args: any[]) => onReceivedMessages(...args),
+        'received_errors': (errors: Array<GkillError>) => onReceivedErrors(errors),
+        'received_messages': (messages: Array<GkillMessage>) => onReceivedMessages(messages),
         'requested_reload_application_config': () => onRequestedReloadApplicationConfig(),
     }
 

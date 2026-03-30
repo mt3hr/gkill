@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
-import { navigateToSettings, clickDialogButton } from './crud-helpers'
+import { navigateToSettings } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
@@ -23,7 +23,7 @@ test.describe('User Config CRUD', () => {
     const app = page.locator('#app')
     const content = await app.textContent()
     // Look for GoogleMap or API key related content
-    const hasGoogleMapSection = content!.includes('GoogleMap') || content!.includes('API') ||
+    const _hasGoogleMapSection = content!.includes('GoogleMap') || content!.includes('API') ||
       content!.includes('Map') || content!.includes('地図')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
@@ -59,7 +59,7 @@ test.describe('User Config CRUD', () => {
     await navigateToSettings(page)
     const app = page.locator('#app')
     const content = await app.textContent()
-    const hasHotReload = content!.includes('ホットリロード') || content!.includes('HotReload') ||
+    const _hasHotReload = content!.includes('ホットリロード') || content!.includes('HotReload') ||
       content!.includes('hot') || content!.includes('reload')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
@@ -77,7 +77,7 @@ test.describe('User Config CRUD', () => {
     await navigateToSettings(page)
     const app = page.locator('#app')
     const content = await app.textContent()
-    const hasTagSection = content!.includes('タグ') || content!.includes('Tag')
+    const _hasTagSection = content!.includes('タグ') || content!.includes('Tag')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
   })
@@ -168,7 +168,7 @@ test.describe('User Config CRUD', () => {
     await navigateToSettings(page)
     const app = page.locator('#app')
     const content = await app.textContent()
-    const hasKFTL = content!.includes('KFTL') || content!.includes('テンプレート') || content!.includes('template')
+    const _hasKFTL = content!.includes('KFTL') || content!.includes('テンプレート') || content!.includes('template')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
   })

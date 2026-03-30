@@ -25,7 +25,7 @@ export class KFTLKCNumValueStatementLine extends KFTLStatementLine {
         try {
             this.parse_num_value()
             return i18n.global.t("KFTL_KC_NUM_VALUE_TITLE")
-        } catch (e: any) {
+        } catch (_e: unknown) {
             return i18n.global.t("KFTL_KC_INVALID_NUM_VALUE_TITLE")
         }
     }
@@ -36,7 +36,7 @@ export class KFTLKCNumValueStatementLine extends KFTLStatementLine {
                 throw new Error(i18n.global.t("KFTL_KC_INVALID_NUM_VALUE_MESSAGE_TITLE"))
             }
             return num_value
-        } catch (e: any) {
+        } catch (_e: unknown) {
             throw new Error(i18n.global.t("KFTL_KC_INVALID_NUM_VALUE_MESSAGE_TITLE"))
         }
     }

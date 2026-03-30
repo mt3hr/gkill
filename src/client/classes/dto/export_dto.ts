@@ -1,6 +1,7 @@
 import { pruneEmpty } from "./export_prune"
+import type { Kyou } from "@/classes/datas/kyou"
 
-export function toExportKyouDto(kyou: any) {
+export function toExportKyouDto(kyou: Kyou) {
     const meta = {
         // id: kyou.id,
         data_type: kyou.data_type,
@@ -11,22 +12,22 @@ export function toExportKyouDto(kyou: any) {
     }
 
     const tags =
-        kyou.attached_tags?.map((t: any) => t.tag)
+        kyou.attached_tags?.map((t: { tag: string }) => t.tag)
 
     const texts =
-        kyou.attached_texts?.map((t: any) => t.text)
+        kyou.attached_texts?.map((t: { text: string }) => t.text)
 
     const notifications =
-        kyou.attached_notifications?.map((n: any) => ({
+        kyou.attached_notifications?.map((n: { content: string; notification_time: Date; is_notificated: boolean }) => ({
             content: n.content,
             notification_time: toIso(n.notification_time),
             is_notificated: n.is_notificated,
         }))
 
     const timeis =
-        kyou.attached_timeis_kyou?.map((tk: any) => ({
+        kyou.attached_timeis_kyou?.map((tk: Kyou) => ({
             title: tk.typed_timeis?.title,
-            tags: tk.attached_tags?.map((t: any) => t.tag),
+            tags: tk.attached_tags?.map((t: { tag: string }) => t.tag),
         }))
 
     const payload =
@@ -96,7 +97,7 @@ export function toExportKyouDto(kyou: any) {
     })
 }
 
-function toIso(v: any): string | undefined {
+function toIso(v: Date | string | null | undefined): string | undefined {
     if (!v) return undefined
     if (v instanceof Date) return v.toISOString()
     return String(v)

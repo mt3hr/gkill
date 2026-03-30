@@ -63,7 +63,7 @@ export function useAddDnoteListView(options: {
         emits('requested_close_dialog')
     }
 
-    function predicate_struct_to_json(group: PredicateGroupType | Predicate): any {
+    function predicate_struct_to_json(group: PredicateGroupType | Predicate): Record<string, unknown> {
         if (is_group(group)) {
             return {
                 logic: group.logic,

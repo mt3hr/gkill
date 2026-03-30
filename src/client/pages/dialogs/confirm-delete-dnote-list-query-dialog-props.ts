@@ -2,5 +2,4 @@
 
 import type { GkillPropsBase } from "../views/gkill-props-base"
 
-export interface ConfirmDeleteDnoteListQueryDialogProps extends GkillPropsBase {
-}
+export type ConfirmDeleteDnoteListQueryDialogProps = GkillPropsBase

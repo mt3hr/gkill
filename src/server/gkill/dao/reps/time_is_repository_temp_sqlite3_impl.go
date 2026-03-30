@@ -214,14 +214,14 @@ INSERT INTO TIMEIS (
 		}
 	}()
 
-	var endTimeStr interface{}
+	var endTimeStr any
 	if timeis.EndTime == nil {
 		endTimeStr = nil
 	} else {
 		endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		timeis.IsDeleted,
 		timeis.ID,
 		timeis.Title,
@@ -282,7 +282,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "timeis"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -410,7 +410,7 @@ AND DEVICE = ?
 
 	dataType := "timeis"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -530,7 +530,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

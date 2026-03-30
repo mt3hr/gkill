@@ -44,7 +44,7 @@ export class KFTLNlogRequest extends KFTLRequest {
                 error.error_message = i18n.global.t("KFTL_NLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE")
                 errors.push(error)
             }
-            const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
+            const time = this.get_related_time() ? this.get_related_time()! : new Date(Date.now())
             const req = new AddNlogRequest()
             req.tx_id = this.get_tx_id()
             const now = new Date(Date.now())

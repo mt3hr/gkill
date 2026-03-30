@@ -7,14 +7,14 @@ import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
 export function useSetNewPasswordPage() {
     // ── State refs ──
-    const actual_height: Ref<Number> = ref(0)
-    const element_height: Ref<Number> = ref(0)
-    const browser_url_bar_height: Ref<Number> = ref(0)
-    const app_title_bar_height: Ref<Number> = ref(50)
+    const actual_height: Ref<number> = ref(0)
+    const element_height: Ref<number> = ref(0)
+    const browser_url_bar_height: Ref<number> = ref(0)
+    const app_title_bar_height: Ref<number> = ref(50)
     const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
     const gkill_api = computed(() => GkillAPI.get_instance())
-    const app_content_height: Ref<Number> = ref(0)
-    const app_content_width: Ref<Number> = ref(0)
+    const app_content_height: Ref<number> = ref(0)
+    const app_content_width: Ref<number> = ref(0)
     const gkill_version: Ref<string> = ref(package_json.version)
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
@@ -93,12 +93,12 @@ export function useSetNewPasswordPage() {
     }
 
     // ── Event handlers ──
-    function onReceivedErrors(...errors: any[]): void {
-        write_errors(errors[0] as Array<GkillError>)
+    function onReceivedErrors(errors: Array<GkillError>): void {
+        write_errors(errors)
     }
 
-    function onReceivedMessages(...messages_args: any[]): void {
-        write_messages(messages_args[0] as Array<GkillMessage>)
+    function onReceivedMessages(messages: Array<GkillMessage>): void {
+        write_messages(messages)
     }
 
     function onCloseMessage(message_id: string): void {

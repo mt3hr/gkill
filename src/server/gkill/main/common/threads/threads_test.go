@@ -42,12 +42,12 @@ func TestGoExecutesFunctionAndWaitGroupCompletes(t *testing.T) {
 func TestAcquireContextCancellation(t *testing.T) {
 	// Fill the semaphore completely so the next Acquire must block.
 	capacity := cap(sem)
-	for i := 0; i < capacity; i++ {
+	for range capacity {
 		sem <- struct{}{}
 	}
 	// Drain after test.
 	defer func() {
-		for i := 0; i < capacity; i++ {
+		for range capacity {
 			<-sem
 		}
 	}()
@@ -69,7 +69,7 @@ func TestMultipleConcurrentGoCalls(t *testing.T) {
 	var counter atomic.Int64
 	var wg sync.WaitGroup
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		err := Go(context.Background(), &wg, func() {
 			counter.Add(1)
 			// Simulate some work.

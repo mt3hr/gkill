@@ -3,9 +3,6 @@
  */
 import regist_dictionary, {
   build_dnote_predicate_from_json,
-  build_dnote_aggregate_target_from_json,
-  build_dnote_key_getter_from_json,
-  build_dnote_kyou_filter_from_json,
 } from '@/classes/dnote/serialize/regist-dictionary'
 import PredicateDictionary from '@/classes/dnote/serialize/dnote-predicate-dictionary'
 import AgregateTargetDictionary from '@/classes/dnote/serialize/dnote-aggregate-target-dictionary'

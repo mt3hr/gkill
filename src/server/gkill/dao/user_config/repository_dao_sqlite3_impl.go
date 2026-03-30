@@ -217,7 +217,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		userID,
 		device,
 	}
@@ -307,7 +307,7 @@ WHERE USER_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		userID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -356,7 +356,7 @@ INSERT INTO REPOSITORY (
 	for _, repository := range repositories {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			repository.ID,
 			repository.UserID,
 			repository.Device,
@@ -444,7 +444,7 @@ INSERT INTO REPOSITORY (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repository.ID,
 		repository.UserID,
 		repository.Device,
@@ -529,7 +529,7 @@ INSERT INTO REPOSITORY (
 
 	for _, repository := range repositories {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			repository.ID,
 			repository.UserID,
 			repository.Device,
@@ -607,7 +607,7 @@ WHERE ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repository.ID,
 		repository.UserID,
 		repository.Device,
@@ -655,7 +655,7 @@ WHERE ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		id,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -687,7 +687,7 @@ WHERE USER_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		userID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -710,7 +710,7 @@ func (r *repositoryDAOSQLite3Impl) checkUseToWriteRepositoryCount(ctx context.Co
 	selectDeviceSQL := `
 SELECT DEVICE FROM REPOSITORY WHERE USER_ID = ? GROUP BY DEVICE
 `
-	selectDeviceQueryArgs := []interface{}{
+	selectDeviceQueryArgs := []any{
 		userID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectDeviceSQL)
@@ -876,7 +876,7 @@ GROUP BY TYPE, DEVICE
 	for _, targetDevice := range devices {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSQL)
 
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			userID,
 			targetDevice,
 		}

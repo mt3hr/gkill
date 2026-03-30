@@ -6,7 +6,7 @@
                     :label="i18n.global.t('SORT_TITLE')" />
             </v-col>
             <v-spacer />
-            <v-col cols="auto" class="pb-0 mb-0 pr-0">
+            <v-col cols="auto" class="pb-0 mb-0 pr-0 pt-2">
                 <v-btn dark color="secondary" @click="emits('request_clear_sort_type')" hide-details>{{
                     i18n.global.t("CLEAR_TITLE") }}</v-btn>
             </v-col>

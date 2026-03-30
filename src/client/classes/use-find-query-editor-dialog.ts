@@ -13,7 +13,7 @@ export function useFindQueryEditorDialog(options: {
     emits: FindQueryEditorDialogEmits
     model_value: Ref<FindKyouQuery | undefined>
 }) {
-    const { props, emits, model_value } = options
+    const { props, emits: _emits, model_value } = options
 
     const is_show_dialog: Ref<boolean> = ref(false)
     useDialogHistoryStack(is_show_dialog)

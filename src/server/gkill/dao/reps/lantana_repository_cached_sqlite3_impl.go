@@ -168,7 +168,7 @@ WHERE
 `
 	dataType := "lantana"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -294,7 +294,7 @@ WHERE
 		UpdateTime:     updateTime,
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -415,7 +415,7 @@ WHERE
 		IDs:    ids,
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -619,7 +619,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				lantana.IsDeleted,
 				lantana.ID,
 				lantana.Mood,
@@ -724,7 +724,7 @@ WHERE
 `
 	dataType := "lantana"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -850,7 +850,7 @@ WHERE
 
 	dataType := "lantana"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -974,7 +974,7 @@ WHERE
 
 	dataType := "lantana"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1067,7 +1067,7 @@ WHERE
 func (l *lantanaRepositoryCachedSQLite3Impl) AddLantanaInfo(ctx context.Context, lantana Lantana) error {
 	l.m.Lock()
 	defer l.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		lantana.IsDeleted,
 		lantana.ID,
 		lantana.Mood,

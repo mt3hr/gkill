@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 
@@ -554,8 +554,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b IDFKyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil
@@ -643,8 +643,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b IDFKyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil

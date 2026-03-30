@@ -1,4 +1,4 @@
-import { describe, test, expect, vi, beforeAll } from 'vitest'
+import { describe, test, expect, vi } from 'vitest'
 
 // Must import i18n helper before the module under test, so i18n.global is initialised
 import { i18n } from '../../helpers/setup-i18n'

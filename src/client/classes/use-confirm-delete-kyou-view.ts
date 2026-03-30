@@ -1,4 +1,3 @@
-import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -34,23 +33,23 @@ export function useConfirmDeleteKyouView(options: {
 
     // ── CRUD relay handlers ──
     const crudRelayHandlers = {
-        'deleted_kyou': (...args: any[]) => emits('deleted_kyou', args[0] as Kyou),
-        'deleted_tag': (...args: any[]) => emits('deleted_tag', args[0] as Tag),
-        'deleted_text': (...args: any[]) => emits('deleted_text', args[0] as Text),
-        'deleted_notification': (...args: any[]) => emits('deleted_notification', args[0] as Notification),
-        'registered_kyou': (...args: any[]) => emits('registered_kyou', args[0] as Kyou),
-        'registered_tag': (...args: any[]) => emits('registered_tag', args[0] as Tag),
-        'registered_text': (...args: any[]) => emits('registered_text', args[0] as Text),
-        'registered_notification': (...args: any[]) => emits('registered_notification', args[0] as Notification),
-        'updated_kyou': (...args: any[]) => emits('updated_kyou', args[0] as Kyou),
-        'updated_tag': (...args: any[]) => emits('updated_tag', args[0] as Tag),
-        'updated_text': (...args: any[]) => emits('updated_text', args[0] as Text),
-        'updated_notification': (...args: any[]) => emits('updated_notification', args[0] as Notification),
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
-        'requested_reload_kyou': (...args: any[]) => emits('requested_reload_kyou', args[0] as Kyou),
+        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
         'requested_reload_list': () => emits('requested_reload_list'),
-        'requested_update_check_kyous': (...args: any[]) => emits('requested_update_check_kyous', args[0] as Array<Kyou>, args[1] as boolean),
+        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => emits('requested_update_check_kyous', kyous, checked),
     }
 
     // ── Delete logic ──
@@ -107,7 +106,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_kmemo(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateKmemoRequest()
-        req.kmemo = cloned_kyou.value.typed_kmemo!!.clone()
+        req.kmemo = cloned_kyou.value.typed_kmemo!.clone()
         req.kmemo.is_deleted = true
 
         req.kmemo.update_app = "gkill"
@@ -122,7 +121,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_kc(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateKCRequest()
-        req.kc = cloned_kyou.value.typed_kc!!.clone()
+        req.kc = cloned_kyou.value.typed_kc!.clone()
         req.kc.is_deleted = true
 
         req.kc.update_app = "gkill"
@@ -137,7 +136,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_urlog(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateURLogRequest()
-        req.urlog = cloned_kyou.value.typed_urlog!!.clone()
+        req.urlog = cloned_kyou.value.typed_urlog!.clone()
         req.urlog.is_deleted = true
 
         req.urlog.update_app = "gkill"
@@ -152,7 +151,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_nlog(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateNlogRequest()
-        req.nlog = cloned_kyou.value.typed_nlog!!.clone()
+        req.nlog = cloned_kyou.value.typed_nlog!.clone()
         req.nlog.is_deleted = true
 
         req.nlog.update_app = "gkill"
@@ -167,7 +166,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_timeis(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateTimeisRequest()
-        req.timeis = cloned_kyou.value.typed_timeis!!.clone()
+        req.timeis = cloned_kyou.value.typed_timeis!.clone()
         req.timeis.is_deleted = true
 
         req.timeis.update_app = "gkill"
@@ -182,7 +181,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_mi(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateMiRequest()
-        req.mi = cloned_kyou.value.typed_mi!!.clone()
+        req.mi = cloned_kyou.value.typed_mi!.clone()
         req.mi.is_deleted = true
 
         req.mi.update_app = "gkill"
@@ -197,7 +196,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_lantana(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateLantanaRequest()
-        req.lantana = cloned_kyou.value.typed_lantana!!.clone()
+        req.lantana = cloned_kyou.value.typed_lantana!.clone()
         req.lantana.is_deleted = true
 
         req.lantana.update_app = "gkill"
@@ -212,7 +211,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_idf_kyou(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateIDFKyouRequest()
-        req.idf_kyou = cloned_kyou.value.typed_idf_kyou!!.clone()
+        req.idf_kyou = cloned_kyou.value.typed_idf_kyou!.clone()
         req.idf_kyou.is_deleted = true
 
         req.idf_kyou.update_app = "gkill"
@@ -231,7 +230,7 @@ export function useConfirmDeleteKyouView(options: {
     async function delete_rekyou(): Promise<Array<GkillError>> {
         await delete_gkill_kyou_cache(cloned_kyou.value.id)
         const req = new UpdateReKyouRequest()
-        req.rekyou = cloned_kyou.value.typed_rekyou!!.clone()
+        req.rekyou = cloned_kyou.value.typed_rekyou!.clone()
         req.rekyou.is_deleted = true
 
         req.rekyou.update_app = "gkill"

@@ -178,7 +178,7 @@ WHERE
 `
 
 	dataType := "notification"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -339,7 +339,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -471,7 +471,7 @@ WHERE
 		UseWords: true,
 		Words:    targetIDs,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -597,7 +597,7 @@ WHERE
 	dataType := "notification"
 
 	query := &find.FindQuery{}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 		startTime.Unix(),
 		endTime.Unix(),
@@ -809,7 +809,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				notification.IsDeleted,
 				notification.ID,
 				notification.Content,
@@ -897,7 +897,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -994,7 +994,7 @@ WHERE
 func (n *notificationRepositoryCachedSQLite3Impl) AddNotificationInfo(ctx context.Context, notification Notification) error {
 	n.m.Lock()
 	defer n.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		notification.IsDeleted,
 		notification.ID,
 		notification.Content,

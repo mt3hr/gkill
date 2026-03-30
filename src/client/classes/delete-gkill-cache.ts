@@ -17,7 +17,7 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
     ]
 
     const cache = await caches.open('gkill-post-kyou-cache')
-    const wait_promises = new Array<Promise<any>>()
+    const wait_promises = new Array<Promise<boolean>>()
     if (id) {
         for (let i = 0; i < data_types.length; i++) {
             const data_type = data_types[i]
@@ -40,7 +40,7 @@ export async function delete_gkill_config_cache(): Promise<void> {
     ]
 
     const cache = await caches.open('gkill-post-config-cache')
-    const wait_promises = new Array<Promise<any>>()
+    const wait_promises = new Array<Promise<boolean>>()
     for (let i = 0; i < data_types.length; i++) {
         const data_type = data_types[i]
         const cacheKey = `/cache/api/${data_type}`

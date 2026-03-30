@@ -7,7 +7,7 @@ export function useNotificationHistoriesView(options: {
     props: NotificationHistoriesViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits } = options
+    const { props, emits: _emits } = options
 
     const cloned_notification: Ref<Notification> = ref(props.notification.clone())
     watch(() => props.notification, () => {

@@ -3,7 +3,7 @@
 ## 概要
 
 Vue Router のルートページ、データ操作用 View コンポーネント、ダイアログコンポーネントを格納するディレクトリ。
-全コンポーネントは Vuetify 3 を使用し、ロジックは `classes/` の Composable に委譲する設計。
+全コンポーネントは Vuetify 4 を使用し、ロジックは `classes/` の Composable に委譲する設計。
 
 ## ディレクトリ構造
 
@@ -188,7 +188,7 @@ xxx-view-emits.ts     # Emits 定義
 | `attached-notification-context-menu.vue` / `attached-timeis-plaing-context-menu.vue` | 添付通知/稼働TimeIs |
 | `device-struct-context-menu.vue` / `kftl-template-struct-context-menu.vue` | 構造コンテキストメニュー |
 | `rep-struct-context-menu.vue` / `rep-type-struct-context-menu.vue` | リポジトリ構造 |
-| `tag-struct-context-menu.vue` / `ryuu-list-item-context-menu.vue` | タグ構造/Ryuu |
+| `tag-struct-context-menu.vue` / `ryuu-item-context-menu.vue` | タグ構造/Ryuu |
 
 ### クエリ系
 
@@ -216,7 +216,7 @@ xxx-view-emits.ts     # Emits 定義
 | `shared-mi-view.vue` / `manage-share-task-list-view.vue` | 共有 Mi 管理 |
 | `manage-share-button.vue` / `share-button.vue` | 共有ボタン |
 | `rykv-view.vue` / `rykv-dialog-host.vue` / `rykv-dialog-host-item.vue` | Rykv |
-| `ryuu-list-view.vue` / `ryuu-list-item-view.vue` | Ryuu リスト |
+| `ryuu-view.vue` / `ryuu-item-view.vue` | Ryuu |
 | `sidebar-header.vue` | サイドバーヘッダー |
 | `foldable-struct.vue` / `rep-struct-element.vue` / `rep-type-element.vue` / `tag-struct-element.vue` | 構造要素 |
 | `saihate-stars-overlay.vue` / `snow-fall-overlay.vue` | オーバーレイ効果 |
@@ -233,7 +233,7 @@ xxx-view-emits.ts     # Emits 定義
 
 ### 削除確認ダイアログ（13コンポーネント）
 
-`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-ryuu-list-item-dialog.vue`
+`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`
 
 ### その他ダイアログ
 
@@ -268,4 +268,4 @@ xxx-view-emits.ts     # Emits 定義
 1. View: `views/xxx-view.vue` を作成、ロジックは `classes/use-xxx-view.ts` に分離
 2. Dialog: `dialogs/xxx-dialog.vue` を作成、ロジックは `classes/use-xxx-dialog.ts` に分離
 3. 必要に応じて `xxx-view-props.ts`, `xxx-view-emits.ts` を作成
-4. Vuetify 3 のコンポーネントを使用してUI構築
+4. Vuetify 4 のコンポーネントを使用してUI構築

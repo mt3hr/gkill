@@ -6,7 +6,7 @@
                     hide-details />
             </v-col>
             <v-spacer />
-            <v-col cols="auto" class="pb-0 mb-0 pr-0">
+            <v-col cols="auto" class="pb-0 mb-0 pr-0 pt-2">
                 <v-btn dark color="secondary" @click="emits('request_clear_use_period_of_time_query')" hide-details>{{
                     i18n.global.t("CLEAR_TITLE") }}</v-btn>
             </v-col>

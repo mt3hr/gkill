@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
-  navigateToRykv, navigateToSettings,
-  makeUniqueLabel, pageContainsText, clickFabButton,
+  navigateToSettings,
+  clickFabButton,
 } from './crud-helpers'
 
 let apiReachable = false
@@ -29,7 +29,7 @@ test.describe('Misc Operations', () => {
     const content = await app.textContent()
 
     // Check for bookmarklet-related text
-    const hasBookmarklet = content!.includes('ブックマークレット') ||
+    const _hasBookmarklet = content!.includes('ブックマークレット') ||
       content!.includes('bookmarklet') ||
       content!.includes('Bookmarklet')
 

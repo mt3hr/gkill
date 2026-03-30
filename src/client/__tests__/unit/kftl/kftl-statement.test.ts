@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { i18n } from '../../helpers/setup-i18n'
+import '../../helpers/setup-i18n'
 import { KFTLStatement } from '@/classes/kftl/kftl-statement'
 
 describe('KFTLStatement', () => {

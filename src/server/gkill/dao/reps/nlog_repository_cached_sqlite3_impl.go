@@ -184,7 +184,7 @@ WHERE
 
 	dataType := "nlog"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -309,7 +309,7 @@ WHERE
 	}
 
 	dataType := "nlog"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -429,7 +429,7 @@ WHERE
 	}
 
 	dataType := "nlog"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -639,7 +639,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				nlog.IsDeleted,
 				nlog.ID,
 				nlog.Shop,
@@ -750,7 +750,7 @@ FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE
 `
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	tableName := n.dbName
@@ -878,7 +878,7 @@ WHERE
 	}
 
 	dataType := "nlog"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	tableName := n.dbName
@@ -1007,7 +1007,7 @@ WHERE
 	}
 
 	dataType := "nlog"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	tableName := n.dbName
@@ -1104,7 +1104,7 @@ WHERE
 func (n *nlogRepositoryCachedSQLite3Impl) AddNlogInfo(ctx context.Context, nlog Nlog) error {
 	n.m.Lock()
 	defer n.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		nlog.IsDeleted,
 		nlog.ID,
 		nlog.Shop,

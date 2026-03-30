@@ -9,7 +9,7 @@ import type { SharedMiPageProps } from '@/pages/shared-mi-page-props'
 export function useSharedMiPage(options: {
     props: SharedMiPageProps
 }) {
-    const props = options.props
+    const _props = options.props
 
     // ── State refs ──
     const actual_height: Ref<number> = ref(0)

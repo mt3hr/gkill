@@ -24,8 +24,8 @@ export class ApplicationConfig {
     rykv_default_period: number
     mi_default_period: number
     account_is_admin: boolean
-    dnote_json_data: any
-    ryuu_json_data: any
+    dnote_json_data: unknown
+    ryuu_json_data: unknown
 
     user_is_admin: boolean
     cache_clear_count_limit: number

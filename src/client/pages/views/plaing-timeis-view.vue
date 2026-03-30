@@ -39,7 +39,7 @@
             ref="upload_file_dialog" />
         <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
+            @closed="(id: string) => close_rykv_dialog(id)"
             v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykvDialogHandler }" />
         <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
             <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">

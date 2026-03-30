@@ -16,7 +16,6 @@
 <script setup lang="ts">
 import { i18n } from '@/i18n'
 const emits = defineEmits(['remove'])
-import { defineModel } from 'vue'
 import PredicateCard from './edit-dnote-card.vue'
 import PredicateGroup from './edit-dnote-predicate-group.vue'
 import type Predicate from '../../classes/dnote/predicate'

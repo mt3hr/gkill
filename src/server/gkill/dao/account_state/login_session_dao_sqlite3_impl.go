@@ -237,7 +237,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		userID,
 		device,
 	}
@@ -331,7 +331,7 @@ WHERE SESSION_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		sessionID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -436,7 +436,7 @@ INSERT INTO LOGIN_SESSION (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		loginSession.ID,
 		loginSession.UserID,
 		loginSession.Device,
@@ -485,7 +485,7 @@ WHERE ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		loginSession.ID,
 		loginSession.UserID,
 		loginSession.Device,
@@ -526,7 +526,7 @@ WHERE SESSION_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		sessionID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -616,7 +616,7 @@ WHERE KEY = ?
 		}
 	}()
 	dbSchemaVersion := ""
-	queryArgs := []interface{}{schemaVersionKey}
+	queryArgs := []any{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
@@ -638,7 +638,7 @@ VALUES(?, ?)`
 					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 				}
 			}()
-			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
+			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
@@ -647,7 +647,7 @@ VALUES(?, ?)`
 				return false, nil, err
 			}
 
-			queryArgs = []interface{}{schemaVersionKey}
+			queryArgs = []any{schemaVersionKey}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {

@@ -18,6 +18,7 @@ import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useMiView(options: {
     props: miViewProps,
@@ -27,16 +28,16 @@ export function useMiView(options: {
 
     // ── Template refs ──
     const mi_root = ref<HTMLElement | null>(null)
-    const query_editor_sidebar = ref<any>(null)
-    const add_mi_dialog = ref<any>(null)
-    const add_nlog_dialog = ref<any>(null)
-    const add_lantana_dialog = ref<any>(null)
-    const add_timeis_dialog = ref<any>(null)
-    const add_urlog_dialog = ref<any>(null)
-    const kftl_dialog = ref<any>(null)
-    const add_kc_dialog = ref<any>(null)
-    const mkfl_dialog = ref<any>(null)
-    const upload_file_dialog = ref<any>(null)
+    const query_editor_sidebar = ref<ComponentRef | null>(null)
+    const add_mi_dialog = ref<ComponentRef | null>(null)
+    const add_nlog_dialog = ref<ComponentRef | null>(null)
+    const add_lantana_dialog = ref<ComponentRef | null>(null)
+    const add_timeis_dialog = ref<ComponentRef | null>(null)
+    const add_urlog_dialog = ref<ComponentRef | null>(null)
+    const kftl_dialog = ref<ComponentRef | null>(null)
+    const add_kc_dialog = ref<ComponentRef | null>(null)
+    const mkfl_dialog = ref<ComponentRef | null>(null)
+    const upload_file_dialog = ref<ComponentRef | null>(null)
     const kyou_list_views = ref()
 
     // ── State refs ──
@@ -57,8 +58,8 @@ export function useMiView(options: {
     const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
     const drawer: Ref<boolean | null> = ref(false)
     const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
-    const position_x: Ref<Number> = ref(0)
-    const position_y: Ref<Number> = ref(0)
+    const position_x: Ref<number> = ref(0)
+    const position_y: Ref<number> = ref(0)
     const is_loading: Ref<boolean> = ref(true)
     const inited = ref(false)
     const received_init_request = ref(false)
@@ -334,6 +335,7 @@ export function useMiView(options: {
             }
 
             nextTick(() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
                 if (kyou_list_view) {
                     if (inited.value) {
@@ -343,7 +345,7 @@ export function useMiView(options: {
                 }
             })
 
-            const waitPromises = new Array<Promise<any>>()
+            const waitPromises = new Array<Promise<unknown>>()
 
             const req = new GetKyousRequest()
             abort_controllers.value[column_index] = req.abort_controller
@@ -389,6 +391,7 @@ export function useMiView(options: {
             }
 
             await nextTick(() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
                 if (kyou_list_view) {
                     ((async () => kyou_list_view.set_loading(false))());
@@ -399,9 +402,9 @@ export function useMiView(options: {
                     skip_search_this_tick.value = false
                 }
             })
-        } catch (err: any) {
+        } catch (err: unknown) {
             // abortは握りつぶす
-            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
                 // abort以外はエラー出力する
                 console.error(err)
             }
@@ -428,6 +431,7 @@ export function useMiView(options: {
 
             match_kyous_list_top_list.value.splice(column_index, 1)
             for (let i = column_index; i < querys.value.length; i++) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kyou_list_view = kyou_list_views.value[i] as any
                 if (!kyou_list_view) {
                     continue
@@ -535,15 +539,18 @@ export function useMiView(options: {
             const json_mi = JSON.parse(e.dataTransfer!.getData("gkill_mi"))
             const parsed_mi = new Mi()
             for (const key in json_mi) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (parsed_mi as any)[key] = (json_mi as any)[key]
 
                 // 時刻はDate型に変換
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if (key.endsWith("time") && (parsed_mi as any)[key]) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (parsed_mi as any)[key] = new Date((parsed_mi as any)[key])
                 }
             }
             mi = parsed_mi
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e)
             return
         }
@@ -753,30 +760,30 @@ export function useMiView(options: {
 
     // ── Event relay objects ──
     const crudRelayHandlers = {
-        'deleted_kyou': (...args: any[]) => onDeletedKyou(args[0] as Kyou),
-        'deleted_tag': (...args: any[]) => emits('deleted_tag', args[0] as Tag),
-        'deleted_text': (...args: any[]) => emits('deleted_text', args[0] as Text),
-        'deleted_notification': (...args: any[]) => emits('deleted_notification', args[0] as Notification),
-        'registered_kyou': (...args: any[]) => emits('registered_kyou', args[0] as Kyou),
-        'registered_tag': (...args: any[]) => emits('registered_tag', args[0] as Tag),
-        'registered_text': (...args: any[]) => emits('registered_text', args[0] as Text),
-        'registered_notification': (...args: any[]) => emits('registered_notification', args[0] as Notification),
-        'updated_kyou': (...args: any[]) => { reload_kyou(args[0] as Kyou); emits('updated_kyou', args[0] as Kyou) },
-        'updated_tag': (...args: any[]) => emits('updated_tag', args[0] as Tag),
-        'updated_text': (...args: any[]) => emits('updated_text', args[0] as Text),
-        'updated_notification': (...args: any[]) => emits('updated_notification', args[0] as Notification),
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
+        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => { reload_kyou(kyou); emits('updated_kyou', kyou) },
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     const allColumnsRequestHandlers = {
-        'requested_reload_kyou': (...args: any[]) => reload_kyou(args[0] as Kyou),
+        'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
         'requested_reload_list': () => { for (let i = 0; i < querys.value.length; i++) { reload_list(i) } },
-        'requested_update_check_kyous': (...args: any[]) => update_check_kyous(args[0] as Array<Kyou>, args[1] as boolean),
+        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => update_check_kyous(kyous, checked),
     }
 
     const rykvDialogHandler = {
-        'requested_open_rykv_dialog': (...args: any[]) => open_rykv_dialog(args[0], args[1], args[2]),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
     // ── Keyboard shortcut ──

@@ -71,11 +71,11 @@
                 <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
                     v-model="dnote_definitions[i].items"
                     v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
-                    @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el: any) => set_item_table_ref(i, el)" />
+                    @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_item_table_ref(i, el)" />
                 <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
                     v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
                     v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
-                    @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el: any) => set_list_table_ref(i, el)" />
+                    @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_list_table_ref(i, el)" />
             </v-window-item>
         </v-window>
         <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-dnote">
@@ -105,11 +105,11 @@
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorsMessagesRelayHandlers"
-            @requested_add_dnote_list_query="(...args: any[]) => onRequestedAddDnoteListQuery(args[0])"
+            @requested_add_dnote_list_query="(query: DnoteListQuery) => onRequestedAddDnoteListQuery(query)"
             ref="add_dnote_list_dialog" />
         <AddDnoteItemDialog :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorsMessagesRelayHandlers"
-            @requested_add_dnote_item="(...args: any[]) => onRequestedAddDnoteItem(args[0])"
+            @requested_add_dnote_item="(item: DnoteItemData) => onRequestedAddDnoteItem(item)"
             ref="add_dnote_item_dialog" />
     </v-card>
 </template>
@@ -122,6 +122,9 @@ import AddDnoteListDialog from '../../pages/dialogs/add-dnote-list-dialog.vue'
 import AddDnoteItemDialog from '../../pages/dialogs/add-dnote-item-dialog.vue'
 import { type DnoteEmits } from '@/pages/views/dnote-emits'
 import { useDnoteView } from '@/classes/use-dnote-view'
+import type DnoteListQuery from "@/pages/views/dnote-list-query"
+import type DnoteItem from "@/classes/dnote/dnote-item"
+type DnoteItemData = DnoteItem
 
 const props = defineProps<DnoteViewProps>()
 const emits = defineEmits<DnoteEmits>()

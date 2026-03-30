@@ -2,13 +2,13 @@
 
 ## 概要
 
-gkill のフロントエンド。Vue 3 + Vuetify 3 + TypeScript で構築された PWA（Progressive Web App）。
+gkill のフロントエンド。Vue 3 + Vuetify 4 + TypeScript で構築された PWA（Progressive Web App）。
 Vite でビルドし、Go バックエンドにバイナリ埋め込みされて配信される。
 
 ## 技術スタック
 
 - **フレームワーク**: Vue 3（Composition API）
-- **UI ライブラリ**: Vuetify 3
+- **UI ライブラリ**: Vuetify 4
 - **言語**: TypeScript
 - **ビルドツール**: Vite
 - **ルーティング**: Vue Router
@@ -46,7 +46,7 @@ client/
 
 アプリケーションの初期化:
 - Vue 3 アプリケーション作成
-- Vuetify 3 プラグイン登録
+- Vuetify 4 プラグイン登録
 - Vue Router 登録
 - vue-i18n 登録
 - カスタム `v-long-press` ディレクティブ登録
@@ -119,7 +119,7 @@ dialogs/add-kc-dialog.vue  ← Dialog 版（View をラップ）
 
 ### `vuetify.ts`
 
-Vuetify 3 のプラグイン設定:
+Vuetify 4 のプラグイン設定:
 - テーマ設定
 - コンポーネント登録
 - アイコン設定

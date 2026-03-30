@@ -24,7 +24,7 @@
         <AddDnoteItemView :application_config="application_config" :gkill_api="gkill_api"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @requested_add_dnote_item="(...dnote_item: any[]) => emits('requested_add_dnote_item', dnote_item[0] as DnoteItem)"
+          @requested_add_dnote_item="(dnote_item: DnoteItem) => emits('requested_add_dnote_item', dnote_item)"
           @requested_close_dialog="hide" />
 
 

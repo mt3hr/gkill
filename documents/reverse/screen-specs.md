@@ -646,7 +646,7 @@ CRUDリレーイベント:
 | `kftl-template-struct-context-menu.vue` | KFTLテンプレート構造（設定画面） |
 | `rep-struct-context-menu.vue` | リポジトリ構造（設定画面） |
 | `rep-type-struct-context-menu.vue` | RepType構造（設定画面） |
-| `ryuu-list-item-context-menu.vue` | Ryuuリスト項目 |
+| `ryuu-item-context-menu.vue` | Ryuu項目 |
 | `tag-struct-context-menu.vue` | タグ構造（設定画面） |
 
 ## 関連資料

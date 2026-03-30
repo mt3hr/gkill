@@ -327,7 +327,7 @@ describe("OAuthStore — cleanup interval", () => {
 // ---------------------------------------------------------------------------
 // Persistence (JSON file)
 // ---------------------------------------------------------------------------
-import { existsSync, unlinkSync, mkdirSync, readFileSync } from "node:fs";
+import { existsSync, unlinkSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -396,8 +396,7 @@ describe("OAuthStore — persistence", () => {
 
   test("load() does not error on invalid JSON", () => {
     const badPath = join(tmpDir, "bad.json");
-    const { writeFileSync: wfs } = require("node:fs");
-    wfs(badPath, "not json!", "utf8");
+    writeFileSync(badPath, "not json!", "utf8");
     const store = new OAuthStore(badPath);
     expect(() => store.load()).not.toThrow();
     expect(store.stats().refreshTokens).toBe(0);

@@ -42,7 +42,7 @@ export class KFTLURLogRequest extends KFTLRequest {
         }
 
         await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
-        const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
+        const time = this.get_related_time() ? this.get_related_time()! : new Date(Date.now())
         const req = new AddURLogRequest()
         const now = new Date(Date.now())
         req.tx_id = this.get_tx_id()

@@ -5,20 +5,19 @@
                 :label="i18n.global.t('CALENDAR_QUERY_TITLE')" hide-details class="pb-0 mb-0" />
         </v-col>
         <v-spacer class="pa-0 ma-0" />
-        <v-col cols="auto" class="pb-0 mb-0 pr-0">
+        <v-col cols="auto" class="pb-0 mb-0 pr-0 pt-2">
             <v-btn dark color="secondary" @click="clicked_clear_calendar_button" hide-details>{{
                 i18n.global.t("CLEAR_TITLE") }}</v-btn>
         </v-col>
     </v-row>
     <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="312" :model-value="dates"
         :multible="true" :color="'primary'" :multiple="'range'" :year="calendar_year" :month="calendar_month"
-        @wheel.prevent.stop="(e: any) => on_wheel(e)" @update:model-value="clicked_date" ref="calendar" />
+        @wheel.prevent.stop="(e: WheelEvent) => on_wheel(e)" @update:model-value="clicked_date" ref="calendar" />
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
 import type { CalendarQueryEmits } from './calendar-query-emits'
 import type { CalendarQueryProps } from './calendar-query-props'
-import { defineEmits, defineProps } from 'vue'
 import { VDatePicker } from 'vuetify/components';
 import { useCalendarQuery } from '@/classes/use-calendar-query'
 const calendar = ref<InstanceType<typeof VDatePicker> | null>(null)

@@ -8,6 +8,7 @@ import type { AddLantanaViewProps } from '@/pages/views/add-lantana-view-props'
 import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useAddLantanaView(options: {
     props: AddLantanaViewProps,
@@ -16,7 +17,7 @@ export function useAddLantanaView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const edit_lantana_flowers = ref<any>(null)
+    const edit_lantana_flowers = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const is_requested_submit = ref(false)
@@ -26,7 +27,7 @@ export function useAddLantanaView(options: {
         lantana.related_time = new Date(Date.now())
         return lantana
     })())
-    const mood: Ref<Number> = ref(lantana.value.mood)
+    const mood: Ref<number> = ref(lantana.value.mood)
     const related_date_typed: Ref<Date> = ref(moment().toDate())
     const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
     const related_time_string: Ref<string> = ref(moment().format("HH:mm:ss"))

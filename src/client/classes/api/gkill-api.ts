@@ -1,4 +1,5 @@
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { ApplicationConfig } from "../datas/config/application-config"
 import type { AddAccountRequest } from "./req_res/add-account-request"
@@ -2638,7 +2639,7 @@ export class GkillAPI {
                 if (!query_json_string) {
                         return new Array<FindKyouQuery>()
                 }
-                const querys_json: any = JSON.parse(query_json_string)
+                const querys_json = JSON.parse(query_json_string) as Array<Record<string, unknown>>
                 if (!querys_json) {
                         return new Array<FindKyouQuery>()
                 }
@@ -2666,7 +2667,7 @@ export class GkillAPI {
                 if (!query_json_string) {
                         return new Array<FindKyouQuery>()
                 }
-                const querys_json: any = JSON.parse(query_json_string)
+                const querys_json = JSON.parse(query_json_string) as Array<Record<string, unknown>>
                 if (!querys_json) {
                         return new Array<FindKyouQuery>()
                 }
@@ -2694,7 +2695,7 @@ export class GkillAPI {
                 if (!indexs_json_string) {
                         return new Array<number>()
                 }
-                const indexs_json: any = JSON.parse(indexs_json_string)
+                const indexs_json = JSON.parse(indexs_json_string) as Array<number>
                 if (!indexs_json) {
                         return new Array<number>()
                 }
@@ -2711,7 +2712,7 @@ export class GkillAPI {
                 if (!indexs_json_string) {
                         return new Array<number>()
                 }
-                const indexs_json: any = JSON.parse(indexs_json_string)
+                const indexs_json = JSON.parse(indexs_json_string) as Array<number>
                 if (!indexs_json) {
                         return new Array<number>()
                 }
@@ -2728,7 +2729,7 @@ export class GkillAPI {
                 if (!last_added_tag_string) {
                         return ""
                 }
-                const last_added_tag: any = last_added_tag_string
+                const last_added_tag: string = last_added_tag_string
                 if (!last_added_tag) {
                         return ""
                 }
@@ -2886,7 +2887,7 @@ export class GkillAPI {
                         if ((await cache.keys()).length === 0) {
                                 return
                         }
-                } catch (e: any) {
+                } catch (_e: unknown) {
                         // でかすぎると例外が飛ぶ。無視する。
                         // 例外は無視する
                 }

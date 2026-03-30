@@ -52,7 +52,7 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 
 	// Note: Transaction safety is provided by the KFTL submit flow's temp repositories.
 	// Each nlog is inserted independently; if any fails, the entire KFTL submit rolls back.
-	for i := 0; i < count; i++ {
+	for i := range count {
 		id := r.RequestID
 		if i > 0 {
 			id = sqlite3impl.GenerateNewID()

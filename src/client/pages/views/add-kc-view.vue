@@ -87,7 +87,7 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     // State
     is_requested_submit,
-    kc,
+    kc: _kc,
     title,
     num_value,
     related_date_typed,
@@ -103,7 +103,7 @@ const {
     save,
 
     // Template event handlers
-    onUpdateRelatedDateMenu,
-    onUpdateRelatedTimeMenu,
+    onUpdateRelatedDateMenu: _onUpdateRelatedDateMenu,
+    onUpdateRelatedTimeMenu: _onUpdateRelatedTimeMenu,
 } = useAddKcView({ props, emits })
 </script>

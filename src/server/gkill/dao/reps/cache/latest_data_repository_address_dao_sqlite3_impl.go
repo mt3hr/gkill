@@ -210,7 +210,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -288,7 +288,7 @@ WHERE TARGET_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		targetID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -370,7 +370,7 @@ LIMIT ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		updateTime.Unix(),
 		limit,
 	}
@@ -459,7 +459,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 		}
 	}()
 
-	deleteQueryArgs := []interface{}{
+	deleteQueryArgs := []any{
 		latestDataRepositoryAddress.TargetID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", deleteSQL, deleteQueryArgs)
@@ -482,7 +482,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 		}
 	}()
 
-	insertQueryArgs := []interface{}{
+	insertQueryArgs := []any{
 		latestDataRepositoryAddress.IsDeleted,
 		latestDataRepositoryAddress.TargetID,
 		latestDataRepositoryAddress.TargetIDInData,
@@ -567,7 +567,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 		_, err := func() (bool, error) {
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", deleteSQL)
-			deleteQueryArgs := []interface{}{
+			deleteQueryArgs := []any{
 				latestDataRepositoryAddress.TargetID,
 			}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", deleteSQL, deleteQueryArgs)
@@ -578,7 +578,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(l.tableName) + ` (
 			}
 
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
-			insertQueryArgs := []interface{}{
+			insertQueryArgs := []any{
 				latestDataRepositoryAddress.IsDeleted,
 				latestDataRepositoryAddress.TargetID,
 				latestDataRepositoryAddress.TargetIDInData,
@@ -629,7 +629,7 @@ WHERE TARGET_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		latestDataRepositoryAddress.TargetID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -689,7 +689,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -844,7 +844,7 @@ WHERE KEY = ?
 		}
 	}()
 	dbSchemaVersion := ""
-	queryArgs := []interface{}{schemaVersionKey}
+	queryArgs := []any{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
@@ -866,7 +866,7 @@ VALUES(?, ?)`
 					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 				}
 			}()
-			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
+			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
@@ -875,7 +875,7 @@ VALUES(?, ?)`
 				return false, nil, err
 			}
 
-			queryArgs = []interface{}{schemaVersionKey}
+			queryArgs = []any{schemaVersionKey}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {

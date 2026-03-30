@@ -219,7 +219,7 @@ INSERT INTO NLOG (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		nlog.IsDeleted,
 		nlog.ID,
 		nlog.Shop,
@@ -281,7 +281,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "nlog"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -406,7 +406,7 @@ AND USER_ID = ?
 AND DEVICE = ?
 `
 	dataType := "nlog"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -522,7 +522,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

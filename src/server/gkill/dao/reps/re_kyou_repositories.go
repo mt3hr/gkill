@@ -4,7 +4,7 @@ import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 
@@ -220,8 +220,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b Kyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil
@@ -526,8 +526,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b ReKyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil
@@ -615,8 +615,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b ReKyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil
@@ -697,8 +697,8 @@ loop:
 		matchReKyousList = append(matchReKyousList, kyou)
 	}
 
-	sort.Slice(matchReKyousList, func(i, j int) bool {
-		return matchReKyousList[i].RelatedTime.After(matchReKyousList[j].RelatedTime)
+	slices.SortFunc(matchReKyousList, func(a, b ReKyou) int {
+		return b.RelatedTime.Compare(a.RelatedTime)
 	})
 	return matchReKyousList, nil
 }

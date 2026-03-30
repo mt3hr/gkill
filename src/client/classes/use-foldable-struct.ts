@@ -4,6 +4,8 @@ import type { FoldableStructProps } from '@/pages/views/foldable-struct-props'
 import { CheckState } from '@/pages/views/check-state'
 import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
 import { DropTypeFoldableStruct } from '@/classes/api/drop-type-foldable-struct'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 export function useFoldableStruct(options: {
     props: FoldableStructProps,
@@ -19,8 +21,8 @@ export function useFoldableStruct(options: {
     const check: Ref<boolean> = ref(false)
     const struct_list: Ref<Array<FoldableStructModel>> = ref(new Array<FoldableStructModel>())
     const indeterminate_group: Ref<boolean> = ref(false)
-    const tr_size: Ref<Number> = ref(24)
-    const font_size: Ref<Number> = ref(16)
+    const tr_size: Ref<number> = ref(24)
+    const font_size: Ref<number> = ref(16)
 
     // ── Computed ──
     const font_size_px = computed(() => font_size.value.valueOf().toString().concat("px"))
@@ -76,7 +78,7 @@ export function useFoldableStruct(options: {
             let all_checked = true
 
             let f = (_struct: FoldableStructModel) => { }
-            let func = (struct: FoldableStructModel) => {
+            const func = (struct: FoldableStructModel) => {
                 if (struct.is_checked) {
                     exist_checked = true
                 } else {
@@ -122,9 +124,9 @@ export function useFoldableStruct(options: {
     // アイテムのチェック状態に変更があった場合に呼び出されます。
     // すべての子アイテムのcheckの状態を、グループのチェック状態と同じにします。
     function change_group_by_user() {
-        let items = new Array()
+        const items: string[] = []
         let f = (_struct: FoldableStructModel) => { }
-        let func = (struct: FoldableStructModel) => {
+        const func = (struct: FoldableStructModel) => {
             items.push(struct.key)
             if (struct.children) {
                 struct.children.forEach(child => {
@@ -170,9 +172,9 @@ export function useFoldableStruct(options: {
     // このアイテムがクリックされたときに呼び出されます。
     // このアイテム内のアイテムのみにチェックが入るように上にemitします。
     function click_group_by_user(e: MouseEvent) {
-        let items = new Array<string>()
+        const items = new Array<string>()
         let f = (_struct: FoldableStructModel) => { }
-        let func = (struct: FoldableStructModel) => {
+        const func = (struct: FoldableStructModel) => {
             items.push(struct.key)
             if (struct.children) {
                 struct.children.forEach(child => {
@@ -187,9 +189,9 @@ export function useFoldableStruct(options: {
 
     // 現在チェックの入っているアイテム名を配列で取得します。
     function get_selected_items(): Array<string> {
-        let items = new Array<string>()
+        const items = new Array<string>()
         let f = (_struct: FoldableStructModel) => { }
-        let func = (struct: FoldableStructModel) => {
+        const func = (struct: FoldableStructModel) => {
             if (struct.is_checked) {
                 items.push(struct.key)
             }
@@ -267,7 +269,7 @@ export function useFoldableStruct(options: {
 
         // parentのなかにchildがあったらtrueを返す
         let has_child = (_parent: FoldableStructModel, _child: FoldableStructModel): boolean => false
-        let has_child_impl = (parent: FoldableStructModel, child: FoldableStructModel): boolean => {
+        const has_child_impl = (parent: FoldableStructModel, child: FoldableStructModel): boolean => {
             let is_has_child = false
             if (parent.children) {
                 for (let i = 0; i < parent.children.length; i++) {
@@ -297,7 +299,7 @@ export function useFoldableStruct(options: {
         delete_struct(struct_obj.id)
         let pasted = false
         let f = (_walk_struct_obj: FoldableStructModel, _parent_struct_obj: FoldableStructModel) => { }
-        let func = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => {
+        const func = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => {
             if (pasted) {
                 return
             }
@@ -383,7 +385,7 @@ export function useFoldableStruct(options: {
             return
         }
         let f = (_struct: FoldableStructModel) => { }
-        let func = (struct: FoldableStructModel) => {
+        const func = (struct: FoldableStructModel) => {
             if (!struct.children) {
                 return
             }
@@ -407,7 +409,7 @@ export function useFoldableStruct(options: {
         }
         let deleted = false
         let f = (_struct: FoldableStructModel, _parent: FoldableStructModel) => { }
-        let func = (struct: FoldableStructModel, parent: FoldableStructModel) => {
+        const func = (struct: FoldableStructModel, parent: FoldableStructModel) => {
             if (deleted) {
                 return
             }
@@ -443,12 +445,12 @@ export function useFoldableStruct(options: {
         open_group.value = !open_group.value
     }
 
-    function onChildReceivedErrors(...errors: any[]) {
-        emits('received_errors', errors[0] as Array<import('@/classes/api/gkill-error').GkillError>)
+    function onChildReceivedErrors(errors: Array<GkillError>) {
+        emits('received_errors', errors)
     }
 
-    function onChildReceivedMessages(...messages: any[]) {
-        emits('received_messages', messages[0] as Array<import('@/classes/api/gkill-message').GkillMessage>)
+    function onChildReceivedMessages(messages: Array<GkillMessage>) {
+        emits('received_messages', messages)
     }
 
     function onChildDblclickedItem(e: MouseEvent, id: string | null) {

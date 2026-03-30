@@ -8,15 +8,15 @@ import type { SharedRYKVPageProps } from '@/pages/shared-rykv-page-props'
 export function useSharedRykvPage(options: {
     props: SharedRYKVPageProps
 }) {
-    const props = options.props
+    const _props = options.props
 
     // ── State refs ──
-    const actual_height: Ref<Number> = ref(0)
-    const element_height: Ref<Number> = ref(0)
-    const browser_url_bar_height: Ref<Number> = ref(0)
-    const app_title_bar_height: Ref<Number> = ref(50)
-    const app_content_height: Ref<Number> = ref(0)
-    const app_content_width: Ref<Number> = ref(0)
+    const actual_height: Ref<number> = ref(0)
+    const element_height: Ref<number> = ref(0)
+    const browser_url_bar_height: Ref<number> = ref(0)
+    const app_title_bar_height: Ref<number> = ref(50)
+    const app_content_height: Ref<number> = ref(0)
+    const app_content_width: Ref<number> = ref(0)
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 

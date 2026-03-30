@@ -7,7 +7,7 @@ export function useLantanaView(options: {
     props: LantanaViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits } = options
+    const { props, emits: _emits } = options
 
     const context_menu = ref<InstanceType<typeof LantanaContextMenu> | null>(null)
 

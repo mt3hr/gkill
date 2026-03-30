@@ -37,20 +37,20 @@ import { useAddKcView } from '@/classes/use-add-kc-view'
 
 function createBaseProps() {
   return {
-    gkill_api: createMockGkillAPI() as any,
+    gkill_api: createMockGkillAPI() as never,
     application_config: {
       device: 'test-device',
       user_id: 'admin',
       mi_default_board: 'Inbox',
       tag_struct: { children: [] },
-    } as any,
+    } as never,
   }
 }
 
 // ========== useAddMiView ==========
 
 describe('useAddMiView', () => {
-  let props: ReturnType<typeof createBaseProps>
+  let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -78,7 +78,7 @@ describe('useAddMiView', () => {
     const view = useAddMiView({ props, emits })
     view.mi_title.value = ''
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 
@@ -120,7 +120,7 @@ describe('useAddMiView', () => {
 // ========== useAddTagView ==========
 
 describe('useAddTagView', () => {
-  let props: any
+  let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -146,7 +146,7 @@ describe('useAddTagView', () => {
     const view = useAddTagView({ props, emits })
     view.tag_name.value = ''
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 
@@ -161,7 +161,7 @@ describe('useAddTagView', () => {
     await view.save()
     // save() may show a confirmation dialog for unknown tags before calling API
     // Verify no errors emitted for valid input
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBe(0)
   })
 
@@ -176,7 +176,7 @@ describe('useAddTagView', () => {
 // ========== useAddNlogView ==========
 
 describe('useAddNlogView', () => {
-  let props: ReturnType<typeof createBaseProps>
+  let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -196,7 +196,7 @@ describe('useAddNlogView', () => {
     const view = useAddNlogView({ props, emits })
     view.nlog_title_value.value = ''
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 
@@ -223,7 +223,7 @@ describe('useAddNlogView', () => {
 // ========== useAddURLogView ==========
 
 describe('useAddUrlogView', () => {
-  let props: ReturnType<typeof createBaseProps>
+  let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -241,7 +241,7 @@ describe('useAddUrlogView', () => {
     const view = useAddUrlogView({ props, emits })
     view.url.value = ''
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 
@@ -255,7 +255,7 @@ describe('useAddUrlogView', () => {
 // ========== useAddLantanaView ==========
 
 describe('useAddLantanaView', () => {
-  let props: ReturnType<typeof createBaseProps>
+  let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -279,7 +279,7 @@ describe('useAddLantanaView', () => {
 // ========== useAddTimeisView ==========
 
 describe('useAddTimeisView', () => {
-  let props: ReturnType<typeof createBaseProps>
+  let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -297,7 +297,7 @@ describe('useAddTimeisView', () => {
     const view = useAddTimeisView({ props, emits })
     view.timeis_title.value = ''
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 
@@ -311,7 +311,7 @@ describe('useAddTimeisView', () => {
 // ========== useAddKcView ==========
 
 describe('useAddKcView', () => {
-  let props: ReturnType<typeof createBaseProps>
+  let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -329,7 +329,7 @@ describe('useAddKcView', () => {
     const view = useAddKcView({ props, emits })
     view.title.value = ''
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 

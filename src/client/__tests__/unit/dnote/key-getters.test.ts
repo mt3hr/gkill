@@ -10,7 +10,6 @@ import {
   makeKyouWithLantana,
   makeKyouWithMi,
   makeKyouWithTags,
-  makeKyou,
 } from '../../helpers/factory'
 
 import TagGetter from '@/classes/dnote/dnote-key-getter/tag-getter'
@@ -22,7 +21,7 @@ import NlogShopNameGetter from '@/classes/dnote/dnote-key-getter/nlog-shop-name-
 import LantanaMoodGetter from '@/classes/dnote/dnote-key-getter/lantana-mood-getter'
 import TitleGetter from '@/classes/dnote/dnote-key-getter/title-getter'
 
-const asKyou = (obj: any) => obj
+const asKyou = (obj: unknown) => obj
 
 describe('TagGetter', () => {
   const getter = new TagGetter()

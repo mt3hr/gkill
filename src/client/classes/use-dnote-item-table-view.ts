@@ -4,16 +4,18 @@ import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
 import type DnoteItemTableViewEmits from '@/pages/views/dnote-item-table-view-emits'
 import type DnoteItemTableViewProps from '@/pages/views/dnote-item-table-view-props'
+import type { ComponentRef } from '@/classes/component-ref'
+import type { GkillError } from '@/classes/api/gkill-error'
 
 export function useDnoteItemTableView(options: {
     props: DnoteItemTableViewProps,
     emits: DnoteItemTableViewEmits,
     model_value: Ref<Array<Array<DnoteItem>>>,
 }) {
-    const { props, emits, model_value } = options
+    const { props, emits: _emits, model_value } = options
 
     // ── Template refs ──
-    const dnote_item_list_views = ref<any>(null)
+    const dnote_item_list_views = ref<ComponentRef | null>(null)
 
     // ── Methods ──
     async function load_aggregated_value(
@@ -23,7 +25,7 @@ export function useDnoteItemTableView(options: {
         kyou_is_loaded: boolean
     ) {
         if (!dnote_item_list_views.value) return
-        const waitPromises: Array<Promise<any>> = []
+        const waitPromises: Array<Promise<Array<GkillError>>> = []
         for (let i = 0; i < dnote_item_list_views.value.length; i++) {
             const v = dnote_item_list_views.value[i]
             if (!v) continue
@@ -35,8 +37,8 @@ export function useDnoteItemTableView(options: {
     async function reset(): Promise<void> {
         if (!dnote_item_list_views.value || dnote_item_list_views.value.length === 0) return
         return nextTick(async () => {
-            for (let i = 0; i < dnote_item_list_views.value.length; i++) {
-                await dnote_item_list_views.value[i].reset()
+            for (let i = 0; i < dnote_item_list_views.value!.length; i++) {
+                await dnote_item_list_views.value![i].reset()
             }
         })
     }

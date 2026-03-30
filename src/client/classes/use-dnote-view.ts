@@ -1,4 +1,5 @@
 import { i18n } from '@/i18n'
+import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import DnoteItem from '@/classes/dnote/dnote-item'
@@ -17,6 +18,7 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { toExportKyouDto } from '@/classes/dto/export_dto'
 import { pruneEmpty } from '@/classes/dto/export_prune'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export interface DnoteDefinition {
     name: string
@@ -31,18 +33,18 @@ export function useDnoteView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const add_dnote_list_dialog = ref<any>(null)
-    const add_dnote_item_dialog = ref<any>(null)
+    const add_dnote_list_dialog = ref<ComponentRef | null>(null)
+    const add_dnote_item_dialog = ref<ComponentRef | null>(null)
 
     // ── View refs (Map-based, for dynamic :ref bindings) ──
-    const item_view_refs = new Map<number, any>()
-    const list_view_refs = new Map<number, any>()
+    const item_view_refs = new Map<number, ComponentRef>()
+    const list_view_refs = new Map<number, ComponentRef>()
 
-    function set_item_table_ref(i: number, el: any): void {
+    function set_item_table_ref(i: number, el: ComponentRef | null): void {
         if (el) item_view_refs.set(i, el)
         else item_view_refs.delete(i)
     }
-    function set_list_table_ref(i: number, el: any): void {
+    function set_list_table_ref(i: number, el: ComponentRef | null): void {
         if (el) list_view_refs.set(i, el)
         else list_view_refs.delete(i)
     }
@@ -136,10 +138,12 @@ export function useDnoteView(options: {
         return await list_view_refs.get(current_definition_index.value)?.load_aggregate_grouping_list(ac, kyous, find_kyou_query, kyou_is_loaded)
     }
 
-    function parse_single_definition_json(def_json: any): DnoteDefinition {
+    function parse_single_definition_json(def_json: Record<string, unknown>): DnoteDefinition {
         regist_dictionary()
-        const name = def_json.name || i18n.global.t('DNOTE_DEFINITION_DEFAULT_NAME')
-        const items: Array<Array<DnoteItem>> = ((def_json && def_json.dnote_item_table_view_data ? def_json.dnote_item_table_view_data : []) || []).map((col: any[]) =>
+        const name = (def_json.name as string) || i18n.global.t('DNOTE_DEFINITION_DEFAULT_NAME')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const items: Array<Array<DnoteItem>> = ((def_json && def_json.dnote_item_table_view_data ? def_json.dnote_item_table_view_data : []) as Array<Array<any>> || []).map((col: Array<any>) =>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             col.map((itemJson: any) => {
                 const item = new DnoteItem()
                 item.id = itemJson.id
@@ -151,7 +155,8 @@ export function useDnoteView(options: {
                 return item
             })
         )
-        const lists: Array<DnoteListQuery> = ((def_json && def_json.dnote_list_item_table_view_data ? def_json.dnote_list_item_table_view_data : []) || []).map((queryJson: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const lists: Array<DnoteListQuery> = ((def_json && def_json.dnote_list_item_table_view_data ? def_json.dnote_list_item_table_view_data : []) as Array<any> || []).map((queryJson: any) => {
             const query = new DnoteListQuery()
             query.id = queryJson.id
             query.prefix = queryJson.prefix
@@ -168,7 +173,7 @@ export function useDnoteView(options: {
         return { name, items, lists }
     }
 
-    function serialize_single_definition(def: DnoteDefinition): any {
+    function serialize_single_definition(def: DnoteDefinition): Record<string, unknown> {
         const dnote_item_table_view_data_serialized = []
         for (let i = 0; i < def.items.length; i++) {
             const list = []
@@ -210,17 +215,17 @@ export function useDnoteView(options: {
         }
     }
 
-    function to_json(): any {
+    function to_json(): Array<Record<string, unknown>> {
         return dnote_definitions.value.map(serialize_single_definition)
     }
 
-    function from_json(json: any): void {
+    function from_json(json: unknown): void {
         regist_dictionary()
-        let definitions_json: any[]
+        let definitions_json: Array<Record<string, unknown>>
         if (Array.isArray(json)) {
-            definitions_json = json
-        } else if (json && (json.dnote_item_table_view_data || json.dnote_list_item_table_view_data)) {
-            definitions_json = [json]
+            definitions_json = json as Array<Record<string, unknown>>
+        } else if (json && typeof json === 'object' && ((json as Record<string, unknown>).dnote_item_table_view_data || (json as Record<string, unknown>).dnote_list_item_table_view_data)) {
+            definitions_json = [json as Record<string, unknown>]
         } else {
             definitions_json = []
         }
@@ -256,7 +261,7 @@ export function useDnoteView(options: {
         await list_view_refs.get(current_definition_index.value)?.reset()
 
         const kyou_is_loaded = true
-        const waitPromises = new Array<Promise<any>>()
+        const waitPromises = new Array<Promise<unknown>>()
         waitPromises.push(load_aggregated_value(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
         waitPromises.push(load_aggregate_grouping_list(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
         await Promise.all(waitPromises)
@@ -295,7 +300,7 @@ export function useDnoteView(options: {
 
         const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous, true, true)
         const kyou_is_loaded = true
-        const waitPromises = new Array<Promise<any>>()
+        const waitPromises = new Array<Promise<unknown>>()
         waitPromises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
         waitPromises.push(load_aggregate_grouping_list(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
         await Promise.all(waitPromises)
@@ -303,7 +308,7 @@ export function useDnoteView(options: {
         loaded_kyous.value = cloned_kyou
     }
 
-    async function abort(): Promise<any> {
+    async function abort(): Promise<void> {
         abort_controller.value.abort()
         abort_controller.value = new AbortController()
         return reset_view()
@@ -338,7 +343,8 @@ export function useDnoteView(options: {
 
     async function apply(): Promise<void> {
         const dnote_json_data = to_json()
-        emits('requested_apply_dnote', dnote_json_data)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        emits('requested_apply_dnote', dnote_json_data as any)
         nextTick(() => emits('requested_close_dialog'))
     }
 
@@ -389,7 +395,8 @@ export function useDnoteView(options: {
         saveAs(blob, filename)
     }
 
-    async function streamSaveJsonArray(items: any[], filename: string): Promise<void> {
+    async function streamSaveJsonArray(items: Kyou[], filename: string): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handle = await (window as any).showSaveFilePicker({
             suggestedName: filename,
             types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
@@ -410,7 +417,7 @@ export function useDnoteView(options: {
                 if (pruned === undefined) continue;
 
                 const seen = new WeakSet<object>()
-                const replacer = (_k: string, v: any) => {
+                const replacer = (_k: string, v: unknown) => {
                     if (typeof v === "bigint") return v.toString()
                     if (v && typeof v === "object") {
                         if (seen.has(v)) return "[Circular]"
@@ -454,32 +461,32 @@ export function useDnoteView(options: {
 
     // ── Event relay objects ──
     const crudRelayHandlers = {
-        'deleted_kyou': (...args: any[]) => emits('deleted_kyou', args[0] as Kyou),
-        'deleted_tag': (...args: any[]) => emits('deleted_tag', args[0] as Tag),
-        'deleted_text': (...args: any[]) => emits('deleted_text', args[0] as Text),
-        'deleted_notification': (...args: any[]) => emits('deleted_notification', args[0] as Notification),
-        'registered_kyou': (...args: any[]) => emits('registered_kyou', args[0] as Kyou),
-        'registered_tag': (...args: any[]) => emits('registered_tag', args[0] as Tag),
-        'registered_text': (...args: any[]) => emits('registered_text', args[0] as Text),
-        'registered_notification': (...args: any[]) => emits('registered_notification', args[0] as Notification),
-        'updated_kyou': (...args: any[]) => emits('updated_kyou', args[0] as Kyou),
-        'updated_tag': (...args: any[]) => emits('updated_tag', args[0] as Tag),
-        'updated_text': (...args: any[]) => emits('updated_text', args[0] as Text),
-        'updated_notification': (...args: any[]) => emits('updated_notification', args[0] as Notification),
+        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
     }
 
     const focusClickRelayHandlers = {
-        'focused_kyou': (...args: any[]) => emits('focused_kyou', args[0] as Kyou),
-        'clicked_kyou': (...args: any[]) => { emits('focused_kyou', args[0] as Kyou); emits('clicked_kyou', args[0] as Kyou) },
+        'focused_kyou': (kyou: Kyou) => emits('focused_kyou', kyou),
+        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
     }
 
     const rykvDialogHandler = {
-        'requested_open_rykv_dialog': (...args: any[]) => emits('requested_open_rykv_dialog', args[0], args[1], args[2]),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
     const errorsMessagesRelayHandlers = {
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     // ── Return ──

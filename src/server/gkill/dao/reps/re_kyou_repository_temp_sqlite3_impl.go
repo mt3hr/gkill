@@ -212,7 +212,7 @@ INSERT INTO REKYOU (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		rekyou.IsDeleted,
 		rekyou.ID,
 		rekyou.TargetID,
@@ -285,7 +285,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "rekyou"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -411,7 +411,7 @@ AND DEVICE = ?
 
 	dataType := "rekyou"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -522,7 +522,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

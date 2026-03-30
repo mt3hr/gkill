@@ -20,10 +20,10 @@
 
         <ConfirmDeleteRelatedKyouQueryView :application_config="application_config" :gkill_api="gkill_api"
           :related_kyou_query="related_kyou_query"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @requested_close_dialog="hide"
-          @requested_delete_related_kyou_query="(...id: any[]) => { emits('requested_delete_related_kyou_query', id[0] as string); hide() }"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
+          @requested_delete_related_kyou_query="(id: string) => { emits('requested_delete_related_kyou_query', id); hide() }"
+          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)" />
         </v-card>
 </div>
     </div>
@@ -33,13 +33,13 @@
 import { type Ref, ref } from 'vue'
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query';
 import ConfirmDeleteRelatedKyouQueryView from '../views/confirm-delete-related-kyou-query-view.vue';
-import type { ConfirmDeleteRyuuListItemDialogProps } from './confirm-delete-ryuu-list-item-dialog-props';
-import type { ConfirmDeleteRyuuListItemDialogEmits } from './confirm-delete-ryuu-list-item-dialog-emits';
+import type { ConfirmDeleteRyuuItemDialogProps } from './confirm-delete-ryuu-item-dialog-props';
+import type { ConfirmDeleteRyuuItemDialogEmits } from './confirm-delete-ryuu-item-dialog-emits';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 
-defineProps<ConfirmDeleteRyuuListItemDialogProps>()
-const emits = defineEmits<ConfirmDeleteRyuuListItemDialogEmits>()
+defineProps<ConfirmDeleteRyuuItemDialogProps>()
+const emits = defineEmits<ConfirmDeleteRyuuItemDialogEmits>()
 defineExpose({ show, hide })
 
 const related_kyou_query: Ref<RelatedKyouQuery> = ref(new RelatedKyouQuery())
@@ -49,7 +49,7 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("confirm-delete-ryuu-list-item-dialog", {
+const ui = useFloatingDialog("confirm-delete-ryuu-item-dialog", {
   centerMode: "always",
   onEscape: () => hide(),
 })

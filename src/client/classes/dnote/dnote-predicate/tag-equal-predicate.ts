@@ -6,6 +6,7 @@ export default class TagEqualPredicate implements DnotePredicate {
     constructor(tag: string) {
         this.tag = tag
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const tag = json.value as string
         return new TagEqualPredicate(tag)
@@ -19,7 +20,7 @@ export default class TagEqualPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "TagEqualPredicate",
             value: this.tag,

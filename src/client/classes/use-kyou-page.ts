@@ -14,25 +14,26 @@ import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useKyouPage() {
     const theme = useTheme()
 
     // ── Template refs ──
-    const application_config_dialog = ref<any>(null)
+    const application_config_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const enable_context_menu = ref(true)
     const enable_dialog = ref(true)
 
-    const actual_height: Ref<Number> = ref(0)
-    const element_height: Ref<Number> = ref(0)
-    const browser_url_bar_height: Ref<Number> = ref(0)
-    const app_title_bar_height: Ref<Number> = ref(50)
+    const actual_height: Ref<number> = ref(0)
+    const element_height: Ref<number> = ref(0)
+    const browser_url_bar_height: Ref<number> = ref(0)
+    const app_title_bar_height: Ref<number> = ref(50)
     const gkill_api = computed(() => GkillAPI.get_instance())
     const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
-    const app_content_height: Ref<Number> = ref(0)
-    const app_content_width: Ref<Number> = ref(0)
+    const app_content_height: Ref<number> = ref(0)
+    const app_content_width: Ref<number> = ref(0)
 
     const is_show_application_config_dialog: Ref<boolean> = ref(false)
     const hightlight_targets: Ref<Array<InfoIdentifier>> = ref(new Array<InfoIdentifier>())
@@ -146,7 +147,7 @@ export function useKyouPage() {
     }
 
     async function load_kyou(): Promise<void> {
-        let kyou_id = new URL(location.href).searchParams.get('kyou_id')
+        const kyou_id = new URL(location.href).searchParams.get('kyou_id')
         if (!kyou_id || kyou_id === "") {
             return
         }

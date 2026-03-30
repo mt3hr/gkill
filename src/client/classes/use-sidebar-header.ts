@@ -5,7 +5,7 @@ export function useSidebarHeader(options: {
     props: SidebarHeaderProps,
     emits: SidebarHeaderEmits,
 }) {
-    const { props, emits } = options
+    const { props: _props, emits: _emits } = options
 
     return {
     }

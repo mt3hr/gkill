@@ -254,7 +254,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -375,7 +375,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -587,7 +587,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(r.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				rekyou.IsDeleted,
 				rekyou.ID,
 				rekyou.TargetID,
@@ -741,7 +741,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -865,7 +865,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -958,7 +958,7 @@ WHERE
 func (r *reKyouRepositoryCachedSQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou ReKyou) error {
 	r.m.Lock()
 	defer r.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		rekyou.IsDeleted,
 		rekyou.ID,
 		rekyou.TargetID,
@@ -1009,7 +1009,7 @@ WHERE
 
 	dataType := "rekyou"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	query := &find.FindQuery{}

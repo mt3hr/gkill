@@ -115,8 +115,7 @@ import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
-interface BrowseZipContentsDialogProps extends KyouViewPropsBase {
-}
+type BrowseZipContentsDialogProps = KyouViewPropsBase
 
 const props = defineProps<BrowseZipContentsDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()

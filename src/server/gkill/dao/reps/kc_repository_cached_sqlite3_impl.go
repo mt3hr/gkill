@@ -173,7 +173,7 @@ WHERE
 `
 
 	dataType := "kc"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -297,7 +297,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -416,7 +416,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -621,7 +621,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(k.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				kc.IsDeleted,
 				kc.ID,
 				kc.Title,
@@ -728,7 +728,7 @@ WHERE
 `
 	dataType := "kc"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -855,7 +855,7 @@ WHERE
 	}
 	dataType := "kc"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -984,7 +984,7 @@ WHERE
 	}
 	dataType := "kc"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1082,7 +1082,7 @@ WHERE
 func (k *kcRepositoryCachedSQLite3Impl) AddKCInfo(ctx context.Context, kc KC) error {
 	k.m.Lock()
 	defer k.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		kc.IsDeleted,
 		kc.ID,
 		kc.Title,

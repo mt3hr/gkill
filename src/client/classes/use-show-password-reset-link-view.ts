@@ -21,7 +21,7 @@ export function useShowPasswordResetLinkView(options: {
     function update_password_reset_urls(): void {
         const current_server_config = props.server_configs.filter((server_config) => server_config.enable_this_device)[0]
         const token = props.account.password_reset_token
-        let http = current_server_config.enable_tls ? "https://" : "http://"
+        const http = current_server_config.enable_tls ? "https://" : "http://"
         const port = current_server_config.address
         lan_password_reset_url.value = `${http}localhost${port}/set_new_password?reset_token=${token}`
         over_lan_password_reset_url.value = `${http}localhost${port}/set_new_password?reset_token=${token}`

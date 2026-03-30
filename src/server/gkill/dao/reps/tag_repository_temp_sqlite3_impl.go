@@ -261,7 +261,7 @@ INSERT INTO TAG (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		tag.IsDeleted,
 		tag.ID,
 		tag.Tag,
@@ -337,7 +337,7 @@ AND DEVICE = ?
 	}
 	dataType := "tag"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -450,7 +450,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

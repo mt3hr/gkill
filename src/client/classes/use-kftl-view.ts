@@ -12,6 +12,7 @@ import { CommitTXRequest } from '@/classes/api/req_res/commit-tx-request'
 import type { KFTLProps } from '@/pages/views/kftl-props'
 import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useKftlView(options: {
     props: KFTLProps,
@@ -20,14 +21,14 @@ export function useKftlView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const kftl_template_dialog = ref<any>(null)
+    const kftl_template_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const text_area_content: Ref<string> = ref("")
-    const text_area_width: Ref<Number | 'unset'> = ref(0)
-    const text_area_height: Ref<Number> = ref(0)
-    const line_label_width: Ref<Number> = ref(0)
-    const line_label_height: Ref<Number> = ref(0)
+    const text_area_width: Ref<number | 'unset'> = ref(0)
+    const text_area_height: Ref<number> = ref(0)
+    const line_label_width: Ref<number> = ref(0)
+    const line_label_height: Ref<number> = ref(0)
 
     const title_height = 52
     const action_height = 10
@@ -35,8 +36,8 @@ export function useKftlView(options: {
     const kftl_input_width: Ref<number | 'unset'> = ref(0)
 
     const line_label_datas: Ref<Array<LineLabelData>> = ref(new Array<LineLabelData>())
-    const line_label_styles: Ref<Array<any>> = ref(new Array<any>())
-    const invalid_line_numbers: Ref<Array<Number>> = ref(new Array<Number>())
+    const line_label_styles: Ref<Array<Record<string, string>>> = ref(new Array<Record<string, string>>())
+    const invalid_line_numbers: Ref<Array<number>> = ref(new Array<number>())
     const is_requested_submit: Ref<boolean> = ref(true)
 
     // ── Computed ──
@@ -98,7 +99,7 @@ export function useKftlView(options: {
     // ── Lifecycle ──
     nextTick(() => {
         const kftl_text_area_element_id = "kftl_text_area"
-        const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!!
+        const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!
         kftl_text_area_element.addEventListener("scroll", update_line_labels)
         update_line_labels()
     })
@@ -144,8 +145,8 @@ export function useKftlView(options: {
 
     async function update_line_labels(): Promise<void> {
         const kftl_text_area_element_id = "kftl_text_area"
-        const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!!
-        const kftl_line_label_elements = document.getElementsByClassName("kftl_line_label")!!
+        const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!
+        const kftl_line_label_elements = document.getElementsByClassName("kftl_line_label")!
         for (let i = 0; i < kftl_line_label_elements.length; i++) {
             const kftl_line_label_element = kftl_line_label_elements.item(i)
             if (kftl_line_label_element) {
@@ -167,7 +168,7 @@ export function useKftlView(options: {
         }
     }
 
-    function is_invalid_line(line_index: Number): boolean {
+    function is_invalid_line(line_index: number): boolean {
         for (let i = 0; i < invalid_line_numbers.value.length; i++) {
             if (invalid_line_numbers.value[i] == line_index) {
                 return true
@@ -273,8 +274,8 @@ export function useKftlView(options: {
 
     // ── Event relay objects ──
     const errorMessageRelayHandlers = {
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     // ── Return ──

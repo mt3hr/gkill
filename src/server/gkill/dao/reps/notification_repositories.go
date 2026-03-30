@@ -4,7 +4,7 @@ import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 
@@ -274,8 +274,8 @@ loop:
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
-	sort.Slice(notificationHistoriesList, func(i, j int) bool {
-		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
+	slices.SortFunc(notificationHistoriesList, func(a, b Notification) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return notificationHistoriesList, nil
@@ -350,8 +350,8 @@ loop:
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
-	sort.Slice(notificationHistoriesList, func(i, j int) bool {
-		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
+	slices.SortFunc(notificationHistoriesList, func(a, b Notification) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return notificationHistoriesList, nil
@@ -501,8 +501,8 @@ loop:
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
-	sort.Slice(notificationHistoriesList, func(i, j int) bool {
-		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
+	slices.SortFunc(notificationHistoriesList, func(a, b Notification) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return notificationHistoriesList, nil
@@ -589,8 +589,8 @@ loop:
 		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
-	sort.Slice(notificationHistoriesList, func(i, j int) bool {
-		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
+	slices.SortFunc(notificationHistoriesList, func(a, b Notification) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return notificationHistoriesList, nil

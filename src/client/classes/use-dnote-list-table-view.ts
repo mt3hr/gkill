@@ -5,16 +5,18 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type DnoteListTableViewEmits from '@/pages/views/dnote-list-table-view-emits'
 import type DnoteListTableViewProps from '@/pages/views/dnote-list-table-view-props'
 import type { Ref } from 'vue'
+import type { ComponentRef } from '@/classes/component-ref'
+import type { GkillError } from '@/classes/api/gkill-error'
 
 export function useDnoteListTableView(options: {
     props: DnoteListTableViewProps,
     emits: DnoteListTableViewEmits,
     model_value: Ref<Array<DnoteListQuery>>,
 }) {
-    const { props, emits, model_value } = options
+    const { props, emits: _emits, model_value } = options
 
     // ── Template refs ──
-    const dnote_list_views = ref<any>(null)
+    const dnote_list_views = ref<ComponentRef | null>(null)
 
     // ── Methods ──
     function load_aggregate_grouping_list(
@@ -24,7 +26,7 @@ export function useDnoteListTableView(options: {
         kyou_is_loaded: boolean
     ): void {
         if (!dnote_list_views.value) return
-        const waits: Array<Promise<any>> = []
+        const waits: Array<Promise<Array<GkillError>>> = []
         for (let i = 0; i < dnote_list_views.value.length; i++) {
             const v = dnote_list_views.value[i]
             if (!v) continue
@@ -37,7 +39,7 @@ export function useDnoteListTableView(options: {
     async function reset(): Promise<void> {
         if (!dnote_list_views.value || dnote_list_views.value.length === 0) return
         return nextTick(async () => {
-            for (let i = 0; i < dnote_list_views.value.length; i++) await dnote_list_views.value[i].reset()
+            for (let i = 0; i < dnote_list_views.value!.length; i++) await dnote_list_views.value![i].reset()
         })
     }
 

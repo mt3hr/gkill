@@ -5,8 +5,8 @@
                 :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
                 @request_open_share_kyou_dialog="show_share_kyou_dialog()"
-                @received_messages="(...messages: any[]) => onReceivedMessages(messages)"
-                @received_errors="(...errors: any[]) => onReceivedErrors(errors)" />
+                @received_messages="(messages: GkillMessage[]) => onReceivedMessages(messages)"
+                @received_errors="(errors: GkillError[]) => onReceivedErrors(errors)" />
             <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="query" @requested_search="onRequestSearchFalse"
                 :inited="inited_sidebar_header_for_query_sidebar"
@@ -33,7 +33,7 @@
             <div> <v-divider /> </div>
             <miBoardQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 :inited="inited_board_query_for_query_sidebar" @inited="onInitedBoard"
-                @request_open_focus_board="(...board_name: any[]) => onRequestOpenFocusBoard(board_name[0] as string)"
+                @request_open_focus_board="(board_name: string) => onRequestOpenFocusBoard(board_name)"
                 ref="board_query" />
             <div> <v-divider /> </div>
             <TagQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
@@ -45,11 +45,18 @@
             <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_timeis_tags="emits_current_query()"
                 @request_update_and_search_timeis_word="emits_current_query()"
-                @request_update_checked_timeis_tags="(...params: any[]) => onTimeisQueryRequestUpdateCheckedTimeisTags(...params)"
+                @request_update_checked_timeis_tags="(tags: string[]) => onTimeisQueryRequestUpdateCheckedTimeisTags(tags, true)"
                 :inited="inited_timeis_query_for_query_sidebar" @inited="onInitedTimeis"
                 @request_update_timeis_keywords="emits_current_query()"
                 @request_update_use_timeis_query="emits_current_query()"
                 @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
+            <div> <v-divider /> </div>
+            <PeriodOfTimeQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                :inited="inited_period_of_time_query_for_query_sidebar"
+                @request_update_use_period_of_time="emits_current_query()"
+                @request_update_period_of_time="emits_current_query()"
+                @request_clear_use_period_of_time_query="emits_cleard_period_of_time_query()"
+                ref="period_of_time_query" />
             <div> <v-divider /> </div>
             <div>
                 <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
@@ -78,6 +85,9 @@ import TimeIsQuery from './time-is-query.vue'
 import TagQuery from './tag-query.vue'
 import ShareKyouFooter from './share-kyou-footer.vue'
 import miSortTypeQuery from './mi-sort-type-query.vue'
+import PeriodOfTimeQuery from './period-of-time-query.vue'
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
 import type { miQueryEditorSidebarEmits } from './mi-query-editor-sidebar-emits'
 import type { miQueryEditorSidebarProps } from './mi-query-editor-sidebar-props'
 import { useMiQueryEditorSidebar } from '@/classes/use-mi-query-editor-sidebar'
@@ -96,6 +106,7 @@ const {
     check_state_query,
     sort_type_query,
     board_query,
+    period_of_time_query,
 
     // State
     query,
@@ -106,6 +117,7 @@ const {
     inited_calendar_query_for_query_sidebar,
     inited_map_query_for_query_sidebar,
     inited_board_query_for_query_sidebar,
+    inited_period_of_time_query_for_query_sidebar,
 
     // Computed
     header_margin,
@@ -127,6 +139,7 @@ const {
     emits_cleard_tag_query,
     emits_cleard_map_query,
     emits_cleard_calendar_query,
+    emits_cleard_period_of_time_query,
     emits_default_query,
     show_manage_share_kyou_dialog,
     show_share_kyou_dialog,

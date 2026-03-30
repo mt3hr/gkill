@@ -7,7 +7,7 @@ import type { Kyou } from "@/classes/datas/kyou"
 export interface DnoteViewProps extends GkillPropsBase {
     query: FindKyouQuery
     checked_kyous: Array<Kyou>
-    app_content_height: Number
-    app_content_width: Number
+    app_content_height: number
+    app_content_width: number
     editable: boolean
 }
