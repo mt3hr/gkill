@@ -3,7 +3,7 @@
 import type { KFTLRequest } from "./kftl-request"
 import { KFTLPrototypeRequest } from "./kftl_prototype/kftl-prototype-request"
 
-export class KFTLRequestMap extends Map<String, KFTLRequest> {
+export class KFTLRequestMap extends Map<string, KFTLRequest> {
     public override set(request_id: string, request: KFTLRequest) {
         const setted_request = this.get(request_id)
         if (setted_request) {

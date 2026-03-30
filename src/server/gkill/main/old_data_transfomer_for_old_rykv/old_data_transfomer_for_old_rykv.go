@@ -1912,7 +1912,7 @@ func (a *allDataDB) insertNlogsFromOldDB(nlogs []*Nlog) error {
 	?,
 	?)`
 	for _, nlog := range nlogs {
-		_, err := tx.Exec(statement, []interface{}{
+		_, err := tx.Exec(statement, []any{
 			nlog.ID,
 			nlog.Time.Format(TimeLayout),
 			nlog.Amount,

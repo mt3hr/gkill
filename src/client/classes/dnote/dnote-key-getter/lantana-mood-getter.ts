@@ -3,7 +3,7 @@ import type DnoteKeyGetter from "../dnote-key-getter";
 
 export default class LantanaMoodGetter implements DnoteKeyGetter {
 
-    static from_json(_json: any): LantanaMoodGetter {
+    static from_json(_json: Record<string, unknown>): LantanaMoodGetter {
         return new LantanaMoodGetter()
     }
 

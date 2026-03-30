@@ -35,7 +35,7 @@ import { useEditTimeIsView } from '@/classes/use-edit-time-is-view'
 import { useEditLantanaView } from '@/classes/use-edit-lantana-view'
 import { useEditKCView } from '@/classes/use-edit-kc-view'
 
-function createMockKyou(data: any = {}) {
+function createMockKyou(data: Record<string, unknown> = {}) {
   const base = {
     id: 'test-kyou-id',
     rep_name: 'test-rep',
@@ -51,7 +51,7 @@ function createMockKyou(data: any = {}) {
     update_device: 'test-device',
     update_user: 'admin',
     typed_kmemo: (() => {
-      const km: any = {
+      const km: Record<string, unknown> = {
         content: 'テストメモ',
         id: 'test-kmemo-id',
         related_time: new Date('2025-03-15T09:00:00+09:00'),
@@ -94,13 +94,13 @@ function createMockKyou(data: any = {}) {
 
 function createBaseProps(kyouData = {}) {
   return {
-    gkill_api: createMockGkillAPI() as any,
+    gkill_api: createMockGkillAPI() as never,
     application_config: {
       device: 'test-device',
       user_id: 'admin',
       mi_default_board: 'Inbox',
-    } as any,
-    kyou: createMockKyou(kyouData) as any,
+    } as never,
+    kyou: createMockKyou(kyouData) as never,
     highlight_targets: [],
     enable_context_menu: true,
     enable_dialog: true,
@@ -128,7 +128,7 @@ describe('useEditKmemoView', () => {
     const view = useEditKmemoView({ props, emits })
     view.kmemo_value.value = ''
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 
@@ -152,7 +152,7 @@ describe('useEditKmemoView', () => {
     const view = useEditKmemoView({ props, emits })
     view.kmemo_value.value = '更新メモ'
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 
@@ -174,7 +174,7 @@ describe('useEditMiView', () => {
     props = createBaseProps({
       data_type: 'mi',
       typed_mi: (() => {
-        const mi: any = {
+        const mi: Record<string, unknown> = {
           id: 'test-mi-id',
           title: 'テストタスク',
           board_name: 'Inbox',
@@ -215,7 +215,7 @@ describe('useEditMiView', () => {
     const view = useEditMiView({ props, emits })
     view.mi_title.value = ''
     await view.save()
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBeGreaterThan(0)
   })
 
@@ -241,7 +241,7 @@ describe('useEditMiView', () => {
 
 // ========== Helper for other edit views ==========
 
-function createTypedKyouProps(dataType: string, typedField: string, typedData: any) {
+function createTypedKyouProps(dataType: string, typedField: string, typedData: Record<string, unknown>) {
   const td = { ...typedData }
   td.clone = () => ({ ...td, clone: td.clone })
   return createBaseProps({

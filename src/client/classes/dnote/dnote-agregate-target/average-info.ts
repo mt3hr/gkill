@@ -1,6 +1,6 @@
 export default class AverageInfo {
     public total_count: number = 0
-    public total_value: any = null
+    public total_value: number | null = null
     clone(): AverageInfo {
         const clone = new AverageInfo()
         clone.total_count = this.total_count

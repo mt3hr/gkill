@@ -2,5 +2,4 @@
 
 import type { GkillPropsBase } from "../views/gkill-props-base"
 
-export interface AddNewDeviceStructElementDialogProps extends GkillPropsBase {
-}
+export type AddNewDeviceStructElementDialogProps = GkillPropsBase

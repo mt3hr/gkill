@@ -20,8 +20,8 @@ export function useAttachedTimeisPlaingContextMenu(options: { props: AttachedTim
     reload_cloned_timeis_kyou()
 
     const is_show: Ref<boolean> = ref(false)
-    const position_x: Ref<Number> = ref(0)
-    const position_y: Ref<Number> = ref(0)
+    const position_x: Ref<number> = ref(0)
+    const position_y: Ref<number> = ref(0)
     const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * 4))), position_y.value.valueOf())}px; }`)
 
     function reload_cloned_timeis_kyou(): void {

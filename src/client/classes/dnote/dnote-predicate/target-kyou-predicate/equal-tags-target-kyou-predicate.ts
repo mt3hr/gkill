@@ -7,6 +7,7 @@ export default class EqualTagsTargetKyouPredicate implements DnotePredicate {
         this.and = and
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const and = json.and as boolean
         return new EqualTagsTargetKyouPredicate(and)
@@ -47,7 +48,7 @@ export default class EqualTagsTargetKyouPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "EqualTagsTargetKyouPredicate",
             value: this.and,

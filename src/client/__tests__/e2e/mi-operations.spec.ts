@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
-  submitKftlText, navigateToRykv, navigateToMi,
-  makeUniqueLabel, pageContainsText, findKyouByText, clickDialogButton,
+  submitKftlText, navigateToMi,
+  makeUniqueLabel, findKyouByText, clickDialogButton,
 } from './crud-helpers'
 
 let apiReachable = false

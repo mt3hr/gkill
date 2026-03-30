@@ -168,7 +168,7 @@ WHERE
 `
 
 	dataType := "kmemo"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -291,7 +291,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -410,7 +410,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -613,7 +613,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(k.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				kmemo.IsDeleted,
 				kmemo.ID,
 				kmemo.Content,
@@ -719,7 +719,7 @@ WHERE
 
 	dataType := "kmemo"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -843,7 +843,7 @@ WHERE
 	}
 	dataType := "kmemo"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -965,7 +965,7 @@ WHERE
 	}
 	dataType := "kmemo"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1057,7 +1057,7 @@ WHERE
 func (k *kmemoRepositoryCachedSQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo Kmemo) error {
 	k.m.Lock()
 	defer k.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		kmemo.IsDeleted,
 		kmemo.ID,
 		kmemo.Content,

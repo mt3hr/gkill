@@ -107,7 +107,7 @@ func TestTagGetAllTags(t *testing.T) {
 	repo := newTempTagRepo(t)
 	ctx := context.Background()
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		tag := makeTag("tag-all-"+string(rune('a'+i)), "target-"+string(rune('a'+i)), "タグ")
 		tag.UpdateTime = tag.UpdateTime.Add(time.Duration(i) * time.Second)
 		if err := repo.AddTagInfo(ctx, tag); err != nil {

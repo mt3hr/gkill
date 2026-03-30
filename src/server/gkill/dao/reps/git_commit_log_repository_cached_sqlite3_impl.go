@@ -206,7 +206,7 @@ WHERE
 `
 
 	dataType := "git_commit_log"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -329,7 +329,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -448,7 +448,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -729,7 +729,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
 				return ctx.Err()
 			default:
 			}
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				gitCommitLog.IsDeleted,
 				gitCommitLog.ID,
 				gitCommitLog.CommitMessage,
@@ -978,7 +978,7 @@ WHERE
 
 	dataType := "git_commit_log"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1081,7 +1081,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindGitCommitLogByIDs(ctx cont
 	defer g.m.RUnlock()
 
 	placeholders := make([]string, len(ids))
-	args := make([]interface{}, len(ids))
+	args := make([]any, len(ids))
 	for i, id := range ids {
 		placeholders[i] = "?"
 		args[i] = id
@@ -1195,7 +1195,7 @@ WHERE
 	}
 	dataType := "git_commit_log"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 

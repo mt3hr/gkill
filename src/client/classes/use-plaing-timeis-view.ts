@@ -11,6 +11,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import { Tag } from '@/classes/datas/tag'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function usePlaingTimeisView(options: {
     props: PlaingTimeIsViewProps,
@@ -20,15 +21,15 @@ export function usePlaingTimeisView(options: {
 
     // ── Template refs ──
     const plaing_timeis_root = ref<HTMLElement | null>(null)
-    const add_mi_dialog = ref<any>(null)
-    const add_nlog_dialog = ref<any>(null)
-    const add_lantana_dialog = ref<any>(null)
-    const add_timeis_dialog = ref<any>(null)
-    const add_urlog_dialog = ref<any>(null)
-    const kftl_dialog = ref<any>(null)
-    const add_kc_dialog = ref<any>(null)
-    const mkfl_dialog = ref<any>(null)
-    const upload_file_dialog = ref<any>(null)
+    const add_mi_dialog = ref<ComponentRef | null>(null)
+    const add_nlog_dialog = ref<ComponentRef | null>(null)
+    const add_lantana_dialog = ref<ComponentRef | null>(null)
+    const add_timeis_dialog = ref<ComponentRef | null>(null)
+    const add_urlog_dialog = ref<ComponentRef | null>(null)
+    const kftl_dialog = ref<ComponentRef | null>(null)
+    const add_kc_dialog = ref<ComponentRef | null>(null)
+    const mkfl_dialog = ref<ComponentRef | null>(null)
+    const upload_file_dialog = ref<ComponentRef | null>(null)
     const kyou_list_views = ref()
 
     // ── State refs ──
@@ -43,8 +44,8 @@ export function usePlaingTimeisView(options: {
     const focused_kyou: Ref<Kyou | null> = ref(null)
     const focused_time: Ref<Date> = ref(moment().toDate())
     const last_added_request_time: Ref<Date | null> = ref(null)
-    const position_x: Ref<Number> = ref(0)
-    const position_y: Ref<Number> = ref(0)
+    const position_x: Ref<number> = ref(0)
+    const position_y: Ref<number> = ref(0)
     const is_loading = ref(false)
     const skip_search_this_tick = ref(false)
     const abort_controller: Ref<AbortController> = ref(new AbortController())
@@ -70,6 +71,7 @@ export function usePlaingTimeisView(options: {
     watch(() => props.application_config.is_loaded, () => {
         nextTick(async () => {
             await nextTick(async () => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kyou_list_view = kyou_list_views.value as any
                 if (!kyou_list_view) {
                     return
@@ -85,6 +87,7 @@ export function usePlaingTimeisView(options: {
         if (!kyou_list_views.value) {
             return
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
         if (!kyou_list_view) {
             return
@@ -151,6 +154,7 @@ export function usePlaingTimeisView(options: {
             focused_kyous_list.value.splice(0)
 
             await nextTick(async () => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kyou_list_view = kyou_list_views.value as any
                 if (!kyou_list_view) {
                     return
@@ -179,11 +183,13 @@ export function usePlaingTimeisView(options: {
             match_kyous_list.value.push(...res.kyous)
             focused_kyous_list.value.push(...res.kyous)
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const kyou_list_view = kyou_list_views.value as any
             if (kyou_list_view) {
                 kyou_list_view.scroll_to(1)
             }
             await nextTick(() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kyou_list_view = kyou_list_views.value as any
                 if (!kyou_list_view) {
                     return
@@ -192,9 +198,9 @@ export function usePlaingTimeisView(options: {
                 kyou_list_view.set_loading(false)
                 skip_search_this_tick.value = false
             })
-        } catch (err: any) {
+        } catch (err: unknown) {
             // abortは握りつぶす
-            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
                 // abort以外はエラー出力する
                 console.error(err)
             }
@@ -290,20 +296,20 @@ export function usePlaingTimeisView(options: {
     // ── Event relay objects ──
     // Note: this view uses reload_list(false) for registered/updated_kyou, NOT reload_kyou
     const crudRelayHandlers = {
-        'deleted_kyou': (...args: any[]) => onDeletedKyou(args[0] as Kyou),
-        'deleted_tag': (...args: any[]) => emits('deleted_tag', args[0] as Tag),
-        'deleted_text': (...args: any[]) => emits('deleted_text', args[0] as Text),
-        'deleted_notification': (...args: any[]) => emits('deleted_notification', args[0] as Notification),
-        'registered_kyou': (...args: any[]) => { reload_list(false); emits('registered_kyou', args[0] as Kyou) },
-        'registered_tag': (...args: any[]) => emits('registered_tag', args[0] as Tag),
-        'registered_text': (...args: any[]) => emits('registered_text', args[0] as Text),
-        'registered_notification': (...args: any[]) => emits('registered_notification', args[0] as Notification),
-        'updated_kyou': (...args: any[]) => { reload_list(false); emits('updated_kyou', args[0] as Kyou) },
-        'updated_tag': (...args: any[]) => emits('updated_tag', args[0] as Tag),
-        'updated_text': (...args: any[]) => emits('updated_text', args[0] as Text),
-        'updated_notification': (...args: any[]) => emits('updated_notification', args[0] as Notification),
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
+        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => { reload_list(false); emits('registered_kyou', kyou) },
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => { reload_list(false); emits('updated_kyou', kyou) },
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     const reloadListRequestHandlers = {
@@ -312,12 +318,12 @@ export function usePlaingTimeisView(options: {
     }
 
     const dialogReloadRequestHandlers = {
-        'requested_reload_kyou': (...args: any[]) => reload_kyou(args[0] as Kyou),
+        'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
         'requested_reload_list': () => reload_list(false),
     }
 
     const rykvDialogHandler = {
-        'requested_open_rykv_dialog': (...args: any[]) => open_rykv_dialog(args[0], args[1], args[2]),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
     // ── Return ──

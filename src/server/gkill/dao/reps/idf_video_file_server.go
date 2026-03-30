@@ -430,7 +430,7 @@ func insertAfter(args []string, needle []string, add []string) []string {
 */
 
 func extractArgValue(args []string, key string) string {
-	for i := 0; i < len(args)-1; i++ {
+	for i := range len(args) - 1 {
 		if args[i] == key {
 			return args[i+1]
 		}

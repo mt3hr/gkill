@@ -48,12 +48,12 @@
         <DeviceStructContextMenu :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             ref="device_struct_context_menu"
-            @requested_edit_device="(...id: any[]) => show_edit_device_struct_dialog(id[0] as string)"
-            @requested_delete_device="(...id: any[]) => show_confirm_delete_device_struct_dialog(id[0] as string)" />
+            @requested_edit_device="(id: string) => show_edit_device_struct_dialog(id)"
+            @requested_delete_device="(id: string) => show_confirm_delete_device_struct_dialog(id)" />
         <ConfirmDeleteDeviceStructDialog ref="confirm_delete_device_struct_dialog"
             :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_delete_device="(...id: any[]) => delete_device_struct(id[0] as string)" />
+            @requested_delete_device="(id: string) => delete_device_struct(id)" />
     </v-card>
 </template>
 <script lang="ts" setup>

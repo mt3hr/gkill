@@ -9,13 +9,11 @@ import { vi } from 'vitest'
 import {
   makeKyouWithKmemo,
   makeKyouWithNlog,
-  makeKyouWithLantana,
-  makeKyouWithTags,
 } from '../../helpers/factory'
 
 // Mock load_kyous before importing aggregators
 vi.mock('@/classes/dnote/kyou-loader', () => ({
-  default: vi.fn(async (_abort: any, kyous: any[]) => kyous),
+  default: vi.fn(async (_abort: unknown, kyous: unknown[]) => kyous),
 }))
 
 import { DnoteAgregator } from '@/classes/dnote/dnote-aggregator'
@@ -27,12 +25,12 @@ import AgregateSumNlogAmount from '@/classes/dnote/dnote-agregate-target/agregat
 import TagGetter from '@/classes/dnote/dnote-key-getter/tag-getter'
 import DataTypeGetter from '@/classes/dnote/dnote-key-getter/data-type-getter'
 
-const asKyou = (obj: any) => obj
-const emptyQuery = {} as any
+const asKyou = (obj: unknown) => obj
+const emptyQuery = {} as never
 const controller = new AbortController()
 
 // Kyous used in tests need clone() for the aggregator's cloned_match_kyous
-function makeTestKyou(factory: (...args: any[]) => any, ...args: any[]) {
+function makeTestKyou(factory: (...args: never[]) => Record<string, unknown>, ...args: never[]) {
   const obj = factory(...args)
   obj.clone = () => ({ ...obj })
   return asKyou(obj)
@@ -128,7 +126,7 @@ describe('DnoteListAggregator', () => {
 
     const result = await aggregator.aggregate_grouping_list(controller, kyous, emptyQuery, true)
     expect(result.length).toBe(2) // one per tag
-    const titles = result.map((r: any) => r.title).sort()
+    const titles = result.map((r: Record<string, unknown>) => r.title).sort()
     expect(titles).toEqual(['tagA', 'tagB'])
   })
 

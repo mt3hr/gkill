@@ -1,4 +1,3 @@
-import { i18n } from '@/i18n'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import { CheckState } from '@/pages/views/check-state'
@@ -8,6 +7,7 @@ import type { TimeIsQueryEmits } from '@/pages/views/time-is-query-emits'
 import type { TimeIsQueryProps } from '@/pages/views/time-is-query-props'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useTimeIsQuery(options: {
     props: TimeIsQueryProps,
@@ -16,7 +16,7 @@ export function useTimeIsQuery(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const foldable_struct = ref<any>(null)
+    const foldable_struct = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const old_cloned_query: Ref<FindKyouQuery | null> = ref(null)
@@ -101,7 +101,7 @@ export function useTimeIsQuery(options: {
     async function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean): Promise<void> {
         if (pre_uncheck_all) {
             let f = (_struct: FoldableStructModel) => { }
-            let func = (struct: FoldableStructModel) => {
+            const func = (struct: FoldableStructModel) => {
                 struct.is_checked = false
                 struct.indeterminate = false
                 if (struct.children) {
@@ -117,7 +117,7 @@ export function useTimeIsQuery(options: {
         for (let i = 0; i < items.length; i++) {
             const key_name = items[i]
             let f = (_struct: FoldableStructModel) => { }
-            let func = (struct: FoldableStructModel) => {
+            const func = (struct: FoldableStructModel) => {
                 if (struct.key === key_name) {
                     switch (is_checked) {
                         case CheckState.checked:
@@ -183,8 +183,8 @@ export function useTimeIsQuery(options: {
 
     // ── Event relay objects ──
     const foldableStructHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     return {

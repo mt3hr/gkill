@@ -135,12 +135,6 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
  * @returns {string} HTML string.
  */
 export function renderSuccessPage({ redirectUrl }) {
-  const escHtml = (s) => String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>

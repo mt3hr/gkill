@@ -5,10 +5,10 @@ import AverageInfo from "./average-info";
 import { format_duration } from "@/classes/format-date-time";
 
 export default class AgregateAverageTimeisTime implements DnoteAgregateTarget {
-    static from_json(_json: any): DnoteAgregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
         return new AgregateAverageTimeisTime()
     }
-    async append_agregate_element_value(average_value_timeis: any | null, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<any> {
+    async append_agregate_element_value(average_value_timeis: unknown, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<unknown> {
         const cloned_typed_average_info_timeis = average_value_timeis === null ? new AverageInfo() : (average_value_timeis as AverageInfo).clone()
         cloned_typed_average_info_timeis.total_value = cloned_typed_average_info_timeis.total_value === null ? 0 : cloned_typed_average_info_timeis.total_value as number
 
@@ -35,15 +35,15 @@ export default class AgregateAverageTimeisTime implements DnoteAgregateTarget {
         }
         return cloned_typed_average_info_timeis
     }
-    async result_to_string(average_value_timeis: any | null): Promise<string> {
-        const average_value = (average_value_timeis === null || (average_value_timeis as AverageInfo).total_count === 0) ? 0 : (average_value_timeis as AverageInfo).total_value / (average_value_timeis as AverageInfo).total_count
+    async result_to_string(average_value_timeis: unknown): Promise<string> {
+        const average_value = (average_value_timeis === null || (average_value_timeis as AverageInfo).total_count === 0) ? 0 : ((average_value_timeis as AverageInfo).total_value as number) / (average_value_timeis as AverageInfo).total_count
         if (average_value === 0) {
             return ""
         }
         const diff = average_value
         return format_duration(diff)
     }
-    to_json(): any {
+    to_json(): Record<string, unknown> {
         return {
             type: "AgregateAverageTimeisTime",
         }

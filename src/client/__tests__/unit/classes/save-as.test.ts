@@ -5,10 +5,10 @@ import { vi } from 'vitest'
 
 // jsdom doesn't have URL.createObjectURL/revokeObjectURL
 if (typeof URL.createObjectURL === 'undefined') {
-  (URL as any).createObjectURL = () => 'blob:mock-url'
+  (URL as unknown as Record<string, unknown>).createObjectURL = () => 'blob:mock-url'
 }
 if (typeof URL.revokeObjectURL === 'undefined') {
-  (URL as any).revokeObjectURL = () => {}
+  (URL as unknown as Record<string, unknown>).revokeObjectURL = () => {}
 }
 
 import { saveAs } from '@/classes/save-as'
@@ -45,7 +45,7 @@ describe('saveAs', () => {
 
   test('converts string to Blob with octet-stream type', () => {
     saveAs('hello world', 'file.txt')
-    const createObjCall = (URL.createObjectURL as any).mock.calls[0][0]
+    const createObjCall = (URL.createObjectURL as ReturnType<typeof vi.fn>).mock.calls[0][0]
     expect(createObjCall).toBeInstanceOf(Blob)
   })
 

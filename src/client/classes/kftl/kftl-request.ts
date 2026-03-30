@@ -35,7 +35,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
 
     async do_request(gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
         let errors = Array<GkillError>()
-        const time = this.get_related_time() != null ? this.get_related_time()!! : new Date(Date.now())
+        const time = this.get_related_time() != null ? this.get_related_time()! : new Date(Date.now())
         const now = new Date(Date.now())
 
         for (let i = 0; i < this.tags.length; i++) {

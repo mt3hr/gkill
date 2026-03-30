@@ -7,8 +7,9 @@ export function useKFTLTemplateView(options: {
     props: KFTLTemplateViewProps,
     emits: KFTLTemplateViewEmits,
 }) {
-    const { props, emits } = options
+    const { props: _props, emits } = options
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const child_template_dialogs: Ref<Array<any>> = ref(new Array<any>())
 
     function clicked_template_button(template: KFTLTemplateElementData, index: number): void {

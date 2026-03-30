@@ -541,7 +541,7 @@ func TestIDFPayloadMCPDTO_JSONRoundTrip(t *testing.T) {
 	}
 
 	// Verify JSON field names
-	var raw map[string]interface{}
+	var raw map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
 		t.Fatalf("Unmarshal to map: %v", err)
 	}
@@ -564,7 +564,7 @@ func TestIDFPayloadMCPDTO_OmitsEmptyMimeType(t *testing.T) {
 		t.Fatalf("Marshal: %v", err)
 	}
 
-	var raw map[string]interface{}
+	var raw map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
 		t.Fatalf("Unmarshal to map: %v", err)
 	}

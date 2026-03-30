@@ -255,7 +255,7 @@ INSERT INTO TEXT (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		text.IsDeleted,
 		text.ID,
 		text.Text,
@@ -318,7 +318,7 @@ AND DEVICE = ?
 	}
 	dataType := "text"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -431,7 +431,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

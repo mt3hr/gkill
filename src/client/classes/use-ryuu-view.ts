@@ -1,8 +1,8 @@
 import { i18n } from '@/i18n'
 import { ref, computed, type Ref, watch, nextTick, onUnmounted } from 'vue'
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
-import type RyuuListViewProps from '@/pages/views/ryuu-list-view-props'
-import type RyuuListViewEmits from '@/pages/views/ryuu-list-view-emits'
+import type RyuuViewProps from '@/pages/views/ryuu-view-props'
+import type RyuuViewEmits from '@/pages/views/ryuu-view-emits'
 import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
@@ -13,22 +13,23 @@ import type { Notification } from '@/classes/datas/notification'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export interface RyuuDefinition {
     name: string
     queries: Array<RelatedKyouQuery>
 }
 
-export function useRyuuListView(options: {
-    props: RyuuListViewProps,
-    emits: RyuuListViewEmits,
+export function useRyuuView(options: {
+    props: RyuuViewProps,
+    emits: RyuuViewEmits,
     model_value: Ref<ApplicationConfig | undefined>,
 }) {
     const { props, emits, model_value } = options
 
     // ── Template refs ──
-    const add_ryuu_item_dialog = ref<any>(null)
-    const related_kyou_list_item_views = ref<any>(null)
+    const add_ryuu_item_dialog = ref<ComponentRef | null>(null)
+    const related_kyou_list_item_views = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const ryuu_definitions: Ref<Array<RyuuDefinition>> = ref([])
@@ -101,6 +102,7 @@ export function useRyuuListView(options: {
         })
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function parse_single_definition_queries(json: any): Array<RelatedKyouQuery> {
         const queries = new Array<RelatedKyouQuery>()
         if (!json) return queries
@@ -119,8 +121,8 @@ export function useRyuuListView(options: {
         return queries
     }
 
-    function from_json(json: any): void {
-        let definitions_json: any[]
+    function from_json(json: unknown): void {
+        let definitions_json: Array<Record<string, unknown>>
         if (Array.isArray(json) && json.length > 0 && json[0] !== null && typeof json[0] === 'object' && 'name' in json[0] && 'queries' in json[0]) {
             definitions_json = json
         } else if (Array.isArray(json)) {
@@ -128,6 +130,7 @@ export function useRyuuListView(options: {
         } else {
             definitions_json = [{ name: i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME'), queries: [] }]
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ryuu_definitions.value = definitions_json.map((def_json: any) => ({
             name: def_json.name || i18n.global.t('RYUU_DEFINITION_DEFAULT_NAME'),
             queries: parse_single_definition_queries(def_json.queries),
@@ -137,7 +140,7 @@ export function useRyuuListView(options: {
         }
     }
 
-    function serialize_single_definition(def: RyuuDefinition): any {
+    function serialize_single_definition(def: RyuuDefinition): Record<string, unknown> {
         const json = []
         for (let i = 0; i < def.queries.length; i++) {
             const related_kyou_query = def.queries[i]
@@ -155,7 +158,7 @@ export function useRyuuListView(options: {
         return { name: def.name, queries: json }
     }
 
-    function to_json(): any {
+    function to_json(): Array<Record<string, unknown>> {
         return ryuu_definitions.value.map(serialize_single_definition)
     }
 
@@ -190,7 +193,8 @@ export function useRyuuListView(options: {
         if (!model_value.value) return
         const ryuu_json_data = to_json()
         model_value.value.ryuu_json_data = ryuu_json_data
-        emits('requested_apply_ryuu_struct', ryuu_json_data)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        emits('requested_apply_ryuu_struct', ryuu_json_data as any)
         nextTick(() => emits('requested_close_dialog'))
     }
 
@@ -370,35 +374,35 @@ export function useRyuuListView(options: {
 
     // ── Event relay objects ──
     const ryuuListItemCrudRelayHandlers = {
-        'deleted_kyou': (...args: any[]) => onDeletedKyou(args[0] as Kyou),
-        'deleted_tag': (...args: any[]) => onDeletedTag(args[0] as Tag),
-        'deleted_text': (...args: any[]) => onDeletedText(args[0] as Text),
-        'deleted_notification': (...args: any[]) => onDeletedNotification(args[0] as Notification),
-        'registered_kyou': (...args: any[]) => onRegisteredKyou(args[0] as Kyou),
-        'registered_tag': (...args: any[]) => onRegisteredTag(args[0] as Tag),
-        'registered_text': (...args: any[]) => onRegisteredText(args[0] as Text),
-        'registered_notification': (...args: any[]) => onRegisteredNotification(args[0] as Notification),
-        'updated_kyou': (...args: any[]) => onUpdatedKyou(args[0] as Kyou),
-        'updated_tag': (...args: any[]) => onUpdatedTag(args[0] as Tag),
-        'updated_text': (...args: any[]) => onUpdatedText(args[0] as Text),
-        'updated_notification': (...args: any[]) => onUpdatedNotification(args[0] as Notification),
-        'received_errors': (...args: any[]) => onReceivedErrors(args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => onReceivedMessages(args[0] as Array<GkillMessage>),
+        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'deleted_tag': (tag: Tag) => onDeletedTag(tag),
+        'deleted_text': (text: Text) => onDeletedText(text),
+        'deleted_notification': (notification: Notification) => onDeletedNotification(notification),
+        'registered_kyou': (kyou: Kyou) => onRegisteredKyou(kyou),
+        'registered_tag': (tag: Tag) => onRegisteredTag(tag),
+        'registered_text': (text: Text) => onRegisteredText(text),
+        'registered_notification': (notification: Notification) => onRegisteredNotification(notification),
+        'updated_kyou': (kyou: Kyou) => onUpdatedKyou(kyou),
+        'updated_tag': (tag: Tag) => onUpdatedTag(tag),
+        'updated_text': (text: Text) => onUpdatedText(text),
+        'updated_notification': (notification: Notification) => onUpdatedNotification(notification),
+        'received_errors': (errors: Array<GkillError>) => onReceivedErrors(errors),
+        'received_messages': (messages: Array<GkillMessage>) => onReceivedMessages(messages),
     }
 
     const ryuuListItemRequestHandlers = {
-        'requested_reload_kyou': (...args: any[]) => onRequestedReloadKyou(args[0] as Kyou),
+        'requested_reload_kyou': (kyou: Kyou) => onRequestedReloadKyou(kyou),
         'requested_reload_list': () => onRequestedReloadList(),
-        'requested_update_check_kyous': (...args: any[]) => onRequestedUpdateCheckKyous(args[0] as Array<Kyou>, args[1] as boolean),
+        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => onRequestedUpdateCheckKyous(kyous, checked),
     }
 
     const ryuuListItemFocusHandlers = {
-        'focused_kyou': (...args: any[]) => onFocusedKyou(args[0] as Kyou),
-        'clicked_kyou': (...args: any[]) => onClickedKyou(args[0] as Kyou),
+        'focused_kyou': (kyou: Kyou) => onFocusedKyou(kyou),
+        'clicked_kyou': (kyou: Kyou) => onClickedKyou(kyou),
     }
 
     const rykvDialogHandler = {
-        'requested_open_rykv_dialog': (...args: any[]) => onRequestedOpenRykvDialog(args[0], args[1], args[2]),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => onRequestedOpenRykvDialog(kind, kyou, payload),
     }
 
     // ── Return ──

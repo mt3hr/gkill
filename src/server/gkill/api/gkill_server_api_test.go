@@ -437,7 +437,7 @@ func prepareLoginReadyAccount(t *testing.T, api *GkillServerAPI, userID string, 
 }
 
 // postJSON sends a POST request with JSON body and returns the response.
-func postJSON(t *testing.T, url string, body interface{}) *http.Response {
+func postJSON(t *testing.T, url string, body any) *http.Response {
 	t.Helper()
 	b, err := json.Marshal(body)
 	if err != nil {
@@ -777,7 +777,7 @@ func TestHandleLogin_ConcurrentRequests(t *testing.T) {
 	var wg sync.WaitGroup
 	errors := make(chan string, concurrency)
 
-	for i := 0; i < concurrency; i++ {
+	for range concurrency {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -815,7 +815,7 @@ func TestHandleLogin_ConcurrentRequests(t *testing.T) {
 
 func TestGenerateNewID_Uniqueness(t *testing.T) {
 	ids := make(map[string]bool)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		id := GenerateNewID()
 		if id == "" {
 			t.Fatal("GenerateNewID returned empty string")

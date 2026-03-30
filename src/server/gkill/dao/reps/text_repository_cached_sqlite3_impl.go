@@ -260,7 +260,7 @@ WHERE
 `
 
 	dataType := "text"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -417,7 +417,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -518,7 +518,7 @@ func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context
 	var err error
 	dataType := "text"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 		target_id,
 	}
@@ -695,7 +695,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				text.IsDeleted,
 				text.ID,
 				text.Text,
@@ -778,7 +778,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -872,7 +872,7 @@ WHERE
 func (t *textRepositoryCachedSQLite3Impl) AddTextInfo(ctx context.Context, text Text) error {
 	t.m.Lock()
 	defer t.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		text.IsDeleted,
 		text.ID,
 		text.Text,

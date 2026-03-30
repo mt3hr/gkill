@@ -26,23 +26,23 @@
                         :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
                         :show_timeis_plaing_end_button="false" :show_rep_name="show_rep_name"
                         :force_show_latest_kyou_info="force_show_latest_kyou_info"
-                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                        @focused_kyou="(...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou)"
-                        @clicked_kyou="(...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) }"
-                        @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
-                        @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])"
+                        @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+                        @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+                        @focused_kyou="(kyou: Kyou) => emits('focused_kyou', kyou)"
+                        @clicked_kyou="(kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) }"
+                        @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
+                        @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)"
                         ref="kyou_list_views"
-                        @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-                        @deleted_tag="(...deleted_tag: any[]) => { /* intentionally ignored */ }" @deleted_text="(...deleted_text: any[]) => { /* intentionally ignored */ }"
-                        @deleted_notification="(...deleted_notification: any[]) => { /* intentionally ignored */ }"
-                        @registered_kyou="(...registered_kyou: any[]) => { /* intentionally ignored */ }"
-                        @registered_tag="(...registered_tag: any[]) => { /* intentionally ignored */ }"
-                        @registered_text="(...registered_text: any[]) => { /* intentionally ignored */ }"
-                        @registered_notification="(...registered_notification: any[]) => { /* intentionally ignored */ }"
-                        @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
-                        @updated_tag="(...updated_tag: any[]) => { /* intentionally ignored */ }" @updated_text="(...updated_text: any[]) => { /* intentionally ignored */ }"
-                        @updated_notification="(...updated_notification: any[]) => { /* intentionally ignored */ }" />
+                        @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)"
+                        @deleted_tag="(_deleted_tag: Tag) => { /* intentionally ignored */ }" @deleted_text="(_deleted_text: Text) => { /* intentionally ignored */ }"
+                        @deleted_notification="(_deleted_notification: Notification) => { /* intentionally ignored */ }"
+                        @registered_kyou="(_registered_kyou: Kyou) => { /* intentionally ignored */ }"
+                        @registered_tag="(_registered_tag: Tag) => { /* intentionally ignored */ }"
+                        @registered_text="(_registered_text: Text) => { /* intentionally ignored */ }"
+                        @registered_notification="(_registered_notification: Notification) => { /* intentionally ignored */ }"
+                        @updated_kyou="(updated_kyou: Kyou) => reload_kyou(updated_kyou)"
+                        @updated_tag="(_updated_tag: Tag) => { /* intentionally ignored */ }" @updated_text="(_updated_text: Text) => { /* intentionally ignored */ }"
+                        @updated_notification="(_updated_notification: Notification) => { /* intentionally ignored */ }" />
                 </v-card>
                 <v-card variant="text" :ripple="false" :link="false" class="px-2" style="flex-shrink: 0;">
                     <v-row no-gutters>
@@ -61,10 +61,14 @@ import { type Ref, ref } from 'vue'
 import KyouListView from '../views/kyou-list-view.vue';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 import type { Kyou } from '@/classes/datas/kyou';
+import type { Tag } from '@/classes/datas/tag';
+import type { Text } from '@/classes/datas/text';
+import type { Notification } from '@/classes/datas/notification';
 import type { KyouListViewDialogProps } from './kyou-list-view-dialog-props';
 import type { KyouListViewEmits } from '../views/kyou-list-view-emits';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
+import type { RykvDialogKind, RykvDialogPayload } from '../views/rykv-dialog-kind';
 
 defineProps<KyouListViewDialogProps>()
 const model_value = defineModel<Array<Kyou>>()

@@ -12,7 +12,6 @@ import {
   makeKyouWithMi,
   makeKyouWithTimeis,
   makeKyouWithTags,
-  makeKyouWithGitCommitLog,
   makeKyou,
 } from '../../helpers/factory'
 
@@ -41,8 +40,8 @@ import AndPredicate from '@/classes/dnote/dnote-predicate/and-predicate'
 import OrPredicate from '@/classes/dnote/dnote-predicate/or-predicate'
 import NotPredicate from '@/classes/dnote/dnote-predicate/not-predicate'
 
-// Helper: cast plain objects as any for predicate calls
-const asKyou = (obj: any) => obj
+// Helper: cast plain objects as never for predicate calls
+const asKyou = (obj: unknown) => obj
 
 // ========== Kmemo Predicates ==========
 

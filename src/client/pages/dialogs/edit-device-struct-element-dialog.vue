@@ -20,9 +20,9 @@
 
         <EditDeviceStructElementView :application_config="application_config" :gkill_api="gkill_api"
           :struct_obj="device_struct"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-          @requested_update_device_struct="(...device_struct: any[]) => emits('requested_update_device_struct', device_struct[0] as DeviceStructElementData)"
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+          @requested_update_device_struct="(device_struct: DeviceStructElementData) => emits('requested_update_device_struct', device_struct)"
           @requested_close_dialog="hide" />
         </v-card>
 </div>

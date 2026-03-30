@@ -201,7 +201,7 @@ INSERT INTO KMEMO (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		kmemo.IsDeleted,
 		kmemo.ID,
 		kmemo.Content,
@@ -259,7 +259,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "kmemo"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -383,7 +383,7 @@ AND DEVICE = ?
 `
 	dataType := "kmemo"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -494,7 +494,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

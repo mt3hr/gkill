@@ -3,7 +3,7 @@ import type DnoteKeyGetter from "../dnote-key-getter";
 
 export default class RelatedDateGetter implements DnoteKeyGetter {
 
-    static from_json(_json: any): RelatedDateGetter {
+    static from_json(_json: Record<string, unknown>): RelatedDateGetter {
         return new RelatedDateGetter()
     }
 

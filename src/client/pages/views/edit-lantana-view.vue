@@ -1,4 +1,8 @@
 <template>
+    <div style="position: relative; min-height: 100px;">
+        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
+            <v-progress-circular indeterminate color="primary" />
+        </v-overlay>
     <v-card v-if="cloned_kyou.typed_lantana" class="pa-2">
         <v-card-title>
             <v-row class="pa-0 ma-0">
@@ -89,6 +93,7 @@
                 v-on="crudRelayHandlers" />
         </v-card>
     </v-card>
+    </div>
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
@@ -108,6 +113,7 @@ const {
     edit_lantana_flowers,
 
     // State
+    is_loading,
     is_requested_submit,
     cloned_kyou,
     mood,

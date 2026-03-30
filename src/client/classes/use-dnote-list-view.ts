@@ -1,4 +1,4 @@
-import { i18n } from '@/i18n'
+import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { nextTick, type Ref, ref } from 'vue'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -12,6 +12,7 @@ import type DnoteListQuery from '@/pages/views/dnote-list-query'
 import type DnoteListViewEmits from '@/pages/views/dnote-list-view-emits'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useDnoteListView(options: {
     props: DnoteListViewProps,
@@ -21,10 +22,10 @@ export function useDnoteListView(options: {
     const { props, emits, model_value } = options
 
     // ── Template refs ──
-    const list_view = ref<any>(null)
-    const contextmenu = ref<any>(null)
-    const confirm_delete_dnote_list_query_dialog = ref<any>(null)
-    const edit_dnote_list_query = ref<any>(null)
+    const list_view = ref<ComponentRef | null>(null)
+    const contextmenu = ref<ComponentRef | null>(null)
+    const confirm_delete_dnote_list_query_dialog = ref<ComponentRef | null>(null)
+    const edit_dnote_list_query = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const aggregated_items: Ref<Array<AgregatedItem>> = ref(new Array<AgregatedItem>())
@@ -104,7 +105,7 @@ export function useDnoteListView(options: {
     }
 
     // ── Template event handlers ──
-    function onContextmenu(e: any): void {
+    function onContextmenu(e: MouseEvent): void {
         if (props.editable) {
             contextmenu.value?.show(e, model_value.value!.id)
         }
@@ -120,49 +121,49 @@ export function useDnoteListView(options: {
 
     // ── CRUD relay handlers ──
     const crudRelayHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     const aggregatedListItemHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
-        'focused_kyou': (...kyou: any[]) => emits('focused_kyou', kyou[0] as Kyou),
-        'clicked_kyou': (...kyou: any[]) => { emits('focused_kyou', kyou[0] as Kyou); emits('clicked_kyou', kyou[0] as Kyou) },
-        'requested_delete_dnote_list_query': (...id: any[]) => emits('requested_delete_dnote_list_query', id[0] as string),
-        'requested_update_dnote_list_query': (...dnote_list_query: any[]) => emits('requested_update_dnote_list_query', dnote_list_query[0] as DnoteListQuery),
-        'deleted_kyou': (...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou),
-        'deleted_tag': (...tag: any[]) => emits('deleted_tag', tag[0] as Tag),
-        'deleted_text': (...text: any[]) => emits('deleted_text', text[0] as Text),
-        'deleted_notification': (...notification: any[]) => emits('deleted_notification', notification[0] as Notification),
-        'registered_kyou': (...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou),
-        'registered_tag': (...tag: any[]) => emits('registered_tag', tag[0] as Tag),
-        'registered_text': (...text: any[]) => emits('registered_text', text[0] as Text),
-        'registered_notification': (...notification: any[]) => emits('registered_notification', notification[0] as Notification),
-        'updated_kyou': (...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou),
-        'updated_tag': (...tag: any[]) => emits('updated_tag', tag[0] as Tag),
-        'updated_text': (...text: any[]) => emits('updated_text', text[0] as Text),
-        'updated_notification': (...notification: any[]) => emits('updated_notification', notification[0] as Notification),
-        'requested_open_rykv_dialog': (...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2]),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'focused_kyou': (kyou: Kyou) => emits('focused_kyou', kyou),
+        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+        'requested_delete_dnote_list_query': (value: string) => emits('requested_delete_dnote_list_query', value),
+        'requested_update_dnote_list_query': (query: DnoteListQuery) => emits('requested_update_dnote_list_query', query),
+        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
     const contextMenuHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
         'requested_delete_dnote_list_query': () => onRequestedDeleteDnoteListQuery(),
         'requested_edit_dnote_list_query': () => onRequestedEditDnoteListQuery(),
     }
 
     const confirmDeleteHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
-        'requested_delete_dnote_list_query': (...id: any[]) => emits('requested_delete_dnote_list_query', id[0] as string),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_delete_dnote_list_query': (value: string) => emits('requested_delete_dnote_list_query', value),
     }
 
     const editDnoteListHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
-        'requested_update_dnote_list_query': (...dnote_list_query: any[]) => emits('requested_update_dnote_list_query', dnote_list_query[0] as DnoteListQuery),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_update_dnote_list_query': (query: DnoteListQuery) => emits('requested_update_dnote_list_query', query),
     }
 
     return {
