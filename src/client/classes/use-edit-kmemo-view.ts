@@ -20,6 +20,7 @@ export function useEditKmemoView(options: {
     const { props, emits } = options
 
     // ── State refs ──
+    const is_loading = ref(true)
     const is_requested_submit = ref(false)
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
@@ -37,13 +38,18 @@ export function useEditKmemoView(options: {
 
     // ── Business logic ──
     async function load(): Promise<void> {
-        cloned_kyou.value = props.kyou.clone()
-        await cloned_kyou.value.reload(false, true)
-        await cloned_kyou.value.load_typed_datas()
-        await cloned_kyou.value.load_all()
-        kmemo_value.value = cloned_kyou.value.typed_kmemo ? cloned_kyou.value.typed_kmemo.content : ""
-        related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
-        related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+        try {
+            is_loading.value = true
+            cloned_kyou.value = props.kyou.clone()
+            await cloned_kyou.value.reload(false, true)
+            await cloned_kyou.value.load_typed_datas()
+            await cloned_kyou.value.load_all()
+            kmemo_value.value = cloned_kyou.value.typed_kmemo ? cloned_kyou.value.typed_kmemo.content : ""
+            related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+            related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+        } finally {
+            is_loading.value = false
+        }
     }
 
     async function save(): Promise<void> {
@@ -147,23 +153,23 @@ export function useEditKmemoView(options: {
 
     // ── Event relay objects ──
     const crudRelayHandlers = {
-        'deleted_kyou': (...args: any[]) => emits('deleted_kyou', args[0] as Kyou),
-        'deleted_tag': (...args: any[]) => emits('deleted_tag', args[0] as Tag),
-        'deleted_text': (...args: any[]) => emits('deleted_text', args[0] as Text),
-        'deleted_notification': (...args: any[]) => emits('deleted_notification', args[0] as Notification),
-        'registered_kyou': (...args: any[]) => emits('registered_kyou', args[0] as Kyou),
-        'registered_tag': (...args: any[]) => emits('registered_tag', args[0] as Tag),
-        'registered_text': (...args: any[]) => emits('registered_text', args[0] as Text),
-        'registered_notification': (...args: any[]) => emits('registered_notification', args[0] as Notification),
-        'updated_kyou': (...args: any[]) => emits('updated_kyou', args[0] as Kyou),
-        'updated_tag': (...args: any[]) => emits('updated_tag', args[0] as Tag),
-        'updated_text': (...args: any[]) => emits('updated_text', args[0] as Text),
-        'updated_notification': (...args: any[]) => emits('updated_notification', args[0] as Notification),
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
-        'requested_reload_kyou': (...args: any[]) => emits('requested_reload_kyou', args[0] as Kyou),
+        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
         'requested_reload_list': () => emits('requested_reload_list'),
-        'requested_update_check_kyous': (...args: any[]) => emits('requested_update_check_kyous', args[0] as Array<Kyou>, args[1] as boolean),
+        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => emits('requested_update_check_kyous', kyous, checked),
     }
 
     // ── Init calls ──
@@ -172,6 +178,7 @@ export function useEditKmemoView(options: {
     // ── Return ──
     return {
         // State
+        is_loading,
         is_requested_submit,
         cloned_kyou,
         kmemo_value,

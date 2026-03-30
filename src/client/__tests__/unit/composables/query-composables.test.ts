@@ -29,7 +29,7 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
 }))
 
 // Try importing query composables
-const queryComposables: Array<{ name: string; factory: any }> = []
+const queryComposables: Array<{ name: string; factory: unknown }> = []
 
 async function tryImport(name: string, path: string, exportName: string) {
   try {
@@ -52,12 +52,12 @@ await tryImport('useTimeIsQuery', '@/classes/use-time-is-query', 'useTimeIsQuery
 
 // Build minimal mock props that satisfy what query composables access
 function createMockQueryProps() {
-  const mockQuery: any = {
+  const mockQuery: Record<string, unknown> = {
     is_enable_map_circle_in_sidebar: false,
     tags: [],
     clone() { return { ...this, clone: this.clone } },
   }
-  const mockAppConfig: any = {
+  const mockAppConfig: Record<string, unknown> = {
     tag_struct: { is_checked: false, indeterminate: false, children: [], key_name: '', label: '' },
     rep_struct: { is_checked: false, indeterminate: false, children: [], key_name: '', label: '' },
     device_struct: { is_checked: false, indeterminate: false, children: [], key_name: '', label: '' },

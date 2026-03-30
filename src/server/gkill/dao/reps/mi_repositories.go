@@ -4,7 +4,7 @@ import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 
@@ -221,8 +221,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b Kyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil
@@ -558,8 +558,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b Mi) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil
@@ -647,8 +647,8 @@ loop:
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
 
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	slices.SortFunc(kyouHistoriesList, func(a, b Mi) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return kyouHistoriesList, nil
@@ -660,7 +660,7 @@ func (m MiRepositories) AddMiInfo(ctx context.Context, mi Mi) error {
 }
 
 func (m MiRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
-	boardNames := map[string]interface{}{}
+	boardNames := map[string]any{}
 
 	findMiQuery := &find.FindQuery{}
 	findMiQuery.OnlyLatestData = true

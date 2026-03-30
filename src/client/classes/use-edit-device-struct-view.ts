@@ -6,6 +6,7 @@ import { DeviceStructElementData } from '@/classes/datas/config/device-struct-el
 import type { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useEditDeviceStructView(options: {
     props: EditDeviceStructViewProps,
@@ -14,12 +15,12 @@ export function useEditDeviceStructView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const foldable_struct = ref<any>(null)
-    const edit_device_struct_element_dialog = ref<any>(null)
-    const add_new_folder_dialog = ref<any>(null)
-    const add_new_device_struct_element_dialog = ref<any>(null)
-    const device_struct_context_menu = ref<any>(null)
-    const confirm_delete_device_struct_dialog = ref<any>(null)
+    const foldable_struct = ref<ComponentRef | null>(null)
+    const edit_device_struct_element_dialog = ref<ComponentRef | null>(null)
+    const add_new_folder_dialog = ref<ComponentRef | null>(null)
+    const add_new_device_struct_element_dialog = ref<ComponentRef | null>(null)
+    const device_struct_context_menu = ref<ComponentRef | null>(null)
+    const confirm_delete_device_struct_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
@@ -167,8 +168,8 @@ export function useEditDeviceStructView(options: {
 
     // ── Event relay objects ──
     const errorMessageRelayHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     // ── Return ──

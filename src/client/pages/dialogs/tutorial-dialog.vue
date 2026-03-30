@@ -68,7 +68,7 @@ watch(dont_show_again, async (checked) => {
   req.application_config = config
   await props.gkill_api.update_application_config(req)
   // ブラウザ側キャッシュも更新
-  props.application_config.show_tutorial_on_startup = false
+  config.show_tutorial_on_startup = false
   props.gkill_api.set_saved_application_config(props.application_config)
 })
 

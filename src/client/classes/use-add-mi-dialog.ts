@@ -10,7 +10,7 @@ export function useAddMiDialog(options: {
     props: AddMiDialogProps
     emits: KyouViewEmits
 }) {
-    const { emits } = options
+    const { emits: _emits } = options
 
     const is_show_dialog: Ref<boolean> = ref(false)
     useDialogHistoryStack(is_show_dialog)

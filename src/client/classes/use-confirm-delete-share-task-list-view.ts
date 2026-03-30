@@ -5,7 +5,7 @@ export function useConfirmDeleteShareTaskListView(options: {
     props: ConfirmDeleteShareKyousListViewProps,
     emits: ConfirmDeleteShareKyousListViewEmits,
 }) {
-    const { props, emits } = options
+    const { props: _props, emits: _emits } = options
 
     return {
     }

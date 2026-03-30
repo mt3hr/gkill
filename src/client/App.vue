@@ -39,8 +39,7 @@ onMounted(() => {
         </td>
         <td>
           <v-app>
-            <v-banner v-if="!isOnline" color="warning" stacked
-                :text="$t('NETWORK_OFFLINE_MESSAGE')">
+            <v-banner v-if="!isOnline" color="warning" stacked :text="$t('NETWORK_OFFLINE_MESSAGE')">
               <template #prepend>
                 <v-icon>mdi-wifi-off</v-icon>
               </template>
@@ -56,6 +55,20 @@ onMounted(() => {
 </template>
 
 <style lang="css">
+.v-layout--full-height {
+  background-color: #0000;
+}
+
+/* v-card-title 内のボタンを本文サイズに統一 */
+.v-card-title .v-btn {
+  font-size: 0.875rem;
+}
+
+.v-row--density-default {
+    --v-col-gap-x: 0px;
+    --v-col-gap-y: 0px;
+}
+
 /* =========================================================
    Base / Layout
 ========================================================= */
@@ -110,6 +123,14 @@ table,
 tr,
 td {
   border-spacing: 0 !important;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+h2 {
+  margin: 0px;
 }
 
 /* =========================================================
@@ -215,7 +236,7 @@ body::-webkit-scrollbar {
 }
 
 .position-fixed {
-  position: relative;
+  position: fixed;
 }
 
 .position-fixed-ryuu {

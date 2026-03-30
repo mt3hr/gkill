@@ -2,5 +2,4 @@
 
 import type { miSidebarProps } from "./mi-sidebar-props"
 
-export interface miSortTypeQueryProps extends miSidebarProps {
-}
+export type miSortTypeQueryProps = miSidebarProps

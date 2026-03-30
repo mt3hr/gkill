@@ -8,7 +8,7 @@ import { InfoIdentifier } from './info-identifier'
 
 export class Lantana extends InfoBase {
 
-    mood: Number
+    mood: number
 
     attached_histories: Array<Lantana>
 
@@ -28,9 +28,9 @@ export class Lantana extends InfoBase {
     async load_attached_datas(): Promise<Array<GkillError>> {
         try {
             return this.load_attached_histories()
-        } catch (err: any) {
+        } catch (err: unknown) {
             // abortは握りつぶす
-            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
                 // abort以外はエラー出力する
                 console.error(err)
             }

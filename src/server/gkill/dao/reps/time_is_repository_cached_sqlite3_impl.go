@@ -197,7 +197,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	queryArgsForStart := []interface{}{}
+	queryArgsForStart := []any{}
 
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
@@ -214,7 +214,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	if query.UsePlaing {
 		onlyLatestData = true
 	}
-	queryArgsForPlaingStart := []interface{}{}
+	queryArgsForPlaingStart := []any{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
@@ -230,7 +230,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 
 	tableName = sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias = sqlite3impl.QuoteIdent(t.dbName)
-	queryArgsForEnd := []interface{}{}
+	queryArgsForEnd := []any{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
@@ -238,7 +238,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	queryArgsForPlaingEnd := []interface{}{}
+	queryArgsForPlaingEnd := []any{}
 	sqlWhereFilterPlaingTimeisEnd := ""
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
@@ -367,7 +367,7 @@ WHERE
 
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
@@ -493,7 +493,7 @@ WHERE
 
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
@@ -697,14 +697,14 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
 		default:
 		}
 		err = func() error {
-			var endTimeUnix interface{}
+			var endTimeUnix any
 			if timeis.EndTime == nil {
 				endTimeUnix = nil
 			} else {
 				endTimeUnix = timeis.EndTime.Unix()
 			}
 
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				timeis.IsDeleted,
 				timeis.ID,
 				timeis.Title,
@@ -837,7 +837,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	queryArgsForStart := []interface{}{}
+	queryArgsForStart := []any{}
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
@@ -853,7 +853,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	if query.UsePlaing {
 		onlyLatestData = true
 	}
-	queryArgsForPlaingStart := []interface{}{}
+	queryArgsForPlaingStart := []any{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
@@ -867,7 +867,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 		whereCounter++
 	}
 
-	queryArgsForEnd := []interface{}{}
+	queryArgsForEnd := []any{}
 	tableName = sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias = sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter = 0
@@ -877,7 +877,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	queryArgsForPlaingEnd := []interface{}{}
+	queryArgsForPlaingEnd := []any{}
 	sqlWhereFilterPlaingTimeisEnd := ""
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
@@ -1007,7 +1007,7 @@ WHERE
 
 	dataType := "timeis"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1019,7 +1019,7 @@ WHERE
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	queryArgsForPlaingStart := []interface{}{}
+	queryArgsForPlaingStart := []any{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	findWordUseLike := true
 	ignoreCase := true
@@ -1151,7 +1151,7 @@ WHERE
 
 	dataType := "timeis"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1163,7 +1163,7 @@ WHERE
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	queryArgsForPlaingStart := []interface{}{}
+	queryArgsForPlaingStart := []any{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	findWordUseLike := true
 	ignoreCase := true
@@ -1261,14 +1261,14 @@ func (t *timeIsRepositoryCachedSQLite3Impl) AddTimeIsInfo(ctx context.Context, t
 	t.m.Lock()
 	defer t.m.Unlock()
 
-	var endTimeUnix interface{}
+	var endTimeUnix any
 	if timeis.EndTime == nil {
 		endTimeUnix = nil
 	} else {
 		endTimeUnix = timeis.EndTime.Unix()
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		timeis.IsDeleted,
 		timeis.ID,
 		timeis.Title,

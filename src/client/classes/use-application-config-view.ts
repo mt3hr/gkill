@@ -19,6 +19,7 @@ import type { RepStructElementData } from '@/classes/datas/config/rep-struct-ele
 import type { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useApplicationConfigView(options: {
     props: ApplicationConfigViewProps,
@@ -29,15 +30,15 @@ export function useApplicationConfigView(options: {
     const theme = useTheme()
 
     // ── Template refs ──
-    const new_board_name_dialog = ref<any>(null)
-    const edit_device_struct_dialog = ref<any>(null)
-    const edit_rep_struct_dialog = ref<any>(null)
-    const edit_rep_type_struct_dialog = ref<any>(null)
-    const edit_tag_struct_dialog = ref<any>(null)
-    const edit_kftl_template_dialog = ref<any>(null)
-    const edit_dnote_dialog = ref<any>(null)
-    const edit_ryuu_dialog = ref<any>(null)
-    const server_config_dialog = ref<any>(null)
+    const new_board_name_dialog = ref<ComponentRef | null>(null)
+    const edit_device_struct_dialog = ref<ComponentRef | null>(null)
+    const edit_rep_struct_dialog = ref<ComponentRef | null>(null)
+    const edit_rep_type_struct_dialog = ref<ComponentRef | null>(null)
+    const edit_tag_struct_dialog = ref<ComponentRef | null>(null)
+    const edit_kftl_template_dialog = ref<ComponentRef | null>(null)
+    const edit_dnote_dialog = ref<ComponentRef | null>(null)
+    const edit_ryuu_dialog = ref<ComponentRef | null>(null)
+    const server_config_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const pages = ref([
@@ -58,7 +59,7 @@ export function useApplicationConfigView(options: {
     const rykv_hot_reload: Ref<boolean> = ref(cloned_application_config.value.rykv_hot_reload)
     const show_tags_in_list: Ref<boolean> = ref(cloned_application_config.value.show_tags_in_list)
     const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_default_board)
-    const mi_board_names: Ref<Array<string>> = ref(new Array())
+    const mi_board_names: Ref<Array<string>> = ref([])
     const rykv_default_period: Ref<number> = ref(cloned_application_config.value.rykv_default_period)
     const mi_default_period: Ref<number> = ref(cloned_application_config.value.mi_default_period)
     const is_checked_use_rykv_period: Ref<boolean> = ref(cloned_application_config.value.rykv_default_period !== -1)
@@ -188,7 +189,7 @@ javascript: (function () {
         rykv_hot_reload.value = cloned_application_config.value.rykv_hot_reload
         show_tags_in_list.value = cloned_application_config.value.show_tags_in_list
         mi_default_board.value = cloned_application_config.value.mi_default_board
-        mi_board_names.value = new Array()
+        mi_board_names.value = []
         rykv_default_period.value = cloned_application_config.value.rykv_default_period
         mi_default_period.value = cloned_application_config.value.mi_default_period
         is_show_share_footer.value = cloned_application_config.value.is_show_share_footer
@@ -360,18 +361,18 @@ javascript: (function () {
         cloned_application_config.value.tag_struct = tag_struct_element_data
     }
 
-    function onRequestedApplyDnote(dnote_data: any): void {
+    function onRequestedApplyDnote(dnote_data: Record<string, unknown>): void {
         cloned_application_config.value.dnote_json_data = dnote_data
     }
 
-    function onRequestedApplyRyuuStruct(ryuu_data: any): void {
+    function onRequestedApplyRyuuStruct(ryuu_data: Record<string, unknown>): void {
         cloned_application_config.value.ryuu_json_data = ryuu_data
     }
 
     // ── Event relay objects ──
     const errorMessageRelayHandlers = {
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     // ── Init ──

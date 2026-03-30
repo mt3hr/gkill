@@ -18,8 +18,8 @@ export function useIDFKyouContextMenu(options: {
 
     // ── State refs ──
     const is_show: Ref<boolean> = ref(false)
-    const position_x: Ref<Number> = ref(0)
-    const position_y: Ref<Number> = ref(0)
+    const position_x: Ref<number> = ref(0)
+    const position_y: Ref<number> = ref(0)
     const tag_history: Ref<string[]> = ref([])
 
     // ── Computed ──

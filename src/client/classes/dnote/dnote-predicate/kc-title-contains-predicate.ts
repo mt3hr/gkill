@@ -6,6 +6,7 @@ export default class KCTitleContainsPredicate implements DnotePredicate {
     constructor(kc_title_contains_target: string) {
         this.kc_title_contains_target = kc_title_contains_target
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const kc_title_contains_target = json.value as string
         return new KCTitleContainsPredicate(kc_title_contains_target)
@@ -19,7 +20,7 @@ export default class KCTitleContainsPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "KCTitleContainsPredicate",
             value: this.kc_title_contains_target,

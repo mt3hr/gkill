@@ -6,18 +6,18 @@
         <v-col cols="auto" class="py-0 my-0 background-white">
             <ShareKyousListDialog :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="find_kyou_query"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                @requested_show_share_kyou_link_dialog="(...share_kyou_list_info: any[]) => show_share_kyou_list_link_dialog(share_kyou_list_info[0] as ShareKyousInfo)"
+                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+                @requested_show_share_kyou_link_dialog="(share_kyou_list_info: ShareKyousInfo) => show_share_kyou_list_link_dialog(share_kyou_list_info)"
                 ref="share_kyou_list_dialog" />
             <ShareKyousListLinkDialog :application_config="application_config" :gkill_api="gkill_api"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="share_kyou_list_link_dialog" />
             <ManageShareKyousListDialog :application_config="application_config" :gkill_api="gkill_api"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                @requested_show_share_kyou_link_dialog="(...share_kyou_list_info: any[]) => show_share_kyou_list_link_dialog(share_kyou_list_info[0] as ShareKyousInfo)"
+                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+                @requested_show_share_kyou_link_dialog="(share_kyou_list_info: ShareKyousInfo) => show_share_kyou_list_link_dialog(share_kyou_list_info)"
                 ref="manage_share_kyou_list_dialog" />
         </v-col>
         <v-spacer class="pa-0 ma-0 background-white" />

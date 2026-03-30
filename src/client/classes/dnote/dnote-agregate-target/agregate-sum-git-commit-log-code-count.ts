@@ -3,10 +3,10 @@ import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAgregateTarget from "../dnote-agregate-target";
 
 export default class AgregateSumGitCommitLogCodeCount implements DnoteAgregateTarget {
-    static from_json(_json: any): DnoteAgregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
         return new AgregateSumGitCommitLogCodeCount()
     }
-    async append_agregate_element_value(git_commit_log_code_count: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
+    async append_agregate_element_value(git_commit_log_code_count: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
         const typed_git_commit_log_code_count = git_commit_log_code_count === null ? 0 : (git_commit_log_code_count as number)
         let code_count = 0
         if (kyou.typed_git_commit_log) {
@@ -14,10 +14,10 @@ export default class AgregateSumGitCommitLogCodeCount implements DnoteAgregateTa
         }
         return typed_git_commit_log_code_count + code_count
     }
-    async result_to_string(git_commit_log_code_count: any | null): Promise<string> {
+    async result_to_string(git_commit_log_code_count: unknown): Promise<string> {
         return (git_commit_log_code_count === null ? 0 : (git_commit_log_code_count as number)).toString()
     }
-    to_json(): any {
+    to_json(): Record<string, unknown> {
         return {
             type: "AgregateSumGitCommitLogCodeCount",
         }

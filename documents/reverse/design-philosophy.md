@@ -235,7 +235,7 @@ Repository への保存
 ### 技術選定
 
 - Vue 3 + Composition API（旧 JavaScript → TypeScript リプレイス）
-- Vuetify 3（Material Design UI）
+- Vuetify 4（Material Design UI）
 - PWA 対応（Service Worker でオフライン利用可能）
 
 ### Page → View → Dialog 階層

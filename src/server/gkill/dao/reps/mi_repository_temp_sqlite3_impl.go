@@ -225,26 +225,26 @@ INSERT INTO MI (
 		}
 	}()
 
-	var limitTimeStr interface{}
+	var limitTimeStr any
 	if mi.LimitTime == nil {
 		limitTimeStr = nil
 	} else {
 		limitTimeStr = mi.LimitTime.Format(sqlite3impl.TimeLayout)
 	}
-	var startTimeStr interface{}
+	var startTimeStr any
 	if mi.EstimateStartTime == nil {
 		startTimeStr = nil
 	} else {
 		startTimeStr = mi.EstimateStartTime.Format(sqlite3impl.TimeLayout)
 	}
-	var endTimeStr interface{}
+	var endTimeStr any
 	if mi.EstimateEndTime == nil {
 		endTimeStr = nil
 	} else {
 		endTimeStr = mi.EstimateEndTime.Format(sqlite3impl.TimeLayout)
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		mi.IsDeleted,
 		mi.ID,
 		mi.Title,
@@ -314,7 +314,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "mi"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -444,7 +444,7 @@ AND DEVICE = ?
 
 	dataType := "mi"
 
-	queryArgsForCreate := []interface{}{
+	queryArgsForCreate := []any{
 		repName,
 		dataType,
 		txID,
@@ -465,7 +465,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
@@ -571,7 +571,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

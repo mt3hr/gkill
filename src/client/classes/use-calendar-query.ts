@@ -58,7 +58,8 @@ export function useCalendarQuery(options: {
         }
     })
 
-    function clicked_date(recved_dates: any): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function clicked_date(recved_dates: any[]): void {
         dates.value = recved_dates
         if (dates.value) {
             emits('request_update_dates', moment(dates.value[0]).toDate(), moment(dates.value[dates.value.length - 1]).add(1, 'day').add(-1, 'millisecond').toDate())
@@ -67,11 +68,11 @@ export function useCalendarQuery(options: {
         }
     }
 
-    function on_wheel(e: any) {
+    function on_wheel(e: WheelEvent) {
         if (0 < e.deltaY) {
-            document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(3) > span.v-btn__content > i").forEach((el) => { (el as any).click() })
+            document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(3) > span.v-btn__content > i").forEach((el) => { (el as HTMLElement).click() })
         } else {
-            document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1) > span.v-btn__content > i").forEach((el) => { (el as any).click() })
+            document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1) > span.v-btn__content > i").forEach((el) => { (el as HTMLElement).click() })
         }
     }
 

@@ -39,7 +39,7 @@ src/
 
 ### src/client/ — フロントエンド
 
-Vue 3 + Vuetify 3 + TypeScript で構成されたPWAフロントエンドです。
+Vue 3 + Vuetify 4 + TypeScript 6 で構成されたPWAフロントエンドです。
 
 ```
 src/client/

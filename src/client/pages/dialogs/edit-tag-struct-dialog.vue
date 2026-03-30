@@ -20,9 +20,9 @@
 
         <EditTagStructView :application_config="application_config" :gkill_api="gkill_api"
           :tag_struct="application_config.tag_struct"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-          @requested_apply_tag_struct="(...tag_struct_element_data: any[]) => emits('requested_apply_tag_struct', tag_struct_element_data[0] as TagStructElementData)"
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+          @requested_apply_tag_struct="(tag_struct_element_data: TagStructElementData) => emits('requested_apply_tag_struct', tag_struct_element_data)"
           @requested_reload_application_config="emits('requested_reload_application_config')"
           @requested_close_dialog="hide" />
         </v-card>

@@ -90,7 +90,7 @@ export function useLoginView(options: {
 
             emits('successed_login', res.session_id)
             return true
-        } catch (e) {
+        } catch (_e) {
             // TLSの場合、サーバ証明書が入っていないとログインできない
             const error = new GkillError()
             error.error_code = GkillErrorCodes.required_certificate

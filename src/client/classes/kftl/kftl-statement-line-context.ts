@@ -21,7 +21,7 @@ export class KFTLStatementLineContext {
 
     private kftl_statement_lines: Array<KFTLStatementLine>
 
-    private add_second: Number
+    private add_second: number
 
     constructor(tx_id: string, statement_line_text: string, target_id: string, next_statement_line_text: string, kftl_statement_lines: Array<KFTLStatementLine>, is_prototype: boolean) {
         this.tx_id = tx_id
@@ -80,11 +80,11 @@ export class KFTLStatementLineContext {
         return this.kftl_statement_lines
     }
 
-    get_add_second(): Number {
+    get_add_second(): number {
         return this.add_second
     }
 
-    set_add_second(add_second: Number): void {
+    set_add_second(add_second: number): void {
         this.add_second = add_second
     }
 

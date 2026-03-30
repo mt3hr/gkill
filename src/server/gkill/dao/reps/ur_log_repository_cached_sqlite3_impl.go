@@ -186,7 +186,7 @@ WHERE
 
 	tableName := sqlite3impl.QuoteIdent(u.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	whereCounter := 0
@@ -311,7 +311,7 @@ WHERE
 
 	tableName := sqlite3impl.QuoteIdent(u.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	whereCounter := 0
@@ -433,7 +433,7 @@ WHERE
 
 	tableName := sqlite3impl.QuoteIdent(u.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	whereCounter := 0
@@ -645,7 +645,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				urlog.IsDeleted,
 				urlog.ID,
 				urlog.URL,
@@ -761,7 +761,7 @@ WHERE
 
 	tableName := sqlite3impl.QuoteIdent(u.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	whereCounter := 0
@@ -899,7 +899,7 @@ WHERE
 
 	tableName := sqlite3impl.QuoteIdent(u.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	whereCounter := 0
@@ -1037,7 +1037,7 @@ WHERE
 
 	tableName := sqlite3impl.QuoteIdent(u.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(u.dbName)
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 	whereCounter := 0
@@ -1133,7 +1133,7 @@ WHERE
 func (u *urlogRepositoryCachedSQLite3Impl) AddURLogInfo(ctx context.Context, urlog URLog) error {
 	u.m.Lock()
 	defer u.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		urlog.IsDeleted,
 		urlog.ID,
 		urlog.URL,

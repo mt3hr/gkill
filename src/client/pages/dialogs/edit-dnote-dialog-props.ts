@@ -3,6 +3,6 @@
 import type { GkillPropsBase } from "../views/gkill-props-base"
 
 export interface EditDnoteDialogProps extends GkillPropsBase {
-    app_content_height: Number
-    app_content_width: Number
+    app_content_height: number
+    app_content_width: number
 }

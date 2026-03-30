@@ -27,7 +27,7 @@ export class DnoteAgregator {
         }
 
         // 抽出されたKyouを集計
-        let agregated_value: any | null = null
+        let agregated_value: unknown = null
         for (let i = 0; i < match_kyous.length; i++) {
             const kyou = match_kyous[i]
             agregated_value = await this.dnote_agregate_target.append_agregate_element_value(agregated_value, kyou, find_kyou_query)

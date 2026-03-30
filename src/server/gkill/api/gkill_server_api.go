@@ -26,7 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -8371,8 +8371,8 @@ loop:
 		kyous = append(kyous, *kyou)
 	}
 
-	sort.Slice(kyous, func(i, j int) bool {
-		return kyous[i].RelatedTime.After(kyous[j].RelatedTime)
+	slices.SortFunc(kyous, func(a, b reps.Kyou) int {
+		return b.RelatedTime.Compare(a.RelatedTime)
 	})
 
 	response.UploadedKyous = kyous
@@ -13534,8 +13534,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 
 	// related_time 降順ソート
-	sort.Slice(allKyous, func(i, j int) bool {
-		return allKyous[i].RelatedTime.After(allKyous[j].RelatedTime)
+	slices.SortFunc(allKyous, func(a, b reps.Kyou) int {
+		return b.RelatedTime.Compare(a.RelatedTime)
 	})
 
 	totalCount := len(allKyous)
@@ -13580,7 +13580,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		candidateCount = len(batch)
 	}
 	candidateIDs := make([]string, 0)
-	for i := 0; i < candidateCount; i++ {
+	for i := range candidateCount {
 		candidateIDs = append(candidateIDs, batch[i].ID)
 	}
 
@@ -13667,7 +13667,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	runningSize := int64(0)
 	resultDTOs := make([]req_res.KyouMCPDTO, 0, candidateCount)
 
-	for i := 0; i < candidateCount; i++ {
+	for i := range candidateCount {
 		kyou := batch[i]
 
 		// タグ取得
@@ -13718,7 +13718,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		}
 
 		// ペイロード構築
-		var payload interface{}
+		var payload any
 		switch kyou.DataType {
 		case "kmemo":
 			if k, ok := kmemoMap[kyou.ID]; ok {

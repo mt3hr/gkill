@@ -501,8 +501,8 @@ func applyExifOrientation(src image.Image, orient int) image.Image {
 	d := image.NewNRGBA(image.Rect(0, 0, dw, dh))
 
 	// src を走査して dst へ転送（1回だけなのでシンプル優先）
-	for y := 0; y < sh; y++ {
-		for x := 0; x < sw; x++ {
+	for y := range sh {
+		for x := range sw {
 			si := y*s.Stride + x*4
 
 			var dx, dy int

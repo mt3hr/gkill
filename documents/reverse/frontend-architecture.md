@@ -4,18 +4,18 @@
 
 | カテゴリ | 技術 | バージョン |
 |---|---|---|
-| フレームワーク | Vue 3 (Composition API) | ^3.4.29 |
-| UIライブラリ | Vuetify 3 (Material Design) | ^3.11.1 |
-| ルーティング | Vue Router | ^4.3.3 |
-| 国際化 | vue-i18n | ^9.14.4 |
-| ビルドツール | Vite | ^5.3.1 |
-| PWA | vite-plugin-pwa + Workbox | ^0.21.1 |
-| TypeScript | TypeScript | ~5.4.0 |
+| フレームワーク | Vue 3 (Composition API) | ^3.5.31 |
+| UIライブラリ | Vuetify 4 (Material Design) | ^4.0.4 |
+| ルーティング | Vue Router 5 | ^5.0.4 |
+| 国際化 | vue-i18n 11 | ^11.3.0 |
+| ビルドツール | Vite 7 | ^7.3.1 |
+| PWA | vite-plugin-pwa + Workbox | ^1.2.0 |
+| TypeScript | TypeScript 6 | ~6.0.0 |
 | アイコン | @mdi/js (Material Design Icons) | ^7.4.47 |
 | 地図 | vue3-google-map + @googlemaps/js-api-loader | — |
 | 日時 | moment | ^2.30.1 |
-| 型チェック | vue-tsc | ^2.0.21 |
-| リンター | ESLint + eslint-plugin-vue | ^8.57.0 |
+| 型チェック | vue-tsc 3 | ^3.2.6 |
+| リンター | ESLint 9 + eslint-plugin-vue 10 (flat config) | ^9.39.4 |
 
 ## 2. ディレクトリ構成
 
@@ -266,10 +266,13 @@ Service Worker が `/share-target` POSTを処理：
 - lib: `WebWorker`（Service Worker用）
 - types: `google.maps`, `vite-plugin-pwa/client`
 
-### ESLint設定 (`.eslintrc.cjs`)
+### ESLint設定 (`eslint.config.js`)
 
-- extends: `plugin:vue/vue3-essential`, `eslint:recommended`, `@vue/eslint-config-typescript`
+- flat config 形式（ESLint 9+）
+- `pluginVue.configs['flat/essential']` + `vueTsEslintConfig()` を使用
 - `@typescript-eslint/no-unused-vars`: warn（`_` プレフィックスは無視）
+- `@typescript-eslint/no-explicit-any`: error
+- `@typescript-eslint/no-empty-object-type`: error
 - 実行: `npm run lint`
 
 ## 10. UX改善

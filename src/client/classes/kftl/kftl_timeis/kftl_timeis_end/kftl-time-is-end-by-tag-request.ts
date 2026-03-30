@@ -42,7 +42,7 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
             return errors
         }
         await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
-        const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
+        const time = this.get_related_time() ? this.get_related_time()! : new Date(Date.now())
 
         // 対象のtimeisを取得する
         let target_timeis: TimeIs | null = null
@@ -57,7 +57,7 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
             return errors
         }
 
-        const awaitPromisses = Array<Promise<any>>()
+        const awaitPromisses = Array<Promise<unknown>>()
         for (let i = 0; i < get_plaing_timeis_res.kyous.length; i++) {
             const timeis = get_plaing_timeis_res.kyous[i]
             awaitPromisses.push(timeis.load_typed_timeis())

@@ -23,9 +23,9 @@
 
         <EditKFTLTemplateStructElementView :application_config="application_config" :gkill_api="gkill_api"
           :struct_obj="kftl_template_struct"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-          @requested_update_kftl_template_struct="(...kftl_template_struct: any[]) => emits('requested_update_kftl_template_struct', kftl_template_struct[0] as KFTLTemplateStructElementData)"
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+          @requested_update_kftl_template_struct="(kftl_template_struct: KFTLTemplateStructElementData) => emits('requested_update_kftl_template_struct', kftl_template_struct)"
           @requested_close_dialog="hide" />
         </v-card>
         <HelpDialog screen_name="kftl" ref="help_dialog" />

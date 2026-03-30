@@ -187,40 +187,40 @@
         </v-card-action>
         <EditDeviceStructDialog :application_config="cloned_application_config" :folder_name="''" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_device_struct="(...device_struct_element_data: any[]) => onRequestedApplyDeviceStruct(device_struct_element_data[0])"
+            @requested_apply_device_struct="(data: DeviceStructElementData) => onRequestedApplyDeviceStruct(data)"
             ref="edit_device_struct_dialog" />
         <EditKFTLTemplateDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_kftl_template_struct="(...kftl_template_struct_element_data: any[]) => onRequestedApplyKftlTemplateStruct(kftl_template_struct_element_data[0])"
+            @requested_apply_kftl_template_struct="(data: KFTLTemplateStructElementData) => onRequestedApplyKftlTemplateStruct(data)"
             @requested_reload_application_config="() => () => { }" ref="edit_kftl_template_dialog" />
         <EditRepStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_rep_struct="(...rep_struct_element_data: any[]) => onRequestedApplyRepStruct(rep_struct_element_data[0])"
-            @requested_reload_application_config="(...application_config: any) => () => { }"
+            @requested_apply_rep_struct="(data: RepStructElementData) => onRequestedApplyRepStruct(data)"
+            @requested_reload_application_config="() => () => { }"
             ref="edit_rep_struct_dialog" />
         <EditRepTypeStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_rep_type_struct="(...rep_type_struct_element_data: any[]) => onRequestedApplyRepTypeStruct(rep_type_struct_element_data[0])"
-            @requested_reload_application_config="(...application_config: any) => () => { }"
+            @requested_apply_rep_type_struct="(data: RepTypeStructElementData) => onRequestedApplyRepTypeStruct(data)"
+            @requested_reload_application_config="() => () => { }"
             ref="edit_rep_type_struct_dialog" />
         <EditTagStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_tag_struct="(...tag_struct_element_data: any[]) => onRequestedApplyTagStruct(tag_struct_element_data[0])"
+            @requested_apply_tag_struct="(data: TagStructElementData) => onRequestedApplyTagStruct(data)"
             @requested_reload_application_config="() => { }" ref="edit_tag_struct_dialog" />
         <EditDnoteDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_dnote="(...dnote_data: any[]) => onRequestedApplyDnote(dnote_data[0])"
+            @requested_apply_dnote="(data: DnoteData) => onRequestedApplyDnote(data)"
             @requested_reload_application_config="() => { }" ref="edit_dnote_dialog" />
         <EditRyuuDialog v-model="cloned_application_config" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :application_config="cloned_application_config"
             :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_ryuu_struct="(...ryuu_data: any[]) => onRequestedApplyRyuuStruct(ryuu_data[0])"
+            @requested_apply_ryuu_struct="(data: RyuuData) => onRequestedApplyRyuuStruct(data)"
             @requested_reload_application_config="() => { }" ref="edit_ryuu_dialog" />
         <NewBoardNameDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
@@ -232,7 +232,6 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
 import { i18n } from '@/i18n'
 
 import EditDeviceStructDialog from '../dialogs/edit-device-struct-dialog.vue'
@@ -248,6 +247,13 @@ import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
 import type { ApplicationConfigViewEmits } from './application-config-view-emits'
 import type { ApplicationConfigViewProps } from './application-config-view-props'
 import { useApplicationConfigView } from '@/classes/use-application-config-view'
+import type { DeviceStructElementData } from "@/classes/datas/config/device-struct-element-data"
+import type { KFTLTemplateStructElementData } from "@/classes/datas/config/kftl-template-struct-element-data"
+import type { RepStructElementData } from "@/classes/datas/config/rep-struct-element-data"
+import type { RepTypeStructElementData } from "@/classes/datas/config/rep-type-struct-element-data"
+import type { TagStructElementData } from "@/classes/datas/config/tag-struct-element-data"
+type DnoteData = Record<string, unknown>
+type RyuuData = Record<string, unknown>
 
 const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()

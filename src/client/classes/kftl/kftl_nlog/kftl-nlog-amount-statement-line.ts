@@ -33,7 +33,7 @@ export class KFTLNlogAmountStatementLine extends KFTLStatementLine {
             } else {
                 return i18n.global.t("KFTL_NLOG_OUT_LABEL_TITLE")
             }
-        } catch (e: any) {
+        } catch (_e: unknown) {
             return i18n.global.t("KFTL_NLOG_INVALID_AMOUNT_LABEL_TITLE")
         }
     }
@@ -45,7 +45,7 @@ export class KFTLNlogAmountStatementLine extends KFTLStatementLine {
                 throw new Error(i18n.global.t("KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE"))
             }
             return amount
-        } catch (e: any) {
+        } catch (_e: unknown) {
             throw new Error(i18n.global.t("KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE"))
         }
     }

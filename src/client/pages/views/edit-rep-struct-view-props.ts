@@ -2,5 +2,4 @@
 
 import type { GkillPropsBase } from "./gkill-props-base"
 
-export interface EditRepStructViewProps extends GkillPropsBase {
-}
+export type EditRepStructViewProps = GkillPropsBase

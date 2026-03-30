@@ -6,6 +6,7 @@ import { UpdateAccountStatusRequest } from '@/classes/api/req_res/update-account
 import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-configs-request'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useManageAccountView(options: {
     props: ManageAccountViewProps,
@@ -14,10 +15,10 @@ export function useManageAccountView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const allocate_rep_dialog = ref<any>(null)
-    const confirm_reset_password_dialog = ref<any>(null)
-    const create_account_dialog = ref<any>(null)
-    const show_password_reset_link_dialog = ref<any>(null)
+    const allocate_rep_dialog = ref<ComponentRef | null>(null)
+    const confirm_reset_password_dialog = ref<ComponentRef | null>(null)
+    const create_account_dialog = ref<ComponentRef | null>(null)
+    const show_password_reset_link_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const cloned_accounts: Ref<Array<Account>> = ref(props.server_configs[0].accounts)
@@ -74,27 +75,27 @@ export function useManageAccountView(options: {
     // ── Event relay objects ──
     const allocateRepDialogHandlers = {
         'requested_reload_server_config': () => emits('requested_reload_server_config'),
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     const confirmResetPasswordDialogHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
-        'requested_show_show_password_reset_dialog': (...account: any[]) => show_show_password_reset_link_dialog(account[0] as Account),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_show_show_password_reset_dialog': (arg0: Account) => show_show_password_reset_link_dialog(arg0),
         'requested_reload_server_config': () => emits('requested_reload_server_config'),
     }
 
     const createAccountDialogHandlers = {
-        'added_account': (...account: any[]) => show_show_password_reset_link_dialog(account[0] as Account),
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
+        'added_account': (arg0: Account) => show_show_password_reset_link_dialog(arg0),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
         'requested_reload_server_config': () => emits('requested_reload_server_config'),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     const showPasswordResetLinkDialogHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     // ── Return ──

@@ -5,7 +5,7 @@ export function useManageShareTaskListView(options: {
     props: ManageShareKyousListViewProps,
     emits: ManageShareKyousListViewEmits,
 }) {
-    const { props, emits } = options
+    const { props: _props, emits: _emits } = options
 
     return {
     }

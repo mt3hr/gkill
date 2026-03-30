@@ -171,7 +171,7 @@ var (
 			}
 
 			openInDefaultBrowserMessagePrefix := "open_in_default_browser:"
-			w.OnMessage(func(m *astilectron.EventMessage) interface{} {
+			w.OnMessage(func(m *astilectron.EventMessage) any {
 				msg := ""
 				m.Unmarshal(&msg)
 

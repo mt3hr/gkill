@@ -4,10 +4,10 @@ import type DnoteAgregateTarget from "../dnote-agregate-target";
 import AverageInfo from "./average-info";
 
 export default class AgregateAverageKCNumValue implements DnoteAgregateTarget {
-    static from_json(_json: any): DnoteAgregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
         return new AgregateAverageKCNumValue()
     }
-    async append_agregate_element_value(typed_average_info_kc_num_value: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
+    async append_agregate_element_value(typed_average_info_kc_num_value: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
         const cloned_typed_average_info_kc_num_value = typed_average_info_kc_num_value === null ? new AverageInfo() : (typed_average_info_kc_num_value as AverageInfo).clone()
         cloned_typed_average_info_kc_num_value.total_value = cloned_typed_average_info_kc_num_value.total_value === null ? 0 : cloned_typed_average_info_kc_num_value.total_value as number
 
@@ -20,12 +20,12 @@ export default class AgregateAverageKCNumValue implements DnoteAgregateTarget {
         }
         return cloned_typed_average_info_kc_num_value
     }
-    async result_to_string(typed_average_info_kc_num_value: any | null): Promise<string> {
+    async result_to_string(typed_average_info_kc_num_value: unknown): Promise<string> {
         const cloned_typed_average_info_kc_num_value = typed_average_info_kc_num_value === null ? new AverageInfo() : (typed_average_info_kc_num_value as AverageInfo).clone()
         cloned_typed_average_info_kc_num_value.total_value = cloned_typed_average_info_kc_num_value.total_value === null ? 0 : cloned_typed_average_info_kc_num_value.total_value as number
         return (cloned_typed_average_info_kc_num_value.total_count === 0 ? 0 : (cloned_typed_average_info_kc_num_value.total_value / cloned_typed_average_info_kc_num_value.total_count)).toString()
     }
-    to_json(): any {
+    to_json(): Record<string, unknown> {
         return {
             type: "AgregateAverageKCNumValue",
         }

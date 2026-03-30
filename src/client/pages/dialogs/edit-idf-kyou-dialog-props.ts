@@ -2,5 +2,4 @@
 
 import type { KyouViewPropsBase } from "../views/kyou-view-props-base"
 
-export interface EditIDFKyouDialogProps extends KyouViewPropsBase {
-}
+export type EditIDFKyouDialogProps = KyouViewPropsBase

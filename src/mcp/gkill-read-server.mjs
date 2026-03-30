@@ -535,7 +535,7 @@ class McpServer {
     let jsonText;
     if (payload !== undefined) {
       if (name === "gkill_get_idf_file" && !isError && payload.file_content_base64) {
-        const { file_content_base64, ...rest } = payload;
+        const { file_content_base64: _file_content_base64, ...rest } = payload;
         jsonText = JSON.stringify(rest, null, 2);
       } else {
         jsonText = JSON.stringify(payload, null, 2);

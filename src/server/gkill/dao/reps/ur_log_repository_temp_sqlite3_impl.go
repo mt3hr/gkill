@@ -223,7 +223,7 @@ INSERT INTO URLOG (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		urlog.IsDeleted,
 		urlog.ID,
 		urlog.URL,
@@ -287,7 +287,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "urlog"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -416,7 +416,7 @@ AND DEVICE = ?
 
 	dataType := "urlog"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -534,7 +534,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

@@ -1,22 +1,22 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, test, expect, beforeEach } from 'vitest'
 import { ref } from 'vue'
 
 // Minimal mock for history API
-let historyStack: Array<{ state: any }> = []
+let historyStack: Array<{ state: Record<string, unknown> | null }> = []
 let historyIndex = 0
 let popstateListeners: Array<(e: PopStateEvent) => void> = []
 
-function mockPushState(state: any, _title: string, _url?: string) {
+function mockPushState(state: Record<string, unknown> | null, _title: string, _url?: string) {
   historyStack = historyStack.slice(0, historyIndex + 1)
   historyStack.push({ state })
   historyIndex = historyStack.length - 1
 }
 
-function mockReplaceState(state: any, _title: string) {
+function _mockReplaceState(state: Record<string, unknown> | null, _title: string) {
   historyStack[historyIndex] = { state }
 }
 
-function firePopstate(state: any) {
+function _firePopstate(state: Record<string, unknown> | null) {
   const event = new PopStateEvent('popstate', { state })
   for (const listener of popstateListeners) {
     listener(event)
@@ -27,16 +27,16 @@ describe('use-dialog-history-stack concepts', () => {
   const MARK = "__gkillDlg"
   const DEPTH = "__gkillDlgDepth"
 
-  function isDialogState(state: any): boolean {
+  function isDialogState(state: Record<string, unknown> | null): state is Record<string, unknown> & { [key: string]: unknown } {
     return state !== null && typeof state === 'object' && state[MARK] === true && typeof state[DEPTH] === 'number'
   }
 
-  function withDialogMarkers(base: any, depth: number): any {
+  function withDialogMarkers(base: Record<string, unknown> | null, depth: number): Record<string, unknown> {
     const b = base && typeof base === 'object' ? base : {}
     return { ...b, [MARK]: true, [DEPTH]: depth }
   }
 
-  function stripDialogKeys(state: any): any {
+  function stripDialogKeys(state: Record<string, unknown> | null): Record<string, unknown> | null {
     if (!state || typeof state !== 'object') return state
     const { [MARK]: _m, [DEPTH]: _d, ...rest } = state
     return rest
@@ -89,8 +89,8 @@ describe('use-dialog-history-stack concepts', () => {
 
   test('back after all dialogs closed navigates normally', () => {
     // Stack is empty, state is not a dialog state
-    const stack: any[] = []
-    const state = { page: 'home' }
+    const stack: Array<{ dialog: { value: boolean } }> = []
+    const state: Record<string, unknown> = { page: 'home' }
 
     // Branch C check: stack empty AND dialog state → strip
     if (stack.length === 0 && isDialogState(state)) {
@@ -152,7 +152,7 @@ describe('use-dialog-history-stack concepts', () => {
   })
 
   test('Branch C: forward into dialog state while stack empty strips markers', () => {
-    const stack: any[] = []
+    const stack: Array<{ dialog: { value: boolean } }> = []
     const state = withDialogMarkers({ page: 'test' }, 2)
 
     expect(isDialogState(state)).toBe(true)
@@ -171,12 +171,12 @@ describe('use-dialog-history-stack concepts', () => {
 
     // Forward state has depth >= stack.length → forward
     const forwardState = withDialogMarkers({}, 2)
-    const newDepth = (forwardState as any)[DEPTH] as number
+    const newDepth = forwardState[DEPTH] as number
     expect(newDepth >= stack.length).toBe(true)
 
     // Back state has depth < stack.length → back
     const backState = withDialogMarkers({}, 0)
-    const backDepth = (backState as any)[DEPTH] as number
+    const backDepth = backState[DEPTH] as number
     expect(backDepth < stack.length).toBe(true)
   })
 })

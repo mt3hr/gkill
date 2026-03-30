@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { i18n } from '../../helpers/setup-i18n'
+import '../../helpers/setup-i18n'
 
 // Import the statement line classes to test their is_this_type static methods
 import { KFTLTagStatementLine } from '@/classes/kftl/kftl_tag/kftl-tag-statement-line'

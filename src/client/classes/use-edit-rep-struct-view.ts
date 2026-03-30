@@ -1,4 +1,3 @@
-import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import type { EditRepStructViewEmits } from '@/pages/views/edit-rep-struct-view-emits'
 import type { EditRepStructViewProps } from '@/pages/views/edit-rep-struct-view-props'
@@ -6,6 +5,7 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useEditRepStructView(options: {
     props: EditRepStructViewProps,
@@ -14,11 +14,11 @@ export function useEditRepStructView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const foldable_struct = ref<any>(null)
-    const edit_rep_struct_element_dialog = ref<any>(null)
-    const add_new_rep_struct_element_dialog = ref<any>(null)
-    const rep_struct_context_menu = ref<any>(null)
-    const confirm_delete_rep_struct_dialog = ref<any>(null)
+    const foldable_struct = ref<ComponentRef | null>(null)
+    const edit_rep_struct_element_dialog = ref<ComponentRef | null>(null)
+    const add_new_rep_struct_element_dialog = ref<ComponentRef | null>(null)
+    const rep_struct_context_menu = ref<ComponentRef | null>(null)
+    const confirm_delete_rep_struct_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
@@ -152,29 +152,29 @@ export function useEditRepStructView(options: {
 
     // ── Event relay objects ──
     const errorMessageHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     const addNewRepHandlers = {
         ...errorMessageHandlers,
-        'requested_add_rep_struct_element': (...args: any[]) => add_rep_struct_element(args[0] as RepStructElementData),
+        'requested_add_rep_struct_element': (element: RepStructElementData) => add_rep_struct_element(element),
     }
 
     const editRepHandlers = {
         ...errorMessageHandlers,
-        'requested_update_rep_struct': (...args: any[]) => update_rep_struct(args[0] as RepStructElementData),
+        'requested_update_rep_struct': (element: RepStructElementData) => update_rep_struct(element),
     }
 
     const repContextMenuHandlers = {
         ...errorMessageHandlers,
-        'requested_edit_rep': (...id: any[]) => show_edit_rep_struct_dialog(id[0] as string),
-        'requested_delete_rep': (...id: any[]) => show_confirm_delete_rep_struct_dialog(id[0] as string),
+        'requested_edit_rep': (value: string) => show_edit_rep_struct_dialog(value),
+        'requested_delete_rep': (value: string) => show_confirm_delete_rep_struct_dialog(value),
     }
 
     const confirmDeleteHandlers = {
         ...errorMessageHandlers,
-        'requested_delete_rep': (...id: any[]) => delete_rep_struct(id[0] as string),
+        'requested_delete_rep': (value: string) => delete_rep_struct(value),
     }
 
     return {

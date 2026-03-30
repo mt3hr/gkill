@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"math"
 	"sync"
 	"time"
@@ -50,8 +51,6 @@ func collectFromRepos[R any, T any](repos []R, fn func(R) ([]T, error)) ([]T, er
 	wg := &sync.WaitGroup{}
 	resultsCh := make(chan []T, lenOfRepos)
 	errch := make(chan error, lenOfRepos)
-	defer close(resultsCh)
-	defer close(errch)
 
 	for _, repo := range repos {
 		wg.Add(1)
@@ -63,27 +62,23 @@ func collectFromRepos[R any, T any](repos []R, fn func(R) ([]T, error)) ([]T, er
 				return
 			}
 			resultsCh <- items
-			errch <- nil
 		}(repo)
 	}
 	wg.Wait()
+	close(errch)
+	close(resultsCh)
+
+	var errs []error
+	for e := range errch {
+		errs = append(errs, e)
+	}
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
 
 	var combined []T
-	var firstErr error
-	for range lenOfRepos {
-		e := <-errch
-		if e != nil {
-			if firstErr == nil {
-				firstErr = e
-			}
-		}
-	}
-	if firstErr != nil {
-		return nil, firstErr
-	}
-
-	for range lenOfRepos {
-		combined = append(combined, (<-resultsCh)...)
+	for items := range resultsCh {
+		combined = append(combined, items...)
 	}
 	return combined, nil
 }

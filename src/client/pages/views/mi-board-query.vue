@@ -7,8 +7,8 @@
                 :is_show_checkbox="false"
                 @clicked_items="(event: MouseEvent, items: string[], check_state: CheckState, is_by_user: boolean) => { if (is_by_user && check_state === CheckState.checked) { items.forEach((board) => { board_name = board; emits('request_open_focus_board', board) }) } }"
                 @requested_update_check_state="[]"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="foldable_struct" />
         </table>
     </div>

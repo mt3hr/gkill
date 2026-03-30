@@ -234,16 +234,15 @@ export function useFindQueryEditorView(options: {
         query.value = find_query
     }
 
-    function onRepQueryRequestUpdateCheckedReps(_reps: any, is_by_user: boolean): void {
+    function onRepQueryRequestUpdateCheckedReps(_reps: string[], is_by_user: boolean): void {
         if (is_by_user) emits_current_query()
     }
 
-    function onTagQueryRequestUpdateCheckedTags(_tags: any, is_by_user: boolean): void {
+    function onTagQueryRequestUpdateCheckedTags(_tags: string[], is_by_user: boolean): void {
         if (is_by_user) emits_current_query()
     }
 
-    function onTimeisQueryRequestUpdateCheckedTimeisTags(...params: any[]): void {
-        const is_by_user = params[1]
+    function onTimeisQueryRequestUpdateCheckedTimeisTags(_tags: string[], is_by_user: boolean): void {
         if (is_by_user) emits_current_query()
     }
 

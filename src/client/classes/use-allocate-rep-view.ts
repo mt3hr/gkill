@@ -1,4 +1,3 @@
-import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 import type { AllocateRepViewEmits } from '@/pages/views/allocate-rep-view-emits'
 import type { AllocateRepViewProps } from '@/pages/views/allocate-rep-view-props'
@@ -7,6 +6,7 @@ import { Account } from '@/classes/datas/config/account'
 import { UpdateUserRepsRequest } from '@/classes/api/req_res/update-user-reps-request'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useAllocateRepView(options: {
     props: AllocateRepViewProps,
@@ -15,8 +15,8 @@ export function useAllocateRepView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const add_rep_dialog = ref<any>(null)
-    const confirm_delete_rep_dialog = ref<any>(null)
+    const add_rep_dialog = ref<ComponentRef | null>(null)
+    const confirm_delete_rep_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const delete_target_rep: Ref<Repository | null> = ref(null)
@@ -123,15 +123,15 @@ export function useAllocateRepView(options: {
 
     // ── Event relay objects ──
     const addRepHandlers = {
-        'requested_add_rep': (...args: any[]) => add_rep(args[0] as Repository),
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'requested_add_rep': (rep: Repository) => add_rep(rep),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     const confirmDeleteRepHandlers = {
-        'requested_delete_rep': (...rep: any) => delete_rep(rep as Repository),
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
+        'requested_delete_rep': (rep: Repository) => delete_rep(rep),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     return {

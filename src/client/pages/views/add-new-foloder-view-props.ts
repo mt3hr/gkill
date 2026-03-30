@@ -2,5 +2,4 @@
 
 import type { GkillPropsBase } from "./gkill-props-base"
 
-export interface AddNewFoloderViewProps extends GkillPropsBase {
-}
+export type AddNewFoloderViewProps = GkillPropsBase

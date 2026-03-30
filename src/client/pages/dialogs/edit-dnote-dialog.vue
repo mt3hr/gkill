@@ -23,11 +23,11 @@
           <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" :query="new FindKyouQuery()"
             :checked_kyous="[]" :editable="true"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_apply_dnote="(...dnote_data: any[]) => { emits('requested_apply_dnote', dnote_data[0]) }"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+            @requested_apply_dnote="(dnote_data: Record<string, unknown>) => { emits('requested_apply_dnote', dnote_data) }"
+            @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @requested_close_dialog="hide()"
-            @requested_reload_application_config="(...application_config: any[]) => emits('requested_reload_application_config', application_config[0] as ApplicationConfig)"
+            @requested_reload_application_config="(application_config: ApplicationConfig) => emits('requested_reload_application_config', application_config)"
             ref="dnote_view" />
         </v-card>
         <HelpDialog screen_name="dnote" ref="help_dialog" />

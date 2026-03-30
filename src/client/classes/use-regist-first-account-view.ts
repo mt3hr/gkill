@@ -47,11 +47,11 @@ export function useRegistFirstAccountView(options: {
     const app_content_height_px = computed(() => props.app_content_height + 'px')
     const app_content_width_px = computed(() => props.app_content_width + 'px')
 
-    // eslint-disable-next-line vue/no-async-in-computed-properties
+     
     const password_sha256 = computed(async () => {
         const encoder = new TextEncoder();
         const msgUint8 = encoder.encode(password.value);
-        // eslint-disable-next-line vue/no-async-in-computed-properties
+         
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
 
         const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -61,11 +61,11 @@ export function useRegistFirstAccountView(options: {
         return hashHex;
     })
 
-    // eslint-disable-next-line vue/no-async-in-computed-properties
+     
     const admin_password_sha256 = computed(async () => {
         const encoder = new TextEncoder();
         const msgUint8 = encoder.encode(admin_password.value);
-        // eslint-disable-next-line vue/no-async-in-computed-properties
+         
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
 
         const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -157,7 +157,7 @@ export function useRegistFirstAccountView(options: {
                 }
                 regist_state.value = RegistStatus.reseted_admin_password
             }
-            // eslint-disable-next-line no-fallthrough
+             
             case RegistStatus.reseted_admin_password: {
                 // 3.Adminのログインセッションを取得する（Adminのパスワード情報は画面が持ってる）
                 // 4.アカウント追加を行う
@@ -188,7 +188,7 @@ export function useRegistFirstAccountView(options: {
                 }
                 regist_state.value = RegistStatus.added_account
             }
-            // eslint-disable-next-line no-fallthrough
+             
             case RegistStatus.added_account: {
                 // 5.アカウントのパスワードリセットトークンを取得する（管理者権限使用）
                 // 6.アカウントのパスワードをリセットする
@@ -214,11 +214,11 @@ export function useRegistFirstAccountView(options: {
                 }
 
                 const server_config = get_server_configs_res.server_configs.find((server_config) => server_config.enable_this_device)
-                const account = server_config?.accounts.find((account) => account.user_id === user_id.value)!
+                const account = server_config?.accounts.find((account) => account.user_id === user_id.value)
 
                 const set_new_password_req = new SetNewPasswordRequest()
                 set_new_password_req.user_id = user_id.value
-                set_new_password_req.reset_token = account?.password_reset_token!
+                set_new_password_req.reset_token = account?.password_reset_token ?? ""
                 set_new_password_req.new_password_sha256 = await password_sha256.value
 
                 const set_new_password_res = await props.gkill_api.set_new_password(set_new_password_req)
@@ -229,7 +229,7 @@ export function useRegistFirstAccountView(options: {
                 }
                 regist_state.value = RegistStatus.reseted_account_password
             }
-            // eslint-disable-next-line no-fallthrough
+             
             case RegistStatus.reseted_account_password: {
                 const message = new GkillMessage()
                 message.message = i18n.global.t("REGISTERED_ACCOUNT_MESAGE")
@@ -237,7 +237,7 @@ export function useRegistFirstAccountView(options: {
                 emits('received_messages', [message])
                 regist_state.value = RegistStatus.done
             }
-            // eslint-disable-next-line no-fallthrough
+             
             default:
                 await sleep(2500)
                 await resetDialogHistory()

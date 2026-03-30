@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
-import { navigateToSettings, clickDialogButton } from './crud-helpers'
+import { navigateToSettings } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
@@ -46,10 +46,10 @@ test.describe('Server Config CRUD', () => {
   test('enable TLS', async ({ page }) => {
     await navigateToSettings(page)
 
-    const toggles = page.locator('.v-switch, .v-checkbox')
+    const _toggles = page.locator('.v-switch, .v-checkbox')
     const app = page.locator('#app')
     const content = await app.textContent()
-    const hasTLS = content!.includes('TLS') || content!.includes('tls') || content!.includes('SSL')
+    const _hasTLS = content!.includes('TLS') || content!.includes('tls') || content!.includes('SSL')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
   })
@@ -66,7 +66,7 @@ test.describe('Server Config CRUD', () => {
     await navigateToSettings(page)
 
     // Look for generate TLS button
-    const generateButton = page.locator('button').filter({ hasText: /生成|generate|TLS/i }).first()
+    const _generateButton = page.locator('button').filter({ hasText: /生成|generate|TLS/i }).first()
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })
@@ -78,7 +78,7 @@ test.describe('Server Config CRUD', () => {
     // Look for address/port input
     const app = page.locator('#app')
     const content = await app.textContent()
-    const hasAddress = content!.includes('アドレス') || content!.includes('address') ||
+    const _hasAddress = content!.includes('アドレス') || content!.includes('address') ||
       content!.includes('ポート') || content!.includes('port') || content!.includes('9999')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
@@ -135,7 +135,7 @@ test.describe('Server Config CRUD', () => {
     // Look for account management section
     const app = page.locator('#app')
     const content = await app.textContent()
-    const hasAccountSection = content!.includes('アカウント') || content!.includes('account') || content!.includes('Account')
+    const _hasAccountSection = content!.includes('アカウント') || content!.includes('account') || content!.includes('Account')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
   })
@@ -166,7 +166,7 @@ test.describe('Server Config CRUD', () => {
     await navigateToSettings(page)
 
     // Look for password reset button
-    const resetButton = page.locator('button').filter({ hasText: /パスワード.*リセット|reset.*password/i }).first()
+    const _resetButton = page.locator('button').filter({ hasText: /パスワード.*リセット|reset.*password/i }).first()
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })
@@ -176,7 +176,7 @@ test.describe('Server Config CRUD', () => {
     await navigateToSettings(page)
 
     // Look for rep add button
-    const addRepButton = page.locator('button').filter({ hasText: /Rep.*追加|追加.*Rep|add.*rep/i }).first()
+    const _addRepButton = page.locator('button').filter({ hasText: /Rep.*追加|追加.*Rep|add.*rep/i }).first()
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })
@@ -186,7 +186,7 @@ test.describe('Server Config CRUD', () => {
     await navigateToSettings(page)
 
     // Look for Device select/dropdown
-    const deviceSelect = page.locator('.v-select, select').first()
+    const _deviceSelect = page.locator('.v-select, select').first()
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })

@@ -6,7 +6,6 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
-import { Kyou } from '@/classes/datas/kyou'
 import { useTheme } from 'vuetify'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
@@ -16,38 +15,39 @@ import { LogoutRequest } from '@/classes/api/req_res/logout-request'
 import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-repositories-request'
 import { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useSaihatePage() {
     const theme = useTheme()
 
     // ── Template refs ──
-    const add_mi_dialog = ref<any>(null)
-    const add_nlog_dialog = ref<any>(null)
-    const add_lantana_dialog = ref<any>(null)
-    const add_timeis_dialog = ref<any>(null)
-    const add_urlog_dialog = ref<any>(null)
-    const kftl_dialog = ref<any>(null)
-    const add_kc_dialog = ref<any>(null)
-    const mkfl_dialog = ref<any>(null)
-    const upload_file_dialog = ref<any>(null)
-    const confirm_logout_dialog = ref<any>(null)
+    const add_mi_dialog = ref<ComponentRef | null>(null)
+    const add_nlog_dialog = ref<ComponentRef | null>(null)
+    const add_lantana_dialog = ref<ComponentRef | null>(null)
+    const add_timeis_dialog = ref<ComponentRef | null>(null)
+    const add_urlog_dialog = ref<ComponentRef | null>(null)
+    const kftl_dialog = ref<ComponentRef | null>(null)
+    const add_kc_dialog = ref<ComponentRef | null>(null)
+    const mkfl_dialog = ref<ComponentRef | null>(null)
+    const upload_file_dialog = ref<ComponentRef | null>(null)
+    const confirm_logout_dialog = ref<ComponentRef | null>(null)
     const saihate_root = ref<HTMLElement | null>(null)
 
     // ── State refs ──
     const enable_context_menu = ref(true)
     const enable_dialog = ref(false)
 
-    const actual_height: Ref<Number> = ref(0)
-    const element_height: Ref<Number> = ref(0)
-    const browser_url_bar_height: Ref<Number> = ref(0)
-    const app_title_bar_height: Ref<Number> = ref(50)
+    const actual_height: Ref<number> = ref(0)
+    const element_height: Ref<number> = ref(0)
+    const browser_url_bar_height: Ref<number> = ref(0)
+    const app_title_bar_height: Ref<number> = ref(50)
     const gkill_api = computed(() => GkillAPI.get_instance())
     const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
-    const app_content_height: Ref<Number> = ref(0)
-    const app_content_width: Ref<Number> = ref(0)
+    const app_content_height: Ref<number> = ref(0)
+    const app_content_width: Ref<number> = ref(0)
 
-    const position_x: Ref<Number> = ref(0)
-    const position_y: Ref<Number> = ref(0)
+    const position_x: Ref<number> = ref(0)
+    const position_y: Ref<number> = ref(0)
     const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
 
     const is_loading = ref(true)

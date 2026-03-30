@@ -25,7 +25,7 @@
           :dnote_list_query="dnote_list_query"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @requested_update_dnote_list_query="(...dnote_list_query: any[]) => emits('requested_update_dnote_list_query', dnote_list_query[0] as DnoteListQuery)"
+          @requested_update_dnote_list_query="(dnote_list_query: DnoteListQuery) => emits('requested_update_dnote_list_query', dnote_list_query)"
           @requested_close_dialog="hide()" />
         </v-card>
         <HelpDialog screen_name="dnote" ref="help_dialog" />

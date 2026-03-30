@@ -2,5 +2,4 @@
 
 import type { KyouViewPropsBase } from "../views/kyou-view-props-base"
 
-export interface AddNotificationDialogProps extends KyouViewPropsBase {
-}
+export type AddNotificationDialogProps = KyouViewPropsBase

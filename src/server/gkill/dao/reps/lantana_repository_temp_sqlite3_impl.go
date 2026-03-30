@@ -210,7 +210,7 @@ INSERT INTO LANTANA (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		lantana.IsDeleted,
 		lantana.ID,
 		lantana.Mood,
@@ -270,7 +270,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "lantana"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -394,7 +394,7 @@ AND DEVICE = ?
 
 	dataType := "lantana"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -506,7 +506,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

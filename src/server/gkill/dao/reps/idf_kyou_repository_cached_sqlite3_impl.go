@@ -183,7 +183,7 @@ FROM ` + sqlite3impl.QuoteIdent(i.dbName) + `
 WHERE
 `
 	dataType := "idf"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -417,7 +417,7 @@ WHERE
 `
 
 	dataType := "idf"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -576,7 +576,7 @@ WHERE
 `
 
 	dataType := "idf"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -820,7 +820,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
 		default:
 		}
 		err = func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				idfKyou.IsDeleted,
 				idfKyou.ID,
 				idfKyou.RepName,
@@ -928,7 +928,7 @@ FROM ` + sqlite3impl.QuoteIdent(i.dbName) + `
 WHERE
 `
 	dataType := "idf"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1149,7 +1149,7 @@ WHERE
 	}
 
 	dataType := "idf"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1287,7 +1287,7 @@ WHERE
 	}
 
 	dataType := "idf"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -1396,7 +1396,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) IDF(ctx context.Context) error {
 func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou) error {
 	i.m.Lock()
 	defer i.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		idfKyou.IsDeleted,
 		idfKyou.ID,
 		idfKyou.RepName,

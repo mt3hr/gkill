@@ -4,10 +4,10 @@ import type DnoteAgregateTarget from "../dnote-agregate-target";
 import AverageInfo from "./average-info";
 
 export default class AgregateAverageNlogAmount implements DnoteAgregateTarget {
-    static from_json(_json: any): DnoteAgregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
         return new AgregateAverageNlogAmount()
     }
-    async append_agregate_element_value(typed_average_info_nlog_amount: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
+    async append_agregate_element_value(typed_average_info_nlog_amount: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
         const cloned_typed_average_info_nlog_amount = typed_average_info_nlog_amount === null ? new AverageInfo() : (typed_average_info_nlog_amount as AverageInfo).clone()
         cloned_typed_average_info_nlog_amount.total_value = cloned_typed_average_info_nlog_amount.total_value === null ? 0 : cloned_typed_average_info_nlog_amount.total_value as number
 
@@ -20,12 +20,12 @@ export default class AgregateAverageNlogAmount implements DnoteAgregateTarget {
         }
         return cloned_typed_average_info_nlog_amount
     }
-    async result_to_string(typed_average_info_nlog_amount: any | null): Promise<string> {
+    async result_to_string(typed_average_info_nlog_amount: unknown): Promise<string> {
         const cloned_typed_average_info_nlog_amount = typed_average_info_nlog_amount === null ? new AverageInfo() : (typed_average_info_nlog_amount as AverageInfo).clone()
         cloned_typed_average_info_nlog_amount.total_value = cloned_typed_average_info_nlog_amount.total_value === null ? 0 : cloned_typed_average_info_nlog_amount.total_value as number
         return (cloned_typed_average_info_nlog_amount.total_count === 0 ? 0 : (cloned_typed_average_info_nlog_amount.total_value / cloned_typed_average_info_nlog_amount.total_count)).toString()
     }
-    to_json(): any {
+    to_json(): Record<string, unknown> {
         return {
             type: "AgregateAverageNlogAmount",
         }

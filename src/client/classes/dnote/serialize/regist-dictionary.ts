@@ -137,20 +137,23 @@ export default function regist_dictionary(): void {
     DnoteKyouFilterDictionary.set("FilterBottomKyous", FilterBottomKyous)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function build_dnote_aggregate_target_from_json(json: any): DnoteAgregateTarget {
     regist_dictionary()
     const ctor = AgregateTargetDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown aggregate type: ${json.type}`)
-    return new ctor(json.value)
+    return ctor.from_json(json) as DnoteAgregateTarget
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function build_dnote_key_getter_from_json(json: any): DnoteKeyGetter {
     regist_dictionary()
     const ctor = DnoteKeyGetterDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown getter type: ${json.type}`)
-    return new ctor(json.value)
+    return ctor.from_json(json) as DnoteKeyGetter
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function build_dnote_predicate_from_json(json: any): DnotePredicate {
     regist_dictionary()
     if ('logic' in json && Array.isArray(json.predicates)) {
@@ -163,12 +166,13 @@ export function build_dnote_predicate_from_json(json: any): DnotePredicate {
 
     const ctor = PredicateDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown predicate type: ${json.type}`)
-    return new ctor(json.value)
+    return ctor.from_json(json) as DnotePredicate
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function build_dnote_kyou_filter_from_json(json: any): DnoteKyouFilter {
     regist_dictionary()
     const ctor = DnoteKyouFilterDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown getter type: ${json.type}`)
-    return new ctor(json.value)
+    return ctor.from_json(json) as DnoteKyouFilter
 }

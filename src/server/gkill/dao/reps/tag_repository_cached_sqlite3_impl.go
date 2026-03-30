@@ -249,7 +249,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 WHERE
 `
 	dataType := "tag"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -408,7 +408,7 @@ WHERE
 		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -536,7 +536,7 @@ WHERE
 		UseWords: true,
 		Words:    words,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -633,7 +633,7 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 	var err error
 	dataType := "tag"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 		target_id,
 	}
@@ -809,7 +809,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + ` (
 		default:
 		}
 		func() error {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				tag.IsDeleted,
 				tag.ID,
 				tag.Tag,
@@ -892,7 +892,7 @@ WHERE
 		UseIDs: true,
 		IDs:    ids,
 	}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 
@@ -986,7 +986,7 @@ WHERE
 func (t *tagRepositoryCachedSQLite3Impl) AddTagInfo(ctx context.Context, tag Tag) error {
 	t.m.Lock()
 	defer t.m.Unlock()
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		tag.IsDeleted,
 		tag.ID,
 		tag.Tag,
@@ -1087,7 +1087,7 @@ WHERE
 	dataType := "tag"
 
 	query := &find.FindQuery{}
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		dataType,
 	}
 

@@ -61,8 +61,8 @@
                 @updated_query="onSidebarUpdatedQuery"
                 @inited="onSidebarInited"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="query_editor_sidebar" />
         </v-navigation-drawer>
         <v-main class="main" :class="(drawer_mode_is_mobile) ? 'scroll_snap_container' : ''">
@@ -76,8 +76,8 @@
                     <td valign="top" v-for="query, index in querys" :key="query.query_id"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <v-card dropzone="true" @dragenter.prevent.stop="() => { }"
-                            @drop.prevent.stop="(...args: any[]) => on_drop_board_task(args[0] as DragEvent, query)"
-                            @dragover.prevent.stop="(...args: any[]) => on_dragover_board_task(args[0] as DragEvent, query)">
+                            @drop.prevent.stop="(e: DragEvent) => on_drop_board_task(e, query)"
+                            @dragover.prevent.stop="(e: DragEvent) => on_dragover_board_task(e, query)">
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
                             }}</v-card-title>
@@ -92,18 +92,18 @@
                                 :show_rep_name="false" :force_show_latest_kyou_info="true" :show_content_only="false"
                                 :show_timeis_plaing_end_button="false"
                                 v-on="crudRelayHandlers"
-                                @scroll_list="(...args: any[]) => onColumnScrollList(index, args[0] as number)"
+                                @scroll_list="(position: number) => onColumnScrollList(index, position)"
                                 @clicked_list_view="() => onColumnClickedListView(index)"
-                                @clicked_kyou="(...args: any[]) => onColumnClickedKyou(index, args[0] as Kyou)"
-                                @focused_kyou="(...args: any[]) => onColumnClickedKyou(index, args[0] as Kyou)"
-                                @requested_change_focus_kyou="(...args: any[]) => onColumnRequestedChangeFocusKyou(index, args[0] as boolean)"
+                                @clicked_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
+                                @focused_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
+                                @requested_change_focus_kyou="(is_focus: boolean) => onColumnRequestedChangeFocusKyou(index, is_focus)"
                                 @requested_search="() => onColumnRequestedSearch(index)"
-                                @requested_change_is_image_only_view="(...args: any[]) => onColumnRequestedChangeImageOnlyView(index, args[0] as boolean)"
+                                @requested_change_is_image_only_view="(is_image_only: boolean) => onColumnRequestedChangeImageOnlyView(index, is_image_only)"
                                 @requested_close_column="close_list_view(index)"
-                                @requested_reload_kyou="(...args: any[]) => reload_kyou(args[0] as Kyou)"
+                                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
                                 @requested_reload_list="() => reload_list(index)"
-                                @requested_update_check_kyous="(...args: any[]) => update_check_kyous(args[0] as Array<Kyou>, args[1] as boolean)"
-                                @requested_open_rykv_dialog="(...args: any[]) => open_rykv_dialog(args[0], args[1], args[2])"
+                                @requested_update_check_kyous="(kyous: Kyou[], checked: boolean) => update_check_kyous(kyous, checked)"
+                                @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
                                 ref="kyou_list_views" />
                         </v-card>
                     </td>
@@ -129,7 +129,7 @@
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                             :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="true"
-                            @requested_focus_time="(...args: any[]) => onRequestedFocusTime(args[0] as Date)" />
+                            @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
                     </td>
                 </tr>
             </table>
@@ -142,8 +142,8 @@
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
-                @focused_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
-                @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
+                @focused_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
+                @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
@@ -183,7 +183,7 @@
                 ref="upload_file_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
+                @closed="(id: string) => close_rykv_dialog(id)"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
             <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
                 <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
@@ -228,6 +228,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 import { i18n } from '@/i18n'
 import MiQueryEditorSidebar from './mi-query-editor-sidebar.vue'
 import { Kyou } from '@/classes/datas/kyou'

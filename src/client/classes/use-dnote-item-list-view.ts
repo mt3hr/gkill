@@ -7,6 +7,7 @@ import type DnoteItem from '@/classes/dnote/dnote-item'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { Ref } from 'vue'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useDnoteItemListView(options: {
     props: DnoteItemListViewProps
@@ -15,7 +16,7 @@ export function useDnoteItemListView(options: {
 }) {
     const { props, emits, model_value } = options
 
-    const dnote_item_views = ref<any>(null)
+    const dnote_item_views = ref<ComponentRef | null>(null)
     const dnd_list_index = props.dnd_list_index
 
     async function load_aggregated_value(
@@ -49,8 +50,8 @@ export function useDnoteItemListView(options: {
     async function reset(): Promise<void> {
         if (!dnote_item_views.value || dnote_item_views.value.length === 0) return
         return nextTick(async () => {
-            for (let i = 0; i < dnote_item_views.value.length; i++) {
-                await dnote_item_views.value[i].reset()
+            for (let i = 0; i < dnote_item_views.value!.length; i++) {
+                await dnote_item_views.value![i].reset()
             }
         })
     }

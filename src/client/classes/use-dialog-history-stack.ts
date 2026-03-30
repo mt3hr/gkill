@@ -15,20 +15,20 @@ import { onBeforeUnmount, onMounted, type Ref, watch } from "vue"
 const MARK = "__gkillDlg"
 const DEPTH = "__gkillDlgDepth"
 
-type AnyObj = Record<string, any>
-function isObj(v: any): v is AnyObj {
+type AnyObj = Record<string, unknown>
+function isObj(v: unknown): v is AnyObj {
   return v !== null && typeof v === "object"
 }
-function isDialogState(state: any): boolean {
+function isDialogState(state: unknown): boolean {
   return isObj(state) && state[MARK] === true && typeof state[DEPTH] === "number"
 }
-function stripDialogKeys(state: any): any {
+function stripDialogKeys(state: unknown): unknown {
   if (!isObj(state)) return state
   if (!(MARK in state) && !(DEPTH in state)) return state
   const { [MARK]: _m, [DEPTH]: _d, ...rest } = state
   return rest
 }
-function withDialogMarkers(base: any, depth: number): any {
+function withDialogMarkers(base: unknown, depth: number): AnyObj {
   const b: AnyObj = isObj(base) ? (base as AnyObj) : {}
   return { ...b, [MARK]: true, [DEPTH]: depth }
 }
@@ -198,9 +198,9 @@ function ensurePopListenerInstalled() {
         }
 
         // Back: close topmost dialog
-        try { (e as any).stopImmediatePropagation?.() } catch {}
+        try { (e as PopStateEvent).stopImmediatePropagation?.() } catch {}
         const top = stack[stack.length - 1]
-        closingFromPop.add(top.dialog as any)
+        closingFromPop.add(top.dialog as unknown as Ref<boolean>)
         top.dialog.value = false
         return
       }
@@ -209,7 +209,7 @@ function ensurePopListenerInstalled() {
       //    This keeps the user on the current route; back is reserved for dialogs.
       if (backOnlyEnabled && stack.length === 0) {
         try {
-          (e as any).stopImmediatePropagation?.()
+          (e as PopStateEvent).stopImmediatePropagation?.()
         } catch {
           // ignore
         }
@@ -221,7 +221,7 @@ function ensurePopListenerInstalled() {
         return
       }
     },
-    { capture: true } as any,
+    { capture: true } as AddEventListenerOptions,
   )
 }
 

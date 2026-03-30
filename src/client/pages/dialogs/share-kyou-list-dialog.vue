@@ -20,11 +20,11 @@
 
         <ShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
           :find_kyou_query="find_kyou_query"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-          @regestered_share_kyou_list_info="(...share_kyou_info: any[]) => {
-            emits('regestered_share_kyou_list_info', share_kyou_info[0] as ShareKyousInfo)
-            emits('requested_show_share_kyou_link_dialog', share_kyou_info[0] as ShareKyousInfo)
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+          @regestered_share_kyou_list_info="(share_kyou_info: ShareKyousInfo) => {
+            emits('regestered_share_kyou_list_info', share_kyou_info)
+            emits('requested_show_share_kyou_link_dialog', share_kyou_info)
           }" @requested_close_dialog="hide()" />
         </v-card>
 </div>

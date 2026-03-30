@@ -1,4 +1,6 @@
 import { i18n } from '@/i18n'
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { deepEquals } from '@/classes/deep-equals'
@@ -16,6 +18,7 @@ import type MapQuery from '@/pages/views/map-query.vue'
 import type miExtructCheckStateQuery from '@/pages/views/mi-extruct-check-state-query.vue'
 import type miSortTypeQuery from '@/pages/views/mi-sort-type-query.vue'
 import type MiBoardQuery from '@/pages/views/mi-board-query.vue'
+import type PeriodOfTimeQuery from '@/pages/views/period-of-time-query.vue'
 
 export function useMiQueryEditorSidebar(options: {
     props: miQueryEditorSidebarProps,
@@ -33,6 +36,7 @@ export function useMiQueryEditorSidebar(options: {
     const check_state_query = ref<InstanceType<typeof miExtructCheckStateQuery> | null>(null)
     const sort_type_query = ref<InstanceType<typeof miSortTypeQuery> | null>(null)
     const board_query = ref<InstanceType<typeof MiBoardQuery> | null>(null)
+    const period_of_time_query = ref<InstanceType<typeof PeriodOfTimeQuery> | null>(null)
 
     // ── State refs ──
     const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
@@ -49,6 +53,7 @@ export function useMiQueryEditorSidebar(options: {
     const inited_check_state_query_for_query_sidebar = ref(false)
     const inited_sort_query_for_query_sidebar = ref(false)
     const inited_board_query_for_query_sidebar = ref(false)
+    const inited_period_of_time_query_for_query_sidebar = ref(true)
 
     // ── Computed ──
     const header_margin = computed(() => props.application_config.is_show_share_footer ? 12 : 6)
@@ -69,7 +74,8 @@ export function useMiQueryEditorSidebar(options: {
             inited_map_query_for_query_sidebar.value &&
             inited_check_state_query_for_query_sidebar.value &&
             inited_sort_query_for_query_sidebar.value &&
-            inited_board_query_for_query_sidebar.value
+            inited_board_query_for_query_sidebar.value &&
+            inited_period_of_time_query_for_query_sidebar.value
     })
 
     // ── Watchers ──
@@ -187,6 +193,13 @@ export function useMiQueryEditorSidebar(options: {
             find_query.is_enable_map_circle_in_sidebar = map_query.value.get_is_enable_circle()
         }
 
+        if (period_of_time_query.value) {
+            find_query.use_period_of_time = period_of_time_query.value.get_use_period_of_time()
+            find_query.period_of_time_start_time_second = period_of_time_query.value.get_period_of_time_start_time_second()
+            find_query.period_of_time_end_time_second = period_of_time_query.value.get_period_of_time_end_time_second()
+            find_query.period_of_time_week_of_days = period_of_time_query.value.get_period_of_time_week_of_days()
+        }
+
         find_query.apply_hide_tags(props.application_config)
 
         return find_query
@@ -269,6 +282,17 @@ export function useMiQueryEditorSidebar(options: {
         emits('updated_query', find_query)
     }
 
+    function emits_cleard_period_of_time_query(): void {
+        const find_query = generate_query()
+        find_query.query_id = props.gkill_api.generate_uuid()
+        find_query.use_period_of_time = default_query.value.use_period_of_time
+        find_query.period_of_time_start_time_second = default_query.value.period_of_time_start_time_second
+        find_query.period_of_time_end_time_second = default_query.value.period_of_time_end_time_second
+        find_query.period_of_time_week_of_days = default_query.value.period_of_time_week_of_days.concat()
+        query.value = find_query
+        emits('updated_query', find_query)
+    }
+
     async function emits_default_query(): Promise<void> {
         const board_name = props.find_kyou_query.mi_board_name
         const find_query = get_default_query().clone()
@@ -300,20 +324,19 @@ export function useMiQueryEditorSidebar(options: {
         emits('request_open_focus_board', board_name)
     }
 
-    function onReceivedMessages(messages: any[]): void {
-        emits('received_messages', messages[0])
+    function onReceivedMessages(messages: Array<GkillMessage>): void {
+        emits('received_messages', messages)
     }
 
-    function onReceivedErrors(errors: any[]): void {
-        emits('received_errors', errors[0])
+    function onReceivedErrors(errors: Array<GkillError>): void {
+        emits('received_errors', errors)
     }
 
-    function onTagQueryRequestUpdateCheckedTags(_tags: any, is_by_user: boolean): void {
+    function onTagQueryRequestUpdateCheckedTags(_tags: string[], is_by_user: boolean): void {
         if (is_by_user) emits_current_query()
     }
 
-    function onTimeisQueryRequestUpdateCheckedTimeisTags(...params: any[]): void {
-        const is_by_user = params[1]
+    function onTimeisQueryRequestUpdateCheckedTimeisTags(_tags: string[], is_by_user: boolean): void {
         if (is_by_user) emits_current_query()
     }
 
@@ -361,6 +384,7 @@ export function useMiQueryEditorSidebar(options: {
         check_state_query,
         sort_type_query,
         board_query,
+        period_of_time_query,
 
         // State
         default_query,
@@ -375,6 +399,7 @@ export function useMiQueryEditorSidebar(options: {
         inited_check_state_query_for_query_sidebar,
         inited_sort_query_for_query_sidebar,
         inited_board_query_for_query_sidebar,
+        inited_period_of_time_query_for_query_sidebar,
 
         // Computed
         header_margin,
@@ -397,6 +422,7 @@ export function useMiQueryEditorSidebar(options: {
         emits_cleard_tag_query,
         emits_cleard_map_query,
         emits_cleard_calendar_query,
+        emits_cleard_period_of_time_query,
         emits_default_query,
         show_manage_share_kyou_dialog,
         show_share_kyou_dialog,

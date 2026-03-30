@@ -2,11 +2,10 @@
 // Implements the MCP spec 2025-03-26 combined authorization server + resource server model.
 // Delegates user credential verification to the gkill backend via /api/login.
 
-import crypto from "node:crypto";
 import { URL } from "node:url";
 
 import { OAuthStore, TTL, generateToken } from "./oauth-store.mjs";
-import { verifyCodeChallenge, isValidCodeVerifier, isSupportedChallengeMethod } from "./pkce.mjs";
+import { verifyCodeChallenge, isSupportedChallengeMethod } from "./pkce.mjs";
 import { renderLoginPage, renderSuccessPage } from "./oauth-html.mjs";
 
 /**
@@ -64,7 +63,7 @@ export class OAuthServer {
   // ---------------------------------------------------------------------------
 
   handleAuthorizeGet(query) {
-    const { client_id, redirect_uri, state, code_challenge, code_challenge_method, scope, response_type, resource } = query;
+    const { client_id, redirect_uri, state, code_challenge, code_challenge_method, scope, response_type: _response_type, resource } = query;
 
     const error = this._validateAuthorizeParams(query);
     if (error) {
@@ -91,7 +90,7 @@ export class OAuthServer {
   async handleAuthorizePost(formData) {
     const {
       client_id, redirect_uri, state, code_challenge,
-      code_challenge_method, scope, response_type,
+      code_challenge_method, scope, response_type: _response_type,
       user_id, password_sha256, resource,
     } = formData;
 

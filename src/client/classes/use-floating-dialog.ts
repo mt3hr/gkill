@@ -459,15 +459,15 @@ export function useFloatingDialog(
     if (!resizable || resizeHandle) return
     resizeHandle = document.createElement("div")
     resizeHandle.className = "gkill-floating-dialog__resize-handle"
-    resizeHandle.addEventListener("mousedown", onResizePointerDown as any)
-    resizeHandle.addEventListener("touchstart", onResizePointerDown as any, { passive: false })
+    resizeHandle.addEventListener("mousedown", onResizePointerDown as EventListener)
+    resizeHandle.addEventListener("touchstart", onResizePointerDown as EventListener, { passive: false })
     parent.appendChild(resizeHandle)
   }
 
   function removeResizeHandle(): void {
     if (!resizeHandle) return
-    resizeHandle.removeEventListener("mousedown", onResizePointerDown as any)
-    resizeHandle.removeEventListener("touchstart", onResizePointerDown as any)
+    resizeHandle.removeEventListener("mousedown", onResizePointerDown as EventListener)
+    resizeHandle.removeEventListener("touchstart", onResizePointerDown as EventListener)
     resizeHandle.remove()
     resizeHandle = null
   }
@@ -483,10 +483,10 @@ export function useFloatingDialog(
     })
 
     window.addEventListener("resize", onResize, { passive: true })
-    window.addEventListener("mousemove", onMove as any, { passive: true })
-    window.addEventListener("mouseup", onUp as any, { passive: true })
-    window.addEventListener("touchmove", onMove as any, { passive: false })
-    window.addEventListener("touchend", onUp as any, { passive: true })
+    window.addEventListener("mousemove", onMove as EventListener, { passive: true })
+    window.addEventListener("mouseup", onUp as EventListener, { passive: true })
+    window.addEventListener("touchmove", onMove as EventListener, { passive: false })
+    window.addEventListener("touchend", onUp as EventListener, { passive: true })
   })
 
   onBeforeUnmount(() => {
@@ -496,11 +496,11 @@ export function useFloatingDialog(
     if (ro) ro.disconnect()
     ro = null
 
-    window.removeEventListener("resize", onResize as any)
-    window.removeEventListener("mousemove", onMove as any)
-    window.removeEventListener("mouseup", onUp as any)
-    window.removeEventListener("touchmove", onMove as any)
-    window.removeEventListener("touchend", onUp as any)
+    window.removeEventListener("resize", onResize as EventListener)
+    window.removeEventListener("mousemove", onMove as EventListener)
+    window.removeEventListener("mouseup", onUp as EventListener)
+    window.removeEventListener("touchmove", onMove as EventListener)
+    window.removeEventListener("touchend", onUp as EventListener)
   })
 
   // ✅ Teleport の v-if で DOM が生えた瞬間に observer attach & 中央寄せ & リサイズハンドル注入

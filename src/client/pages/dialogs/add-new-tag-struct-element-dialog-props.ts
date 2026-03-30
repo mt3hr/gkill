@@ -2,5 +2,4 @@
 
 import type { GkillPropsBase } from "../views/gkill-props-base"
 
-export interface AddNewTagStructElementDialogProps extends GkillPropsBase {
-}
+export type AddNewTagStructElementDialogProps = GkillPropsBase

@@ -1,4 +1,4 @@
-export function pruneEmpty(v: any): any {
+export function pruneEmpty(v: unknown): unknown {
     if (v === null || v === undefined) return undefined
 
     if (Array.isArray(v)) {
@@ -7,7 +7,7 @@ export function pruneEmpty(v: any): any {
     }
 
     if (typeof v === "object") {
-        const o: any = {}
+        const o: Record<string, unknown> = {}
         for (const [k, val] of Object.entries(v)) {
             const pv = pruneEmpty(val)
             if (pv !== undefined) o[k] = pv

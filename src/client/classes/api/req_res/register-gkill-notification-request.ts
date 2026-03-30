@@ -4,7 +4,7 @@ import { GkillAPIRequest } from '../gkill-api-request'
 
 export class RegisterGkillNotificationRequest extends GkillAPIRequest {
 
-    subscription: any
+    subscription: PushSubscription | null
 
     public_key: string
 
