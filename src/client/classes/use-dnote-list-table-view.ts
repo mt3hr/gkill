@@ -19,12 +19,12 @@ export function useDnoteListTableView(options: {
     const dnote_list_views = ref<ComponentRef | null>(null)
 
     // ── Methods ──
-    function load_aggregate_grouping_list(
+    async function load_aggregate_grouping_list(
         abort_controller: AbortController,
         kyous: Array<Kyou>,
         query: FindKyouQuery,
         kyou_is_loaded: boolean
-    ): void {
+    ): Promise<void> {
         if (!dnote_list_views.value) return
         const waits: Array<Promise<Array<GkillError>>> = []
         for (let i = 0; i < dnote_list_views.value.length; i++) {
@@ -32,8 +32,7 @@ export function useDnoteListTableView(options: {
             if (!v) continue
             waits.push(v.load_aggregate_grouping_list(abort_controller, kyous, query, kyou_is_loaded))
         }
-        // fire-and-forget
-        Promise.all(waits).then(() => { })
+        await Promise.all(waits)
     }
 
     async function reset(): Promise<void> {

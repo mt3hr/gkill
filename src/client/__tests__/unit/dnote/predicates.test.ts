@@ -189,16 +189,15 @@ describe('LantanaMoodEqualPredicate', () => {
 })
 
 describe('LantanaMoodGreaterThanPredicate', () => {
-  // Note: implementation checks mood <= target (inverted logic from name)
   const predicate = new LantanaMoodGreaterThanPredicate(5)
 
-  test('matches when mood is at or below target', async () => {
-    const kyou = asKyou(makeKyouWithLantana(3))
+  test('matches when mood is at or above target', async () => {
+    const kyou = asKyou(makeKyouWithLantana(8))
     expect(await predicate.is_match(kyou, null)).toBe(true)
   })
 
-  test('does not match when mood above target', async () => {
-    const kyou = asKyou(makeKyouWithLantana(8))
+  test('does not match when mood below target', async () => {
+    const kyou = asKyou(makeKyouWithLantana(3))
     expect(await predicate.is_match(kyou, null)).toBe(false)
   })
 })
@@ -422,19 +421,17 @@ describe('OrPredicate', () => {
 })
 
 describe('NotPredicate', () => {
-  // Note: current NotPredicate implementation uses OR logic internally
-  // (returns true if ANY child matches). Testing as-is.
-  test('returns true when any child matches', async () => {
+  test('returns false when any child matches', async () => {
     const p1 = new KmemoContentContainsPredicate('テスト')
     const not = new NotPredicate([p1])
     const kyou = asKyou(makeKyouWithKmemo('テストメモ'))
-    expect(await not.is_match(kyou, null)).toBe(true)
+    expect(await not.is_match(kyou, null)).toBe(false)
   })
 
-  test('returns false when no child matches', async () => {
+  test('returns true when no child matches', async () => {
     const p1 = new KmemoContentContainsPredicate('存在しない')
     const not = new NotPredicate([p1])
     const kyou = asKyou(makeKyouWithKmemo('テストメモ'))
-    expect(await not.is_match(kyou, null)).toBe(false)
+    expect(await not.is_match(kyou, null)).toBe(true)
   })
 })

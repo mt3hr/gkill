@@ -8,14 +8,14 @@ export default class GitCommitLogCodeAdditionGreaterThanPredicate implements Dno
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
-        const git_commit_log_code_count = json.git_commit_log_code_count as number
+        const git_commit_log_code_count = json.value as number
         return new GitCommitLogCodeAdditionGreaterThanPredicate(git_commit_log_code_count)
     }
     async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         if (loaded_kyou.typed_git_commit_log) {
             const git_commit_log_code_count = loaded_kyou.typed_git_commit_log.addition
             if (git_commit_log_code_count) {
-                if (git_commit_log_code_count <= this.git_commit_log_code_count) {
+                if (git_commit_log_code_count >= this.git_commit_log_code_count) {
                     return true
                 }
             }

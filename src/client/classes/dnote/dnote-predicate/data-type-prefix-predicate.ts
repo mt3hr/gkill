@@ -8,7 +8,7 @@ export default class DataTypePrefixPredicate implements DnotePredicate {
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
-        const data_type_prefix = json.data_type_prefix as string
+        const data_type_prefix = json.value as string
         return new DataTypePrefixPredicate(data_type_prefix)
     }
     async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {

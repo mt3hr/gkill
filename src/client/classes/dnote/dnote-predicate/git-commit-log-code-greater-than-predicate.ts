@@ -15,7 +15,7 @@ export default class GitCommitLogCodeGreaterThanPredicate implements DnotePredic
         if (loaded_kyou.typed_git_commit_log) {
             const git_commit_log_code_count = loaded_kyou.typed_git_commit_log.addition + loaded_kyou.typed_git_commit_log.deletion
             if (git_commit_log_code_count) {
-                if (git_commit_log_code_count <= this.git_commit_log_code_count) {
+                if (git_commit_log_code_count >= this.git_commit_log_code_count) {
                     return true
                 }
             }
