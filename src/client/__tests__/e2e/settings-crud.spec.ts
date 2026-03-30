@@ -44,7 +44,7 @@ test.describe('Settings Page CRUD', () => {
     const app = page.locator('#app')
     const content = await app.textContent()
     // Check for tag-related text in settings
-    const hasTagContent = content!.includes('タグ') || content!.includes('tag') || content!.includes('Tag')
+    const _hasTagContent = content!.includes('タグ') || content!.includes('tag') || content!.includes('Tag')
     // Tag structure may be on a different tab/section — just verify page loads
     expect(content!.length).toBeGreaterThan(0)
   })
@@ -54,7 +54,7 @@ test.describe('Settings Page CRUD', () => {
     const app = page.locator('#app')
     const content = await app.textContent()
     // Look for repository-related content
-    const hasRepContent = content!.includes('Rep') || content!.includes('リポジトリ') || content!.includes('rep')
+    const _hasRepContent = content!.includes('Rep') || content!.includes('リポジトリ') || content!.includes('rep')
     expect(content!.length).toBeGreaterThan(0)
   })
 
@@ -70,7 +70,7 @@ test.describe('Settings Page CRUD', () => {
     const app = page.locator('#app')
     const content = await app.textContent()
     // Check for KFTL template-related content
-    const hasKftlContent = content!.includes('KFTL') || content!.includes('テンプレート') || content!.includes('template')
+    const _hasKftlContent = content!.includes('KFTL') || content!.includes('テンプレート') || content!.includes('template')
     expect(content!.length).toBeGreaterThan(0)
   })
 })

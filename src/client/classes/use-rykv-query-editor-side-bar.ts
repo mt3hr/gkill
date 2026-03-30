@@ -296,7 +296,7 @@ export function useRykvQueryEditorSideBar(options: {
         if (is_by_user) emits_current_query()
     }
 
-    function onTimeIsQueryRequestUpdateCheckedTimeisTags(...params: any[]): void {
+    function onTimeIsQueryRequestUpdateCheckedTimeisTags(params: Array<unknown>): void {
         const is_by_user = params[1]
         if (is_by_user) emits_current_query()
     }

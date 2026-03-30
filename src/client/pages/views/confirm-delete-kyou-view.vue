@@ -44,7 +44,7 @@ const props = defineProps<ConfirmDeleteKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const {
-    cloned_kyou,
+    cloned_kyou: _cloned_kyou,
     show_kyou,
     delete_kyou,
     crudRelayHandlers,

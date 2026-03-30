@@ -7,11 +7,11 @@ import { vi } from 'vitest'
 // jsdom Request requires absolute URLs; patch to accept relative
 const OriginalRequest = globalThis.Request
 globalThis.Request = class extends OriginalRequest {
-  constructor(input: any, init?: any) {
+  constructor(input: RequestInfo | URL, init?: RequestInit) {
     const url = typeof input === 'string' && !input.startsWith('http') ? `http://localhost${input}` : input
     super(url, init)
   }
-} as any
+} as typeof Request
 
 // Mock the Cache API
 const mockCacheDelete = vi.fn().mockResolvedValue(true)

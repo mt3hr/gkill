@@ -207,7 +207,7 @@ func TestGkillError_JSONRoundTrip(t *testing.T) {
 	}
 
 	// Verify JSON field names
-	var raw map[string]interface{}
+	var raw map[string]any
 	err = json.Unmarshal(data, &raw)
 	if err != nil {
 		t.Fatalf("Unmarshal to map failed: %v", err)
@@ -245,7 +245,7 @@ func TestGkillMessage_JSONRoundTrip(t *testing.T) {
 	}
 
 	// Verify JSON field names
-	var raw map[string]interface{}
+	var raw map[string]any
 	err = json.Unmarshal(data, &raw)
 	if err != nil {
 		t.Fatalf("Unmarshal to map failed: %v", err)

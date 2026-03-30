@@ -27,8 +27,8 @@ export abstract class KFTLStatementLine {
         return this.context
     }
 
-    get_count_line_in_textarea(textarea_info: TextAreaInfo): Number {
-        const textarea_element = document.getElementById(textarea_info.text_area_element_id)!!
+    get_count_line_in_textarea(textarea_info: TextAreaInfo): number {
+        const textarea_element = document.getElementById(textarea_info.text_area_element_id)!
         const kftl_text_area_width = textarea_element.clientWidth
         const text_width = KFTLStatementLine.get_text_width(this.get_statement_line_text(), KFTLStatementLine.get_canvas_font(textarea_element)).valueOf()
         const lines = 1 + parseInt(`${text_width / kftl_text_area_width}`)
@@ -47,15 +47,16 @@ export abstract class KFTLStatementLine {
 
     abstract get_label_name(context: KFTLStatementLineContext): string
 
-    private static get_text_width(text: any, font: any): Number {
-        const canvas: any = (KFTLStatementLine.get_text_width as any).canvas || ((KFTLStatementLine.get_text_width as any).canvas = document.createElement("canvas"))
-        const context = canvas.getContext("2d")
+    private static get_text_width(text: string, font: string): number {
+        const fn = KFTLStatementLine.get_text_width as unknown as Record<string, HTMLCanvasElement>
+        const canvas: HTMLCanvasElement = fn.canvas || (fn.canvas = document.createElement("canvas"))
+        const context = canvas.getContext("2d")!
         context.font = font
         const metrics = context.measureText(text)
         return metrics.width
     }
 
-    private static get_css_style(element: any, prop: any): string {
+    private static get_css_style(element: Element, prop: string): string {
         return window.getComputedStyle(element, null).getPropertyValue(prop)
     }
 

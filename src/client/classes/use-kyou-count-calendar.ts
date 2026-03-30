@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick, type Ref } from 'vue'
 import type { KyouCountCalendarProps } from '@/pages/views/kyou-count-calendar-props'
 import type { KyouCountCalendarEmits } from '@/pages/views/kyou-count-calendar-emits'
 import moment from 'moment'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useKyouCountCalendar(options: {
     props: KyouCountCalendarProps,
@@ -11,12 +12,12 @@ export function useKyouCountCalendar(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const kyou_counter_calendar = ref<any>(null)
+    const kyou_counter_calendar = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const date = ref(new Date(Date.now()))
     const slider_model: Ref<number> = ref(props.for_mi ? 0 : 86399)
-    const events: Ref<Array<any>> = ref(new Array<any>())
+    const events: Ref<Array<Record<string, unknown>>> = ref(new Array<Record<string, unknown>>())
 
     // ── Computed ──
     const time = computed(() => {
@@ -46,7 +47,7 @@ export function useKyouCountCalendar(options: {
         if (!props.kyous) {
             return
         }
-        const date_event_map: Map<string, Number> = new Map<string, Number>()
+        const date_event_map: Map<string, number> = new Map<string, number>()
         for (let i = 0; i < props.kyous.length; i++) {
             const kyou = props.kyous[i]
             const date_str = moment(kyou.related_time).format("yyyy-MM-DD")
@@ -58,7 +59,7 @@ export function useKyouCountCalendar(options: {
             }
         }
 
-        date_event_map.forEach((count: Number, date_str: string): void => {
+        date_event_map.forEach((count: number, date_str: string): void => {
             events.value.push({
                 title: count.toString(),
                 start: moment(date_str).toDate(),
@@ -67,7 +68,7 @@ export function useKyouCountCalendar(options: {
         })
     }
 
-    function on_wheel(e: any) {
+    function on_wheel(e: WheelEvent) {
         if (0 < e.deltaY) {
             date.value = add_months(date.value, 1)
         } else {
@@ -86,9 +87,9 @@ export function useKyouCountCalendar(options: {
                 if (!element.textContent || element.textContent.trim() === "") {
                     return
                 }
-                let year = date.value.getFullYear().toString()
-                let month = (date.value.getMonth() + 1).toString()
-                let day = (element as any).innerText.toString().split("\n")[0].split(" ").slice(-1)[0].replaceAll(i18n.global.t("DAY_TITLE"), "")
+                const year = date.value.getFullYear().toString()
+                const month = (date.value.getMonth() + 1).toString()
+                const day = (element as HTMLElement).innerText.toString().split("\n")[0].split(" ").slice(-1)[0].replaceAll(i18n.global.t("DAY_TITLE"), "")
                 clicked_date(moment(year + "-" + month + "-" + day).toDate())
             }))
         })

@@ -138,7 +138,7 @@ export abstract class InfoBase {
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        const awaitPromises = new Array<Promise<any>>()
+        const awaitPromises = new Array<Promise<Array<GkillError>>>()
         awaitPromises.push(this.load_attached_tags())
         awaitPromises.push(this.load_attached_texts())
         awaitPromises.push(this.load_attached_notifications())

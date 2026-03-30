@@ -1,4 +1,5 @@
 import { computed, type Ref, ref } from 'vue'
+import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { DecideRelatedTimeUploadedFileViewProps } from '@/pages/views/decide-related-time-uploaded-file-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { Kyou } from '@/classes/datas/kyou'
@@ -7,6 +8,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Tag } from '@/classes/datas/tag'
 import type { Text } from '@/classes/datas/text'
 import type { Notification } from '@/classes/datas/notification'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useDecideRelatedTimeUploadedFileView(options: {
     props: DecideRelatedTimeUploadedFileViewProps,
@@ -15,8 +17,8 @@ export function useDecideRelatedTimeUploadedFileView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const kyou_list_view = ref<any>(null)
-    const edit_idf_kyou_view = ref<any>(null)
+    const kyou_list_view = ref<ComponentRef | null>(null)
+    const edit_idf_kyou_view = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const enable_context_menu = ref(true)
@@ -54,43 +56,43 @@ export function useDecideRelatedTimeUploadedFileView(options: {
 
     // ── Event relay objects ──
     const kyouListViewHandlers = {
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'received_messages': (...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>),
-        'focused_kyou': (...kyou: any[]) => focused_kyou.value = kyou[0] as Kyou,
-        'clicked_kyou': (...kyou: any[]) => focused_kyou.value = kyou[0] as Kyou,
-        'requested_reload_kyou': (...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou),
-        'deleted_kyou': (...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou),
-        'deleted_tag': (...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag),
-        'deleted_text': (...deleted_text: any[]) => emits('deleted_text', deleted_text[0]),
-        'deleted_notification': (...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification),
-        'registered_kyou': (...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou),
-        'registered_tag': (...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag),
-        'registered_text': (...registered_text: any[]) => emits('registered_text', registered_text[0] as Text),
-        'registered_notification': (...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification),
-        'updated_kyou': (...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou),
-        'updated_tag': (...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag),
-        'updated_text': (...updated_text: any[]) => emits('updated_text', updated_text[0] as Text),
-        'updated_notification': (...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification),
-        'requested_open_rykv_dialog': (...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2]),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'focused_kyou': (kyou: Kyou) => focused_kyou.value = kyou,
+        'clicked_kyou': (kyou: Kyou) => focused_kyou.value = kyou,
+        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
+        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
     const editIdfKyouViewHandlers = {
-        'deleted_kyou': (...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou),
-        'deleted_tag': (...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag),
-        'deleted_text': (...deleted_text: any[]) => emits('deleted_text', deleted_text[0]),
-        'deleted_notification': (...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification),
-        'registered_kyou': (...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou),
-        'registered_tag': (...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag),
-        'registered_text': (...registered_text: any[]) => emits('registered_text', registered_text[0] as Text),
-        'registered_notification': (...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification),
-        'updated_kyou': (...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou),
-        'updated_tag': (...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag),
-        'updated_text': (...updated_text: any[]) => emits('updated_text', updated_text[0] as Text),
-        'updated_notification': (...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification),
-        'received_errors': (...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>),
-        'requested_reload_kyou': (...kyou: any[]) => {
+        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'requested_reload_kyou': (kyou: Kyou) => {
             reload_focused_kyou()
-            emits('requested_reload_kyou', kyou[0] as Kyou)
+            emits('requested_reload_kyou', kyou)
         },
     }
 

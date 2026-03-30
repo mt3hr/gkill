@@ -14,6 +14,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { AddMiViewProps } from '@/pages/views/add-mi-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type NewBoardNameDialog from '@/pages/dialogs/new-board-name-dialog.vue'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useAddMiView(options: {
     props: AddMiViewProps,
@@ -23,7 +24,7 @@ export function useAddMiView(options: {
 
     // ── Template refs ──
     const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null)
-    const add_notification_views = ref<any>(null)
+    const add_notification_views = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const is_requested_submit = ref(false)
@@ -327,8 +328,8 @@ export function useAddMiView(options: {
 
     // ── CRUD relay handlers ──
     const crudRelayHandlers = {
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     // ── Second init call ──

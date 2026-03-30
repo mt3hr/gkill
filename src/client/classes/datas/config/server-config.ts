@@ -29,7 +29,7 @@ export class ServerConfig {
 
     urlog_useragent: string
 
-    upload_size_limit_month: Number
+    upload_size_limit_month: number
 
     user_data_directory: string
 

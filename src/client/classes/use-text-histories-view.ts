@@ -7,7 +7,7 @@ export function useTextHistoriesView(options: {
     props: TextHistoriesViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits } = options
+    const { props, emits: _emits } = options
 
     const cloned_text: Ref<Text> = ref(props.text.clone())
     watch(() => props.text, () => {

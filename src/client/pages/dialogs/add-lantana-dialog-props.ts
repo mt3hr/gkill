@@ -2,5 +2,4 @@
 
 import type { KyouViewPropsBase } from "../views/kyou-view-props-base"
 
-export interface AddLantanaDialogProps extends KyouViewPropsBase {
-}
+export type AddLantanaDialogProps = KyouViewPropsBase

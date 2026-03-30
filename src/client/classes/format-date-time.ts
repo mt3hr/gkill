@@ -3,7 +3,7 @@ import moment from "moment"
 
 export function format_time(time: Date): string {
     time = moment(time).toDate()
-    const locale = (i18n.global.locale as any).value || i18n.global.locale || 'ja'
+    const locale = (i18n.global.locale as unknown as { value: string }).value || i18n.global.locale || 'ja'
     const formatted = new Intl.DateTimeFormat(locale, {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit',
@@ -19,11 +19,11 @@ export function format_time(time: Date): string {
 }
 
 export function format_number(n: number): string {
-    const locale = (i18n.global.locale as any).value || i18n.global.locale || 'ja'
+    const locale = (i18n.global.locale as unknown as { value: string }).value || i18n.global.locale || 'ja'
     return new Intl.NumberFormat(locale).format(n)
 }
 
-export function format_duration(duration_milli_second: any | null): string {
+export function format_duration(duration_milli_second: number | null): string {
     if (!duration_milli_second || duration_milli_second === 0) {
         return ""
     }

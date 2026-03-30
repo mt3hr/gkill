@@ -20,11 +20,11 @@
 
       <div class="gkill-floating-dialog__body">
         <v-card class="edit_ryuu_dialog_view">
-          <RyuuListView v-model="model_value" :application_config="application_config" :gkill_api="gkill_api"
+          <RyuuView v-model="model_value" :application_config="application_config" :gkill_api="gkill_api"
             :editable="true" :find_kyou_query_default="new FindKyouQuery()" :target_kyou="new Kyou()"
-            @requested_apply_ryuu_struct="(...ryuu_data: any[]) => { emits('requested_apply_ryuu_struct', ryuu_data[0]) }"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_apply_ryuu_struct="(ryuu_data: Record<string, unknown>) => { emits('requested_apply_ryuu_struct', ryuu_data) }"
+            @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+            @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
             @requested_close_dialog="hide()" />
         </v-card>
         <HelpDialog screen_name="ryuu" ref="help_dialog" />
@@ -37,7 +37,7 @@ import { ref } from 'vue'
 import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import HelpDialog from './help-dialog.vue'
-import RyuuListView from '../views/ryuu-list-view.vue'
+import RyuuView from '../views/ryuu-view.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { EditRyuuDialogEmits } from './edit-ryuu-dialog-emits'
 import type { EditRyuuDialogProps } from './edit-ryuu-dialog-props'

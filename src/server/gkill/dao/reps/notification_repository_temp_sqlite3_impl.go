@@ -209,7 +209,7 @@ INSERT INTO NOTIFICATION (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		notification.IsDeleted,
 		notification.ID,
 		notification.NotificationTime.Format(sqlite3impl.TimeLayout),
@@ -274,7 +274,7 @@ AND DEVICE = ?
 	}
 	dataType := "notification"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -389,7 +389,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

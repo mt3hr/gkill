@@ -5,7 +5,7 @@
                 <v-checkbox readonly v-model="use_rep" :label="i18n.global.t('REP_QUERY_TITLE')" hide-details />
             </v-col>
             <v-spacer />
-            <v-col cols="auto" class="pb-0 mb-0 pr-0">
+            <v-col cols="auto" class="pb-0 mb-0 pr-0 pt-2">
                 <v-btn dark color="secondary" @click="emits('request_clear_rep_query')" hide-details>{{
                     i18n.global.t("CLEAR_TITLE") }}</v-btn>
             </v-col>
@@ -22,8 +22,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="false"
                         :struct_obj="cloned_application_config.device_struct"
                         @requested_update_check_state="update_devices"
-                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                        @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                        @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                         @clicked_items="clicked_devices" ref="foldable_struct_devices" />
                 </table>
                 <h2>{{ i18n.global.t("REP_QUERY_TYPES_TITLE") }}</h2>
@@ -32,8 +32,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
                         :struct_obj="cloned_application_config.rep_type_struct"
                         @requested_update_check_state="update_rep_types"
-                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                        @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                        @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                         @clicked_items="clicked_rep_types" ref="foldable_struct_rep_types" />
                 </table>
             </v-window-item>
@@ -44,8 +44,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
                         :struct_obj="cloned_application_config.rep_struct"
                         @requested_update_check_state="update_reps"
-                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                        @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                        @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                         @clicked_items="clicked_reps" ref="foldable_struct_reps" />
                 </table>
             </v-window-item>

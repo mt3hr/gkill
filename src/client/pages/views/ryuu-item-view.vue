@@ -1,7 +1,7 @@
 <template>
     <v-card class="pa-0 ma-0 related_kyou_list_item" :draggable="editable" :class="{ draggable: editable }"
         @dragstart="drag_start" @dragover="dragover" @drop="drop"
-        @contextmenu.prevent.stop="(e: any) => { if (editable) { show_context_menu(e) } }"
+        @contextmenu.prevent.stop="(e: PointerEvent) => { if (editable) { show_context_menu(e) } }"
         @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } }">
         <table>
             <tr>
@@ -74,7 +74,7 @@
             v-on="kyouDialogRelayHandlers"
             ref="kyou_dialog" />
 
-        <RyuuListItemContextMenu :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
+        <RyuuItemContextMenu :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             v-on="contextMenuRelayHandlers"
             ref="contextmenu" />
 
@@ -86,17 +86,17 @@
 <script lang="ts" setup>
 import EditRyuuItemDialog from '../dialogs/edit-ryuu-item-dialog.vue'
 import KyouView from './kyou-view.vue'
-import type RyuuListItemViewEmits from './ryuu-list-item-view-emits'
-import type RyuuListItemViewProps from './ryuu-list-item-view-props'
+import type RyuuItemViewEmits from './ryuu-item-view-emits'
+import type RyuuItemViewProps from './ryuu-item-view-props'
 import KyouDialog from '../dialogs/kyou-dialog.vue'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 import type RelatedKyouQuery from '../../classes/dnote/related-kyou-query'
-import RyuuListItemContextMenu from './ryuu-list-item-context-menu.vue'
-import { useRyuuListItemView } from '@/classes/use-ryuu-list-item-view'
+import RyuuItemContextMenu from './ryuu-item-context-menu.vue'
+import { useRyuuItemView } from '@/classes/use-ryuu-item-view'
 
 const model_value = defineModel<RelatedKyouQuery>()
-const props = defineProps<RyuuListItemViewProps>()
-const emits = defineEmits<RyuuListItemViewEmits>()
+const props = defineProps<RyuuItemViewProps>()
+const emits = defineEmits<RyuuItemViewEmits>()
 
 const {
     // Template refs
@@ -121,7 +121,7 @@ const {
     kyouViewRelayHandlers,
     kyouDialogRelayHandlers,
     contextMenuRelayHandlers,
-} = useRyuuListItemView({ props, emits, model_value })
+} = useRyuuItemView({ props, emits, model_value })
 
 defineExpose({ load_related_kyou })
 </script>

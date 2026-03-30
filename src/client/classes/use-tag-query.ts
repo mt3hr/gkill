@@ -72,7 +72,7 @@ export function useTagQuery(options: {
     function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean) {
         if (pre_uncheck_all) {
             let f = (_struct: FoldableStructModel) => { }
-            let func = (struct: FoldableStructModel) => {
+            const func = (struct: FoldableStructModel) => {
                 struct.is_checked = false
                 struct.indeterminate = false
                 if (struct.children) {
@@ -88,7 +88,7 @@ export function useTagQuery(options: {
         for (let i = 0; i < items.length; i++) {
             const key_name = items[i]
             let f = (_struct: FoldableStructModel) => { }
-            let func = (struct: FoldableStructModel) => {
+            const func = (struct: FoldableStructModel) => {
                 if (struct.key === key_name) {
                     switch (is_checked) {
                         case CheckState.checked:

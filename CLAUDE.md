@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-gkill is a lifelogging application (version 1.1.0) that records and reviews life events (memos, bookmarks, tasks, mood values, expenses, timestamps, files, git commits, etc.). It is a standalone client-server app with a Go backend and Vue 3 frontend, compiled into a single binary with the frontend embedded via `//go:embed`. Licensed under MIT.
+gkill is a lifelogging application (version 1.1.1-dev) that records and reviews life events (memos, bookmarks, tasks, mood values, expenses, timestamps, files, git commits, etc.). It is a standalone client-server app with a Go backend and Vue 3 frontend, compiled into a single binary with the frontend embedded via `//go:embed`. Licensed under MIT.
 
 ## Build & Development Commands
 
@@ -14,7 +14,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 |---|---|
 | `npm run dev` | Start Vite dev server (frontend only) |
 | `npm run build` | Build frontend (`vue-tsc --build` + `vite build` in parallel) |
-| `npm run lint` | ESLint with auto-fix for `.vue`/`.ts`/`.js` files |
+| `npm run lint` | ESLint with auto-fix (flat config, `eslint.config.js`) |
 | `npm run install_server` | Full build: frontend → embed → `go install` (headless HTTP server) |
 | `npm run install_app` | Full build: frontend → embed → `go install` (desktop app with go-astilectron window) |
 | `npm run go_install` | Go install only (skip frontend rebuild) |
@@ -26,7 +26,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 
 **Prerequisites:**
 - Go 1.26.0+ (see `src/server/go.mod`)
-- Node.js 20.15.1+
+- Node.js 20.19+ (Vite 7 requires 20.19+; 24.x recommended)
 - `npm i` (install JS dependencies)
 
 **Test commands:**
@@ -44,12 +44,17 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run test_wear_os` | Wear OS Gradle tests |
 
 **Test coverage (~1,904 tests total, all 29 Go packages covered):**
-- Go (~534 tests, 47 files across all 29 packages): API handler integration (CRUD + Update + Get for all 11 data types, session validation, account management, transactions, session expiry detection (ERR000373), login rate limiting (ERR000374, IP-based sliding window), GetKyous query with complex filters (word/tag/rep/calendar/Mi check state/combined), GetKyousMCP, SubmitKFTLText for all data types (Kmemo/Lantana/Mi/Nlog/TimeIs/URLog/KC + tag/time combos + TimeIsEnd variants), UpdateCache, board/tag/rep name lists, tag/text/notification histories, server config read/update + TLS path change, application config update + search state preservation + structure deletion timeout, user repository update + duplicate write detection, share CRUD, Notification edit/soft-delete/history regression, Tag/Text delete with Kyou persistence, local access restriction, TLS file generation, BrowseZipContents endpoint (ZIP extraction, IsZip detection, path traversal prevention, error codes ERR000375/ERR000376)), KFTL parser (81 tests: all data type line generation + request map application for Lantana/Mi/Nlog/TimeIs variants/URLog/KC/text blocks/tags, ASCII prefix variants for all data types including !/,/,,/#/?/--//mi//mood//expense//num//url//start//end//timeis//end?//endt//endt?, Mi ASCII ? time field parsing, Nlog title/amount mismatch handling, Lantana mood 0-10 range validation), DAO layer (account, session, server config, user config, share_kyou_info, gkill_notification, 11 SQLite3 repos + 11 cached repos + 11 temp repos, cache address DAO, rep_cache_updater, GkillDAOManager), find package (all filter flags, MiCheckState/MiSortType enum values, nil dates, empty slices, data type filter), req_res package (18 JSON roundtrip tests including IDFPayloadMCPDTO), message package, sqlite3 utilities, gpslogs parsing, dvnf file management, hide_files, threads pool, gkill_log routing, gkill_options defaults, CLI entry points, fitbit batch, legacy data transformer
-- Frontend unit (~676 tests, 49 files): GkillAPI methods (add/update/delete/get for all data types, config, sharing, upload, transactions, notifications, error handling, session management, endpoint address verification, browse_zip_contents), 22 data models (Kmemo, Tag, Kyou, Mi, TimeIs, URLog, Nlog, Lantana, KC, Text, GitCommitLog, GPSLog, IDFKyou (including is_zip field), Notification, ReKyou, InfoBase, InfoIdentifier, MetaInfoBase, CircleOptions, LatLng, KftlTemplateElementData, ShareKyousInfo), D-note module (52 predicates, 17 aggregate targets, 12 key getters, DnoteAgregator/DnoteListAggregator, serialization dictionaries), KFTL parser, composition functions (context menus for 10 entity types including IDF ZIP browse, add views for Mi/Tag/Nlog/URLog/Lantana/TimeIs/KC, edit views for Kmemo/Mi/Nlog/URLog/TimeIs/Lantana/KC), page composables, query composable patterns, router (12 routes), i18n completeness (7 locales), utility functions (deep-equals, looks-like-url, format-date-time, long-press directive, save-as, delete-gkill-cache, service-worker-utils, use-dialog-history-stack)
-- Frontend E2E (187 tests, 29 spec files): All 12 routes covered + CRUD interaction flows. Login session persistence/auth redirect/password masking/logout/no-password-login-rejection/Rep check state. KFTL CRUD flows (submit all data types via KFTL, verify in RYKV/Mi/Plaing) + KFTL TimeIs End flows (end by title/title-if-exist/tag/tag-if-exist). GUI add dialog flows (Mi/Lantana/Nlog/TimeIs/URLog/KC via FAB, Tag/Text via context menu) + minimal-input Mi add, full-field TimeIs/URLog add. GUI edit dialog flows (Kmemo/Mi/Nlog/URLog/Lantana/TimeIs/Tag content editing + empty content validation) + running TimeIs end button, ReKyou edit, Text edit. GUI delete flows (Kmemo/Mi/Lantana/Nlog/URLog/TimeIs/Tag/Text deletion + ReKyou add/delete). View/browse history flows (Lantana/Mi/Nlog/URLog/ReKyou/Tag/Text history + repost + NoImage fallback). Notification CRUD (add/edit/delete/view/history via context menu). Search & summary (keyword search on RYKV/Mi, D-note toggle). Settings page CRUD (server config/user config/tag/rep/device/KFTL template structure sections) + server config functional tests (profile/TLS/address/account/rep management) + user config functional tests (GoogleMap API/image viewer/board names/hot reload/tag/rep/device/reptype/KFTL template structure CRUD). Mi operations (board move/completion state/share view/share stop). Regression tests (Kmemo required field/local access/tag/device/reptype structure add/ApplicationConfig apply/file upload). Misc (Notification/Text visual distinction, TimeIs history, context menu deduplication, bookmarklet, GPS upload, invalid share link, server restart)
-- MCP (~381 tests, 10 files): validation, normalization (including normalizeIdfFileArgs), constants, tool handlers, GkillReadClient (including fetchFile), McpServer (including gkill_get_idf_file tool dispatch/image content block), PKCE (S256/plain verification), OAuth store (token/code/client CRUD, TTL expiration, JSON file persistence), OAuth server (metadata, authorize, token exchange, PKCE, refresh token rotation, DCR with client_id_issued_at, RFC 8707 resource parameter, redirect_uri validation, full E2E flow), access-log (level filtering, JSON format validation, lazy file open, close/reopen, none-level no-op, context fields)
-- Android (12 tests, 2 files): unit tests (server URL/port/binary name/socket timeout/retry interval/PID extraction regex/process line filter), instrumented tests (package name/app context validation with filesDir/assets/cacheDir)
-- Wear OS (114 tests, 9 files): credential store (SharedPreferences CRUD), API client (MockWebServer: login/KFTL submit/template fetch), wearable listener service (message path handling), activity lifecycle, template cache management, wear client (Data Layer), data models (TemplateNode/PlaingTimeIsNode)
+
+| Area | Tests | Files | Scope |
+|---|---|---|---|
+| Go backend | ~534 | 47 | API handlers, KFTL parser, DAO layer, find filters, req_res, utilities |
+| Frontend unit | ~676 | 49 | GkillAPI, data models, D-note, KFTL, composables, router, i18n, utils |
+| Frontend E2E | 187 | 29 | All 12 routes, CRUD flows, settings, Mi operations, regressions |
+| MCP | ~381 | 10 | Tools, OAuth (PKCE/DCR/RFC 8707), access-log |
+| Android | 12 | 2 | Unit + instrumented |
+| Wear OS | 114 | 9 | Credential, API client, Data Layer, lifecycle |
+
+See `documents/reverse/testing-guide.md` for details, `src/ABOUT_TEST.md` for per-directory test specs.
 
 **E2E test environment:** E2E tests use `$HOME/gkill_test` as a dedicated gkill home directory. `npm run test_client_e2e` automatically cleans this directory, starts gkill_server (fresh admin with no password), runs Playwright tests, and stops the server. See `src/client/__tests__/e2e/run-e2e.mjs` for the orchestration logic.
 
@@ -157,20 +162,24 @@ $HOME/gkill/
 
 ### Frontend (Vue 3 + TypeScript) — `src/client/`
 
-Stack: Vue 3 + Vuetify 3 + Vue Router + vue-i18n + Vite + PWA (vite-plugin-pwa + Workbox)
+Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 7 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
 - `main.ts` — App entry, registers Vuetify, router, i18n, custom `v-long-press` directive
 - `router/index.ts` — 12 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, set_new_password, regist_first_account, shared_page, shared_mi)
 - `pages/` — Route page components
-- `pages/views/` — 176 view components for add/edit/list operations per data type
+- `pages/views/` — 175 view components for add/edit/list operations per data type
 - `pages/dialogs/` — 93 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser with inline image viewer
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,400 lines), client-side API wrapper
 - `classes/datas/` — TypeScript data models mirroring Go structs
-- `classes/kftl/` — KFTL parser (44 statement types)
+- `classes/kftl/` — KFTL parser (43 statement types)
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 - `plugins/vuetify.ts` — Vuetify config with light (`gkill_theme`) and dark (`gkill_dark_theme`) themes
 
 **State management:** Props/Emit only. No Pinia/Vuex. `GkillAPI` singleton for backend communication.
+
+**Composable pattern:** Each view/dialog has a corresponding `classes/use-*.ts` composable with the component logic. Props and emits are defined in separate `-props.ts` / `-emits.ts` files alongside the `.vue` file. Template refs to child components use the `ComponentRef` type (`classes/component-ref.ts`).
+
+**Naming convention:** `{action}-{feature}-{entity}-{component}` (e.g., `add-dnote-item-view.vue`, `confirm-delete-ryuu-item-dialog.vue`). Dnote and Ryuu follow the same pattern.
 
 **i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. ~768 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
@@ -195,13 +204,31 @@ Transport: stdio (default, `npm run mcp:gkill-read`) or HTTP (`npm run mcp:gkill
 
 **Wear OS** (`src/wear_os/`): Gradle multi-module project (phone_companion + watch_app). Communicates via Wearable Data Layer. Must copy `gradlew`/`gradlew.bat`/`gradle-wrapper.jar` from `src/android/` before building. Both modules use applicationId `com.gkill_android.mobile_app.src.gkill.mt3hr.gkill`.
 
+## Lint & Code Quality
+
+ESLint 9 flat config (`eslint.config.js`). All rules enforced as error with zero violations.
+
+| Rule | Level | Note |
+|---|---|---|
+| `@typescript-eslint/no-explicit-any` | error | `any` 使用禁止���`unknown` or 具体的型を使うこと |
+| `@typescript-eslint/no-empty-object-type` | error | 空の `{}` 型禁止。`type X = ParentType` ���使うこと |
+| `@typescript-eslint/no-unused-vars` | warn | `_` プレフィックスで無視 (`argsIgnorePattern: '^_'`) |
+
+Go: `slices.SortFunc` (not `sort.Slice`), `for range n` (not `for i := 0; i < n; i++`), `any` (not `interface{}`), `errors.Join` for multi-error collection.
+
 ## Language
 
 The codebase (variable names, comments, commit messages) is primarily in Japanese. README and documentation are in Japanese.
 
 ## Documentation
 
-Reverse-engineered design documents are in `documents/reverse/`:
+### User Manual
+
+HTML manuals in `resources/manual/` (7 languages: ja, en, zh, ko, es, fr, de). 17 pages per language covering login, KFTL, Mi, RYKV, Plaing, settings, etc. Embedded into the binary via `//go:embed` and served at `/manual/`.
+
+### Reverse-Engineered Design Documents
+
+`documents/reverse/`:
 - `README.md` — Overview and index of reverse-engineered documents
 - `glossary.md` — Domain term definitions (71 terms)
 - `design-philosophy.md` — Architecture decisions and rationale
@@ -226,7 +253,5 @@ Reverse-engineered design documents are in `documents/reverse/`:
 
 ### Test Documentation
 
-Each `src/` subdirectory that has a `README.md` also has an `ABOUT_TEST.md` describing the tests for that area in Japanese. The top-level index is `src/ABOUT_TEST.md`, which links to all 19 subdirectory test specification documents.
-
 - `documents/reverse/testing-guide.md` — Comprehensive test guide (execution, architecture, troubleshooting)
-- `src/ABOUT_TEST.md` — Test specification index (links to all subdirectory ABOUT_TEST.md files)
+- `src/ABOUT_TEST.md` — Test specification index, links to 19 subdirectory `ABOUT_TEST.md` files

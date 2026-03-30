@@ -29,8 +29,8 @@ import { createMockGkillAPI } from '../../helpers/mock-api'
 import { makeKyouWithKmemo } from '../../helpers/factory'
 
 // Dynamic import to test which confirm-delete composables exist
-let useConfirmDeleteKyouView: any
-let useConfirmDeleteTagView: any
+let useConfirmDeleteKyouView: unknown
+let useConfirmDeleteTagView: unknown
 
 try {
   const mod1 = await import('@/classes/use-confirm-delete-kyou-view')
@@ -44,15 +44,15 @@ try {
 
 function createMockProps() {
   return {
-    gkill_api: createMockGkillAPI() as any,
+    gkill_api: createMockGkillAPI() as never,
     application_config: {
       device: 'test-device',
       user_id: 'admin',
-    } as any,
+    } as never,
     kyou: {
       ...makeKyouWithKmemo('テスト'),
       clone: () => ({ ...makeKyouWithKmemo('テスト') }),
-    } as any,
+    } as never,
     highlight_targets: [],
     enable_context_menu: true,
     enable_dialog: true,

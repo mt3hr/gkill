@@ -10,7 +10,7 @@ export function useShareKyouFooter(options: {
     props: ShareKyouFooterProps,
     emits: ShareKyouFooterEmits,
 }) {
-    const { props, emits } = options
+    const { props: _props, emits: _emits } = options
 
     const share_kyou_list_dialog = ref<InstanceType<typeof ShareKyousListDialog> | null>(null)
     const share_kyou_list_link_dialog = ref<InstanceType<typeof ShareKyousListLinkDialog> | null>(null)

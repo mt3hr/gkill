@@ -22,9 +22,9 @@
         <v-card class="pa-2">
 
         <AddRyuuItemView :application_config="application_config" :gkill_api="gkill_api"
-          @requested_add_related_kyou_query="(...related_kyou_query: any[]) => emits('requested_add_related_kyou_query', related_kyou_query[0] as RelatedKyouQuery)"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+          @requested_add_related_kyou_query="(related_kyou_query: RelatedKyouQuery) => emits('requested_add_related_kyou_query', related_kyou_query)"
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @requested_close_dialog="hide()" />
         </v-card>
         <HelpDialog screen_name="ryuu" ref="help_dialog" />

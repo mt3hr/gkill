@@ -5,7 +5,7 @@ export function useTextView(options: {
     props: TextViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits } = options
+    const { props: _props, emits: _emits } = options
 
     return {
     }

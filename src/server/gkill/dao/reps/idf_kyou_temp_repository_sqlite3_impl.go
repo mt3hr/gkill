@@ -222,7 +222,7 @@ INSERT INTO IDF (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		idfKyou.IsDeleted,
 		idfKyou.ID,
 		idfKyou.RepName,
@@ -288,7 +288,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "idf"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -440,7 +440,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "idf"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -563,7 +563,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

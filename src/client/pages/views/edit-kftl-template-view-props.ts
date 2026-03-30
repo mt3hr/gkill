@@ -2,5 +2,4 @@
 
 import type { GkillPropsBase } from "./gkill-props-base"
 
-export interface EditKFTLTemplateViewProps extends GkillPropsBase {
-}
+export type EditKFTLTemplateViewProps = GkillPropsBase

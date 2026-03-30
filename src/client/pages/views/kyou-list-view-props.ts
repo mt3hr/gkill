@@ -8,9 +8,9 @@ export interface KyouListViewProps extends GkillPropsBase {
     is_focused_list: boolean
     query: FindKyouQuery
     matched_kyous: Array<Kyou>
-    list_height: Number
-    kyou_height: Number
-    width: Number
+    list_height: number
+    kyou_height: number
+    width: number
     show_footer: boolean
     show_checkbox: boolean
     closable: boolean

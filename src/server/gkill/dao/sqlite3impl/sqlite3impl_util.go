@@ -31,7 +31,7 @@ func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error
 	return db, err
 }
 
-func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAlias string, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, ignoreCase bool, queryArgs *[]interface{}) (string, error) {
+func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAlias string, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, ignoreCase bool, queryArgs *[]any) (string, error) {
 	sql := ""
 
 	// CASE無視（大文字小文字無視）の場合はLOWERをいれる

@@ -10,7 +10,7 @@ export function useAttachedNotification(options: {
     props: AttachedNotificationProps
     emits: KyouViewEmits
 }) {
-    const { props, emits } = options
+    const { props, emits: _emits } = options
 
     const context_menu = ref<InstanceType<typeof AttachedNotificationContextMenu> | null>(null)
 
@@ -37,7 +37,7 @@ export function useAttachedNotification(options: {
     }
 
     function format_time(time: Date) {
-        let year: string | number = time.getFullYear()
+        const year: string | number = time.getFullYear()
         let month: string | number = time.getMonth() + 1
         let date: string | number = time.getDate()
         let hour: string | number = time.getHours()

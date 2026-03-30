@@ -44,6 +44,7 @@ export default defineConfig(() => {
               url: 'url'
             }
           }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
         injectManifest: {
           maximumFileSizeToCacheInBytes: 10 * 1024 ** 2,

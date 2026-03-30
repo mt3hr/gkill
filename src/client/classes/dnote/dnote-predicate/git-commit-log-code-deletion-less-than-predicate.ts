@@ -6,6 +6,7 @@ export default class GitCommitLogCodeDeletionLessThanPredicate implements DnoteP
     constructor(git_commit_log_code_count: number) {
         this.git_commit_log_code_count = git_commit_log_code_count
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const git_commit_log_code_count = json.value as number
         return new GitCommitLogCodeDeletionLessThanPredicate(git_commit_log_code_count)
@@ -22,7 +23,7 @@ export default class GitCommitLogCodeDeletionLessThanPredicate implements DnoteP
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "GitCommitLogCodeDeletionLessThanPredicate",
             value: this.git_commit_log_code_count,

@@ -3,7 +3,7 @@ package reps
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 
@@ -68,8 +68,8 @@ loop:
 		}
 	}
 
-	sort.Slice(gpsLogs, func(i, j int) bool {
-		return gpsLogs[i].RelatedTime.After(gpsLogs[j].RelatedTime)
+	slices.SortFunc(gpsLogs, func(a, b GPSLog) int {
+		return b.RelatedTime.Compare(a.RelatedTime)
 	})
 	return gpsLogs, nil
 }
@@ -130,8 +130,8 @@ loop:
 		}
 	}
 
-	sort.Slice(gpsLogs, func(i, j int) bool {
-		return gpsLogs[i].RelatedTime.After(gpsLogs[j].RelatedTime)
+	slices.SortFunc(gpsLogs, func(a, b GPSLog) int {
+		return b.RelatedTime.Compare(a.RelatedTime)
 	})
 	return gpsLogs, nil
 }

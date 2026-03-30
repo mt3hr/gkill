@@ -1,6 +1,6 @@
 <template>
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height" :draggable="props.draggable"
-        @dragstart="(...args: any[]) => on_drag_start(args[0] as DragEvent)">
+        @dragstart="(e: DragEvent) => on_drag_start(e)">
         <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0" :style="mi_title_style">
                 <table class="pa-0 ma-0">
@@ -55,7 +55,7 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     context_menu,
-    cloned_kyou,
+    cloned_kyou: _cloned_kyou,
     is_checked_mi,
     mi_title_style,
     show_context_menu,

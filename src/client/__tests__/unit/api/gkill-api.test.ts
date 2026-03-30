@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { i18n } from '../../helpers/setup-i18n'
-import { makeKmemo, makeMi, makeTag, makeURLog, makeNlog, makeLantana, makeText, makeReKyou, makeShareKyousInfo } from '../../helpers/factory'
+import { makeKmemo, makeMi, makeTag, makeURLog, makeNlog, makeLantana, makeText, makeShareKyousInfo } from '../../helpers/factory'
 
 // Mock @/i18n before importing GkillAPI
 vi.mock('@/i18n', () => ({ i18n }))
@@ -98,7 +98,7 @@ describe('GkillAPI', () => {
         user_id: 'test_user',
         password_sha256: 'abc123',
       }
-      await api.login(req as any)
+      await api.login(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/login',
@@ -121,7 +121,7 @@ describe('GkillAPI', () => {
       })
 
       const api = GkillAPI.get_instance()
-      const result = await api.login({ user_id: 'u', password_sha256: 'p' } as any)
+      const result = await api.login({ user_id: 'u', password_sha256: 'p' } as never)
       expect(result.session_id).toBe('test-session-123')
     })
   })
@@ -138,7 +138,7 @@ describe('GkillAPI', () => {
       'set_session_id',
       'check_auth',
     ])('%s is a function', (method) => {
-      expect(typeof (api as any)[method]).toBe('function')
+      expect(typeof (api as Record<string, unknown>)[method]).toBe('function')
     })
   })
 
@@ -169,7 +169,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_kmemo(req as any)
+      await api.add_kmemo(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_kmemo',
@@ -199,7 +199,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_mi(req as any)
+      await api.add_mi(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_mi',
@@ -227,7 +227,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_tag(req as any)
+      await api.add_tag(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_tag',
@@ -265,7 +265,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_kyous(req as any)
+      await api.get_kyous(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_kyous',
@@ -292,7 +292,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_kmemo(req as any)
+      await api.get_kmemo(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_kmemo',
@@ -319,7 +319,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_mi(req as any)
+      await api.get_mi(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_mi',
@@ -361,7 +361,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_kmemo(req as any)
+      await api.update_kmemo(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_kmemo',
@@ -391,7 +391,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_mi(req as any)
+      await api.update_mi(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_mi',
@@ -430,7 +430,7 @@ describe('GkillAPI', () => {
         locale_name: 'ja',
       }
 
-      await expect(api.get_kmemo(req as any)).rejects.toThrow('Network error')
+      await expect(api.get_kmemo(req as never)).rejects.toThrow('Network error')
     })
 
     test('HTTP 500 response still attempts to parse JSON', async () => {
@@ -454,7 +454,7 @@ describe('GkillAPI', () => {
       }
 
       // The API does not check HTTP status; it parses JSON regardless
-      const result = await api.get_kmemo(req as any)
+      const result = await api.get_kmemo(req as never)
       expect(result.errors).toEqual([
         { error_code: 'INTERNAL', error_message: 'Server error' },
       ])
@@ -475,7 +475,7 @@ describe('GkillAPI', () => {
         locale_name: 'ja',
       }
 
-      await expect(api.get_kmemo(req as any)).rejects.toThrow(SyntaxError)
+      await expect(api.get_kmemo(req as never)).rejects.toThrow(SyntaxError)
     })
   })
 
@@ -511,7 +511,7 @@ describe('GkillAPI', () => {
         delete: vi.fn().mockResolvedValue(true),
         has: vi.fn().mockResolvedValue(false),
         match: vi.fn().mockResolvedValue(undefined),
-      } as any
+      } as CacheStorage
 
       const mockResponse = { messages: [], errors: [] }
       ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -528,7 +528,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      const result = await api.logout(req as any)
+      const result = await api.logout(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/logout',
@@ -592,7 +592,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_timeis(req as any)
+      await api.add_timeis(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_timeis',
@@ -620,7 +620,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_lantana(req as any)
+      await api.add_lantana(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_lantana',
@@ -648,7 +648,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_nlog(req as any)
+      await api.add_nlog(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_nlog',
@@ -676,7 +676,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_urlog(req as any)
+      await api.add_urlog(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_urlog',
@@ -718,7 +718,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_kc(req as any)
+      await api.add_kc(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_kc',
@@ -746,7 +746,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_text(req as any)
+      await api.add_text(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_text',
@@ -788,7 +788,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_rekyou(req as any)
+      await api.add_rekyou(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_rekyou',
@@ -827,7 +827,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_kyou(req as any)
+      await api.get_kyou(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_kyou',
@@ -853,7 +853,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_tags_by_target_id(req as any)
+      await api.get_tags_by_target_id(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_tags_by_id',
@@ -879,7 +879,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_texts_by_target_id(req as any)
+      await api.get_texts_by_target_id(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_texts_by_id',
@@ -904,7 +904,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_mi_board_list(req as any)
+      await api.get_mi_board_list(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_mi_board_list',
@@ -929,7 +929,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_all_tag_names(req as any)
+      await api.get_all_tag_names(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_all_tag_names',
@@ -969,7 +969,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_tag(req as any)
+      await api.update_tag(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_tag',
@@ -1014,7 +1014,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_timeis(req as any)
+      await api.update_timeis(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_timeis',
@@ -1044,7 +1044,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_lantana(req as any)
+      await api.update_lantana(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_lantana',
@@ -1074,7 +1074,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_nlog(req as any)
+      await api.update_nlog(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_nlog',
@@ -1118,7 +1118,7 @@ describe('GkillAPI', () => {
         locale_name: 'ja',
       }
 
-      const result = await api.get_kmemo(req as any)
+      const result = await api.get_kmemo(req as never)
       expect(result.errors).toEqual([
         { error_code: 'ERR000013', error_message: 'Account session not found' },
       ])
@@ -1151,7 +1151,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_kc(req as any)
+      await api.get_kc(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_kc',
@@ -1178,7 +1178,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_urlog(req as any)
+      await api.get_urlog(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_urlog',
@@ -1205,7 +1205,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_nlog(req as any)
+      await api.get_nlog(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_nlog',
@@ -1232,7 +1232,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_timeis(req as any)
+      await api.get_timeis(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_timeis',
@@ -1259,7 +1259,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_lantana(req as any)
+      await api.get_lantana(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_lantana',
@@ -1286,7 +1286,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_git_commit_log(req as any)
+      await api.get_git_commit_log(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_git_commit_log',
@@ -1313,7 +1313,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_idf_kyou(req as any)
+      await api.get_idf_kyou(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_idf_kyou',
@@ -1340,7 +1340,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_rekyou(req as any)
+      await api.get_rekyou(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_rekyou',
@@ -1378,7 +1378,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_tag_histories_by_tag_id(req as any)
+      await api.get_tag_histories_by_tag_id(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_tag_histories_by_tag_id',
@@ -1404,7 +1404,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_text_history_by_text_id(req as any)
+      await api.get_text_history_by_text_id(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_text_histories_by_text_id',
@@ -1430,7 +1430,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_notification_history_by_notification_id(req as any)
+      await api.get_notification_history_by_notification_id(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_gkill_notification_histories_by_notification_id',
@@ -1467,7 +1467,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_server_configs(req as any)
+      await api.get_server_configs(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_server_configs',
@@ -1493,7 +1493,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_application_config(req as any)
+      await api.update_application_config(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_application_config',
@@ -1519,7 +1519,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_user_reps(req as any)
+      await api.update_user_reps(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_user_reps',
@@ -1545,7 +1545,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.update_server_config(req as any)
+      await api.update_server_config(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/update_server_configs',
@@ -1582,7 +1582,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_repositories(req as any)
+      await api.get_repositories(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_repositories',
@@ -1608,7 +1608,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.upload_files(req as any)
+      await api.upload_files(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/upload_files',
@@ -1645,7 +1645,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_share_kyou_list_infos(req as any)
+      await api.get_share_kyou_list_infos(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_share_kyou_list_infos',
@@ -1672,7 +1672,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.add_share_kyou_list_info(req as any)
+      await api.add_share_kyou_list_info(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/add_share_kyou_list_info',
@@ -1698,7 +1698,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.delete_share_kyou_list_infos(req as any)
+      await api.delete_share_kyou_list_infos(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/delete_share_kyou_list_infos',
@@ -1736,7 +1736,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.commit_tx(req as any)
+      await api.commit_tx(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/commit_tx',
@@ -1762,7 +1762,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.discard_tx(req as any)
+      await api.discard_tx(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/discard_tx',
@@ -1799,7 +1799,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.get_gkill_notification_public_key(req as any)
+      await api.get_gkill_notification_public_key(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/get_gkill_notification_public_key',
@@ -1825,7 +1825,7 @@ describe('GkillAPI', () => {
         force_reget: false,
         locale_name: 'ja',
       }
-      await api.register_gkill_notification(req as any)
+      await api.register_gkill_notification(req as never)
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/register_gkill_notification',
@@ -1967,7 +1967,7 @@ describe('GkillAPI', () => {
       'get_gkill_notification_public_key',
       'register_gkill_notification',
     ])('%s is a function', (method) => {
-      expect(typeof (api as any)[method]).toBe('function')
+      expect(typeof (api as Record<string, unknown>)[method]).toBe('function')
     })
   })
 })

@@ -8,6 +8,7 @@ export default class FilterBottomKyous implements DnoteKyouFilter {
         this.limit_count = limit_count
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnoteKyouFilter {
         const limit_count = json.value as number
         return new FilterBottomKyous(limit_count)

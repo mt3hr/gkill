@@ -63,7 +63,7 @@ export function useEditDnoteListView(options: {
         emits('requested_close_dialog')
     }
 
-    function predicate_struct_to_json(group: PredicateGroupType | Predicate): any {
+    function predicate_struct_to_json(group: PredicateGroupType | Predicate): Record<string, unknown> {
         if (is_group(group)) {
             return {
                 logic: group.logic,
@@ -74,6 +74,7 @@ export function useEditDnoteListView(options: {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function predicate_struct_from_json(json: any): PredicateGroupType | Predicate {
         if (json.logic && Array.isArray(json.predicates)) {
             return {

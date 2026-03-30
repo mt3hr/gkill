@@ -5,7 +5,7 @@ import type { GkillPropsBase } from "../views/gkill-props-base"
 
 export interface KyouListViewDialogProps extends GkillPropsBase {
     highlight_targets: Array<InfoIdentifier>
-    list_height: Number
+    list_height: number
     enable_context_menu: boolean
     enable_dialog: boolean
     force_show_latest_kyou_info: boolean

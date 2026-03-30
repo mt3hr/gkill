@@ -3,7 +3,7 @@ import type DnoteKeyGetter from "../dnote-key-getter";
 
 export default class NlogShopNameGetter implements DnoteKeyGetter {
 
-    static from_json(_json: any): NlogShopNameGetter {
+    static from_json(_json: Record<string, unknown>): NlogShopNameGetter {
         return new NlogShopNameGetter()
     }
 

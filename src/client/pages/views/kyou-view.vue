@@ -1,7 +1,7 @@
 <template>
     <div @dblclick="show_kyou_dialog()" @click.prevent="onRootClick()"
         :key="kyou.id" :class="'kyou_'.concat(kyou.id)">
-        <div v-if="!show_content_only">
+        <div v-if="!show_content_only" :class="kyou_class">
             <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag" :key="attached_tag.id"
                 :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
                 :highlight_targets="highlight_targets"
@@ -15,7 +15,7 @@
                     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                     v-on="crudRelayHandlers" />
             </div>
-            <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)"
+            <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: PointerEvent) => show_context_menu(e)"
                 :class="kyou_class">
                 <v-col v-if="show_related_time" class="kyou_related_time pa-0 ma-0" cols="auto">
                     {{ related_time }}

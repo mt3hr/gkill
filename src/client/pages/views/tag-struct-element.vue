@@ -11,7 +11,7 @@ const props = defineProps<TagStructElementProps>()
 defineEmits<TagStructElementEmits>()
 
 const {
-    cloned_application_config,
+    cloned_application_config: _cloned_application_config,
     reload_cloned_application_config,
 } = useTagStructElement({ props })
 

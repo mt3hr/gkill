@@ -2,5 +2,4 @@
 
 import type { KyouViewPropsBase } from "./kyou-view-props-base"
 
-export interface KCContextMenuProps extends KyouViewPropsBase {
-}
+export type KCContextMenuProps = KyouViewPropsBase

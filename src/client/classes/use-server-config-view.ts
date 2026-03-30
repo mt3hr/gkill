@@ -6,6 +6,7 @@ import type { ServerConfigViewProps } from '@/pages/views/server-config-view-pro
 import { GkillError } from '@/classes/api/gkill-error'
 import { UpdateServerConfigsRequest } from '@/classes/api/req_res/update-server-configs-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function useServerConfigView(options: {
     props: ServerConfigViewProps,
@@ -14,9 +15,9 @@ export function useServerConfigView(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const confirm_generate_tls_files_dialog = ref<any>(null)
-    const manage_account_dialog = ref<any>(null)
-    const new_device_name_dialog = ref<any>(null)
+    const confirm_generate_tls_files_dialog = ref<ComponentRef | null>(null)
+    const manage_account_dialog = ref<ComponentRef | null>(null)
+    const new_device_name_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const is_loading = ref(false)

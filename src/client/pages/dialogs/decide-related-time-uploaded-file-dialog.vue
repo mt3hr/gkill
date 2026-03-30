@@ -21,13 +21,13 @@
         <DecideRelatedTimeUploadedFileView :application_config="application_config" :gkill_api="gkill_api"
           :app_content_height="app_content_height" :app_content_width="app_content_width"
           :uploaded_kyous="uploaded_kyous"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-          @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+          @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
           @requested_reload_list="emits('requested_reload_list')"
-          @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
-          @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
-          @requested_open_rykv_dialog="(...params: any[]) => emits('requested_open_rykv_dialog', params[0], params[1], params[2])" />
+          @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyous, is_checked)"
+          @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"
+          @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)" />
         </v-card>
 </div>
     </div>
@@ -41,6 +41,7 @@ import DecideRelatedTimeUploadedFileView from '../views/decide-related-time-uplo
 import type { Kyou } from '@/classes/datas/kyou'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { RykvDialogKind, RykvDialogPayload } from '../views/rykv-dialog-kind'
 
 defineProps<DecideRelatedTimeUploadedFileDialogProps>()
 const emits = defineEmits<DecideRelatedTimeUploadedFileDialogEmits>()
