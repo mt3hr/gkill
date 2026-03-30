@@ -16,7 +16,7 @@ export default class AgregateMinKCNumValue implements DnoteAgregateTarget {
                 max_num_value = typed_agregated_value_max_kc_num_value
             }
         }
-        return typed_agregated_value_max_kc_num_value + max_num_value
+        return max_num_value
     }
     async result_to_string(kc_num_value: unknown): Promise<string> {
         return ((kc_num_value === null ? 0 : kc_num_value) as number).toString()

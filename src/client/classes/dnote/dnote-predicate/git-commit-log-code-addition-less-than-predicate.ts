@@ -8,7 +8,7 @@ export default class GitCommitLogCodeAdditionLessThanPredicate implements DnoteP
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
-        const git_commit_log_code_count = json.git_commit_log_code_count as number
+        const git_commit_log_code_count = json.value as number
         return new GitCommitLogCodeAdditionLessThanPredicate(git_commit_log_code_count)
     }
     async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {

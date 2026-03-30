@@ -14,7 +14,7 @@ export default class GitCommitLogCodeDeletionLessThanPredicate implements DnoteP
     async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
 
         if (loaded_kyou.typed_git_commit_log) {
-            const git_commit_log_code_count = loaded_kyou.typed_git_commit_log.addition
+            const git_commit_log_code_count = loaded_kyou.typed_git_commit_log.deletion
             if (git_commit_log_code_count) {
                 if (git_commit_log_code_count <= this.git_commit_log_code_count) {
                     return true

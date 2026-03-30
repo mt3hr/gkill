@@ -14,7 +14,7 @@ export default class LantanaMoodGreaterThanPredicate implements DnotePredicate {
     async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         const lantana_mood = loaded_kyou.typed_lantana?.mood
         if (lantana_mood) {
-            if (lantana_mood.valueOf() <= this.lantana_mood_greater_than_target) {
+            if (lantana_mood.valueOf() >= this.lantana_mood_greater_than_target) {
                 return true
             }
         }
