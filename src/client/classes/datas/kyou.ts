@@ -1,4 +1,5 @@
 'use strict'
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { InfoBase } from './info-base'
 import { GkillError } from '../api/gkill-error'
@@ -61,7 +62,7 @@ export class Kyou extends InfoBase {
     }
 
     async load_all(query?: FindKyouQuery): Promise<Array<GkillError>> {
-        const awaitPromises = new Array<Promise<any>>()
+        const awaitPromises = new Array<Promise<Array<GkillError>>>()
         try {
             awaitPromises.push(this.load_typed_datas(query))
             awaitPromises.push(this.load_attached_histories(query))
@@ -73,9 +74,9 @@ export class Kyou extends InfoBase {
                 })
                 return errors
             })
-        } catch (err: any) {
+        } catch (err: unknown) {
             // abortは握りつぶす
-            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
                 // abort以外はエラー出力する
                 console.error(err)
             }
@@ -137,7 +138,7 @@ export class Kyou extends InfoBase {
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        const awaitPromises = new Array<Promise<any>>()
+        const awaitPromises = new Array<Promise<Array<GkillError>>>()
         try {
             awaitPromises.push(this.load_attached_tags())
             awaitPromises.push(this.load_attached_texts())
@@ -151,9 +152,9 @@ export class Kyou extends InfoBase {
                 })
                 return errors
             })
-        } catch (err: any) {
+        } catch (err: unknown) {
             // abortは握りつぶす
-            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
                 // abort以外はエラー出力する
                 console.error(err)
             }

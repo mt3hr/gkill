@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO_OPTIONS" (
 	}, nil
 }
 
-var shareKyouInfoDefaultValue = map[string]interface{}{
+var shareKyouInfoDefaultValue = map[string]any{
 	"IS_SHARE_TIME_ONLY":      false,
 	"IS_SHARE_WITH_TAGS":      false,
 	"IS_SHARE_WITH_TEXTS":     false,
@@ -366,7 +366,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		userID,
 		device,
 	}
@@ -513,7 +513,7 @@ WHERE SHARE_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		sharedID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "query args", queryArgs)
@@ -617,7 +617,7 @@ INSERT INTO SHARE_KYOU_INFO (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		kyouShareInfo.ID,
 		kyouShareInfo.UserID,
 		kyouShareInfo.Device,
@@ -644,7 +644,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
  ?
 )
 `
-	insertValuesMap := map[string]interface{}{
+	insertValuesMap := map[string]any{
 		"IS_SHARE_TIME_ONLY":      kyouShareInfo.IsShareTimeOnly,
 		"IS_SHARE_WITH_TAGS":      kyouShareInfo.IsShareWithTags,
 		"IS_SHARE_WITH_TEXTS":     kyouShareInfo.IsShareWithTexts,
@@ -667,7 +667,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 
 	for key, value := range insertValuesMap {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", optionsSQL)
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			kyouShareInfo.ShareID,
 			key,
 			value,
@@ -731,7 +731,7 @@ WHERE SHARE_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		kyouShareInfo.ID,
 		kyouShareInfo.UserID,
 		kyouShareInfo.Device,
@@ -796,7 +796,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		}
 	}()
 
-	insertValuesMap := map[string]interface{}{
+	insertValuesMap := map[string]any{
 		"IS_SHARE_TIME_ONLY":      kyouShareInfo.IsShareTimeOnly,
 		"IS_SHARE_WITH_TAGS":      kyouShareInfo.IsShareWithTags,
 		"IS_SHARE_WITH_TEXTS":     kyouShareInfo.IsShareWithTexts,
@@ -820,7 +820,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	// レコード自体が存在しなかったらいれる
 	for key, value := range insertValuesMap {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			kyouShareInfo.ShareID,
 			key,
 		}
@@ -840,7 +840,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		}
 		if recordCount == 0 {
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				kyouShareInfo.ShareID,
 				key,
 				value,
@@ -855,7 +855,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 			}
 		} else {
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", updateOptionsSQL)
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				value,
 				kyouShareInfo.ShareID,
 				key,
@@ -873,7 +873,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 
 	// 更新する
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-	queryArgs = []interface{}{
+	queryArgs = []any{
 		kyouShareInfo.ID,
 		kyouShareInfo.UserID,
 		kyouShareInfo.Device,
@@ -934,7 +934,7 @@ WHERE SHARE_ID = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		shareID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", queryArgs)
@@ -962,7 +962,7 @@ WHERE SHARE_ID = ?
 		}
 	}()
 
-	queryArgs = []interface{}{
+	queryArgs = []any{
 		shareID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", optionsSQL, queryArgs)
@@ -1060,7 +1060,7 @@ WHERE KEY = ?
 		}
 	}()
 	dbSchemaVersion := ""
-	queryArgs := []interface{}{schemaVersionKey}
+	queryArgs := []any{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
@@ -1082,7 +1082,7 @@ VALUES(?, ?)`
 					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 				}
 			}()
-			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
+			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
@@ -1091,7 +1091,7 @@ VALUES(?, ?)`
 				return false, nil, err
 			}
 
-			queryArgs = []interface{}{schemaVersionKey}
+			queryArgs = []any{schemaVersionKey}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {

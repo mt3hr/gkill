@@ -8,7 +8,7 @@ import { LantanaFlowerState } from '@/classes/lantana/lantana-flower-state'
 export function useLantanaFlowersView(options: { props: LantanaFlowersViewProps, emits: LantanaFlowersViewEmits }) {
     const { props, emits } = options
 
-    const mood: Ref<Number> = ref(props.mood)
+    const mood: Ref<number> = ref(props.mood)
 
     const flower_state_1: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 2 ? LantanaFlowerState.full : (mood.value.valueOf() >= 1 ? LantanaFlowerState.half : LantanaFlowerState.none))
     const flower_state_2: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 4 ? LantanaFlowerState.full : (mood.value.valueOf() >= 3 ? LantanaFlowerState.half : LantanaFlowerState.none))
@@ -29,11 +29,11 @@ export function useLantanaFlowersView(options: { props: LantanaFlowersViewProps,
         emit_updated_mood()
     })
 
-    async function get_mood(): Promise<Number> {
+    async function get_mood(): Promise<number> {
         return mood.value
     }
 
-    async function set_mood(mood_value: Number): Promise<void> {
+    async function set_mood(mood_value: number): Promise<void> {
         if (!props.editable) {
             return
         }

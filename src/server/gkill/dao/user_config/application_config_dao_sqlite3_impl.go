@@ -144,7 +144,7 @@ func GetDefaultApplicationConfig(userID string, device string) *ApplicationConfi
 
 var nullJSONStr = json.RawMessage("null")
 var emptyArrayJSONStr = json.RawMessage("[]")
-var applicationConfigDefaultValue = map[string]interface{}{
+var applicationConfigDefaultValue = map[string]any{
 	"USER_ID":                       "",
 	"DEVICE":                        "",
 	"USE_DARK_THEME":                false,
@@ -806,7 +806,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		applicationConfigDefaultValue["USE_DARK_THEME"],
 		applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"],
 		applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"],
@@ -1001,7 +1001,7 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 	}()
 
-	insertValuesMap := map[string]interface{}{
+	insertValuesMap := map[string]any{
 		"USE_DARK_THEME":                applicationConfig.UseDarkTheme,
 		"GOOGLE_MAP_API_KEY":            applicationConfig.GoogleMapAPIKey,
 		"RYKV_IMAGE_LIST_COLUMN_NUMBER": applicationConfig.RykvImageListColumnNumber,
@@ -1035,7 +1035,7 @@ INSERT INTO APPLICATION_CONFIG (
 		if isIgnoreDeviceNameKey {
 			device = "ALL"
 		}
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			applicationConfig.UserID,
 			device,
 			key,
@@ -1104,7 +1104,7 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 	}()
 
-	insertValuesMap := map[string]interface{}{
+	insertValuesMap := map[string]any{
 		"USE_DARK_THEME":                applicationConfigDefaultValue["USE_DARK_THEME"],
 		"GOOGLE_MAP_API_KEY":            applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"],
 		"RYKV_IMAGE_LIST_COLUMN_NUMBER": applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"],
@@ -1138,7 +1138,7 @@ INSERT INTO APPLICATION_CONFIG (
 		if isIgnoreDeviceNameKey {
 			device = "ALL"
 		}
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			userID,
 			device,
 			key,
@@ -1208,7 +1208,7 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 	}()
 
-	updateValuesMap := map[string]interface{}{
+	updateValuesMap := map[string]any{
 		"USE_DARK_THEME":                applicationConfig.UseDarkTheme,
 		"GOOGLE_MAP_API_KEY":            applicationConfig.GoogleMapAPIKey,
 		"RYKV_IMAGE_LIST_COLUMN_NUMBER": applicationConfig.RykvImageListColumnNumber,
@@ -1282,7 +1282,7 @@ INSERT INTO APPLICATION_CONFIG (
 		if isIgnoreDeviceNameKey {
 			device = "ALL"
 		}
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			applicationConfig.UserID,
 			device,
 			key,
@@ -1314,7 +1314,7 @@ INSERT INTO APPLICATION_CONFIG (
 			if isIgnoreDeviceNameKey {
 				device = "ALL"
 			}
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				applicationConfig.UserID,
 				device,
 				key,
@@ -1345,7 +1345,7 @@ INSERT INTO APPLICATION_CONFIG (
 		if isIgnoreDeviceNameKey {
 			device = "ALL"
 		}
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			value,
 			applicationConfig.UserID,
 			device,
@@ -1388,7 +1388,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		userID,
 		device,
 	}
@@ -1480,7 +1480,7 @@ WHERE KEY = ?
 		}
 	}()
 	dbSchemaVersion := ""
-	queryArgs := []interface{}{schemaVersionKey}
+	queryArgs := []any{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
@@ -1502,7 +1502,7 @@ VALUES(?, ?)`
 					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 				}
 			}()
-			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
+			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
@@ -1511,7 +1511,7 @@ VALUES(?, ?)`
 				return false, nil, err
 			}
 
-			queryArgs = []interface{}{schemaVersionKey}
+			queryArgs = []any{schemaVersionKey}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {

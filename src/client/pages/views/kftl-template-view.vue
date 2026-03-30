@@ -14,14 +14,14 @@
     </v-card-title>
 
     <div class="button_list">
-      <v-btn dark color="primary" class="pa-3 ma-3" v-for="template, index in template.children" :key="template.id!"
-        @click="clicked_template_button(template, index)">
-        {{ template.title }}
+      <v-btn dark color="primary" class="pa-3 ma-3" v-for="(child, index) in template.children" :key="child.id!"
+        @click="clicked_template_button(child, index)">
+        {{ child.title }}
 
-        <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api" :template="template"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-          @clicked_template_element_leaf="(...t: any[]) => emits('clicked_template_element_leaf', t[0] as KFTLTemplateElementData)"
+        <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api" :template="child"
+          @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+          @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+          @clicked_template_element_leaf="(t: KFTLTemplateElementData) => emits('clicked_template_element_leaf', t)"
           @requested_close_dialog="emits('requested_close_dialog')" ref="child_template_dialogs" />
       </v-btn>
     </div>

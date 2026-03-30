@@ -3,7 +3,7 @@ import type DnoteKeyGetter from "../dnote-key-getter";
 
 export default class DataTypeGetter implements DnoteKeyGetter {
 
-    static from_json(_json: any): DataTypeGetter {
+    static from_json(_json: Record<string, unknown>): DataTypeGetter {
         return new DataTypeGetter()
     }
 

@@ -3,7 +3,7 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, makeUniqueLabel,
-  pageContainsText, findKyouByText, clickDialogButton, confirmDelete,
+  findKyouByText,
 } from './crud-helpers'
 
 let apiReachable = false

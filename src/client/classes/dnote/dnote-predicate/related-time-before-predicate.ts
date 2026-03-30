@@ -6,6 +6,7 @@ export default class RelatedTimeBeforePredicate implements DnotePredicate {
     constructor(related_time: Date) {
         this.related_time = related_time
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const related_time = new Date(json.value) as Date
         return new RelatedTimeBeforePredicate(related_time)
@@ -17,7 +18,7 @@ export default class RelatedTimeBeforePredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "RelatedTimeBeforePredicate",
             value: this.related_time.getTime(),

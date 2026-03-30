@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -17,11 +18,11 @@ export function useAggregatedListItem(options: {
     // ── Computed ──
     const list_height = computed(() => window.screen.height * 7 / 10)
 
-    const aggregate_target_type = computed(() => props.dnote_list_query.aggregate_target.to_json().type.toString())
+    const aggregate_target_type = computed(() => (props.dnote_list_query.aggregate_target.to_json().type as string).toString())
     const is_lantana_type = computed(() => aggregate_target_type.value.includes("Lantana"))
     const is_plus_number_value = computed(() => {
         if (aggregate_target_type.value.includes("Git") || aggregate_target_type.value.includes("Nlog")) {
-            if (props.aggregated_item.value.toString().startsWith("-")) {
+            if (String(props.aggregated_item.value).startsWith("-")) {
                 return false
             } else {
                 return true
@@ -31,7 +32,7 @@ export function useAggregatedListItem(options: {
     })
     const is_minus_number_value = computed(() => {
         if (aggregate_target_type.value.includes("Git") || aggregate_target_type.value.includes("Nlog")) {
-            if (props.aggregated_item.value.toString().startsWith("-")) {
+            if (String(props.aggregated_item.value).startsWith("-")) {
                 return true
             }
         }
@@ -49,23 +50,23 @@ export function useAggregatedListItem(options: {
 
     // ── CRUD relay handlers ──
     const crudRelayHandlers = {
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
-        'focused_kyou': (...args: any[]) => emits('focused_kyou', args[0] as Kyou),
-        'clicked_kyou': (...args: any[]) => { emits('focused_kyou', args[0] as Kyou); emits('clicked_kyou', args[0] as Kyou) },
-        'deleted_kyou': (...args: any[]) => emits('deleted_kyou', args[0] as Kyou),
-        'deleted_tag': (...args: any[]) => emits('deleted_tag', args[0] as Tag),
-        'deleted_text': (...args: any[]) => emits('deleted_text', args[0] as Text),
-        'deleted_notification': (...args: any[]) => emits('deleted_notification', args[0] as Notification),
-        'registered_kyou': (...args: any[]) => emits('registered_kyou', args[0] as Kyou),
-        'registered_tag': (...args: any[]) => emits('registered_tag', args[0] as Tag),
-        'registered_text': (...args: any[]) => emits('registered_text', args[0] as Text),
-        'registered_notification': (...args: any[]) => emits('registered_notification', args[0] as Notification),
-        'updated_kyou': (...args: any[]) => emits('updated_kyou', args[0] as Kyou),
-        'updated_tag': (...args: any[]) => emits('updated_tag', args[0] as Tag),
-        'updated_text': (...args: any[]) => emits('updated_text', args[0] as Text),
-        'updated_notification': (...args: any[]) => emits('updated_notification', args[0] as Notification),
-        'requested_open_rykv_dialog': (...args: any[]) => emits('requested_open_rykv_dialog', args[0], args[1], args[2]),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'focused_kyou': (kyou: Kyou) => emits('focused_kyou', kyou),
+        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
+        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
+        'deleted_text': (text: Text) => emits('deleted_text', text),
+        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
+        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
+        'registered_text': (text: Text) => emits('registered_text', text),
+        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
+        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
+        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
+        'updated_text': (text: Text) => emits('updated_text', text),
+        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
     // ── Return ──

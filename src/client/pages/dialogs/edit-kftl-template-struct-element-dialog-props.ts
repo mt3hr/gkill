@@ -2,6 +2,5 @@
 
 import type { GkillPropsBase } from "../views/gkill-props-base"
 
-export interface EditKFTLTemplateStructElementDialogProps extends GkillPropsBase {
-}
+export type EditKFTLTemplateStructElementDialogProps = GkillPropsBase
 

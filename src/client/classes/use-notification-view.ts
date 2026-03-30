@@ -5,7 +5,7 @@ export function useNotificationView(options: {
     props: NotificationViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits } = options
+    const { props: _props, emits: _emits } = options
 
     return {
     }

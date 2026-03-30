@@ -6,6 +6,7 @@ export default class NlogTitleContainsPredicate implements DnotePredicate {
     constructor(nlog_title_contains_target: string) {
         this.nlog_title_contains_target = nlog_title_contains_target
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const nlog_title_contains_target = json.value as string
         return new NlogTitleContainsPredicate(nlog_title_contains_target)
@@ -19,7 +20,7 @@ export default class NlogTitleContainsPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "NlogTitleContainsPredicate",
             value: this.nlog_title_contains_target,

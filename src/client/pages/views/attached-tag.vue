@@ -1,6 +1,6 @@
 <template>
     <span class="tag_wrap">
-        <span :class="tag_class" @contextmenu.prevent="async (...e: any[]) => show_context_menu(e[0] as PointerEvent)">
+        <span :class="tag_class" @contextmenu.prevent="async (e: PointerEvent) => show_context_menu(e)">
             {{ tag.tag }}
         </span>
         <AttachedTagContextMenu :application_config="application_config" :gkill_api="gkill_api" :tag="tag" :kyou="kyou"

@@ -49,9 +49,9 @@ export class DnoteListAggregator {
             }
         }
         if (aggregated_result_list.length > 0 && typeof aggregated_result_list[0].value === "number") {
-            aggregated_result_list.sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+            aggregated_result_list.sort((a, b) => Math.abs(b.value as number) - Math.abs(a.value as number))
         } else {
-            aggregated_result_list.sort((a, b) => b.value - a.value)
+            aggregated_result_list.sort((a, b) => (b.value as number) - (a.value as number))
         }
         for (let i = 0; i < aggregated_result_list.length; i++) {
             aggregated_result_list[i].value = await this.dnote_aggregate_target.result_to_string(aggregated_result_list[i].value)

@@ -20,7 +20,7 @@ declare let self: ServiceWorkerGlobalScope
 cleanupOutdatedCaches()
 
 precacheAndRoute(self.__WB_MANIFEST, {
-  directoryIndex: (null as any),
+  directoryIndex: null as unknown as string,
 })
 
 // SPA の app-shell (index.html) フォールバック。ただし / と /api/ は除外
@@ -36,7 +36,8 @@ registerRoute(
   }),
 )
 
-self.addEventListener('push', async function (event: any) {
+self.addEventListener('push', async function (event: PushEvent) {
+  if (!event.data) return;
   const data = event.data.json()
   if (data.is_notification) {
     const title = 'gkill'
@@ -105,8 +106,8 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           }
           return response
 
-        } catch (err: any) {
-          if ((err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+        } catch (err: unknown) {
+          if (err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
             return Response.error()
           } else {
             // abort以外はエラー出力する
@@ -145,8 +146,8 @@ self.addEventListener('fetch', (event: FetchEvent) => {
             config_cache.put(cacheKey, response.clone())
           }
           return response
-        } catch (err: any) {
-          if ((err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+        } catch (err: unknown) {
+          if (err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
             return Response.error()
           } else {
             // abort以外はエラー出力する

@@ -3,7 +3,7 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToSettings,
-  makeUniqueLabel, pageContainsText, findKyouByText,
+  makeUniqueLabel, findKyouByText,
   clickDialogButton, clickFabButton,
 } from './crud-helpers'
 
@@ -58,7 +58,7 @@ test.describe('Regression Tests for Previously Fixed Bugs', () => {
     await navigateToSettings(page)
 
     // Look for local access only toggle/switch
-    const localAccessToggle = page.locator('.v-switch, .v-checkbox, input[type="checkbox"]')
+    const _localAccessToggle = page.locator('.v-switch, .v-checkbox, input[type="checkbox"]')
       .filter({ hasText: /ローカル|local|IsLocalOnlyAccess/i }).first()
     // If direct text match fails, look in surrounding text
     const app = page.locator('#app')
@@ -74,12 +74,12 @@ test.describe('Regression Tests for Previously Fixed Bugs', () => {
     await navigateToSettings(page)
 
     // Look for tag structure section and add button
-    const addButtons = page.locator('button').filter({ hasText: /追加|add/i })
+    const _addButtons = page.locator('button').filter({ hasText: /追加|add/i })
     const app = page.locator('#app')
     const content = await app.textContent()
 
     // Verify tag-related section exists
-    const hasTagSection = content!.includes('タグ') || content!.includes('Tag') || content!.includes('tag')
+    const _hasTagSection = content!.includes('タグ') || content!.includes('Tag') || content!.includes('tag')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
   })
@@ -104,7 +104,7 @@ test.describe('Regression Tests for Previously Fixed Bugs', () => {
     const content = await app.textContent()
 
     // Verify RepType section exists
-    const hasRepTypeSection = content!.includes('RepType') || content!.includes('レップタイプ') || content!.includes('reptype')
+    const _hasRepTypeSection = content!.includes('RepType') || content!.includes('レップタイプ') || content!.includes('reptype')
     expect(content!.length).toBeGreaterThan(0)
     await expect(app).toBeVisible()
   })

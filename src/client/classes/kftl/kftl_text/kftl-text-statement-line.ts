@@ -18,7 +18,7 @@ export class KFTLTextStatementLine extends KFTLStatementLine {
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
         const request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
         const text_id = request.get_current_text_id()
-        request.add_text_line(text_id!!, this.get_context().get_this_statement_line_text())
+        request.add_text_line(text_id!, this.get_context().get_this_statement_line_text())
         return new Promise<void>((resolve) => resolve())
     }
 

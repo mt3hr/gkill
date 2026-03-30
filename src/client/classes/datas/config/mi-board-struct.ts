@@ -12,7 +12,7 @@ export class MiBoardStruct {
 
     parent_folder_id: string | null
 
-    seq: Number
+    seq: number
 
     check_when_inited: boolean
 

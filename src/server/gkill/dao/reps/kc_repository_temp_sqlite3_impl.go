@@ -217,7 +217,7 @@ INSERT INTO KC (
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		kc.IsDeleted,
 		kc.ID,
 		kc.Title,
@@ -278,7 +278,7 @@ AND DEVICE = ?
 	}
 
 	dataType := "kc"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -403,7 +403,7 @@ AND DEVICE = ?
 `
 	dataType := "kc"
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 		txID,
@@ -518,7 +518,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		txID,
 		userID,
 		device,

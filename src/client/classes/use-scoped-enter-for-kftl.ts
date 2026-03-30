@@ -71,6 +71,6 @@ export function useScopedEnterForKFTL(
     });
 
     onBeforeUnmount(() => {
-        window.removeEventListener('keydown', listener, { capture: true } as any);
+        window.removeEventListener('keydown', listener, { capture: true } as EventListenerOptions);
     });
 }

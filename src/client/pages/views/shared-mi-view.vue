@@ -23,12 +23,12 @@
                                 :enable_dialog="false" :show_content_only="false"
                                 :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
                                 :show_rep_name="false" :force_show_latest_kyou_info="true"
-                                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
-                                @focused_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
-                                @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
+                                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
+                                @focused_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
+                                @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
                                 v-on="crudRelayHandlers"
-                                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)"
-                                @requested_open_rykv_dialog="(...params: any[]) => open_rykv_dialog(params[0], params[1], params[2])"
+                                @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)"
+                                @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
                                 ref="kyou_list_view" />
                         </v-card>
                     </td>
@@ -39,7 +39,7 @@
                                     <KyouCountCalendar v-show="is_show_kyou_count_calendar"
                                         :application_config="application_config" :gkill_api="gkill_api"
                                         :kyous="match_kyous" :for_mi="true" class="kyou_list_calendar_in_share_mi_view"
-                                        @requested_focus_time="(...time: any[]) => { focused_time = time[0] as Date }" />
+                                        @requested_focus_time="(time: Date) => { focused_time = time }" />
                                 </td>
                             </tr>
                             <tr>
@@ -68,18 +68,19 @@
             </table>
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="false" :enable_dialog="false"
-                @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
-                @focused_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
-                @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
-                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @closed="(id: string) => close_rykv_dialog(id)"
+                @focused_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
+                @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
+                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
                 @requested_reload_list="() => { }"
                 v-on="{ ...crudRelayHandlers, ...rykvDialogHandler }"
-                @deleted_kyou="(...deleted_kyou: any[]) => onDeletedKyou(deleted_kyou[0] as Kyou)" />
+                @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)" />
         </v-main>
     </div>
 </template>
 <script setup lang="ts">
 import type { SharedMiViewProps } from './shared-mi-view-props'
+import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'

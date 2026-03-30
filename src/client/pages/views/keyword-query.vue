@@ -6,7 +6,7 @@
                 :label="i18n.global.t('WORD_QUERY_TITLE')" hide-details class="pa-0 ma-0" />
         </v-col>
         <v-spacer />
-        <v-col cols="auto" class="pb-0 mb-0 pr-0">
+        <v-col cols="auto" class="pb-0 mb-0 pr-0 pt-2">
             <v-btn dark color="secondary" @click="emits('request_clear_keyword_query')" hide-details>{{
                 i18n.global.t("CLEAR_TITLE") }}</v-btn>
         </v-col>

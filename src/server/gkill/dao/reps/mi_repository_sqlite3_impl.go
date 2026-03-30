@@ -293,7 +293,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 
 	tableName := "MI"
 	tableNameAlias := "MI"
-	queryArgsForCreate := []interface{}{
+	queryArgsForCreate := []any{
 		repName,
 	}
 	whereCounter := 0
@@ -319,7 +319,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForCheck := []interface{}{
+	queryArgsForCheck := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -342,7 +342,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForLimit := []interface{}{
+	queryArgsForLimit := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -365,7 +365,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForStart := []interface{}{
+	queryArgsForStart := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -388,7 +388,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForEnd := []interface{}{
+	queryArgsForEnd := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -424,7 +424,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		}
 	}()
 
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
 	queryArgs = append(queryArgs, queryArgsForCheck...)
 	queryArgs = append(queryArgs, queryArgsForLimit...)
@@ -685,7 +685,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 
 	tableName := "MI"
 	tableNameAlias := "MI"
-	queryArgsForCreate := []interface{}{
+	queryArgsForCreate := []any{
 		repName,
 	}
 	whereCounter := 0
@@ -709,7 +709,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForCheck := []interface{}{
+	queryArgsForCheck := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -732,7 +732,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForLimit := []interface{}{
+	queryArgsForLimit := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -755,7 +755,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForStart := []interface{}{
+	queryArgsForStart := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -778,7 +778,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForEnd := []interface{}{
+	queryArgsForEnd := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -814,7 +814,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 		}
 	}()
 
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
 	queryArgs = append(queryArgs, queryArgsForCheck...)
 	queryArgs = append(queryArgs, queryArgsForLimit...)
@@ -1072,7 +1072,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 
 	tableName := "MI"
 	tableNameAlias := "MI"
-	queryArgsForCreate := []interface{}{
+	queryArgsForCreate := []any{
 		repName,
 	}
 	whereCounter := 0
@@ -1096,7 +1096,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForCheck := []interface{}{
+	queryArgsForCheck := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1119,7 +1119,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForLimit := []interface{}{
+	queryArgsForLimit := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1142,7 +1142,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForStart := []interface{}{
+	queryArgsForStart := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1165,7 +1165,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForEnd := []interface{}{
+	queryArgsForEnd := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1201,7 +1201,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		}
 	}()
 
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
 	queryArgs = append(queryArgs, queryArgsForCheck...)
 	queryArgs = append(queryArgs, queryArgsForLimit...)
@@ -1510,7 +1510,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 
 	tableName := "MI"
 	tableNameAlias := "MI"
-	queryArgsForCreate := []interface{}{
+	queryArgsForCreate := []any{
 		repName,
 	}
 	whereCounter := 0
@@ -1536,7 +1536,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForCheck := []interface{}{
+	queryArgsForCheck := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1559,7 +1559,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForLimit := []interface{}{
+	queryArgsForLimit := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1582,7 +1582,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForStart := []interface{}{
+	queryArgsForStart := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1605,7 +1605,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForEnd := []interface{}{
+	queryArgsForEnd := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1641,7 +1641,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		}
 	}()
 
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
 	queryArgs = append(queryArgs, queryArgsForCheck...)
 	queryArgs = append(queryArgs, queryArgsForLimit...)
@@ -1927,7 +1927,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 
 	tableName := "MI"
 	tableNameAlias := "MI"
-	queryArgsForCreate := []interface{}{
+	queryArgsForCreate := []any{
 		repName,
 	}
 	whereCounter := 0
@@ -1951,7 +1951,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForCheck := []interface{}{
+	queryArgsForCheck := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1974,7 +1974,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForLimit := []interface{}{
+	queryArgsForLimit := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -1997,7 +1997,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForStart := []interface{}{
+	queryArgsForStart := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -2020,7 +2020,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForEnd := []interface{}{
+	queryArgsForEnd := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -2056,7 +2056,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 		}
 	}()
 
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
 	queryArgs = append(queryArgs, queryArgsForCheck...)
 	queryArgs = append(queryArgs, queryArgsForLimit...)
@@ -2344,7 +2344,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 
 	tableName := "MI"
 	tableNameAlias := "MI"
-	queryArgsForCreate := []interface{}{
+	queryArgsForCreate := []any{
 		repName,
 	}
 	whereCounter := 0
@@ -2368,7 +2368,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForCheck := []interface{}{
+	queryArgsForCheck := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -2391,7 +2391,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForLimit := []interface{}{
+	queryArgsForLimit := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -2414,7 +2414,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForStart := []interface{}{
+	queryArgsForStart := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -2437,7 +2437,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 
 	tableName = "MI"
 	tableNameAlias = "MI"
-	queryArgsForEnd := []interface{}{
+	queryArgsForEnd := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -2473,7 +2473,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		}
 	}()
 
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
 	queryArgs = append(queryArgs, queryArgsForCheck...)
 	queryArgs = append(queryArgs, queryArgsForLimit...)
@@ -2631,26 +2631,26 @@ INSERT INTO MI (
 		}
 	}()
 
-	var limitTimeStr interface{}
+	var limitTimeStr any
 	if mi.LimitTime == nil {
 		limitTimeStr = nil
 	} else {
 		limitTimeStr = mi.LimitTime.Format(sqlite3impl.TimeLayout)
 	}
-	var startTimeStr interface{}
+	var startTimeStr any
 	if mi.EstimateStartTime == nil {
 		startTimeStr = nil
 	} else {
 		startTimeStr = mi.EstimateStartTime.Format(sqlite3impl.TimeLayout)
 	}
-	var endTimeStr interface{}
+	var endTimeStr any
 	if mi.EstimateEndTime == nil {
 		endTimeStr = nil
 	} else {
 		endTimeStr = mi.EstimateEndTime.Format(sqlite3impl.TimeLayout)
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		mi.IsDeleted,
 		mi.ID,
 		mi.Title,
@@ -2707,7 +2707,7 @@ WHERE
 
 	tableName := "MI"
 	tableNameAlias := "MI"
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	whereCounter := 0
 	var onlyLatestData bool
 	relatedTimeColumnName := "UPDATE_TIME"

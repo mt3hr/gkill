@@ -33,9 +33,9 @@ export class FindKyouQuery {
     hide_tags: Array<string>
     tags_and: boolean
     use_map: boolean
-    map_latitude: Number
-    map_longitude: Number
-    map_radius: Number
+    map_latitude: number
+    map_longitude: number
+    map_radius: number
     use_calendar: boolean
     calendar_start_date: Date | null
     calendar_end_date: Date | null
@@ -76,6 +76,7 @@ export class FindKyouQuery {
 
     use_include_id: boolean
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static parse_find_kyou_query(json: any): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.query_id = json.query_id

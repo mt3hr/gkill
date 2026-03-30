@@ -6,6 +6,7 @@ export default class LantanaMoodGreaterThanPredicate implements DnotePredicate {
     constructor(lantana_mood_greater_than_target: number) {
         this.lantana_mood_greater_than_target = lantana_mood_greater_than_target
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const lantana_mood_greater_than_target = json.value as number
         return new LantanaMoodGreaterThanPredicate(lantana_mood_greater_than_target)
@@ -19,7 +20,7 @@ export default class LantanaMoodGreaterThanPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "LantanaMoodGreaterThanPredicate",
             value: this.lantana_mood_greater_than_target,

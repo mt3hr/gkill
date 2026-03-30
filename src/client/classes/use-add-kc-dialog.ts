@@ -10,7 +10,7 @@ export function useAddKcDialog(options: {
     props: EditLantanaDialogProps
     emits: KyouDialogEmits
 }) {
-    const { emits } = options
+    const { emits: _emits } = options
 
     const is_show_dialog: Ref<boolean> = ref(false)
     useDialogHistoryStack(is_show_dialog)

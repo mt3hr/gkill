@@ -12,7 +12,7 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 export class KFTLKCRequest extends KFTLRequest {
 
     private title: string
-    private num_value: Number
+    private num_value: number
 
     constructor(request_id: string, context: KFTLStatementLineContext) {
         super(request_id, context)
@@ -24,7 +24,7 @@ export class KFTLKCRequest extends KFTLRequest {
         let errors = new Array<GkillError>()
         await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
 
-        const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
+        const time = this.get_related_time() ? this.get_related_time()! : new Date(Date.now())
         const req = new AddKCRequest()
         const now = new Date(Date.now())
         req.tx_id = this.get_tx_id()
@@ -56,7 +56,7 @@ export class KFTLKCRequest extends KFTLRequest {
         this.title = title
     }
 
-    set_num_value(num_value: Number): void {
+    set_num_value(num_value: number): void {
         this.num_value = num_value
     }
 }

@@ -7,7 +7,7 @@ export function useTagHistoriesView(options: {
     props: TagHistoriesViewProps,
     emits: KyouViewEmits,
 }) {
-    const { props, emits } = options
+    const { props, emits: _emits } = options
 
     const cloned_tag: Ref<Tag> = ref(props.tag.clone())
     watch(() => props.tag, () => {

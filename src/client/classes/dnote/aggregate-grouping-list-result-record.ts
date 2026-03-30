@@ -2,6 +2,6 @@ import type { Kyou } from "../datas/kyou"
 
 export default class AgregatedItem {
     title: string = ""
-    value: any = ""
+    value: unknown = ""
     match_kyous: Array<Kyou> = new Array<Kyou>()
 }

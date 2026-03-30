@@ -14,23 +14,24 @@ import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-
 import { Tag } from '@/classes/datas/tag'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import type { ComponentRef } from '@/classes/component-ref'
 
 export function usePlaingTimeisPage() {
     const theme = useTheme()
 
     // ── Template refs ──
-    const plaing_timeis_view = ref<any>(null)
-    const application_config_dialog = ref<any>(null)
+    const plaing_timeis_view = ref<ComponentRef | null>(null)
+    const application_config_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
-    const actual_height: Ref<Number> = ref(0)
-    const element_height: Ref<Number> = ref(0)
-    const browser_url_bar_height: Ref<Number> = ref(0)
-    const app_title_bar_height: Ref<Number> = ref(50)
+    const actual_height: Ref<number> = ref(0)
+    const element_height: Ref<number> = ref(0)
+    const browser_url_bar_height: Ref<number> = ref(0)
+    const app_title_bar_height: Ref<number> = ref(50)
     const gkill_api = computed(() => GkillAPI.get_instance())
     const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
-    const app_content_height: Ref<Number> = ref(0)
-    const app_content_width: Ref<Number> = ref(0)
+    const app_content_height: Ref<number> = ref(0)
+    const app_content_width: Ref<number> = ref(0)
 
     const is_show_application_config_dialog: Ref<boolean> = ref(false)
     const is_loading = ref(true)
@@ -233,12 +234,12 @@ export function usePlaingTimeisPage() {
         router.replace('/' + page_name + '?loaded=true')
     }
 
-    function onPlaingViewReceivedErrors(...errors: any[]): void {
-        write_errors(errors[0] as Array<GkillError>)
+    function onPlaingViewReceivedErrors(errors: Array<GkillError>): void {
+        write_errors(errors)
     }
 
-    function onPlaingViewReceivedMessages(...messages: any[]): void {
-        write_messages(messages[0] as Array<GkillMessage>)
+    function onPlaingViewReceivedMessages(messages: Array<GkillMessage>): void {
+        write_messages(messages)
     }
 
     function onPlaingViewDeletedKyou(): void {
@@ -261,8 +262,8 @@ export function usePlaingTimeisPage() {
         // no-op
     }
 
-    function onPlaingViewRegisteredTag(...registered_tag: any[]): void {
-        check_tag_update(registered_tag[0] as Tag)
+    function onPlaingViewRegisteredTag(registered_tag: Tag): void {
+        check_tag_update(registered_tag)
     }
 
     function onPlaingViewRegisteredText(): void {
@@ -277,8 +278,8 @@ export function usePlaingTimeisPage() {
         // no-op
     }
 
-    function onPlaingViewUpdatedTag(...updated_tag: any[]): void {
-        check_tag_update(updated_tag[0] as Tag)
+    function onPlaingViewUpdatedTag(updated_tag: Tag): void {
+        check_tag_update(updated_tag)
     }
 
     function onPlaingViewUpdatedText(): void {
@@ -289,12 +290,12 @@ export function usePlaingTimeisPage() {
         // no-op
     }
 
-    function onApplicationConfigReceivedErrors(...errors: any[]): void {
-        write_errors(errors[0] as Array<GkillError>)
+    function onApplicationConfigReceivedErrors(errors: Array<GkillError>): void {
+        write_errors(errors)
     }
 
-    function onApplicationConfigReceivedMessages(...messages: any[]): void {
-        write_messages(messages[0] as Array<GkillMessage>)
+    function onApplicationConfigReceivedMessages(messages: Array<GkillMessage>): void {
+        write_messages(messages)
     }
 
     function onAlertClickClose(message_id: string): void {

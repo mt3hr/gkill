@@ -12,7 +12,7 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
     constructor(line_text: string, context: KFTLStatementLineContext) {
         super(line_text, context)
         const target_id = (this.get_prev_line() && this.get_prev_line()?.get_context() && this.get_prev_line()?.get_context().is_this_prototype() || this.prev_line_is_kmemo_statement())
-            ? this.get_prev_line()!!.get_context().get_this_statement_line_target_id()
+            ? this.get_prev_line()!.get_context().get_this_statement_line_target_id()
             : GkillAPI.get_gkill_api().generate_uuid()
         context.set_this_statement_line_target_id(target_id)
         context.set_next_statement_line_target_id(target_id)
@@ -24,7 +24,7 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
         try {
             kmemo_request = request_map.get(target_id) as KFTLKmemoRequest
             kmemo_request.add_kmemo_line(this.get_statement_line_text())
-        } catch (e: any) {
+        } catch (_e: unknown) {
             kmemo_request = new KFTLKmemoRequest(this.get_context().get_this_statement_line_target_id(), this.get_context())
             kmemo_request.add_kmemo_line(this.get_statement_line_text())
             request_map.set(target_id, kmemo_request)
@@ -56,7 +56,7 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
         return true
     }
 
-    private static is_kmemo_statement_line(statement_line: any): boolean {
+    private static is_kmemo_statement_line(statement_line: KFTLStatementLine): boolean {
         return statement_line.constructor.name == KFTLKmemoStatementLine.name
     }
 

@@ -78,8 +78,8 @@
                 @requested_search="onSidebarRequestedSearch"
                 @updated_query="onSidebarUpdatedQuery"
                 @inited="onSidebarInited"
-                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="query_editor_sidebar" />
         </v-navigation-drawer>
         <v-main class="main" :class="(drawer_mode_is_mobile) ? 'scroll_snap_container' : ''">
@@ -102,17 +102,17 @@
                             :show_rep_name="!is_shared_rykv_view" :force_show_latest_kyou_info="true"
                             :show_content_only="false" :show_timeis_plaing_end_button="false"
                             v-on="crudRelayHandlers"
-                            @scroll_list="(...args: any[]) => onColumnScrollList(index, args[0] as number)"
+                            @scroll_list="(position: number) => onColumnScrollList(index, position)"
                             @clicked_list_view="() => onColumnClickedListView(index)"
-                            @clicked_kyou="(...args: any[]) => onColumnClickedKyou(index, args[0] as Kyou)"
-                            @focused_kyou="(...args: any[]) => onColumnClickedKyou(index, args[0] as Kyou)"
-                            @requested_change_focus_kyou="(...args: any[]) => onColumnRequestedChangeFocusKyou(index, args[0] as boolean)"
+                            @clicked_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
+                            @focused_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
+                            @requested_change_focus_kyou="(is_focus: boolean) => onColumnRequestedChangeFocusKyou(index, is_focus)"
                             @requested_search="() => onColumnRequestedSearch(index)"
-                            @requested_change_is_image_only_view="(...args: any[]) => onColumnRequestedChangeImageOnlyView(index, args[0] as boolean)"
+                            @requested_change_is_image_only_view="(is_image_only: boolean) => onColumnRequestedChangeImageOnlyView(index, is_image_only)"
                             @requested_close_column="close_list_view(index)"
-                            @requested_reload_kyou="(...args: any[]) => reload_kyou(args[0] as Kyou)"
+                            @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
                             @requested_reload_list="() => onColumnRequestedReloadList(index)"
-                            @requested_open_rykv_dialog="(...args: any[]) => open_rykv_dialog(args[0], args[1], args[2])"
+                            @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
                             ref="kyou_list_views" />
                     </td>
                     <td valign="top" v-if="!is_shared_rykv_view"
@@ -140,7 +140,7 @@
                                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
                         </div>
                         <div class="ryuu_view dummy">
-                            <RyuuListView v-if="focused_kyou && default_query" :application_config="application_config"
+                            <RyuuView v-if="focused_kyou && default_query" :application_config="application_config"
                                 :gkill_api="gkill_api" :target_kyou="focused_kyou" :editable="false"
                                 :find_kyou_query_default="default_query"
                                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers }" />
@@ -158,15 +158,15 @@
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                             :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="false"
-                            @requested_focus_time="(...args: any[]) => onRequestedFocusTime(args[0] as Date)" />
+                            @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
                     </td>
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
                             :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
                             :marker_time="gps_log_map_marker_time"
-                            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                            @requested_focus_time="(...args: any[]) => onGpsLogMapRequestedFocusTime(args[0] as Date)" />
+                            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+                            @requested_focus_time="(date: Date) => onGpsLogMapRequestedFocusTime(date)" />
                     </td>
                 </tr>
             </table>
@@ -218,7 +218,7 @@
                 ref="upload_file_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @closed="(...id: any[]) => close_rykv_dialog(id[0] as string)"
+                :enable_dialog="enable_dialog" @closed="(id: string) => close_rykv_dialog(id)"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }" />
             <v-avatar v-if="!is_shared_rykv_view" :style="floatingActionButtonStyle()" color="primary"
                 class="position-fixed">
@@ -264,6 +264,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 import { i18n } from '@/i18n'
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from '../dialogs/add-kc-dialog.vue'
@@ -283,7 +284,7 @@ import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
-import RyuuListView from './ryuu-list-view.vue'
+import RyuuView from './ryuu-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import RykvDialogHost from './rykv-dialog-host.vue'
@@ -385,7 +386,7 @@ import { computed } from 'vue'
 const is_ryuu_empty = computed(() => {
     const data = props.application_config.ryuu_json_data
     if (!data || !Array.isArray(data) || data.length === 0) return true
-    return data.every((item: any) => {
+    return data.every((item: unknown) => {
         if (Array.isArray(item)) return item.length === 0
         if (item && typeof item === 'object' && 'queries' in item) {
             return !item.queries || !Array.isArray(item.queries) || item.queries.length === 0

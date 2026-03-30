@@ -11,11 +11,11 @@ registerSW()
 
 /* abortは握りつぶす */
 // src/utils/isAbortError.ts (例)
-export function isAbortError(err: any): boolean {
+export function isAbortError(err: unknown): boolean {
   if (!err) return false
-  if (err.name === "AbortError") return true
+  if (err instanceof Error && err.name === "AbortError") return true
 
-  const msg = String(err?.message ?? "")
+  const msg = String((err instanceof Error ? err.message : err) ?? "")
   return (
     msg.includes("signal is aborted without reason") ||
     msg.includes("user aborted a request") ||

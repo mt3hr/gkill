@@ -147,7 +147,7 @@ const {
     is_requested_submit,
     cloned_kyou,
     timeis_title,
-    timeis_start_date_typed,
+    timeis_start_date_typed: _timeis_start_date_typed,
     timeis_start_date_string,
     timeis_start_time_string,
     timeis_end_date_typed,

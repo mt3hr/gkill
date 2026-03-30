@@ -20,10 +20,10 @@
 
         <EditRepTypeStructView :application_config="application_config" :gkill_api="gkill_api"
           :rep_type_struct="application_config.rep_type_struct"
-          @requested_reload_application_config="(...application_config: any[]) => emits('requested_reload_application_config', application_config[0] as ApplicationConfig)"
-          @requested_apply_rep_type_struct="(...rep_type_struct_element_data: any[]) => emits('requested_apply_rep_type_struct', rep_type_struct_element_data[0] as RepTypeStructElementData)"
-          @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-          @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+          @requested_reload_application_config="(application_config: ApplicationConfig) => emits('requested_reload_application_config', application_config)"
+          @requested_apply_rep_type_struct="(rep_type_struct_element_data: RepTypeStructElementData) => emits('requested_apply_rep_type_struct', rep_type_struct_element_data)"
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @requested_close_dialog="hide" />
         </v-card>
 </div>

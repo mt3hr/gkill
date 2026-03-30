@@ -17,8 +17,8 @@ import AgregateAverageLantanaMood from '@/classes/dnote/dnote-agregate-target/ag
 import AgregateAverageNlogAmount from '@/classes/dnote/dnote-agregate-target/agregate-average-nlog-amount'
 import AgregateSumGitCommitLogCodeCount from '@/classes/dnote/dnote-agregate-target/agregate-sum-git-commit-log-code-count'
 
-const asKyou = (obj: any) => obj
-const emptyQuery = {} as any
+const asKyou = (obj: unknown) => obj
+const emptyQuery = {} as never
 
 // ========== Count ==========
 

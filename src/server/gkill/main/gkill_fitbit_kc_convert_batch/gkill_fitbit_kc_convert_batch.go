@@ -594,7 +594,7 @@ func run(args Args) error {
 	// Parser workers
 	var wgParse sync.WaitGroup
 	taskCh := make(chan parseTask, len(tasks))
-	for i := 0; i < args.ParseWorkers; i++ {
+	for range args.ParseWorkers {
 		wgParse.Add(1)
 		go func() {
 			defer wgParse.Done()

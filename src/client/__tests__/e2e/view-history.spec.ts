@@ -155,7 +155,7 @@ test.describe('View/Browse History Flows', () => {
     expect(found).toBe(true)
 
     // Try to open history on the record
-    const historyOpened = await openHistoryFor(page, label)
+    const _historyOpened = await openHistoryFor(page, label)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
   })
@@ -197,7 +197,7 @@ test.describe('View/Browse History Flows', () => {
     await navigateToRykv(page)
 
     // Check if text content is visible
-    const textVisible = await pageContainsText(page, 'テスト閲覧テキスト')
+    const _textVisible = await pageContainsText(page, 'テスト閲覧テキスト')
 
     // Try to open history for the text
     const textElement = page.locator('#app').locator('text=テスト閲覧テキスト').first()

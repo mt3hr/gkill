@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 	}, nil
 }
 
-var serverConfigDefaultValue = map[string]interface{}{
+var serverConfigDefaultValue = map[string]any{
 	"DEVICE":                         "",
 	"ENABLE_THIS_DEVICE":             false,
 	"IS_LOCAL_ONLY_ACCESS":           true,
@@ -618,7 +618,7 @@ HAVING DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		device,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -705,7 +705,7 @@ INSERT INTO SERVER_CONFIG (
 		}
 	}()
 
-	insertValuesMap := map[string]interface{}{
+	insertValuesMap := map[string]any{
 		"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
 		"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
 		"ADDRESS":                        serverConfig.Address,
@@ -739,7 +739,7 @@ INSERT INTO SERVER_CONFIG (
 
 	for key, value := range insertValuesMap {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			serverConfig.Device,
 			key,
 			value,
@@ -837,7 +837,7 @@ INSERT INTO SERVER_CONFIG (
 	}()
 
 	for _, serverConfig := range serverConfigs {
-		updateValuesMap := map[string]interface{}{
+		updateValuesMap := map[string]any{
 			"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
 			"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
 			"ADDRESS":                        serverConfig.Address,
@@ -858,7 +858,7 @@ INSERT INTO SERVER_CONFIG (
 		// レコード自体が存在しなかったらいれる
 		for key, value := range updateValuesMap {
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				serverConfig.Device,
 				key,
 			}
@@ -878,7 +878,7 @@ INSERT INTO SERVER_CONFIG (
 			}
 			if recordCount == 0 {
 				slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
-				queryArgs := []interface{}{
+				queryArgs := []any{
 					serverConfig.Device,
 					key,
 					value,
@@ -897,7 +897,7 @@ INSERT INTO SERVER_CONFIG (
 		// 更新する
 		for key, value := range updateValuesMap {
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				value,
 				serverConfig.Device,
 				key,
@@ -933,7 +933,7 @@ GROUP BY DEVICE
 	}()
 
 	enableDeviceCount := 0
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		true,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", checkEnableDeviceCountSQL, queryArgs)
@@ -1024,7 +1024,7 @@ INSERT INTO SERVER_CONFIG (
   ?
 )
 `
-	updateValuesMap := map[string]interface{}{
+	updateValuesMap := map[string]any{
 		"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
 		"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
 		"ADDRESS":                        serverConfig.Address,
@@ -1071,7 +1071,7 @@ INSERT INTO SERVER_CONFIG (
 	// レコード自体が存在しなかったらいれる
 	for key, value := range updateValuesMap {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			serverConfig.Device,
 			key,
 		}
@@ -1091,7 +1091,7 @@ INSERT INTO SERVER_CONFIG (
 		}
 		if recordCount == 0 {
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				serverConfig.Device,
 				key,
 				value,
@@ -1121,7 +1121,7 @@ INSERT INTO SERVER_CONFIG (
 
 	for key, value := range updateValuesMap {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
-		queryArgs := []interface{}{
+		queryArgs := []any{
 			value,
 			serverConfig.Device,
 			key,
@@ -1156,7 +1156,7 @@ GROUP BY DEVICE
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		true,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -1227,7 +1227,7 @@ WHERE DEVICE = ?
 		}
 	}()
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		device,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
@@ -1309,7 +1309,7 @@ INSERT INTO SERVER_CONFIG (
 	}()
 
 	for _, serverConfig := range serverConfigs {
-		insertValuesMap := map[string]interface{}{
+		insertValuesMap := map[string]any{
 			"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
 			"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
 			"ADDRESS":                        serverConfig.Address,
@@ -1329,7 +1329,7 @@ INSERT INTO SERVER_CONFIG (
 		}
 
 		for key, value := range insertValuesMap {
-			queryArgs := []interface{}{
+			queryArgs := []any{
 				serverConfig.Device,
 				key,
 				value,
@@ -1365,7 +1365,7 @@ GROUP BY DEVICE
 		}
 	}()
 
-	queryArgsCheckEnableDevice := []interface{}{
+	queryArgsCheckEnableDevice := []any{
 		true,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", checkEnableDeviceCountSQL, queryArgsCheckEnableDevice)
@@ -1493,7 +1493,7 @@ WHERE KEY = ?
 		}
 	}()
 	dbSchemaVersion := ""
-	queryArgs := []interface{}{schemaVersionKey}
+	queryArgs := []any{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
@@ -1515,7 +1515,7 @@ VALUES(?, ?)`
 					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 				}
 			}()
-			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
+			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
@@ -1524,7 +1524,7 @@ VALUES(?, ?)`
 				return false, nil, err
 			}
 
-			queryArgs = []interface{}{schemaVersionKey}
+			queryArgs = []any{schemaVersionKey}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {

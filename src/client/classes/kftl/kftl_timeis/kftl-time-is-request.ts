@@ -49,7 +49,7 @@ export class KFTLTimeIsRequest extends KFTLRequest {
         }
 
         await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
-        const related_time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
+        const related_time = this.get_related_time() ? this.get_related_time()! : new Date(Date.now())
         const now = new Date(Date.now())
 
         const timeis_req = new AddTimeisRequest()

@@ -15,7 +15,7 @@ export function useEditRyuuItemView(options: {
     emits: EditRyuuItemViewEmits,
     model_value: ModelRef<RelatedKyouQuery | undefined>,
 }) {
-    const props = options.props
+    const _props = options.props
     const emits = options.emits
     const model_value = options.model_value
 
@@ -49,7 +49,8 @@ export function useEditRyuuItemView(options: {
         title.value = model_value.value!.title
         prefix.value = model_value.value!.prefix
         suffix.value = model_value.value!.suffix
-        root_predicate.value = model_value.value!.predicate.predicate_struct_to_json()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        root_predicate.value = model_value.value!.predicate.predicate_struct_to_json() as any
         related_time_match_type.value = model_value.value!.related_time_match_type
         is_use_custom_find_kyou_query.value = model_value.value!.find_kyou_query !== null
         find_kyou_query.value = model_value.value!.find_kyou_query
@@ -71,7 +72,7 @@ export function useEditRyuuItemView(options: {
         emits('requested_close_dialog')
     }
 
-    function predicate_struct_to_json(group: PredicateGroupType | Predicate): any {
+    function predicate_struct_to_json(group: PredicateGroupType | Predicate): Record<string, unknown> {
         if (is_group(group)) {
             return {
                 logic: group.logic,

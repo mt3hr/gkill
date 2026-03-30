@@ -215,7 +215,7 @@ FROM TIMEIS
 
 	tableName := "TIMEIS"
 	tableNameAlias := "TIMEIS"
-	queryArgsForStart := []interface{}{
+	queryArgsForStart := []any{
 		repName,
 	}
 	whereCounter := 0
@@ -225,7 +225,7 @@ FROM TIMEIS
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
-	queryArgsForPlaingStart := []interface{}{}
+	queryArgsForPlaingStart := []any{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	ignoreCase := true
 
@@ -247,7 +247,7 @@ FROM TIMEIS
 
 	tableName = "TIMEIS"
 	tableNameAlias = "TIMEIS"
-	queryArgsForEnd := []interface{}{
+	queryArgsForEnd := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -256,7 +256,7 @@ FROM TIMEIS
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	queryArgsForPlaingEnd := []interface{}{}
+	queryArgsForPlaingEnd := []any{}
 	sqlWhereFilterPlaingTimeisEnd := ""
 	ignoreCase = true
 
@@ -418,7 +418,7 @@ WHERE
 		UpdateTime:     updateTime,
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 	}
 	tableName := "TIMEIS"
@@ -576,7 +576,7 @@ WHERE
 		IDs:    ids,
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 	}
 	tableName := "TIMEIS"
@@ -802,7 +802,7 @@ FROM TIMEIS
 
 	tableName := "TIMEIS"
 	tableNameAlias := "TIMEIS"
-	queryArgsForStart := []interface{}{
+	queryArgsForStart := []any{
 		repName,
 	}
 	whereCounter := 0
@@ -812,7 +812,7 @@ FROM TIMEIS
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
-	queryArgsForPlaingStart := []interface{}{}
+	queryArgsForPlaingStart := []any{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	ignoreCase := true
 
@@ -834,7 +834,7 @@ FROM TIMEIS
 
 	tableName = "TIMEIS"
 	tableNameAlias = "TIMEIS"
-	queryArgsForEnd := []interface{}{
+	queryArgsForEnd := []any{
 		repName,
 	}
 	whereCounter = 0
@@ -844,7 +844,7 @@ FROM TIMEIS
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	queryArgsForPlaingEnd := []interface{}{}
+	queryArgsForPlaingEnd := []any{}
 	sqlWhereFilterPlaingTimeisEnd := ""
 	ignoreCase = true
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
@@ -1010,7 +1010,7 @@ WHERE
 
 	tableName := "TIMEIS"
 	tableNameAlias := "TIMEIS"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -1020,7 +1020,7 @@ WHERE
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	queryArgsForPlaingStart := []interface{}{}
+	queryArgsForPlaingStart := []any{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	findWordUseLike := true
 	ignoreCase := true
@@ -1187,7 +1187,7 @@ WHERE
 
 	tableName := "TIMEIS"
 	tableNameAlias := "TIMEIS"
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		repName,
 		dataType,
 	}
@@ -1197,7 +1197,7 @@ WHERE
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	queryArgsForPlaingStart := []interface{}{}
+	queryArgsForPlaingStart := []any{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	findWordUseLike := true
 	ignoreCase := true
@@ -1367,14 +1367,14 @@ INSERT INTO TIMEIS (
 		}
 	}()
 
-	var endTimeStr interface{}
+	var endTimeStr any
 	if timeis.EndTime == nil {
 		endTimeStr = nil
 	} else {
 		endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
 	}
 
-	queryArgs := []interface{}{
+	queryArgs := []any{
 		timeis.IsDeleted,
 		timeis.ID,
 		timeis.Title,
@@ -1563,7 +1563,7 @@ WHERE KEY = ?
 		}
 	}()
 	dbSchemaVersion := ""
-	queryArgs := []interface{}{schemaVersionKey}
+	queryArgs := []any{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
@@ -1585,7 +1585,7 @@ VALUES(?, ?)`
 					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 				}
 			}()
-			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
+			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
@@ -1594,7 +1594,7 @@ VALUES(?, ?)`
 				return false, nil, err
 			}
 
-			queryArgs = []interface{}{schemaVersionKey}
+			queryArgs = []any{schemaVersionKey}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {

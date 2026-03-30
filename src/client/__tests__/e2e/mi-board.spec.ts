@@ -75,7 +75,7 @@ test.describe('Mi Board', () => {
     // Look for an add/plus button (FAB or toolbar button)
     const addButton = page.locator('button').filter({ hasText: /追加|add|\+/i })
     const fabButton = page.locator('.v-btn--fab, [class*="fab"]')
-    const hasAdd = (await addButton.count()) > 0 || (await fabButton.count()) > 0
+    const _hasAdd = (await addButton.count()) > 0 || (await fabButton.count()) > 0
     // May not be visible if not logged in, so just check app didn't crash
     const app = page.locator('#app')
     await expect(app).toBeVisible()

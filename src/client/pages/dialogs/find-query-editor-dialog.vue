@@ -19,11 +19,11 @@
         <v-card>
           <FindQueryEditorView v-if="model_value" :application_config="received_application_config"
             :gkill_api="gkill_api" :find_kyou_query="model_value" :inited="inited"
-            @updated_query="(...query: any[]) => model_value = (query[0] as FindKyouQuery)" @inited="inited = true"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @updated_query="(query: FindKyouQuery) => model_value = (query)" @inited="inited = true"
+            @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+            @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
             @requested_close_dialog="hide()"
-            @requested_apply="(...find_kyou_query: any[]) => model_value = find_kyou_query[0] as FindKyouQuery"
+            @requested_apply="(find_kyou_query: FindKyouQuery) => model_value = find_kyou_query"
             ref="find_query_editor_view" />
         </v-card>
       </div>

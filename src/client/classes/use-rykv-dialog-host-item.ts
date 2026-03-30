@@ -1,4 +1,5 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
+import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Notification } from '@/classes/datas/notification'
@@ -8,6 +9,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type { OpenedRykvDialog } from '@/pages/views/rykv-dialog-kind'
 import type { GkillPropsBase } from '@/pages/views/gkill-props-base'
 import type { KyouDialogEmits } from '@/pages/views/kyou-dialog-emits'
+import type { ComponentRef } from '@/classes/component-ref'
 
 interface RykvDialogHostItemProps extends GkillPropsBase {
     item: OpenedRykvDialog
@@ -26,7 +28,7 @@ export function useRykvDialogHostItem(options: {
     const { props, emits } = options
 
     // ── Template refs ──
-    const dialog = ref<any>(null)
+    const dialog = ref<ComponentRef | null>(null)
 
     // ── Computed ──
     const payload_tag = computed(() => (props.item.payload ?? null) as Tag | null)
@@ -59,7 +61,7 @@ export function useRykvDialogHostItem(options: {
         requested_reload_list: () => emits('requested_reload_list'),
         requested_update_check_kyous: (kyous: Array<Kyou>, is_checked: boolean) =>
             emits('requested_update_check_kyous', kyous, is_checked),
-        requested_open_rykv_dialog: (kind: any, kyou: any, payload: any) =>
+        requested_open_rykv_dialog: (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) =>
             emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 

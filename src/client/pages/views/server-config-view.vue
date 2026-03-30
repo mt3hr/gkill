@@ -139,23 +139,23 @@
         </v-card-action>
         <ConfirmGenerateTLSFilesDialog :application_config="application_config" :gkill_api="gkill_api"
             :server_config="server_config"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
             ref="confirm_generate_tls_files_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
             :server_configs="server_configs"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
             ref="create_account_dialog" />
         <ManageAccountDialog :application_config="application_config" :gkill_api="gkill_api"
             :server_configs="server_configs"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
             ref="manage_account_dialog" />
         <NewDeviceNameDialog :gkill_api="gkill_api" :application_config="application_config"
-            @setted_new_device_name="(...device_name: any[]) => onSettedNewDeviceName(device_name[0] as string)"
+            @setted_new_device_name="(device_name: string) => onSettedNewDeviceName(device_name)"
             ref="new_device_name_dialog" />
     </v-card>
 </template>

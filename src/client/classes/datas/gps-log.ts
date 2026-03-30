@@ -4,9 +4,9 @@ export class GPSLog {
 
     related_time: Date
 
-    longitude: Number
+    longitude: number
 
-    latitude: Number
+    latitude: number
 
     constructor() {
         this.related_time = new Date(0)

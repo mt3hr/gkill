@@ -1,11 +1,12 @@
 package dvnf
 
 import (
+	"cmp"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"time"
 )
@@ -118,7 +119,9 @@ func CreateNewDVNF(opt *Option, isDir bool) (string, error) {
 // SortDVNFs .
 // 日時降順でソートします。
 func SortDVNFs(dvnfs []string) {
-	sort.Sort(sort.Reverse(sort.StringSlice(dvnfs)))
+	slices.SortFunc(dvnfs, func(a, b string) int {
+		return cmp.Compare(b, a)
+	})
 }
 
 // GetDVNFs .

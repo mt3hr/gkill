@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"math"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -121,11 +123,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 				break loop
 			}
 		}
-		var err error
-		for _, e := range errs {
-			err = fmt.Errorf("%w %w", err, e)
-		}
-		return gkillErrors, err
+		return gkillErrors, errors.Join(errs...)
 	}
 
 	// タグ取得
@@ -710,12 +708,9 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 			trimedKyousMap[kyou.RelatedTime.Unix()] = kyou
 		}
 
-		sortedKyous := make([]reps.Kyou, 0, len(trimedKyousMap))
-		for _, kyou := range trimedKyousMap {
-			sortedKyous = append(sortedKyous, kyou)
-		}
-		sort.Slice(sortedKyous, func(i int, j int) bool {
-			return sortedKyous[i].RelatedTime.After(sortedKyous[j].RelatedTime)
+		sortedKyous := slices.Collect(maps.Values(trimedKyousMap))
+		slices.SortFunc(sortedKyous, func(a, b reps.Kyou) int {
+			return b.RelatedTime.Compare(a.RelatedTime)
 		})
 
 		resultKyous[id] = sortedKyous
@@ -1246,7 +1241,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	}
 
 	// 並び替え
-	sort.Slice(matchGPSLogs, func(i, j int) bool { return matchGPSLogs[i].RelatedTime.Before(matchGPSLogs[j].RelatedTime) })
+	slices.SortFunc(matchGPSLogs, func(a, b reps.GPSLog) int { return a.RelatedTime.Compare(b.RelatedTime) })
 
 	// 該当する時間を出す
 	matchGPSLogSetList := [][]reps.GPSLog{}
@@ -1315,100 +1310,78 @@ func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) 
 func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	if !findCtx.ParsedFindQuery.ForMi {
 		// kyouとしてソート
-		sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
-			iUnix := findCtx.ResultKyous[i].RelatedTime.Unix()
-			jUnix := findCtx.ResultKyous[j].RelatedTime.Unix()
-			if iUnix > jUnix {
-				return true
-			} else if iUnix < jUnix {
-				return false
-			} else if findCtx.ResultKyous[i].ID < findCtx.ResultKyous[j].ID {
-				return true
+		slices.SortFunc(findCtx.ResultKyous, func(a, b reps.Kyou) int {
+			aUnix := a.RelatedTime.Unix()
+			bUnix := b.RelatedTime.Unix()
+			if aUnix != bUnix {
+				if aUnix > bUnix {
+					return -1
+				}
+				return 1
 			}
-			return false
+			if a.ID < b.ID {
+				return -1
+			} else if a.ID > b.ID {
+				return 1
+			}
+			return 0
 		})
 		return nil, nil
 	}
 
 	// miとしてソート。指定日時でソートする。指定日時がないものは、末尾に作成日時でくっつける
 	sortType := findCtx.ParsedFindQuery.MiSortType
-	sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
-		var iTime *time.Time = nil
-		var jTime *time.Time = nil
+	slices.SortFunc(findCtx.ResultKyous, func(a, b reps.Kyou) int {
+		var aTime *time.Time = nil
+		var bTime *time.Time = nil
 
-		iMi := findCtx.MatchMisAtFilterMi[findCtx.ResultKyous[i].ID]
-		jMi := findCtx.MatchMisAtFilterMi[findCtx.ResultKyous[j].ID]
+		aMi := findCtx.MatchMisAtFilterMi[a.ID]
+		bMi := findCtx.MatchMisAtFilterMi[b.ID]
+
+		compareTimes := func(aT, bT *time.Time) int {
+			if aT != nil && bT != nil {
+				return aT.Compare(*bT)
+			}
+			if aT == nil && bT != nil {
+				return 1
+			}
+			if aT != nil && bT == nil {
+				return -1
+			}
+			return aMi.CreateTime.Compare(bMi.CreateTime)
+		}
 
 		switch string(sortType) {
 		case string(find.CreateTime):
-			iTime = &iMi.CreateTime
-			jTime = &jMi.CreateTime
-			return iTime.Before(*jTime)
+			aTime = &aMi.CreateTime
+			bTime = &bMi.CreateTime
+			return aTime.Compare(*bTime)
 		case string(find.EstimateStartTime):
-			if iMi.EstimateStartTime != nil {
-				iTime = iMi.EstimateStartTime
+			if aMi.EstimateStartTime != nil {
+				aTime = aMi.EstimateStartTime
 			}
-			if jMi.EstimateStartTime != nil {
-				jTime = jMi.EstimateStartTime
+			if bMi.EstimateStartTime != nil {
+				bTime = bMi.EstimateStartTime
 			}
-
-			if iTime != nil && jTime != nil {
-				return iTime.Before(*jTime)
-			}
-			if iTime == nil && jTime != nil {
-				return false
-			}
-			if iTime != nil && jTime == nil {
-				return true
-			}
-
-			iTime = &iMi.CreateTime
-			jTime = &jMi.CreateTime
-			return iTime.Before(*jTime)
+			return compareTimes(aTime, bTime)
 		case string(find.EstimateEndTime):
-			if iMi.EstimateEndTime != nil {
-				iTime = iMi.EstimateEndTime
+			if aMi.EstimateEndTime != nil {
+				aTime = aMi.EstimateEndTime
 			}
-			if jMi.EstimateEndTime != nil {
-				jTime = jMi.EstimateEndTime
+			if bMi.EstimateEndTime != nil {
+				bTime = bMi.EstimateEndTime
 			}
-
-			if iTime != nil && jTime != nil {
-				return iTime.Before(*jTime)
-			}
-			if iTime == nil && jTime != nil {
-				return false
-			}
-			if iTime != nil && jTime == nil {
-				return true
-			}
-
-			iTime = &iMi.CreateTime
-			jTime = &jMi.CreateTime
-			return iTime.Before(*jTime)
+			return compareTimes(aTime, bTime)
 		case string(find.LimitTime):
-			if iMi.LimitTime != nil {
-				iTime = iMi.LimitTime
+			if aMi.LimitTime != nil {
+				aTime = aMi.LimitTime
 			}
-			if jMi.LimitTime != nil {
-				jTime = jMi.LimitTime
+			if bMi.LimitTime != nil {
+				bTime = bMi.LimitTime
 			}
-
-			if iTime != nil && jTime != nil {
-				return iTime.Before(*jTime)
-			}
-			if iTime == nil && jTime != nil {
-				return false
-			}
-			if iTime != nil && jTime == nil {
-				return true
-			}
-
-			iTime = &iMi.CreateTime
-			jTime = &jMi.CreateTime
-			return iTime.Before(*jTime)
+			return compareTimes(aTime, bTime)
 		}
-		return false
+		return 0
 	})
 	return nil, nil
 }
@@ -1489,7 +1462,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
 		if findCtx.DisableLatestDataRepositoryCache {
-			sort.Slice(currentKyou, func(i, j int) bool { return currentKyou[i].UpdateTime.After(currentKyou[j].UpdateTime) })
+			slices.SortFunc(currentKyou, func(a, b reps.Kyou) int { return b.UpdateTime.Compare(a.UpdateTime) })
 
 			// UsePlaing時はLatestDataRepositoryAddressと一致するもののみ残す
 			if findCtx.ParsedFindQuery.UsePlaing {
@@ -1541,8 +1514,8 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	isForMi := findCtx.ParsedFindQuery.ForMi
 	if isForMi {
 		for id, kyous := range latestKyousMap {
-			sort.Slice(kyous, func(i, j int) bool {
-				return kyous[i].UpdateTime.After(kyous[j].UpdateTime)
+			slices.SortFunc(kyous, func(a, b reps.Kyou) int {
+				return b.UpdateTime.Compare(a.UpdateTime)
 			})
 			latestKyousMap[id] = []reps.Kyou{kyous[0]}
 		}

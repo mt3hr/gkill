@@ -2,5 +2,4 @@
 
 import type { GkillPropsBase } from "./gkill-props-base"
 
-export interface AddNlogViewProps extends GkillPropsBase {
-}
+export type AddNlogViewProps = GkillPropsBase

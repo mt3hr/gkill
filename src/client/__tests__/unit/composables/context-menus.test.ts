@@ -46,17 +46,17 @@ Object.assign(navigator, {
 
 function createMockProps() {
   return {
-    gkill_api: createMockGkillAPI() as any,
+    gkill_api: createMockGkillAPI() as never,
     application_config: {
       device: 'test-device',
       user_id: 'admin',
       mi_default_board: 'Inbox',
       session_is_local: false,
-    } as any,
+    } as never,
     kyou: {
       ...makeKyouWithKmemo('テストメモ'),
       clone: () => ({ ...makeKyouWithKmemo('テストメモ') }),
-    } as any,
+    } as never,
     highlight_targets: [],
     enable_context_menu: true,
     enable_dialog: true,
@@ -80,14 +80,14 @@ describe('useKmemoContextMenu', () => {
   })
 
   test('show() sets is_show=true', async () => {
-    const event = new MouseEvent('contextmenu', { clientX: 100, clientY: 200 }) as any
+    const event = new MouseEvent('contextmenu', { clientX: 100, clientY: 200 }) as never
     await menu.show(event)
     expect(menu.is_show.value).toBe(true)
   })
 
   test('show() loads tag history from gkill_api', async () => {
     props.gkill_api.get_saved_tag_history.mockReturnValue(['tag1', 'tag2'])
-    await menu.show(new MouseEvent('contextmenu') as any)
+    await menu.show(new MouseEvent('contextmenu') as never)
     expect(menu.tag_history.value).toEqual(['tag1', 'tag2'])
   })
 
@@ -98,7 +98,7 @@ describe('useKmemoContextMenu', () => {
 
   test('copy_id() emits received_messages', async () => {
     await menu.copy_id()
-    const calls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_messages')
+    const calls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_messages')
     expect(calls.length).toBe(1)
   })
 
@@ -144,7 +144,7 @@ describe('useKmemoContextMenu', () => {
       added_tag: { tag: 'タグ' },
     })
     await menu.add_tag_from_history('タグ')
-    const calls = emits.mock.calls.filter((c: any[]) => c[0] === 'registered_tag')
+    const calls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'registered_tag')
     expect(calls.length).toBe(1)
   })
 
@@ -154,7 +154,7 @@ describe('useKmemoContextMenu', () => {
       errors: [{ error_code: 'ERR001', error_message: 'failed' }],
     })
     await menu.add_tag_from_history('テスト')
-    const errorCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_errors')
+    const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
     expect(errorCalls.length).toBe(1)
   })
 
@@ -217,31 +217,31 @@ describe.each(entityMenus)('$name', ({ factory }) => {
   test('is_show starts as false', () => {
     const props = createMockProps()
     const emits = vi.fn()
-    const menu = factory({ props, emits } as any)
+    const menu = factory({ props, emits } as never)
     expect(menu.is_show.value).toBe(false)
   })
 
   test('show() sets is_show=true', async () => {
     const props = createMockProps()
     const emits = vi.fn()
-    const menu = factory({ props, emits } as any)
-    await menu.show(new MouseEvent('contextmenu', { clientX: 50, clientY: 50 }) as any)
+    const menu = factory({ props, emits } as never)
+    await menu.show(new MouseEvent('contextmenu', { clientX: 50, clientY: 50 }) as never)
     expect(menu.is_show.value).toBe(true)
   })
 
   test('copy_id() emits received_messages', async () => {
     const props = createMockProps()
     const emits = vi.fn()
-    const menu = factory({ props, emits } as any)
+    const menu = factory({ props, emits } as never)
     await menu.copy_id()
-    const msgCalls = emits.mock.calls.filter((c: any[]) => c[0] === 'received_messages')
+    const msgCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_messages')
     expect(msgCalls.length).toBe(1)
   })
 
   test('has add_tag_from_history method', () => {
     const props = createMockProps()
     const emits = vi.fn()
-    const menu = factory({ props, emits } as any)
+    const menu = factory({ props, emits } as never)
     expect(typeof menu.add_tag_from_history).toBe('function')
   })
 })

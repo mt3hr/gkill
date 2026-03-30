@@ -47,12 +47,12 @@
         <TagStructContextMenu :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             ref="tag_struct_context_menu"
-            @requested_edit_tag="(...id: any[]) => show_edit_tag_struct_dialog(id[0] as string)"
-            @requested_delete_tag="(...id: any[]) => show_confirm_delete_tag_struct_dialog(id[0] as string)" />
+            @requested_edit_tag="(id: string) => show_edit_tag_struct_dialog(id)"
+            @requested_delete_tag="(id: string) => show_confirm_delete_tag_struct_dialog(id)" />
         <ConfirmDeleteTagStructDialog ref="confirm_delete_tag_struct_dialog" :application_config="application_config"
             :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_delete_tag="(...id: any[]) => delete_tag_struct(id[0] as string)" />
+            @requested_delete_tag="(id: string) => delete_tag_struct(id)" />
     </v-card>
 </template>
 <script lang="ts" setup>

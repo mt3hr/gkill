@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config'
 function stripShebangPlugin() {
   return {
     name: 'strip-shebang',
-    transform(code: string, id: string) {
+    transform(code: string, _id: string) {
       if (code.startsWith('#!')) {
         return { code: code.replace(/^#![^\n]*\n/, '\n'), map: null }
       }

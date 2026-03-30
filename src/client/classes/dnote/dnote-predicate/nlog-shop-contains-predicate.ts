@@ -6,6 +6,7 @@ export default class NlogShopContainsPredicate implements DnotePredicate {
     constructor(nlog_shop_contains_target: string) {
         this.nlog_shop_contains_target = nlog_shop_contains_target
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const nlog_shop_contains_target = json.value as string
         return new NlogShopContainsPredicate(nlog_shop_contains_target)
@@ -19,7 +20,7 @@ export default class NlogShopContainsPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "NlogShopContainsPredicate",
             value: this.nlog_shop_contains_target,

@@ -55,7 +55,7 @@ vi.mock('vue-router', () => ({
 }))
 
 // Try importing page composables - some may fail due to heavy dependencies
-const pageComposables: Array<{ name: string; factory: any }> = []
+const pageComposables: Array<{ name: string; factory: unknown }> = []
 
 async function tryImport(name: string, path: string, exportName: string) {
   try {
@@ -110,8 +110,8 @@ describe('Page Composable Patterns', () => {
 
   test('page composables should handle error messages via emits pattern', () => {
     // Verify that error message handling pattern works
-    const messages: any[] = []
-    const addMessage = (msg: any) => messages.push(msg)
+    const messages: unknown[] = []
+    const addMessage = (msg: unknown) => messages.push(msg)
     addMessage({ message_code: 'MSG001', message: 'test' })
     expect(messages.length).toBe(1)
   })

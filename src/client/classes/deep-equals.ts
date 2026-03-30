@@ -2,7 +2,7 @@ const isArray = Array.isArray;
 const keyList = Object.keys;
 const hasProp = Object.prototype.hasOwnProperty;
 
-export function deepEquals<T extends any>(a: T, b: T): boolean {
+export function deepEquals<T>(a: T, b: T): boolean {
     if (a === b) { return true; }
 
 
@@ -51,7 +51,7 @@ export function deepEquals<T extends any>(a: T, b: T): boolean {
 
         for (i = length; i-- !== 0;) {
             key = keys[i];
-            if (!deepEquals((a as any)[key], (b as any)[key])) { return false; }
+            if (!deepEquals((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) { return false; }
         }
 
         return true;

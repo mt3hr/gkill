@@ -6,7 +6,7 @@ import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import AttachedTextContextMenu from '@/pages/views/attached-text-context-menu.vue'
 
 export function useAttachedText(options: { props: AttachedTextProps, emits: KyouViewEmits }) {
-    const { props, emits } = options
+    const { props, emits: _emits } = options
 
     const context_menu = ref<InstanceType<typeof AttachedTextContextMenu> | null>(null)
 

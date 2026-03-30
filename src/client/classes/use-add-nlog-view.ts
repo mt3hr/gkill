@@ -152,8 +152,8 @@ export function useAddNlogView(options: {
 
     // ── CRUD relay handlers ──
     const crudRelayHandlers = {
-        'received_errors': (...args: any[]) => emits('received_errors', args[0] as Array<GkillError>),
-        'received_messages': (...args: any[]) => emits('received_messages', args[0] as Array<GkillMessage>),
+        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
+        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
     // ── Return ──

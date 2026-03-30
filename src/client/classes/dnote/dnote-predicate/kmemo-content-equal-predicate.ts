@@ -6,6 +6,7 @@ export default class KmemoContentEqualPredicate implements DnotePredicate {
     constructor(kmemo_content_equal_target: string) {
         this.kmemo_content_equal_target = kmemo_content_equal_target
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const kmemo_content_equal_target = json.value as string
         return new KmemoContentEqualPredicate(kmemo_content_equal_target)
@@ -19,7 +20,7 @@ export default class KmemoContentEqualPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "KmemoContentEqualPredicate",
             value: this.kmemo_content_equal_target,

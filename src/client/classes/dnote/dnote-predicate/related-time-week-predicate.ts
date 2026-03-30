@@ -6,6 +6,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
     constructor(week: number) {
         this.week = week
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const week = json.value as number
         return new RelatedTimeWeekPredicate(week)
@@ -17,7 +18,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "RelatedTimeWeekPredicate",
             value: this.week,

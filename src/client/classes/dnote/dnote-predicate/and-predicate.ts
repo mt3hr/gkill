@@ -7,10 +7,12 @@ export default class AndPredicate implements DnotePredicate {
     constructor(predicates: Array<DnotePredicate>) {
         this.predicates = predicates
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         let children = new Array<DnotePredicate>()
         if (json.predicates) {
-            children = json.predicates.map((j: any) => PredicateDictonary.get(j.type).from_json(j));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            children = json.predicates.map((j: any) => PredicateDictonary.get(j.type)!.from_json(j));
         }
         return new AndPredicate(children);
     }
@@ -25,7 +27,7 @@ export default class AndPredicate implements DnotePredicate {
         }
         return true
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             logic: 'AND',
             type: "AndPredicate",

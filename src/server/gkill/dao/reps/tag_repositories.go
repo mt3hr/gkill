@@ -4,7 +4,7 @@ import (
 	"context"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 
@@ -496,8 +496,8 @@ loop:
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
-	sort.Slice(tagHistoriesList, func(i, j int) bool {
-		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
+	slices.SortFunc(tagHistoriesList, func(a, b Tag) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return tagHistoriesList, nil
@@ -583,8 +583,8 @@ loop:
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
-	sort.Slice(tagHistoriesList, func(i, j int) bool {
-		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
+	slices.SortFunc(tagHistoriesList, func(a, b Tag) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
 	})
 
 	return tagHistoriesList, nil

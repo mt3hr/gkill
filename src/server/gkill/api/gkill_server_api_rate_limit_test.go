@@ -10,7 +10,7 @@ func TestRateLimiter_Allow(t *testing.T) {
 	ip := "192.168.1.1"
 
 	// First 10 attempts should be allowed
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		if !rl.allow(ip) {
 			t.Fatalf("attempt %d should be allowed", i+1)
 		}
@@ -26,7 +26,7 @@ func TestRateLimiter_DifferentIPs(t *testing.T) {
 	rl := newLoginRateLimiter()
 
 	// Exhaust limit for IP1
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		rl.allow("10.0.0.1")
 	}
 
@@ -46,7 +46,7 @@ func TestRateLimiter_WindowExpiry(t *testing.T) {
 
 	// Add 10 attempts that are 16 minutes old (expired)
 	old := time.Now().Add(-16 * time.Minute)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		rl.attempts[ip] = append(rl.attempts[ip], old)
 	}
 

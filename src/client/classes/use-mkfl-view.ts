@@ -6,7 +6,7 @@ export function useMkflView(options: {
     emits: MKFLViewEmits,
     plaing_timeis_view: ReturnType<typeof ref<InstanceType<typeof PlaingTimeisView> | null>>,
 }) {
-    const { emits, plaing_timeis_view } = options
+    const { emits: _emits, plaing_timeis_view } = options
 
     // ── Methods ──
     async function reload_plaing_timeis_view(): Promise<void> {

@@ -6,6 +6,7 @@ export default class NlogShopEqualPredicate implements DnotePredicate {
     constructor(nlog_shop_equal_target: string) {
         this.nlog_shop_equal_target = nlog_shop_equal_target
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static from_json(json: any): DnotePredicate {
         const nlog_shop_equal_target = json.value as string
         return new NlogShopEqualPredicate(nlog_shop_equal_target)
@@ -19,7 +20,7 @@ export default class NlogShopEqualPredicate implements DnotePredicate {
         }
         return false
     }
-    predicate_struct_to_json(): any {
+    predicate_struct_to_json(): Record<string, unknown> {
         return {
             type: "NlogShopEqualPredicate",
             value: this.nlog_shop_equal_target,
