@@ -59,6 +59,12 @@ onMounted(() => {
   background-color: #0000;
 }
 
+.kftl_line_label p {
+    padding: 0px;
+    margin: 0px;
+}
+
+
 /* v-card-title 内のボタンを本文サイズに統一 */
 .v-card-title .v-btn {
   font-size: 0.875rem;
