@@ -12,6 +12,8 @@
         </div>
         <div>{{ account.user_id }}</div>
 
+        <v-text-field v-model="local_password_reset_url" :label="i18n.global.t('LOCAL_TITLE')" readonly
+            @click="copy_local_password_reset_url" @focus="$event.target.select()" />
         <v-text-field v-model="lan_password_reset_url" :label="i18n.global.t('IN_LAN_TITLE')" readonly
             @click="copy_lan_password_reset_url" @focus="$event.target.select()" />
         <v-text-field v-model="over_lan_password_reset_url" :label="i18n.global.t('OVER_LAN_TITLE')" readonly
@@ -37,8 +39,10 @@ const props = defineProps<ShowPasswordResetLinkViewProps>()
 const emits = defineEmits<ShowPasswordResetLinkViewEmits>()
 
 const {
+    local_password_reset_url,
     lan_password_reset_url,
     over_lan_password_reset_url,
+    copy_local_password_reset_url,
     copy_lan_password_reset_url,
     copy_over_lan_password_reset_url,
 } = useShowPasswordResetLinkView({ props, emits })

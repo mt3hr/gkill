@@ -31,6 +31,8 @@ export class ApplicationConfig {
     cache_clear_count_limit: number
     global_ip: string
     private_ip: string
+    lan_hostname: string
+    global_hostname: string
     version: string
     build_time: Date
     commit_hash: string
@@ -85,6 +87,8 @@ export class ApplicationConfig {
         application_config.cache_clear_count_limit = this.cache_clear_count_limit
         application_config.global_ip = this.global_ip
         application_config.private_ip = this.private_ip
+        application_config.lan_hostname = this.lan_hostname
+        application_config.global_hostname = this.global_hostname
         application_config.version = this.version
         application_config.build_time = this.build_time
         application_config.commit_hash = this.commit_hash
@@ -466,6 +470,8 @@ export class ApplicationConfig {
         this.cache_clear_count_limit = 1001
         this.global_ip = ""
         this.private_ip = ""
+        this.lan_hostname = ""
+        this.global_hostname = ""
         this.version = ""
         this.build_time = new Date(0)
         this.commit_hash = ""
