@@ -267,8 +267,8 @@ func TestGenerateFindSQLCommon_OnlyLatestData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(sql, "UPDATE_TIME = ( SELECT MAX(UPDATE_TIME)") {
-		t.Errorf("expected latest data subquery in sql, got %q", sql)
+	if !strings.Contains(sql, "UPDATE_TIME = ( SELECT UPDATE_TIME FROM") || !strings.Contains(sql, "ORDER BY datetime(INNER_TABLE.UPDATE_TIME) DESC LIMIT 1") {
+		t.Errorf("expected latest data subquery with datetime() in sql, got %q", sql)
 	}
 }
 
