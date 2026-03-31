@@ -38,7 +38,7 @@ export function useShareKyouLinkView(options: {
 
     const local_share_url = computed(() => (location.protocol + "//" + location.host + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id))
     const lan_share_url = computed(() => ((props.application_config.private_ip && props.application_config.private_ip !== "") ? location.protocol + "//" + props.application_config.private_ip + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id : ""))
-    const over_lan_share_url = computed(() => ((props.application_config.global_ip && props.application_config.global_ip !== "") ? location.protocol + "//" + props.application_config.global_ip + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id : ""))
+    const over_lan_share_url = computed(() => ((props.application_config.global_hostname && props.application_config.global_hostname !== "") ? location.protocol + "//" + props.application_config.global_hostname + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id : ""))
 
     async function copy_local_share_kyou_link(): Promise<void> {
         navigator.clipboard.writeText(local_share_url.value);

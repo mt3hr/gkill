@@ -1704,42 +1704,14 @@ export class GkillAPI {
                 const response = json as unknown as GetApplicationConfigResponse
                 this.check_auth(response)
 
-                const application_config = new ApplicationConfig()
-                application_config.account_is_admin = response.application_config.account_is_admin
-                application_config.device = response.application_config.device
-                application_config.use_dark_theme = response.application_config.use_dark_theme
-                application_config.google_map_api_key = response.application_config.google_map_api_key
-                application_config.is_loaded = response.application_config.is_loaded
-                application_config.mi_default_board = response.application_config.mi_default_board
-                application_config.default_page = response.application_config.default_page
-                application_config.rykv_hot_reload = response.application_config.rykv_hot_reload
-                application_config.rykv_image_list_column_number = response.application_config.rykv_image_list_column_number
-                application_config.show_tags_in_list = response.application_config.show_tags_in_list
-                application_config.show_tutorial_on_startup = response.application_config.show_tutorial_on_startup
-                application_config.user_id = response.application_config.user_id
-                application_config.session_is_local = response.application_config.session_is_local
-                application_config.rykv_default_period = response.application_config.rykv_default_period
-                application_config.mi_default_period = response.application_config.mi_default_period
-                application_config.is_show_share_footer = response.application_config.is_show_share_footer
-                application_config.urlog_bookmarklet_session = response.application_config.urlog_bookmarklet_session
-                application_config.for_share_kyou = response.application_config.for_share_kyou
+                const application_config = Object.assign(new ApplicationConfig(), response.application_config)
 
-                application_config.user_is_admin = response.application_config.user_is_admin
-                application_config.cache_clear_count_limit = response.application_config.cache_clear_count_limit
-                application_config.global_ip = response.application_config.global_ip
-                application_config.private_ip = response.application_config.private_ip
-                application_config.version = response.application_config.version
-                application_config.build_time = response.application_config.build_time
-                application_config.commit_hash = response.application_config.commit_hash
-
-                application_config.tag_struct = response.application_config.tag_struct ? response.application_config.tag_struct : new TagStructElementData()
-                application_config.device_struct = response.application_config.device_struct ? response.application_config.device_struct : new DeviceStructElementData()
-                application_config.rep_struct = response.application_config.rep_struct ? response.application_config.rep_struct : new RepStructElementData()
-                application_config.rep_type_struct = response.application_config.rep_type_struct ? response.application_config.rep_type_struct : new RepTypeStructElementData()
-                application_config.mi_board_struct = response.application_config.mi_board_struct ? response.application_config.mi_board_struct : new MiBoardStructElementData()
-                application_config.kftl_template_struct = response.application_config.kftl_template_struct ? response.application_config.kftl_template_struct : new KFTLTemplateElementData()
-                application_config.dnote_json_data = response.application_config.dnote_json_data
-                application_config.ryuu_json_data = response.application_config.ryuu_json_data
+                if (!application_config.tag_struct) application_config.tag_struct = new TagStructElementData()
+                if (!application_config.device_struct) application_config.device_struct = new DeviceStructElementData()
+                if (!application_config.rep_struct) application_config.rep_struct = new RepStructElementData()
+                if (!application_config.rep_type_struct) application_config.rep_type_struct = new RepTypeStructElementData()
+                if (!application_config.mi_board_struct) application_config.mi_board_struct = new MiBoardStructElementData()
+                if (!application_config.kftl_template_struct) application_config.kftl_template_struct = new KFTLTemplateElementData()
 
                 if (!application_config.tag_struct.children) {
                         application_config.tag_struct.id = this.generate_uuid()

@@ -62,6 +62,10 @@ type ApplicationConfig struct {
 
 	PrivateIP string `json:"private_ip"`
 
+	LanHostname string `json:"lan_hostname"`
+
+	GlobalHostname string `json:"global_hostname"`
+
 	Version string `json:"version"`
 
 	BuildTime time.Time `json:"build_time"`

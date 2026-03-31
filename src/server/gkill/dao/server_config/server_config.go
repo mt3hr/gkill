@@ -42,6 +42,10 @@ type ServerConfig struct {
 
 	GoogleMapAPIKey string `json:"google_map_api_key"`
 
+	LanHostname string `json:"lan_hostname"`
+
+	GlobalHostname string `json:"global_hostname"`
+
 	Repositories []*user_config.Repository `json:"repositories"`
 
 	Accounts []*account.Account `json:"accounts"`
