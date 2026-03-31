@@ -43,10 +43,12 @@ export class McpAccessLog {
   /**
    * @param {string} logFilePath  Absolute path to the log file.
    * @param {string} [levelName]  Minimum level name (default "info").
+   * @param {string} [source]     Source identifier for log entries.
    */
-  constructor(logFilePath, levelName = "info") {
+  constructor(logFilePath, levelName = "info", source = "gkill-read-server.mjs") {
     this.path = logFilePath;
     this.minLevel = LEVELS[levelName] ?? LEVELS.info;
+    this.source = source;
     /** @type {number|null} */
     this.fd = null;
   }
@@ -90,7 +92,7 @@ export class McpAccessLog {
     const entry = {
       time: new Date().toISOString(),
       level: LEVEL_NAMES[levelNum] || "INFO",
-      source: "gkill-read-server.mjs",
+      source: this.source,
       msg,
       app: "gkill_mcp",
       ...fields,

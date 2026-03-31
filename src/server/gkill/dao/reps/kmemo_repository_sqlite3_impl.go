@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -1141,6 +1142,10 @@ func (k *kmemoRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo Kme
 			}
 		}()
 	}
+	if strings.TrimSpace(kmemo.Content) == "" {
+		return fmt.Errorf("kmemo content must not be empty")
+	}
+
 	sql := `
 INSERT INTO KMEMO (
   IS_DELETED,

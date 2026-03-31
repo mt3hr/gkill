@@ -31,7 +31,9 @@ $HOME/gkill/
 │   ├── gkill_trace.log
 │   ├── gkill_trace_sql.log
 │   ├── gkill.log                   # 全レベル統合
-│   └── gkill_mcp_access.log        # MCPサーバアクセスログ（MCP_LOG環境変数で制御）
+│   ├── gkill_mcp_read_access.log      # Read MCPサーバアクセスログ（MCP_LOG環境変数で制御）
+│   ├── gkill_mcp_write_access.log     # Write MCPサーバアクセスログ
+│   └── gkill_mcp_readwrite_access.log # Read/Write MCPサーバアクセスログ
 ├── lib/base_directory/              # ライブラリファイル
 └── tls/                             # TLS証明書（オプション）
     ├── cert.cer
@@ -409,20 +411,31 @@ gkill_server generate_video_cache --user ユーザーID
 
 ## 11. MCP HTTPサーバーのデプロイ
 
-gkill MCP サーバー（`src/mcp/gkill-read-server.mjs`）は、Claude.ai / ChatGPT 等のAI MCPクライアントからgkillデータを読み取るためのHTTPサーバー。OAuth 2.1認証で保護されている。
+gkill MCP サーバーは3種類提供されている。いずれもOAuth 2.1認証で保護されたHTTPサーバーとして動作する。
+
+| サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
+|---|---|---|---|---|
+| Read専用 | `gkill-read-server.mjs` | 7 | 8808 | 読み取りのみ |
+| Write専用 | `gkill-write-server.mjs` | 14 (11 write + 3 read convenience) | 8809 | 書き込み中心 |
+| Read/Write統合 | `gkill-readwrite-server.mjs` | 18 (7 read + 11 write) | 8810 | 全機能 |
 
 ### 11.1 起動
 
 ```bash
-# 環境変数を設定して起動
-GKILL_BASE_URL=http://127.0.0.1:9999 \
-GKILL_USER=admin \
-GKILL_PASSWORD_SHA256="<sha256 hex>" \
-MCP_TRANSPORT=http \
-MCP_OAUTH_ISSUER="https://<公開ホスト名>" \
-MCP_PORT=8808 \
-node src/mcp/gkill-read-server.mjs
+# Read専用
+MCP_TRANSPORT=http MCP_PORT=8808 MCP_OAUTH_ISSUER="https://<公開ホスト名>" \
+  node src/mcp/gkill-read-server.mjs
+
+# Write専用
+MCP_TRANSPORT=http MCP_PORT=8809 MCP_OAUTH_ISSUER="https://<公開ホスト名>" \
+  node src/mcp/gkill-write-server.mjs
+
+# Read/Write統合
+MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER="https://<公開ホスト名>" \
+  node src/mcp/gkill-readwrite-server.mjs
 ```
+
+共通の環境変数 `GKILL_BASE_URL`, `GKILL_USER`, `GKILL_PASSWORD_SHA256` も必要。
 
 ### 11.2 環境変数
 
@@ -432,14 +445,22 @@ node src/mcp/gkill-read-server.mjs
 | `GKILL_USER` | — | gkillログインユーザーID |
 | `GKILL_PASSWORD_SHA256` | — | パスワードのSHA-256ハッシュ（`GKILL_PASSWORD`でも可） |
 | `MCP_TRANSPORT` | `stdio` | `http` でHTTPモード起動 |
-| `MCP_PORT` | `8808` | HTTPサーバーポート |
+| `MCP_PORT` | `8808`/`8809`/`8810` | HTTPサーバーポート（サーバーごとにデフォルト異なる） |
 | `MCP_OAUTH_ISSUER` | `http://localhost:<port>` | OAuthメタデータのissuer URL。**リモートアクセス時は必須**（公開URL）|
 | `GKILL_INSECURE` | `false` | `true` でgkillバックエンドへのTLS証明書検証をスキップ |
-| `MCP_LOG` | `info` | MCPアクセスログレベル（`none`/`error`/`warn`/`info`/`debug`/`trace`）。`gkill_mcp_access.log` に出力 |
+| `MCP_LOG` | `info` | MCPアクセスログレベル（`none`/`error`/`warn`/`info`/`debug`/`trace`） |
+
+#### アクセスログファイル
+
+| サーバー | ログファイル | トークン永続化ファイル |
+|---|---|---|
+| Read | `gkill_mcp_read_access.log` | `mcp_oauth_state.json` |
+| Write | `gkill_mcp_write_access.log` | `mcp_oauth_write_state.json` |
+| ReadWrite | `gkill_mcp_readwrite_access.log` | `mcp_oauth_readwrite_state.json` |
 
 #### MCPアクセスログのイベント一覧
 
-`gkill_mcp_access.log` に記録されるイベント:
+全サーバー共通で以下のイベントが記録される:
 
 | msg | レベル | 記録内容 | 発生タイミング |
 |---|---|---|---|
@@ -451,29 +472,32 @@ node src/mcp/gkill-read-server.mjs
 | `token_rejected` | WARN | remote_addr, method, path | Bearer トークン検証失敗 |
 | `server_start` | INFO | transport, log_level, port | サーバ起動 |
 
-> **注:** `POST /mcp` でツールが呼ばれた場合、`http_request`（HTTPレベル）と `tool_call`（ツールレベル）の2行が出力されます。`http_request` はステータスコードとレスポンスサイズ、`tool_call` はツール名と所要時間をそれぞれ記録します。
+ログの `source` フィールドでどのサーバーからの出力か識別可能（`gkill-read-server.mjs` / `gkill-write-server.mjs` / `gkill-readwrite-server.mjs`）。
 
-> **注:** Go バックエンドのアクセスログでは、認証不要のエンドポイント（`/files/` 等）や認証失敗リクエストの場合、`user_id` は空文字になります。
+> **注:** `POST /mcp` でツールが呼ばれた場合、`http_request`（HTTPレベル）と `tool_call`（ツールレベル）の2行が出力されます。
 
 ### 11.3 リモートアクセス（Cloudflare Tunnel等）
 
-MCPサーバーをリモートから利用するには、外部からアクセス可能にする必要がある。
+MCPサーバーをリモートから利用するには、外部からアクセス可能にする必要がある。各サーバーごとに個別のトンネルを設定する。
 
 ```yaml
-# .cloudflared/config.yml 例
+# .cloudflared/<tunnel-name>.yml 例
 ingress:
-  - hostname: example.com
-    service: http://localhost:8808
+  - hostname: <公開ホスト名>
+    service: http://localhost:<ポート>
     originRequest:
       noTLSVerify: true
+      httpHostHeader: localhost
   - service: http_status:404
 ```
 
 **重要**: `MCP_OAUTH_ISSUER` を公開URL（例: `https://example.com`）に設定すること。未設定だと OAuthメタデータ内のURLが `http://localhost` になり、Claude.ai/ChatGPT から認可エンドポイントに到達できない。
 
+**重要**: Claude.ai等からのMCP接続URLは末尾に `/mcp` を付けること（例: `https://example.com/mcp`）。
+
 ### 11.4 トークン永続化
 
-リフレッシュトークン（30日TTL）とDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_state.json` に自動保存される。サーバー再起動後も再認証不要。
+リフレッシュトークン（30日TTL）とDCRクライアント登録は `$GKILL_HOME/configs/` 配下の各サーバーのOAuth状態ファイルに自動保存される。サーバー再起動後も再認証不要。
 
 ### 11.5 既知の制限
 

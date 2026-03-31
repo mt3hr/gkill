@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -2580,6 +2581,10 @@ func (m *miRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi Mi) error {
 				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 			}
 		}()
+	}
+
+	if strings.TrimSpace(mi.Title) == "" {
+		return fmt.Errorf("mi title must not be empty")
 	}
 
 	sql := `

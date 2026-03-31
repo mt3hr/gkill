@@ -100,7 +100,9 @@ type GkillMessage struct {
 | `gkill_trace.log` | TRACEレベル |
 | `gkill_trace_sql.log` | SQL文トレース |
 | `gkill.log` | 全レベル統合 |
-| `gkill_mcp_access.log` | MCPサーバのアクセスログ（全HTTPリクエスト、認証成功/失敗、ツールコール、トークン検証。`MCP_LOG`環境変数で制御） |
+| `gkill_mcp_read_access.log` | Read MCPサーバのアクセスログ（`MCP_LOG`環境変数で制御） |
+| `gkill_mcp_write_access.log` | Write MCPサーバのアクセスログ |
+| `gkill_mcp_readwrite_access.log` | Read/Write統合MCPサーバのアクセスログ |
 
 **ログフォーマット:** JSON形式、ソース位置追跡有効、静的フィールド `{"app": "gkill"}`
 

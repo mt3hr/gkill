@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -1322,6 +1323,10 @@ func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis 
 				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 			}
 		}()
+	}
+
+	if strings.TrimSpace(timeis.Title) == "" {
+		return fmt.Errorf("timeis title must not be empty")
 	}
 
 	sql := `
