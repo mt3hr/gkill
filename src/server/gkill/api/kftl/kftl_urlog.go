@@ -112,9 +112,11 @@ type kftlURLogURLStatementLine struct {
 func newKFTLURLogURLStatementLine(lineText string, ctx *KFTLStatementLineContext, req *kftlURLogRequest) *kftlURLogURLStatementLine {
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
-	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+	// Use generateDefaultConstructor so that separators (「、」「、、」) are
+	// recognised and break the URLog; otherwise fall through to title.
+	ctx.NextStatementLineConstructor = ctx.factory.generateDefaultConstructor(ctx.NextStatementLineText, func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
 		return newKFTLURLogTitleStatementLine(lt, c, req)
-	}
+	})
 	return &kftlURLogURLStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 

@@ -183,7 +183,7 @@ func newKFTLNlogAmountStatementLine(lineText string, ctx *KFTLStatementLineConte
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
 	// After amount: next line is either another title (via nlog constructor) or done
-	ctx.NextStatementLineConstructor = ctx.factory.generateNlogConstructor(req)
+	ctx.NextStatementLineConstructor = ctx.factory.generateNlogConstructor(ctx.NextStatementLineText, req)
 	return &kftlNlogAmountStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
