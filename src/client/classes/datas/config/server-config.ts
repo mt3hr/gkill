@@ -45,6 +45,10 @@ export class ServerConfig {
 
     google_map_api_key: string
 
+    lan_hostname: string
+
+    global_hostname: string
+
     async clone(): Promise<ServerConfig> {
         const server_config = new ServerConfig()
         server_config.is_loaded = this.is_loaded
@@ -67,6 +71,8 @@ export class ServerConfig {
         server_config.mi_notification_private_key = this.mi_notification_private_key
         server_config.use_gkill_notification = this.use_gkill_notification
         server_config.google_map_api_key = this.google_map_api_key
+        server_config.lan_hostname = this.lan_hostname
+        server_config.global_hostname = this.global_hostname
         return server_config
     }
 
@@ -91,6 +97,8 @@ export class ServerConfig {
         this.accounts = new Array<Account>()
         this.use_gkill_notification = false
         this.google_map_api_key = ""
+        this.lan_hostname = ""
+        this.global_hostname = ""
     }
 
 }

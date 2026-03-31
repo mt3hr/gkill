@@ -7958,6 +7958,15 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	response.ApplicationConfig.CacheClearCountLimit = gkill_options.CacheClearCountLimit
 	response.ApplicationConfig.GlobalIP = globalIP.String()
 	response.ApplicationConfig.PrivateIP = privateIPStr
+
+	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
+	if err != nil {
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
+	if serverConfig != nil {
+		response.ApplicationConfig.LanHostname = serverConfig.LanHostname
+		response.ApplicationConfig.GlobalHostname = serverConfig.GlobalHostname
+	}
 	response.ApplicationConfig.Version = version.Version
 	response.ApplicationConfig.BuildTime = version.BuildTime
 	response.ApplicationConfig.CommitHash = version.CommitHash
