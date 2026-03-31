@@ -1162,6 +1162,13 @@ func (k *kcRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc KC) error {
 		}()
 	}
 
+	if strings.TrimSpace(kc.Title) == "" {
+		return fmt.Errorf("kc title must not be empty")
+	}
+	if kc.NumValue.String() == "" {
+		return fmt.Errorf("kc num_value must not be empty")
+	}
+
 	sql := `
 INSERT INTO KC (
   IS_DELETED,

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -311,8 +312,8 @@ WHERE
 				&relatedTimeStr,
 				&createTimeStr,
 				&text.CreateApp,
-				&text.CreateDevice,
 				&text.CreateUser,
+				&text.CreateDevice,
 				&updateTimeStr,
 				&text.UpdateApp,
 				&text.UpdateDevice,
@@ -481,8 +482,8 @@ WHERE
 				&relatedTimeStr,
 				&createTimeStr,
 				&text.CreateApp,
-				&text.CreateDevice,
 				&text.CreateUser,
+				&text.CreateDevice,
 				&updateTimeStr,
 				&text.UpdateApp,
 				&text.UpdateDevice,
@@ -643,8 +644,8 @@ WHERE
 				&relatedTimeStr,
 				&createTimeStr,
 				&text.CreateApp,
-				&text.CreateDevice,
 				&text.CreateUser,
+				&text.CreateDevice,
 				&updateTimeStr,
 				&text.UpdateApp,
 				&text.UpdateDevice,
@@ -828,8 +829,8 @@ WHERE
 				&relatedTimeStr,
 				&createTimeStr,
 				&text.CreateApp,
-				&text.CreateDevice,
 				&text.CreateUser,
+				&text.CreateDevice,
 				&updateTimeStr,
 				&text.UpdateApp,
 				&text.UpdateDevice,
@@ -885,6 +886,13 @@ func (t *textRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text Text) 
 			}
 		}()
 	}
+	if strings.TrimSpace(text.Text) == "" {
+		return fmt.Errorf("text must not be empty")
+	}
+	if strings.TrimSpace(text.TargetID) == "" {
+		return fmt.Errorf("text target_id must not be empty")
+	}
+
 	sql := `
 INSERT INTO TEXT (
   IS_DELETED,
