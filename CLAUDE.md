@@ -43,14 +43,14 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run test_android` | Android Gradle tests |
 | `npm run test_wear_os` | Wear OS Gradle tests |
 
-**Test coverage (~1,904 tests total, all 29 Go packages covered):**
+**Test coverage (~2,086 tests total, all 29 Go packages covered):**
 
 | Area | Tests | Files | Scope |
 |---|---|---|---|
 | Go backend | ~534 | 47 | API handlers, KFTL parser, DAO layer, find filters, req_res, utilities |
 | Frontend unit | ~676 | 49 | GkillAPI, data models, D-note, KFTL, composables, router, i18n, utils |
 | Frontend E2E | 187 | 29 | All 12 routes, CRUD flows, settings, Mi operations, regressions |
-| MCP | ~381 | 10 | Tools, OAuth (PKCE/DCR/RFC 8707), access-log |
+| MCP | ~563 | 17 | Tools (read/write/readwrite), OAuth (PKCE/DCR/RFC 8707), access-log, write-normalization |
 | Android | 12 | 2 | Unit + instrumented |
 | Wear OS | 114 | 9 | Credential, API client, Data Layer, lifecycle |
 
@@ -185,18 +185,49 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 7 + TypeScript 6 + 
 
 ### MCP Server — `src/mcp/`
 
-Read-only MCP server (`gkill-read-server.mjs`) exposing **7 tools** for AI integration:
+3つのMCPサーバーを提供。いずれもstdio (ローカル) / HTTP (OAuth 2.1認証付きリモート) の2モード対応。
+
+**Read専用** (`gkill-read-server.mjs`) — **7 tools**, port 8808:
 1. `gkill_get_kyous` — Get records with filters, pagination, type data inlined
 2. `gkill_get_mi_board_list` — Get task board names
 3. `gkill_get_all_tag_names` — Get all tags
 4. `gkill_get_all_rep_names` — Get all repository names
 5. `gkill_get_gps_log` — Get GPS logs by date range
 6. `gkill_get_application_config` — Get tag hierarchy, board structure, templates
-7. `gkill_get_idf_file` — Get IDF file content by rep_name + file_name (proxies backend `/files/` endpoint; images returned as MCP image content blocks)
+7. `gkill_get_idf_file` — Get IDF file content (images returned as MCP image content blocks)
 
-Transport: stdio (default, `npm run mcp:gkill-read`) or HTTP (`npm run mcp:gkill-read-http`, with OAuth 2.1 auth).
+**Write専用** (`gkill-write-server.mjs`) — **14 tools** (11 write + 3 read convenience), port 8809:
+1. `gkill_add_kmemo` — Create text memo
+2. `gkill_add_urlog` — Create bookmark
+3. `gkill_add_nlog` — Create expense record
+4. `gkill_add_lantana` — Create mood record (0-10)
+5. `gkill_add_timeis` — Create time interval
+6. `gkill_add_mi` — Create task
+7. `gkill_add_kc` — Create numeric record
+8. `gkill_add_tag` — Add tag to existing entry
+9. `gkill_add_text` — Add text annotation to existing entry
+10. `gkill_submit_kftl` — Submit KFTL formatted text (batch creation)
+11. `gkill_delete_kyou` — Soft-delete an entry
+12-14. Read convenience: `gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`
 
-**Environment variables:** `GKILL_BASE_URL`, `GKILL_USER`, `GKILL_PASSWORD_SHA256`, `MCP_LOG` (access log level, default `info`), and for HTTP mode: `MCP_TRANSPORT`, `MCP_PORT`, `MCP_OAUTH_ISSUER` (required for remote access — set to public URL e.g. `https://example.com`). OAuth 2.1 (Authorization Code + PKCE) is always enabled for HTTP mode. Supports ChatGPT and Claude.ai MCP connectors via RFC 9728 (Protected Resource Metadata), RFC 8414 (AS Metadata), RFC 7591 (DCR), RFC 8707 (Resource Indicators). Token persistence: refresh tokens and DCR registrations saved to `$GKILL_HOME/configs/mcp_oauth_state.json`. Access log: `$GKILL_HOME/logs/gkill_mcp_access.log`.
+**Read/Write統合** (`gkill-readwrite-server.mjs`) — **18 tools** (read 7 + write 11), port 8810:
+Read専用の全7ツール + Write専用の全11ツールを1サーバーで提供。
+
+Transport: stdio (default) or HTTP (OAuth 2.1).
+
+| Server | stdio | HTTP | Default Port |
+|---|---|---|---|
+| Read | `npm run mcp:gkill-read` | `npm run mcp:gkill-read-http` | 8808 |
+| Write | `npm run mcp:gkill-write` | `npm run mcp:gkill-write-http` | 8809 |
+| ReadWrite | `npm run mcp:gkill-readwrite` | `npm run mcp:gkill-readwrite-http` | 8810 |
+
+**Environment variables:** `GKILL_BASE_URL`, `GKILL_USER`, `GKILL_PASSWORD_SHA256`, `MCP_LOG` (access log level, default `info`), and for HTTP mode: `MCP_TRANSPORT`, `MCP_PORT`, `MCP_OAUTH_ISSUER` (required for remote access — set to public URL e.g. `https://example.com`). OAuth 2.1 (Authorization Code + PKCE) is always enabled for HTTP mode. Supports ChatGPT and Claude.ai MCP connectors via RFC 9728 (Protected Resource Metadata), RFC 8414 (AS Metadata), RFC 7591 (DCR), RFC 8707 (Resource Indicators).
+
+| Server | Token persistence | Access log |
+|---|---|---|
+| Read | `$GKILL_HOME/configs/mcp_oauth_state.json` | `$GKILL_HOME/logs/gkill_mcp_read_access.log` |
+| Write | `$GKILL_HOME/configs/mcp_oauth_write_state.json` | `$GKILL_HOME/logs/gkill_mcp_write_access.log` |
+| ReadWrite | `$GKILL_HOME/configs/mcp_oauth_readwrite_state.json` | `$GKILL_HOME/logs/gkill_mcp_readwrite_access.log` |
 
 ### Mobile — `src/android/`, `src/wear_os/`
 

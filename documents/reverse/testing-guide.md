@@ -2,7 +2,7 @@
 
 ## 1. 概要
 
-gkill プロジェクトでは約1,904件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
+gkill プロジェクトでは約2,086件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
 
 ### テスト統計
 
@@ -11,10 +11,10 @@ gkill プロジェクトでは約1,904件の自動テストを整備していま
 | Go バックエンド | ~534 | 47 | Go `testing` |
 | フロントエンド ユニット | ~676 | 49 | Vitest |
 | フロントエンド E2E | 187 | 29 | Playwright |
-| MCP サーバ | ~381 | 10 | Vitest |
+| MCP サーバ | ~563 | 17 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 114 | 9 | JUnit 4 + MockK |
-| **合計** | **~1,904** | **~146** | |
+| **合計** | **~2,086** | **~153** | |
 
 ### テスト仕様書
 
@@ -276,20 +276,39 @@ src/client/__tests__/
 
 ### 3.4 MCP サーバ（`src/mcp/__tests__/`）
 
-MCP テストは全てモック/スタブベースで動作し、実行中の gkill_server は不要です。OAuth テスト（`oauth-server.test.mjs`, `oauth-store.test.mjs`）もインメモリストアを使用するため、外部環境変数（`GKILL_BASE_URL` 等）の設定は不要です。
+MCP テストは全てモック/スタブベースで動作し、実行中の gkill_server は不要です。OAuth テスト（`oauth-server.test.mjs`, `oauth-store.test.mjs`）もインメモリストアを使用するため、外部環境変数（`GKILL_BASE_URL` 等）の設定は不要です。3種のMCPサーバ（Read/Write/ReadWrite）のテストを含みます。
+
+**共通・Read専用サーバ:**
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
-| `validation.test.mjs` | 7ツールの入力パラメータ検証（必須/型/範囲） |
+| `validation.test.mjs` | Read入力パラメータ検証（必須/型/範囲） |
 | `normalization.test.mjs` | 日付・文字列・デフォルト値の正規化 |
 | `constants.test.mjs` | ツール名、エラーコード、デフォルト設定値 |
-| `tool-handlers.test.mjs` | 各ツールのハンドラ実行ロジック |
+| `tool-handlers.test.mjs` | Read 7ツールのハンドラ実行ロジック |
 | `client.test.mjs` | GkillReadClient（fetch モック、認証、レスポンスパース） |
-| `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール（ディスパッチ/画像image block/非画像/ネストパス/セッションフォールバック） |
+| `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール |
+| `access-log.test.mjs` | McpAccessLog（レベルフィルタリング、JSON形式、sourceパラメータ） |
 | `pkce.test.mjs` | PKCE検証（S256/plain） |
 | `oauth-store.test.mjs` | OAuth ストア（トークン/コード/クライアント CRUD、TTL 有効期限、JSON ファイル永続化） |
-| `oauth-server.test.mjs` | OAuth サーバ（メタデータ、認可、トークン交換、PKCE、リフレッシュトークンローテーション、DCR、RFC 8707 resource パラメータ、redirect_uri 検証、E2E フロー） |
-| `access-log.test.mjs` | McpAccessLog（レベルフィルタリング、JSON形式検証、lazy open、close/reopen、noneレベルno-op、コンテキストフィールド） |
+| `oauth-server.test.mjs` | OAuth サーバ（メタデータ、認可、トークン交換、PKCE、DCR、RFC 8707、E2E フロー） |
+
+**Write専用サーバ:**
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
+| `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
+| `write-server.test.mjs` | McpWriteServer（14ツールディスパッチ、エンティティデフォルト値、レスポンス構造） |
+| `write-tool-handlers.test.mjs` | Write 14ツール定義・summarize関数 |
+
+**Read/Write統合サーバ:**
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
+| `readwrite-server.test.mjs` | McpServer統合（全18ツールディスパッチ、IDF画像ブロック） |
+| `readwrite-tool-handlers.test.mjs` | 統合18ツール定義・summarize関数 |
 
 ### 3.5 Android / Wear OS
 

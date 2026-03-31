@@ -162,6 +162,9 @@ export function normalizeKyouArgs(args) {
   if (Object.prototype.hasOwnProperty.call(source, "is_include_timeis") && source.is_include_timeis !== undefined) {
     normalized.is_include_timeis = assertBoolean(source.is_include_timeis, "is_include_timeis");
   }
+  if (Object.prototype.hasOwnProperty.call(source, "include_id") && source.include_id !== undefined) {
+    normalized.include_id = assertBoolean(source.include_id, "include_id");
+  }
 
   return normalized;
 }

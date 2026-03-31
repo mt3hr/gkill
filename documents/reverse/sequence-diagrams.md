@@ -464,7 +464,7 @@ sequenceDiagram
 
 ### 補足
 
-- **トークン永続化:** リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_state.json` に保存。サーバ再起動後も再認証不要
+- **トークン永続化:** リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/` 配下に保存（Read: `mcp_oauth_state.json`、Write: `mcp_oauth_write_state.json`、ReadWrite: `mcp_oauth_readwrite_state.json`）。サーバ再起動後も再認証不要
 - **アクセストークン:** インメモリのみ（サーバ再起動で失効、リフレッシュトークンで再発行可能）
 - **PKCE:** S256（SHA-256）と plain の両方をサポート。S256 推奨
 - **RFC 8707（Resource Indicators）:** 認可〜トークン交換で `resource` パラメータを引き回し、一致を検証

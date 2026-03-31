@@ -338,7 +338,7 @@ describe("OAuthStore — persistence", () => {
   beforeEach(() => {
     tmpDir = join(tmpdir(), `oauth-store-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(tmpDir, { recursive: true });
-    persistPath = join(tmpDir, "mcp_oauth_state.json");
+    persistPath = join(tmpDir, "mcp_oauth_read_state.json");
   });
 
   afterEach(() => {
