@@ -764,6 +764,7 @@
     "NETWORK_OFFLINE_MESSAGE": "네트워크에 연결되어 있지 않습니다",
     "NETWORK_ERROR_MESSAGE": "네트워크 오류가 발생했습니다. 연결을 확인해 주세요",
     "NO_RESULTS_MESSAGE": "대상 없음",
+    "LOADING_MESSAGE": "로딩 중",
     "REQUIRED_FIELD_MESSAGE": "이 항목은 필수입니다",
     "UNSAVED_CHANGES_WARNING_MESSAGE": "저장되지 않은 변경 사항이 있습니다. 페이지를 떠나시겠습니까？",
     "BROWSE_ZIP_CONTENTS_TITLE": "ZIP 내용 탐색",

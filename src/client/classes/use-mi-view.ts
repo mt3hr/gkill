@@ -254,7 +254,7 @@ export function useMiView(options: {
     }
 
     async function reload_list(column_index: number): Promise<void> {
-        return search(column_index, querys.value[column_index], true)
+        return search(column_index, querys.value[column_index], true, false, true)
     }
 
     async function init(): Promise<void> {
@@ -308,8 +308,9 @@ export function useMiView(options: {
         })
     }
 
-    async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
+    async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean, preserve_scroll?: boolean): Promise<void> {
         const query_id = query.query_id
+        let my_abort_controller: AbortController | null = null
 
         // 検索する。Tickでまとめる
         try {
@@ -338,7 +339,7 @@ export function useMiView(options: {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
                 if (kyou_list_view) {
-                    if (inited.value) {
+                    if (inited.value && !preserve_scroll) {
                         kyou_list_view.scroll_to(0)
                     }
                     ((async () => kyou_list_view.set_loading(true))());
@@ -348,7 +349,8 @@ export function useMiView(options: {
             const waitPromises = new Array<Promise<unknown>>()
 
             const req = new GetKyousRequest()
-            abort_controllers.value[column_index] = req.abort_controller
+            my_abort_controller = req.abort_controller
+            abort_controllers.value[column_index] = my_abort_controller
             req.query = query.clone()
             req.query.parse_words_and_not_words()
             if (update_cache) {
@@ -398,7 +400,11 @@ export function useMiView(options: {
                 }
 
                 if (inited.value) {
-                    kyou_list_view.scroll_to(0)
+                    if (preserve_scroll) {
+                        kyou_list_view.scroll_to(match_kyous_list_top_list.value[column_index])
+                    } else {
+                        kyou_list_view.scroll_to(0)
+                    }
                     skip_search_this_tick.value = false
                 }
             })
@@ -407,6 +413,16 @@ export function useMiView(options: {
             if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
                 // abort以外はエラー出力する
                 console.error(err)
+            }
+            // abort含め例外時はloading状態を解除する（ただし新しいsearchが開始されていない場合のみ）
+            if (my_abort_controller && abort_controllers.value[column_index] === my_abort_controller) {
+                nextTick(() => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const kyou_list_view = kyou_list_views.value?.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+                    if (kyou_list_view) {
+                        kyou_list_view.set_loading(false)
+                    }
+                })
             }
         }
     }

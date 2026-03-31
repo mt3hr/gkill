@@ -143,9 +143,7 @@ export function useKftlView(options: {
         localStorage.setItem("kftl_content", text_area_content.value)
     }
 
-    async function update_line_labels(): Promise<void> {
-        const kftl_text_area_element_id = "kftl_text_area"
-        const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!
+    function sync_line_label_scroll(kftl_text_area_element: HTMLElement): void {
         const kftl_line_label_elements = document.getElementsByClassName("kftl_line_label")!
         for (let i = 0; i < kftl_line_label_elements.length; i++) {
             const kftl_line_label_element = kftl_line_label_elements.item(i)
@@ -153,12 +151,23 @@ export function useKftlView(options: {
                 kftl_line_label_element.scrollTo(0, kftl_text_area_element.scrollTop)
             }
         }
+    }
+
+    async function update_line_labels(): Promise<void> {
+        const kftl_text_area_element_id = "kftl_text_area"
+        const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!
+
+        sync_line_label_scroll(kftl_text_area_element)
 
         const statement = new KFTLStatement(text_area_content.value)
         const textarea_info = new TextAreaInfo()
         textarea_info.text_area_element_id = kftl_text_area_element_id
 
         line_label_datas.value = statement.generate_line_label_data(textarea_info)
+
+        // ラベル再生成後、DOM更新を待ってスクロール位置を再同期する
+        await nextTick()
+        sync_line_label_scroll(kftl_text_area_element)
 
         invalid_line_numbers.value = await statement.get_invalid_line_indexs()
 

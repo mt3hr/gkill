@@ -10,13 +10,16 @@ export function useMiSortTypeQuery(options: { props: miSortTypeQueryProps, emits
     const { props, emits } = options
 
     const query = ref(props.find_kyou_query.clone())
+    const skip_emits_for_prop_change = ref(false)
 
     watch(() => props.find_kyou_query, () => {
         if (!props.find_kyou_query) {
             return
         }
         query.value = props.find_kyou_query.clone()
+        skip_emits_for_prop_change.value = true
         load_sort_type()
+        nextTick(() => skip_emits_for_prop_change.value = false)
     })
 
     nextTick(() => {
@@ -28,7 +31,9 @@ export function useMiSortTypeQuery(options: { props: miSortTypeQueryProps, emits
     const sort_type: Ref<MiSortType> = ref(MiSortType.create_time)
 
     watch(() => sort_type.value, () => {
-        emits('request_update_sort_type', sort_type.value)
+        if (!skip_emits_for_prop_change.value) {
+            emits('request_update_sort_type', sort_type.value)
+        }
     })
 
     function load_sort_type(): void {

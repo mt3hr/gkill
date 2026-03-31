@@ -14,6 +14,7 @@ export function useMiExtructCheckStateQuery(options: {
     const query = ref(props.find_kyou_query.clone())
     const use_mi_check_state = ref(true)
     const check_state: Ref<MiCheckState> = ref(MiCheckState.uncheck)
+    const skip_emits_for_prop_change = ref(false)
 
     const check_states: Ref<Array<{ name: string, value: MiCheckState }>> = ref([
         {
@@ -36,11 +37,15 @@ export function useMiExtructCheckStateQuery(options: {
             return
         }
         query.value = props.find_kyou_query.clone()
+        skip_emits_for_prop_change.value = true
         load_check_state()
+        nextTick(() => skip_emits_for_prop_change.value = false)
     })
 
     watch(() => check_state.value, () => {
-        emits('request_update_extruct_check_state', check_state.value)
+        if (!skip_emits_for_prop_change.value) {
+            emits('request_update_extruct_check_state', check_state.value)
+        }
     })
 
     // ── Lifecycle ──
