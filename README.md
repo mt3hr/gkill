@@ -1,4 +1,4 @@
-# ライフログアプリケーション「gkill」
+# ライフログアプリケーション「gkill」 
 gkill is not a lifelogging application.  
 gkillはライフログアプリケーションじゃないです。  
 ![gkill_sample_view](https://github.com/mt3hr/gkill/blob/main/documents/resources/gkill_sample_view.png?raw=true)
