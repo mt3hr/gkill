@@ -166,7 +166,7 @@ describe("callApi", () => {
     });
 
     const client = new GkillClient();
-    const result = await client.callApi("/api/get_kyous_mcp", {}, true);
+    const _result = await client.callApi("/api/get_kyous_mcp", {}, true);
     expect(callCount).toBe(4);
   });
 });
