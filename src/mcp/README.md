@@ -1,4 +1,7 @@
 ## MCP連携
+
+> **セットアップ手順**: Claude（Claude.ai / Claude Code / Claude Desktop）からの接続手順は [MCP セットアップガイド](../../documents/reverse/mcp-setup-guide.md) を参照してください。
+
 gkill のAPIをMCPサーバとして公開できます。3種類のサーバーを提供:
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |

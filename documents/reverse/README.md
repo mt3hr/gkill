@@ -38,6 +38,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 17. **[operations-guide.md](operations-guide.md)** — 運用ガイド。デプロイ、バックアップ、トラブルシューティング手順です。
 18. **[dev-setup.md](dev-setup.md)** — 環境構築資料。開発環境のセットアップ手順です。
 19. **[testing-guide.md](testing-guide.md)** — テストガイド。テストの実行方法、アーキテクチャ、追加ガイドラインです。
+20. **[mcp-setup-guide.md](mcp-setup-guide.md)** — MCPセットアップガイド。Claude（Claude.ai / Claude Code / Claude Desktop）からgkillのMCPサーバーを利用するための手順です。
 
 ### ユーザ向け
 
@@ -66,6 +67,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [operations-guide.md](operations-guide.md) | デプロイ・バックアップ・保守手順 | 運用担当者、環境構築時 |
 | [dev-setup.md](dev-setup.md) | 開発環境構築手順（ビルド、クロスコンパイル） | 新規開発者のオンボーディング |
 | [testing-guide.md](testing-guide.md) | テスト実行・アーキテクチャ・追加ガイドライン | テスト実行、テスト追加時の参照 |
+| [mcp-setup-guide.md](mcp-setup-guide.md) | MCP サーバーセットアップ手順 | Claude連携のセットアップ、トラブルシューティング |
 | [user-guide.md](user-guide.md) | ユーザ向け導入・操作ガイド | エンドユーザ、導入担当者 |
 
 ## 資料間の依存関係
@@ -107,6 +109,8 @@ graph TD
 
     N --> Q[dev-setup.md<br/>環境構築]
     Q --> T[testing-guide.md<br/>テストガイド]
+    Q --> U[mcp-setup-guide.md<br/>MCPセットアップ]
+    K --> U
     N --> R[program-spec.md<br/>プログラム仕様]
     O --> R
     E --> R
@@ -123,6 +127,7 @@ graph TD
     style Q fill:#dfd,stroke:#333,stroke-width:2px
     style R fill:#dfd,stroke:#333,stroke-width:2px
     style T fill:#dfd,stroke:#333,stroke-width:2px
+    style U fill:#dfd,stroke:#333,stroke-width:2px
     style S fill:#ffd,stroke:#333,stroke-width:2px
 ```
 
@@ -132,6 +137,7 @@ graph TD
 - **glossary.md** は全資料の基盤です。必ず最初に読んでください。
 - **design-philosophy.md** → 構造系資料（ER図、クラス図、フォルダ構成）の設計判断の背景を提供します。
 - **folder-structure.md** → **dev-setup.md** / **program-spec.md** は、ディレクトリ構成から環境構築手順・プログラム仕様へ進みます。
+- **dev-setup.md** → **mcp-setup-guide.md** は、開発環境構築からMCP連携セットアップへ進みます。**api-endpoints.md** の知識も前提になります。
 - **er-diagram.md** → **class-diagrams.md** → **dvnf-rep-type-spec.md** → **program-spec.md** → **sequence-diagrams.md** → **activity-diagrams.md** と、データ構造からコード構造、処理フローへと段階的に詳細化されます。
 - **screen-transition.md** → **screen-specs.md** → **frontend-architecture.md** は、画面遷移から画面仕様、フロントエンド実装の詳細へ進みます。
 - **api-endpoints.md** → **error-handling-and-security.md** は、APIの仕様からエラー処理方針へ進みます。

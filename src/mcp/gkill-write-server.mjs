@@ -208,7 +208,7 @@ const TOOLS = [
     name: "gkill_add_nlog",
     description:
       "Create an expense/income record (nlog) in gkill for tracking financial transactions. " +
-      "Each record has a title (what was purchased or received), an amount (positive for expense, negative for income/refund), and an optional shop name. " +
+      "Each record has a title (what was purchased or received), an amount (negative for expense/spending, positive for income/refund), and an optional shop name. " +
       "The repository is determined automatically by the server. " +
       "Response fields: added_nlog (full Nlog entity with id, title, shop, amount, rep_name, related_time, etc.), added_kyou (parent Kyou wrapper). " +
       "Use the returned id as target_id for gkill_add_tag (e.g., tag with category like \"food\", \"transport\") to organize expenses.",
@@ -216,7 +216,7 @@ const TOOLS = [
       type: "object",
       properties: {
         title: { type: "string", description: "Description of the expense/income (e.g., \"lunch\", \"train ticket\", \"freelance payment\")." },
-        amount: { type: "integer", description: "Monetary amount (integer only, e.g. 1500, -200). Must be a valid integer — empty or non-integer values are rejected by the server." },
+        amount: { type: "integer", description: "Monetary amount (integer only, e.g. -1500 for expense, 200 for income). Must be a valid integer — empty or non-integer values are rejected by the server." },
         shop: { type: "string", description: "Shop, store, or source name (e.g., \"Starbucks\", \"Amazon\"). Optional." },
         related_time: { type: "string", description: `When the transaction occurred. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Defaults to now.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },
@@ -385,7 +385,7 @@ const TOOLS = [
       "(no prefix) → kmemo text content. " +
       "Separator lines: 、 or , → separate into a new entity; 、、 or ,, → separate + increment time by 1 second. " +
       "Example (creates 3 records: kmemo + mood + expense): " +
-      "\"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n500\\n!\" " +
+      "\"今日はいい天気だった\\n、\\n/mood\\n8\\n、\\n/expense\\nカフェ\\nアイスコーヒー\\n-500\\n!\" " +
       "Important: unlike individual gkill_add_* tools, KFTL does not return created entity IDs. If you need IDs for tagging/updating, use individual gkill_add_* tools instead. " +
       "Response fields: messages[] (server processing messages).",
     inputSchema: {
@@ -478,7 +478,7 @@ const TOOLS = [
       properties: {
         id: { type: "string", description: "ID of the nlog to update. Obtain from gkill_add_nlog response or gkill_get_kyous with include_id:true." },
         title: { type: "string", description: "New expense/income description." },
-        amount: { type: "integer", description: "New monetary amount (integer only, e.g. 1500, -200). Must be a valid integer." },
+        amount: { type: "integer", description: "New monetary amount (integer only, e.g. -1500 for expense, 200 for income). Must be a valid integer." },
         shop: { type: "string", description: "New shop/store name. Omit to keep unchanged." },
         related_time: { type: "string", description: `New related time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}. Omit to keep unchanged.` },
         locale_name: { type: "string", description: "Locale for server messages, e.g. ja/en. Defaults to server default (ja)." },

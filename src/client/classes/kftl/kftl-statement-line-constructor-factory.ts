@@ -21,6 +21,7 @@ import { KFTLStartTimeIsEndByTagStatementLine } from "./kftl_timeis/kftl_timeis_
 import { KFTLStartTimeIsEndByTagIfExistStatementLine } from "./kftl_timeis/kftl_timeis_end/kftl_timeis_end_tag_exist/kftl-start-time-is-end-by-tag-if-exist-statement-line"
 import { KFTLStartTimeIsStartStatementLine } from "./kftl_timeis/kftl_timeis_start/kftl-start-time-is-start-statement-line"
 import { KFTLStartURLogStatementLine } from "./kftl_urlog/kftl-start-ur-log-statement-line"
+import { KFTLURLogTitleStatementLine } from "./kftl_urlog/kftlur-log-title-statement-line"
 
 export class KFTLStatementLineConstructorFactory {
 
@@ -58,6 +59,13 @@ export class KFTLStatementLineConstructorFactory {
         return this.generate_default_constructor(line_text, (line_text: string, context: KFTLStatementLineContext) => {
             this.prev_line_is_meta_info = false
             return new KFTLNlogTitleStatementLine(line_text, context)
+        })
+    }
+
+    generate_urlog_title_constructor(line_text: string): { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } {
+        return this.generate_default_constructor(line_text, (line_text: string, context: KFTLStatementLineContext) => {
+            this.prev_line_is_meta_info = false
+            return new KFTLURLogTitleStatementLine(line_text, context)
         })
     }
 

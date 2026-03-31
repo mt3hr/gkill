@@ -979,3 +979,122 @@ func TestStatement_AsciiMixed(t *testing.T) {
 		t.Errorf("line 3: expected kmemo, got %s", lines[3].GetLabelName())
 	}
 }
+
+// ─── M12: Nlog followed by separator then another record ─────────────────────
+
+func TestApply_NlogThenSeparatorThenKmemo(t *testing.T) {
+	// nlog + separator + kmemo — previously caused ERR000351 because
+	// generateNlogConstructor did not check nextLineText for separators.
+	text := "ーん\n店\nお菓子\n-100\n、\nメモです"
+	requestMap, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("nlog + separator + kmemo should not error, got: %v", err)
+	}
+	all := requestMap.All()
+	if len(all) != 2 {
+		t.Fatalf("expected 2 requests (nlog + kmemo), got %d", len(all))
+	}
+}
+
+func TestApply_NlogThenSeparatorThenMi(t *testing.T) {
+	text := "ーん\n店\nお菓子\n-100\n、\nーみ\nタスク"
+	requestMap, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("nlog + separator + mi should not error, got: %v", err)
+	}
+	all := requestMap.All()
+	if len(all) != 2 {
+		t.Fatalf("expected 2 requests (nlog + mi), got %d", len(all))
+	}
+}
+
+func TestStatement_NlogThenSeparatorThenKmemo(t *testing.T) {
+	// Verify statement line types: nlog lines + split + kmemo
+	text := "ーん\n店\nお菓子\n-100\n、\nメモです"
+	lines := helperGenerateLines(t, text)
+	// nlogStart + shop + title + amount + split + kmemo = 6 lines
+	if len(lines) != 6 {
+		t.Fatalf("expected 6 lines, got %d", len(lines))
+	}
+	if lines[4].GetLabelName() != "split" {
+		t.Errorf("line 4: expected split, got %s", lines[4].GetLabelName())
+	}
+	if lines[5].GetLabelName() != "kmemo" {
+		t.Errorf("line 5: expected kmemo, got %s", lines[5].GetLabelName())
+	}
+}
+
+// ─── M13: URLog followed by separator — separator should break, not become title ─
+
+func TestApply_URLogThenSeparatorThenKmemo(t *testing.T) {
+	// 「、」がタイトルに紛れ込まず、セパレータとして認識されること
+	text := "ーう\nhttps://example.com\n、\nメモです"
+	requestMap, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("urlog + separator + kmemo should not error, got: %v", err)
+	}
+	all := requestMap.All()
+	if len(all) != 2 {
+		t.Fatalf("expected 2 requests (urlog + kmemo), got %d", len(all))
+	}
+}
+
+func TestApply_URLogThenSplitNextSecondThenKmemo(t *testing.T) {
+	// 「、、」もセパレータとして認識されること
+	text := "ーう\nhttps://example.com\n、、\nメモです"
+	requestMap, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("urlog + split-next-second + kmemo should not error, got: %v", err)
+	}
+	all := requestMap.All()
+	if len(all) != 2 {
+		t.Fatalf("expected 2 requests (urlog + kmemo), got %d", len(all))
+	}
+}
+
+func TestStatement_URLogThenSeparator(t *testing.T) {
+	// 行タイプ検証: urlog + url + split + kmemo (titleはスキップされる)
+	text := "ーう\nhttps://example.com\n、\nメモです"
+	lines := helperGenerateLines(t, text)
+	if len(lines) != 4 {
+		t.Fatalf("expected 4 lines, got %d", len(lines))
+	}
+	if lines[0].GetLabelName() != "urlog" {
+		t.Errorf("line 0: expected urlog, got %s", lines[0].GetLabelName())
+	}
+	if lines[1].GetLabelName() != "urlogURL" {
+		t.Errorf("line 1: expected urlogURL, got %s", lines[1].GetLabelName())
+	}
+	if lines[2].GetLabelName() != "split" {
+		t.Errorf("line 2: expected split, got %s", lines[2].GetLabelName())
+	}
+	if lines[3].GetLabelName() != "kmemo" {
+		t.Errorf("line 3: expected kmemo, got %s", lines[3].GetLabelName())
+	}
+}
+
+func TestApply_URLogWithNormalTitle(t *testing.T) {
+	// セパレータでない普通のタイトルは従来通りタイトルとして扱われること
+	text := "ーう\nhttps://example.com\nExample Title"
+	requestMap, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("urlog with normal title should not error, got: %v", err)
+	}
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request (urlog), got %d", len(all))
+	}
+}
+
+func TestApply_AsciiExpenseThenSeparatorThenKmemo(t *testing.T) {
+	// Same bug with ASCII prefix /expense
+	text := "/expense\nshop\ntitle\n500\n,\nmemo"
+	requestMap, err := helperApplyToRequestMapAllowError(t, text)
+	if err != nil {
+		t.Fatalf("/expense + separator + kmemo should not error, got: %v", err)
+	}
+	all := requestMap.All()
+	if len(all) != 2 {
+		t.Fatalf("expected 2 requests, got %d", len(all))
+	}
+}
