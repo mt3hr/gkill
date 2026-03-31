@@ -167,7 +167,7 @@ graph TD
 {
   "commit_hash": "0c9fe181...",
   "build_time": "2026-03-19T10:30:00+09:00",
-  "version": "1.1.1-dev"
+  "version": "1.1.1"
 }
 ```
 
