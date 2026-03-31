@@ -18,7 +18,7 @@ function mockFetchOk(body = {}) {
   });
 }
 
-function mockFetchError(status, body = {}) {
+function _mockFetchError(status, body = {}) {
   globalThis.fetch = vi.fn().mockResolvedValue({
     ok: false,
     status,
@@ -263,7 +263,7 @@ describe("callWrite", () => {
 
     const client = new GkillWriteClient();
     client.sessionId = "default-sess";
-    const result = await client.callWrite("/api/add_kmemo", { kmemo: {} }, true, "override-sess");
+    const _result = await client.callWrite("/api/add_kmemo", { kmemo: {} }, true, "override-sess");
 
     const callBody = JSON.parse(globalThis.fetch.mock.calls[0][1].body);
     expect(callBody.session_id).toBe("override-sess");
