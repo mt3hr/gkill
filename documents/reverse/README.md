@@ -33,7 +33,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 12. **[screen-transition.md](screen-transition.md)** — 画面遷移図。UIのページ・ダイアログ遷移を理解します。
 13. **[screen-specs.md](screen-specs.md)** — 画面仕様。各画面の項目定義・コンポーネント構成の詳細です。
 14. **[frontend-architecture.md](frontend-architecture.md)** — フロントエンド設計ガイド。Vue 3 + TypeScript実装の詳細です。
-15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全79エンドポイントのリファレンスです。
+15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全80エンドポイントのリファレンスです。
 16. **[error-handling-and-security.md](error-handling-and-security.md)** — エラーハンドリング・セキュリティ設計。エラーコード体系とセキュリティポリシーです。
 17. **[operations-guide.md](operations-guide.md)** — 運用ガイド。デプロイ、バックアップ、トラブルシューティング手順です。
 18. **[dev-setup.md](dev-setup.md)** — 環境構築資料。開発環境のセットアップ手順です。
@@ -51,12 +51,12 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [glossary.md](glossary.md) | ドメイン用語の定義（71項目） | 全員。用語確認時に随時参照 |
 | [design-philosophy.md](design-philosophy.md) | アーキテクチャ決定と設計思想 | 設計判断の背景を知りたいとき |
 | [folder-structure.md](folder-structure.md) | プロジェクトのフォルダ構成 | 初回参照、ファイル探索時 |
-| [usecase.md](usecase.md) | ユースケース一覧（74件） | 機能仕様の把握、テスト設計 |
+| [usecase.md](usecase.md) | ユースケース一覧（75件） | 機能仕様の把握、テスト設計 |
 | [er-diagram.md](er-diagram.md) | エンティティ関連図（Mermaid） | DB設計・データモデルの理解 |
 | [class-diagrams.md](class-diagrams.md) | Go/TSクラス階層（Mermaid） | コード構造の理解、実装時の参照 |
 | [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) | DVNF命名規則・RepType仕様 | リポジトリ管理、データ型の理解 |
 | [program-spec.md](program-spec.md) | 主要プログラム仕様（初期化、DAO、API、キャッシュ） | アーキテクチャの深い理解 |
-| [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（22本: 正常系17 + 異常系5） | 処理フローの理解、デバッグ |
+| [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（23本: 正常系18 + 異常系5） | 処理フローの理解、デバッグ |
 | [activity-diagrams.md](activity-diagrams.md) | 処理ロジックのフローチャート | 詳細な処理手順の確認 |
 | [state-machines.md](state-machines.md) | エンティティ状態遷移図 | 状態管理ロジックの理解 |
 | [screen-transition.md](screen-transition.md) | ページ・ダイアログ遷移図 | UI実装・改修時の参照 |

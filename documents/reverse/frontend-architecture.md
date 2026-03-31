@@ -54,7 +54,7 @@ src/client/
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
 │   ├── views/                       # Viewコンポーネント (175)
-│   └── dialogs/                     # ダイアログコンポーネント (92, Esc閉じ対応)
+│   └── dialogs/                     # ダイアログコンポーネント (93, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -133,7 +133,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（211ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（210ファイル） |
 
 ### GkillAPI シングルトン
 
@@ -233,13 +233,13 @@ Service Worker が `/share-target` POSTを処理：
 
 | コード | 言語 | キー数 |
 |---|---|---|
-| `ja` | 日本語 | ~765 |
-| `en` | 英語 | ~765 |
-| `zh` | 中国語 | ~765 |
-| `ko` | 韓国語 | ~765 |
-| `es` | スペイン語 | ~765 |
-| `fr` | フランス語 | ~765 |
-| `de` | ドイツ語 | ~765 |
+| `ja` | 日本語 | ~771 |
+| `en` | 英語 | ~771 |
+| `zh` | 中国語 | ~771 |
+| `ko` | 韓国語 | ~771 |
+| `es` | スペイン語 | ~771 |
+| `fr` | フランス語 | ~771 |
+| `de` | ドイツ語 | ~771 |
 
 ### ロケールファイル
 
