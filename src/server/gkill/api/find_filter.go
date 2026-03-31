@@ -638,8 +638,9 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	}
 
 	matchTextFindByIDQuery := &find.FindQuery{
-		UseIDs: true,
-		IDs:    targetIDs,
+		UseIDs:         true,
+		IDs:            targetIDs,
+		OnlyLatestData: true,
 	}
 
 	matchReps := reps.Repositories{}
@@ -1149,8 +1150,9 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		targetIDs = append(targetIDs, text.TargetID)
 	}
 	matchTextFindByIDQuery := &find.FindQuery{
-		UseIDs: true,
-		IDs:    targetIDs,
+		UseIDs:         true,
+		IDs:            targetIDs,
+		OnlyLatestData: true,
 	}
 
 	allTimeIss, err := collectFromRepos([]reps.TimeIsRepository(findCtx.Repositories.TimeIsReps), func(rep reps.TimeIsRepository) ([]reps.TimeIs, error) {
