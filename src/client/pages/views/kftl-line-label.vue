@@ -14,5 +14,11 @@ defineProps<KFTLLineLabelProps>()
 .line_label {
     height: 24px;
     font-size: 1em;
+    line-height: 24px;
+}
+
+.line_label p {
+    margin: 0;
+    padding: 0;
 }
 </style>

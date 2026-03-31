@@ -38,13 +38,13 @@ export function useRepQuery(options: {
             const devices = cloned_query.value.devices_in_sidebar
             const rep_types = cloned_query.value.rep_types_in_sidebar
             if (devices) {
-                await update_check_devices(devices, CheckState.checked, true)
+                await update_check_devices(devices, CheckState.checked, true, true)
             }
             if (rep_types) {
-                await update_check_rep_types(rep_types, CheckState.checked, true)
+                await update_check_rep_types(rep_types, CheckState.checked, true, true)
             }
             if (reps) {
-                await update_check_reps(reps, CheckState.checked, true)
+                await update_check_reps(reps, CheckState.checked, true, true)
             }
         }
     })
@@ -54,9 +54,9 @@ export function useRepQuery(options: {
         if (props.inited) {
             skip_emits_this_tick.value = true
             nextTick(() => skip_emits_this_tick.value = false)
-            update_check_devices(cloned_query.value.devices_in_sidebar, CheckState.checked, true)
-            update_check_rep_types(cloned_query.value.rep_types_in_sidebar, CheckState.checked, true)
-            update_check_reps(cloned_query.value.reps, CheckState.checked, true)
+            update_check_devices(cloned_query.value.devices_in_sidebar, CheckState.checked, true, true)
+            update_check_rep_types(cloned_query.value.rep_types_in_sidebar, CheckState.checked, true, true)
+            update_check_reps(cloned_query.value.reps, CheckState.checked, true, true)
             return
         }
         if (!props.inited) {
@@ -75,14 +75,28 @@ export function useRepQuery(options: {
         const devices = cloned_query.value.devices_in_sidebar
         const rep_types = cloned_query.value.rep_types_in_sidebar
         if (devices) {
-            await update_check_devices(devices, CheckState.checked, true)
+            await update_check_devices(devices, CheckState.checked, true, true)
         }
         if (rep_types) {
-            await update_check_rep_types(rep_types, CheckState.checked, true)
+            await update_check_rep_types(rep_types, CheckState.checked, true, true)
         }
         if (reps) {
-            await update_check_reps(reps, CheckState.checked, true)
+            await update_check_reps(reps, CheckState.checked, true, true)
         }
+
+        const checked_reps = foldable_struct_reps.value?.get_selected_items()
+        if (checked_reps) {
+            emits('request_update_checked_reps', checked_reps, false)
+        }
+        const checked_devices = foldable_struct_devices.value?.get_selected_items()
+        if (checked_devices) {
+            emits('request_update_checked_devices', checked_devices, false)
+        }
+        const checked_rep_types = foldable_struct_rep_types.value?.get_selected_items()
+        if (checked_rep_types) {
+            emits('request_update_checked_rep_types', checked_rep_types, false)
+        }
+
         loading.value = false
     })
 
@@ -117,7 +131,7 @@ export function useRepQuery(options: {
         update_check_rep_types(items, is_checked, false)
     }
 
-    function update_check_reps(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean) {
+    function update_check_reps(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean) {
         if (pre_uncheck_all) {
             let f = (_struct: FoldableStructModel) => { }
             const func = (struct: FoldableStructModel) => {
@@ -160,12 +174,14 @@ export function useRepQuery(options: {
         }
         const reps = foldable_struct_reps.value?.get_selected_items()
         if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
-            emits('request_update_checked_reps', reps, true)
+            if (!skip_emits_this_tick.value && !disable_emits) {
+                emits('request_update_checked_reps', reps, true)
+            }
         }
         foldable_struct_reps.value?.update_check()
     }
 
-    function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean) {
+    function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean) {
         if (pre_uncheck_all) {
             let f = (_struct: FoldableStructModel) => { }
             const func = (struct: FoldableStructModel) => {
@@ -209,18 +225,20 @@ export function useRepQuery(options: {
 
         const devices = foldable_struct_devices.value?.get_selected_items()
         if (devices && !deepEquals(devices, old_cloned_query.value?.devices_in_sidebar)) {
-            emits('request_update_checked_devices', devices, true)
+            if (!skip_emits_this_tick.value && !disable_emits) {
+                emits('request_update_checked_devices', devices, true)
+            }
         }
         if (!loading.value) {
             const reps = calc_reps_by_types_and_devices()
             if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
-                update_check_reps(reps, CheckState.checked, true)
+                update_check_reps(reps, CheckState.checked, true, disable_emits)
             }
         }
         foldable_struct_devices.value?.update_check()
     }
 
-    function update_check_rep_types(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean) {
+    function update_check_rep_types(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean) {
         if (pre_uncheck_all) {
             let f = (_struct: FoldableStructModel) => { }
             const func = (struct: FoldableStructModel) => {
@@ -264,12 +282,14 @@ export function useRepQuery(options: {
 
         const rep_types = foldable_struct_rep_types.value?.get_selected_items()
         if (rep_types && !deepEquals(rep_types, old_cloned_query.value?.rep_types)) {
-            emits('request_update_checked_rep_types', rep_types, true)
+            if (!skip_emits_this_tick.value && !disable_emits) {
+                emits('request_update_checked_rep_types', rep_types, true)
+            }
         }
         if (!loading.value) {
             const reps = calc_reps_by_types_and_devices()
             if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
-                update_check_reps(reps, CheckState.checked, true)
+                update_check_reps(reps, CheckState.checked, true, disable_emits)
             }
         }
         foldable_struct_rep_types.value?.update_check()
