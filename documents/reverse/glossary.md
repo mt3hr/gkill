@@ -242,7 +242,7 @@ DNote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | MCP アクセスログ | `src/mcp/lib/access-log.mjs` | MCPサーバのアクセスログモジュール。`MCP_LOG` 環境変数で制御 |
 | Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
 | Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |
-| ビルド設定 | `package.json` | npm scripts、依存関係、バージョン (1.1.1) |
+| ビルド設定 | `package.json` | npm scripts、依存関係、バージョン (1.1.2-dev) |
 | Vite 設定 | `vite.config.ts` | ビルド設定・PWA・エイリアス |
 | TypeScript 設定 | `tsconfig.app.json` | フロントエンド TypeScript 設定 |
 | ESLint 設定 | `eslint.config.js` | リンター設定（flat config） |
