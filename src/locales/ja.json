@@ -764,6 +764,7 @@
     "NETWORK_OFFLINE_MESSAGE": "ネットワークに接続されていません",
     "NETWORK_ERROR_MESSAGE": "ネットワークエラーが発生しました。接続を確認してください",
     "NO_RESULTS_MESSAGE": "対象なし",
+    "LOADING_MESSAGE": "取得中",
     "REQUIRED_FIELD_MESSAGE": "この項目は必須です",
     "UNSAVED_CHANGES_WARNING_MESSAGE": "未保存の変更があります。ページを離れますか？",
     "BROWSE_ZIP_CONTENTS_TITLE": "ZIP内容を閲覧",

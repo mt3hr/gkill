@@ -764,6 +764,7 @@
     "NETWORK_OFFLINE_MESSAGE": "No hay conexión a la red",
     "NETWORK_ERROR_MESSAGE": "Se produjo un error de red. Compruebe su conexión.",
     "NO_RESULTS_MESSAGE": "Sin elementos",
+    "LOADING_MESSAGE": "Cargando",
     "REQUIRED_FIELD_MESSAGE": "Este campo es obligatorio",
     "UNSAVED_CHANGES_WARNING_MESSAGE": "Tiene cambios sin guardar. ¿Desea salir de la página?",
     "BROWSE_ZIP_CONTENTS_TITLE": "Explorar contenido ZIP",

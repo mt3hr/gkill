@@ -22,7 +22,7 @@
                 <td>
                     <div class="kftl_line_label line_label_wrap">
                         <KFTLLineLabel v-for="(line_label_data, index) in line_label_datas"
-                            :key="line_label_data.target_request_id" :application_config="application_config"
+                            :key="index" :application_config="application_config"
                             :gkill_api="gkill_api" :line_label_data="line_label_data"
                             :style="line_label_styles[index]" />
                     </div>
@@ -97,6 +97,8 @@ defineExpose({ focus_kftl_text_area })
     height: calc(v-bind(text_area_height_px));
     width: calc(v-bind(text_area_width_px));
     resize: none;
+    font-size: 1em;
+    line-height: 24px;
 }
 
 .line_label_wrap {

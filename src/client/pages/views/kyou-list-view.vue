@@ -60,13 +60,16 @@
                     </table>
                 </template>
             </v-virtual-scroll>
-            <v-col v-if="!is_loading && matched_kyous && matched_kyous.length === 0" cols="12" class="text-center text-grey py-6">
-                {{ i18n.global.t('NO_RESULTS_MESSAGE') }}
-            </v-col>
         </v-card>
         <v-card v-if="show_footer" :class="footer_class" variant="text" :ripple="false" :link="false">
             <v-row no-gutters>
-                <v-col v-if="matched_kyous && matched_kyous.length" cols="auto" class="py-3">
+                <v-col v-if="!has_loaded && (!matched_kyous || matched_kyous.length === 0)" cols="auto" class="py-3 text-grey">
+                    {{ i18n.global.t('LOADING_MESSAGE') }}
+                </v-col>
+                <v-col v-else-if="has_loaded && (!matched_kyous || matched_kyous.length === 0)" cols="auto" class="py-3 text-grey">
+                    {{ i18n.global.t('NO_RESULTS_MESSAGE') }}
+                </v-col>
+                <v-col v-else-if="matched_kyous && matched_kyous.length" cols="auto" class="py-3">
                     {{ matched_kyous.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
                 </v-col>
                 <v-spacer />
@@ -139,6 +142,7 @@ const {
     // State
     match_kyous_for_image,
     is_loading,
+    has_loaded,
 
     // Computed
     kyou_height_px,

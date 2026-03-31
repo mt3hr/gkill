@@ -264,14 +264,14 @@ body::-webkit-scrollbar {
   --gkill-scrollbar-thumb-radius: 5px;
 }
 
-/* スクロールバー */
-div::-webkit-scrollbar {
+/* スクロールバー（アプリ全体に適用） */
+*::-webkit-scrollbar {
   margin-left: 1px;
   width: var(--gkill-scrollbar-size);
   height: var(--gkill-scrollbar-size);
 }
 
-div::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background: rgb(var(--v-theme-primary));
   width: var(--gkill-scrollbar-thumb-width);
   border-radius: var(--gkill-scrollbar-thumb-radius);

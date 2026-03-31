@@ -23,6 +23,7 @@ export function useKyouListView(options: {
     // ── State refs ──
     const match_kyous_for_image: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
     const is_loading: Ref<boolean> = ref(false)
+    const has_loaded: Ref<boolean> = ref(false)
 
     // ── Computed ──
     const kyou_height_px = computed(() => props.kyou_height ? props.kyou_height.toString().concat("px") : "0px")
@@ -141,6 +142,9 @@ export function useKyouListView(options: {
 
     function set_loading(loading: boolean): void {
         is_loading.value = loading
+        if (!loading) {
+            has_loaded.value = true
+        }
     }
 
     function get_is_loading(): boolean {
@@ -197,6 +201,7 @@ export function useKyouListView(options: {
         // State
         match_kyous_for_image,
         is_loading,
+        has_loaded,
 
         // Computed
         kyou_height_px,

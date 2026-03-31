@@ -41,7 +41,7 @@ export class KFTLStatement {
     generate_line_label_data(text_area_info: TextAreaInfo): Array<LineLabelData> {
         const tx_id = "" // label_data作るためには必要ない
         const label_datas = new Array<LineLabelData>()
-        const lines = this.generate_kftl_lines()
+        const lines = this.generate_kftl_lines(false)
         let prev_context: KFTLStatementLineContext | null = null
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
@@ -56,8 +56,8 @@ export class KFTLStatement {
             const line_text = ""
             const next_line_text = ""
             const target_id: string = (prev_context != null && prev_context.get_next_statement_line_target_id() != null) ? prev_context.get_next_statement_line_target_id()! : GkillAPI.get_gkill_api().generate_uuid()!
-            const context = new KFTLStatementLineContext(tx_id, line_text, next_line_text, target_id, lines, false)
-            line = line.get_context().get_next_statement_line_constructor()!(context.get_this_statement_line_target_id(), context)
+            const context = new KFTLStatementLineContext(tx_id, line_text, target_id, next_line_text, lines, false)
+            line = line.get_context().get_next_statement_line_constructor()!(context.get_this_statement_line_text(), context)
             const label_data = new LineLabelData()
             label_data.lines = line.get_count_line_in_textarea(text_area_info).valueOf()
             label_data.label = line.get_label_name(line.get_context())
@@ -85,7 +85,7 @@ export class KFTLStatement {
         return line
     }
 
-    private generate_kftl_lines(): Array<KFTLStatementLine> {
+    private generate_kftl_lines(break_on_submit_marker: boolean = true): Array<KFTLStatementLine> {
         const tx_id = GkillAPI.get_gkill_api().generate_uuid()
         KFTLStatementLineConstructorFactory.get_instance().reset()
         const lines = new Array<KFTLStatementLine>()
@@ -108,7 +108,7 @@ export class KFTLStatement {
             }
             prev_context = context
 
-            if (i != 0 && line_text == i18n.global.t("KFTL_SAVE_CHARACTOR")) {
+            if (break_on_submit_marker && i != 0 && line_text == i18n.global.t("KFTL_SAVE_CHARACTOR")) {
                 break
             }
             lines.push(line)

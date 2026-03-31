@@ -764,6 +764,7 @@
     "NETWORK_OFFLINE_MESSAGE": "Vous êtes hors ligne",
     "NETWORK_ERROR_MESSAGE": "Une erreur réseau s'est produite. Vérifiez votre connexion.",
     "NO_RESULTS_MESSAGE": "Aucun élément",
+    "LOADING_MESSAGE": "Chargement",
     "REQUIRED_FIELD_MESSAGE": "Ce champ est obligatoire",
     "UNSAVED_CHANGES_WARNING_MESSAGE": "Vous avez des modifications non enregistrées. Quitter la page ?",
     "BROWSE_ZIP_CONTENTS_TITLE": "Parcourir le contenu ZIP",

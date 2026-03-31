@@ -764,6 +764,7 @@
     "NETWORK_OFFLINE_MESSAGE": "You are offline",
     "NETWORK_ERROR_MESSAGE": "A network error occurred. Please check your connection.",
     "NO_RESULTS_MESSAGE": "No items",
+    "LOADING_MESSAGE": "Loading",
     "REQUIRED_FIELD_MESSAGE": "This field is required",
     "UNSAVED_CHANGES_WARNING_MESSAGE": "You have unsaved changes. Leave page?",
     "BROWSE_ZIP_CONTENTS_TITLE": "Browse ZIP contents",
