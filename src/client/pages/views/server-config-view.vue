@@ -68,6 +68,22 @@
                 </tr>
                 <tr>
                     <td>
+                        {{ i18n.global.t("LAN_HOSTNAME_TITLE") }}
+                    </td>
+                    <td>
+                        <v-text-field v-model="server_config.lan_hostname"></v-text-field>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {{ i18n.global.t("GLOBAL_HOSTNAME_TITLE") }}
+                    </td>
+                    <td>
+                        <v-text-field v-model="server_config.global_hostname"></v-text-field>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         {{ i18n.global.t("TLS_CERT_FILE_TITLE") }}
                     </td>
                     <td>

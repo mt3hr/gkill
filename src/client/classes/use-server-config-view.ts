@@ -76,6 +76,8 @@ export function useServerConfigView(options: {
         new_server_config.urlog_useragent = server_config.value.urlog_useragent
         new_server_config.upload_size_limit_month = server_config.value.upload_size_limit_month
         new_server_config.user_data_directory = server_config.value.user_data_directory
+        new_server_config.lan_hostname = server_config.value.lan_hostname
+        new_server_config.global_hostname = server_config.value.global_hostname
         new_server_config.device = device_name
         cloned_server_configs.value.push(new_server_config)
         device.value = device_name

@@ -131,6 +131,8 @@ var serverConfigDefaultValue = map[string]any{
 	"GKILL_NOTIFICATION_PRIVATE_KEY": "",
 	"USE_GKILL_NOTIFICATION":         true,
 	"GOOGLE_MAP_API_KEY":             "",
+	"LAN_HOSTNAME":                   "",
+	"GLOBAL_HOSTNAME":                "",
 }
 
 func (s *serverConfigDAOSQLite3Impl) GetAllServerConfigs(ctx context.Context) ([]*ServerConfig, error) {
@@ -315,7 +317,29 @@ SELECT
 	FROM SERVER_CONFIG
 	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
 	AND KEY = 'GOOGLE_MAP_API_KEY'
-  ) AS GOOGLE_MAP_API_KEY
+  ) AS GOOGLE_MAP_API_KEY,
+  /* LAN_HOSTNAME */ (
+      SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'LAN_HOSTNAME'
+  ) AS LAN_HOSTNAME,
+  /* GLOBAL_HOSTNAME */ (
+      SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'GLOBAL_HOSTNAME'
+  ) AS GLOBAL_HOSTNAME
 FROM SERVER_CONFIG AS GROUPED_SERVER_CONFIG
 GROUP BY DEVICE
 `,
@@ -335,6 +359,8 @@ GROUP BY DEVICE
 		serverConfigDefaultValue["GKILL_NOTIFICATION_PRIVATE_KEY"],
 		serverConfigDefaultValue["USE_GKILL_NOTIFICATION"],
 		serverConfigDefaultValue["GOOGLE_MAP_API_KEY"],
+		serverConfigDefaultValue["LAN_HOSTNAME"],
+		serverConfigDefaultValue["GLOBAL_HOSTNAME"],
 	)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
@@ -387,6 +413,8 @@ GROUP BY DEVICE
 				&serverConfig.GkillNotificationPrivateKey,
 				&serverConfig.UseGkillNotification,
 				&serverConfig.GoogleMapAPIKey,
+				&serverConfig.LanHostname,
+				&serverConfig.GlobalHostname,
 			)
 			if err != nil {
 				return nil, err
@@ -583,7 +611,29 @@ SELECT
 	FROM SERVER_CONFIG
 	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
 	AND KEY = 'GOOGLE_MAP_API_KEY'
-  ) AS GOOGLE_MAP_API_KEY
+  ) AS GOOGLE_MAP_API_KEY,
+  /* LAN_HOSTNAME */ (
+      SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'LAN_HOSTNAME'
+  ) AS LAN_HOSTNAME,
+  /* GLOBAL_HOSTNAME */ (
+      SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'GLOBAL_HOSTNAME'
+  ) AS GLOBAL_HOSTNAME
 FROM SERVER_CONFIG AS GROUPED_SERVER_CONFIG
 GROUP BY DEVICE
 HAVING DEVICE = ?
@@ -604,6 +654,8 @@ HAVING DEVICE = ?
 		serverConfigDefaultValue["GKILL_NOTIFICATION_PRIVATE_KEY"],
 		serverConfigDefaultValue["USE_GKILL_NOTIFICATION"],
 		serverConfigDefaultValue["GOOGLE_MAP_API_KEY"],
+		serverConfigDefaultValue["LAN_HOSTNAME"],
+		serverConfigDefaultValue["GLOBAL_HOSTNAME"],
 	)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
@@ -660,6 +712,8 @@ HAVING DEVICE = ?
 				&serverConfig.GkillNotificationPrivateKey,
 				&serverConfig.UseGkillNotification,
 				&serverConfig.GoogleMapAPIKey,
+				&serverConfig.LanHostname,
+				&serverConfig.GlobalHostname,
 			)
 			serverConfigs = append(serverConfigs, serverConfig)
 		}
@@ -722,6 +776,8 @@ INSERT INTO SERVER_CONFIG (
 		"GKILL_NOTIFICATION_PRIVATE_KEY": serverConfig.GkillNotificationPrivateKey,
 		"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
 		"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
+		"LAN_HOSTNAME":                   serverConfig.LanHostname,
+		"GLOBAL_HOSTNAME":                serverConfig.GlobalHostname,
 	}
 
 	stmt, err := s.db.PrepareContext(ctx, sql)
@@ -854,6 +910,8 @@ INSERT INTO SERVER_CONFIG (
 			"GKILL_NOTIFICATION_PRIVATE_KEY": serverConfig.GkillNotificationPrivateKey,
 			"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
 			"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
+			"LAN_HOSTNAME":                   serverConfig.LanHostname,
+			"GLOBAL_HOSTNAME":                serverConfig.GlobalHostname,
 		}
 		// レコード自体が存在しなかったらいれる
 		for key, value := range updateValuesMap {
@@ -1041,6 +1099,8 @@ INSERT INTO SERVER_CONFIG (
 		"GKILL_NOTIFICATION_PRIVATE_KEY": serverConfig.GkillNotificationPrivateKey,
 		"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
 		"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
+		"LAN_HOSTNAME":                   serverConfig.LanHostname,
+		"GLOBAL_HOSTNAME":                serverConfig.GlobalHostname,
 	}
 
 	stmt, err := tx.PrepareContext(ctx, checkExistSQL)
@@ -1326,6 +1386,8 @@ INSERT INTO SERVER_CONFIG (
 			"GKILL_NOTIFICATION_PRIVATE_KEY": serverConfig.GkillNotificationPrivateKey,
 			"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
 			"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
+			"LAN_HOSTNAME":                   serverConfig.LanHostname,
+			"GLOBAL_HOSTNAME":                serverConfig.GlobalHostname,
 		}
 
 		for key, value := range insertValuesMap {
