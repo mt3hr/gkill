@@ -404,7 +404,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			if *whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += fmt.Sprintf(" UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+			sql += fmt.Sprintf(" UPDATE_TIME = ( SELECT UPDATE_TIME FROM %s AS INNER_TABLE WHERE INNER_TABLE.ID = %s.ID ORDER BY datetime(INNER_TABLE.UPDATE_TIME) DESC LIMIT 1 )", tableName, tableNameAlias)
 			*whereCounter++
 		}
 	}
