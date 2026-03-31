@@ -83,12 +83,15 @@ func (f *kftlFactory) generateNoneConstructor(nextLineText string) StatementLine
 }
 
 // generateNlogConstructor returns a constructor for Nlog title continuation.
+// It delegates to generateDefaultConstructor so that separators and other
+// prefixes are recognised; only when none match does it fall through to
+// creating another nlog title line.
 // Mirrors: KFTLStatementLineConstructorFactory.generate_nlog_constructor()
-func (f *kftlFactory) generateNlogConstructor(req *kftlNlogRequest) StatementLineConstructorFunc {
-	return func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
+func (f *kftlFactory) generateNlogConstructor(nextLineText string, req *kftlNlogRequest) StatementLineConstructorFunc {
+	return f.generateDefaultConstructor(nextLineText, func(lineText string, ctx *KFTLStatementLineContext) KFTLStatementLine {
 		f.prevLineIsMetaInfo = false
 		return newKFTLNlogTitleStatementLine(lineText, ctx, req)
-	}
+	})
 }
 
 // generateDefaultConstructor checks nextLineText against all known patterns
