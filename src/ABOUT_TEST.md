@@ -2,7 +2,7 @@
 
 ## 概要
 
-gkill プロジェクト全体で約1,904件のテストが存在する。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
+gkill プロジェクト全体で約2,086件のテストが存在する。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
 
 ## テスト統計
 
@@ -11,10 +11,10 @@ gkill プロジェクト全体で約1,904件のテストが存在する。Go バ
 | Go バックエンド (`server/`) | ~534 | Go `testing` |
 | フロントエンド ユニット (`client/`) | ~676 | Vitest |
 | フロントエンド E2E (`client/`) | 187 | Playwright |
-| MCP サーバ (`mcp/`) | ~381 | Vitest |
+| MCP サーバ (`mcp/`) | ~563 | Vitest |
 | Android (`android/`) | 12 | JUnit 4 |
 | Wear OS (`wear_os/`) | 114 | JUnit 4 + MockK |
-| **合計** | **~1,904** | |
+| **合計** | **~2,086** | |
 
 ## テスト実行コマンド
 

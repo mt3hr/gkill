@@ -169,15 +169,23 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-├── gkill-read-server.mjs   # 読み取り専用MCPサーバー（7ツール提供）
+├── gkill-read-server.mjs      # Read専用MCPサーバー（7ツール、port 8808）
+├── gkill-write-server.mjs     # Write専用MCPサーバー（14ツール、port 8809）
+├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（18ツール、port 8810）
 └── lib/
-    ├── access-log.mjs      # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
-    ├── oauth-server.mjs    # OAuth 2.1サーバー
-    ├── oauth-store.mjs     # トークン/コード永続化
-    └── ...                 # その他ライブラリ
+    ├── access-log.mjs         # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
+    ├── normalization.mjs      # Read入力正規化
+    ├── write-normalization.mjs # Write入力正規化
+    ├── validation.mjs         # 入力バリデーション
+    ├── constants.mjs          # 共通定数
+    ├── errors.mjs             # エラークラス
+    ├── oauth-server.mjs       # OAuth 2.1サーバー
+    ├── oauth-store.mjs        # トークン/コード永続化
+    ├── oauth-html.mjs         # OAuth ログインページテンプレート
+    └── pkce.mjs               # PKCE検証
 ```
 
-トランスポート: stdio（デフォルト）またはHTTP。
+トランスポート: stdio（デフォルト）またはHTTP（OAuth 2.1認証付き）。
 
 ### src/locales/ — i18nリソース
 
@@ -256,7 +264,9 @@ $HOME/gkill/
 │   ├── gkill_trace.log
 │   ├── gkill_trace_sql.log
 │   ├── gkill.log           # 統合ログ
-│   └── gkill_mcp_access.log # MCPサーバアクセスログ（MCP_LOG環境変数で制御）
+│   ├── gkill_mcp_read_access.log      # Read MCPサーバアクセスログ（MCP_LOG環境変数で制御）
+│   ├── gkill_mcp_write_access.log     # Write MCPサーバアクセスログ
+│   └── gkill_mcp_readwrite_access.log # Read/Write MCPサーバアクセスログ
 ├── lib/base_directory/     # ライブラリファイル
 └── tls/                    # TLS証明書（オプション）
     ├── cert.cer

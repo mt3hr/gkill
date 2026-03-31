@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -1168,6 +1169,16 @@ func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog Nlog) 
 				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 			}
 		}()
+	}
+
+	if strings.TrimSpace(nlog.Title) == "" {
+		return fmt.Errorf("nlog title must not be empty")
+	}
+	if nlog.Amount.String() == "" {
+		return fmt.Errorf("nlog amount must not be empty")
+	}
+	if _, err := nlog.Amount.Int64(); err != nil {
+		return fmt.Errorf("nlog amount must be a valid integer: %w", err)
 	}
 
 	sql := `

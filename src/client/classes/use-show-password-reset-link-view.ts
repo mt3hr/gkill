@@ -15,11 +15,13 @@ export function useShowPasswordResetLinkView(options: {
     const over_lan_password_reset_url: Ref<string> = ref("")
 
     watch(() => props.account, () => update_password_reset_urls())
+    watch(() => props.server_configs, () => update_password_reset_urls())
 
     update_password_reset_urls()
 
     function update_password_reset_urls(): void {
         const current_server_config = props.server_configs.filter((server_config) => server_config.enable_this_device)[0]
+        if (!current_server_config) return
         const token = props.account.password_reset_token
         const http = current_server_config.enable_tls ? "https://" : "http://"
         const port = current_server_config.address
