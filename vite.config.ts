@@ -19,7 +19,7 @@ export default defineConfig(() => {
           propsDestructure: true,
         },
       }),
-      vueDevTools(),
+      ...(process.env.NODE_ENV !== 'production' ? [vueDevTools()] : []),
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'auto',
