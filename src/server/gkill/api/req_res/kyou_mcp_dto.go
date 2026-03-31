@@ -7,6 +7,7 @@ import (
 
 // KyouMCPDTO は MCP レスポンス用の軽量 Kyou DTO
 type KyouMCPDTO struct {
+	ID            string               `json:"id,omitempty"`
 	DataType      string               `json:"data_type"`
 	RelatedTime   time.Time            `json:"related_time"`
 	Tags          []string             `json:"tags,omitempty"`

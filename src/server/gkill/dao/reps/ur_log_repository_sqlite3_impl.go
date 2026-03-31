@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -1181,6 +1182,10 @@ func (u *urlogRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog URL
 				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 			}
 		}()
+	}
+
+	if strings.TrimSpace(urlog.URL) == "" {
+		return fmt.Errorf("urlog url must not be empty")
 	}
 
 	sql := `

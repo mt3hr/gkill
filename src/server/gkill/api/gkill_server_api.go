@@ -13814,6 +13814,9 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			TimeIs:        timeisDTOs,
 			Payload:       payload,
 		}
+		if request.IncludeID {
+			dto.ID = kyou.ID
+		}
 
 		dtoJSON, marshalErr := json.Marshal(dto)
 		if marshalErr != nil {

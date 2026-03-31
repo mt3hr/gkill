@@ -202,6 +202,7 @@ const TOOLS = [
       "Practical recommendation: start with a minimal query, keep limit small, and add filters gradually. Hidden tags can be searched intentionally by passing them directly in query.tags or query.timeis_tags. rep_types are backend-specific and may be case-sensitive, so do not assume ApplicationConfig display labels map 1:1 to accepted query values. " +
       "If a query fails, first retry with fewer query fields, a smaller limit, and is_include_timeis=false; then add rep_types or TimeIs expansion back step by step. " +
       "The server always applies only_latest_data=true. " +
+      "Results are returned in reverse chronological order (newest first, by related_time). " +
       "Response fields: kyous[], total_count, returned_count, has_more, next_cursor.",
     inputSchema: {
       type: "object",
@@ -231,13 +232,25 @@ const TOOLS = [
           description: `Include attached TimeIs (plaing) data for each kyou — i.e., which TimeIs was running when each record was created. Default: ${DEFAULT_KYOUS_INCLUDE_TIMEIS}. Note: this does NOT filter out TimeIs-type kyous from results; those always appear regardless of this flag. Only controls inline plaing attachment on other data types.`,
           default: DEFAULT_KYOUS_INCLUDE_TIMEIS,
         },
+        include_id: {
+          type: "boolean",
+          description:
+            "Include entity ID (UUID) in each result object. Default: false (IDs omitted to reduce response size). " +
+            "Set to true when you need IDs for subsequent operations such as gkill_update_* (patch update), gkill_delete_kyou (soft-delete), " +
+            "gkill_add_tag (tagging by target_id), or gkill_add_text (annotating by target_id). " +
+            "When true, each result includes an 'id' field at the top level of the kyou object.",
+          default: false,
+        },
       },
       additionalProperties: false,
     },
   },
   {
     name: "gkill_get_mi_board_list",
-    description: "Get the list of Mi (task) board names. Use this to discover board names for use in Mi queries.",
+    description:
+      "Get the list of Mi (task) board names configured in gkill. Boards are like Kanban columns that organize tasks. " +
+      "Use this to discover existing board names for Mi queries (query.mi_board_name with use_mi_board_name:true). " +
+      "Response fields: boards[] (array of board name strings).",
     inputSchema: {
       type: "object",
       properties: {
@@ -291,7 +304,12 @@ const TOOLS = [
   {
     name: "gkill_get_application_config",
     description:
-      "Get application configuration including tag hierarchy (parent-child relationships, default check states, force-hide settings), task board structure, repository structure, and KFTL templates. Recommended first call: use this before gkill_get_kyous to understand the data organization, visible tags, and board names. Note that display labels in this config may not map 1:1 to accepted rep_types query values.",
+      "Get application configuration including tag hierarchy, task board structure, repository structure, and KFTL templates. " +
+      "Recommended first call: use this before gkill_get_kyous to understand the data organization, visible tags, and board names. " +
+      "Response fields: tag_struct (tag parent-child hierarchy with check_when_inited, is_force_hide, children), " +
+      "mi_board_struct (task board hierarchy), rep_struct (repository hierarchy), rep_type_struct (repository type hierarchy), " +
+      "device_struct (device hierarchy), kftl_template_struct (KFTL templates), mi_default_board (default board name, e.g. \"Inbox\"), show_tags_in_list (boolean). " +
+      "Note that display labels in this config may not map 1:1 to accepted rep_types query values.",
     inputSchema: {
       type: "object",
       properties: {
@@ -596,6 +614,7 @@ class McpServer {
             cursor: normalized.cursor,
             max_size_mb: normalized.max_size_mb,
             is_include_timeis: normalized.is_include_timeis,
+            include_id: normalized.include_id || false,
           },
           true,
           sid,
@@ -1250,8 +1269,9 @@ if (_isDirectRun) {
   const gkillHome = process.env.GKILL_HOME || _resolvePath(process.env.HOME || process.env.USERPROFILE || ".", "gkill");
   const mcpLogLevel = parseMcpLogLevel(process.env.MCP_LOG);
   const accessLog = new McpAccessLog(
-    _resolvePath(gkillHome, "logs", "gkill_mcp_access.log"),
+    _resolvePath(gkillHome, "logs", "gkill_mcp_read_access.log"),
     mcpLogLevel,
+    "gkill-read-server.mjs",
   );
 
   const server = new McpServer(client, accessLog);
@@ -1259,7 +1279,7 @@ if (_isDirectRun) {
   if (transport === "http") {
     const port = parseInt(process.env.MCP_PORT || "8808", 10);
     const issuer = process.env.MCP_OAUTH_ISSUER || `http://localhost:${port}`;
-    const persistPath = _resolvePath(gkillHome, "configs", "mcp_oauth_state.json");
+    const persistPath = _resolvePath(gkillHome, "configs", "mcp_oauth_read_state.json");
     const oauthServer = new OAuthServer({
       issuer,
       persistPath,

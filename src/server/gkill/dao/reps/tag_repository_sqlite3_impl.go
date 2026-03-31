@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -1038,6 +1039,13 @@ func (t *tagRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag Tag) erro
 			}
 		}()
 	}
+	if strings.TrimSpace(tag.Tag) == "" {
+		return fmt.Errorf("tag must not be empty")
+	}
+	if strings.TrimSpace(tag.TargetID) == "" {
+		return fmt.Errorf("tag target_id must not be empty")
+	}
+
 	sql := `
 INSERT INTO TAG (
   IS_DELETED,

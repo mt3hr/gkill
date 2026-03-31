@@ -5593,6 +5593,8 @@ func TestHandleUpdateKC_Nonexistent_Succeeds(t *testing.T) {
 		WantResponseKyou: true,
 		KC: reps.KC{
 			ID:          GenerateNewID(),
+			Title:       "test kc",
+			NumValue:    json.Number("42"),
 			RelatedTime: now,
 			DataType:    "kc",
 			CreateTime:  now,

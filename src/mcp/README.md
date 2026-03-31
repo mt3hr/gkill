@@ -1,6 +1,11 @@
-## MCP連携（Read専用）
-gkill の Read API を MCP サーバとして公開できます。
-この実装は `R` のみ対応で、`Add/Update/Delete` は公開しません。
+## MCP連携
+gkill のAPIをMCPサーバとして公開できます。3種類のサーバーを提供:
+
+| サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
+|---|---|---|---|---|
+| **Read専用** | `gkill-read-server.mjs` | 7 | 8808 | 読み取りのみ |
+| **Write専用** | `gkill-write-server.mjs` | 14 (11 write + 3 read convenience) | 8809 | 書き込み中心 |
+| **Read/Write統合** | `gkill-readwrite-server.mjs` | 18 (7 read + 11 write) | 8810 | 全機能 |
 
 2つのトランスポートモードに対応：
 - **stdio** (デフォルト): Claude Desktop等のローカルMCPクライアント向け
@@ -93,7 +98,7 @@ HTTPモードではOAuth 2.1が常に有効です。MCP仕様に準拠し、Chat
 #### トークン仕様
 - アクセストークン有効期間: 1時間（インメモリ、再起動で消失→リフレッシュトークンで再発行）
 - リフレッシュトークン有効期間: 30日（ローテーション方式）
-- リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_state.json` に自動永続化。サーバー再起動後も再認証不要
+- リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/mcp_oauth_read_state.json` に自動永続化。サーバー再起動後も再認証不要
 
 #### 動作確認（curl）
 ```bash
@@ -129,7 +134,9 @@ curl -v -X POST http://localhost:8808/mcp \
 - `MCP_PORT` (default: `8808`) — HTTPサーバのポート番号
 - `MCP_OAUTH_ISSUER` (default: `http://localhost:<MCP_PORT>`) — OAuthメタデータのissuer URL。**リモート接続時は必須**。クライアントがアクセス可能な公開URL（例: `https://example.com`）を設定。未設定だとClaude.ai/ChatGPTからOAuth認証が失敗する
 
-### 提供ツール（7つ）
+### 提供ツール
+
+#### Readツール（7つ — Read専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
@@ -138,7 +145,24 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_all_rep_names` | 全リポジトリ名を取得 |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得 |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
-| `gkill_get_idf_file` | IDFファイルの実データを取得（`gkill_get_kyous`のIDFペイロードの`rep_name`と`file_name`を指定。画像はMCP image blockで返却） |
+| `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却） |
+
+#### Writeツール（11 — Write専用/ReadWrite統合サーバで使用可能）
+| ツール名 | 説明 |
+|---|---|
+| `gkill_add_kmemo` | テキストメモ作成 |
+| `gkill_add_urlog` | ブックマーク/URL記録作成 |
+| `gkill_add_nlog` | 支出/収入記録作成 |
+| `gkill_add_lantana` | 気分記録作成（0-10） |
+| `gkill_add_timeis` | 時間記録作成（開始/終了） |
+| `gkill_add_mi` | タスク作成 |
+| `gkill_add_kc` | 数値記録作成 |
+| `gkill_add_tag` | 既存エントリにタグ追加 |
+| `gkill_add_text` | 既存エントリにテキスト注釈追加 |
+| `gkill_submit_kftl` | KFTLテキスト一括処理 |
+| `gkill_delete_kyou` | エントリのソフト削除 |
+
+Write専用サーバにはRead便利ツール3つ（`gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`）も含まれます。
 
 ### AI用運用ガイド（MCP）
 AIが安定して呼び出せるよう、以下のルールを推奨します。

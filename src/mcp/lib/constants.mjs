@@ -8,7 +8,7 @@ export const DEFAULT_KYOUS_INCLUDE_TIMEIS = false;
 export const RFC3339_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 export const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-export const KYOUS_TOP_LEVEL_FIELDS = new Set(["query", "locale_name", "limit", "cursor", "max_size_mb", "is_include_timeis"]);
+export const KYOUS_TOP_LEVEL_FIELDS = new Set(["query", "locale_name", "limit", "cursor", "max_size_mb", "is_include_timeis", "include_id"]);
 
 export const KYOUS_QUERY_BOOLEAN_FIELDS = new Set([
   "update_cache",
