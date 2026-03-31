@@ -27,7 +27,7 @@
             <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_timeis_tags="emits_current_query()"
                 @request_update_and_search_timeis_word="emits_current_query()"
-                @request_update_checked_timeis_tags="(tags: string[]) => onTimeisQueryRequestUpdateCheckedTimeisTags(tags, true)"
+                @request_update_checked_timeis_tags="(tags: string[], is_by_user: boolean) => onTimeisQueryRequestUpdateCheckedTimeisTags(tags, is_by_user)"
                 :inited="inited_timeis_query_for_query_sidebar" @inited="onInitedTimeis"
                 @request_update_timeis_keywords="emits_current_query()"
                 @request_update_use_timeis_query="emits_current_query()"
