@@ -14,7 +14,7 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "node --max-old-space-size=8192 ./node_modules/vue-tsc/bin/vue-tsc.js --build --force",
+    "type-check": "node --max-old-space-size=8192 ./node_modules/vue-tsc/bin/vue-tsc.js --build",
     "lint": "eslint --fix",
     "go_mod": "rimraf src/server/go.mod && rimraf src/server/go.sum && cd src/server && go mod init github.com/mt3hr/gkill/src/server && cd gkill/main/gkill_server && go mod tidy",
     "go_install": "cd src/server/gkill/main/gkill_server && go install",
