@@ -55,7 +55,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `！` | Save | 保存実行 |
 | (上記以外) | Kmemo | テキストメモ（デフォルト） |
 
-## ファイル一覧（19ファイル）
+## ファイル一覧（22ファイル）
 
 ### コア構造
 
@@ -95,6 +95,14 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_related_time_statement_line.go` | RelatedTime 行（`？` プレフィックス） |
 | `kftl_split_statement_lines.go` | Split / SplitNextSecond 行（`、` / `、、` プレフィックス） |
 | `kftl_none_statement_line.go` | None 行 — 認識できないプレフィックスの行（スキップ） |
+
+### テスト（3ファイル）
+
+| ファイル | 説明 |
+|---------|------|
+| `kftl_factory_test.go` | ファクトリのプレフィックス判定テスト |
+| `kftl_request_map_test.go` | リクエストマップの集約テスト |
+| `kftl_statement_test.go` | KFTL テキスト全体のパース・実行テスト |
 
 ## 開発ガイドライン
 
