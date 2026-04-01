@@ -81,23 +81,35 @@ src/server/
 ├── go.mod                          # Goモジュール定義（github.com/mt3hr/gkill/src/server）
 ├── go.sum                          # 依存パッケージのチェックサム
 └── gkill/
-    ├── api/                        # HTTPハンドラ層
-    │   ├── gkill_server_api.go     # メインAPIハンドラ（~14,000行）
-    │   ├── gkill_server_api_address.go  # ルーティング定義（80 POSTエンドポイント）
-    │   ├── handle_*.go             # 個別ハンドラ関数群（handle_browse_zip_contents.go 含む）
+    ├── api/                        # API共通基盤
     │   ├── embed.go                # go:embed によるSPA埋め込み
     │   ├── embed/                  # 埋め込みリソース（ビルド時生成）
     │   │   ├── html/              # フロントエンドビルド成果物
     │   │   ├── i18n/locales/      # i18nリソース
     │   │   └── version.json       # バージョン情報
-    │   ├── gkill_server_api_access_log.go  # アクセスログミドルウェア（gorilla/mux Use()）
+    │   ├── version.go              # バージョン情報取得
+    │   ├── gkill_version_data.go   # バージョンデータ構造体
     │   ├── find_filter.go          # 検索フィルタロジック
+    │   ├── find_filter_helpers.go  # 検索フィルタヘルパー
+    │   ├── find_kyou_context.go    # 検索コンテキスト
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
     │   ├── req_res/                # リクエスト/レスポンス構造体（164ファイル）
-    │   └── kftl/                   # KFTLパーサー（バックエンド側）
-    │       ├── kftl_factory.go     # ファクトリ（ステートメント生成）
-    │       └── *.go                # 各ステートメント型実装
+    │   ├── kftl/                   # KFTLパーサー（バックエンド側）
+    │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成）
+    │   │   └── *.go                # 各ステートメント型実装
+    │   └── gkill_server_api/       # HTTPハンドラ層（85+ファイル）
+    │       ├── serve.go            # HTTPサーバー起動・停止
+    │       ├── close.go            # サーバー終了処理
+    │       ├── gkill_server_api_address.go  # ルーティング定義（80 POSTエンドポイント）
+    │       ├── auth.go             # セッション認証ヘルパー
+    │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
+    │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
+    │       ├── filter_local_only.go # ローカルアクセス制限フィルタ
+    │       ├── utils.go            # ユーティリティ関数
+    │       ├── web_push.go         # WebPush通知
+    │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、80+ファイル）
     ├── dao/                        # データアクセス層
     │   ├── gkill_dao_manager.go    # DAOマネージャ（ConfigDAOs + GkillRepositories管理）
     │   ├── config_da_os.go          # ConfigDAOs構造体（8つの設定DAO）
@@ -114,6 +126,8 @@ src/server/
     │   ├── share_kyou_info/        # 共有設定DAO
     │   ├── gkill_notification/     # 通知ターゲットDAO
     │   └── hide_files/             # ファイル隠蔽ユーティリティ
+    ├── usecase/                    # ビジネスロジック層（16ファイル）
+    │   └── *.go                    # HTTP非依存のユースケース関数群
     ├── dvnf/                       # DVNF（Data Versioning and Naming Framework）
     │   ├── dvnf.go                 # DVNFコア（タイムスタンプベース命名）
     │   └── cmd/                    # DVNFコマンド（get/copy/move）
