@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mattn/go-zglob"
 	"github.com/mt3hr/gkill/src/server/gkill/api"
+	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_server_api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/hide_files"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
@@ -36,7 +37,7 @@ import (
 var (
 	AppName = "gkill_server"
 
-	gkillServerAPI *api.GkillServerAPI
+	gkillServerAPI *gkill_server_api.GkillServerAPI
 
 	IDFCmd = &cobra.Command{
 		Use: "idf",
@@ -328,7 +329,7 @@ func fixTimezone() {
 func InitGkillServerAPI() error {
 	var err error
 
-	gkillServerAPI, err = api.NewGkillServerAPI()
+	gkillServerAPI, err = gkill_server_api.NewGkillServerAPI()
 	if err != nil {
 		return err
 	}
@@ -365,7 +366,7 @@ func LaunchGkillServerAPI(ctx context.Context) error {
 	}
 }
 
-func GetGkillServerAPI() *api.GkillServerAPI {
+func GetGkillServerAPI() *gkill_server_api.GkillServerAPI {
 	return gkillServerAPI
 }
 

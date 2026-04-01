@@ -1,4 +1,4 @@
-package api
+package gkill_server_api
 
 import (
 	"bytes"
@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	gkill_api "github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
@@ -78,7 +79,7 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 		}
 	}
 
-	api, err := NewGkillServerAPI()
+	gkillAPI, err := NewGkillServerAPI()
 	if err != nil {
 		// Restore before failing
 		gkill_options.GkillHomeDir = origHome
@@ -99,8 +100,8 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 		// leave some DB files locked, and it also misses GkillNotificationTargetDAO.
 		// We close each one explicitly here to avoid TempDir cleanup failures on Windows.
 		ctx := context.Background()
-		if api.GkillDAOManager != nil && api.GkillDAOManager.ConfigDAOs != nil {
-			cfgDAOs := api.GkillDAOManager.ConfigDAOs
+		if gkillAPI.GkillDAOManager != nil && gkillAPI.GkillDAOManager.ConfigDAOs != nil {
+			cfgDAOs := gkillAPI.GkillDAOManager.ConfigDAOs
 			if cfgDAOs.AccountDAO != nil {
 				cfgDAOs.AccountDAO.Close(ctx)
 			}
@@ -140,7 +141,7 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 		apiTestMu.Unlock()
 	}
 
-	return api, cleanup
+	return gkillAPI, cleanup
 }
 
 // setupTestRouter creates a GkillServerAPI and registers all routes on the
@@ -149,254 +150,76 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	t.Helper()
 
-	api, optCleanup := setupTestGkillServerAPI(t)
+	gkillAPI, optCleanup := setupTestGkillServerAPI(t)
 
-	router := api.GkillDAOManager.GetRouter()
+	router := gkillAPI.GkillDAOManager.GetRouter()
 
-	// Register key API routes (mirrors Serve() route registrations)
-	router.HandleFunc(api.APIAddress.LoginAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleLogin(w, r)
-	}).Methods(api.APIAddress.LoginMethod)
+	// Register key API routes using auth middleware wrappers (mirrors Serve() route registrations)
 
-	router.HandleFunc(api.APIAddress.LogoutAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleLogout(w, r)
-	}).Methods(api.APIAddress.LogoutMethod)
+	// --- wrapNoAuth routes (no authentication required) ---
+	router.HandleFunc(gkillAPI.APIAddress.LoginAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleLogin)).Methods(gkillAPI.APIAddress.LoginMethod)
+	router.HandleFunc(gkillAPI.APIAddress.LogoutAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleLogout)).Methods(gkillAPI.APIAddress.LogoutMethod)
+	router.HandleFunc(gkillAPI.APIAddress.ResetPasswordAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleResetPassword)).Methods(gkillAPI.APIAddress.ResetPasswordMethod)
+	router.HandleFunc(gkillAPI.APIAddress.SetNewPasswordAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleSetNewPassword)).Methods(gkillAPI.APIAddress.SetNewPasswordMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateCacheAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUpdateCache)).Methods(gkillAPI.APIAddress.UpdateCacheMethod)
 
-	router.HandleFunc(api.APIAddress.GetApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetApplicationConfig(w, r)
-	}).Methods(api.APIAddress.GetApplicationConfigMethod)
+	// --- wrapAuth routes (authentication required, no repos) ---
+	router.HandleFunc(gkillAPI.APIAddress.GetApplicationConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetApplicationConfig)).Methods(gkillAPI.APIAddress.GetApplicationConfigMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetServerConfigsAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetServerConfigs)).Methods(gkillAPI.APIAddress.GetServerConfigsMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddAccountAddress, gkillAPI.wrapAuth(gkillAPI.HandleAddAccount)).Methods(gkillAPI.APIAddress.AddAccountMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateAccountStatusAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateAccountStatus)).Methods(gkillAPI.APIAddress.UpdateAccountStatusMethod)
 
-	router.HandleFunc(api.APIAddress.AddKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddKmemo(w, r)
-	}).Methods(api.APIAddress.AddKmemoMethod)
-
-	router.HandleFunc(api.APIAddress.AddTagAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddTag(w, r)
-	}).Methods(api.APIAddress.AddTagMethod)
-
-	router.HandleFunc(api.APIAddress.GetKyousAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetKyous(w, r)
-	}).Methods(api.APIAddress.GetKyousMethod)
-
-	router.HandleFunc(api.APIAddress.SubmitKFTLTextAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleSubmitKFTLText(w, r)
-	}).Methods(api.APIAddress.SubmitKFTLTextMethod)
-
-	// --- CRUD routes for data types ---
-	router.HandleFunc(api.APIAddress.GetKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetKmemo(w, r)
-	}).Methods(api.APIAddress.GetKmemoMethod)
-
-	router.HandleFunc(api.APIAddress.AddMiAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddMi(w, r)
-	}).Methods(api.APIAddress.AddMiMethod)
-
-	router.HandleFunc(api.APIAddress.GetMiAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetMi(w, r)
-	}).Methods(api.APIAddress.GetMiMethod)
-
-	router.HandleFunc(api.APIAddress.AddTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddTimeis(w, r)
-	}).Methods(api.APIAddress.AddTimeisMethod)
-
-	router.HandleFunc(api.APIAddress.GetTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetTimeis(w, r)
-	}).Methods(api.APIAddress.GetTimeisMethod)
-
-	router.HandleFunc(api.APIAddress.GetTagsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetTagsByTargetID(w, r)
-	}).Methods(api.APIAddress.GetTagsByTargetIDMethod)
-
-	// --- Phase 1b: Remaining CRUD routes ---
-	router.HandleFunc(api.APIAddress.AddLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddLantana(w, r)
-	}).Methods(api.APIAddress.AddLantanaMethod)
-
-	router.HandleFunc(api.APIAddress.GetLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetLantana(w, r)
-	}).Methods(api.APIAddress.GetLantanaMethod)
-
-	router.HandleFunc(api.APIAddress.AddKCAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddKC(w, r)
-	}).Methods(api.APIAddress.AddKCMethod)
-
-	router.HandleFunc(api.APIAddress.GetKCAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetKC(w, r)
-	}).Methods(api.APIAddress.GetKCMethod)
-
-	router.HandleFunc(api.APIAddress.AddNlogAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddNlog(w, r)
-	}).Methods(api.APIAddress.AddNlogMethod)
-
-	router.HandleFunc(api.APIAddress.GetNlogAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetNlog(w, r)
-	}).Methods(api.APIAddress.GetNlogMethod)
-
-	router.HandleFunc(api.APIAddress.AddURLogAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddURLog(w, r)
-	}).Methods(api.APIAddress.AddURLogMethod)
-
-	router.HandleFunc(api.APIAddress.GetURLogAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetURLog(w, r)
-	}).Methods(api.APIAddress.GetURLogMethod)
-
-	router.HandleFunc(api.APIAddress.AddTextAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddText(w, r)
-	}).Methods(api.APIAddress.AddTextMethod)
-
-	router.HandleFunc(api.APIAddress.GetTextsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetTextsByTargetID(w, r)
-	}).Methods(api.APIAddress.GetTextsByTargetIDMethod)
-
-	router.HandleFunc(api.APIAddress.AddNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddNotification(w, r)
-	}).Methods(api.APIAddress.AddNotificationMethod)
-
-	router.HandleFunc(api.APIAddress.GetNotificationsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetNotificationsByTargetID(w, r)
-	}).Methods(api.APIAddress.GetNotificationsByTargetIDMethod)
-
-	router.HandleFunc(api.APIAddress.AddRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddRekyou(w, r)
-	}).Methods(api.APIAddress.AddRekyouMethod)
-
-	router.HandleFunc(api.APIAddress.GetRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetRekyou(w, r)
-	}).Methods(api.APIAddress.GetRekyouMethod)
-
-	// --- Phase 1c: Update routes ---
-	router.HandleFunc(api.APIAddress.UpdateKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateKmemo(w, r)
-	}).Methods(api.APIAddress.UpdateKmemoMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateMiAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateMi(w, r)
-	}).Methods(api.APIAddress.UpdateMiMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateTagAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateTag(w, r)
-	}).Methods(api.APIAddress.UpdateTagMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateTextAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateText(w, r)
-	}).Methods(api.APIAddress.UpdateTextMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateNotification(w, r)
-	}).Methods(api.APIAddress.UpdateNotificationMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateKCAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateKC(w, r)
-	}).Methods(api.APIAddress.UpdateKCMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateURLogAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateURLog(w, r)
-	}).Methods(api.APIAddress.UpdateURLogMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateNlogAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateNlog(w, r)
-	}).Methods(api.APIAddress.UpdateNlogMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateTimeis(w, r)
-	}).Methods(api.APIAddress.UpdateTimeisMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateLantana(w, r)
-	}).Methods(api.APIAddress.UpdateLantanaMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateRekyou(w, r)
-	}).Methods(api.APIAddress.UpdateRekyouMethod)
-
-	// --- Phase 2: Get/List/History routes ---
-	router.HandleFunc(api.APIAddress.GetKyouAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetKyou(w, r)
-	}).Methods(api.APIAddress.GetKyouMethod)
-
-	router.HandleFunc(api.APIAddress.GetMiBoardListAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetMiBoardList(w, r)
-	}).Methods(api.APIAddress.GetMiBoardListMethod)
-
-	router.HandleFunc(api.APIAddress.GetAllTagNamesAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetAllTagNames(w, r)
-	}).Methods(api.APIAddress.GetAllTagNamesMethod)
-
-	router.HandleFunc(api.APIAddress.GetAllRepNamesAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetAllRepNames(w, r)
-	}).Methods(api.APIAddress.GetAllRepNamesMethod)
-
-	router.HandleFunc(api.APIAddress.GetTagHistoriesByTagIDAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetTagHistoriesByTagID(w, r)
-	}).Methods(api.APIAddress.GetTagHistoriesByTagIDMethod)
-
-	router.HandleFunc(api.APIAddress.GetTextHistoriesByTextIDAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetTextHistoriesByTextID(w, r)
-	}).Methods(api.APIAddress.GetTextHistoriesByTagIDMethod)
-
-	router.HandleFunc(api.APIAddress.GetNotificationHistoriesByNotificationIDAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetNotificationHistoriesByNotificationID(w, r)
-	}).Methods(api.APIAddress.GetNotificationHistoriesByTagIDMethod)
-
-	router.HandleFunc(api.APIAddress.GetServerConfigsAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetServerConfigs(w, r)
-	}).Methods(api.APIAddress.GetServerConfigsMethod)
-
-	// --- Phase 3: Config + Sharing routes ---
-	router.HandleFunc(api.APIAddress.GetRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetRepositories(w, r)
-	}).Methods(api.APIAddress.GetRepositoriesMethod)
-
-	router.HandleFunc(api.APIAddress.AddShareKyouListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddShareKyouListInfo(w, r)
-	}).Methods(api.APIAddress.AddShareKyouListInfoMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateShareKyouListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateShareKyouListInfo(w, r)
-	}).Methods(api.APIAddress.UpdateShareKyouListInfoMethod)
-
-	router.HandleFunc(api.APIAddress.GetShareKyouListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetShareKyouListInfos(w, r)
-	}).Methods(api.APIAddress.GetShareKyouListInfosMethod)
-
-	router.HandleFunc(api.APIAddress.DeleteShareKyouListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleDeleteShareKyouListInfos(w, r)
-	}).Methods(api.APIAddress.DeleteShareKyouListInfosMethod)
-
-	// --- Phase 1f: Account management routes ---
-	router.HandleFunc(api.APIAddress.AddAccountAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleAddAccount(w, r)
-	}).Methods(api.APIAddress.AddAccountMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateAccountStatusAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateAccountStatus(w, r)
-	}).Methods(api.APIAddress.UpdateAccountStatusMethod)
-
-	router.HandleFunc(api.APIAddress.ResetPasswordAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleResetPassword(w, r)
-	}).Methods(api.APIAddress.ResetPasswordMethod)
-
-	router.HandleFunc(api.APIAddress.SetNewPasswordAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleSetNewPassword(w, r)
-	}).Methods(api.APIAddress.SetNewPasswordMethod)
-
-	// --- Phase 1g: Transaction routes ---
-	router.HandleFunc(api.APIAddress.CommitTXAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleCommitTx(w, r)
-	}).Methods(api.APIAddress.CommitTXMethod)
-
-	router.HandleFunc(api.APIAddress.DiscardTXAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleDiscardTX(w, r)
-	}).Methods(api.APIAddress.DiscardTXMethod)
-
-	// --- Phase 3: GetKyousMCP + UpdateCache routes ---
-	router.HandleFunc(api.APIAddress.GetKyousMCPAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleGetKyousMCP(w, r)
-	}).Methods(api.APIAddress.GetKyousMCPMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateCacheAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateCache(w, r)
-	}).Methods(api.APIAddress.UpdateCacheMethod)
+	// --- wrapAuthRepos routes (authentication + repos required) ---
+	router.HandleFunc(gkillAPI.APIAddress.AddKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddKmemo)).Methods(gkillAPI.APIAddress.AddKmemoMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddTagAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddTag)).Methods(gkillAPI.APIAddress.AddTagMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetKyousAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKyous)).Methods(gkillAPI.APIAddress.GetKyousMethod)
+	router.HandleFunc(gkillAPI.APIAddress.SubmitKFTLTextAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleSubmitKFTLText)).Methods(gkillAPI.APIAddress.SubmitKFTLTextMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKmemo)).Methods(gkillAPI.APIAddress.GetKmemoMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddMiAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddMi)).Methods(gkillAPI.APIAddress.AddMiMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetMiAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMi)).Methods(gkillAPI.APIAddress.GetMiMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddTimeisAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddTimeis)).Methods(gkillAPI.APIAddress.AddTimeisMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetTimeisAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTimeis)).Methods(gkillAPI.APIAddress.GetTimeisMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetTagsByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTagsByTargetID)).Methods(gkillAPI.APIAddress.GetTagsByTargetIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddLantanaAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddLantana)).Methods(gkillAPI.APIAddress.AddLantanaMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetLantanaAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetLantana)).Methods(gkillAPI.APIAddress.GetLantanaMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddKCAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddKC)).Methods(gkillAPI.APIAddress.AddKCMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetKCAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKC)).Methods(gkillAPI.APIAddress.GetKCMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddNlogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddNlog)).Methods(gkillAPI.APIAddress.AddNlogMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetNlogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNlog)).Methods(gkillAPI.APIAddress.GetNlogMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddURLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddURLog)).Methods(gkillAPI.APIAddress.AddURLogMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetURLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetURLog)).Methods(gkillAPI.APIAddress.GetURLogMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddTextAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddText)).Methods(gkillAPI.APIAddress.AddTextMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetTextsByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTextsByTargetID)).Methods(gkillAPI.APIAddress.GetTextsByTargetIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddNotificationAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddNotification)).Methods(gkillAPI.APIAddress.AddNotificationMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetNotificationsByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNotificationsByTargetID)).Methods(gkillAPI.APIAddress.GetNotificationsByTargetIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddRekyou)).Methods(gkillAPI.APIAddress.AddRekyouMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRekyou)).Methods(gkillAPI.APIAddress.GetRekyouMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateKmemo)).Methods(gkillAPI.APIAddress.UpdateKmemoMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateMiAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateMi)).Methods(gkillAPI.APIAddress.UpdateMiMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateTagAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateTag)).Methods(gkillAPI.APIAddress.UpdateTagMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateTextAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateText)).Methods(gkillAPI.APIAddress.UpdateTextMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateNotificationAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateNotification)).Methods(gkillAPI.APIAddress.UpdateNotificationMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateKCAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateKC)).Methods(gkillAPI.APIAddress.UpdateKCMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateURLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateURLog)).Methods(gkillAPI.APIAddress.UpdateURLogMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateNlogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateNlog)).Methods(gkillAPI.APIAddress.UpdateNlogMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateTimeisAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateTimeis)).Methods(gkillAPI.APIAddress.UpdateTimeisMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateLantanaAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateLantana)).Methods(gkillAPI.APIAddress.UpdateLantanaMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateRekyou)).Methods(gkillAPI.APIAddress.UpdateRekyouMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKyou)).Methods(gkillAPI.APIAddress.GetKyouMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetMiBoardListAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMiBoardList)).Methods(gkillAPI.APIAddress.GetMiBoardListMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetAllTagNamesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetAllTagNames)).Methods(gkillAPI.APIAddress.GetAllTagNamesMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetAllRepNamesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetAllRepNames)).Methods(gkillAPI.APIAddress.GetAllRepNamesMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetTagHistoriesByTagIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTagHistoriesByTagID)).Methods(gkillAPI.APIAddress.GetTagHistoriesByTagIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetTextHistoriesByTextIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTextHistoriesByTextID)).Methods(gkillAPI.APIAddress.GetTextHistoriesByTagIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetNotificationHistoriesByNotificationIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNotificationHistoriesByNotificationID)).Methods(gkillAPI.APIAddress.GetNotificationHistoriesByTagIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetRepositoriesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRepositories)).Methods(gkillAPI.APIAddress.GetRepositoriesMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddShareKyouListInfoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddShareKyouListInfo)).Methods(gkillAPI.APIAddress.AddShareKyouListInfoMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateShareKyouListInfoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateShareKyouListInfo)).Methods(gkillAPI.APIAddress.UpdateShareKyouListInfoMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetShareKyouListInfosAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetShareKyouListInfos)).Methods(gkillAPI.APIAddress.GetShareKyouListInfosMethod)
+	router.HandleFunc(gkillAPI.APIAddress.DeleteShareKyouListInfosAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleDeleteShareKyouListInfos)).Methods(gkillAPI.APIAddress.DeleteShareKyouListInfosMethod)
+	router.HandleFunc(gkillAPI.APIAddress.CommitTXAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleCommitTx)).Methods(gkillAPI.APIAddress.CommitTXMethod)
+	router.HandleFunc(gkillAPI.APIAddress.DiscardTXAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleDiscardTX)).Methods(gkillAPI.APIAddress.DiscardTXMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetKyousMCPAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKyousMCP)).Methods(gkillAPI.APIAddress.GetKyousMCPMethod)
 
 	ts := httptest.NewServer(router)
 
@@ -405,16 +228,16 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 		optCleanup()
 	}
 
-	return ts, api, cleanup
+	return ts, gkillAPI, cleanup
 }
 
 // prepareLoginReadyAccount updates the default admin account to be login-ready
 // (clears the password reset token and sets a known password hash).
-func prepareLoginReadyAccount(t *testing.T, api *GkillServerAPI, userID string, passwordSha256 string) {
+func prepareLoginReadyAccount(t *testing.T, gkillAPI *GkillServerAPI, userID string, passwordSha256 string) {
 	t.Helper()
 	ctx := context.Background()
 
-	acc, err := api.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, userID)
+	acc, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, userID)
 	if err != nil {
 		t.Fatalf("GetAccount(%s) failed: %v", userID, err)
 	}
@@ -427,7 +250,7 @@ func prepareLoginReadyAccount(t *testing.T, api *GkillServerAPI, userID string, 
 	acc.PasswordSha256 = &passwordSha256
 	acc.IsEnable = true
 
-	ok, err := api.GkillDAOManager.ConfigDAOs.AccountDAO.UpdateAccount(ctx, acc)
+	ok, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.UpdateAccount(ctx, acc)
 	if err != nil {
 		t.Fatalf("UpdateAccount failed: %v", err)
 	}
@@ -516,25 +339,25 @@ func TestNewGKillAPIAddress_PathPrefixes(t *testing.T) {
 }
 
 func TestSetupGkillServerAPI(t *testing.T) {
-	api, cleanup := setupTestGkillServerAPI(t)
+	gkillAPI, cleanup := setupTestGkillServerAPI(t)
 	defer cleanup()
 
-	if api == nil {
+	if gkillAPI == nil {
 		t.Fatal("setupTestGkillServerAPI returned nil")
 	}
-	if api.APIAddress == nil {
+	if gkillAPI.APIAddress == nil {
 		t.Fatal("APIAddress is nil")
 	}
-	if api.GkillDAOManager == nil {
+	if gkillAPI.GkillDAOManager == nil {
 		t.Fatal("GkillDAOManager is nil")
 	}
-	if api.FindFilter == nil {
+	if gkillAPI.FindFilter == nil {
 		t.Fatal("FindFilter is nil")
 	}
 
 	// Verify the admin account was created
 	ctx := context.Background()
-	accounts, err := api.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(ctx)
+	accounts, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(ctx)
 	if err != nil {
 		t.Fatalf("GetAllAccounts failed: %v", err)
 	}
@@ -559,7 +382,7 @@ func TestSetupGkillServerAPI(t *testing.T) {
 	}
 
 	// Verify server config was created
-	configs, err := api.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
+	configs, err := gkillAPI.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
 	if err != nil {
 		t.Fatalf("GetAllServerConfigs failed: %v", err)
 	}
@@ -568,7 +391,7 @@ func TestSetupGkillServerAPI(t *testing.T) {
 	}
 
 	// Verify device can be retrieved
-	device, err := api.GetDevice()
+	device, err := gkillAPI.GetDevice()
 	if err != nil {
 		t.Fatalf("GetDevice failed: %v", err)
 	}
@@ -578,11 +401,11 @@ func TestSetupGkillServerAPI(t *testing.T) {
 }
 
 func TestHandleLogin_Success(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" // sha256 of ""
-	prepareLoginReadyAccount(t, api, "admin", passwordHash)
+	prepareLoginReadyAccount(t, gkillAPI, "admin", passwordHash)
 
 	req := &req_res.LoginRequest{
 		UserID:         "admin",
@@ -618,11 +441,11 @@ func TestHandleLogin_Success(t *testing.T) {
 }
 
 func TestHandleLogin_WrongPassword(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	correctHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	prepareLoginReadyAccount(t, api, "admin", correctHash)
+	prepareLoginReadyAccount(t, gkillAPI, "admin", correctHash)
 
 	req := &req_res.LoginRequest{
 		UserID:         "admin",
@@ -767,11 +590,11 @@ func TestHandleLogin_WrongMethod(t *testing.T) {
 }
 
 func TestHandleLogin_ConcurrentRequests(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	prepareLoginReadyAccount(t, api, "admin", passwordHash)
+	prepareLoginReadyAccount(t, gkillAPI, "admin", passwordHash)
 
 	const concurrency = 5
 	var wg sync.WaitGroup
@@ -830,10 +653,10 @@ func TestGenerateNewID_Uniqueness(t *testing.T) {
 // --- GkillDAOManager integration tests ---
 
 func TestGkillDAOManager_ConfigDAOs_NotNil(t *testing.T) {
-	api, cleanup := setupTestGkillServerAPI(t)
+	gkillAPI, cleanup := setupTestGkillServerAPI(t)
 	defer cleanup()
 
-	cfgDAOs := api.GkillDAOManager.ConfigDAOs
+	cfgDAOs := gkillAPI.GkillDAOManager.ConfigDAOs
 	if cfgDAOs == nil {
 		t.Fatal("ConfigDAOs is nil")
 	}
@@ -864,9 +687,9 @@ func TestGkillDAOManager_ConfigDAOs_NotNil(t *testing.T) {
 }
 
 // loginAndGetSession is a helper that logs in and returns the session ID.
-func loginAndGetSession(t *testing.T, tsURL string, api *GkillServerAPI, userID, passwordHash string) string {
+func loginAndGetSession(t *testing.T, tsURL string, gkillAPI *GkillServerAPI, userID, passwordHash string) string {
 	t.Helper()
-	prepareLoginReadyAccount(t, api, userID, passwordHash)
+	prepareLoginReadyAccount(t, gkillAPI, userID, passwordHash)
 
 	req := &req_res.LoginRequest{
 		UserID:         userID,
@@ -966,7 +789,7 @@ func TestHTTPServer_RouteRegistration(t *testing.T) {
 
 func TestGetLocalizer_DefaultsToJapanese(t *testing.T) {
 	// Unknown locale should fallback to "ja"
-	localizer := GetLocalizer("nonexistent_locale")
+	localizer := gkill_api.GetLocalizer("nonexistent_locale")
 	if localizer == nil {
 		t.Fatal("GetLocalizer returned nil for unknown locale")
 	}
@@ -975,9 +798,9 @@ func TestGetLocalizer_DefaultsToJapanese(t *testing.T) {
 func TestGetLocalizer_KnownLocales(t *testing.T) {
 	locales := []string{"ja", "en", "zh", "ko", "es", "fr", "de"}
 	for _, loc := range locales {
-		l := GetLocalizer(loc)
+		l := gkill_api.GetLocalizer(loc)
 		if l == nil {
-			t.Errorf("GetLocalizer(%q) returned nil", loc)
+			t.Errorf("gkill_api.GetLocalizer(%q) returned nil", loc)
 		}
 	}
 }
@@ -992,11 +815,11 @@ var _ = (*dao.GkillDAOManager)(nil)
 // entry per data type (including directory and gpslog required by the write-count
 // validation), all pointing to files inside tmpDir. Uses AddRepositories (batch)
 // to pass the all-types-present validation in a single transaction.
-func addTestRepositories(t *testing.T, api *GkillServerAPI, tmpDir string) {
+func addTestRepositories(t *testing.T, gkillAPI *GkillServerAPI, tmpDir string) {
 	t.Helper()
 	ctx := context.Background()
 
-	device, err := api.GetDevice()
+	device, err := gkillAPI.GetDevice()
 	if err != nil {
 		t.Fatalf("GetDevice failed: %v", err)
 	}
@@ -1050,7 +873,7 @@ func addTestRepositories(t *testing.T, api *GkillServerAPI, tmpDir string) {
 		})
 	}
 
-	ok, err := api.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepositories(ctx, repos)
+	ok, err := gkillAPI.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepositories(ctx, repos)
 	if err != nil {
 		t.Fatalf("AddRepositories failed: %v", err)
 	}
@@ -1063,10 +886,10 @@ func addTestRepositories(t *testing.T, api *GkillServerAPI, tmpDir string) {
 // Returns the httptest server URL, API, and cleanup function.
 // cleanup is set before addTestRepositories so that a Fatal inside it still
 // releases the global mutex via baseCleanup.
-func setupTestRouterWithRepos(t *testing.T) (tsURL string, api *GkillServerAPI, cleanup func()) {
+func setupTestRouterWithRepos(t *testing.T) (tsURL string, gkillAPI *GkillServerAPI, cleanup func()) {
 	t.Helper()
 
-	ts, api, baseCleanup := setupTestRouter(t)
+	ts, gkillAPI, baseCleanup := setupTestRouter(t)
 
 	// Set cleanup BEFORE addTestRepositories so a Fatal inside it still unlocks.
 	cleanup = func() {
@@ -1076,19 +899,19 @@ func setupTestRouterWithRepos(t *testing.T) (tsURL string, api *GkillServerAPI, 
 
 	// Extract temp directory from gkill_options (set by setupTestGkillServerAPI)
 	tmpDir := gkill_options.GkillHomeDir
-	addTestRepositories(t, api, tmpDir)
+	addTestRepositories(t, gkillAPI, tmpDir)
 
-	return ts.URL, api, cleanup
+	return ts.URL, gkillAPI, cleanup
 }
 
 // --- Phase 1a: Core data type CRUD handler tests ---
 
 func TestHandleAddKmemo_AndGetKmemo(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -1154,11 +977,11 @@ func TestHandleAddKmemo_AndGetKmemo(t *testing.T) {
 }
 
 func TestHandleAddMi_AndGetMi(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	miID := GenerateNewID()
@@ -1228,11 +1051,11 @@ func TestHandleAddMi_AndGetMi(t *testing.T) {
 }
 
 func TestHandleAddTimeis_AndGetTimeis(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	timeisID := GenerateNewID()
@@ -1299,11 +1122,11 @@ func TestHandleAddTimeis_AndGetTimeis(t *testing.T) {
 }
 
 func TestHandleAddTag_AndGetTagsByTargetID(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -1457,11 +1280,11 @@ func TestHandleAddMi_InvalidSession(t *testing.T) {
 }
 
 func TestHandleAddKmemo_DuplicateID(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -1514,11 +1337,11 @@ func TestHandleAddKmemo_DuplicateID(t *testing.T) {
 // --- Phase 1b: Remaining CRUD handler tests ---
 
 func TestHandleAddLantana_AndGetLantana(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	lantanaID := GenerateNewID()
@@ -1583,11 +1406,11 @@ func TestHandleAddLantana_AndGetLantana(t *testing.T) {
 }
 
 func TestHandleAddKC_AndGetKC(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kcID := GenerateNewID()
@@ -1653,11 +1476,11 @@ func TestHandleAddKC_AndGetKC(t *testing.T) {
 }
 
 func TestHandleAddNlog_AndGetNlog(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	nlogID := GenerateNewID()
@@ -1727,11 +1550,11 @@ func TestHandleAddNlog_AndGetNlog(t *testing.T) {
 }
 
 func TestHandleAddURLog_AndGetURLog(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	urlogID := GenerateNewID()
@@ -1801,11 +1624,11 @@ func TestHandleAddURLog_AndGetURLog(t *testing.T) {
 }
 
 func TestHandleAddText_AndGetTextsByTargetID(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -1898,11 +1721,11 @@ func TestHandleAddText_AndGetTextsByTargetID(t *testing.T) {
 }
 
 func TestHandleAddNotification_AndGetNotificationsByTargetID(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -1997,11 +1820,11 @@ func TestHandleAddNotification_AndGetNotificationsByTargetID(t *testing.T) {
 }
 
 func TestHandleAddReKyou_AndGetReKyou(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -2090,11 +1913,11 @@ func TestHandleAddReKyou_AndGetReKyou(t *testing.T) {
 // --- Phase 1c: Update handler tests ---
 
 func TestHandleUpdateKmemo(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -2190,11 +2013,11 @@ func TestHandleUpdateKmemo(t *testing.T) {
 }
 
 func TestHandleUpdateMi(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	miID := GenerateNewID()
@@ -2417,11 +2240,11 @@ func TestHandleAddNlog_InvalidSession(t *testing.T) {
 // --- Phase 1e: GetKyous query tests ---
 
 func TestHandleGetKyous_EmptyResult(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Query with a calendar range in the far past, expecting no results
 	farPast := time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -2455,11 +2278,11 @@ func TestHandleGetKyous_EmptyResult(t *testing.T) {
 }
 
 func TestHandleGetKyous_WithData(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -2527,11 +2350,11 @@ func TestHandleGetKyous_WithData(t *testing.T) {
 }
 
 func TestHandleGetKyous_CalendarFilter(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -2627,11 +2450,11 @@ func TestHandleGetKyous_CalendarFilter(t *testing.T) {
 // --- Phase 1f: Account management tests ---
 
 func TestHandleAddAccount_Success(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
 	addReq := &req_res.AddAccountRequest{
 		SessionID: sessionID,
@@ -2673,7 +2496,7 @@ func TestHandleAddAccount_Success(t *testing.T) {
 
 	// Verify account exists in DAO
 	ctx := context.Background()
-	acc, err := api.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, "testuser")
+	acc, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, "testuser")
 	if err != nil {
 		t.Fatalf("GetAccount(testuser) failed: %v", err)
 	}
@@ -2686,13 +2509,13 @@ func TestHandleAddAccount_Success(t *testing.T) {
 }
 
 func TestHandleAddAccount_NonAdmin(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 	// First, login as admin and add a non-admin user
-	adminSession := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	adminSession := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
 	addReq := &req_res.AddAccountRequest{
 		SessionID: adminSession,
@@ -2708,10 +2531,10 @@ func TestHandleAddAccount_NonAdmin(t *testing.T) {
 	resp.Body.Close()
 
 	// Set password for normaluser via DAO so we can login
-	prepareLoginReadyAccount(t, api, "normaluser", passwordHash)
+	prepareLoginReadyAccount(t, gkillAPI, "normaluser", passwordHash)
 
 	// Login as non-admin user
-	normalSession := loginAndGetSession(t, ts.URL, api, "normaluser", passwordHash)
+	normalSession := loginAndGetSession(t, ts.URL, gkillAPI, "normaluser", passwordHash)
 
 	// Try to add an account as non-admin — should fail
 	addReq2 := &req_res.AddAccountRequest{
@@ -2747,13 +2570,13 @@ func TestHandleAddAccount_NonAdmin(t *testing.T) {
 }
 
 func TestHandleUpdateAccountStatus_DisableUser(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 	// Login as admin and add a user to disable
-	adminSession := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	adminSession := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
 	addReq := &req_res.AddAccountRequest{
 		SessionID: adminSession,
@@ -2798,7 +2621,7 @@ func TestHandleUpdateAccountStatus_DisableUser(t *testing.T) {
 
 	// Verify account is disabled in DAO
 	ctx := context.Background()
-	acc, err := api.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, "disableuser")
+	acc, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, "disableuser")
 	if err != nil {
 		t.Fatalf("GetAccount(disableuser) failed: %v", err)
 	}
@@ -2811,11 +2634,11 @@ func TestHandleUpdateAccountStatus_DisableUser(t *testing.T) {
 }
 
 func TestHandleResetPassword_Success(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
 	// Reset password for admin
 	resetReq := &req_res.ResetPasswordRequest{
@@ -2849,11 +2672,11 @@ func TestHandleResetPassword_Success(t *testing.T) {
 }
 
 func TestHandleSetNewPassword_Success(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
 	// Reset password for admin to get a reset token
 	resetReq := &req_res.ResetPasswordRequest{
@@ -2866,7 +2689,7 @@ func TestHandleSetNewPassword_Success(t *testing.T) {
 
 	// Read the account from DAO to get the PasswordResetToken
 	ctx := context.Background()
-	acc, err := api.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, "admin")
+	acc, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, "admin")
 	if err != nil {
 		t.Fatalf("GetAccount(admin) failed: %v", err)
 	}
@@ -2907,7 +2730,7 @@ func TestHandleSetNewPassword_Success(t *testing.T) {
 	}
 
 	// Verify the token is cleared and password updated
-	acc2, err := api.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, "admin")
+	acc2, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, "admin")
 	if err != nil {
 		t.Fatalf("GetAccount(admin) after set: %v", err)
 	}
@@ -2919,11 +2742,11 @@ func TestHandleSetNewPassword_Success(t *testing.T) {
 // --- Phase 1g: Transaction tests ---
 
 func TestHandleCommitTx_EmptyTransaction(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
 	commitReq := &req_res.CommitTxRequest{
 		SessionID:  sessionID,
@@ -2953,11 +2776,11 @@ func TestHandleCommitTx_EmptyTransaction(t *testing.T) {
 }
 
 func TestHandleDiscardTx_EmptyTransaction(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
 	discardReq := &req_res.DiscardTxRequest{
 		SessionID:  sessionID,
@@ -3037,11 +2860,11 @@ var _ = share_kyou_info.JSONString("")
 // =============================================================================
 
 func TestHandleUpdateTag(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -3182,11 +3005,11 @@ func TestHandleUpdateTag_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateText(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -3327,11 +3150,11 @@ func TestHandleUpdateText_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateNotification(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -3475,11 +3298,11 @@ func TestHandleUpdateNotification_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateKC(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kcID := GenerateNewID()
@@ -3604,11 +3427,11 @@ func TestHandleUpdateKC_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateURLog(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	urlogID := GenerateNewID()
@@ -3735,11 +3558,11 @@ func TestHandleUpdateURLog_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateNlog(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	nlogID := GenerateNewID()
@@ -3866,11 +3689,11 @@ func TestHandleUpdateNlog_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateTimeis(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	timeisID := GenerateNewID()
@@ -3995,11 +3818,11 @@ func TestHandleUpdateTimeis_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateLantana(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	lantanaID := GenerateNewID()
@@ -4121,11 +3944,11 @@ func TestHandleUpdateLantana_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateRekyou(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID1 := GenerateNewID()
@@ -4275,11 +4098,11 @@ func TestHandleUpdateRekyou_InvalidSession(t *testing.T) {
 // =============================================================================
 
 func TestHandleGetKyou(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -4361,11 +4184,11 @@ func TestHandleGetKyou_InvalidSession(t *testing.T) {
 }
 
 func TestHandleGetMiBoardList(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -4442,11 +4265,11 @@ func TestHandleGetMiBoardList_InvalidSession(t *testing.T) {
 }
 
 func TestHandleGetAllTagNames(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -4551,11 +4374,11 @@ func TestHandleGetAllTagNames_InvalidSession(t *testing.T) {
 }
 
 func TestHandleGetAllRepNames(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	getReq := &req_res.GetAllRepNamesRequest{
 		SessionID:  sessionID,
@@ -4601,11 +4424,11 @@ func TestHandleGetAllRepNames_InvalidSession(t *testing.T) {
 }
 
 func TestHandleGetTagHistoriesByTagID(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -4718,11 +4541,11 @@ func TestHandleGetTagHistoriesByTagID_InvalidSession(t *testing.T) {
 }
 
 func TestHandleGetTextHistoriesByTextID(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -4835,11 +4658,11 @@ func TestHandleGetTextHistoriesByTextID_InvalidSession(t *testing.T) {
 }
 
 func TestHandleGetNotificationHistoriesByNotificationID(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -4955,11 +4778,11 @@ func TestHandleGetNotificationHistoriesByNotificationID_InvalidSession(t *testin
 }
 
 func TestHandleGetServerConfigs(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
 	getReq := &req_res.GetServerConfigsRequest{
 		SessionID:  sessionID,
@@ -5008,11 +4831,11 @@ func TestHandleGetServerConfigs_InvalidSession(t *testing.T) {
 // =============================================================================
 
 func TestHandleGetRepositories(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	getReq := &req_res.GetRepositoriesRequest{
 		SessionID:  sessionID,
@@ -5068,13 +4891,13 @@ func TestHandleGetRepositories_InvalidSession(t *testing.T) {
 }
 
 func TestHandleAddShareKyouListInfo(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
-	device, err := api.GetDevice()
+	device, err := gkillAPI.GetDevice()
 	if err != nil {
 		t.Fatalf("GetDevice failed: %v", err)
 	}
@@ -5145,13 +4968,13 @@ func TestHandleAddShareKyouListInfo_InvalidSession(t *testing.T) {
 }
 
 func TestHandleGetShareKyouListInfos(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
-	device, err := api.GetDevice()
+	device, err := gkillAPI.GetDevice()
 	if err != nil {
 		t.Fatalf("GetDevice failed: %v", err)
 	}
@@ -5226,13 +5049,13 @@ func TestHandleGetShareKyouListInfos_InvalidSession(t *testing.T) {
 }
 
 func TestHandleDeleteShareKyouListInfos(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
-	device, err := api.GetDevice()
+	device, err := gkillAPI.GetDevice()
 	if err != nil {
 		t.Fatalf("GetDevice failed: %v", err)
 	}
@@ -5337,11 +5160,11 @@ func TestHandleDeleteShareKyouListInfos_InvalidSession(t *testing.T) {
 // a nonexistent entity actually succeeds. Only Mi checks existence BEFORE writing.
 
 func TestHandleUpdateMi_NotFound(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -5391,11 +5214,11 @@ func TestHandleUpdateMi_NotFound(t *testing.T) {
 // updating a nonexistent entity succeeds. These tests verify that behavior.
 
 func TestHandleUpdateTag_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	// We need a target (kmemo) for the tag
@@ -5456,11 +5279,11 @@ func TestHandleUpdateTag_Nonexistent_Succeeds(t *testing.T) {
 }
 
 func TestHandleUpdateText_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -5518,11 +5341,11 @@ func TestHandleUpdateText_Nonexistent_Succeeds(t *testing.T) {
 }
 
 func TestHandleUpdateNotification_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -5579,11 +5402,11 @@ func TestHandleUpdateNotification_Nonexistent_Succeeds(t *testing.T) {
 }
 
 func TestHandleUpdateKC_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -5624,11 +5447,11 @@ func TestHandleUpdateKC_Nonexistent_Succeeds(t *testing.T) {
 }
 
 func TestHandleUpdateURLog_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -5669,11 +5492,11 @@ func TestHandleUpdateURLog_Nonexistent_Succeeds(t *testing.T) {
 }
 
 func TestHandleUpdateNlog_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -5715,11 +5538,11 @@ func TestHandleUpdateNlog_Nonexistent_Succeeds(t *testing.T) {
 }
 
 func TestHandleUpdateTimeis_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -5758,11 +5581,11 @@ func TestHandleUpdateTimeis_Nonexistent_Succeeds(t *testing.T) {
 }
 
 func TestHandleUpdateLantana_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -5802,11 +5625,11 @@ func TestHandleUpdateLantana_Nonexistent_Succeeds(t *testing.T) {
 }
 
 func TestHandleUpdateRekyou_Nonexistent_Succeeds(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	// Create a target kmemo for the rekyou
@@ -5868,40 +5691,32 @@ func TestHandleUpdateRekyou_Nonexistent_Succeeds(t *testing.T) {
 // --- Section: Config update tests ---
 
 // setupTestRouterWithConfigRoutes extends setupTestRouter with config update routes.
-func setupTestRouterWithConfigRoutes(t *testing.T) (tsURL string, api *GkillServerAPI, cleanup func()) {
+func setupTestRouterWithConfigRoutes(t *testing.T) (tsURL string, gkillAPI *GkillServerAPI, cleanup func()) {
 	t.Helper()
 
-	ts, api, baseCleanup := setupTestRouter(t)
+	ts, gkillAPI, baseCleanup := setupTestRouter(t)
 
-	router := api.GkillDAOManager.GetRouter()
+	router := gkillAPI.GkillDAOManager.GetRouter()
 
-	// Register config update routes not in the base setupTestRouter
-	router.HandleFunc(api.APIAddress.UpdateApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateApplicationConfig(w, r)
-	}).Methods(api.APIAddress.UpdateApplicationConfigMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateServerConfigsAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateServerConfigs(w, r)
-	}).Methods(api.APIAddress.UpdateServerConfigsMethod)
-
-	router.HandleFunc(api.APIAddress.UpdateUserRepsAddress, func(w http.ResponseWriter, r *http.Request) {
-		api.HandleUpdateUserReps(w, r)
-	}).Methods(api.APIAddress.UpdateUserRepsMethod)
+	// Register config update routes not in the base setupTestRouter (wrapAuth — auth only, no repos)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateApplicationConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateApplicationConfig)).Methods(gkillAPI.APIAddress.UpdateApplicationConfigMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateServerConfigsAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateServerConfigs)).Methods(gkillAPI.APIAddress.UpdateServerConfigsMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateUserRepsAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateUserReps)).Methods(gkillAPI.APIAddress.UpdateUserRepsMethod)
 
 	cleanup = func() {
 		ts.Close()
 		baseCleanup()
 	}
 
-	return ts.URL, api, cleanup
+	return ts.URL, gkillAPI, cleanup
 }
 
 func TestHandleUpdateApplicationConfig(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Get current config
 	getReq := &req_res.GetApplicationConfigRequest{
@@ -5988,11 +5803,11 @@ func TestHandleUpdateApplicationConfig_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateServerConfigs(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Get current server configs
 	getReq := &req_res.GetServerConfigsRequest{
@@ -6069,13 +5884,13 @@ func TestHandleUpdateServerConfigs_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateUserReps(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
-	device, err := api.GetDevice()
+	device, err := gkillAPI.GetDevice()
 	if err != nil {
 		t.Fatalf("GetDevice failed: %v", err)
 	}
@@ -6173,13 +5988,13 @@ func TestHandleUpdateUserReps_InvalidSession(t *testing.T) {
 // --- Section: Sharing - UpdateShareKyouListInfo tests ---
 
 func TestHandleUpdateShareKyouListInfo(t *testing.T) {
-	ts, api, cleanup := setupTestRouter(t)
+	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, ts.URL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, ts.URL, gkillAPI, "admin", passwordHash)
 
-	device, err := api.GetDevice()
+	device, err := gkillAPI.GetDevice()
 	if err != nil {
 		t.Fatalf("GetDevice failed: %v", err)
 	}
@@ -6303,13 +6118,13 @@ func TestHandleUpdateShareKyouListInfo_InvalidSession(t *testing.T) {
 // --- Section: GetServerConfigs non-admin test ---
 
 func TestHandleGetServerConfigs_NonAdmin(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 	// Create a non-admin user
-	adminSession := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	adminSession := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 	addReq := &req_res.AddAccountRequest{
 		SessionID: adminSession,
 		AccountInfo: &req_res.Account{
@@ -6323,8 +6138,8 @@ func TestHandleGetServerConfigs_NonAdmin(t *testing.T) {
 	resp := postJSON(t, tsURL+"/api/add_user", addReq)
 	resp.Body.Close()
 
-	prepareLoginReadyAccount(t, api, "normaluser_config", passwordHash)
-	normalSession := loginAndGetSession(t, tsURL, api, "normaluser_config", passwordHash)
+	prepareLoginReadyAccount(t, gkillAPI, "normaluser_config", passwordHash)
+	normalSession := loginAndGetSession(t, tsURL, gkillAPI, "normaluser_config", passwordHash)
 
 	// Try to get server configs as non-admin
 	getReq := &req_res.GetServerConfigsRequest{
@@ -6356,11 +6171,11 @@ func TestHandleGetServerConfigs_NonAdmin(t *testing.T) {
 // --- Section: Idempotent update tests ---
 
 func TestHandleUpdateTag_Idempotent(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -6456,11 +6271,11 @@ func TestHandleUpdateTag_Idempotent(t *testing.T) {
 }
 
 func TestHandleUpdateNlog_Idempotent(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	nlogID := GenerateNewID()
@@ -6540,11 +6355,11 @@ func TestHandleUpdateNlog_Idempotent(t *testing.T) {
 }
 
 func TestHandleUpdateTimeis_Idempotent(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	timeisID := GenerateNewID()
@@ -6625,11 +6440,11 @@ func TestHandleUpdateTimeis_Idempotent(t *testing.T) {
 // =============================================================================
 
 func TestHandleGetKyous_WordFilter(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -6708,11 +6523,11 @@ func TestHandleGetKyous_WordFilter(t *testing.T) {
 }
 
 func TestHandleGetKyous_WordsAndFilter(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -6790,11 +6605,11 @@ func TestHandleGetKyous_WordsAndFilter(t *testing.T) {
 }
 
 func TestHandleGetKyous_TagFilter(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -6893,11 +6708,11 @@ func TestHandleGetKyous_TagFilter(t *testing.T) {
 }
 
 func TestHandleGetKyous_RepFilter(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -6960,11 +6775,11 @@ func TestHandleGetKyous_RepFilter(t *testing.T) {
 }
 
 func TestHandleGetKyous_MiCheckStateFilter(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 
@@ -7102,11 +6917,11 @@ func TestHandleGetKyous_MiCheckStateFilter(t *testing.T) {
 }
 
 func TestHandleGetKyous_CalendarRange(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Create 3 records at different dates
 	dates := []time.Time{
@@ -7180,11 +6995,11 @@ func TestHandleGetKyous_CalendarRange(t *testing.T) {
 }
 
 func TestHandleGetKyous_OnlyLatestData(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -7274,11 +7089,11 @@ func TestHandleGetKyous_OnlyLatestData(t *testing.T) {
 }
 
 func TestHandleGetKyous_CombinedFilters(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	pastTime := now.Add(-72 * time.Hour)
@@ -7396,11 +7211,11 @@ func TestHandleGetKyous_CombinedFilters(t *testing.T) {
 // =============================================================================
 
 func TestHandleSubmitKFTLText_SimpleKmemo(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Submit simple KFTL text (plain text becomes a kmemo)
 	submitReq := &req_res.SubmitKFTLTextRequest{
@@ -7482,11 +7297,11 @@ func TestHandleSubmitKFTLText_InvalidSession(t *testing.T) {
 }
 
 func TestHandleSubmitKFTLText_EmptyText(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Submit empty text
 	submitReq := &req_res.SubmitKFTLTextRequest{
@@ -7511,11 +7326,11 @@ func TestHandleSubmitKFTLText_EmptyText(t *testing.T) {
 }
 
 func TestHandleSubmitKFTLText_MultipleStatements(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Submit multi-line KFTL text with a tag line
 	kftlText := "kftl_multi_statement_test_content\n#kftl_multi_tag_test"
@@ -7581,11 +7396,11 @@ func TestHandleSubmitKFTLText_MultipleStatements(t *testing.T) {
 // =============================================================================
 
 func TestHandleGetKyousMCP_BasicQuery(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -7792,21 +7607,21 @@ func helperGetKyousWithWord(t *testing.T, tsURL string, sessionID string, word s
 }
 
 func TestHandleSubmitKFTLText_Lantana(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーら\n5")
 }
 
 func TestHandleSubmitKFTLText_Mi(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	marker := fmt.Sprintf("kftl_mi_test_%d", time.Now().UnixNano())
 	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーみ\n"+marker)
@@ -7818,21 +7633,21 @@ func TestHandleSubmitKFTLText_Mi(t *testing.T) {
 }
 
 func TestHandleSubmitKFTLText_Nlog(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーん\n500\nテスト店")
 }
 
 func TestHandleSubmitKFTLText_TimeIsStart(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	marker := fmt.Sprintf("kftl_timeis_test_%d", time.Now().UnixNano())
 	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーた\n"+marker)
@@ -7844,31 +7659,31 @@ func TestHandleSubmitKFTLText_TimeIsStart(t *testing.T) {
 }
 
 func TestHandleSubmitKFTLText_URLog(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーう\nhttps://example.com/kftl_test")
 }
 
 func TestHandleSubmitKFTLText_KC(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーか\nテストカウンター\n42")
 }
 
 func TestHandleSubmitKFTLText_KmemoWithTagAndTime(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	marker := fmt.Sprintf("kftl_kmemo_tag_time_test_%d", time.Now().UnixNano())
 	// Tag on first line, content on second — simple pattern that always works
@@ -7882,11 +7697,11 @@ func TestHandleSubmitKFTLText_KmemoWithTagAndTime(t *testing.T) {
 }
 
 func TestHandleSubmitKFTLText_TimeIsEnd(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// First start a TimeIs, then end it
 	marker := fmt.Sprintf("kftl_timeis_end_test_%d", time.Now().UnixNano())
@@ -7899,11 +7714,11 @@ func TestHandleSubmitKFTLText_TimeIsEnd(t *testing.T) {
 
 // 項番21: TimeIsEndIfTagExist should not error when no matching TimeIs exists
 func TestHandleSubmitKFTLText_TimeIsEndByTagIfExist_NoMatch(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Submit TimeIsEndByTagIfExist with a tag that has no running TimeIs
 	// This should NOT produce an error (the "if exist" variant should silently succeed)
@@ -7932,11 +7747,11 @@ func TestHandleSubmitKFTLText_TimeIsEndByTagIfExist_NoMatch(t *testing.T) {
 
 // 項番139: UpdateApplicationConfig should preserve search functionality
 func TestHandleUpdateApplicationConfig_PreservesSearchState(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// First create some data
 	marker := fmt.Sprintf("config_preserve_test_%d", time.Now().UnixNano())
@@ -7986,11 +7801,11 @@ func TestHandleUpdateApplicationConfig_PreservesSearchState(t *testing.T) {
 
 // 項番120/127/131: Structure deletion with children should complete in bounded time
 func TestHandleUpdateApplicationConfig_DeleteStructureWithChildren(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Get current config
 	getConfigReq := &req_res.GetApplicationConfigRequest{
@@ -8031,11 +7846,11 @@ func TestHandleUpdateApplicationConfig_DeleteStructureWithChildren(t *testing.T)
 
 // 項番42: Notification編集後に最新版が取得できること
 func TestHandleNotification_EditAndGetLatest(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -8109,11 +7924,11 @@ func TestHandleNotification_EditAndGetLatest(t *testing.T) {
 
 // 項番52: Notification削除(soft delete)後に非表示になること
 func TestHandleNotification_SoftDeleteAndVerifyHidden(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -8192,11 +8007,11 @@ func TestHandleNotification_SoftDeleteAndVerifyHidden(t *testing.T) {
 
 // 項番62: Notification履歴が正しく表示されること
 func TestHandleNotification_HistoryAfterEdit(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -8264,11 +8079,11 @@ func TestHandleNotification_HistoryAfterEdit(t *testing.T) {
 
 // 項番21: TimeIsEndByTagIfExist with matching tag should succeed
 func TestHandleSubmitKFTLText_TimeIsEndByTagIfExist_WithMatch(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	tag := fmt.Sprintf("endtag_%d", time.Now().UnixNano())
 	// Start a TimeIs with a tag
@@ -8279,11 +8094,11 @@ func TestHandleSubmitKFTLText_TimeIsEndByTagIfExist_WithMatch(t *testing.T) {
 
 // 項番35: Kmemo update with empty content — verify behavior
 func TestHandleUpdateKmemo_EmptyContent(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -8328,11 +8143,11 @@ func TestHandleUpdateKmemo_EmptyContent(t *testing.T) {
 
 // 項番53: Tag削除後にKyouがまだ取得できること
 func TestHandleDeleteTag_KyouStillReturned(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -8386,11 +8201,11 @@ func TestHandleDeleteTag_KyouStillReturned(t *testing.T) {
 
 // 項番54: Text削除後にKyouがまだ取得できること
 func TestHandleDeleteText_KyouStillReturned(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	now := time.Now().Truncate(time.Second)
 	kmemoID := GenerateNewID()
@@ -8444,11 +8259,11 @@ func TestHandleDeleteText_KyouStillReturned(t *testing.T) {
 
 // 項番84: TLSファイル生成
 func TestHandleGenerateTLSFile_Success(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	generateReq := &req_res.GenerateTLSFileRequest{
 		SessionID:  sessionID,
@@ -8471,11 +8286,11 @@ func TestHandleGenerateTLSFile_Success(t *testing.T) {
 
 // 項番80: ローカルアクセス制限 — checkIsLocalAccess関数テスト
 func TestLocalOnlyAccess_AcceptsLocalhost(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Even with local-only access, test server (localhost) should work
 	// Verify API is reachable from test (which is localhost)
@@ -8494,11 +8309,11 @@ func TestLocalOnlyAccess_AcceptsLocalhost(t *testing.T) {
 
 // 項番86: TLSファイルパス変更がServerConfigに反映されること
 func TestHandleUpdateServerConfigs_TLSPathChange(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Get current server configs
 	getReq := &req_res.GetServerConfigsRequest{
@@ -8547,13 +8362,13 @@ func TestHandleUpdateServerConfigs_TLSPathChange(t *testing.T) {
 
 // 項番104: 書き込み有効状態不正検知 — 同一デバイス・同一タイプにUseToWrite=trueが重複
 func TestHandleUpdateUserReps_DuplicateWriteDetected(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithConfigRoutes(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
-	device, err := api.GetDevice()
+	device, err := gkillAPI.GetDevice()
 	if err != nil {
 		t.Fatalf("GetDevice failed: %v", err)
 	}
@@ -8647,20 +8462,20 @@ func TestHandleUpdateUserReps_DuplicateWriteDetected(t *testing.T) {
 }
 
 func TestGetAccountFromSessionID_Expired(t *testing.T) {
-	tsURL, api, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-	sessionID := loginAndGetSession(t, tsURL, api, "admin", passwordHash)
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
 	// Expire the session by updating ExpirationTime to the past
 	ctx := context.Background()
-	session, err := api.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
+	session, err := gkillAPI.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
 	if err != nil || session == nil {
 		t.Fatalf("failed to get session: %v", err)
 	}
 	session.ExpirationTime = time.Now().Add(-1 * time.Hour)
-	_, err = api.GkillDAOManager.ConfigDAOs.LoginSessionDAO.UpdateLoginSession(ctx, session)
+	_, err = gkillAPI.GkillDAOManager.ConfigDAOs.LoginSessionDAO.UpdateLoginSession(ctx, session)
 	if err != nil {
 		t.Fatalf("failed to update session expiration: %v", err)
 	}
