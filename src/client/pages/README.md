@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 14 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（172 .vue）
-└── dialogs/                        # Dialog コンポーネント（89 .vue）
+├── views/                          # View コンポーネント（175 .vue）
+└── dialogs/                        # Dialog コンポーネント（93 .vue）
 ```
 
 ## 設計パターン
@@ -56,7 +56,7 @@ xxx-view-emits.ts     # Emits 定義
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（172 .vue）
+## views/ — 全 View コンポーネント一覧（175 .vue）
 
 ### データ追加系（20コンポーネント）
 
@@ -221,7 +221,7 @@ xxx-view-emits.ts     # Emits 定義
 | `foldable-struct.vue` / `rep-struct-element.vue` / `rep-type-element.vue` / `tag-struct-element.vue` | 構造要素 |
 | `saihate-stars-overlay.vue` / `snow-fall-overlay.vue` | オーバーレイ効果 |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（89 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（93 .vue）
 
 ### データ追加ダイアログ（19コンポーネント）
 
