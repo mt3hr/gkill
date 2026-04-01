@@ -193,16 +193,51 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api.go`（約14,000行）がAPIの中心です。
+`gkill/api/gkill_server_api/`パッケージ（85+ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
 
 #### 主な責務
 
-- HTTPサーバーの起動・停止
-- 全80 POSTエンドポイントのハンドリング
+- HTTPサーバーの起動・停止（`serve.go`, `close.go`）
+- 全80 POSTエンドポイントのハンドリング（`handle_*.go`）
 - GkillDAOManagerの保持・提供
-- セッション検証
+- 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
 - アクセスログミドルウェア（gorilla/mux `Use()` で全ルートに適用。リモートIP・メソッド・パス・ステータス・所要時間・ユーザIDを `ACCESS` レベルで記録。実装: `gkill_server_api_access_log.go`）
+
+### 認証ミドルウェアパターン
+
+ハンドラ登録時に3つのラッパー関数を使い分けて認証レベルを指定します。
+
+| ラッパー関数 | 認証レベル | AuthContextの内容 | 用途 |
+|---|---|---|---|
+| `wrapNoAuth` | なし | — | login, get_shared_kyous 等 |
+| `wrapAuth` | セッション認証 | Account | logout, reset_password 等 |
+| `wrapAuthRepos` | セッション＋リポジトリ | Account, Device, GkillRepositories | データCRUD系ハンドラ |
+
+#### AuthContext構造体
+
+`auth_context.go`で定義。認証ミドルウェアが抽出した情報を格納し、各ハンドラに渡します。
+
+```go
+type AuthContext struct {
+    Account          *reps.Account
+    Device           *reps.Device
+    GkillRepositories *reps.GkillRepositories
+}
+```
+
+#### ミドルウェアの処理フロー
+
+1. `authMiddleware`: リクエストからsession_idを取得 → LoginSessionDAOでセッション検証 → AccountDAO からアカウント取得 → `AuthContext.Account` に設定
+2. `authWithReposMiddleware`: 上記に加え → DeviceDAO からデバイス取得 → GkillDAOManager.GetRepositories() → `AuthContext.Device`, `AuthContext.GkillRepositories` に設定
+
+### usecaseレイヤー
+
+`gkill/usecase/`パッケージ（16ファイル）は、ハンドラから抽出されたHTTP非依存のビジネスロジックを提供します。
+
+- DAO/リポジトリ型を直接操作する関数群
+- HTTPリクエスト/レスポンスに依存しない
+- ハンドラとMCPサーバーの両方から再利用可能
 
 ### エンドポイント分類（80 POST）
 
@@ -223,7 +258,7 @@ graph LR
 
 ### ルーティング定義
 
-`gkill_server_api_address.go`で全エンドポイントのルートが定義されます。すべて`POST /api/{endpoint}`形式です。
+`gkill/api/gkill_server_api/gkill_server_api_address.go`で全エンドポイントのルートが定義されます。すべて`POST /api/{endpoint}`形式です。各ルートは`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でラップされたハンドラに紐づけられます。
 
 ### レスポンス構造
 
