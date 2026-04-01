@@ -1,4 +1,4 @@
-package api
+package gkill_server_api
 
 type GkillServerAPIAddress struct {
 	LoginAddress string

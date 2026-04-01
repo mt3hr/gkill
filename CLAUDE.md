@@ -75,10 +75,11 @@ Both use cobra for CLI with shared subcommands: `version`, `idf`, `dvnf`, `gener
 Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.0)
 
 Key packages:
-- `gkill/api/` — HTTP API handlers via gorilla/mux, **80 POST endpoints** under `/api/`, plus `/zip_cache/` file server. Main handler: `gkill_server_api.go` (~14,000 lines). Route definitions: `gkill_server_api_address.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
-- `gkill/api/embed.go` — `//go:embed embed` directive serves the compiled Vue SPA at root `/`
+- `gkill/api/` — Shared infrastructure: `embed.go` (`//go:embed` serves Vue SPA at `/`), `version.go`, `gkill_version_data.go`, `find_filter.go`, `find_filter_helpers.go`, `find_kyou_context.go`
+- `gkill/api/gkill_server_api/` — HTTP API handlers (85+ files, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
 - `gkill/api/req_res/` — Request/response structs for every endpoint (175 types)
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
+- `gkill/usecase/` — HTTP-independent business logic (16 files). Extracted from handlers to enable reuse without HTTP context. Functions operate on DAO/repository types directly.
 - `gkill/dao/` — Data access layer with `GkillDAOManager` managing SQLite3 databases
 - `gkill/dao/reps/` — Repository interfaces and implementations for each data type
 - `gkill/main/common/` — Shared CLI commands, server initialization, logging

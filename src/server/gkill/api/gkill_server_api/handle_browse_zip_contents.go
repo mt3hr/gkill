@@ -1,4 +1,4 @@
-package api
+package gkill_server_api
 
 import (
 	"archive/zip"
@@ -16,6 +16,7 @@ import (
 	"sync"
 	"unicode/utf8"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
@@ -52,7 +53,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidBrowseZipContentsRequestDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 		}
@@ -64,7 +65,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidBrowseZipContentsRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -84,7 +85,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -96,7 +97,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -113,7 +114,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -125,7 +126,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -138,7 +139,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -157,7 +158,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -170,7 +171,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.BrowseZipContentsError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -179,7 +180,7 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 	response.Entries = entries
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.BrowseZipContentsSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE"}),
+		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE"}),
 	})
 }
 
