@@ -59,7 +59,7 @@ api/
 | `gkill_error.ts` | エラーコード定義 |
 | `gkill_message.ts` | メッセージコード定義 |
 
-### `req_res/`（154ファイル）— Request/Response 型
+### `req_res/`（152ファイル）— Request/Response 型
 
 サーバ側 `api/req_res/` と1対1で対応する TypeScript 型定義。
 各エンドポイントに `*-request.ts` + `*-response.ts` のペアが存在。

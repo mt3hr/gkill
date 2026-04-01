@@ -53,7 +53,7 @@ dao/
 ### GkillDAOManager
 
 全リポジトリの初期化・接続管理・ライフサイクルを統括する中心的な構造体。
-API ハンドラ層は `GkillDAOManager` 経由でリポジトリにアクセスする。
+ユースケース層（`usecase/`）および API ハンドラ層は `GkillDAOManager` 経由でリポジトリにアクセスする。
 
 ## ルートファイル（3ファイル）
 
@@ -133,7 +133,7 @@ API ハンドラ層は `GkillDAOManager` 経由でリポジトリにアクセス
 | `repository_dao.go` | `RepositoryDAO` インタフェース |
 | `repository_dao_sqlite3_impl.go` | SQLite3 実装 |
 
-### `reps/`（110+ファイル）— メインリポジトリ
+### `reps/`（126ファイル）— メインリポジトリ
 
 全 Kyou データ型のリポジトリ。詳細は [reps/README.md](reps/README.md) を参照。
 

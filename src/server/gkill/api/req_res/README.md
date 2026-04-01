@@ -26,7 +26,7 @@
 - `Errors []message.GkillError` — エラー情報
 - `Messages []message.GkillMessage` — メッセージ情報
 
-## 全ファイル一覧（155ファイル）
+## 全ファイル一覧（166ファイル）
 
 ### 認証系（10ファイル）
 
@@ -187,5 +187,6 @@
 2. `<操作>_<対象>_response.go` を作成し、Response 構造体を定義
 3. Request に `SessionID` フィールドを含める（認証不要の場合を除く）
 4. Response に `Errors` と `Messages` フィールドを含める
-5. `gkill_server_api.go` にハンドラを追加
-6. TypeScript 側 `src/client/classes/api/req_res/` にも対応する型を追加
+5. `gkill_server_api/handle_xxx.go` にハンドラを追加
+6. ビジネスロジックは `usecase/` 層に実装
+7. TypeScript 側 `src/client/classes/api/req_res/` にも対応する型を追加
