@@ -11,10 +11,10 @@ KeyGetter でグルーピングし、AggregateTarget で集計値を算出する
 ```
 dnote/
 ├── (ルートファイル 17個)         # コア型定義
-├── dnote-agregate-target/      # 集計対象（22ファイル）
+├── dnote-agregate-target/      # 集計対象（20ファイル）
 ├── dnote-filter/               # フィルタ（2ファイル）
 ├── dnote-key-getter/           # グルーピングキー（9ファイル）
-├── dnote-predicate/            # 検索条件述語（39ファイル）
+├── dnote-predicate/            # 検索条件述語（34ファイル）
 │   └── target-kyou-predicate/  # 対象 Kyou 述語（3ファイル）
 ├── pulldown-menu/              # UI プルダウンメニュー（4ファイル）
 └── serialize/                  # シリアライズ辞書（5ファイル）
@@ -74,7 +74,7 @@ dnote/
 | `related-time-match-type.ts` | 関連時刻マッチ型 |
 | `aggregate-grouping-list-result-record.ts` | グルーピング集計結果レコード |
 
-## `dnote-agregate-target/`（22ファイル）— 集計対象
+## `dnote-agregate-target/`（20ファイル）— 集計対象
 
 グループごとの集計値を算出するクラス群。
 
@@ -88,9 +88,9 @@ dnote/
 | `agregate-average-timeis-time.ts` | TimeIs 経過時間の平均 |
 | `agregate-average-timeis-start-time.ts` | TimeIs 開始時刻の平均 |
 | `agregate-average-timeis-end-time.ts` | TimeIs 終了時刻の平均 |
-| `agregate-average-git-commit-log-code-add.ts` | Git コミット追加行数の平均 |
-| `agregate-average-git-commit-log-code-delete.ts` | Git コミット削除行数の平均 |
-| `agregate-average-git-commit-log-code-diff.ts` | Git コミット差分行数の平均 |
+| `agregate-average-git-commit-log-code-addition-count.ts` | Git コミット追加行数の平均 |
+| `agregate-average-git-commit-log-code-deletion-count.ts` | Git コミット削除行数の平均 |
+| `agregate-average-git-commit-log-code-count.ts` | Git コミット差分行数の平均 |
 
 ### 合計（Sum）
 
@@ -100,9 +100,9 @@ dnote/
 | `agregate-sum-lantana-mood.ts` | Lantana 気分値の合計 |
 | `agregate-sum-nlog-amount.ts` | Nlog 金額の合計 |
 | `agregate-sum-timeis-time.ts` | TimeIs 経過時間の合計 |
-| `agregate-sum-git-commit-log-code-add.ts` | Git コミット追加行数の合計 |
-| `agregate-sum-git-commit-log-code-delete.ts` | Git コミット削除行数の合計 |
-| `agregate-sum-git-commit-log-code-diff.ts` | Git コミット差分行数の合計 |
+| `agregate-sum-git-commit-log-code-addition-count.ts` | Git コミット追加行数の合計 |
+| `agregate-sum-git-commit-log-code-deletion-count.ts` | Git コミット削除行数の合計 |
+| `agregate-sum-git-commit-log-code-count.ts` | Git コミット差分行数の合計 |
 
 ### 最大/最小/カウント
 
@@ -143,9 +143,9 @@ dnote/
 | `lantana-mood-getter.ts` | Lantana 気分値 |
 | `nlog-shop-name-getter.ts` | Nlog 店名 |
 
-## `dnote-predicate/`（39ファイル）— 検索条件述語
+## `dnote-predicate/`（34ファイル）— 検索条件述語
 
-AND / OR / NOT の論理演算で組み合わせ可能な述語群。
+AND / OR / NOT の論理演算で組み合わせ可能な述語群（33 .ts ファイル + 1 サブディレクトリ）。
 
 ### 論理演算子
 
@@ -165,73 +165,74 @@ AND / OR / NOT の論理演算で組み合わせ可能な述語群。
 
 | ファイル | 条件 |
 |---------|------|
-| `kmemo-content-contain-predicate.ts` | 内容に文字列を含む |
-| `kmemo-content-not-contain-predicate.ts` | 内容に文字列を含まない |
+| `kmemo-content-contains-predicate.ts` | 内容に文字列を含む |
+| `kmemo-content-equal-predicate.ts` | 内容が一致 |
 
 ### KC 述語
 
 | ファイル | 条件 |
 |---------|------|
-| `kc-title-contain-predicate.ts` | タイトルに文字列を含む |
-| `kc-title-not-contain-predicate.ts` | タイトルに文字列を含まない |
+| `kc-title-contains-predicate.ts` | タイトルに文字列を含む |
+| `kc-title-equal-predicate.ts` | タイトルが一致 |
 
 ### Lantana 述語
 
 | ファイル | 条件 |
 |---------|------|
-| `lantana-mood-contain-predicate.ts` | 気分値が範囲内 |
+| `lantana-mood-greater-than-predicate.ts` | 気分値が指定値より大きい |
+| `lantana-mood-less-than-predicate.ts` | 気分値が指定値より小さい |
 | `lantana-mood-equal-predicate.ts` | 気分値が一致 |
-| `lantana-mood-not-contain-predicate.ts` | 気分値が範囲外 |
 
 ### Mi 述語
 
 | ファイル | 条件 |
 |---------|------|
-| `mi-title-contain-predicate.ts` | タイトルに文字列を含む |
-| `mi-title-not-contain-predicate.ts` | タイトルに文字列を含まない |
+| `mi-title-contains-predicate.ts` | タイトルに文字列を含む |
+| `mi-title-equal-predicate.ts` | タイトルが一致 |
 
 ### Nlog 述語
 
 | ファイル | 条件 |
 |---------|------|
-| `nlog-amount-contain-predicate.ts` | 金額が範囲内 |
-| `nlog-amount-not-contain-predicate.ts` | 金額が範囲外 |
-| `nlog-shop-name-contain-predicate.ts` | 店名に文字列を含む |
-| `nlog-shop-name-not-contain-predicate.ts` | 店名に文字列を含まない |
-| `nlog-title-contain-predicate.ts` | タイトルに文字列を含む |
+| `nlog-amount-greater-than-predicate.ts` | 金額が指定値より大きい |
+| `nlog-amount-less-than-predicate.ts` | 金額が指定値より小さい |
+| `nlog-shop-contains-predicate.ts` | 店名に文字列を含む |
+| `nlog-shop-equal-predicate.ts` | 店名が一致 |
+| `nlog-title-contains-predicate.ts` | タイトルに文字列を含む |
+| `nlog-title-equal-predicate.ts` | タイトルが一致 |
 
 ### TimeIs 述語
 
 | ファイル | 条件 |
 |---------|------|
-| `timeis-title-contain-predicate.ts` | タイトルに文字列を含む |
-| `timeis-title-not-contain-predicate.ts` | タイトルに文字列を含まない |
+| `timeis-title-contains-predicate.ts` | タイトルに文字列を含む |
+| `timeis-title-equal-predicate.ts` | タイトルが一致 |
 
 ### Text 述語
 
 | ファイル | 条件 |
 |---------|------|
-| `text-content-contain-predicate.ts` | 内容に文字列を含む |
-| `text-content-not-contain-predicate.ts` | 内容に文字列を含まない |
+| `text-content-contains-predicate.ts` | 内容に文字列を含む |
+| `text-content-equal-predicate.ts` | 内容が一致 |
 
 ### Git Commit Log 述語
 
 | ファイル | 条件 |
 |---------|------|
-| `git-commit-log-code-add-contain-predicate.ts` | 追加行数が範囲内 |
-| `git-commit-log-code-add-not-contain-predicate.ts` | 追加行数が範囲外 |
-| `git-commit-log-code-delete-contain-predicate.ts` | 削除行数が範囲内 |
-| `git-commit-log-code-delete-not-contain-predicate.ts` | 削除行数が範囲外 |
-| `git-commit-log-code-diff-contain-predicate.ts` | 差分行数が範囲内 |
-| `git-commit-log-code-diff-not-contain-predicate.ts` | 差分行数が範囲外 |
+| `git-commit-log-code-addition-greater-than-predicate.ts` | 追加行数が指定値より大きい |
+| `git-commit-log-code-addition-less-than-predicate.ts` | 追加行数が指定値より小さい |
+| `git-commit-log-code-deletion-greater-than-predicate.ts` | 削除行数が指定値より大きい |
+| `git-commit-log-code-deletion-less-than-predicate.ts` | 削除行数が指定値より小さい |
+| `git-commit-log-code-greater-than-predicate.ts` | 差分行数が指定値より大きい |
+| `git-commit-log-code-less-than-predicate.ts` | 差分行数が指定値より小さい |
 
 ### 関連時刻述語
 
 | ファイル | 条件 |
 |---------|------|
-| `related-time-between-predicate.ts` | 関連時刻が範囲内 |
-| `related-time-not-between-predicate.ts` | 関連時刻が範囲外 |
-| `related-time-in-today-predicate.ts` | 今日のデータ |
+| `related-time-after-predicate.ts` | 関連時刻が指定時刻より後 |
+| `related-time-before-predicate.ts` | 関連時刻が指定時刻より前 |
+| `related-time-week-predicate.ts` | 関連時刻の曜日一致 |
 
 ### タグ述語
 

@@ -2,24 +2,35 @@
 
 ## 概要
 
-gorilla/mux を使用した HTTP API ハンドラ層。全エンドポイントは POST メソッドで `/api/` パス配下に配置される。
+HTTP API の共通基盤とハンドラ層。全エンドポイントは POST メソッドで `/api/` パス配下に配置される。
 コンパイル済み Vue 3 SPA を `//go:embed` ディレクティブでバイナリに埋め込み、ルート `/` で配信する。
+ハンドラの実装は `gkill_server_api/` サブパッケージに集約されている。
 
 ## ディレクトリ構造
 
 ```
 api/
-├── gkill_server_api.go          # メインハンドラ（全エンドポイント登録、~557KB）
-├── gkill_server_api_address.go  # エンドポイントアドレス定義
 ├── embed.go                     # //go:embed ディレクティブ（Vue SPA 配信）
 ├── find_filter.go               # 検索フィルタロジック
 ├── find_filter_helpers.go       # 検索フィルタヘルパー
+├── find_filter_test.go          # 検索フィルタテスト
 ├── find_kyou_context.go         # Kyou 検索コンテキスト
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
-├── handle_submit_kftl_text.go   # KFTL テキスト送信ハンドラ
-├── handle_get_kyous_mcp.go      # MCP 用 Kyou 取得ハンドラ
-├── handle_update_cache.go       # キャッシュ更新ハンドラ
+├── gkill_server_api/            # HTTP ハンドラ（94ファイル）
+│   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
+│   ├── gkill_server_api_address.go # エンドポイントアドレス定義
+│   ├── serve.go                 # gorilla/mux ルーター設定・全78ルート登録
+│   ├── close.go                 # サーバ終了処理
+│   ├── auth.go                  # 認証処理
+│   ├── auth_context.go          # 認証コンテキスト
+│   ├── auth_middleware.go       # 認証ミドルウェア
+│   ├── filter_local_only.go     # ローカル限定フィルタ
+│   ├── utils.go                 # ユーティリティ関数
+│   ├── web_push.go              # Web Push 通知
+│   ├── gkill_server_api_access_log.go # アクセスログ
+│   ├── gkill_server_api_rate_limit.go # レートリミット
+│   └── handle_*.go              # 各エンドポイントのハンドラ（79ファイル）
 ├── find/                        # 検索クエリ型定義
 ├── gpslogs/                     # GPS ログパーサ
 ├── kftl/                        # KFTL パーサ → kftl/README.md 参照
@@ -28,59 +39,70 @@ api/
 └── embed/                       # ビルド生成物（.gitignore 対象）
 ```
 
-## ルートレベルファイル（11ファイル）
+## api/ ルートレベルファイル（7ファイル）
 
 | ファイル | 役割 |
 |---------|------|
-| `gkill_server_api.go` | **メインハンドラファイル**（約557KB）。`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux ルーター設定と全76エンドポイントの登録 |
-| `gkill_server_api_address.go` | `GkillServerAPIAddress` 構造体 — 全エンドポイントの URL パス定義 |
 | `embed.go` | `//go:embed embed` ディレクティブ。ビルド時にフロントエンドの dist/ をバイナリに埋め込む |
 | `find_filter.go` | Kyou の検索フィルタロジック。FindQuery に基づいたデータ絞り込み |
 | `find_filter_helpers.go` | 検索フィルタのヘルパー関数群 |
+| `find_filter_test.go` | 検索フィルタのテスト |
 | `find_kyou_context.go` | Kyou 検索時のコンテキスト構造体 |
 | `gkill_version_data.go` | バージョンデータ構造体定義 |
 | `version.go` | ビルド時に埋め込まれるバージョン情報 |
-| `handle_submit_kftl_text.go` | `/api/submit_kftl_text` エンドポイントの独立ハンドラ |
-| `handle_get_kyous_mcp.go` | `/api/get_kyous_mcp` エンドポイントの独立ハンドラ |
-| `handle_update_cache.go` | `/api/update_cache` エンドポイントの独立ハンドラ |
 
 ## サブディレクトリ
 
-### `find/`（4ファイル）— 検索クエリ型定義
+### `gkill_server_api/`（94ファイル）— HTTP ハンドラ
+
+詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
+
+`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全78エンドポイントを登録する。
+各エンドポイントは `handle_*.go`（79ファイル、1ハンドラ1ファイル）として分割されている。
+ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
+
+### `find/`（5ファイル）— 検索クエリ型定義
+
+詳細は [find/README.md](find/README.md) を参照。
 
 | ファイル | 説明 |
 |---------|------|
-| `find_query.go` | `FindQuery` 構造体 — 検索条件（キーワード、日付範囲、タグ、データ型等） |
+| `find_query.go` | `FindQuery` 構造体 — 検索条件（62フィールド: キーワード、日付範囲、タグ、データ型等） |
 | `mi_check_state.go` | Mi（タスク）のチェック状態 enum |
 | `mi_sort_type.go` | Mi のソート順 enum |
 | `week_of_days.go` | 曜日フィルタ enum |
+| `find_query_test.go` | JSON シリアライズ・デシリアライズテスト |
 
-### `gpslogs/`（1ファイル）— GPS ログパーサ
+### `gpslogs/`（2ファイル）— GPS ログパーサ
 
 | ファイル | 説明 |
 |---------|------|
 | `google_location_history_data.go` | Google Location History の JSON/GPX データ構造体 |
+| `gpslogs_test.go` | GPS データパーステスト |
 
-### `message/`（4ファイル）— エラー/メッセージコード
+### `message/`（5ファイル）— エラー/メッセージコード
+
+詳細は [message/README.md](message/README.md) を参照。
 
 | ファイル | 説明 |
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用 |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数定義 |
-| `message_codes.go` | メッセージコード定数定義 |
+| `error_codes.go` | エラーコード定数（376定数） |
+| `message_codes.go` | メッセージコード定数（86定数） |
+| `message_test.go` | コード形式テスト |
 
-### `kftl/`（19ファイル）— KFTL パーサ
+### `kftl/`（24ファイル）— KFTL パーサ
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 
-### `req_res/`（155ファイル）— Request/Response 構造体
+### `req_res/`（166ファイル）— Request/Response 構造体
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
 
-## 全エンドポイント一覧（76エンドポイント）
+## 全エンドポイント一覧（78エンドポイント）
 
-全エンドポイントは `POST /api/` 配下に配置。`gkill_server_api.go` 内で gorilla/mux に登録。
+全エンドポイントは `POST /api/` 配下に配置。`gkill_server_api/serve.go` 内で gorilla/mux に登録。
 
 ### 認証系（5エンドポイント）
 
@@ -191,7 +213,7 @@ api/
 | `DeleteShareKyouListInfos` | 共有リスト情報削除 |
 | `GetSharedKyous` | 共有 Kyou 取得 |
 
-### 通知・TLS・トランザクション・その他（7エンドポイント）
+### 通知・TLS・トランザクション・その他（8エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -209,10 +231,10 @@ api/
 ### ハンドラの追加方法
 
 1. `req_res/` に Request/Response 構造体を追加
-2. `gkill_server_api_address.go` にアドレス定数を追加
-3. `gkill_server_api.go` にハンドラメソッドを実装
-4. `gkill_server_api.go` の `resetRouter()` 内で `router.HandleFunc()` を登録
-5. 独立したハンドラの場合は `handle_xxx.go` として分離可能
+2. `gkill_server_api/gkill_server_api_address.go` にアドレス定数を追加
+3. `gkill_server_api/handle_xxx.go` にハンドラメソッドを実装（1ハンドラ1ファイル）
+4. ビジネスロジックは `usecase/` 層に実装し、ハンドラから呼び出す
+5. `gkill_server_api/serve.go` の `resetRouter()` 内で `router.HandleFunc()` を登録
 
 ### 命名規則
 

@@ -18,13 +18,15 @@ server/
 ├── go.mod                     # Go モジュール定義
 ├── go.sum                     # 依存関係チェックサム
 └── gkill/
-    ├── api/                   # HTTP API ハンドラ → api/README.md
+    ├── api/                   # HTTP API 共通基盤 → api/README.md
+    │   ├── gkill_server_api/  # HTTP ハンドラ（79 handle_*.go + 認証・ルーティング）
     │   ├── embed/             # ビルド生成物（Vue SPA 埋め込み）
     │   ├── find/              # 検索クエリ型
     │   ├── gpslogs/           # GPS ログパーサ
     │   ├── kftl/              # KFTL パーサ → api/kftl/README.md
     │   ├── message/           # エラー/メッセージコード
     │   └── req_res/           # Request/Response 構造体 → api/req_res/README.md
+    ├── usecase/               # ユースケース層（HTTP 非依存ビジネスロジック）→ usecase/README.md
     ├── dao/                   # データアクセス層 → dao/README.md
     │   ├── account/           # アカウント
     │   ├── account_state/     # セッション・履歴
@@ -112,26 +114,32 @@ go build ./...
 
 - snake_case（例: `gkill_server_api.go`, `kmemo_repository_sqlite3_impl.go`）
 - OS 別実装: `*_windows.go`, `*_other.go`
-- テスト: 現在テストファイルは存在しない
+- テスト: `*_test.go`（`api/find_filter_test.go`, `api/gkill_server_api/` 内等）
 
 ### パッケージ構成
 
-- `api/` — HTTP 層。ビジネスロジックは含まない
+- `api/` — HTTP API 共通基盤（FindFilter、エラー/メッセージ型、リクエスト/レスポンス型、KFTL パーサ）と HTTP ハンドラ（`gkill_server_api/`）
+- `usecase/` — HTTP 非依存のビジネスロジック。ハンドラから呼び出される共通処理（追加・更新・取得）
 - `dao/` — データアクセス。SQL クエリとエンティティ定義
 - `main/` — エントリポイントと CLI。初期化ロジック
 - `dvnf/` — 独立したユーティリティ機能
 
 ### ハンドラパターン
 
-全ハンドラは `GkillServerAPI` 構造体のメソッドとして実装。
-リクエストの JSON デコード → バリデーション → リポジトリ操作 → レスポンス返却の流れ。
+全ハンドラは `gkill_server_api/` パッケージ内の `GkillServerAPI` 構造体のメソッドとして実装。
+リクエストの JSON デコード → バリデーション → ユースケース層呼び出し → レスポンス返却の流れ。
 
 ## 関連ドキュメント
 
-- [api/README.md](gkill/api/README.md) — HTTP API 層（全76エンドポイント一覧）
+- [api/README.md](gkill/api/README.md) — HTTP API 共通基盤・ハンドラ層（全78エンドポイント一覧）
+- [api/gkill_server_api/README.md](gkill/api/gkill_server_api/README.md) — HTTP ハンドラ（94ファイル）
 - [api/kftl/README.md](gkill/api/kftl/README.md) — KFTL パーサ
 - [api/req_res/README.md](gkill/api/req_res/README.md) — Request/Response 構造体
+- [api/message/README.md](gkill/api/message/README.md) — エラーコード・メッセージコード
+- [api/find/README.md](gkill/api/find/README.md) — 検索クエリ型定義
+- [usecase/README.md](gkill/usecase/README.md) — ユースケース層（HTTP 非依存ビジネスロジック）
 - [dao/README.md](gkill/dao/README.md) — データアクセス層
 - [dao/reps/README.md](gkill/dao/reps/README.md) — メインリポジトリ
 - [main/README.md](gkill/main/README.md) — CLI エントリポイント
+- [main/common/README.md](gkill/main/common/README.md) — CLI 共通基盤（ログ、オプション、スレッド管理）
 - [dvnf/README.md](gkill/dvnf/README.md) — データバージョニング
