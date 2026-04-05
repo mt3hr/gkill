@@ -727,6 +727,9 @@ func TestCachedReKyou_AddAndGet(t *testing.T) {
 	if got.TargetID != "target-001" {
 		t.Errorf("TargetID = %q, want %q", got.TargetID, "target-001")
 	}
+	if got.RepName != "rekyou" {
+		t.Errorf("RepName = %q, want %q", got.RepName, "rekyou")
+	}
 }
 
 // ===========================================================================

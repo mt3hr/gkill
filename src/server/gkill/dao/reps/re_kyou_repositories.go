@@ -2,8 +2,8 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
 	"sync"
 	"time"
@@ -16,6 +16,16 @@ import (
 type ReKyouRepositories struct {
 	ReKyouRepositories []ReKyouRepository
 	GkillRepositories  *GkillRepositories
+}
+
+func cloneRepositoriesWithoutReKyou(original *GkillRepositories, withoutRekyouReps Repositories) *GkillRepositories {
+	cloned := *original
+	cloned.Reps = append(Repositories(nil), withoutRekyouReps...)
+	cloned.ReKyouReps = ReKyouRepositories{
+		ReKyouRepositories: nil,
+		GkillRepositories:  &cloned,
+	}
+	return &cloned
 }
 
 func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
@@ -47,7 +57,6 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		existInRep := false
 		if rekyou.IsDeleted {
 			continue
 		}
@@ -56,31 +65,29 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 		}
 
 		// 存在すれば検索ヒットとする
-		if existInRep {
-			kyou := Kyou{}
-			kyou.IsDeleted = rekyou.IsDeleted
-			kyou.ID = rekyou.ID
-			kyou.RepName = rekyou.RepName
-			kyou.RelatedTime = rekyou.RelatedTime
-			kyou.DataType = rekyou.DataType
-			kyou.CreateTime = rekyou.CreateTime
-			kyou.CreateApp = rekyou.CreateApp
-			kyou.CreateDevice = rekyou.CreateDevice
-			kyou.CreateUser = rekyou.CreateUser
-			kyou.UpdateTime = rekyou.UpdateTime
-			kyou.UpdateApp = rekyou.UpdateApp
-			kyou.UpdateUser = rekyou.UpdateUser
-			kyou.UpdateDevice = rekyou.UpdateDevice
-			if _, exist := matchKyous[kyou.ID]; !exist {
-				matchKyous[kyou.ID] = []Kyou{}
-			}
-
-			key := kyou.ID
-			if !query.OnlyLatestData {
-				key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
-			}
-			matchKyous[key] = append(matchKyous[key], kyou)
+		kyou := Kyou{}
+		kyou.IsDeleted = rekyou.IsDeleted
+		kyou.ID = rekyou.ID
+		kyou.RepName = rekyou.RepName
+		kyou.RelatedTime = rekyou.RelatedTime
+		kyou.DataType = rekyou.DataType
+		kyou.CreateTime = rekyou.CreateTime
+		kyou.CreateApp = rekyou.CreateApp
+		kyou.CreateDevice = rekyou.CreateDevice
+		kyou.CreateUser = rekyou.CreateUser
+		kyou.UpdateTime = rekyou.UpdateTime
+		kyou.UpdateApp = rekyou.UpdateApp
+		kyou.UpdateUser = rekyou.UpdateUser
+		kyou.UpdateDevice = rekyou.UpdateDevice
+		if _, exist := matchKyous[kyou.ID]; !exist {
+			matchKyous[kyou.ID] = []Kyou{}
 		}
+
+		key := kyou.ID
+		if !query.OnlyLatestData {
+			key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
+		}
+		matchKyous[key] = append(matchKyous[key], kyou)
 	}
 	return matchKyous, nil
 }
@@ -302,18 +309,14 @@ func (r *ReKyouRepositories) GetRepName(ctx context.Context) (string, error) {
 }
 
 func (r *ReKyouRepositories) Close(ctx context.Context) error {
-	reps, err := r.UnWrapTyped()
-	if err != nil {
-		return err
-	}
-
 	existErr := false
+	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(reps))
+	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range reps {
+	for _, rep := range r.ReKyouRepositories {
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			err := rep.Close(ctx)
@@ -375,18 +378,13 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		existInRep := false
 		if rekyou.IsDeleted {
 			continue
 		}
 		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
 			continue
 		}
-
-		// 存在すれば検索ヒットとする
-		if existInRep {
-			matchReKyous = append(matchReKyous, rekyou)
-		}
+		matchReKyous = append(matchReKyous, rekyou)
 	}
 	return matchReKyous, nil
 }
@@ -534,17 +532,21 @@ loop:
 }
 
 func (r *ReKyouRepositories) GetReKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]ReKyou, error) {
+	repImpls, err := r.UnWrapTyped()
+	if err != nil {
+		return nil, err
+	}
+
 	kyouHistories := map[string]ReKyou{}
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []ReKyou, len(r.ReKyouRepositories))
-	errch := make(chan error, len(r.ReKyouRepositories))
+	ch := make(chan []ReKyou, len(repImpls))
+	errch := make(chan error, len(repImpls))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r.ReKyouRepositories {
+	for _, rep := range repImpls {
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
@@ -733,11 +735,7 @@ func (r *ReKyouRepositories) GetRepositoriesWithoutReKyouRep(ctx context.Context
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
 
-	withoutRekyouGkillRepsValue := r.GkillRepositories
-	withoutRekyouGkillRepsValue.Reps = withoutRekyouReps
-	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = withoutRekyouGkillRepsValue
-	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
-	return withoutRekyouGkillRepsValue, nil
+	return cloneRepositoriesWithoutReKyou(r.GkillRepositories, withoutRekyouReps), nil
 }
 
 func (r *ReKyouRepositories) UnWrapTyped() ([]ReKyouRepository, error) {
