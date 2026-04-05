@@ -85,7 +85,7 @@ export enum GkillErrorCodes {
     kc_title_is_blank = "ERR900084",
     kc_num_value_is_blank = "ERR900085",
     required_certificate = "ERR900086",
-    copied_local_share_kyou_link = "ERR900087"
+    copied_local_share_kyou_link = "ERR900087",
+    network_error = "ERR900088"
 }
-
 
