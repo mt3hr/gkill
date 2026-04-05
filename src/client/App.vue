@@ -214,6 +214,10 @@ body::-webkit-scrollbar {
   overflow-y: auto;
 }
 
+.kyou_detail_view.dummy {
+  background-color: rgb(var(--v-theme-background));
+}
+
 /* mkfl ダイアログだけ例外 */
 .mkfl_dialog.gkill-float-scrim .v-card {
   overflow-y: hidden;
