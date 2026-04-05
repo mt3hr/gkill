@@ -597,16 +597,13 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *fin
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		existInRep := false
 		if rekyou.IsDeleted {
 			continue
 		}
 		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
 			continue
 		}
-		if existInRep {
-			matchReKyous = append(matchReKyous, rekyou)
-		}
+		matchReKyous = append(matchReKyous, rekyou)
 	}
 	return matchReKyous, nil
 }
@@ -1192,11 +1189,7 @@ func (r *reKyouRepositorySQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx contex
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
 
-	withoutRekyouGkillRepsValue := r.gkillRepositories
-	withoutRekyouGkillRepsValue.Reps = withoutRekyouReps
-	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = withoutRekyouGkillRepsValue
-	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
-	return withoutRekyouGkillRepsValue, nil
+	return cloneRepositoriesWithoutReKyou(r.gkillRepositories, withoutRekyouReps), nil
 }
 
 func (r *reKyouRepositorySQLite3Impl) UnWrapTyped() ([]ReKyouRepository, error) {

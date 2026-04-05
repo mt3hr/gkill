@@ -1,6 +1,7 @@
 package reps
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"cmp"
 	"slices"
 	"sync"
 	"sync/atomic"
@@ -421,10 +421,6 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 	var matchKyou *Kyou
 	matchKyousInRep := []Kyou{}
 	var err error
-	ch := make(chan *Kyou, len(g.Reps))
-	errch := make(chan error, len(g.Reps))
-	defer close(ch)
-	defer close(errch)
 
 	latestDataRepositoryAddress, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddress(ctx, id)
 	if err != nil {
@@ -432,7 +428,12 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 		return nil, err
 	}
 
-	for _, rep := range g.Reps {
+	repImpls, err := g.Reps.UnWrap()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rep := range repImpls {
 		repName, err := rep.GetRepName(ctx)
 		if err != nil {
 			return nil, err
@@ -486,6 +487,39 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	g.cancelPreFunc = cancelFunc
 
 	var err error
+	persistLatestDataRepositoryAddresses := func(addrs []gkill_cache.LatestDataRepositoryAddress, now time.Time) error {
+		allLatestDataRepositoryAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{}
+		for _, addr := range addrs {
+			if existing, exist := allLatestDataRepositoryAddresses[addr.TargetID]; !exist || existing.DataUpdateTime.Before(addr.DataUpdateTime) {
+				addr.LatestDataRepositoryAddressUpdatedTime = now
+				allLatestDataRepositoryAddresses[addr.TargetID] = addr
+			}
+		}
+
+		latestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(allLatestDataRepositoryAddresses))
+		for _, addr := range allLatestDataRepositoryAddresses {
+			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
+		}
+
+		updatedLatestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
+		if err != nil {
+			return fmt.Errorf("error at update latest data repository address cache data: %w", err)
+		}
+
+		if g.LatestDataRepositoryAddresses == nil {
+			g.LatestDataRepositoryAddresses = map[string]gkill_cache.LatestDataRepositoryAddress{}
+		}
+		for _, updatedLatestDataRepositoryAddress := range updatedLatestDataRepositoryAddresses {
+			g.LatestDataRepositoryAddresses[updatedLatestDataRepositoryAddress.TargetID] = updatedLatestDataRepositoryAddress
+		}
+
+		_, err = g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, updatedLatestDataRepositoryAddresses)
+		if err != nil {
+			return fmt.Errorf("error at update latest data repository address cache data: %w", err)
+		}
+		g.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
+		return nil
+	}
 
 	// Phase 1: UpdateCacheは逐次実行する。並列にするとcachedDBのmutexでデッドロックが発生するため、意図的に逐次処理にしている。
 	updateCacheTargets := []interface {
@@ -531,26 +565,23 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	for _, addr := range allLatestDataRepositoryAddresses {
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
 	}
-
-	updatedLatestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
-	if err != nil {
-		err = fmt.Errorf("error at update latest data repository address cache data: %w", err)
+	if err := persistLatestDataRepositoryAddresses(latestDataRepositoryAddresses, now); err != nil {
 		return err
 	}
 
-	if g.LatestDataRepositoryAddresses == nil {
-		g.LatestDataRepositoryAddresses = map[string]gkill_cache.LatestDataRepositoryAddress{}
-	}
-	for _, updatedLatestDataRepositoryAddress := range updatedLatestDataRepositoryAddresses {
-		g.LatestDataRepositoryAddresses[updatedLatestDataRepositoryAddress.TargetID] = updatedLatestDataRepositoryAddress
-	}
+	if gkill_options.CacheReKyouReps != nil && *gkill_options.CacheReKyouReps && len(g.ReKyouReps.ReKyouRepositories) > 0 {
+		if err := g.ReKyouReps.UpdateCache(ctx); err != nil {
+			return err
+		}
 
-	_, err = g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, updatedLatestDataRepositoryAddresses)
-	if err != nil {
-		err = fmt.Errorf("error at update latest data repository address cache data: %w", err)
-		return err
+		reKyouAddrs, err := g.ReKyouReps.GetLatestDataRepositoryAddress(ctx, false)
+		if err != nil {
+			return err
+		}
+		if err := persistLatestDataRepositoryAddresses(reKyouAddrs, time.Now()); err != nil {
+			return err
+		}
 	}
-	g.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
 
 	if _, err := g.CacheMemoryDB.Exec(`ANALYZE;`); err != nil {
 		return fmt.Errorf("ANALYZE: %w", err)
