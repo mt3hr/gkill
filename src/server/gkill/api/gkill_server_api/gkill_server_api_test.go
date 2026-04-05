@@ -4401,6 +4401,16 @@ func TestHandleGetAllRepNames(t *testing.T) {
 	if len(getResp.RepNames) == 0 {
 		t.Error("RepNames is empty, expected at least one repository name")
 	}
+	foundReKyou := false
+	for _, repName := range getResp.RepNames {
+		if repName == "rekyou" {
+			foundReKyou = true
+			break
+		}
+	}
+	if !foundReKyou {
+		t.Errorf("RepNames missing rekyou repository: %#v", getResp.RepNames)
+	}
 }
 
 func TestHandleGetAllRepNames_InvalidSession(t *testing.T) {
