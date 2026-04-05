@@ -170,6 +170,7 @@ import type { DiscardTXResponse } from "./req_res/discard-tx-response"
 import type { BrowseZipContentsRequest } from "./req_res/browse-zip-contents-request"
 import type { BrowseZipContentsResponse } from "./req_res/browse-zip-contents-response"
 import { i18n } from "@/i18n"
+import { GkillErrorCodes } from "./message/gkill_error"
 import { TagStructElementData } from "../datas/config/tag-struct-element-data"
 import { DeviceStructElementData } from "../datas/config/device-struct-element-data"
 import { RepStructElementData } from "../datas/config/rep-struct-element-data"
@@ -2554,7 +2555,7 @@ export class GkillAPI {
                                 console.error('[GkillAPI] network error:', e)
                                 const body = {
                                         errors: [{
-                                                error_code: "NETWORK_ERROR",
+                                                error_code: GkillErrorCodes.network_error,
                                                 error_message: i18n.global.t('NETWORK_ERROR_MESSAGE')
                                         }],
                                         messages: []
