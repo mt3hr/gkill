@@ -3,17 +3,18 @@ package reps
 import (
 	"context"
 	sqllib "database/sql"
+	"errors"
 	"fmt"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 type reKyouRepositoryCachedSQLite3Impl struct {
@@ -652,14 +653,27 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (str
 func (r *reKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 	r.m.Lock()
 	defer r.m.Unlock()
+	errs := []error{}
 	if r.addReKyouInfoStmt != nil {
-		r.addReKyouInfoStmt.Close()
+		if err := r.addReKyouInfoStmt.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if r.rekyouRep != nil {
+		if err := r.rekyouRep.Close(ctx); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if gkill_options.CacheReKyouReps != nil && *gkill_options.CacheReKyouReps {
-		_, err := r.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(r.dbName))
-		return err
+		if _, err := r.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+sqlite3impl.QuoteIdent(r.dbName)); err != nil {
+			errs = append(errs, err)
+		}
+		return errors.Join(errs...)
 	}
-	return r.cachedDB.Close()
+	if err := r.cachedDB.Close(); err != nil {
+		errs = append(errs, err)
+	}
+	return errors.Join(errs...)
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
@@ -693,16 +707,13 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindReKyou(ctx context.Context, quer
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		existInRep := false
 		if rekyou.IsDeleted {
 			continue
 		}
 		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
 			continue
 		}
-		if existInRep {
-			matchReKyous = append(matchReKyous, rekyou)
-		}
+		matchReKyous = append(matchReKyous, rekyou)
 	}
 	return matchReKyous, nil
 }
@@ -958,6 +969,23 @@ WHERE
 func (r *reKyouRepositoryCachedSQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou ReKyou) error {
 	r.m.Lock()
 	defer r.m.Unlock()
+	if rekyou.RepName == "" {
+		if r.gkillRepositories != nil && r.gkillRepositories.WriteReKyouRep != nil {
+			repName, err := r.gkillRepositories.WriteReKyouRep.GetRepName(ctx)
+			if err == nil && repName != "" {
+				rekyou.RepName = repName
+			}
+		}
+		if rekyou.RepName == "" && r.rekyouRep != nil {
+			repImpls, err := r.rekyouRep.UnWrapTyped()
+			if err == nil && len(repImpls) == 1 {
+				repName, err := repImpls[0].GetRepName(ctx)
+				if err == nil && repName != "" {
+					rekyou.RepName = repName
+				}
+			}
+		}
+	}
 	queryArgs := []any{
 		rekyou.IsDeleted,
 		rekyou.ID,
@@ -1129,30 +1157,27 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx 
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
 
-	withoutRekyouGkillRepsValue := r.gkillRepositories
-	withoutRekyouGkillRepsValue.Reps = withoutRekyouReps
-	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = withoutRekyouGkillRepsValue
-	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
-	return withoutRekyouGkillRepsValue, nil
+	return cloneRepositoriesWithoutReKyou(r.gkillRepositories, withoutRekyouReps), nil
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UnWrapTyped() ([]ReKyouRepository, error) {
-	return []ReKyouRepository{r}, nil
+	if r.rekyouRep == nil {
+		return []ReKyouRepository{r}, nil
+	}
+	return r.rekyouRep.UnWrapTyped()
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
-	return []Repository{r}, nil
+	if r.rekyouRep == nil {
+		return []Repository{r}, nil
+	}
+	return r.rekyouRep.UnWrap()
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
-	repName, err := r.GetRepName(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, NULL AS TARGET_ID_IN_DATA,
-       ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
+       REP_NAME AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME_UNIX AS DATA_UPDATE_TIME_UNIX
 FROM ` + sqlite3impl.QuoteIdent(r.dbName) + ` AS T
 WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.QuoteIdent(r.dbName) + ` AS INNER_TABLE WHERE INNER_TABLE.ID = T.ID)
 `
@@ -1162,7 +1187,7 @@ WHERE T.UPDATE_TIME_UNIX = (SELECT MAX(UPDATE_TIME_UNIX) FROM ` + sqlite3impl.Qu
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, repName)
+	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		return nil, err
 	}
