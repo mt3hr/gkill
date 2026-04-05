@@ -351,17 +351,21 @@ loop:
 }
 
 func (r Repositories) GetKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]Kyou, error) {
+	repImpls, err := r.UnWrap()
+	if err != nil {
+		return nil, err
+	}
+
 	kyouHistories := map[string]Kyou{}
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []Kyou, len(r))
-	errch := make(chan error, len(r))
+	ch := make(chan []Kyou, len(repImpls))
+	errch := make(chan error, len(repImpls))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r {
+	for _, rep := range repImpls {
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			if repName != nil {
