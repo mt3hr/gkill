@@ -710,6 +710,9 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		}
 
 		sortedKyous := slices.Collect(maps.Values(trimedKyousMap))
+		if len(sortedKyous) == 0 {
+			continue
+		}
 		slices.SortFunc(sortedKyous, func(a, b reps.Kyou) int {
 			return b.RelatedTime.Compare(a.RelatedTime)
 		})
