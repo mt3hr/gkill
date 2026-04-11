@@ -251,7 +251,7 @@ INSERT INTO IDF (
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) HandleFileServe(w http.ResponseWriter, r *http.Request) {
-	panic("not implemented yet, use HandleFileServe method of idfKyouRepositorySQLite3Impl instead")
+	http.Error(w, "not implemented: use HandleFileServe method of idfKyouRepositorySQLite3Impl", http.StatusInternalServerError)
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]Kyou, error) {
