@@ -1390,7 +1390,7 @@ WHERE
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) IDF(ctx context.Context) error {
-	panic("not implemented")
+	return i.idfRep.IDF(ctx)
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou IDFKyou) error {
