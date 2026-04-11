@@ -19,6 +19,7 @@ import (
 func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	var err error
 	router := g.GkillDAOManager.GetRouter()
+	router.Use(g.recoverMiddleware)
 	router.Use(g.accessLogMiddleware)
 	// --- PathPrefix routes (wrapNoAuth) ---
 	router.PathPrefix("/files/").HandlerFunc(g.wrapNoAuth(g.HandleFileServe))
