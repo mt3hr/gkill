@@ -87,7 +87,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTLSFileNamesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -103,7 +103,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RemoveCertFileError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -116,7 +116,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RemovePemFileError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -143,7 +143,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -171,7 +171,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -182,7 +182,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -209,7 +209,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GenerateTLSFilesError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -226,7 +226,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -266,7 +266,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -282,7 +282,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -294,7 +294,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -307,7 +307,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -318,7 +318,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -329,7 +329,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -342,7 +342,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -354,7 +354,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -365,7 +365,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -376,7 +376,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
