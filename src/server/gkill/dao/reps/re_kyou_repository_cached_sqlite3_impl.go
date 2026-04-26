@@ -173,6 +173,22 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 		return nil, err
 	}
 
+	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
+	wordMatchTargetIDs := map[string]bool{}
+	useWordFilter := query.UseWords && (len(query.Words) > 0 || len(query.NotWords) > 0)
+	if useWordFilter {
+		wordMatchKyousMap, err := repsWithoutRekyou.Reps.FindKyous(ctx, query)
+		if err != nil {
+			err = fmt.Errorf("error at find kyous for word filter: %w", err)
+			return nil, err
+		}
+		for _, kyous := range wordMatchKyousMap {
+			for _, kyou := range kyous {
+				wordMatchTargetIDs[kyou.ID] = true
+			}
+		}
+	}
+
 	for _, rekyou := range notDeletedAllReKyous {
 		existInRep := false
 		for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
@@ -197,6 +213,13 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 		}
 		if !matchID {
 			continue
+		}
+
+		// ワードフィルタが有効な場合、TargetIDがマッチしなければスキップ
+		if useWordFilter {
+			if !wordMatchTargetIDs[rekyou.TargetID] {
+				continue
+			}
 		}
 
 		if existInRep {
