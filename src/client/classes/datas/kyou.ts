@@ -44,6 +44,7 @@ export class Kyou extends InfoBase {
     typed_idf_kyou: IDFKyou | null
     typed_git_commit_log: GitCommitLog | null
     typed_rekyou: ReKyou | null
+    is_typed_data_loaded: boolean
 
     async load_attached_histories(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         if (this.data_type.startsWith("git")) {
@@ -93,6 +94,9 @@ export class Kyou extends InfoBase {
     }
 
     async load_typed_datas(query?: FindKyouQuery): Promise<Array<GkillError>> {
+        if (this.is_typed_data_loaded) {
+            return []
+        }
         let errors = new Array<GkillError>()
         if (this.data_type.startsWith("kmemo")) {
             const e = await this.load_typed_kmemo(query)
@@ -134,6 +138,7 @@ export class Kyou extends InfoBase {
             const e = await this.load_typed_rekyou(query)
             errors = errors.concat(e)
         }
+        this.is_typed_data_loaded = true
         return errors
     }
 
@@ -683,6 +688,17 @@ export class Kyou extends InfoBase {
         cloned_kyou.update_device = this.update_device
         cloned_kyou.update_user = this.update_user
         cloned_kyou.image_source = this.image_source
+        cloned_kyou.typed_kmemo = this.typed_kmemo
+        cloned_kyou.typed_kc = this.typed_kc
+        cloned_kyou.typed_urlog = this.typed_urlog
+        cloned_kyou.typed_nlog = this.typed_nlog
+        cloned_kyou.typed_timeis = this.typed_timeis
+        cloned_kyou.typed_mi = this.typed_mi
+        cloned_kyou.typed_lantana = this.typed_lantana
+        cloned_kyou.typed_idf_kyou = this.typed_idf_kyou
+        cloned_kyou.typed_git_commit_log = this.typed_git_commit_log
+        cloned_kyou.typed_rekyou = this.typed_rekyou
+        cloned_kyou.is_typed_data_loaded = this.is_typed_data_loaded
         return cloned_kyou
     }
 
@@ -709,6 +725,7 @@ export class Kyou extends InfoBase {
         this.typed_idf_kyou = null
         this.typed_git_commit_log = null
         this.typed_rekyou = null
+        this.is_typed_data_loaded = false
     }
 
 }
