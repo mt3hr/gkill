@@ -358,6 +358,9 @@ export function useRykvView(options: {
                 return
             }
 
+            // typed_dataを事前並列ロードしてから表示することで、
+            // アイテムマウント時に即座に内容が表示されるようにする
+            await Promise.all(res.kyous.map(k => k.load_typed_datas()))
             match_kyous_list.value[column_index] = res.kyous
             if (!props.is_shared_rykv_view) {
                 if (is_show_kyou_count_calendar.value || is_show_dnote.value) {
