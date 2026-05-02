@@ -284,6 +284,9 @@ export function useDnoteView(options: {
 
         const trimed_kyous_map = new Map<string, Kyou>()
         for (let i = 0; i < kyous.length; i++) {
+            if (trimed_kyous_map.has(kyous[i].id) && trimed_kyous_map.get(kyous[i].id)!.update_time.getTime() > kyous[i].update_time.getTime()) {
+                continue
+            }
             trimed_kyous_map.set(kyous[i].id, kyous[i])
         }
         const trimed_kyous = new Array<Kyou>()
