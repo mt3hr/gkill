@@ -81,9 +81,6 @@ export function useKyouView(options: {
 
     // ── Initialization (IIFE) ──
     ;(async () => {
-        if (props.force_show_latest_kyou_info) {
-            await cloned_kyou.value.reload(true, props.force_show_latest_kyou_info);//最新を読み込むためにReload
-        }
         load_attached_infos()
     })(); //非同期で実行してほしい
 
