@@ -298,7 +298,7 @@ export function useDnoteView(options: {
         }
         estimate_aggregate_task.value += dnote_list_item_table_view_data.value.length
 
-        const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous, true, true)
+        const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous, false, true)
         const kyou_is_loaded = true
         const waitPromises = new Array<Promise<unknown>>()
         waitPromises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
