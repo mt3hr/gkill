@@ -48,7 +48,7 @@
                                     :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                                     :is_readonly_mi_check="true" :enable_context_menu="enable_context_menu"
                                     :enable_dialog="enable_dialog" :show_attached_timeis="false" :show_rep_name="true"
-                                    :force_show_latest_kyou_info="false" :show_update_time="false"
+                                    :force_show_latest_kyou_info="force_show_latest_kyou_info" :show_update_time="false"
                                     :show_related_time="!(query.for_mi && kyou.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
                                     :show_attached_tags="false" :show_attached_texts="false"
                                     :show_attached_notifications="false" :is_image_request_to_thumb_size="true"
