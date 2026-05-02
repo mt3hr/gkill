@@ -12,7 +12,7 @@ export default async function load_kyous(abort_controller: AbortController, kyou
             kyou.abort_controller = abort_controller
         }
         if (get_latest_data) {
-            await kyou.reload(false, true)
+            await kyou.reload(false, false)
         }
         if (clone || get_latest_data) {
             waitPromises.push(kyou.load_typed_datas())
