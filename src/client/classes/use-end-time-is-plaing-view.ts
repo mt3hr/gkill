@@ -27,9 +27,9 @@ export function useEndTimeIsPlaingView(options: {
     const timeis_start_date_typed: Ref<Date> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).toDate() : new Date(0))
     const timeis_start_date_string: Ref<string> = computed(() => moment(timeis_start_date_typed.value).format("YYYY-MM-DD"))
     const timeis_start_time_string: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).format("HH:mm:ss") : "")
-    const timeis_end_date_typed: Ref<Date | null> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).toDate() : null)
+    const timeis_end_date_typed: Ref<Date | null> = ref(moment().toDate())
     const timeis_end_date_string: Ref<string> = computed(() => timeis_end_date_typed.value ? moment(timeis_end_date_typed.value).format("YYYY-MM-DD") : "")
-    const timeis_end_time_string: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : "")
+    const timeis_end_time_string: Ref<string> = ref(moment().format("HH:mm:ss"))
 
     const show_start_date_menu = ref(false)
     const show_start_time_menu = ref(false)
