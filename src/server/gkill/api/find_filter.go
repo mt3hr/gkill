@@ -8,6 +8,7 @@ import (
 	"maps"
 	"math"
 	"slices"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -726,6 +727,9 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 
 	if (findCtx.ParsedFindQuery.UsePlaing) || (findCtx.ParsedFindQuery.ForMi) {
 		for id := range resultKyous {
+			sort.Slice(resultKyous[id], func(i, j int) bool {
+				return resultKyous[id][i].UpdateTime.After(resultKyous[id][j].UpdateTime)
+			})
 			resultKyous[id] = []reps.Kyou{resultKyous[id][0]}
 		}
 	}
@@ -1529,4 +1533,3 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	findCtx.MatchKyousCurrent = latestKyousMap
 	return nil, nil
 }
-
