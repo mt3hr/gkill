@@ -14,6 +14,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 export interface RyuuDefinition {
     name: string
@@ -303,7 +304,21 @@ export function useRyuuView(options: {
         emits('registered_notification', registered_notification)
     }
 
+    async function reload_kyou_in_opened_dialogs(kyou: Kyou): Promise<void> {
+        for (let i = 0; i < opened_dialogs.value.length; i++) {
+            if (opened_dialogs.value[i].kyou.id === kyou.id) {
+                const updated_kyou = kyou.clone()
+                await delete_gkill_kyou_cache(kyou.id)
+                await updated_kyou.reload(false, true)
+                updated_kyou.is_typed_data_loaded = false
+                await updated_kyou.load_all()
+                opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
+            }
+        }
+    }
+
     function onUpdatedKyou(updated_kyou: Kyou): void {
+        reload_kyou_in_opened_dialogs(updated_kyou)
         emits('updated_kyou', updated_kyou)
     }
 
@@ -328,6 +343,7 @@ export function useRyuuView(options: {
     }
 
     function onRequestedReloadKyou(kyou: Kyou): void {
+        reload_kyou_in_opened_dialogs(kyou)
         emits('requested_reload_kyou', kyou)
     }
 
