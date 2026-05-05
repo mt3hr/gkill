@@ -9,6 +9,7 @@ import type { Notification } from '@/classes/datas/notification'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 export function useSharedMiView(options: {
     props: SharedMiViewProps,
@@ -52,14 +53,20 @@ export function useSharedMiView(options: {
             const kyou_in_list = kyous_list[j]
             if (kyou.id === kyou_in_list.id) {
                 const updated_kyou = kyou.clone()
+                await delete_gkill_kyou_cache(kyou.id)
                 await updated_kyou.reload(false, true)
+                updated_kyou.is_typed_data_loaded = false
                 await updated_kyou.load_all()
-                kyous_list.splice(j, 1, updated_kyou)
+                const new_list = [...match_kyous.value]
+                new_list[j] = updated_kyou
+                match_kyous.value = new_list
             }
         }
         if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
             const updated_kyou = kyou.clone()
+            await delete_gkill_kyou_cache(kyou.id)
             await updated_kyou.reload(false, true)
+            updated_kyou.is_typed_data_loaded = false
             await updated_kyou.load_all()
             focused_kyou.value = updated_kyou
         }
