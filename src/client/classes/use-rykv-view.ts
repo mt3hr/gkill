@@ -196,9 +196,13 @@ export function useRykvView(options: {
                     const kyou_in_list = kyous_list[j]
                     if (kyou.id === kyou_in_list.id) {
                         const updated_kyou = kyou.clone()
+                        await delete_gkill_kyou_cache(kyou.id)
                         await updated_kyou.reload(false, true)
+                        updated_kyou.is_typed_data_loaded = false
                         await updated_kyou.load_all()
-                        kyous_list.splice(j, 1, updated_kyou)
+                        const new_kyous_list = [...kyous_list]
+                        new_kyous_list[j] = updated_kyou
+                        match_kyous_list.value[i] = new_kyous_list
                     }
                 }
             }
