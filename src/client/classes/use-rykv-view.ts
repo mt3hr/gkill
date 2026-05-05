@@ -215,6 +215,18 @@ export function useRykvView(options: {
                 focused_kyou.value = updated_kyou
             }
         })();
+        (async (): Promise<void> => {
+            for (let i = 0; i < opened_dialogs.value.length; i++) {
+                if (opened_dialogs.value[i].kyou.id === kyou.id) {
+                    const updated_kyou = kyou.clone()
+                    await delete_gkill_kyou_cache(kyou.id)
+                    await updated_kyou.reload(false, true)
+                    updated_kyou.is_typed_data_loaded = false
+                    await updated_kyou.load_all()
+                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
+                }
+            }
+        })();
     }
 
     async function reload_list(column_index: number): Promise<void> {
