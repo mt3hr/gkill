@@ -1308,7 +1308,7 @@ func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) 
 				kyous[0].RelatedTime = *mi.LimitTime
 			} else {
 				kyous[0].DataType = "mi_create"
-				kyous[0].RelatedTime = mi.CreateTime
+				kyous[0].RelatedTime = mi.UpdateTime
 			}
 
 		}

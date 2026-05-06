@@ -1,6 +1,7 @@
 import { i18n } from '@/i18n'
 import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import type { rykvViewEmits } from '@/pages/views/rykv-view-emits'
@@ -188,6 +189,21 @@ export function useRykvView(options: {
         emits('deleted_kyou', deletedKyou)
     }
 
+    function build_mi_reload_query(base_query: FindKyouQuery, data_type: string): FindKyouQuery | undefined {
+        if (!data_type.startsWith("mi")) {
+            return undefined
+        }
+        const q = base_query.clone()
+        q.for_mi = true
+        switch (data_type) {
+            case "mi_start": q.mi_sort_type = MiSortType.estimate_start_time; break
+            case "mi_end": q.mi_sort_type = MiSortType.estimate_end_time; break
+            case "mi_limit": q.mi_sort_type = MiSortType.limit_time; break
+            default: q.mi_sort_type = MiSortType.create_time; break
+        }
+        return q
+    }
+
     async function reload_kyou(kyou: Kyou): Promise<void> {
         (async (): Promise<void> => {
             for (let i = 0; i < match_kyous_list.value.length; i++) {
@@ -195,9 +211,10 @@ export function useRykvView(options: {
                 for (let j = 0; j < kyous_list.length; j++) {
                     const kyou_in_list = kyous_list[j]
                     if (kyou.id === kyou_in_list.id) {
+                        const reload_query = build_mi_reload_query(querys.value[i], kyou_in_list.data_type)
                         const updated_kyou = kyou.clone()
                         await delete_gkill_kyou_cache(kyou.id)
-                        await updated_kyou.reload(false, true)
+                        await updated_kyou.reload(false, true, reload_query)
                         updated_kyou.is_typed_data_loaded = false
                         await updated_kyou.load_all()
                         const new_kyous_list = [...kyous_list]
@@ -209,8 +226,15 @@ export function useRykvView(options: {
         })();
         (async (): Promise<void> => {
             if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
+                let reload_query: FindKyouQuery | undefined
+                for (let i = 0; i < match_kyous_list.value.length; i++) {
+                    if (match_kyous_list.value[i].some(k => k.id === kyou.id)) {
+                        reload_query = build_mi_reload_query(querys.value[i], focused_kyou.value.data_type)
+                        break
+                    }
+                }
                 const updated_kyou = kyou.clone()
-                await updated_kyou.reload(false, true)
+                await updated_kyou.reload(false, true, reload_query)
                 await updated_kyou.load_all()
                 focused_kyou.value = updated_kyou
             }
@@ -218,9 +242,16 @@ export function useRykvView(options: {
         (async (): Promise<void> => {
             for (let i = 0; i < opened_dialogs.value.length; i++) {
                 if (opened_dialogs.value[i].kyou.id === kyou.id) {
+                    let reload_query: FindKyouQuery | undefined
+                    for (let j = 0; j < match_kyous_list.value.length; j++) {
+                        if (match_kyous_list.value[j].some(k => k.id === kyou.id)) {
+                            reload_query = build_mi_reload_query(querys.value[j], opened_dialogs.value[i].kyou.data_type)
+                            break
+                        }
+                    }
                     const updated_kyou = kyou.clone()
                     await delete_gkill_kyou_cache(kyou.id)
-                    await updated_kyou.reload(false, true)
+                    await updated_kyou.reload(false, true, reload_query)
                     updated_kyou.is_typed_data_loaded = false
                     await updated_kyou.load_all()
                     opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
@@ -637,13 +668,33 @@ export function useRykvView(options: {
     }
 
     function open_rykv_dialog(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void {
+        const dialog_id = props.gkill_api.generate_uuid()
         opened_dialogs.value.push({
-            id: props.gkill_api.generate_uuid(),
+            id: dialog_id,
             kind,
             kyou: kyou.clone(),
             payload: payload ?? null,
             opened_at: Date.now(),
         })
+        ;(async (): Promise<void> => {
+                let reload_query: FindKyouQuery | undefined
+                for (let i = 0; i < match_kyous_list.value.length; i++) {
+                    if (match_kyous_list.value[i].some(k => k.id === kyou.id)) {
+                        reload_query = build_mi_reload_query(querys.value[i], kyou.data_type)
+                        break
+                    }
+                }
+                const updated_kyou = kyou.clone()
+                await updated_kyou.reload(false, true, reload_query)
+                updated_kyou.is_typed_data_loaded = false
+                await updated_kyou.load_all()
+                for (let i = 0; i < opened_dialogs.value.length; i++) {
+                    if (opened_dialogs.value[i].id === dialog_id) {
+                        opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
+                        break
+                    }
+                }
+            })()
     }
 
     function close_rykv_dialog(dialog_id: string): void {
