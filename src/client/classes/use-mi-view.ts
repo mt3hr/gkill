@@ -254,9 +254,16 @@ export function useMiView(options: {
         (async (): Promise<void> => {
             for (let i = 0; i < opened_dialogs.value.length; i++) {
                 if (opened_dialogs.value[i].kyou.id === kyou.id) {
+                    let column_query: FindKyouQuery | undefined
+                    for (let j = 0; j < match_kyous_list.value.length; j++) {
+                        if (match_kyous_list.value[j].some(k => k.id === kyou.id)) {
+                            column_query = querys.value[j]
+                            break
+                        }
+                    }
                     const updated_kyou = kyou.clone()
                     await delete_gkill_kyou_cache(kyou.id)
-                    await updated_kyou.reload(false, true)
+                    await updated_kyou.reload(false, true, column_query)
                     updated_kyou.is_typed_data_loaded = false
                     await updated_kyou.load_all()
                     opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
@@ -633,13 +640,33 @@ export function useMiView(options: {
     }
 
     function open_rykv_dialog(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void {
+        const dialog_id = props.gkill_api.generate_uuid()
         opened_dialogs.value.push({
-            id: props.gkill_api.generate_uuid(),
+            id: dialog_id,
             kind,
             kyou: kyou.clone(),
             payload: payload ?? null,
             opened_at: Date.now(),
         })
+        ;(async (): Promise<void> => {
+            let column_query: FindKyouQuery | undefined
+            for (let i = 0; i < match_kyous_list.value.length; i++) {
+                if (match_kyous_list.value[i].some(k => k.id === kyou.id)) {
+                    column_query = querys.value[i]
+                    break
+                }
+            }
+            const updated_kyou = kyou.clone()
+            await updated_kyou.reload(false, true, column_query)
+            updated_kyou.is_typed_data_loaded = false
+            await updated_kyou.load_all()
+            for (let i = 0; i < opened_dialogs.value.length; i++) {
+                if (opened_dialogs.value[i].id === dialog_id) {
+                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
+                    break
+                }
+            }
+        })()
     }
 
     function close_rykv_dialog(dialog_id: string): void {

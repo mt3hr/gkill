@@ -429,6 +429,11 @@ export class Kyou extends InfoBase {
                 match_mi = mi
             }
         })
+        if (!match_mi && res.mi_histories.length > 0) {
+            match_mi = res.mi_histories.reduce((latest, mi) =>
+                mi.update_time > latest.update_time ? mi : latest
+            )
+        }
         this.typed_mi = match_mi
         return new Array<GkillError>()
     }
@@ -649,21 +654,32 @@ export class Kyou extends InfoBase {
             await this.load_typed_mi()
             if (this.typed_mi) {
                 switch (query.mi_sort_type) {
-                    case MiSortType.create_time:
-                        this.related_time = this.create_time
-                        this.data_type = "mi_create"
-                        break;
                     case MiSortType.estimate_start_time:
-                        this.related_time = this.typed_mi?.estimate_start_time ? this.typed_mi.estimate_start_time : this.create_time
-                        this.data_type = "mi_start"
+                        if (this.typed_mi?.estimate_start_time) {
+                            this.related_time = this.typed_mi.estimate_start_time
+                            this.data_type = "mi_start"
+                        } else {
+                            this.related_time = this.create_time
+                            this.data_type = "mi_create"
+                        }
                         break;
                     case MiSortType.estimate_end_time:
-                        this.related_time = this.typed_mi?.estimate_end_time ? this.typed_mi.estimate_end_time : this.create_time
-                        this.data_type = "mi_end"
+                        if (this.typed_mi?.estimate_end_time) {
+                            this.related_time = this.typed_mi.estimate_end_time
+                            this.data_type = "mi_end"
+                        } else {
+                            this.related_time = this.create_time
+                            this.data_type = "mi_create"
+                        }
                         break;
                     case MiSortType.limit_time:
-                        this.related_time = this.typed_mi?.limit_time ? this.typed_mi.limit_time : this.create_time
-                        this.data_type = "mi_limit"
+                        if (this.typed_mi?.limit_time) {
+                            this.related_time = this.typed_mi.limit_time
+                            this.data_type = "mi_limit"
+                        } else {
+                            this.related_time = this.create_time
+                            this.data_type = "mi_create"
+                        }
                         break;
                 }
             }
