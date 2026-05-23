@@ -3544,10 +3544,15 @@ func (a *allDataDB) getGkillIDFKyous() ([]*reps.IDFKyou, error) {
 		}
 		fileMetadata.IsDeleted = false
 		fileMetadata.CreateApp = "idf"
-		fileMetadata.CreateDevice = strings.Split(fileMetadata.RepName, "_")[1]
+		repNameParts := strings.Split(fileMetadata.RepName, "_")
+		deviceName := repNameParts[0]
+		if len(repNameParts) > 1 {
+			deviceName = repNameParts[1]
+		}
+		fileMetadata.CreateDevice = deviceName
 		fileMetadata.CreateUser = a.UserName
 		fileMetadata.UpdateApp = "idf"
-		fileMetadata.UpdateDevice = strings.Split(fileMetadata.RepName, "_")[1]
+		fileMetadata.UpdateDevice = deviceName
 		fileMetadata.UpdateUser = a.UserName
 		fileMetadata.CreateTime = time
 		fileMetadata.UpdateTime = time
