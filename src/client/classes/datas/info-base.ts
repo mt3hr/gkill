@@ -34,12 +34,19 @@ export abstract class InfoBase {
     attached_notifications: Array<Notification>
     attached_timeis_kyou: Array<Kyou>
     is_checked_kyou: boolean
+    is_attached_tags_loaded: boolean
+    is_attached_texts_loaded: boolean
+    is_attached_notifications_loaded: boolean
+    is_attached_timeis_loaded: boolean
 
     async load_all(): Promise<Array<GkillError>> {
         return this.load_attached_datas()
     }
 
     async load_attached_tags(): Promise<Array<GkillError>> {
+        if (this.is_attached_tags_loaded) {
+            return []
+        }
         const errors = new Array<GkillError>()
         const req = new GetTagsByTargetIDRequest()
         req.abort_controller = this.abort_controller
@@ -50,10 +57,14 @@ export abstract class InfoBase {
             return res.errors
         }
         this.attached_tags = res.tags
+        this.is_attached_tags_loaded = true
         return errors
     }
 
     async load_attached_texts(): Promise<Array<GkillError>> {
+        if (this.is_attached_texts_loaded) {
+            return []
+        }
         const errors = new Array<GkillError>()
         const req = new GetTextsByTargetIDRequest()
         req.abort_controller = this.abort_controller
@@ -64,10 +75,14 @@ export abstract class InfoBase {
             return res.errors
         }
         this.attached_texts = res.texts
+        this.is_attached_texts_loaded = true
         return errors
     }
 
     async load_attached_notifications(): Promise<Array<GkillError>> {
+        if (this.is_attached_notifications_loaded) {
+            return []
+        }
         const errors = new Array<GkillError>()
         const req = new GetNotificationsByTargetIDRequest()
         req.abort_controller = this.abort_controller
@@ -78,10 +93,14 @@ export abstract class InfoBase {
             return res.errors
         }
         this.attached_notifications = res.notifications
+        this.is_attached_notifications_loaded = true
         return errors
     }
 
     async load_attached_timeis(): Promise<Array<GkillError>> {
+        if (this.is_attached_timeis_loaded) {
+            return []
+        }
         const errors = new Array<GkillError>()
         const req = new GetKyousRequest()
         req.abort_controller = this.abort_controller
@@ -134,6 +153,7 @@ export abstract class InfoBase {
             await res.kyous[i].load_typed_timeis()
         }
         this.attached_timeis_kyou = res.kyous
+        this.is_attached_timeis_loaded = true
         return errors
     }
 
@@ -154,21 +174,25 @@ export abstract class InfoBase {
 
     async clear_attached_tags(): Promise<Array<GkillError>> {
         this.attached_tags = []
+        this.is_attached_tags_loaded = false
         return new Array<GkillError>()
     }
 
     async clear_attached_texts(): Promise<Array<GkillError>> {
         this.attached_texts = []
+        this.is_attached_texts_loaded = false
         return new Array<GkillError>()
     }
 
     async clear_attached_notifications(): Promise<Array<GkillError>> {
         this.attached_notifications = []
+        this.is_attached_notifications_loaded = false
         return new Array<GkillError>()
     }
 
     async clear_attached_timeis(): Promise<Array<GkillError>> {
         this.attached_timeis_kyou = []
+        this.is_attached_timeis_loaded = false
         return new Array<GkillError>()
     }
 
@@ -177,6 +201,10 @@ export abstract class InfoBase {
         this.attached_texts = []
         this.attached_notifications = []
         this.attached_timeis_kyou = []
+        this.is_attached_tags_loaded = false
+        this.is_attached_texts_loaded = false
+        this.is_attached_notifications_loaded = false
+        this.is_attached_timeis_loaded = false
         return new Array<GkillError>()
     }
 
@@ -202,5 +230,9 @@ export abstract class InfoBase {
         this.attached_notifications = new Array<Notification>()
         this.attached_timeis_kyou = new Array<Kyou>()
         this.is_checked_kyou = false
+        this.is_attached_tags_loaded = false
+        this.is_attached_texts_loaded = false
+        this.is_attached_notifications_loaded = false
+        this.is_attached_timeis_loaded = false
     }
 }
