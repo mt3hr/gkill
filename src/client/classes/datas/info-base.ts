@@ -43,8 +43,8 @@ export abstract class InfoBase {
         return this.load_attached_datas()
     }
 
-    async load_attached_tags(): Promise<Array<GkillError>> {
-        if (this.is_attached_tags_loaded) {
+    async load_attached_tags(force = false): Promise<Array<GkillError>> {
+        if (this.is_attached_tags_loaded && !force) {
             return []
         }
         const errors = new Array<GkillError>()
@@ -61,8 +61,8 @@ export abstract class InfoBase {
         return errors
     }
 
-    async load_attached_texts(): Promise<Array<GkillError>> {
-        if (this.is_attached_texts_loaded) {
+    async load_attached_texts(force = false): Promise<Array<GkillError>> {
+        if (this.is_attached_texts_loaded && !force) {
             return []
         }
         const errors = new Array<GkillError>()
@@ -79,8 +79,8 @@ export abstract class InfoBase {
         return errors
     }
 
-    async load_attached_notifications(): Promise<Array<GkillError>> {
-        if (this.is_attached_notifications_loaded) {
+    async load_attached_notifications(force = false): Promise<Array<GkillError>> {
+        if (this.is_attached_notifications_loaded && !force) {
             return []
         }
         const errors = new Array<GkillError>()
@@ -97,8 +97,8 @@ export abstract class InfoBase {
         return errors
     }
 
-    async load_attached_timeis(): Promise<Array<GkillError>> {
-        if (this.is_attached_timeis_loaded) {
+    async load_attached_timeis(force = false): Promise<Array<GkillError>> {
+        if (this.is_attached_timeis_loaded && !force) {
             return []
         }
         const errors = new Array<GkillError>()
@@ -157,12 +157,12 @@ export abstract class InfoBase {
         return errors
     }
 
-    async load_attached_datas(): Promise<Array<GkillError>> {
+    async load_attached_datas(force = false): Promise<Array<GkillError>> {
         const awaitPromises = new Array<Promise<Array<GkillError>>>()
-        awaitPromises.push(this.load_attached_tags())
-        awaitPromises.push(this.load_attached_texts())
-        awaitPromises.push(this.load_attached_notifications())
-        awaitPromises.push(this.load_attached_timeis())
+        awaitPromises.push(this.load_attached_tags(force))
+        awaitPromises.push(this.load_attached_texts(force))
+        awaitPromises.push(this.load_attached_notifications(force))
+        awaitPromises.push(this.load_attached_timeis(force))
         return Promise.all(awaitPromises).then((errors_list) => {
             const errors = new Array<GkillError>()
             errors_list.forEach(e => {

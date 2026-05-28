@@ -62,12 +62,12 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_all(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_all(query?: FindKyouQuery, forceAttached = false): Promise<Array<GkillError>> {
         const awaitPromises = new Array<Promise<Array<GkillError>>>()
         try {
             awaitPromises.push(this.load_typed_datas(query))
             awaitPromises.push(this.load_attached_histories(query))
-            awaitPromises.push(this.load_attached_datas())
+            awaitPromises.push(this.load_attached_datas(forceAttached))
             return Promise.all(awaitPromises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {
@@ -142,13 +142,13 @@ export class Kyou extends InfoBase {
         return errors
     }
 
-    async load_attached_datas(): Promise<Array<GkillError>> {
+    async load_attached_datas(force = false): Promise<Array<GkillError>> {
         const awaitPromises = new Array<Promise<Array<GkillError>>>()
         try {
-            awaitPromises.push(this.load_attached_tags())
-            awaitPromises.push(this.load_attached_texts())
-            awaitPromises.push(this.load_attached_notifications())
-            awaitPromises.push(this.load_attached_timeis())
+            awaitPromises.push(this.load_attached_tags(force))
+            awaitPromises.push(this.load_attached_texts(force))
+            awaitPromises.push(this.load_attached_notifications(force))
+            awaitPromises.push(this.load_attached_timeis(force))
             awaitPromises.push(this.load_attached_histories())
             return Promise.all(awaitPromises).then((errors_list) => {
                 const errors = new Array<GkillError>()
