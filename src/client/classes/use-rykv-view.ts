@@ -216,7 +216,7 @@ export function useRykvView(options: {
                         await delete_gkill_kyou_cache(kyou.id)
                         await updated_kyou.reload(false, true, reload_query)
                         updated_kyou.is_typed_data_loaded = false
-                        await updated_kyou.load_all()
+                        await updated_kyou.load_all(reload_query, true)
                         const new_kyous_list = [...kyous_list]
                         new_kyous_list[j] = updated_kyou
                         match_kyous_list.value[i] = new_kyous_list
@@ -235,7 +235,7 @@ export function useRykvView(options: {
                 }
                 const updated_kyou = kyou.clone()
                 await updated_kyou.reload(false, true, reload_query)
-                await updated_kyou.load_all()
+                await updated_kyou.load_all(reload_query, true)
                 focused_kyou.value = updated_kyou
             }
         })();
@@ -253,7 +253,7 @@ export function useRykvView(options: {
                     await delete_gkill_kyou_cache(kyou.id)
                     await updated_kyou.reload(false, true, reload_query)
                     updated_kyou.is_typed_data_loaded = false
-                    await updated_kyou.load_all()
+                    await updated_kyou.load_all(reload_query, true)
                     opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
                 }
             }
@@ -698,7 +698,7 @@ export function useRykvView(options: {
                 const updated_kyou = kyou.clone()
                 await updated_kyou.reload(false, true, reload_query)
                 updated_kyou.is_typed_data_loaded = false
-                await updated_kyou.load_all()
+                await updated_kyou.load_all(reload_query, true)
                 for (let i = 0; i < opened_dialogs.value.length; i++) {
                     if (opened_dialogs.value[i].id === dialog_id) {
                         opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
