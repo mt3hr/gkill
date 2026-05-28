@@ -28,7 +28,7 @@ export function useMiSortTypeQuery(options: { props: miSortTypeQueryProps, emits
     })
 
     const use_sort_type = ref(true)
-    const sort_type: Ref<MiSortType> = ref(MiSortType.create_time)
+    const sort_type: Ref<MiSortType> = ref(MiSortType.estimate_start_time)
 
     watch(() => sort_type.value, () => {
         if (!skip_emits_for_prop_change.value) {
