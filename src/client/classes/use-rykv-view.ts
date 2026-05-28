@@ -535,6 +535,15 @@ export function useRykvView(options: {
         gps_log_map_start_time.value = kyou.related_time
         gps_log_map_end_time.value = kyou.related_time
         gps_log_map_marker_time.value = kyou.related_time
+        if (inited.value && kyou_list_views.value) {
+            for (let i = 0; i < querys.value.length; i++) {
+                if (querys.value[i].is_focus_kyou_in_list_view) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const kyou_list_view = kyou_list_views.value[i] as any
+                    kyou_list_view?.scroll_to_time(kyou.related_time)
+                }
+            }
+        }
     }
 
     async function update_check_kyous(_kyou: Array<Kyou>, _is_checked: boolean): Promise<void> {
@@ -606,7 +615,9 @@ export function useRykvView(options: {
         focused_column_index.value = index
         focused_query.value = querys.value[index]
         clicked_kyou_in_list_view(index, kyou)
-        onFocusedKyouFromSubView(kyou)
+        gps_log_map_start_time.value = kyou.related_time
+        gps_log_map_end_time.value = kyou.related_time
+        gps_log_map_marker_time.value = kyou.related_time
     }
 
     function onColumnRequestedChangeFocusKyou(index: number, is_focus: boolean): void {
