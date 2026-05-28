@@ -721,6 +721,14 @@ export class Kyou extends InfoBase {
         cloned_kyou.typed_git_commit_log = this.typed_git_commit_log
         cloned_kyou.typed_rekyou = this.typed_rekyou
         cloned_kyou.is_typed_data_loaded = this.is_typed_data_loaded
+        cloned_kyou.attached_tags = this.attached_tags.slice()
+        cloned_kyou.attached_texts = this.attached_texts.slice()
+        cloned_kyou.attached_notifications = this.attached_notifications.slice()
+        cloned_kyou.attached_timeis_kyou = this.attached_timeis_kyou.slice()
+        cloned_kyou.is_attached_tags_loaded = this.is_attached_tags_loaded
+        cloned_kyou.is_attached_texts_loaded = this.is_attached_texts_loaded
+        cloned_kyou.is_attached_notifications_loaded = this.is_attached_notifications_loaded
+        cloned_kyou.is_attached_timeis_loaded = this.is_attached_timeis_loaded
         return cloned_kyou
     }
 
