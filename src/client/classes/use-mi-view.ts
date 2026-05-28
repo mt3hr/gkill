@@ -235,7 +235,7 @@ export function useMiView(options: {
                         await delete_gkill_kyou_cache(kyou.id)
                         await updated_kyou.reload(false, true, querys.value[i])
                         updated_kyou.is_typed_data_loaded = false
-                        await updated_kyou.load_all()
+                        await updated_kyou.load_all(querys.value[i], true)
                         const new_kyous_list = [...kyous_list]
                         new_kyous_list[j] = updated_kyou
                         match_kyous_list.value[i] = new_kyous_list
@@ -247,7 +247,7 @@ export function useMiView(options: {
             if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
                 const updated_kyou = kyou.clone()
                 await updated_kyou.reload(false, true)
-                await updated_kyou.load_all()
+                await updated_kyou.load_all(undefined, true)
                 focused_kyou.value = updated_kyou
             }
         })();
@@ -265,7 +265,7 @@ export function useMiView(options: {
                     await delete_gkill_kyou_cache(kyou.id)
                     await updated_kyou.reload(false, true, column_query)
                     updated_kyou.is_typed_data_loaded = false
-                    await updated_kyou.load_all()
+                    await updated_kyou.load_all(column_query, true)
                     opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
                 }
             }
@@ -659,7 +659,7 @@ export function useMiView(options: {
             const updated_kyou = kyou.clone()
             await updated_kyou.reload(false, true, column_query)
             updated_kyou.is_typed_data_loaded = false
-            await updated_kyou.load_all()
+            await updated_kyou.load_all(column_query, true)
             for (let i = 0; i < opened_dialogs.value.length; i++) {
                 if (opened_dialogs.value[i].id === dialog_id) {
                     opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
