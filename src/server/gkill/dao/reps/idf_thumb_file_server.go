@@ -40,11 +40,18 @@ var (
 )
 
 func init() {
-	var err error
-	_, err = exec.LookPath("ffmpeg")
-	existFFMPEG = err == nil
-	_, err = exec.LookPath("ffprobe")
-	existFFPROBE = err == nil
+	_, existFFMPEG = findInPath("ffmpeg")
+	_, existFFPROBE = findInPath("ffprobe")
+}
+
+func findInPath(name string) (string, bool) {
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
+		full := filepath.Join(dir, name)
+		if info, err := os.Stat(full); err == nil && !info.IsDir() {
+			return full, true
+		}
+	}
+	return "", false
 }
 
 var (
