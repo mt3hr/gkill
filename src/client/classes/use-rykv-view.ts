@@ -567,7 +567,12 @@ export function useRykvView(options: {
     }
 
     function onSidebarRequestedSearch(update_cache: boolean): void {
-        nextTick(() => search(focused_column_index.value, querys.value[focused_column_index.value], true, update_cache))
+        const current_query = querys.value[focused_column_index.value]
+        if (current_query.use_calendar && current_query.calendar_start_date && current_query.calendar_end_date) {
+            gps_log_map_start_time.value = current_query.calendar_start_date
+            gps_log_map_end_time.value = current_query.calendar_end_date
+        }
+        nextTick(() => search(focused_column_index.value, current_query, true, update_cache))
     }
 
     function onSidebarUpdatedQuery(new_query: FindKyouQuery): void {
