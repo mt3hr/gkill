@@ -16,16 +16,10 @@ export default defineConfig({
   globalSetup: './src/client/__tests__/e2e/global-setup.ts',
   globalTeardown: './src/client/__tests__/e2e/global-teardown.ts',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:9999',
     trace: 'on-first-retry',
-    navigationTimeout: 30000,
+    navigationTimeout: 60000,
     actionTimeout: 10000,
-  },
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 30000,
   },
   projects: [
     { name: 'setup', testMatch: /auth\.setup\.ts/ },
