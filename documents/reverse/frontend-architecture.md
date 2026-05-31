@@ -31,7 +31,7 @@ src/client/
 │   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,400行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (150ファイル、サーバー側は164ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (160ファイル、サーバー側は172ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (44 ステートメント型)
@@ -53,8 +53,8 @@ src/client/
 │   ├── regist-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
-│   ├── views/                       # Viewコンポーネント (175)
-│   └── dialogs/                     # ダイアログコンポーネント (93, Esc閉じ対応)
+│   ├── views/                       # Viewコンポーネント (177)
+│   └── dialogs/                     # ダイアログコンポーネント (94, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -74,8 +74,8 @@ Page（ルートページ）
 | 層 | 配置 | 件数 | 責務 |
 |---|---|---|---|
 | **Page** | `pages/*.vue` | 14 | ルーティング先。ページ全体のレイアウト（12ルート＋共有用2ページ） |
-| **View** | `pages/views/*.vue` | 175 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 93 | モーダル操作（確認、詳細編集等） |
+| **View** | `pages/views/*.vue` | 177 | データ型ごとの追加/編集/一覧表示 |
+| **Dialog** | `pages/dialogs/*.vue` | 94 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -83,9 +83,25 @@ Page（ルートページ）
 - View: データ型 + 操作で命名（例: `add-kmemo-view.vue`, `kyou-list-view.vue`）
 - Dialog: 操作内容で命名（例: `confirm-delete-dialog.vue`）
 
+### プラグインビューコンポーネント
+
+プラグインKyou（`typed_plugin` フィールドが非 null のKyou）の表示には専用コンポーネントを使用する:
+
+| コンポーネント | 説明 |
+|---|---|
+| `plugin-html-view.vue` | `GetPluginContentHTMLResponse.html` を iframe srcdoc に展開して表示。postMessage でダークテーマ通知・高さ動的調整を行う |
+| `plugin-html-context-menu.vue` | プラグインKyou用コンテキストメニュー（タグ追加・テキスト追加・リポスト等）|
+| `plugin-config-dialog.vue` | `GetPluginConfigHTMLResponse.html` を iframe srcdoc に展開してプラグイン設定フォームを表示 |
+
+**postMessage 通信パターン:**
+- 親 → iframe: `{ gkill_theme: 'dark' | 'light' }` — テーマ変更通知（CSS変数切替用）
+- iframe → 親: `{ gkill_iframe_size: { width, height } }` — コンテンツサイズ通知（iframe高さ自動調整用）
+
+**iframe セキュリティ:** `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）でセッションCookieを隔離する。
+
 ### ダイアログ アクセシビリティ
 
-全93ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
+全94ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
 
 | 機能 | 説明 |
 |------|------|
@@ -159,13 +175,18 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 
 | キャッシュ名 | 対象 | 説明 |
 |---|---|---|
-| `gkill-post-kyou-cache` | データ系エンドポイント | get_kyou, get_kmemo 等のPOSTレスポンスをキャッシュ |
+| `gkill-post-kyou-cache` | データ系エンドポイント | get_kyou, get_kmemo, get_plugin_content_html 等のPOSTレスポンスをキャッシュ |
 | `gkill-post-config-cache` | 設定系エンドポイント | get_application_config, get_all_tag_names 等 |
 
 **キャッシュ有効性検証:**
 - `_histories` フィールドの存在チェック
 - `errors` 配列が空であること
 - `force_reget` パラメータでキャッシュバイパス可能
+
+**キャッシュキー識別子:**
+- 通常の Kyou データ: `body.id` または `body.target_id` をキャッシュキーの識別子として使用
+- プラグインコンテンツ HTML（`/api/get_plugin_content_html`）: `body.kyou_id` を使用（命名が異なる点に注意）
+  - キャッシュキー: `/cache/api/plugin_content_html/{kyou_id}`
 
 **SPAフォールバック:**
 - `/`、`/api/*`、`/files/*`、`/zip_cache/*` 以外の全パスを `index.html` にフォールバック
@@ -275,7 +296,36 @@ Service Worker が `/share-target` POSTを処理：
 - `@typescript-eslint/no-empty-object-type`: error
 - 実行: `npm run lint`
 
-## 10. UX改善
+## 10. プラグイン HTML ビュー
+
+### コンポーネント構成
+
+| ファイル | 役割 |
+|---|---|
+| `pages/views/plugin-html-view.vue` | メイン View（iframe srcdoc でプラグイン HTML を表示） |
+| `pages/views/plugin-html-view-props.ts` | `PluginHtmlViewProps`（`KyouViewPropsBase` を拡張） |
+| `pages/views/plugin-html-context-menu.vue` | コンテキストメニュー（GitCommitLog と同項目） |
+| `pages/views/plugin-html-context-menu-props.ts` | `PluginHtmlContextMenuProps`（`= KyouViewPropsBase`） |
+| `classes/use-plugin-html-view.ts` | View レベル Composable（コンテキストメニュー表示・crudRelayHandlers） |
+| `classes/use-plugin-html-context-menu.ts` | コンテキストメニュー Composable |
+
+### iframe テーマ連携
+
+- `application_config.use_dark_theme` を `watch` し、変更時に iframe へ postMessage で通知
+  - メッセージ形式: `{ gkill_theme: 'dark' | 'light' }`
+  - 送信タイミング: iframe の `onload` イベント + `use_dark_theme` 変更時
+- `sandbox="allow-scripts allow-forms"`（`allow-same-origin` を付けないことでセッション Cookie アクセスを禁止）
+- iframe は `scrolling="no"` で自身のスクロールバーを非表示にし、スクロールを親コンポーネントに委譲
+
+### iframe 高さ自動調整
+
+- iframe 内コンテンツが `{ gkill_iframe_size: { width, height } }` を postMessage で送信
+- 親は `e.source === iframe_ref.value.contentWindow` を検証してから `iframe_content_height` を更新
+- `iframe height = iframe_content_height + 'px'`（コンテンツ高さ確定前は `80px` フォールバック）
+
+---
+
+## 11. UX改善
 
 ### オフラインバナー
 

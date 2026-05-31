@@ -27,6 +27,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 6. **[class-diagrams.md](class-diagrams.md)** — クラス図。Go/TypeScriptのコード構造とクラス階層を理解します。
 7. **[dvnf-rep-type-spec.md](dvnf-rep-type-spec.md)** — DVNF/RepType仕様。データバージョニングとリポジトリ種別の仕様です。
 8. **[program-spec.md](program-spec.md)** — 主要プログラム仕様。初期化フロー、DAO構成、APIハンドラ、キャッシュシステム等の詳細です。
+8.1. **[plugin-system.md](plugin-system.md)** — プラグインシステム仕様。外部バイナリ連携・stdio通信・SQLiteキャッシュ・テーマ連携・PWAキャッシュの詳細です。
 9. **[sequence-diagrams.md](sequence-diagrams.md)** — シーケンス図。主要な処理フロー（ログイン、データ登録、MCP OAuth等）を理解します。
 10. **[activity-diagrams.md](activity-diagrams.md)** — アクティビティ図。詳細な処理ロジックのフローチャートです。
 11. **[state-machines.md](state-machines.md)** — ステートマシン図。エンティティの状態遷移を理解します。
@@ -56,7 +57,8 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [class-diagrams.md](class-diagrams.md) | Go/TSクラス階層（Mermaid） | コード構造の理解、実装時の参照 |
 | [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) | DVNF命名規則・RepType仕様 | リポジトリ管理、データ型の理解 |
 | [program-spec.md](program-spec.md) | 主要プログラム仕様（初期化、DAO、API、キャッシュ） | アーキテクチャの深い理解 |
-| [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（23本: 正常系18 + 異常系5） | 処理フローの理解、デバッグ |
+| [plugin-system.md](plugin-system.md) | プラグインシステム仕様（stdio通信、SQLiteキャッシュ、テーマ連携、PWAキャッシュ） | プラグイン開発・カスタマイズ時 |
+| [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（24本: 正常系19 + 異常系5） | 処理フローの理解、デバッグ |
 | [activity-diagrams.md](activity-diagrams.md) | 処理ロジックのフローチャート | 詳細な処理手順の確認 |
 | [state-machines.md](state-machines.md) | エンティティ状態遷移図 | 状態管理ロジックの理解 |
 | [screen-transition.md](screen-transition.md) | ページ・ダイアログ遷移図 | UI実装・改修時の参照 |

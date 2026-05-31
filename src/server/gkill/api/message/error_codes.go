@@ -376,4 +376,12 @@ const (
 	LoginRateLimitError                                              = "ERR000374"
 	InvalidBrowseZipContentsRequestDataError                         = "ERR000375"
 	BrowseZipContentsError                                           = "ERR000376"
+	InvalidGetPluginListRequestDataError                             = "ERR000377"
+	GetPluginListError                                               = "ERR000378"
+	InvalidGetPluginContentHTMLRequestDataError                      = "ERR000379"
+	GetPluginContentHTMLError                                        = "ERR000380"
+	InvalidGetPluginConfigHTMLRequestDataError                       = "ERR000381"
+	GetPluginConfigHTMLError                                         = "ERR000382"
+	InvalidPostPluginConfigRequestDataError                          = "ERR000383"
+	PostPluginConfigError                                            = "ERR000384"
 )
