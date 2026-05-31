@@ -47,6 +47,9 @@ src/
   wear_os/    # Wear OS project (phone_companion/ + watch_app/)
   locales/    # i18n JSON files (ja, en, zh, ko, es, fr, de) — shared by frontend & backend
   tools/      # Utility scripts
+  plugins/    # Standalone plugin binaries (each has its own go.mod, manifest.json, executable)
+              #   examples/gkill_example/  — sample plugin (fixed Kyou response)
+              #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin
 ```
 
 ### Two Deployment Modes
@@ -77,11 +80,13 @@ Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.0)
 Key packages:
 - `gkill/api/` — Shared infrastructure: `embed.go` (`//go:embed` serves Vue SPA at `/`), `version.go`, `gkill_version_data.go`, `find_filter.go`, `find_filter_helpers.go`, `find_kyou_context.go`
 - `gkill/api/gkill_server_api/` — HTTP API handlers (85+ files, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
-- `gkill/api/req_res/` — Request/response structs for every endpoint (175 types)
+- `gkill/api/req_res/` — Request/response structs for every endpoint (172 files)
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
+- `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou` (stdio newline-delimited JSON)
+- `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{FindKyous, GetContentHTML, GetConfigHTML})` starts the stdio JSON message loop. Plugins are standalone binaries in `src/plugins/`
 - `gkill/usecase/` — HTTP-independent business logic (16 files). Extracted from handlers to enable reuse without HTTP context. Functions operate on DAO/repository types directly.
 - `gkill/dao/` — Data access layer with `GkillDAOManager` managing SQLite3 databases
-- `gkill/dao/reps/` — Repository interfaces and implementations for each data type
+- `gkill/dao/reps/` — Repository interfaces and implementations for each data type. `plugin_repository_impl.go` manages plugin subprocess lifecycle (start, mutex-guarded stdio, auto-restart on crash)
 - `gkill/main/common/` — Shared CLI commands, server initialization, logging
 - `gkill/main/common/gkill_options/` — CLI flag definitions and directory structure
 
@@ -89,7 +94,7 @@ Key packages:
 
 **Repository pattern:** Each data type has 4 implementation layers: `*_repository.go` (interface) → `*_repository_sqlite3_impl.go` → `*_repository_cached_sqlite3_impl.go` → `*_repository_temp_sqlite3_impl.go`
 
-**Core entity — "Kyou"** (record). Data types: kmemo (text), timeis (timestamps), lantana (mood 0-10), kc (numeric), nlog (expense), urlog (bookmark), mi (task), idf_kyou (file, with `is_zip` flag for .zip/.cbz), re_kyou (repost), tag, text, notification, git_commit_log, gps_log (GPS tracks).
+**Core entity — "Kyou"** (record). Data types: kmemo (text), timeis (timestamps), lantana (mood 0-10), kc (numeric), nlog (expense), urlog (bookmark), mi (task), idf_kyou (file, with `is_zip` flag for .zip/.cbz), re_kyou (repost), tag, text, notification, git_commit_log, gps_log (GPS tracks), plugin_kyou (external plugin data — `typed_plugin` field non-null in TypeScript `Kyou` class; `data_type` is plugin-defined e.g. `claude_conversation`).
 
 **Response structure:** All API responses include `messages []GkillMessage` and `errors []GkillError` (with `error_code` + `error_message`). HTTP 200 for normal responses (check `errors` array), 403 for access denied, 500 for unexpected errors.
 
@@ -98,7 +103,7 @@ Key packages:
 Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 7 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
 - `router/index.ts` — 12 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, set_new_password, regist_first_account, shared_page, shared_mi)
-- `pages/views/` — 175 view components, `pages/dialogs/` — 93 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser
+- `pages/views/` — 177 view components, `pages/dialogs/` — 94 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser and plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`)
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,400 lines), client-side API wrapper
 - `classes/kftl/` — KFTL parser (44 statement types)
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
