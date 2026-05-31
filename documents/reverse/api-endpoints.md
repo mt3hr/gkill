@@ -219,6 +219,47 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 | `/api/update_cache` | キャッシュ更新トリガー |
 | `/api/get_gkill_info` | アプリケーション情報取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。将来の拡張用と推定） |
 
+## プラグイン（4件）
+
+| パス | 説明 |
+|---|---|
+| `/api/get_plugin_list` | インストール済みプラグイン一覧取得（名前・バージョン・説明・rep_name・is_alive） |
+| `/api/get_plugin_content_html` | プラグイン Kyou のコンテンツ HTML 取得 |
+| `/api/get_plugin_config_html` | プラグイン設定画面 HTML 取得 |
+| `/api/post_plugin_config` | プラグイン設定フォームのデータ保存 |
+
+### get_plugin_list 詳細
+
+| 項目 | 内容 |
+|---|---|
+| リクエスト型 | `GetPluginListRequest` |
+| 主要フィールド | `session_id`, `locale_name` |
+| レスポンス型 | `GetPluginListResponse` |
+| レスポンスフィールド | `plugins: Array<PluginInfo>`（`name`, `version`, `description`, `data_type`, `rep_name`, `is_alive`） |
+| 備考 | `is_alive` はプラグインプロセスの生存状態を示す。プロセスが起動済みの場合 `true`、停止中は `false` |
+
+### get_plugin_content_html 詳細
+
+| 項目 | 内容 |
+|---|---|
+| リクエスト型 | `GetPluginContentHTMLRequest` |
+| 主要フィールド | `session_id`, `rep_name`, `kyou_id` |
+| レスポンス型 | `GetPluginContentHTMLResponse` |
+| レスポンスフィールド | `html` — iframe srcdoc に直接セット |
+| PWAキャッシュキー | `/cache/api/plugin_content_html/{kyou_id}` |
+| 備考 | キャッシュ識別子に `kyou_id` を使用（他エンドポイントの `id` / `target_id` とは命名が異なる） |
+
+### post_plugin_config 詳細
+
+| 項目 | 内容 |
+|---|---|
+| リクエスト型 | `PostPluginConfigRequest` |
+| 主要フィールド | `session_id`, `rep_name`, `form_data: Record<string, string>` |
+| レスポンス型 | `PostPluginConfigResponse` |
+| 備考 | `plugin-config-dialog.vue` の iframe srcdoc 内フォームの送信データを受け取り、プラグインプロセスの `post_config` コマンドへ転送する |
+
+---
+
 ## 非APIルート
 
 | パス | メソッド | 説明 |
@@ -232,9 +273,9 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 
 ## 補足
 
-- **合計:** POST エンドポイント 80件（うち78件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 4件
+- **合計:** POST エンドポイント 84件（うち82件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 4件
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（164ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（172ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（16ファイル）
 - `get_kftl_template` と `get_gkill_info` はアドレス定義（`gkill_server_api_address.go`）が存在するが、`HandleFunc` 登録もハンドラ関数実装も存在しない。コードベース全体を調査した結果、これらは**未実装のエンドポイント**であることが確認された。リクエストは404となる

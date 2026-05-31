@@ -163,6 +163,11 @@ type GkillServerAPIAddress struct {
 
 	BrowseZipContentsAddress string
 
+	GetPluginListAddress      string
+	GetPluginContentHTMLAddress string
+	GetPluginConfigHTMLAddress  string
+	PostPluginConfigAddress     string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -322,6 +327,11 @@ type GkillServerAPIAddress struct {
 	UpdateCacheMethod string
 
 	BrowseZipContentsMethod string
+
+	GetPluginListMethod      string
+	GetPluginContentHTMLMethod string
+	GetPluginConfigHTMLMethod  string
+	PostPluginConfigMethod     string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -488,5 +498,13 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateCacheMethod = "POST"
 	gkillAPIAddress.BrowseZipContentsAddress = "/api/browse_zip_contents"
 	gkillAPIAddress.BrowseZipContentsMethod = "POST"
+	gkillAPIAddress.GetPluginListAddress = "/api/get_plugin_list"
+	gkillAPIAddress.GetPluginListMethod = "POST"
+	gkillAPIAddress.GetPluginContentHTMLAddress = "/api/get_plugin_content_html"
+	gkillAPIAddress.GetPluginContentHTMLMethod = "POST"
+	gkillAPIAddress.GetPluginConfigHTMLAddress = "/api/get_plugin_config_html"
+	gkillAPIAddress.GetPluginConfigHTMLMethod = "POST"
+	gkillAPIAddress.PostPluginConfigAddress = "/api/post_plugin_config"
+	gkillAPIAddress.PostPluginConfigMethod = "POST"
 	return gkillAPIAddress
 }

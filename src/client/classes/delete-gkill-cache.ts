@@ -14,6 +14,7 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
         'tags_by_id',
         'texts_by_id',
         'gkill_notifications_by_id',
+        'plugin_content_html',
     ]
 
     const cache = await caches.open('gkill-post-kyou-cache')

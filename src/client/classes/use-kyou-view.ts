@@ -19,6 +19,7 @@ import type UrLogView from '@/pages/views/ur-log-view.vue'
 import type IdfKyouView from '@/pages/views/idf-kyou-view.vue'
 import type ReKyouView from '@/pages/views/re-kyou-view.vue'
 import type GitCommitLogView from '@/pages/views/git-commit-log-view.vue'
+import type PluginHtmlView from '@/pages/views/plugin-html-view.vue'
 
 export function useKyouView(options: {
     props: KyouViewProps,
@@ -37,6 +38,7 @@ export function useKyouView(options: {
     const idf_kyou_view = ref<InstanceType<typeof IdfKyouView> | null>(null)
     const rekyou_view = ref<InstanceType<typeof ReKyouView> | null>(null)
     const git_commit_log_view = ref<InstanceType<typeof GitCommitLogView> | null>(null)
+    const plugin_html_view = ref<InstanceType<typeof PluginHtmlView> | null>(null)
 
     // ── State refs ──
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
@@ -134,6 +136,7 @@ export function useKyouView(options: {
         idf_kyou_view.value?.show_context_menu(e)
         rekyou_view.value?.show_context_menu(e)
         git_commit_log_view.value?.show_context_menu(e)
+        plugin_html_view.value?.show_context_menu(e)
     }
 
     function show_kyou_dialog(): void {
@@ -185,6 +188,7 @@ export function useKyouView(options: {
         idf_kyou_view,
         rekyou_view,
         git_commit_log_view,
+        plugin_html_view,
 
         // State
         cloned_kyou,

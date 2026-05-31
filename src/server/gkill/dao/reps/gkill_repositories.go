@@ -68,6 +68,10 @@ type GkillRepositories struct {
 
 	GPSLogReps GPSLogRepositories
 
+	// PluginReps はプラグインリポジトリ一覧。Repsにも含まれる。
+	// APIハンドラがGetContentHTML等を呼ぶ際に使用する。
+	PluginReps []PluginRepository
+
 	WriteTagRep TagRepository
 
 	WriteTextRep TextRepository
@@ -338,8 +342,10 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 			queryLatestValue := query
 			queryLatest := queryLatestValue
 
-			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs == nil || len(query.IDs) == 0 {
+			// idsを指定されていなければ、最新であるもののIDのみを対象とする。
+			// ただしプラグインrepはLatestDataRepositoryAddressを使わないためスキップする。
+			_, isPlugin := rep.(PluginRepository)
+			if !isPlugin && (query.IDs == nil || len(query.IDs) == 0) {
 				ids := append([]string{}, query.IDs...)
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {

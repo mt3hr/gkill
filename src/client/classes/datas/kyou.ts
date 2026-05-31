@@ -44,6 +44,9 @@ export class Kyou extends InfoBase {
     typed_idf_kyou: IDFKyou | null
     typed_git_commit_log: GitCommitLog | null
     typed_rekyou: ReKyou | null
+    // typed_plugin は既存のデータ型に該当しないプラグインKyouの場合にセットされる。
+    // rep_name でプラグインを特定し、GetContentHTML でView HTMLを取得する。
+    typed_plugin: { rep_name: string } | null
     is_typed_data_loaded: boolean
 
     async load_attached_histories(_query?: FindKyouQuery): Promise<Array<GkillError>> {
@@ -137,6 +140,12 @@ export class Kyou extends InfoBase {
         if (this.data_type.startsWith("rekyou")) {
             const e = await this.load_typed_rekyou(query)
             errors = errors.concat(e)
+        }
+        // 上記いずれにも該当しない場合はプラグインKyouとして扱う
+        if (!this.typed_kmemo && !this.typed_kc && !this.typed_urlog && !this.typed_nlog &&
+            !this.typed_timeis && !this.typed_mi && !this.typed_lantana && !this.typed_idf_kyou &&
+            !this.typed_git_commit_log && !this.typed_rekyou) {
+            this.typed_plugin = { rep_name: this.rep_name }
         }
         this.is_typed_data_loaded = true
         return errors
@@ -720,6 +729,7 @@ export class Kyou extends InfoBase {
         cloned_kyou.typed_idf_kyou = this.typed_idf_kyou
         cloned_kyou.typed_git_commit_log = this.typed_git_commit_log
         cloned_kyou.typed_rekyou = this.typed_rekyou
+        cloned_kyou.typed_plugin = this.typed_plugin
         cloned_kyou.is_typed_data_loaded = this.is_typed_data_loaded
         cloned_kyou.attached_tags = this.attached_tags.slice()
         cloned_kyou.attached_texts = this.attached_texts.slice()
@@ -755,6 +765,7 @@ export class Kyou extends InfoBase {
         this.typed_idf_kyou = null
         this.typed_git_commit_log = null
         this.typed_rekyou = null
+        this.typed_plugin = null
         this.is_typed_data_loaded = false
     }
 

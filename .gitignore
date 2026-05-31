@@ -4,6 +4,7 @@
 /release/*
 /**/embed/**/*
 /**/assets/*
+/**/*.exe
 
 ~$*
 *.asta.lock

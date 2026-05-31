@@ -93,6 +93,13 @@
                 :enable_dialog="enable_dialog"
                 v-on="crudRelayHandlers"
                 ref="git_commit_log_view" />
+            <PluginHtmlView v-if="cloned_kyou.typed_plugin"
+                :kyou="cloned_kyou" :application_config="application_config"
+                :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                :height="height" :width="width"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                v-on="crudRelayHandlers"
+                ref="plugin_html_view" />
         </div>
         <div v-if="!show_content_only">
             <AttachedText v-for="attached_text in cloned_kyou.attached_texts" :text="attached_text"
@@ -125,6 +132,7 @@ import NlogView from './nlog-view.vue'
 import ReKyouView from './re-kyou-view.vue'
 import TimeIsView from './time-is-view.vue'
 import URLogView from './ur-log-view.vue'
+import PluginHtmlView from './plugin-html-view.vue'
 
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { KyouViewProps } from './kyou-view-props'
@@ -145,6 +153,7 @@ const {
     idf_kyou_view,
     rekyou_view,
     git_commit_log_view,
+    plugin_html_view,
 
     // State
     cloned_kyou,
