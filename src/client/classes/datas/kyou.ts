@@ -142,9 +142,15 @@ export class Kyou extends InfoBase {
             errors = errors.concat(e)
         }
         // 上記いずれにも該当しない場合はプラグインKyouとして扱う
-        if (!this.typed_kmemo && !this.typed_kc && !this.typed_urlog && !this.typed_nlog &&
-            !this.typed_timeis && !this.typed_mi && !this.typed_lantana && !this.typed_idf_kyou &&
-            !this.typed_git_commit_log && !this.typed_rekyou) {
+        // data_typeが既知のプレフィックスにマッチしなかった場合のみプラグインとして扱う
+        // （APIエラーでload失敗した既知data_typeをプラグインとして誤判定しないようにするため）
+        const is_known_data_type =
+            this.data_type.startsWith("kmemo") || this.data_type.startsWith("kc") ||
+            this.data_type.startsWith("urlog") || this.data_type.startsWith("nlog") ||
+            this.data_type.startsWith("timeis") || this.data_type.startsWith("mi") ||
+            this.data_type.startsWith("lantana") || this.data_type.startsWith("idf") ||
+            this.data_type.startsWith("git") || this.data_type.startsWith("rekyou")
+        if (!is_known_data_type) {
             this.typed_plugin = { rep_name: this.rep_name }
         }
         this.is_typed_data_loaded = true
