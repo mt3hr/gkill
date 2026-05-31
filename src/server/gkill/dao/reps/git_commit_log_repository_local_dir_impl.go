@@ -596,8 +596,11 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 	var matchGitCommitLog *GitCommitLog
 	logs, err := g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash(id)})
 	if err != nil {
-		return nil, nil
-		// return err
+		// Log(From: hash) が失敗した場合（Android環境など）は Log(All: true) でフォールバック
+		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
+		if err != nil {
+			return nil, nil
+		}
 	}
 	defer func() { logs.Close() }()
 
