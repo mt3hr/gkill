@@ -1284,7 +1284,8 @@ WHERE
 		return nil, err
 	}
 	if len(gitCommitLog) == 0 {
-		return nil, nil
+		// SQLiteにデータがない場合（キャッシュ未構築など）はraw git実装にフォールバック
+		return g.gitRep.GetGitCommitLog(ctx, id, updateTime)
 	}
 	return &gitCommitLog[0], nil
 }
