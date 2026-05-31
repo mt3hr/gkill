@@ -117,6 +117,43 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         }
       })()
     )
+  } else if (request.method === 'POST' &&
+    url.pathname === '/api/get_plugin_content_html') {
+    event.respondWith(
+      (async () => {
+        try {
+          const reqClone1 = request.clone()
+          const reqClone2 = request.clone()
+
+          const body = await reqClone1.json()
+          const force_reget = parseBoolLoose(body.force_reget)
+          const id = body.kyou_id
+
+          const cacheKey = `/cache/api/plugin_content_html/${id}`
+
+          const kyou_cache = await caches.open('gkill-post-kyou-cache')
+          if (!force_reget) {
+            const cached = await kyou_cache.match(cacheKey)
+            if (cached) return cached
+          }
+
+          const response = await fetch(reqClone2)
+          if (await shouldCacheResponse(response, true)) {
+            kyou_cache.put(cacheKey, response.clone())
+          }
+          return response
+
+        } catch (err: unknown) {
+          if (err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            return Response.error()
+          } else {
+            // abort以外はエラー出力する
+            console.error('[SW] fetch handler error', err)
+            try { return await fetch(request.clone()) } catch { return Response.error() }
+          }
+        }
+      })()
+    )
   } else if (request.method === 'POST' && (
     // ApplicationConfig系
     url.pathname === '/api/get_all_rep_names' ||

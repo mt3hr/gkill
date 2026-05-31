@@ -1,0 +1,10 @@
+{
+  "protocol_version": "1",
+  "name": "gkill_example",
+  "version": "1.0.0",
+  "description": "gkillプラグインのサンプル実装。固定のKyouを返す。",
+  "data_type": "example_kyou",
+  "rep_name": "Example",
+  "executable": "gkill_example",
+  "min_gkill_version": "1.1.3"
+}

@@ -32,6 +32,10 @@ type GkillDAOManager struct {
 	gkillNotificators        map[string]map[string]*GkillNotificator
 	fileRepWatchCacheUpdater rep_cache_updater.FileRepCacheUpdater
 
+	// pluginManagers はユーザID別のPluginManager。
+	// GetRepositories 時に遅延初期化される。
+	pluginManagers map[string]*PluginManager
+
 	ConfigDAOs *ConfigDAOs
 
 	router    *mux.Router
@@ -96,6 +100,26 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO, err = gkill_notification.NewGkillNotificateTargetDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "gkill_notification_target.db"))
 	if err != nil {
 		return nil, err
+	}
+
+	// plugins/ ベースディレクトリを作成する
+	pluginsBaseDir := filepath.Join(os.ExpandEnv(gkill_options.GkillHomeDir), "plugins")
+	if err := os.MkdirAll(pluginsBaseDir, fs.ModePerm); err != nil {
+		slog.Warn(fmt.Sprintf("plugins base dir create failed: %v", err))
+	}
+
+	// 全ユーザの plugins/{userID}/ ディレクトリを作成する
+	accounts, err := gkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(ctx)
+	if err != nil {
+		slog.Warn(fmt.Sprintf("get all accounts failed (plugin dir creation skipped): %v", err))
+	} else {
+		for _, acc := range accounts {
+			userPluginsDir := filepath.Join(pluginsBaseDir, acc.UserID)
+			if err := os.MkdirAll(userPluginsDir, fs.ModePerm); err != nil {
+				slog.Warn(fmt.Sprintf("plugin user dir create failed for %s: %v", acc.UserID, err))
+				continue
+			}
+		}
 	}
 
 	return gkillDAOManager, nil
@@ -945,6 +969,16 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.Reps = append(repositories.Reps, rep)
 		}
 
+		// プラグインリポジトリを追加（デバイス非依存、ユーザ別）
+		pm := g.getOrCreatePluginManager(userID)
+		if discoverErr := pm.DiscoverPlugins(ctx); discoverErr != nil {
+			slog.Warn(fmt.Sprintf("plugin discovery error for user %s: %v", userID, discoverErr))
+		}
+		for _, pluginRepo := range pm.GetRepositories() {
+			repositories.PluginReps = append(repositories.PluginReps, pluginRepo.(reps.PluginRepository))
+			repositories.Reps = append(repositories.Reps, pluginRepo)
+		}
+
 		err = repositories.UpdateCache(ctx)
 		if err != nil {
 			err = fmt.Errorf("error at update cache in get repositories: %w", err)
@@ -959,6 +993,29 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	}
 
 	return repositories, nil
+}
+
+// getOrCreatePluginManager はユーザID別のPluginManagerを取得または作成する。
+func (g *GkillDAOManager) getOrCreatePluginManager(userID string) *PluginManager {
+	if g.pluginManagers == nil {
+		g.pluginManagers = map[string]*PluginManager{}
+	}
+	if pm, ok := g.pluginManagers[userID]; ok {
+		return pm
+	}
+	pm := newPluginManager(userID)
+	g.pluginManagers[userID] = pm
+	return pm
+}
+
+// GetPluginManager はユーザID別のPluginManagerを返す。APIハンドラからプラグイン操作時に使用する。
+// DiscoverPlugins を呼び出してからPluginManagerを返す。
+func (g *GkillDAOManager) GetPluginManager(userID string) *PluginManager {
+	pm := g.getOrCreatePluginManager(userID)
+	if discoverErr := pm.DiscoverPlugins(context.Background()); discoverErr != nil {
+		slog.Warn(fmt.Sprintf("plugin discovery error for user %s: %v", userID, discoverErr))
+	}
+	return pm
 }
 
 func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNotificator, error) {
@@ -1031,6 +1088,17 @@ func (g *GkillDAOManager) Close() error {
 		}
 	}
 	g.gkillNotificators = nil
+
+	for userID, pm := range g.pluginManagers {
+		if e := pm.CloseAll(ctx); e != nil {
+			if allErrors != nil {
+				allErrors = fmt.Errorf("error at close plugins user id = %s: %w: %w", userID, e, allErrors)
+			} else {
+				allErrors = fmt.Errorf("error at close plugins user id = %s: %w", userID, e)
+			}
+		}
+	}
+	g.pluginManagers = nil
 
 	if g.ConfigDAOs != nil {
 		err = g.ConfigDAOs.AccountDAO.Close(ctx)

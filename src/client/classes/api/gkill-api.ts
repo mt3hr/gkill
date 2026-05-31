@@ -169,6 +169,14 @@ import type { DiscardTXRequest } from "./req_res/discard-tx-request"
 import type { DiscardTXResponse } from "./req_res/discard-tx-response"
 import type { BrowseZipContentsRequest } from "./req_res/browse-zip-contents-request"
 import type { BrowseZipContentsResponse } from "./req_res/browse-zip-contents-response"
+import type { GetPluginListRequest } from "./req_res/get-plugin-list-request"
+import { GetPluginListResponse } from "./req_res/get-plugin-list-response"
+import type { GetPluginContentHTMLRequest } from "./req_res/get-plugin-content-html-request"
+import { GetPluginContentHTMLResponse } from "./req_res/get-plugin-content-html-response"
+import type { GetPluginConfigHTMLRequest } from "./req_res/get-plugin-config-html-request"
+import { GetPluginConfigHTMLResponse } from "./req_res/get-plugin-config-html-response"
+import type { PostPluginConfigRequest } from "./req_res/post-plugin-config-request"
+import { PostPluginConfigResponse } from "./req_res/post-plugin-config-response"
 import { i18n } from "@/i18n"
 import { GkillErrorCodes } from "./message/gkill_error"
 import { TagStructElementData } from "../datas/config/tag-struct-element-data"
@@ -281,6 +289,11 @@ export class GkillAPI {
         discard_tx_address: string
         browse_zip_contents_address: string
 
+        get_plugin_list_address: string
+        get_plugin_content_html_address: string
+        get_plugin_config_html_address: string
+        post_plugin_config_address: string
+
         login_method: string
         logout_method: string
         reset_password_method: string
@@ -365,6 +378,11 @@ export class GkillAPI {
         commit_tx_method: string
         discard_tx_method: string
         browse_zip_contents_method: string
+
+        get_plugin_list_method: string
+        get_plugin_content_html_method: string
+        get_plugin_config_html_method: string
+        post_plugin_config_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -451,6 +469,10 @@ export class GkillAPI {
                 this.commit_tx_address = "/api/commit_tx"
                 this.discard_tx_address = "/api/discard_tx"
                 this.browse_zip_contents_address = "/api/browse_zip_contents"
+                this.get_plugin_list_address = "/api/get_plugin_list"
+                this.get_plugin_content_html_address = "/api/get_plugin_content_html"
+                this.get_plugin_config_html_address = "/api/get_plugin_config_html"
+                this.post_plugin_config_address = "/api/post_plugin_config"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -535,6 +557,10 @@ export class GkillAPI {
                 this.commit_tx_method = "POST"
                 this.discard_tx_method = "POST"
                 this.browse_zip_contents_method = "POST"
+                this.get_plugin_list_method = "POST"
+                this.get_plugin_content_html_method = "POST"
+                this.get_plugin_config_html_method = "POST"
+                this.post_plugin_config_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -2478,6 +2504,58 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: BrowseZipContentsResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async get_plugin_list(req: GetPluginListRequest): Promise<GetPluginListResponse> {
+                const res = await this.gkill_fetch(this.get_plugin_list_address, {
+                        'method': this.get_plugin_list_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: GetPluginListResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async get_plugin_content_html(req: GetPluginContentHTMLRequest): Promise<GetPluginContentHTMLResponse> {
+                const res = await this.gkill_fetch(this.get_plugin_content_html_address, {
+                        'method': this.get_plugin_content_html_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: GetPluginContentHTMLResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async get_plugin_config_html(req: GetPluginConfigHTMLRequest): Promise<GetPluginConfigHTMLResponse> {
+                const res = await this.gkill_fetch(this.get_plugin_config_html_address, {
+                        'method': this.get_plugin_config_html_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: GetPluginConfigHTMLResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async post_plugin_config(req: PostPluginConfigRequest): Promise<PostPluginConfigResponse> {
+                const res = await this.gkill_fetch(this.post_plugin_config_address, {
+                        'method': this.post_plugin_config_method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: PostPluginConfigResponse = json
                 this.check_auth(response)
                 return response
         }
