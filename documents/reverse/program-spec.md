@@ -535,6 +535,31 @@ Vuetifyで2つのテーマを定義しています。
 | `optimize` | リポジトリ最適化 |
 | `update_cache` | キャッシュ更新（稼働中サーバーにHTTPリクエスト） |
 
+## 11. プラグインリポジトリシステム
+
+`pluginRepositoryImpl` (`src/server/gkill/dao/reps/plugin_repository_impl.go`) がプラグインバイナリをサブプロセスとして管理する。
+
+### 並行制御設計
+
+| 設計判断 | 内容 |
+|---|---|
+| Mutex の位置 | `pluginRepositoryImpl` struct に `sync.Mutex` を保持。`pluginProcess` struct には置かない |
+| ロック範囲 | `callCommand()` が `mu.Lock()` → `ensureStarted()` → `sendRequest()` → `mu.Unlock()` を直列化 |
+| プロセス起動 | `exec.CommandContext(context.Background(), ...)` — HTTP リクエストキャンセルによる強制終了を防ぐ |
+| クラッシュ復旧 | `sendRequest()` 失敗時に `started=false` → `ensureStarted()` → `sendRequest()` を1回リトライ |
+
+### bufio.Scanner バッファ
+
+大きな HTML レスポンス（会話コンテンツ等）に対応するため 32MB バッファを設定:
+
+```go
+scanner.Buffer(make([]byte, 32*1024*1024), 32*1024*1024)
+```
+
+詳細は [plugin-system.md](plugin-system.md) を参照。
+
+---
+
 ## 関連資料
 
 - [folder-structure.md](folder-structure.md) — ディレクトリ構成
@@ -543,3 +568,4 @@ Vuetifyで2つのテーマを定義しています。
 - [sequence-diagrams.md](sequence-diagrams.md) — シーケンス図
 - [api-endpoints.md](api-endpoints.md) — APIエンドポイント一覧
 - [frontend-architecture.md](frontend-architecture.md) — フロントエンド設計ガイド
+- [plugin-system.md](plugin-system.md) — プラグインシステム仕様

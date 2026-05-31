@@ -114,6 +114,12 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.HandleFunc(g.APIAddress.DiscardTXAddress, g.wrapAuthRepos(g.HandleDiscardTX)).Methods(g.APIAddress.DiscardTXMethod)
 	router.HandleFunc(g.APIAddress.SubmitKFTLTextAddress, g.wrapAuthRepos(g.HandleSubmitKFTLText)).Methods(g.APIAddress.SubmitKFTLTextMethod)
 
+	// プラグイン関連エンドポイント
+	router.HandleFunc(g.APIAddress.GetPluginListAddress, g.wrapAuth(g.HandleGetPluginList)).Methods(g.APIAddress.GetPluginListMethod)
+	router.HandleFunc(g.APIAddress.GetPluginContentHTMLAddress, g.wrapAuth(g.HandleGetPluginContentHTML)).Methods(g.APIAddress.GetPluginContentHTMLMethod)
+	router.HandleFunc(g.APIAddress.GetPluginConfigHTMLAddress, g.wrapAuth(g.HandleGetPluginConfigHTML)).Methods(g.APIAddress.GetPluginConfigHTMLMethod)
+	router.HandleFunc(g.APIAddress.PostPluginConfigAddress, g.wrapAuth(g.HandlePostPluginConfig)).Methods(g.APIAddress.PostPluginConfigMethod)
+
 	manualPage, err := fs.Sub(api.EmbedFS, "embed/manual")
 	if err != nil {
 		return err

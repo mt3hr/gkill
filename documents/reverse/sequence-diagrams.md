@@ -553,6 +553,85 @@ sequenceDiagram
 
 ---
 
+## 19. プラグイン一覧取得（get_plugin_list）
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant UI as plugin-config-dialog.vue
+    participant API as GkillServerAPI
+    participant PluginMgr as PluginManager
+
+    User->>UI: 設定画面を開く（プラグイン一覧表示）
+    UI->>API: POST /api/get_plugin_list<br>{session_id, locale_name}
+    API->>API: getAccountFromSessionID(session_id)
+    API->>PluginMgr: GetPlugins(user_id)
+    loop 各プラグイン
+        PluginMgr->>PluginMgr: manifest情報取得（name, version, description, data_type, rep_name）
+        PluginMgr->>PluginMgr: is_alive 確認（プロセス生存判定）
+    end
+    PluginMgr-->>API: []PluginInfo
+    API-->>UI: {plugins: [{name, version, description, data_type, rep_name, is_alive}, ...]}
+    UI-->>User: プラグイン一覧を表示
+```
+
+---
+
+## 20. プラグイン設定 HTML 取得（get_plugin_config_html）
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant UI as plugin-config-dialog.vue
+    participant API as GkillServerAPI
+    participant PluginRepo as pluginRepositoryImpl
+    participant Plugin as プラグインバイナリ
+
+    User->>UI: プラグイン設定ボタンを押す
+    UI->>API: POST /api/get_plugin_config_html<br>{session_id, rep_name}
+    API->>API: getAccountFromSessionID(session_id)
+    API->>PluginRepo: rep_name でプラグインを検索
+    PluginRepo->>PluginRepo: ensureStarted() — プロセス未起動なら起動
+    PluginRepo->>PluginRepo: callCommand() — mu.Lock()
+    PluginRepo->>Plugin: {"command":"get_config_html"}\n (stdin)
+    Plugin->>Plugin: GetConfigHTML ハンドラ呼び出し<br>（設定フォームHTML生成）
+    Plugin-->>PluginRepo: {"html":"<form>...</form>"}\n (stdout)
+    PluginRepo->>PluginRepo: mu.Unlock()
+    PluginRepo-->>API: html string
+    API-->>UI: {html, messages, errors}
+    UI->>UI: iframe srcdoc = html（設定フォーム表示）
+    UI-->>User: 設定フォームを表示
+```
+
+---
+
+## 21. プラグイン設定保存（post_plugin_config）
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant UI as plugin-config-dialog.vue
+    participant API as GkillServerAPI
+    participant PluginRepo as pluginRepositoryImpl
+    participant Plugin as プラグインバイナリ
+
+    User->>UI: 設定フォーム送信
+    Note right of UI: iframe内フォームの送信データを<br>form_data: Record<string,string> として収集
+    UI->>API: POST /api/post_plugin_config<br>{session_id, rep_name, form_data}
+    API->>API: getAccountFromSessionID(session_id)
+    API->>PluginRepo: rep_name でプラグインを検索
+    PluginRepo->>PluginRepo: callCommand() — mu.Lock()
+    PluginRepo->>Plugin: {"command":"post_config","form_data":{...}}\n (stdin)
+    Plugin->>Plugin: PostConfig ハンドラ呼び出し<br>（設定を cache.db またはファイルに保存）
+    Plugin-->>PluginRepo: {"pong":false}\n (stdout)
+    PluginRepo->>PluginRepo: mu.Unlock()
+    PluginRepo-->>API: OK
+    API-->>UI: {messages, errors}
+    UI-->>User: 設定保存完了
+```
+
+---
+
 ## 異常系シーケンス
 
 以下は正常系シーケンスに対応するエラーパターン。全エンドポイント共通のエラー処理パターンも含む。
@@ -669,6 +748,43 @@ sequenceDiagram
 
     API-->>Client: HTTP 403 Forbidden
 ```
+
+## 24. プラグインコンテンツ HTML 取得
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant UI as plugin-html-view.vue
+    participant SW as Service Worker
+    participant API as GkillServerAPI
+    participant PluginRepo as pluginRepositoryImpl
+    participant Plugin as プラグインバイナリ<br>(例: gkill_plugin_claudeai)
+
+    User->>UI: KyouDetailView で PluginKyou 表示
+    UI->>SW: POST /api/get_plugin_content_html<br>{session_id, rep_name, kyou_id}
+    alt キャッシュヒット (/cache/api/plugin_content_html/{kyou_id})
+        SW-->>UI: キャッシュ済み HTML
+    else キャッシュミス
+        SW->>API: POST /api/get_plugin_content_html
+        API->>PluginRepo: GetContentHTML(ctx, kyouID)
+        PluginRepo->>PluginRepo: callCommand() — mu.Lock()
+        PluginRepo->>Plugin: {"command":"get_content_html","kyou_id":"..."}\n (stdin)
+        Plugin->>Plugin: globalCache.GetMsgByID(pluginDir, kyouID)
+        Plugin-->>PluginRepo: {"html":"<!DOCTYPE html>..."}\n (stdout)
+        PluginRepo->>PluginRepo: mu.Unlock()
+        PluginRepo-->>API: html string
+        API-->>SW: {html, messages, errors}
+        SW->>SW: gkill-post-kyou-cache に保存
+        SW-->>UI: {html}
+    end
+    UI->>UI: iframe srcdoc = html (レンダリング)
+    UI->>UI: on_iframe_load() → postMessage({gkill_theme: 'dark'|'light'})
+    Note right of UI: iframe が theme を受信し<br>data-theme 属性を更新 → CSS 変数切り替え
+    UI-->>UI: iframe → postMessage({gkill_iframe_size:{width, height}})
+    UI->>UI: iframe_content_height 更新 → iframe 高さ自動調整
+```
+
+---
 
 ### E5. KFTL テキスト送信エラー
 
