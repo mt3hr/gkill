@@ -128,19 +128,75 @@ func matchWordsText(text string, q sdk.Query) bool {
 }
 
 // renderSingleMsgHTML は1メッセージのみのHTMLを生成する。
+// テーマはpostMessage経由で親ページから受け取り動的に切り替える。
 func renderSingleMsgHTML(convTitle string, msg cachedMessage) string {
 	var sb strings.Builder
 	sb.WriteString(`<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <style>
-body{font-family:sans-serif;margin:0;padding:12px;font-size:14px;}
-.conv-title{font-size:0.85em;color:#888;margin-bottom:8px;}
-.msg{padding:8px 12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;line-height:1.5;}
-.human{background:#e8f0fe;}
-.assistant{background:#f0f0f0;}
-.sender{font-size:0.75em;color:#888;margin-bottom:4px;}
-.ts{font-size:0.7em;color:#aaa;margin-top:4px;}
-</style></head><body>`)
+:root {
+  --bg: #ffffff;
+  --text: #333333;
+  --msg-human-bg: #dbeafe;
+  --msg-assistant-bg: #f3f4f6;
+  --sender-color: #6b7280;
+  --ts-color: #9ca3af;
+  --title-color: #9ca3af;
+  --scrollbar-thumb: #2672ed;
+  --scrollbar-track: #e5e7eb;
+}
+[data-theme="dark"] {
+  --bg: #212121;
+  --text: #e0e0e0;
+  --msg-human-bg: #1a3557;
+  --msg-assistant-bg: #2d2d2d;
+  --sender-color: #aaaaaa;
+  --ts-color: #888888;
+  --title-color: #888888;
+  --scrollbar-thumb: #2672ed;
+  --scrollbar-track: #424242;
+}
+html, body { height: auto; margin: 0; overflow: visible; }
+body { font-family: sans-serif; padding: 12px; font-size: 14px;
+  background: var(--bg); color: var(--text); }
+.conv-title { font-size: 0.85em; color: var(--title-color); margin-bottom: 8px; }
+.msg { padding: 8px 12px; border-radius: 8px; white-space: pre-wrap;
+  word-break: break-word; line-height: 1.5; }
+.human { background: var(--msg-human-bg); }
+.assistant { background: var(--msg-assistant-bg); }
+.sender { font-size: 0.75em; color: var(--sender-color); margin-bottom: 4px; }
+.ts { font-size: 0.7em; color: var(--ts-color); margin-top: 4px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+</style>
+<script>
+(function() {
+  function notifySize() {
+    window.parent.postMessage({
+      gkill_iframe_size: {
+        width: document.documentElement.scrollWidth,
+        height: document.documentElement.scrollHeight
+      }
+    }, '*');
+  }
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.gkill_theme) {
+      document.documentElement.setAttribute('data-theme', e.data.gkill_theme);
+      setTimeout(notifySize, 10);
+    }
+  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', notifySize);
+  } else {
+    notifySize();
+  }
+  if (window.ResizeObserver) {
+    new ResizeObserver(notifySize).observe(document.documentElement);
+  }
+})();
+</script>
+</head><body>`)
 
 	if convTitle != "" {
 		sb.WriteString(`<div class="conv-title">`)
