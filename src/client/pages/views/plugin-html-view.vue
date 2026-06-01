@@ -1,5 +1,7 @@
 <template>
-    <div class="plugin-html-view" @contextmenu.prevent="show_context_menu">
+    <div class="plugin-html-view"
+        :style="plugin_html_view_style"
+        @contextmenu.prevent="show_context_menu">
         <div v-if="is_loading" class="plugin-loading">
             <v-progress-circular indeterminate />
         </div>
@@ -9,9 +11,14 @@
         <!-- プラグインのHTMLをiframeのsrcdocで表示。
              sandbox: allow-same-originを付けないことでセッションcookieにアクセスさせない。
              高さはiframe内コンテンツからのpostMessageで動的に決定し、
-             スクロールは親コンポーネントに任せる。 -->
+             スクロールは親コンポーネントに任せる。
+             v-show を使い iframe を常にDOMに残す。v-if/v-else-if でのDOM挿入は
+             iOS/Android がフォーカス可能要素の挿入を検知してスクロール位置を自動変更する
+             原因になるため、表示切り替えは display:none で行う。
+             tabindex="-1" でフォーカス可能要素として扱われることも防ぐ。 -->
         <iframe
-            v-else-if="html"
+            v-show="!!html && !is_loading && !error_message"
+            tabindex="-1"
             ref="iframe_ref"
             :srcdoc="html"
             sandbox="allow-scripts allow-forms"
@@ -22,6 +29,7 @@
                 height: iframe_height,
                 'pointer-events': allow_pointer_events ? 'auto' : 'none',
                 overflow: 'hidden',
+                'overflow-anchor': 'none',
             }"
             @load="on_iframe_load"
         />
@@ -60,13 +68,31 @@ const is_loading = ref<boolean>(true)
 const error_message = ref<string>('')
 const iframe_ref = ref<HTMLIFrameElement | null>(null)
 
+const plugin_html_view_style = computed((): Record<string, string> => {
+    if (typeof props.height !== 'number') {
+        return {}
+    }
+    return {
+        height: props.height + 'px',
+        overflow: 'hidden',
+        contain: 'layout',
+        'overflow-anchor': 'none',
+    }
+})
+
 // iframeコンテンツからpostMessageで受け取ったコンテンツ高さ（px）
 const iframe_content_height = ref<number>(0)
 
-// コンテンツ高さが確定するまでのフォールバック高さ
-const iframe_height = computed<string>(() =>
-    iframe_content_height.value > 0 ? iframe_content_height.value + 'px' : '80px'
-)
+// iframeの表示高さを計算する。
+// リストコンテキスト（height が数値＝KyouListView内）では props.height を固定値として返す。
+// postMessageによる動的な高さ変化を許容すると、VVirtualScrollItemのResizeObserverが
+// 変化を検出してoffsetを再計算しスクロール位置がずれるため。
+const iframe_height = computed<string>(() => {
+    if (typeof props.height === 'number') {
+        return props.height + 'px'
+    }
+    return iframe_content_height.value > 0 ? iframe_content_height.value + 'px' : '80px'
+})
 
 // リストコンテキスト（height が数値）ではクリック不可、それ以外は操作可能
 const allow_pointer_events = computed<boolean>(() => typeof props.height !== 'number')
@@ -98,8 +124,16 @@ watch(() => props.application_config.use_dark_theme, () => {
     send_theme_to_iframe()
 })
 
-onMounted(async () => {
-    window.addEventListener('message', on_window_message)
+// HTMLコンテンツを取得してセットする。
+// 開始時点のkyou.idを保持し、レスポンス受信後に現在のprops.kyou.idと
+// 一致しない場合は結果を破棄することでレース条件を防止する。
+async function load_html(): Promise<void> {
+    const target_id = props.kyou.id
+
+    html.value = ''
+    iframe_content_height.value = 0
+    is_loading.value = true
+    error_message.value = ''
 
     if (!props.kyou.typed_plugin) {
         is_loading.value = false
@@ -112,6 +146,12 @@ onMounted(async () => {
     req.kyou_id = props.kyou.id
 
     const res = await GkillAPI.get_gkill_api().get_plugin_content_html(req)
+
+    // レスポンス到着時点でkyouが別のものに変わっていたら無視
+    if (props.kyou.id !== target_id) {
+        return
+    }
+
     is_loading.value = false
 
     if (res.errors && res.errors.length > 0) {
@@ -119,6 +159,17 @@ onMounted(async () => {
         return
     }
     html.value = res.html
+}
+
+// v-virtual-scrollによるコンポーネント再利用時もHTMLを再ロードするためkyou.idを監視する。
+// immediate: trueにより初回マウント時もこのwatchでHTMLをロードする。
+watch(() => props.kyou.id, async () => {
+    await load_html()
+}, { immediate: true })
+
+// messageリスナー登録のみ。HTMLロードはwatchのimmediate:trueに委ねる。
+onMounted(() => {
+    window.addEventListener('message', on_window_message)
 })
 
 onUnmounted(() => {

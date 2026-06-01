@@ -92,7 +92,8 @@ export function useKyouListView(options: {
         return nextTick(async () => {
             const target_element_id = props.query.query_id.concat(props.query.is_image_only ? "_kyou_image_list_view" : "_kyou_list_view")
             const kyou_list_view_element = document.getElementById(target_element_id)
-            const scroll_height = kyou_list_view_element?.querySelector(".v-virtual-scroll__container")?.scrollHeight
+            const virtual_scroll_container = kyou_list_view_element?.querySelector(".v-virtual-scroll__container")
+            const scroll_height = virtual_scroll_container?.scrollHeight ?? kyou_list_view_element?.scrollHeight
             if (!kyou_list_view_element || !scroll_height || scroll_height < scroll_top) {
                 nextTick(async () => { // nextTickじゃ動かんかったのでsleepで対応
                     await sleep(50)
