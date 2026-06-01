@@ -4,31 +4,44 @@
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>
-            <v-virtual-scroll v-if="!query.is_image_only" :id="query.query_id.concat('_kyou_list_view')"
-                class="kyou_list_view" :items="matched_kyous" :item-height="kyou_height_px"
-                :height="list_height.valueOf() - footer_height.valueOf()" :width="width.valueOf() + 8"
-                ref="kyou_list_view"
+            <div v-if="!query.is_image_only" :id="query.query_id.concat('_kyou_list_view')"
+                class="kyou_list_view"
+                :style="{
+                    height: (list_height.valueOf() - footer_height.valueOf()) + 'px',
+                    width: (width.valueOf() + 8) + 'px',
+                }"
                 @scrollend.prevent="onScrollEnd">
-                <template v-slot:default="{ item }">
-                    <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
-                        :draggable="draggable" :key="item.id" :highlight_targets="[]" :is_image_view="false"
-                        :kyou="item" :show_checkbox="show_checkbox"
-                        :show_content_only="show_content_only" :show_mi_create_time="true"
-                        :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                        :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="show_timeis_plaing_end_button"
-                        :width="width.valueOf()" :show_attached_timeis="false"
-                        :is_readonly_mi_check="is_readonly_mi_check" :enable_context_menu="enable_context_menu"
-                        :show_rep_name="show_rep_name" :force_show_latest_kyou_info="force_show_latest_kyou_info"
-                        :show_update_time="false" :is_image_request_to_thumb_size="true"
-                        :show_related_time="!(query.for_mi && item.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
-                        :enable_dialog="enable_dialog"
-                        :height="kyou_height.valueOf()" :show_attached_tags="application_config.show_tags_in_list"
-                        :show_attached_texts="false" :show_attached_notifications="false"
-                        @focused_kyou="onFocusedKyou"
-                        @clicked_kyou="onClickedKyou"
-                        v-on="crudRelayHandlers" />
-                </template>
-            </v-virtual-scroll>
+                <v-virtual-scroll
+                    :items="matched_kyous" :item-height="kyou_height_px"
+                    :height="list_height.valueOf() - footer_height.valueOf()"
+                    renderless
+                    ref="kyou_list_view">
+                    <template v-slot:default="{ item }">
+                        <!-- Android ChromeではVuetifyのVVirtualScrollItemがunmount時に0pxを通知し、
+                             offsets再計算でscrollTopが戻ることがある。renderlessでitem測定を避け、
+                             固定heightのwrapperだけをスクロールコンテナに置く。 -->
+                        <div class="kyou_in_list">
+                            <KyouView :application_config="application_config" :gkill_api="gkill_api"
+                                :draggable="draggable" :key="item.id" :highlight_targets="[]" :is_image_view="false"
+                                :kyou="item" :show_checkbox="show_checkbox"
+                                :show_content_only="show_content_only" :show_mi_create_time="true"
+                                :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                                :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="show_timeis_plaing_end_button"
+                                :width="width.valueOf()" :show_attached_timeis="false"
+                                :is_readonly_mi_check="is_readonly_mi_check" :enable_context_menu="enable_context_menu"
+                                :show_rep_name="show_rep_name" :force_show_latest_kyou_info="force_show_latest_kyou_info"
+                                :show_update_time="false" :is_image_request_to_thumb_size="true"
+                                :show_related_time="!(query.for_mi && item.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
+                                :enable_dialog="enable_dialog"
+                                :height="kyou_height.valueOf()" :show_attached_tags="application_config.show_tags_in_list"
+                                :show_attached_texts="false" :show_attached_notifications="false"
+                                @focused_kyou="onFocusedKyou"
+                                @clicked_kyou="onClickedKyou"
+                                v-on="crudRelayHandlers" />
+                        </div>
+                    </template>
+                </v-virtual-scroll>
+            </div>
             <v-virtual-scroll v-if="query.is_image_only" :id="query.query_id.concat('_kyou_image_list_view')"
                 class="kyou_list_view_image" :items="match_kyous_for_image" :item-height="kyou_height_px"
                 :height="list_height.valueOf() - footer_height.valueOf()"
@@ -199,8 +212,16 @@ defineExpose({ scroll_to, scroll_to_kyou, scroll_to_time, set_loading, get_is_lo
     overflow-y: hidden !important;
 }
 
-.kyou_list_view_card_wrap .v-virtual-scroll {
+.kyou_list_view_card_wrap .v-virtual-scroll,
+.kyou_list_view_card_wrap .kyou_list_view {
     max-width: 100vw;
     overflow-x: hidden !important;
+}
+
+.kyou_list_view_card_wrap .kyou_list_view {
+    display: block;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    position: relative;
 }
 </style>
