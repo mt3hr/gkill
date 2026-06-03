@@ -37,6 +37,38 @@ function withDialogMarkers(base: unknown, depth: number): AnyObj {
 type Entry = { id: string; dialog: Ref<boolean> }
 const stack: Entry[] = []
 
+// --- Pending open tracking (setTimeout-based push delay) ---
+// By deferring history.pushState to a macro-task (setTimeout 0), any iframe
+// navigations triggered during the same render cycle (also macro-tasks, but
+// queued earlier) complete first at the pre-dialog top-level state.
+// This prevents their joint session history entries from landing after the
+// dialog's push entry, which would cause popstate to not fire on back and
+// require 2 back presses to close the dialog.
+let openSeqCounter = 0
+const pendingOpenSeqMap = new WeakMap<object, number>()
+
+function scheduleOpen(id: string, dialog: Ref<boolean>, refObj: object): void {
+  const seq = ++openSeqCounter
+  pendingOpenSeqMap.set(refObj, seq)
+  setTimeout(() => {
+    if (pendingOpenSeqMap.get(refObj) !== seq) return
+    pendingOpenSeqMap.delete(refObj)
+    if (!dialog.value) return
+    if (pendingNav > 0) {
+      queueOpen(id, dialog)
+      return
+    }
+    const existingIdx = stack.findIndex((e) => e.id === id)
+    if (existingIdx >= 0) {
+      const [e] = stack.splice(existingIdx, 1)
+      stack.push(e)
+    } else {
+      stack.push({ id, dialog })
+    }
+    pushDialogHistory(stack.length)
+  }, 0)
+}
+
 // Public helper: close only the topmost dialog.
 export function closeTopDialog(): boolean {
   if (stack.length === 0) return false
@@ -273,16 +305,7 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
           queueOpen(id, dialog)
           return
         }
-
-        const existingIdx = stack.findIndex((e) => e.id === id)
-        if (existingIdx >= 0) {
-          const [e] = stack.splice(existingIdx, 1)
-          stack.push(e)
-        } else {
-          stack.push({ id, dialog })
-        }
-
-        pushDialogHistory(stack.length)
+        scheduleOpen(id, dialog, refObj)
         return
       }
 
@@ -298,6 +321,13 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
       // close (reset)
       if (closingFromReset.has(refObj)) {
         closingFromReset.delete(refObj)
+        if (stack.length === 0) clearDialogKeysFromCurrentState()
+        return
+      }
+
+      // Cancel pending open if dialog closed before setTimeout fired
+      if (pendingOpenSeqMap.has(refObj)) {
+        pendingOpenSeqMap.delete(refObj)
         if (stack.length === 0) clearDialogKeysFromCurrentState()
         return
       }
@@ -328,6 +358,7 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
     watchedRefs.delete(refObj)
     closingFromPop.delete(refObj)
     closingFromReset.delete(refObj)
+    pendingOpenSeqMap.delete(refObj)
 
     if (dialog.value === true) dialog.value = false
 
@@ -342,16 +373,7 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
         queueOpen(id, dialog)
         return
       }
-
-      const existingIdx = stack.findIndex((e) => e.id === id)
-      if (existingIdx >= 0) {
-        const [e] = stack.splice(existingIdx, 1)
-        stack.push(e)
-      } else {
-        stack.push({ id, dialog })
-      }
-
-      pushDialogHistory(stack.length)
+      scheduleOpen(id, dialog, refObj)
     }
   })
 }

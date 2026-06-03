@@ -8,19 +8,24 @@
         <div v-else-if="error_message" class="plugin-error">
             {{ error_message }}
         </div>
-        <!-- プラグインのHTMLをiframeのsrcdocで表示。
+        <!-- プラグインのHTMLをiframeで表示。
              sandbox: allow-same-originを付けないことでセッションcookieにアクセスさせない。
              高さはiframe内コンテンツからのpostMessageで動的に決定し、
              スクロールは親コンポーネントに任せる。
              v-show を使い iframe を常にDOMに残す。v-if/v-else-if でのDOM挿入は
              iOS/Android がフォーカス可能要素の挿入を検知してスクロール位置を自動変更する
              原因になるため、表示切り替えは display:none で行う。
-             tabindex="-1" でフォーカス可能要素として扱われることも防ぐ。 -->
+             tabindex="-1" でフォーカス可能要素として扱われることも防ぐ。
+             ダイアログ表示時: srcdocには定数ローダーを使用し、コンテンツはpostMessage経由で
+             document.open()+document.write()で注入する（replacementナビゲーション）。
+             これによりiframeナビゲーションがdialogのpushStateより前に完了し、
+             ブラウザバック1回でダイアログが閉じるようになる。
+             リスト表示時: 従来通りsrcdocを直接更新する。 -->
         <iframe
             v-show="!!html && !is_loading && !error_message"
             tabindex="-1"
             ref="iframe_ref"
-            :srcdoc="html"
+            :srcdoc="effective_srcdoc"
             sandbox="allow-scripts allow-forms"
             class="plugin-content-iframe"
             scrolling="no"
@@ -63,10 +68,18 @@ const {
     crudRelayHandlers,
 } = usePluginHtmlView({ props, emits })
 
+// ダイアログ表示時にiframeのsrcdocナビゲーションがpushStateより後にならないよう、
+// srcdocには定数ローダーを使い、コンテンツはpostMessageで注入する。
+// ローダーはgkill_plugin_htmlメッセージを受け取るとdocument.open()+write()+close()で
+// コンテンツを差し替える（replacementナビゲーション = joint historyエントリを増やさない）。
+const PLUGIN_IFRAME_LOADER = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:transparent}</style></head><body><script>(function(){window.addEventListener("message",function(e){if(!e.data||typeof e.data.gkill_plugin_html!=="string")return;document.open();document.write(e.data.gkill_plugin_html);document.close();});})();<\/script></body></html>'
+
 const html = ref<string>('')
 const is_loading = ref<boolean>(true)
 const error_message = ref<string>('')
 const iframe_ref = ref<HTMLIFrameElement | null>(null)
+// 最後にiframeに注入したHTML。重複注入・無限ループを防ぐ。
+const sent_html = ref<string>('')
 
 const plugin_html_view_style = computed((): Record<string, string> => {
     if (typeof props.height !== 'number') {
@@ -97,13 +110,39 @@ const iframe_height = computed<string>(() => {
 // リストコンテキスト（height が数値）ではクリック不可、それ以外は操作可能
 const allow_pointer_events = computed<boolean>(() => typeof props.height !== 'number')
 
+// リストコンテキスト判定（height が数値 = KyouListView内）
+// リスト表示時は従来通りsrcdocを直接使用し、
+// ダイアログ表示時は定数ローダー + postMessage注入方式を使用する。
+const is_list_view = computed<boolean>(() => typeof props.height === 'number')
+
+// ダイアログ表示: 定数ローダー（変更されないのでiframeの再ナビゲーションが発生しない）
+// リスト表示: 従来通りhtmlを直接srcdocに設定
+const effective_srcdoc = computed<string | undefined>(() => {
+    if (is_list_view.value) {
+        return html.value || undefined
+    }
+    return PLUGIN_IFRAME_LOADER
+})
+
 // iframeにテーマをpostMessageで通知する
 function send_theme_to_iframe(): void {
     const theme = props.application_config.use_dark_theme ? 'dark' : 'light'
     iframe_ref.value?.contentWindow?.postMessage({ gkill_theme: theme }, '*')
 }
 
+// ダイアログ表示時: htmlが用意できたらpostMessageでiframeローダーに注入する。
+// sent_htmlで重複チェックし、@loadが繰り返し発火しても無限ループにならないようにする。
+function try_inject_html(): void {
+    if (is_list_view.value) return
+    if (!html.value) return
+    if (html.value === sent_html.value) return
+    if (!iframe_ref.value?.contentWindow) return
+    sent_html.value = html.value
+    iframe_ref.value.contentWindow.postMessage({ gkill_plugin_html: html.value }, '*')
+}
+
 function on_iframe_load(): void {
+    try_inject_html()
     send_theme_to_iframe()
 }
 
@@ -124,6 +163,12 @@ watch(() => props.application_config.use_dark_theme, () => {
     send_theme_to_iframe()
 })
 
+// ダイアログ表示時: htmlが変化したらiframeに注入を試みる
+// （ローダーがすでにロード済みの場合に即座に反映させるため）
+watch(html, () => {
+    try_inject_html()
+})
+
 // HTMLコンテンツを取得してセットする。
 // 開始時点のkyou.idを保持し、レスポンス受信後に現在のprops.kyou.idと
 // 一致しない場合は結果を破棄することでレース条件を防止する。
@@ -131,6 +176,7 @@ async function load_html(): Promise<void> {
     const target_id = props.kyou.id
 
     html.value = ''
+    sent_html.value = ''
     iframe_content_height.value = 0
     is_loading.value = true
     error_message.value = ''
