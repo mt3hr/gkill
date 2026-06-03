@@ -2,7 +2,7 @@
   "protocol_version": "1",
   "name": "gkill_plugin_claudeai",
   "version": "1.0.0",
-  "description": "Claude.ai のチャット履歴をgkillタイムラインに表示する。conversations.json をetc/に置いて使用。",
+  "description": "Claude.ai のチャット履歴をgkillタイムラインに表示する。conversations.json をプラグインフォルダに置いて使用。",
   "data_type": "claude_conversation",
   "rep_name": "Claude.ai",
   "executable": "gkill_plugin_claudeai",

@@ -23,7 +23,7 @@ code{background:#eee;padding:2px 6px;border-radius:3px;font-size:0.9em;}
 <li>ChatGPT にログイン → 右上のアイコン → <strong>Settings</strong></li>
 <li>「Data controls」→「<strong>Export data</strong>」→「Export」</li>
 <li>届いたメールのリンクからZIPをダウンロードして解凍</li>
-<li><code>conversations-000.json</code>、<code>conversations-001.json</code> 等 (<code>conversations-*.json</code>) または <code>conversations.json</code> をこのプラグインの <code>etc/</code> フォルダに配置する</li>
+<li><code>conversations-000.json</code>、<code>conversations-001.json</code> 等 (<code>conversations-*.json</code>) または <code>conversations.json</code> をこのプラグインのフォルダに配置する</li>
 </ol>
 <p>配置先フォルダ: <code>%s</code></p>
 </div>
