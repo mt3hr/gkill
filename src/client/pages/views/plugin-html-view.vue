@@ -191,20 +191,29 @@ async function load_html(): Promise<void> {
     req.rep_name = props.kyou.typed_plugin.rep_name
     req.kyou_id = props.kyou.id
 
-    const res = await GkillAPI.get_gkill_api().get_plugin_content_html(req)
+    try {
+        const res = await GkillAPI.get_gkill_api().get_plugin_content_html(req)
 
-    // レスポンス到着時点でkyouが別のものに変わっていたら無視
-    if (props.kyou.id !== target_id) {
-        return
+        // レスポンス到着時点でkyouが別のものに変わっていたら無視
+        if (props.kyou.id !== target_id) {
+            return
+        }
+
+        is_loading.value = false
+
+        if (res.errors && res.errors.length > 0) {
+            error_message.value = res.errors.map(e => e.error_message).join(', ')
+            return
+        }
+        html.value = res.html
+    } catch (e: unknown) {
+        // kyouが変わっていたら別のload_html()に委ねる
+        if (props.kyou.id !== target_id) {
+            return
+        }
+        is_loading.value = false
+        error_message.value = e instanceof Error ? e.message : 'プラグインコンテンツの取得に失敗しました'
     }
-
-    is_loading.value = false
-
-    if (res.errors && res.errors.length > 0) {
-        error_message.value = res.errors.map(e => e.error_message).join(', ')
-        return
-    }
-    html.value = res.html
 }
 
 // v-virtual-scrollによるコンポーネント再利用時もHTMLを再ロードするためkyou.idを監視する。

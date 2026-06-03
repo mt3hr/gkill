@@ -104,9 +104,16 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 	return nil
 }
 
+// scanResult は scanner.Scan() の結果を goroutine 間で受け渡すための型。
+type scanResult struct {
+	data []byte
+	err  error
+}
+
 // sendRequest は改行区切りJSONでリクエストを送り、レスポンスを受け取る。
 // 呼び出し前に p.mu がロック済みであること。
-func (p *pluginRepositoryImpl) sendRequest(req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
+// ctx がキャンセルされた場合はプロセスを強制終了してエラーを返す。
+func (p *pluginRepositoryImpl) sendRequest(ctx context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("error at marshal plugin request: %w", err)
@@ -117,28 +124,59 @@ func (p *pluginRepositoryImpl) sendRequest(req gkill_plugin.PluginRequest) (*gki
 		return nil, fmt.Errorf("error at write to plugin stdin %s: %w", p.manifest.Name, err)
 	}
 
-	if !p.proc.scanner.Scan() {
-		p.proc.started = false
-		if scanErr := p.proc.scanner.Err(); scanErr != nil {
-			return nil, fmt.Errorf("error at read from plugin stdout %s: %w", p.manifest.Name, scanErr)
+	// bufio.Scanner.Scan() はブロッキングなのでgoroutineで実行し、
+	// contextキャンセル（タイムアウト含む）に対応する
+	ch := make(chan scanResult, 1)
+	go func() {
+		if p.proc.scanner.Scan() {
+			b := make([]byte, len(p.proc.scanner.Bytes()))
+			copy(b, p.proc.scanner.Bytes())
+			ch <- scanResult{data: b}
+		} else {
+			if scanErr := p.proc.scanner.Err(); scanErr != nil {
+				ch <- scanResult{err: fmt.Errorf("error at read from plugin stdout %s: %w", p.manifest.Name, scanErr)}
+			} else {
+				ch <- scanResult{err: fmt.Errorf("plugin %s closed stdout unexpectedly", p.manifest.Name)}
+			}
 		}
-		return nil, fmt.Errorf("plugin %s closed stdout unexpectedly", p.manifest.Name)
-	}
+	}()
 
-	var resp gkill_plugin.PluginResponse
-	if err := json.Unmarshal(p.proc.scanner.Bytes(), &resp); err != nil {
-		return nil, fmt.Errorf("error at unmarshal plugin response %s: %w", p.manifest.Name, err)
+	select {
+	case <-ctx.Done():
+		p.proc.started = false
+		// goroutineのScan()ブロックを解除するためプロセスを強制終了する。
+		// 次のcallCommand呼び出しでensureStarted()が新プロセスを起動する。
+		if p.proc.cmd.Process != nil {
+			_ = p.proc.cmd.Process.Kill()
+		}
+		return nil, fmt.Errorf("plugin %s request timed out: %w", p.manifest.Name, ctx.Err())
+	case result := <-ch:
+		if result.err != nil {
+			p.proc.started = false
+			return nil, result.err
+		}
+		var resp gkill_plugin.PluginResponse
+		if err := json.Unmarshal(result.data, &resp); err != nil {
+			return nil, fmt.Errorf("error at unmarshal plugin response %s: %w", p.manifest.Name, err)
+		}
+		if len(resp.Errors) > 0 {
+			return &resp, fmt.Errorf("plugin %s returned errors: %v", p.manifest.Name, resp.Errors)
+		}
+		return &resp, nil
 	}
-
-	if len(resp.Errors) > 0 {
-		return &resp, fmt.Errorf("plugin %s returned errors: %v", p.manifest.Name, resp.Errors)
-	}
-	return &resp, nil
 }
 
 // callCommand は p.mu でロックし、ensureStarted・sendRequest・クラッシュ時リトライをまとめて実行する。
 // p.mu で全操作を直列化することで並列リクエストによる競合を防ぐ。
-func (p *pluginRepositoryImpl) callCommand(_ context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
+// ctx にDeadlineが設定されていない場合はデフォルト30秒のタイムアウトを付加する。
+func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
+	// タイムアウト未設定の場合はデフォルト30秒を付加する
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+	}
+
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -146,15 +184,19 @@ func (p *pluginRepositoryImpl) callCommand(_ context.Context, req gkill_plugin.P
 		return nil, err
 	}
 
-	resp, err := p.sendRequest(req)
+	resp, err := p.sendRequest(ctx, req)
 	if err != nil {
-		// 1回だけリトライ（プロセスクラッシュ後の自動再起動）
+		// タイムアウト・キャンセルはリトライしない（リトライしても同じ結果になるため）
+		if ctx.Err() != nil {
+			return nil, err
+		}
+		// プロセスクラッシュ時のみ1回リトライ（自動再起動）
 		slog.Warn(fmt.Sprintf("plugin %s error, retrying: %v", p.manifest.Name, err))
 		p.proc.started = false
 		if startErr := p.ensureStarted(); startErr != nil {
 			return nil, fmt.Errorf("plugin restart failed %s: %w (original: %v)", p.manifest.Name, startErr, err)
 		}
-		resp, err = p.sendRequest(req)
+		resp, err = p.sendRequest(ctx, req)
 		if err != nil {
 			return nil, err
 		}
