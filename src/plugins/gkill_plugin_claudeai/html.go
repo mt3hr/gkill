@@ -24,7 +24,7 @@ code{background:#eee;padding:2px 6px;border-radius:3px;font-size:0.9em;}
 <li>Claude.ai にログイン → 左下のアカウントアイコン → <strong>Settings</strong></li>
 <li>「Privacy」→「<strong>Export data</strong>」をクリック</li>
 <li>ZIPが届いたら解凍し、<code>conversations.json</code> を取り出す</li>
-<li>このプラグインの <code>etc/</code> フォルダに配置する</li>
+<li>このプラグインのフォルダに配置する</li>
 </ol>
 <p>配置先: <code>%s/conversations.json</code></p>
 </div>
@@ -46,4 +46,3 @@ code{background:#eee;padding:2px 6px;border-radius:3px;font-size:0.9em;}
 </div>
 </body></html>`, len(convs))
 }
-
