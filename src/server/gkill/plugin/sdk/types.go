@@ -58,7 +58,7 @@ type Kyou struct {
 	Texts        []string  `json:"texts,omitempty"`
 }
 
-// Config はプラグインの設定。etc/config.json の内容を表す。
+// Config はプラグインの設定。config.json の内容を表す。
 // キーと値の単純なマップ。
 type Config map[string]any
 
