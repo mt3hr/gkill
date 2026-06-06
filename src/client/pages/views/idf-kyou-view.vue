@@ -6,7 +6,8 @@
                 {{ kyou.typed_idf_kyou.file_name }}
             </a>
             <v-progress-linear v-if="text_loading" indeterminate color="primary" height="2" />
-            <pre v-if="text_content !== null" class="idf_text_content">{{ text_content }}</pre>
+            <pre v-if="text_content !== null"
+                :class="['idf_text_content', is_image_request_to_thumb_size ? 'idf_text_content--noscroll' : '']">{{ text_content }}</pre>
         </div>
         <!-- その他のファイル: リンクのみ -->
         <a v-if="kyou.typed_idf_kyou && !is_text && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio"
@@ -97,5 +98,9 @@ defineExpose({ show_context_menu })
     font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
     background: rgba(0, 0, 0, 0.04);
     border-radius: 4px;
+}
+
+.idf_text_content--noscroll {
+    overflow: hidden;
 }
 </style>
