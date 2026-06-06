@@ -22,6 +22,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -120,6 +121,15 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			break
 		}
 	}
+	// CacheIDFKyouReps が有効なとき IDFKyouReps は単一のキャッシュrepに統合され
+	// GetRepName が "IDFKyouReps" を返すため個別名で検索できない。
+	// WriteIDFKyouRep は非キャッシュの実体repを保持しているので名前が一致すれば使用する。
+	if targetRep == nil && repositories.WriteIDFKyouRep != nil {
+		repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
+		if err == nil && repName == request.TargetRepName {
+			targetRep = repositories.WriteIDFKyouRep
+		}
+	}
 
 	if targetRep == nil {
 		err := fmt.Errorf("error at not found target idf rep %s: %w", request.TargetRepName, err)
@@ -141,7 +151,9 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	defer close(gkillErrorCh)
 	wg := &sync.WaitGroup{}
 	for _, fileInfo := range request.Files {
-		repDir, err := targetRep.GetPath(r.Context(), "")
+		// GetPath("") はIDFのDBファイルパス (contentDir/.gkill/gkill_id.db) を返す。
+		// ファイルを保存するのは contentDir なので2段上のディレクトリを使う。
+		dbPath, err := targetRep.GetPath(r.Context(), "")
 		if err != nil {
 			err := fmt.Errorf("error at get target rep path at %s: %w", request.TargetRepName, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
@@ -152,6 +164,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
+		repDir := filepath.Dir(filepath.Dir(dbPath))
 		// ファイル名解決
 		estimateCreateFileName, err := g.resolveFileName(repDir, fileInfo.FileName, request.ConflictBehavior)
 		if err != nil {
@@ -273,6 +286,13 @@ loop:
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
+				}
+				if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
+					err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), *idfKyou)
+					if err != nil {
+						err = fmt.Errorf("error at add idf kyou info to cache rep at %s: %w", request.TargetRepName, err)
+						slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+					}
 				}
 
 				// defer g.WebPushUpdatedData(r.Context(), userID, device, idfKyou.ID)
