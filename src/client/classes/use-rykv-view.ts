@@ -11,6 +11,7 @@ import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
+import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { Tag } from '@/classes/datas/tag'
@@ -37,6 +38,7 @@ export function useRykvView(options: {
     const add_kc_dialog = ref<ComponentRef | null>(null)
     const mkfl_dialog = ref<ComponentRef | null>(null)
     const upload_file_dialog = ref<ComponentRef | null>(null)
+    const save_clipboard_to_file_dialog = ref<ComponentRef | null>(null)
     const dnote_view = ref<ComponentRef | null>(null)
     const kyou_list_views = ref()
 
@@ -759,6 +761,10 @@ export function useRykvView(options: {
         upload_file_dialog.value?.show()
     }
 
+    function show_save_clipboard_to_file_dialog(): void {
+        save_clipboard_to_file_dialog.value?.show()
+    }
+
     function floatingActionButtonStyle() {
         return {
             'bottom': '60px',
@@ -804,6 +810,7 @@ export function useRykvView(options: {
     // ── Keyboard shortcut ──
     const enable_enter_shortcut = ref(true)
     useScopedEnterForKFTL(rykv_root, show_kftl_dialog, enable_enter_shortcut)
+    useScopedCtrlVForClipboard(rykv_root, show_save_clipboard_to_file_dialog, enable_enter_shortcut)
 
     // ── Return ──
     return {
@@ -819,6 +826,7 @@ export function useRykvView(options: {
         add_kc_dialog,
         mkfl_dialog,
         upload_file_dialog,
+        save_clipboard_to_file_dialog,
         dnote_view,
         kyou_list_views,
 
@@ -886,6 +894,7 @@ export function useRykvView(options: {
         show_nlog_dialog,
         show_lantana_dialog,
         show_upload_file_dialog,
+        show_save_clipboard_to_file_dialog,
         floatingActionButtonStyle,
 
         // Event relay objects

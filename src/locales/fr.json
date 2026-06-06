@@ -770,5 +770,17 @@
     "BROWSE_ZIP_CONTENTS_TITLE": "Parcourir le contenu ZIP",
     "BROWSE_ZIP_CONTENTS_EMPTY": "Ce dossier est vide",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "Échec de la consultation du contenu ZIP",
-    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "Contenu ZIP récupéré"
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "Contenu ZIP récupéré",
+    "SAVE_CLIPBOARD_TO_FILE_APP_NAME": "Enregistrer le presse-papiers",
+    "SAVE_CLIPBOARD_TO_FILE_TITLE": "Enregistrer le presse-papiers en fichier",
+    "CLIPBOARD_EMPTY_MESSAGE": "Aucune donnée dans le presse-papiers",
+    "CLIPBOARD_NOT_SUPPORTED_MESSAGE": "Ce navigateur ne prend pas en charge la lecture du presse-papiers",
+    "CLIPBOARD_PERMISSION_DENIED_MESSAGE": "L'accès au presse-papiers a été refusé",
+    "CLIPBOARD_PASTE_HERE_MESSAGE": "Appuyez sur Ctrl+V pour coller",
+    "CLIPBOARD_TYPE_LABEL": "Type",
+    "CLIPBOARD_ALREADY_SAVED_CONFIRM_MESSAGE": "Ces données sont déjà enregistrées. Enregistrer à nouveau ?",
+    "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "Enregistrer à nouveau",
+    "CLIPBOARD_SAVED_MESSAGE": "Contenu du presse-papiers enregistré",
+    "CLIPBOARD_CHANGE_FILENAME_TITLE": "Changer le nom du fichier",
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Entrée : Enregistrer / Ctrl+V : Coller et enregistrer / Échap : Fermer"
 }

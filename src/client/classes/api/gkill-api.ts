@@ -1827,6 +1827,7 @@ export class GkillAPI {
                         (response as any)[key] = json[key]
                 }
                 // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
+                if (!response.uploaded_kyous) response.uploaded_kyous = []
                 for (let i = 0; i < response.uploaded_kyous.length; i++) {
                         const kyou = new Kyou()
                         for (const key in response.uploaded_kyous[i]) {
