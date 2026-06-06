@@ -10,14 +10,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 
-const TEXT_EXTENSIONS = new Set([
-    'txt', 'md', 'markdown', 'csv', 'tsv',
-    'json', 'jsonl', 'xml', 'yaml', 'yml', 'toml', 'ini', 'cfg', 'conf', 'env',
-    'html', 'htm', 'css', 'js', 'ts', 'jsx', 'tsx', 'vue', 'svelte',
-    'py', 'go', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'rb', 'php',
-    'swift', 'kt', 'rs', 'scala', 'r', 'sh', 'bash', 'zsh', 'bat', 'ps1',
-    'sql', 'graphql', 'proto', 'log', 'diff', 'patch',
-])
+const TEXT_EXTENSIONS = new Set(['txt'])
 
 const MAX_TEXT_LENGTH = 10000
 
