@@ -770,5 +770,17 @@
     "BROWSE_ZIP_CONTENTS_TITLE": "Explorar contenido ZIP",
     "BROWSE_ZIP_CONTENTS_EMPTY": "Esta carpeta está vacía",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "Error al explorar el contenido ZIP",
-    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "Contenido ZIP obtenido"
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "Contenido ZIP obtenido",
+    "SAVE_CLIPBOARD_TO_FILE_APP_NAME": "Guardar portapapeles",
+    "SAVE_CLIPBOARD_TO_FILE_TITLE": "Guardar portapapeles como archivo",
+    "CLIPBOARD_EMPTY_MESSAGE": "No hay datos en el portapapeles",
+    "CLIPBOARD_NOT_SUPPORTED_MESSAGE": "Este navegador no admite la lectura del portapapeles",
+    "CLIPBOARD_PERMISSION_DENIED_MESSAGE": "Se denegó el acceso al portapapeles",
+    "CLIPBOARD_PASTE_HERE_MESSAGE": "Presione Ctrl+V para pegar",
+    "CLIPBOARD_TYPE_LABEL": "Tipo",
+    "CLIPBOARD_ALREADY_SAVED_CONFIRM_MESSAGE": "Estos datos ya están guardados. ¿Guardar de nuevo?",
+    "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "Guardar de nuevo",
+    "CLIPBOARD_SAVED_MESSAGE": "Contenido del portapapeles guardado",
+    "CLIPBOARD_CHANGE_FILENAME_TITLE": "Cambiar nombre de archivo",
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: Guardar / Ctrl+V: Pegar y guardar / Esc: Cerrar"
 }
