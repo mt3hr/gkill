@@ -770,5 +770,17 @@
     "BROWSE_ZIP_CONTENTS_TITLE": "ZIP内容を閲覧",
     "BROWSE_ZIP_CONTENTS_EMPTY": "このフォルダにはファイルがありません",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP内容の閲覧に失敗しました",
-    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP内容を取得しました"
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP内容を取得しました",
+    "SAVE_CLIPBOARD_TO_FILE_APP_NAME": "クリップボードを保存",
+    "SAVE_CLIPBOARD_TO_FILE_TITLE": "クリップボードをファイルに保存",
+    "CLIPBOARD_EMPTY_MESSAGE": "クリップボードにデータがありません",
+    "CLIPBOARD_NOT_SUPPORTED_MESSAGE": "このブラウザはクリップボード読み取りに対応していません",
+    "CLIPBOARD_PERMISSION_DENIED_MESSAGE": "クリップボードへのアクセスが拒否されました",
+    "CLIPBOARD_PASTE_HERE_MESSAGE": "Ctrl+V で貼り付けてください",
+    "CLIPBOARD_TYPE_LABEL": "種別",
+    "CLIPBOARD_ALREADY_SAVED_CONFIRM_MESSAGE": "このデータはすでに保存済みです。もう一度保存しますか？",
+    "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "もう一度保存",
+    "CLIPBOARD_SAVED_MESSAGE": "クリップボードの内容を保存しました",
+    "CLIPBOARD_CHANGE_FILENAME_TITLE": "ファイル名を変更",
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: 保存 / Ctrl+V: 貼り付けて保存 / Esc: 閉じる"
 }
