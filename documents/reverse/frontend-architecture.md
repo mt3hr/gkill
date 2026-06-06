@@ -54,7 +54,7 @@ src/client/
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
 │   ├── views/                       # Viewコンポーネント (177)
-│   └── dialogs/                     # ダイアログコンポーネント (94, Esc閉じ対応)
+│   └── dialogs/                     # ダイアログコンポーネント (95, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -75,7 +75,7 @@ Page（ルートページ）
 |---|---|---|---|
 | **Page** | `pages/*.vue` | 14 | ルーティング先。ページ全体のレイアウト（12ルート＋共有用2ページ） |
 | **View** | `pages/views/*.vue` | 177 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 94 | モーダル操作（確認、詳細編集等） |
+| **Dialog** | `pages/dialogs/*.vue` | 95 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -101,7 +101,7 @@ Page（ルートページ）
 
 ### ダイアログ アクセシビリティ
 
-全94ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
+全95ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
 
 | 機能 | 説明 |
 |------|------|
@@ -357,6 +357,33 @@ Service Worker が `/share-target` POSTを処理：
 - `rykv-view.vue` / `mi-view.vue`: ナビゲーションドロワーの幅を `$vuetify.display.smAndDown` で画面幅に応じて切替（スマートフォンでは `100vw`）
 - `rykv-view.vue`: 詳細ビュー（`.kyou_detail_view`）の `min-width` を `0` に変更し `max-width: 100vw` を追加。600px以下でフルワイド表示
 - `kyou-list-view.vue`: `v-virtual-scroll` に `max-width: 100vw` を追加し、画像リスト幅が画面を超えないように制限
+
+### スコープ付きキーボードショートカット Composable
+
+各 View に対してスコープを限定したキーボードイベントリスナーを登録する Composable 群を `src/client/classes/` に定義している。
+
+| Composable | ファイル | 説明 |
+|---|---|---|
+| `useScopedEnterForKFTL` | `use-scoped-enter-for-kftl.ts` | 対象 View にフォーカスがある状態で Enter キーを押すとメモ帳ダイアログを開く |
+| `useScopedCtrlVForClipboard` | `use-scoped-ctrl-v-for-clipboard.ts` | 対象 View 内が最後にクリックされた状態で Ctrl+V を押すとクリップボード保存ダイアログを開く |
+
+これらは `onMounted` / `onBeforeUnmount` でドキュメントレベルのイベントリスナーを管理し、`rykv-view.vue`・`mi-view.vue`・`plaing-timeis-view.vue` の各 composable から呼び出される。
+
+### クリップボード保存ダイアログ（`save-clipboard-to-file-dialog.vue`）
+
+`use-save-clipboard-to-file-dialog.ts` に主要ロジックを実装するフローティングダイアログ。既存の `POST /api/upload_files` を再利用し、ブラウザ Clipboard API で取得したデータを base64 変換してアップロードする。
+
+| 機能 | 説明 |
+|---|---|
+| Clipboard API 読み取り | `navigator.clipboard.read()` で画像・テキスト・PDF 等を取得。優先度順（PNG > JPEG > ... > text/plain）で型を自動選択 |
+| プレビュー | 画像は `URL.createObjectURL` でプレビュー表示、テキストは先頭5行を表示 |
+| 保存済み判定 | SHA-256 ハッシュで前回保存と一致する場合は確認を促す。同一 Blob の二重保存を防止 |
+| 連続保存 | 保存後もダイアログを閉じず、`save_btn` にフォーカスを戻して Enter で継続保存可能 |
+| Ctrl+V ペースト | ダイアログが最後にクリックされた状態なら `paste` イベントを受け取り、クリップボードデータを自動更新して保存 |
+| Enter キー保存 | テキスト入力フィールド外で Enter を押すと `save_or_confirm` を実行 |
+| ファイル名自動生成 | `clipboard_YYYYMMDD_HHmmss.ext` 形式。折りたたみ UI で変更可能 |
+| 保存先記憶 | 最後に選択した IDF リポジトリ名を `localStorage`（キー: `gkill_clipboard_save_last_rep_name`）に保存 |
+| 「最後クリック」判定 | `mousedown` キャプチャリスナーで `.gkill-floating-dialog` を追跡し、ペースト・Enter 保存を自ダイアログのみに限定する |
 
 ### 未保存データ警告
 
