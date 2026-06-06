@@ -49,6 +49,7 @@ graph LR
         UC_TIMEIS[状態（打刻）を<br>記録/編集/削除する]
         UC_FILE[ファイルを<br>アップロードし記録する]
         UC_GPSLOG[ログファイルを<br>アップロードし記録する]
+        UC_CLIPBOARD[クリップボードの内容を<br>ファイルとして保存する]
         UC_REKYOU[情報をリポストする]
     end
 
@@ -89,6 +90,7 @@ graph LR
     User --> UC_TIMEIS
     User --> UC_FILE
     User --> UC_GPSLOG
+    User --> UC_CLIPBOARD
     User --> UC_REKYOU
     User --> UC_TAG
     User --> UC_TEXT
@@ -195,6 +197,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 |-------|---------------|------------------|
 | UC-0801 | ファイルをアップロードする | `UploadFiles` |
 | UC-0802 | GPS ログファイルをアップロードする | `UploadGPSLogFiles` |
+| UC-0803 | クリップボードの内容をファイルとして保存する | `UploadFiles`（クライアントサイドで Clipboard API → base64 変換後送信） |
 
 ### 2.9 設定管理
 

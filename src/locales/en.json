@@ -770,5 +770,17 @@
     "BROWSE_ZIP_CONTENTS_TITLE": "Browse ZIP contents",
     "BROWSE_ZIP_CONTENTS_EMPTY": "This folder is empty",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "Failed to browse ZIP contents",
-    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP contents retrieved"
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP contents retrieved",
+    "SAVE_CLIPBOARD_TO_FILE_APP_NAME": "Save Clipboard",
+    "SAVE_CLIPBOARD_TO_FILE_TITLE": "Save Clipboard to File",
+    "CLIPBOARD_EMPTY_MESSAGE": "No data in clipboard",
+    "CLIPBOARD_NOT_SUPPORTED_MESSAGE": "This browser does not support clipboard reading",
+    "CLIPBOARD_PERMISSION_DENIED_MESSAGE": "Clipboard access was denied",
+    "CLIPBOARD_PASTE_HERE_MESSAGE": "Press Ctrl+V to paste",
+    "CLIPBOARD_TYPE_LABEL": "Type",
+    "CLIPBOARD_ALREADY_SAVED_CONFIRM_MESSAGE": "This data is already saved. Save again?",
+    "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "Save Again",
+    "CLIPBOARD_SAVED_MESSAGE": "Clipboard content saved",
+    "CLIPBOARD_CHANGE_FILENAME_TITLE": "Change filename",
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: Save / Ctrl+V: Paste & Save / Esc: Close"
 }

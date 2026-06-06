@@ -770,5 +770,17 @@
     "BROWSE_ZIP_CONTENTS_TITLE": "ZIP-Inhalt durchsuchen",
     "BROWSE_ZIP_CONTENTS_EMPTY": "Dieser Ordner ist leer",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP-Inhalt konnte nicht durchsucht werden",
-    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP-Inhalt abgerufen"
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP-Inhalt abgerufen",
+    "SAVE_CLIPBOARD_TO_FILE_APP_NAME": "Zwischenablage speichern",
+    "SAVE_CLIPBOARD_TO_FILE_TITLE": "Zwischenablage als Datei speichern",
+    "CLIPBOARD_EMPTY_MESSAGE": "Keine Daten in der Zwischenablage",
+    "CLIPBOARD_NOT_SUPPORTED_MESSAGE": "Dieser Browser unterstützt das Lesen der Zwischenablage nicht",
+    "CLIPBOARD_PERMISSION_DENIED_MESSAGE": "Zugriff auf die Zwischenablage wurde verweigert",
+    "CLIPBOARD_PASTE_HERE_MESSAGE": "Drücken Sie Ctrl+V zum Einfügen",
+    "CLIPBOARD_TYPE_LABEL": "Typ",
+    "CLIPBOARD_ALREADY_SAVED_CONFIRM_MESSAGE": "Diese Daten wurden bereits gespeichert. Erneut speichern?",
+    "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "Erneut speichern",
+    "CLIPBOARD_SAVED_MESSAGE": "Zwischenablageinhalt gespeichert",
+    "CLIPBOARD_CHANGE_FILENAME_TITLE": "Dateiname ändern",
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: Speichern / Ctrl+V: Einfügen & Speichern / Esc: Schließen"
 }

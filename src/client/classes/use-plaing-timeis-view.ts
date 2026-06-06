@@ -11,6 +11,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import { Tag } from '@/classes/datas/tag'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
+import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -31,6 +32,7 @@ export function usePlaingTimeisView(options: {
     const add_kc_dialog = ref<ComponentRef | null>(null)
     const mkfl_dialog = ref<ComponentRef | null>(null)
     const upload_file_dialog = ref<ComponentRef | null>(null)
+    const save_clipboard_to_file_dialog = ref<ComponentRef | null>(null)
     const kyou_list_views = ref()
 
     // ── State refs ──
@@ -263,6 +265,7 @@ export function usePlaingTimeisView(options: {
     // ── Enter key → KFTL dialog ──
     const enable_enter_shortcut = ref(true)
     useScopedEnterForKFTL(plaing_timeis_root, show_kftl_dialog, enable_enter_shortcut)
+    useScopedCtrlVForClipboard(plaing_timeis_root, show_save_clipboard_to_file_dialog, enable_enter_shortcut)
 
     // ── Dialog show methods ──
     function show_kftl_dialog(): void {
@@ -299,6 +302,10 @@ export function usePlaingTimeisView(options: {
 
     function show_upload_file_dialog(): void {
         upload_file_dialog.value?.show()
+    }
+
+    function show_save_clipboard_to_file_dialog(): void {
+        save_clipboard_to_file_dialog.value?.show()
     }
 
     function floatingActionButtonStyle() {
@@ -356,6 +363,7 @@ export function usePlaingTimeisView(options: {
         add_kc_dialog,
         mkfl_dialog,
         upload_file_dialog,
+        save_clipboard_to_file_dialog,
         kyou_list_views,
 
         // State
@@ -389,6 +397,7 @@ export function usePlaingTimeisView(options: {
         show_nlog_dialog,
         show_lantana_dialog,
         show_upload_file_dialog,
+        show_save_clipboard_to_file_dialog,
         floatingActionButtonStyle,
 
         // Event relay objects

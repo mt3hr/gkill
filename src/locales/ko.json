@@ -770,5 +770,17 @@
     "BROWSE_ZIP_CONTENTS_TITLE": "ZIP 내용 탐색",
     "BROWSE_ZIP_CONTENTS_EMPTY": "이 폴더는 비어 있습니다",
     "FAILED_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP 내용 탐색에 실패했습니다",
-    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP 내용을 가져왔습니다"
+    "SUCCESS_BROWSE_ZIP_CONTENTS_MESSAGE": "ZIP 내용을 가져왔습니다",
+    "SAVE_CLIPBOARD_TO_FILE_APP_NAME": "클립보드 저장",
+    "SAVE_CLIPBOARD_TO_FILE_TITLE": "클립보드를 파일로 저장",
+    "CLIPBOARD_EMPTY_MESSAGE": "클립보드에 데이터가 없습니다",
+    "CLIPBOARD_NOT_SUPPORTED_MESSAGE": "이 브라우저는 클립보드 읽기를 지원하지 않습니다",
+    "CLIPBOARD_PERMISSION_DENIED_MESSAGE": "클립보드 접근이 거부되었습니다",
+    "CLIPBOARD_PASTE_HERE_MESSAGE": "Ctrl+V 로 붙여넣기 하세요",
+    "CLIPBOARD_TYPE_LABEL": "유형",
+    "CLIPBOARD_ALREADY_SAVED_CONFIRM_MESSAGE": "이 데이터는 이미 저장되었습니다. 다시 저장하시겠습니까?",
+    "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "다시 저장",
+    "CLIPBOARD_SAVED_MESSAGE": "클립보드 내용을 저장했습니다",
+    "CLIPBOARD_CHANGE_FILENAME_TITLE": "파일명 변경",
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: 저장 / Ctrl+V: 붙여넣기 후 저장 / Esc: 닫기"
 }

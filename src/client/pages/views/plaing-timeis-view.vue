@@ -37,6 +37,9 @@
         <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" v-on="crudRelayHandlers"
             ref="upload_file_dialog" />
+        <SaveClipboardToFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="application_config" :gkill_api="gkill_api" v-on="crudRelayHandlers"
+            ref="save_clipboard_to_file_dialog" />
         <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @closed="(id: string) => close_rykv_dialog(id)"
@@ -75,6 +78,9 @@
                     <v-list-item @click="show_upload_file_dialog()">
                         <v-list-item-title>{{ i18n.global.t("UPLOAD_APP_NAME") }}</v-list-item-title>
                     </v-list-item>
+                    <v-list-item @click="show_save_clipboard_to_file_dialog()">
+                        <v-list-item-title>{{ i18n.global.t("SAVE_CLIPBOARD_TO_FILE_APP_NAME") }}</v-list-item-title>
+                    </v-list-item>
                 </v-list>
             </v-menu>
         </v-avatar>
@@ -93,6 +99,7 @@ import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
+import SaveClipboardToFileDialog from '../dialogs/save-clipboard-to-file-dialog.vue'
 import type { PlaingTimeIsViewProps } from './plaing-timeis-view-props'
 import type { PlaingTimeIsViewEmits } from './plaing-timeis-emits'
 import RykvDialogHost from './rykv-dialog-host.vue'
@@ -113,6 +120,7 @@ const {
     add_kc_dialog,
     mkfl_dialog,
     upload_file_dialog,
+    save_clipboard_to_file_dialog,
     kyou_list_views,
 
     // State
@@ -143,6 +151,7 @@ const {
     show_nlog_dialog,
     show_lantana_dialog,
     show_upload_file_dialog,
+    show_save_clipboard_to_file_dialog,
     floatingActionButtonStyle,
 
     // Event relay objects
