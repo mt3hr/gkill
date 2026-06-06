@@ -1,6 +1,15 @@
 <template>
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <a v-if="kyou.typed_idf_kyou && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio"
+        <!-- テキストファイル: 内容をインライン表示 -->
+        <div v-if="kyou.typed_idf_kyou && is_text" class="idf_text_wrap">
+            <a :href="kyou.typed_idf_kyou.file_url" @click="open_link" class="idf_text_filename">
+                {{ kyou.typed_idf_kyou.file_name }}
+            </a>
+            <v-progress-linear v-if="text_loading" indeterminate color="primary" height="2" />
+            <pre v-if="text_content !== null" class="idf_text_content">{{ text_content }}</pre>
+        </div>
+        <!-- その他のファイル: リンクのみ -->
+        <a v-if="kyou.typed_idf_kyou && !is_text && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio"
             :href="kyou.typed_idf_kyou.file_url" @click="open_link">
             {{ kyou.typed_idf_kyou.file_name }}
         </a>
@@ -46,6 +55,9 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     context_menu,
+    is_text,
+    text_content,
+    text_loading,
     show_context_menu,
     open_link,
     buildMediaUrl,
@@ -54,3 +66,36 @@ const {
 
 defineExpose({ show_context_menu })
 </script>
+
+<style scoped>
+.idf_text_wrap {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.idf_text_filename {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    padding: 2px 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.idf_text_content {
+    flex: 1;
+    overflow: auto;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    padding: 4px 6px;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+}
+</style>

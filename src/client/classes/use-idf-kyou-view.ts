@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { IDFKyouProps } from '@/pages/views/idf-kyou-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
@@ -10,6 +10,22 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 
+const TEXT_EXTENSIONS = new Set([
+    'txt', 'md', 'markdown', 'csv', 'tsv',
+    'json', 'jsonl', 'xml', 'yaml', 'yml', 'toml', 'ini', 'cfg', 'conf', 'env',
+    'html', 'htm', 'css', 'js', 'ts', 'jsx', 'tsx', 'vue', 'svelte',
+    'py', 'go', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'rb', 'php',
+    'swift', 'kt', 'rs', 'scala', 'r', 'sh', 'bash', 'zsh', 'bat', 'ps1',
+    'sql', 'graphql', 'proto', 'log', 'diff', 'patch',
+])
+
+const MAX_TEXT_LENGTH = 10000
+
+function get_extension(filename: string): string {
+    const dot = filename.lastIndexOf('.')
+    return dot >= 0 ? filename.slice(dot + 1).toLowerCase() : ''
+}
+
 export function useIDFKyouView(options: {
     props: IDFKyouProps,
     emits: KyouViewEmits,
@@ -18,6 +34,42 @@ export function useIDFKyouView(options: {
 
     // ── Template refs ──
     const context_menu = ref<ComponentRef | null>(null)
+
+    // ── Text file preview ──
+    const text_content = ref<string | null>(null)
+    const text_loading = ref(false)
+
+    const is_text = computed((): boolean => {
+        const fname = props.kyou.typed_idf_kyou?.file_name ?? ''
+        const idf = props.kyou.typed_idf_kyou
+        if (!idf || idf.is_image || idf.is_video || idf.is_audio || idf.is_zip) return false
+        return TEXT_EXTENSIONS.has(get_extension(fname))
+    })
+
+    async function load_text_content(): Promise<void> {
+        const url = props.kyou.typed_idf_kyou?.file_url
+        if (!url || !is_text.value) return
+        text_loading.value = true
+        text_content.value = null
+        try {
+            const res = await fetch(url)
+            if (!res.ok) return
+            const raw = await res.text()
+            text_content.value = raw.length > MAX_TEXT_LENGTH
+                ? raw.slice(0, MAX_TEXT_LENGTH) + '\n…'
+                : raw
+        } catch {
+            // 取得失敗時はリンク表示にフォールバックするため無視
+        } finally {
+            text_loading.value = false
+        }
+    }
+
+    watch(
+        () => props.kyou.typed_idf_kyou?.file_url,
+        () => { if (is_text.value) load_text_content() },
+        { immediate: true },
+    )
 
     // ── Business logic ──
     function show_context_menu(e: PointerEvent): void {
@@ -91,6 +143,11 @@ export function useIDFKyouView(options: {
     return {
         // Template refs
         context_menu,
+
+        // Text preview
+        is_text,
+        text_content,
+        text_loading,
 
         // Business logic
         show_context_menu,
