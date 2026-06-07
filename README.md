@@ -56,24 +56,24 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 
 ### ⭐️gkill体験  
 Windows用の利用例サンプルデータがあります。  
-まず [gkill_sample_data_v1.1.0.zip](https://github.com/mt3hr/gkill/releases/latest) で軽く試して体験してほしいです。  
+まず [gkill_sample_data_v1.1.3.zip](https://github.com/mt3hr/gkill/releases/latest) で軽く試して体験してほしいです。  
 ダウンロード/展開後、LAUNCH_GKILL_SAMPLE_DATA.batを起動してください。  
 [説明書](documents/gkill_user_document.pdf)に利用イメージのドキュメントがあります。   
 
 ### 💻️Windowsユーザ向け  
-①Assetsから「windows_amd64_gkill_v1.1.0.zip」をダウンロード  
+①Assetsから「windows_amd64_gkill_v1.1.3.zip」をダウンロード  
 ②zipを解凍して「gkill.exe」を実行  
 ※初回起動には時間がかかります。コーヒーでも淹れてお待ち下さい。  
 
 ### 📱Androidユーザ向け  
-①Assetsから「gkill_v1.1.0.apk」をダウンロード  
+①Assetsから「gkill_v1.1.3.apk」をダウンロード  
 ②インストール  
 ③ホーム画面から起動  
 ※インストール時に警告が出ますが、「詳細」からインストールできます  
 ⇛警告理由：古いAndroidAPIを利用しているため  
 
 ### 😎上級者・サーバ構築派向け  
-①あなたの環境の「gkill_server_v1.1.0.zip」をダウンロード  
+①あなたの環境の「gkill_server_v1.1.3.zip」をダウンロード  
 ②適当な場所に展開して「gkill_server.exe」を実行  
 ③その後「[http://localhost:9999](http://localhost:9999)」にアクセス  
 ④ブラウザからインストール（PWA）  
@@ -129,7 +129,7 @@ Windows用の利用例サンプルデータがあります。
 
 100% 2026-03-25 対応完了 ソース保守性向上対応  
 
-100% 2026-03-25 対応完了 v1.1.0リリース  
+100% 2026-03-25 対応完了 v1.1.3リリース  
 
 100% 2025-08-16 対応完了 マニュアル用サンプルデータ取得  
 
@@ -151,7 +151,7 @@ Windows用の利用例サンプルデータがあります。
 
 100% 2026-03-25 対応完了 全体テスト実施（自動化）  
 
-100% 2026-03-25 対応完了 gkill v1.1.0リリース  
+100% 2026-03-25 対応完了 gkill v1.1.3リリース  
 
 </details>
 
