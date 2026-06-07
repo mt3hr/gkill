@@ -188,7 +188,7 @@ flowchart TD
     Start([ZIP内容閲覧リクエスト]) --> Auth[セッション認証]
     Auth --> GetIDFKyou[IDFKyou取得<br>ファイルパス特定]
     GetIDFKyou --> CalcHash[ZIPファイルのSHA1ハッシュ計算]
-    CalcHash --> CacheCheck{zip_cache/{rep_name}/{sha1}/<br>が存在する?}
+    CalcHash --> CacheCheck{"zip_cache/(rep_name)/(sha1)/<br>が存在する?"}
 
     CacheCheck -->|Yes| BuildEntries[ZipEntryリスト生成<br>キャッシュから]
     CacheCheck -->|No| ExtractToTemp[一時ディレクトリに展開開始]
@@ -206,7 +206,7 @@ flowchart TD
     DecodeFilename --> WriteFile[ファイルを一時ディレクトリに書き込み]
     WriteFile --> LoopEntries
 
-    LoopEntries -->|No| AtomicRename[一時ディレクトリ→<br>zip_cache/{rep_name}/{sha1}/ にリネーム<br>（アトミック展開）]
+    LoopEntries -->|No| AtomicRename["一時ディレクトリ→<br>zip_cache/(rep_name)/(sha1)/ にリネーム<br>（アトミック展開）"]
     AtomicRename --> BuildEntries
 
     BuildEntries --> ReturnEntries([ZipEntryリスト返却<br>MSG000080])
