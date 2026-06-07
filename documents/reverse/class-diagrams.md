@@ -35,7 +35,7 @@ classDiagram
         +string Content
         +time.Time CreateTime
         +time.Time UpdateTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class KC {
@@ -44,7 +44,7 @@ classDiagram
         +string Title
         +json.Number NumValue
         +time.Time RelatedTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class Lantana {
@@ -52,7 +52,7 @@ classDiagram
         +string ID
         +int Mood
         +time.Time RelatedTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class Mi {
@@ -64,7 +64,7 @@ classDiagram
         +*time.Time LimitTime
         +*time.Time EstimateStartTime
         +*time.Time EstimateEndTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class Nlog {
@@ -74,7 +74,7 @@ classDiagram
         +string Title
         +json.Number Amount
         +time.Time RelatedTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class URLog {
@@ -86,7 +86,7 @@ classDiagram
         +string FaviconImage
         +string ThumbnailImage
         +time.Time RelatedTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class TimeIs {
@@ -95,7 +95,7 @@ classDiagram
         +string Title
         +time.Time StartTime
         +*time.Time EndTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class Tag {
@@ -104,7 +104,7 @@ classDiagram
         +string TargetID
         +string Tag
         +time.Time RelatedTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class Text {
@@ -113,7 +113,7 @@ classDiagram
         +string TargetID
         +string Text
         +time.Time RelatedTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class Notification {
@@ -123,7 +123,7 @@ classDiagram
         +time.Time NotificationTime
         +string Content
         +bool IsNotificated
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class ReKyou {
@@ -131,7 +131,7 @@ classDiagram
         +string ID
         +string TargetID
         +time.Time RelatedTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     class IDFKyou {
@@ -141,7 +141,7 @@ classDiagram
         +string TargetFile
         +bool IsZip
         +time.Time RelatedTime
-        ..共通メタフィールド省略..
+        %% 共通メタフィールド省略
     }
 
     Tag --> Kyou : TARGET_ID で紐づく
@@ -241,7 +241,7 @@ classDiagram
     }
 
     class KmemoRepositories {
-        <<type: []KmemoRepository>>
+        <<typeAlias>>
         +FindKmemo(ctx, query) []Kmemo
         +GetKmemo(ctx, id, updateTime) *Kmemo
     }
@@ -344,7 +344,7 @@ classDiagram
         +HandleAddKmemo(w, r)
         +HandleUpdateKmemo(w, r)
         +HandleGetKyous(w, r)
-        ..79エンドポイント..
+        %% 残り80エンドポイント省略（合計84）
     }
 
     GkillServerAPI --> GkillDAOManager : uses
@@ -591,7 +591,7 @@ classDiagram
         +add_kmemo(req) Promise~AddKmemoResponse~
         +update_kmemo(req) Promise~UpdateKmemoResponse~
         +get_kyous(req) Promise~GetKyousResponse~
-        ..50+メソッド..
+        %% 残り80+メソッド省略（合計84）
     }
 
     InfoBase <|-- Kyou : extends

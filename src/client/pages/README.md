@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 14 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（175 .vue）
-└── dialogs/                        # Dialog コンポーネント（93 .vue）
+├── views/                          # View コンポーネント（177 .vue）
+└── dialogs/                        # Dialog コンポーネント（95 .vue）
 ```
 
 ## 設計パターン
@@ -56,7 +56,7 @@ xxx-view-emits.ts     # Emits 定義
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（175 .vue）
+## views/ — 全 View コンポーネント一覧（177 .vue）
 
 ### データ追加系（20コンポーネント）
 
@@ -220,8 +220,10 @@ xxx-view-emits.ts     # Emits 定義
 | `sidebar-header.vue` | サイドバーヘッダー |
 | `foldable-struct.vue` / `rep-struct-element.vue` / `rep-type-element.vue` / `tag-struct-element.vue` | 構造要素 |
 | `saihate-stars-overlay.vue` / `snow-fall-overlay.vue` | オーバーレイ効果 |
+| `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
+| `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（93 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（95 .vue）
 
 ### データ追加ダイアログ（19コンポーネント）
 
@@ -260,6 +262,11 @@ xxx-view-emits.ts     # Emits 定義
 | `show-password-reset-link-dialog.vue` | パスワードリセットリンク |
 | `share-kyou-list-dialog.vue` / `share-kyou-list-link-dialog.vue` | 共有リスト |
 | `upload-file-dialog.vue` | ファイルアップロード |
+| `browse-zip-contents-dialog.vue` | ZIP コンテンツブラウザ |
+| `help-dialog.vue` | ヘルプダイアログ |
+| `plugin-config-dialog.vue` | プラグイン設定 |
+| `save-clipboard-to-file-dialog.vue` | クリップボード内容ファイル保存 |
+| `tutorial-dialog.vue` | チュートリアル |
 
 ## 開発ガイドライン
 
