@@ -593,9 +593,9 @@ sequenceDiagram
     API->>PluginRepo: rep_name でプラグインを検索
     PluginRepo->>PluginRepo: ensureStarted() — プロセス未起動なら起動
     PluginRepo->>PluginRepo: callCommand() — mu.Lock()
-    PluginRepo->>Plugin: {"command":"get_config_html"}\n (stdin)
+    PluginRepo->>Plugin: {"command":"get_config_html"} (stdin)
     Plugin->>Plugin: GetConfigHTML ハンドラ呼び出し<br>（設定フォームHTML生成）
-    Plugin-->>PluginRepo: {"html":"<form>...</form>"}\n (stdout)
+    Plugin-->>PluginRepo: {"html":"<form>...</form>"} (stdout)
     PluginRepo->>PluginRepo: mu.Unlock()
     PluginRepo-->>API: html string
     API-->>UI: {html, messages, errors}
@@ -621,9 +621,9 @@ sequenceDiagram
     API->>API: getAccountFromSessionID(session_id)
     API->>PluginRepo: rep_name でプラグインを検索
     PluginRepo->>PluginRepo: callCommand() — mu.Lock()
-    PluginRepo->>Plugin: {"command":"post_config","form_data":{...}}\n (stdin)
+    PluginRepo->>Plugin: {"command":"post_config","form_data":{...}} (stdin)
     Plugin->>Plugin: PostConfig ハンドラ呼び出し<br>（設定を cache.db またはファイルに保存）
-    Plugin-->>PluginRepo: {"pong":false}\n (stdout)
+    Plugin-->>PluginRepo: {"pong":false} (stdout)
     PluginRepo->>PluginRepo: mu.Unlock()
     PluginRepo-->>API: OK
     API-->>UI: {messages, errors}
@@ -768,9 +768,9 @@ sequenceDiagram
         SW->>API: POST /api/get_plugin_content_html
         API->>PluginRepo: GetContentHTML(ctx, kyouID)
         PluginRepo->>PluginRepo: callCommand() — mu.Lock()
-        PluginRepo->>Plugin: {"command":"get_content_html","kyou_id":"..."}\n (stdin)
+        PluginRepo->>Plugin: {"command":"get_content_html","kyou_id":"..."} (stdin)
         Plugin->>Plugin: globalCache.GetMsgByID(pluginDir, kyouID)
-        Plugin-->>PluginRepo: {"html":"<!DOCTYPE html>..."}\n (stdout)
+        Plugin-->>PluginRepo: {"html":"<!DOCTYPE html>..."} (stdout)
         PluginRepo->>PluginRepo: mu.Unlock()
         PluginRepo-->>API: html string
         API-->>SW: {html, messages, errors}
