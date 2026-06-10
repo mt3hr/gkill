@@ -2,7 +2,7 @@
 
 ## 概要
 
-全11データ型のリポジトリ SQLite3 実装テスト。CRUD 操作、キャッシュ層、一時リポジトリ層、キャッシュ更新処理を網羅する。
+全12データ型のリポジトリ SQLite3 実装テスト。CRUD 操作、キャッシュ層、一時リポジトリ層、キャッシュ更新処理を網羅する。
 
 ## テストフレームワーク
 
@@ -10,7 +10,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 
 ## テストファイル一覧
 
-### SQLite3 リポジトリ実装テスト（11ファイル）
+### SQLite3 リポジトリ実装テスト（12ファイル）
 
 | ファイル | テスト対象 |
 |---------|-----------|
@@ -25,6 +25,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | `text_repository_sqlite3_impl_test.go` | Text（テキスト注釈）リポジトリ |
 | `notification_repository_sqlite3_impl_test.go` | Notification（通知）リポジトリ |
 | `re_kyou_repository_sqlite3_impl_test.go` | ReKyou（リポスト）リポジトリ |
+| `idf_kyou_repository_sqlite3_impl_test.go` | IDFKyou（ファイル）リポジトリ |
 
 ### キャッシュ・一時・ユーティリティテスト
 
@@ -40,7 +41,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 
 - **CRUD 操作**: 各データ型の Create / Read / Update / Delete
 - **検索・フィルタ**: ID 検索、日付範囲検索、全件取得
-- **IDFKyou 拡張**: IsZip フィールド、isZip() 判定関数、IsImagePublic() エクスポート関数のテスト
+- **IDFKyou**: 追加・取得・カレンダーフィルタ・論理削除・履歴・OnlyLatestData・IsZip検出・Rep名取得の9テストケース
 - **4層リポジトリパターン**: interface → SQLite3 実装 → キャッシュ実装 → 一時実装の各層
 - **キャッシュ管理**: キャッシュアドレスの解決、キャッシュの更新とクリア
 
