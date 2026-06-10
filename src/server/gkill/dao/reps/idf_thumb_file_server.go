@@ -45,10 +45,16 @@ func init() {
 }
 
 func findInPath(name string) (string, bool) {
+	exts := []string{""}
+	if runtime.GOOS == "windows" {
+		exts = []string{".exe", ".cmd", ".bat", ""}
+	}
 	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
-		full := filepath.Join(dir, name)
-		if info, err := os.Stat(full); err == nil && !info.IsDir() {
-			return full, true
+		for _, ext := range exts {
+			full := filepath.Join(dir, name+ext)
+			if info, err := os.Stat(full); err == nil && !info.IsDir() {
+				return full, true
+			}
 		}
 	}
 	return "", false
