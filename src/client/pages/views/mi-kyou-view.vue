@@ -1,5 +1,5 @@
 <template>
-    <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height" :draggable="props.draggable"
+    <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height" :draggable="effective_draggable"
         @dragstart="(e: DragEvent) => on_drag_start(e)">
         <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0" :style="mi_title_style">
@@ -58,6 +58,7 @@ const {
     cloned_kyou: _cloned_kyou,
     is_checked_mi,
     mi_title_style,
+    effective_draggable,
     show_context_menu,
     clicked_mi_check,
     on_drag_start,
