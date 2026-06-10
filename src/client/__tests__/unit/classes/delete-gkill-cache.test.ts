@@ -46,10 +46,10 @@ beforeEach(() => {
 })
 
 describe('delete_gkill_kyou_cache', () => {
-  test('deletes cache entries for all 14 data types when id provided', async () => {
+  test('deletes cache entries for all 15 data types when id provided', async () => {
     await delete_gkill_kyou_cache('test-id')
     expect(mockCachesOpen).toHaveBeenCalledWith('gkill-post-kyou-cache')
-    expect(mockCacheDelete).toHaveBeenCalledTimes(14)
+    expect(mockCacheDelete).toHaveBeenCalledTimes(15)
   })
 
   test('constructs correct cache key format /cache/api/{type}/{id}', async () => {
