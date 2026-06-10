@@ -2,7 +2,7 @@
 
 ## 1. DVNFの概要
 
-DVNF（Data Versioning and Naming Framework）は、gkillで使用されるファイル/ディレクトリの命名規則フレームワークです。データリポジトリのファイルをタイムスタンプベースで管理し、バージョニングを実現します。
+DVNF（DeVice Name Folder Naming Framework）は、gkillで使用されるファイル/ディレクトリの命名規則フレームワークです。データリポジトリのファイルをタイムスタンプベースで管理し、バージョニングを実現します。
 
 ### ソースコード
 
