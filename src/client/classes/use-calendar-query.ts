@@ -30,21 +30,26 @@ export function useCalendarQuery(options: {
         }
 
         const start_date = moment(query.value.calendar_start_date)
-        const end_date = moment(query.value.calendar_end_date)
         const date_list = Array<Date>()
         if (query.value.calendar_start_date && query.value.calendar_end_date) {
-            for (let date = start_date; date.unix() <= end_date.unix(); date = date.add(1, 'day')) {
-                date_list.push(date.toDate())
+            // Vuetify4のrange modeは[start, end]の2要素のみを受け付ける。
+            // 中間日付を全て詰めるとレンジではなく個別選択として解釈されてしまう。
+            date_list.push(start_date.toDate())
+            const end_day = moment(query.value.calendar_end_date).startOf('day')
+            // startとendが同日の場合は1要素のみにする。
+            // 2要素にするとVDatePickerが「レンジ完了状態」と判断し、
+            // 次のクリックで新しいレンジが始まってしまうため。
+            if (!end_day.isSame(start_date, 'day')) {
+                date_list.push(end_day.toDate())
             }
         } else {
             if (query.value.calendar_start_date) {
                 date_list.push(start_date.toDate())
             }
             if (query.value.calendar_end_date) {
-                date_list.push(start_date.toDate())
+                date_list.push(moment(query.value.calendar_end_date).startOf('day').toDate())
             }
         }
-        dates.value = []
         dates.value = date_list
 
         if (!props.inited) {
@@ -60,12 +65,17 @@ export function useCalendarQuery(options: {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function clicked_date(recved_dates: any[]): void {
-        dates.value = recved_dates
-        if (dates.value) {
-            emits('request_update_dates', moment(dates.value[0]).toDate(), moment(dates.value[dates.value.length - 1]).add(1, 'day').add(-1, 'millisecond').toDate())
-        } else {
+        if (!recved_dates || recved_dates.length === 0) {
+            dates.value = []
             emits('request_update_dates', null, null)
+            return
         }
+        // Vuetify4のrange modeは[start, end]の2要素のみを受け付ける。
+        // 中間日付を全て含む配列が来ても先頭と末尾のみ残す。
+        const first = recved_dates[0]
+        const last = recved_dates[recved_dates.length - 1]
+        dates.value = recved_dates.length === 1 ? [first] : [first, last]
+        emits('request_update_dates', moment(first).toDate(), moment(last).add(1, 'day').add(-1, 'millisecond').toDate())
     }
 
     function on_wheel(e: WheelEvent) {
