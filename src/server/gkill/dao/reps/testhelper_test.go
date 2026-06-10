@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	gorilla_mux "github.com/gorilla/mux"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
@@ -143,9 +144,21 @@ func newTempReKyouRepo(t *testing.T, reps *GkillRepositories) ReKyouRepository {
 	return repo
 }
 
-// Note: IDFKyouRepository uses NewIDFDirRep with complex dependencies (mux.Router, etc.)
-// and is not easily unit-testable with a simple temp file approach.
-// IDFKyou tests are deferred to integration tests.
+// newTempIDFKyouRepo creates an IDFKyouRepository backed by a temp directory and SQLite3 file.
+// An empty mux.Router is passed; it is only used for file-serving routes and does not affect CRUD.
+func newTempIDFKyouRepo(t *testing.T) IDFKyouRepository {
+	t.Helper()
+	dir := t.TempDir()
+	dbFile := filepath.Join(dir, "idf.db")
+	r := gorilla_mux.NewRouter()
+	ignorePatterns := []string{}
+	repo, err := NewIDFDirRep(context.Background(), dir, dbFile, true, r, false, &ignorePatterns, nil)
+	if err != nil {
+		t.Fatalf("failed to create IDFKyou repo: %v", err)
+	}
+	t.Cleanup(func() { repo.Close(context.Background()) })
+	return repo
+}
 
 // testTime returns a fixed time for testing.
 func testTime() time.Time {
