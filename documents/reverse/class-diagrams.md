@@ -647,7 +647,7 @@ classDiagram
 
 命名規則: Go は PascalCase、TypeScript は snake_case。JSON シリアライズ時のキー名で対応。
 
-## 6. DNote 集計システム（TypeScript フロントエンド）
+## 6. Dnote 集計システム（TypeScript フロントエンド）
 
 > **スペルについて:** コードベースでは `Agregate`（正しくは `Aggregate`）が一貫して使用されています（`DnoteAgregateTarget`, `AgregateAverageKcNumValue` 等）。本資料ではコードの命名をそのまま記載しています。
 
@@ -761,7 +761,7 @@ classDiagram
     note for DnoteKeyGetter "日付/曜日/週/月/タグ/データ型等\n9種類のグルーピングキー"
 ```
 
-### DNote の処理フロー（クラス間の連携）
+### Dnote の処理フロー（クラス間の連携）
 
 ```
 DnoteAggregator
@@ -771,7 +771,7 @@ DnoteAggregator
   4. DnoteAgregateTarget.result_to_string() で結果文字列化
 ```
 
-### DNote 述語の全実装クラス
+### Dnote 述語の全実装クラス
 
 | カテゴリ | 実装クラス |
 |---------|-----------|
