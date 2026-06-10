@@ -1,6 +1,6 @@
 import { i18n } from '@/i18n'
 import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { miKyouViewProps } from '@/pages/views/mi-kyou-view-props'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -22,6 +22,11 @@ export function useMiKyouView(options: {
 
     // ── Template refs ──
     const context_menu = ref<ComponentRef | null>(null)
+
+    // タッチデバイス（モバイル）ではドラッグを無効にする。
+    // ロングプレスでcontextmenuイベントを発火させるため。
+    const is_mobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    const effective_draggable = computed(() => is_mobile ? false : (props.draggable ?? false))
 
     // ── State refs ──
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
@@ -181,6 +186,7 @@ export function useMiKyouView(options: {
         cloned_kyou,
         is_checked_mi,
         mi_title_style,
+        effective_draggable,
 
         // Business logic
         show_context_menu,
