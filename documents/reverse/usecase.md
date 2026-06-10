@@ -353,7 +353,7 @@ Excel の「現状・改修案」シートの改修後 CRUD + コードの実装
 |------|-----|------|-------|-------|-----|---------|------|--------|
 | **KFTL** | C | C | C | C | C | C | C | C(開始/終了) |
 | **Rykv** | CRUD | CRUD | RUD | RUD | RUD | RUD | RUD | RUD |
-| **DNote** | CRUD | CRUD | RUD | RUD | RUD | RUD | RUD | RUD |
+| **Dnote** | CRUD | CRUD | RUD | RUD | RUD | RUD | RUD | RUD |
 | **Mi** | CRUD | CRUD | - | - | CRUD | - | - | - |
 | **Plaing TimeIs** | - | - | - | - | - | - | - | R(終了操作) |
 | **URLog サーバ** | - | - | - | C(ブックマークレット) | - | - | - | - |

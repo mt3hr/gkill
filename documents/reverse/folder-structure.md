@@ -128,7 +128,7 @@ src/server/
     │   └── hide_files/             # ファイル隠蔽ユーティリティ
     ├── usecase/                    # ビジネスロジック層（16ファイル）
     │   └── *.go                    # HTTP非依存のユースケース関数群
-    ├── dvnf/                       # DVNF（Data Versioning and Naming Framework）
+    ├── dvnf/                       # DVNF（DeVice Name Folder Naming Framework）
     │   ├── dvnf.go                 # DVNFコア（タイムスタンプベース命名）
     │   └── cmd/                    # DVNFコマンド（get/copy/move）
     └── main/                       # エントリーポイント
