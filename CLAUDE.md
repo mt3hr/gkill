@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-gkill is a lifelogging application (version 1.1.4-dev) that records and reviews life events (memos, bookmarks, tasks, mood values, expenses, timestamps, files, git commits, etc.). Standalone client-server app: Go backend + Vue 3 frontend, compiled into a single binary with the frontend embedded via `//go:embed`. Licensed under MIT.
+gkill is a lifelogging application (version 1.1.4) that records and reviews life events (memos, bookmarks, tasks, mood values, expenses, timestamps, files, git commits, etc.). Standalone client-server app: Go backend + Vue 3 frontend, compiled into a single binary with the frontend embedded via `//go:embed`. Licensed under MIT.
 
 ## Build & Development Commands
 
@@ -75,7 +75,7 @@ Both use cobra for CLI with shared subcommands: `version`, `idf`, `dvnf`, `gener
 
 ### Backend (Go) — `src/server/`
 
-Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.0)
+Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.4)
 
 Key packages:
 - `gkill/api/` — Shared infrastructure: `embed.go` (`//go:embed` serves Vue SPA at `/`), `version.go`, `gkill_version_data.go`, `find_filter.go`, `find_filter_helpers.go`, `find_kyou_context.go`
@@ -100,7 +100,7 @@ Key packages:
 
 ### Frontend (Vue 3 + TypeScript) — `src/client/`
 
-Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 7 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
+Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
 - `router/index.ts` — 12 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, set_new_password, regist_first_account, shared_page, shared_mi)
 - `pages/views/` — 177 view components, `pages/dialogs/` — 95 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser and plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`)
@@ -134,7 +134,7 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 7 + TypeScript 6 + 
 
 ## Lint & Code Quality
 
-ESLint 9 flat config (`eslint.config.js`). All rules enforced as error with zero violations.
+ESLint 10 flat config (`eslint.config.js`). All rules enforced as error with zero violations.
 
 | Rule | Level | Note |
 |---|---|---|
