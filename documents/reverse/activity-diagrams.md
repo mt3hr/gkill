@@ -152,11 +152,11 @@ flowchart TD
     LoopFiles -->|No| Success([アップロード完了])
 ```
 
-## 5. DNote 集計処理フロー
+## 5. Dnote 集計処理フロー
 
 ```mermaid
 flowchart TD
-    Start([DNote集計要求]) --> LoadKyous[Kyouデータロード<br>KyouLoader]
+    Start([Dnote集計要求]) --> LoadKyous[Kyouデータロード<br>KyouLoader]
 
     LoadKyous --> ApplyPredicate{Predicate<br>フィルタ適用}
     ApplyPredicate --> CheckPredType{述語タイプ}

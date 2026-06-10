@@ -35,7 +35,7 @@ src/client/
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (44 ステートメント型)
-│   ├── dnote/                       # DNote集計ユーティリティ
+│   ├── dnote/                       # Dnote集計ユーティリティ
 │   ├── lantana/                     # 気分値関連クラス
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
