@@ -4,18 +4,18 @@
 
 | カテゴリ | 技術 | バージョン |
 |---|---|---|
-| フレームワーク | Vue 3 (Composition API) | ^3.5.31 |
-| UIライブラリ | Vuetify 4 (Material Design) | ^4.0.4 |
-| ルーティング | Vue Router 5 | ^5.0.4 |
-| 国際化 | vue-i18n 11 | ^11.3.0 |
-| ビルドツール | Vite 7 | ^7.3.1 |
-| PWA | vite-plugin-pwa + Workbox | ^1.2.0 |
-| TypeScript | TypeScript 6 | ~6.0.0 |
+| フレームワーク | Vue 3 (Composition API) | ^3.5.35 |
+| UIライブラリ | Vuetify 4 (Material Design) | ^4.1.1 |
+| ルーティング | Vue Router 5 | ^5.1.0 |
+| 国際化 | vue-i18n 11 | ^11.4.5 |
+| ビルドツール | Vite 8 | ^8.0.16 |
+| PWA | vite-plugin-pwa + Workbox | ^1.3.0 |
+| TypeScript | TypeScript 6 | ~6.0.3 |
 | アイコン | @mdi/js (Material Design Icons) | ^7.4.47 |
 | 地図 | vue3-google-map + @googlemaps/js-api-loader | — |
 | 日時 | moment | ^2.30.1 |
-| 型チェック | vue-tsc 3 | ^3.2.6 |
-| リンター | ESLint 9 + eslint-plugin-vue 10 (flat config) | ^9.39.4 |
+| 型チェック | vue-tsc 3 | ^3.3.4 |
+| リンター | ESLint 10 + eslint-plugin-vue 10 (flat config) | ^10.4.1 |
 
 ## 2. ディレクトリ構成
 
@@ -289,7 +289,7 @@ Service Worker が `/share-target` POSTを処理：
 
 ### ESLint設定 (`eslint.config.js`)
 
-- flat config 形式（ESLint 9+）
+- flat config 形式（ESLint 10+）
 - `pluginVue.configs['flat/essential']` + `vueTsEslintConfig()` を使用
 - `@typescript-eslint/no-unused-vars`: warn（`_` プレフィックスは無視）
 - `@typescript-eslint/no-explicit-any`: error

@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（12ルート全網羅 + CRUD/設定/回帰テスト、29ファイル187テスト）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（12ルート全網羅 + CRUD/設定/回帰テスト、30ファイル192テスト）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## テストフレームワーク
 
@@ -11,7 +11,7 @@
 
 ## テストファイル一覧
 
-### E2E テスト（29ファイル, 187テスト）
+### E2E テスト（30ファイル, 192テスト）
 
 #### ページ表示・ナビゲーション系（12ファイル）
 
@@ -55,8 +55,9 @@
 | `src/client/__tests__/e2e/user-config-crud.spec.ts` | ユーザ設定機能テスト（API/画像/板名/構造CRUD） |
 | `src/client/__tests__/e2e/regression-fixes.spec.ts` | 修正済みバグ回帰テスト（7件） |
 | `src/client/__tests__/e2e/misc-features.spec.ts` / `misc-operations.spec.ts` | 見た目区別、ブックマークレット、GPS、共有リンク、再起動 |
+| `src/client/__tests__/e2e/clipboard-save.spec.ts` | Ctrl+V でクリップボード保存ダイアログ表示（RYKV/Mi）、テキスト入力中は抑制、ダイアログ閉じ、クリップボードテキストのプレビュー |
 
-### Composable ユニットテスト（6ファイル）
+### Composable ユニットテスト（7ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -66,6 +67,7 @@
 | `src/client/__tests__/unit/composables/confirm-delete.test.ts` | 削除確認ダイアログ Composable |
 | `src/client/__tests__/unit/composables/page-composables.test.ts` | ページレベル Composable |
 | `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン |
+| `src/client/__tests__/unit/composables/save-clipboard-to-file-dialog.test.ts` | クリップボード保存ダイアログ Composable（初期状態、MIME判定、ファイルサイズ表示、load_clipboard エラーパス、save_or_confirm、useScopedCtrlVForClipboard キー処理） |
 
 ### ルーターテスト
 

@@ -162,12 +162,21 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	router.HandleFunc(gkillAPI.APIAddress.ResetPasswordAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleResetPassword)).Methods(gkillAPI.APIAddress.ResetPasswordMethod)
 	router.HandleFunc(gkillAPI.APIAddress.SetNewPasswordAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleSetNewPassword)).Methods(gkillAPI.APIAddress.SetNewPasswordMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateCacheAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUpdateCache)).Methods(gkillAPI.APIAddress.UpdateCacheMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UploadFilesAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUploadFiles)).Methods(gkillAPI.APIAddress.UploadFilesMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UploadGPSLogFilesAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUploadGPSLogFiles)).Methods(gkillAPI.APIAddress.UploadGPSLogFilesMethod)
+	router.HandleFunc(gkillAPI.APIAddress.BrowseZipContentsAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleBrowseZipContents)).Methods(gkillAPI.APIAddress.BrowseZipContentsMethod)
 
 	// --- wrapAuth routes (authentication required, no repos) ---
 	router.HandleFunc(gkillAPI.APIAddress.GetApplicationConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetApplicationConfig)).Methods(gkillAPI.APIAddress.GetApplicationConfigMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetServerConfigsAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetServerConfigs)).Methods(gkillAPI.APIAddress.GetServerConfigsMethod)
 	router.HandleFunc(gkillAPI.APIAddress.AddAccountAddress, gkillAPI.wrapAuth(gkillAPI.HandleAddAccount)).Methods(gkillAPI.APIAddress.AddAccountMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateAccountStatusAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateAccountStatus)).Methods(gkillAPI.APIAddress.UpdateAccountStatusMethod)
+	router.HandleFunc(gkillAPI.APIAddress.ReloadRepositoriesAddress, gkillAPI.wrapAuth(gkillAPI.HandleReloadRepositories)).Methods(gkillAPI.APIAddress.ReloadRepositoriesMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetUpdatedDatasByTimeAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetUpdatedDatasByTime)).Methods(gkillAPI.APIAddress.GetUpdatedDatasByTimeMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetPluginListAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetPluginList)).Methods(gkillAPI.APIAddress.GetPluginListMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetPluginContentHTMLAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetPluginContentHTML)).Methods(gkillAPI.APIAddress.GetPluginContentHTMLMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetPluginConfigHTMLAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetPluginConfigHTML)).Methods(gkillAPI.APIAddress.GetPluginConfigHTMLMethod)
+	router.HandleFunc(gkillAPI.APIAddress.PostPluginConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandlePostPluginConfig)).Methods(gkillAPI.APIAddress.PostPluginConfigMethod)
 
 	// --- wrapAuthRepos routes (authentication + repos required) ---
 	router.HandleFunc(gkillAPI.APIAddress.AddKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddKmemo)).Methods(gkillAPI.APIAddress.AddKmemoMethod)
@@ -220,6 +229,8 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	router.HandleFunc(gkillAPI.APIAddress.CommitTXAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleCommitTx)).Methods(gkillAPI.APIAddress.CommitTXMethod)
 	router.HandleFunc(gkillAPI.APIAddress.DiscardTXAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleDiscardTX)).Methods(gkillAPI.APIAddress.DiscardTXMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetKyousMCPAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetKyousMCP)).Methods(gkillAPI.APIAddress.GetKyousMCPMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetGitCommitLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetGitCommitLog)).Methods(gkillAPI.APIAddress.GetGitCommitLogMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetGPSLogAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetGPSLog)).Methods(gkillAPI.APIAddress.GetGPSLogMethod)
 
 	ts := httptest.NewServer(router)
 
@@ -8468,6 +8479,410 @@ func TestHandleUpdateUserReps_DuplicateWriteDetected(t *testing.T) {
 	} else {
 		// Non-200 status indicates the server rejected the request
 		t.Logf("duplicate write request rejected with status %d (expected behavior)", resp.StatusCode)
+	}
+}
+
+// --- Phase 2: Logout handler tests ---
+
+func TestHandleLogout_Success(t *testing.T) {
+	ts, gkillAPI, cleanup := setupTestRouter(t)
+	defer cleanup()
+	tsURL := ts.URL
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	// Logout with valid session — should succeed with no errors
+	logoutReq := &req_res.LogoutRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+	}
+	resp := postJSON(t, tsURL+"/api/logout", logoutReq)
+	defer resp.Body.Close()
+
+	var logoutResp req_res.LogoutResponse
+	if err := json.NewDecoder(resp.Body).Decode(&logoutResp); err != nil {
+		t.Fatalf("decode logout response: %v", err)
+	}
+	if len(logoutResp.Errors) > 0 {
+		t.Errorf("expected no errors on logout, got: %+v", logoutResp.Errors)
+	}
+	if len(logoutResp.Messages) == 0 {
+		t.Error("expected success message after logout")
+	}
+}
+
+func TestHandleLogout_UnknownSessionSucceedsSilently(t *testing.T) {
+	// DeleteLoginSession executes SQL DELETE which returns true/nil even for non-existent rows.
+	// This is intentional: we don't want to leak whether a session ID was valid.
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	logoutReq := &req_res.LogoutRequest{
+		SessionID:  "non-existent-session-id",
+		LocaleName: "en",
+	}
+	resp := postJSON(t, ts.URL+"/api/logout", logoutReq)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+	var logoutResp req_res.LogoutResponse
+	if err := json.NewDecoder(resp.Body).Decode(&logoutResp); err != nil {
+		t.Fatalf("decode logout response: %v", err)
+	}
+	// No error expected — logout silently succeeds for unknown session IDs
+	if len(logoutResp.Errors) > 0 {
+		t.Errorf("expected no errors for unknown session logout, got: %+v", logoutResp.Errors)
+	}
+}
+
+func TestHandleLogout_SessionInvalidatedAfterLogout(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	// Logout
+	logoutReq := &req_res.LogoutRequest{SessionID: sessionID, LocaleName: "en"}
+	resp := postJSON(t, tsURL+"/api/logout", logoutReq)
+	resp.Body.Close()
+
+	// Try to use the old session — should get auth errors
+	getReq := &req_res.GetKmemoRequest{SessionID: sessionID, ID: "any-id", LocaleName: "en"}
+	resp2 := postJSON(t, tsURL+"/api/get_kmemo", getReq)
+	defer resp2.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp2.Body).Decode(&result); err != nil {
+		t.Fatalf("decode post-logout response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error when using session after logout, got none")
+	}
+}
+
+// --- Phase 2: BrowseZipContents handler tests ---
+
+func TestHandleBrowseZipContents_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.BrowseZipContentsRequest{
+		SessionID:  "",
+		TargetID:   "any-id",
+		LocaleName: "en",
+	}
+	resp := postJSON(t, ts.URL+"/api/browse_zip_contents", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode browse zip response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+// --- Phase 2: UploadFiles handler tests ---
+
+func TestHandleUploadFiles_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.UploadFilesRequest{
+		SessionID:  "",
+		LocaleName: "en",
+	}
+	resp := postJSON(t, ts.URL+"/api/upload_files", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode upload files response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+// --- Phase 2: UploadGPSLogFiles handler tests ---
+
+func TestHandleUploadGPSLogFiles_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.UploadGPSLogFilesRequest{
+		SessionID:     "",
+		TargetRepName: "rep",
+	}
+	resp := postJSON(t, ts.URL+"/api/upload_gpslog_files", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode upload gpslog response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+// --- Phase 2: GetGitCommitLog handler tests ---
+
+func TestHandleGetGitCommitLog_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.GetGitCommitLogRequest{
+		SessionID:  "",
+		LocaleName: "en",
+	}
+	resp := postJSON(t, ts.URL+"/api/get_git_commit_log", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode get git commit log response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+// --- Phase 2: GetGPSLog handler tests ---
+
+func TestHandleGetGPSLog_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.GetGPSLogRequest{
+		SessionID:  "",
+		LocaleName: "en",
+		StartDate:  time.Now().Add(-24 * time.Hour),
+		EndDate:    time.Now(),
+	}
+	resp := postJSON(t, ts.URL+"/api/get_gps_log", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode get gps log response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+// --- Phase 2: ReloadRepositories handler tests ---
+
+func TestHandleReloadRepositories_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.ReloadRepositoriesRequest{
+		SessionID:  "",
+		LocaleName: "en",
+	}
+	resp := postJSON(t, ts.URL+"/api/reload_repositories", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode reload repositories response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+func TestHandleReloadRepositories_Success(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	req := &req_res.ReloadRepositoriesRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+	}
+	resp := postJSON(t, tsURL+"/api/reload_repositories", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Messages []*message.GkillMessage `json:"messages"`
+		Errors   []*message.GkillError   `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode reload repositories response: %v", err)
+	}
+	if len(result.Errors) > 0 {
+		t.Errorf("unexpected errors: %+v", result.Errors)
+	}
+}
+
+// --- Phase 2: GetUpdatedDatasByTime handler tests ---
+
+func TestHandleGetUpdatedDatasByTime_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.GetUpdatedDatasByTimeRequest{
+		SessionID:       "",
+		LocaleName:      "en",
+		LastUpdatedTime: time.Now().Add(-time.Hour),
+	}
+	resp := postJSON(t, ts.URL+"/api/get_updated_datas_by_time", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode get updated datas response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+// --- Phase 1-3: Plugin handler tests ---
+
+func TestHandleGetPluginList_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.GetPluginListRequest{
+		SessionID:  "",
+		LocaleName: "en",
+	}
+	resp := postJSON(t, ts.URL+"/api/get_plugin_list", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode get plugin list response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+func TestHandleGetPluginList_EmptyList(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	req := &req_res.GetPluginListRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+	}
+	resp := postJSON(t, tsURL+"/api/get_plugin_list", req)
+	defer resp.Body.Close()
+
+	var result req_res.GetPluginListResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode get plugin list response: %v", err)
+	}
+	if len(result.Errors) > 0 {
+		t.Errorf("unexpected errors: %+v", result.Errors)
+	}
+	// No plugins configured in test setup — list should be empty (nil or [])
+	if len(result.Plugins) != 0 {
+		t.Errorf("expected 0 plugins in test environment, got %d", len(result.Plugins))
+	}
+}
+
+func TestHandleGetPluginContentHTML_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.GetPluginContentHTMLRequest{
+		SessionID:  "",
+		LocaleName: "en",
+		RepName:    "my-plugin",
+		KyouID:     "some-id",
+	}
+	resp := postJSON(t, ts.URL+"/api/get_plugin_content_html", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode get plugin content html response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+func TestHandleGetPluginConfigHTML_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.GetPluginConfigHTMLRequest{
+		SessionID:  "",
+		LocaleName: "en",
+		RepName:    "my-plugin",
+	}
+	resp := postJSON(t, ts.URL+"/api/get_plugin_config_html", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode get plugin config html response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
+	}
+}
+
+func TestHandlePostPluginConfig_RequiresSession(t *testing.T) {
+	ts, _, cleanup := setupTestRouter(t)
+	defer cleanup()
+
+	req := &req_res.PostPluginConfigRequest{
+		SessionID:  "",
+		LocaleName: "en",
+		RepName:    "my-plugin",
+		FormData:   map[string]string{"key": "value"},
+	}
+	resp := postJSON(t, ts.URL+"/api/post_plugin_config", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Errors []*message.GkillError `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode post plugin config response: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected error for empty session ID, got none")
 	}
 }
 

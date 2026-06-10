@@ -143,7 +143,6 @@ const {
     show_already_saved_confirm,
     show_saved_snackbar,
     save_btn,
-    dialog_el,
     set_dialog_el,
     is_image_type,
     is_text_type,

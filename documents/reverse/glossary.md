@@ -217,7 +217,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | CLIフラグ定義 | `src/server/gkill/main/common/gkill_options/option.go` | --gkill_home_dir 等のフラグとディレクトリ構成 |
 | gkill_server エントリ | `src/server/gkill/main/gkill_server/main.go` | サーバーモード main() |
 | gkill デスクトップ エントリ | `src/server/gkill/main/gkill/main.go` | デスクトップアプリ main() |
-| Go モジュール定義 | `src/server/go.mod` | Go 1.26.0、モジュールパス |
+| Go モジュール定義 | `src/server/go.mod` | Go 1.26.4、モジュールパス |
 
 ### フロントエンド（TypeScript / Vue 3）
 
