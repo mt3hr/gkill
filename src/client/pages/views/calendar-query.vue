@@ -43,3 +43,9 @@ const {
 
 defineExpose({ get_use_calendar, get_start_date, get_end_date })
 </script>
+<style scoped>
+/* レンジ背景のopacityを濃くする（デフォルト 0.1 → 0.5） */
+:deep(.v-date-picker-month__range-bg--range) {
+    opacity: 0.5 !important;
+}
+</style>
