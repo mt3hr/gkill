@@ -327,5 +327,6 @@ defineExpose({ reload_cloned_application_config })
 .gkill_version_info {
     text-align: right;
     font-size: x-small;
+    margin: 0px;
 }
 </style>
