@@ -707,6 +707,61 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 					continue
 				}
 			}
+			if findCtx.ParsedFindQuery.UsePeriodOfTime {
+				localTime := kyou.RelatedTime.In(time.Local)
+
+				// 曜日フィルタ
+				if len(findCtx.ParsedFindQuery.PeriodOfTimeWeekOfDays) == 0 {
+					continue
+				}
+				if len(findCtx.ParsedFindQuery.PeriodOfTimeWeekOfDays) != 7 {
+					weekday := find.WeekOfDays(int(localTime.Weekday()))
+					matched := false
+					for _, w := range findCtx.ParsedFindQuery.PeriodOfTimeWeekOfDays {
+						if w == weekday {
+							matched = true
+							break
+						}
+					}
+					if !matched {
+						continue
+					}
+				}
+
+				// 時間帯フィルタ
+				timeSec := int64(localTime.Hour()*3600 + localTime.Minute()*60 + localTime.Second())
+				startPtr := findCtx.ParsedFindQuery.PeriodOfTimeStartTimeSecond
+				endPtr := findCtx.ParsedFindQuery.PeriodOfTimeEndTimeSecond
+				if startPtr != nil && endPtr != nil {
+					st := time.Unix(*startPtr, 0).In(time.Local)
+					et := time.Unix(*endPtr, 0).In(time.Local)
+					stSec := int64(st.Hour()*3600 + st.Minute()*60 + st.Second())
+					etSec := int64(et.Hour()*3600 + et.Minute()*60 + et.Second())
+					if stSec > etSec {
+						// 夜跨ぎ: timeSec >= stSec OR timeSec <= etSec
+						if timeSec < stSec && timeSec > etSec {
+							continue
+						}
+					} else {
+						// 通常: timeSec >= stSec AND timeSec <= etSec
+						if timeSec < stSec || timeSec > etSec {
+							continue
+						}
+					}
+				} else if startPtr != nil {
+					st := time.Unix(*startPtr, 0).In(time.Local)
+					stSec := int64(st.Hour()*3600 + st.Minute()*60 + st.Second())
+					if timeSec < stSec {
+						continue
+					}
+				} else if endPtr != nil {
+					et := time.Unix(*endPtr, 0).In(time.Local)
+					etSec := int64(et.Hour()*3600 + et.Minute()*60 + et.Second())
+					if timeSec > etSec {
+						continue
+					}
+				}
+			}
 			trimedKyousMap[kyou.RelatedTime.Unix()] = kyou
 		}
 
