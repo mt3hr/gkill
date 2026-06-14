@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de bord - Aide</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Démarrage</a> &gt; <span>Tableau de bord</span></nav>
+  <h1>Tableau de bord</h1>
+  <p>Une vue complète pour voir tous vos journaux de vie pour la date sélectionnée en un coup d'œil. La moitié supérieure affiche la Vue d'agrégation et la carte GPS de ce jour, et la partie inférieure affiche vos tâches.</p>
+
+  <h2>Boutons de barre</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>← (Jour précédent)</td>
+      <td>Affiche les données du jour précédent.</td>
+    </tr>
+    <tr>
+      <td>Étiquette de date (ex: 2025/6/15 Dim)</td>
+      <td>Cliquez pour ouvrir le sélecteur de calendrier.</td>
+    </tr>
+    <tr>
+      <td>→ (Jour suivant)</td>
+      <td>Affiche les données du jour suivant.</td>
+    </tr>
+    <tr>
+      <td>&#10068; Aide</td>
+      <td>Affiche l'aide pour l'écran actuel.</td>
+    </tr>
+    <tr>
+      <td>⚙ Paramètres</td>
+      <td>Ouvre les paramètres de l'application.</td>
+    </tr>
+    <tr>
+      <td>Menu de navigation (clic sur le titre)</td>
+      <td>Permet de naviguer vers chaque écran.</td>
+    </tr>
+  </table>
+
+  <h2>Zones d'affichage</h2>
+  <table>
+    <tr>
+      <th>Zone</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Vue d'agrégation</td>
+      <td>Affiche la Vue d'agrégation du jour sélectionné dans la moitié gauche. Vous pouvez affiner les conditions de recherche dans Paramètres.</td>
+    </tr>
+    <tr>
+      <td>Carte GPS</td>
+      <td>Affiche le journal GPS du jour sélectionné sous forme de carte dans la moitié droite.</td>
+    </tr>
+    <tr>
+      <td>Liste des tâches</td>
+      <td>Affiche les tâches liées au jour sélectionné en bas. Vous pouvez affiner les conditions de recherche dans Paramètres.</td>
+    </tr>
+  </table>
+
+  <h2>Bouton d'action flottant (+)</h2>
+  <p>Appuyez sur le bouton "+" en bas à droite pour ouvrir le menu d'ajout rapide d'enregistrements.</p>
+  <table>
+    <tr>
+      <th>Élément de menu</th>
+      <th>Contenu</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Bloc-notes</td>
+      <td>Saisie de texte</td>
+      <td>Ouvre l'écran pour saisir des mémos et divers enregistrements avec la syntaxe du bloc-notes.</td>
+    </tr>
+    <tr>
+      <td>Bloc-notes d'horodatage</td>
+      <td>Texte + horodatage</td>
+      <td>Ouvre l'écran pour gérer la saisie de mémos et les sessions d'horodatage simultanément.</td>
+    </tr>
+    <tr>
+      <td>Enregistrement numérique</td>
+      <td>Enregistrer un nombre</td>
+      <td>Enregistre des données numériques arbitraires.</td>
+    </tr>
+    <tr>
+      <td>Signet</td>
+      <td>Enregistrer une URL</td>
+      <td>Enregistre l'URL d'une page web en tant que signet.</td>
+    </tr>
+    <tr>
+      <td>Journal de temps</td>
+      <td>Démarrer le suivi du temps</td>
+      <td>Démarre une nouvelle session de suivi du temps.</td>
+    </tr>
+    <tr>
+      <td>Tâche</td>
+      <td>Ajouter une tâche</td>
+      <td>Crée une nouvelle tâche.</td>
+    </tr>
+    <tr>
+      <td>Dépense</td>
+      <td>Enregistrer un montant</td>
+      <td>Enregistre le montant et la description d'une dépense.</td>
+    </tr>
+    <tr>
+      <td>Humeur</td>
+      <td>Enregistrer l'humeur (0–10)</td>
+      <td>Enregistre votre humeur actuelle sur une échelle de 0 à 10.</td>
+    </tr>
+    <tr>
+      <td>Téléverser</td>
+      <td>Téléverser un fichier</td>
+      <td>Téléverse et enregistre des fichiers tels que des images ou des documents.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Conseil :</strong> Appuyez longuement sur le bouton "+" pour ouvrir directement le Bloc-notes.
+  </div>
+
+  <div class="tip">
+    <strong>Raccourci :</strong> Appuyez sur Entrée pour ouvrir la boîte de dialogue du Bloc-notes.
+  </div>
+
+  <div class="tip">
+    <strong>Conseil :</strong> Vous pouvez configurer les conditions de recherche pour la Vue d'agrégation et les tâches depuis le bouton "Tableau de bord" dans Paramètres.
+  </div>
+
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="getting-started.html">Démarrage</a></li>
+    <li><a href="kftl.html">Bloc-notes</a></li>
+    <li><a href="mi.html">Tâches</a></li>
+    <li><a href="rykv.html">Vue journal</a></li>
+    <li><a href="application-config.html">Paramètres</a></li>
+    <li><a href="saihate.html">Accueil</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

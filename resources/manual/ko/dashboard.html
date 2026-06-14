@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대시보드 - 도움말</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>대시보드</span></nav>
+  <h1>대시보드</h1>
+  <p>선택한 날짜의 라이프 로그를 한 화면에서 한눈에 볼 수 있는 종합 뷰입니다. 상단에는 해당 날짜의 집계 뷰와 GPS 지도, 하단에는 작업 목록이 표시됩니다.</p>
+
+  <h2>툴바 버튼</h2>
+  <table>
+    <tr>
+      <th>버튼</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>← (전날)</td>
+      <td>전날의 데이터를 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>날짜 레이블（예: 2025/6/15 일）</td>
+      <td>클릭하면 달력 피커가 열립니다.</td>
+    </tr>
+    <tr>
+      <td>→ (다음 날)</td>
+      <td>다음 날의 데이터를 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>&#10068; 도움말</td>
+      <td>현재 화면의 도움말을 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>⚙ 설정</td>
+      <td>애플리케이션 설정을 엽니다.</td>
+    </tr>
+    <tr>
+      <td>내비게이션 메뉴（타이틀 클릭）</td>
+      <td>각 화면으로 이동할 수 있습니다.</td>
+    </tr>
+  </table>
+
+  <h2>표시 영역</h2>
+  <table>
+    <tr>
+      <th>영역</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>집계 뷰</td>
+      <td>선택한 날짜의 집계 뷰를 왼쪽 절반에 표시합니다. 설정에서 검색 조건을 좁힐 수 있습니다.</td>
+    </tr>
+    <tr>
+      <td>GPS 지도</td>
+      <td>선택한 날짜의 GPS 로그를 오른쪽 절반에 지도로 표시합니다.</td>
+    </tr>
+    <tr>
+      <td>작업 목록</td>
+      <td>선택한 날짜와 관련된 작업을 하단에 목록으로 표시합니다. 설정에서 검색 조건을 좁힐 수 있습니다.</td>
+    </tr>
+  </table>
+
+  <h2>플로팅 액션 버튼（+）</h2>
+  <p>화면 오른쪽 하단의 "+" 버튼을 탭하면 각종 기록 추가 메뉴가 표시됩니다.</p>
+  <table>
+    <tr>
+      <th>메뉴 항목</th>
+      <th>내용</th>
+      <th>설명</th>
+    </tr>
+    <tr>
+      <td>메모장</td>
+      <td>텍스트 입력</td>
+      <td>메모장 구문으로 메모와 각종 기록을 입력하는 화면을 엽니다.</td>
+    </tr>
+    <tr>
+      <td>타임스탬프 메모장</td>
+      <td>텍스트＋타임스탬프</td>
+      <td>메모 입력과 진행 중인 타임스탬프를 동시에 관리하는 화면을 엽니다.</td>
+    </tr>
+    <tr>
+      <td>숫자 기록</td>
+      <td>숫자를 기록</td>
+      <td>임의의 숫자 데이터를 기록합니다.</td>
+    </tr>
+    <tr>
+      <td>북마크</td>
+      <td>URL을 기록</td>
+      <td>웹 페이지 URL을 북마크로 저장합니다.</td>
+    </tr>
+    <tr>
+      <td>타임스탬프</td>
+      <td>시간 측정을 시작</td>
+      <td>새 타임스탬프 세션을 시작합니다.</td>
+    </tr>
+    <tr>
+      <td>작업</td>
+      <td>작업을 추가</td>
+      <td>새 작업을 만듭니다.</td>
+    </tr>
+    <tr>
+      <td>지출</td>
+      <td>금액을 기록</td>
+      <td>지출 금액과 내용을 기록합니다.</td>
+    </tr>
+    <tr>
+      <td>기분</td>
+      <td>기분값（0〜10）을 기록</td>
+      <td>현재 기분을 0〜10의 숫자로 기록합니다.</td>
+    </tr>
+    <tr>
+      <td>업로드</td>
+      <td>파일을 업로드</td>
+      <td>이미지나 문서 등의 파일을 업로드하여 기록합니다.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>팁:</strong> "+" 버튼을 길게 누르면 메모장이 직접 열립니다.
+  </div>
+
+  <div class="tip">
+    <strong>단축키:</strong> Enter 키를 누르면 메모장 대화상자가 열립니다.
+  </div>
+
+  <div class="tip">
+    <strong>팁:</strong> 설정 화면의 "대시보드" 버튼에서 표시할 요약 노트와 작업의 검색 조건을 설정할 수 있습니다.
+  </div>
+
+  <h2>관련 문서</h2>
+  <ul>
+    <li><a href="getting-started.html">시작하기</a></li>
+    <li><a href="kftl.html">메모장</a></li>
+    <li><a href="mi.html">작업</a></li>
+    <li><a href="rykv.html">라이프 로그 뷰</a></li>
+    <li><a href="application-config.html">설정</a></li>
+    <li><a href="saihate.html">홈</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

@@ -14,6 +14,7 @@ stateDiagram-v2
     LoginPage --> KyouPage: ログイン成功 → /kyou
     LoginPage --> MkflPage: ログイン成功 → /mkfl
     LoginPage --> PlaingPage: ログイン成功 → /plaing
+    LoginPage --> DashboardPage: ログイン成功 → /dashboard
     LoginPage --> SaihatePage: ログイン成功 → /saihate
     LoginPage --> SetNewPasswordPage: パスワードリセットリンク → /set_new_password
     LoginPage --> RegistFirstAccountPage: 初回起動 → /regist_first_account
@@ -25,6 +26,8 @@ stateDiagram-v2
     KyouPage --> RykvPage: ナビゲーション
     MkflPage --> RykvPage: ナビゲーション
     PlaingPage --> RykvPage: ナビゲーション
+    DashboardPage --> RykvPage: ナビゲーション
+    RykvPage --> DashboardPage: ナビゲーション
 
     KFTLPage --> LoginPage: ログアウト
     RykvPage --> LoginPage: ログアウト
@@ -32,19 +35,20 @@ stateDiagram-v2
     KyouPage --> LoginPage: ログアウト
     MkflPage --> LoginPage: ログアウト
     PlaingPage --> LoginPage: ログアウト
+    DashboardPage --> LoginPage: ログアウト
     SaihatePage --> LoginPage: ログアウト
 
     [*] --> SharedPage: 共有リンクアクセス
     [*] --> SharedMiPage: 共有タスクリンクアクセス
 ```
 
-**メイン画面群（認証必要）:** KFTLPage, RykvPage, MiPage, KyouPage, MkflPage, PlaingPage, SaihatePage
+**メイン画面群（認証必要）:** KFTLPage, RykvPage, MiPage, KyouPage, MkflPage, PlaingPage, DashboardPage, SaihatePage
 
 **共有ページ（認証不要）:** SharedPage (`/shared_page`), SharedMiPage (`/shared_mi`)
 
 ## 2. 各画面の役割と遷移条件
 
-### ルートページ一覧（12ルート）
+### ルートページ一覧（13ルート）
 
 | パス | ページ | 認証要否 | 役割 |
 |-----|-------|---------|------|
@@ -55,6 +59,7 @@ stateDiagram-v2
 | `/kyou` | KyouPage | 要 | Kyou 記録一覧 |
 | `/mkfl` | MkflPage | 要 | 打刻メモ帳（KFTL入力+TimeIs表示） |
 | `/plaing` | PlaingPage | 要 | 稼働中 TimeIs 一覧 |
+| `/dashboard` | DashboardPage | 要 | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/saihate` | SaihatePage | 要 | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | SetNewPasswordPage | 不要 | 新パスワード設定 |
 | `/regist_first_account` | RegistFirstAccountPage | 不要 | 初回アカウント登録 |
