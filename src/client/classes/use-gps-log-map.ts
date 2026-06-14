@@ -190,5 +190,8 @@ export function useGpsLogMap(options: {
         start_date_str,
         end_date_str,
         date_time_str,
+
+        // Methods
+        centering,
     }
 }

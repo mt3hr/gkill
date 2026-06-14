@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros pasos</a> &gt; <span>Panel</span></nav>
+  <h1>Panel</h1>
+  <p>Una vista completa para ver todos los registros de vida de la fecha seleccionada de un vistazo. La mitad superior muestra la Vista de agregación y el mapa GPS de ese día, y la parte inferior muestra las tareas.</p>
+
+  <h2>Botones de barra</h2>
+  <table>
+    <tr>
+      <th>Botón</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>← (Día anterior)</td>
+      <td>Muestra los datos del día anterior.</td>
+    </tr>
+    <tr>
+      <td>Etiqueta de fecha (ej: 2025/6/15 Dom)</td>
+      <td>Haga clic para abrir el selector de calendario.</td>
+    </tr>
+    <tr>
+      <td>→ (Día siguiente)</td>
+      <td>Muestra los datos del día siguiente.</td>
+    </tr>
+    <tr>
+      <td>&#10068; Ayuda</td>
+      <td>Muestra la ayuda de la pantalla actual.</td>
+    </tr>
+    <tr>
+      <td>⚙ Configuración</td>
+      <td>Abre la configuración de la aplicación.</td>
+    </tr>
+    <tr>
+      <td>Menú de navegación (clic en título)</td>
+      <td>Permite navegar a cada pantalla.</td>
+    </tr>
+  </table>
+
+  <h2>Áreas de visualización</h2>
+  <table>
+    <tr>
+      <th>Área</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Vista de agregación</td>
+      <td>Muestra la Vista de agregación del día seleccionado en la mitad izquierda. Puede limitar las condiciones de búsqueda en Configuración.</td>
+    </tr>
+    <tr>
+      <td>Mapa GPS</td>
+      <td>Muestra el registro GPS del día seleccionado como mapa en la mitad derecha.</td>
+    </tr>
+    <tr>
+      <td>Lista de tareas</td>
+      <td>Muestra las tareas relacionadas con el día seleccionado en la parte inferior. Puede limitar las condiciones de búsqueda en Configuración.</td>
+    </tr>
+  </table>
+
+  <h2>Botón de acción flotante (+)</h2>
+  <p>Toque el botón "+" en la parte inferior derecha para abrir el menú de adición rápida de registros.</p>
+  <table>
+    <tr>
+      <th>Elemento de menú</th>
+      <th>Contenido</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Bloc de notas</td>
+      <td>Entrada de texto</td>
+      <td>Abre la pantalla para ingresar notas y varios registros usando la sintaxis del bloc de notas.</td>
+    </tr>
+    <tr>
+      <td>Bloc de notas de tiempo</td>
+      <td>Texto + marca de tiempo</td>
+      <td>Abre la pantalla para gestionar la entrada de notas y las marcas de tiempo simultáneamente.</td>
+    </tr>
+    <tr>
+      <td>Registro numérico</td>
+      <td>Registrar un número</td>
+      <td>Registra datos numéricos arbitrarios.</td>
+    </tr>
+    <tr>
+      <td>Marcador</td>
+      <td>Registrar una URL</td>
+      <td>Guarda una URL de página web como marcador.</td>
+    </tr>
+    <tr>
+      <td>Registro de tiempo</td>
+      <td>Iniciar seguimiento de tiempo</td>
+      <td>Inicia una nueva sesión de seguimiento de tiempo.</td>
+    </tr>
+    <tr>
+      <td>Tarea</td>
+      <td>Agregar una tarea</td>
+      <td>Crea una nueva tarea.</td>
+    </tr>
+    <tr>
+      <td>Gasto</td>
+      <td>Registrar un monto</td>
+      <td>Registra el monto y descripción del gasto.</td>
+    </tr>
+    <tr>
+      <td>Estado de ánimo</td>
+      <td>Registrar humor (0–10)</td>
+      <td>Registra tu estado de ánimo actual como un valor de 0 a 10.</td>
+    </tr>
+    <tr>
+      <td>Cargar</td>
+      <td>Cargar un archivo</td>
+      <td>Carga y registra archivos como imágenes o documentos.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Mantenga presionado el botón "+" para abrir el Bloc de notas directamente.
+  </div>
+
+  <div class="tip">
+    <strong>Atajo:</strong> Presione Enter para abrir el cuadro de diálogo del Bloc de notas.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Puede configurar las condiciones de búsqueda para Vista de agregación y tareas desde el botón "Panel" en Configuración.
+  </div>
+
+  <h2>Documentos relacionados</h2>
+  <ul>
+    <li><a href="getting-started.html">Inicio</a></li>
+    <li><a href="kftl.html">Bloc de notas</a></li>
+    <li><a href="mi.html">Tareas</a></li>
+    <li><a href="rykv.html">Vista de registro</a></li>
+    <li><a href="application-config.html">Configuración</a></li>
+    <li><a href="saihate.html">Inicio rápido</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

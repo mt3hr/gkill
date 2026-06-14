@@ -23,7 +23,7 @@
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
             @requested_close_dialog="hide()"
-            @requested_apply="(find_kyou_query: FindKyouQuery) => model_value = find_kyou_query"
+            @requested_apply="(find_kyou_query: FindKyouQuery) => { model_value = find_kyou_query; emits('requested_apply', find_kyou_query) }"
             ref="find_query_editor_view" />
         </v-card>
       </div>

@@ -782,5 +782,13 @@
     "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "もう一度保存",
     "CLIPBOARD_SAVED_MESSAGE": "クリップボードの内容を保存しました",
     "CLIPBOARD_CHANGE_FILENAME_TITLE": "ファイル名を変更",
-    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: 保存 / Ctrl+V: 貼り付けて保存 / Esc: 閉じる"
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: 保存 / Ctrl+V: 貼り付けて保存 / Esc: 閉じる",
+    "DASHBOARD_APP_NAME": "ダッシュボード",
+    "DASHBOARD_PAGE_TITLE": "ダッシュボード",
+    "DASHBOARD_TODAY_LABEL": "今日",
+    "DASHBOARD_PREV_DAY": "前日",
+    "DASHBOARD_NEXT_DAY": "翌日",
+    "EDIT_DASHBOARD_TITLE": "ダッシュボード",
+    "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "タスク検索条件",
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "集計検索条件"
 }

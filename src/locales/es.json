@@ -782,5 +782,13 @@
     "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "Guardar de nuevo",
     "CLIPBOARD_SAVED_MESSAGE": "Contenido del portapapeles guardado",
     "CLIPBOARD_CHANGE_FILENAME_TITLE": "Cambiar nombre de archivo",
-    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: Guardar / Ctrl+V: Pegar y guardar / Esc: Cerrar"
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: Guardar / Ctrl+V: Pegar y guardar / Esc: Cerrar",
+    "DASHBOARD_APP_NAME": "Panel",
+    "DASHBOARD_PAGE_TITLE": "Panel",
+    "DASHBOARD_TODAY_LABEL": "Hoy",
+    "DASHBOARD_PREV_DAY": "Día anterior",
+    "DASHBOARD_NEXT_DAY": "Día siguiente",
+    "EDIT_DASHBOARD_TITLE": "Panel",
+    "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "Condición de búsqueda de tareas",
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Condición de búsqueda agregada"
 }

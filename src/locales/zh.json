@@ -782,5 +782,13 @@
     "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "再次保存",
     "CLIPBOARD_SAVED_MESSAGE": "剪贴板内容已保存",
     "CLIPBOARD_CHANGE_FILENAME_TITLE": "更改文件名",
-    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: 保存 / Ctrl+V: 粘贴并保存 / Esc: 关闭"
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: 保存 / Ctrl+V: 粘贴并保存 / Esc: 关闭",
+    "DASHBOARD_APP_NAME": "仪表板",
+    "DASHBOARD_PAGE_TITLE": "仪表板",
+    "DASHBOARD_TODAY_LABEL": "今天",
+    "DASHBOARD_PREV_DAY": "前一天",
+    "DASHBOARD_NEXT_DAY": "后一天",
+    "EDIT_DASHBOARD_TITLE": "仪表板",
+    "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "任务搜索条件",
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "汇总搜索条件"
 }

@@ -65,6 +65,7 @@ graph LR
         UC_AGGREGATE[検索結果の記録の<br>値を集計する]
         UC_RELATED[表示した情報に<br>関連する情報を表示する]
         UC_MAP[表示した情報に<br>関連する場所を表示する]
+        UC_DASHBOARD[当日のDnoteとMI一覧を<br>一画面で確認する]
     end
 
     subgraph "タスク管理機能"
@@ -100,6 +101,7 @@ graph LR
     User --> UC_AGGREGATE
     User --> UC_RELATED
     User --> UC_MAP
+    User --> UC_DASHBOARD
     User --> UC_MI_MANAGE
     User --> UC_MI_SHARE
     User --> UC_KYOU_SHARE
@@ -199,7 +201,17 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0802 | GPS ログファイルをアップロードする | `UploadGPSLogFiles` |
 | UC-0803 | クリップボードの内容をファイルとして保存する | `UploadFiles`（クライアントサイドで Clipboard API → base64 変換後送信） |
 
-### 2.9 設定管理
+### 2.9 ダッシュボード
+
+| UC-ID | ユースケース名 | API エンドポイント |
+|-------|---------------|------------------|
+| UC-0901d | 当日のDnoteとMI一覧を一画面で確認する | `GetKyous`（DnoteView・KyouListView） |
+| UC-0902d | ダッシュボードの日付を切り替えて過去日のデータを確認する | `GetKyous`（日付パラメータ変更） |
+| UC-0903d | ダッシュボードのMI検索条件を設定する | `UpdateApplicationConfig`（DashboardConfig.dashboard_mi_find_kyou_query） |
+| UC-0904d | ダッシュボードのDnote検索条件を設定する | `UpdateApplicationConfig`（DashboardConfig.dashboard_dnote_find_kyou_query） |
+| UC-0905d | ダッシュボードからライフログを記録する | `SubmitKFTLText`, `AddMi`, `AddTimeis` 等（FABメニュー経由） |
+
+### 2.10 設定管理
 
 | UC-ID | ユースケース名 | API エンドポイント |
 |-------|---------------|------------------|
@@ -212,7 +224,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0907 | リポジトリを再読み込みする | `ReloadRepositories` |
 | UC-0908 | アカウントステータスを更新する | `UpdateAccountStatus` |
 
-### 2.10 共有
+### 2.11 共有
 
 | UC-ID | ユースケース名 | API エンドポイント |
 |-------|---------------|------------------|
@@ -222,7 +234,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1004 | 共有リスト情報を取得する | `GetShareKyouListInfos` |
 | UC-1005 | 共有 Kyou を取得する | `GetSharedKyous` |
 
-### 2.11 その他
+### 2.12 その他
 
 | UC-ID | ユースケース名 | API エンドポイント |
 |-------|---------------|------------------|

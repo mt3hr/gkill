@@ -139,6 +139,7 @@ func GetDefaultApplicationConfig(userID string, device string) *ApplicationConfi
 		MiBoardStruct:             (applicationConfigDefaultValue["MI_BOARD_STRUCT"]).(*json.RawMessage),
 		KFTLTemplate:              (applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"]).(*json.RawMessage),
 		DnoteJSONData:             (applicationConfigDefaultValue["DNOTE_JSON_DATA"]).(*json.RawMessage),
+		DashboardJSONData:         (applicationConfigDefaultValue["DASHBOARD_JSON_DATA"]).(*json.RawMessage),
 	}
 }
 
@@ -166,6 +167,7 @@ var applicationConfigDefaultValue = map[string]any{
 	"MI_BOARD_STRUCT":               &nullJSONStr,
 	"KFTL_TEMPLATE_STRUCT":          &nullJSONStr,
 	"DNOTE_JSON_DATA":               &nullJSONStr,
+	"DASHBOARD_JSON_DATA":           &nullJSONStr,
 }
 
 var ignoreDeviceNameConfigKey = []string{
@@ -177,6 +179,7 @@ var ignoreDeviceNameConfigKey = []string{
 	"MI_BOARD_STRUCT",
 	"KFTL_TEMPLATE_STRUCT",
 	"DNOTE_JSON_DATA",
+	"DASHBOARD_JSON_DATA",
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error) {
@@ -405,9 +408,9 @@ SELECT
 	AND KEY = 'KFTL_TEMPLATE_STRUCT'
   ) AS KFTL_TEMPLATE_STRUCT,
   /* DNOTE_JSON_DATA */ (
-    SELECT 
-	  CASE 
-	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+    SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
 		THEN VALUE
 		ELSE ?
 	  END
@@ -415,7 +418,19 @@ SELECT
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
 	AND DEVICE = 'ALL'
 	AND KEY = 'DNOTE_JSON_DATA'
-  ) AS DNOTE_JSON_DATA
+  ) AS DNOTE_JSON_DATA,
+  /* DASHBOARD_JSON_DATA */ (
+    SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
+		THEN VALUE
+		ELSE ?
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'DASHBOARD_JSON_DATA'
+  ) AS DASHBOARD_JSON_DATA
 FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 `
@@ -454,6 +469,7 @@ GROUP BY USER_ID, DEVICE
 		applicationConfigDefaultValue["MI_BOARD_STRUCT"],
 		applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"],
 		applicationConfigDefaultValue["DNOTE_JSON_DATA"],
+		applicationConfigDefaultValue["DASHBOARD_JSON_DATA"],
 	)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -481,6 +497,7 @@ GROUP BY USER_ID, DEVICE
 			miBoardStruct := ""
 			kftlTemplateStruct := ""
 			dnoteJsonData := ""
+			dashboardJsonData := ""
 
 			err = rows.Scan(
 				&applicationConfig.UserID,
@@ -504,6 +521,7 @@ GROUP BY USER_ID, DEVICE
 				&miBoardStruct,
 				&kftlTemplateStruct,
 				&dnoteJsonData,
+				&dashboardJsonData,
 			)
 			if err != nil {
 				return nil, err
@@ -540,6 +558,10 @@ GROUP BY USER_ID, DEVICE
 			if dnoteJsonData != "" {
 				d := json.RawMessage(dnoteJsonData)
 				applicationConfig.DnoteJSONData = &d
+			}
+			if dashboardJsonData != "" {
+				d := json.RawMessage(dashboardJsonData)
+				applicationConfig.DashboardJSONData = &d
 			}
 
 			applicationConfigs = append(applicationConfigs, applicationConfig)
@@ -778,9 +800,9 @@ SELECT
 	AND KEY = 'KFTL_TEMPLATE_STRUCT'
   ) AS KFTL_TEMPLATE_STRUCT,
   /* DNOTE_JSON_DATA */ (
-    SELECT 
-	  CASE 
-	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+    SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
 		THEN VALUE
 		ELSE ?
 	  END
@@ -788,7 +810,19 @@ SELECT
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
 	AND DEVICE = 'ALL'
 	AND KEY = 'DNOTE_JSON_DATA'
-  ) AS DNOTE_JSON_DATA
+  ) AS DNOTE_JSON_DATA,
+  /* DASHBOARD_JSON_DATA */ (
+    SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
+		THEN VALUE
+		ELSE ?
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'DASHBOARD_JSON_DATA'
+  ) AS DASHBOARD_JSON_DATA
 FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 HAVING USER_ID = ? AND DEVICE = ?
@@ -826,6 +860,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 		applicationConfigDefaultValue["MI_BOARD_STRUCT"],
 		applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"],
 		applicationConfigDefaultValue["DNOTE_JSON_DATA"],
+		applicationConfigDefaultValue["DASHBOARD_JSON_DATA"],
 
 		userID,
 		device,
@@ -859,6 +894,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 			miBoardStruct := ""
 			kftlTemplateStruct := ""
 			dnoteJsonData := ""
+			dashboardJsonData := ""
 
 			err = rows.Scan(
 				&applicationConfig.UserID,
@@ -882,6 +918,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 				&miBoardStruct,
 				&kftlTemplateStruct,
 				&dnoteJsonData,
+				&dashboardJsonData,
 			)
 
 			if ryuuJSONData != "" {
@@ -915,6 +952,10 @@ HAVING USER_ID = ? AND DEVICE = ?
 			if dnoteJsonData != "" {
 				d := json.RawMessage(dnoteJsonData)
 				applicationConfig.DnoteJSONData = &d
+			}
+			if dashboardJsonData != "" {
+				d := json.RawMessage(dashboardJsonData)
+				applicationConfig.DashboardJSONData = &d
 			}
 
 			applicationConfigs = append(applicationConfigs, applicationConfig)
@@ -1021,6 +1062,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"MI_BOARD_STRUCT":               applicationConfig.MiBoardStruct,
 		"KFTL_TEMPLATE_STRUCT":          applicationConfig.KFTLTemplate,
 		"DNOTE_JSON_DATA":               applicationConfig.DnoteJSONData,
+		"DASHBOARD_JSON_DATA":           applicationConfig.DashboardJSONData,
 	}
 	for key, value := range insertValuesMap {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
@@ -1124,6 +1166,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"MI_BOARD_STRUCT":               applicationConfigDefaultValue["MI_BOARD_STRUCT"],
 		"KFTL_TEMPLATE_STRUCT":          applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"],
 		"DNOTE_JSON_DATA":               applicationConfigDefaultValue["DNOTE_JSON_DATA"],
+		"DASHBOARD_JSON_DATA":           applicationConfigDefaultValue["DASHBOARD_JSON_DATA"],
 	}
 	for key, value := range insertValuesMap {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
@@ -1228,6 +1271,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"MI_BOARD_STRUCT":               applicationConfig.MiBoardStruct,
 		"KFTL_TEMPLATE_STRUCT":          applicationConfig.KFTLTemplate,
 		"DNOTE_JSON_DATA":               applicationConfig.DnoteJSONData,
+		"DASHBOARD_JSON_DATA":           applicationConfig.DashboardJSONData,
 	}
 
 	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)

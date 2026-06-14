@@ -20,6 +20,7 @@ import type { RepTypeStructElementData } from '@/classes/datas/config/rep-type-s
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
+import { DashboardConfig } from '@/classes/datas/config/dashboard-config'
 
 export function useApplicationConfigView(options: {
     props: ApplicationConfigViewProps,
@@ -38,6 +39,7 @@ export function useApplicationConfigView(options: {
     const edit_kftl_template_dialog = ref<ComponentRef | null>(null)
     const edit_dnote_dialog = ref<ComponentRef | null>(null)
     const edit_ryuu_dialog = ref<ComponentRef | null>(null)
+    const edit_dashboard_dialog = ref<ComponentRef | null>(null)
     const server_config_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
@@ -230,6 +232,7 @@ javascript: (function () {
         application_config.kftl_template_struct = cloned_application_config.value.kftl_template_struct
         application_config.ryuu_json_data = cloned_application_config.value.ryuu_json_data
         application_config.dnote_json_data = cloned_application_config.value.dnote_json_data
+        application_config.dashboard_json_data = cloned_application_config.value.dashboard_json_data
         application_config.mi_board_struct = cloned_application_config.value.mi_board_struct
 
         const req = new UpdateApplicationConfigRequest()
@@ -328,6 +331,16 @@ javascript: (function () {
     function show_edit_ryuu_dialog() {
         edit_ryuu_dialog.value?.show()
     }
+    function show_edit_dashboard_dialog() {
+        let dnote_query = undefined
+        let mi_query = undefined
+        if (cloned_application_config.value.dashboard_json_data) {
+            const config = DashboardConfig.parse(cloned_application_config.value.dashboard_json_data)
+            dnote_query = config.dashboard_dnote_find_kyou_query ?? undefined
+            mi_query = config.dashboard_mi_find_kyou_query ?? undefined
+        }
+        edit_dashboard_dialog.value?.show(dnote_query, mi_query)
+    }
     function show_new_board_name_dialog(): void {
         new_board_name_dialog.value?.show()
     }
@@ -363,10 +376,17 @@ javascript: (function () {
 
     function onRequestedApplyDnote(dnote_data: Record<string, unknown>): void {
         cloned_application_config.value.dnote_json_data = dnote_data
+        props.application_config.dnote_json_data = dnote_data
     }
 
     function onRequestedApplyRyuuStruct(ryuu_data: Record<string, unknown>): void {
         cloned_application_config.value.ryuu_json_data = ryuu_data
+        props.application_config.ryuu_json_data = ryuu_data
+    }
+
+    function onRequestedApplyDashboardStruct(dashboard_data: Record<string, unknown>): void {
+        cloned_application_config.value.dashboard_json_data = dashboard_data
+        props.application_config.dashboard_json_data = dashboard_data
     }
 
     // ── Event relay objects ──
@@ -389,6 +409,7 @@ javascript: (function () {
         edit_kftl_template_dialog,
         edit_dnote_dialog,
         edit_ryuu_dialog,
+        edit_dashboard_dialog,
         server_config_dialog,
 
         // State
@@ -427,6 +448,7 @@ javascript: (function () {
         show_edit_kftl_template_dialog,
         show_edit_dnote_dialog,
         show_edit_ryuu_dialog,
+        show_edit_dashboard_dialog,
         show_new_board_name_dialog,
         show_server_config_dialog,
 
@@ -439,6 +461,7 @@ javascript: (function () {
         onRequestedApplyTagStruct,
         onRequestedApplyDnote,
         onRequestedApplyRyuuStruct,
+        onRequestedApplyDashboardStruct,
 
         // Event relay objects
         errorMessageRelayHandlers,
