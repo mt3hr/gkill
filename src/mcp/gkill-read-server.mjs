@@ -6,7 +6,7 @@ import http from "node:http";
 import { dirname as _dirname, resolve as _resolvePath } from "node:path";
 import process from "node:process";
 import { fileURLToPath as _fileURLToPath } from "node:url";
-import { Agent } from "undici";
+import { Agent, fetch } from "undici";
 
 import { GkillApiError, isPlainObject, invalidArgument } from "./lib/errors.mjs";
 import { assertTrimmedString } from "./lib/validation.mjs";
