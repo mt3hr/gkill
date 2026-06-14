@@ -34,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, nextTick } from 'vue'
 import type { ApplicationConfigDialogProps } from './application-config-dialog-props'
 import type { ApplicationConfigDialogEmits } from './application-config-dialog-emits'
 import ApplicationConfigView from '../views/application-config-view.vue'
@@ -62,6 +62,7 @@ const ui = useFloatingDialog("application-config-dialog", {
 
 async function show(): Promise<void> {
   is_show_dialog.value = true
+  await nextTick()
   application_config_view.value?.reload_cloned_application_config()
 }
 async function hide(): Promise<void> {

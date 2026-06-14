@@ -68,14 +68,16 @@
         </h1>
         <v-window v-model="current_definition_index">
             <v-window-item v-for="(def, i) in dnote_definitions" :key="i" :value="i" :eager="true">
-                <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-                    v-model="dnote_definitions[i].items"
-                    v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
-                    @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_item_table_ref(i, el)" />
-                <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-                    v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
-                    v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
-                    @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_list_table_ref(i, el)" />
+                <div class="dnote-scroll-wrap">
+                    <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
+                        v-model="dnote_definitions[i].items"
+                        v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
+                        @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_item_table_ref(i, el)" />
+                    <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
+                        v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
+                        v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
+                        @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_list_table_ref(i, el)" />
+                </div>
             </v-window-item>
         </v-window>
         <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-dnote">
@@ -155,6 +157,7 @@ const {
     // Business logic
     reload,
     abort,
+    set_loading,
 
     // Template event handlers
     add_definition,
@@ -173,9 +176,22 @@ const {
     errorsMessagesRelayHandlers,
 } = useDnoteView({ props, emits })
 
-defineExpose({ reload, abort })
+defineExpose({ reload, abort, set_loading })
 </script>
 <style lang="css" scoped>
+.dnote-scroll-wrap {
+    overflow-x: auto;
+}
+
+/* v-window / v-window-item は内部で overflow:hidden を持つため上書き */
+:deep(.v-window__container) {
+    overflow-x: visible !important;
+}
+
+:deep(.v-window-item) {
+    overflow-x: visible !important;
+}
+
 .overlay_target {
     z-index: -10000;
     position: absolute;

@@ -6,13 +6,14 @@
         </v-sheet>
         <v-sheet>
             <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key"
-                style="width: 300px; height: 425px" class="googlemap" :key="application_config.google_map_api_key">
+                style="width: 300px; height: 425px" class="googlemap" :key="application_config.google_map_api_key"
+                gestureHandling="cooperative">
                 <Polyline :options="polyline_options" :key="polyline_options.timestamp" />
                 <Marker v-if="marker_options" :options="marker_options" :key="marker_options.timestamp" />
             </GoogleMap>
         </v-sheet>
         <v-sheet>
-            <v-slider min="0" :max="time_slider_max" v-model="slider_model" :label="date_time_str" />
+            <v-slider min="0" hide-details :max="time_slider_max" v-model="slider_model" :label="date_time_str" />
         </v-sheet>
     </div>
 </template>
@@ -42,7 +43,11 @@ const {
     start_date_str,
     end_date_str,
     date_time_str,
+
+    centering,
 } = useGpsLogMap({ props, emits })
+
+defineExpose({ centering })
 </script>
 <style lang="css" scoped>
 .map_date {
