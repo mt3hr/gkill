@@ -281,6 +281,11 @@ body::-webkit-scrollbar {
   border-radius: var(--gkill-scrollbar-thumb-radius);
 }
 
+table > tr > td {
+    padding: 0;
+    margin: 0;
+}
+
 /* =========================================================
    Dnote / Misc
 ========================================================= */
@@ -305,15 +310,12 @@ body::-webkit-scrollbar {
 
 .dnote_view {
   position: relative;
-  max-width: 625px;
   width: 100%;
   overflow: unset !important;
 }
 
 /* Date picker header hidden */
-div.v-sheet.v-picker.v-date-picker.v-date-picker--year>div:nth-child(1),
-div.v-sheet.v-picker.v-date-picker.v-date-picker--month>div:nth-child(1),
-div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
+div.v-sheet.v-picker.v-date-picker > .v-picker__header-wrapper {
   display: none;
 }
 

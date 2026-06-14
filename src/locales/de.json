@@ -782,5 +782,13 @@
     "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "Erneut speichern",
     "CLIPBOARD_SAVED_MESSAGE": "Zwischenablageinhalt gespeichert",
     "CLIPBOARD_CHANGE_FILENAME_TITLE": "Dateiname ändern",
-    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: Speichern / Ctrl+V: Einfügen & Speichern / Esc: Schließen"
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: Speichern / Ctrl+V: Einfügen & Speichern / Esc: Schließen",
+    "DASHBOARD_APP_NAME": "Dashboard",
+    "DASHBOARD_PAGE_TITLE": "Dashboard",
+    "DASHBOARD_TODAY_LABEL": "Heute",
+    "DASHBOARD_PREV_DAY": "Vorheriger Tag",
+    "DASHBOARD_NEXT_DAY": "Nächster Tag",
+    "EDIT_DASHBOARD_TITLE": "Dashboard",
+    "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "Aufgaben-Suchbedingung",
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Aggregat-Suchbedingung"
 }

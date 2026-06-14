@@ -782,5 +782,13 @@
     "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "다시 저장",
     "CLIPBOARD_SAVED_MESSAGE": "클립보드 내용을 저장했습니다",
     "CLIPBOARD_CHANGE_FILENAME_TITLE": "파일명 변경",
-    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: 저장 / Ctrl+V: 붙여넣기 후 저장 / Esc: 닫기"
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Enter: 저장 / Ctrl+V: 붙여넣기 후 저장 / Esc: 닫기",
+    "DASHBOARD_APP_NAME": "대시보드",
+    "DASHBOARD_PAGE_TITLE": "대시보드",
+    "DASHBOARD_TODAY_LABEL": "오늘",
+    "DASHBOARD_PREV_DAY": "이전 날",
+    "DASHBOARD_NEXT_DAY": "다음 날",
+    "EDIT_DASHBOARD_TITLE": "대시보드",
+    "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "작업 검색 조건",
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "집계 검색 조건"
 }

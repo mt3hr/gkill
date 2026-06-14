@@ -345,7 +345,12 @@ erDiagram
 - **LOGIN_SESSION**: セッション管理。30日有効期限
 - **FILE_UPLOAD_HISTORY**: ファイルアップロード履歴（月間容量制限のため）
 - **SERVER_CONFIG**: サーバ設定。DEVICE + KEY の複合主キー（Key-Value 形式）
-- **APPLICATION_CONFIG**: ユーザ別アプリ設定。USER_ID + DEVICE + KEY の複合主キー
+- **APPLICATION_CONFIG**: ユーザ別アプリ設定。USER_ID + DEVICE + KEY の複合主キー。主な KEY 値は以下の通り:
+
+  | KEY | DEVICE | 説明 |
+  |---|---|---|
+  | `DASHBOARD_JSON_DATA` | `ALL` | ダッシュボード設定（`DashboardConfig` の JSON 文字列）。`ignoreDeviceNameConfigKey` リストに含まれるためデバイス非依存で保存される |
+  | その他設定キー | デバイス名 or `ALL` | テーマ・表示日数・テンプレート等のアプリ設定 |
 - **REPOSITORY**: データ保存先定義。TYPE でデータ型、FILE で SQLite3 ファイルパスを指定
 - **SHARE_KYOU_INFO**: Kyou 共有リンク設定
 - **GKILL_NOTIFICATION**: Web Push 通知購読情報
@@ -381,7 +386,24 @@ erDiagram
 - 時刻は UNIX タイムスタンプ（他テーブルとは異なる形式）
 - ADDITION / DELETION はコード変更行数
 
-## 4. テーブル設計の特徴
+## 4. ApplicationConfig Go 構造体
+
+定義: `src/server/gkill/dao/user_config/application_config.go`
+
+ApplicationConfig は Go 側で以下のフィールドを持つ（抜粋）。
+
+```go
+type ApplicationConfig struct {
+    // ... 既存フィールド ...
+    DashboardJSONData *json.RawMessage `json:"dashboard_json_data"`
+}
+```
+
+`DashboardJSONData` フィールドは `*json.RawMessage` 型で、フロントエンドの `DashboardConfig` クラスを JSON として格納する。`DASHBOARD_JSON_DATA` キーで `APPLICATION_CONFIG` テーブルに保存され、デバイス名 `ALL` で読み書きされる（デバイス非依存設定）。
+
+SQLite3 実装（`application_config_dao_sqlite3_impl.go`）では、SELECT/INSERT ともに `DASHBOARD_JSON_DATA` キーへの対応が追加されている。
+
+## 5. テーブル設計の特徴
 
 ### Append-Only テーブル（主キーなし）
 

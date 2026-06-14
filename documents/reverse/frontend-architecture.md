@@ -49,12 +49,13 @@ src/client/
 │   ├── saihate-page.vue
 │   ├── mkfl-page.vue
 │   ├── plaing-timeis-page.vue
+│   ├── dashboard-page.vue
 │   ├── set-new-password-page.vue
 │   ├── regist-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
 │   ├── views/                       # Viewコンポーネント (177)
-│   └── dialogs/                     # ダイアログコンポーネント (95, Esc閉じ対応)
+│   └── dialogs/                     # ダイアログコンポーネント (99, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -73,9 +74,9 @@ Page（ルートページ）
 
 | 層 | 配置 | 件数 | 責務 |
 |---|---|---|---|
-| **Page** | `pages/*.vue` | 14 | ルーティング先。ページ全体のレイアウト（12ルート＋共有用2ページ） |
+| **Page** | `pages/*.vue` | 15 | ルーティング先。ページ全体のレイアウト（13ルート＋共有用2ページ） |
 | **View** | `pages/views/*.vue` | 177 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 95 | モーダル操作（確認、詳細編集等） |
+| **Dialog** | `pages/dialogs/*.vue` | 99 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -130,6 +131,7 @@ Page（ルートページ）
 | `/kyou` | `kyou` | kyou-page.vue | ライフイベント一覧 |
 | `/mkfl` | `mkfl` | mkfl-page.vue | 打刻メモ帳（KFTL入力+TimeIs表示） |
 | `/plaing` | `plaing` | plaing-timeis-page.vue | アクティブ打刻一覧 |
+| `/dashboard` | `dashboard` | dashboard-page.vue | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/saihate` | `saihate` | saihate-page.vue | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | `set_new_password` | set-new-password-page.vue | パスワード設定 |
 | `/regist_first_account` | `regist_first_account` | regist-first-account-page.vue | 初回アカウント登録 |
@@ -325,7 +327,93 @@ Service Worker が `/share-target` POSTを処理：
 
 ---
 
-## 11. UX改善
+## 11. ダッシュボード機能
+
+### DashboardConfig クラス
+
+定義: `src/client/classes/datas/config/dashboard-config.ts`
+
+ダッシュボード画面の表示設定を保持する設定クラス。`ApplicationConfig.dashboard_json_data` にJSON文字列として格納され、デバイス非依存（DEVICE='ALL'）で保存される。
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `dashboard_mi_find_kyou_query` | `FindKyouQuery \| null` | ダッシュボード下部のMI一覧に適用する検索クエリ |
+| `dashboard_dnote_find_kyou_query` | `FindKyouQuery \| null` | ダッシュボード上半分左のDnoteビューに適用する検索クエリ |
+
+**静的メソッド:**
+
+| メソッド | 説明 |
+|---|---|
+| `static parse(json: unknown): DashboardConfig` | JSONオブジェクトからDashboardConfigインスタンスを生成。旧フィールド `dashboard_default_find_kyou_query` を `dashboard_mi_find_kyou_query` へ後方互換マイグレーションする |
+| `to_json(): Record<string, unknown>` | JSONシリアライズ用オブジェクトを返す |
+
+**後方互換性:** 旧バージョンで保存された `dashboard_default_find_kyou_query` フィールドは、`parse()` 実行時に `dashboard_mi_find_kyou_query` として読み込まれる。
+
+### ダッシュボードページ
+
+定義: `src/client/pages/dashboard-page.vue` / `src/client/classes/use-dashboard-page.ts`
+
+特定日のライフログを俯瞰する日次サマリー画面。`/dashboard` ルートに対応する。
+
+**画面レイアウト:**
+
+```
+┌──────────────────────────────────────┐
+│  ツールバー（日付ナビ・設定・ヘルプ）            │
+├─────────────────┬────────────────────┤
+│  DnoteView      │  GPSLogMap         │
+│  （30vh、左半分） │  （30vh、右半分）     │
+├─────────────────┴────────────────────┤
+│  KyouListView（MI一覧、残り全高さ）           │
+│  ※ dashboard_mi_find_kyou_query で絞込    │
+└──────────────────────────────────────┘
+                              [FABメニュー]
+```
+
+**主要機能:**
+- 表示日の切替（前日・翌日・カレンダーピッカー）
+- EditDashboardDialog 経由でMI検索条件・Dnote検索条件を設定
+- FABメニューから全データ型の記録追加が可能
+- Enter → KFTLダイアログ、Ctrl+V → クリップボード保存ダイアログ
+
+### MiFindQueryEditorView / MiFindQueryEditorDialog
+
+定義:
+- `src/client/pages/views/mi-find-query-editor-view.vue` / `mi-find-query-editor-view-props.ts` / `mi-find-query-editor-view-emits.ts`
+- `src/client/pages/dialogs/mi-find-query-editor-dialog.vue` / `mi-find-query-editor-dialog-props.ts` / `mi-find-query-editor-dialog-emits.ts`
+- `src/client/classes/use-mi-find-query-editor-view.ts`
+- `src/client/classes/use-mi-find-query-editor-dialog.ts`
+
+既存の `find-query-editor-view.vue` が汎用Kyou向けであるのに対し、`mi-find-query-editor-view.vue` はMI（タスク）専用の検索条件エディタ。ダッシュボードのEditDashboardDialogから呼び出される。
+
+**対応フィルタ条件:**
+
+| フィルタ | 説明 |
+|---|---|
+| チェック状態（`mi-extruct-check-state-query`） | 完了/未完了/全件での絞り込み |
+| ソート順（`mi-sort-type-query`） | 並び順の選択 |
+| キーワード | 全文検索 |
+| タグ | タグでの絞り込み |
+| TimeIs | 打刻期間での絞り込み |
+| 地図（map-query） | GPS位置での絞り込み |
+| 時間帯 | 時間範囲での絞り込み |
+
+**クエリ反映タイミング:** 「保存」ボタン押下時のみ `emits('requested_apply', query)` を発行し、クエリを親コンポーネントに反映する（リアルタイム反映なし）。
+
+### EditDashboardDialog
+
+定義: `src/client/pages/dialogs/edit-dashboard-dialog.vue` / `edit-dashboard-dialog-props.ts` / `edit-dashboard-dialog-emits.ts` / `src/client/classes/use-edit-dashboard-dialog.ts`
+
+ダッシュボードの表示設定を編集するダイアログ。`DashboardConfig` の各フィールドを編集し、保存時に `UpdateApplicationConfig` API を呼び出して永続化する。
+
+| 設定項目 | 内容 |
+|---|---|
+| MI検索条件 | `MiFindQueryEditorView` でMI一覧の絞り込み条件を設定 |
+| Dnote検索条件 | `FindQueryEditorView` でDnoteビューの条件を設定 |
+
+---
+
+## 12. UX改善
 
 ### オフラインバナー
 

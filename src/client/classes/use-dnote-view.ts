@@ -317,6 +317,10 @@ export function useDnoteView(options: {
         return reset_view()
     }
 
+    function set_loading(loading: boolean): void {
+        is_loading.value = loading
+    }
+
     function add_definition(): void {
         const new_def: DnoteDefinition = {
             name: i18n.global.t('DNOTE_DEFINITION_DEFAULT_NAME') + " " + (dnote_definitions.value.length + 1),
@@ -524,6 +528,7 @@ export function useDnoteView(options: {
         // Business logic (exposed for defineExpose)
         reload,
         abort,
+        set_loading,
 
         // Template event handlers
         add_definition,

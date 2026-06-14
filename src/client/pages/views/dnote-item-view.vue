@@ -104,4 +104,9 @@ defineExpose({ load_aggregated_value, reset })
 .dnote_item_root.draggable {
   cursor: grab;
 }
+
+.dnote_item_root table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
 </style>

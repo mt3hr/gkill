@@ -63,6 +63,8 @@ export function useFindQueryEditorView(options: {
             nextTick(() => {
                 if (props.find_kyou_query.query_id === "") {
                     query.value = default_query.value
+                } else {
+                    query.value = props.find_kyou_query
                 }
                 loading.value = false
                 nextTick(() => emits('inited'))
