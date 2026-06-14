@@ -65,6 +65,15 @@ defineExpose({ load_aggregated_value, reset })
 </script>
 
 <style scoped>
+.dnote_item_table_root {
+    overflow-x: visible;
+}
+
+.dnote_item_table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
 .dnote_item_table_td {
     vertical-align: top;
     min-width: 210px;

@@ -35,7 +35,7 @@ export function useFindQueryEditorDialog(options: {
 
     async function show(find_kyou_query: FindKyouQuery): Promise<void> {
         return nextTick(async () => {
-            cloned_find_kyou_query.value = find_kyou_query
+            cloned_find_kyou_query.value = find_kyou_query.clone()
             cloned_find_kyou_query.value.query_id = props.gkill_api.generate_uuid()
             is_show_dialog.value = true
             received_application_config.value = new ApplicationConfig()

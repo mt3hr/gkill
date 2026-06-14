@@ -782,5 +782,13 @@
     "CLIPBOARD_ALREADY_SAVED_SAVE_AGAIN_TITLE": "Enregistrer à nouveau",
     "CLIPBOARD_SAVED_MESSAGE": "Contenu du presse-papiers enregistré",
     "CLIPBOARD_CHANGE_FILENAME_TITLE": "Changer le nom du fichier",
-    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Entrée : Enregistrer / Ctrl+V : Coller et enregistrer / Échap : Fermer"
+    "SAVE_CLIPBOARD_SHORTCUT_HINT": "Entrée : Enregistrer / Ctrl+V : Coller et enregistrer / Échap : Fermer",
+    "DASHBOARD_APP_NAME": "Tableau de bord",
+    "DASHBOARD_PAGE_TITLE": "Tableau de bord",
+    "DASHBOARD_TODAY_LABEL": "Aujourd'hui",
+    "DASHBOARD_PREV_DAY": "Jour précédent",
+    "DASHBOARD_NEXT_DAY": "Jour suivant",
+    "EDIT_DASHBOARD_TITLE": "Tableau de bord",
+    "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "Condition de recherche de tâches",
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Condition de recherche agrégée"
 }

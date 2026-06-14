@@ -65,7 +65,7 @@ defineExpose({ load_aggregate_grouping_list, reset })
 
 <style scoped>
 .dnote_list_table_root {
-  overflow-x: auto;
+  overflow-x: visible;
   padding: 0px;
 }
 

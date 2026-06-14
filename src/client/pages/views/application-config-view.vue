@@ -161,6 +161,8 @@
                             i18n.global.t("EDIT_DNOTE_TITLE") }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_ryuu_dialog">{{
                             i18n.global.t("EDIT_RYUU_TITLE") }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_dashboard_dialog">{{
+                            i18n.global.t("EDIT_DASHBOARD_TITLE") }}</v-btn>
                     </td>
                 </tr>
             </table>
@@ -222,6 +224,11 @@
             v-on="errorMessageRelayHandlers"
             @requested_apply_ryuu_struct="(data: RyuuData) => onRequestedApplyRyuuStruct(data)"
             @requested_reload_application_config="() => { }" ref="edit_ryuu_dialog" />
+        <EditDashboardDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            @requested_apply_dashboard_struct="(data: DashboardData) => onRequestedApplyDashboardStruct(data)"
+            @requested_reload_application_config="() => { }" ref="edit_dashboard_dialog" />
         <NewBoardNameDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
@@ -243,6 +250,7 @@ import EditDnoteDialog from '../dialogs/edit-dnote-dialog.vue'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
 import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
+import EditDashboardDialog from '../dialogs/edit-dashboard-dialog.vue'
 
 import type { ApplicationConfigViewEmits } from './application-config-view-emits'
 import type { ApplicationConfigViewProps } from './application-config-view-props'
@@ -254,6 +262,7 @@ import type { RepTypeStructElementData } from "@/classes/datas/config/rep-type-s
 import type { TagStructElementData } from "@/classes/datas/config/tag-struct-element-data"
 type DnoteData = Record<string, unknown>
 type RyuuData = Record<string, unknown>
+type DashboardData = Record<string, unknown>
 
 const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()
@@ -268,6 +277,7 @@ const {
     edit_kftl_template_dialog,
     edit_dnote_dialog,
     edit_ryuu_dialog,
+    edit_dashboard_dialog,
     server_config_dialog,
 
     // State
@@ -304,6 +314,7 @@ const {
     show_edit_kftl_template_dialog,
     show_edit_dnote_dialog,
     show_edit_ryuu_dialog,
+    show_edit_dashboard_dialog,
     show_new_board_name_dialog,
     show_server_config_dialog,
 
@@ -316,6 +327,7 @@ const {
     onRequestedApplyTagStruct,
     onRequestedApplyDnote,
     onRequestedApplyRyuuStruct,
+    onRequestedApplyDashboardStruct,
 
     // Event relay objects
     errorMessageRelayHandlers,

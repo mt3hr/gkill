@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Dashboard</span></nav>
+  <h1>Dashboard</h1>
+  <p>Eine umfassende Ansicht, um alle Lebensprotokoll-Einträge des ausgewählten Datums auf einen Blick zu sehen. Die obere Hälfte zeigt die Aggregationsansicht und die GPS-Karte des Tages, die untere Hälfte zeigt Ihre Aufgaben.</p>
+
+  <h2>Toolbar-Schaltflächen</h2>
+  <table>
+    <tr>
+      <th>Schaltfläche</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>← (Vorheriger Tag)</td>
+      <td>Zeigt die Daten des vorherigen Tages an.</td>
+    </tr>
+    <tr>
+      <td>Datumsbezeichnung (z. B. 2025/6/15 So)</td>
+      <td>Klicken Sie, um die Kalenderauswahl zu öffnen.</td>
+    </tr>
+    <tr>
+      <td>→ (Nächster Tag)</td>
+      <td>Zeigt die Daten des nächsten Tages an.</td>
+    </tr>
+    <tr>
+      <td>&#10068; Hilfe</td>
+      <td>Zeigt die Hilfe für den aktuellen Bildschirm an.</td>
+    </tr>
+    <tr>
+      <td>⚙ Einstellungen</td>
+      <td>Öffnet die Anwendungseinstellungen.</td>
+    </tr>
+    <tr>
+      <td>Navigationsmenü (Titelklick)</td>
+      <td>Ermöglicht die Navigation zu jedem Bildschirm.</td>
+    </tr>
+  </table>
+
+  <h2>Anzeigebereiche</h2>
+  <table>
+    <tr>
+      <th>Bereich</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Aggregationsansicht</td>
+      <td>Zeigt die Aggregationsansicht des ausgewählten Tages in der linken Hälfte an. Sie können die Suchbedingungen in den Einstellungen einschränken.</td>
+    </tr>
+    <tr>
+      <td>GPS-Karte</td>
+      <td>Zeigt das GPS-Protokoll des ausgewählten Tages als Karte in der rechten Hälfte an.</td>
+    </tr>
+    <tr>
+      <td>Aufgabenliste</td>
+      <td>Zeigt Aufgaben im Zusammenhang mit dem ausgewählten Tag unten in einer Liste an. Sie können die Suchbedingungen in den Einstellungen einschränken.</td>
+    </tr>
+  </table>
+
+  <h2>Schwebende Aktions-Schaltfläche (+)</h2>
+  <p>Tippen Sie auf die Schaltfläche "+" unten rechts, um das Schnellhinzufüge-Menü für neue Einträge zu öffnen.</p>
+  <table>
+    <tr>
+      <th>Menüelement</th>
+      <th>Inhalt</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Notizblock</td>
+      <td>Texteingabe</td>
+      <td>Öffnet den Bildschirm zur Eingabe von Notizen und verschiedenen Einträgen mit der Notizblock-Syntax.</td>
+    </tr>
+    <tr>
+      <td>Stempel-Notizblock</td>
+      <td>Text + Zeitstempel</td>
+      <td>Öffnet den Bildschirm zur gleichzeitigen Verwaltung von Notizenein­gabe und laufenden Zeitstempeln.</td>
+    </tr>
+    <tr>
+      <td>Numerischer Eintrag</td>
+      <td>Zahl erfassen</td>
+      <td>Erfasst beliebige numerische Daten.</td>
+    </tr>
+    <tr>
+      <td>Lesezeichen</td>
+      <td>URL erfassen</td>
+      <td>Speichert eine Webseiten-URL als Lesezeichen.</td>
+    </tr>
+    <tr>
+      <td>Zeiterfassung</td>
+      <td>Zeiterfassung starten</td>
+      <td>Startet eine neue Zeiterfassungssitzung.</td>
+    </tr>
+    <tr>
+      <td>Aufgabe</td>
+      <td>Aufgabe hinzufügen</td>
+      <td>Erstellt eine neue Aufgabe.</td>
+    </tr>
+    <tr>
+      <td>Ausgabe</td>
+      <td>Betrag erfassen</td>
+      <td>Erfasst den Ausgabebetrag und die Beschreibung.</td>
+    </tr>
+    <tr>
+      <td>Stimmung</td>
+      <td>Stimmung erfassen (0–10)</td>
+      <td>Erfasst Ihre aktuelle Stimmung als Wert von 0 bis 10.</td>
+    </tr>
+    <tr>
+      <td>Hochladen</td>
+      <td>Datei hochladen</td>
+      <td>Lädt Dateien wie Bilder oder Dokumente hoch und erfasst sie.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Halten Sie die Schaltfläche "+" gedrückt, um den Notizblock direkt zu öffnen.
+  </div>
+
+  <div class="tip">
+    <strong>Tastenkürzel:</strong> Drücken Sie Enter, um den Notizblock-Dialog zu öffnen.
+  </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Sie können die Suchbedingungen für Aggregationsansicht und Aufgaben über die Schaltfläche "Dashboard" in den Einstellungen konfigurieren.
+  </div>
+
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="getting-started.html">Erste Schritte</a></li>
+    <li><a href="kftl.html">Notizblock</a></li>
+    <li><a href="mi.html">Aufgaben</a></li>
+    <li><a href="rykv.html">Lebensprotokollanzeige</a></li>
+    <li><a href="application-config.html">Einstellungen</a></li>
+    <li><a href="saihate.html">Startseite</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

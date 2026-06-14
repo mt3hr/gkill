@@ -42,6 +42,8 @@ type ApplicationConfig struct {
 
 	RyuuJSONData *json.RawMessage `json:"ryuu_json_data"`
 
+	DashboardJSONData *json.RawMessage `json:"dashboard_json_data"`
+
 	MiBoardStruct *json.RawMessage `json:"mi_board_struct"`
 
 	AccountIsAdmin bool `json:"account_is_admin"`

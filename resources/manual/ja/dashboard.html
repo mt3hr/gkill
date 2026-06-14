@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ダッシュボード画面 - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>ダッシュボード画面</span></nav>
+  <h1>ダッシュボード</h1>
+  <p>選択した日付のライフログを一画面で俯瞰できる総合ビューです。上半分にはその日の集計ビューとGPS地図、下半分にはタスク一覧が表示されます。</p>
+
+  <h2>ツールバーボタン</h2>
+  <table>
+    <tr>
+      <th>ボタン</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>← (前日)</td>
+      <td>前の日付のデータを表示します。</td>
+    </tr>
+    <tr>
+      <td>日付ラベル（例: 2025/6/15(日)）</td>
+      <td>クリックするとカレンダーピッカーが開きます。</td>
+    </tr>
+    <tr>
+      <td>→ (翌日)</td>
+      <td>次の日付のデータを表示します。</td>
+    </tr>
+    <tr>
+      <td>&#10068; ヘルプ</td>
+      <td>現在の画面のヘルプを表示します。</td>
+    </tr>
+    <tr>
+      <td>⚙ 設定</td>
+      <td>アプリケーション設定を開きます。</td>
+    </tr>
+    <tr>
+      <td>ナビゲーションメニュー（タイトルクリック）</td>
+      <td>各画面へ移動できます。</td>
+    </tr>
+  </table>
+
+  <h2>表示エリア</h2>
+  <table>
+    <tr>
+      <th>エリア</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>集計ビュー</td>
+      <td>選択日の集計ビューを左半分に表示します。設定で検索条件を絞り込めます。</td>
+    </tr>
+    <tr>
+      <td>GPS地図</td>
+      <td>選択日のGPSログを右半分に地図表示します。</td>
+    </tr>
+    <tr>
+      <td>タスク一覧</td>
+      <td>選択日に関連するタスクを下部に一覧表示します。設定で検索条件を絞り込めます。</td>
+    </tr>
+  </table>
+
+  <h2>フローティングアクションボタン（+）</h2>
+  <p>画面右下の「+」ボタンをタップすると、各種記録の追加メニューが表示されます。</p>
+  <table>
+    <tr>
+      <th>メニュー項目</th>
+      <th>内容</th>
+      <th>説明</th>
+    </tr>
+    <tr>
+      <td>メモ帳</td>
+      <td>テキスト入力</td>
+      <td>メモ帳構文でメモや各種記録を入力する画面を開きます。</td>
+    </tr>
+    <tr>
+      <td>打刻メモ帳</td>
+      <td>テキスト＋打刻</td>
+      <td>メモ入力と進行中の打刻を同時に管理する画面を開きます。</td>
+    </tr>
+    <tr>
+      <td>数値記録</td>
+      <td>数値を記録</td>
+      <td>任意の数値データを記録します。</td>
+    </tr>
+    <tr>
+      <td>ブックマーク</td>
+      <td>URLを記録</td>
+      <td>WebページのURLをブックマークとして保存します。</td>
+    </tr>
+    <tr>
+      <td>打刻帳</td>
+      <td>時間計測を開始</td>
+      <td>新しい打刻セッションを開始します。</td>
+    </tr>
+    <tr>
+      <td>タスク</td>
+      <td>タスクを追加</td>
+      <td>新しいタスクを作成します。</td>
+    </tr>
+    <tr>
+      <td>支出</td>
+      <td>金額を記録</td>
+      <td>支出金額と内容を記録します。</td>
+    </tr>
+    <tr>
+      <td>気分</td>
+      <td>気分値（0〜10）を記録</td>
+      <td>現在の気分を0〜10の数値で記録します。</td>
+    </tr>
+    <tr>
+      <td>アップロード</td>
+      <td>ファイルをアップロード</td>
+      <td>画像やドキュメントなどのファイルをアップロードして記録します。</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 「+」ボタンを長押しすると、メモ帳が直接開きます。
+  </div>
+
+  <div class="tip">
+    <strong>ショートカット:</strong> Enterキーを押すとメモ帳ダイアログが開きます。
+  </div>
+
+  <div class="tip">
+    <strong>ヒント:</strong> 設定画面の「ダッシュボード」ボタンから、表示する集計ビューやタスクの検索条件を設定できます。
+  </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="getting-started.html">はじめに</a></li>
+    <li><a href="kftl.html">メモ帳画面</a></li>
+    <li><a href="mi.html">タスク画面</a></li>
+    <li><a href="rykv.html">ライフログビュー画面</a></li>
+    <li><a href="application-config.html">設定画面</a></li>
+    <li><a href="saihate.html">さいはて画面</a></li>
+  </ul>
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

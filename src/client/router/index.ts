@@ -12,6 +12,7 @@ import old_shared_mi_page from '../pages/old-shared-mi-page.vue'
 import plaing_timeis_page from '@/pages/plaing-timeis-page.vue'
 import mkfl_page from '@/pages/mkfl-page.vue'
 import regist_first_account_page from '@/pages/regist-first-account-page.vue'
+import dashboard_page from '@/pages/dashboard-page.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -55,6 +56,11 @@ const router = createRouter({
       path: '/saihate',
       name: 'saihate',
       component: saihate_page,
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: dashboard_page,
     },
     {
       path: '/set_new_password',
