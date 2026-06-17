@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -36,7 +37,28 @@ func GenerateNewID() string {
 	return uuid.New().String()
 }
 
+// reForbiddenChars はWindows/Android不正文字の正規表現です。
+// クライアント側 sanitize_filename と同じ文字セットです。
+var reForbiddenChars = regexp.MustCompile(`[\\/:*?"<>|{}]`)
+
+// reControlChars は制御文字 (0x00-0x1f, 0x7f) の正規表現です。
+var reControlChars = regexp.MustCompile("[\x00-\x1f\x7f]")
+
+// sanitizeFilename はOS不正文字・制御文字を除去してファイル名を安全にします。
+// クライアント側の sanitize_filename と同じロジックです。
+func sanitizeFilename(name string) string {
+	name = reForbiddenChars.ReplaceAllString(name, "")
+	name = reControlChars.ReplaceAllString(name, "")
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "file"
+	}
+	return name
+}
+
 func (g *GkillServerAPI) resolveFileName(repDir string, filename string, behavior req_res.FileUploadConflictBehavior) (string, error) {
+	// OS不正文字・制御文字を除去する (クライアント側 sanitize_filename と同じ処理)
+	filename = sanitizeFilename(filename)
 	// パストラバーサル対策: ファイル名をサニタイズしてrepDir外へのアクセスを禁止する
 	cleanFilename := filepath.Clean(filename)
 	if filepath.IsAbs(cleanFilename) || cleanFilename == ".." || strings.HasPrefix(cleanFilename, ".."+string(os.PathSeparator)) {

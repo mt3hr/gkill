@@ -27,7 +27,7 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
 
 import { createApp, defineComponent, ref } from 'vue'
 import { createMockGkillAPI } from '../../helpers/mock-api'
-import { useSaveClipboardToFileDialog } from '@/classes/use-save-clipboard-to-file-dialog'
+import { useSaveClipboardToFileDialog, sanitize_filename } from '@/classes/use-save-clipboard-to-file-dialog'
 import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -313,6 +313,38 @@ describe('useSaveClipboardToFileDialog', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (navigator as any).clipboard
     unmount()
+  })
+})
+
+// ── sanitize_filename ────────────────────────────────────────────────────────
+
+describe('sanitize_filename', () => {
+  test('removes curly braces from filename', () => {
+    expect(sanitize_filename('photo {uuid}.png')).toBe('photo uuid.png')
+  })
+
+  test('removes Windows-invalid chars: \\ / : * ? " < > |', () => {
+    expect(sanitize_filename('file\\name/test:foo*bar?baz"qux<a>b|c.txt')).toBe('filenametestfoobarbazquxabc.txt')
+  })
+
+  test('removes control characters', () => {
+    expect(sanitize_filename('file\x00name\x1f.txt')).toBe('filename.txt')
+  })
+
+  test('trims leading/trailing whitespace', () => {
+    expect(sanitize_filename('  hello.png  ')).toBe('hello.png')
+  })
+
+  test('returns "file" when result is empty after sanitization', () => {
+    expect(sanitize_filename('{}|<>*?')).toBe('file')
+  })
+
+  test('preserves normal filename unchanged', () => {
+    expect(sanitize_filename('screenshot_20240101_120000.png')).toBe('screenshot_20240101_120000.png')
+  })
+
+  test('preserves Japanese characters', () => {
+    expect(sanitize_filename('スクリーンショット 2024-01-01.png')).toBe('スクリーンショット 2024-01-01.png')
   })
 })
 
