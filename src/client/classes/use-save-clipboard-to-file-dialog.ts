@@ -31,6 +31,13 @@ const TYPE_PRIORITY = [
 
 const CLIPBOARD_LAST_REP_KEY = 'gkill_clipboard_save_last_rep_name'
 
+// OS不正文字を除去してファイル名を安全にする
+// Windows禁止文字 (\ / : * ? " < > |) + Androidで問題になる {} を削除
+export function sanitize_filename(name: string): string {
+    // eslint-disable-next-line no-control-regex
+    return name.replace(/[\\/:*?"<>|{}]/g, '').replace(/[\x00-\x1f\x7f]/g, '').trim() || 'file'
+}
+
 function get_ext_from_filename(name: string): string {
     const dot = name.lastIndexOf('.')
     return dot >= 0 ? name.slice(dot + 1).toLowerCase() : 'bin'
@@ -147,7 +154,7 @@ export function useSaveClipboardToFileDialog(options: {
     }
 
     function generate_filename(mimeType: string, originalName?: string): string {
-        if (originalName) return originalName
+        if (originalName) return sanitize_filename(originalName)  // OSで使えない文字を除去
         const now = new Date()
         const pad = (n: number) => n.toString().padStart(2, '0')
         const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
