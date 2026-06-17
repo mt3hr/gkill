@@ -404,33 +404,40 @@ WHERE
 
 			// 判定OKであれば追加する
 			// ファイルの内容を取得する
-			var targetRep Repository
 			var filename string
 			if targetRepName == "" || targetRepName == repName {
-				targetRep = i
 				filename = filepath.Join(i.contentDir, idf.TargetFile)
 			} else {
-				for _, rep := range i.repositoriesRef.Reps {
-					repName, err := rep.GetRepName(ctx)
+				// TARGET_REP_NAMEが別のIDFRepを指す場合、
+				// そのRepのcontentDirとidf.TargetFileからパスを組み立てる。
+				// GetPath(ctx, idf.ID)はターゲットRepのDBにidf.IDが存在しないため使えない。
+				var targetIDFRep IDFKyouRepository
+				for _, idfRep := range i.repositoriesRef.IDFKyouReps {
+					idfRepName, err := idfRep.GetRepName(ctx)
 					if err != nil {
-						err = fmt.Errorf("error at get rep name: %w", err)
-						return nil, err
+						return nil, fmt.Errorf("error at get rep name: %w", err)
 					}
-					if repName == targetRepName {
-						targetRep = rep
+					if idfRepName == targetRepName {
+						targetIDFRep = idfRep
+						break
 					}
 				}
-				if targetRep == nil {
-					// 対象Repが見つからない場合は無視する
-					continue
-				}
-				filename, err = targetRep.GetPath(ctx, idf.ID)
-				if err != nil {
-					// err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
-					// return nil, err
-
-					// 接続されていないRepのIDがあったときは無視する
-					continue
+				if targetIDFRep == nil {
+					// 対象IDFRepが見つからない場合（ディレクトリリネーム後など）は
+					// 自身のcontentDirにフォールバックする。
+					// DBファイルはディレクトリと一緒に移動するため、
+					// ファイルは現在のcontentDir内に存在する可能性が高い。
+					filename = filepath.Join(i.contentDir, idf.TargetFile)
+				} else {
+					// GetPath("") はidDBFileパスを返す。
+					// idDBFile = contentDir/.gkill/gkill_id.db なので
+					// contentDir = Dir(Dir(idDBFile))
+					dbPath, err := targetIDFRep.GetPath(ctx, "")
+					if err != nil {
+						continue
+					}
+					targetContentDir := filepath.Dir(filepath.Dir(dbPath))
+					filename = filepath.Join(targetContentDir, idf.TargetFile)
 				}
 			}
 
