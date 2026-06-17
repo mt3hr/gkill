@@ -420,6 +420,10 @@ WHERE
 						targetRep = rep
 					}
 				}
+				if targetRep == nil {
+					// 対象Repが見つからない場合は無視する
+					continue
+				}
 				filename, err = targetRep.GetPath(ctx, idf.ID)
 				if err != nil {
 					// err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
