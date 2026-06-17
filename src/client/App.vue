@@ -39,11 +39,16 @@ onMounted(() => {
         </td>
         <td>
           <v-app>
-            <v-banner v-if="!isOnline" color="warning" stacked :text="$t('NETWORK_OFFLINE_MESSAGE')">
-              <template #prepend>
-                <v-icon>mdi-wifi-off</v-icon>
-              </template>
-            </v-banner>
+            <v-snackbar
+              :model-value="!isOnline"
+              color="warning"
+              location="top"
+              :timeout="-1"
+              multi-line
+            >
+              <v-icon class="mr-2">mdi-wifi-off</v-icon>
+              {{ $t('NETWORK_OFFLINE_MESSAGE') }}
+            </v-snackbar>
             <VLocaleProvider :locale="locale">
               <RouterView />
             </VLocaleProvider>
