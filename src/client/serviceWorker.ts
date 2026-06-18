@@ -1,13 +1,9 @@
 /// <reference lib="webworker" />
 import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
-import { GkillAPI } from './classes/api/gkill-api';
-import { AddURLogRequest } from './classes/api/req_res/add-ur-log-request';
-import { AddKmemoRequest } from './classes/api/req_res/add-kmemo-request';
 import { isUrl } from './classes/looks-like-url';
 import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
-import { GetApplicationConfigRequest } from './classes/api/req_res/get-application-config-request';
 import { shouldCacheResponse, parseBoolLoose } from './classes/service-worker-utils';
 
 export default null
@@ -205,110 +201,112 @@ self.addEventListener('fetch', event => {
     event.respondWith((async () => {
       let is_saved = false
       try {
-      const form = await req.formData();
-      const shared_url = form.get('url') as string | null;
-      const shared_text = form.get('text') as string | null;
-      const shared_title = form.get('title') as string | null;
+        const form = await req.formData();
+        const shared_url = form.get('url') as string | null;
+        const shared_text = form.get('text') as string | null;
+        const shared_title = form.get('title') as string | null;
 
-      const gkill_api = GkillAPI.get_instance()
-      const session_id = await gkill_api.get_session_id_from_cookie_store()
-      const now = new Date(Date.now())
-
-      const application_config_req = new GetApplicationConfigRequest()
-      application_config_req.session_id = session_id
-      const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
-
-      if (isUrl(shared_url)) {
-        const req = new AddURLogRequest()
-        req.session_id = session_id
-        req.urlog.url = shared_url
-        if (shared_title) {
-          req.urlog.title = shared_title
-        }
-        req.urlog.id = gkill_api.generate_uuid()
-        req.urlog.related_time = now
-        req.urlog.create_app = "gkill_share"
-        req.urlog.create_device = application_config_res.application_config.device
-        req.urlog.create_time = now
-        req.urlog.create_user = application_config_res.application_config.user_id
-        req.urlog.update_app = "gkill_share"
-        req.urlog.update_device = application_config_res.application_config.device
-        req.urlog.update_time = now
-        req.urlog.update_user = application_config_res.application_config.user_id
-        await gkill_api.add_urlog(req)
-        is_saved = true
-      } else if (isUrl(shared_title)) {
-        const req = new AddURLogRequest()
-        req.session_id = session_id
-        req.urlog.url = shared_title
-        req.urlog.id = gkill_api.generate_uuid()
-        req.urlog.related_time = now
-        req.urlog.create_app = "gkill_share"
-        req.urlog.create_device = application_config_res.application_config.device
-        req.urlog.create_time = now
-        req.urlog.create_user = application_config_res.application_config.user_id
-        req.urlog.update_app = "gkill_share"
-        req.urlog.update_device = application_config_res.application_config.device
-        req.urlog.update_time = now
-        req.urlog.update_user = application_config_res.application_config.user_id
-        await gkill_api.add_urlog(req)
-        is_saved = true
-      } else if (shared_text) {
-        const shared_text_lines = String(shared_text).split("http")
-        const shared_text_lines_last_line = "http" + shared_text_lines[shared_text.length >= 2 ? shared_text_lines.length - 1 : 0]
-        if (isUrl(shared_text)) {
-          const req = new AddURLogRequest()
-          req.session_id = session_id
-          req.urlog.url = shared_text
-          if (shared_title) {
-            req.urlog.title = shared_title
+        // Get session ID via Cookie Store API (available in service workers)
+        let session_id = ""
+        if (typeof cookieStore !== 'undefined') {
+          const cookie = await cookieStore.get('gkill_session_id')
+          if (cookie && cookie.value) {
+            session_id = cookie.value
           }
-          req.urlog.id = gkill_api.generate_uuid()
-          req.urlog.related_time = now
-          req.urlog.create_app = "gkill_share"
-          req.urlog.create_device = application_config_res.application_config.device
-          req.urlog.create_time = now
-          req.urlog.create_user = application_config_res.application_config.user_id
-          req.urlog.update_app = "gkill_share"
-          req.urlog.update_device = application_config_res.application_config.device
-          req.urlog.update_time = now
-          req.urlog.update_user = application_config_res.application_config.user_id
-          await gkill_api.add_urlog(req)
-          is_saved = true
-        } else if (isUrl(shared_text_lines_last_line)) { // AndroidのGoogleアプリだと末尾にURLが入っていることがある
-          const req = new AddURLogRequest()
-          req.session_id = session_id
-          req.urlog.url = shared_text_lines_last_line
-          req.urlog.id = gkill_api.generate_uuid()
-          req.urlog.related_time = now
-          req.urlog.create_app = "gkill_share"
-          req.urlog.create_device = application_config_res.application_config.device
-          req.urlog.create_time = now
-          req.urlog.create_user = application_config_res.application_config.user_id
-          req.urlog.update_app = "gkill_share"
-          req.urlog.update_device = application_config_res.application_config.device
-          req.urlog.update_time = now
-          req.urlog.update_user = application_config_res.application_config.user_id
-          await gkill_api.add_urlog(req)
-          is_saved = true
-        } else {
-          const req = new AddKmemoRequest()
-          req.session_id = session_id
-          req.kmemo.content = shared_text
-          req.kmemo.id = gkill_api.generate_uuid()
-          req.kmemo.related_time = now
-          req.kmemo.create_app = "gkill_share"
-          req.kmemo.create_device = application_config_res.application_config.device
-          req.kmemo.create_time = now
-          req.kmemo.create_user = application_config_res.application_config.user_id
-          req.kmemo.update_app = "gkill_share"
-          req.kmemo.update_device = application_config_res.application_config.device
-          req.kmemo.update_time = now
-          req.kmemo.update_user = application_config_res.application_config.user_id
-          await gkill_api.add_kmemo(req)
-          is_saved = true
         }
-      }
+
+        const now = new Date(Date.now())
+
+        // Get device/user info from application config
+        const config_res = await fetch('/api/get_application_config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ session_id, locale_name: 'en' }),
+        })
+        const config_json = await config_res.json()
+        const app_config = config_json.application_config ?? {}
+        const device: string = app_config.device ?? ""
+        const user_id: string = app_config.user_id ?? ""
+
+        const make_kyou_base = () => ({
+          is_deleted: false,
+          id: crypto.randomUUID(),
+          rep_name: "",
+          related_time: now,
+          data_type: "",
+          create_time: now,
+          create_app: "gkill_share",
+          create_device: device,
+          create_user: user_id,
+          update_time: now,
+          update_app: "gkill_share",
+          update_device: device,
+          update_user: user_id,
+        })
+
+        const add_urlog = async (url: string, title: string): Promise<void> => {
+          await fetch('/api/add_urlog', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              session_id,
+              locale_name: 'en',
+              tx_id: null,
+              want_response_kyou: false,
+              added_kyou: null,
+              urlog: {
+                ...make_kyou_base(),
+                url,
+                title,
+                description: "",
+                favicon_image: "",
+                thumbnail_image: "",
+              },
+            }),
+          })
+        }
+
+        const add_kmemo = async (content: string): Promise<void> => {
+          await fetch('/api/add_kmemo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              session_id,
+              locale_name: 'en',
+              tx_id: null,
+              want_response_kyou: false,
+              added_kyou: null,
+              kmemo: {
+                ...make_kyou_base(),
+                content,
+              },
+            }),
+          })
+        }
+
+        if (isUrl(shared_url)) {
+          await add_urlog(shared_url, shared_title ?? "")
+          is_saved = true
+        } else if (isUrl(shared_title)) {
+          await add_urlog(shared_title, "")
+          is_saved = true
+        } else if (shared_text) {
+          const shared_text_lines = String(shared_text).split("http")
+          const shared_text_lines_last_line = "http" + shared_text_lines[shared_text.length >= 2 ? shared_text_lines.length - 1 : 0]
+          if (isUrl(shared_text)) {
+            await add_urlog(shared_text, shared_title ?? "")
+            is_saved = true
+          } else if (isUrl(shared_text_lines_last_line)) { // AndroidのGoogleアプリだと末尾にURLが入っていることがある
+            await add_urlog(shared_text_lines_last_line, "")
+            is_saved = true
+          } else {
+            await add_kmemo(shared_text)
+            is_saved = true
+          }
+        }
       } catch (e) {
         console.error('[SW] share-target error:', e)
         is_saved = false
