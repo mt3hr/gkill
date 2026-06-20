@@ -66,6 +66,48 @@
 
   <div class="tip">Changes require a server restart to take effect.</div>
 
+  <h2>Storage Management</h2>
+  <p>Storage (repositories) are the directories or locations where gkill saves your record data. You can configure multiple storage locations by purpose (text memos, files, GPS logs, etc.) or by device.</p>
+  <p>Storage configuration is done per user via the "Storage Assignment" button in Account Management.</p>
+
+  <h3>Adding Storage</h3>
+  <ol>
+    <li>Open Account Management and click the "Storage Assignment" button for the target user.</li>
+    <li>Click "Add" to add a new storage location.</li>
+    <li>Configure the following fields:
+      <ul>
+        <li><strong>Display Name</strong>: The name shown in the Life Log View and filter panels</li>
+        <li><strong>Type</strong>: The type of data to store (text memos, time logs, tasks, file management, GPS logs, Git commit logs, etc.)</li>
+        <li><strong>Path</strong>: The directory path where data is saved (glob patterns supported for file management type)</li>
+        <li><strong>Use as Write Target</strong>: Whether new records of this type should be saved here</li>
+        <li><strong>Enabled</strong>: Whether this storage is included in search and display</li>
+      </ul>
+    </li>
+    <li>Click "Save" to apply the configuration.</li>
+  </ol>
+
+  <h3>Storage Types</h3>
+  <table>
+    <tr><th>Type</th><th>Purpose</th></tr>
+    <tr><td>Text Memo</td><td>Stores text memos</td></tr>
+    <tr><td>Time Log</td><td>Stores time tracking records</td></tr>
+    <tr><td>Task</td><td>Stores task management records</td></tr>
+    <tr><td>Expense</td><td>Stores expense records</td></tr>
+    <tr><td>Bookmark</td><td>Stores URL bookmarks</td></tr>
+    <tr><td>Mood</td><td>Stores mood value records</td></tr>
+    <tr><td>Numeric</td><td>Stores numeric data records</td></tr>
+    <tr><td>File Management</td><td>Stores uploaded files (images, videos, etc.)</td></tr>
+    <tr><td>GPS Log</td><td>Manages GPS logs in GPX file format</td></tr>
+    <tr><td>Git Commit Log</td><td>Reads commit history from a Git repository (read-only)</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> Multiple storage locations of the same type can be added. For example, you can separate text memo storage by device to keep each device's data organized.
+  </div>
+  <div class="tip">
+    <strong>Tip:</strong> Only one storage location per type should have "Use as Write Target" enabled. This determines where new records of that type are saved when multiple storage locations of the same type exist.
+  </div>
+
   <h2>Related Documents</h2>
   <ul>
     <li><a href="application-config.html">Settings</a></li>

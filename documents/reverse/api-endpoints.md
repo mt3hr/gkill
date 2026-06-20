@@ -40,6 +40,116 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 - **アクセス拒否:** HTTP 403（ローカルアクセス制限時）
 - **サーバーエラー:** HTTP 500
 
+### 代表的なリクエスト/レスポンス例
+
+#### `/api/get_kyous` — 記録一覧取得
+
+`FindQuery` の主要フィールド：
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `session_id` | string | セッションID |
+| `use_words` | bool | テキスト検索を使用するか |
+| `words` | []string | 検索キーワード（AND条件） |
+| `not_words` | []string | 除外キーワード |
+| `use_tags` | bool | タグフィルタを使用するか |
+| `tags` | []string | タグ名一覧（AND条件） |
+| `use_reps` | bool | リポジトリフィルタを使用するか |
+| `reps` | []string | リポジトリ名一覧 |
+| `use_time_is_end_time` | bool | TimeIsの終了時刻フィルタを使用するか |
+| `calendar_start_time` | string | 検索開始日時（RFC3339） |
+| `calendar_end_time` | string | 検索終了日時（RFC3339） |
+| `page_size` | int | 1ページあたりの件数 |
+| `page` | int | ページ番号（0始まり） |
+| `locale_name` | string | ロケール名 |
+
+```json
+// リクエスト例
+{
+  "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "use_words": true,
+  "words": ["今日", "作業"],
+  "use_tags": false,
+  "tags": [],
+  "use_reps": false,
+  "reps": [],
+  "calendar_start_time": "2026-06-01T00:00:00+09:00",
+  "calendar_end_time":   "2026-06-30T23:59:59+09:00",
+  "page_size": 50,
+  "page": 0,
+  "locale_name": "ja"
+}
+
+// レスポンス例
+{
+  "kyous": [
+    {
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "create_time": "2026-06-21T10:00:00+09:00",
+      "create_app": "gkill",
+      "create_device": "desktop",
+      "create_user": "admin",
+      "update_time": "2026-06-21T10:00:00+09:00",
+      "is_deleted": false,
+      "rep_name": "kmemo_desktop",
+      "data_type": "kmemo",
+      "typed_kmemo": {
+        "content": "今日の作業ログ"
+      }
+    }
+  ],
+  "messages": [],
+  "errors": []
+}
+```
+
+#### `/api/submit_kftl_text` — KFTLテキスト送信
+
+```json
+// リクエスト例
+{
+  "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "kftl_text": "今日の朝食\n#食事\n/mood 8\n/num 体重 65.5",
+  "locale_name": "ja"
+}
+
+// レスポンス例（成功時）
+{
+  "messages": [
+    { "message_code": "KFTLSubmitSuccess", "message": "KFTLテキストを記録しました" }
+  ],
+  "errors": []
+}
+```
+
+#### `/api/upload_files` — ファイルアップロード
+
+multipart/form-data で送信する（JSONではない）。
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `session_id` | string（フォームフィールド） | セッションID |
+| `rep_name` | string（フォームフィールド） | アップロード先リポジトリ名（directory型） |
+| `related_time` | string（フォームフィールド） | 関連日時（RFC3339） |
+| `files` | file[]（multipart） | アップロードファイル（複数可） |
+
+```
+// レスポンス例（成功時）
+{
+  "add_idf_kyous": [
+    {
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "file_name": "photo.jpg",
+      "rep_name": "files_desktop",
+      "is_image": true,
+      "is_zip": false
+    }
+  ],
+  "messages": [],
+  "errors": []
+}
+```
+
 ### 主要エラーコード
 
 | エラーコード | 説明 |

@@ -117,11 +117,64 @@
   <div class="tip">
     <strong>快捷键：</strong> 按 Ctrl+V 可将剪贴板内容直接保存为文件，便于快速保存截图或复制的图片。
   </div>
+  <h2>使用标签</h2>
+  <p>标签是用于分类和整理记录的标注。一条记录可以附加多个标签。</p>
+  <h3>添加标签</h3>
+  <ol>
+    <li>在时间轴上长按记录（移动端）或右键点击（桌面端）。</li>
+    <li>从上下文菜单中选择"添加标签"。</li>
+    <li>输入标签名称并添加。已有的标签会作为输入候选显示。</li>
+  </ol>
+  <h3>编辑或删除标签</h3>
+  <ol>
+    <li>在时间轴上长按标签（移动端）或右键点击（桌面端）。</li>
+    <li>从上下文菜单中选择"编辑标签"或"删除标签"。</li>
+  </ol>
+  <h3>标签层级管理</h3>
+  <p>在设置画面的"标签结构"中可以管理标签的显示名称和排列顺序。将常用标签置于顶部，便于在标签候选列表中找到它们。</p>
+  <div class="tip">
+    <strong>提示：</strong> 在记事本语法中输入 <code>#标签名</code>，发送文本时会自动附加标签。详情请参阅<a href="kftl-syntax.html">记事本语法参考</a>。
+  </div>
+
+  <h2>文件上传详情</h2>
+  <p>通过"+"按钮菜单中的"上传"，可以将图片、视频、文档等文件保存到gkill。</p>
+  <h3>操作步骤</h3>
+  <ol>
+    <li>从"+"按钮中选择"上传"。</li>
+    <li>选择上传目标的存储位置（文件管理用存储库）。</li>
+    <li>确认并调整相关日期（文件的记录日期）。</li>
+    <li>选择文件并上传。可以一次选择多个文件。</li>
+  </ol>
+  <h3>支持的文件格式</h3>
+  <p>支持图片（JPEG、PNG、GIF、WEBP）、视频（MP4等）、PDF、ZIP及其他常见文件格式。ZIP文件上传后可以浏览其内容（右键点击记录→"打开ZIP内容"）。</p>
+  <h3>上传大小限制</h3>
+  <p>每月上传大小上限由管理员在服务器设置中配置。达到上限时会显示错误消息（设置为 <code>-1</code> 时为无限制）。</p>
+  <div class="tip">
+    <strong>快捷键：</strong> 按 Ctrl+V 可将剪贴板中的图片或文本直接保存为文件。便于快速记录截图。
+  </div>
+
+  <h2>GPS地图使用方法</h2>
+  <p>开启工具栏的地图按钮后，记录时间段内的GPS移动轨迹将显示在地图上。</p>
+  <h3>GPS日志的上传步骤</h3>
+  <ol>
+    <li>从"+"按钮中选择"上传"。</li>
+    <li>选择"GPS记录用"的存储位置（GPS日志用存储库）。</li>
+    <li>选择GPX文件并上传。</li>
+    <li>上传后，开启地图按钮即可显示移动轨迹。</li>
+  </ol>
+  <h3>Google Maps API密钥的设置</h3>
+  <p>地图显示需要Google Maps API密钥。请在设置画面（生活日志视图工具栏"设置"→"显示设置"）的"Google Maps API密钥"中输入API密钥并保存。</p>
+  <div class="tip">
+    <strong>提示：</strong> Google Maps API密钥可在 <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> 获取。需要启用了Maps JavaScript API的密钥。
+  </div>
+
   <h2>相关文档</h2>
   <ul>
     <li><a href="kyou.html">记录详情</a></li>
     <li><a href="dnote.html">统计视图</a></li>
     <li><a href="ryuu.html">关联信息</a></li>
+    <li><a href="kftl-syntax.html">记事本语法参考</a></li>
+    <li><a href="application-config.html">设置画面</a></li>
   </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

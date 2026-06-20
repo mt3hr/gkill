@@ -65,6 +65,38 @@
   <p><strong>Aplicar</strong>: Guardar la configuraci&oacute;n.<br><strong>Cancelar</strong>: Descartar los cambios y cerrar la pantalla.</p>
 
   <div class="tip">Los cambios requieren reiniciar el servidor para que surtan efecto.</div>
+
+  <h2>Gestion del almacenamiento</h2>
+  <p>Los repositorios de datos son los lugares donde se guardan los registros. Se pueden configurar multiples repositorios segun el proposito o dispositivo.</p>
+  <p>La asignacion por usuario se gestiona mediante el boton "Asignacion de almacenamiento" en Gestion de cuentas.</p>
+  <h3>Como agregar un repositorio</h3>
+  <ol>
+    <li>Abra Gestion de cuentas &gt; Asignacion de almacenamiento del usuario deseado.</li>
+    <li>Pulse el boton "Agregar".</li>
+    <li>Configure los siguientes elementos: nombre para mostrar, tipo, ruta, usar como destino de escritura, habilitado.</li>
+    <li>Pulse "Guardar".</li>
+  </ol>
+  <h3>Tipos de repositorio</h3>
+  <table>
+    <tr><th>Tipo</th><th>Descripcion</th></tr>
+    <tr><td>Notas de texto</td><td>Almacena notas de texto</td></tr>
+    <tr><td>Marca de tiempo</td><td>Almacena registros de seguimiento de tiempo</td></tr>
+    <tr><td>Tareas</td><td>Almacena tareas</td></tr>
+    <tr><td>Gastos</td><td>Almacena registros de gastos</td></tr>
+    <tr><td>Marcadores</td><td>Almacena marcadores de URL</td></tr>
+    <tr><td>Estado de animo</td><td>Almacena registros de estado de animo</td></tr>
+    <tr><td>Registro numerico</td><td>Almacena datos numericos</td></tr>
+    <tr><td>Gestion de archivos</td><td>Almacena archivos subidos</td></tr>
+    <tr><td>Registro GPS</td><td>Almacena registros de seguimiento GPS</td></tr>
+    <tr><td>Registro de commits Git</td><td>Almacena historiales de commits de Git</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo:</strong> Puede agregar multiples repositorios del mismo tipo (por ejemplo, separados por dispositivo).
+  </div>
+  <div class="tip">
+    <strong>Consejo:</strong> La opcion "Usar como destino de escritura" solo debe estar activada para un repositorio por tipo.
+  </div>
+
   <h2>Documentos Relacionados</h2>
   <ul>
     <li><a href="application-config.html">Configuración</a></li>

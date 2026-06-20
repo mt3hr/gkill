@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KI-Integration - Hilfe</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>KI-Integration</span></nav>
+  <h1>KI-Integration</h1>
+  <p>Durch die Verbindung von KI-Assistenten wie Claude mit gkill können Sie Ihre Lebensprotokoll-Einträge per natürlicher Konversation suchen, hinzufügen und bearbeiten.</p>
+
+  <h2>Was Sie tun können</h2>
+  <table>
+    <tr><th>Aktion</th><th>Beispiel</th></tr>
+    <tr><td>Einträge suchen</td><td>„Zeige mir meine Mittagessen-Notizen der letzten Woche" / „Fasse diesen Monat Ausgaben zusammen"</td></tr>
+    <tr><td>Einträge hinzufügen</td><td>„Füge eine Notiz für heute hinzu" / „Erstelle eine Aufgabe"</td></tr>
+    <tr><td>Einträge aktualisieren / löschen</td><td>„Markiere diese Aufgabe als erledigt"</td></tr>
+    <tr><td>GPS / Dateien abrufen</td><td>„Zeige meine heutige Route"</td></tr>
+    <tr><td>Einstellungen prüfen</td><td>„Liste meine Vorlagen auf"</td></tr>
+  </table>
+
+  <h2>Integrationstypen</h2>
+  <table>
+    <tr><th>Typ</th><th>Beschreibung</th></tr>
+    <tr><td>Nur-Lesen</td><td>Die KI kann Einträge nur anzeigen und suchen. Hinzufügen oder Ändern ist nicht möglich.</td></tr>
+    <tr><td>Nur-Schreiben</td><td>Die KI kann Einträge nur hinzufügen, aktualisieren und löschen.</td></tr>
+    <tr><td>Lesen &amp; Schreiben</td><td>Die KI kann Einträge anzeigen, hinzufügen, aktualisieren und löschen.</td></tr>
+  </table>
+
+  <h2>Einrichtung (Claude Desktop)</h2>
+  <p>Fügen Sie Folgendes zur Claude-Desktop-Konfigurationsdatei (<code>claude_desktop_config.json</code>) hinzu.</p>
+
+  <h3>Nur-Lesen-Integration</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "ihre-benutzer-id",
+        "GKILL_PASSWORD_SHA256": "sha256-hash-ihres-passworts"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>Tipp:</strong> <code>GKILL_PASSWORD_SHA256</code> ist der SHA256-Hash Ihres Passworts. Sie können ihn mit den auf Ihrem Betriebssystem verfügbaren Tools generieren.
+  </div>
+
+  <h2>Einrichtung (Claude Code)</h2>
+  <pre><code>npx @anthropic-ai/claude-code mcp add gkill \
+  --command npx \
+  --args "-y,gkill-mcp-server" \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=ihre-benutzer-id \
+  --env GKILL_PASSWORD_SHA256=ihr-hash</code></pre>
+
+  <h2>Fernzugriff</h2>
+  <p>Machen Sie Ihren gkill-Server über das Internet zugänglich und setzen Sie <code>GKILL_BASE_URL</code> auf seine öffentliche Adresse. Aus Sicherheitsgründen wird die Aktivierung von TLS (HTTPS) dringend empfohlen.</p>
+  <div class="tip">
+    <strong>Tipp:</strong> TLS-Einstellungen können unter <a href="server-config.html">Servereinstellungen</a> konfiguriert werden.
+  </div>
+
+  <h2>Verwandte Seiten</h2>
+  <ul>
+    <li><a href="getting-started.html">Erste Schritte</a></li>
+    <li><a href="server-config.html">Servereinstellungen</a></li>
+    <li><a href="application-config.html">Anwendungseinstellungen</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>
