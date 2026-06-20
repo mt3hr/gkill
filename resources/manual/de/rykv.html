@@ -117,11 +117,59 @@
   <div class="tip">
     <strong>Tastenkürzel:</strong> Drücken Sie Ctrl+V, um den Inhalt der Zwischenablage direkt als Datei zu speichern. Nützlich zum schnellen Speichern von Screenshots oder kopierten Bildern.
   </div>
+  <h2>Tags verwenden</h2>
+  <h3>Ein Tag hinzufugen</h3>
+  <ol>
+    <li>Halten Sie einen Datensatz gedruckt oder klicken Sie mit der rechten Maustaste, um das Kontextmenu zu offnen.</li>
+    <li>Wahlen Sie "Tag hinzufugen".</li>
+    <li>Geben Sie den Tag-Namen ein (vorhandene Tags werden als Vorschlage angezeigt).</li>
+  </ol>
+  <h3>Ein Tag bearbeiten oder loschen</h3>
+  <ol>
+    <li>Halten Sie das zu andernde Tag gedruckt oder klicken Sie mit der rechten Maustaste darauf.</li>
+    <li>Wahlen Sie "Bearbeiten" oder "Loschen" aus dem Menu.</li>
+  </ol>
+  <h3>Tag-Strukturverwaltung</h3>
+  <p>Sie konnen Anzeigenamen und Reihenfolge der Tags unter Einstellungen &gt; Tag-Struktur verwalten.</p>
+  <div class="tip">
+    <strong>Tipp:</strong> Wenn Sie <code>#Tag-Name</code> in der Notizblock-Syntax schreiben, wird der Datensatz automatisch mit einem Tag versehen. Weitere Details finden Sie in der <a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a>.
+  </div>
+
+  <h2>Datei-Upload-Details</h2>
+  <ol>
+    <li>Tippen Sie auf die "+"-Schaltflache und wahlen Sie "Datei hochladen".</li>
+    <li>Wahlen Sie das Ziel-Repository (Repository fur die Dateiverwaltung).</li>
+    <li>Bestatigen und passen Sie das zugehorige Datum und die Uhrzeit an.</li>
+    <li>Wahlen Sie die hochzuladende(n) Datei(en) aus (mehrere Dateien moglich).</li>
+  </ol>
+  <p><strong>Unterstutzte Formate:</strong> Bilder (JPEG/PNG/GIF/WEBP), Videos (MP4 usw.), PDF, ZIP und andere.</p>
+  <p>ZIP-Dateien konnen in ihrem Inhalt durchsucht werden (Rechtsklick &gt; ZIP-Inhalt offnen).</p>
+  <p><strong>Groessenbeschrankung:</strong> Gemas Serverkonfiguration (-1 fur unbegrenzt).</p>
+  <div class="tip">
+    <strong>Tipp:</strong> Drucken Sie Ctrl+V, um den Inhalt der Zwischenablage direkt als Datei zu speichern.
+  </div>
+
+  <h2>GPS-Karte verwenden</h2>
+  <h3>Eine GPS-Aufzeichnung hochladen</h3>
+  <ol>
+    <li>Tippen Sie auf die "+"-Schaltflache und wahlen Sie "Datei hochladen".</li>
+    <li>Wahlen Sie das fur GPS-Aufzeichnungen vorgesehene Repository.</li>
+    <li>Wahlen Sie die GPX-Datei aus.</li>
+    <li>Aktivieren Sie die Kartenschaltflache, um die Anzeige zu bestatigen.</li>
+  </ol>
+  <h3>Google Maps API-Schlussel konfigurieren</h3>
+  <p>Gehen Sie zu Einstellungen &gt; Anzeigeeinstellungen &gt; Google Maps API-Schlussel und geben Sie Ihren Schlussel ein.</p>
+  <div class="tip">
+    <strong>Tipp:</strong> Holen Sie sich Ihren API-Schlussel in der Google Cloud Console, indem Sie die Maps JavaScript API aktivieren.
+  </div>
+
   <h2>Verwandte Dokumente</h2>
   <ul>
     <li><a href="kyou.html">Datensatzdetails</a></li>
     <li><a href="dnote.html">Aggregationsansicht</a></li>
     <li><a href="ryuu.html">Verwandte Informationen</a></li>
+    <li><a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a></li>
+    <li><a href="application-config.html">Einstellungen</a></li>
   </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

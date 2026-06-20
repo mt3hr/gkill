@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integración con IA - Ayuda</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros pasos</a> &gt; <span>Integración con IA</span></nav>
+  <h1>Integración con IA</h1>
+  <p>Al conectar asistentes de IA como Claude con gkill, puede buscar, agregar y editar sus registros de vida mediante conversación natural.</p>
+
+  <h2>Lo que puede hacer</h2>
+  <table>
+    <tr><th>Acción</th><th>Ejemplo</th></tr>
+    <tr><td>Buscar registros</td><td>"Muéstrame las notas del almuerzo de la semana pasada" / "Resume los gastos de este mes"</td></tr>
+    <tr><td>Agregar registros</td><td>"Agrega una nota para hoy" / "Crea una tarea"</td></tr>
+    <tr><td>Actualizar / eliminar registros</td><td>"Marca esta tarea como completada"</td></tr>
+    <tr><td>Obtener GPS / archivos</td><td>"Muéstrame mi ruta de hoy"</td></tr>
+    <tr><td>Verificar configuración</td><td>"Lista mis plantillas"</td></tr>
+  </table>
+
+  <h2>Tipos de integración</h2>
+  <table>
+    <tr><th>Tipo</th><th>Descripción</th></tr>
+    <tr><td>Solo lectura</td><td>La IA solo puede ver y buscar registros. No puede agregar ni modificar.</td></tr>
+    <tr><td>Solo escritura</td><td>La IA solo puede agregar, actualizar y eliminar registros.</td></tr>
+    <tr><td>Lectura y escritura</td><td>La IA puede ver, agregar, actualizar y eliminar registros.</td></tr>
+  </table>
+
+  <h2>Configuración (Claude Desktop)</h2>
+  <p>Agregue lo siguiente al archivo de configuración de Claude Desktop (<code>claude_desktop_config.json</code>).</p>
+
+  <h3>Integración de solo lectura</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "su-id-de-usuario",
+        "GKILL_PASSWORD_SHA256": "hash-sha256-de-su-contraseña"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>Consejo:</strong> <code>GKILL_PASSWORD_SHA256</code> es el hash SHA256 de su contraseña. Puede generarlo con herramientas disponibles en su sistema operativo.
+  </div>
+
+  <h2>Configuración (Claude Code)</h2>
+  <pre><code>npx @anthropic-ai/claude-code mcp add gkill \
+  --command npx \
+  --args "-y,gkill-mcp-server" \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=su-id-de-usuario \
+  --env GKILL_PASSWORD_SHA256=su-hash</code></pre>
+
+  <h2>Acceso remoto</h2>
+  <p>Haga que su servidor gkill sea accesible a través de Internet y configure <code>GKILL_BASE_URL</code> con su dirección pública. Se recomienda encarecidamente habilitar TLS (HTTPS) por seguridad.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> La configuración de TLS se puede realizar desde <a href="server-config.html">Configuración del servidor</a>.
+  </div>
+
+  <h2>Páginas relacionadas</h2>
+  <ul>
+    <li><a href="getting-started.html">Primeros pasos</a></li>
+    <li><a href="server-config.html">Configuración del servidor</a></li>
+    <li><a href="application-config.html">Configuración de la aplicación</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

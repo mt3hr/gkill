@@ -384,6 +384,48 @@ gkill_server generate_thumb_cache --user ユーザーID
 gkill_server generate_video_cache --user ユーザーID
 ```
 
+### 9.4 キャッシュアーキテクチャ詳細
+
+gkillは複数層のキャッシュを組み合わせてパフォーマンスを確保している。
+
+#### インメモリキャッシュ（CachedSQLite3Impl）
+
+`--cache_in_memory=true`（デフォルト）の場合、各リポジトリは`CachedSQLite3Impl`でラップされる。
+
+**設計方針:**
+- `CachedSQLite3Impl`は内部にSQLite3の検索結果をメモリ上のキャッシュ（`[]KyouInterface`スライス）として保持する
+- キャッシュの有効期間は`--cache_update_duration`（デフォルト: 1分）。期限切れ後は次回アクセス時に再取得
+- キャッシュアイテム数が`--cache_clear_count_limit`（デフォルト: 3000）を超えるとキャッシュをクリアして再構築
+- 書き込み（ADD/UPDATE）後はキャッシュを即時無効化し、次回読み取り時に再構築する（キャッシュ汚染防止）
+- `--cache_in_memory=false`にするとキャッシュなしで毎回SQLite3に直接クエリ（メモリ不足時の代替手段）
+
+#### ローカルキャッシュ（SQLite3ImplLocalCached）
+
+`--cache_reps_local=true`の場合、リモートリポジトリのデータを`caches/local_rep_cache/`配下のSQLite3 DBにコピーしてローカルから高速検索する。ネットワーク遅延が大きい環境（NAS等）で有効。
+
+#### サムネイル・動画キャッシュ（ファイルキャッシュ）
+
+`caches/thumb_cache/{rep_name}/{sha1}.webp`（サムネイル）と`caches/video_cache/{rep_name}/{sha1}.webm`（互換動画）の形式でファイルを保存する。キャッシュキーにはファイルのSHA1ハッシュを使用するため、同一内容のファイルは1つのキャッシュエントリで共有される。
+
+| キャッシュ種別 | パス形式 | 生成タイミング |
+|---|---|---|
+| サムネイル | `caches/thumb_cache/{rep_name}/{sha1}.webp` | 初回ブラウザアクセス時 or `generate_thumb_cache` 事前生成 |
+| 互換動画 | `caches/video_cache/{rep_name}/{sha1}.webm` | 初回ブラウザアクセス時 or `generate_video_cache` 事前生成 |
+
+#### ZIPキャッシュ（アトミック展開）
+
+`/api/browse_zip_contents`リクエスト時、以下の手順でアトミックにZIPを展開する：
+
+1. 一時ディレクトリ（`caches/zip_cache/{rep_name}/{sha1}_tmp_{uuid}/`）に展開
+2. 展開完了後、`{sha1}_tmp_{uuid}` → `{sha1}` にアトミックリネーム
+3. リネーム済みディレクトリが存在する場合は展開をスキップ（べき等）
+
+この方式により、複数の同時リクエストがあっても競合状態を回避する（singleflightでさらに同時展開を抑制）。
+
+#### キャッシュ更新API
+
+`POST /api/update_cache`（または`gkill_server update_cache` CLIコマンド）を呼び出すと、全インメモリキャッシュを即時再構築する。サーバー再起動なしにリポジトリ変更を反映する際に使用する。
+
 ---
 
 ## 10. サーバー管理

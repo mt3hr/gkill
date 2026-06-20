@@ -176,11 +176,64 @@
     <strong>ショートカット:</strong> Ctrl+V を押すと、クリップボードの内容をファイルとして直接保存できます。スクリーンショットや画像を素早く記録するのに便利です。
   </div>
 
+  <h2>タグの使い方</h2>
+  <p>タグは記録を分類・整理するためのラベルです。複数のタグを1つの記録に付けられます。</p>
+  <h3>タグを追加する</h3>
+  <ol>
+    <li>タイムライン上の記録を長押し（モバイル）または右クリック（デスクトップ）します。</li>
+    <li>コンテキストメニューから「タグを追加」を選択します。</li>
+    <li>タグ名を入力して追加します。既存のタグは入力候補として表示されます。</li>
+  </ol>
+  <h3>タグを編集・削除する</h3>
+  <ol>
+    <li>タイムライン上のタグを長押し（モバイル）または右クリック（デスクトップ）します。</li>
+    <li>コンテキストメニューから「タグを編集」または「タグを削除」を選択します。</li>
+  </ol>
+  <h3>タグの階層構造</h3>
+  <p>設定画面の「タグ構造」でタグの表示名や並び順を管理できます。よく使うタグを上位に置くと、タグの入力候補一覧で見つけやすくなります。</p>
+  <div class="tip">
+    <strong>ヒント:</strong> メモ帳構文で <code>#タグ名</code> と入力すると、テキスト送信時に自動でタグが付きます。詳しくは<a href="kftl-syntax.html">メモ帳構文リファレンス</a>をご覧ください。
+  </div>
+
+  <h2>ファイルのアップロード詳細</h2>
+  <p>「+」ボタンメニューの「アップロード」から、画像・動画・ドキュメントなどのファイルをgkillに保存できます。</p>
+  <h3>操作手順</h3>
+  <ol>
+    <li>「+」ボタンから「アップロード」を選択します。</li>
+    <li>アップロード先の記録保管場所（ファイル管理用のリポジトリ）を選択します。</li>
+    <li>関連日時（ファイルの記録日時）を確認・調整します。</li>
+    <li>ファイルを選択してアップロードします。複数ファイルを一度に選択できます。</li>
+  </ol>
+  <h3>対応ファイル形式</h3>
+  <p>画像（JPEG・PNG・GIF・WEBP）、動画（MP4等）、PDF、ZIP、およびその他の一般的なファイル形式に対応しています。ZIPファイルはアップロード後に内容をブラウズできます（記録を右クリック→「ZIP内容を開く」）。</p>
+  <h3>アップロードサイズ制限</h3>
+  <p>1か月あたりのアップロードサイズ上限はサーバ設定で管理者が設定します。上限に達した場合はエラーメッセージが表示されます（<code>-1</code> に設定されている場合は無制限です）。</p>
+  <div class="tip">
+    <strong>ショートカット:</strong> Ctrl+V を押すと、クリップボードにある画像やテキストをそのままファイルとして保存できます。スクリーンショットを素早く記録するのに便利です。
+  </div>
+
+  <h2>GPS地図の使い方</h2>
+  <p>ツールバーの地図ボタンをオンにすると、記録の期間に対応するGPSの移動経路が地図上に表示されます。</p>
+  <h3>GPSログのアップロード手順</h3>
+  <ol>
+    <li>「+」ボタンから「アップロード」を選択します。</li>
+    <li>アップロード先に「GPS記録用」の記録保管場所（GPSログ用のリポジトリ）を選択します。</li>
+    <li>GPXファイルを選択してアップロードします。</li>
+    <li>アップロード後、地図ボタンをオンにすると移動経路が表示されます。</li>
+  </ol>
+  <h3>Google Maps APIキーの設定</h3>
+  <p>地図表示にはGoogle Maps APIキーが必要です。設定画面（ライフログビュー画面のツールバー「設定」→「表示設定」）の「Google Maps APIキー」にAPIキーを入力して保存してください。</p>
+  <div class="tip">
+    <strong>ヒント:</strong> Google Maps APIキーは <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> で取得できます。Maps JavaScript API を有効にしたキーが必要です。
+  </div>
+
   <h2>関連ドキュメント</h2>
   <ul>
     <li><a href="kyou.html">記録詳細画面</a></li>
     <li><a href="dnote.html">集計ビュー</a></li>
     <li><a href="ryuu.html">関連情報</a></li>
+    <li><a href="kftl-syntax.html">メモ帳構文リファレンス</a></li>
+    <li><a href="application-config.html">設定画面</a></li>
   </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

@@ -125,11 +125,59 @@
   <div class="tip">
     <strong>Atajo:</strong> Presione Ctrl+V para guardar el contenido del portapapeles directamente como archivo. Útil para guardar rápidamente capturas de pantalla o imágenes copiadas.
   </div>
+  <h2>Uso de etiquetas</h2>
+  <h3>Agregar una etiqueta</h3>
+  <ol>
+    <li>Mantenga pulsado o haga clic derecho en un registro para abrir el menu contextual.</li>
+    <li>Seleccione "Agregar etiqueta".</li>
+    <li>Escriba el nombre de la etiqueta (se mostraran etiquetas existentes como sugerencias).</li>
+  </ol>
+  <h3>Editar o eliminar una etiqueta</h3>
+  <ol>
+    <li>Mantenga pulsado o haga clic derecho en la etiqueta que desea modificar.</li>
+    <li>Seleccione "Editar" o "Eliminar" del menu.</li>
+  </ol>
+  <h3>Gestion de la estructura de etiquetas</h3>
+  <p>Puede gestionar los nombres de visualizacion y el orden de las etiquetas en Configuracion &gt; Estructura de etiquetas.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> Si escribe <code>#nombre_etiqueta</code> en la sintaxis del bloc de notas, el registro se etiquetara automaticamente. Consulta la <a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a> para mas detalles.
+  </div>
+
+  <h2>Detalles de carga de archivos</h2>
+  <ol>
+    <li>Toque el boton "+" y seleccione "Subir archivo".</li>
+    <li>Seleccione el repositorio de destino (repositorio para gestion de archivos).</li>
+    <li>Confirme y ajuste la fecha y hora relacionadas.</li>
+    <li>Seleccione el archivo o archivos a subir (se admiten multiples archivos).</li>
+  </ol>
+  <p><strong>Formatos admitidos:</strong> Imagenes (JPEG/PNG/GIF/WEBP), videos (MP4, etc.), PDF, ZIP y otros.</p>
+  <p>Los archivos ZIP pueden explorarse en su contenido (clic derecho &gt; Abrir contenido ZIP).</p>
+  <p><strong>Limite de tamaño:</strong> Segun la configuracion del servidor (-1 para ilimitado).</p>
+  <div class="tip">
+    <strong>Consejo:</strong> Presione Ctrl+V para guardar el contenido del portapapeles directamente como archivo.
+  </div>
+
+  <h2>Uso del mapa GPS</h2>
+  <h3>Subir un registro GPS</h3>
+  <ol>
+    <li>Toque el boton "+" y seleccione "Subir archivo".</li>
+    <li>Seleccione el repositorio destinado al registro GPS.</li>
+    <li>Seleccione el archivo GPX.</li>
+    <li>Active el boton de mapa para confirmar la visualizacion.</li>
+  </ol>
+  <h3>Configurar la clave de Google Maps API</h3>
+  <p>Vaya a Configuracion &gt; Configuracion de visualizacion &gt; Clave de Google Maps API e introduzca su clave.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> Obtenga su clave de API en Google Cloud Console activando la API de Maps JavaScript.
+  </div>
+
   <h2>Documentos Relacionados</h2>
   <ul>
     <li><a href="kyou.html">Detalles del Registro</a></li>
     <li><a href="dnote.html">Vista de Agregación</a></li>
     <li><a href="ryuu.html">Información Relacionada</a></li>
+    <li><a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a></li>
+    <li><a href="application-config.html">Configuracion</a></li>
   </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI連携 - ヘルプ</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>AI連携</span></nav>
+  <h1>AI連携</h1>
+  <p>Claude などの AI アシスタントと gkill を連携することで、会話形式でライフログを検索・追加・編集できるようになります。</p>
+
+  <h2>できること</h2>
+  <table>
+    <tr><th>操作</th><th>例</th></tr>
+    <tr><td>記録の検索</td><td>「先週のランチ記録を見せて」「今月の支出を集計して」</td></tr>
+    <tr><td>記録の追加</td><td>「今日のメモを追加して」「タスクを作って」</td></tr>
+    <tr><td>記録の更新・削除</td><td>「このタスクを完了にして」</td></tr>
+    <tr><td>GPS・ファイルの取得</td><td>「今日の移動経路を教えて」</td></tr>
+    <tr><td>設定の確認</td><td>「テンプレート一覧を見せて」</td></tr>
+  </table>
+
+  <h2>連携の種類</h2>
+  <table>
+    <tr><th>種類</th><th>説明</th></tr>
+    <tr><td>読み取り専用</td><td>AI が記録の閲覧・検索のみ行える。記録の追加・変更はできない</td></tr>
+    <tr><td>書き込み専用</td><td>AI が記録の追加・更新・削除のみ行える</td></tr>
+    <tr><td>読み書き両用</td><td>AI が記録の閲覧・追加・更新・削除をすべて行える</td></tr>
+  </table>
+
+  <h2>設定方法（Claude Desktop）</h2>
+  <p>Claude Desktop の設定ファイル（<code>claude_desktop_config.json</code>）に以下を追記します。</p>
+
+  <h3>読み取り専用で連携する場合</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "あなたのユーザーID",
+        "GKILL_PASSWORD_SHA256": "パスワードのSHA256ハッシュ"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>ヒント:</strong> <code>GKILL_PASSWORD_SHA256</code> はパスワードをSHA256でハッシュ化した値です。コマンドプロンプト（Windows）で <code>certutil -hashfile - SHA256</code> などのツールで生成できます。
+  </div>
+
+  <h2>設定方法（Claude Code）</h2>
+  <p>ターミナルで以下のコマンドを実行します。</p>
+  <pre><code># 読み取り専用で追加
+npx @anthropic-ai/claude-code mcp add gkill \
+  --command npx \
+  --args "-y,gkill-mcp-server" \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=ユーザーID \
+  --env GKILL_PASSWORD_SHA256=ハッシュ値</code></pre>
+
+  <h2>リモートアクセス（外出先から利用する場合）</h2>
+  <p>gkill サーバをインターネット経由でアクセスできる状態にした上で、<code>GKILL_BASE_URL</code> にそのアドレスを指定します。セキュリティのため TLS（HTTPS）を有効化することを推奨します。</p>
+  <div class="tip">
+    <strong>ヒント:</strong> TLS の設定は<a href="server-config.html">サーバ設定</a>から行えます。
+  </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="getting-started.html">はじめに</a></li>
+    <li><a href="server-config.html">サーバ設定</a></li>
+    <li><a href="application-config.html">設定画面</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

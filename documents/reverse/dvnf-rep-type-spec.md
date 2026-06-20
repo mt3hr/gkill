@@ -262,6 +262,106 @@ graph TD
     C --> G[LatestDataRepositoryAddress更新]
 ```
 
+## 9. RepTypeとユーザーUI操作の対応
+
+各RepTypeは、フロントエンドのFABボタンメニュー（記録追加メニュー）・コンテキストメニュー（編集メニュー）と対応している。
+
+### FABメニュー（新規追加）とRepTypeの対応
+
+RykvPageのフローティングアクションボタン（FAB）を押すと表示されるメニューと、対応するRepTypeの関係：
+
+| FABメニュー項目 | 作成されるデータ型 | 対応RepType | 備考 |
+|---|---|---|---|
+| テキストメモ | Kmemo | `kmemo` | フリーテキスト入力 |
+| 数値記録 | KC | `kc` | 数値 + 単位名 |
+| 気分 | Lantana | `lantana` | 0〜10のスライダー |
+| 支出 | Nlog | `nlog` | 金額 + 店名 |
+| ブックマーク | URLog | `urlog` | URL + タイトル |
+| タスク | Mi | `mi` | タイトル + ボード名 |
+| 打刻（開始） | TimeIs | `timeis` | 名前 + 開始時刻 |
+| ファイルアップロード | IDFKyou | `directory` | ファイル選択ダイアログ |
+| GPSログアップロード | GPSLog | `gpslog` | GPXファイル選択 |
+
+### コンテキストメニュー（編集操作）とRepTypeの対応
+
+Kyouの長押し/右クリックで表示されるコンテキストメニューの編集項目は、`data_type`フィールド（=RepType）に応じて動的に表示/非表示が切り替わる：
+
+| data_type | 表示される操作 |
+|---|---|
+| `kmemo` | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認 |
+| `kc` / `lantana` / `nlog` | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認 |
+| `urlog` | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認、URLを開く |
+| `timeis` | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認、終了（進行中の場合） |
+| `mi` | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認 |
+| `directory`（IDFKyou） | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認、ファイルを開く、ZIPを閲覧（is_zip=true時） |
+| `gpslog` | 削除、タグ追加、テキスト追加、通知追加（編集なし） |
+| `git_commit_log` | タグ追加、テキスト追加、通知追加（編集なし） |
+| `rekyou` | 削除のみ（元のKyouをRykv上でフォロー表示） |
+
+## 10. 特殊RepTypeのディレクトリレイアウト
+
+### `directory`（ファイル管理）のディレクトリ構造
+
+`directory`型リポジトリの`file`フィールドにはglob対応のパス（例：`/home/user/photos/**`）を指定する。指定ディレクトリ内の各ファイルが1件のIDFKyouとして認識される。
+
+```
+/home/user/photos/          ← file フィールドに指定するディレクトリ（glob可）
+├── .gkill/
+│   └── gkill_id.db         ← IDFKyouのIDとファイルパスのマッピングDB（自動生成）
+├── 2026/
+│   ├── 01/
+│   │   ├── photo_001.jpg   ← IDFKyouとして1件ずつ認識される
+│   │   └── photo_002.jpg
+│   └── 06/
+│       └── photo_100.jpg
+└── archive/
+    └── old_data.zip         ← is_zip=true でZIPブラウズ対象となる
+```
+
+IDFKyouの`file`フィールドは`{rep_name}/{相対パス}`の形式で格納される。
+
+### `gpslog`（GPSログ）のディレクトリ構造
+
+`gpslog`型リポジトリの`file`フィールドにはGPXファイルを格納するディレクトリを指定する。SQLite3は使用せず、GPXファイルを直接読み書きする。
+
+```
+/home/user/gps_logs/        ← file フィールドに指定するディレクトリ
+├── 2026-01-15.gpx           ← 1ファイル=1日分のGPSトラック（複数トラック含む場合あり）
+├── 2026-01-16.gpx
+└── 2026-06-21.gpx
+```
+
+DVNFコマンドでGPXファイルをアップロード後、`/api/upload_gpslog_files`経由でgpslogリポジトリに保存される。
+
+### `git_commit_log`（Gitコミットログ）のディレクトリ構造
+
+`git_commit_log`型リポジトリの`file`フィールドにはGitリポジトリのルートディレクトリを指定する。go-gitライブラリで`.git/`を直接読み取り、コミット履歴をGitCommitLogとして表示する（書き込みなし）。
+
+```
+/home/user/my_project/      ← file フィールドに指定するGitリポジトリ
+├── .git/                   ← go-gitがここを読み取る
+│   ├── HEAD
+│   ├── objects/
+│   └── refs/
+├── src/
+└── README.md
+```
+
+## 11. DVNFコマンドの使用例
+
+`gkill dvnf` サブコマンドの実際の使用例：
+
+```bash
+# directory型リポジトリ内のファイル一覧を取得
+gkill dvnf get --directory /home/user/photos --name photo --device desktop --time-length 8 --extension .jpg
+
+# DVNFファイルのコピー（タイムスタンプを現在日時に更新）
+gkill dvnf copy --src /home/user/photos/photo_desktop_20260101.jpg --dest-dir /home/user/photos_backup
+
+# DVNFファイルの移動（アーカイブ）
+gkill dvnf move --src /home/user/photos/photo_desktop_20260101.jpg --dest-dir /home/user/archive
+```
+
 ## 関連資料
 
 - [glossary.md](glossary.md) — 用語集（Kyou、RepType等の定義）
