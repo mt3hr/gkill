@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 集成 - 帮助</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">入门</a> &gt; <span>AI 集成</span></nav>
+  <h1>AI 集成</h1>
+  <p>通过将 Claude 等 AI 助手与 gkill 连接，您可以通过自然对话搜索、添加和编辑生活日志记录。</p>
+
+  <h2>可以做的事情</h2>
+  <table>
+    <tr><th>操作</th><th>示例</th></tr>
+    <tr><td>搜索记录</td><td>"显示上周的午餐笔记" / "汇总本月支出"</td></tr>
+    <tr><td>添加记录</td><td>"添加今天的备忘录" / "创建一个任务"</td></tr>
+    <tr><td>更新 / 删除记录</td><td>"将此任务标记为已完成"</td></tr>
+    <tr><td>获取 GPS / 文件</td><td>"显示今天的路线"</td></tr>
+    <tr><td>查看设置</td><td>"列出我的模板"</td></tr>
+  </table>
+
+  <h2>集成类型</h2>
+  <table>
+    <tr><th>类型</th><th>说明</th></tr>
+    <tr><td>只读</td><td>AI 只能查看和搜索记录，不能添加或修改。</td></tr>
+    <tr><td>只写</td><td>AI 只能添加、更新和删除记录。</td></tr>
+    <tr><td>读写</td><td>AI 可以查看、添加、更新和删除记录。</td></tr>
+  </table>
+
+  <h2>设置方法（Claude Desktop）</h2>
+  <p>在 Claude Desktop 配置文件（<code>claude_desktop_config.json</code>）中添加以下内容。</p>
+
+  <h3>只读集成</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "您的用户ID",
+        "GKILL_PASSWORD_SHA256": "密码的SHA256哈希值"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>提示：</strong> <code>GKILL_PASSWORD_SHA256</code> 是密码的 SHA256 哈希值。可以使用操作系统提供的工具生成。
+  </div>
+
+  <h2>设置方法（Claude Code）</h2>
+  <pre><code>npx @anthropic-ai/claude-code mcp add gkill \
+  --command npx \
+  --args "-y,gkill-mcp-server" \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=您的用户ID \
+  --env GKILL_PASSWORD_SHA256=哈希值</code></pre>
+
+  <h2>远程访问</h2>
+  <p>使 gkill 服务器可通过互联网访问，并将 <code>GKILL_BASE_URL</code> 设置为其公共地址。出于安全考虑，强烈建议启用 TLS（HTTPS）。</p>
+  <div class="tip">
+    <strong>提示：</strong> TLS 设置可从<a href="server-config.html">服务器设置</a>中配置。
+  </div>
+
+  <h2>相关页面</h2>
+  <ul>
+    <li><a href="getting-started.html">入门</a></li>
+    <li><a href="server-config.html">服务器设置</a></li>
+    <li><a href="application-config.html">应用程序设置</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

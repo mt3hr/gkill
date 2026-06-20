@@ -127,11 +127,59 @@
   <div class="tip">
     <strong>Raccourci :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier. Utile pour sauvegarder rapidement des captures d'écran ou des images copiées.
   </div>
+  <h2>Utilisation des étiquettes</h2>
+  <h3>Ajouter une étiquette</h3>
+  <ol>
+    <li>Maintenez appuye ou faites un clic droit sur un enregistrement pour ouvrir le menu contextuel.</li>
+    <li>Selectionnez "Ajouter une etiquette".</li>
+    <li>Tapez le nom de l'etiquette (les etiquettes existantes s'affichent comme suggestions).</li>
+  </ol>
+  <h3>Modifier ou supprimer une étiquette</h3>
+  <ol>
+    <li>Maintenez appuye ou faites un clic droit sur l'etiquette a modifier.</li>
+    <li>Selectionnez "Modifier" ou "Supprimer" dans le menu.</li>
+  </ol>
+  <h3>Gestion de la structure des étiquettes</h3>
+  <p>Vous pouvez gerer les noms d'affichage et l'ordre des etiquettes dans Parametres &gt; Structure des etiquettes.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> En ecrivant <code>#nom_etiquette</code> dans la syntaxe du bloc-notes, l'enregistrement sera automatiquement etiquete. Consultez la <a href="kftl-syntax.html">Reference de syntaxe du bloc-notes</a> pour plus de details.
+  </div>
+
+  <h2>Détails du téléchargement de fichiers</h2>
+  <ol>
+    <li>Appuyez sur le bouton "+" et selectionnez "Telecharger un fichier".</li>
+    <li>Selectionnez le depot de destination (depot pour la gestion de fichiers).</li>
+    <li>Confirmez et ajustez la date et l'heure associees.</li>
+    <li>Selectionnez le ou les fichiers a telecharger (plusieurs fichiers possibles).</li>
+  </ol>
+  <p><strong>Formats pris en charge :</strong> Images (JPEG/PNG/GIF/WEBP), videos (MP4, etc.), PDF, ZIP et autres.</p>
+  <p>Les fichiers ZIP peuvent etre explores dans leur contenu (clic droit &gt; Ouvrir le contenu ZIP).</p>
+  <p><strong>Limite de taille :</strong> Selon la configuration du serveur (-1 pour illimite).</p>
+  <div class="tip">
+    <strong>Astuce :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier.
+  </div>
+
+  <h2>Utilisation de la carte GPS</h2>
+  <h3>Telecharger un enregistrement GPS</h3>
+  <ol>
+    <li>Appuyez sur le bouton "+" et selectionnez "Telecharger un fichier".</li>
+    <li>Selectionnez le depot destine aux enregistrements GPS.</li>
+    <li>Selectionnez le fichier GPX.</li>
+    <li>Activez le bouton de carte pour confirmer l'affichage.</li>
+  </ol>
+  <h3>Configurer la cle API Google Maps</h3>
+  <p>Allez dans Parametres &gt; Parametres d'affichage &gt; Cle API Google Maps et entrez votre cle.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> Obtenez votre cle API dans Google Cloud Console en activant l'API Maps JavaScript.
+  </div>
+
   <h2>Documents associés</h2>
   <ul>
     <li><a href="kyou.html">Détails de l'enregistrement</a></li>
     <li><a href="dnote.html">Vue d'agrégation</a></li>
     <li><a href="ryuu.html">Informations associées</a></li>
+    <li><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a></li>
+    <li><a href="application-config.html">Paramètres</a></li>
   </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>

@@ -44,3 +44,4 @@ npm run test_client_unit
 | `datas/` | [datas/ABOUT_TEST.md](datas/ABOUT_TEST.md) |
 | `dnote/` | [dnote/ABOUT_TEST.md](dnote/ABOUT_TEST.md) |
 | `kftl/` | [kftl/ABOUT_TEST.md](kftl/ABOUT_TEST.md) |
+| `lantana/` | 独立テストなし。`LantanaFlowerState` 等の enum 型定義のみ。テストは `datas/lantana.test.ts` でカバー |

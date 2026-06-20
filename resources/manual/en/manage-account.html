@@ -59,6 +59,29 @@
     <strong>Tip:</strong> The <code>admin</code> account is automatically created when the server first starts. Accounts added from the Account Management screen are regular users (without admin privileges). Accounts are managed by enabling/disabling rather than deleting.
   </div>
 
+  <h2>Password Reset Procedure</h2>
+  <p>If a user forgets their password, an admin can issue a password reset link using the following steps.</p>
+  <h3>Admin Steps</h3>
+  <ol>
+    <li>Open the Server Config screen and click "Account Management".</li>
+    <li>Click the "Password Reset" button in the target user's row.</li>
+    <li>Click "OK" in the confirmation dialog — a reset link is generated.</li>
+    <li>Copy the displayed link and share it with the user (via message, email, etc.).</li>
+  </ol>
+  <h3>User Steps</h3>
+  <ol>
+    <li>Open the reset link received from the admin in a browser.</li>
+    <li>Enter a new password and confirm it by entering it again.</li>
+    <li>Click "Set" to apply the new password.</li>
+    <li>You will be redirected to the login screen — log in with your new password.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> The reset link is single-use and becomes invalid after use. If the link has expired, ask the admin to generate a new one.
+  </div>
+
+  <h2>Storage Assignment</h2>
+  <p>Assign storage locations (repositories) where each user's data will be saved. Click "Storage Assignment" to open the storage configuration dialog for that user. See <a href="server-config.html">Server Config</a> → "Storage Management" for details.</p>
+
   <h2>Related Documents</h2>
   <ul>
     <li><a href="server-config.html">Server Config</a></li>

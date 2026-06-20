@@ -124,11 +124,64 @@
     <strong>Shortcut:</strong> Press Ctrl+V to save clipboard content directly as a file. Useful for quickly saving screenshots or copied images.
   </div>
 
+  <h2>Using Tags</h2>
+  <p>Tags are labels you can attach to records to categorize and organize them. Multiple tags can be attached to a single record.</p>
+  <h3>Adding a Tag</h3>
+  <ol>
+    <li>Long-press (mobile) or right-click (desktop) a record in the timeline.</li>
+    <li>Select "Add Tag" from the context menu.</li>
+    <li>Type the tag name and confirm. Existing tags will appear as suggestions.</li>
+  </ol>
+  <h3>Editing or Deleting a Tag</h3>
+  <ol>
+    <li>Long-press (mobile) or right-click (desktop) the tag displayed on a record.</li>
+    <li>Select "Edit Tag" or "Delete Tag" from the context menu.</li>
+  </ol>
+  <h3>Tag Structure</h3>
+  <p>In Settings → "Tag Structure", you can manage display names and ordering of tags. Placing frequently used tags higher makes them easier to find in the autocomplete list.</p>
+  <div class="tip">
+    <strong>Tip:</strong> In Notepad syntax, entering <code>#tagname</code> automatically attaches a tag when the text is submitted. See the <a href="kftl-syntax.html">Notepad Syntax Reference</a> for details.
+  </div>
+
+  <h2>File Upload Details</h2>
+  <p>From the "+" FAB menu, select "Upload" to save images, videos, documents, and other files to gkill.</p>
+  <h3>Steps</h3>
+  <ol>
+    <li>Select "Upload" from the "+" FAB menu.</li>
+    <li>Choose the target storage (a file management repository).</li>
+    <li>Confirm or adjust the record date/time associated with the file.</li>
+    <li>Select the file(s) to upload. Multiple files can be selected at once.</li>
+  </ol>
+  <h3>Supported File Types</h3>
+  <p>Images (JPEG, PNG, GIF, WEBP), videos (MP4, etc.), PDFs, ZIPs, and most common file formats are supported. ZIP files can be browsed after upload (right-click the record → "Browse ZIP Contents").</p>
+  <h3>Upload Size Limit</h3>
+  <p>The monthly upload size limit is configured by the administrator in Server Config. If the limit is reached, an error message will appear. (A value of <code>-1</code> means unlimited.)</p>
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Ctrl+V to save clipboard content (image, text, PDF, etc.) directly as a file. Ideal for quickly saving screenshots.
+  </div>
+
+  <h2>Using the GPS Map</h2>
+  <p>Enable the Map button in the toolbar to display GPS tracks on an interactive map for the currently selected time period.</p>
+  <h3>Uploading GPS Logs</h3>
+  <ol>
+    <li>Select "Upload" from the "+" FAB menu.</li>
+    <li>Choose a GPS log storage as the destination.</li>
+    <li>Select and upload your GPX file.</li>
+    <li>Enable the Map button to view the track on the map.</li>
+  </ol>
+  <h3>Google Maps API Key</h3>
+  <p>A Google Maps API key is required for map display. Go to Settings (toolbar "Settings" → "Display Settings") and enter your key in the "Google Maps API Key" field.</p>
+  <div class="tip">
+    <strong>Tip:</strong> You can obtain a Google Maps API key from <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. Enable the Maps JavaScript API for your key.
+  </div>
+
   <h2>Related Documents</h2>
   <ul>
     <li><a href="kyou.html">Records</a></li>
     <li><a href="dnote.html">Aggregation View</a></li>
     <li><a href="ryuu.html">Related Info</a></li>
+    <li><a href="kftl-syntax.html">Notepad Syntax Reference</a></li>
+    <li><a href="application-config.html">Settings</a></li>
   </ul>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
