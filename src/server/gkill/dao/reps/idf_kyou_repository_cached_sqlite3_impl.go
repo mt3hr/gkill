@@ -279,7 +279,11 @@ WHERE
 				return nil, err
 			}
 
-			// 対象IDFRepsからファイルURLを取得
+			// targetRepNameが空の場合はRepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = idf.RepName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -507,6 +511,11 @@ WHERE
 				return nil, err
 			}
 
+			// targetRepNameが空の場合はRepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = idf.RepName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -663,6 +672,11 @@ WHERE
 				return nil, err
 			}
 
+			// targetRepNameが空の場合はRepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = idf.RepName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -1026,7 +1040,11 @@ WHERE
 				return nil, err
 			}
 
-			// 対象IDFRepsからファイルURLを取得
+			// targetRepNameが空の場合はRepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = idf.RepName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -1229,6 +1247,11 @@ WHERE
 				return nil, err
 			}
 
+			// targetRepNameが空の場合はRepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = idf.RepName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -1367,6 +1390,11 @@ WHERE
 				return nil, err
 			}
 
+			// targetRepNameが空の場合はRepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = idf.RepName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
