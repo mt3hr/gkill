@@ -65,6 +65,49 @@
   <p><strong>应用</strong>: 保存设置。<br><strong>取消</strong>: 放弃更改并关闭画面。</p>
 
   <div class="tip">更改设置后需要重新启动服务器才能生效。</div>
+
+  <h2>存储位置管理</h2>
+  <p>存储位置（存储库）是gkill保存记录数据的目录或场所。可以根据用途（文本备忘录、文件、GPS日志等）和设备分别设置多个存储位置。</p>
+  <p>存储位置的配置通过账户管理画面的"存储分配按钮"对每个用户进行设置。</p>
+
+  <h3>添加存储位置</h3>
+  <ol>
+    <li>打开账户管理画面，点击目标用户的"存储分配按钮"。</li>
+    <li>点击"添加"按钮添加新的存储位置。</li>
+    <li>配置以下项目：
+      <ul>
+        <li><strong>显示名称</strong>: 在生活日志视图和筛选器中显示的名称</li>
+        <li><strong>类型</strong>: 保存数据的种类（文本备忘录、打卡、任务、文件管理、GPS日志、Git提交日志等）</li>
+        <li><strong>路径</strong>: 保存数据的目录路径（文件管理时也可使用glob格式）</li>
+        <li><strong>用作写入目标</strong>: 新增记录时是否保存到此存储位置</li>
+        <li><strong>启用</strong>: 是否将此存储位置作为搜索和显示对象</li>
+      </ul>
+    </li>
+    <li>点击"保存"按钮使配置生效。</li>
+  </ol>
+
+  <h3>类型选择</h3>
+  <table>
+    <tr><th>类型</th><th>用途</th></tr>
+    <tr><td>文本备忘录</td><td>保存文本备忘录</td></tr>
+    <tr><td>打卡</td><td>保存时间追踪（打卡）记录</td></tr>
+    <tr><td>任务</td><td>保存任务管理记录</td></tr>
+    <tr><td>支出</td><td>保存支出记录</td></tr>
+    <tr><td>书签</td><td>保存URL书签</td></tr>
+    <tr><td>心情</td><td>保存心情值记录</td></tr>
+    <tr><td>数值记录</td><td>保存数值数据</td></tr>
+    <tr><td>文件管理</td><td>保存上传文件（图片、视频等）</td></tr>
+    <tr><td>GPS日志</td><td>管理GPX格式的GPS日志</td></tr>
+    <tr><td>Git提交日志</td><td>读取Git仓库的提交历史（只读）</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>提示:</strong> 可以添加同类型的多个存储位置。例如，按设备分别设置文本备忘录用存储位置，可以整理各设备的数据。
+  </div>
+  <div class="tip">
+    <strong>提示:</strong> 开启"用作写入目标"的存储位置将成为新记录的保存目标。同类型有多个存储位置时，只将需要写入的一个设为开启。
+  </div>
+
   <h2>相关文档</h2>
   <ul>
     <li><a href="application-config.html">设置</a></li>

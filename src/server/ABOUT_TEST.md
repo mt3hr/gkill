@@ -72,9 +72,11 @@ cd src/server && go test ./...
 | サブディレクトリ | テスト仕様 |
 |----------------|-----------|
 | `gkill/api/` | [gkill/api/ABOUT_TEST.md](gkill/api/ABOUT_TEST.md) |
+| `gkill/api/gkill_server_api/` | [gkill/api/gkill_server_api/ABOUT_TEST.md](gkill/api/gkill_server_api/ABOUT_TEST.md) |
 | `gkill/api/kftl/` | [gkill/api/kftl/ABOUT_TEST.md](gkill/api/kftl/ABOUT_TEST.md) |
 | `gkill/api/req_res/` | [gkill/api/req_res/ABOUT_TEST.md](gkill/api/req_res/ABOUT_TEST.md) |
 | `gkill/dao/` | [gkill/dao/ABOUT_TEST.md](gkill/dao/ABOUT_TEST.md) |
 | `gkill/dao/reps/` | [gkill/dao/reps/ABOUT_TEST.md](gkill/dao/reps/ABOUT_TEST.md) |
+| `gkill/usecase/` | [gkill/usecase/ABOUT_TEST.md](gkill/usecase/ABOUT_TEST.md) |
 | `gkill/dvnf/` | [gkill/dvnf/ABOUT_TEST.md](gkill/dvnf/ABOUT_TEST.md) |
 | `gkill/main/` | [gkill/main/ABOUT_TEST.md](gkill/main/ABOUT_TEST.md) |
