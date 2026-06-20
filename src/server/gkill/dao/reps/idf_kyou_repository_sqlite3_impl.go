@@ -377,9 +377,6 @@ WHERE
 				return nil, err
 			}
 
-			// 対象IDFRepsからファイルURLを取得
-			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
-
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
@@ -427,7 +424,9 @@ WHERE
 					// 自身のcontentDirにフォールバックする。
 					// DBファイルはディレクトリと一緒に移動するため、
 					// ファイルは現在のcontentDir内に存在する可能性が高い。
+					// FileURLも現在のRepNameで構築し直す。
 					filename = filepath.Join(i.contentDir, idf.TargetFile)
+					targetRepName = repName
 				} else {
 					// GetPath("") はidDBFileパスを返す。
 					// idDBFile = contentDir/.gkill/gkill_id.db なので
@@ -440,6 +439,9 @@ WHERE
 					filename = filepath.Join(targetContentDir, idf.TargetFile)
 				}
 			}
+
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			fileContentText := ""
 			if query.UseWords {
@@ -1080,6 +1082,25 @@ func (i *idfKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, 
 	return filepath.Base(i.contentDir), nil
 }
 
+// resolveTargetRepName はDBから読み出したTARGET_REP_NAMEを有効なRep名に解決する。
+// 空または"."の場合は現在のrepNameを返す。
+// 現在の各IDFRepに存在しない名前（DVNFリネーム後の旧名など）の場合もrepNameにフォールバックする。
+func (i *idfKyouRepositorySQLite3Impl) resolveTargetRepName(ctx context.Context, targetRepName, repName string) (string, error) {
+	if targetRepName == "" || targetRepName == "." || targetRepName == repName {
+		return repName, nil
+	}
+	for _, idfRep := range i.repositoriesRef.IDFKyouReps {
+		idfRepName, err := idfRep.GetRepName(ctx)
+		if err != nil {
+			return "", fmt.Errorf("error at get rep name: %w", err)
+		}
+		if idfRepName == targetRepName {
+			return targetRepName, nil
+		}
+	}
+	return repName, nil
+}
+
 func (i *idfKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
 	i.m.Lock()
 	defer i.m.Unlock()
@@ -1245,7 +1266,13 @@ WHERE
 				return nil, err
 			}
 
-			// 対象IDFRepsからファイルURLを取得
+			// targetRepNameを解決（DVNFリネーム後の旧名にフォールバック対応）
+			targetRepName, err = i.resolveTargetRepName(ctx, targetRepName, repName)
+			if err != nil {
+				return nil, err
+			}
+
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -1493,12 +1520,19 @@ WHERE
 				return nil, err
 			}
 
+			// targetRepNameを解決（DVNFリネーム後の旧名にフォールバック対応）
+			targetRepName, err = i.resolveTargetRepName(ctx, targetRepName, repName)
+			if err != nil {
+				return nil, err
+			}
+
 			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
 
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -1670,12 +1704,19 @@ WHERE
 				return nil, err
 			}
 
+			// targetRepNameを解決（DVNFリネーム後の旧名にフォールバック対応）
+			targetRepName, err = i.resolveTargetRepName(ctx, targetRepName, repName)
+			if err != nil {
+				return nil, err
+			}
+
 			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
 
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -1910,10 +1951,21 @@ INSERT INTO IDF (
 		}
 	}()
 
+	// ファイルがこのid.dbと同じフォルダにある場合はTARGET_REP_NAMEを空にする。
+	// 空にすることでDVNFによるフォルダリネーム後も正しく解決できる。
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		return err
+	}
+	targetRepNameForDB := idfKyou.RepName
+	if targetRepNameForDB == repName || targetRepNameForDB == "" {
+		targetRepNameForDB = ""
+	}
+
 	queryArgs := []any{
 		idfKyou.IsDeleted,
 		idfKyou.ID,
-		idfKyou.RepName,
+		targetRepNameForDB,
 		idfKyou.TargetFile,
 		idfKyou.RelatedTime.Format(sqlite3impl.TimeLayout),
 		idfKyou.CreateTime.Format(sqlite3impl.TimeLayout),

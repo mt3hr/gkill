@@ -355,6 +355,11 @@ AND DEVICE = ?
 				return nil, err
 			}
 
+			// targetRepNameが空または現在のRepNameと異なる場合はrepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = repName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
@@ -507,6 +512,11 @@ AND DEVICE = ?
 				return nil, err
 			}
 
+			// targetRepNameが空または現在のRepNameと異なる場合はrepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = repName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
 			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
