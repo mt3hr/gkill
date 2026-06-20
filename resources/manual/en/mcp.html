@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Integration - Help</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
+    h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
+    h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
+    th { background: #f5f5f5; }
+    .icon { font-size: 1.2em; }
+    .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    body.dark { background: #212121; color: #e0e0e0; }
+    body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
+    body.dark h2 { color: #bbb; }
+    body.dark h3 { color: #aaa; }
+    body.dark table th { background: #333; }
+    body.dark table th, body.dark table td { border-color: #444; }
+    body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark code { background: #333; }
+    body.dark pre { background: #2a2a2a; }
+    body.dark a { color: #64B5F6; }
+    body.dark .back-link a { color: #64B5F6; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .breadcrumb { color: #999; }
+    body.dark .breadcrumb a { color: #64B5F6; }
+    /* scrollbar (gkill theme) */
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
+    body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+  </style>
+</head>
+<body>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>AI Integration</span></nav>
+  <h1>AI Integration</h1>
+  <p>By connecting AI assistants such as Claude to gkill, you can search, add, and edit your life log records through natural conversation.</p>
+
+  <h2>What You Can Do</h2>
+  <table>
+    <tr><th>Action</th><th>Example</th></tr>
+    <tr><td>Search records</td><td>"Show me last week's lunch notes" / "Summarize this month's expenses"</td></tr>
+    <tr><td>Add records</td><td>"Add a memo for today" / "Create a task"</td></tr>
+    <tr><td>Update / delete records</td><td>"Mark this task as done"</td></tr>
+    <tr><td>Retrieve GPS / files</td><td>"Show my route for today"</td></tr>
+    <tr><td>Check settings</td><td>"List my templates"</td></tr>
+  </table>
+
+  <h2>Integration Types</h2>
+  <table>
+    <tr><th>Type</th><th>Description</th></tr>
+    <tr><td>Read-only</td><td>AI can view and search records only. Adding or modifying records is not allowed.</td></tr>
+    <tr><td>Write-only</td><td>AI can add, update, and delete records only.</td></tr>
+    <tr><td>Read &amp; Write</td><td>AI can view, add, update, and delete records.</td></tr>
+  </table>
+
+  <h2>Setup (Claude Desktop)</h2>
+  <p>Add the following to the Claude Desktop configuration file (<code>claude_desktop_config.json</code>).</p>
+
+  <h3>Read-only integration</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "your-user-id",
+        "GKILL_PASSWORD_SHA256": "sha256-hash-of-your-password"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>Tip:</strong> <code>GKILL_PASSWORD_SHA256</code> is the SHA256 hash of your password. You can generate it using tools available on your operating system or online SHA256 calculators.
+  </div>
+
+  <h2>Setup (Claude Code)</h2>
+  <p>Run the following command in your terminal.</p>
+  <pre><code># Add read-only integration
+npx @anthropic-ai/claude-code mcp add gkill \
+  --command npx \
+  --args "-y,gkill-mcp-server" \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=your-user-id \
+  --env GKILL_PASSWORD_SHA256=your-hash</code></pre>
+
+  <h2>Remote Access (Accessing from Outside Your Local Network)</h2>
+  <p>Make your gkill server accessible over the internet, then set <code>GKILL_BASE_URL</code> to its public address. Enabling TLS (HTTPS) is strongly recommended for security.</p>
+  <div class="tip">
+    <strong>Tip:</strong> TLS settings can be configured from <a href="server-config.html">Server Settings</a>.
+  </div>
+
+  <h2>Related</h2>
+  <ul>
+    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="server-config.html">Server Settings</a></li>
+    <li><a href="application-config.html">Application Settings</a></li>
+  </ul>
+
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
+</body>
+</html>

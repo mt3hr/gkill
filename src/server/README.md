@@ -143,3 +143,4 @@ go build ./...
 - [main/README.md](gkill/main/README.md) — CLI エントリポイント
 - [main/common/README.md](gkill/main/common/README.md) — CLI 共通基盤（ログ、オプション、スレッド管理）
 - [dvnf/README.md](gkill/dvnf/README.md) — データバージョニング
+- [plugin/README.md](gkill/plugin/README.md) — プラグインシステム（SDK・通信プロトコル）

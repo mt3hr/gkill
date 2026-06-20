@@ -36,9 +36,9 @@ plugins/
 
 | プラグイン | data_type | 概要 |
 |---|---|---|
-| `gkill_example` | `example_kyou` | サンプル実装。固定Kyouを2件返す |
-| `gkill_plugin_claudeai` | `claude_conversation` | Claude.ai のチャット履歴をタイムライン表示 |
-| `gkill_plugin_chatgpt` | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
+| [`gkill_example`](examples/gkill_example/README.md) | `example_kyou` | サンプル実装。固定Kyouを2件返す |
+| [`gkill_plugin_claudeai`](gkill_plugin_claudeai/README.md) | `claude_conversation` | Claude.ai のチャット履歴をタイムライン表示 |
+| [`gkill_plugin_chatgpt`](gkill_plugin_chatgpt/README.md) | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
 
 ---
 

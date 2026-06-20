@@ -473,11 +473,11 @@ sequenceDiagram
 | TypeScript 6 | ~6.0.3 | 型安全性 |
 | vite-plugin-pwa | ^1.3.0 | PWA対応 |
 
-### ルート構成（12ルート）
+### ルート構成（13ルート）
 
-全12ルートの定義一覧は [screen-transition.md](screen-transition.md) を、各画面の項目定義は [screen-specs.md](screen-specs.md) を参照。
+全13ルートの定義一覧は [screen-transition.md](screen-transition.md) を、各画面の項目定義は [screen-specs.md](screen-specs.md) を参照。
 
-主要ルート: `/`（ログイン）, `/kftl`（KFTL入力）, `/mi`（タスクボード）, `/rykv`（履歴閲覧）, `/kyou`（記録詳細）, `/mkfl`（打刻メモ帳）, `/plaing`（打刻一覧）, `/saihate`（記録特化）, `/shared_page`（共有）他
+主要ルート: `/`（ログイン）, `/kftl`（KFTL入力）, `/mi`（タスクボード）, `/rykv`（履歴閲覧）, `/kyou`（記録詳細）, `/mkfl`（打刻メモ帳）, `/plaing`（打刻一覧）, `/dashboard`（日次サマリー）, `/saihate`（記録特化）, `/set_new_password`（パスワード変更）, `/regist_first_account`（初回登録）, `/shared_page`（共有）, `/shared_mi`（共有タスク）
 
 ### GkillAPI シングルトン
 

@@ -33,7 +33,7 @@ gkill プロジェクト全体で約2,090件のテストが存在する（正確
 
 | ディレクトリ | テスト仕様 | 概要 |
 |-------------|-----------|------|
-| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit ~623 + E2E 192） |
+| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit ~632 + E2E 202） |
 | `client/classes/` | [client/classes/ABOUT_TEST.md](client/classes/ABOUT_TEST.md) | ユーティリティクラス |
 | `client/classes/api/` | [client/classes/api/ABOUT_TEST.md](client/classes/api/ABOUT_TEST.md) | GkillAPI クライアント |
 | `client/classes/datas/` | [client/classes/datas/ABOUT_TEST.md](client/classes/datas/ABOUT_TEST.md) | 22データモデル |
@@ -54,3 +54,4 @@ gkill プロジェクト全体で約2,090件のテストが存在する（正確
 | `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（~563テスト） |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（114テスト） |
+| `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) | プラグイン（独自テストなし、API統合テストでカバー） |
