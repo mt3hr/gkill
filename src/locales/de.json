@@ -790,5 +790,9 @@
     "DASHBOARD_NEXT_DAY": "Nächster Tag",
     "EDIT_DASHBOARD_TITLE": "Dashboard",
     "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "Aufgaben-Suchbedingung",
-    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Aggregat-Suchbedingung"
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Aggregat-Suchbedingung",
+    "ZIP_TEXT_TOO_LARGE_MESSAGE": "Datei ist zu groß für eine Vorschau",
+    "ZIP_TEXT_TRUNCATED_MESSAGE": "Der Inhalt wurde abgeschnitten, da die Datei die Vorschaugrößenbeschränkung überschreitet",
+    "ZIP_TEXT_LOAD_FAILED_MESSAGE": "Textdatei konnte nicht geladen werden",
+    "ZIP_DOWNLOAD_LINK_TITLE": "Herunterladen"
 }

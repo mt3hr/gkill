@@ -11,6 +11,8 @@ type ZipEntry struct {
 
 	IsImage bool `json:"is_image"`
 
+	IsText bool `json:"is_text"`
+
 	FileURL string `json:"file_url"`
 }
 
