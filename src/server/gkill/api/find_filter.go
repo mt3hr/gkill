@@ -173,19 +173,21 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	}
 
 	// テキスト取得
-	wg.Add(1)
-	go func() {
-		defer func() { doneCh <- struct{}{} }()
-		defer wg.Done()
-		ge, e := f.findTexts(ctx, findKyouContext)
-		if e != nil {
-			e = fmt.Errorf("error at find texts: %w", e)
-		} else {
-			slog.Log(ctx, gkill_log.Trace, "finish findTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-		}
-		errch <- e
-		gkillErrch <- ge
-	}()
+	if findQuery.UseWords {
+		wg.Add(1)
+		go func() {
+			defer func() { doneCh <- struct{}{} }()
+			defer wg.Done()
+			ge, e := f.findTexts(ctx, findKyouContext)
+			if e != nil {
+				e = fmt.Errorf("error at find texts: %w", e)
+			} else {
+				slog.Log(ctx, gkill_log.Trace, "finish findTexts", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+			}
+			errch <- e
+			gkillErrch <- ge
+		}()
+	}
 
 	if findQuery.UseTimeIs {
 		wg.Add(1)
