@@ -790,5 +790,9 @@
     "DASHBOARD_NEXT_DAY": "다음 날",
     "EDIT_DASHBOARD_TITLE": "대시보드",
     "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "작업 검색 조건",
-    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "집계 검색 조건"
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "집계 검색 조건",
+    "ZIP_TEXT_TOO_LARGE_MESSAGE": "파일이 너무 커서 미리볼 수 없습니다",
+    "ZIP_TEXT_TRUNCATED_MESSAGE": "파일이 미리보기 크기 제한을 초과하여 이후 내용이 생략되었습니다",
+    "ZIP_TEXT_LOAD_FAILED_MESSAGE": "텍스트 파일을 불러오는 데 실패했습니다",
+    "ZIP_DOWNLOAD_LINK_TITLE": "다운로드"
 }

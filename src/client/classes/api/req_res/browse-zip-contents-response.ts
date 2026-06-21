@@ -7,6 +7,7 @@ export interface ZipEntry {
     is_dir: boolean
     size: number
     is_image: boolean
+    is_text: boolean
     file_url: string
 }
 
