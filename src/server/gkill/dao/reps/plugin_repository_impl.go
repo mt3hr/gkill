@@ -421,5 +421,19 @@ func pluginKyouMatchesQuery(kyou Kyou, q *find.FindQuery) bool {
 			return false
 		}
 	}
+	// UseIDsフィルタ:
+	// findQueryToPluginQueryはUseIDsをPluginQueryに変換しないため、
+	// プラグインはID指定クエリを受けても全件返す。
+	// gkill側でIDフィルタを補完することで、
+	// textMatchFindByIDQueryでプラグイン全件が混入するのを防ぐ。
+	if q.UseIDs {
+		idSet := make(map[string]struct{}, len(q.IDs))
+		for _, id := range q.IDs {
+			idSet[id] = struct{}{}
+		}
+		if _, inSet := idSet[kyou.ID]; !inSet {
+			return false
+		}
+	}
 	return true
 }
