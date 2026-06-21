@@ -132,6 +132,51 @@ export function normalizeKyouQuery(query) {
     normalized[key] = value;
   }
 
+  // filter group の自動活性化:
+  // AIクライアントが use_X フラグを省略しても、対応データフィールドが指定されていれば
+  // use_X=true を自動設定する（明示的に false が渡された場合は上書きしない）
+  if (!Object.prototype.hasOwnProperty.call(normalized, "use_words")) {
+    if (
+      (Array.isArray(normalized.words) && normalized.words.length > 0) ||
+      (Array.isArray(normalized.not_words) && normalized.not_words.length > 0)
+    ) {
+      normalized.use_words = true;
+    }
+  }
+  if (!Object.prototype.hasOwnProperty.call(normalized, "use_tags")) {
+    if (Array.isArray(normalized.tags) && normalized.tags.length > 0) {
+      normalized.use_tags = true;
+    }
+  }
+  if (!Object.prototype.hasOwnProperty.call(normalized, "use_calendar")) {
+    if (normalized.calendar_start_date !== undefined || normalized.calendar_end_date !== undefined) {
+      normalized.use_calendar = true;
+    }
+  }
+  if (!Object.prototype.hasOwnProperty.call(normalized, "use_timeis")) {
+    if (
+      (Array.isArray(normalized.timeis_words) && normalized.timeis_words.length > 0) ||
+      (Array.isArray(normalized.timeis_not_words) && normalized.timeis_not_words.length > 0)
+    ) {
+      normalized.use_timeis = true;
+    }
+  }
+  if (!Object.prototype.hasOwnProperty.call(normalized, "use_timeis_tags")) {
+    if (Array.isArray(normalized.timeis_tags) && normalized.timeis_tags.length > 0) {
+      normalized.use_timeis_tags = true;
+    }
+  }
+  if (!Object.prototype.hasOwnProperty.call(normalized, "use_reps")) {
+    if (Array.isArray(normalized.reps) && normalized.reps.length > 0) {
+      normalized.use_reps = true;
+    }
+  }
+  if (!Object.prototype.hasOwnProperty.call(normalized, "use_ids")) {
+    if (Array.isArray(normalized.ids) && normalized.ids.length > 0) {
+      normalized.use_ids = true;
+    }
+  }
+
   normalized.only_latest_data = true;
   return normalized;
 }
