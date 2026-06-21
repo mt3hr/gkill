@@ -790,5 +790,9 @@
     "DASHBOARD_NEXT_DAY": "Jour suivant",
     "EDIT_DASHBOARD_TITLE": "Tableau de bord",
     "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "Condition de recherche de tâches",
-    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Condition de recherche agrégée"
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Condition de recherche agrégée",
+    "ZIP_TEXT_TOO_LARGE_MESSAGE": "Le fichier est trop volumineux pour être prévisualisé",
+    "ZIP_TEXT_TRUNCATED_MESSAGE": "Le contenu a été tronqué car le fichier dépasse la limite de taille de prévisualisation",
+    "ZIP_TEXT_LOAD_FAILED_MESSAGE": "Échec du chargement du fichier texte",
+    "ZIP_DOWNLOAD_LINK_TITLE": "Télécharger"
 }

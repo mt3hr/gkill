@@ -790,5 +790,9 @@
     "DASHBOARD_NEXT_DAY": "Día siguiente",
     "EDIT_DASHBOARD_TITLE": "Panel",
     "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "Condición de búsqueda de tareas",
-    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Condición de búsqueda agregada"
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "Condición de búsqueda agregada",
+    "ZIP_TEXT_TOO_LARGE_MESSAGE": "El archivo es demasiado grande para previsualizar",
+    "ZIP_TEXT_TRUNCATED_MESSAGE": "El contenido fue truncado porque el archivo superó el límite de tamaño de vista previa",
+    "ZIP_TEXT_LOAD_FAILED_MESSAGE": "Error al cargar el archivo de texto",
+    "ZIP_DOWNLOAD_LINK_TITLE": "Descargar"
 }

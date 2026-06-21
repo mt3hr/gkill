@@ -790,5 +790,9 @@
     "DASHBOARD_NEXT_DAY": "翌日",
     "EDIT_DASHBOARD_TITLE": "ダッシュボード",
     "DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE": "タスク検索条件",
-    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "集計検索条件"
+    "DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE": "集計検索条件",
+    "ZIP_TEXT_TOO_LARGE_MESSAGE": "ファイルが大きすぎるためプレビューできません",
+    "ZIP_TEXT_TRUNCATED_MESSAGE": "表示サイズ上限に達したため、以降の内容は省略されています",
+    "ZIP_TEXT_LOAD_FAILED_MESSAGE": "テキストファイルの読み込みに失敗しました",
+    "ZIP_DOWNLOAD_LINK_TITLE": "ダウンロード"
 }
