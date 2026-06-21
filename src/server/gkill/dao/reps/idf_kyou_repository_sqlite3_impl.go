@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		fullConnect:     fullConnect,
 	}
 
-	fs := http.FileServer(http.Dir(dir))
+	fs := http.FileServer(noDirFS{http.Dir(dir)})
 	rep.fileServer = fs
 	// thumb server wraps the base file server
 	rep.thumbServer = NewThumbFileServer(dir, fs)
@@ -2038,7 +2038,31 @@ func (i *idfKyouRepositorySQLite3Impl) HandleFileServe(w http.ResponseWriter, r 
 		return
 	}
 
-	http.FileServer(http.Dir(i.contentDir)).ServeHTTP(w, r)
+	http.FileServer(noDirFS{http.Dir(i.contentDir)}).ServeHTTP(w, r)
+}
+
+// noDirFS はディレクトリへのアクセスを拒否する http.FileSystem ラッパー。
+// ディレクトリが要求された場合は os.ErrNotExist を返し、
+// http.FileServer が 404 を返すようにする。
+type noDirFS struct {
+	base http.FileSystem
+}
+
+func (n noDirFS) Open(name string) (http.File, error) {
+	f, err := n.base.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	stat, err := f.Stat()
+	if err != nil {
+		f.Close()
+		return nil, err
+	}
+	if stat.IsDir() {
+		f.Close()
+		return nil, os.ErrNotExist
+	}
+	return f, nil
 }
 
 func isImage(filename string) bool {
@@ -2152,6 +2176,32 @@ func isZip(filename string) bool {
 		return true
 	}
 	return false
+}
+
+func isText(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case
+		".txt", ".text", ".log", ".csv", ".tsv",
+		".md", ".markdown", ".rst", ".adoc", ".asciidoc",
+		".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml",
+		".ini", ".cfg", ".conf", ".env", ".properties",
+		".go", ".py", ".js", ".ts", ".jsx", ".tsx",
+		".java", ".kt", ".kts", ".c", ".h", ".cpp", ".cc",
+		".cxx", ".hpp", ".cs", ".rb", ".php", ".swift", ".rs",
+		".sh", ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd",
+		".html", ".htm", ".xhtml", ".css", ".scss", ".sass", ".less",
+		".vue", ".svelte", ".xml", ".tex", ".bib",
+		".diff", ".patch", ".sql", ".r", ".lua", ".vim",
+		".dockerfile", ".makefile", ".gitignore", ".gitattributes", ".editorconfig":
+		return true
+	}
+	return false
+}
+
+// IsTextPublic は外部パッケージからisText判定を利用するための公開関数
+func IsTextPublic(filename string) bool {
+	return isText(filename)
 }
 
 // IsImagePublic は外部パッケージからisImage判定を利用するための公開関数
