@@ -269,6 +269,96 @@ describe("normalizeKyouQuery", () => {
     expect(() => normalizeKyouQuery("not-an-object")).toThrow(GkillApiError);
     expect(() => normalizeKyouQuery(null)).toThrow(GkillApiError);
   });
+
+  // --- use_X フラグ自動活性化 ---
+  describe("auto-activation of use_X flags", () => {
+    test("sets use_words=true when words is non-empty", () => {
+      const result = normalizeKyouQuery({ words: ["test"] });
+      expect(result.use_words).toBe(true);
+    });
+
+    test("sets use_words=true when not_words is non-empty", () => {
+      const result = normalizeKyouQuery({ not_words: ["exclude"] });
+      expect(result.use_words).toBe(true);
+    });
+
+    test("does not override explicit use_words=false when words is non-empty", () => {
+      const result = normalizeKyouQuery({ words: ["test"], use_words: false });
+      expect(result.use_words).toBe(false);
+    });
+
+    test("does not set use_words when words is empty array", () => {
+      const result = normalizeKyouQuery({ words: [] });
+      expect(result).not.toHaveProperty("use_words");
+    });
+
+    test("sets use_tags=true when tags is non-empty", () => {
+      const result = normalizeKyouQuery({ tags: ["tagA"] });
+      expect(result.use_tags).toBe(true);
+    });
+
+    test("does not override explicit use_tags=false when tags is non-empty", () => {
+      const result = normalizeKyouQuery({ tags: ["tagA"], use_tags: false });
+      expect(result.use_tags).toBe(false);
+    });
+
+    test("does not set use_tags when tags is empty array", () => {
+      const result = normalizeKyouQuery({ tags: [] });
+      expect(result).not.toHaveProperty("use_tags");
+    });
+
+    test("sets use_calendar=true when calendar_start_date is provided", () => {
+      const result = normalizeKyouQuery({ calendar_start_date: "2026-01-01" });
+      expect(result.use_calendar).toBe(true);
+    });
+
+    test("sets use_calendar=true when calendar_end_date is provided", () => {
+      const result = normalizeKyouQuery({ calendar_end_date: "2026-12-31" });
+      expect(result.use_calendar).toBe(true);
+    });
+
+    test("does not override explicit use_calendar=false", () => {
+      const result = normalizeKyouQuery({ calendar_start_date: "2026-01-01", use_calendar: false });
+      expect(result.use_calendar).toBe(false);
+    });
+
+    test("sets use_timeis=true when timeis_words is non-empty", () => {
+      const result = normalizeKyouQuery({ timeis_words: ["keyword"] });
+      expect(result.use_timeis).toBe(true);
+    });
+
+    test("does not override explicit use_timeis=false", () => {
+      const result = normalizeKyouQuery({ timeis_words: ["keyword"], use_timeis: false });
+      expect(result.use_timeis).toBe(false);
+    });
+
+    test("sets use_timeis_tags=true when timeis_tags is non-empty", () => {
+      const result = normalizeKyouQuery({ timeis_tags: ["tagB"] });
+      expect(result.use_timeis_tags).toBe(true);
+    });
+
+    test("sets use_reps=true when reps is non-empty", () => {
+      const result = normalizeKyouQuery({ reps: ["rep1"] });
+      expect(result.use_reps).toBe(true);
+    });
+
+    test("does not set use_reps when reps is empty array", () => {
+      const result = normalizeKyouQuery({ reps: [] });
+      expect(result).not.toHaveProperty("use_reps");
+    });
+
+    test("sets use_ids=true when ids is non-empty", () => {
+      const result = normalizeKyouQuery({ ids: ["abc123"] });
+      expect(result.use_ids).toBe(true);
+    });
+
+    test("auto-activates use_words for typical AI request with words only", () => {
+      const result = normalizeKyouQuery({ words: ["test", "keyword"] });
+      expect(result.use_words).toBe(true);
+      expect(result.words).toEqual(["test", "keyword"]);
+      expect(result.only_latest_data).toBe(true);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
