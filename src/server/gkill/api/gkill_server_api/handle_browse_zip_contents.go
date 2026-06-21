@@ -349,6 +349,7 @@ func buildZipEntries(cacheDir string, repName string, hash string) ([]*req_res.Z
 			IsDir:   info.IsDir(),
 			Size:    info.Size(),
 			IsImage: reps.IsImagePublic(rel),
+			IsText:  reps.IsTextPublic(rel),
 			FileURL: fileURL,
 		}
 		entries = append(entries, entry)
@@ -382,7 +383,31 @@ func (g *GkillServerAPI) HandleZipCacheFileServe(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// zip_cacheディレクトリからファイルを配信
+	// zip_cacheディレクトリからファイルを配信（ディレクトリ一覧は拒否）
 	cacheRootDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, zipCacheSubDir))
-	http.StripPrefix("/zip_cache/", http.FileServer(http.Dir(cacheRootDir))).ServeHTTP(w, r)
+	http.StripPrefix("/zip_cache/", http.FileServer(noDirFS{http.Dir(cacheRootDir)})).ServeHTTP(w, r)
+}
+
+// noDirFS はディレクトリへのアクセスを拒否する http.FileSystem ラッパー。
+// ディレクトリが要求された場合は os.ErrNotExist を返し、
+// http.FileServer が 404 を返すようにする。
+type noDirFS struct {
+	base http.FileSystem
+}
+
+func (n noDirFS) Open(name string) (http.File, error) {
+	f, err := n.base.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	stat, err := f.Stat()
+	if err != nil {
+		f.Close()
+		return nil, err
+	}
+	if stat.IsDir() {
+		f.Close()
+		return nil, os.ErrNotExist
+	}
+	return f, nil
 }
