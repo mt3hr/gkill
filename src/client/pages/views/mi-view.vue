@@ -127,8 +127,8 @@
                         </div>
                     </td>
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
-                            :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="true"
+                        <MiKyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
+                            :gkill_api="gkill_api" :kyous="focused_kyous_list" :mi_sort_type="focused_query.mi_sort_type"
                             @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
                     </td>
                 </tr>
@@ -242,7 +242,7 @@ import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from '../dialogs/add-kc-dialog.vue'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
-import KyouCountCalendar from './kyou-count-calendar.vue'
+import MiKyouCountCalendar from './mi-kyou-count-calendar.vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
