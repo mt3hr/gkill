@@ -1,17 +1,17 @@
 <template>
-    <v-card class="dnote_view">
+    <v-card class="dnote_view" :class="{ fill_height_mode: fill_height }">
         <v-overlay v-model="is_loading" :content-class="'dnote_progress_overlay'" class="align-center justify-center"
             contained persistent>
             <v-progress-circular indeterminate color="primary" class="align-center justify-center" />
-            <div v-if="getted_kyous_count !== target_kyous_count" class="align-center justify-center">
+            <div v-if="is_fetching_from_api || getted_kyous_count !== target_kyous_count" class="align-center justify-center">
                 <div class="align-center justify-center overlay_message">
                     {{ i18n.global.t('DNOTE_GETTING_DATA') }}
                 </div>
-                <div class="align-center justify-center overlay_message">
+                <div v-if="!is_fetching_from_api" class="align-center justify-center overlay_message">
                     {{ getted_kyous_count }}/{{ target_kyous_count }}
                 </div>
             </div>
-            <div v-if="getted_kyous_count === target_kyous_count" class="align-center justify-center">
+            <div v-if="!is_fetching_from_api && getted_kyous_count === target_kyous_count" class="align-center justify-center">
                 <div class="align-center justify-center overlay_message">
                     {{ i18n.global.t('DNOTE_CALCURATING') }}
                 </div>
@@ -144,6 +144,7 @@ const {
     dnote_definitions,
     current_definition_index,
     is_loading,
+    is_fetching_from_api,
     target_kyous_count,
     getted_kyous_count,
     estimate_aggregate_task,
@@ -179,17 +180,80 @@ const {
 defineExpose({ reload, abort, set_loading })
 </script>
 <style lang="css" scoped>
-.dnote-scroll-wrap {
-    overflow-x: auto;
+/* fill_heightのとき固定高さ（常時） */
+.dnote_view {
+    height: v-bind('fill_height ? app_content_height.toString().concat("px") : "auto"');
+    overflow-y: v-bind('fill_height ? "hidden" : "visible"');
 }
 
-/* v-window / v-window-item は内部で overflow:hidden を持つため上書き */
+/* fill_height_mode のときだけ flex column レイアウトを有効化 */
+.fill_height_mode {
+    display: flex;
+    flex-direction: column;
+}
+
+.fill_height_mode :deep(.v-window) {
+    flex: 1;
+    min-height: 0;
+}
+
+/* v-window / v-window-item の overflow-x は常時上書き（既存動作維持） */
 :deep(.v-window__container) {
     overflow-x: visible !important;
 }
 
 :deep(.v-window-item) {
     overflow-x: visible !important;
+}
+
+/* height: 100% は fill_height_mode のときだけ */
+.fill_height_mode :deep(.v-window__container) {
+    height: 100% !important;
+}
+
+.fill_height_mode :deep(.v-window-item) {
+    height: 100% !important;
+}
+
+/* dnote-scroll-wrap: overflow-x は常時（既存動作維持） */
+.dnote-scroll-wrap {
+    overflow-x: auto;
+}
+
+/* flex column レイアウトと height:100% は fill_height_mode のときだけ */
+.fill_height_mode .dnote-scroll-wrap {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.fill_height_mode :deep(.dnote_list_table_root) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.fill_height_mode :deep(.dnote_list_table_row) {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch !important;
+}
+
+.fill_height_mode :deep(.dnote_list_view_root) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* v-virtual-scroll: fill_heightのとき残り高さをflex-growで占める */
+:deep(.dnote_list_view) {
+    height: v-bind('fill_height ? "0" : "50vh"') !important;
+    flex-grow: v-bind('fill_height ? "1" : "0"') !important;
+}
+
+.fill_height_mode :deep(.dnote_list_view) {
+    min-height: 0 !important;
 }
 
 .overlay_target {
