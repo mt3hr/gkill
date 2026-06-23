@@ -6,4 +6,5 @@ export interface GPSLogMapProps extends GkillPropsBase {
     start_date: Date
     end_date: Date
     marker_time: Date
+    app_content_height: number
 }
