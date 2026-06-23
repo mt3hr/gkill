@@ -64,7 +64,7 @@
                             <div class="gps-map-container">
                                 <GPSLogMap :start_date="target_date_start" :end_date="target_date_end"
                                     :marker_time="target_date_start" :application_config="application_config"
-                                    :gkill_api="gkill_api"
+                                    :gkill_api="gkill_api" :app_content_height="panel_height"
                                     @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
                                     @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
                                     ref="gps_log_map" />
@@ -402,6 +402,16 @@ map-container {
 .gps-map-container {
     width: 100%;
     overflow-x: unset;
+}
+
+.gps-map-container :deep(.gps_log_map_wrap) {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.gps-map-container :deep(.map_container) {
+    flex: none !important;
+    height: v-bind(map_height_px) !important;
 }
 
 .gps-map-container :deep(.googlemap) {
