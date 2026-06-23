@@ -41,17 +41,17 @@
                     </v-btn>
                 </template>
             </v-tooltip>
-            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_CALENDAR')">
-                <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props" icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
-                        <v-icon>mdi-calendar</v-icon>
-                    </v-btn>
-                </template>
-            </v-tooltip>
             <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_MAP')">
                 <template v-slot:activator="{ props }">
                     <v-btn v-bind="props" icon @click="is_show_gps_log_map = !is_show_gps_log_map">
                         <v-icon>mdi-map</v-icon>
+                    </v-btn>
+                </template>
+            </v-tooltip>
+            <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_CALENDAR')">
+                <template v-slot:activator="{ props }">
+                    <v-btn v-bind="props" icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
+                        <v-icon>mdi-calendar</v-icon>
                     </v-btn>
                 </template>
             </v-tooltip>
@@ -151,22 +151,22 @@
                         <Dnote class="rykv_dnote_wrap" :app_content_height="app_content_height"
                             :app_content_width="app_content_width" :application_config="application_config"
                             :gkill_api="gkill_api" :query="focused_query" :checked_kyous="focused_column_checked_kyous"
-                            :editable="false"
+                            :editable="false" :fill_height="true"
                             v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }"
                             ref="dnote_view" />
+                    </td>
+                    <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                        <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
+                            :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
+                            :marker_time="gps_log_map_marker_time" :app_content_height="app_content_height"
+                            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+                            @requested_focus_time="(date: Date) => onGpsLogMapRequestedFocusTime(date)" />
                     </td>
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                             :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="false"
                             @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
-                    </td>
-                    <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
-                            :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
-                            :marker_time="gps_log_map_marker_time"
-                            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
-                            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
-                            @requested_focus_time="(date: Date) => onGpsLogMapRequestedFocusTime(date)" />
                     </td>
                 </tr>
             </table>
