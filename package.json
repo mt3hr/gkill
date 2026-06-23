@@ -46,7 +46,7 @@
     "install_app": "npm run prepare_install && cd src/server/gkill/main/gkill && go install -ldflags \"-H windowsgui\"",
     "install_server": "npm run prepare_install && npm run go_install",
     "setup_gkill_develop_env": "node -e \"var x=require('child_process').execSync;if(require('os').platform()!=='linux'){console.error('This script is for Ubuntu/WSL only');process.exit(1)};console.log('[1/2] Installing apt packages...');x('sudo apt-get update && sudo apt-get install -y p7zip-full default-jdk',{stdio:'inherit'});console.log('[2/2] Installing Go tools...');x('go install github.com/akavel/rsrc@latest',{stdio:'inherit'});var ok=true;if(!process.env.ANDROID_HOME&&!process.env.ANDROID_SDK_ROOT){console.warn('WARNING: ANDROID_HOME/ANDROID_SDK_ROOT not set. Install Android SDK for APK builds.');ok=false};console.log(ok?'Setup complete! All dependencies are ready.':'Setup complete! See warnings above for optional dependencies.')\"",
-    "test": "npm run test_server && npm run test_client && npm run test_mcp && npm run test_android && npm run test_wear_os",
+    "test": "npm run install_server && npm run test_server && npm run test_client && npm run test_mcp && npm run test_android && npm run test_wear_os",
     "test_server": "cd src/server && go test ./...",
     "test_client": "npm run test_client_unit && npm run test_client_e2e",
     "test_client_unit": "vitest run",
