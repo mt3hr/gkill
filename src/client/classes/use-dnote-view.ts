@@ -54,6 +54,7 @@ export function useDnoteView(options: {
     const current_definition_index = ref(0)
     const abort_controller = ref(new AbortController())
     const is_loading = ref(true)
+    const is_fetching_from_api = ref(false)
 
     const target_kyous_count = ref(0)
     const getted_kyous_count = ref(0)
@@ -270,6 +271,7 @@ export function useDnoteView(options: {
 
     // ── Business logic ──
     async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
+        is_fetching_from_api.value = false
         loaded_kyous.value = null
         is_loading.value = true
         last_reload_query.value = query
@@ -319,6 +321,9 @@ export function useDnoteView(options: {
 
     function set_loading(loading: boolean): void {
         is_loading.value = loading
+        if (loading) {
+            is_fetching_from_api.value = true
+        }
     }
 
     function add_definition(): void {
@@ -513,6 +518,7 @@ export function useDnoteView(options: {
         current_definition_index,
         abort_controller,
         is_loading,
+        is_fetching_from_api,
         target_kyous_count,
         getted_kyous_count,
         estimate_aggregate_task,
