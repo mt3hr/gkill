@@ -1,17 +1,17 @@
 <template>
-    <div>
+    <div class="gps_log_map_wrap">
         <v-sheet tile height="35" class="d-flex">
             <div class="map_date"><span>{{ start_date_str }}</span><span v-if="start_date !== end_date">～ {{
                 end_date_str }}</span></div>
         </v-sheet>
-        <v-sheet>
+        <div class="map_container">
             <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key"
-                style="width: 300px; height: 425px" class="googlemap" :key="application_config.google_map_api_key"
+                class="googlemap" :key="application_config.google_map_api_key"
                 gestureHandling="cooperative">
                 <Polyline :options="polyline_options" :key="polyline_options.timestamp" />
                 <Marker v-if="marker_options" :options="marker_options" :key="marker_options.timestamp" />
             </GoogleMap>
-        </v-sheet>
+        </div>
         <v-sheet>
             <v-slider min="0" hide-details :max="time_slider_max" v-model="slider_model" :label="date_time_str" />
         </v-sheet>
@@ -50,6 +50,24 @@ const {
 defineExpose({ centering })
 </script>
 <style lang="css" scoped>
+.gps_log_map_wrap {
+    display: flex;
+    flex-direction: column;
+    height: v-bind('app_content_height.toString().concat("px")');
+    width: 400px;
+}
+
+.map_container {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.googlemap {
+    width: 100%;
+    height: 100%;
+}
+
 .map_date {
     font-size: 26px;
 }
