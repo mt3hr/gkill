@@ -122,6 +122,7 @@ export function useDashboardPage() {
             const config = DashboardConfig.parse(application_config.value.dashboard_json_data)
             if (config.dashboard_mi_find_kyou_query) {
                 const saved = config.dashboard_mi_find_kyou_query
+                query.include_create_mi = false
                 query.use_tags = saved.use_tags
                 query.tags = saved.tags.concat()
                 query.tags_and = saved.tags_and
