@@ -258,7 +258,12 @@ func makeMi(id, title string) Mi {
 // makeDefaultFindQuery creates a FindQuery with all filters off.
 func makeDefaultFindQuery() *find.FindQuery {
 	return &find.FindQuery{
-		OnlyLatestData: true,
+		OnlyLatestData:  true,
+		IncludeCreateMi: true,
+		IncludeCheckMi:  true,
+		IncludeLimitMi:  true,
+		IncludeStartMi:  true,
+		IncludeEndMi:    true,
 	}
 }
 
