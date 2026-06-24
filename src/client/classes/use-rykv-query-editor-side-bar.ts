@@ -111,7 +111,9 @@ export function useRykvQueryEditorSideBar(options: {
         find_query.is_image_only = query.value.is_image_only
         find_query.include_create_mi = true
         find_query.include_check_mi = true
+        find_query.include_limit_mi = true
         find_query.include_start_mi = true
+        find_query.include_end_mi = true
 
         if (keyword_query.value) {
             find_query.use_words = keyword_query.value.get_use_words()
