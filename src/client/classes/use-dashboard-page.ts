@@ -140,6 +140,7 @@ export function useDashboardPage() {
             }
         }
         query.for_mi = true
+        query.include_limit_mi = true
         query.use_reps = false
         query.use_calendar = true
         query.calendar_start_date = target_date_start.value
