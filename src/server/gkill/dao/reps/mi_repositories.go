@@ -664,6 +664,11 @@ func (m MiRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
 
 	findMiQuery := &find.FindQuery{}
 	findMiQuery.OnlyLatestData = true
+	findMiQuery.IncludeCreateMi = true
+	findMiQuery.IncludeCheckMi = true
+	findMiQuery.IncludeLimitMi = true
+	findMiQuery.IncludeStartMi = true
+	findMiQuery.IncludeEndMi = true
 	mis, err := m.FindMi(ctx, findMiQuery)
 	if err != nil {
 		err = fmt.Errorf("error at find mi: %w", err)
