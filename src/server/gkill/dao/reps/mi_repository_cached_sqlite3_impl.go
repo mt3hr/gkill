@@ -5,6 +5,7 @@ import (
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -266,51 +267,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
-	// 検索対象のデータ抽出用WHERE
-	filterWhereCounter := 0
-	sqlWhereFilterEndMi := ""
-	sqlWhereFilterEndMi += "DATA_TYPE IN ("
-
-	if query.IncludeCreateMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_create'"
-	}
-	if query.IncludeCheckMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_check'"
-	}
-	if query.IncludeLimitMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_limit'"
-	}
-	if query.IncludeStartMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_start'"
-	}
-	if query.IncludeEndMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_end'"
-	}
-	sqlWhereFilterEndMi += ")"
-	if filterWhereCounter == 0 {
-		sqlWhereFilterEndMi = " 1 = 0 " // false
-	}
-
 	tableName := m.dbName
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []any{}
@@ -427,7 +383,18 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s",
+		sqlCreateMi, sqlWhereForCreate,
+		sqlCheckMi, sqlWhereForCheck,
+		sqlLimitMi, sqlWhereForLimit,
+		sqlStartMi, sqlWhereForStart,
+		sqlEndMi, sqlWhereForEnd)
+	queryArgs := []any{}
+	queryArgs = append(queryArgs, queryArgsForCreate...)
+	queryArgs = append(queryArgs, queryArgsForCheck...)
+	queryArgs = append(queryArgs, queryArgsForLimit...)
+	queryArgs = append(queryArgs, queryArgsForStart...)
+	queryArgs = append(queryArgs, queryArgsForEnd...)
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
@@ -442,12 +409,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		}
 	}()
 
-	queryArgs := []any{}
-	queryArgs = append(queryArgs, queryArgsForCreate...)
-	queryArgs = append(queryArgs, queryArgsForCheck...)
-	queryArgs = append(queryArgs, queryArgsForLimit...)
-	queryArgs = append(queryArgs, queryArgsForStart...)
-	queryArgs = append(queryArgs, queryArgsForEnd...)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -622,51 +583,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
-	// 検索対象のデータ抽出用WHERE
-	filterWhereCounter := 0
-	sqlWhereFilterEndMi := ""
-	sqlWhereFilterEndMi += "DATA_TYPE IN ("
-
-	if query.IncludeCreateMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_create'"
-	}
-	if query.IncludeCheckMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_check'"
-	}
-	if query.IncludeLimitMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_limit'"
-	}
-	if query.IncludeStartMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_start'"
-	}
-	if query.IncludeEndMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_end'"
-	}
-	sqlWhereFilterEndMi += ")"
-	if filterWhereCounter == 0 {
-		sqlWhereFilterEndMi = " 1 = 0 " // false
-	}
-
 	tableName := m.dbName
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []any{}
@@ -783,7 +699,18 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s",
+		sqlCreateMi, sqlWhereForCreate,
+		sqlCheckMi, sqlWhereForCheck,
+		sqlLimitMi, sqlWhereForLimit,
+		sqlStartMi, sqlWhereForStart,
+		sqlEndMi, sqlWhereForEnd)
+	queryArgs := []any{}
+	queryArgs = append(queryArgs, queryArgsForCreate...)
+	queryArgs = append(queryArgs, queryArgsForCheck...)
+	queryArgs = append(queryArgs, queryArgsForLimit...)
+	queryArgs = append(queryArgs, queryArgsForStart...)
+	queryArgs = append(queryArgs, queryArgsForEnd...)
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
@@ -798,12 +725,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		}
 	}()
 
-	queryArgs := []any{}
-	queryArgs = append(queryArgs, queryArgsForCreate...)
-	queryArgs = append(queryArgs, queryArgsForCheck...)
-	queryArgs = append(queryArgs, queryArgsForLimit...)
-	queryArgs = append(queryArgs, queryArgsForStart...)
-	queryArgs = append(queryArgs, queryArgsForEnd...)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -975,51 +896,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
-	// 検索対象のデータ抽出用WHERE
-	filterWhereCounter := 0
-	sqlWhereFilterEndMi := ""
-	sqlWhereFilterEndMi += "DATA_TYPE IN ("
-
-	if query.IncludeCreateMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_create'"
-	}
-	if query.IncludeCheckMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_check'"
-	}
-	if query.IncludeLimitMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_limit'"
-	}
-	if query.IncludeStartMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_start'"
-	}
-	if query.IncludeEndMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_end'"
-	}
-	sqlWhereFilterEndMi += ")"
-	if filterWhereCounter == 0 {
-		sqlWhereFilterEndMi = " 1 = 0 " // false
-	}
-
 	tableName := m.dbName
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []any{}
@@ -1136,7 +1012,18 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s",
+		sqlCreateMi, sqlWhereForCreate,
+		sqlCheckMi, sqlWhereForCheck,
+		sqlLimitMi, sqlWhereForLimit,
+		sqlStartMi, sqlWhereForStart,
+		sqlEndMi, sqlWhereForEnd)
+	queryArgs := []any{}
+	queryArgs = append(queryArgs, queryArgsForCreate...)
+	queryArgs = append(queryArgs, queryArgsForCheck...)
+	queryArgs = append(queryArgs, queryArgsForLimit...)
+	queryArgs = append(queryArgs, queryArgsForStart...)
+	queryArgs = append(queryArgs, queryArgsForEnd...)
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
@@ -1151,12 +1038,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		}
 	}()
 
-	queryArgs := []any{}
-	queryArgs = append(queryArgs, queryArgsForCreate...)
-	queryArgs = append(queryArgs, queryArgsForCheck...)
-	queryArgs = append(queryArgs, queryArgsForLimit...)
-	queryArgs = append(queryArgs, queryArgsForStart...)
-	queryArgs = append(queryArgs, queryArgsForEnd...)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -1230,8 +1111,13 @@ func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 	}
 
 	query := &find.FindQuery{
-		UpdateCache:    false,
-		OnlyLatestData: false,
+		UpdateCache:     false,
+		OnlyLatestData:  false,
+		IncludeCreateMi: true,
+		IncludeCheckMi:  true,
+		IncludeLimitMi:  true,
+		IncludeStartMi:  true,
+		IncludeEndMi:    true,
 	}
 
 	allMis, err := m.miRep.FindMi(ctx, query)
@@ -1558,51 +1444,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
-	// 検索対象のデータ抽出用WHERE
-	filterWhereCounter := 0
-	sqlWhereFilterEndMi := ""
-	sqlWhereFilterEndMi += "DATA_TYPE IN ("
-
-	if query.IncludeCreateMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_create'"
-	}
-	if query.IncludeCheckMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_check'"
-	}
-	if query.IncludeLimitMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_limit'"
-	}
-	if query.IncludeStartMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_start'"
-	}
-	if query.IncludeEndMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_end'"
-	}
-	sqlWhereFilterEndMi += ")"
-	if filterWhereCounter == 0 {
-		sqlWhereFilterEndMi = " 1 = 0 " // false
-	}
-
 	tableName := m.dbName
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []any{}
@@ -1631,7 +1472,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	tableNameAlias = m.dbName
 	queryArgsForCheck := []any{}
 	whereCounter = 0
-	relatedTimeColumnName = "CREATE_TIME_UNIX"
+	relatedTimeColumnName = "UPDATE_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1719,7 +1560,32 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+	sqlSegments := []string{}
+	queryArgs := []any{}
+	if query.IncludeCreateMi {
+		sqlSegments = append(sqlSegments, sqlCreateMi+" WHERE "+sqlWhereForCreate)
+		queryArgs = append(queryArgs, queryArgsForCreate...)
+	}
+	if query.IncludeCheckMi {
+		sqlSegments = append(sqlSegments, sqlCheckMi+" WHERE "+sqlWhereForCheck)
+		queryArgs = append(queryArgs, queryArgsForCheck...)
+	}
+	if query.IncludeLimitMi {
+		sqlSegments = append(sqlSegments, sqlLimitMi+" WHERE "+sqlWhereForLimit)
+		queryArgs = append(queryArgs, queryArgsForLimit...)
+	}
+	if query.IncludeStartMi {
+		sqlSegments = append(sqlSegments, sqlStartMi+" WHERE "+sqlWhereForStart)
+		queryArgs = append(queryArgs, queryArgsForStart...)
+	}
+	if query.IncludeEndMi {
+		sqlSegments = append(sqlSegments, sqlEndMi+" WHERE "+sqlWhereForEnd)
+		queryArgs = append(queryArgs, queryArgsForEnd...)
+	}
+	if len(sqlSegments) == 0 {
+		return []Mi{}, nil
+	}
+	sql := strings.Join(sqlSegments, " UNION ")
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
@@ -1734,12 +1600,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		}
 	}()
 
-	queryArgs := []any{}
-	queryArgs = append(queryArgs, queryArgsForCreate...)
-	queryArgs = append(queryArgs, queryArgsForCheck...)
-	queryArgs = append(queryArgs, queryArgsForLimit...)
-	queryArgs = append(queryArgs, queryArgsForStart...)
-	queryArgs = append(queryArgs, queryArgsForEnd...)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -1943,51 +1803,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
-	// 検索対象のデータ抽出用WHERE
-	filterWhereCounter := 0
-	sqlWhereFilterEndMi := ""
-	sqlWhereFilterEndMi += "DATA_TYPE IN ("
-
-	if query.IncludeCreateMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_create'"
-	}
-	if query.IncludeCheckMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_check'"
-	}
-	if query.IncludeLimitMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_limit'"
-	}
-	if query.IncludeStartMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_start'"
-	}
-	if query.IncludeEndMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_end'"
-	}
-	sqlWhereFilterEndMi += ")"
-	if filterWhereCounter == 0 {
-		sqlWhereFilterEndMi = " 1 = 0 " // false
-	}
-
 	tableName := m.dbName
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []any{}
@@ -2098,7 +1913,32 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+	sqlSegments := []string{}
+	queryArgs := []any{}
+	if query.IncludeCreateMi {
+		sqlSegments = append(sqlSegments, sqlCreateMi+" WHERE "+sqlWhereForCreate)
+		queryArgs = append(queryArgs, queryArgsForCreate...)
+	}
+	if query.IncludeCheckMi {
+		sqlSegments = append(sqlSegments, sqlCheckMi+" WHERE "+sqlWhereForCheck)
+		queryArgs = append(queryArgs, queryArgsForCheck...)
+	}
+	if query.IncludeLimitMi {
+		sqlSegments = append(sqlSegments, sqlLimitMi+" WHERE "+sqlWhereForLimit)
+		queryArgs = append(queryArgs, queryArgsForLimit...)
+	}
+	if query.IncludeStartMi {
+		sqlSegments = append(sqlSegments, sqlStartMi+" WHERE "+sqlWhereForStart)
+		queryArgs = append(queryArgs, queryArgsForStart...)
+	}
+	if query.IncludeEndMi {
+		sqlSegments = append(sqlSegments, sqlEndMi+" WHERE "+sqlWhereForEnd)
+		queryArgs = append(queryArgs, queryArgsForEnd...)
+	}
+	if len(sqlSegments) == 0 {
+		return nil, nil
+	}
+	sql := strings.Join(sqlSegments, " UNION ")
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
@@ -2113,12 +1953,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		}
 	}()
 
-	queryArgs := []any{}
-	queryArgs = append(queryArgs, queryArgsForCreate...)
-	queryArgs = append(queryArgs, queryArgsForCheck...)
-	queryArgs = append(queryArgs, queryArgsForLimit...)
-	queryArgs = append(queryArgs, queryArgsForStart...)
-	queryArgs = append(queryArgs, queryArgsForEnd...)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -2324,51 +2158,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		FROM ` + sqlite3impl.QuoteIdent(m.dbName) + `
 		`
 
-	// 検索対象のデータ抽出用WHERE
-	filterWhereCounter := 0
-	sqlWhereFilterEndMi := ""
-	sqlWhereFilterEndMi += "DATA_TYPE IN ("
-
-	if query.IncludeCreateMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_create'"
-	}
-	if query.IncludeCheckMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_check'"
-	}
-	if query.IncludeLimitMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_limit'"
-	}
-	if query.IncludeStartMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_start'"
-	}
-	if query.IncludeEndMi {
-		if filterWhereCounter != 0 {
-			sqlWhereFilterEndMi += ", "
-		}
-		filterWhereCounter++
-		sqlWhereFilterEndMi += "'mi_end'"
-	}
-	sqlWhereFilterEndMi += ")"
-	if filterWhereCounter == 0 {
-		sqlWhereFilterEndMi = " 1 = 0 " // false
-	}
-
 	tableName := m.dbName
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []any{}
@@ -2479,7 +2268,32 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+	sqlSegments := []string{}
+	queryArgs := []any{}
+	if query.IncludeCreateMi {
+		sqlSegments = append(sqlSegments, sqlCreateMi+" WHERE "+sqlWhereForCreate)
+		queryArgs = append(queryArgs, queryArgsForCreate...)
+	}
+	if query.IncludeCheckMi {
+		sqlSegments = append(sqlSegments, sqlCheckMi+" WHERE "+sqlWhereForCheck)
+		queryArgs = append(queryArgs, queryArgsForCheck...)
+	}
+	if query.IncludeLimitMi {
+		sqlSegments = append(sqlSegments, sqlLimitMi+" WHERE "+sqlWhereForLimit)
+		queryArgs = append(queryArgs, queryArgsForLimit...)
+	}
+	if query.IncludeStartMi {
+		sqlSegments = append(sqlSegments, sqlStartMi+" WHERE "+sqlWhereForStart)
+		queryArgs = append(queryArgs, queryArgsForStart...)
+	}
+	if query.IncludeEndMi {
+		sqlSegments = append(sqlSegments, sqlEndMi+" WHERE "+sqlWhereForEnd)
+		queryArgs = append(queryArgs, queryArgsForEnd...)
+	}
+	if len(sqlSegments) == 0 {
+		return []Mi{}, nil
+	}
+	sql := strings.Join(sqlSegments, " UNION ")
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
@@ -2494,12 +2308,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		}
 	}()
 
-	queryArgs := []any{}
-	queryArgs = append(queryArgs, queryArgsForCreate...)
-	queryArgs = append(queryArgs, queryArgsForCheck...)
-	queryArgs = append(queryArgs, queryArgsForLimit...)
-	queryArgs = append(queryArgs, queryArgsForStart...)
-	queryArgs = append(queryArgs, queryArgsForEnd...)
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
