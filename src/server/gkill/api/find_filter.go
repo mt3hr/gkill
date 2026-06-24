@@ -849,11 +849,15 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 	}
 
 	// 対象MiのKyouのみを抽出する
+	// MatchKyousCurrent のキーは kyou.ID+UpdateTime.Unix() 形式のため mi.ID で直接引けない。
+	// 値の kyous[0].ID と照合してキーをmi.IDに正規化して格納する。
 	filteredKyous := map[string][]reps.Kyou{}
 	for _, mi := range targetMis {
-		kyous, exist := findCtx.MatchKyousCurrent[mi.ID]
-		if exist {
-			filteredKyous[mi.ID] = kyous
+		for _, kyous := range findCtx.MatchKyousCurrent {
+			if len(kyous) > 0 && kyous[0].ID == mi.ID {
+				filteredKyous[mi.ID] = kyous
+				break
+			}
 		}
 	}
 

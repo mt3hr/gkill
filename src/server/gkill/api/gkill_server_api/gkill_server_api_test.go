@@ -7610,6 +7610,11 @@ func helperGetKyousWithWord(t *testing.T, tsURL string, sessionID string, word s
 			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
+			IncludeCreateMi:   true,
+			IncludeCheckMi:    true,
+			IncludeLimitMi:    true,
+			IncludeStartMi:    true,
+			IncludeEndMi:      true,
 		},
 	}
 	resp := postJSON(t, tsURL+"/api/get_kyous", getReq)

@@ -19,7 +19,6 @@ import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/page
 import moment from 'moment'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
-import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 
 export function useDashboardPage() {
     const theme = useTheme()
@@ -122,7 +121,13 @@ export function useDashboardPage() {
             const config = DashboardConfig.parse(application_config.value.dashboard_json_data)
             if (config.dashboard_mi_find_kyou_query) {
                 const saved = config.dashboard_mi_find_kyou_query
-                query.include_create_mi = false
+                query.include_create_mi = saved.include_create_mi
+                query.include_check_mi = saved.include_check_mi
+                query.include_limit_mi = saved.include_limit_mi
+                query.include_start_mi = saved.include_start_mi
+                query.include_end_mi = saved.include_end_mi
+                query.use_mi_sort_type = saved.use_mi_sort_type
+                query.mi_sort_type = saved.mi_sort_type
                 query.use_tags = saved.use_tags
                 query.tags = saved.tags.concat()
                 query.tags_and = saved.tags_and
@@ -212,12 +217,6 @@ export function useDashboardPage() {
         const req = new GetKyousRequest()
         req.query = mi_kyou_query.value
         current_mi_abort_controller = req.abort_controller
-
-        req.query.include_create_mi = req.query.mi_sort_type === MiSortType.create_time
-        req.query.include_check_mi = false
-        req.query.include_limit_mi = req.query.mi_sort_type === MiSortType.limit_time
-        req.query.include_start_mi = req.query.mi_sort_type === MiSortType.estimate_start_time
-        req.query.include_end_mi = req.query.mi_sort_type === MiSortType.estimate_end_time
 
         try {
             const res = await gkill_api.value.get_kyous(req)
