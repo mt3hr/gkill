@@ -2973,8 +2973,12 @@ export class GkillAPI {
                         const name = pos > -1 ? cookie.substr(0, pos) : cookie
                         document.cookie = name + '=;max-age=0'
                 }
-                await delete_gkill_config_cache()
-                await delete_gkill_kyou_cache(null)
+                try {
+                        await delete_gkill_config_cache()
+                        await delete_gkill_kyou_cache(null)
+                } catch (_e) {
+                        // Cache API が利用できない環境ではスキップ
+                }
         }
 }
 
