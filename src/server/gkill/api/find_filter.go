@@ -313,9 +313,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish replaceLatestKyouInfos", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
-	for _, kyous := range findKyouContext.MatchKyousCurrent {
-		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
-	}
 
 	gkillErr, err = f.overrideKyous(ctx, findKyouContext)
 	if err != nil {
@@ -323,6 +320,10 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	slog.Log(ctx, gkill_log.Trace, "finish overrideKyous", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
+
+	for _, kyous := range findKyouContext.MatchKyousCurrent {
+		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
+	}
 
 	gkillErr, err = f.sortResultKyous(ctx, findKyouContext)
 	if err != nil {
@@ -1453,6 +1454,18 @@ func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext
 		}
 		return 0
 	})
+
+	// IDが重複するKyouを除去する（ソート済みのため先頭がソート条件に最もマッチする）
+	seen := map[string]struct{}{}
+	deduped := make([]reps.Kyou, 0, len(findCtx.ResultKyous))
+	for _, kyou := range findCtx.ResultKyous {
+		if _, exist := seen[kyou.ID]; !exist {
+			seen[kyou.ID] = struct{}{}
+			deduped = append(deduped, kyou)
+		}
+	}
+	findCtx.ResultKyous = deduped
+
 	return nil, nil
 }
 
