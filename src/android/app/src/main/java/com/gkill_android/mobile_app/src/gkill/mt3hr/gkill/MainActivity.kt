@@ -2,20 +2,18 @@ package com.gkill_android.mobile_app.src.gkill.mt3hr.gkill
 
 import android.os.Bundle
 import android.util.Log
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
+import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
-import java.io.IOException
-import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.net.URL
 
 class MainActivity : AppCompatActivity() {
+    private var gkillServerProcess: Process? = null
+
     private fun copyServerBinary(): File {
         val outputFile = File(filesDir, "gkill_server")
 
@@ -32,26 +30,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startGkillServer() {
-        val gkillBinary = copyServerBinary()
-
-        Log.i("gkill", "バイナリパス: ${gkillBinary.absolutePath}")
-        Log.i("gkill", "バイナリサイズ: ${gkillBinary.length()} bytes")
-        Log.i("gkill", "実行可能: ${gkillBinary.canExecute()}")
-        Log.i("gkill", "読み取り可能: ${gkillBinary.canRead()}")
-
         Thread {
             try {
+                val gkillBinary = copyServerBinary()
+
+                Log.i("gkill", "バイナリパス: ${gkillBinary.absolutePath}")
+                Log.i("gkill", "バイナリサイズ: ${gkillBinary.length()} bytes")
+                Log.i("gkill", "実行可能: ${gkillBinary.canExecute()}")
+                Log.i("gkill", "読み取り可能: ${gkillBinary.canRead()}")
+
                 val homeDir = filesDir.parentFile?.absolutePath ?: filesDir.absolutePath
                 Log.i("gkill", "HOME: $homeDir")
 
-                // nativeLibraryDirからの実行を試みる（W^X制限回避）
                 val nativeDir = applicationInfo.nativeLibraryDir
                 Log.i("gkill", "nativeLibraryDir: $nativeDir")
 
-                val pb = ProcessBuilder(gkillBinary.absolutePath)
+                val pb = ProcessBuilder(gkillBinary.absolutePath, "--disable_tls", "--log", "debug")
                 pb.environment()["HOME"] = homeDir
                 pb.redirectErrorStream(true)
                 val process = pb.start()
+                gkillServerProcess = process
 
                 // stdoutを別スレッドで読み続ける（バッファフルによるハング防止）
                 Thread {
@@ -80,37 +78,56 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // killExistingGkillServer()
-        startGkillServer() // アプリ再起動時も呼ばれるように
-        waitUntilServerStarts {
-            setContentView(R.layout.activity_main)
-            val webView = findViewById<WebView>(R.id.webview)
-            webView.settings.javaScriptEnabled = true
-            webView.webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                    view?.loadUrl(url ?: "")
-                    return true  // 外部に飛ばさずWebView内で処理
-                }
-            }
+        setContentView(R.layout.activity_main)
 
-            val gkillURL = "http://localhost:9999"
-            webView.loadUrl(gkillURL)
+        val webView = findViewById<WebView>(R.id.webview)
+        webView.visibility = View.GONE
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.setOnLongClickListener { true }
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                view?.loadUrl(url ?: "")
+                return true  // 外部に飛ばさずWebView内で処理
+            }
+        }
+
+        killExistingGkillServer()
+        startGkillServer()
+        waitUntilServerStarts {
+            findViewById<View>(R.id.loading_layout).visibility = View.GONE
+            webView.visibility = View.VISIBLE
+            webView.loadUrl("http://localhost:9999")
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        gkillServerProcess?.destroy()
+        gkillServerProcess = null
+    }
 
     private fun killExistingGkillServer() {
         try {
-            val process = Runtime.getRuntime().exec("ps")
-            process.inputStream.bufferedReader().useLines { lines ->
+            gkillServerProcess?.destroy()
+            gkillServerProcess = null
+        } catch (e: Exception) {
+            Log.w("gkill", "保存プロセスkill失敗", e)
+        }
+        try {
+            val ps = Runtime.getRuntime().exec("ps -A")
+            ps.inputStream.bufferedReader().useLines { lines ->
                 lines.filter { it.contains("gkill_server") }.forEach { line ->
-                    val pid = line.split(Regex("\\s+"))[1] // PIDは2番目の列にある
-                    Runtime.getRuntime().exec("kill $pid")
-                    Log.d("gkill", "Killed existing gkill_server with pid $pid")
+                    val parts = line.trim().split(Regex("\\s+"))
+                    if (parts.size >= 2) {
+                        val pid = parts[1]
+                        Runtime.getRuntime().exec(arrayOf("kill", "-9", pid)).waitFor()
+                        Log.d("gkill", "Killed gkill_server pid=$pid")
+                    }
                 }
             }
         } catch (e: Exception) {
-            Log.w("gkill", "既存プロセスkill失敗", e)
+            Log.w("gkill", "ps-based kill失敗", e)
         }
     }
 
