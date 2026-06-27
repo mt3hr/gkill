@@ -19,7 +19,7 @@ class MainActivityInstrumentedTest {
     fun packageName_isCorrect() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals(
-            "com.gkill_android.mobile_app.src.gkill.mt3hr.gkill",
+            "com.mt3hr.gkill",
             appContext.packageName
         )
     }
