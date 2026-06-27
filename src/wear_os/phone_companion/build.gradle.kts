@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         // Must match the watch_app applicationId for Wearable MessageClient to work
-        applicationId = "com.gkill_android.mobile_app.src.gkill.mt3hr.gkill"
+        applicationId = "com.mt3hr.gkill.wear"
         minSdk = 26
         targetSdk = 35
         versionCode = (findProperty("versionCode") as? String)?.toIntOrNull() ?: 1
