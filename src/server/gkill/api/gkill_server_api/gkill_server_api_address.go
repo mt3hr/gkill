@@ -149,6 +149,8 @@ type GkillServerAPIAddress struct {
 
 	URLogBookmarkletAddress string
 
+	URLogBookmarkletPageAddress string
+
 	GetUpdatedDatasByTimeAddress string
 
 	CommitTXAddress string
@@ -314,6 +316,8 @@ type GkillServerAPIAddress struct {
 
 	URLogBookmarkletMethod string
 
+	URLogBookmarkletPageMethod string
+
 	GetUpdatedDatasByTimeMethod string
 
 	CommitTXMethod string
@@ -411,6 +415,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.OpenFileAddress = "/api/open_file"
 	gkillAPIAddress.ReloadRepositoriesAddress = "/api/reload_repositories"
 	gkillAPIAddress.URLogBookmarkletAddress = "/api/urlog_bookmarklet"
+	gkillAPIAddress.URLogBookmarkletPageAddress = "/api/urlog_bookmarklet_page"
 	gkillAPIAddress.GetUpdatedDatasByTimeAddress = "/api/get_updated_datas_by_time"
 	gkillAPIAddress.CommitTXAddress = "/api/commit_tx"
 	gkillAPIAddress.DiscardTXAddress = "/api/discard_tx"
@@ -489,6 +494,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.OpenFileMethod = "POST"
 	gkillAPIAddress.ReloadRepositoriesMethod = "POST"
 	gkillAPIAddress.URLogBookmarkletMethod = "POST"
+	gkillAPIAddress.URLogBookmarkletPageMethod = "GET"
 	gkillAPIAddress.GetUpdatedDatasByTimeMethod = "POST"
 	gkillAPIAddress.CommitTXMethod = "POST"
 	gkillAPIAddress.DiscardTXMethod = "POST"
