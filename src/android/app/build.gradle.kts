@@ -8,7 +8,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.gkill_android.mobile_app.src.gkill.mt3hr.gkill"
+        applicationId = "com.mt3hr.gkill"
         minSdk = 26
         targetSdk = 28
         versionCode = (findProperty("versionCode") as? String)?.toIntOrNull() ?: 1

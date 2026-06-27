@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         // Must match phone_companion applicationId for Wearable MessageClient to work
-        applicationId = "com.gkill_android.mobile_app.src.gkill.mt3hr.gkill"
+        applicationId = "com.mt3hr.gkill.wear"
         minSdk = 30  // Wear OS 3+ (Pixel Watch 2 runs Wear OS 4)
         targetSdk = 35
         versionCode = (findProperty("versionCode") as? String)?.toIntOrNull() ?: 1
