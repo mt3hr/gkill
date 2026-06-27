@@ -33,6 +33,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.HandleFunc(g.APIAddress.GetSharedKyousAddress, g.wrapNoAuth(g.HandleGetSharedKyous)).Methods(g.APIAddress.GetSharedKyousMethod)
 	router.HandleFunc(g.APIAddress.UpdateCacheAddress, g.wrapNoAuth(g.HandleUpdateCache)).Methods(g.APIAddress.UpdateCacheMethod)
 	router.HandleFunc(g.APIAddress.URLogBookmarkletAddress, g.wrapNoAuth(g.HandleURLogBookmarkletAddress)).Methods(g.APIAddress.URLogBookmarkletMethod)
+	router.HandleFunc(g.APIAddress.URLogBookmarkletPageAddress, g.wrapNoAuth(g.HandleURLogBookmarkletPage)).Methods(g.APIAddress.URLogBookmarkletPageMethod)
 	router.HandleFunc(g.APIAddress.GetKyousMCPAddress, g.wrapNoAuth(g.HandleGetKyousMCP)).Methods(g.APIAddress.GetKyousMCPMethod)
 	router.HandleFunc(g.APIAddress.UploadFilesAddress, g.wrapNoAuth(g.HandleUploadFiles)).Methods(g.APIAddress.UploadFilesMethod)
 	router.HandleFunc(g.APIAddress.UploadGPSLogFilesAddress, g.wrapNoAuth(g.HandleUploadGPSLogFiles)).Methods(g.APIAddress.UploadGPSLogFilesMethod)
