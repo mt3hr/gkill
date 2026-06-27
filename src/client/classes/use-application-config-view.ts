@@ -168,23 +168,9 @@ javascript: (function () {
 		};
 	};
 	function sendURLog() {
-		let urlog = JSON.stringify(genURLog());
-		let d = document.createElement('div');
-		d.style.cssText = 'position:fixed;top:16px;right:16px;background:#1976d2;color:#fff;padding:12px 20px;border-radius:4px;z-index:2147483647;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
-		d.textContent = '保存中...';
-		document.body.appendChild(d);
-		fetch('`  + location.protocol + "//" + location.host + props.gkill_api.urlog_bookmarklet_address + `', {
-			method: '`+ props.gkill_api.urlog_bookmarklet_method + `',
-			body: urlog
-		}).then(function(){
-			d.style.background = '#388e3c';
-			d.textContent = 'ブックマーク保存しました';
-			setTimeout(function(){ d.remove(); }, 2000);
-		}).catch(function(){
-			d.style.background = '#d32f2f';
-			d.textContent = '保存に失敗しました';
-			setTimeout(function(){ d.remove(); }, 3000);
-		});
+		var p = genURLog();
+		var q = Object.keys(p).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(p[k]); }).join('&');
+		window.open('`  + location.protocol + "//" + location.host + props.gkill_api.urlog_bookmarklet_page_address + `?'+q, '_blank', 'width=420,height=160');
 	};
 	sendURLog();
 }());`).split("\n").join("").split("\t").join("")
