@@ -199,7 +199,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if urlogBookmarkletSession == nil {
-		loginSession := &account_state.LoginSession{
+		newSession := &account_state.LoginSession{
 			ID:              GenerateNewID(),
 			UserID:          request.UserID,
 			Device:          device,
@@ -210,10 +210,27 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			ExpirationTime:  time.Now().Add(time.Hour * 24 * 30), // 1ヶ月
 			IsLocalAppUser:  isLocalAppUser,
 		}
-		ok, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.AddLoginSession(r.Context(), loginSession)
+		ok, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.AddLoginSession(r.Context(), newSession)
 		if !ok || err != nil {
 			if err != nil {
 				err = fmt.Errorf("error add login session = %s: %w", request.UserID, err)
+				slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
+			}
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddURLogLoginSessionError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_INTERNAL_SERVER_ERROR_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	} else if time.Now().After(urlogBookmarkletSession.ExpirationTime) {
+		// 期限切れの場合は有効期限を更新する（session_idは維持するので既存ブックマークレットがそのまま使える）
+		urlogBookmarkletSession.ExpirationTime = time.Now().Add(time.Hour * 24 * 30)
+		urlogBookmarkletSession.LoginTime = time.Now()
+		ok, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.UpdateLoginSession(r.Context(), urlogBookmarkletSession)
+		if !ok || err != nil {
+			if err != nil {
+				err = fmt.Errorf("error update urlog bookmarklet session = %s: %w", request.UserID, err)
 				slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
 			}
 			gkillError := &message.GkillError{

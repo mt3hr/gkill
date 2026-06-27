@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
@@ -439,6 +440,11 @@ var detector = chardet.NewHtmlDetector()
 
 // 文字列をUTF8に統一する
 func toUTF8(str []byte) (utf8str []byte, err error) {
+	// 既に有効なUTF-8であればそのまま返す（chardetの誤検出による文字化けを防ぐ）
+	if utf8.Valid(str) {
+		return str, nil
+	}
+
 	detectorResult, err := detector.DetectBest([]byte(str))
 	if err != nil {
 		err = fmt.Errorf("failed to detect charset: %w", err)

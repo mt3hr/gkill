@@ -284,6 +284,7 @@ export class GkillAPI {
         open_file_address: string
         reload_repositories_address: string
         urlog_bookmarklet_address: string
+        urlog_bookmarklet_page_address: string
         get_updated_datas_by_time_address: string
         commit_tx_address: string
         discard_tx_address: string
@@ -374,6 +375,7 @@ export class GkillAPI {
         open_file_method: string
         reload_repositories_method: string
         urlog_bookmarklet_method: string
+        urlog_bookmarklet_page_method: string
         get_updated_datas_by_time_method: string
         commit_tx_method: string
         discard_tx_method: string
@@ -465,6 +467,7 @@ export class GkillAPI {
                 this.open_file_address = "/api/open_file"
                 this.reload_repositories_address = "/api/reload_repositories"
                 this.urlog_bookmarklet_address = "/api/urlog_bookmarklet"
+                this.urlog_bookmarklet_page_address = "/api/urlog_bookmarklet_page"
                 this.get_updated_datas_by_time_address = "/api/get_updated_datas_by_time"
                 this.commit_tx_address = "/api/commit_tx"
                 this.discard_tx_address = "/api/discard_tx"
@@ -553,6 +556,7 @@ export class GkillAPI {
                 this.open_file_method = "POST"
                 this.reload_repositories_method = "POST"
                 this.urlog_bookmarklet_method = "POST"
+                this.urlog_bookmarklet_page_method = "GET"
                 this.get_updated_datas_by_time_method = "POST"
                 this.commit_tx_method = "POST"
                 this.discard_tx_method = "POST"

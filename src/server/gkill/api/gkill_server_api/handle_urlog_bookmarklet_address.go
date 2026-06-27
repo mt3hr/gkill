@@ -41,12 +41,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	if err != nil {
 		err = fmt.Errorf("error at parse urlog bookmarklet request to json: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidURLogBookmarkletRequestDataError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
-		}
-		// response.Errors = append(response.Errors, gkillError)
-		_ = gkillError
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -55,7 +50,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
 		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -64,12 +59,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -77,12 +67,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		gkillError := &message.GkillError{
-			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -127,23 +112,13 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetURLogError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if existURLog != nil {
 		err = fmt.Errorf("exist urlog id = %s", urlog.ID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AlreadyExistURLogError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		w.WriteHeader(http.StatusConflict)
 		return
 	}
 
@@ -152,12 +127,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	if err != nil {
 		err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -166,12 +136,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	if err != nil {
 		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -181,12 +146,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	if err != nil {
 		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddURLogError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
-		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, urlog.ID)
