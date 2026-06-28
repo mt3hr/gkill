@@ -454,7 +454,6 @@ export function useRykvView(options: {
         return nextTick(() => {
             skip_search_this_tick.value = true
             focused_column_index.value = -1
-            focused_query.value = querys.value[focused_column_index.value]
 
             querys.value.splice(column_index, 1)
             querys_backup.value.splice(column_index, 1)
@@ -468,7 +467,6 @@ export function useRykvView(options: {
             match_kyous_list_top_list.value.splice(column_index, 1)
             abort_controllers.value.splice(column_index, 1)
 
-            match_kyous_list_top_list.value.splice(column_index, 1)
             for (let i = column_index; i < querys.value.length; i++) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const kyou_list_view = kyou_list_views.value[i] as any
@@ -484,6 +482,7 @@ export function useRykvView(options: {
             nextTick(() => {
                 skip_search_this_tick.value = true
                 focused_column_index.value = 0
+                focused_query.value = querys.value[0]
             })
         })
     }
