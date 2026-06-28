@@ -21,7 +21,6 @@ export function useRepQuery(options: {
     const foldable_struct_rep_types = ref<InstanceType<typeof FoldableStruct> | null>(null)
 
     // ── State refs ──
-    const old_cloned_query: Ref<FindKyouQuery | null> = ref(null)
     const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
     const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
@@ -64,13 +63,12 @@ export function useRepQuery(options: {
         }
     })
 
-    watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
+    watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, _old_value: FindKyouQuery) => {
         if (!new_value) {
             return
         }
         loading.value = true
         cloned_query.value = new_value.clone()
-        old_cloned_query.value = old_value
         const reps = cloned_query.value.reps
         const devices = cloned_query.value.devices_in_sidebar
         const rep_types = cloned_query.value.rep_types_in_sidebar
@@ -173,7 +171,7 @@ export function useRepQuery(options: {
             f(cloned_application_config.value.rep_struct)
         }
         const reps = foldable_struct_reps.value?.get_selected_items()
-        if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
+        if (reps && !deepEquals(reps, cloned_query.value?.reps)) {
             if (!skip_emits_this_tick.value && !disable_emits) {
                 emits('request_update_checked_reps', reps, true)
             }
@@ -224,14 +222,14 @@ export function useRepQuery(options: {
         }
 
         const devices = foldable_struct_devices.value?.get_selected_items()
-        if (devices && !deepEquals(devices, old_cloned_query.value?.devices_in_sidebar)) {
+        if (devices && !deepEquals(devices, cloned_query.value?.devices_in_sidebar)) {
             if (!skip_emits_this_tick.value && !disable_emits) {
                 emits('request_update_checked_devices', devices, true)
             }
         }
         if (!loading.value) {
             const reps = calc_reps_by_types_and_devices()
-            if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
+            if (reps && !deepEquals(reps, cloned_query.value?.reps)) {
                 update_check_reps(reps, CheckState.checked, true, disable_emits)
             }
         }
@@ -281,14 +279,14 @@ export function useRepQuery(options: {
         }
 
         const rep_types = foldable_struct_rep_types.value?.get_selected_items()
-        if (rep_types && !deepEquals(rep_types, old_cloned_query.value?.rep_types)) {
+        if (rep_types && !deepEquals(rep_types, cloned_query.value?.rep_types_in_sidebar)) {
             if (!skip_emits_this_tick.value && !disable_emits) {
                 emits('request_update_checked_rep_types', rep_types, true)
             }
         }
         if (!loading.value) {
             const reps = calc_reps_by_types_and_devices()
-            if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
+            if (reps && !deepEquals(reps, cloned_query.value?.reps)) {
                 update_check_reps(reps, CheckState.checked, true, disable_emits)
             }
         }
