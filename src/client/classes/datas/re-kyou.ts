@@ -2,6 +2,7 @@
 
 import { GkillAPI } from '../api/gkill-api'
 import { GkillError } from '../api/gkill-error'
+import { i18n } from '@/i18n'
 import { GkillErrorCodes } from '../api/message/gkill_error'
 import { GetKyouRequest } from '../api/req_res/get-kyou-request'
 import { GetReKyouRequest } from '../api/req_res/get-re-kyou-request'
@@ -29,7 +30,7 @@ export class ReKyou extends InfoBase {
         if (!res.kyou_histories || res.kyou_histories.length < 1) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.not_found_rekyou_target
-            error.error_message = "ReKyou対象の情報が見つかりませんでした"
+            error.error_message = i18n.global.t('NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE')
             return [error]
         }
         this.attached_kyou = res.kyou_histories[0]

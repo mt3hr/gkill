@@ -796,5 +796,20 @@
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "テキストファイルの読み込みに失敗しました",
     "ZIP_DOWNLOAD_LINK_TITLE": "ダウンロード",
     "DROP_FILE_ZONE_LABEL": "ここにファイルをドロップ",
-    "DROP_GPS_FILE_ZONE_LABEL": "ここにGPXファイルをドロップ"
+    "DROP_GPS_FILE_ZONE_LABEL": "ここにGPXファイルをドロップ",
+    "PLUGIN_CONTENT_FETCH_FAILED_MESSAGE": "プラグインコンテンツの取得に失敗しました",
+    "NOT_FOUND_KMEMO_ERROR_MESSAGE": "Kmemoが見つかりませんでした",
+    "NOT_FOUND_KC_ERROR_MESSAGE": "KCが見つかりませんでした",
+    "NOT_FOUND_URLOG_ERROR_MESSAGE": "URLogが見つかりませんでした",
+    "NOT_FOUND_NLOG_ERROR_MESSAGE": "Nlogが見つかりませんでした",
+    "NOT_FOUND_TIMEIS_ERROR_MESSAGE": "TimeIsが見つかりませんでした",
+    "NOT_FOUND_MI_ERROR_MESSAGE": "Miが見つかりませんでした",
+    "NOT_FOUND_LANTANA_ERROR_MESSAGE": "Lantanaが見つかりませんでした",
+    "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "IDFKyouが見つかりませんでした",
+    "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLogが見つかりませんでした",
+    "NOT_FOUND_REKYOU_ERROR_MESSAGE": "ReKyouが見つかりませんでした",
+    "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "ReKyou対象の情報が見つかりませんでした",
+    "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "{0}のリクエストはすでに設定されています",
+    "NO_DEVICE_NAME": "なし",
+    "ALL_MI_BOARD_NAME": "すべて"
 }

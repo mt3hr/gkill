@@ -796,5 +796,20 @@
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "Error al cargar el archivo de texto",
     "ZIP_DOWNLOAD_LINK_TITLE": "Descargar",
     "DROP_FILE_ZONE_LABEL": "Suelte los archivos aquí",
-    "DROP_GPS_FILE_ZONE_LABEL": "Suelte los archivos .gpx aquí"
+    "DROP_GPS_FILE_ZONE_LABEL": "Suelte los archivos .gpx aquí",
+    "PLUGIN_CONTENT_FETCH_FAILED_MESSAGE": "Error al obtener el contenido del complemento",
+    "NOT_FOUND_KMEMO_ERROR_MESSAGE": "Kmemo no encontrado",
+    "NOT_FOUND_KC_ERROR_MESSAGE": "KC no encontrado",
+    "NOT_FOUND_URLOG_ERROR_MESSAGE": "URLog no encontrado",
+    "NOT_FOUND_NLOG_ERROR_MESSAGE": "Nlog no encontrado",
+    "NOT_FOUND_TIMEIS_ERROR_MESSAGE": "TimeIs no encontrado",
+    "NOT_FOUND_MI_ERROR_MESSAGE": "Mi no encontrado",
+    "NOT_FOUND_LANTANA_ERROR_MESSAGE": "Lantana no encontrado",
+    "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "IDFKyou no encontrado",
+    "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog no encontrado",
+    "NOT_FOUND_REKYOU_ERROR_MESSAGE": "ReKyou no encontrado",
+    "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "Objetivo de ReKyou no encontrado",
+    "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "La solicitud de {0} ya está configurada",
+    "NO_DEVICE_NAME": "Ninguno",
+    "ALL_MI_BOARD_NAME": "Todos"
 }

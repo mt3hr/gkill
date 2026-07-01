@@ -1,6 +1,7 @@
 'use strict'
 
 import { GkillError } from '@/classes/api/gkill-error'
+import { i18n } from '@/i18n'
 import { TagStructElementData } from './tag-struct-element-data'
 import { RepStructElementData } from './rep-struct-element-data'
 import { DeviceStructElementData } from './device-struct-element-data'
@@ -276,7 +277,7 @@ export class ApplicationConfig {
         if (!exist) {
             const device_struct = new DeviceStructElementData()
             device_struct.key = "なし"
-            device_struct.name = "なし"
+            device_struct.name = i18n.global.t('NO_DEVICE_NAME')
             device_struct.check_when_inited = true
             device_struct.is_checked = device_struct.check_when_inited
             device_struct.id = GkillAPI.get_gkill_api().generate_uuid()
@@ -429,7 +430,7 @@ export class ApplicationConfig {
         if (!exist) {
             const board_struct = new MiBoardStructElementData()
             board_struct.key = "すべて"
-            board_struct.name = "すべて"
+            board_struct.name = i18n.global.t('ALL_MI_BOARD_NAME')
             board_struct.check_when_inited = true
             board_struct.is_checked = board_struct.check_when_inited
             board_struct.id = GkillAPI.get_gkill_api().generate_uuid()

@@ -21,6 +21,8 @@ export function useUploadFileView(options: {
 
     // ── Template refs ──
     const decide_related_time_uploaded_file_dialog = ref<InstanceType<typeof DecideRelatedTimeUploadedFileDialog> | null>(null)
+    const file_input = ref<HTMLInputElement | null>(null)
+    const gps_file_input = ref<HTMLInputElement | null>(null)
 
     // ── State refs ──
     const tab = ref(2)
@@ -214,6 +216,30 @@ export function useUploadFileView(options: {
         await upload_gps_log_files()
     }
 
+    function trigger_file_input(): void {
+        file_input.value?.click()
+    }
+
+    async function on_file_input_change(event: Event): Promise<void> {
+        const input = event.target as HTMLInputElement
+        if (!input.files?.length) return
+        files.value = Array.from(input.files)
+        await upload_files()
+        input.value = ''
+    }
+
+    function trigger_gps_file_input(): void {
+        gps_file_input.value?.click()
+    }
+
+    async function on_gps_file_input_change(event: Event): Promise<void> {
+        const input = event.target as HTMLInputElement
+        if (!input.files?.length) return
+        gps_log_files.value = Array.from(input.files)
+        await upload_gps_log_files()
+        input.value = ''
+    }
+
     async function reload_kyou(kyou: Kyou): Promise<void> {
         for (let i = 0; i < uploaded_kyous.value.length; i++) {
             const uploaded_kyou = uploaded_kyous.value[i]
@@ -248,6 +274,8 @@ export function useUploadFileView(options: {
     return {
         // Template refs
         decide_related_time_uploaded_file_dialog,
+        file_input,
+        gps_file_input,
 
         // State
         tab,
@@ -257,14 +285,10 @@ export function useUploadFileView(options: {
         target_rep_name_for_file,
         target_rep_names_for_gps_file,
         target_rep_name_for_gps_file,
-        gps_log_files,
-        files,
         uploaded_kyous,
 
         // Business logic / template handlers
         load_target_rep_names,
-        upload_files,
-        upload_gps_log_files,
         reload_kyou,
         removeUploadedKyou,
 
@@ -281,6 +305,12 @@ export function useUploadFileView(options: {
         on_dragleave_gps_file,
         on_dragover_gps_file,
         on_drop_gps_file,
+
+        // Click handlers
+        trigger_file_input,
+        on_file_input_change,
+        trigger_gps_file_input,
+        on_gps_file_input_change,
 
         // Event relay objects
         crudRelayHandlers,

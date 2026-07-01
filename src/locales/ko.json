@@ -796,5 +796,20 @@
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "텍스트 파일을 불러오는 데 실패했습니다",
     "ZIP_DOWNLOAD_LINK_TITLE": "다운로드",
     "DROP_FILE_ZONE_LABEL": "여기에 파일을 드롭하세요",
-    "DROP_GPS_FILE_ZONE_LABEL": "여기에 .gpx 파일을 드롭하세요"
+    "DROP_GPS_FILE_ZONE_LABEL": "여기에 .gpx 파일을 드롭하세요",
+    "PLUGIN_CONTENT_FETCH_FAILED_MESSAGE": "플러그인 콘텐츠를 가져오는 데 실패했습니다",
+    "NOT_FOUND_KMEMO_ERROR_MESSAGE": "Kmemo를 찾을 수 없습니다",
+    "NOT_FOUND_KC_ERROR_MESSAGE": "KC를 찾을 수 없습니다",
+    "NOT_FOUND_URLOG_ERROR_MESSAGE": "URLog를 찾을 수 없습니다",
+    "NOT_FOUND_NLOG_ERROR_MESSAGE": "Nlog를 찾을 수 없습니다",
+    "NOT_FOUND_TIMEIS_ERROR_MESSAGE": "TimeIs를 찾을 수 없습니다",
+    "NOT_FOUND_MI_ERROR_MESSAGE": "Mi를 찾을 수 없습니다",
+    "NOT_FOUND_LANTANA_ERROR_MESSAGE": "Lantana를 찾을 수 없습니다",
+    "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "IDFKyou를 찾을 수 없습니다",
+    "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog를 찾을 수 없습니다",
+    "NOT_FOUND_REKYOU_ERROR_MESSAGE": "ReKyou를 찾을 수 없습니다",
+    "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "ReKyou 대상을 찾을 수 없습니다",
+    "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "{0} 요청이 이미 설정되어 있습니다",
+    "NO_DEVICE_NAME": "없음",
+    "ALL_MI_BOARD_NAME": "전체"
 }
