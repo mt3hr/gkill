@@ -794,5 +794,7 @@
     "ZIP_TEXT_TOO_LARGE_MESSAGE": "ファイルが大きすぎるためプレビューできません",
     "ZIP_TEXT_TRUNCATED_MESSAGE": "表示サイズ上限に達したため、以降の内容は省略されています",
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "テキストファイルの読み込みに失敗しました",
-    "ZIP_DOWNLOAD_LINK_TITLE": "ダウンロード"
+    "ZIP_DOWNLOAD_LINK_TITLE": "ダウンロード",
+    "DROP_FILE_ZONE_LABEL": "ここにファイルをドロップ",
+    "DROP_GPS_FILE_ZONE_LABEL": "ここにGPXファイルをドロップ"
 }
