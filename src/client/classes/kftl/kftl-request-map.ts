@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from '@/i18n'
 import type { KFTLRequest } from "./kftl-request"
 import { KFTLPrototypeRequest } from "./kftl_prototype/kftl-prototype-request"
 
@@ -12,7 +13,7 @@ export class KFTLRequestMap extends Map<string, KFTLRequest> {
                 request.set_texts(setted_request.get_texts())
                 request.set_related_time(setted_request.get_related_time())
             } else {
-                throw new Error(`${request_id}のリクエストはすでに設定されています`)
+                throw new Error(i18n.global.t('KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE', [request_id]))
             }
         }
         return super.set(request_id, request)
