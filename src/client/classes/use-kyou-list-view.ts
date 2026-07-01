@@ -33,6 +33,11 @@ export function useKyouListView(options: {
     // ── Watchers ──
     watch(() => props.query, () => reload())
     watch(() => props.matched_kyous, () => reload())
+    watch(() => props.application_config.rykv_image_list_column_number, () => {
+        if (props.query.is_image_only) {
+            update_match_kyous_for_image()
+        }
+    })
 
     // ── CRUD relay handlers ──
     const crudRelayHandlers = {
