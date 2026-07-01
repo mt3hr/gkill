@@ -206,7 +206,6 @@ defineExpose({ scroll_to, scroll_to_kyou, scroll_to_time, set_loading, get_is_lo
     overflow-y: hidden;
 }
 
-.kyou_list_view_card_wrap .v-virtual-scroll,
 .kyou_list_view_card_wrap .kyou_list_view {
     max-width: 100vw;
     overflow-x: hidden !important;
