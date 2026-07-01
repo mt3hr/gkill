@@ -33,6 +33,8 @@ export function useUploadFileView(options: {
     const gps_log_files: Ref<File | File[] | null> = ref(null)
     const files: Ref<File | File[] | null> = ref(null)
     const uploaded_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
+    const is_dragging_over_file: Ref<boolean> = ref(false)
+    const is_dragging_over_gps_file: Ref<boolean> = ref(false)
 
     // ── Init ──
     nextTick(() => load_target_rep_names())
@@ -146,6 +148,72 @@ export function useUploadFileView(options: {
         })
     }
 
+    function on_dragenter_file(e: DragEvent): void {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!e.dataTransfer?.types.includes('Files')) return
+        is_dragging_over_file.value = true
+    }
+
+    function on_dragleave_file(e: DragEvent): void {
+        e.preventDefault()
+        e.stopPropagation()
+        is_dragging_over_file.value = false
+    }
+
+    function on_dragover_file(e: DragEvent): void {
+        e.preventDefault()
+        e.stopPropagation()
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = "copy"
+        }
+    }
+
+    async function on_drop_file(e: DragEvent): Promise<void> {
+        e.preventDefault()
+        e.stopPropagation()
+        is_dragging_over_file.value = false
+        if (!e.dataTransfer) return
+        const dropped_files = Array.from(e.dataTransfer.files)
+        if (dropped_files.length === 0) return
+        files.value = dropped_files
+        await upload_files()
+    }
+
+    function on_dragenter_gps_file(e: DragEvent): void {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!e.dataTransfer?.types.includes('Files')) return
+        is_dragging_over_gps_file.value = true
+    }
+
+    function on_dragleave_gps_file(e: DragEvent): void {
+        e.preventDefault()
+        e.stopPropagation()
+        is_dragging_over_gps_file.value = false
+    }
+
+    function on_dragover_gps_file(e: DragEvent): void {
+        e.preventDefault()
+        e.stopPropagation()
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = "copy"
+        }
+    }
+
+    async function on_drop_gps_file(e: DragEvent): Promise<void> {
+        e.preventDefault()
+        e.stopPropagation()
+        is_dragging_over_gps_file.value = false
+        if (!e.dataTransfer) return
+        const dropped_files = Array.from(e.dataTransfer.files).filter(
+            (f: File) => f.name.toLowerCase().endsWith('.gpx')
+        )
+        if (dropped_files.length === 0) return
+        gps_log_files.value = dropped_files
+        await upload_gps_log_files()
+    }
+
     async function reload_kyou(kyou: Kyou): Promise<void> {
         for (let i = 0; i < uploaded_kyous.value.length; i++) {
             const uploaded_kyou = uploaded_kyous.value[i]
@@ -199,6 +267,20 @@ export function useUploadFileView(options: {
         upload_gps_log_files,
         reload_kyou,
         removeUploadedKyou,
+
+        // Drag state
+        is_dragging_over_file,
+        is_dragging_over_gps_file,
+
+        // Drag handlers
+        on_dragenter_file,
+        on_dragleave_file,
+        on_dragover_file,
+        on_drop_file,
+        on_dragenter_gps_file,
+        on_dragleave_gps_file,
+        on_dragover_gps_file,
+        on_drop_gps_file,
 
         // Event relay objects
         crudRelayHandlers,
