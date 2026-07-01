@@ -796,5 +796,20 @@
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "Textdatei konnte nicht geladen werden",
     "ZIP_DOWNLOAD_LINK_TITLE": "Herunterladen",
     "DROP_FILE_ZONE_LABEL": "Dateien hier ablegen",
-    "DROP_GPS_FILE_ZONE_LABEL": ".gpx-Dateien hier ablegen"
+    "DROP_GPS_FILE_ZONE_LABEL": ".gpx-Dateien hier ablegen",
+    "PLUGIN_CONTENT_FETCH_FAILED_MESSAGE": "Plugin-Inhalt konnte nicht abgerufen werden",
+    "NOT_FOUND_KMEMO_ERROR_MESSAGE": "Kmemo nicht gefunden",
+    "NOT_FOUND_KC_ERROR_MESSAGE": "KC nicht gefunden",
+    "NOT_FOUND_URLOG_ERROR_MESSAGE": "URLog nicht gefunden",
+    "NOT_FOUND_NLOG_ERROR_MESSAGE": "Nlog nicht gefunden",
+    "NOT_FOUND_TIMEIS_ERROR_MESSAGE": "TimeIs nicht gefunden",
+    "NOT_FOUND_MI_ERROR_MESSAGE": "Mi nicht gefunden",
+    "NOT_FOUND_LANTANA_ERROR_MESSAGE": "Lantana nicht gefunden",
+    "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "IDFKyou nicht gefunden",
+    "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog nicht gefunden",
+    "NOT_FOUND_REKYOU_ERROR_MESSAGE": "ReKyou nicht gefunden",
+    "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "ReKyou-Ziel nicht gefunden",
+    "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "Die Anfrage für {0} ist bereits gesetzt",
+    "NO_DEVICE_NAME": "Keine",
+    "ALL_MI_BOARD_NAME": "Alle"
 }

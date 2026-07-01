@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="show" max-width="800">
         <v-card>
-            <v-card-title>{{ rep_name }} 設定</v-card-title>
+            <v-card-title>{{ rep_name }} {{ i18n.global.t('TOOLTIP_SETTINGS') }}</v-card-title>
             <v-card-text>
                 <div v-if="is_loading" class="d-flex justify-center pa-4">
                     <v-progress-circular indeterminate />
@@ -20,7 +20,7 @@
             </v-card-text>
             <v-card-actions>
                 <v-spacer />
-                <v-btn @click="show = false">閉じる</v-btn>
+                <v-btn @click="show = false">{{ i18n.global.t('CLOSE_TITLE') }}</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { i18n } from '@/i18n'
 import { GkillAPI } from '../../classes/api/gkill-api'
 import { GetPluginConfigHTMLRequest } from '../../classes/api/req_res/get-plugin-config-html-request'
 
