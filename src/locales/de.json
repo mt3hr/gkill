@@ -794,5 +794,7 @@
     "ZIP_TEXT_TOO_LARGE_MESSAGE": "Datei ist zu groß für eine Vorschau",
     "ZIP_TEXT_TRUNCATED_MESSAGE": "Der Inhalt wurde abgeschnitten, da die Datei die Vorschaugrößenbeschränkung überschreitet",
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "Textdatei konnte nicht geladen werden",
-    "ZIP_DOWNLOAD_LINK_TITLE": "Herunterladen"
+    "ZIP_DOWNLOAD_LINK_TITLE": "Herunterladen",
+    "DROP_FILE_ZONE_LABEL": "Dateien hier ablegen",
+    "DROP_GPS_FILE_ZONE_LABEL": ".gpx-Dateien hier ablegen"
 }

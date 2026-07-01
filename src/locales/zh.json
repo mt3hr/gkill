@@ -794,5 +794,7 @@
     "ZIP_TEXT_TOO_LARGE_MESSAGE": "文件太大，无法预览",
     "ZIP_TEXT_TRUNCATED_MESSAGE": "文件超出预览大小限制，后续内容已被省略",
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "文本文件加载失败",
-    "ZIP_DOWNLOAD_LINK_TITLE": "下载"
+    "ZIP_DOWNLOAD_LINK_TITLE": "下载",
+    "DROP_FILE_ZONE_LABEL": "将文件拖放到此处",
+    "DROP_GPS_FILE_ZONE_LABEL": "将.gpx文件拖放到此处"
 }

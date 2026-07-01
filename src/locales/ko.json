@@ -794,5 +794,7 @@
     "ZIP_TEXT_TOO_LARGE_MESSAGE": "파일이 너무 커서 미리볼 수 없습니다",
     "ZIP_TEXT_TRUNCATED_MESSAGE": "파일이 미리보기 크기 제한을 초과하여 이후 내용이 생략되었습니다",
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "텍스트 파일을 불러오는 데 실패했습니다",
-    "ZIP_DOWNLOAD_LINK_TITLE": "다운로드"
+    "ZIP_DOWNLOAD_LINK_TITLE": "다운로드",
+    "DROP_FILE_ZONE_LABEL": "여기에 파일을 드롭하세요",
+    "DROP_GPS_FILE_ZONE_LABEL": "여기에 .gpx 파일을 드롭하세요"
 }
