@@ -134,7 +134,10 @@ func TestServerConfigDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetServerConfig after delete should not error: %v", err)
 	}
-	if got != nil {
-		t.Error("expected nil after delete")
+	if got == nil {
+		t.Fatal("GetServerConfig returned nil")
+	}
+	if got.EnableThisDevice {
+		t.Error("deleted device should return default EnableThisDevice=false")
 	}
 }
