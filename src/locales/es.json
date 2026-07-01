@@ -794,5 +794,7 @@
     "ZIP_TEXT_TOO_LARGE_MESSAGE": "El archivo es demasiado grande para previsualizar",
     "ZIP_TEXT_TRUNCATED_MESSAGE": "El contenido fue truncado porque el archivo superó el límite de tamaño de vista previa",
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "Error al cargar el archivo de texto",
-    "ZIP_DOWNLOAD_LINK_TITLE": "Descargar"
+    "ZIP_DOWNLOAD_LINK_TITLE": "Descargar",
+    "DROP_FILE_ZONE_LABEL": "Suelte los archivos aquí",
+    "DROP_GPS_FILE_ZONE_LABEL": "Suelte los archivos .gpx aquí"
 }
