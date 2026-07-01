@@ -796,5 +796,20 @@
     "ZIP_TEXT_LOAD_FAILED_MESSAGE": "Échec du chargement du fichier texte",
     "ZIP_DOWNLOAD_LINK_TITLE": "Télécharger",
     "DROP_FILE_ZONE_LABEL": "Déposez les fichiers ici",
-    "DROP_GPS_FILE_ZONE_LABEL": "Déposez les fichiers .gpx ici"
+    "DROP_GPS_FILE_ZONE_LABEL": "Déposez les fichiers .gpx ici",
+    "PLUGIN_CONTENT_FETCH_FAILED_MESSAGE": "Échec de la récupération du contenu du plugin",
+    "NOT_FOUND_KMEMO_ERROR_MESSAGE": "Kmemo introuvable",
+    "NOT_FOUND_KC_ERROR_MESSAGE": "KC introuvable",
+    "NOT_FOUND_URLOG_ERROR_MESSAGE": "URLog introuvable",
+    "NOT_FOUND_NLOG_ERROR_MESSAGE": "Nlog introuvable",
+    "NOT_FOUND_TIMEIS_ERROR_MESSAGE": "TimeIs introuvable",
+    "NOT_FOUND_MI_ERROR_MESSAGE": "Mi introuvable",
+    "NOT_FOUND_LANTANA_ERROR_MESSAGE": "Lantana introuvable",
+    "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "IDFKyou introuvable",
+    "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog introuvable",
+    "NOT_FOUND_REKYOU_ERROR_MESSAGE": "ReKyou introuvable",
+    "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "Cible ReKyou introuvable",
+    "KFTL_REQUEST_ALREADY_SET_ERROR_MESSAGE": "La requête de {0} est déjà définie",
+    "NO_DEVICE_NAME": "Aucun",
+    "ALL_MI_BOARD_NAME": "Tous"
 }

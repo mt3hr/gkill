@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { i18n } from '@/i18n'
 import PluginHtmlContextMenu from './plugin-html-context-menu.vue'
 import type { PluginHtmlViewProps } from './plugin-html-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
@@ -212,7 +213,7 @@ async function load_html(): Promise<void> {
             return
         }
         is_loading.value = false
-        error_message.value = e instanceof Error ? e.message : 'プラグインコンテンツの取得に失敗しました'
+        error_message.value = e instanceof Error ? e.message : i18n.global.t('PLUGIN_CONTENT_FETCH_FAILED_MESSAGE')
     }
 }
 

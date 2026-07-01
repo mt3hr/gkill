@@ -23,6 +23,7 @@
                         <div
                             class="drop_zone"
                             :class="{ 'drop_zone_active': is_dragging_over_file }"
+                            @click="trigger_file_input"
                             @dragenter.stop="on_dragenter_file"
                             @dragleave.stop="on_dragleave_file"
                             @dragover.prevent.stop="on_dragover_file"
@@ -31,8 +32,8 @@
                             <v-icon size="48">mdi-cloud-upload-outline</v-icon>
                             <div>{{ i18n.global.t('DROP_FILE_ZONE_LABEL') }}</div>
                         </div>
-                        <v-file-input :label="i18n.global.t('FILE_TITLE')" multiple @change="upload_files"
-                            v-model="files" />
+                        <input type="file" multiple ref="file_input" style="display:none"
+                            @change="on_file_input_change" />
                     </v-card>
                 </v-window-item>
                 <v-window-item key="gps_log_file" :eager="true">
@@ -49,6 +50,7 @@
                         <div
                             class="drop_zone"
                             :class="{ 'drop_zone_active': is_dragging_over_gps_file }"
+                            @click="trigger_gps_file_input"
                             @dragenter.stop="on_dragenter_gps_file"
                             @dragleave.stop="on_dragleave_gps_file"
                             @dragover.prevent.stop="on_dragover_gps_file"
@@ -57,8 +59,8 @@
                             <v-icon size="48">mdi-cloud-upload-outline</v-icon>
                             <div>{{ i18n.global.t('DROP_GPS_FILE_ZONE_LABEL') }}</div>
                         </div>
-                        <v-file-input :label="i18n.global.t('GPS_LOG_FILE_TITLE')" multiple
-                            @change="upload_gps_log_files" v-model="gps_log_files" accept=".gpx" />
+                        <input type="file" multiple accept=".gpx" ref="gps_file_input" style="display:none"
+                            @change="on_gps_file_input_change" />
                     </v-card>
                 </v-window-item>
             </v-window>
@@ -83,6 +85,8 @@ const emits = defineEmits<UploadFileViewEmits>()
 const {
     // Template refs
     decide_related_time_uploaded_file_dialog,
+    file_input,
+    gps_file_input,
 
     // State
     tab,
@@ -92,13 +96,7 @@ const {
     target_rep_name_for_file,
     target_rep_names_for_gps_file,
     target_rep_name_for_gps_file,
-    gps_log_files,
-    files,
     uploaded_kyous,
-
-    // Business logic / template handlers
-    upload_files,
-    upload_gps_log_files,
 
     // Drag state
     is_dragging_over_file,
@@ -114,12 +112,19 @@ const {
     on_dragover_gps_file,
     on_drop_gps_file,
 
+    // Click handlers
+    trigger_file_input,
+    on_file_input_change,
+    trigger_gps_file_input,
+    on_gps_file_input_change,
+
     // Event relay objects
     crudRelayHandlers,
 } = useUploadFileView({ props, emits })
 </script>
 <style scoped>
 .drop_zone {
+    cursor: pointer;
     border: 2px dashed rgba(var(--v-theme-primary), 0.4);
     border-radius: 8px;
     padding: 32px 16px;
