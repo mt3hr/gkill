@@ -113,6 +113,30 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 	}, nil
 }
 
+func GetDefaultServerConfig(device string) *ServerConfig {
+	return &ServerConfig{
+		Device:                      device,
+		EnableThisDevice:            serverConfigDefaultValue["ENABLE_THIS_DEVICE"].(bool),
+		IsLocalOnlyAccess:           serverConfigDefaultValue["IS_LOCAL_ONLY_ACCESS"].(bool),
+		Address:                     serverConfigDefaultValue["ADDRESS"].(string),
+		EnableTLS:                   serverConfigDefaultValue["ENABLE_TLS"].(bool),
+		TLSCertFile:                 serverConfigDefaultValue["TLS_CERT_FILE"].(string),
+		TLSKeyFile:                  serverConfigDefaultValue["TLS_KEY_FILE"].(string),
+		OpenDirectoryCommand:        serverConfigDefaultValue["OPEN_DIRECTORY_COMMAND"].(string),
+		OpenFileCommand:             serverConfigDefaultValue["OPEN_FILE_COMMAND"].(string),
+		URLogTimeout:                time.Duration(serverConfigDefaultValue["URLOG_TIMEOUT"].(int64)),
+		URLogUserAgent:              serverConfigDefaultValue["URLOG_USERAGENT"].(string),
+		UploadSizeLimitMonth:        serverConfigDefaultValue["UPLOAD_SIZE_LIMIT_MONTH"].(int),
+		UserDataDirectory:           serverConfigDefaultValue["USER_DATA_DIRECTORY"].(string),
+		GkillNotificationPublicKey:  serverConfigDefaultValue["GKILL_NOTIFICATION_PUBLIC_KEY"].(string),
+		GkillNotificationPrivateKey: serverConfigDefaultValue["GKILL_NOTIFICATION_PRIVATE_KEY"].(string),
+		UseGkillNotification:        serverConfigDefaultValue["USE_GKILL_NOTIFICATION"].(bool),
+		GoogleMapAPIKey:             serverConfigDefaultValue["GOOGLE_MAP_API_KEY"].(string),
+		LanHostname:                 serverConfigDefaultValue["LAN_HOSTNAME"].(string),
+		GlobalHostname:              serverConfigDefaultValue["GLOBAL_HOSTNAME"].(string),
+	}
+}
+
 var serverConfigDefaultValue = map[string]any{
 	"DEVICE":                         "",
 	"ENABLE_THIS_DEVICE":             false,
@@ -123,7 +147,7 @@ var serverConfigDefaultValue = map[string]any{
 	"TLS_KEY_FILE":                   gkill_options.TLSKeyFileDefault,
 	"OPEN_DIRECTORY_COMMAND":         "explorer /select,$filename",
 	"OPEN_FILE_COMMAND":              "rundll32 url.dll,FileProtocolHandler $filename",
-	"URLOG_TIMEOUT":                  1 * time.Minute,
+	"URLOG_TIMEOUT":                  int64(time.Minute),
 	"URLOG_USERAGENT":                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36",
 	"UPLOAD_SIZE_LIMIT_MONTH":        -1,
 	"USER_DATA_DIRECTORY":            gkill_options.DataDirectoryDefault,
@@ -231,11 +255,11 @@ SELECT
 	AND KEY = 'OPEN_FILE_COMMAND'
   ) AS OPEN_FILE_COMMAND,
   /* URLOG_TIMEOUT */ (
-    SELECT 
-	  CASE 
-	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+    SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
 		THEN VALUE
-		ELSE '%v'
+		ELSE %v
 	  END
 	FROM SERVER_CONFIG
 	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
@@ -525,11 +549,11 @@ SELECT
 	AND KEY = 'OPEN_FILE_COMMAND'
   ) AS OPEN_FILE_COMMAND,
   /* URLOG_TIMEOUT */ (
-    SELECT 
-	  CASE 
-	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+    SELECT
+	  CASE
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1
 		THEN VALUE
-		ELSE '%v'
+		ELSE %v
 	  END
 	FROM SERVER_CONFIG
 	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
@@ -723,7 +747,7 @@ HAVING DEVICE = ?
 		return nil, err
 	}
 	if len(serverConfigs) == 0 {
-		return nil, nil
+		return GetDefaultServerConfig(device), nil
 	} else if len(serverConfigs) == 1 {
 		return serverConfigs[0], nil
 	}
