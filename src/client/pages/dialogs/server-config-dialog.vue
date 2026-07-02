@@ -19,7 +19,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
        <ServerConfigView v-show="server_configs.length !== 0" :application_config="application_config"
           :gkill_api="gkill_api" :server_configs="server_configs"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"

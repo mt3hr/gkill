@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <EditRepStructElementView :application_config="application_config" :gkill_api="gkill_api"
           :folder_name="i18n.global.t('REP_TITLE')" :struct_obj="rep_struct"

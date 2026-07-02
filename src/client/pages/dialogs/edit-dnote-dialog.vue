@@ -19,7 +19,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="edit_dnote_dialog_view">
+        <v-card variant="flat" class="edit_dnote_dialog_view">
           <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" :query="new FindKyouQuery()"
             :checked_kyous="[]" :editable="true"

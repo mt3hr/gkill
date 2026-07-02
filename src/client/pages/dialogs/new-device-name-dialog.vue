@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card>
+        <v-card variant="flat">
           <v-card-title>{{ i18n.global.t('ADD_DEVICE_TITLE') }}</v-card-title>
           <v-row class="ma-0 pa-0">
             <v-col cols="13" class="ma-0 pa-0">

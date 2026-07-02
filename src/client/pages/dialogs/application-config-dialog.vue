@@ -19,7 +19,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <ApplicationConfigView :application_config="application_config" :gkill_api="gkill_api"
           :app_content_height="app_content_height" :app_content_width="app_content_width"

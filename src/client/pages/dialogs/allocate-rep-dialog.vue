@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <AllocateRepView :application_config="application_config" :gkill_api="gkill_api"
           :server_configs="server_configs" :account="cloned_account"

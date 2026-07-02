@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <ConfirmDeleteShareKyousListView v-if="share_kyou_list_info" :application_config="application_config"
           :gkill_api="gkill_api" :share_kyou_list_info="share_kyou_list_info"

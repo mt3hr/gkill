@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <ConfirmDeleteRepTypeStructView :application_config="application_config" :gkill_api="gkill_api"
           :rep_type_struct="rep_type_struct"

@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
        <ConfirmLogoutView :close_database="close_database_value"
           @requested_logout="(close_database: boolean) => emits('requested_logout', close_database)"
           @requested_close_dialog="hide" />
