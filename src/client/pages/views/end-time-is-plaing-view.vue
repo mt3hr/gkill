@@ -3,7 +3,7 @@
         <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
-    <v-card v-if="cloned_kyou.typed_timeis" class="pa-2">
+    <v-card variant="flat" v-if="cloned_kyou.typed_timeis" class="pa-2">
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">

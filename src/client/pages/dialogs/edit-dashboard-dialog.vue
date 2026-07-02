@@ -20,7 +20,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
           <v-row class="pa-0 ma-0">
             <v-col class="pa-1 ma-0">
               <span>{{ i18n.global.t('DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE') }}</span>

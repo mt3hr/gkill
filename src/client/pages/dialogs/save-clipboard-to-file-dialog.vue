@@ -18,7 +18,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2" min-width="320">
+        <v-card variant="flat" class="pa-2" min-width="320">
           <v-card-title class="pb-1">{{ i18n.global.t('SAVE_CLIPBOARD_TO_FILE_TITLE') }}</v-card-title>
 
           <!-- Loading -->

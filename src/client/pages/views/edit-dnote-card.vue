@@ -1,6 +1,6 @@
 <!-- PredicateCard.vue -->
 <template>
-    <v-card class="predicate-card">
+    <v-card variant="flat" class="predicate-card">
         <v-select v-model="model_value!.type" :items="predicate_types" :label="i18n.global.t('DNOTE_PREDICATE_TITLE')"
             item-title="label" item-value="value" />
         <v-select v-if="model_value!.type === 'DataTypePrefixPredicate' || model_value!.type === 'EqualDataTypeTargetKyouPredicate'" v-model="model_value!.value"

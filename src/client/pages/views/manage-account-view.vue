@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card variant="flat">
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -13,7 +13,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-card class="manage_account_list_view_card">
+        <v-card variant="flat" class="manage_account_list_view_card">
             <table class="manage_account_list_view">
                 <tr v-for="account in cloned_accounts" :key="account.user_id">
                     <td>

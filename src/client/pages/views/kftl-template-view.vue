@@ -3,7 +3,7 @@
     このコンポーネントは「View」なので、Teleport / is_show_dialog で包まない。
     表示/非表示は親（kftl-template-dialog.vue）側が制御する。
   -->
-  <v-card :max-width="500" class="help_card pa-3">
+  <v-card variant="flat" :max-width="500" class="help_card pa-3">
     <v-card-title>
       <v-row>
         <v-col cols="auto" class="pa-0 ma-0">

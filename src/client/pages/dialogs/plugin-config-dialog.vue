@@ -1,6 +1,6 @@
 <template>
     <v-dialog v-model="show" max-width="800">
-        <v-card>
+        <v-card variant="flat">
             <v-card-title>{{ rep_name }} {{ i18n.global.t('TOOLTIP_SETTINGS') }}</v-card-title>
             <v-card-text>
                 <div v-if="is_loading" class="d-flex justify-center pa-4">

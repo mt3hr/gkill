@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card variant="flat">
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -7,7 +7,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-card>
+        <v-card variant="flat">
             <p>
             <pre>{{ i18n.global.t("GENERATE_OREORE_TLS_FILE_MESSAGE") }}</pre>
             </p>
