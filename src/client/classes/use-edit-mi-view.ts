@@ -25,6 +25,7 @@ export function useEditMiView(options: {
     const new_board_name_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
+    const is_loading = ref(true)
     const is_requested_submit = ref(false)
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
@@ -55,18 +56,23 @@ export function useEditMiView(options: {
 
     // ── Business logic ──
     async function load(): Promise<void> {
-        cloned_kyou.value = props.kyou.clone()
-        await cloned_kyou.value.reload(false, true)
-        await cloned_kyou.value.load_typed_datas()
-        await cloned_kyou.value.load_all()
-        mi_title.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : ""
-        mi_board_name.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : ""
-        mi_estimate_start_date_typed.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).toDate() : null
-        mi_estimate_start_time_string.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("HH:mm:ss") : ""
-        mi_estimate_end_date_typed.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).toDate() : null
-        mi_estimate_end_time_string.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("HH:mm:ss") : ""
-        mi_limit_date_typed.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).toDate() : null
-        mi_limit_time_string.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("HH:mm:ss") : ""
+        try {
+            is_loading.value = true
+            cloned_kyou.value = props.kyou.clone()
+            await cloned_kyou.value.reload(false, true)
+            await cloned_kyou.value.load_typed_datas()
+            await cloned_kyou.value.load_all()
+            mi_title.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : ""
+            mi_board_name.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : ""
+            mi_estimate_start_date_typed.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).toDate() : null
+            mi_estimate_start_time_string.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("HH:mm:ss") : ""
+            mi_estimate_end_date_typed.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).toDate() : null
+            mi_estimate_end_time_string.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("HH:mm:ss") : ""
+            mi_limit_date_typed.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).toDate() : null
+            mi_limit_time_string.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("HH:mm:ss") : ""
+        } finally {
+            is_loading.value = false
+        }
     }
 
     async function load_mi_board_names(): Promise<void> {
@@ -328,6 +334,7 @@ export function useEditMiView(options: {
         new_board_name_dialog,
 
         // State
+        is_loading,
         is_requested_submit,
         cloned_kyou,
         show_kyou,

@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-2">
+    <v-card class="pa-2" variant="flat">
         <v-card-title>
             {{ i18n.global.t("ADD_REP_TITLE") }}
         </v-card-title>
