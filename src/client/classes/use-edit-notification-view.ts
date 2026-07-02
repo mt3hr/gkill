@@ -22,6 +22,7 @@ export function useEditNotificationView(options: {
     // ── State refs ──
     const is_loading = ref(true)
     const is_requested_submit = ref(false)
+    const is_busy = computed(() => is_loading.value || is_requested_submit.value)
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const cloned_notification: Ref<Notification> = ref(props.notification.clone())
@@ -160,6 +161,7 @@ export function useEditNotificationView(options: {
         // State
         is_loading,
         is_requested_submit,
+        is_busy,
         cloned_kyou,
         cloned_notification,
         content_value,

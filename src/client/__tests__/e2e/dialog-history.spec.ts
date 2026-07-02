@@ -150,9 +150,12 @@ test.describe('Dialog History Invariants', () => {
     await submitKftlText(page, label2)
     await navigateToRykv(page)
 
+    // ダイアログを1枚ずつ確実に開く (2枚目を1枚目の上に開く競合を避けるため、
+    // 各段階で枚数の確定を待ってから次へ進める)
     expect(await openHistoryFor(page, label1)).toBe(true)
+    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(1, { timeout: 15000 })
     expect(await openHistoryFor(page, label2)).toBe(true)
-    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(2, { timeout: 5000 })
+    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(2, { timeout: 15000 })
 
     // APP_BAR タイトルのプルダウンから タスク(mi) を選ぶ
     await page.locator('.v-toolbar-title').first().click()

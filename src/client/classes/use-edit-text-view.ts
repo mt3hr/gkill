@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { EditTextViewProps } from '@/pages/views/edit-text-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { UpdateTextRequest } from '@/classes/api/req_res/update-text-request'
@@ -21,6 +21,7 @@ export function useEditTextView(options: {
     // ── State refs ──
     const is_loading = ref(true)
     const is_requested_submit = ref(false)
+    const is_busy = computed(() => is_loading.value || is_requested_submit.value)
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const cloned_text: Ref<Text> = ref(props.text.clone())
     const text_value: Ref<string> = ref(cloned_text.value.text)
@@ -128,6 +129,7 @@ export function useEditTextView(options: {
         // State
         is_loading,
         is_requested_submit,
+        is_busy,
         cloned_kyou,
         cloned_text,
         text_value,

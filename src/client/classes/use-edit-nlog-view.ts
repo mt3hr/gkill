@@ -22,6 +22,7 @@ export function useEditNlogView(options: {
     // ── State refs ──
     const is_loading = ref(true)
     const is_requested_submit = ref(false)
+    const is_busy = computed(() => is_loading.value || is_requested_submit.value)
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const nlog_title_value: Ref<string> = ref(cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.title : "")
     const nlog_amount_value: Ref<number> = ref(cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.amount : 0)
@@ -211,6 +212,7 @@ export function useEditNlogView(options: {
         // State
         is_loading,
         is_requested_submit,
+        is_busy,
         cloned_kyou,
         nlog_title_value,
         nlog_amount_value,
