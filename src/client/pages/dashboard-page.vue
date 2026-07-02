@@ -186,6 +186,8 @@
             <ConfirmLogoutDialog @requested_logout="(close_database: boolean) => logout(close_database)"
                 ref="confirm_logout_dialog" />
             <HelpDialog screen_name="dashboard" ref="help_dialog" />
+            <TutorialDialog :application_config="application_config" :gkill_api="gkill_api"
+                ref="tutorial_dialog" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
                 @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
@@ -219,6 +221,7 @@ import RykvDialogHost from './views/rykv-dialog-host.vue'
 import ConfirmLogoutDialog from './dialogs/confirm-logout-dialog.vue'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
+import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import AddKCDialog from './dialogs/add-kc-dialog.vue'
 import AddTimeisDialog from './dialogs/add-timeis-dialog.vue'
 import AddLantanaDialog from './dialogs/add-lantana-dialog.vue'
@@ -236,6 +239,7 @@ import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialo
 import { useDashboardPage } from '@/classes/use-dashboard-page'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
+const tutorial_dialog = ref<InstanceType<typeof TutorialDialog> | null>(null)
 const dnote_view = ref<InstanceType<typeof DnoteView> | null>(null)
 const gps_log_map = ref<InstanceType<typeof GPSLogMap> | null>(null)
 const mi_list_view = ref<InstanceType<typeof KyouListView> | null>(null)
@@ -333,6 +337,12 @@ async function fetch_for_date(): Promise<void> {
 // 日付変更時にデータを再取得
 watch(selected_date, () => {
     fetch_for_date()
+})
+
+watch(application_config, (config) => {
+    if (config.is_loaded && config.show_tutorial_on_startup) {
+        nextTick(() => tutorial_dialog.value?.show())
+    }
 })
 
 const dnote_view_element_height = ref(0)
