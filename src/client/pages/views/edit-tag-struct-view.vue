@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card variant="flat">
         <v-card-title>
             {{ i18n.global.t("TAG_STRUCT_TITLE") }}
         </v-card-title>

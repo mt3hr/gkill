@@ -1,6 +1,6 @@
 <template>
-    <div v-show="target_rep_name_for_file !== '' && target_rep_name_for_gps_file !== ''">
-        <v-card>
+    <div v-show="target_rep_name_for_file !== '' && target_rep_name_for_gps_file !== ''" style="flex: 1 1 auto; display: flex; flex-direction: column;">
+        <v-card variant="flat">
             <v-card-title>
                 {{ i18n.global.t("UPLOAD_FILE_TITLE") }}
             </v-card-title>
@@ -10,7 +10,7 @@
             </v-tabs>
             <v-window v-model="tab">
                 <v-window-item key="file" :eager="true">
-                    <v-card>
+                    <v-card variant="flat">
                         <v-card-title>
                             {{ i18n.global.t("FILE_NAME_COLLISION_TITLE") }}
                         </v-card-title>
@@ -37,7 +37,7 @@
                     </v-card>
                 </v-window-item>
                 <v-window-item key="gps_log_file" :eager="true">
-                    <v-card>
+                    <v-card variant="flat">
                         <v-card-title>
                             {{ i18n.global.t("FILE_NAME_COLLISION_TITLE") }}
                         </v-card-title>
