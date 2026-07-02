@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card variant="flat">
         <v-card-title>
             {{ i18n.global.t("EDIT_REP_TYPE_TITLE") }}
         </v-card-title>
