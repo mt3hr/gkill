@@ -22,6 +22,7 @@ export function useEditKmemoView(options: {
     // ── State refs ──
     const is_loading = ref(true)
     const is_requested_submit = ref(false)
+    const is_busy = computed(() => is_loading.value || is_requested_submit.value)
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const kmemo_value: Ref<string> = ref(cloned_kyou.value.typed_kmemo ? cloned_kyou.value.typed_kmemo.content : "")
@@ -180,6 +181,7 @@ export function useEditKmemoView(options: {
         // State
         is_loading,
         is_requested_submit,
+        is_busy,
         cloned_kyou,
         kmemo_value,
         related_date_typed,

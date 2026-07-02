@@ -1,4 +1,8 @@
 <template>
+    <div style="position: relative; min-height: 100px; flex: 1 1 auto; display: flex; flex-direction: column;">
+        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
+            <v-progress-circular indeterminate color="primary" />
+        </v-overlay>
     <v-card v-if="cloned_kyou.typed_timeis" class="pa-2">
         <v-card-title>
             <v-row class="pa-0 ma-0">
@@ -7,7 +11,7 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :readonly="is_busy" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
@@ -19,7 +23,7 @@
                 <table>
                     <tr>
                         <td>
-                            <v-menu v-model="show_start_date_menu" :close-on-content-click="false"
+                            <v-menu :disabled="is_busy" v-model="show_start_date_menu" :close-on-content-click="false"
                                 transition="scale-transition" offset-y min-width="auto">
                                 <template #activator="{ props }">
                                     <v-text-field v-model="timeis_start_date_string"
@@ -33,7 +37,7 @@
                             </v-menu>
                         </td>
                         <td>
-                            <v-menu v-model="show_start_time_menu" :close-on-content-click="false"
+                            <v-menu :disabled="is_busy" v-model="show_start_time_menu" :close-on-content-click="false"
                                 transition="scale-transition" offset-y min-width="auto">
                                 <template #activator="{ props }">
                                     <v-text-field v-model="timeis_start_time_string"
@@ -55,7 +59,7 @@
                 <table>
                     <tr>
                         <td>
-                            <v-menu v-model="show_end_date_menu" :close-on-content-click="false"
+                            <v-menu :disabled="is_busy" v-model="show_end_date_menu" :close-on-content-click="false"
                                 transition="scale-transition" offset-y min-width="auto">
                                 <template #activator="{ props }">
                                     <v-text-field v-model="timeis_end_date_string"
@@ -67,7 +71,7 @@
                             </v-menu>
                         </td>
                         <td>
-                            <v-menu v-model="show_end_time_menu" :close-on-content-click="false"
+                            <v-menu :disabled="is_busy" v-model="show_end_time_menu" :close-on-content-click="false"
                                 transition="scale-transition" offset-y min-width="auto">
                                 <template #activator="{ props }">
                                     <v-text-field v-model="timeis_end_time_string"
@@ -86,17 +90,17 @@
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="reset_end_date_time()"
-                                :disabled="is_requested_submit">{{
+                                :disabled="is_busy">{{
                                     i18n.global.t("RESET_TITLE") }}</v-btn>
                         </td>
                         <td>
                             <v-btn dark color="secondary" @click="clear_end_date_time()"
-                                :disabled="is_requested_submit">{{
+                                :disabled="is_busy">{{
                                     i18n.global.t("CLEAR_TITLE") }}</v-btn>
                         </td>
                         <td>
                             <v-btn dark color="primary" @click="now_to_end_date_time()"
-                                :disabled="is_requested_submit">{{
+                                :disabled="is_busy">{{
                                     i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
                         </td>
                     </tr>
@@ -105,13 +109,13 @@
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
                     i18n.global.t("RESET_TITLE")
                     }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
                     i18n.global.t("END_TITLE")
                     }}</v-btn>
             </v-col>
@@ -129,6 +133,7 @@
                 v-on="crudRelayHandlers" />
         </v-card>
     </v-card>
+    </div>
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
@@ -144,7 +149,8 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     // State
-    is_requested_submit,
+    is_loading,
+    is_busy,
     cloned_kyou,
     timeis_title,
     timeis_start_date_typed: _timeis_start_date_typed,
