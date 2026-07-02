@@ -489,6 +489,7 @@ div.v-sheet.v-picker.v-date-picker > .v-picker__header-wrapper {
   display: flex;
   flex-direction: column;
   overflow: auto;
+  flex: 1 1 auto;
 }
 
 .gkill-floating-dialog.is-user-resized .gkill-floating-dialog__body {

@@ -1,9 +1,9 @@
 <template>
-    <div style="position: relative; min-height: 100px;">
+    <div style="position: relative; min-height: 100px; flex: 1 1 auto; display: flex; flex-direction: column;">
         <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
-    <v-card v-if="cloned_kyou.typed_lantana" class="pa-2">
+    <v-card v-if="cloned_kyou.typed_lantana" class="pa-2" variant="flat">
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">

@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-2" v-if="id !== ''">
+    <v-card class="pa-2" variant="flat" v-if="id !== ''">
         <v-text-field v-model="title" :label="i18n.global.t('RYUU_TITLE_TITLE')" />
         <v-text-field v-model="prefix" :label="i18n.global.t('RYUU_PREFIX_TITLE')" />
         <v-text-field v-model="suffix" :label="i18n.global.t('RYUU_SUFFIX_TITLE')" />
