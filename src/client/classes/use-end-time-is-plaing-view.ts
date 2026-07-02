@@ -50,8 +50,6 @@ export function useEndTimeIsPlaingView(options: {
         timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
         timeis_start_date_typed.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").toDate()
         timeis_start_time_string.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
-        timeis_end_date_typed.value = moment().toDate()
-        timeis_end_time_string.value = moment().format("HH:mm:ss")
     }
 
     function reset(): void {
