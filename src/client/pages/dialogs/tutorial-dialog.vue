@@ -2,7 +2,7 @@
   <Teleport to="body" v-if="is_show_dialog">
     <div class="gkill-float-scrim" />
 
-    <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog">
+    <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog tutorial-dialog">
       <div class="gkill-floating-dialog__header pa-0 ma-0" @mousedown="ui.onHeaderPointerDown"
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title">{{ $t('TUTORIAL_TITLE') }}</div>
@@ -13,7 +13,7 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body">
+      <div class="gkill-floating-dialog__body tutorial-dialog__body">
         <iframe :src="tutorial_url" class="tutorial-dialog-iframe" />
       </div>
 
@@ -76,31 +76,35 @@ async function close_dialog(): Promise<void> {
   await hide()
 }
 </script>
-<style scoped>
+<style>
+/* Teleport 先では data-v-xxx が付かないため非スコープで定義 */
+/* モバイル (≤768px): 80vw × 70vh */
 @media (max-width: 768px) {
-  .gkill-floating-dialog:not(.is-user-resized) {
-    width: 80vw;
-    max-width: 80vw;
-    height: 70vh;
+  .tutorial-dialog:not(.is-user-resized) {
+    width: 80vw !important;
+    max-width: 80vw !important;
+    height: 70vh !important;
   }
-  .gkill-floating-dialog:not(.is-user-resized) .gkill-floating-dialog__body {
-    width: 80vw;
-    max-width: 80vw;
+  .tutorial-dialog:not(.is-user-resized) .tutorial-dialog__body {
+    width: 80vw !important;
+    max-width: 80vw !important;
   }
 }
+/* PC (≥769px): 50vw × 80vh */
 @media (min-width: 769px) {
-  .gkill-floating-dialog:not(.is-user-resized) {
-    width: 70vw;
-    max-width: 70vw;
-    height: 80vh;
+  .tutorial-dialog:not(.is-user-resized) {
+    width: 50vw !important;
+    max-width: 50vw !important;
+    height: 80vh !important;
   }
-  .gkill-floating-dialog:not(.is-user-resized) .gkill-floating-dialog__body {
-    width: 70vw;
-    max-width: 70vw;
+  .tutorial-dialog:not(.is-user-resized) .tutorial-dialog__body {
+    width: 50vw !important;
+    max-width: 50vw !important;
   }
 }
-.gkill-floating-dialog:not(.is-user-resized) .gkill-floating-dialog__body {
-  max-height: none;
+/* ボディをコンテナ高さに追従させる (ユーザーリサイズ前) */
+.tutorial-dialog:not(.is-user-resized) .tutorial-dialog__body {
+  max-height: none !important;
   flex: 1 1 auto;
   min-height: 0;
 }
