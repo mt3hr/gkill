@@ -43,7 +43,7 @@ defineExpose({ show, hide })
 
 const tag_struct: Ref<TagStructElementData> = ref(new TagStructElementData())
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data';
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
@@ -60,7 +60,7 @@ async function show(tag_struct_obj: TagStructElementData): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
   tag_struct.value = new TagStructElementData()
 }
 </script>

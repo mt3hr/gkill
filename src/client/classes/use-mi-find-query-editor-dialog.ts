@@ -5,7 +5,7 @@ import type { MiFindQueryEditorDialogProps } from '@/pages/dialogs/mi-find-query
 import type { MiFindQueryEditorDialogEmits } from '@/pages/dialogs/mi-find-query-editor-dialog-emits'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useMiFindQueryEditorDialog(options: {
@@ -44,7 +44,7 @@ export function useMiFindQueryEditorDialog(options: {
     }
 
     async function hide(): Promise<void> {
-        is_show_dialog.value = false
+        closeDialogViaHistory(is_show_dialog)
     }
 
     return {

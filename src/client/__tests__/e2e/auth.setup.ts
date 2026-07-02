@@ -9,6 +9,9 @@ const E2E_PASSWORD = 'e2etest'
 const E2E_USER = 'e2e_user'
 export const STORAGE_STATE = path.join(__dirname, '.auth/user.json')
 
+// GKILL_E2E_BASE_URL でテスト対象サーバを上書きできる (既定: http://localhost:9999)
+const gkillPort = Number(new URL(process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999').port || 9999)
+
 /**
  * Get the password reset token from gkill_server's redirect response.
  * On first run, gkill_server redirects / to /regist_first_account?reset_token=<token>.
@@ -17,7 +20,7 @@ export const STORAGE_STATE = path.join(__dirname, '.auth/user.json')
 function getResetToken(): Promise<string> {
   return new Promise((resolve) => {
     const req = http.request(
-      { hostname: '127.0.0.1', port: 9999, path: '/', method: 'GET', timeout: 5000 },
+      { hostname: '127.0.0.1', port: gkillPort, path: '/', method: 'GET', timeout: 5000 },
       (res) => {
         const location = res.headers['location'] || ''
         const match = location.match(/reset_token=([^&]+)/)

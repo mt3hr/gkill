@@ -3,7 +3,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import type { MKFLDialogProps } from '@/pages/dialogs/mkfl-dialog-props'
 import type { MKFLDialogEmits } from '@/pages/dialogs/mkfl-dialog-emits'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useMKFLDialog(options: {
@@ -69,7 +69,7 @@ export function useMKFLDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        is_show_dialog.value = false
+        closeDialogViaHistory(is_show_dialog)
     }
 
     return {
