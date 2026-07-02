@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card variant="flat">
         <v-card-title>
             {{ i18n.global.t("SHARED_KYOU_LINK_LIST_TITLE") }}
         </v-card-title>

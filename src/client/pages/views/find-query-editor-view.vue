@@ -1,5 +1,5 @@
 <template>
-    <v-card class="find_query_editor_view dummy" :class="loading_class">
+    <v-card variant="flat" class="find_query_editor_view dummy" :class="loading_class">
         <div class="overlay_target">
             <v-overlay v-model="loading" class="align-center justify-center" persistent contained>
                 <v-progress-circular indeterminate color="primary" />

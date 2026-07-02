@@ -19,7 +19,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <EditKFTLTemplateStructView :application_config="application_config" :gkill_api="gkill_api"
           :kftl_template_struct="application_config.kftl_template_struct"
