@@ -2,7 +2,7 @@
   <Teleport to="body" v-if="is_show_dialog">
     <div class="gkill-float-scrim" />
 
-    <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog">
+    <div :ref="ui.containerRef" :style="ui.fixedStyle.value" class="gkill-floating-dialog help-dialog">
       <div class="gkill-floating-dialog__header pa-0 ma-0" @mousedown="ui.onHeaderPointerDown"
         @touchstart="ui.onHeaderPointerDown">
         <div class="gkill-floating-dialog__title"></div>
@@ -13,7 +13,7 @@
         </v-btn>
       </div>
 
-      <div class="gkill-floating-dialog__body">
+      <div class="gkill-floating-dialog__body help-dialog__body">
         <iframe :src="help_url" class="help-dialog-iframe" />
       </div>
     </div>
@@ -52,11 +52,39 @@ async function hide(): Promise<void> {
   is_show_dialog.value = false
 }
 </script>
-<style scoped>
+<style>
+/* Teleport 先では data-v-xxx が付かないため非スコープで定義 */
+@media (max-width: 768px) {
+  .help-dialog:not(.is-user-resized) {
+    width: 80vw !important;
+    max-width: 80vw !important;
+    height: 70vh !important;
+  }
+  .help-dialog:not(.is-user-resized) .help-dialog__body {
+    width: 80vw !important;
+    max-width: 80vw !important;
+  }
+}
+@media (min-width: 769px) {
+  .help-dialog:not(.is-user-resized) {
+    width: 50vw !important;
+    max-width: 50vw !important;
+    height: 80vh !important;
+  }
+  .help-dialog:not(.is-user-resized) .help-dialog__body {
+    width: 50vw !important;
+    max-width: 50vw !important;
+  }
+}
+.help-dialog:not(.is-user-resized) .help-dialog__body {
+  max-height: none !important;
+  flex: 1 1 auto;
+  min-height: 0;
+}
 .help-dialog-iframe {
   width: 100%;
-  height: 100%;
+  flex: 1 1 auto;
   border: none;
-  min-height: 400px;
+  min-height: 0;
 }
 </style>
