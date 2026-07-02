@@ -179,4 +179,99 @@ describe('use-dialog-history-stack concepts', () => {
     const backDepth = backState[DEPTH] as number
     expect(backDepth < stack.length).toBe(true)
   })
+
+  // --- 案C: history 駆動クローズのコンセプト ---
+
+  test('Branch D closes (stack.length - newDepth) dialogs on multi-entry jump', () => {
+    // 戻るボタン長押しなどで一気に複数エントリ戻った場合、
+    // popstate 1回で深さの差分すべてを閉じる
+    const d1 = ref(true)
+    const d2 = ref(true)
+    const d3 = ref(true)
+    const stack = [{ dialog: d1 }, { dialog: d2 }, { dialog: d3 }]
+
+    const jumpedState = withDialogMarkers({}, 1) // depth 3 → 1 へジャンプ
+    const newDepth = jumpedState[DEPTH] as number
+    let count = stack.length - newDepth
+    expect(count).toBe(2)
+
+    while (count > 0 && stack.length > 0) {
+      const entry = stack.pop()!
+      entry.dialog.value = false
+      count--
+    }
+
+    expect(d3.value).toBe(false)
+    expect(d2.value).toBe(false)
+    expect(d1.value).toBe(true)
+    expect(stack.length).toBe(newDepth)
+  })
+
+  test('close target priority: requested (middle) dialog closes, depth stays consistent', () => {
+    // closeDialogViaHistory で「最上位でない」ダイアログの×を押した場合、
+    // popstate ではターゲット指定のダイアログを閉じ、上のダイアログは維持する。
+    // 履歴エントリは depth 値しか持たないため、除去後も depth == stack.length が保たれる
+    const dA = ref(true)
+    const dX = ref(true) // 閉じる対象 (中間)
+    const dY = ref(true)
+    const stack = [{ dialog: dA }, { dialog: dX }, { dialog: dY }]
+    const pendingCloseTargets: object[] = [dX]
+
+    // go(-1) 着弾: newDepth = 2, count = 1
+    const newDepth = 2
+    let count = stack.length - newDepth
+    expect(count).toBe(1)
+
+    while (count > 0 && stack.length > 0) {
+      let idx = -1
+      while (pendingCloseTargets.length > 0 && idx < 0) {
+        const t = pendingCloseTargets.shift()!
+        idx = stack.findIndex((en) => (en.dialog as unknown as object) === t)
+      }
+      if (idx < 0) idx = stack.length - 1
+      const [entry] = stack.splice(idx, 1)
+      entry.dialog.value = false
+      count--
+    }
+
+    expect(dX.value).toBe(false) // 指定ターゲットが閉じる
+    expect(dY.value).toBe(true) // 最上位は維持
+    expect(dA.value).toBe(true)
+    expect(stack.length).toBe(newDepth) // depth 整合
+  })
+
+  test('reset accounting: one popstate per traversal, not per entry', () => {
+    // history.go(-N) は N エントリ戻っても popstate は1回しか発火しない。
+    // pendingNav (握りつぶし予約) はトラバーサル単位で数えること。
+    // エントリ数で数えると N>=2 で詰まり、resetDialogHistory が resolve しない
+    // (→ navigateToPage の await が完了せず画面遷移しなくなる)
+    const depth = 3
+    const inFlight = 1 // 飛行中の closeDialogViaHistory 由来 go(-1) — 各1回発火する
+    const goDelta = Math.max(0, depth - inFlight)
+    const pendingNav = inFlight + (goDelta > 0 ? 1 : 0)
+
+    expect(goDelta).toBe(2)
+    expect(pendingNav).toBe(2) // in-flight 1回 + go(-2) 1回 = popstate 2回
+
+    // in-flight が無い純粋ケース: go(-3) 1回 → popstate 1回
+    const pendingNavNoInflight = 0 + (Math.max(0, 3 - 0) > 0 ? 1 : 0)
+    expect(pendingNavNoInflight).toBe(1)
+  })
+
+  test('stale close targets are dropped and fall back to topmost', () => {
+    const dA = ref(true)
+    const dGone = ref(false) // 既に閉じられていて stack に居ないターゲット
+    const stack = [{ dialog: dA }]
+    const pendingCloseTargets: object[] = [dGone]
+
+    let idx = -1
+    while (pendingCloseTargets.length > 0 && idx < 0) {
+      const t = pendingCloseTargets.shift()!
+      idx = stack.findIndex((en) => (en.dialog as unknown as object) === t)
+    }
+    if (idx < 0) idx = stack.length - 1
+
+    expect(pendingCloseTargets.length).toBe(0) // 残骸ターゲットは破棄
+    expect(idx).toBe(0) // 最上位にフォールバック
+  })
 })

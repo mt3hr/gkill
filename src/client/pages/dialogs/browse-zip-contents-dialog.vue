@@ -148,7 +148,7 @@ import { type Ref, ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import type { ZipEntry } from '@/classes/api/req_res/browse-zip-contents-response'
 import { BrowseZipContentsRequest } from '@/classes/api/req_res/browse-zip-contents-request'
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { GkillError } from '@/classes/api/gkill-error'
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
@@ -160,7 +160,7 @@ const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
+useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
 const ui = useFloatingDialog("browse-zip-contents-dialog", {
   centerMode: "always",
   onEscape: () => hide(),
@@ -271,10 +271,9 @@ async function show(): Promise<void> {
   await loadEntries()
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
-  enlarged_image_index.value = -1
+  closeEnlarged()
   closeTextViewer()
-  emits('closed')
+  closeDialogViaHistory(is_show_dialog)
 }
 
 async function loadEntries(): Promise<void> {
@@ -312,7 +311,7 @@ function openEnlargedByEntry(entry: ZipEntry): void {
 
 function closeEnlarged(): void {
   enlarged_image_index.value = -1
-  is_enlarged.value = false
+  closeDialogViaHistory(is_enlarged)
 }
 
 function showPrevImage(): void {
@@ -401,7 +400,7 @@ async function openTextViewer(entry: ZipEntry): Promise<void> {
 function closeTextViewer(): void {
   text_viewer_entry.value = null
   text_viewer_content.value = ''
-  is_text_viewer.value = false
+  closeDialogViaHistory(is_text_viewer)
 }
 
 function detectAndDecodeText(bytes: Uint8Array): string {

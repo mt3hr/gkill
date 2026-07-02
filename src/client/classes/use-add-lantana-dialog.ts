@@ -3,7 +3,7 @@
 import { ref, type Ref } from 'vue'
 import type { EditLantanaDialogProps } from '@/pages/dialogs/edit-lantana-dialog-props'
 import type { KyouDialogEmits } from '@/pages/views/kyou-dialog-emits'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useAddLantanaDialog(options: {
@@ -22,7 +22,7 @@ export function useAddLantanaDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        is_show_dialog.value = false
+        closeDialogViaHistory(is_show_dialog)
     }
 
     return {

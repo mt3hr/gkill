@@ -43,7 +43,7 @@ defineExpose({ show, hide })
 
 const rep_struct: Ref<RepStructElementData> = ref(new RepStructElementData())
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data';
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
@@ -60,7 +60,7 @@ async function show(rep_struct_obj: RepStructElementData): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
   rep_struct.value = new RepStructElementData()
 }
 </script>

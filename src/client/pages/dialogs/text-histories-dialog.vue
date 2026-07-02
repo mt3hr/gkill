@@ -109,10 +109,10 @@ const text_highlight_targets = computed<Array<InfoIdentifier>>(() => {
   return [info_identifer]
 })
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
+useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("text-histories-dialog", {
   centerMode: "always",
@@ -125,8 +125,7 @@ async function show(): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
-  emits('closed')
+  closeDialogViaHistory(is_show_dialog)
 }
 </script>
 

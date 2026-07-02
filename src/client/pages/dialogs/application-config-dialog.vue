@@ -49,7 +49,7 @@ const _props = defineProps<ApplicationConfigDialogProps>()
 const emits = defineEmits<ApplicationConfigDialogEmits>()
 defineExpose({ show, hide })
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -66,7 +66,7 @@ async function show(): Promise<void> {
   application_config_view.value?.reload_cloned_application_config()
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
 }
 </script>
 
