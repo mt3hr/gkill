@@ -42,7 +42,7 @@ defineProps<ShareKyousListLinkDialogProps>()
 const emits = defineEmits<ShareKyousListLinkDialogEmits>()
 defineExpose({ show, hide })
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -60,7 +60,7 @@ async function show(share_kyou_list_info_: ShareKyousInfo): Promise<void> {
 }
 async function hide(): Promise<void> {
   share_kyou_list_info.value = null
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
 }
 </script>
 

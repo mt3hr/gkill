@@ -31,12 +31,18 @@ import { ref, watch } from 'vue'
 import { i18n } from '@/i18n'
 import { GkillAPI } from '../../classes/api/gkill-api'
 import { GetPluginConfigHTMLRequest } from '../../classes/api/req_res/get-plugin-config-html-request'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 
 const props = defineProps<{
     rep_name: string
 }>()
 
 const show = defineModel<boolean>('show', { default: false })
+// iframe 内でプラグイン製フォームがナビゲーションし joint history entry を
+// 作り得るため、closeDialogViaHistory は使わずプログラム的クローズのままにする
+// (unmount で iframe の履歴ごと消えてから巻き戻される)。登録だけ行い、
+// ブラウザバック/Escape で閉じられるようにする。
+useDialogHistoryStack(show)
 
 const html = ref<string>('')
 const is_loading = ref<boolean>(false)

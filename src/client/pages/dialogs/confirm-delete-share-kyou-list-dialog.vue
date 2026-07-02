@@ -45,7 +45,7 @@ defineExpose({ show, hide })
 
 const share_kyou_list_info: Ref<ShareKyousInfo | null> = ref(null)
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -61,7 +61,7 @@ async function show(share_kyou_list_info_: ShareKyousInfo): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
 }
 </script>
 

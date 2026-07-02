@@ -2,7 +2,7 @@
 
 import { ref, type Ref } from 'vue'
 import type { KyouDialogEmits } from '@/pages/views/kyou-dialog-emits'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useAddNotificationDialog(options: {
@@ -11,7 +11,7 @@ export function useAddNotificationDialog(options: {
     const { emits } = options
 
     const is_show_dialog: Ref<boolean> = ref(false)
-    useDialogHistoryStack(is_show_dialog)
+    useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
     const ui = useFloatingDialog("add-notification-dialog", {
         centerMode: "always",
     })
@@ -20,8 +20,7 @@ export function useAddNotificationDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        is_show_dialog.value = false
-        emits('closed')
+        closeDialogViaHistory(is_show_dialog)
     }
 
     return {

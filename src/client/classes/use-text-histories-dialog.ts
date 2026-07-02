@@ -8,7 +8,7 @@ import type { Text } from '@/classes/datas/text'
 import type { Notification } from '@/classes/datas/notification'
 import type { TextHistoriesDialogProps } from '@/pages/dialogs/text-histories-dialog-props'
 import type { KyouDialogEmits } from '@/pages/views/kyou-dialog-emits'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useTextHistoriesDialog(options: {
@@ -19,7 +19,7 @@ export function useTextHistoriesDialog(options: {
 
     // ── Dialog state ──
     const is_show_dialog: Ref<boolean> = ref(false)
-    useDialogHistoryStack(is_show_dialog)
+    useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
     const ui = useFloatingDialog("text-histories-dialog", {
         centerMode: "always",
     })
@@ -60,8 +60,7 @@ export function useTextHistoriesDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        is_show_dialog.value = false
-        emits('closed')
+        closeDialogViaHistory(is_show_dialog)
     }
 
     // ── Return ──

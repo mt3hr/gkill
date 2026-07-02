@@ -1,5 +1,9 @@
 import http from 'node:http'
 
+// GKILL_E2E_BASE_URL でテスト対象サーバを上書きできる (既定: http://localhost:9999)
+const baseUrl = new URL(process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999')
+const gkillPort = Number(baseUrl.port || 9999)
+
 /**
  * Check if the gkill server (localhost:9999) is reachable.
  * Returns true if reachable, false otherwise.
@@ -7,7 +11,7 @@ import http from 'node:http'
 export function checkGkillServer(): Promise<boolean> {
   return new Promise((resolve) => {
     const req = http.request(
-      { hostname: '127.0.0.1', port: 9999, path: '/', method: 'GET', timeout: 10000 },
+      { hostname: '127.0.0.1', port: gkillPort, path: '/', method: 'GET', timeout: 10000 },
       () => resolve(true),
     )
     req.on('error', () => resolve(false))

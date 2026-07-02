@@ -5,6 +5,20 @@ import { onBeforeUnmount, onMounted, type Ref, watch } from "vue"
  * + resetDialogHistory()
  * + Back closes topmost dialog first when dialogs are open.
  *
+ * 案C: ×ボタン/Escape も closeDialogViaHistory() で「ブラウザバック相当」に一本化。
+ * - closeDialogViaHistory(ref) は history.go(-1) を発行し、popstate ハンドラが
+ *   ref を false にする。ブラウザバックと完全に同じ経路になるため、
+ *   バックスタックに使用済みエントリが残らない。
+ * - onClosed オプション: 閉じた原因を問わず(バック/×/Escape/リセット)ちょうど1回
+ *   呼ばれる。'closed' emit はここに一本化する(hide() 内での emit は撤去)。
+ *   これにより「emit → 親が unmount → post-flush watcher が破棄され巻き戻し漏れ」
+ *   の競合も構造的に消える。
+ * - 注意: iframe 内ナビゲーションで joint history entry を作るダイアログ
+ *   (help/tutorial/plugin-config)は closeDialogViaHistory を使ってはならない。
+ *   go(-1) が iframe 側の履歴を巻いてしまい top-level popstate が発火しないため。
+ *   それらは従来通り ref を直接 false にする(プログラム的クローズ分岐が
+ *   unmount で iframe が消えた後に巻き戻すので、joint entry ごと消えて安全)。
+ *
  * Extra:
  * - Escape closes ONLY the topmost dialog (no global "全部閉じる" 問題を回避)
  *
@@ -37,6 +51,13 @@ function withDialogMarkers(base: unknown, depth: number): AnyObj {
 type Entry = { id: string; dialog: Ref<boolean> }
 const stack: Entry[] = []
 
+export type UseDialogHistoryStackOptions = {
+  // 閉じたとき(バック/×/Escape/リセットを問わず)にちょうど1回呼ばれる。
+  // 'closed' emit の一本化用。unmount による強制クローズでは呼ばれない。
+  onClosed?: () => void
+}
+const onClosedMap = new WeakMap<object, () => void>()
+
 // --- Pending open tracking (setTimeout-based push delay) ---
 // By deferring history.pushState to a macro-task (setTimeout 0), any iframe
 // navigations triggered during the same render cycle (also macro-tasks, but
@@ -54,7 +75,7 @@ function scheduleOpen(id: string, dialog: Ref<boolean>, refObj: object): void {
     if (pendingOpenSeqMap.get(refObj) !== seq) return
     pendingOpenSeqMap.delete(refObj)
     if (!dialog.value) return
-    if (pendingNav > 0) {
+    if (navInFlight()) {
       queueOpen(id, dialog)
       return
     }
@@ -67,14 +88,6 @@ function scheduleOpen(id: string, dialog: Ref<boolean>, refObj: object): void {
     }
     pushDialogHistory(stack.length)
   }, 0)
-}
-
-// Public helper: close only the topmost dialog.
-export function closeTopDialog(): boolean {
-  if (stack.length === 0) return false
-  const top = stack[stack.length - 1]
-  top.dialog.value = false
-  return true
 }
 
 // Identity helpers
@@ -96,9 +109,40 @@ const closingFromPop = new WeakSet<object>()
 // When we close because of resetDialogHistory, watcher should NOT call history.go again.
 const closingFromReset = new WeakSet<object>()
 
-// --- Race protection: queue opens while a history.go(-delta) close is pending ---
-let pendingNav = 0
+// --- Race protection: queue opens while a history navigation is pending ---
+let pendingNav = 0 // 自前の巻き戻し。着弾する popstate を握りつぶす数
 const queuedOpens: Array<{ id: string; dialog: Ref<boolean> }> = []
+
+// --- 案C: history 駆動クローズの管理 ---
+// closeDialogViaHistory() が発行した go(-1) の飛行数。着弾 popstate は
+// (pendingNav と違い)通常の back と同じように処理される。
+let pendingCloseNav = 0
+// 閉じる対象として指定されたダイアログ (FIFO)。popstate 側で最優先で閉じる。
+// これにより「最上位以外の×」も正しいダイアログが閉じる。
+const pendingCloseTargets: object[] = []
+// closeDialogViaHistory の完了待ち Promise
+const closeWaiters = new Map<object, { promise: Promise<void>; resolve: () => void }>()
+
+function waiterFor(refObj: object): Promise<void> {
+  const existing = closeWaiters.get(refObj)
+  if (existing) return existing.promise
+  let resolve!: () => void
+  const promise = new Promise<void>((r) => {
+    resolve = r
+  })
+  closeWaiters.set(refObj, { promise, resolve })
+  return promise
+}
+function resolveCloseWaiter(refObj: object): void {
+  const w = closeWaiters.get(refObj)
+  if (!w) return
+  closeWaiters.delete(refObj)
+  w.resolve()
+}
+
+function navInFlight(): boolean {
+  return pendingNav > 0 || pendingCloseNav > 0
+}
 
 function queueOpen(id: string, dialog: Ref<boolean>) {
   const idx = queuedOpens.findIndex((x) => x.id === id)
@@ -112,7 +156,7 @@ function pushDialogHistory(depth: number) {
 }
 
 function flushQueuedOpens() {
-  if (pendingNav > 0 || queuedOpens.length === 0) return
+  if (navInFlight() || queuedOpens.length === 0) return
   const items = queuedOpens.splice(0, queuedOpens.length)
 
   for (const it of items) {
@@ -146,18 +190,26 @@ function resolveResetWaiters() {
   for (const w of ws) w()
 }
 
+// ナビゲーション完了後の共通後始末
+function afterNavSettled(): void {
+  if (navInFlight()) return
+  if (stack.length === 0) clearDialogKeysFromCurrentState()
+  flushQueuedOpens()
+  resolveResetWaiters()
+}
+
 /**
  * Close all dialogs and rewind browser history by the dialog depth.
  */
 export function resetDialogHistory(): Promise<void> {
-  if (pendingNav === 0 && stack.length === 0) return Promise.resolve()
+  if (!navInFlight() && stack.length === 0) return Promise.resolve()
 
   const depth = stack.length
   return new Promise<void>((resolve) => {
     resetWaiters.push(resolve)
 
     if (depth <= 0) {
-      if (pendingNav === 0) resolveResetWaiters()
+      if (!navInFlight()) resolveResetWaiters()
       return
     }
 
@@ -171,9 +223,68 @@ export function resetDialogHistory(): Promise<void> {
       entries[i].dialog.value = false
     }
 
-    pendingNav += depth
-    history.go(-depth)
+    // 飛行中の history 駆動クローズ traversal は既に1エントリずつ消費する。
+    // その分を差し引いて巻き戻し、着弾する popstate はすべて握りつぶす。
+    // 注意: popstate は「エントリ数」ではなく「トラバーサル数」だけ発火する。
+    // go(-N) は N エントリ戻っても popstate 1回なので、握りつぶし予約も
+    // トラバーサル単位で数える (エントリ数で数えると N>=2 で pendingNav が
+    // 詰まり、resetDialogHistory の Promise が永遠に resolve しなくなる)。
+    const inFlight = pendingCloseNav
+    pendingCloseNav = 0
+    pendingCloseTargets.length = 0
+    const goDelta = Math.max(0, depth - inFlight)
+    pendingNav += inFlight + (goDelta > 0 ? 1 : 0)
+    if (goDelta > 0) history.go(-goDelta)
   })
+}
+
+/**
+ * ダイアログを「ブラウザバック相当」で閉じる (案C)。
+ * 履歴エントリを1つ消費する go(-1) を発行し、popstate ハンドラが ref を
+ * false にする。ブラウザバック(①)と×ボタン(②)が完全に同一経路になる。
+ * - 履歴に積まれる前(pending/queued open)なら直接 false にする。
+ * - useDialogHistoryStack 未登録の ref も直接 false にする。
+ * - 戻り値は実際に閉じ終わったとき(watcher 処理後)に resolve する。
+ * - iframe 内ナビゲーションで joint history entry を作るダイアログには使用禁止
+ *   (ファイル先頭コメント参照)。
+ */
+export function closeDialogViaHistory(dialog: Ref<boolean>): Promise<void> {
+  const refObj = dialog as unknown as object
+  if (!dialog.value) return Promise.resolve()
+
+  if (!watchedRefs.has(refObj)) {
+    dialog.value = false
+    return Promise.resolve()
+  }
+
+  const id = getRefId(refObj)
+  const inStack = stack.findIndex((e) => e.id === id) >= 0
+  if (!inStack) {
+    // まだ pushState されていない: 直接閉じる (watcher 側でキャンセル処理される)
+    const p = waiterFor(refObj)
+    dialog.value = false
+    return p
+  }
+
+  if (pendingCloseTargets.indexOf(refObj) >= 0) return waiterFor(refObj)
+
+  const p = waiterFor(refObj)
+  pendingCloseTargets.push(refObj)
+  pendingCloseNav++
+  history.go(-1)
+  return p
+}
+
+// Public helper: close only the topmost dialog (history 駆動)。
+// 既にクローズ要求済みのものはスキップするので、連打で順に閉じられる。
+export function closeTopDialog(): boolean {
+  for (let i = stack.length - 1; i >= 0; i--) {
+    const refObj = stack[i].dialog as unknown as object
+    if (pendingCloseTargets.indexOf(refObj) >= 0) continue
+    closeDialogViaHistory(stack[i].dialog)
+    return true
+  }
+  return false
 }
 
 // --- Back handling ---
@@ -188,19 +299,23 @@ function ensurePopListenerInstalled() {
   if (popListenerInstalled) return
   popListenerInstalled = true
 
+  // リロード直後など、ダイアログが無いのに現在エントリにマーカーが残っている
+  // 場合を無害化しておく (残っていると×クローズの深さ判定が狂う)
+  if (stack.length === 0) clearDialogKeysFromCurrentState()
+
   window.addEventListener(
     "popstate",
     (e) => {
       // A) If this popstate was caused by our own history.go(+/-), swallow it.
       if (pendingNav > 0) {
         pendingNav--
-        if (pendingNav === 0) {
-          if (stack.length === 0) clearDialogKeysFromCurrentState()
-          flushQueuedOpens()
-          resolveResetWaiters()
-        }
+        if (pendingNav === 0) afterNavSettled()
         return
       }
+
+      // 案C: closeDialogViaHistory の traversal が着弾。
+      // 以降は通常のブラウザバックと同じ扱いで処理する。
+      if (pendingCloseNav > 0) pendingCloseNav--
 
       // B) Back-only bounce (we called history.go(1) to cancel a back)
       if (backOnlyBouncePending > 0) {
@@ -211,6 +326,7 @@ function ensurePopListenerInstalled() {
       // C) Forward into dialog state while stack is empty: strip markers
       if (stack.length === 0 && isDialogState((e as PopStateEvent).state)) {
         history.replaceState(stripDialogKeys((e as PopStateEvent).state), "")
+        afterNavSettled()
         return
       }
 
@@ -226,14 +342,36 @@ function ensurePopListenerInstalled() {
             withDialogMarkers(stripDialogKeys((e as PopStateEvent).state), stack.length),
             ""
           )
+          afterNavSettled()
           return
         }
 
-        // Back: close topmost dialog
-        try { (e as PopStateEvent).stopImmediatePropagation?.() } catch {}
-        const top = stack[stack.length - 1]
-        closingFromPop.add(top.dialog as unknown as Ref<boolean>)
-        top.dialog.value = false
+        // Back: 深さの差分だけ閉じる (長押しジャンプで複数エントリ戻った場合も
+        // 追従する)。closeDialogViaHistory のターゲットがあれば最優先で閉じる。
+        try { (e as PopStateEvent).stopImmediatePropagation?.() } catch { /* ignore */ }
+
+        let count = stack.length - newDepth
+        while (count > 0 && stack.length > 0) {
+          let idx = -1
+          while (pendingCloseTargets.length > 0 && idx < 0) {
+            const t = pendingCloseTargets.shift() as object
+            idx = stack.findIndex((en) => (en.dialog as unknown as object) === t)
+          }
+          if (idx < 0) idx = stack.length - 1
+
+          const [entry] = stack.splice(idx, 1)
+          const refObj = entry.dialog as unknown as object
+          if (entry.dialog.value === true) {
+            closingFromPop.add(refObj)
+            entry.dialog.value = false
+          } else {
+            // 既に閉じている残骸だった場合は待ちだけ解決する
+            resolveCloseWaiter(refObj)
+          }
+          count--
+        }
+        if (stack.length === 0) clearDialogKeysFromCurrentState()
+        afterNavSettled()
         return
       }
 
@@ -252,6 +390,8 @@ function ensurePopListenerInstalled() {
         history.go(1)
         return
       }
+
+      afterNavSettled()
     },
     { capture: true } as AddEventListenerOptions,
   )
@@ -276,7 +416,7 @@ function ensureEscListenerInstalled() {
       e.preventDefault()
       e.stopPropagation()
 
-      // 1回の ESC で 1つだけ閉じる
+      // 1回の ESC で 1つだけ閉じる (×ボタンと同じく history 駆動)
       closeTopDialog()
     },
     { capture: true },
@@ -284,9 +424,14 @@ function ensureEscListenerInstalled() {
 }
 
 // --- Core hook ---
-export function useDialogHistoryStack(dialog: Ref<boolean>): void {
+export function useDialogHistoryStack(
+  dialog: Ref<boolean>,
+  options?: UseDialogHistoryStackOptions,
+): void {
   const refObj = dialog as unknown as object
   const id = getRefId(refObj)
+
+  if (options?.onClosed) onClosedMap.set(refObj, options.onClosed)
 
   if (watchedRefs.has(refObj)) {
     ensurePopListenerInstalled()
@@ -301,7 +446,7 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
     dialog,
     (open) => {
       if (open) {
-        if (pendingNav > 0) {
+        if (navInFlight()) {
           queueOpen(id, dialog)
           return
         }
@@ -309,46 +454,46 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
         return
       }
 
-      // close (pop)
+      // ---- close ----
       if (closingFromPop.has(refObj)) {
+        // close (pop): popstate ハンドラ側で stack から除去済みのことが多い
         closingFromPop.delete(refObj)
-        const idx = stack.findIndex((e) => e.id === id)
+        const idx = stack.findIndex((en) => en.id === id)
         if (idx >= 0) stack.splice(idx, 1)
         if (stack.length === 0) clearDialogKeysFromCurrentState()
-        return
-      }
-
-      // close (reset)
-      if (closingFromReset.has(refObj)) {
+      } else if (closingFromReset.has(refObj)) {
+        // close (reset)
         closingFromReset.delete(refObj)
         if (stack.length === 0) clearDialogKeysFromCurrentState()
-        return
-      }
-
-      // Cancel pending open if dialog closed before setTimeout fired
-      if (pendingOpenSeqMap.has(refObj)) {
+      } else if (pendingOpenSeqMap.has(refObj)) {
+        // Cancel pending open if dialog closed before setTimeout fired
         pendingOpenSeqMap.delete(refObj)
         if (stack.length === 0) clearDialogKeysFromCurrentState()
-        return
+      } else {
+        const idx = stack.findIndex((en) => en.id === id)
+        if (idx >= 0) {
+          // Programmatic close (ref 直接書き換え)。該当エントリのみ除去して
+          // 1エントリ巻き戻す (上に乗っているダイアログはそのまま維持される)。
+          stack.splice(idx, 1)
+
+          const targetIdx = pendingCloseTargets.indexOf(refObj)
+          if (targetIdx >= 0) {
+            // closeDialogViaHistory の traversal が飛行中に直接 false にされた:
+            // 二重に戻らず、着弾する popstate を握りつぶしに変換する
+            pendingCloseTargets.splice(targetIdx, 1)
+            pendingCloseNav = Math.max(0, pendingCloseNav - 1)
+            pendingNav += 1
+          } else {
+            pendingNav += 1
+            history.go(-1)
+          }
+        } else if (stack.length === 0) {
+          clearDialogKeysFromCurrentState()
+        }
       }
 
-      // Programmatic close
-      const idx = stack.findIndex((e) => e.id === id)
-      if (idx < 0) {
-        if (stack.length === 0) clearDialogKeysFromCurrentState()
-        return
-      }
-
-      const prevDepth = stack.length
-      stack.splice(idx, stack.length - idx)
-      const delta = prevDepth - stack.length
-
-      if (delta > 0) {
-        pendingNav += delta
-        history.go(-delta)
-      } else if (stack.length === 0) {
-        clearDialogKeysFromCurrentState()
-      }
+      resolveCloseWaiter(refObj)
+      onClosedMap.get(refObj)?.()
     },
     { flush: "post" },
   )
@@ -359,17 +504,28 @@ export function useDialogHistoryStack(dialog: Ref<boolean>): void {
     closingFromPop.delete(refObj)
     closingFromReset.delete(refObj)
     pendingOpenSeqMap.delete(refObj)
+    onClosedMap.delete(refObj)
 
     if (dialog.value === true) dialog.value = false
 
-    const idx = stack.findIndex((e) => e.id === id)
+    const idx = stack.findIndex((en) => en.id === id)
     if (idx >= 0) stack.splice(idx, 1)
+
+    // 飛行中の close traversal は unmount 後に着弾するため握りつぶしに変換
+    const targetIdx = pendingCloseTargets.indexOf(refObj)
+    if (targetIdx >= 0) {
+      pendingCloseTargets.splice(targetIdx, 1)
+      pendingCloseNav = Math.max(0, pendingCloseNav - 1)
+      pendingNav += 1
+    }
+
     if (stack.length === 0) clearDialogKeysFromCurrentState()
+    resolveCloseWaiter(refObj)
   })
 
   onMounted(() => {
     if (dialog.value === true) {
-      if (pendingNav > 0) {
+      if (navInFlight()) {
         queueOpen(id, dialog)
         return
       }

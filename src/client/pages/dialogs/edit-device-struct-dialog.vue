@@ -42,7 +42,7 @@ defineProps<EditDeviceStructDialogProps>()
 const emits = defineEmits<EditDeviceStructDialogEmits>()
 defineExpose({ show, hide })
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data.js'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
@@ -58,7 +58,7 @@ async function show(): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
 }
 
 </script>

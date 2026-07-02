@@ -78,8 +78,8 @@ test.describe('Dashboard', () => {
     await page.waitForTimeout(2000)
 
     // 現在表示中の日付テキストを取得
-    const toolbar = page.locator('.v-toolbar-title, .v-app-bar')
-    const before = await toolbar.textContent()
+    const toolbar = page.locator('.v-toolbar-title, .v-app-bar').first()
+    const _before = await toolbar.textContent()
 
     // 前日ボタンをクリック
     await page.locator('button .mdi-chevron-left').first().click()

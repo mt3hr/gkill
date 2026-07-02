@@ -16,7 +16,8 @@ export default defineConfig({
   globalSetup: './src/client/__tests__/e2e/global-setup.ts',
   globalTeardown: './src/client/__tests__/e2e/global-teardown.ts',
   use: {
-    baseURL: 'http://localhost:9999',
+    // GKILL_E2E_BASE_URL でテスト対象サーバを上書きできる (別ポートでの実行用)
+    baseURL: process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999',
     trace: 'on-first-retry',
     navigationTimeout: 60000,
     actionTimeout: 10000,
