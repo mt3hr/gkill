@@ -77,11 +77,38 @@ async function close_dialog(): Promise<void> {
 }
 </script>
 <style scoped>
+@media (max-width: 768px) {
+  .gkill-floating-dialog:not(.is-user-resized) {
+    width: 80vw;
+    max-width: 80vw;
+    height: 70vh;
+  }
+  .gkill-floating-dialog:not(.is-user-resized) .gkill-floating-dialog__body {
+    width: 80vw;
+    max-width: 80vw;
+  }
+}
+@media (min-width: 769px) {
+  .gkill-floating-dialog:not(.is-user-resized) {
+    width: 70vw;
+    max-width: 70vw;
+    height: 80vh;
+  }
+  .gkill-floating-dialog:not(.is-user-resized) .gkill-floating-dialog__body {
+    width: 70vw;
+    max-width: 70vw;
+  }
+}
+.gkill-floating-dialog:not(.is-user-resized) .gkill-floating-dialog__body {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
+}
 .tutorial-dialog-iframe {
   width: 100%;
-  height: 100%;
+  flex: 1 1 auto;
   border: none;
-  min-height: 400px;
+  min-height: 0;
 }
 .tutorial-dialog-footer {
   border-top: 1px solid #e0e0e0;
