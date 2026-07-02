@@ -20,6 +20,7 @@ export function useEditNotificationView(options: {
     const { props, emits } = options
 
     // ── State refs ──
+    const is_loading = ref(true)
     const is_requested_submit = ref(false)
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
@@ -38,13 +39,17 @@ export function useEditNotificationView(options: {
 
     // ── Business logic ──
     async function load(): Promise<void> {
-        cloned_kyou.value = props.kyou.clone()
-        await cloned_kyou.value.reload(false, true)
-        await cloned_kyou.value.load_typed_datas()
-        await cloned_kyou.value.load_all()
-        cloned_notification.value = props.notification.clone()
-        void cloned_notification.value.attached_histories[0]
-        content_value.value = cloned_notification.value.content
+        try {
+            is_loading.value = true
+            cloned_kyou.value = props.kyou.clone()
+            await cloned_kyou.value.reload(false, true)
+            await cloned_kyou.value.load_typed_datas()
+            await cloned_kyou.value.load_all()
+            cloned_notification.value = props.notification.clone()
+            content_value.value = cloned_notification.value.content
+        } finally {
+            is_loading.value = false
+        }
     }
 
     async function save(): Promise<void> {
@@ -153,6 +158,7 @@ export function useEditNotificationView(options: {
     // ── Return ──
     return {
         // State
+        is_loading,
         is_requested_submit,
         cloned_kyou,
         cloned_notification,

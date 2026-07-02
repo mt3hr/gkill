@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card variant="flat">
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <KyouListView class="decide_related_time_uploaded_files_kyou_list_view"

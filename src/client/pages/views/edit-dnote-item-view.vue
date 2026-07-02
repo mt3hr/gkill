@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-2">
+    <v-card class="pa-2" variant="flat">
         <v-text-field v-model="title" :label="i18n.global.t('DNOTE_TITLE_TITLE')" />
         <v-text-field v-model="prefix" :label="i18n.global.t('DNOTE_PREFIX_TITLE')" />
         <v-text-field v-model="suffix" :label="i18n.global.t('DNOTE_SUFFIX_TITLE')" />

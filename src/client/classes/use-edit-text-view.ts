@@ -19,6 +19,7 @@ export function useEditTextView(options: {
     const { props, emits } = options
 
     // ── State refs ──
+    const is_loading = ref(true)
     const is_requested_submit = ref(false)
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const cloned_text: Ref<Text> = ref(props.text.clone())
@@ -30,12 +31,17 @@ export function useEditTextView(options: {
 
     // ── Business logic ──
     async function load(): Promise<void> {
-        cloned_kyou.value = props.kyou.clone()
-        await cloned_kyou.value.reload(false, true)
-        await cloned_kyou.value.load_typed_datas()
-        await cloned_kyou.value.load_all()
-        cloned_text.value = props.text.clone()
-        text_value.value = cloned_text.value.text
+        try {
+            is_loading.value = true
+            cloned_kyou.value = props.kyou.clone()
+            await cloned_kyou.value.reload(false, true)
+            await cloned_kyou.value.load_typed_datas()
+            await cloned_kyou.value.load_all()
+            cloned_text.value = props.text.clone()
+            text_value.value = cloned_text.value.text
+        } finally {
+            is_loading.value = false
+        }
     }
 
     async function save(): Promise<void> {
@@ -120,6 +126,7 @@ export function useEditTextView(options: {
     // ── Return ──
     return {
         // State
+        is_loading,
         is_requested_submit,
         cloned_kyou,
         cloned_text,

@@ -19,6 +19,7 @@ export function useEditTagView(options: {
     const { props, emits } = options
 
     // ── State refs ──
+    const is_loading = ref(true)
     const is_requested_submit = ref(false)
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const cloned_tag: Ref<Tag> = ref(props.tag.clone())
@@ -30,12 +31,17 @@ export function useEditTagView(options: {
 
     // ── Business logic ──
     async function load(): Promise<void> {
-        cloned_kyou.value = props.kyou.clone()
-        await cloned_kyou.value.reload(false, true)
-        await cloned_kyou.value.load_typed_datas()
-        await cloned_kyou.value.load_all()
-        cloned_tag.value = props.tag.clone()
-        tag_name.value = cloned_tag.value.tag
+        try {
+            is_loading.value = true
+            cloned_kyou.value = props.kyou.clone()
+            await cloned_kyou.value.reload(false, true)
+            await cloned_kyou.value.load_typed_datas()
+            await cloned_kyou.value.load_all()
+            cloned_tag.value = props.tag.clone()
+            tag_name.value = cloned_tag.value.tag
+        } finally {
+            is_loading.value = false
+        }
     }
 
     async function save(): Promise<void> {
@@ -120,6 +126,7 @@ export function useEditTagView(options: {
     // ── Return ──
     return {
         // State
+        is_loading,
         is_requested_submit,
         cloned_kyou,
         cloned_tag,
