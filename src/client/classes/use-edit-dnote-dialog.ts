@@ -4,7 +4,7 @@ import { nextTick, ref, type Ref } from 'vue'
 import type { EditDnoteDialogProps } from '@/pages/dialogs/edit-dnote-dialog-props'
 import type { EditDnoteDialogEmits } from '@/pages/dialogs/edit-dnote-dialog-emits'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 import type Dnote from '@/pages/views/dnote-view.vue'
 
@@ -26,7 +26,7 @@ export function useEditDnoteDialog(options: {
         nextTick(() => dnote_view.value?.reload([], new FindKyouQuery()))
     }
     async function hide(): Promise<void> {
-        is_show_dialog.value = false
+        closeDialogViaHistory(is_show_dialog)
     }
 
     return {

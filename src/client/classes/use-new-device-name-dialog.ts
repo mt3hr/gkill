@@ -3,7 +3,7 @@
 import { ref, type Ref } from 'vue'
 import type { NewDeviceNameDialogProps } from '@/pages/dialogs/new-device-name-dialog-props'
 import type { NewDeviceNameDialogEmits } from '@/pages/dialogs/new-device-name-dialog-emits'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useNewDeviceNameDialog(options: {
@@ -25,7 +25,7 @@ export function useNewDeviceNameDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        is_show_dialog.value = false
+        closeDialogViaHistory(is_show_dialog)
     }
     function emits_board_name(): void {
         emits('setted_new_device_name', device_name.value)

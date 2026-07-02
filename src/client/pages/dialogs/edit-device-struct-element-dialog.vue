@@ -42,7 +42,7 @@ const emits = defineEmits<EditDeviceStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const device_struct: Ref<DeviceStructElementData> = ref(new DeviceStructElementData())
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data.js'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
@@ -59,7 +59,7 @@ async function show(device_struct_obj: DeviceStructElementData): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
 }
 </script>
 

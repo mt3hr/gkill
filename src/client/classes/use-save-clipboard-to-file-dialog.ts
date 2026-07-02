@@ -8,6 +8,7 @@ import { UploadFilesRequest } from '@/classes/api/req_res/upload-files-request'
 import { FileUploadConflictBehavior } from '@/classes/api/req_res/file-upload-conflict-behavior'
 import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import type { Repository } from '@/classes/datas/config/repository'
+import { closeDialogViaHistory } from '@/classes/use-dialog-history-stack'
 
 const MIME_TO_EXT: Record<string, string> = {
     'image/png': 'png',
@@ -34,7 +35,7 @@ const CLIPBOARD_LAST_REP_KEY = 'gkill_clipboard_save_last_rep_name'
 // OS不正文字を除去してファイル名を安全にする
 // Windows禁止文字 (\ / : * ? " < > |) + Androidで問題になる {} を削除
 export function sanitize_filename(name: string): string {
-    // eslint-disable-next-line no-control-regex
+     
     return name.replace(/[\\/:*?"<>|{}]/g, '').replace(/[\x00-\x1f\x7f]/g, '').trim() || 'file'
 }
 
@@ -361,7 +362,7 @@ export function useSaveClipboardToFileDialog(options: {
     }
 
     function hide(): void {
-        is_show_dialog.value = false
+        closeDialogViaHistory(is_show_dialog)
         is_last_clicked_dialog.value = false
         if (preview_url.value) {
             URL.revokeObjectURL(preview_url.value)
