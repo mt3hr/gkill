@@ -11,17 +11,17 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :readonly="is_busy" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
         <v-textarea v-model="text_value" :label="i18n.global.t('TEXT_TITLE')" autofocus
-            :readonly="is_requested_submit" />
+            :readonly="is_busy" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
                     i18n.global.t("SAVE_TITLE")
                 }}</v-btn>
             </v-col>
@@ -54,7 +54,7 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     // State
     is_loading,
-    is_requested_submit,
+    is_busy,
     cloned_kyou,
     text_value,
     show_kyou,

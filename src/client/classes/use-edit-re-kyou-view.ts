@@ -22,6 +22,7 @@ export function useEditReKyouView(options: {
     // ── State refs ──
     const is_loading = ref(true)
     const is_requested_submit = ref(false)
+    const is_busy = computed(() => is_loading.value || is_requested_submit.value)
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const related_date_typed: Ref<Date> = ref(moment(props.kyou.related_time).toDate())
@@ -160,6 +161,7 @@ export function useEditReKyouView(options: {
         // State
         is_loading,
         is_requested_submit,
+        is_busy,
         cloned_kyou,
         related_date_typed,
         related_date_string,

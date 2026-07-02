@@ -11,19 +11,19 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :readonly="is_busy" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
         <v-textarea v-model="content_value" :label="i18n.global.t('NOTIFICATION_CONTENT_TITLE')" autofocus
-            :readonly="is_requested_submit" />
+            :readonly="is_busy" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
                     <tr>
                         <td>
-                            <v-menu v-model="show_notification_date_menu" :close-on-content-click="false"
+                            <v-menu :disabled="is_busy" v-model="show_notification_date_menu" :close-on-content-click="false"
                                 transition="scale-transition" offset-y min-width="auto">
                                 <template #activator="{ props }">
                                     <v-text-field v-model="notification_date_string"
@@ -35,7 +35,7 @@
                             </v-menu>
                         </td>
                         <td>
-                            <v-menu v-model="show_notification_time_menu" :close-on-content-click="false"
+                            <v-menu :disabled="is_busy" v-model="show_notification_time_menu" :close-on-content-click="false"
                                 transition="scale-transition" offset-y min-width="auto">
                                 <template #activator="{ props }">
                                     <v-text-field v-model="notification_time_string"
@@ -48,7 +48,7 @@
                         </td>
                         <td>
                             <v-btn dark color="secondary" @click="reset_notification_date_time()"
-                                :disabled="is_requested_submit">{{
+                                :disabled="is_busy">{{
                                     i18n.global.t("RESET_TITLE") }}</v-btn>
                         </td>
                     </tr>
@@ -57,13 +57,13 @@
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
                     i18n.global.t("RESET_TITLE")
                     }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
                     i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
@@ -99,7 +99,7 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     // State
     is_loading,
-    is_requested_submit,
+    is_busy,
     cloned_kyou,
     content_value,
     notification_date_typed,

@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { EditTagViewProps } from '@/pages/views/edit-tag-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request'
@@ -21,6 +21,7 @@ export function useEditTagView(options: {
     // ── State refs ──
     const is_loading = ref(true)
     const is_requested_submit = ref(false)
+    const is_busy = computed(() => is_loading.value || is_requested_submit.value)
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const cloned_tag: Ref<Tag> = ref(props.tag.clone())
     const tag_name: Ref<string> = ref(props.tag.tag)
@@ -128,6 +129,7 @@ export function useEditTagView(options: {
         // State
         is_loading,
         is_requested_submit,
+        is_busy,
         cloned_kyou,
         cloned_tag,
         tag_name,
