@@ -22,6 +22,7 @@ export function useEditTimeIsView(options: {
     // ── State refs ──
     const is_loading = ref(true)
     const is_requested_submit = ref(false)
+    const is_busy = computed(() => is_loading.value || is_requested_submit.value)
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const show_kyou: Ref<boolean> = ref(false)
@@ -223,6 +224,7 @@ export function useEditTimeIsView(options: {
         // State
         is_loading,
         is_requested_submit,
+        is_busy,
         cloned_kyou,
         show_kyou,
         timeis_title,
