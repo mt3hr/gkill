@@ -43,7 +43,7 @@ defineExpose({ show, hide })
 
 const kftl_template_struct: Ref<KFTLTemplateStructElementData> = ref(new KFTLTemplateStructElementData())
 
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data';
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
@@ -60,7 +60,7 @@ async function show(kftl_template_struct_obj: KFTLTemplateStructElementData): Pr
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
   kftl_template_struct.value = new KFTLTemplateStructElementData()
 }
 </script>

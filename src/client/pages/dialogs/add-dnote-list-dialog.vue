@@ -44,7 +44,7 @@ import type { GkillMessage } from '../../classes/api/gkill-message';
 import type AddDnoteListDialogEmits from './add-dnote-list-dialog-emits';
 import type AddDnoteListDialogProps from './add-dnote-list-dialog-props';
 import type DnoteListQuery from '../views/dnote-list-query';
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -65,7 +65,7 @@ async function show(): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  is_show_dialog.value = false
+  closeDialogViaHistory(is_show_dialog)
 }
 </script>
 
