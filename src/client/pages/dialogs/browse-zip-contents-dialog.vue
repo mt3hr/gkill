@@ -17,7 +17,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
           <v-card-title>
             <span>{{ i18n.global.t("BROWSE_ZIP_CONTENTS_TITLE") }}</span>
             <span v-if="all_entries.length > 0" class="text-caption ml-2">({{ all_entries.length }})</span>

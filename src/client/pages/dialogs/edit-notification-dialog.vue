@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
        <EditNotificationView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="notification_highlight_targets" :kyou="kyou"
           :notification="notification" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"

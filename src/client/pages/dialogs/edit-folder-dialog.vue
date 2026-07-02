@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <EditFolderView :application_config="application_config" :folder_name="folder_name" :gkill_api="gkill_api"
           :struct_obj="struct_obj"
