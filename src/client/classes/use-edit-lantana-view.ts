@@ -26,6 +26,7 @@ export function useEditLantanaView(options: {
     // ── State refs ──
     const is_loading = ref(true)
     const is_requested_submit = ref(false)
+    const is_busy = computed(() => is_loading.value || is_requested_submit.value)
 
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const mood: Ref<number> = ref(props.kyou.typed_lantana?.mood ?? 0)
@@ -176,6 +177,7 @@ export function useEditLantanaView(options: {
         // State
         is_loading,
         is_requested_submit,
+        is_busy,
         cloned_kyou,
         mood,
         related_date_typed,

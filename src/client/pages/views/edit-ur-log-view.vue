@@ -11,20 +11,20 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :readonly="is_busy" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')" autofocus :readonly="is_requested_submit" />
-        <v-text-field class="input text" type="text" v-model="title" :label="i18n.global.t('URLOG_TITLE_TITLE')" :readonly="is_requested_submit" />
-        <v-checkbox v-model="re_get_urlog_content" :label="i18n.global.t('URLOG_REGET_TITLE')" hide-details color="primary" />
+        <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')" autofocus :readonly="is_busy" />
+        <v-text-field class="input text" type="text" v-model="title" :label="i18n.global.t('URLOG_TITLE_TITLE')" :readonly="is_busy" />
+        <v-checkbox v-model="re_get_urlog_content" :readonly="is_busy" :label="i18n.global.t('URLOG_REGET_TITLE')" hide-details color="primary" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
                     <tr>
                         <td>
-                            <v-menu v-model="show_related_date_menu" :close-on-content-click="false"
+                            <v-menu :disabled="is_busy" v-model="show_related_date_menu" :close-on-content-click="false"
                                 transition="scale-transition" offset-y min-width="auto">
                                 <template #activator="{ props }">
                                     <v-text-field v-model="related_date_string"
@@ -36,7 +36,7 @@
                             </v-menu>
                         </td>
                         <td>
-                            <v-menu v-model="show_related_time_menu" :close-on-content-click="false"
+                            <v-menu :disabled="is_busy" v-model="show_related_time_menu" :close-on-content-click="false"
                                 transition="scale-transition" offset-y min-width="auto">
                                 <template #activator="{ props }">
                                     <v-text-field v-model="related_time_string"
@@ -55,12 +55,12 @@
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="reset_related_date_time()"
-                                :disabled="is_requested_submit">{{
+                                :disabled="is_busy">{{
                                     i18n.global.t("RESET_TITLE") }}</v-btn>
                         </td>
                         <td>
                             <v-btn dark color="primary" @click="now_to_related_date_time()"
-                                :disabled="is_requested_submit">{{
+                                :disabled="is_busy">{{
                                     i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
                         </td>
                     </tr>
@@ -69,13 +69,13 @@
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
                     i18n.global.t("RESET_TITLE")
                 }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
                     i18n.global.t("SAVE_TITLE")
                 }}</v-btn>
             </v-col>
@@ -125,7 +125,7 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     is_loading,
-    is_requested_submit,
+    is_busy,
     cloned_kyou,
     title,
     url,
