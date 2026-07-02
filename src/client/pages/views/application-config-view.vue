@@ -1,5 +1,5 @@
 <template>
-    <v-card>
+    <v-card variant="flat">
         <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
@@ -24,7 +24,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-card>
+        <v-card variant="flat">
             <table>
                 <tr>
                     <td>

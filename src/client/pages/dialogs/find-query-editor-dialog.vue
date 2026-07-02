@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card>
+        <v-card variant="flat">
           <FindQueryEditorView v-if="model_value" :application_config="received_application_config"
             :gkill_api="gkill_api" :find_kyou_query="model_value" :inited="inited"
             @updated_query="(query: FindKyouQuery) => model_value = (query)" @inited="inited = true"

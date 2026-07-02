@@ -19,7 +19,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <AddRyuuItemView :application_config="application_config" :gkill_api="gkill_api"
           @requested_add_related_kyou_query="(related_kyou_query: RelatedKyouQuery) => emits('requested_add_related_kyou_query', related_kyou_query)"

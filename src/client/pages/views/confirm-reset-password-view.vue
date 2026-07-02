@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-2">
+    <v-card variant="flat" class="pa-2">
         <v-card-title>
             {{ i18n.global.t("RESET_PASSWORD_TITLE") }}
         </v-card-title>

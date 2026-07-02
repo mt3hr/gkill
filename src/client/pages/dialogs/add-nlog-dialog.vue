@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <AddNlogView :application_config="application_config" :gkill_api="gkill_api"
           @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"

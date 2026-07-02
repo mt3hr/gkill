@@ -20,7 +20,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body" ref="dialog_body_ref">
-        <v-card style="overflow: hidden">
+        <v-card variant="flat" style="overflow: hidden">
        <KFTLView :app_content_height="view_height" :app_content_width="view_width"
           :application_config="application_config" :gkill_api="gkill_api"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"

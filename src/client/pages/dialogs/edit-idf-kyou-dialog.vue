@@ -16,7 +16,7 @@
       </div>
 
       <div class="gkill-floating-dialog__body">
-        <v-card class="pa-2">
+        <v-card variant="flat" class="pa-2">
 
         <EditIDFKyouView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="[kyou.generate_info_identifer()]" :idf_kyou="kyou.typed_idf_kyou" :kyou="kyou"
