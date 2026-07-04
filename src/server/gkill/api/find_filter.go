@@ -1546,51 +1546,69 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
 		if findCtx.DisableLatestDataRepositoryCache {
 			slices.SortFunc(currentKyou, func(a, b reps.Kyou) int { return b.UpdateTime.Compare(a.UpdateTime) })
+			// 降順ソート済みなので currentKyou[0].UpdateTime がマッチした中の最新
+			newestUpdateTime := currentKyou[0].UpdateTime
+			latestData, hasLatestData := (findCtx.Repositories.LatestDataRepositoryAddresses)[id]
 
-			// UsePlaing時はLatestDataRepositoryAddressと一致するもののみ残す
+			// マッチした中の最新がグローバル最新(LatestDataRepositoryAddress)でなければ、
+			// 最新版は別rep(非表示/未同期rep)にあり検索には古い版しか載っていない。
+			// 検索条件に合う最新版が存在しないのでレコードごと除外する。
 			if findCtx.ParsedFindQuery.UsePlaing {
-				latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[id]
-				if !exist || !currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) {
+				if !hasLatestData || !newestUpdateTime.Equal(latestData.DataUpdateTime) {
 					continue
 				}
+			} else if hasLatestData && newestUpdateTime.Before(latestData.DataUpdateTime) {
+				continue
 			}
 
-			// TimeIsやMiは複数Kyou（start/end等）を持つのでそのまま保持する
+			// 最新版(newestUpdateTime)のentryのみ残す。TimeIsのstart/end・Miの各射影は
+			// 同一UpdateTimeなので残り、他repの古い版entryだけが落ちる。
 			isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFindQuery.ForMi
 			isTimeIsData := strings.HasPrefix(currentKyou[0].DataType, "timeis")
 			if isTimeIsData || isMiData {
-				latestKyousMap[id] = currentKyou
+				latestVersionKyous := make([]reps.Kyou, 0, len(currentKyou))
+				for _, kyou := range currentKyou {
+					if kyou.UpdateTime.Equal(newestUpdateTime) {
+						latestVersionKyous = append(latestVersionKyous, kyou)
+					}
+				}
+				latestKyousMap[id] = latestVersionKyous
 			} else {
 				latestKyousMap[id] = []reps.Kyou{currentKyou[0]}
 			}
 			continue
 		}
 
-		latestData, exist := (findCtx.Repositories.LatestDataRepositoryAddresses)[id]
-		if !exist {
+		latestData, hasLatestData := (findCtx.Repositories.LatestDataRepositoryAddresses)[id]
+		if !hasLatestData {
 			continue
 		}
 
-		isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFindQuery.ForMi
-		isTimeIsData := strings.HasPrefix(currentKyou[0].DataType, "timeis")
-		isUsePlaing := findCtx.ParsedFindQuery.UsePlaing
+		// マッチした中の最新UpdateTime
+		var newestUpdateTime time.Time
+		for _, kyou := range currentKyou {
+			if kyou.UpdateTime.After(newestUpdateTime) {
+				newestUpdateTime = kyou.UpdateTime
+			}
+		}
 
-		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
-		// Miもそのままいれる
-		if ((currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) || isMiData || isTimeIsData) && !isUsePlaing) ||
-			(currentKyou[0].UpdateTime.Unix() == latestData.DataUpdateTime.Unix() && isUsePlaing) {
-			latestKyousMap[id] = currentKyou
-			continue
-		} else if isUsePlaing {
+		// マッチした中の最新がグローバル最新でなければ除外(上のDisableブランチと同じ方針)。
+		if findCtx.ParsedFindQuery.UsePlaing {
+			if newestUpdateTime.Unix() != latestData.DataUpdateTime.Unix() {
+				continue
+			}
+		} else if newestUpdateTime.Before(latestData.DataUpdateTime) {
 			continue
 		}
 
-		// はい入ってなかったら最新のKyouを取得する
-		latestKyou, err := findCtx.Repositories.Reps.GetKyou(ctx, latestData.TargetID, &latestData.DataUpdateTime)
-		if err != nil {
-			return nil, fmt.Errorf("error at get latest kyou: %w", err)
+		// 最新版のentryのみ保持する。
+		latestVersionKyous := make([]reps.Kyou, 0, len(currentKyou))
+		for _, kyou := range currentKyou {
+			if !kyou.UpdateTime.Before(newestUpdateTime) {
+				latestVersionKyous = append(latestVersionKyous, kyou)
+			}
 		}
-		latestKyousMap[id] = []reps.Kyou{*latestKyou}
+		latestKyousMap[id] = latestVersionKyous
 	}
 
 	// miの場合は最新以外消す
