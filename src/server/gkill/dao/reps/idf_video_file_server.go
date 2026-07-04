@@ -91,7 +91,15 @@ func (v *IDFVideoFileServer) ensureServePathForURL(ctx context.Context, u *url.U
 		return ensuredVideo{}, false, nil
 	}
 
-	// If ffmpeg/ffprobe are missing, fallback to original.
+	// 既存の互換キャッシュがあれば ffmpeg の有無に関わらず配信する。
+	// compatPathFor は rel とファイルサイズのみに依存し ffmpeg を使わないため、
+	// ffmpeg存在判定より前にキャッシュ有無を確認できる。
+	compatPath, cpErr := v.compatPathFor(rel, st)
+	if cpErr == nil && fileExists(compatPath) {
+		return ensuredVideo{servePath: compatPath}, true, nil
+	}
+
+	// キャッシュが無くffmpeg/ffprobeも無い場合は生成できないので原本へフォールバック。
 	if !existFFMPEG || !existFFPROBE {
 		return ensuredVideo{servePath: abs}, true, nil
 	}
@@ -105,12 +113,8 @@ func (v *IDFVideoFileServer) ensureServePathForURL(ctx context.Context, u *url.U
 		return ensuredVideo{servePath: abs}, true, nil
 	}
 
-	compatPath, err := v.compatPathFor(rel, st)
-	if err != nil {
+	if cpErr != nil {
 		return ensuredVideo{servePath: abs}, true, nil
-	}
-	if fileExists(compatPath) {
-		return ensuredVideo{servePath: compatPath}, true, nil
 	}
 
 	_, genErr, _ := videoSF.Do(compatPath, func() (any, error) {
