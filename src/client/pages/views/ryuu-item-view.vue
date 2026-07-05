@@ -2,7 +2,7 @@
     <v-card class="pa-0 ma-0 related_kyou_list_item" :draggable="editable" :class="{ draggable: editable }"
         @dragstart="drag_start" @dragover="dragover" @drop="drop"
         @contextmenu.prevent.stop="(e: PointerEvent) => { if (editable) { show_context_menu(e) } }"
-        @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } }">
+        @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }">
         <table>
             <tr>
                 <td>
@@ -31,12 +31,10 @@
                                             v-if="(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana)">
                                             <LantanaFlowersView :gkill_api="gkill_api"
                                                 :application_config="application_config"
-                                                :mood="match_kyou.typed_lantana.mood" :editable="false"
-                                                @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }" />
+                                                :mood="match_kyou.typed_lantana.mood" :editable="false" />
                                         </span>
 
-                                        <span v-if="(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
-                                            @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }">
+                                        <span v-if="(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)">
                                             {{ match_kyou.typed_kc.num_value }}
                                         </span>
 
@@ -49,7 +47,7 @@
                                             :show_mi_estimate_start_time="false" :show_mi_limit_time="false"
                                             :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="false"
                                             :height="'fit-content'" :enable_context_menu="enable_context_menu"
-                                            :enable_dialog="enable_dialog" :show_attached_timeis="false"
+                                            :enable_dialog="false" :show_attached_timeis="false"
                                             :show_update_time="false" :show_related_time="false" :width="'fit-content'"
                                             :is_readonly_mi_check="true" :show_rep_name="false"
                                             :force_show_latest_kyou_info="true" :show_attached_tags="true"
