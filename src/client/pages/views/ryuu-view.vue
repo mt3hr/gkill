@@ -39,10 +39,6 @@
                 @received_errors="(errors: GkillError[]) => onReceivedErrors(errors)"
                 @received_messages="(messages: GkillMessage[]) => onReceivedMessages(messages)"
                 ref="add_ryuu_item_dialog" />
-            <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
-                :enable_context_menu="true" :enable_dialog="true"
-                @closed="(id: string) => onDialogHostClosed(id)"
-                v-on="{ ...ryuuListItemCrudRelayHandlers, ...ryuuListItemRequestHandlers, ...ryuuListItemFocusHandlers, ...rykvDialogHandler }" />
 
             <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-ryuu">
                 <v-menu transition="slide-x-transition">
@@ -78,7 +74,6 @@ import type RyuuViewEmits from './ryuu-view-emits'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import RykvDialogHost from './rykv-dialog-host.vue'
 import { useRyuuView } from '@/classes/use-ryuu-view'
 
 const model_value = defineModel<ApplicationConfig>()
@@ -93,7 +88,6 @@ const {
     // State
     ryuu_definitions,
     current_definition_index,
-    opened_dialogs,
     abort_controler,
 
     // Business logic
@@ -107,7 +101,6 @@ const {
     onReceivedErrors,
     onReceivedMessages,
     onRequestedAddRelatedKyouQuery,
-    onDialogHostClosed,
     onAddButtonClick,
     onApplyClick,
     onCancelClick,

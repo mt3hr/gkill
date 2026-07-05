@@ -15,9 +15,6 @@ import moment from 'moment'
 import type RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { Tag } from '@/classes/datas/tag'
-import type { Text } from '@/classes/datas/text'
-import type { Notification } from '@/classes/datas/notification'
 import EqualTagsTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-target-kyou-predicate'
 import EqualTitleTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-title-target-kyou-predicate'
 import type DnotePredicate from '@/classes/dnote/dnote-predicate'
@@ -33,7 +30,6 @@ export function useRyuuItemView(options: {
     const { props, emits, model_value } = options
 
     // ── Template refs ──
-    const kyou_dialog = ref<ComponentRef | null>(null)
     const contextmenu = ref<ComponentRef | null>(null)
     const edit_related_kyou_query_dialog = ref<ComponentRef | null>(null)
 
@@ -266,8 +262,9 @@ export function useRyuuItemView(options: {
     }
 
     function show_kyou_dialog(): void {
-        if (props.enable_dialog) {
-            kyou_dialog.value?.show()
+        if (props.enable_dialog && match_kyou.value) {
+            // rykv画面のDialogHostで開くように上位へ伝播する（ローカルのKyouDialogは使わない）
+            emits('requested_open_rykv_dialog', 'kyou', match_kyou.value)
         }
     }
 
@@ -289,29 +286,6 @@ export function useRyuuItemView(options: {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
-    const kyouDialogRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
-        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
-        'deleted_text': (text: Text) => emits('deleted_text', text),
-        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
-        'registered_text': (text: Text) => emits('registered_text', text),
-        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
-        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
-        'updated_text': (text: Text) => emits('updated_text', text),
-        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        'focused_kyou': (kyou: Kyou) => emits('focused_kyou', kyou),
-        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
-        'requested_reload_list': () => emits('requested_reload_list'),
-        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => emits('requested_update_check_kyous', kyous, checked),
-        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
-    }
-
     const contextMenuRelayHandlers = {
         'requested_delete_related_kyou_query': (value: string) => emits('requested_delete_related_kyou_list_query', value),
         'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
@@ -321,7 +295,6 @@ export function useRyuuItemView(options: {
     // ── Return ──
     return {
         // Template refs
-        kyou_dialog,
         contextmenu,
         edit_related_kyou_query_dialog,
 
@@ -340,7 +313,6 @@ export function useRyuuItemView(options: {
 
         // Event relay objects
         kyouViewRelayHandlers,
-        kyouDialogRelayHandlers,
         contextMenuRelayHandlers,
     }
 }
