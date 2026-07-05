@@ -285,8 +285,7 @@ export function useRyuuItemView(options: {
     const kyouViewRelayHandlers = {
         'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
         'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        'focused_kyou': (kyou: Kyou) => emits('focused_kyou', kyou),
-        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+        // Ryuuのクリックでは Focused を変更しない（focused_kyou/clicked_kyou を中継しない）
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
