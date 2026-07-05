@@ -19,7 +19,7 @@ func (uc *UsecaseContext) GetKyouHistories(ctx context.Context, repositories *re
 	var gkillErrors []*message.GkillError
 
 	// UpdateTimeが指定されていれば一致するものを、そうでなければIDが一致する履歴全部を取得する
-	var kyouHistories []reps.Kyou
+	kyouHistories := []reps.Kyou{}
 	var err error
 	if updateTime != nil {
 		var kyou *reps.Kyou
@@ -41,6 +41,9 @@ func (uc *UsecaseContext) GetKyouHistories(ctx context.Context, repositories *re
 		return nil, gkillErrors, nil
 	}
 
+	if kyouHistories == nil {
+		kyouHistories = []reps.Kyou{}
+	}
 	return kyouHistories, nil, nil
 }
 
