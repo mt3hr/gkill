@@ -122,6 +122,7 @@
                             :style="{ background: 'rgb(var(--v-theme-background))' }" />
                     </td>
                     <td valign="top" v-if="is_show_kyou_detail_view"
+                        class="rykv_kyou_detail_view_wrap"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <div class="kyou_detail_view dummy">
                             <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
@@ -412,7 +413,7 @@ const is_ryuu_empty = computed(() => {
     overflow-y: scroll;
     height: calc(v-bind('app_content_height.toString().concat("px")') - v-bind('is_ryuu_empty ? "0px" : "100vh * 0.2"'));
     width: 400px;
-    min-width: 0;
+    min-width: 400px;
     max-width: 100vw;
 }
 
@@ -445,5 +446,8 @@ const is_ryuu_empty = computed(() => {
     position: absolute;
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
     min-width: v-bind("is_loading ? 'calc(100vw)' : '0px'");
+}
+.rykv_kyou_detail_view_wrap {
+    background-color: rgb(var(--v-theme-background));
 }
 </style>
