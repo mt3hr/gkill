@@ -66,12 +66,6 @@
             </tr>
         </table>
 
-        <KyouDialog v-if="match_kyou" :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="[]" :kyou="match_kyou" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog" :is_readonly_mi_check="false" :show_timeis_plaing_end_button="true"
-            v-on="kyouDialogRelayHandlers"
-            ref="kyou_dialog" />
-
         <RyuuItemContextMenu :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             v-on="contextMenuRelayHandlers"
             ref="contextmenu" />
@@ -86,7 +80,6 @@ import EditRyuuItemDialog from '../dialogs/edit-ryuu-item-dialog.vue'
 import KyouView from './kyou-view.vue'
 import type RyuuItemViewEmits from './ryuu-item-view-emits'
 import type RyuuItemViewProps from './ryuu-item-view-props'
-import KyouDialog from '../dialogs/kyou-dialog.vue'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 import type RelatedKyouQuery from '../../classes/dnote/related-kyou-query'
 import RyuuItemContextMenu from './ryuu-item-context-menu.vue'
@@ -98,7 +91,6 @@ const emits = defineEmits<RyuuItemViewEmits>()
 
 const {
     // Template refs
-    kyou_dialog,
     contextmenu,
     edit_related_kyou_query_dialog,
 
@@ -117,7 +109,6 @@ const {
 
     // Event relay objects
     kyouViewRelayHandlers,
-    kyouDialogRelayHandlers,
     contextMenuRelayHandlers,
 } = useRyuuItemView({ props, emits, model_value })
 
