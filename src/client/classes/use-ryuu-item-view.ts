@@ -15,7 +15,8 @@ import moment from 'moment'
 import type RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import EqualTagsTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-target-kyou-predicate'
+import EqualTagsAndTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-and-target-kyou-predicate'
+import EqualTagsOrTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-or-target-kyou-predicate'
 import EqualTitleTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-title-target-kyou-predicate'
 import type DnotePredicate from '@/classes/dnote/dnote-predicate'
 import type RyuuItemViewEmits from '@/pages/views/ryuu-item-view-emits'
@@ -156,9 +157,9 @@ export function useRyuuItemView(options: {
             if (ryuu_predicate && ryuu_predicate instanceof AndPredicate) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (ryuu_predicate as any).predicates.forEach((predicate: DnotePredicate) => {
-                    if (predicate && predicate instanceof EqualTagsTargetKyouPredicate) {
+                    if (predicate && (predicate instanceof EqualTagsAndTargetKyouPredicate || predicate instanceof EqualTagsOrTargetKyouPredicate)) {
                         find_kyou_query.use_tags = true
-                        find_kyou_query.tags_and = predicate["and"] ? Boolean(predicate["and"]) : false
+                        find_kyou_query.tags_and = predicate instanceof EqualTagsAndTargetKyouPredicate
                         find_kyou_query.tags = props.target_kyou ? props.target_kyou.attached_tags.map(tag => tag.tag) : []
                     }
                 })

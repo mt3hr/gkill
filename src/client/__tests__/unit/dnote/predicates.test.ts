@@ -37,6 +37,8 @@ import DataTypePrefixPredicate from '@/classes/dnote/dnote-predicate/data-type-p
 import RelatedTimeBeforePredicate from '@/classes/dnote/dnote-predicate/related-time-before-predicate'
 import RelatedTimeAfterPredicate from '@/classes/dnote/dnote-predicate/related-time-after-predicate'
 import EqualIdTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-id-target-kyou-predicate'
+import EqualTagsAndTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-and-target-kyou-predicate'
+import EqualTagsOrTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-or-target-kyou-predicate'
 import AndPredicate from '@/classes/dnote/dnote-predicate/and-predicate'
 import OrPredicate from '@/classes/dnote/dnote-predicate/or-predicate'
 import NotPredicate from '@/classes/dnote/dnote-predicate/not-predicate'
@@ -398,6 +400,62 @@ describe('EqualIdTargetKyouPredicate', () => {
     expect(json.type).toBe('EqualIdTargetKyouPredicate')
     const restored = EqualIdTargetKyouPredicate.from_json(json)
     expect(restored).toBeInstanceOf(EqualIdTargetKyouPredicate)
+  })
+})
+
+describe('EqualTagsAndTargetKyouPredicate', () => {
+  const predicate = new EqualTagsAndTargetKyouPredicate()
+
+  test('matches when tags are identical', async () => {
+    const loaded_kyou = asKyou(makeKyouWithTags(['重要']))
+    const target_kyou = asKyou(makeKyouWithTags(['重要']))
+    expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(true)
+  })
+
+  test('does not match when a tag differs', async () => {
+    const loaded_kyou = asKyou(makeKyouWithTags(['重要']))
+    const target_kyou = asKyou(makeKyouWithTags(['メモ']))
+    expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(false)
+  })
+
+  test('does not match when target_kyou is null', async () => {
+    const loaded_kyou = asKyou(makeKyouWithTags(['重要']))
+    expect(await predicate.is_match(loaded_kyou, null)).toBe(false)
+  })
+
+  test('from_json / predicate_struct_to_json round-trip', () => {
+    const json = predicate.predicate_struct_to_json()
+    expect(json.type).toBe('EqualTagsAndTargetKyouPredicate')
+    const restored = EqualTagsAndTargetKyouPredicate.from_json(json)
+    expect(restored).toBeInstanceOf(EqualTagsAndTargetKyouPredicate)
+  })
+})
+
+describe('EqualTagsOrTargetKyouPredicate', () => {
+  const predicate = new EqualTagsOrTargetKyouPredicate()
+
+  test('matches when at least one tag is shared', async () => {
+    const loaded_kyou = asKyou(makeKyouWithTags(['重要', 'メモ']))
+    const target_kyou = asKyou(makeKyouWithTags(['メモ', '日常']))
+    expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(true)
+  })
+
+  test('does not match when no tag is shared', async () => {
+    const loaded_kyou = asKyou(makeKyouWithTags(['重要']))
+    const target_kyou = asKyou(makeKyouWithTags(['日常']))
+    expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(false)
+  })
+
+  test('does not match when target_kyou is null', async () => {
+    const loaded_kyou = asKyou(makeKyouWithTags(['重要']))
+    expect(await predicate.is_match(loaded_kyou, null)).toBe(false)
+  })
+
+  test('from_json / predicate_struct_to_json round-trip', () => {
+    const json = predicate.predicate_struct_to_json()
+    expect(json.type).toBe('EqualTagsOrTargetKyouPredicate')
+    const restored = EqualTagsOrTargetKyouPredicate.from_json(json)
+    expect(restored).toBeInstanceOf(EqualTagsOrTargetKyouPredicate)
   })
 })
 
