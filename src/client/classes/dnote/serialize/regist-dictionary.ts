@@ -68,7 +68,8 @@ import FilterTopKyous from "../dnote-filter/filter-top-kyous"
 import KCTitleContainsPredicate from "../dnote-predicate/kc-title-contains-predicate"
 import KCTitleEqualPredicate from "../dnote-predicate/kc-title-equal-predicate"
 import EqualTitleTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-title-target-kyou-predicate"
-import EqualTagsTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-tags-target-kyou-predicate"
+import EqualTagsAndTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-tags-and-target-kyou-predicate"
+import EqualTagsOrTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-tags-or-target-kyou-predicate"
 import EqualDataTypeTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-rep-data-type-target-kyou-predicate"
 import EqualIdTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-id-target-kyou-predicate"
 
@@ -107,7 +108,8 @@ export default function regist_dictionary(): void {
     PredicateDictionary.set("RelatedTimeAfterPredicate", RelatedTimeAfterPredicate)
     PredicateDictionary.set("RelatedTimeBeforePredicate", RelatedTimeBeforePredicate)
     PredicateDictionary.set("EqualTitleTargetKyouPredicate", EqualTitleTargetKyouPredicate)
-    PredicateDictionary.set("EqualTagsTargetKyouPredicate", EqualTagsTargetKyouPredicate)
+    PredicateDictionary.set("EqualTagsAndTargetKyouPredicate", EqualTagsAndTargetKyouPredicate)
+    PredicateDictionary.set("EqualTagsOrTargetKyouPredicate", EqualTagsOrTargetKyouPredicate)
     PredicateDictionary.set("EqualDataTypeTargetKyouPredicate", EqualDataTypeTargetKyouPredicate)
     PredicateDictionary.set("EqualIdTargetKyouPredicate", EqualIdTargetKyouPredicate)
     DnoteKeyGetterDictionary.set("DataTypeGetter", DataTypeGetter)
