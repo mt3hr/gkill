@@ -406,9 +406,9 @@ describe('EqualIdTargetKyouPredicate', () => {
 describe('EqualTagsAndTargetKyouPredicate', () => {
   const predicate = new EqualTagsAndTargetKyouPredicate()
 
-  test('matches when tags are identical', async () => {
-    const loaded_kyou = asKyou(makeKyouWithTags(['重要']))
-    const target_kyou = asKyou(makeKyouWithTags(['重要']))
+  test('matches when tag sets are identical (multiple tags)', async () => {
+    const loaded_kyou = asKyou(makeKyouWithTags(['重要', 'メモ']))
+    const target_kyou = asKyou(makeKyouWithTags(['メモ', '重要']))
     expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(true)
   })
 
@@ -416,6 +416,13 @@ describe('EqualTagsAndTargetKyouPredicate', () => {
     const loaded_kyou = asKyou(makeKyouWithTags(['重要']))
     const target_kyou = asKyou(makeKyouWithTags(['メモ']))
     expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(false)
+  })
+
+  test('does not match when one side has an extra tag (subset is not enough)', async () => {
+    const loaded_kyou = asKyou(makeKyouWithTags(['重要']))
+    const target_kyou = asKyou(makeKyouWithTags(['重要', 'メモ']))
+    expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(false)
+    expect(await predicate.is_match(target_kyou, loaded_kyou)).toBe(false)
   })
 
   test('does not match when target_kyou is null', async () => {
