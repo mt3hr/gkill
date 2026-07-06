@@ -32,4 +32,5 @@ export default [
     { label: i18n.global.t("DNOTE_EQUAL_TITLE_TARGET_KYOU_PREDICATE"), value: "EqualTitleTargetKyouPredicate" },
     { label: i18n.global.t("DNOTE_EQUAL_TAGS_TARGET_KYOU_PREDICATE"), value: "EqualTagsTargetKyouPredicate" },
     { label: i18n.global.t("DNOTE_EQUAL_DATA_TYPE_TARGET_KYOU_PREDICATE"), value: "EqualDataTypeTargetKyouPredicate" },
+    { label: i18n.global.t("DNOTE_EQUAL_ID_TARGET_KYOU_PREDICATE"), value: "EqualIdTargetKyouPredicate" },
 ]
