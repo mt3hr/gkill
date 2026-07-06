@@ -7,7 +7,7 @@
             :label="i18n.global.t('DNOTE_AGGREGATE_TARGET')"></v-select>
         <v-select v-model="key_getter" :items="key_getters" item-title="label" item-value="value"
             :label="i18n.global.t('DNOTE_LIST_KEY')"></v-select>
-        <PredicateGroup v-model="root_predicate" />
+        <PredicateGroup v-model="root_predicate" :is_root="true" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()">{{ i18n.global.t("RESET_TITLE") }}</v-btn>

@@ -3,11 +3,9 @@
         <v-text-field v-model="title" :label="i18n.global.t('RYUU_TITLE_TITLE')" />
         <v-text-field v-model="prefix" :label="i18n.global.t('RYUU_PREFIX_TITLE')" />
         <v-text-field v-model="suffix" :label="i18n.global.t('RYUU_SUFFIX_TITLE')" />
-        <PredicateGroup v-model="root_predicate" />
+        <PredicateGroup v-model="root_predicate" :is_root="true" />
         <v-select v-model="related_time_match_type" :items="related_time_match_types" item-title="label"
             item-value="value" :label="i18n.global.t('RYUU_RELATION_PREDICATE_TITLE')"></v-select>
-        <v-text-field type="number" v-model="find_duration_hour" min="0"
-            :label="i18n.global.t('RYUU_FIND_DURATION_HOUR_TITLE')" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-checkbox v-model="is_use_custom_find_kyou_query"
@@ -20,6 +18,8 @@
                         i18n.global.t('RYUU_FIND_QUERY_TITLE') }} </v-btn>
             </v-col>
         </v-row>
+        <v-text-field v-if="is_use_custom_find_kyou_query" type="number" v-model="find_duration_hour" min="0"
+            :label="i18n.global.t('RYUU_FIND_DURATION_HOUR_TITLE')" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()">{{ i18n.global.t("RESET_TITLE") }}</v-btn>

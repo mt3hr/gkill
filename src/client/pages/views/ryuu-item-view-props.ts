@@ -8,6 +8,7 @@ export default interface RyuuItemViewProps {
     application_config: ApplicationConfig
     find_kyou_query_default: FindKyouQuery
     target_kyou: Kyou | null
+    matched_kyous?: Array<Kyou> | null
     enable_context_menu: boolean
     enable_dialog: boolean
     abort_controller: AbortController

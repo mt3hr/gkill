@@ -5,7 +5,7 @@
         <v-text-field v-model="suffix" :label="i18n.global.t('DNOTE_SUFFIX_TITLE')" />
         <v-select v-model="aggregate_target" :items="aggregate_targets" item-title="label" item-value="value"
             :label="i18n.global.t('DNOTE_AGGREGATE_TARGET')"></v-select>
-        <PredicateGroup v-model="root_predicate" />
+        <PredicateGroup v-model="root_predicate" :is_root="true" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()">{{ i18n.global.t("RESET_TITLE") }}</v-btn>

@@ -8,5 +8,6 @@ export default interface RyuuViewProps {
     application_config: ApplicationConfig
     find_kyou_query_default: FindKyouQuery
     target_kyou: Kyou | null
+    matched_kyous?: Array<Kyou> | null
     editable: boolean
 }

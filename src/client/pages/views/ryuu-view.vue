@@ -26,7 +26,7 @@
                         v-model="def.queries[qIdx]" :gkill_api="gkill_api" :application_config="application_config"
                         :enable_dialog="true" :enable_context_menu="true" :target_kyou="target_kyou"
                         :abort_controller="abort_controler" :find_kyou_query_default="find_kyou_query_default"
-                        :editable="editable"
+                        :matched_kyous="matched_kyous" :editable="editable"
                         @requested_move_related_kyou_query="(group_id: string, query_id: string, direction: 'up' | 'down') => onRequestedMoveRelatedKyouQuery(group_id, query_id, direction)"
                         @requested_delete_related_kyou_list_query="(id: string) => onRequestedDeleteRelatedKyouListQuery(id)"
                         v-on="{ ...ryuuListItemCrudRelayHandlers, ...ryuuListItemRequestHandlers, ...ryuuListItemFocusHandlers, ...rykvDialogHandler }"
