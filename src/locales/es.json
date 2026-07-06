@@ -726,6 +726,7 @@
     "DNOTE_EQUAL_TITLE_TARGET_KYOU_PREDICATE": "El título es igual al objetivo",
     "DNOTE_EQUAL_TAGS_TARGET_KYOU_PREDICATE": "Las etiquetas son iguales al objetivo",
     "DNOTE_EQUAL_DATA_TYPE_TARGET_KYOU_PREDICATE": "El tipo de datos es igual al objetivo",
+    "DNOTE_EQUAL_ID_TARGET_KYOU_PREDICATE": "El ID es igual al objetivo",
     "PERIOD_OF_TIME_QUERY_TITLE": "Período de tiempo",
     "PERIOD_OF_TIME_QUERY_START_TIME_TITLE": "Inicio",
     "PERIOD_OF_TIME_QUERY_END_TIME_TITLE": "Fin",
