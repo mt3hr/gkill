@@ -144,6 +144,7 @@
                             <RyuuView v-if="focused_kyou && default_query" :application_config="application_config"
                                 :gkill_api="gkill_api" :target_kyou="focused_kyou" :editable="false"
                                 :find_kyou_query_default="default_query"
+                                :matched_kyous="match_kyous_list[focused_column_index] ?? null"
                                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }" />
                         </div>
                     </td>
