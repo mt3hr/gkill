@@ -10,26 +10,13 @@ export default class EqualTagsAndTargetKyouPredicate implements DnotePredicate {
         if (!target_kyou) {
             return false
         }
-        const loaded_tags = loaded_kyou.attached_tags
-        const target_tags = target_kyou?.attached_tags
+        // Kyouは複数のタグを持つ。双方が同じタグ集合を持つ（互いのタグがすべて相手にも憑いている）場合のみTrue
+        const loaded_tag_names = loaded_kyou.attached_tags.map(tag => tag.tag)
+        const target_tag_names = target_kyou.attached_tags.map(tag => tag.tag)
 
-        if (target_tags.length === 0 && loaded_tags.length === 0) {
-            return true
-        }
-
-        let match_and = true
-        for (let i = 0; i < loaded_tags.length; i++) {
-            const loaded_tag = loaded_tags[i]
-            for (let j = 0; j < target_tags.length; j++) {
-                const target_tag = target_tags[j]
-                if (loaded_tag.tag !== target_tag.tag) {
-                    match_and = false
-                    return false
-                }
-            }
-        }
-
-        return match_and
+        const all_loaded_in_target = loaded_tag_names.every(tag => target_tag_names.includes(tag))
+        const all_target_in_loaded = target_tag_names.every(tag => loaded_tag_names.includes(tag))
+        return all_loaded_in_target && all_target_in_loaded
     }
     predicate_struct_to_json(): Record<string, unknown> {
         return {
