@@ -726,6 +726,7 @@
     "DNOTE_EQUAL_TITLE_TARGET_KYOU_PREDICATE": "Titel entspricht dem Ziel",
     "DNOTE_EQUAL_TAGS_TARGET_KYOU_PREDICATE": "Tags entsprechen dem Ziel",
     "DNOTE_EQUAL_DATA_TYPE_TARGET_KYOU_PREDICATE": "Datentyp entspricht dem Ziel",
+    "DNOTE_EQUAL_ID_TARGET_KYOU_PREDICATE": "ID entspricht dem Ziel",
     "PERIOD_OF_TIME_QUERY_TITLE": "Zeitraum",
     "PERIOD_OF_TIME_QUERY_START_TIME_TITLE": "Start",
     "PERIOD_OF_TIME_QUERY_END_TIME_TITLE": "Ende",
