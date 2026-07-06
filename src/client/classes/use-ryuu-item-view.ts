@@ -166,25 +166,45 @@ export function useRyuuItemView(options: {
             }
         }
 
-        const get_kyous_req = new GetKyousRequest()
-        get_kyous_req.abort_controller = props.abort_controller
-        get_kyous_req.query = find_kyou_query
-        await props.gkill_api.delete_updated_gkill_caches()
-        const res = await props.gkill_api.get_kyous(get_kyous_req)
-        if (res.errors && res.errors.length !== 0) {
-            emits('received_errors', res.errors)
-            return
+        // 検索条件カスタマイズOFF（find_kyou_query === null）かつ親からKyou配列が渡されている場合は、
+        // KyouListViewが取得済みの検索結果を再利用してサーバ検索（get_kyous）を省略する。
+        const use_matched_kyous = model_value.value?.find_kyou_query === null && !!props.matched_kyous
+
+        let source_kyous: Array<Kyou>
+        if (use_matched_kyous) {
+            // find_kyou_queryのcalendar window（related_time範囲）でクライアント側フィルタし、
+            // サーバ検索が返していた母集団と同等にする（null境界は無制限）。
+            const start = find_kyou_query.calendar_start_date
+            const end = find_kyou_query.calendar_end_date
+            source_kyous = props.matched_kyous!.filter((kyou) => {
+                const related_time = kyou.related_time
+                if (start && related_time.getTime() < start.getTime()) return false
+                if (end && related_time.getTime() > end.getTime()) return false
+                return true
+            })
+        } else {
+            const get_kyous_req = new GetKyousRequest()
+            get_kyous_req.abort_controller = props.abort_controller
+            get_kyous_req.query = find_kyou_query
+            await props.gkill_api.delete_updated_gkill_caches()
+            const res = await props.gkill_api.get_kyous(get_kyous_req)
+            if (res.errors && res.errors.length !== 0) {
+                emits('received_errors', res.errors)
+                return
+            }
+            source_kyous = res.kyous
         }
 
         const trimed_kyous_map = new Map<string, Kyou>()
-        for (let i = 0; i < res.kyous.length; i++) {
-            trimed_kyous_map.set(res.kyous[i].id, res.kyous[i])
+        for (let i = 0; i < source_kyous.length; i++) {
+            trimed_kyous_map.set(source_kyous[i].id, source_kyous[i])
         }
         const trimed_kyous = new Array<Kyou>()
         trimed_kyous_map.forEach((kyou) => trimed_kyous.push(kyou))
 
         const clone = true
-        const get_latest_data = true
+        // 再利用時はKyouListViewが取得済みの新鮮なデータのため、各Kyouのサーバ再取得を省略する。
+        const get_latest_data = !use_matched_kyous
         let kyous = new Array<Kyou>()
         switch (related_time_match_type) {
             case RelatedTimeMatchType.NEAR_RELATED_TIME: {
