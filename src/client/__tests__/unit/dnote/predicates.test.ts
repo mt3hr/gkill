@@ -36,6 +36,7 @@ import TagEqualPredicate from '@/classes/dnote/dnote-predicate/tag-equal-predica
 import DataTypePrefixPredicate from '@/classes/dnote/dnote-predicate/data-type-prefix-predicate'
 import RelatedTimeBeforePredicate from '@/classes/dnote/dnote-predicate/related-time-before-predicate'
 import RelatedTimeAfterPredicate from '@/classes/dnote/dnote-predicate/related-time-after-predicate'
+import EqualIdTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-id-target-kyou-predicate'
 import AndPredicate from '@/classes/dnote/dnote-predicate/and-predicate'
 import OrPredicate from '@/classes/dnote/dnote-predicate/or-predicate'
 import NotPredicate from '@/classes/dnote/dnote-predicate/not-predicate'
@@ -367,6 +368,36 @@ describe('RelatedTimeAfterPredicate', () => {
   test('does not match when related_time before cutoff', async () => {
     const kyou = asKyou(makeKyouWithKmemo('test', { related_time: new Date('2025-03-01T00:00:00Z') }))
     expect(await predicate.is_match(kyou, null)).toBe(false)
+  })
+})
+
+// ========== Target Kyou Predicates ==========
+
+describe('EqualIdTargetKyouPredicate', () => {
+  const predicate = new EqualIdTargetKyouPredicate()
+
+  test('matches when IDs are equal', async () => {
+    const loaded_kyou = asKyou(makeKyou({ id: 'same-id', related_time: new Date() }))
+    const target_kyou = asKyou(makeKyou({ id: 'same-id', related_time: new Date() }))
+    expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(true)
+  })
+
+  test('does not match when IDs differ', async () => {
+    const loaded_kyou = asKyou(makeKyou({ id: 'id-1', related_time: new Date() }))
+    const target_kyou = asKyou(makeKyou({ id: 'id-2', related_time: new Date() }))
+    expect(await predicate.is_match(loaded_kyou, target_kyou)).toBe(false)
+  })
+
+  test('does not match when target_kyou is null', async () => {
+    const loaded_kyou = asKyou(makeKyou({ id: 'id-1', related_time: new Date() }))
+    expect(await predicate.is_match(loaded_kyou, null)).toBe(false)
+  })
+
+  test('from_json / predicate_struct_to_json round-trip', () => {
+    const json = predicate.predicate_struct_to_json()
+    expect(json.type).toBe('EqualIdTargetKyouPredicate')
+    const restored = EqualIdTargetKyouPredicate.from_json(json)
+    expect(restored).toBeInstanceOf(EqualIdTargetKyouPredicate)
   })
 })
 
