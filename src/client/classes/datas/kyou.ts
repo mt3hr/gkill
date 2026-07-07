@@ -633,6 +633,14 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
+    // 最新のメタ情報を取得したうえで、typedデータ（typed_timeis等）も強制的に再取得する。
+    // 表示時点でKyouを最新化しておき、終了操作などでの読み込み待ちをなくすために使う。
+    async reload_with_typed_datas(query?: FindKyouQuery): Promise<Array<GkillError>> {
+        const errors = await this.reload(true, true, query)
+        this.is_typed_data_loaded = false
+        return errors.concat(await this.load_typed_datas(query))
+    }
+
     async reload(content_only: boolean, is_updated_info: boolean, query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetKyouRequest()
         req.abort_controller = this.abort_controller
