@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import moment from 'moment'
 import { format_duration } from '@/classes/format-date-time'
@@ -20,6 +20,23 @@ export function useTimeIsView(options: {
     end_timeis_plaing_dialog: ReturnType<typeof ref<InstanceType<typeof EndTimeIsPlaingDialog> | null>>,
 }) {
     const { props, emits, context_menu, end_timeis_plaing_dialog } = options
+
+    // ── Lifecycle ──
+    // 表示時点で再生中TimeIsを最新化しておき、終了操作時の読み込み待ちをなくす。
+    onMounted(async () => {
+        const timeis = props.kyou.typed_timeis
+        if (!props.show_timeis_plaing_end_button || !timeis || timeis.end_time) {
+            return
+        }
+        try {
+            await props.kyou.reload_with_typed_datas()
+        } catch (err: unknown) {
+            // abortは握りつぶす
+            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
+                console.error(err)
+            }
+        }
+    })
 
     // ── Computed ──
     const duration = computed(() => {
