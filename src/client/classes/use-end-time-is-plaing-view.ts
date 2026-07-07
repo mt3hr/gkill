@@ -20,7 +20,7 @@ export function useEndTimeIsPlaingView(options: {
     const { props, emits } = options
 
     // ── State refs ──
-    const is_loading = ref(true)
+    const is_loading = ref(false)
     const is_requested_submit = ref(false)
     const is_busy = computed(() => is_loading.value || is_requested_submit.value)
 
@@ -44,19 +44,13 @@ export function useEndTimeIsPlaingView(options: {
     watch(() => props.kyou, () => load())
 
     // ── Business logic ──
-    async function load(): Promise<void> {
-        try {
-            is_loading.value = true
-            cloned_kyou.value = props.kyou.clone()
-            await cloned_kyou.value.reload(false, true)
-            await cloned_kyou.value.load_typed_datas()
-            await cloned_kyou.value.load_all()
-            timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
-            timeis_start_date_typed.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").toDate()
-            timeis_start_time_string.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
-        } finally {
-            is_loading.value = false
-        }
+    // 表示時点（TimeIsView）でKyouを最新化済みのため、ここではネットワーク取得せず
+    // props.kyouから同期的に初期化することで終了操作の待ち時間をなくす。
+    function load(): void {
+        cloned_kyou.value = props.kyou.clone()
+        timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
+        timeis_start_date_typed.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").toDate()
+        timeis_start_time_string.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
     }
 
     function reset(): void {
