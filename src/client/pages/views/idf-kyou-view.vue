@@ -1,7 +1,18 @@
 <template>
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
+        <!-- Markdownファイル: HTMLに変換してリッチテキスト表示 -->
+        <div v-if="kyou.typed_idf_kyou && is_markdown" class="idf_text_wrap">
+            <a :href="kyou.typed_idf_kyou.file_url" @click="open_link" class="idf_text_filename">
+                {{ kyou.typed_idf_kyou.file_name }}
+            </a>
+            <v-progress-linear v-if="text_loading" indeterminate color="primary" height="2" />
+            <!-- eslint-disable-next-line vue/no-v-html markdown_to_safe_html でDOMPurifyサニタイズ済み -->
+            <div v-if="markdown_html"
+                :class="['idf_markdown_content', is_image_request_to_thumb_size ? 'idf_markdown_content--list' : '']"
+                v-html="markdown_html"></div>
+        </div>
         <!-- テキストファイル: 内容をインライン表示 -->
-        <div v-if="kyou.typed_idf_kyou && is_text" class="idf_text_wrap">
+        <div v-else-if="kyou.typed_idf_kyou && is_text" class="idf_text_wrap">
             <a :href="kyou.typed_idf_kyou.file_url" @click="open_link" class="idf_text_filename">
                 {{ kyou.typed_idf_kyou.file_name }}
             </a>
@@ -10,7 +21,7 @@
                 :class="['idf_text_content', is_image_request_to_thumb_size ? 'idf_text_content--noscroll' : '']">{{ text_content }}</pre>
         </div>
         <!-- その他のファイル: リンクのみ -->
-        <a v-if="kyou.typed_idf_kyou && !is_text && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio"
+        <a v-if="kyou.typed_idf_kyou && !is_text && !is_markdown && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio"
             :href="kyou.typed_idf_kyou.file_url" @click="open_link">
             {{ kyou.typed_idf_kyou.file_name }}
         </a>
@@ -57,7 +68,9 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     context_menu,
     is_text,
+    is_markdown,
     text_content,
+    markdown_html,
     text_loading,
     show_context_menu,
     open_link,
@@ -102,5 +115,118 @@ defineExpose({ show_context_menu })
 
 .idf_text_content--noscroll {
     overflow: hidden;
+}
+
+/* Markdownをv-htmlで描画するため、scoped属性が付かない子要素は :deep() で指定する。
+   App.vue のグローバルスタイル (h1,h2 の margin:0、tr/td の padding:0) を打ち消す必要がある。 */
+.idf_markdown_content {
+    flex: 1;
+    overflow: auto;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    padding: 4px 6px;
+    word-break: break-word;
+}
+
+.idf_markdown_content--list {
+    overflow: hidden;
+    contain: layout;
+    pointer-events: none;
+}
+
+.idf_markdown_content :deep(h1),
+.idf_markdown_content :deep(h2),
+.idf_markdown_content :deep(h3),
+.idf_markdown_content :deep(h4),
+.idf_markdown_content :deep(h5),
+.idf_markdown_content :deep(h6) {
+    margin: 0.6em 0 0.3em;
+    line-height: 1.3;
+    font-weight: bold;
+}
+
+.idf_markdown_content :deep(h1) {
+    font-size: 1.5em;
+}
+
+.idf_markdown_content :deep(h2) {
+    font-size: 1.3em;
+}
+
+.idf_markdown_content :deep(h3) {
+    font-size: 1.15em;
+}
+
+.idf_markdown_content :deep(h1),
+.idf_markdown_content :deep(h2) {
+    border-bottom: 1px solid rgba(var(--v-border-color), 0.25);
+    padding-bottom: 0.2em;
+}
+
+.idf_markdown_content :deep(p),
+.idf_markdown_content :deep(ul),
+.idf_markdown_content :deep(ol),
+.idf_markdown_content :deep(blockquote),
+.idf_markdown_content :deep(table),
+.idf_markdown_content :deep(pre) {
+    margin: 0.5em 0;
+}
+
+.idf_markdown_content :deep(ul),
+.idf_markdown_content :deep(ol) {
+    padding-inline-start: 1.5em;
+}
+
+.idf_markdown_content :deep(blockquote) {
+    border-left: 3px solid rgba(var(--v-border-color), 0.35);
+    padding-left: 0.8em;
+    opacity: 0.85;
+}
+
+.idf_markdown_content :deep(code) {
+    font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+    font-size: 0.92em;
+    background: rgba(var(--v-theme-on-surface), 0.06);
+    border-radius: 3px;
+    padding: 0.1em 0.3em;
+}
+
+.idf_markdown_content :deep(pre) {
+    background: rgba(var(--v-theme-on-surface), 0.06);
+    border-radius: 4px;
+    padding: 6px 8px;
+    overflow-x: auto;
+}
+
+.idf_markdown_content :deep(pre code) {
+    background: none;
+    padding: 0;
+}
+
+.idf_markdown_content :deep(table) {
+    border-collapse: collapse;
+}
+
+.idf_markdown_content :deep(th),
+.idf_markdown_content :deep(td) {
+    border: 1px solid rgba(var(--v-border-color), 0.3);
+    padding: 3px 6px;
+}
+
+/* 画像は遅れて読み込まれて高さを押し広げる。
+   リスト表示は行高固定 (v-virtual-scroll の item-height) なので上限を掛ける。 */
+.idf_markdown_content :deep(img) {
+    max-width: 100%;
+    height: auto;
+}
+
+.idf_markdown_content--list :deep(img) {
+    max-height: 120px;
+}
+
+.idf_markdown_content :deep(hr) {
+    border: none;
+    border-top: 1px solid rgba(var(--v-border-color), 0.3);
+    margin: 0.8em 0;
 }
 </style>
