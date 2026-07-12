@@ -121,6 +121,47 @@ describe('markdown_to_safe_html', () => {
     })
 })
 
+describe('markdown_to_safe_html Mermaid', () => {
+    it('mermaidブロックをdata-gkill-mermaid付きのプレースホルダにする', async () => {
+        const md = [
+            '```mermaid',
+            'graph TD',
+            '  A --> B',
+            '```',
+        ].join('\n')
+
+        const html = await markdown_to_safe_html(md, BASE_URL)
+
+        expect(html).toContain('data-gkill-mermaid')
+        expect(html).toContain('graph TD')
+        // 描画前・描画失敗時にソースが読めるよう、中身はコードブロックのまま残す
+        expect(html).not.toContain('language-mermaid')
+    })
+
+    it('mermaid以外のコードブロックは従来どおり', async () => {
+        const html = await markdown_to_safe_html('```go\nfunc main() {}\n```', BASE_URL)
+
+        expect(html).toContain('language-go')
+        expect(html).not.toContain('data-gkill-mermaid')
+    })
+
+    it('mermaidソース内のHTMLはエスケープされる', async () => {
+        const md = [
+            '```mermaid',
+            'graph TD',
+            '  A["<img src=x onerror=alert(1)>"] --> B',
+            '```',
+        ].join('\n')
+
+        const html = await markdown_to_safe_html(md, BASE_URL)
+
+        expect(html).toContain('data-gkill-mermaid')
+        // タグとしてではなく、エスケープされたテキストとして残る
+        expect(html).not.toContain('<img')
+        expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;')
+    })
+})
+
 describe('truncate_markdown', () => {
     it('上限以下ならそのまま返す', () => {
         expect(truncate_markdown('abc', 10)).toBe('abc')
