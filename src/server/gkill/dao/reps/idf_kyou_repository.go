@@ -31,6 +31,8 @@ type IDFKyouRepository interface {
 
 	GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error)
 
+	GetIDFKyouByTargetFile(ctx context.Context, targetFile string) (*IDFKyou, error)
+
 	GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error)
 
 	IDF(ctx context.Context) error
