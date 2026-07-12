@@ -669,6 +669,7 @@
     "FAILED_GET_ACCOUNT_CONFIG_MESSAGE": "Échec de la récupération des paramètres du compte",
     "FAILED_GET_ALL_REPOSITORIES_MESSAGE": "Échec de la récupération de tous les dépôts",
     "FAILED_GET_GPS_LOG_MESSAGE": "Échec de la récupération des informations de localisation",
+    "FAILED_GET_IDF_FILE_PATH_NO_AUTH_MESSAGE": "Échec de la récupération du chemin du fichier. Autorisation refusée.",
     "FAILED_GET_LATEST_INFO_MESSAGE": "Échec de la récupération des dernières informations",
     "FAILED_GET_NOTIFICATION_MESSAGE": "Échec de la récupération de la notification",
     "FAILED_GET_REPOSITORIES_MESSAGE": "Échec de la récupération de la liste de stockage",

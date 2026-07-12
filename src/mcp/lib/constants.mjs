@@ -5,6 +5,12 @@ export const DATE_ONLY_DESC = "YYYY-MM-DD date string";
 export const DEFAULT_KYOUS_LIMIT = 20;
 export const DEFAULT_KYOUS_MAX_SIZE_MB = 0.25;
 export const DEFAULT_KYOUS_INCLUDE_TIMEIS = false;
+// gkill_get_idf_file が返すファイルの上限。base64はJSON-RPCレスポンスに素で載るため、
+// 上限がないと大きな動画などで応答が破裂する。超えた場合はローカルパス経由の取得を案内する。
+export const MAX_IDF_FILE_BYTES = Math.max(
+  1,
+  Number(process.env.GKILL_MCP_MAX_FILE_BYTES) || 8 * 1024 * 1024,
+);
 export const RFC3339_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 export const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
