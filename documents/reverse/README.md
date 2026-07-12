@@ -34,7 +34,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 12. **[screen-transition.md](screen-transition.md)** — 画面遷移図。UIのページ・ダイアログ遷移を理解します。
 13. **[screen-specs.md](screen-specs.md)** — 画面仕様。各画面の項目定義・コンポーネント構成の詳細です。
 14. **[frontend-architecture.md](frontend-architecture.md)** — フロントエンド設計ガイド。Vue 3 + TypeScript実装の詳細です。
-15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全84エンドポイントのリファレンスです。
+15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全85エンドポイントのリファレンスです。
 16. **[error-handling-and-security.md](error-handling-and-security.md)** — エラーハンドリング・セキュリティ設計。エラーコード体系とセキュリティポリシーです。
 17. **[operations-guide.md](operations-guide.md)** — 運用ガイド。デプロイ、バックアップ、トラブルシューティング手順です。
 18. **[dev-setup.md](dev-setup.md)** — 環境構築資料。開発環境のセットアップ手順です。
@@ -64,7 +64,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [screen-transition.md](screen-transition.md) | ページ・ダイアログ遷移図 | UI実装・改修時の参照 |
 | [screen-specs.md](screen-specs.md) | 画面仕様・項目定義（265+コンポーネント） | UI実装・改修時の参照 |
 | [frontend-architecture.md](frontend-architecture.md) | Vue 3フロントエンド設計ガイド | フロントエンド開発者向け |
-| [api-endpoints.md](api-endpoints.md) | 全APIエンドポイントのリファレンス（84件） | API利用・実装時の参照 |
+| [api-endpoints.md](api-endpoints.md) | 全APIエンドポイントのリファレンス（85件） | API利用・実装時の参照 |
 | [error-handling-and-security.md](error-handling-and-security.md) | エラー処理方針・セキュリティ設計 | エラー処理実装、セキュリティレビュー |
 | [operations-guide.md](operations-guide.md) | デプロイ・バックアップ・保守手順 | 運用担当者、環境構築時 |
 | [dev-setup.md](dev-setup.md) | 開発環境構築手順（ビルド、クロスコンパイル） | 新規開発者のオンボーディング |

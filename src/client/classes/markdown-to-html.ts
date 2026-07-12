@@ -41,10 +41,21 @@ export function truncate_markdown(markdown: string, max_length: number): string 
     return truncated + '\n\n…'
 }
 
+// Kyouとして開ける可能性のあるMarkdownリンクをマークするdata属性。
+// 値は元の相対href (idf-kyou-view がダブルクリック時にサーバへ渡して解決する)。
+export const MD_LINK_DATA_ATTRIBUTE = 'data-gkill-md-link'
+
+const FILES_URL_PREFIX = '/files/'
+
+// 相対URLであるか (スキーム付きURL・プロトコル相対URL・ページ内アンカーでないか)
+function is_relative_url(url: string): boolean {
+    return !(url === '' || url.startsWith('#') || url.startsWith('//') || HAS_SCHEME_PATTERN.test(url))
+}
+
 // 相対URLを base_url 基準の絶対URLに解決する。
 // スキーム付きURL・プロトコル相対URL・ページ内アンカーはそのまま返す。
 function resolve_url(url: string, base: URL): string {
-    if (url === '' || url.startsWith('#') || url.startsWith('//') || HAS_SCHEME_PATTERN.test(url)) {
+    if (!is_relative_url(url)) {
         return url
     }
     try {
@@ -52,6 +63,22 @@ function resolve_url(url: string, base: URL): string {
     } catch {
         // 解決できないものはそのまま
         return url
+    }
+}
+
+// 相対リンクで、解決先が /files/ 配下のMarkdownファイルであるか。
+// この場合、対象ファイルがIDFKyouとして存在すればKyouDialogで開ける。
+function is_relative_markdown_file_link(href: string, base: URL): boolean {
+    if (!is_relative_url(href)) {
+        return false
+    }
+    try {
+        const resolved = new URL(href, base)
+        return resolved.origin === base.origin
+            && resolved.pathname.startsWith(FILES_URL_PREFIX)
+            && is_markdown_file_name(decodeURIComponent(resolved.pathname))
+    } catch {
+        return false
     }
 }
 
@@ -88,6 +115,9 @@ export async function markdown_to_safe_html(markdown: string, base_url: string):
         const href = anchor.getAttribute('href')
         if (href !== null) {
             anchor.setAttribute('href', resolve_url(href, base))
+            if (is_relative_markdown_file_link(href, base)) {
+                anchor.setAttribute(MD_LINK_DATA_ATTRIBUTE, href)
+            }
         }
         anchor.setAttribute('target', '_blank')
         anchor.setAttribute('rel', 'noopener noreferrer')

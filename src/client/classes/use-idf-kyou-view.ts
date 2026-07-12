@@ -10,7 +10,9 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { detectAndDecodeText } from '@/classes/decode-text'
-import { is_markdown_file_name, markdown_to_safe_html, truncate_markdown } from '@/classes/markdown-to-html'
+import { is_markdown_file_name, markdown_to_safe_html, truncate_markdown, MD_LINK_DATA_ATTRIBUTE } from '@/classes/markdown-to-html'
+import { GetIDFKyouByRelativePathRequest } from '@/classes/api/req_res/get-idf-kyou-by-relative-path-request'
+import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 
 const TEXT_EXTENSIONS = new Set(['txt'])
 
@@ -118,6 +120,72 @@ export function useIDFKyouView(options: {
         }
     }
 
+    // ── Markdown内の相対MDリンク → KyouDialog ──
+
+    function find_md_link_anchor(e: MouseEvent): HTMLAnchorElement | null {
+        const target = e.target
+        if (!(target instanceof Element)) return null
+        return target.closest(`a[${MD_LINK_DATA_ATTRIBUTE}]`)
+    }
+
+    function on_markdown_content_click(e: MouseEvent): void {
+        const anchor = find_md_link_anchor(e)
+        if (!anchor) return
+        // 修飾キー付きクリックはブラウザ既定の動作 (新規タブで開く等) に任せる
+        if (e.ctrlKey || e.metaKey || e.shiftKey) return
+        // ダブルクリック1回目のクリックで新規タブが開かないよう、シングルクリックの遷移は無効化する
+        e.preventDefault()
+    }
+
+    async function on_markdown_content_dblclick(e: MouseEvent): Promise<void> {
+        const anchor = find_md_link_anchor(e)
+        if (!anchor) return
+        e.preventDefault()
+        // 親KyouViewのダブルクリック (現在のKyouのダイアログ表示) を抑止する
+        e.stopPropagation()
+
+        const fallback_url = anchor.getAttribute('href')
+        const open_fallback = () => {
+            if (fallback_url) {
+                window.open(fallback_url, '_blank')
+            }
+        }
+
+        if (!props.enable_dialog) {
+            open_fallback()
+            return
+        }
+
+        try {
+            const req = new GetIDFKyouByRelativePathRequest()
+            req.target_id = props.kyou.id
+            // フラグメント・クエリを除いた相対パスをサーバへ渡す
+            req.relative_path = (anchor.getAttribute(MD_LINK_DATA_ATTRIBUTE) ?? '').split(/[#?]/)[0]
+            const res = await props.gkill_api.get_idf_kyou_by_relative_path(req)
+            if (res.errors && res.errors.length !== 0) {
+                emits('received_errors', res.errors)
+                return
+            }
+            if (res.kyou_id) {
+                const kyou_req = new GetKyouRequest()
+                kyou_req.id = res.kyou_id
+                const kyou_res = await props.gkill_api.get_kyou(kyou_req)
+                if (kyou_res.errors && kyou_res.errors.length !== 0) {
+                    emits('received_errors', kyou_res.errors)
+                    return
+                }
+                if (kyou_res.kyou_histories.length !== 0) {
+                    emits('requested_open_rykv_dialog', 'kyou', kyou_res.kyou_histories[0])
+                    return
+                }
+            }
+            // 対象がKyouとして見つからない場合は従来どおり生ファイルを新規タブで開く
+            open_fallback()
+        } catch {
+            open_fallback()
+        }
+    }
+
     function buildMediaUrl(fileUrl: string, isVideoThumb: boolean): string {
         let is_added_query = false
         if (isVideoThumb) {
@@ -187,6 +255,8 @@ export function useIDFKyouView(options: {
         // Business logic
         show_context_menu,
         open_link,
+        on_markdown_content_click,
+        on_markdown_content_dblclick,
         buildMediaUrl,
 
         // Event relay objects

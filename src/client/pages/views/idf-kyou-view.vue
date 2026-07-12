@@ -9,6 +9,7 @@
             <!-- eslint-disable-next-line vue/no-v-html markdown_to_safe_html でDOMPurifyサニタイズ済み -->
             <div v-if="markdown_html"
                 :class="['idf_markdown_content', is_image_request_to_thumb_size ? 'idf_markdown_content--list' : '']"
+                @click="on_markdown_content_click" @dblclick="on_markdown_content_dblclick"
                 v-html="markdown_html"></div>
         </div>
         <!-- テキストファイル: 内容をインライン表示 -->
@@ -74,6 +75,8 @@ const {
     text_loading,
     show_context_menu,
     open_link,
+    on_markdown_content_click,
+    on_markdown_content_dblclick,
     buildMediaUrl,
     crudRelayHandlers,
 } = useIDFKyouView({ props, emits })
@@ -87,6 +90,7 @@ defineExpose({ show_context_menu })
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+    min-width: 0;
 }
 
 .idf_text_filename {
@@ -125,6 +129,11 @@ defineExpose({ show_context_menu })
     font-size: 0.78rem;
     line-height: 1.6;
     padding: 4px 6px;
+    min-width: 0;
+    max-width: 100%;
+    /* word-break: break-word と違い overflow-wrap: anywhere は min-content を縮める。
+       長いURLや連続英数字で親の幅を押し広げないために必要。 */
+    overflow-wrap: anywhere;
     word-break: break-word;
 }
 
@@ -191,11 +200,16 @@ defineExpose({ show_context_menu })
     padding: 0.1em 0.3em;
 }
 
+/* UA既定の white-space: pre のままだと最長コード行が min-content になり、親の幅を突き破る。
+   横スクロールは出さず、プレーンテキスト表示 (.idf_text_content) と同じく折り返す。 */
 .idf_markdown_content :deep(pre) {
     background: rgba(var(--v-theme-on-surface), 0.06);
     border-radius: 4px;
     padding: 6px 8px;
-    overflow-x: auto;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-width: 100%;
 }
 
 .idf_markdown_content :deep(pre code) {
@@ -203,14 +217,20 @@ defineExpose({ show_context_menu })
     padding: 0;
 }
 
+/* table-layout: fixed にしないと、横に広い表の列 min-content がそのまま親の幅を押し広げる */
 .idf_markdown_content :deep(table) {
     border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    max-width: 100%;
 }
 
 .idf_markdown_content :deep(th),
 .idf_markdown_content :deep(td) {
     border: 1px solid rgba(var(--v-border-color), 0.3);
     padding: 3px 6px;
+    overflow-wrap: anywhere;
+    word-break: break-all;
 }
 
 /* 画像は遅れて読み込まれて高さを押し広げる。
