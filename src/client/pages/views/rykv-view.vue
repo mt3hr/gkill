@@ -124,7 +124,7 @@
                     <td valign="top" v-if="is_show_kyou_detail_view"
                         class="rykv_kyou_detail_view_wrap"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <div class="kyou_detail_view dummy">
+                        <div class="kyou_detail_view dummy" ref="kyou_detail_view_element">
                             <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
                                 :is_image_request_to_thumb_size="false" :application_config="application_config"
                                 :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false"
@@ -346,6 +346,8 @@ const {
     default_query,
     is_loading,
     inited,
+    kyou_detail_view_element,
+    kyou_detail_view_width,
 
     // Computed
     kyou_list_view_height,
@@ -424,11 +426,18 @@ const is_ryuu_empty = computed(() => {
     }
 }
 
+/* 確定幅を与える。中身のKyouの型によらず、外側のtd列がryuuの中身のmin-contentで広がるのを防ぐ */
 .ryuu_view.dummy {
     overflow-x: hidden;
     overflow-y: auto;
     height: calc(100vh * 0.2);
     height: calc(v-bind('is_ryuu_empty ? "0px" : "100vh * 0.2"'));
+    width: v-bind('kyou_detail_view_width.toString().concat("px")');
+    max-width: v-bind('kyou_detail_view_width.toString().concat("px")');
+}
+
+.ryuu_view.dummy :deep(.ryuu_views) {
+    min-width: 0;
 }
 
 .scroll_snap_container {

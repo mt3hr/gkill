@@ -260,7 +260,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_user_reps` | リポジトリパス更新 |
 | `/api/reload_repositories` | リポジトリ再読み込み |
 
-## ファイル操作（5件）
+## ファイル操作（6件）
 
 | パス | 説明 |
 |---|---|
@@ -269,6 +269,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/open_directory` | ディレクトリを開く（OS コマンド実行） |
 | `/api/open_file` | ファイルを開く（OS コマンド実行） |
 | `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（ファイル名・サイズ・パス等）を返却する。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
+| `/api/get_idf_kyou_by_relative_path` | IDFKyou相対パス解決。基準IDFKyou（`target_id`）のファイルからの相対パス（`relative_path`）を同一Rep内で解決し、対象ファイルのIDFKyou IDを返却する（Markdown内相対リンクのKyouDialog表示用）。見つからない場合は `kyou_id` 空文字。セッション認証必須。パストラバーサル防止対応 |
 
 ## KFTL（2件）
 
@@ -383,7 +384,7 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 
 ## 補足
 
-- **合計:** POST エンドポイント 84件（うち82件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 4件
+- **合計:** POST エンドポイント 85件（うち83件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 4件
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（172ファイル）

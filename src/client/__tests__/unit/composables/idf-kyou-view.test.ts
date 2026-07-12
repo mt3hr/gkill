@@ -3,6 +3,10 @@
  * ファイル種別の判定と、Markdown/テキストのインライン表示のロードを検証する。
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+// use-idf-kyou-viewはreq_res経由でGkillAPIRequestに依存する。
+// GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
+// 本番同様に gkill-api を先に評価させないと class extends が undefined になる。
+import '@/classes/api/gkill-api'
 import { useIDFKyouView } from '@/classes/use-idf-kyou-view'
 import type { IDFKyouProps } from '@/pages/views/idf-kyou-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
@@ -123,5 +127,177 @@ describe('useIDFKyouView', () => {
 
         const { is_markdown } = useIDFKyouView({ props, emits: noop_emits })
         expect(is_markdown.value).toBe(false)
+    })
+})
+
+describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
+    beforeEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    // data-gkill-md-link 付きのanchor (markdown_to_safe_htmlが付与するものと同形)
+    function createMdLinkAnchor(relative_path: string, href: string): HTMLAnchorElement {
+        const anchor = document.createElement('a')
+        anchor.setAttribute('href', href)
+        anchor.setAttribute('data-gkill-md-link', relative_path)
+        document.body.appendChild(anchor)
+        return anchor
+    }
+
+    function createMouseEvent(target: Element, modifiers: Partial<MouseEvent> = {}): MouseEvent {
+        return {
+            target,
+            preventDefault: vi.fn(),
+            stopPropagation: vi.fn(),
+            ctrlKey: false,
+            metaKey: false,
+            shiftKey: false,
+            ...modifiers,
+        } as unknown as MouseEvent
+    }
+
+    function createPropsWithAPI(api: unknown, enable_dialog = true): IDFKyouProps {
+        const props = createProps('note.md', '/files/rep1/note.md')
+        ;(props as unknown as { gkill_api: unknown }).gkill_api = api
+        ;(props as unknown as { enable_dialog: boolean }).enable_dialog = enable_dialog
+        return props
+    }
+
+    it('シングルクリックは遷移を無効化する (誤って新規タブが開かないように)', () => {
+        const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
+        const props = createPropsWithAPI({})
+        const { on_markdown_content_click } = useIDFKyouView({ props, emits: noop_emits })
+
+        const e = createMouseEvent(anchor)
+        on_markdown_content_click(e)
+        expect(e.preventDefault).toHaveBeenCalled()
+    })
+
+    it('修飾キー付きシングルクリックはブラウザ既定の動作に任せる', () => {
+        const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
+        const props = createPropsWithAPI({})
+        const { on_markdown_content_click } = useIDFKyouView({ props, emits: noop_emits })
+
+        const e = createMouseEvent(anchor, { ctrlKey: true })
+        on_markdown_content_click(e)
+        expect(e.preventDefault).not.toHaveBeenCalled()
+    })
+
+    it('マークされていない要素のクリックは何もしない', () => {
+        const plain = document.createElement('span')
+        document.body.appendChild(plain)
+        const props = createPropsWithAPI({})
+        const { on_markdown_content_click } = useIDFKyouView({ props, emits: noop_emits })
+
+        const e = createMouseEvent(plain)
+        on_markdown_content_click(e)
+        expect(e.preventDefault).not.toHaveBeenCalled()
+    })
+
+    it('ダブルクリックで対象Kyouを解決し requested_open_rykv_dialog をemitする', async () => {
+        const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
+        const target_kyou = { id: 'kyou-target' }
+        const api = {
+            get_idf_kyou_by_relative_path: vi.fn().mockResolvedValue({ errors: [], kyou_id: 'kyou-target' }),
+            get_kyou: vi.fn().mockResolvedValue({ errors: [], kyou_histories: [target_kyou] }),
+        }
+        const emits = vi.fn() as unknown as KyouViewEmits
+        const props = createPropsWithAPI(api)
+        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits })
+
+        const e = createMouseEvent(anchor)
+        await on_markdown_content_dblclick(e)
+
+        expect(e.preventDefault).toHaveBeenCalled()
+        expect(e.stopPropagation).toHaveBeenCalled()
+        expect(api.get_idf_kyou_by_relative_path).toHaveBeenCalledWith(
+            expect.objectContaining({ target_id: 'kyou-1', relative_path: 'index.md' }),
+        )
+        expect(emits).toHaveBeenCalledWith('requested_open_rykv_dialog', 'kyou', target_kyou)
+    })
+
+    it('相対パスのフラグメントを除いてサーバへ渡す', async () => {
+        const anchor = createMdLinkAnchor('index.md#section', '/files/rep1/index.md#section')
+        const api = {
+            get_idf_kyou_by_relative_path: vi.fn().mockResolvedValue({ errors: [], kyou_id: '' }),
+        }
+        vi.stubGlobal('open', vi.fn())
+        const props = createPropsWithAPI(api)
+        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits: noop_emits })
+
+        await on_markdown_content_dblclick(createMouseEvent(anchor))
+
+        expect(api.get_idf_kyou_by_relative_path).toHaveBeenCalledWith(
+            expect.objectContaining({ relative_path: 'index.md' }),
+        )
+    })
+
+    it('対象がKyouとして見つからない場合は従来どおり新規タブで開く', async () => {
+        const anchor = createMdLinkAnchor('missing.md', '/files/rep1/missing.md')
+        const api = {
+            get_idf_kyou_by_relative_path: vi.fn().mockResolvedValue({ errors: [], kyou_id: '' }),
+        }
+        const open_mock = vi.fn()
+        vi.stubGlobal('open', open_mock)
+        const emits = vi.fn() as unknown as KyouViewEmits
+        const props = createPropsWithAPI(api)
+        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits })
+
+        await on_markdown_content_dblclick(createMouseEvent(anchor))
+
+        expect(open_mock).toHaveBeenCalledWith('/files/rep1/missing.md', '_blank')
+        expect(emits).not.toHaveBeenCalled()
+    })
+
+    it('API失敗時も従来どおり新規タブで開く', async () => {
+        const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
+        const api = {
+            get_idf_kyou_by_relative_path: vi.fn().mockRejectedValue(new Error('network error')),
+        }
+        const open_mock = vi.fn()
+        vi.stubGlobal('open', open_mock)
+        const props = createPropsWithAPI(api)
+        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits: noop_emits })
+
+        await on_markdown_content_dblclick(createMouseEvent(anchor))
+
+        expect(open_mock).toHaveBeenCalledWith('/files/rep1/index.md', '_blank')
+    })
+
+    it('enable_dialog=false のときはAPIを呼ばず新規タブで開く', async () => {
+        const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
+        const api = {
+            get_idf_kyou_by_relative_path: vi.fn(),
+        }
+        const open_mock = vi.fn()
+        vi.stubGlobal('open', open_mock)
+        const props = createPropsWithAPI(api, false)
+        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits: noop_emits })
+
+        await on_markdown_content_dblclick(createMouseEvent(anchor))
+
+        expect(api.get_idf_kyou_by_relative_path).not.toHaveBeenCalled()
+        expect(open_mock).toHaveBeenCalledWith('/files/rep1/index.md', '_blank')
+    })
+
+    it('マークされていない要素のダブルクリックは何もしない (親のdblclickに任せる)', async () => {
+        const plain = document.createElement('span')
+        document.body.appendChild(plain)
+        const api = {
+            get_idf_kyou_by_relative_path: vi.fn(),
+        }
+        const props = createPropsWithAPI(api)
+        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits: noop_emits })
+
+        const e = createMouseEvent(plain)
+        await on_markdown_content_dblclick(e)
+
+        expect(e.preventDefault).not.toHaveBeenCalled()
+        expect(e.stopPropagation).not.toHaveBeenCalled()
+        expect(api.get_idf_kyou_by_relative_path).not.toHaveBeenCalled()
     })
 })
