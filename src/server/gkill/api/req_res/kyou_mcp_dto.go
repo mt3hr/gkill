@@ -83,6 +83,8 @@ type IDFPayloadMCPDTO struct {
 	IsAudio  bool   `json:"is_audio"`
 	RepName  string `json:"rep_name"`
 	MimeType string `json:"mime_type,omitempty"`
+	// FilePath はファイルの絶対パス。同一マシンからのリクエストのときだけ埋める。
+	FilePath string `json:"file_path,omitempty"`
 }
 
 type GitPayloadMCPDTO struct {

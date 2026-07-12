@@ -541,6 +541,14 @@ ingress:
 
 リフレッシュトークン（30日TTL）とDCRクライアント登録は `$GKILL_HOME/configs/` 配下の各サーバーのOAuth状態ファイルに自動保存される。サーバー再起動後も再認証不要。
 
+### 11.4.1 ファイルURL配信ルート（HTTPモード）
+
+HTTPモードのMCPサーバは `GET /files/{token}` を公開し、`gkill_get_kyous` のIDFペイロードに入る `file_url` / `file_url_full`（画像はサムネ＋原寸）のバイトを配信する。リモートのAIクライアント（ChatGPT等）が実パスを読めない代わりに、base64を経由せず任意サイズのファイルを取得できる。
+
+- URLは `MCP_OAUTH_ISSUER`（公開URL）を基点に組み立てられる。Cloudflare Tunnelは hostname 単位で全パスをプロキシするため、`/mcp` と同じトンネルで `/files/…` も到達する。**追加のトンネル設定は不要**。
+- トークンは特定1ファイルに束縛・期限付き（`GKILL_MCP_FILE_LINK_TTL_MS`、既定1時間）・推測不能で、メモリ保持（サーバ再起動で失効）。URLにセッションは載らない。gkill本体を公開する必要はない。
+- 配信ルートはBearer不要（画像取得は認証ヘッダを付けられないため）。防御はトークン自体が担う。
+
 ### 11.5 既知の制限
 
 - **ChatGPT**: OAuth認証・初回データ取得は成功するが、cursorベースのページング継続時にChatGPTプラットフォーム側で「Resource not found」が発生する（2026-03時点、ベータ版の制限）

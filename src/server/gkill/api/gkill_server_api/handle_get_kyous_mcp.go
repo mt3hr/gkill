@@ -341,6 +341,11 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			if idfk, ok := idfKyouMap[kyou.ID]; ok {
 				mimeType := mime.TypeByExtension(filepath.Ext(idfk.TargetFile))
 				repName := kyou.RepName
+				// ファイル実パスは同一マシンのクライアントにしか意味がないので、ローカルリクエストのときだけ返す
+				filePath := ""
+				if isLocalRequest(r) {
+					filePath = idfk.ContentPath
+				}
 				payload = req_res.IDFPayloadMCPDTO{
 					Kind:     "idf",
 					FileName: idfk.TargetFile,
@@ -349,6 +354,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 					IsAudio:  idfk.IsAudio,
 					RepName:  repName,
 					MimeType: mimeType,
+					FilePath: filePath,
 				}
 			}
 		case "git_commit_log":

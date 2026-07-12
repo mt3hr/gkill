@@ -384,4 +384,9 @@ const (
 	GetPluginConfigHTMLError                                         = "ERR000382"
 	InvalidPostPluginConfigRequestDataError                          = "ERR000383"
 	PostPluginConfigError                                            = "ERR000384"
+	InvalidGetIDFKyouByRelativePathRequestDataError                  = "ERR000385"
+	GetIDFKyouByRelativePathError                                    = "ERR000386"
+	InvalidGetIDFFilePathRequestDataError                            = "ERR000387"
+	GetIDFFilePathError                                              = "ERR000388"
+	GetIDFFilePathNotLocalRequestError                               = "ERR000389"
 )

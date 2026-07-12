@@ -30,4 +30,6 @@ export interface KyouViewProps extends KyouViewPropsBase {
     enable_dialog: boolean
     force_show_latest_kyou_info: boolean
     is_image_request_to_thumb_size: boolean
+    // IDFKyouViewへ中継する。未指定なら enable_dialog に従う
+    enable_md_link_dialog?: boolean
 }

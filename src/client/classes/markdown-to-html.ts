@@ -45,6 +45,10 @@ export function truncate_markdown(markdown: string, max_length: number): string 
 // 値は元の相対href (idf-kyou-view がダブルクリック時にサーバへ渡して解決する)。
 export const MD_LINK_DATA_ATTRIBUTE = 'data-gkill-md-link'
 
+// Mermaidのコードブロックであることを示すdata属性。
+// 値が 'rendered' ならSVG描画済み (mermaid-render.ts が付ける)。
+export const MERMAID_DATA_ATTRIBUTE = 'data-gkill-mermaid'
+
 const FILES_URL_PREFIX = '/files/'
 
 // 相対URLであるか (スキーム付きURL・プロトコル相対URL・ページ内アンカーでないか)
@@ -103,6 +107,20 @@ export async function markdown_to_safe_html(markdown: string, base_url: string):
     template.innerHTML = clean_html
 
     const base = new URL(base_url, document.baseURI)
+
+    // Mermaidのコードブロックはプレースホルダにする。
+    // SVGの描画はmermaidがDOMを要求するため、DOM挿入後に render_mermaid_diagrams が行う。
+    // textContentに元ソースを残すので、描画に失敗してもコードブロックとしてソースが読める。
+    for (const code of template.content.querySelectorAll('code.language-mermaid')) {
+        const pre = code.parentElement
+        if (!pre || pre.tagName !== 'PRE') {
+            continue
+        }
+        const placeholder = document.createElement('pre')
+        placeholder.setAttribute(MERMAID_DATA_ATTRIBUTE, '')
+        placeholder.textContent = code.textContent ?? ''
+        pre.replaceWith(placeholder)
+    }
 
     for (const img of template.content.querySelectorAll('img')) {
         const src = img.getAttribute('src')
