@@ -91,6 +91,34 @@ describe('markdown_to_safe_html', () => {
         expect(html).toContain('target="_blank"')
         expect(html).toContain('rel="noopener noreferrer"')
     })
+
+    it('相対MDリンクに data-gkill-md-link を付与する (値は元の相対パス)', async () => {
+        const html = await markdown_to_safe_html('[index](index.md)', BASE_URL)
+        expect(html).toContain('data-gkill-md-link="index.md"')
+    })
+
+    it('親ディレクトリへの相対MDリンクもマークする', async () => {
+        const html = await markdown_to_safe_html('[up](../index.md)', BASE_URL)
+        expect(html).toContain('data-gkill-md-link="../index.md"')
+    })
+
+    it('日本語ファイル名の相対MDリンクもマークする (markedがパーセントエンコードした値)', async () => {
+        const html = await markdown_to_safe_html('[哲学](記録哲学.md)', BASE_URL)
+        expect(html).toContain(`data-gkill-md-link="${encodeURIComponent('記録哲学')}.md"`)
+    })
+
+    it('絶対URL・ページ内アンカー・非MDの相対リンクはマークしない', async () => {
+        const html = await markdown_to_safe_html(
+            '[ext](https://example.com/x.md) [anc](#sec) [img](photo.jpg) [txt](note.txt)',
+            BASE_URL,
+        )
+        expect(html).not.toContain('data-gkill-md-link')
+    })
+
+    it('/files/ 配下でないbase_urlの相対MDリンクはマークしない', async () => {
+        const html = await markdown_to_safe_html('[other](other.md)', '/zip_cache/rep1/hash/note.md')
+        expect(html).not.toContain('data-gkill-md-link')
+    })
 })
 
 describe('truncate_markdown', () => {
