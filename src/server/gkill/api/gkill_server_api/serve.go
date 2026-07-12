@@ -38,6 +38,8 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.HandleFunc(g.APIAddress.UploadFilesAddress, g.wrapNoAuth(g.HandleUploadFiles)).Methods(g.APIAddress.UploadFilesMethod)
 	router.HandleFunc(g.APIAddress.UploadGPSLogFilesAddress, g.wrapNoAuth(g.HandleUploadGPSLogFiles)).Methods(g.APIAddress.UploadGPSLogFilesMethod)
 	router.HandleFunc(g.APIAddress.BrowseZipContentsAddress, g.wrapNoAuth(g.HandleBrowseZipContents)).Methods(g.APIAddress.BrowseZipContentsMethod)
+	router.HandleFunc(g.APIAddress.GetIDFKyouByRelativePathAddress, g.wrapNoAuth(g.HandleGetIDFKyouByRelativePath)).Methods(g.APIAddress.GetIDFKyouByRelativePathMethod)
+	router.HandleFunc(g.APIAddress.GetIDFFilePathAddress, g.wrapNoAuth(g.HandleGetIDFFilePath)).Methods(g.APIAddress.GetIDFFilePathMethod)
 
 	// --- wrapAuth routes (auth only, no repos) ---
 	router.HandleFunc(g.APIAddress.GetApplicationConfigAddress, g.wrapAuth(g.HandleGetApplicationConfig)).Methods(g.APIAddress.GetApplicationConfigMethod)

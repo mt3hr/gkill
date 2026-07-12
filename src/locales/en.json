@@ -669,6 +669,7 @@
     "FAILED_GET_ACCOUNT_CONFIG_MESSAGE": "Failed to retrieve account settings",
     "FAILED_GET_ALL_REPOSITORIES_MESSAGE": "Failed to retrieve all repositories",
     "FAILED_GET_GPS_LOG_MESSAGE": "Failed to retrieve location info",
+    "FAILED_GET_IDF_FILE_PATH_NO_AUTH_MESSAGE": "Failed to get the file path. Permission denied.",
     "FAILED_GET_LATEST_INFO_MESSAGE": "Failed to retrieve latest info",
     "FAILED_GET_NOTIFICATION_MESSAGE": "Failed to retrieve notification",
     "FAILED_GET_REPOSITORIES_MESSAGE": "Failed to retrieve storage list",
