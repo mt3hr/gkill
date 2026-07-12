@@ -7,7 +7,7 @@
             </a>
             <v-progress-linear v-if="text_loading" indeterminate color="primary" height="2" />
             <!-- eslint-disable-next-line vue/no-v-html markdown_to_safe_html でDOMPurifyサニタイズ済み -->
-            <div v-if="markdown_html"
+            <div v-if="markdown_html" ref="markdown_content"
                 :class="['idf_markdown_content', is_image_request_to_thumb_size ? 'idf_markdown_content--list' : '']"
                 @click="on_markdown_content_click" @dblclick="on_markdown_content_dblclick"
                 v-html="markdown_html"></div>
@@ -68,6 +68,7 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     context_menu,
+    markdown_content,
     is_text,
     is_markdown,
     text_content,
@@ -241,6 +242,24 @@ defineExpose({ show_context_menu })
 }
 
 .idf_markdown_content--list :deep(img) {
+    max-height: 120px;
+}
+
+/* Mermaid: 描画済みのSVGラッパ。描画前・失敗時はプレースホルダの pre のまま表示される。 */
+.idf_markdown_content :deep(.gkill_mermaid) {
+    margin: 0.5em 0;
+    max-width: 100%;
+    overflow-x: auto;
+    text-align: center;
+}
+
+.idf_markdown_content :deep(.gkill_mermaid svg) {
+    max-width: 100%;
+    height: auto;
+}
+
+/* リスト表示は行高固定 (v-virtual-scroll の item-height) なので、画像と同じく上限を掛ける */
+.idf_markdown_content--list :deep(.gkill_mermaid svg) {
     max-height: 120px;
 }
 
