@@ -169,6 +169,8 @@ import type { DiscardTXRequest } from "./req_res/discard-tx-request"
 import type { DiscardTXResponse } from "./req_res/discard-tx-response"
 import type { BrowseZipContentsRequest } from "./req_res/browse-zip-contents-request"
 import type { BrowseZipContentsResponse } from "./req_res/browse-zip-contents-response"
+import type { GetIDFKyouByRelativePathRequest } from "./req_res/get-idf-kyou-by-relative-path-request"
+import type { GetIDFKyouByRelativePathResponse } from "./req_res/get-idf-kyou-by-relative-path-response"
 import type { GetPluginListRequest } from "./req_res/get-plugin-list-request"
 import { GetPluginListResponse } from "./req_res/get-plugin-list-response"
 import type { GetPluginContentHTMLRequest } from "./req_res/get-plugin-content-html-request"
@@ -289,6 +291,7 @@ export class GkillAPI {
         commit_tx_address: string
         discard_tx_address: string
         browse_zip_contents_address: string
+        get_idf_kyou_by_relative_path_address: string
 
         get_plugin_list_address: string
         get_plugin_content_html_address: string
@@ -380,6 +383,7 @@ export class GkillAPI {
         commit_tx_method: string
         discard_tx_method: string
         browse_zip_contents_method: string
+        get_idf_kyou_by_relative_path_method: string
 
         get_plugin_list_method: string
         get_plugin_content_html_method: string
@@ -472,6 +476,7 @@ export class GkillAPI {
                 this.commit_tx_address = "/api/commit_tx"
                 this.discard_tx_address = "/api/discard_tx"
                 this.browse_zip_contents_address = "/api/browse_zip_contents"
+                this.get_idf_kyou_by_relative_path_address = "/api/get_idf_kyou_by_relative_path"
                 this.get_plugin_list_address = "/api/get_plugin_list"
                 this.get_plugin_content_html_address = "/api/get_plugin_content_html"
                 this.get_plugin_config_html_address = "/api/get_plugin_config_html"
@@ -561,6 +566,7 @@ export class GkillAPI {
                 this.commit_tx_method = "POST"
                 this.discard_tx_method = "POST"
                 this.browse_zip_contents_method = "POST"
+                this.get_idf_kyou_by_relative_path_method = "POST"
                 this.get_plugin_list_method = "POST"
                 this.get_plugin_content_html_method = "POST"
                 this.get_plugin_config_html_method = "POST"
@@ -2512,6 +2518,21 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: BrowseZipContentsResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async get_idf_kyou_by_relative_path(req: GetIDFKyouByRelativePathRequest): Promise<GetIDFKyouByRelativePathResponse> {
+                const res = await this.gkill_fetch(this.get_idf_kyou_by_relative_path_address, {
+                        'method': this.get_idf_kyou_by_relative_path_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: GetIDFKyouByRelativePathResponse = json
                 this.check_auth(response)
                 return response
         }
