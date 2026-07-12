@@ -2,9 +2,9 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	sqllib "database/sql"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"io"
 	"log/slog"
 	"net/http"
@@ -14,11 +14,11 @@ import (
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 type idfKyouRepositoryCachedSQLite3Impl struct {
@@ -1275,6 +1275,136 @@ WHERE
 		return nil, nil
 	}
 	return &idfKyous[0], nil
+}
+
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouByTargetFile(ctx context.Context, targetFile string) (*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
+	var err error
+	tableName := sqlite3impl.QuoteIdent(i.dbName)
+	sql := `
+SELECT
+  IS_DELETED,
+  ID,
+  TARGET_REP_NAME,
+  TARGET_FILE,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME_UNIX,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  CONTENT_PATH,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + tableName + `
+WHERE TARGET_FILE IN (?, ?)
+  AND UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM ` + tableName + ` AS INNER_TABLE WHERE INNER_TABLE.ID = ` + tableName + `.ID )
+ORDER BY UPDATE_TIME_UNIX DESC
+`
+
+	// TARGET_FILEはOS依存の区切り文字で格納されている可能性があるため両方で検索する
+	slashPath := filepath.ToSlash(targetFile)
+	backslashPath := strings.ReplaceAll(slashPath, "/", "\\")
+
+	dataType := "idf"
+	queryArgs := []any{
+		dataType,
+		slashPath,
+		backslashPath,
+	}
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get idf kyou by target file sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from idf: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			idf := IDFKyou{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+			targetRepName := ""
+
+			err = rows.Scan(
+				&idf.IsDeleted,
+				&idf.ID,
+				&targetRepName,
+				&idf.TargetFile,
+				&relatedTimeUnix,
+				&createTimeUnix,
+				&idf.CreateApp,
+				&idf.CreateDevice,
+				&idf.CreateUser,
+				&updateTimeUnix,
+				&idf.UpdateApp,
+				&idf.UpdateDevice,
+				&idf.UpdateUser,
+				&idf.ContentPath,
+				&idf.RepName,
+				&idf.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				return nil, err
+			}
+
+			// 削除済みの最新データは対象外
+			if idf.IsDeleted {
+				continue
+			}
+
+			// targetRepNameが空の場合はRepNameにフォールバック
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = idf.RepName
+			}
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
+
+			// 画像であるか判定
+			idf.IsImage = isImage(idf.TargetFile)
+			idf.IsVideo = isVideo(idf.TargetFile)
+			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
+
+			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			idf.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+
+			return &idf, nil
+		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
+	return nil, nil
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {

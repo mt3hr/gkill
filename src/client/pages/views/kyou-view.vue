@@ -77,7 +77,7 @@
             <IDFKyouView v-if="cloned_kyou.typed_idf_kyou" :idf_kyou="cloned_kyou.typed_idf_kyou" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_image_request_to_thumb_size="is_image_request_to_thumb_size"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :enable_md_link_dialog="enable_md_link_dialog" :is_image_request_to_thumb_size="is_image_request_to_thumb_size"
                 v-on="crudRelayHandlers"
                 ref="idf_kyou_view" />
             <ReKyouView v-if="cloned_kyou.typed_rekyou" :rekyou="cloned_kyou.typed_rekyou" :draggable=draggable
