@@ -50,6 +50,17 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 		return true
 	}
 
+	if isLocalRequest(r) {
+		return true
+	}
+	w.WriteHeader(http.StatusForbidden)
+	return false
+}
+
+// isLocalRequest はリクエスト元が同一マシンかどうかを返す。
+// ファイル実パスなど、同一マシン上のクライアントにしか意味がなく、
+// かつ外部に漏らしたくない情報の公開可否判定に使う。
+func isLocalRequest(r *http.Request) bool {
 	spl := strings.Split(r.RemoteAddr, ":")
 	remoteHost := strings.Join(spl[:len(spl)-1], ":")
 	switch remoteHost {
@@ -62,6 +73,5 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	case "::1":
 		return true
 	}
-	w.WriteHeader(http.StatusForbidden)
 	return false
 }

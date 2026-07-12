@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { IDFKyouProps } from '@/pages/views/idf-kyou-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
@@ -11,6 +11,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 import { detectAndDecodeText } from '@/classes/decode-text'
 import { is_markdown_file_name, markdown_to_safe_html, truncate_markdown, MD_LINK_DATA_ATTRIBUTE } from '@/classes/markdown-to-html'
+import { render_mermaid_diagrams } from '@/classes/mermaid-render'
 import { GetIDFKyouByRelativePathRequest } from '@/classes/api/req_res/get-idf-kyou-by-relative-path-request'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 
@@ -35,6 +36,7 @@ export function useIDFKyouView(options: {
 
     // ── Template refs ──
     const context_menu = ref<ComponentRef | null>(null)
+    const markdown_content = ref<HTMLElement | null>(null)
 
     // ── Text file preview ──
     const text_content = ref<string | null>(null)
@@ -84,6 +86,11 @@ export function useIDFKyouView(options: {
                 const html = await markdown_to_safe_html(truncate_markdown(raw, max_length), url)
                 if (seq !== load_seq) return
                 markdown_html.value = html
+
+                // Mermaidの描画はDOMを要求するため、v-htmlが反映されてから行う
+                await nextTick()
+                if (seq !== load_seq || !markdown_content.value) return
+                await render_mermaid_diagrams(markdown_content.value)
                 return
             }
 
@@ -151,7 +158,9 @@ export function useIDFKyouView(options: {
             }
         }
 
-        if (!props.enable_dialog) {
+        // enable_dialog は内側KyouViewのdblclick抑止にも使われている (ryuu-item-view.vue) ため、
+        // MarkDownリンクのダイアログ可否は enable_md_link_dialog で上書きできるようにする
+        if (!(props.enable_md_link_dialog ?? props.enable_dialog)) {
             open_fallback()
             return
         }
@@ -244,6 +253,7 @@ export function useIDFKyouView(options: {
     return {
         // Template refs
         context_menu,
+        markdown_content,
 
         // Text preview
         is_text,

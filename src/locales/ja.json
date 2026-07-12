@@ -669,6 +669,7 @@
     "FAILED_GET_ACCOUNT_CONFIG_MESSAGE": "アカウント設定情報の取得に失敗しました",
     "FAILED_GET_ALL_REPOSITORIES_MESSAGE": "記録先全件取得に失敗しました",
     "FAILED_GET_GPS_LOG_MESSAGE": "位置情報取得に失敗しました",
+    "FAILED_GET_IDF_FILE_PATH_NO_AUTH_MESSAGE": "ファイルパス取得処理に失敗しました。権限がありません。",
     "FAILED_GET_LATEST_INFO_MESSAGE": "最新情報の取得に失敗しました",
     "FAILED_GET_NOTIFICATION_MESSAGE": "通知取得に失敗しました",
     "FAILED_GET_REPOSITORIES_MESSAGE": "保存先一覧の取得に失敗しました",

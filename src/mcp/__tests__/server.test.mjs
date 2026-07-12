@@ -6,6 +6,7 @@
 
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { McpServer } from "../gkill-read-server.mjs";
+import { MAX_IDF_FILE_BYTES } from "../lib/constants.mjs";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -226,7 +227,7 @@ describe("handleMessage", () => {
     expect(response.jsonrpc).toBe("2.0");
     expect(response.id).toBe(2);
     expect(Array.isArray(response.result.tools)).toBe(true);
-    expect(response.result.tools.length).toBe(7);
+    expect(response.result.tools.length).toBe(8);
 
     const toolNames = response.result.tools.map((t) => t.name);
     expect(toolNames).toContain("gkill_get_kyous");
@@ -396,5 +397,142 @@ describe("gkill_get_idf_file", () => {
 
     expect(result.content).toHaveLength(1);
     expect(result.content[0].type).toBe("text");
+  });
+
+  // 画像のバイト列はimageブロックで届く。structuredContentにも同じbase64が入ると
+  // 1レスポンスに同じデータが2回乗り、クライアントのツール結果上限を超えて切り捨てられ、
+  // 画像そのものが届かなくなる。
+  test("buildToolResult omits base64 from text and structuredContent for images", () => {
+    const payload = {
+      file_name: "img.jpg",
+      mime_type: "image/jpeg",
+      file_size_bytes: 100,
+      is_image: true,
+      file_content_base64: "base64data",
+    };
+
+    const result = server.buildToolResult("gkill_get_idf_file", payload, false);
+
+    expect(result.structuredContent.file_content_base64).toBeUndefined();
+    expect(result.structuredContent.file_name).toBe("img.jpg");
+    expect(result.content[0].text).not.toContain("base64data");
+    // imageブロックからは従来どおりバイト列が届く
+    expect(result.content[1].data).toBe("base64data");
+  });
+
+  // 非画像にはimageブロックが付かないため、structuredContentが唯一のバイト列の渡し口。
+  test("buildToolResult keeps base64 in structuredContent for non-images", () => {
+    const payload = {
+      file_name: "doc.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: 200,
+      is_image: false,
+      file_content_base64: "pdfdata",
+    };
+
+    const result = server.buildToolResult("gkill_get_idf_file", payload, false);
+
+    expect(result.structuredContent.file_content_base64).toBe("pdfdata");
+    expect(result.content[0].text).not.toContain("pdfdata");
+  });
+
+  test("buildToolResult strips charset parameter from the image block mimeType", () => {
+    const payload = {
+      file_name: "img.jpg",
+      mime_type: "image/jpeg; charset=binary",
+      file_size_bytes: 100,
+      is_image: true,
+      file_content_base64: "base64data",
+    };
+
+    const result = server.buildToolResult("gkill_get_idf_file", payload, false);
+
+    expect(result.content[1].mimeType).toBe("image/jpeg");
+  });
+
+  test("rejects files larger than the size limit", async () => {
+    const huge = Buffer.alloc(MAX_IDF_FILE_BYTES + 1);
+    mockClient.fetchFile.mockResolvedValue({ buffer: huge, contentType: "video/mp4" });
+    server.currentSessionId = "sess";
+
+    await expect(
+      server.handleToolCall("gkill_get_idf_file", { rep_name: "repo", file_name: "big.mp4" }),
+    ).rejects.toThrow(/too large/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// file_path exposure (local stdio clients only)
+// ---------------------------------------------------------------------------
+describe("file_path exposure", () => {
+  let mockClient;
+  let server;
+
+  beforeEach(() => {
+    mockClient = createMockClient();
+    server = new McpServer(mockClient);
+  });
+
+  test("defaults to non-local so a transport that forgets to opt in never leaks paths", () => {
+    expect(server.isLocalTransport).toBe(false);
+  });
+
+  test("gkill_get_idf_file_path resolves the path for local clients", async () => {
+    server.isLocalTransport = true;
+    server.currentSessionId = "sess";
+    mockClient.callRead.mockResolvedValue({
+      file_path: "C:\\Users\\me\\gkill\\files\\photo.png",
+      exists: true,
+      errors: [],
+    });
+
+    const result = await server.handleToolCall("gkill_get_idf_file_path", {
+      rep_name: "repo",
+      file_name: "photo.png",
+    });
+
+    expect(mockClient.callRead).toHaveBeenCalledWith(
+      "/api/get_idf_file_path",
+      expect.objectContaining({ rep_name: "repo", file_name: "photo.png" }),
+      true,
+      "sess",
+    );
+    expect(result.file_path).toBe("C:\\Users\\me\\gkill\\files\\photo.png");
+    expect(result.exists).toBe(true);
+  });
+
+  // リモートクライアント (HTTP/OAuth 越しのクラウドAI) に絶対パスを渡すと
+  // ユーザのディレクトリ構造の漏洩になる。gkillへの問い合わせ自体を行わない。
+  test("gkill_get_idf_file_path refuses remote clients without calling gkill", async () => {
+    server.isLocalTransport = false;
+    server.currentSessionId = "sess";
+
+    await expect(
+      server.handleToolCall("gkill_get_idf_file_path", { rep_name: "repo", file_name: "photo.png" }),
+    ).rejects.toThrow(/same machine/);
+    expect(mockClient.callRead).not.toHaveBeenCalled();
+  });
+
+  test("buildToolResult keeps file_path in kyou payloads for local clients", () => {
+    server.isLocalTransport = true;
+    const payload = {
+      kyous: [{ data_type: "idf", payload: { kind: "idf", file_path: "/home/me/gkill/photo.png" } }],
+    };
+
+    const result = server.buildToolResult("gkill_get_kyous", payload, false);
+
+    expect(result.structuredContent.kyous[0].payload.file_path).toBe("/home/me/gkill/photo.png");
+  });
+
+  test("buildToolResult strips file_path from kyou payloads for remote clients", () => {
+    server.isLocalTransport = false;
+    const payload = {
+      kyous: [{ data_type: "idf", payload: { kind: "idf", file_path: "/home/me/gkill/photo.png" } }],
+    };
+
+    const result = server.buildToolResult("gkill_get_kyous", payload, false);
+
+    expect(result.structuredContent.kyous[0].payload.file_path).toBeUndefined();
+    expect(result.content[0].text).not.toContain("/home/me/gkill/photo.png");
   });
 });

@@ -270,6 +270,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/open_file` | ファイルを開く（OS コマンド実行） |
 | `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（ファイル名・サイズ・パス等）を返却する。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
 | `/api/get_idf_kyou_by_relative_path` | IDFKyou相対パス解決。基準IDFKyou（`target_id`）のファイルからの相対パス（`relative_path`）を同一Rep内で解決し、対象ファイルのIDFKyou IDを返却する（Markdown内相対リンクのKyouDialog表示用）。見つからない場合は `kyou_id` 空文字。セッション認証必須。パストラバーサル防止対応 |
+| `/api/get_idf_file_path` | IDFファイル絶対パス解決。`rep_name` + `file_name` から実ファイルの絶対パス（`file_path`）を返却する。MCPクライアントがbase64転送を経ずにファイルを直接読むための導線。**リクエスト元がlocalhostのときのみ応答**し、それ以外は `file_path` 空 + `ERR000389`。DB登録済みファイルしか引けないためパストラバーサル不可。リポジトリに無い場合は `exists` false。セッション認証必須 |
 
 ## KFTL（2件）
 
