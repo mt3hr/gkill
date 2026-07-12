@@ -19,12 +19,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 const CURRENT_SCHEMA_VERSION_IDF_KYOU_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
@@ -1568,6 +1568,172 @@ WHERE
 		return nil, nil
 	}
 	return &idfKyous[0], nil
+}
+
+func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouByTargetFile(ctx context.Context, targetFile string) (*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
+	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+	sql := `
+SELECT
+  IS_DELETED,
+  ID,
+  TARGET_REP_NAME,
+  TARGET_FILE,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM IDF
+WHERE TARGET_FILE IN (?, ?)
+  AND UPDATE_TIME = ( SELECT UPDATE_TIME FROM IDF AS INNER_TABLE WHERE INNER_TABLE.ID = IDF.ID ORDER BY datetime(INNER_TABLE.UPDATE_TIME) DESC LIMIT 1 )
+ORDER BY datetime(UPDATE_TIME) DESC
+`
+
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at idf : %w", err)
+		return nil, err
+	}
+
+	// TARGET_FILEはOS依存の区切り文字で格納されている可能性があるため両方で検索する
+	slashPath := filepath.ToSlash(targetFile)
+	backslashPath := strings.ReplaceAll(slashPath, "/", "\\")
+
+	dataType := "idf"
+	queryArgs := []any{
+		repName,
+		dataType,
+		slashPath,
+		backslashPath,
+	}
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get idf kyou by target file sql: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from idf: %w", err)
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			idf := IDFKyou{}
+			idf.RepName = repName
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			targetRepName := ""
+
+			err = rows.Scan(
+				&idf.IsDeleted,
+				&idf.ID,
+				&targetRepName,
+				&idf.TargetFile,
+				&relatedTimeStr,
+				&createTimeStr,
+				&idf.CreateApp,
+				&idf.CreateDevice,
+				&idf.CreateUser,
+				&updateTimeStr,
+				&idf.UpdateApp,
+				&idf.UpdateDevice,
+				&idf.UpdateUser,
+				&idf.RepName,
+				&idf.DataType,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				return nil, err
+			}
+
+			// 削除済みの最新データは対象外
+			if idf.IsDeleted {
+				continue
+			}
+
+			// targetRepNameを解決（DVNFリネーム後の旧名にフォールバック対応）
+			targetRepName, err = i.resolveTargetRepName(ctx, targetRepName, repName)
+			if err != nil {
+				return nil, err
+			}
+
+			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
+
+			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
+			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
+
+			// 画像であるか判定
+			idf.IsImage = isImage(idf.TargetFile)
+			idf.IsVideo = isVideo(idf.TargetFile)
+			idf.IsAudio = isAudio(idf.TargetFile)
+			idf.IsZip = isZip(idf.TargetFile)
+
+			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
+				return nil, err
+			}
+			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
+				return nil, err
+			}
+			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
+				return nil, err
+			}
+
+			return &idf, nil
+		}
+	}
+	if err := rows.Err(); err != nil {
+		err = fmt.Errorf("error at iterate rows: %w", err)
+		return nil, err
+	}
+	return nil, nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {

@@ -2,8 +2,8 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
 	"net/http"
 	"slices"
@@ -452,6 +452,71 @@ errloop:
 		select {
 		case e := <-errch:
 			err = fmt.Errorf("error at get idfkyou: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// IDFKyou集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchIDFKyouInRep := <-ch:
+			if matchIDFKyouInRep == nil {
+				continue loop
+			}
+			if matchIDFKyou != nil {
+				if matchIDFKyouInRep.UpdateTime.Before(matchIDFKyou.UpdateTime) {
+					matchIDFKyou = matchIDFKyouInRep
+				}
+			} else {
+				matchIDFKyou = matchIDFKyouInRep
+			}
+		default:
+			break loop
+		}
+	}
+
+	return matchIDFKyou, nil
+}
+
+func (i IDFKyouRepositories) GetIDFKyouByTargetFile(ctx context.Context, targetFile string) (*IDFKyou, error) {
+	var matchIDFKyou *IDFKyou
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan *IDFKyou, len(i))
+	errch := make(chan error, len(i))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range i {
+		rep := rep
+		err := threads.Go(ctx, wg, func() {
+			matchIDFKyouInRep, err := rep.GetIDFKyouByTargetFile(ctx, targetFile)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchIDFKyouInRep
+		})
+		if err != nil {
+			errch <- err
+		}
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at get idfkyou by target file: %w", e)
 			existErr = true
 		default:
 			break errloop

@@ -160,10 +160,11 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         } as unknown as MouseEvent
     }
 
-    function createPropsWithAPI(api: unknown, enable_dialog = true): IDFKyouProps {
+    function createPropsWithAPI(api: unknown, enable_dialog = true, enable_md_link_dialog?: boolean): IDFKyouProps {
         const props = createProps('note.md', '/files/rep1/note.md')
         ;(props as unknown as { gkill_api: unknown }).gkill_api = api
         ;(props as unknown as { enable_dialog: boolean }).enable_dialog = enable_dialog
+        ;(props as unknown as { enable_md_link_dialog?: boolean }).enable_md_link_dialog = enable_md_link_dialog
         return props
     }
 
@@ -282,6 +283,25 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
 
         expect(api.get_idf_kyou_by_relative_path).not.toHaveBeenCalled()
         expect(open_mock).toHaveBeenCalledWith('/files/rep1/index.md', '_blank')
+    })
+
+    it('enable_dialog=false でも enable_md_link_dialog=true ならダイアログを開く (Ryuuの構成)', async () => {
+        const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
+        const target_kyou = { id: 'kyou-target' }
+        const api = {
+            get_idf_kyou_by_relative_path: vi.fn().mockResolvedValue({ errors: [], kyou_id: 'kyou-target' }),
+            get_kyou: vi.fn().mockResolvedValue({ errors: [], kyou_histories: [target_kyou] }),
+        }
+        const open_mock = vi.fn()
+        vi.stubGlobal('open', open_mock)
+        const emits = vi.fn() as unknown as KyouViewEmits
+        const props = createPropsWithAPI(api, false, true)
+        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits })
+
+        await on_markdown_content_dblclick(createMouseEvent(anchor))
+
+        expect(emits).toHaveBeenCalledWith('requested_open_rykv_dialog', 'kyou', target_kyou)
+        expect(open_mock).not.toHaveBeenCalled()
     })
 
     it('マークされていない要素のダブルクリックは何もしない (親のdblclickに任せる)', async () => {

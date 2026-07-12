@@ -2,8 +2,8 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"io"
 	"log/slog"
 	"net/http"
@@ -100,10 +100,10 @@ type idfKyouRepositorySQLite3ImplLocalCached struct {
 	localCachedRep       IDFKyouRepository
 	m                    sync.RWMutex
 
-	repositoriesRef *GkillRepositories
-	r               *mux.Router
-	contentDir      string
-	fullConnect     bool
+	repositoriesRef        *GkillRepositories
+	r                      *mux.Router
+	contentDir             string
+	fullConnect            bool
 	autoIDF                bool
 	idfIgnore              *[]string
 	lastUpdateCacheChanged bool
@@ -246,6 +246,12 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) GetIDFKyou(ctx context.Context
 	i.m.RLock()
 	defer i.m.RUnlock()
 	return i.localCachedRep.GetIDFKyou(ctx, id, updateTime)
+}
+
+func (i *idfKyouRepositorySQLite3ImplLocalCached) GetIDFKyouByTargetFile(ctx context.Context, targetFile string) (*IDFKyou, error) {
+	i.m.RLock()
+	defer i.m.RUnlock()
+	return i.localCachedRep.GetIDFKyouByTargetFile(ctx, targetFile)
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) GetIDFKyouHistories(ctx context.Context, id string) ([]IDFKyou, error) {
