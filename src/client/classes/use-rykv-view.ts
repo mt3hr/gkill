@@ -2,7 +2,7 @@ import { i18n } from '@/i18n'
 import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import type { rykvViewEmits } from '@/pages/views/rykv-view-emits'
 import type { rykvViewProps } from '@/pages/views/rykv-view-props'
@@ -41,6 +41,7 @@ export function useRykvView(options: {
     const save_clipboard_to_file_dialog = ref<ComponentRef | null>(null)
     const dnote_view = ref<ComponentRef | null>(null)
     const kyou_list_views = ref()
+    const kyou_detail_view_element = ref<HTMLElement | null>(null)
 
     // ── State refs ──
     const enable_context_menu = ref(true)
@@ -74,6 +75,7 @@ export function useRykvView(options: {
     const received_init_request = ref(false)
     const skip_search_this_tick = ref(false)
     const abort_controllers: Ref<Array<AbortController>> = ref([])
+    const kyou_detail_view_width: Ref<number> = ref(400) // KyouDetailViewの初期幅とあわせる。ryuuの最大幅に使う
 
     // ── Computed ──
     const kyou_list_view_height = computed(() => props.app_content_height)
@@ -90,6 +92,29 @@ export function useRykvView(options: {
     ])
 
     // ── Watchers ──
+    // KyouDetailViewはCSSのresizeでユーザが幅を変えるため、実寸をResizeObserverで追う。
+    // 表示切り替えでelementごと作り直されるので、refをwatchして付け替える。
+    let kyou_detail_view_resize_observer: ResizeObserver | null = null
+    watch(kyou_detail_view_element, (element, old_element) => {
+        if (kyou_detail_view_resize_observer && old_element) {
+            try { kyou_detail_view_resize_observer.unobserve(old_element) } catch { /* noop */ }
+        }
+        if (element) {
+            if (!kyou_detail_view_resize_observer) {
+                kyou_detail_view_resize_observer = new ResizeObserver((entries) => {
+                    for (const entry of entries) {
+                        kyou_detail_view_width.value = entry.borderBoxSize?.[0]?.inlineSize ?? entry.contentRect.width
+                    }
+                })
+            }
+            kyou_detail_view_resize_observer.observe(element)
+        }
+    }, { flush: 'post' })
+    onBeforeUnmount(() => {
+        kyou_detail_view_resize_observer?.disconnect()
+        kyou_detail_view_resize_observer = null
+    })
+
     watch(() => focused_time.value, () => {
         if (!kyou_list_views.value) {
             return
@@ -829,6 +854,7 @@ export function useRykvView(options: {
         save_clipboard_to_file_dialog,
         dnote_view,
         kyou_list_views,
+        kyou_detail_view_element,
 
         // State
         enable_context_menu,
@@ -853,6 +879,7 @@ export function useRykvView(options: {
         default_query,
         is_loading,
         inited,
+        kyou_detail_view_width,
 
         // Computed
         kyou_list_view_height,
