@@ -131,15 +131,17 @@ curl -v -X POST http://localhost:8808/mcp \
 - `GKILL_SESSION_ID` (任意。指定時はログインをスキップ)
 - `GKILL_LOCALE` (default: `ja`)
 - `GKILL_INSECURE` — `true` or `1` でgkill_serverへの接続時にTLS証明書検証をスキップ（自己署名証明書用）
+- `GKILL_MCP_MAX_FILE_BYTES` (default: `8388608` = 8MB) — `gkill_get_idf_file`（base64）で返せる最大バイト数
+- `GKILL_MCP_FILE_LINK_TTL_MS` (default: `3600000` = 1時間) — HTTPモードで発行するファイルURLトークンの有効期限
 
 #### トランスポート
 - `MCP_TRANSPORT` (default: `stdio`) — `stdio` or `http`
 - `MCP_PORT` (default: `8808`) — HTTPサーバのポート番号
-- `MCP_OAUTH_ISSUER` (default: `http://localhost:<MCP_PORT>`) — OAuthメタデータのissuer URL。**リモート接続時は必須**。クライアントがアクセス可能な公開URL（例: `https://example.com`）を設定。未設定だとClaude.ai/ChatGPTからOAuth認証が失敗する
+- `MCP_OAUTH_ISSUER` (default: `http://localhost:<MCP_PORT>`) — OAuthメタデータのissuer URL。**リモート接続時は必須**。クライアントがアクセス可能な公開URL（例: `https://example.com`）を設定。未設定だとClaude.ai/ChatGPTからOAuth認証が失敗する。HTTPモードのファイルURL（`file_url`）もこのURLを基点に組み立てられ、`GET /files/{token}` で配信される
 
 ### 提供ツール
 
-#### Readツール（7つ — Read専用/ReadWrite統合サーバで使用可能）
+#### Readツール（8つ — Read専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_get_kyous` | Kyou一覧を取得（タグ・テキスト・型データをインライン返却） |
@@ -148,7 +150,36 @@ curl -v -X POST http://localhost:8808/mcp \
 | `gkill_get_all_rep_names` | 全リポジトリ名を取得 |
 | `gkill_get_gps_log` | 期間指定でGPSログを取得 |
 | `gkill_get_application_config` | アプリケーション設定を取得（タグ階層・ボード構造・テンプレート等） |
-| `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却） |
+| `gkill_get_idf_file` | IDFファイルの実データを取得（画像はMCP image blockで返却）。上限は `GKILL_MCP_MAX_FILE_BYTES`（既定8MB） |
+| `gkill_get_idf_file_path` | IDFファイルの絶対パスを取得。stdio接続時のみ利用可 |
+
+##### ファイル実パス導線
+
+ローカルのAIクライアントは、base64転送を経ずにファイルを直接読める。`gkill_get_kyous` のIDFペイロードには `file_path`（絶対パス）が入り、AIはそれをファイルシステムから直接読めばよい。画像はサイズ上限なくそのまま閲覧できる。
+
+絶対パスは**同一マシンのクライアントにしか渡さない**。二重にゲートしている:
+
+- **gkillサーバ側**: リクエスト元がlocalhostのときだけ `file_path` を返す。
+- **MCPサーバ側**: stdioトランスポート（＝クライアントが同一マシン）のときだけAIに見せる。HTTP/OAuth接続では `file_path` を削ぎ落とし、`gkill_get_idf_file_path` も拒否する。
+
+MCPサーバはHTTPモードでもgkillと同居しうるため、gkill側のlocalhost判定だけではリモートのAIにパスが渡ってしまう。MCPサーバ側のゲートが実質的な防御線になる。
+
+##### リモート向けファイルURL導線（HTTPモード）
+
+リモートのAIクライアント（クラウド上のChatGPT等）は実パスを読めないので、代わりに**MCPサーバ自身が発行する期限付き公開URL**を渡す。HTTPモードで動いているとき、`gkill_get_kyous` のIDFペイロードに自動で以下が入る:
+
+- `file_url` — 画像は既定でサムネ（長辺〜1024のJPEG）、それ以外は原寸。
+- `file_url_full` — 画像の原寸URL（画像のときだけ）。
+
+AIはこのURLを **Bearer無しでGET** すればバイトを取得できる（base64を経由せず、サイズ上限なし）。配信は各MCPサーバの `GET /files/{token}` ルートが担い、`MCP_OAUTH_ISSUER`（公開URL）を基点にURLを組み立てる。
+
+セキュリティは**トークン自体**が担保する:
+
+- トークンは特定の1ファイル(rep_name + file_name)に束縛され、期限付き（`GKILL_MCP_FILE_LINK_TTL_MS`、既定1時間）、`crypto.randomBytes` で推測不能。
+- gkillからのバイト取得は発行時のOAuthセッションで行い、**URLにセッションは載らない**。URLを知る者は「期限内・そのファイルだけ」取得できる。
+- トークン発行はOAuth認証済みのツールコール内でのみ。gkill本体を公開する必要はない（gkillは非公開のまま、MCPサーバの公開面だけで完結）。
+
+リモートで大きすぎて `gkill_get_idf_file`（base64、`GKILL_MCP_MAX_FILE_BYTES` 上限）に収まらないファイルも、この `file_url` なら取得できる。
 
 #### Writeツール（11 — Write専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |

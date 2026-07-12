@@ -165,7 +165,11 @@ type GkillServerAPIAddress struct {
 
 	BrowseZipContentsAddress string
 
-	GetPluginListAddress      string
+	GetIDFKyouByRelativePathAddress string
+
+	GetIDFFilePathAddress string
+
+	GetPluginListAddress        string
 	GetPluginContentHTMLAddress string
 	GetPluginConfigHTMLAddress  string
 	PostPluginConfigAddress     string
@@ -332,7 +336,11 @@ type GkillServerAPIAddress struct {
 
 	BrowseZipContentsMethod string
 
-	GetPluginListMethod      string
+	GetIDFKyouByRelativePathMethod string
+
+	GetIDFFilePathMethod string
+
+	GetPluginListMethod        string
 	GetPluginContentHTMLMethod string
 	GetPluginConfigHTMLMethod  string
 	PostPluginConfigMethod     string
@@ -504,6 +512,10 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateCacheMethod = "POST"
 	gkillAPIAddress.BrowseZipContentsAddress = "/api/browse_zip_contents"
 	gkillAPIAddress.BrowseZipContentsMethod = "POST"
+	gkillAPIAddress.GetIDFKyouByRelativePathAddress = "/api/get_idf_kyou_by_relative_path"
+	gkillAPIAddress.GetIDFKyouByRelativePathMethod = "POST"
+	gkillAPIAddress.GetIDFFilePathAddress = "/api/get_idf_file_path"
+	gkillAPIAddress.GetIDFFilePathMethod = "POST"
 	gkillAPIAddress.GetPluginListAddress = "/api/get_plugin_list"
 	gkillAPIAddress.GetPluginListMethod = "POST"
 	gkillAPIAddress.GetPluginContentHTMLAddress = "/api/get_plugin_content_html"
