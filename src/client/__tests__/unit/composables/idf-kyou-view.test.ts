@@ -285,6 +285,25 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         expect(open_mock).toHaveBeenCalledWith('/files/rep1/index.md', '_blank')
     })
 
+    it('enable_md_link_dialog=false でも enable_dialog=true ならダイアログを開く (未指定Boolean propはVueがfalseに解決するため)', async () => {
+        const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
+        const target_kyou = { id: 'kyou-target' }
+        const api = {
+            get_idf_kyou_by_relative_path: vi.fn().mockResolvedValue({ errors: [], kyou_id: 'kyou-target' }),
+            get_kyou: vi.fn().mockResolvedValue({ errors: [], kyou_histories: [target_kyou] }),
+        }
+        const open_mock = vi.fn()
+        vi.stubGlobal('open', open_mock)
+        const emits = vi.fn() as unknown as KyouViewEmits
+        const props = createPropsWithAPI(api, true, false)
+        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits })
+
+        await on_markdown_content_dblclick(createMouseEvent(anchor))
+
+        expect(emits).toHaveBeenCalledWith('requested_open_rykv_dialog', 'kyou', target_kyou)
+        expect(open_mock).not.toHaveBeenCalled()
+    })
+
     it('enable_dialog=false でも enable_md_link_dialog=true ならダイアログを開く (Ryuuの構成)', async () => {
         const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
         const target_kyou = { id: 'kyou-target' }
