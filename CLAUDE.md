@@ -122,9 +122,9 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 
 | Server | Tools | stdio | HTTP | Port |
 |---|---|---|---|---|
-| Read | 7 (get_kyous, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_gps_log, get_application_config, get_idf_file) | `npm run mcp:gkill-read` | `npm run mcp:gkill-read-http` | 8808 |
+| Read | 8 (get_kyous, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_gps_log, get_application_config, get_idf_file, get_idf_file_path) | `npm run mcp:gkill-read` | `npm run mcp:gkill-read-http` | 8808 |
 | Write | 23 (9 add + 1 submit_kftl + 1 delete + 9 update + 3 read convenience) | `npm run mcp:gkill-write` | `npm run mcp:gkill-write-http` | 8809 |
-| ReadWrite | 27 (read 7 + write 20) | `npm run mcp:gkill-readwrite` | `npm run mcp:gkill-readwrite-http` | 8810 |
+| ReadWrite | 28 (read 8 + write 20) | `npm run mcp:gkill-readwrite` | `npm run mcp:gkill-readwrite-http` | 8810 |
 
 **Environment variables:** `GKILL_BASE_URL`, `GKILL_USER`, `GKILL_PASSWORD_SHA256`, `MCP_LOG` (default `info`), and for HTTP mode: `MCP_TRANSPORT`, `MCP_PORT`, `MCP_OAUTH_ISSUER`.
 
