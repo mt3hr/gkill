@@ -264,6 +264,89 @@ func TestIDFKyouIsZipDetection(t *testing.T) {
 	}
 }
 
+func TestIDFKyouGetIDFKyouByTargetFile(t *testing.T) {
+	repo := newTempIDFKyouRepo(t)
+	ctx := context.Background()
+
+	idf := makeIDFKyou("idf-md-target", "index.md")
+	if err := repo.AddIDFKyouInfo(ctx, idf); err != nil {
+		t.Fatalf("AddIDFKyouInfo failed: %v", err)
+	}
+	other := makeIDFKyou("idf-md-other", "docs/other.md")
+	if err := repo.AddIDFKyouInfo(ctx, other); err != nil {
+		t.Fatalf("AddIDFKyouInfo failed: %v", err)
+	}
+
+	// 完全一致で取得できる
+	got, err := repo.GetIDFKyouByTargetFile(ctx, "index.md")
+	if err != nil {
+		t.Fatalf("GetIDFKyouByTargetFile failed: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetIDFKyouByTargetFile returned nil for existing file")
+	}
+	if got.ID != "idf-md-target" {
+		t.Errorf("ID = %q, want %q", got.ID, "idf-md-target")
+	}
+
+	// サブディレクトリのパスも取得できる (スラッシュ区切り)
+	got, err = repo.GetIDFKyouByTargetFile(ctx, "docs/other.md")
+	if err != nil {
+		t.Fatalf("GetIDFKyouByTargetFile failed: %v", err)
+	}
+	if got == nil || got.ID != "idf-md-other" {
+		t.Errorf("expected idf-md-other, got %+v", got)
+	}
+
+	// バックスラッシュ区切りで格納されていても取得できる
+	backslash := makeIDFKyou("idf-md-backslash", "docs\\win.md")
+	if err := repo.AddIDFKyouInfo(ctx, backslash); err != nil {
+		t.Fatalf("AddIDFKyouInfo failed: %v", err)
+	}
+	got, err = repo.GetIDFKyouByTargetFile(ctx, "docs/win.md")
+	if err != nil {
+		t.Fatalf("GetIDFKyouByTargetFile failed: %v", err)
+	}
+	if got == nil || got.ID != "idf-md-backslash" {
+		t.Errorf("expected idf-md-backslash for backslash-stored path, got %+v", got)
+	}
+
+	// 存在しないパスはnil
+	got, err = repo.GetIDFKyouByTargetFile(ctx, "missing.md")
+	if err != nil {
+		t.Fatalf("GetIDFKyouByTargetFile failed: %v", err)
+	}
+	if got != nil {
+		t.Errorf("expected nil for missing file, got %+v", got)
+	}
+}
+
+func TestIDFKyouGetIDFKyouByTargetFile_DeletedNotReturned(t *testing.T) {
+	repo := newTempIDFKyouRepo(t)
+	ctx := context.Background()
+
+	idf := makeIDFKyou("idf-md-del", "deleted.md")
+	if err := repo.AddIDFKyouInfo(ctx, idf); err != nil {
+		t.Fatalf("AddIDFKyouInfo failed: %v", err)
+	}
+
+	// Append-Onlyで削除版を追加 (最新がIsDeleted=true)
+	deleted := makeIDFKyou("idf-md-del", "deleted.md")
+	deleted.IsDeleted = true
+	deleted.UpdateTime = idf.UpdateTime.Add(time.Hour)
+	if err := repo.AddIDFKyouInfo(ctx, deleted); err != nil {
+		t.Fatalf("AddIDFKyouInfo (soft delete) failed: %v", err)
+	}
+
+	got, err := repo.GetIDFKyouByTargetFile(ctx, "deleted.md")
+	if err != nil {
+		t.Fatalf("GetIDFKyouByTargetFile failed: %v", err)
+	}
+	if got != nil {
+		t.Errorf("expected nil for soft-deleted file, got %+v", got)
+	}
+}
+
 func TestIDFKyouGetRepName(t *testing.T) {
 	repo := newTempIDFKyouRepo(t)
 	ctx := context.Background()
