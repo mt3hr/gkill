@@ -8,7 +8,7 @@ export interface IDFKyouProps extends KyouViewPropsBase {
     height: number | string
     width: number | string
     is_image_request_to_thumb_size: boolean
-    // MarkDown内リンクのダブルクリックでKyouDialogを開いてよいか。
-    // 未指定なら enable_dialog に従う。enable_dialog は内側KyouViewのdblclick抑止にも使われているため分けている。
+    // trueなら enable_dialog=false でもMarkDown内リンクのダブルクリックでKyouDialogを開く。
+    // enable_dialog は内側KyouViewのdblclick抑止にも使われているため分けている (ryuu-item-view.vue)。
     enable_md_link_dialog?: boolean
 }

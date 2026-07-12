@@ -159,8 +159,9 @@ export function useIDFKyouView(options: {
         }
 
         // enable_dialog は内側KyouViewのdblclick抑止にも使われている (ryuu-item-view.vue) ため、
-        // MarkDownリンクのダイアログ可否は enable_md_link_dialog で上書きできるようにする
-        if (!(props.enable_md_link_dialog ?? props.enable_dialog)) {
+        // enable_dialog=false でも enable_md_link_dialog=true ならMarkDownリンクのダイアログを開く。
+        // 未指定のBoolean propはVueが undefined ではなく false に解決するため ?? では上書きできない。
+        if (!props.enable_md_link_dialog && !props.enable_dialog) {
             open_fallback()
             return
         }
