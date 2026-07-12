@@ -64,6 +64,7 @@
     "copyfiles": "^2.4.1",
     "dompurify": "^3.4.11",
     "marked": "^18.0.6",
+    "mermaid": "^11.16.0",
     "mkdirp": "^3.0.1",
     "moment": "^2.30.1",
     "undici": "^8.5.0",
