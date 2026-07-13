@@ -61,16 +61,24 @@ export async function render_mermaid_diagrams(container: HTMLElement): Promise<v
             const wrapper = document.createElement('div')
             wrapper.className = 'gkill_mermaid'
             wrapper.setAttribute(MERMAID_DATA_ATTRIBUTE, RENDERED)
-            // mermaidのラベルはforeignObject内のHTMLを使うため html プロファイルも許可する
+            // mermaidのラベルはforeignObject内のHTMLを使うため html プロファイルも許可する。
+            // foreignObjectはSVGプロファイルに含まれないので、mermaid自身のサニタイズ設定と揃えて明示的に許可する。
+            // (許可しないとノードのラベルがまるごと消え、ラベルのない図になる)
             wrapper.innerHTML = DOMPurify.sanitize(svg, {
                 USE_PROFILES: { svg: true, svgFilters: true, html: true },
+                ADD_TAGS: ['foreignobject'],
+                ADD_ATTR: ['dominant-baseline'],
+                HTML_INTEGRATION_POINTS: { foreignobject: true },
             })
             target.replaceWith(wrapper)
         } catch {
             // 描画失敗時はソースのコードブロックのまま残す
         } finally {
-            // mermaidが描画のためにbodyへ差し込む一時要素を掃除する
-            document.getElementById(id)?.remove()
+            // mermaidが描画のためにbodyへ差し込む一時要素を掃除する。
+            // 一時要素は #d{id} で、描画されたSVGはその子。通常はmermaid自身が消すが、
+            // 例外時に残ることがあるため念のため消す。
+            // idそのもの (#{id}) で消してはならない。mermaidはrender()に渡したidを
+            // 戻り値のSVGルートにも付けるため、いま挿入したSVGのほうを消してしまう。
             document.getElementById('d' + id)?.remove()
         }
     }
