@@ -18,6 +18,19 @@ vi.mock('mermaid', () => ({ default: mermaid_mock }))
 
 const MERMAID_SOURCE = 'graph TD\n  A --> B\n'
 
+// 実物のmermaidの戻り値に合わせたSVG。
+// - ルート要素には render() に渡した id が付く
+// - mermaidが注入するCSSは #id スコープなので、idは保持されている必要がある
+function fake_rendered_svg(id: string, inner: string = '<g></g>'): string {
+    return `<svg id="${id}" width="100%"><style>#${id} .node rect{fill:#eee}</style>${inner}</svg>`
+}
+
+// ノードのラベルはforeignObject内のHTML (mermaidのhtmlLabelsは既定でtrue)
+const FOREIGN_OBJECT_LABEL =
+    '<g><foreignObject width="100" height="20">'
+    + '<div xmlns="http://www.w3.org/1999/xhtml" class="nodeLabel">ラベル</div>'
+    + '</foreignObject></g>'
+
 function createContainer(...children: Array<string>): HTMLElement {
     const container = document.createElement('div')
     for (const child of children) {
@@ -35,7 +48,7 @@ describe('render_mermaid_diagrams', () => {
         document.body.innerHTML = ''
         mermaid_mock.initialize.mockReset()
         mermaid_mock.parse.mockReset().mockResolvedValue({ diagramType: 'flowchart' })
-        mermaid_mock.render.mockReset().mockResolvedValue({ svg: '<svg><g></g></svg>' })
+        mermaid_mock.render.mockReset().mockImplementation((id: string) => Promise.resolve({ svg: fake_rendered_svg(id) }))
     })
 
     it('プレースホルダが無いときはmermaidをロードしない', async () => {
@@ -92,7 +105,8 @@ describe('render_mermaid_diagrams', () => {
     })
 
     it('SVGはサニタイズされる', async () => {
-        mermaid_mock.render.mockResolvedValue({ svg: '<svg><script>alert(1)</script></svg>' })
+        mermaid_mock.render.mockImplementation((id: string) =>
+            Promise.resolve({ svg: fake_rendered_svg(id, '<script>alert(1)</script>') }))
         const container = createContainer(MERMAID_SOURCE)
 
         await render_mermaid_diagrams(container)
@@ -100,5 +114,49 @@ describe('render_mermaid_diagrams', () => {
         const wrapper = container.querySelector('.gkill_mermaid')
         expect(wrapper).not.toBeNull()
         expect(wrapper?.innerHTML).not.toContain('<script')
+    })
+
+    // mermaidはrender()に渡したidを戻り値のSVGルートに付ける。
+    // 一時要素の掃除をidで行うと、DOMに挿入した描画済みSVGのほうを消してしまう。
+    it('描画したSVGをdocumentから消してしまわない', async () => {
+        const container = createContainer(MERMAID_SOURCE)
+
+        await render_mermaid_diagrams(container)
+
+        const wrapper = container.querySelector('.gkill_mermaid')
+        expect(wrapper?.innerHTML).not.toBe('')
+        const svg = container.querySelector('.gkill_mermaid svg')
+        expect(svg).not.toBeNull()
+        // mermaidが注入するCSSは #id スコープなので、idも保持されていること
+        expect(svg?.getAttribute('id')).toBe(mermaid_mock.render.mock.calls[0][0])
+    })
+
+    it('foreignObject内のラベルをサニタイズで消さない', async () => {
+        mermaid_mock.render.mockImplementation((id: string) =>
+            Promise.resolve({ svg: fake_rendered_svg(id, FOREIGN_OBJECT_LABEL) }))
+        const container = createContainer(MERMAID_SOURCE)
+
+        await render_mermaid_diagrams(container)
+
+        const wrapper = container.querySelector('.gkill_mermaid')
+        expect(wrapper?.querySelector('foreignObject')).not.toBeNull()
+        expect(wrapper?.textContent).toContain('ラベル')
+    })
+
+    it('mermaidがbodyに残した一時要素を掃除する', async () => {
+        mermaid_mock.render.mockImplementation((id: string) => {
+            // mermaidが描画のためにbodyへ差し込む一時要素 (通常はmermaid自身が消す)
+            const temp = document.createElement('div')
+            temp.id = 'd' + id
+            document.body.appendChild(temp)
+            return Promise.resolve({ svg: fake_rendered_svg(id) })
+        })
+        const container = createContainer(MERMAID_SOURCE)
+
+        await render_mermaid_diagrams(container)
+
+        const id = mermaid_mock.render.mock.calls[0][0]
+        expect(document.getElementById('d' + id)).toBeNull()
+        expect(container.querySelector('.gkill_mermaid svg')).not.toBeNull()
     })
 })
