@@ -73,6 +73,10 @@
                         v-model="dnote_definitions[i].items"
                         v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
                         @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_item_table_ref(i, el)" />
+                    <DnoteTrendGraphTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
+                        v-if="dnote_definitions[i].trends" v-model="dnote_definitions[i].trends"
+                        v-on="errorsMessagesRelayHandlers"
+                        @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_trend_table_ref(i, el)" />
                     <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
                         v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
                         v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
@@ -91,6 +95,9 @@
                     </v-list-item>
                     <v-list-item @click="add_dnote_list_dialog?.show()">
                         <v-list-item-title>{{ i18n.global.t("ADD_DNOTE_LIST_MENU_TITLE") }}</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="add_dnote_trend_graph_dialog?.show()">
+                        <v-list-item-title>{{ i18n.global.t("ADD_DNOTE_TREND_GRAPH_MENU_TITLE") }}</v-list-item-title>
                     </v-list-item>
                 </v-list>
             </v-menu>
@@ -113,6 +120,10 @@
             v-on="errorsMessagesRelayHandlers"
             @requested_add_dnote_item="(item: DnoteItemData) => onRequestedAddDnoteItem(item)"
             ref="add_dnote_item_dialog" />
+        <AddDnoteTrendGraphDialog :application_config="application_config" :gkill_api="gkill_api"
+            v-on="errorsMessagesRelayHandlers"
+            @requested_add_dnote_trend_graph="(query: DnoteTrendGraphQuery) => onRequestedAddDnoteTrendGraph(query)"
+            ref="add_dnote_trend_graph_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
@@ -120,11 +131,14 @@ import { i18n } from '@/i18n'
 import { type DnoteViewProps } from '@/pages/views/dnote-view-props'
 import DnoteItemTableView from './dnote-item-table-view.vue'
 import DnoteListTableView from './dnote-list-table-view.vue'
+import DnoteTrendGraphTableView from './dnote-trend-graph-table-view.vue'
 import AddDnoteListDialog from '../../pages/dialogs/add-dnote-list-dialog.vue'
 import AddDnoteItemDialog from '../../pages/dialogs/add-dnote-item-dialog.vue'
+import AddDnoteTrendGraphDialog from '../../pages/dialogs/add-dnote-trend-graph-dialog.vue'
 import { type DnoteEmits } from '@/pages/views/dnote-emits'
 import { useDnoteView } from '@/classes/use-dnote-view'
 import type DnoteListQuery from "@/pages/views/dnote-list-query"
+import type DnoteTrendGraphQuery from "@/pages/views/dnote-trend-graph-query"
 import type DnoteItem from "@/classes/dnote/dnote-item"
 type DnoteItemData = DnoteItem
 
@@ -135,10 +149,12 @@ const {
     // Template refs
     add_dnote_list_dialog,
     add_dnote_item_dialog,
+    add_dnote_trend_graph_dialog,
 
     // View ref helpers
     set_item_table_ref,
     set_list_table_ref,
+    set_trend_table_ref,
 
     // State
     dnote_definitions,
@@ -168,6 +184,7 @@ const {
     download_kyous_json,
     onRequestedAddDnoteListQuery,
     onRequestedAddDnoteItem,
+    onRequestedAddDnoteTrendGraph,
     incrementFinishedAggregateTask,
 
     // Event relay objects
