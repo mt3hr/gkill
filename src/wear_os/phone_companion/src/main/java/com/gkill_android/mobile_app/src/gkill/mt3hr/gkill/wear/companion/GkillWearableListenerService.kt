@@ -36,7 +36,7 @@ class GkillWearableListenerService : WearableListenerService() {
     override fun onMessageReceived(event: MessageEvent) {
         Log.d(TAG, "onMessageReceived path=${event.path} sourceNode=${event.sourceNodeId}")
         val store = GkillCredentialStore(this)
-        val apiClient = GkillApiClient(store.getServerUrl())
+        val apiClient = GkillApiClient(store.getServerUrl(), store.getAllowSelfSignedCert())
 
         scope.launch {
             when (event.path) {

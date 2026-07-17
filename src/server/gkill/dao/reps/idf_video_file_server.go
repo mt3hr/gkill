@@ -82,7 +82,7 @@ func (v *IDFVideoFileServer) ensureServePathForURL(ctx context.Context, u *url.U
 		return ensuredVideo{}, false, nil
 	}
 
-	abs, ok := secureJoin(v.rootDir, rel)
+	abs, ok := SecureJoin(v.rootDir, rel)
 	if !ok {
 		return ensuredVideo{}, false, nil
 	}

@@ -18,6 +18,23 @@ import (
 
 const TimeLayout = "2006-01-02T15:04:05-07:00"
 
+// sensitiveLogColumns はTraceSQLログで値をマスクする機密カラム名です。
+var sensitiveLogColumns = map[string]struct{}{
+	"GOOGLE_MAP_API_KEY":             {},
+	"GKILL_NOTIFICATION_PRIVATE_KEY": {},
+	"PASSWORD_SHA256":                {},
+	"PASSWORD_RESET_TOKEN":           {},
+}
+
+// MaskSensitiveValueForLog は機密カラムの値をログ用に "***" へ置き換えます。
+// SQLの実行引数には使わず、TraceSQLログ出力にのみ使うこと。
+func MaskSensitiveValueForLog(key string, value any) any {
+	if _, ok := sensitiveLogColumns[key]; ok {
+		return "***"
+	}
+	return value
+}
+
 func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }

@@ -27,6 +27,12 @@ class GkillCredentialStore(context: Context) {
         prefs.edit().putString("password_sha256", hash).apply()
     }
 
+    fun getAllowSelfSignedCert(): Boolean = prefs.getBoolean("allow_self_signed_cert", false)
+
+    fun setAllowSelfSignedCert(allow: Boolean) {
+        prefs.edit().putBoolean("allow_self_signed_cert", allow).apply()
+    }
+
     fun getSessionId(): String = prefs.getString("session_id", "") ?: ""
 
     fun setSessionId(id: String) {
