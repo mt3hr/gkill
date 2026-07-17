@@ -14,11 +14,13 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -59,12 +61,11 @@ func sanitizeFilename(name string) string {
 func (g *GkillServerAPI) resolveFileName(repDir string, filename string, behavior req_res.FileUploadConflictBehavior) (string, error) {
 	// OS不正文字・制御文字を除去する (クライアント側 sanitize_filename と同じ処理)
 	filename = sanitizeFilename(filename)
-	// パストラバーサル対策: ファイル名をサニタイズしてrepDir外へのアクセスを禁止する
-	cleanFilename := filepath.Clean(filename)
-	if filepath.IsAbs(cleanFilename) || cleanFilename == ".." || strings.HasPrefix(cleanFilename, ".."+string(os.PathSeparator)) {
+	// パストラバーサル対策: repDir外へのアクセスを禁止する
+	fullFilename, ok := reps.SecureJoin(repDir, filename)
+	if !ok {
 		return "", fmt.Errorf("invalid filename: path traversal detected")
 	}
-	fullFilename := filepath.Join(repDir, cleanFilename)
 	_, err := os.Stat(fullFilename)
 	if err != nil {
 		return fullFilename, nil
@@ -306,17 +307,66 @@ func publicKey(priv any) any {
 	}
 }
 
-func httpGetBase64Data(url string) (string, error) {
-	req, err := http.NewRequest("GET", url, nil)
+// maxHTTPGetBodyBytes は httpGetBase64Data が取得するレスポンスボディの上限サイズです。
+const maxHTTPGetBodyBytes = 10 * 1024 * 1024
+
+// isDisallowedFetchIP はSSRF対策として、ユーザ指定URLの取得先にできないIPか判定します。
+// loopback・プライベート・リンクローカル・マルチキャスト・未指定アドレスを拒否します。
+func isDisallowedFetchIP(ip net.IP) bool {
+	if ip == nil {
+		return true
+	}
+	return ip.IsLoopback() ||
+		ip.IsPrivate() ||
+		ip.IsUnspecified() ||
+		ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() ||
+		ip.IsMulticast()
+}
+
+// ssrfSafeHTTPClient はユーザ指定URLの取得に使うHTTPクライアントです。
+// Dialer.Controlで実際の接続先IPを検証するため、DNSリバインディングやリダイレクトで
+// 内部アドレスへ誘導されても接続段階で拒否されます。
+var ssrfSafeHTTPClient = &http.Client{
+	Timeout: 30 * time.Second,
+	Transport: &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout: 10 * time.Second,
+			Control: func(network, address string, c syscall.RawConn) error {
+				host, _, err := net.SplitHostPort(address)
+				if err != nil {
+					return err
+				}
+				if isDisallowedFetchIP(net.ParseIP(host)) {
+					return fmt.Errorf("blocked request to disallowed address: %s", address)
+				}
+				return nil
+			},
+		}).DialContext,
+	},
+}
+
+func httpGetBase64Data(urlString string) (string, error) {
+	parsedURL, err := url.Parse(urlString)
+	if err != nil {
+		err = fmt.Errorf("error at parse url %s: %w", urlString, err)
+		return "", err
+	}
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		err = fmt.Errorf("unsupported url scheme %q at http get %s", parsedURL.Scheme, urlString)
+		return "", err
+	}
+
+	req, err := http.NewRequest("GET", urlString, nil)
 	if err != nil {
 		err = fmt.Errorf("error at new http get request: %w", err)
 		return "", err
 	}
-	req.Header.Set("Referer", url)
+	req.Header.Set("Referer", urlString)
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := ssrfSafeHTTPClient.Do(req)
 	if err != nil {
-		err = fmt.Errorf("error at http get %s: %w", url, err)
+		err = fmt.Errorf("error at http get %s: %w", urlString, err)
 		return "", err
 	}
 	defer func() {
@@ -326,9 +376,13 @@ func httpGetBase64Data(url string) (string, error) {
 		}
 	}()
 
-	b, err := io.ReadAll(res.Body)
+	b, err := io.ReadAll(io.LimitReader(res.Body, maxHTTPGetBodyBytes+1))
 	if err != nil {
-		err = fmt.Errorf("error at read all body %s: %w", url, err)
+		err = fmt.Errorf("error at read all body %s: %w", urlString, err)
+		return "", err
+	}
+	if len(b) > maxHTTPGetBodyBytes {
+		err = fmt.Errorf("response body too large at http get %s", urlString)
 		return "", err
 	}
 

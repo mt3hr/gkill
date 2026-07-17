@@ -292,7 +292,15 @@ VALUES (
 		account.IsEnable,
 		account.PasswordResetToken,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	// パスワードハッシュ・リセットトークンはログに出さない
+	queryArgsForLog := []any{
+		account.UserID,
+		"***",
+		account.IsAdmin,
+		account.IsEnable,
+		"***",
+	}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -334,7 +342,16 @@ WHERE USER_ID = ?
 		account.PasswordResetToken,
 		account.UserID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	// パスワードハッシュ・リセットトークンはログに出さない
+	queryArgsForLog := []any{
+		account.UserID,
+		"***",
+		account.IsAdmin,
+		account.IsEnable,
+		"***",
+		account.UserID,
+	}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
