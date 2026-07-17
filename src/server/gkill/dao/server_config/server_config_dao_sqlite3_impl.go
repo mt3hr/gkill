@@ -824,7 +824,12 @@ INSERT INTO SERVER_CONFIG (
 			key,
 			value,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+		queryArgsForLog := []any{
+			serverConfig.Device,
+			key,
+			sqlite3impl.MaskSensitiveValueForLog(key, value),
+		}
+		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
 		_, err = stmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
@@ -965,7 +970,12 @@ INSERT INTO SERVER_CONFIG (
 					key,
 					value,
 				}
-				slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgs)
+				queryArgsForLog := []any{
+					serverConfig.Device,
+					key,
+					sqlite3impl.MaskSensitiveValueForLog(key, value),
+				}
+				slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgsForLog)
 				_, err = countStmt.ExecContext(ctx, queryArgs...)
 
 				if err != nil {
@@ -984,7 +994,12 @@ INSERT INTO SERVER_CONFIG (
 				serverConfig.Device,
 				key,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+			queryArgsForLog := []any{
+				sqlite3impl.MaskSensitiveValueForLog(key, value),
+				serverConfig.Device,
+				key,
+			}
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
 			_, err = updateStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -1180,7 +1195,12 @@ INSERT INTO SERVER_CONFIG (
 				key,
 				value,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgs)
+			queryArgsForLog := []any{
+				serverConfig.Device,
+				key,
+				sqlite3impl.MaskSensitiveValueForLog(key, value),
+			}
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgsForLog)
 			_, err = countStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -1210,7 +1230,12 @@ INSERT INTO SERVER_CONFIG (
 			serverConfig.Device,
 			key,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+		queryArgsForLog := []any{
+			sqlite3impl.MaskSensitiveValueForLog(key, value),
+			serverConfig.Device,
+			key,
+		}
+		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
 		_, err = updateStmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
@@ -1420,8 +1445,13 @@ INSERT INTO SERVER_CONFIG (
 				key,
 				value,
 			}
+			queryArgsForLog := []any{
+				serverConfig.Device,
+				key,
+				sqlite3impl.MaskSensitiveValueForLog(key, value),
+			}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgsForLog)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)

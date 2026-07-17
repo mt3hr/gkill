@@ -23,31 +23,38 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
-/** Minimal gkill API client using OkHttp (blocking, call from coroutine/thread). */
-class GkillApiClient(private val serverUrl: String) {
+/**
+ * Minimal gkill API client using OkHttp (blocking, call from coroutine/thread).
+ *
+ * @param allowSelfSignedCert When true, certificate and hostname verification are
+ * disabled so that a gkill server running on localhost with a self-signed
+ * certificate can be reached. Defaults to false (standard platform validation);
+ * enable only via the explicit user setting.
+ */
+class GkillApiClient(
+    private val serverUrl: String,
+    private val allowSelfSignedCert: Boolean = false
+) {
 
     private val client = buildOkHttpClient()
 
-    /**
-     * Build an OkHttpClient that trusts all certificates.
-     * gkill typically runs on localhost with a self-signed certificate,
-     * so standard certificate validation would always fail.
-     */
     private fun buildOkHttpClient(): OkHttpClient {
-        val trustAll = object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
-            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-        }
-        val sslContext = SSLContext.getInstance("TLS").apply {
-            init(null, arrayOf<TrustManager>(trustAll), SecureRandom())
-        }
-        return OkHttpClient.Builder()
-            .sslSocketFactory(sslContext.socketFactory, trustAll)
-            .hostnameVerifier { _, _ -> true }
+        val builder = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
-            .build()
+        if (allowSelfSignedCert) {
+            val trustAll = object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+            }
+            val sslContext = SSLContext.getInstance("TLS").apply {
+                init(null, arrayOf<TrustManager>(trustAll), SecureRandom())
+            }
+            builder.sslSocketFactory(sslContext.socketFactory, trustAll)
+                .hostnameVerifier { _, _ -> true }
+        }
+        return builder.build()
     }
 
     private val json = Json { ignoreUnknownKeys = true }
