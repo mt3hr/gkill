@@ -258,6 +258,8 @@ DNote 設定 UI 用のプルダウンメニューアイテム定義。
 | `kyou-getter-menu-items.ts` | Kyou 取得方法の選択肢 |
 | `predicate-menu-items.ts` | 述語の選択肢 |
 | `rep-type-menu-items.ts` | リポジトリ型の選択肢 |
+| `trend-granularity-menu-items.ts` | トレンドグラフ集計粒度（日/週/月）の選択肢 |
+| `trend-chart-type-menu-items.ts` | トレンドグラフ種別（折れ線/棒）の選択肢 |
 
 ## `serialize/`（5ファイル）— シリアライズ辞書
 
@@ -270,6 +272,25 @@ DNote 設定の JSON シリアライズ/デシリアライズ用辞書。
 | `dnote-kyou-filter-dictionary.ts` | フィルタの型辞書 |
 | `dnote-predicate-dictionary.ts` | 述語の型辞書 |
 | `regist-dictionary.ts` | 辞書登録ユーティリティ |
+
+## トレンドグラフ（`dnote-trend/` + `dnote-trend-aggregator.ts`）
+
+集計項目・集計リストに続く第3の DNote エンティティ。既存 DNote と同じく**親から渡された kyous**を対象に、
+Predicate と AggregateTarget を流用して `related_time` を日/週/月単位のバケットに区切って時系列集計する。
+結果は VSparkline で描画される（ビュー幅いっぱいで縦積み）。
+バケット期間はクエリの calendar 範囲から、範囲がない場合は kyous の related_time の min/max から導出する。
+
+| ファイル | 説明 |
+|---------|------|
+| `dnote-trend-aggregator.ts` | 時系列バケット集計ロジック（ゼロ埋め・昇順保証。400バケット上限、超過時は新しい側優先） |
+| `dnote-trend/dnote-trend-types.ts` | 粒度（day/week/month）とグラフ種別（line/bar）の型 |
+| `dnote-trend/dnote-trend-point.ts` | バケット1点分の集計結果 |
+| `dnote-trend/agregated-value-to-number.ts` | 累積値（number / AverageInfo）の数値化 |
+
+定義は `dnote_json_data` の各定義オブジェクト内 `dnote_trend_graph_view_data` に保存される（キー欠落時は空扱い＝後方互換）。
+
+**既知の制約**: 複数バケットをまたぐ TimeIs は `related_time`（開始時刻）のバケットにのみ計上される。
+バケット内の経過時間はバケット境界でトリムされるため、またいだ先のバケットには時間が計上されない。
 
 ## 開発ガイドライン
 
