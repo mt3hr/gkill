@@ -144,9 +144,8 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 
 	// 候補IDを収集
-	// request.Limitは冒頭でクランプ済みだが、割り当てサイズの上限を明示するためここでも定数で制限する。
-	// 静的解析(go/uncontrolled-allocation-size)が上限ガードを認識できるよう、
-	// 変数を関係演算子の左辺に置いた明示的なクランプにしている(min()ビルトインは認識されない)。
+	// request.Limitは冒頭で[1,maxLimit]にクランプ済み。ここでは batch のインデックス範囲
+	// (batch[i])を安全にするため candidateCount <= len(batch) にクランプする。
 	candidateCount := request.Limit
 	if candidateCount < 0 {
 		candidateCount = 0
@@ -243,7 +242,13 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	// DTO構築ループ（サイズ監視）
 	maxBytes := int64(request.MaxSizeMB * 1024 * 1024)
 	runningSize := int64(0)
-	resultDTOs := make([]req_res.KyouMCPDTO, 0, candidateCount)
+	// 容量ヒントは candidateCount(len(batch)以下にクランプ済み)を使う。
+	// go/uncontrolled-allocation-size が上限ガードを認識できるよう、割り当てを
+	// candidateCount <= len(batch) が成立するブランチ内に置く(この条件は常に真)。
+	resultDTOs := make([]req_res.KyouMCPDTO, 0)
+	if candidateCount <= len(batch) {
+		resultDTOs = make([]req_res.KyouMCPDTO, 0, candidateCount)
+	}
 
 	for i := range candidateCount {
 		kyou := batch[i]
