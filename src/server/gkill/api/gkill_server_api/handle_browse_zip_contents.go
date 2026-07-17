@@ -231,16 +231,9 @@ func extractZip(zipFilePath string, cacheDir string) error {
 		// ZIP仕様: Flags bit 11 (0x800) が立っていればUTF-8、そうでなければレガシーエンコーディング
 		entryName := decodeZipEntryName(f)
 
-		// パストラバーサル防止
-		name := filepath.FromSlash(entryName)
-		name = filepath.Clean(name)
-		if strings.HasPrefix(name, "..") || filepath.IsAbs(name) {
-			continue
-		}
-
-		destPath := filepath.Join(tmpDir, name)
-		// destPathがtmpDir配下であることを確認
-		if !strings.HasPrefix(filepath.Clean(destPath), filepath.Clean(tmpDir)+string(os.PathSeparator)) && filepath.Clean(destPath) != filepath.Clean(tmpDir) {
+		// パストラバーサル防止: tmpDir配下に収まるエントリのみ展開する
+		destPath, ok := reps.SecureJoin(tmpDir, entryName)
+		if !ok || filepath.IsAbs(filepath.FromSlash(entryName)) {
 			continue
 		}
 

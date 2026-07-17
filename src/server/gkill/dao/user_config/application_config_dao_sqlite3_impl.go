@@ -1083,7 +1083,13 @@ INSERT INTO APPLICATION_CONFIG (
 			key,
 			value,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+		queryArgsForLog := []any{
+			applicationConfig.UserID,
+			device,
+			key,
+			sqlite3impl.MaskSensitiveValueForLog(key, value),
+		}
+		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
 		_, err = insertStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at add application config sql: %w", err)
@@ -1364,7 +1370,13 @@ INSERT INTO APPLICATION_CONFIG (
 				key,
 				value,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgs)
+			queryArgsForLog := []any{
+				applicationConfig.UserID,
+				device,
+				key,
+				sqlite3impl.MaskSensitiveValueForLog(key, value),
+			}
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgsForLog)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -1395,7 +1407,13 @@ INSERT INTO APPLICATION_CONFIG (
 			device,
 			key,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+		queryArgsForLog := []any{
+			sqlite3impl.MaskSensitiveValueForLog(key, value),
+			applicationConfig.UserID,
+			device,
+			key,
+		}
+		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
 		_, err = updateStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
