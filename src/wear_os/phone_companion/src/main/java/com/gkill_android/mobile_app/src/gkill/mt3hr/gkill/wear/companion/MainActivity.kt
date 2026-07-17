@@ -60,6 +60,11 @@ class MainActivity : AppCompatActivity() {
                     android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             layoutParams = lp
         }
+        val cbAllowSelfSigned = android.widget.CheckBox(this).apply {
+            text = "自己署名証明書を許可 (localhost等の自己署名HTTPSサーバー向け。証明書検証が無効になります)"
+            isChecked = store.getAllowSelfSignedCert()
+            layoutParams = lp
+        }
         val btnSave = Button(this).apply {
             text = "保存 & 接続テスト"
             layoutParams = lp
@@ -73,6 +78,7 @@ class MainActivity : AppCompatActivity() {
         layout.addView(etServerUrl)
         layout.addView(etUserId)
         layout.addView(etPassword)
+        layout.addView(cbAllowSelfSigned)
         layout.addView(btnSave)
         layout.addView(tvStatus)
 
@@ -92,15 +98,17 @@ class MainActivity : AppCompatActivity() {
             }
 
             val passwordSha256 = sha256(password)
+            val allowSelfSigned = cbAllowSelfSigned.isChecked
             store.setServerUrl(serverUrl)
             store.setUserId(userId)
             store.setPasswordSha256(passwordSha256)
+            store.setAllowSelfSignedCert(allowSelfSigned)
             store.clearSession()
 
             tvStatus.text = "接続テスト中..."
 
             CoroutineScope(Dispatchers.IO).launch {
-                val client = GkillApiClient(serverUrl)
+                val client = GkillApiClient(serverUrl, allowSelfSigned)
                 val (sessionId, errorMsg) = client.loginWithError(userId, passwordSha256)
                 withContext(Dispatchers.Main) {
                     if (sessionId != null) {

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
@@ -22,8 +23,21 @@ type PluginManager struct {
 	plugins    []reps.PluginRepository
 }
 
+// isSingleSafePathElement は値を単一のパス要素として使ってよいか検証する。
+// 区切り文字・親ディレクトリ参照・空文字を含むものを拒否する。
+func isSingleSafePathElement(element string) bool {
+	if element == "" || element == "." || element == ".." {
+		return false
+	}
+	if strings.ContainsAny(element, `/\`) {
+		return false
+	}
+	return filepath.Clean(element) == element
+}
+
 // newPluginManager はユーザ別の PluginManager を生成する。
 // まだプラグインの発見は行わない。
+// userID がパス要素として不正な場合はプラグイン無しとして扱う(pluginsDirを空にする)。
 func newPluginManager(userID string) *PluginManager {
 	// GKILL_HOME は InitGkillOptions() で設定される確定済みパスを使う。
 	// gkill_options.GkillHomeDir は "$HOME/gkill" のような未展開文字列のため、
@@ -32,7 +46,12 @@ func newPluginManager(userID string) *PluginManager {
 	if pluginsBaseDir == "" || pluginsBaseDir == "$GKILL_HOME" {
 		pluginsBaseDir = filepath.Clean(os.ExpandEnv(gkill_options.GkillHomeDir))
 	}
-	pluginsDir := filepath.Join(pluginsBaseDir, "plugins", userID)
+	pluginsDir := ""
+	if isSingleSafePathElement(userID) {
+		pluginsDir = filepath.Join(pluginsBaseDir, "plugins", userID)
+	} else {
+		slog.Warn(fmt.Sprintf("invalid user id for plugin dir, plugins disabled for user %q", userID))
+	}
 	return &PluginManager{
 		userID:     userID,
 		pluginsDir: pluginsDir,
@@ -45,6 +64,10 @@ func newPluginManager(userID string) *PluginManager {
 // すでに登録済みのプラグインはスキップする（重複防止）。
 // 発見失敗は警告ログに記録し、gkill本体の起動を止めない。
 func (pm *PluginManager) DiscoverPlugins(ctx context.Context) error {
+	// pluginsDirが空 = userIDが不正でプラグイン無効
+	if pm.pluginsDir == "" {
+		return nil
+	}
 	if err := os.MkdirAll(pm.pluginsDir, os.ModePerm); err != nil {
 		// ディレクトリ作成失敗はプラグイン無しとして扱う（警告のみ）
 		slog.Warn(fmt.Sprintf("plugin dir create failed for user %s: %v", pm.userID, err))
