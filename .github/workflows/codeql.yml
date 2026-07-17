@@ -1,0 +1,157 @@
+name: "CodeQL Advanced"
+
+on:
+  push:
+    branches: ["main"]
+
+  pull_request:
+    branches: ["main"]
+
+  schedule:
+    - cron: "44 14 * * 1"
+
+  # GitHub Actions画面から手動実行できるようにする
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+
+    runs-on: ubuntu-latest
+
+    # GradleやCodeQLが停止した場合に無制限に実行し続けないための上限
+    timeout-minutes: 60
+
+    permissions:
+      # Code scanningの解析結果を登録するために必要
+      security-events: write
+
+      # CodeQL query packや依存関係の取得に使用
+      packages: read
+
+      # リポジトリ読み取り
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          # Goはこれまでどおり自動ビルド
+          - language: go
+            build-mode: autobuild
+
+          # Kotlinは自動ビルドに失敗するため手動ビルド
+          - language: java-kotlin
+            build-mode: manual
+
+          # JavaScript / TypeScriptはビルド不要
+          - language: javascript-typescript
+            build-mode: none
+
+    steps:
+      # ------------------------------------------------------------
+      # リポジトリ取得
+      # ------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # ------------------------------------------------------------
+      # Android / Kotlinの実行環境
+      #
+      # AGP 8.9.0を動かすため、JDK 17を使用する。
+      # Gradleキャッシュもここで有効化する。
+      # ------------------------------------------------------------
+      - name: Set up JDK 17
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            src/android/**/*.gradle*
+            src/android/gradle/libs.versions.toml
+            src/android/gradle/wrapper/gradle-wrapper.properties
+            src/wear_os/**/*.gradle*
+            src/wear_os/gradle/libs.versions.toml
+            src/wear_os/gradle/wrapper/gradle-wrapper.properties
+
+      # ------------------------------------------------------------
+      # CodeQL初期化
+      #
+      # Java/Kotlinの場合、この処理より後に実行されたコンパイルを
+      # CodeQLが追跡して解析データベースを作る。
+      # ------------------------------------------------------------
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+          # より広範囲の検査を行いたい場合は、以下を有効化できる
+          # queries: security-extended
+
+      # ------------------------------------------------------------
+      # Gradle Wrapper確認
+      #
+      # Wrapper関連ファイルが不足している場合に、
+      # 分かりやすい場所で失敗させる。
+      # ------------------------------------------------------------
+      - name: Verify Gradle wrappers
+        if: matrix.language == 'java-kotlin'
+        shell: bash
+        run: |
+          test -f src/android/gradlew
+          test -f src/android/gradle/wrapper/gradle-wrapper.jar
+          test -f src/android/gradle/wrapper/gradle-wrapper.properties
+
+          test -f src/wear_os/gradlew
+          test -f src/wear_os/gradle/wrapper/gradle-wrapper.jar
+          test -f src/wear_os/gradle/wrapper/gradle-wrapper.properties
+
+          chmod +x src/android/gradlew
+          chmod +x src/wear_os/gradlew
+
+      # ------------------------------------------------------------
+      # AndroidアプリのKotlin / Javaをビルド
+      #
+      # 対象:
+      #   src/android/app
+      # ------------------------------------------------------------
+      - name: Build Android application
+        if: matrix.language == 'java-kotlin'
+        working-directory: src/android
+        shell: bash
+        run: |
+          ./gradlew \
+            :app:assembleDebug \
+            --no-daemon \
+            --stacktrace
+
+      # ------------------------------------------------------------
+      # Wear OSアプリのKotlin / Javaをビルド
+      #
+      # 対象:
+      #   src/wear_os/watch_app
+      #   src/wear_os/phone_companion
+      # ------------------------------------------------------------
+      - name: Build Wear OS applications
+        if: matrix.language == 'java-kotlin'
+        working-directory: src/wear_os
+        shell: bash
+        run: |
+          ./gradlew \
+            :watch_app:assembleDebug \
+            :phone_companion:assembleDebug \
+            --no-daemon \
+            --stacktrace
+
+      # ------------------------------------------------------------
+      # 解析実行・GitHubへの結果登録
+      # ------------------------------------------------------------
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
