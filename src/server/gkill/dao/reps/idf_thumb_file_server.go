@@ -133,7 +133,7 @@ func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL strin
 		return nil
 	}
 
-	abs, ok := secureJoin(t.rootDir, rel)
+	abs, ok := SecureJoin(t.rootDir, rel)
 	if !ok {
 		err := fmt.Errorf("bad path %s", queryURL)
 		return err
@@ -216,7 +216,7 @@ func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	abs, ok := secureJoin(t.rootDir, rel)
+	abs, ok := SecureJoin(t.rootDir, rel)
 	if !ok {
 		http.Error(w, "bad path", http.StatusBadRequest)
 		return
@@ -305,8 +305,9 @@ func cleanRelURLPath(p string) (string, bool) {
 	return cp, true
 }
 
-// rootDir から外へ出ないように join
-func secureJoin(rootDir, rel string) (string, bool) {
+// SecureJoin は rootDir から外へ出ないように join する。
+// 結果が rootDir 配下でなければ ok=false を返す。
+func SecureJoin(rootDir, rel string) (string, bool) {
 	root := filepath.Clean(rootDir)
 	full := filepath.Join(root, filepath.FromSlash(rel))
 	full = filepath.Clean(full)
