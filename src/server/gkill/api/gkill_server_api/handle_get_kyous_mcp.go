@@ -144,8 +144,19 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 
 	// 候補IDを収集
-	// request.Limitは冒頭でクランプ済みだが、割り当てサイズの上限を明示するためここでも定数で制限する
-	candidateCount := min(request.Limit, len(batch), maxLimit)
+	// request.Limitは冒頭でクランプ済みだが、割り当てサイズの上限を明示するためここでも定数で制限する。
+	// 静的解析(go/uncontrolled-allocation-size)が上限ガードを認識できるよう、
+	// 変数を関係演算子の左辺に置いた明示的なクランプにしている(min()ビルトインは認識されない)。
+	candidateCount := request.Limit
+	if candidateCount < 0 {
+		candidateCount = 0
+	}
+	if candidateCount > len(batch) {
+		candidateCount = len(batch)
+	}
+	if candidateCount > maxLimit {
+		candidateCount = maxLimit
+	}
 	candidateIDs := make([]string, 0)
 	for i := range candidateCount {
 		candidateIDs = append(candidateIDs, batch[i].ID)
