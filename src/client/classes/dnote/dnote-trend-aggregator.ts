@@ -87,10 +87,13 @@ export class DnoteTrendAggregator {
         }
 
         const points = new Array<DnoteTrendPoint>()
-        const buckets = new Map<string, { point: DnoteTrendPoint, agregated_value: unknown, bucket_query: FindKyouQuery }>()
+        const buckets = new Map<string, { point: DnoteTrendPoint, agregated_value: unknown, bucket_query: FindKyouQuery, bucket_start_ms: number, bucket_end_exclusive_ms: number }>()
+        const first_bucket_start_ms = cursor.valueOf()
+        let last_bucket_start_ms = first_bucket_start_ms
         while (cursor.isSameOrBefore(end) && points.length < max_bucket_count) {
             const bucket_start = cursor.clone()
-            const bucket_end = cursor.clone().endOf(unit)
+            // 終端は排他的（翌単位の0:00）。TimeIsのTrimを0:00ちょうどで区切るため
+            const bucket_end_exclusive = cursor.clone().add(1, step)
             const point: DnoteTrendPoint = {
                 bucket_key: bucket_start.format('YYYY-MM-DD'),
                 label: bucket_label(bucket_start, this.granularity),
@@ -102,10 +105,11 @@ export class DnoteTrendAggregator {
             if (bucket_query !== find_kyou_query) {
                 bucket_query.use_calendar = true
                 bucket_query.calendar_start_date = bucket_start.toDate()
-                bucket_query.calendar_end_date = bucket_end.toDate()
+                bucket_query.calendar_end_date = bucket_end_exclusive.toDate()
             }
             points.push(point)
-            buckets.set(point.bucket_key, { point, agregated_value: null, bucket_query })
+            buckets.set(point.bucket_key, { point, agregated_value: null, bucket_query, bucket_start_ms: bucket_start.valueOf(), bucket_end_exclusive_ms: bucket_end_exclusive.valueOf() })
+            last_bucket_start_ms = bucket_start.valueOf()
             cursor = cursor.clone().add(1, step)
         }
 
@@ -113,6 +117,23 @@ export class DnoteTrendAggregator {
         for (let i = 0; i < cloned_kyous.length; i++) {
             const kyou = cloned_kyous[i]
             if (!(await this.dnote_predicate.is_match(kyou, null))) {
+                continue
+            }
+            if (kyou.typed_timeis) {
+                // TimeIsは日付をまたぐことがあるため、期間が重なる全バケットへ振り分ける
+                // （バケット内への切り詰めは各AgregateTargetがbucket_queryのcalendar範囲で行う）
+                const span_start = kyou.typed_timeis.start_time.getTime()
+                const raw_end = kyou.typed_timeis.end_time ? kyou.typed_timeis.end_time.getTime() : Date.now()
+                const span_end = Math.max(raw_end, span_start + 1)
+                let span_cursor = moment(Math.max(span_start, first_bucket_start_ms)).startOf(unit)
+                while (span_cursor.valueOf() < span_end && span_cursor.valueOf() <= last_bucket_start_ms) {
+                    const bucket = buckets.get(span_cursor.format('YYYY-MM-DD'))
+                    if (bucket && span_start < bucket.bucket_end_exclusive_ms && span_end > bucket.bucket_start_ms) {
+                        bucket.agregated_value = await this.dnote_aggregate_target.append_agregate_element_value(bucket.agregated_value, kyou, bucket.bucket_query)
+                        bucket.point.match_kyous.push(kyou.clone())
+                    }
+                    span_cursor = span_cursor.clone().add(1, step)
+                }
                 continue
             }
             const bucket_key = moment(kyou.related_time).startOf(unit).format('YYYY-MM-DD')
