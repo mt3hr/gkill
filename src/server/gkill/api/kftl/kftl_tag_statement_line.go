@@ -41,9 +41,10 @@ func (l *kftlTagStatementLine) ApplyThisLineToRequestMap(_ context.Context, requ
 		req, _ = requestMap.Get(targetID)
 	}
 
-	// Parse tags: remove "。" prefix, split by "、"
+	// Parse tags: remove "。" or "#" prefix, split by "、" or ","
 	tagStr := strings.TrimPrefix(l.lineText, splitterTag)
-	tags := strings.Split(tagStr, "、")
+	tagStr = strings.TrimPrefix(tagStr, splitterTagAscii)
+	tags := strings.FieldsFunc(tagStr, func(r rune) bool { return r == '、' || r == ',' })
 	for _, tag := range tags {
 		tag = strings.TrimSpace(tag)
 		if tag != "" {

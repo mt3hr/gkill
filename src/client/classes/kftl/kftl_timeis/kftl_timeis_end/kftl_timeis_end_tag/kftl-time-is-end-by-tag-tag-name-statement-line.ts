@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../../../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '@/classes/kftl/kftl-statement-line-constructor-factory'
 import type { KFTLTimeIsEndByTagRequest } from '../kftl-time-is-end-by-tag-request'
 import { i18n } from '@/i18n'
+import { split_tags } from '../../../kftl-prefixes'
 
 export class KFTLTimeIsEndByTagTagNameStatementLine extends KFTLStatementLine {
 
@@ -17,8 +18,9 @@ export class KFTLTimeIsEndByTagTagNameStatementLine extends KFTLStatementLine {
 
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
         const req = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsEndByTagRequest
-        for (let i = 0; i < this.get_context().get_this_statement_line_text().split("、").length; i++) {
-            const tag = this.get_context().get_this_statement_line_text().split("、")[i].trim()
+        const tags = split_tags(this.get_context().get_this_statement_line_text())
+        for (let i = 0; i < tags.length; i++) {
+            const tag = tags[i].trim()
             if (tag == "") { continue }
             req.add_target_tag_name(tag)
         }

@@ -1098,3 +1098,115 @@ func TestApply_AsciiExpenseThenSeparatorThenKmemo(t *testing.T) {
 		t.Fatalf("expected 2 requests, got %d", len(all))
 	}
 }
+
+// ─── ASCIIプレフィックスの内容パース(プレフィックス除去・区切り文字) ────────
+
+func TestApply_AsciiTagContent(t *testing.T) {
+	// "#" が除去され、"," で分割されること
+	text := "#foo,bar\nmemo"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	tags := all[0].GetTags()
+	if len(tags) != 2 || tags[0] != "foo" || tags[1] != "bar" {
+		t.Errorf("expected tags [foo bar], got %v", tags)
+	}
+}
+
+func TestApply_AsciiTagContentMixedSeparator(t *testing.T) {
+	// ASCIIプレフィックス + 全角区切りの交差ケース
+	text := "#foo、bar\nmemo"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	tags := all[0].GetTags()
+	if len(tags) != 2 || tags[0] != "foo" || tags[1] != "bar" {
+		t.Errorf("expected tags [foo bar], got %v", tags)
+	}
+}
+
+func TestApply_JapaneseTagContentRegression(t *testing.T) {
+	// 従来の "。" + "、" の挙動が変わらないこと
+	text := "。foo、bar\nmemo"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	tags := all[0].GetTags()
+	if len(tags) != 2 || tags[0] != "foo" || tags[1] != "bar" {
+		t.Errorf("expected tags [foo bar], got %v", tags)
+	}
+}
+
+func TestApply_AsciiRelatedTimeValue(t *testing.T) {
+	// "?" が除去され日時としてパースされること
+	text := "?2025-06-01 10:00:00\nhello"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	rt := all[0].GetRelatedTime()
+	if rt.Year() != 2025 || rt.Month() != time.June || rt.Day() != 1 || rt.Hour() != 10 || rt.Minute() != 0 {
+		t.Errorf("expected related time 2025-06-01 10:00, got %v", rt)
+	}
+}
+
+func TestApply_AsciiEndByTagTagNames(t *testing.T) {
+	// /endt のタグ名行が "," で分割されること
+	text := "/endt\nwork,home"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	tags := all[0].GetTags()
+	if len(tags) != 2 || tags[0] != "work" || tags[1] != "home" {
+		t.Errorf("expected tags [work home], got %v", tags)
+	}
+}
+
+func TestApply_AsciiTimeIsTimes(t *testing.T) {
+	// /timeis の開始・終了時刻行の "?" プレフィックスが除去されてパースされること
+	text := "/timeis\nWork\n?2025-06-01 10:00:00\n?2025-06-01 11:00:00"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	timeIsReq, ok := all[0].(*kftlTimeIsRequest)
+	if !ok {
+		t.Fatalf("expected *kftlTimeIsRequest, got %T", all[0])
+	}
+	if timeIsReq.startTime.Hour() != 10 {
+		t.Errorf("expected start time hour 10, got %v", timeIsReq.startTime)
+	}
+	if timeIsReq.endTime == nil || timeIsReq.endTime.Hour() != 11 {
+		t.Errorf("expected end time hour 11, got %v", timeIsReq.endTime)
+	}
+}
+
+func TestApply_JapaneseTimeIsTimes(t *testing.T) {
+	// "？" プレフィックス付きの時刻行もパースされること
+	text := "ーち\nWork\n？2025-06-01 10:00:00\n？2025-06-01 11:00:00"
+	requestMap := helperApplyToRequestMap(t, text)
+	all := requestMap.All()
+	if len(all) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(all))
+	}
+	timeIsReq, ok := all[0].(*kftlTimeIsRequest)
+	if !ok {
+		t.Fatalf("expected *kftlTimeIsRequest, got %T", all[0])
+	}
+	if timeIsReq.startTime.Hour() != 10 {
+		t.Errorf("expected start time hour 10, got %v", timeIsReq.startTime)
+	}
+	if timeIsReq.endTime == nil || timeIsReq.endTime.Hour() != 11 {
+		t.Errorf("expected end time hour 11, got %v", timeIsReq.endTime)
+	}
+}

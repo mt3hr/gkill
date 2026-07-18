@@ -7,6 +7,7 @@ import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLNlogRequest } from './kftl-nlog-request'
 import { KFTLNlogShopNameStatementLine } from './kftl-nlog-shop-name-statement-line'
 import { i18n } from '@/i18n'
+import { KFTL_ASCII_NLOG_SPLITTER_TITLE, matches_exact } from '../kftl-prefixes'
 
 export class KFTLStartNlogStatementLine extends KFTLStatementLine {
 
@@ -29,7 +30,7 @@ export class KFTLStartNlogStatementLine extends KFTLStatementLine {
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == i18n.global.t("KFTL_NLOG_SPLITTER_TITLE")
+        return matches_exact(line_text, "KFTL_NLOG_SPLITTER_TITLE", KFTL_ASCII_NLOG_SPLITTER_TITLE)
     }
 
 }

@@ -8,6 +8,7 @@ import type { KFTLRequest } from '../kftl-request'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
 import { i18n } from '@/i18n'
+import { KFTL_ASCII_RELATED_TIME_PREFIX, matches_prefix, strip_prefix } from '../kftl-prefixes'
 
 export class KFTLRelatedTimeStatementLine extends KFTLStatementLine {
 
@@ -28,7 +29,7 @@ export class KFTLRelatedTimeStatementLine extends KFTLStatementLine {
             request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
             request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
         }
-        const time = moment(this.get_context().get_this_statement_line_text().replace(i18n.global.t("KFTL_RELATED_TIME_PREFIX"), "")).toDate()
+        const time = moment(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_RELATED_TIME_PREFIX", KFTL_ASCII_RELATED_TIME_PREFIX)).toDate()
         if (Number.isNaN(time.getTime())) {
             throw new Error(i18n.global.t("KFTL_INVALID_PARSE_RELATED_TIME_ERROR_MESSAGE_TITLE"))
         }
@@ -37,7 +38,7 @@ export class KFTLRelatedTimeStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        const time = moment(this.get_context().get_this_statement_line_text().replace(i18n.global.t("KFTL_RELATED_TIME_PREFIX"), "")).toDate()
+        const time = moment(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_RELATED_TIME_PREFIX", KFTL_ASCII_RELATED_TIME_PREFIX)).toDate()
         if (Number.isNaN(time.getTime())) {
             return i18n.global.t("KFTL_INVALID_RELATED_TIME_TITLE")
         }
@@ -45,7 +46,7 @@ export class KFTLRelatedTimeStatementLine extends KFTLStatementLine {
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text.startsWith(i18n.global.t("KFTL_RELATED_TIME_PREFIX"))
+        return matches_prefix(line_text, "KFTL_RELATED_TIME_PREFIX", KFTL_ASCII_RELATED_TIME_PREFIX)
     }
 
 }

@@ -146,7 +146,9 @@ func newKFTLTimeIsStartTimeStatementLine(lineText string, ctx *KFTLStatementLine
 }
 
 func (l *kftlTimeIsStartTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	t, err := parseDateTime(l.lineText)
+	timeStr := strings.TrimPrefix(l.lineText, splitterRelatedTime)
+	timeStr = strings.TrimPrefix(timeStr, splitterRelatedTimeAscii)
+	t, err := parseDateTime(timeStr)
 	if err != nil {
 		return fmt.Errorf("invalid timeis start_time %q: %w", l.lineText, err)
 	}
@@ -173,7 +175,9 @@ func newKFTLTimeIsEndTimeStatementLine(lineText string, ctx *KFTLStatementLineCo
 }
 
 func (l *kftlTimeIsEndTimeStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	t, err := parseDateTime(l.lineText)
+	timeStr := strings.TrimPrefix(l.lineText, splitterRelatedTime)
+	timeStr = strings.TrimPrefix(timeStr, splitterRelatedTimeAscii)
+	t, err := parseDateTime(timeStr)
 	if err != nil {
 		return fmt.Errorf("invalid timeis end_time %q: %w", l.lineText, err)
 	}
@@ -615,7 +619,7 @@ func newKFTLTimeIsEndByTagTagStatementLine(lineText string, ctx *KFTLStatementLi
 }
 
 func (l *kftlTimeIsEndByTagTagStatementLine) ApplyThisLineToRequestMap(_ context.Context, _ *KFTLRequestMap) error {
-	for _, tag := range strings.Split(l.lineText, "、") {
+	for _, tag := range strings.FieldsFunc(l.lineText, func(r rune) bool { return r == '、' || r == ',' }) {
 		tag = strings.TrimSpace(tag)
 		if tag != "" {
 			l.req.AddTag(tag)

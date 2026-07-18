@@ -144,4 +144,68 @@ describe('KFTL Request Generation', () => {
       expect(invalids).toEqual([])
     })
   })
+
+  // MCP(Go側パーサー)と同じASCIIプレフィックスでの入力
+  describe('ASCII prefixes', () => {
+    test('"#" tag line with "," separator adds both tags without prefix', async () => {
+      const stmt = new KFTLStatement('テストメモ\n#tag1,tag2')
+      const requests = await stmt.generate_requests()
+      expect(requests.length).toBe(1)
+      const tags = requests[0].get_tags()
+      expect(tags).toContain('tag1')
+      expect(tags).toContain('tag2')
+    })
+
+    test('"#" tag line with "、" separator also splits', async () => {
+      const stmt = new KFTLStatement('テストメモ\n#tag1、tag2')
+      const requests = await stmt.generate_requests()
+      const tags = requests[0].get_tags()
+      expect(tags).toContain('tag1')
+      expect(tags).toContain('tag2')
+    })
+
+    test('"?" related time line sets the parsed time', async () => {
+      const stmt = new KFTLStatement('?2025-01-15 10:00:00\nテストメモ')
+      const requests = await stmt.generate_requests()
+      const relTime = requests[0].get_related_time()
+      expect(relTime).toBeInstanceOf(Date)
+      if (relTime) {
+        expect(relTime.getFullYear()).toBe(2025)
+        expect(relTime.getMonth()).toBe(0) // January
+        expect(relTime.getDate()).toBe(15)
+      }
+    })
+
+    test('"," split separator creates two separate requests', async () => {
+      const stmt = new KFTLStatement('最初のメモ\n,\n次のメモ')
+      const requests = await stmt.generate_requests()
+      expect(requests.length).toBe(2)
+    })
+
+    test('",," split separator creates two separate requests', async () => {
+      const stmt = new KFTLStatement('最初のメモ\n,,\n次のメモ')
+      const requests = await stmt.generate_requests()
+      expect(requests.length).toBe(2)
+    })
+
+    test('"--" text block fences generate one request', async () => {
+      const stmt = new KFTLStatement('メモ\n--\nブロック内容\n--')
+      const requests = await stmt.generate_requests()
+      expect(requests.length).toBe(1)
+    })
+
+    test('"!" save character stops parsing of following lines', async () => {
+      const stmt = new KFTLStatement('メモ\n!\n無視される行\n。無視されるタグ')
+      const requests = await stmt.generate_requests()
+      expect(requests.length).toBe(1)
+      expect(requests[0].get_tags()).not.toContain('無視されるタグ')
+    })
+
+    test('"！" save character regression: stops parsing as before', async () => {
+      const stmt = new KFTLStatement('メモ\n！\n無視される行\n。無視されるタグ')
+      const requests = await stmt.generate_requests()
+      expect(requests.length).toBe(1)
+      expect(requests[0].get_tags()).not.toContain('無視されるタグ')
+    })
+  })
 })
