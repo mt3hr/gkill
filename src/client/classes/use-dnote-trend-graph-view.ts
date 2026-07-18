@@ -57,7 +57,7 @@ export function useDnoteTrendGraphView(options: {
         titleFormat: (item: { index: number, value: number }) => {
             const point = trend_points.value[item.index]
             if (!point) return ""
-            const value_string = point.value_string !== "" ? point.value_string : point.value.toString()
+            const value_string = (point.value_string !== "" ? point.value_string : point.value.toString()).replace("<br>", "")
             return `${point.label}: ${value_string}`
         },
     }))
