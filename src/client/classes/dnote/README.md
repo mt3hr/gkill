@@ -10,13 +10,14 @@ KeyGetter でグルーピングし、AggregateTarget で集計値を算出する
 
 ```
 dnote/
-├── (ルートファイル 17個)         # コア型定義
+├── (ルートファイル 18個)         # コア型定義 + トレンドグラフ集計（dnote-trend-aggregator.ts）
 ├── dnote-agregate-target/      # 集計対象（20ファイル）
 ├── dnote-filter/               # フィルタ（2ファイル）
 ├── dnote-key-getter/           # グルーピングキー（9ファイル）
-├── dnote-predicate/            # 検索条件述語（34ファイル）
-│   └── target-kyou-predicate/  # 対象 Kyou 述語（3ファイル）
-├── pulldown-menu/              # UI プルダウンメニュー（4ファイル）
+├── dnote-predicate/            # 検索条件述語（33ファイル）
+│   └── target-kyou-predicate/  # 対象 Kyou 述語（5ファイル）
+├── dnote-trend/                # トレンドグラフ型定義（3ファイル）
+├── pulldown-menu/              # UI プルダウンメニュー（6ファイル）
 └── serialize/                  # シリアライズ辞書（5ファイル）
 ```
 
@@ -52,7 +53,7 @@ dnote/
 最終結果
 ```
 
-## ルートファイル（17ファイル）
+## ルートファイル（18ファイル）
 
 | ファイル | 役割 |
 |---------|------|
@@ -240,15 +241,17 @@ AND / OR / NOT の論理演算で組み合わせ可能な述語群（33 .ts フ�
 |---------|------|
 | `tag-equal-predicate.ts` | タグが一致 |
 
-### 対象 Kyou 述語（`target-kyou-predicate/` 3ファイル）
+### 対象 Kyou 述語（`target-kyou-predicate/` 5ファイル）
 
 | ファイル | 条件 |
 |---------|------|
+| `equal-id-target-kyou-predicate.ts` | ID一致 |
 | `equal-rep-data-type-target-kyou-predicate.ts` | リポジトリデータ型一致 |
-| `equal-tags-target-kyou-predicate.ts` | タグ一致 |
+| `equal-tags-and-target-kyou-predicate.ts` | タグがすべて対象と等しい |
+| `equal-tags-or-target-kyou-predicate.ts` | タグが一部対象と等しい |
 | `equal-title-target-kyou-predicate.ts` | タイトル一致 |
 
-## `pulldown-menu/`（4ファイル）— UI プルダウンメニュー
+## `pulldown-menu/`（6ファイル）— UI プルダウンメニュー
 
 DNote 設定 UI 用のプルダウンメニューアイテム定義。
 

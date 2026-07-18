@@ -26,7 +26,7 @@ gkill はライフログアプリケーション。テキストメモ、ブッ�
 │  //go:embed  (1バイナリに埋め込み)         │
 ├─────────────────────────────────────────┤
 │  バックエンド (Go + gorilla/mux)         │  ← src/server/
-│  ・84 POST API エンドポイント             │
+│  ・85 POST API エンドポイント             │
 │  ・SQLite3 (pure Go)                      │
 │  ・cobra CLI                             │
 ├─────────────────────────────────────────┤
@@ -35,7 +35,7 @@ gkill はライフログアプリケーション。テキストメモ、ブッ�
 │  ・Wear OS (Pixel Watch) KFTL 入力       │  ← src/wear_os/
 ├─────────────────────────────────────────┤
 │  AI 連携                                 │
-│  ・MCP Server (読み取り専用)              │  ← src/mcp/
+│  ・MCP Server (Read/Write/ReadWrite)     │  ← src/mcp/
 └─────────────────────────────────────────┘
 ```
 
@@ -77,13 +77,13 @@ src/
 │   │   ├── dnote/   #     Dynamic Note (集計・フィルタ)
 │   │   └── kftl/    #     KFTL パーサ
 │   └── pages/       #   Vue ページ・ビュー・ダイアログ
-│       ├── views/   #     View コンポーネント (175個)
-│       └── dialogs/ #     Dialog コンポーネント (93個)
+│       ├── views/   #     View コンポーネント (185個)
+│       └── dialogs/ #     Dialog コンポーネント (100個)
 ├── server/          # Go バックエンド
 │   └── gkill/
-│       ├── api/     #   HTTP API (78エンドポイント)
+│       ├── api/     #   HTTP API (85エンドポイント)
 │       │   ├── kftl/    #   KFTL パーサ
-│       │   └── req_res/ #   Request/Response 構造体 (174型)
+│       │   └── req_res/ #   Request/Response 構造体 (176ファイル)
 │       ├── dao/     #   データアクセス層 (SQLite3)
 │       │   └── reps/#   メインリポジトリ (4層実装)
 │       ├── dvnf/    #   データバージョニング
@@ -140,15 +140,15 @@ npm run go_install
 
 ### テスト
 
-約2,092件の自動テストが存在する。詳細は [ABOUT_TEST.md](ABOUT_TEST.md) を参照。
+約2,312件の自動テストが存在する。詳細は [ABOUT_TEST.md](ABOUT_TEST.md) を参照。
 
 | コマンド | 対象 |
 |---------|------|
 | `npm test` | 全テスト |
-| `npm run test_server` | Go バックエンド (~569テスト) |
-| `npm run test_client_unit` | フロントエンド ユニット (~632テスト) |
-| `npm run test_client_e2e` | フロントエンド E2E (202テスト) |
-| `npm run test_mcp` | MCP サーバ (~563テスト) |
+| `npm run test_server` | Go バックエンド (~577テスト) |
+| `npm run test_client_unit` | フロントエンド ユニット (800テスト) |
+| `npm run test_client_e2e` | フロントエンド E2E (207テスト) |
+| `npm run test_mcp` | MCP サーバ (602テスト) |
 | `npm run test_android` | Android (12テスト) |
 | `npm run test_wear_os` | Wear OS (114テスト) |
 

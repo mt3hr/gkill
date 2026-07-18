@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-gkill is a lifelogging application (version ) that records and reviews life events (memos, bookmarks, tasks, mood values, expenses, timestamps, files, git commits, etc.). Standalone client-server app: Go backend + Vue 3 frontend, compiled into a single binary with the frontend embedded via `//go:embed`. Licensed under MIT.
+gkill is a lifelogging application that records and reviews life events (memos, bookmarks, tasks, mood values, expenses, timestamps, files, git commits, etc.). Standalone client-server app: Go backend + Vue 3 frontend, compiled into a single binary with the frontend embedded via `//go:embed`. Licensed under MIT.
 
 ## Build & Development Commands
 
@@ -49,6 +49,7 @@ src/
   tools/      # Utility scripts
   plugins/    # Standalone plugin binaries (each has its own go.mod, manifest.json, executable)
               #   examples/gkill_example/  — sample plugin (fixed Kyou response)
+              #   gkill_plugin_chatgpt/    — ChatGPT conversation history plugin
               #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin
 ```
 
@@ -79,8 +80,8 @@ Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.4)
 
 Key packages:
 - `gkill/api/` — Shared infrastructure: `embed.go` (`//go:embed` serves Vue SPA at `/`), `version.go`, `gkill_version_data.go`, `find_filter.go`, `find_filter_helpers.go`, `find_kyou_context.go`
-- `gkill/api/gkill_server_api/` — HTTP API handlers (83 files, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
-- `gkill/api/req_res/` — Request/response structs for every endpoint (172 files)
+- `gkill/api/gkill_server_api/` — HTTP API handlers (86 files, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
+- `gkill/api/req_res/` — Request/response structs for every endpoint (176 files)
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou` (stdio newline-delimited JSON)
 - `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{FindKyous, GetContentHTML, GetConfigHTML})` starts the stdio JSON message loop. Plugins are standalone binaries in `src/plugins/`
@@ -102,9 +103,9 @@ Key packages:
 
 Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + PWA (vite-plugin-pwa + Workbox)
 
-- `router/index.ts` — 12 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, set_new_password, regist_first_account, shared_page, shared_mi)
-- `pages/views/` — 177 view components, `pages/dialogs/` — 95 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser and plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`)
-- `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,400 lines), client-side API wrapper
+- `router/index.ts` — 13 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, set_new_password, regist_first_account, shared_page, shared_mi)
+- `pages/views/` — 185 view components, `pages/dialogs/` — 100 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend graph components (`dnote-trend-graph-*` — client-side time-series aggregation via `classes/dnote/dnote-trend-aggregator.ts`, no server API)
+- `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,500 lines), client-side API wrapper
 - `classes/kftl/` — KFTL parser (44 statement types)
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 
@@ -114,7 +115,7 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 
 **Naming convention:** `{action}-{feature}-{entity}-{component}` (e.g., `add-dnote-item-view.vue`, `confirm-delete-ryuu-item-dialog.vue`). Dnote and Ryuu follow the same pattern.
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 784 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 830 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 
@@ -152,6 +153,6 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 
 ## Documentation
 
-- `resources/manual/` — HTML manuals (7 languages, 18 pages per language), embedded via `//go:embed` and served at `/manual/`
-- `documents/reverse/` — Reverse-engineered design documents (22 files). See `documents/reverse/README.md` for index. Key files: glossary.md (71 terms), api-endpoints.md (84 endpoints), usecase.md (76 use cases), sequence-diagrams.md (24 diagrams), testing-guide.md
-- `src/ABOUT_TEST.md` — Test specification index, links to 19 subdirectory `ABOUT_TEST.md` files
+- `resources/manual/` — HTML manuals (7 languages, 20 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
+- `documents/reverse/` — Reverse-engineered design documents (23 files). See `documents/reverse/README.md` for index. Key files: glossary.md (80 terms), api-endpoints.md (87 endpoints, 85 registered), usecase.md (78 use cases), sequence-diagrams.md (27 diagrams), testing-guide.md
+- `src/ABOUT_TEST.md` — Test specification index, links to 22 subdirectory `ABOUT_TEST.md` files

@@ -116,7 +116,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（84）を提供する。`gkill_server_api/` パッケージ（83ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（87定義・85登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 86ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -141,7 +141,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 
 ## 7. Dnote 集計システム用語
 
-Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateTarget の3段階で処理する。
+Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateTarget の3段階で処理する。集計要素として集計項目・集計リスト・トレンドグラフの3種類を定義タブ内に配置できる。
 
 ### 処理コンポーネント
 
@@ -150,6 +150,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **Predicate / 条件** | 条件 | フィルタリング条件。AND/OR/NOT の論理演算で組み合わせ可能。30+ 種類の具象クラスがある |
 | **KeyGetter / 集計キー** | 集計キー | グルーピング基準。関連日・関連年月・関連曜日・タグ・データタイプ・タイトル・店名・気分値等から選択 |
 | **AggregateTarget / 集計対象** | 集計対象 | 集計関数。件数・合計・平均・最大値・最小値を、支出額・気分値・作業時間・コード行数等に適用可能 |
+| **DnoteTrendGraph / トレンドグラフ** | トレンドグラフ | 時系列集計グラフ。取得済み Kyou を `DnoteTrendAggregator`（`src/client/classes/dnote/dnote-trend-aggregator.ts`）が集計粒度（日/週/月）で時系列集計し、スパークライン（折れ線/棒）で表示する。集計項目・集計リストと並ぶ第3の集計要素。サーバーAPIを持たずクライアント側のみで完結する |
 
 ### Predicate の主なカテゴリ
 
@@ -193,7 +194,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **ZipEntry** | ZIP内のファイルエントリ情報。ファイル名・サイズ・パス等を含む。`/api/browse_zip_contents` のレスポンスとして返却される |
 | **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す |
 | **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する |
-| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、7ツール）・**Write専用**（`gkill-write-server.mjs`、14ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、18ツール）。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
+| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、8ツール）・**Write専用**（`gkill-write-server.mjs`、23ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、28ツール）。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
 
 ## 10. 主要ファイルパス相互参照
 
@@ -203,11 +204,11 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全84エンドポイントのパス・メソッド定義 |
-| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（83ファイル、1ハンドラ1ファイル） |
+| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全87エンドポイントのパス・メソッド定義 |
+| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（86ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
-| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（172ファイル） |
-| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000374 の定数定義 |
+| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（176ファイル） |
+| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000389 の定数定義（ERR000243は欠番） |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
 | KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |
 | Embed（SPA埋め込み） | `src/server/gkill/api/embed.go` | `//go:embed embed` ディレクティブ |
@@ -229,7 +230,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
-| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（~3,400行） |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（~3,500行） |
 | リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（160ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
@@ -249,9 +250,9 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| MCP サーバー（Read） | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（7ツール、stdio/HTTP） |
-| MCP サーバー（Write） | `src/mcp/gkill-write-server.mjs` | 書き込み専用MCPサーバー（14ツール、stdio/HTTP） |
-| MCP サーバー（ReadWrite） | `src/mcp/gkill-readwrite-server.mjs` | 読み書き統合MCPサーバー（18ツール、stdio/HTTP） |
+| MCP サーバー（Read） | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（8ツール、stdio/HTTP） |
+| MCP サーバー（Write） | `src/mcp/gkill-write-server.mjs` | 書き込み専用MCPサーバー（23ツール、stdio/HTTP） |
+| MCP サーバー（ReadWrite） | `src/mcp/gkill-readwrite-server.mjs` | 読み書き統合MCPサーバー（28ツール、stdio/HTTP） |
 | MCP アクセスログ | `src/mcp/lib/access-log.mjs` | MCPサーバのアクセスログモジュール。`MCP_LOG` 環境変数で制御 |
 | Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
 | Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |

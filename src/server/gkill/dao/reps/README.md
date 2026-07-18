@@ -226,6 +226,13 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 | `gps_log_repositories.go` | 集約インタフェース |
 | `gps_log_repository_gpx_dir_impl.go` | GPX ディレクトリからの読み取り実装 |
 
+### Plugin（プラグイン Kyou）— 2ファイル
+
+| ファイル | 説明 |
+|---------|------|
+| `plugin_repository.go` | プラグインリポジトリのインタフェース |
+| `plugin_repository_impl.go` | プラグインサブプロセスのライフサイクル管理実装（起動、mutex 保護付き stdio 通信、クラッシュ時の自動再起動）。stdio の改行区切り JSON でプラグインバイナリと通信する |
+
 ### ファイルサーバ — 2ファイル
 
 | ファイル | 説明 |

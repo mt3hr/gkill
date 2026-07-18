@@ -166,6 +166,34 @@ stateDiagram-v2
 
 **履歴ダイアログ:** KyouHistory, TagHistory, TextHistory
 
+### 集計ビュー（DnoteView）のダイアログ遷移
+
+Rykv 画面・ダッシュボード画面に埋め込まれる集計ビューのダイアログ遷移。フローティング「＋」メニューから集計項目・集計リスト・トレンドグラフの3種類の集計要素を追加できる。
+
+```mermaid
+stateDiagram-v2
+    DnoteView --> AddMenu: フローティング＋ボタン
+    AddMenu --> AddDnoteItem: 集計項目追加
+    AddMenu --> AddDnoteList: 集計リスト追加
+    AddMenu --> AddDnoteTrendGraph: トレンドグラフ追加
+
+    DnoteView --> EditDnoteItem: 集計項目ダブルクリック
+    DnoteView --> EditDnoteList: 集計リストダブルクリック
+    DnoteView --> EditDnoteTrendGraph: トレンドグラフダブルクリック
+
+    DnoteView --> TrendGraphCtx: トレンドグラフ右クリック
+    TrendGraphCtx --> EditDnoteTrendGraph: 編集選択
+    TrendGraphCtx --> ConfirmDeleteDnoteTrendGraph: 削除選択
+```
+
+**追加ダイアログ:** AddDnoteItem（`add-dnote-item-dialog.vue`）, AddDnoteList（`add-dnote-list-dialog.vue`）, AddDnoteTrendGraph（`add-dnote-trend-graph-dialog.vue`）
+
+**編集ダイアログ:** EditDnoteItem, EditDnoteList, EditDnoteTrendGraph（`edit-dnote-trend-graph-dialog.vue`）
+
+**削除確認ダイアログ:** ConfirmDeleteDnoteItemList, ConfirmDeleteDnoteListQuery, ConfirmDeleteDnoteTrendGraph（`confirm-delete-dnote-trend-graph-dialog.vue`）
+
+トレンドグラフはドラッグ&ドロップで並べ替え可能（ダイアログ遷移なし）。
+
 ## 4. Mi 画面のダイアログ遷移
 
 **典型的な呼び出しシナリオ：** ユーザーがカンバンボード上のタスクを追加・編集するとき、またはタスクリストを他のユーザーやチームと共有したい場合に各ダイアログを呼び出す。新規ボードの作成は「+」ボタンから、既存タスクの操作はタスクカードの長押し/右クリックのコンテキストメニューから起動する。

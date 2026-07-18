@@ -6,9 +6,9 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 7 | 8808 | 読み取りのみ |
-| **Write専用** | `gkill-write-server.mjs` | 14 (11 write + 3 read convenience) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill-readwrite-server.mjs` | 18 (7 read + 11 write) | 8810 | 全機能 |
+| **Read専用** | `gkill-read-server.mjs` | 8 | 8808 | 読み取りのみ |
+| **Write専用** | `gkill-write-server.mjs` | 23 (20 write + 3 read convenience) | 8809 | 書き込み中心 |
+| **Read/Write統合** | `gkill-readwrite-server.mjs` | 28 (8 read + 20 write) | 8810 | 全機能 |
 
 2つのトランスポートモードに対応：
 - **stdio** (デフォルト): Claude Desktop等のローカルMCPクライアント向け
@@ -181,7 +181,7 @@ AIはこのURLを **Bearer無しでGET** すればバイトを取得できる（
 
 リモートで大きすぎて `gkill_get_idf_file`（base64、`GKILL_MCP_MAX_FILE_BYTES` 上限）に収まらないファイルも、この `file_url` なら取得できる。
 
-#### Writeツール（11 — Write専用/ReadWrite統合サーバで使用可能）
+#### Writeツール（20 — Write専用/ReadWrite統合サーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_add_kmemo` | テキストメモ作成 |
@@ -193,6 +193,15 @@ AIはこのURLを **Bearer無しでGET** すればバイトを取得できる（
 | `gkill_add_kc` | 数値記録作成 |
 | `gkill_add_tag` | 既存エントリにタグ追加 |
 | `gkill_add_text` | 既存エントリにテキスト注釈追加 |
+| `gkill_update_kmemo` | テキストメモ更新 |
+| `gkill_update_urlog` | ブックマーク/URL記録更新 |
+| `gkill_update_nlog` | 支出/収入記録更新 |
+| `gkill_update_lantana` | 気分記録更新 |
+| `gkill_update_timeis` | 時間記録更新 |
+| `gkill_update_mi` | タスク更新 |
+| `gkill_update_kc` | 数値記録更新 |
+| `gkill_update_tag` | タグ更新 |
+| `gkill_update_text` | テキスト注釈更新 |
 | `gkill_submit_kftl` | KFTLテキスト一括処理 |
 | `gkill_delete_kyou` | エントリのソフト削除 |
 

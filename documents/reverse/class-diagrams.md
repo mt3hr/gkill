@@ -344,7 +344,7 @@ classDiagram
         +HandleAddKmemo(w, r)
         +HandleUpdateKmemo(w, r)
         +HandleGetKyous(w, r)
-        %% 残り80エンドポイント省略（合計84）
+        %% 残り82エンドポイント省略（合計85登録）
     }
 
     GkillServerAPI --> GkillDAOManager : uses
@@ -769,6 +769,44 @@ DnoteAggregator
   2. DnoteKeyGetter.get_keys() でグルーピング
   3. DnoteAgregateTarget.append_agregate_element_value() で集計
   4. DnoteAgregateTarget.result_to_string() で結果文字列化
+```
+
+### Dnote トレンドグラフ集計（DnoteTrendAggregator）
+
+集計項目・集計リストに並ぶ第3の集計要素「トレンドグラフ」の集計クラス（`src/client/classes/dnote/dnote-trend-aggregator.ts`）。Kyou を集計粒度（日/週/月）ごとのバケットに振り分け、バケット単位で `DnoteAgregateTarget` を適用して時系列点列を生成する。`dnote-trend-graph-view.vue` がスパークライン（折れ線/棒）として描画する。サーバー API は使用しない。
+
+```mermaid
+classDiagram
+    class DnoteTrendAggregator {
+        -DnotePredicate dnote_predicate
+        -DnoteAgregateTarget dnote_aggregate_target
+        -DnoteTrendGranularity granularity
+        +aggregate_trend(abort_controller, kyous, find_kyou_query, kyou_is_loaded) Promise~Array~DnoteTrendPoint~~
+    }
+
+    class DnoteTrendPoint {
+        <<interface>>
+        +string bucket_key
+        +string label
+        +number value
+        +string value_string
+        +Array~Kyou~ match_kyous
+    }
+
+    class DnoteTrendGranularity {
+        <<type>>
+        'day' | 'week' | 'month'
+    }
+
+    class DnoteTrendChartType {
+        <<type>>
+        'line' | 'bar'
+    }
+
+    DnoteTrendAggregator --> DnotePredicate : フィルタリング
+    DnoteTrendAggregator --> DnoteAgregateTarget : バケット単位で集計
+    DnoteTrendAggregator --> DnoteTrendPoint : 生成
+    DnoteTrendAggregator ..> DnoteTrendGranularity : 粒度指定
 ```
 
 ### Dnote 述語の全実装クラス

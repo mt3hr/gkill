@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル ~180個)       # use-*.ts Composable + ユーティリティ
+├── (ルートファイル ~236個)       # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -183,6 +183,9 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `long-press.ts` | ロングプレスディレクティブ |
 | `looks-like-url.ts` | URL 判定ユーティリティ |
 | `save-as.ts` | ファイル保存ユーティリティ |
+| `markdown-to-html.ts` | Markdown → HTML 変換（IDFKyou の .md/.markdown リッチ表示用。DOMPurify サニタイズ付き） |
+| `mermaid-render.ts` | Markdown 内 ```mermaid コードブロックの図描画 |
+| `decode-text.ts` | テキストファイルの文字コード判定・デコード |
 | `cookie-store.d.ts` | Cookie Store API 型定義 |
 
 ## `dto/` サブディレクトリ（3ファイル）

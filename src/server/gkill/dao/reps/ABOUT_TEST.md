@@ -32,6 +32,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `cached_and_temp_test.go` | キャッシュ層 / 一時リポジトリ層の動作検証 |
+| `re_kyou_granular_cache_test.go` | ReKyou のグラニュラーキャッシュ動作検証 |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
 | `cache/latest_data_repository_address_dao_sqlite3_impl_test.go` | キャッシュアドレス DAO |
 | `cache/rep_cache_updater/rep_cache_updater_test.go` | キャッシュ更新処理 |
