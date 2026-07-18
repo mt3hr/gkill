@@ -1,38 +1,19 @@
 <template>
-  <div
-    class="dnote_list_view_root"
-    @dragover="dragover"
-    @drop="drop"
-  >
+  <div class="dnote_list_view_root" @dragover="dragover" @drop="drop">
     <!-- ドラッグはタイトルをハンドルにする（スクロール操作と干渉しにくい） -->
-    <h2
-      class="dnote_list_title"
-      :draggable="editable"
-      :class="{ draggable: editable }"
-      @dragstart="drag_start"
-    >
+    <h2 class="dnote_list_title" :draggable="editable" :class="{ draggable: editable }" @dragstart="drag_start">
       {{ model_value?.title ? model_value.title : "" }}
     </h2>
 
-    <v-virtual-scroll
-      class="dnote_list_view"
-      :items="aggregated_items"
-      :height="'50vh'"
-      :width="200 + 8"
-      @contextmenu.prevent.stop="onContextmenu"
-      ref="list_view"
-    >
+    <v-virtual-scroll class="dnote_list_view" :items="aggregated_items" :height="'50vh'" :width="200 + 8"
+      @contextmenu.prevent.stop="onContextmenu" ref="list_view">
       <template v-slot:default="{ item }">
-        <AggregatedListItem
-          :application_config="application_config"
-          :gkill_api="gkill_api"
-          :dnote_list_query="model_value!"
-          :aggregated_item="item"
-          v-on="aggregatedListItemHandlers"
-        />
+        <AggregatedListItem :application_config="application_config" :gkill_api="gkill_api"
+          :dnote_list_query="model_value!" :aggregated_item="item" v-on="aggregatedListItemHandlers" />
       </template>
     </v-virtual-scroll>
-    <v-col v-if="aggregated_items && aggregated_items.length === 0" cols="12" class="text-center text-grey py-6">
+    <v-col v-if="aggregated_items && aggregated_items.length === 0" cols="12" class="text-center text-grey py-3"
+      style="max-height: fit-content">
       {{ i18n.global.t('NO_RESULTS_MESSAGE') }}
     </v-col>
 
@@ -45,27 +26,14 @@
       </v-row>
     </v-card>
 
-    <DnoteListQueryContextMenu
-      :application_config="application_config"
-      :gkill_api="gkill_api"
-      v-on="contextMenuHandlers"
-      ref="contextmenu"
-    />
+    <DnoteListQueryContextMenu :application_config="application_config" :gkill_api="gkill_api"
+      v-on="contextMenuHandlers" ref="contextmenu" />
 
-    <ConfirmDeleteDnoteListQueryDialog
-      :application_config="application_config"
-      :gkill_api="gkill_api"
-      v-on="confirmDeleteHandlers"
-      ref="confirm_delete_dnote_list_query_dialog"
-    />
+    <ConfirmDeleteDnoteListQueryDialog :application_config="application_config" :gkill_api="gkill_api"
+      v-on="confirmDeleteHandlers" ref="confirm_delete_dnote_list_query_dialog" />
 
-    <EditDnoteListDialog
-      :application_config="application_config"
-      :gkill_api="gkill_api"
-      :dnote_list_query="model_value!"
-      v-on="editDnoteListHandlers"
-      ref="edit_dnote_list_query"
-    />
+    <EditDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
+      :dnote_list_query="model_value!" v-on="editDnoteListHandlers" ref="edit_dnote_list_query" />
   </div>
 </template>
 
@@ -120,10 +88,12 @@ defineExpose({ load_aggregate_grouping_list, reset })
 .dnote_list_title {
   white-space: nowrap;
 }
+
 .dnote_list_title.draggable {
   cursor: grab;
   user-select: none;
 }
+
 .dnote_list_title.draggable:active {
   cursor: grabbing;
 }
