@@ -9,6 +9,8 @@ import { vi } from 'vitest'
 import {
   makeKyouWithKmemo,
   makeKyouWithNlog,
+  makeKyouWithTimeis,
+  makeTimeis,
 } from '../../helpers/factory'
 
 // Mock load_kyous before importing aggregators
@@ -23,6 +25,7 @@ import KmemoContentContainsPredicate from '@/classes/dnote/dnote-predicate/kmemo
 import DataTypePrefixPredicate from '@/classes/dnote/dnote-predicate/data-type-prefix-predicate'
 import AgregateCountKyou from '@/classes/dnote/dnote-agregate-target/agregate-count-kyou'
 import AgregateSumNlogAmount from '@/classes/dnote/dnote-agregate-target/agregate-sum-nlog-amount'
+import AgregateSumTimeIsTime from '@/classes/dnote/dnote-agregate-target/agregate-sum-timeis-time'
 
 const controller = new AbortController()
 const emptyQuery = {} as never
@@ -191,6 +194,117 @@ describe('DnoteTrendAggregator', () => {
     expect(points[points.length - 1].bucket_key).toBe('2026-07-01')
     expect(points[points.length - 1].value).toBe(1)
     expect(points[0].bucket_key > '2025-01-01').toBe(true)
+  })
+})
+
+// TimeIsの0:00区切り集計テスト。
+// バケット境界(0:00)はローカルタイムゾーン基準のため、日時はローカル時刻のDateコンストラクタで作る
+describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
+  const HOUR = 60 * 60 * 1000
+
+  // 本番のFindKyouQueryと同様にclone可能なクエリ（バケットごとのTrim範囲が効く）
+  function makeCloneableQuery(start: Date, end: Date) {
+    return {
+      use_calendar: true,
+      calendar_start_date: start,
+      calendar_end_date: end,
+      clone(): unknown {
+        return { ...this }
+      },
+    } as never
+  }
+
+  function makeTimeisKyou(start: Date, end: Date | null, id = 'test-timeis-id') {
+    const obj = makeKyouWithTimeis()
+    obj.id = id
+    obj.related_time = start
+    obj.typed_timeis = makeTimeis({ id, start_time: start, end_time: end }) as never
+    obj.clone = () => ({ ...obj })
+    return obj as never
+  }
+
+  test('2日またぎTimeIsは0:00で区切って両日に計上される', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AgregateSumTimeIsTime()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
+
+    // 7/17 22:00 〜 7/18 03:00
+    const kyous = [makeTimeisKyou(new Date(2026, 6, 17, 22, 0), new Date(2026, 6, 18, 3, 0))]
+
+    const query = makeCloneableQuery(new Date(2026, 6, 17, 0, 0), new Date(2026, 6, 18, 23, 59, 59))
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.length).toBe(2)
+    expect(points[0].value).toBe(2 * HOUR)
+    expect(points[1].value).toBe(3 * HOUR)
+    expect(points[0].match_kyous.length).toBe(1)
+    expect(points[1].match_kyous.length).toBe(1)
+  })
+
+  test('3日またぎTimeIsは中日が丸24時間になる', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AgregateSumTimeIsTime()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
+
+    // 7/16 23:00 〜 7/18 01:00
+    const kyous = [makeTimeisKyou(new Date(2026, 6, 16, 23, 0), new Date(2026, 6, 18, 1, 0))]
+
+    const query = makeCloneableQuery(new Date(2026, 6, 16, 0, 0), new Date(2026, 6, 18, 23, 59, 59))
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.length).toBe(3)
+    expect(points.map(p => p.value)).toEqual([1 * HOUR, 24 * HOUR, 1 * HOUR])
+  })
+
+  test('検索範囲より前に開始したTimeIsも範囲内の分が計上される', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AgregateSumTimeIsTime()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
+
+    // 7/16 22:00 〜 7/17 03:00（検索範囲は7/17から）
+    const kyous = [makeTimeisKyou(new Date(2026, 6, 16, 22, 0), new Date(2026, 6, 17, 3, 0))]
+
+    const query = makeCloneableQuery(new Date(2026, 6, 17, 0, 0), new Date(2026, 6, 18, 23, 59, 59))
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.length).toBe(2)
+    expect(points[0].value).toBe(3 * HOUR)
+    expect(points[1].value).toBe(0)
+  })
+
+  test('件数集計でもまたいだ各日に1件ずつ計上される', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AgregateCountKyou()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
+
+    const kyous = [
+      makeTimeisKyou(new Date(2026, 6, 17, 22, 0), new Date(2026, 6, 18, 3, 0), 'timeis-spanning'),
+      makeTimeisKyou(new Date(2026, 6, 17, 10, 0), new Date(2026, 6, 17, 11, 0), 'timeis-within'),
+    ]
+
+    const query = makeCloneableQuery(new Date(2026, 6, 17, 0, 0), new Date(2026, 6, 18, 23, 59, 59))
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.length).toBe(2)
+    expect(points[0].value).toBe(2)
+    expect(points[1].value).toBe(1)
+  })
+
+  test('0:00ちょうどに終了したTimeIsは翌日に計上されない', async () => {
+    const predicate = new DataTypePrefixPredicate('timeis')
+    const target = new AgregateSumTimeIsTime()
+    const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
+
+    // 7/17 20:00 〜 7/18 00:00ちょうど
+    const kyous = [makeTimeisKyou(new Date(2026, 6, 17, 20, 0), new Date(2026, 6, 18, 0, 0))]
+
+    const query = makeCloneableQuery(new Date(2026, 6, 17, 0, 0), new Date(2026, 6, 18, 23, 59, 59))
+    const points = await aggregator.aggregate_trend(controller, kyous, query, true)
+
+    expect(points.length).toBe(2)
+    expect(points[0].value).toBe(4 * HOUR)
+    expect(points[1].value).toBe(0)
+    expect(points[1].match_kyous.length).toBe(0)
   })
 })
 
