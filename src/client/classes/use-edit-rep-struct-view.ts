@@ -6,6 +6,7 @@ import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
+import { move_struct_up, move_struct_down, move_struct_to_folder } from '@/classes/foldable-struct-move'
 
 export function useEditRepStructView(options: {
     props: EditRepStructViewProps,
@@ -19,6 +20,7 @@ export function useEditRepStructView(options: {
     const add_new_rep_struct_element_dialog = ref<ComponentRef | null>(null)
     const rep_struct_context_menu = ref<ComponentRef | null>(null)
     const confirm_delete_rep_struct_dialog = ref<ComponentRef | null>(null)
+    const select_move_target_folder_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
@@ -141,6 +143,22 @@ export function useEditRepStructView(options: {
         rep_name_walk(cloned_application_config.value.rep_struct)
     }
 
+    function move_rep_struct_up(id: string): void {
+        move_struct_up(cloned_application_config.value.rep_struct, id)
+    }
+
+    function move_rep_struct_down(id: string): void {
+        move_struct_down(cloned_application_config.value.rep_struct, id)
+    }
+
+    function show_select_move_target_folder_dialog(id: string): void {
+        select_move_target_folder_dialog.value?.show(cloned_application_config.value.rep_struct, id)
+    }
+
+    function move_rep_struct_to_folder(struct_id: string, target_folder_id: string | null): void {
+        move_struct_to_folder(cloned_application_config.value.rep_struct, struct_id, target_folder_id)
+    }
+
     // ── Template event handlers ──
     function onDblclickedItem(e: MouseEvent, id: string | null): void {
         if (id) show_edit_rep_struct_dialog(id)
@@ -169,7 +187,15 @@ export function useEditRepStructView(options: {
     const repContextMenuHandlers = {
         ...errorMessageHandlers,
         'requested_edit_rep': (value: string) => show_edit_rep_struct_dialog(value),
+        'requested_move_up_rep': (value: string) => move_rep_struct_up(value),
+        'requested_move_down_rep': (value: string) => move_rep_struct_down(value),
+        'requested_move_rep_to_folder': (value: string) => show_select_move_target_folder_dialog(value),
         'requested_delete_rep': (value: string) => show_confirm_delete_rep_struct_dialog(value),
+    }
+
+    const selectMoveTargetFolderHandlers = {
+        ...errorMessageHandlers,
+        'requested_move_struct_obj_to_folder': (struct_id: string, target_folder_id: string | null) => move_rep_struct_to_folder(struct_id, target_folder_id),
     }
 
     const confirmDeleteHandlers = {
@@ -184,6 +210,7 @@ export function useEditRepStructView(options: {
         add_new_rep_struct_element_dialog,
         rep_struct_context_menu,
         confirm_delete_rep_struct_dialog,
+        select_move_target_folder_dialog,
 
         // State
         cloned_application_config,
@@ -198,6 +225,10 @@ export function useEditRepStructView(options: {
         add_rep_struct_element,
         show_confirm_delete_rep_struct_dialog,
         delete_rep_struct,
+        move_rep_struct_up,
+        move_rep_struct_down,
+        show_select_move_target_folder_dialog,
+        move_rep_struct_to_folder,
 
         // Template event handlers
         onDblclickedItem,
@@ -209,5 +240,6 @@ export function useEditRepStructView(options: {
         editRepHandlers,
         repContextMenuHandlers,
         confirmDeleteHandlers,
+        selectMoveTargetFolderHandlers,
     }
 }

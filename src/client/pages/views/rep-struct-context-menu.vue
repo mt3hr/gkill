@@ -4,6 +4,15 @@
             <v-list-item @click="emits('requested_edit_rep', id)">
                 <v-list-item-title>{{ i18n.global.t("EDIT_TITLE") }}</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="emits('requested_move_up_rep', id)">
+                <v-list-item-title>{{ i18n.global.t("MOVE_UP_TITLE") }}</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="emits('requested_move_down_rep', id)">
+                <v-list-item-title>{{ i18n.global.t("MOVE_DOWN_TITLE") }}</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="emits('requested_move_rep_to_folder', id)">
+                <v-list-item-title>{{ i18n.global.t("MOVE_TO_FOLDER_TITLE") }}</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="emits('requested_delete_rep', id)">
                 <v-list-item-title>{{ i18n.global.t("DELETE_TITLE") }}</v-list-item-title>
             </v-list-item>

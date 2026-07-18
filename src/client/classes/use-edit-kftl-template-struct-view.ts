@@ -7,6 +7,7 @@ import type { FolderStructElementData } from '@/classes/datas/config/folder-stru
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
+import { move_struct_up, move_struct_down, move_struct_to_folder } from '@/classes/foldable-struct-move'
 
 export function useEditKftlTemplateStructView(options: {
     props: EditKFTLTemplateStructViewProps,
@@ -21,6 +22,7 @@ export function useEditKftlTemplateStructView(options: {
     const add_new_kftl_template_struct_element_dialog = ref<ComponentRef | null>(null)
     const kftl_template_struct_context_menu = ref<ComponentRef | null>(null)
     const confirm_delete_kftl_template_struct_dialog = ref<ComponentRef | null>(null)
+    const select_move_target_folder_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
@@ -157,6 +159,22 @@ export function useEditKftlTemplateStructView(options: {
         kftl_template_walk(cloned_application_config.value.kftl_template_struct)
     }
 
+    function move_kftl_template_struct_up(id: string): void {
+        move_struct_up(cloned_application_config.value.kftl_template_struct, id)
+    }
+
+    function move_kftl_template_struct_down(id: string): void {
+        move_struct_down(cloned_application_config.value.kftl_template_struct, id)
+    }
+
+    function show_select_move_target_folder_dialog(id: string): void {
+        select_move_target_folder_dialog.value?.show(cloned_application_config.value.kftl_template_struct, id)
+    }
+
+    function move_kftl_template_struct_to_folder(struct_id: string, target_folder_id: string | null): void {
+        move_struct_to_folder(cloned_application_config.value.kftl_template_struct, struct_id, target_folder_id)
+    }
+
     // ── Template event handlers ──
     function onDblclickedItem(_e: MouseEvent, id: string | null): void {
         if (id) show_edit_kftl_template_struct_dialog(id)
@@ -181,6 +199,7 @@ export function useEditKftlTemplateStructView(options: {
         add_new_kftl_template_struct_element_dialog,
         kftl_template_struct_context_menu,
         confirm_delete_kftl_template_struct_dialog,
+        select_move_target_folder_dialog,
 
         // State
         cloned_application_config,
@@ -197,6 +216,10 @@ export function useEditKftlTemplateStructView(options: {
         add_kftl_template_struct_element,
         show_confirm_delete_kftl_template_struct_dialog,
         delete_kftl_template_struct,
+        move_kftl_template_struct_up,
+        move_kftl_template_struct_down,
+        show_select_move_target_folder_dialog,
+        move_kftl_template_struct_to_folder,
 
         // Template event handlers
         onDblclickedItem,
