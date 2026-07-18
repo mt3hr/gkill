@@ -9,6 +9,7 @@ import type DnoteTrendGraphViewEmits from '@/pages/views/dnote-trend-graph-view-
 import type { ComponentRef } from '@/classes/component-ref'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { format_day_of_week } from '@/classes/format-date-time'
 
 export function useDnoteTrendGraphView(options: {
     props: DnoteTrendGraphViewProps,
@@ -58,7 +59,13 @@ export function useDnoteTrendGraphView(options: {
             const point = trend_points.value[item.index]
             if (!point) return ""
             const value_string = (point.value_string !== "" ? point.value_string : point.value.toString()).replace("<br>", "")
-            return `${point.label}: ${value_string}`
+            let label = point.label
+            // 日単位のときは曜日も表示する
+            if (model_value.value?.granularity === 'day') {
+                const [year, month, date] = point.bucket_key.split('-').map(Number)
+                label = `${point.label}(${format_day_of_week(new Date(year, month - 1, date))})`
+            }
+            return `${label}: ${value_string}`
         },
     }))
 
