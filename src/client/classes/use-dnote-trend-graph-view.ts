@@ -56,7 +56,8 @@ export function useDnoteTrendGraphView(options: {
 
     const sparkline_tooltip = computed(() => ({
         titleFormat: (item: { index: number, value: number }) => {
-            const point = trend_points.value[item.index]
+            // VSparklineは1点のとき点を複製するため、indexが範囲外になり得る。クランプして必ず表示する
+            const point = trend_points.value[Math.min(item.index, trend_points.value.length - 1)]
             if (!point) return ""
             const value_string = (point.value_string !== "" ? point.value_string : point.value.toString()).replace("<br>", "")
             let label = point.label
@@ -148,6 +149,15 @@ export function useDnoteTrendGraphView(options: {
     }
 
     // ── Template event handlers ──
+    // タッチ端末で合成mousemoveが抑制されツールチップが出ないことがある(VSparklineはマウスイベントのみ対応)ため、
+    // タップ由来のclickを合成mousemoveへ変換してVuetify内部のツールチップ表示を確実に起動する
+    function onGraphClick(e: MouseEvent): void {
+        const root = e.currentTarget as HTMLElement | null
+        const svg = root?.querySelector('svg')
+        if (!svg) return
+        svg.dispatchEvent(new MouseEvent('mousemove', { clientX: e.clientX, clientY: e.clientY }))
+    }
+
     function onContextmenu(e: MouseEvent): void {
         if (props.editable) {
             contextmenu.value?.show(e, model_value.value!.id)
@@ -210,6 +220,7 @@ export function useDnoteTrendGraphView(options: {
         drop,
 
         // Template event handlers
+        onGraphClick,
         onContextmenu,
         onRequestedDeleteDnoteTrendGraph,
         onRequestedEditDnoteTrendGraph,
