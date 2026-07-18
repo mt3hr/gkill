@@ -13,7 +13,8 @@
     <v-sheet v-show="query.use_map">
         <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key" @click="handle_map_click"
             style="width: 100%; height: 400px" class="googlemap search_google_map"
-            :key="application_config.google_map_api_key">
+            :key="application_config.google_map_api_key + (application_config.use_dark_theme ? '_dark' : '_light')"
+            :colorScheme="application_config.use_dark_theme ? 'DARK' : 'LIGHT'">
             <Circle :options="circle"
                 :key="(circle.center?.lat.toString().concat(circle.center?.lng.toString()).concat(radius.toString()))" />
         </GoogleMap>
