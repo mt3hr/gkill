@@ -7,6 +7,7 @@ import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLMiRequest } from './kftl-mi-request'
 import { KFTLMiEstimateStartTimeStatementLine } from './kftl-mi-estimate-start-time-statement-line'
 import { i18n } from '@/i18n'
+import { KFTL_ASCII_TIMEIS_TIME_PREFIX, strip_prefix } from '../kftl-prefixes'
 
 export class KFTLMiLimitTimeStatementLine extends KFTLStatementLine {
 
@@ -18,7 +19,7 @@ export class KFTLMiLimitTimeStatementLine extends KFTLStatementLine {
 
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
         const request = request_map.get(this.get_context().get_this_statement_line_target_id()) as unknown as KFTLMiRequest
-        const time = moment(this.get_context().get_this_statement_line_text().replace("？", "")).toDate()
+        const time = moment(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX)).toDate()
         if (!Number.isNaN(time.getTime())) {
             request.set_limit_time(time)
         }

@@ -14,8 +14,8 @@ Vitest
 |---------|-----------|
 | `src/client/__tests__/unit/kftl/kftl-request-map.test.ts` | リクエストマップの構築 |
 | `src/client/__tests__/unit/kftl/kftl-statement.test.ts` | ステートメントの解析ロジック |
-| `src/client/__tests__/unit/kftl/kftl-type-detection.test.ts` | ステートメント型の判定 |
-| `src/client/__tests__/unit/kftl/kftl-request-generation.test.ts` | 解析結果からの API リクエスト生成 |
+| `src/client/__tests__/unit/kftl/kftl-type-detection.test.ts` | ステートメント型の判定（日本語プレフィックス + ASCIIプレフィックス、否定ケース含む） |
+| `src/client/__tests__/unit/kftl/kftl-request-generation.test.ts` | 解析結果からの API リクエスト生成（ASCIIプレフィックス入力: `#tag1,tag2`、`?日時`、`,`/`,,` 区切り、`--` ブロック、保存文字 `!` を含む） |
 | `src/client/__tests__/unit/kftl/kftl-individual-types.test.ts` | 個別ステートメント型のテスト（42種） |
 
 ## テスト内容

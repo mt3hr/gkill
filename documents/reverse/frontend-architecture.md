@@ -34,7 +34,7 @@ src/client/
 │   │   └── req_res/                # リクエスト/レスポンス型 (162ファイル、サーバー側は176ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
-│   ├── kftl/                        # KFTLパーサー (44 ステートメント型)
+│   ├── kftl/                        # KFTLパーサー (44 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)
 │   ├── dnote/                       # Dnote集計ユーティリティ（トレンドグラフ集計 dnote-trend-aggregator.ts・dnote-trend/ 含む）
 │   ├── lantana/                     # 気分値関連クラス
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
