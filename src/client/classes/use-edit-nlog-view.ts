@@ -63,9 +63,7 @@ export function useEditNlogView(options: {
         try {
             is_loading.value = true
             cloned_kyou.value = props.kyou.clone()
-            await cloned_kyou.value.reload(false, true)
             await cloned_kyou.value.load_typed_datas()
-            await cloned_kyou.value.load_all()
             nlog_title_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.title : ""
             nlog_amount_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.amount : 0
             nlog_shop_value.value = cloned_kyou.value.typed_nlog ? cloned_kyou.value.typed_nlog.shop : ""
