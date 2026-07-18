@@ -109,4 +109,8 @@ defineExpose({ load_aggregated_value, reset })
   border-collapse: collapse;
   border-spacing: 0;
 }
+
+.dnote_item_root table td {
+  white-space: nowrap;
+}
 </style>

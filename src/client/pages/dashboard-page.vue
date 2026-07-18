@@ -55,6 +55,7 @@
                         <v-col cols="12" md="6" class="pa-0 ma-0 dnote_view_wrap">
                             <DnoteView ref="dnote_view" :query="dnote_query" :checked_kyous="checked_kyous"
                                 :app_content_height="panel_height" :app_content_width="app_content_width"
+                                :fill_height="true"
                                 :application_config="application_config" :gkill_api="gkill_api" :editable="false"
                                 @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
                                 @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
@@ -345,10 +346,7 @@ watch(application_config, (config) => {
     }
 })
 
-const dnote_view_element_height = ref(0)
 watch(() => application_config.value.is_loaded, async () => {
-    await nextTick(() => { })
-    dnote_view_element_height.value = document.getElementsByClassName("dnote_view")[0]?.clientHeight ?? 0
     await nextTick(() => { })
     gps_log_map.value?.centering()
     // 初期データ取得: application_config ロード完了後にデータを取得する
@@ -360,16 +358,9 @@ watch(() => application_config.value.is_loaded, async () => {
     is_loading.value = false
 })
 
-// CSS v-bind values for map height (Google Maps requires explicit pixel heights)
-const map_height_px = computed((): string => {
-    return `${dnote_view_element_height.value - 32 - 54}px`
-})
+// パネル高さは panel_height で決定的に決まる（DnoteView・GPSLogMapとも fill 高さ = panel_height）
 const mi_list_height_px = computed((): string => {
-    const mi_list_height = app_content_height.value - dnote_view_element_height.value - 44 - 48 // 44px is the height of the MI list title
-    if (mi_list_height == 0) {
-        return "200px"
-    }
-    return `${mi_list_height}px`
+    return `${Math.max(200, app_content_height.value - panel_height.value - 44 - 48)}px` // 44px is the height of the MI list title
 })
 const app_content_height_px = computed(() => `${app_content_height.value}px`)
 </script>
@@ -389,11 +380,6 @@ const app_content_height_px = computed(() => `${app_content_height.value}px`)
 
 .main {
     padding-top: 50px !important;
-}
-
-.dnote_view_wrap,
-map-container {
-    max-height: fit-content;
 }
 
 .dashboard-content-scroll {
@@ -416,17 +402,6 @@ map-container {
 
 .gps-map-container :deep(.gps_log_map_wrap) {
     width: 100% !important;
-    height: auto !important;
-}
-
-.gps-map-container :deep(.map_container) {
-    flex: none !important;
-    height: v-bind(map_height_px) !important;
-}
-
-.gps-map-container :deep(.googlemap) {
-    width: 100% !important;
-    height: v-bind(map_height_px) !important;
 }
 
 ::v-deep(.kyou_list_view_card) {
@@ -444,13 +419,6 @@ map-container {
 
 :deep(.dnote_view .dnote-scroll-wrap) {
     overflow-x: auto;
-}
-
-:deep(.dashboard-content-scroll .dnote_list_table_root .dnote_list_view) {
-    height: 30vh !important;
-    max-height: 30vh !important;
-    min-height: 30vh !important;
-    overflow-y: scroll;
 }
 </style>
 <style scoped>
