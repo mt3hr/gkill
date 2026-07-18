@@ -35,6 +35,7 @@ Vitest
 | `src/client/__tests__/unit/datas/kftl-template-element-data.test.ts` | KftlTemplateElementData（KFTLテンプレート要素） |
 | `src/client/__tests__/unit/datas/share-kyous-info.test.ts` | ShareKyousInfo（共有情報） |
 | `src/client/__tests__/unit/datas/dashboard-config.test.ts` | DashboardConfig（ダッシュボード設定: MI検索条件・Dnote検索条件） |
+| `src/client/__tests__/unit/datas/rep-type-map.test.ts` | RepTypeローカライズマップ・ApplicationConfig未定義RepType自動追加時の表示名ローカライズ |
 
 ## テスト内容
 

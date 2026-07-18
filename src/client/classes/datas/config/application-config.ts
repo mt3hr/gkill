@@ -6,6 +6,7 @@ import { TagStructElementData } from './tag-struct-element-data'
 import { RepStructElementData } from './rep-struct-element-data'
 import { DeviceStructElementData } from './device-struct-element-data'
 import { RepTypeStructElementData } from './rep-type-struct-element-data'
+import { generate_rep_type_map } from './rep-type-map'
 import { KFTLTemplateElementData } from '../kftl-template-element-data'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetAllRepNamesRequest } from '@/classes/api/req_res/get-all-rep-names-request'
@@ -377,10 +378,11 @@ export class ApplicationConfig {
             }
         })
 
+        const rep_type_map = generate_rep_type_map()
         not_found.forEach(rep_type => {
             const rep_type_struct = new RepTypeStructElementData()
             rep_type_struct.key = rep_type
-            rep_type_struct.name = rep_type
+            rep_type_struct.name = rep_type_map.get(rep_type) ?? rep_type
             rep_type_struct.check_when_inited = true
             rep_type_struct.is_checked = rep_type_struct.check_when_inited
             rep_type_struct.id = GkillAPI.get_gkill_api().generate_uuid()
