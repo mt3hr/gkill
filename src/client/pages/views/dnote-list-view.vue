@@ -117,6 +117,9 @@ defineExpose({ load_aggregate_grouping_list, reset })
 </script>
 
 <style scoped>
+.dnote_list_title {
+  white-space: nowrap;
+}
 .dnote_list_title.draggable {
   cursor: grab;
   user-select: none;

@@ -92,6 +92,10 @@ defineExpose({ load_trend_graph, reset })
   overflow: visible;
 }
 
+.dnote_trend_graph_title {
+  white-space: nowrap;
+}
+
 .dnote_trend_graph_title.draggable {
   cursor: grab;
   user-select: none;
