@@ -62,12 +62,6 @@ export function useDnoteTrendGraphView(options: {
         },
     }))
 
-    const window_range_str = computed(() => {
-        const points = trend_points.value
-        if (points.length === 0) return ""
-        return `${points[0].bucket_key} ～ ${points[points.length - 1].bucket_key}`
-    })
-
     const is_all_empty = computed(() => trend_points.value.length === 0 || trend_points.value.every((point) => point.match_kyous.length === 0))
 
     // ── Business logic ──
@@ -197,7 +191,6 @@ export function useDnoteTrendGraphView(options: {
         sparkline_labels,
         sparkline_min,
         sparkline_tooltip,
-        window_range_str,
         is_all_empty,
 
         // Business logic
