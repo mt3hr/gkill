@@ -17,10 +17,6 @@
       {{ i18n.global.t('NO_RESULTS_MESSAGE') }}
     </div>
 
-    <div class="dnote_trend_graph_range text-grey">
-      {{ window_range_str }}
-    </div>
-
     <DnoteTrendGraphContextMenu :application_config="application_config" :gkill_api="gkill_api"
       v-on="contextMenuHandlers" ref="contextmenu" />
 
@@ -62,7 +58,6 @@ const {
   sparkline_labels,
   sparkline_min,
   sparkline_tooltip,
-  window_range_str,
   is_all_empty,
 
   // Business logic
@@ -104,10 +99,5 @@ defineExpose({ load_trend_graph, reset })
 
 .dnote_trend_graph_title.draggable:active {
   cursor: grabbing;
-}
-
-.dnote_trend_graph_range {
-  font-size: 0.75rem;
-  text-align: center;
 }
 </style>
