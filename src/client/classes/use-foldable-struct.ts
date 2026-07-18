@@ -27,6 +27,10 @@ export function useFoldableStruct(options: {
     // ── Computed ──
     const font_size_px = computed(() => font_size.value.valueOf().toString().concat("px"))
 
+    // タッチデバイス（モバイル）ではドラッグを無効にする。ロングプレスでcontextmenuイベントを発火させるため。
+    const is_mobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    const effective_draggable = computed(() => is_mobile ? false : props.is_editable)
+
     // ── Watchers ──
     watch(() => props.is_open, () => {
         open_group.value = props.is_open
@@ -441,6 +445,14 @@ export function useFoldableStruct(options: {
         emits('contextmenu_item', e, props.struct_obj.id)
     }
 
+    // iOS Safariは長押しでcontextmenuイベントを発火しないため、v-long-pressで補完する
+    function onLongPressItem(e: PointerEvent) {
+        if (!is_mobile || !props.is_editable) {
+            return
+        }
+        emits('contextmenu_item', e, props.struct_obj.id)
+    }
+
     function onToggleOpenGroup() {
         open_group.value = !open_group.value
     }
@@ -476,6 +488,7 @@ export function useFoldableStruct(options: {
         struct_list,
         indeterminate_group,
         font_size_px,
+        effective_draggable,
 
         // Methods used in template
         is_item,
@@ -494,6 +507,7 @@ export function useFoldableStruct(options: {
 
         // Template event handlers
         onContextmenuItem,
+        onLongPressItem,
         onToggleOpenGroup,
         onChildReceivedErrors,
         onChildReceivedMessages,

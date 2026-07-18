@@ -21,6 +21,7 @@ Vitest
 | `src/client/__tests__/unit/classes/use-dialog-history-stack.test.ts` | ダイアログ＋ブラウザ履歴スタック管理 |
 | `src/client/__tests__/unit/classes/markdown-to-html.test.ts` | Markdown → HTML 変換（見出し・表・コード・画像、サニタイズ） |
 | `src/client/__tests__/unit/classes/mermaid-render.test.ts` | Markdown 内 Mermaid コードブロックの図描画 |
+| `src/client/__tests__/unit/classes/foldable-struct-move.test.ts` | Struct ツリーの移動ロジック（上へ/下へ/フォルダへ移動） |
 
 ## テスト内容
 
@@ -33,6 +34,7 @@ Vitest
 - **markdown-to-html**: Markdown ファイル（.md/.markdown）のリッチ HTML 変換とサニタイズ
 - **mermaid-render**: ```mermaid コードブロックの SVG 描画
 - **use-dialog-history-stack**: ブラウザバックでダイアログ閉じ、フォワードでダイアログ維持、複数ダイアログの順次閉じ、プログラマティック閉じ、Escape閉じ、Branch C/D ロジック
+- **foldable-struct-move**: 同一親内の上下入れ替え、フォルダ/ルートへの移動、自分自身・子孫フォルダ・非フォルダへの移動拒否と失敗時のツリー保全、移動先候補列挙
 
 ## 実行方法
 
