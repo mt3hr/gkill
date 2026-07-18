@@ -1,7 +1,7 @@
 <template>
     <div class="gps_log_map_wrap">
         <v-sheet tile height="35" class="d-flex">
-            <div class="map_date"><span>{{ start_date_str }}</span><span v-if="start_date !== end_date">～ {{
+            <div class="map_date"><span>{{ start_date_str }}</span><span v-if="start_date_str !== end_date_str">～ {{
                 end_date_str }}</span></div>
         </v-sheet>
         <div class="map_container">
