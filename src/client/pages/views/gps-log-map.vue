@@ -6,7 +6,9 @@
         </v-sheet>
         <div class="map_container">
             <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key"
-                class="googlemap" :key="application_config.google_map_api_key"
+                class="googlemap"
+                :key="application_config.google_map_api_key + (application_config.use_dark_theme ? '_dark' : '_light')"
+                :colorScheme="application_config.use_dark_theme ? 'DARK' : 'LIGHT'"
                 gestureHandling="cooperative">
                 <Polyline :options="polyline_options" :key="polyline_options.timestamp" />
                 <Marker v-if="marker_options" :options="marker_options" :key="marker_options.timestamp" />
