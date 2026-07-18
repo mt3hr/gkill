@@ -19,6 +19,8 @@ Vitest
 | `src/client/__tests__/unit/classes/save-as.test.ts` | ファイル保存ユーティリティ |
 | `src/client/__tests__/unit/classes/delete-gkill-cache.test.ts` | gkill キャッシュ削除処理 |
 | `src/client/__tests__/unit/classes/use-dialog-history-stack.test.ts` | ダイアログ＋ブラウザ履歴スタック管理 |
+| `src/client/__tests__/unit/classes/markdown-to-html.test.ts` | Markdown → HTML 変換（見出し・表・コード・画像、サニタイズ） |
+| `src/client/__tests__/unit/classes/mermaid-render.test.ts` | Markdown 内 Mermaid コードブロックの図描画 |
 
 ## テスト内容
 
@@ -28,6 +30,8 @@ Vitest
 - **long-press**: Vue カスタムディレクティブの登録・発火タイミング
 - **save-as**: Blob ダウンロードの処理フロー
 - **delete-gkill-cache**: Service Worker キャッシュのクリア処理
+- **markdown-to-html**: Markdown ファイル（.md/.markdown）のリッチ HTML 変換とサニタイズ
+- **mermaid-render**: ```mermaid コードブロックの SVG 描画
 - **use-dialog-history-stack**: ブラウザバックでダイアログ閉じ、フォワードでダイアログ維持、複数ダイアログの順次閉じ、プログラマティック閉じ、Escape閉じ、Branch C/D ロジック
 
 ## 実行方法

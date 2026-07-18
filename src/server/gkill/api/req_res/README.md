@@ -26,7 +26,7 @@
 - `Errors []message.GkillError` — エラー情報
 - `Messages []message.GkillMessage` — メッセージ情報
 
-## 全ファイル一覧（166ファイル）
+## 全ファイル一覧（176ファイル: 型定義175 + テスト `req_res_test.go` 1）
 
 ### 認証系（10ファイル）
 
@@ -38,7 +38,7 @@
 | `set_new_password_request.go` / `set_new_password_response.go` | 新パスワード設定 |
 | `add_account_request.go` / `add_account_response.go` | アカウント追加 |
 
-### データ追加系（28ファイル）
+### データ追加系（26ファイル）
 
 | ファイル | データ型 |
 |---------|---------|
@@ -56,7 +56,7 @@
 | `add_time_is_request.go` / `add_time_is_response.go` | TimeIs（タイムスタンプ） |
 | `add_ur_log_request.go` / `add_ur_log_response.go` | URLog（ブックマーク） |
 
-### データ更新系（30ファイル）
+### データ更新系（29ファイル）
 
 | ファイル | データ型 |
 |---------|---------|
@@ -76,7 +76,7 @@
 | `update_account_status_request.go` / `update_account_status_response.go` | アカウントステータス |
 | `update_share_kyou_list_infos_response.go` | 共有リスト情報（複数） |
 
-### データ取得系（56ファイル）
+### データ取得系（58ファイル）
 
 #### 個別データ取得
 
@@ -136,7 +136,7 @@
 | `update_user_reps_request.go` / `update_user_reps_response.go` | ユーザリポジトリ更新 |
 | `update_cache_request.go` / `update_cache_response.go` | キャッシュ更新 |
 
-### ファイル操作系（8ファイル）
+### ファイル操作系（14ファイル）
 
 | ファイル | 説明 |
 |---------|------|
@@ -144,6 +144,18 @@
 | `upload_gps_log_files_request.go` / `upload_gps_log_files_response.go` | GPS ログファイルアップロード |
 | `open_directory_request.go` / `open_directory_response.go` | ディレクトリを開く |
 | `open_file_request.go` / `open_file_response.go` | ファイルを開く |
+| `browse_zip_contents_request.go` / `browse_zip_contents_response.go` | ZIP ファイル内容閲覧 |
+| `get_idf_kyou_by_relative_path_request.go` / `get_idf_kyou_by_relative_path_response.go` | 相対パスによる IDFKyou 解決（Markdown 内相対リンク用） |
+| `get_idf_file_path_request.go` / `get_idf_file_path_response.go` | IDF ファイル絶対パス解決（MCP stdio クライアント用） |
+
+### プラグイン系（8ファイル）
+
+| ファイル | 説明 |
+|---------|------|
+| `get_plugin_list_request.go` / `get_plugin_list_response.go` | プラグイン一覧取得 |
+| `get_plugin_content_html_request.go` / `get_plugin_content_html_response.go` | プラグイン Kyou コンテンツ HTML 取得 |
+| `get_plugin_config_html_request.go` / `get_plugin_config_html_response.go` | プラグイン設定画面 HTML 取得 |
+| `post_plugin_config_request.go` / `post_plugin_config_response.go` | プラグイン設定保存 |
 
 ### トランザクション系（4ファイル）
 
@@ -158,7 +170,7 @@
 |---------|------|
 | `delete_share_kyou_list_info_request.go` / `delete_share_kyou_list_infos_response.go` | 共有リスト情報削除 |
 
-### その他操作系（6ファイル）
+### その他操作系（11ファイル）
 
 | ファイル | 説明 |
 |---------|------|

@@ -38,7 +38,7 @@
 <body>
   <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Aggregation View</span></nav>
   <h1>Aggregation View</h1>
-  <p>A screen for aggregating and visualizing life log data based on conditions. You can define two types: "Items" for single aggregate values and "Lists" for grouped aggregations by key.</p>
+  <p>A screen for aggregating and visualizing life log data based on conditions. You can define three types: "Items" for single aggregate values, "Lists" for grouped aggregations by key, and "Trend Graphs" for visualizing changes over time.</p>
   <div class="tip">
     <strong>Tip:</strong> The Aggregation View is a toggle feature within the LifeLog View screen. Click the aggregation icon in the LifeLog View toolbar to display it.
   </div>
@@ -83,7 +83,7 @@
     </tr>
     <tr>
       <td>+ Button (floating)</td>
-      <td>Displays a menu to choose between adding an Item or a List.</td>
+      <td>Displays a menu to choose between adding an Item, a List, or a Trend Graph.</td>
     </tr>
   </table>
 
@@ -152,6 +152,41 @@
     </tr>
   </table>
 
+  <h2>Trend Graph (Time-Series Aggregation)</h2>
+  <p>Aggregates matching data into fixed time periods and displays the trend as a line or bar chart. Hover over a point on the chart to see the aggregate value for each period.</p>
+  <table>
+    <tr>
+      <th>Setting</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Title</td>
+      <td>Text input</td>
+      <td>Sets the display name of the trend graph.</td>
+    </tr>
+    <tr>
+      <td>Aggregate Target</td>
+      <td>Dropdown</td>
+      <td>Selects the aggregation method (count, sum, average, max, min, etc.).</td>
+    </tr>
+    <tr>
+      <td>Granularity</td>
+      <td>Dropdown</td>
+      <td>Selects the time period unit: "Daily", "Weekly", or "Monthly".</td>
+    </tr>
+    <tr>
+      <td>Chart Type</td>
+      <td>Dropdown</td>
+      <td>Selects "Line" or "Bar".</td>
+    </tr>
+    <tr>
+      <td>Predicate Group</td>
+      <td>Condition editor</td>
+      <td>Narrows down the aggregation target with AND/OR conditions.</td>
+    </tr>
+  </table>
+
   <h2>Predicate Group Editing</h2>
   <table>
     <tr>
@@ -188,7 +223,7 @@
     </tr>
     <tr>
       <td>Double-click</td>
-      <td>Opens the editing screen for the item or list.</td>
+      <td>Opens the editing screen for the item, list, or trend graph.</td>
     </tr>
     <tr>
       <td>Right-click</td>
@@ -196,7 +231,7 @@
     </tr>
     <tr>
       <td>Drag & Drop</td>
-      <td>Changes the display order of items and lists.</td>
+      <td>Changes the display order of items, lists, and trend graphs.</td>
     </tr>
   </table>
 
@@ -217,7 +252,7 @@
   </table>
 
   <div class="tip">
-    <strong>Tip:</strong> Items are useful for single aggregate values (e.g. monthly total expenses), while Lists are useful for grouped aggregations (e.g. expenses by store).
+    <strong>Tip:</strong> Items are useful for single aggregate values (e.g. monthly total expenses), Lists for grouped aggregations (e.g. expenses by store), and Trend Graphs for tracking changes over time (e.g. weekly mood changes, monthly expense trends).
   </div>
 
   <div class="tip">

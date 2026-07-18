@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（85+ファイル）に対する統合テストを含む。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 86ファイル）に対する統合テストを含む。
 
 ## テストフレームワーク
 
@@ -14,6 +14,9 @@ Go `testing` パッケージ
 |---------|-----------|
 | `gkill_server_api_test.go` | API ハンドラ統合テスト（全エンドポイント） |
 | `gkill_server_api_rate_limit_test.go` | ログインレート制限テスト（IP別カウント、ウィンドウ期限、IP抽出） |
+| `handle_get_idf_file_path_test.go` | IDF ファイル絶対パス解決ハンドラ（localhost 限定応答、ERR000389、存在確認） |
+| `handle_get_idf_kyou_by_relative_path_test.go` | Markdown 相対リンクの IDFKyou 解決ハンドラ（同一 Rep 内解決、パストラバーサル防止） |
+| `utils_ssrf_test.go` | `httpGetBase64Data` の SSRF 対策（スキーム制限、内部アドレス拒否、サイズ上限、タイムアウト） |
 
 ## テスト内容
 

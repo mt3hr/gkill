@@ -58,6 +58,17 @@
     <tr><td>读写</td><td>AI 可以查看、添加、更新和删除记录。</td></tr>
   </table>
 
+  <h2>文件的传递</h2>
+  <p>向AI展示文件记录（图片、视频、文档）的方式会根据连接形式自动切换。</p>
+  <table>
+    <tr><th>连接形式</th><th>传递方式</th></tr>
+    <tr><td>本地连接（同一台电脑上的AI）</td><td>文件的实际路径将传递给AI，AI可以直接读取文件。</td></tr>
+    <tr><td>远程连接（通过互联网的AI）</td><td>将签发带有效期的专用URL，AI从该URL获取文件。图片会同时提供缩略图和原尺寸版本。无需公开gkill本体。</td></tr>
+  </table>
+  <div class="tip">
+    <strong>提示：</strong> 嵌入传输的大小上限（默认8MB）可通过环境变量 <code>GKILL_MCP_MAX_FILE_BYTES</code> 调整，URL的有效期（默认1小时）可通过 <code>GKILL_MCP_FILE_LINK_TTL_MS</code> 调整。
+  </div>
+
   <h2>设置方法（Claude Desktop）</h2>
   <p>在 Claude Desktop 配置文件（<code>claude_desktop_config.json</code>）中添加以下内容。</p>
 

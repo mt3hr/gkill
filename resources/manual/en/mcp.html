@@ -58,6 +58,17 @@
     <tr><td>Read &amp; Write</td><td>AI can view, add, update, and delete records.</td></tr>
   </table>
 
+  <h2>File Delivery</h2>
+  <p>How file records (images, videos, documents) are shown to the AI switches automatically depending on the connection type.</p>
+  <table>
+    <tr><th>Connection Type</th><th>Delivery Method</th></tr>
+    <tr><td>Local connection (AI on the same PC)</td><td>The file's actual path is passed to the AI, which can read the file directly.</td></tr>
+    <tr><td>Remote connection (AI over the internet)</td><td>An expiring dedicated URL is issued, and the AI fetches the file from that URL. For images, both a thumbnail and the full-size version are provided. There is no need to expose gkill itself.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> The size limit for embedded transfer (default 8MB) can be adjusted with the <code>GKILL_MCP_MAX_FILE_BYTES</code> environment variable, and the URL expiration (default 1 hour) with <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+  </div>
+
   <h2>Setup (Claude Desktop)</h2>
   <p>Add the following to the Claude Desktop configuration file (<code>claude_desktop_config.json</code>).</p>
 

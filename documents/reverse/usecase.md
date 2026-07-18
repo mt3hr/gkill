@@ -192,6 +192,10 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0708 | 全タグ名を取得する | `GetAllTagNames` |
 | UC-0709 | GPS ログを取得する | `GetGPSLog` |
 | UC-0710 | 更新データを時刻指定取得する | `GetUpdatedDatasByTime` |
+| UC-0711 | 集計ビューで記録を集計・分析する（集計項目・集計リスト） | `GetKyous`（集計はクライアント側）+ `UpdateApplicationConfig`（定義を `dnote_json_data` に保存） |
+| UC-0712 | 集計ビューにトレンドグラフを追加・編集・削除する | `GetKyous`（時系列集計は `DnoteTrendAggregator` によるクライアント側処理）+ `UpdateApplicationConfig`（定義保存） |
+| UC-0713 | Markdown ファイル内の相対リンクから対象記録を開く | `GetIDFKyouByRelativePath` |
+| UC-0714 | ZIP ファイルの内容を閲覧する | `BrowseZipContents` |
 
 ### 2.8 ファイルアップロード
 
@@ -249,6 +253,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1109 | ディレクトリを開く | `OpenDirectory` |
 | UC-1110 | ファイルを開く | `OpenFile` |
 | UC-1111 | MCP 経由で IDF ファイルの実データを取得する | `GetIDFFile` |
+| UC-1112 | MCP 経由で IDF ファイルの絶対パスを取得する | `GetIDFFilePath`（localhost からのリクエストのみ応答） |
 
 ## 3. ユースケース記述（astah モデルから抽出）
 

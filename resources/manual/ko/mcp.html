@@ -58,6 +58,17 @@
     <tr><td>읽기 및 쓰기</td><td>AI가 기록 조회·추가·수정·삭제를 모두 할 수 있습니다.</td></tr>
   </table>
 
+  <h2>파일 전달</h2>
+  <p>파일 기록(이미지·동영상·문서)을 AI에게 보여주는 방법은 연결 형태에 따라 자동으로 전환됩니다.</p>
+  <table>
+    <tr><th>연결 형태</th><th>전달 방법</th></tr>
+    <tr><td>로컬 연결(같은 PC의 AI)</td><td>파일의 저장 위치(실제 경로)가 AI에 전달되어, AI가 파일을 직접 읽을 수 있습니다.</td></tr>
+    <tr><td>원격 연결(인터넷 경유의 AI)</td><td>유효 기간이 있는 전용 URL이 발행되어, AI는 그 URL에서 파일을 가져옵니다. 이미지는 섬네일과 원본 크기 모두 전달됩니다. gkill 본체를 공개할 필요는 없습니다.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>팁:</strong> 내장 전송의 크기 상한(기본 8MB)은 환경 변수 <code>GKILL_MCP_MAX_FILE_BYTES</code>로, URL 유효 기간(기본 1시간)은 <code>GKILL_MCP_FILE_LINK_TTL_MS</code>로 조정할 수 있습니다.
+  </div>
+
   <h2>설정 방법 (Claude Desktop)</h2>
   <p>Claude Desktop 설정 파일(<code>claude_desktop_config.json</code>)에 다음을 추가합니다.</p>
 

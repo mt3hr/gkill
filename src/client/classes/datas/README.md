@@ -69,7 +69,7 @@ datas/
 | `circle-options.ts` | 地図上の円描画オプション |
 | `lat-lng.ts` | 緯度経度座標 |
 
-## `config/` サブディレクトリ（13ファイル）
+## `config/` サブディレクトリ（14ファイル）
 
 アプリケーション設定・サーバ設定のモデル定義。
 サーバ側の対応: `src/server/gkill/dao/user_config/`, `server_config/`
@@ -77,6 +77,7 @@ datas/
 | ファイル | 説明 |
 |---------|------|
 | `application-config.ts` | アプリケーション設定（KFTL テンプレート、表示設定等） |
+| `dashboard-config.ts` | ダッシュボード設定（MI検索条件・Dnote検索条件の2つの FindKyouQuery を保持） |
 | `server-config.ts` | サーバ設定（ポート、パス等） |
 | `repository.ts` | リポジトリ設定（データ保存先定義） |
 | `account.ts` | アカウント情報 |

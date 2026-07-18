@@ -5,9 +5,9 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、83ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、86ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（172ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（176ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、16ファイル）
 
 ## 共通仕様
@@ -315,7 +315,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む） |
 
-MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_idf_file`）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。
+MCPサーバは8つのReadツールを提供（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_idf_file`, `gkill_get_idf_file_path`）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_idf_file_path` は `/api/get_idf_file_path` を経由してファイルの絶対パスを返す（stdio接続のローカルクライアント用）。
 
 ## TLS・セキュリティ（1件）
 
@@ -323,11 +323,12 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 |---|---|
 | `/api/generate_tls_file` | TLS証明書ファイル生成 |
 
-## その他（3件）
+## その他（4件）
 
 | パス | 説明 |
 |---|---|
 | `/api/urlog_bookmarklet` | URLogブックマークレット用エンドポイント。ブラウザのブックマークレットから現在のページのURL・タイトルをURLogとして直接追加する。ログイン時にブックマークレット専用セッション（`ApplicationName="urlog_bookmarklet"`）が自動作成され、通常のセッションとは分離される |
+| `/api/urlog_bookmarklet_page` | URLogブックマークレット導入ページ配信（GET）。ブックマークレット登録用のHTMLページを返す |
 | `/api/update_cache` | キャッシュ更新トリガー |
 | `/api/get_gkill_info` | アプリケーション情報取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。将来の拡張用と推定） |
 
@@ -379,15 +380,16 @@ MCPサーバは7つのツールを提供（`gkill_get_kyous`, `gkill_get_mi_boar
 | `/files/*` | GET | アップロードファイル配信 |
 | `/zip_cache/*` | GET | ZIP展開済みファイル配信。`/api/browse_zip_contents` で展開されたファイルをセッション認証付きで配信する。`$HOME/gkill/caches/zip_cache/` 配下のファイルを提供 |
 | `/serviceWorker.js` | GET | PWA Service Worker 配信 |
-| `/` | GET | Vue SPA（embed された index.html） |
+| `/resources/manual/*` | GET | HTMLマニュアル配信（7言語）。`filterLocalOnly` によるアクセス制御付き |
+| `/` | GET | Vue SPA（embed された index.html）。`/rykv` `/kftl` `/mi` `/kyou` `/dashboard` `/saihate` `/plaing` 等のページパスも同一SPAを配信 |
 
 ---
 
 ## 補足
 
-- **合計:** POST エンドポイント 85件（うち83件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 4件
+- **合計:** `/api/` エンドポイント 87件定義（うち85件はハンドラ登録済み、2件はアドレス定義のみ。メソッドはPOST中心、一部GET）+ 非APIルート 5件
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（172ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（176ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（16ファイル）
 - `get_kftl_template` と `get_gkill_info` はアドレス定義（`gkill_server_api_address.go`）が存在するが、`HandleFunc` 登録もハンドラ関数実装も存在しない。コードベース全体を調査した結果、これらは**未実装のエンドポイント**であることが確認された。リクエストは404となる

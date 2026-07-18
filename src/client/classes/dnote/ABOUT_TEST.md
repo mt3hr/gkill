@@ -17,6 +17,7 @@ Vitest
 | `src/client/__tests__/unit/dnote/aggregate-targets.test.ts` | 7種の集計ターゲット |
 | `src/client/__tests__/unit/dnote/aggregators.test.ts` | DnoteAgregator / DnoteListAggregator |
 | `src/client/__tests__/unit/dnote/serialization.test.ts` | 辞書データのシリアライゼーション |
+| `src/client/__tests__/unit/dnote/trend-aggregator.test.ts` | DnoteTrendAggregator（トレンドグラフの時系列バケット集計: 日/週/月粒度、ゼロ埋め、バケット上限） |
 
 ## テスト内容
 
