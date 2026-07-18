@@ -242,6 +242,8 @@ defineExpose({ reload, abort, set_loading })
     height: 100%;
     display: flex;
     flex-direction: column;
+    /* リスト無し定義でも溢れ分を内部スクロール */
+    overflow-y: auto;
 }
 
 .fill_height_mode :deep(.dnote_list_table_root) {
