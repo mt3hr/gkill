@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <div v-if="target_kyou" class="ryuu_views">
-            <v-tabs v-if="ryuu_definitions.length > 1 || editable" v-model="current_definition_index" show-arrows>
+            <v-tabs v-if="ryuu_definitions.length > 1 || editable" v-model="current_definition_index" show-arrows :center-active="false">
                 <v-tab v-for="(def, i) in ryuu_definitions" :key="i" :value="i">
                     {{ def.name }}
                 </v-tab>
@@ -15,18 +15,17 @@
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn v-if="ryuu_definitions.length > 1" icon="mdi-delete" size="small" variant="text"
-                        @click="delete_current_definition"
-                        :title="i18n.global.t('DELETE_RYUU_DEFINITION_TITLE')" />
+                        @click="delete_current_definition" :title="i18n.global.t('DELETE_RYUU_DEFINITION_TITLE')" />
                 </v-col>
             </v-row>
 
-            <v-window v-model="current_definition_index">
+            <v-window v-model="current_definition_index" :touch="false">
                 <v-window-item v-for="(def, i) in ryuu_definitions" :key="i" :value="i">
-                    <RyuuItemView v-for="(query, qIdx) in def.queries" :key="query.id"
-                        v-model="def.queries[qIdx]" :gkill_api="gkill_api" :application_config="application_config"
-                        :enable_dialog="true" :enable_context_menu="true" :target_kyou="target_kyou"
-                        :abort_controller="abort_controler" :find_kyou_query_default="find_kyou_query_default"
-                        :matched_kyous="matched_kyous" :editable="editable"
+                    <RyuuItemView v-for="(query, qIdx) in def.queries" :key="query.id" v-model="def.queries[qIdx]"
+                        :gkill_api="gkill_api" :application_config="application_config" :enable_dialog="true"
+                        :enable_context_menu="true" :target_kyou="target_kyou" :abort_controller="abort_controler"
+                        :find_kyou_query_default="find_kyou_query_default" :matched_kyous="matched_kyous"
+                        :editable="editable"
                         @requested_move_related_kyou_query="(group_id: string, query_id: string, direction: 'up' | 'down') => onRequestedMoveRelatedKyouQuery(group_id, query_id, direction)"
                         @requested_delete_related_kyou_list_query="(id: string) => onRequestedDeleteRelatedKyouListQuery(id)"
                         v-on="{ ...ryuuListItemCrudRelayHandlers, ...ryuuListItemRequestHandlers, ...ryuuListItemFocusHandlers, ...rykvDialogHandler }"
@@ -43,8 +42,7 @@
             <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-ryuu">
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
-                        <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props"
-                            @click="onAddButtonClick" />
+                        <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" @click="onAddButtonClick" />
                     </template>
                 </v-menu>
             </v-avatar>
