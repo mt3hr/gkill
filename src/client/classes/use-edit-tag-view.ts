@@ -35,9 +35,7 @@ export function useEditTagView(options: {
         try {
             is_loading.value = true
             cloned_kyou.value = props.kyou.clone()
-            await cloned_kyou.value.reload(false, true)
             await cloned_kyou.value.load_typed_datas()
-            await cloned_kyou.value.load_all()
             cloned_tag.value = props.tag.clone()
             tag_name.value = cloned_tag.value.tag
         } finally {
