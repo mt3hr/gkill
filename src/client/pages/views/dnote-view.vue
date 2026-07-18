@@ -3,7 +3,8 @@
         <v-overlay v-model="is_loading" :content-class="'dnote_progress_overlay'" class="align-center justify-center"
             contained persistent>
             <v-progress-circular indeterminate color="primary" class="align-center justify-center" />
-            <div v-if="is_fetching_from_api || getted_kyous_count !== target_kyous_count" class="align-center justify-center">
+            <div v-if="is_fetching_from_api || getted_kyous_count !== target_kyous_count"
+                class="align-center justify-center">
                 <div class="align-center justify-center overlay_message">
                     {{ i18n.global.t('DNOTE_GETTING_DATA') }}
                 </div>
@@ -11,7 +12,8 @@
                     {{ getted_kyous_count }}/{{ target_kyous_count }}
                 </div>
             </div>
-            <div v-if="!is_fetching_from_api && getted_kyous_count === target_kyous_count" class="align-center justify-center">
+            <div v-if="!is_fetching_from_api && getted_kyous_count === target_kyous_count"
+                class="align-center justify-center">
                 <div class="align-center justify-center overlay_message">
                     {{ i18n.global.t('DNOTE_CALCURATING') }}
                 </div>
@@ -22,14 +24,14 @@
                 }}</div>
             </div>
         </v-overlay>
-        <v-tabs v-if="dnote_definitions.length > 1 || editable" v-model="current_definition_index" show-arrows>
+        <v-tabs v-if="dnote_definitions.length > 1 || editable" v-model="current_definition_index" show-arrows :center-active="false">
             <v-tab v-for="(def, i) in dnote_definitions" :key="i" :value="i">
                 {{ def.name }}
             </v-tab>
             <v-tooltip :text="i18n.global.t('ADD_DNOTE_DEFINITION_TITLE')">
                 <template v-slot:activator="{ props }">
-                    <v-btn v-if="editable" v-bind="props" icon="mdi-plus" size="small" variant="text" class="align-self-center ml-1"
-                        @click="add_definition" />
+                    <v-btn v-if="editable" v-bind="props" icon="mdi-plus" size="small" variant="text"
+                        class="align-self-center ml-1" @click="add_definition" />
                 </template>
             </v-tooltip>
         </v-tabs>
@@ -41,8 +43,8 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-tooltip :text="i18n.global.t('DELETE_DNOTE_DEFINITION_TITLE')">
                     <template v-slot:activator="{ props }">
-                        <v-btn v-if="dnote_definitions.length > 1" v-bind="props" icon="mdi-delete" size="small" variant="text"
-                            @click="delete_current_definition" />
+                        <v-btn v-if="dnote_definitions.length > 1" v-bind="props" icon="mdi-delete" size="small"
+                            variant="text" @click="delete_current_definition" />
                     </template>
                 </v-tooltip>
             </v-col>
@@ -60,27 +62,30 @@
                 <v-col cols="auto pa-0 ma-0" v-if="!editable">
                     <v-tooltip :text="i18n.global.t('TOOLTIP_DOWNLOAD')">
                         <template v-slot:activator="{ props }">
-                            <v-btn v-bind="props" :disabled="!loaded_kyous" icon="mdi-download-circle-outline" @click="download_kyous_json" />
+                            <v-btn v-bind="props" :disabled="!loaded_kyous" icon="mdi-download-circle-outline"
+                                @click="download_kyous_json" />
                         </template>
                     </v-tooltip>
                 </v-col>
             </v-row>
         </h1>
-        <v-window v-model="current_definition_index">
+        <v-window v-model="current_definition_index" :touch="false">
             <v-window-item v-for="(def, i) in dnote_definitions" :key="i" :value="i" :eager="true">
                 <div class="dnote-scroll-wrap">
-                    <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-                        v-model="dnote_definitions[i].items"
+                    <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api"
+                        :editable="editable" v-model="dnote_definitions[i].items"
                         v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
-                        @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_item_table_ref(i, el)" />
-                    <DnoteTrendGraphTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-                        v-if="dnote_definitions[i].trends" v-model="dnote_definitions[i].trends"
-                        v-on="errorsMessagesRelayHandlers"
-                        @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_trend_table_ref(i, el)" />
-                    <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-                        v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
+                        @finish_a_aggregate_task="incrementFinishedAggregateTask"
+                        :ref="(el) => set_item_table_ref(i, el)" />
+                    <DnoteTrendGraphTableView :application_config="application_config" :gkill_api="gkill_api"
+                        :editable="editable" v-if="dnote_definitions[i].trends" v-model="dnote_definitions[i].trends"
+                        v-on="errorsMessagesRelayHandlers" @finish_a_aggregate_task="incrementFinishedAggregateTask"
+                        :ref="(el) => set_trend_table_ref(i, el)" />
+                    <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api"
+                        :editable="editable" v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
                         v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
-                        @finish_a_aggregate_task="incrementFinishedAggregateTask" :ref="(el) => set_list_table_ref(i, el)" />
+                        @finish_a_aggregate_task="incrementFinishedAggregateTask"
+                        :ref="(el) => set_list_table_ref(i, el)" />
                 </div>
             </v-window-item>
         </v-window>
@@ -263,6 +268,7 @@ defineExpose({ reload, abort, set_loading })
     display: flex;
     flex-direction: column;
     min-height: 0;
+    max-height: -webkit-fill-available;
 }
 
 /* v-virtual-scroll: fill_heightのとき残り高さをflex-growで占める */
