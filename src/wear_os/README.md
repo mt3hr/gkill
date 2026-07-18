@@ -28,7 +28,7 @@ wear_os/
     ├── build.gradle.kts
     └── src/main/
         ├── AndroidManifest.xml
-        ├── java/.../wear/watch/        # Kotlin ソース（15ファイル）
+        ├── java/.../wear/watch/        # Kotlin ソース（14ファイル）
         └── res/
             └── values/strings.xml
 ```
@@ -46,7 +46,7 @@ wear_os/
 | `GkillCredentialStore.kt` | ユーザ認証情報（user_id, password）の安全な保存・読み取り |
 | `MainActivity.kt` | コンパニオンアプリのメインアクティビティ（認証情報設定画面） |
 
-### `watch_app/` — ウォッチ側アプリ（15ファイル）
+### `watch_app/` — ウォッチ側アプリ（14ファイル）
 
 Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレートの選択・送信を行う。
 

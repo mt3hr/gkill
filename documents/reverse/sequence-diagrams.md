@@ -632,6 +632,43 @@ sequenceDiagram
 
 ---
 
+## 22. プラグインコンテンツ HTML 取得
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant UI as plugin-html-view.vue
+    participant SW as Service Worker
+    participant API as GkillServerAPI
+    participant PluginRepo as pluginRepositoryImpl
+    participant Plugin as プラグインバイナリ<br>(例: gkill_plugin_claudeai)
+
+    User->>UI: KyouDetailView で PluginKyou 表示
+    UI->>SW: POST /api/get_plugin_content_html<br>{session_id, rep_name, kyou_id}
+    alt キャッシュヒット (/cache/api/plugin_content_html/{kyou_id})
+        SW-->>UI: キャッシュ済み HTML
+    else キャッシュミス
+        SW->>API: POST /api/get_plugin_content_html
+        API->>PluginRepo: GetContentHTML(ctx, kyouID)
+        PluginRepo->>PluginRepo: callCommand() — mu.Lock()
+        PluginRepo->>Plugin: {"command":"get_content_html","kyou_id":"..."} (stdin)
+        Plugin->>Plugin: globalCache.GetMsgByID(pluginDir, kyouID)
+        Plugin-->>PluginRepo: {"html":"<!DOCTYPE html>..."} (stdout)
+        PluginRepo->>PluginRepo: mu.Unlock()
+        PluginRepo-->>API: html string
+        API-->>SW: {html, messages, errors}
+        SW->>SW: gkill-post-kyou-cache に保存
+        SW-->>UI: {html}
+    end
+    UI->>UI: iframe srcdoc = html (レンダリング)
+    UI->>UI: on_iframe_load() → postMessage({gkill_theme: 'dark'|'light'})
+    Note right of UI: iframe が theme を受信し<br>data-theme 属性を更新 → CSS 変数切り替え
+    UI-->>UI: iframe → postMessage({gkill_iframe_size:{width, height}})
+    UI->>UI: iframe_content_height 更新 → iframe 高さ自動調整
+```
+
+---
+
 ## 異常系シーケンス
 
 以下は正常系シーケンスに対応するエラーパターン。全エンドポイント共通のエラー処理パターンも含む。
@@ -748,43 +785,6 @@ sequenceDiagram
 
     API-->>Client: HTTP 403 Forbidden
 ```
-
-## 24. プラグインコンテンツ HTML 取得
-
-```mermaid
-sequenceDiagram
-    actor User as ユーザ
-    participant UI as plugin-html-view.vue
-    participant SW as Service Worker
-    participant API as GkillServerAPI
-    participant PluginRepo as pluginRepositoryImpl
-    participant Plugin as プラグインバイナリ<br>(例: gkill_plugin_claudeai)
-
-    User->>UI: KyouDetailView で PluginKyou 表示
-    UI->>SW: POST /api/get_plugin_content_html<br>{session_id, rep_name, kyou_id}
-    alt キャッシュヒット (/cache/api/plugin_content_html/{kyou_id})
-        SW-->>UI: キャッシュ済み HTML
-    else キャッシュミス
-        SW->>API: POST /api/get_plugin_content_html
-        API->>PluginRepo: GetContentHTML(ctx, kyouID)
-        PluginRepo->>PluginRepo: callCommand() — mu.Lock()
-        PluginRepo->>Plugin: {"command":"get_content_html","kyou_id":"..."} (stdin)
-        Plugin->>Plugin: globalCache.GetMsgByID(pluginDir, kyouID)
-        Plugin-->>PluginRepo: {"html":"<!DOCTYPE html>..."} (stdout)
-        PluginRepo->>PluginRepo: mu.Unlock()
-        PluginRepo-->>API: html string
-        API-->>SW: {html, messages, errors}
-        SW->>SW: gkill-post-kyou-cache に保存
-        SW-->>UI: {html}
-    end
-    UI->>UI: iframe srcdoc = html (レンダリング)
-    UI->>UI: on_iframe_load() → postMessage({gkill_theme: 'dark'|'light'})
-    Note right of UI: iframe が theme を受信し<br>data-theme 属性を更新 → CSS 変数切り替え
-    UI-->>UI: iframe → postMessage({gkill_iframe_size:{width, height}})
-    UI->>UI: iframe_content_height 更新 → iframe 高さ自動調整
-```
-
----
 
 ### E5. KFTL テキスト送信エラー
 

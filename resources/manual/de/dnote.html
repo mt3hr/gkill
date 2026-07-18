@@ -38,7 +38,7 @@
 <body>
   <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Aggregationsansicht</span></nav>
   <h1>Aggregationsansicht</h1>
-  <p>Bildschirm zur Aggregation und Visualisierung von Lebensprotokoll-Daten basierend auf Bedingungen. Es können zwei Typen definiert werden: „Elemente" für einzelne Aggregatwerte und „Listen" für gruppierte Aggregationen nach Schlüssel.</p>
+  <p>Bildschirm zur Aggregation und Visualisierung von Lebensprotokoll-Daten basierend auf Bedingungen. Es können drei Typen definiert werden: „Elemente" für einzelne Aggregatwerte, „Listen" für gruppierte Aggregationen nach Schlüssel und „Trenddiagramme" zur Darstellung der zeitlichen Entwicklung.</p>
   <div class="tip">
     <strong>Tipp:</strong> Die Aggregationsansicht ist eine Umschaltfunktion innerhalb der LifeLog-Ansicht. Klicken Sie auf das Aggregationssymbol in der Symbolleiste der LifeLog-Ansicht, um sie anzuzeigen.
   </div>
@@ -83,7 +83,7 @@
     </tr>
     <tr>
       <td>＋-Schaltfläche (schwebend)</td>
-      <td>Zeigt ein Menü zur Auswahl zwischen Element oder Liste hinzufügen an.</td>
+      <td>Zeigt ein Menü zur Auswahl zwischen Element hinzufügen, Liste hinzufügen oder Trenddiagramm hinzufügen an.</td>
     </tr>
   </table>
 
@@ -152,6 +152,41 @@
     </tr>
   </table>
 
+  <h2>Trenddiagramm (Zeitreihenaggregation)</h2>
+  <p>Aggregiert die den Bedingungen entsprechenden Daten in festen Zeiträumen und zeigt die Entwicklung als Linien- oder Balkendiagramm an. Wenn Sie den Mauszeiger über einen Punkt des Diagramms bewegen, wird der Aggregatwert des jeweiligen Zeitraums angezeigt.</p>
+  <table>
+    <tr>
+      <th>Einstellung</th>
+      <th>Typ</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Titel</td>
+      <td>Texteingabe</td>
+      <td>Legt den Anzeigenamen des Trenddiagramms fest.</td>
+    </tr>
+    <tr>
+      <td>Aggregationsziel</td>
+      <td>Dropdown</td>
+      <td>Wählt die Aggregationsmethode (Anzahl, Summe, Durchschnitt, Maximum, Minimum usw.).</td>
+    </tr>
+    <tr>
+      <td>Granularität</td>
+      <td>Dropdown</td>
+      <td>Wählt die Zeiteinheit: „Täglich", „Wöchentlich" oder „Monatlich".</td>
+    </tr>
+    <tr>
+      <td>Diagrammtyp</td>
+      <td>Dropdown</td>
+      <td>Wählt „Linie" oder „Balken".</td>
+    </tr>
+    <tr>
+      <td>Bedingungsgruppe</td>
+      <td>Bedingungseditor</td>
+      <td>Schränkt das Aggregationsziel mit AND/OR-Bedingungen ein.</td>
+    </tr>
+  </table>
+
   <h2>Bedingungsgruppe bearbeiten</h2>
   <table>
     <tr>
@@ -188,7 +223,7 @@
     </tr>
     <tr>
       <td>Doppelklick</td>
-      <td>Öffnet den Editor für das Element oder die Liste.</td>
+      <td>Öffnet den Editor für das Element, die Liste oder das Trenddiagramm.</td>
     </tr>
     <tr>
       <td>Rechtsklick</td>
@@ -196,7 +231,7 @@
     </tr>
     <tr>
       <td>Drag & Drop</td>
-      <td>Ändert die Anzeigereihenfolge von Elementen und Listen.</td>
+      <td>Ändert die Anzeigereihenfolge von Elementen, Listen und Trenddiagrammen.</td>
     </tr>
   </table>
 
@@ -217,7 +252,7 @@
   </table>
 
   <div class="tip">
-    <strong>Tipp:</strong> Elemente sind nützlich für einzelne Aggregatwerte (z.B. monatliche Gesamtausgaben), während Listen für gruppierte Aggregationen nützlich sind (z.B. Ausgaben nach Geschäft).
+    <strong>Tipp:</strong> Elemente sind nützlich für einzelne Aggregatwerte (z.B. monatliche Gesamtausgaben), Listen für gruppierte Aggregationen (z.B. Ausgaben nach Geschäft) und Trenddiagramme zur Verfolgung der Entwicklung (z.B. wöchentliche Stimmungsänderungen, monatlicher Ausgabenverlauf).
   </div>
 
   <div class="tip">

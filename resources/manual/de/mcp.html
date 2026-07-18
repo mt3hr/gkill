@@ -58,6 +58,17 @@
     <tr><td>Lesen &amp; Schreiben</td><td>Die KI kann Einträge anzeigen, hinzufügen, aktualisieren und löschen.</td></tr>
   </table>
 
+  <h2>Dateiübergabe</h2>
+  <p>Wie Dateieinträge (Bilder, Videos, Dokumente) der KI gezeigt werden, wechselt automatisch je nach Verbindungsart.</p>
+  <table>
+    <tr><th>Verbindungsart</th><th>Übergabemethode</th></tr>
+    <tr><td>Lokale Verbindung (KI auf demselben PC)</td><td>Der tatsächliche Dateipfad wird an die KI übergeben, die die Datei direkt lesen kann.</td></tr>
+    <tr><td>Remote-Verbindung (KI über das Internet)</td><td>Eine zeitlich begrenzte dedizierte URL wird ausgestellt, und die KI ruft die Datei über diese URL ab. Bei Bildern werden sowohl Miniaturansicht als auch Originalgröße bereitgestellt. gkill selbst muss nicht öffentlich zugänglich sein.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp:</strong> Die Größenbeschränkung für die eingebettete Übertragung (Standard 8 MB) kann mit der Umgebungsvariable <code>GKILL_MCP_MAX_FILE_BYTES</code> angepasst werden, die URL-Gültigkeitsdauer (Standard 1 Stunde) mit <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+  </div>
+
   <h2>Einrichtung (Claude Desktop)</h2>
   <p>Fügen Sie Folgendes zur Claude-Desktop-Konfigurationsdatei (<code>claude_desktop_config.json</code>) hinzu.</p>
 

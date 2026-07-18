@@ -2,19 +2,19 @@
 
 ## 1. 概要
 
-gkill プロジェクトでは約2,073件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
+gkill プロジェクトでは約2,300件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
 
 ### テスト統計
 
 | コンポーネント | テスト数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | ~569 | 48 | Go `testing` |
-| フロントエンド ユニット | ~623 | 50 | Vitest |
-| フロントエンド E2E | 192 | 30 | Playwright |
-| MCP サーバ | ~563 | 17 | Vitest |
+| Go バックエンド | ~577 | 52 | Go `testing` |
+| フロントエンド ユニット | 800 | 55 | Vitest |
+| フロントエンド E2E | 207 | 33（+auth.setup.ts） | Playwright |
+| MCP サーバ | 602 | 18 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 114 | 9 | JUnit 4 + MockK |
-| **合計** | **~2,073** | **~156** | |
+| **合計** | **~2,312** | **169** | |
 
 ### テスト仕様書
 
@@ -157,18 +157,21 @@ src/server/gkill/
 src/client/__tests__/
 ├── unit/
 │   ├── api/gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
-│   ├── classes/                       ← ユーティリティ（6ファイル）
+│   ├── classes/                       ← ユーティリティ（9ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
 │   │   ├── long-press.test.ts
 │   │   ├── save-as.test.ts
-│   │   └── delete-gkill-cache.test.ts
-│   ├── datas/                         ← データモデル（22ファイル）
-│   ├── dnote/                         ← D-note モジュール（5ファイル）
+│   │   ├── delete-gkill-cache.test.ts
+│   │   ├── markdown-to-html.test.ts
+│   │   ├── mermaid-render.test.ts
+│   │   └── use-dialog-history-stack.test.ts
+│   ├── datas/                         ← データモデル（23ファイル）
+│   ├── dnote/                         ← D-note モジュール（6ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
-│   ├── composables/                   ← Vue Composable（6ファイル）
-│   ├── router.test.ts                 ← ルーター（12ルート）
+│   ├── composables/                   ← Vue Composable（8ファイル）
+│   ├── router.test.ts                 ← ルーター（13ルート）
 │   ├── i18n-completeness.test.ts      ← i18n 完全性（7ロケール）
 │   └── service-worker.test.ts         ← Service Worker
 ├── e2e/                               ← E2E テスト（後述）
@@ -187,14 +190,14 @@ src/client/__tests__/
 
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
-全12ルートを Playwright で検証し、CRUD 操作フローもカバー（29ファイル、187テスト）。各テストでは以下を共通チェック：
+全13ルートを Playwright で検証し、CRUD 操作フローもカバー（33 specファイル + auth.setup.ts、207テスト）。各テストでは以下を共通チェック：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
 - **CRUD フロー**: KFTL 記録 → 画面追加 → 編集 → 削除 → 閲覧の一連操作
 - **レスポンシブ対応**: 一部テスト（rykv.spec.ts, mi-board.spec.ts）でモバイルビューポートの表示確認
 
-#### ページ表示・ナビゲーション系（12 spec files）
+#### ページ表示・ナビゲーション系（13 spec files）
 
 | テストファイル | 対象ルート | 主なテスト内容 |
 |-------------|-----------|--------------|
@@ -206,12 +209,13 @@ src/client/__tests__/
 | `plaing.spec.ts` | `/plaing` | 計画ビュー |
 | `settings.spec.ts` | `/saihate` | 設定コンテンツ、インタラクティブ操作 |
 | `kyou-list.spec.ts` | `/kyou` | レコード一覧 |
+| `dashboard.spec.ts` | `/dashboard` | ダッシュボード表示（ナビゲーション、描画、JSエラーなし確認） |
 | `share-page.spec.ts` | `/shared_page` | 共有ページ |
 | `shared-mi.spec.ts` | `/shared_mi` | 共有タスク |
 | `regist-first-account.spec.ts` | `/regist_first_account` | 初回アカウント登録 |
 | `set-new-password.spec.ts` | `/set_new_password` | パスワード再設定 |
 
-#### CRUD 操作フロー系（7 spec files）
+#### CRUD 操作フロー系（8 spec files）
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
@@ -222,6 +226,7 @@ src/client/__tests__/
 | `view-browse.spec.ts` | 履歴ダイアログ表示、混合データ型表示、Mi ボード/Plaing ページの表示確認 |
 | `notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴ダイアログ |
 | `search-and-summary.spec.ts` | RYKV キーワード検索、Mi キーワード検索、D-note サマリパネルトグル |
+| `clipboard-save.spec.ts` | RYKV ページでの Ctrl+V によるクリップボード保存ダイアログの表示・閉じる操作 |
 
 #### KFTL TimeIs終了系（1 spec file）
 
@@ -287,7 +292,8 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `validation.test.mjs` | Read入力パラメータ検証（必須/型/範囲） |
 | `normalization.test.mjs` | 日付・文字列・デフォルト値の正規化 |
 | `constants.test.mjs` | ツール名、エラーコード、デフォルト設定値 |
-| `tool-handlers.test.mjs` | Read 7ツールのハンドラ実行ロジック |
+| `tool-handlers.test.mjs` | Read 8ツールのハンドラ実行ロジック |
+| `file-link.test.mjs` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
 | `client.test.mjs` | GkillReadClient（fetch モック、認証、レスポンスパース） |
 | `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール |
 | `access-log.test.mjs` | McpAccessLog（レベルフィルタリング、JSON形式、sourceパラメータ） |
@@ -301,16 +307,16 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 |-------------|-----------|
 | `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `write-server.test.mjs` | McpWriteServer（14ツールディスパッチ、エンティティデフォルト値、レスポンス構造） |
-| `write-tool-handlers.test.mjs` | Write 14ツール定義・summarize関数 |
+| `write-server.test.mjs` | McpWriteServer（23ツールディスパッチ、エンティティデフォルト値、レスポンス構造） |
+| `write-tool-handlers.test.mjs` | Write 23ツール定義（update系9ツール含む）・summarize関数 |
 
 **Read/Write統合サーバ:**
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite-server.test.mjs` | McpServer統合（全18ツールディスパッチ、IDF画像ブロック） |
-| `readwrite-tool-handlers.test.mjs` | 統合18ツール定義・summarize関数 |
+| `readwrite-server.test.mjs` | McpServer統合（全28ツールディスパッチ、IDF画像ブロック） |
+| `readwrite-tool-handlers.test.mjs` | 統合28ツール定義・summarize関数 |
 
 ### 3.5 Android / Wear OS
 
@@ -337,7 +343,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 
 ## 5. テストカバレッジの範囲
 
-### Go バックエンド（29パッケージ全てにテスト有）
+### Go バックエンド（30パッケージにテスト有）
 
 ```mermaid
 graph LR
@@ -384,7 +390,7 @@ graph LR
     end
 
     subgraph "E2E テスト"
-        E1[12 ルート<br/>全画面]
+        E1[13 ルート<br/>全画面]
     end
 
     F1 --> E1

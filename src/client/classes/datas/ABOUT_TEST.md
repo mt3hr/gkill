@@ -2,7 +2,7 @@
 
 ## 概要
 
-フロントエンドで使用する全22種のTypeScriptデータモデルクラスをテストする。各モデルのデフォルトコンストラクション、フィールド代入、シリアライゼーションを検証している。
+フロントエンドで使用する全23種のTypeScriptデータモデルクラスをテストする。各モデルのデフォルトコンストラクション、フィールド代入、シリアライゼーションを検証している。
 
 ## テストフレームワーク
 
@@ -34,6 +34,7 @@ Vitest
 | `src/client/__tests__/unit/datas/lat-lng.test.ts` | LatLng（緯度経度） |
 | `src/client/__tests__/unit/datas/kftl-template-element-data.test.ts` | KftlTemplateElementData（KFTLテンプレート要素） |
 | `src/client/__tests__/unit/datas/share-kyous-info.test.ts` | ShareKyousInfo（共有情報） |
+| `src/client/__tests__/unit/datas/dashboard-config.test.ts` | DashboardConfig（ダッシュボード設定: MI検索条件・Dnote検索条件） |
 
 ## テスト内容
 
