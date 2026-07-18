@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import { i18n } from '@/i18n'
+import { KFTL_ASCII_SPLIT_APPEND_TIME_PREFIX, matches_exact } from '../kftl-prefixes'
 
 export class KFTLSplitAndNextSecondStatementLine extends KFTLStatementLine {
     constructor(line_text: string, context: KFTLStatementLineContext) {
@@ -26,7 +27,7 @@ export class KFTLSplitAndNextSecondStatementLine extends KFTLStatementLine {
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == i18n.global.t("KFTL_SPLIT_APPEND_TIME_PREFIX")
+        return matches_exact(line_text, "KFTL_SPLIT_APPEND_TIME_PREFIX", KFTL_ASCII_SPLIT_APPEND_TIME_PREFIX)
     }
 }
 

@@ -369,9 +369,11 @@ KFTLは以下のステートメント型をサポートしています。
 
 ### プレフィックスの二重対応
 
-サーバ側パーサ（`kftl_factory.go`）は、日本語プレフィックスと ASCII プレフィックスの**両方**を常に受理する。例: タグは `。tag` でも `#tag` でも受理される。セーブ文字は `！` でも `!` でも受理される。これにより非日本語ロケールのユーザも問題なく KFTL を使用できる。
+サーバ側パーサ（`kftl_factory.go`）とクライアント側パーサ（`src/client/classes/kftl/`）は、日本語プレフィックスと ASCII プレフィックスの**両方**を常に受理する。例: タグは `。tag` でも `#tag` でも受理される。セーブ文字は `！` でも `!` でも受理される。これにより非日本語ロケールのユーザも問題なく KFTL を使用できる。クライアント側の ASCII プレフィックス定数と判定・除去ヘルパーは `src/client/classes/kftl/kftl-prefixes.ts` に集約されている。
 
-Mi の時間フィールド（limitTime, estimateStartTime, estimateEndTime）でも、全角 `？` と ASCII `?` の両方を関連時刻プレフィックスとして受理する。
+タグ行の複数タグ区切りは全角 `、` と半角 `,` の両方を受理する（例: `#tag1,tag2`、`。tag1、tag2`）。タグで打刻終了（`ーたえ`/`/endt`、`ーいたえ`/`/endt?`）のタグ名行も同様。
+
+Mi の時間フィールド（limitTime, estimateStartTime, estimateEndTime）と TimeIs（`ーち`/`/timeis`）の開始・終了時刻行でも、全角 `？` と ASCII `?` の両方を関連時刻プレフィックスとして受理する。
 
 ### nowFromCtx
 

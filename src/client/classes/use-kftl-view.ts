@@ -4,6 +4,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { LineLabelData } from '@/classes/kftl/line-label-data'
 import { KFTLStatement } from '@/classes/kftl/kftl-statement'
+import { KFTL_ASCII_SAVE_CHARACTOR } from '@/classes/kftl/kftl-prefixes'
 import { TextAreaInfo } from '@/classes/kftl/text-area-info'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
@@ -171,7 +172,7 @@ export function useKftlView(options: {
 
         invalid_line_numbers.value = await statement.get_invalid_line_indexs()
 
-        if (text_area_content.value.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n") && !is_requested_submit.value) {
+        if ((text_area_content.value.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n") || text_area_content.value.endsWith("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n")) && !is_requested_submit.value) {
             is_requested_submit.value = true
             submit()
         }
@@ -196,16 +197,22 @@ export function useKftlView(options: {
     }
 
     // ── Business logic ──
+    // 全角「！」または半角「!」の保存マーカーを取り除く
+    function remove_save_marker(text: string): string {
+        const ja_marker = "\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n"
+        if (text.includes(ja_marker)) {
+            return text.replace(ja_marker, "\n")
+        }
+        return text.replace("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n", "\n")
+    }
+
     async function submit(): Promise<void> {
         try {
             if (invalid_line_numbers.value.length != 0) {
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.kftl_has_invalid_line
                 error.error_message = i18n.global.t("KFTL_FOUND_INVALID_LINE_MESSAGE")
-                text_area_content.value = text_area_content.value.replace(
-                    "\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n",
-                    "\n",
-                )
+                text_area_content.value = remove_save_marker(text_area_content.value)
                 emits('received_errors', [error])
                 return
             }
@@ -224,10 +231,7 @@ export function useKftlView(options: {
             }
             if (errors.length != 0) {
                 emits('received_errors', errors)
-                text_area_content.value = text_area_content.value.replace(
-                    "\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n",
-                    "\n",
-                )
+                text_area_content.value = remove_save_marker(text_area_content.value)
 
                 if (tx_id) {
                     const deiscard_req = new DiscardTXRequest()
@@ -245,10 +249,7 @@ export function useKftlView(options: {
                 const commit_res = await props.gkill_api.commit_tx(commit_req)
                 if (commit_res.errors && commit_res.errors.length != 0) {
                     emits('received_errors', commit_res.errors)
-                    text_area_content.value = text_area_content.value.replace(
-                        "\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n",
-                        "\n",
-                    )
+                    text_area_content.value = remove_save_marker(text_area_content.value)
                     return
                 }
             }

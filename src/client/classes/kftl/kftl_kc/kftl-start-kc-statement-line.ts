@@ -7,6 +7,7 @@ import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLKCRequest } from './kftl-kc-request'
 import { KFTLKCTitleStatementLine } from './kftl-kc-title-statement-line'
 import { i18n } from '@/i18n'
+import { KFTL_ASCII_KC_SPLITTER_TITLE, matches_exact } from '../kftl-prefixes'
 
 export class KFTLStartKCStatementLine extends KFTLStatementLine {
 
@@ -28,7 +29,7 @@ export class KFTLStartKCStatementLine extends KFTLStatementLine {
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == i18n.global.t("KFTL_KC_SPLITTER_TITLE")
+        return matches_exact(line_text, "KFTL_KC_SPLITTER_TITLE", KFTL_ASCII_KC_SPLITTER_TITLE)
     }
 
 }

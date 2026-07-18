@@ -8,6 +8,7 @@ import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
 import type { KFTLTimeIsRequest } from './kftl-time-is-request'
 import { KFTLTimeIsEndTimeStatementLine } from './kftl-time-is-end-time-statement-line'
 import { i18n } from '@/i18n'
+import { KFTL_ASCII_TIMEIS_TIME_PREFIX, strip_prefix } from '../kftl-prefixes'
 
 export class KFTLTimeIsStartTimeStatementLine extends KFTLStatementLine {
 
@@ -23,7 +24,7 @@ export class KFTLTimeIsStartTimeStatementLine extends KFTLStatementLine {
             request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
             request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
         }
-        const time = moment(this.get_context().get_this_statement_line_text().replace(i18n.global.t("KFTL_TIMEIS_TIME_PREFIX"), "")).toDate()
+        const time = moment(strip_prefix(this.get_context().get_this_statement_line_text(), "KFTL_TIMEIS_TIME_PREFIX", KFTL_ASCII_TIMEIS_TIME_PREFIX)).toDate()
         if (Number.isNaN(time.getTime())) {
             throw new Error(i18n.global.t("KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE"))
         }

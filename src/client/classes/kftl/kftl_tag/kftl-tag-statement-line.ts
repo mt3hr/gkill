@@ -7,6 +7,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
+import { KFTL_ASCII_TAG_PREFIX, matches_prefix, split_tags, strip_prefix } from '../kftl-prefixes'
 
 export class KFTLTagStatementLine extends KFTLStatementLine {
 
@@ -27,7 +28,7 @@ export class KFTLTagStatementLine extends KFTLStatementLine {
             request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
             request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
         }
-        const tags: Array<string> = this.get_statement_line_text().slice(1, this.get_statement_line_text().length).split("、")
+        const tags: Array<string> = split_tags(strip_prefix(this.get_statement_line_text(), "KFTL_TAG_PREFIX", KFTL_ASCII_TAG_PREFIX))
         tags.forEach(tag => {
             request.add_tag(tag)
         })
@@ -40,7 +41,7 @@ export class KFTLTagStatementLine extends KFTLStatementLine {
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text.startsWith(i18n.global.t("KFTL_TAG_PREFIX"))
+        return matches_prefix(line_text, "KFTL_TAG_PREFIX", KFTL_ASCII_TAG_PREFIX)
     }
 
 }

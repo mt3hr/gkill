@@ -1,6 +1,5 @@
 'use strict'
 
-import { i18n } from "@/i18n"
 import { GkillAPI } from "../api/gkill-api"
 import type { KFTLRequest } from "./kftl-request"
 import { KFTLRequestMap } from "./kftl-request-map"
@@ -9,6 +8,7 @@ import { KFTLStatementLineConstructorFactory } from "./kftl-statement-line-const
 import { KFTLStatementLineContext } from "./kftl-statement-line-context"
 import { KFTLSplitAndNextSecondStatementLine } from "./kftl_split/kftl-split-and-next-second-statement-line"
 import { LineLabelData } from "./line-label-data"
+import { is_save_charactor_line } from "./kftl-prefixes"
 import type { TextAreaInfo } from "./text-area-info"
 
 export class KFTLStatement {
@@ -108,7 +108,7 @@ export class KFTLStatement {
             }
             prev_context = context
 
-            if (break_on_submit_marker && i != 0 && line_text == i18n.global.t("KFTL_SAVE_CHARACTOR")) {
+            if (break_on_submit_marker && i != 0 && is_save_charactor_line(line_text)) {
                 break
             }
             lines.push(line)

@@ -7,6 +7,7 @@ import { KFTLTimeIsEndByTagRequest } from '../kftl-time-is-end-by-tag-request'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { KFTLTimeIsEndByTagTagNameStatementLine } from './kftl-time-is-end-by-tag-tag-name-statement-line'
 import { i18n } from '@/i18n'
+import { KFTL_ASCII_TIMEIS_END_TAG_END_SPLITTER_TITLE, matches_exact } from '../../../kftl-prefixes'
 
 export class KFTLStartTimeIsEndByTagStatementLine extends KFTLStatementLine {
 
@@ -30,6 +31,6 @@ export class KFTLStartTimeIsEndByTagStatementLine extends KFTLStatementLine {
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == i18n.global.t("KFTL_TIMEIS_END_TAG_END_SPLITTER_TITLE")
+        return matches_exact(line_text, "KFTL_TIMEIS_END_TAG_END_SPLITTER_TITLE", KFTL_ASCII_TIMEIS_END_TAG_END_SPLITTER_TITLE)
     }
 }

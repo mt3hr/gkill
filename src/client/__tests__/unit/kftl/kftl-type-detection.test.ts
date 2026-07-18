@@ -161,4 +161,85 @@ describe('KFTL Statement Line Type Detection', () => {
       expect(KFTLStartKCStatementLine.is_this_type('ーみ')).toBe(false)
     })
   })
+
+  // MCP(Go側パーサー)と同じASCIIプレフィックスを受け付けること
+  describe('ASCII prefixes', () => {
+    test('Tag matches "#" with content', () => {
+      expect(KFTLTagStatementLine.is_this_type('#diary')).toBe(true)
+    })
+    test('RelatedTime matches "?" with date', () => {
+      expect(KFTLRelatedTimeStatementLine.is_this_type('?2025-01-15')).toBe(true)
+    })
+    test('Text matches exact "--"', () => {
+      expect(KFTLStartTextStatementLine.is_this_type('--')).toBe(true)
+    })
+    test('Split matches exact ","', () => {
+      expect(KFTLSplitStatementLine.is_this_type(',')).toBe(true)
+    })
+    test('SplitAndNextSecond matches exact ",,"', () => {
+      expect(KFTLSplitAndNextSecondStatementLine.is_this_type(',,')).toBe(true)
+    })
+    test('KC matches exact "/num"', () => {
+      expect(KFTLStartKCStatementLine.is_this_type('/num')).toBe(true)
+    })
+    test('Mi matches exact "/mi"', () => {
+      expect(KFTLStartMiStatementLine.is_this_type('/mi')).toBe(true)
+    })
+    test('Lantana matches exact "/mood"', () => {
+      expect(KFTLStartLantanaStatementLine.is_this_type('/mood')).toBe(true)
+    })
+    test('Nlog matches exact "/expense"', () => {
+      expect(KFTLStartNlogStatementLine.is_this_type('/expense')).toBe(true)
+    })
+    test('URLog matches exact "/url"', () => {
+      expect(KFTLStartURLogStatementLine.is_this_type('/url')).toBe(true)
+    })
+    test('TimeIs matches exact "/timeis"', () => {
+      expect(KFTLStartTimeIsStatementLine.is_this_type('/timeis')).toBe(true)
+    })
+    test('TimeIsStart matches exact "/start"', () => {
+      expect(KFTLStartTimeIsStartStatementLine.is_this_type('/start')).toBe(true)
+    })
+    test('TimeIsEnd matches exact "/end"', () => {
+      expect(KFTLStartTimeIsEndStatementLine.is_this_type('/end')).toBe(true)
+    })
+    test('TimeIsEndIfExist matches exact "/end?"', () => {
+      expect(KFTLStartTimeIsEndIfExistStatementLine.is_this_type('/end?')).toBe(true)
+    })
+    test('TimeIsEndByTag matches exact "/endt"', () => {
+      expect(KFTLStartTimeIsEndByTagStatementLine.is_this_type('/endt')).toBe(true)
+    })
+    test('TimeIsEndByTagIfExist matches exact "/endt?"', () => {
+      expect(KFTLStartTimeIsEndByTagIfExistStatementLine.is_this_type('/endt?')).toBe(true)
+    })
+  })
+
+  describe('ASCII cross-type rejection', () => {
+    test('"," is not SplitAndNextSecond', () => {
+      expect(KFTLSplitAndNextSecondStatementLine.is_this_type(',')).toBe(false)
+    })
+    test('",," is not Split', () => {
+      expect(KFTLSplitStatementLine.is_this_type(',,')).toBe(false)
+    })
+    test('",,," matches neither Split nor SplitAndNextSecond', () => {
+      expect(KFTLSplitStatementLine.is_this_type(',,,')).toBe(false)
+      expect(KFTLSplitAndNextSecondStatementLine.is_this_type(',,,')).toBe(false)
+    })
+    test('"/end" is not TimeIsEndIfExist nor TimeIsEndByTag', () => {
+      expect(KFTLStartTimeIsEndIfExistStatementLine.is_this_type('/end')).toBe(false)
+      expect(KFTLStartTimeIsEndByTagStatementLine.is_this_type('/end')).toBe(false)
+    })
+    test('"/endt?" is not TimeIsEndByTag', () => {
+      expect(KFTLStartTimeIsEndByTagStatementLine.is_this_type('/endt?')).toBe(false)
+    })
+    test('unknown command "/endx" matches no TimeIs type', () => {
+      expect(KFTLStartTimeIsEndStatementLine.is_this_type('/endx')).toBe(false)
+      expect(KFTLStartTimeIsEndIfExistStatementLine.is_this_type('/endx')).toBe(false)
+      expect(KFTLStartTimeIsEndByTagStatementLine.is_this_type('/endx')).toBe(false)
+      expect(KFTLStartTimeIsEndByTagIfExistStatementLine.is_this_type('/endx')).toBe(false)
+    })
+    test('"/mi" with trailing text is rejected', () => {
+      expect(KFTLStartMiStatementLine.is_this_type('/mi task')).toBe(false)
+    })
+  })
 })
