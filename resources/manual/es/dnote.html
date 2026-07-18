@@ -38,7 +38,7 @@
 <body>
   <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Vista de Agregación</span></nav>
   <h1>Vista de agregación</h1>
-  <p>Pantalla para agregar y visualizar datos del registro de vida según condiciones. Se pueden definir dos tipos: «Elementos» para valores agregados individuales y «Listas» para agregaciones agrupadas por clave.</p>
+  <p>Pantalla para agregar y visualizar datos del registro de vida según condiciones. Se pueden definir tres tipos: «Elementos» para valores agregados individuales, «Listas» para agregaciones agrupadas por clave y «Gráficos de tendencia» para visualizar la evolución temporal.</p>
   <div class="tip">
     <strong>Consejo:</strong> La vista de agregación es una función de alternancia dentro de la vista de registro de vida. Haga clic en el icono de agregación en la barra de herramientas de la vista de registro de vida para mostrarla.
   </div>
@@ -83,7 +83,7 @@
     </tr>
     <tr>
       <td>Botón ＋ (flotante)</td>
-      <td>Muestra un menú para seleccionar añadir un elemento o añadir una lista.</td>
+      <td>Muestra un menú para seleccionar añadir un elemento, añadir una lista o agregar un gráfico de tendencia.</td>
     </tr>
   </table>
 
@@ -152,6 +152,41 @@
     </tr>
   </table>
 
+  <h2>Gráfico de tendencia (agregación temporal)</h2>
+  <p>Agrega los datos que coinciden con las condiciones en períodos fijos y muestra la evolución como gráfico de línea o de barras. Al pasar el cursor sobre un punto del gráfico se muestra el valor agregado de cada período.</p>
+  <table>
+    <tr>
+      <th>Configuración</th>
+      <th>Tipo</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Título</td>
+      <td>Entrada de texto</td>
+      <td>Establece el nombre visible del gráfico de tendencia.</td>
+    </tr>
+    <tr>
+      <td>Objetivo de agregación</td>
+      <td>Desplegable</td>
+      <td>Selecciona el método de agregación (recuento, suma, promedio, máximo, mínimo, etc.).</td>
+    </tr>
+    <tr>
+      <td>Granularidad</td>
+      <td>Desplegable</td>
+      <td>Selecciona la unidad de período: «Diario», «Semanal» o «Mensual».</td>
+    </tr>
+    <tr>
+      <td>Tipo de gráfico</td>
+      <td>Desplegable</td>
+      <td>Selecciona «Línea» o «Barras».</td>
+    </tr>
+    <tr>
+      <td>Grupo de condiciones</td>
+      <td>Editor de condiciones</td>
+      <td>Filtra el objetivo de agregación con condiciones AND/OR.</td>
+    </tr>
+  </table>
+
   <h2>Edición de grupo de condiciones</h2>
   <table>
     <tr>
@@ -188,7 +223,7 @@
     </tr>
     <tr>
       <td>Doble clic</td>
-      <td>Abre la pantalla de edición de un elemento o lista.</td>
+      <td>Abre la pantalla de edición de un elemento, lista o gráfico de tendencia.</td>
     </tr>
     <tr>
       <td>Clic derecho</td>
@@ -196,7 +231,7 @@
     </tr>
     <tr>
       <td>Arrastrar y soltar</td>
-      <td>Permite cambiar el orden de visualización de elementos y listas.</td>
+      <td>Permite cambiar el orden de visualización de elementos, listas y gráficos de tendencia.</td>
     </tr>
   </table>
 
@@ -217,7 +252,7 @@
   </table>
 
   <div class="tip">
-    <strong>Consejo:</strong> Los elementos son útiles para valores agregados individuales (ej: gastos totales del mes), y las listas para agregaciones por grupo (ej: gastos por tienda).
+    <strong>Consejo:</strong> Los elementos son útiles para valores agregados individuales (ej: gastos totales del mes), las listas para agregaciones por grupo (ej: gastos por tienda) y los gráficos de tendencia para seguir la evolución (ej: cambios de ánimo semanales, evolución mensual de gastos).
   </div>
 
   <div class="tip">

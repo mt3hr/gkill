@@ -28,19 +28,19 @@ src/client/
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,400行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,500行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (160ファイル、サーバー側は172ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (162ファイル、サーバー側は176ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (44 ステートメント型)
-│   ├── dnote/                       # Dnote集計ユーティリティ
+│   ├── dnote/                       # Dnote集計ユーティリティ（トレンドグラフ集計 dnote-trend-aggregator.ts・dnote-trend/ 含む）
 │   ├── lantana/                     # 気分値関連クラス
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
 │   └── use-*.ts                     # Composition関数群（コンテキストメニュー等）
-├── pages/                           # ルートページコンポーネント (14ファイル)
+├── pages/                           # ルートページコンポーネント (15ファイル)
 │   ├── login-page.vue
 │   ├── kftl-page.vue
 │   ├── kyou-page.vue
@@ -54,8 +54,10 @@ src/client/
 │   ├── regist-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
-│   ├── views/                       # Viewコンポーネント (177)
-│   └── dialogs/                     # ダイアログコンポーネント (99, Esc閉じ対応)
+│   ├── shared-mi-page.vue
+│   ├── shared-rykv-page.vue
+│   ├── views/                       # Viewコンポーネント (185)
+│   └── dialogs/                     # ダイアログコンポーネント (100, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -75,8 +77,8 @@ Page（ルートページ）
 | 層 | 配置 | 件数 | 責務 |
 |---|---|---|---|
 | **Page** | `pages/*.vue` | 15 | ルーティング先。ページ全体のレイアウト（13ルート＋共有用2ページ） |
-| **View** | `pages/views/*.vue` | 177 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 99 | モーダル操作（確認、詳細編集等） |
+| **View** | `pages/views/*.vue` | 185 | データ型ごとの追加/編集/一覧表示 |
+| **Dialog** | `pages/dialogs/*.vue` | 100 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -98,11 +100,24 @@ Page（ルートページ）
 - 親 → iframe: `{ gkill_theme: 'dark' | 'light' }` — テーマ変更通知（CSS変数切替用）
 - iframe → 親: `{ gkill_iframe_size: { width, height } }` — コンテンツサイズ通知（iframe高さ自動調整用）
 
+### Dnoteトレンドグラフ コンポーネント
+
+Dnote（集計ビュー）の時系列トレンドグラフ機能を構成するコンポーネント群。バックエンドAPIを持たず、取得済みKyouをクライアント側で `DnoteTrendAggregator`（`classes/dnote/dnote-trend-aggregator.ts`）が日/週/月粒度で集計し、スパークライン（折れ線/棒）として描画する:
+
+| コンポーネント | 説明 |
+|---|---|
+| `dnote-trend-graph-view.vue` | トレンドグラフ本体。スパークライン描画・ツールチップ表示 |
+| `dnote-trend-graph-table-view.vue` | 集計値のテーブル表示 |
+| `dnote-trend-graph-context-menu.vue` | 右クリックメニュー（編集/削除） |
+| `add-dnote-trend-graph-view.vue` / `add-dnote-trend-graph-dialog.vue` | トレンドグラフ追加 |
+| `edit-dnote-trend-graph-view.vue` / `edit-dnote-trend-graph-dialog.vue` | トレンドグラフ編集 |
+| `confirm-delete-dnote-trend-graph-view.vue` / `confirm-delete-dnote-trend-graph-dialog.vue` | 削除確認 |
+
 **iframe セキュリティ:** `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）でセッションCookieを隔離する。
 
 ### ダイアログ アクセシビリティ
 
-全95ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
+全100ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
 
 | 機能 | 説明 |
 |------|------|
@@ -155,10 +170,10 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約3,400行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,500行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- 全80エンドポイントに対応するメソッドを持つ
+- 全85エンドポイントに対応するメソッドを持つ
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 

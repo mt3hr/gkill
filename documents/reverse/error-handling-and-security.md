@@ -28,7 +28,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **375件** のエラーコードが存在する（ERR000001〜ERR000376、ERR000243は欠番）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **388件** のエラーコードが存在する（ERR000001〜ERR000389、ERR000243は欠番）。
 
 #### 認証系（ERR000001〜ERR000017）
 
@@ -59,6 +59,10 @@ type GkillMessage struct {
 | `ERR000351` | SubmitKFTLTextError | KFTLテキスト処理エラー |
 | `ERR000375` | InvalidBrowseZipContentsRequestDataError | ZIP内容閲覧リクエストパースエラー |
 | `ERR000376` | BrowseZipContentsError | ZIP内容閲覧処理エラー（展開失敗、パストラバーサル検出等） |
+| `ERR000377`〜`ERR000384` | Invalid〜/GetPluginListError, GetPluginContentHTMLError, GetPluginConfigHTMLError, PostPluginConfigError | プラグイン系エンドポイント（一覧取得・コンテンツHTML・設定HTML・設定保存）のパース/処理エラー |
+| `ERR000385`〜`ERR000386` | InvalidGetIDFKyouByRelativePathRequestDataError / GetIDFKyouByRelativePathError | Markdown相対リンク解決（IDFKyou相対パス解決）のパース/処理エラー |
+| `ERR000387`〜`ERR000388` | InvalidGetIDFFilePathRequestDataError / GetIDFFilePathError | IDFファイル絶対パス解決のパース/処理エラー |
+| `ERR000389` | GetIDFFilePathNotLocalRequestError | IDFファイル絶対パス解決を localhost 以外からリクエストした場合の拒否エラー |
 
 ### 1.3 HTTPステータスコードの使い分け
 
@@ -105,6 +109,8 @@ type GkillMessage struct {
 | `gkill_mcp_readwrite_access.log` | Read/Write統合MCPサーバのアクセスログ |
 
 **ログフォーマット:** JSON形式、ソース位置追跡有効、静的フィールド `{"app": "gkill"}`
+
+**機密値のマスク:** TraceSQL ログ（`gkill_trace_sql.log`）に出力される SQL バインド値のうち、機密値（Google Map 等の APIキー、TLS 秘密鍵、パスワードハッシュ、パスワードリセットトークン）はマスクされて記録される（`account_dao_sqlite3_impl.go`・`server_config_dao_sqlite3_impl.go`・`sqlite3impl_util.go`）。
 
 ---
 
@@ -255,6 +261,25 @@ sequenceDiagram
 4. デフォルトデバイス `"gkill"` が作成される
 
 → 初回起動後、速やかにパスワードを設定することを推奨。
+
+### 2.10 外部URL取得のSSRF対策
+
+URLog 等で外部URLのコンテンツを取得する `httpGetBase64Data`（`gkill_server_api/utils.go`）には以下のSSRF対策が実装されている（テスト: `utils_ssrf_test.go`）:
+
+| 対策 | 内容 |
+|------|------|
+| **スキーム制限** | `http` / `https` のみ許可 |
+| **内部アドレス拒否** | `Dialer.Control` で接続先IPを検査し、ループバック・プライベート・リンクローカル等の内部アドレスへの接続を拒否（DNSリバインディング対策を含む） |
+| **サイズ上限** | レスポンスボディの読み取りサイズに上限を設定 |
+| **タイムアウト** | リクエスト全体にタイムアウトを設定 |
+
+### 2.11 パストラバーサル対策の集約（SecureJoin）
+
+ユーザ入力由来のパス結合は `reps.SecureJoin` に統一されている。結合結果がベースディレクトリ配下に収まることを検証し、`../` 等による脱出を拒否する。ZIP展開（`handle_browse_zip_contents.go`）、サムネイル/動画キャッシュ配信（`idf_thumb_file_server.go`・`idf_video_file_server.go`）等で使用される。また `plugin_manager.go` は userID をパス要素として使用する前に検証する。
+
+### 2.12 Wear OS 通信の証明書検証
+
+Wear OS companion アプリの gkill サーバー接続は、デフォルトで標準の証明書検証を行う。自己署名証明書の信頼は opt-in 設定でのみ有効化できる。
 
 ---
 

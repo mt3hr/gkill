@@ -193,12 +193,12 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（83ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 86ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
 
 #### 主な責務
 
 - HTTPサーバーの起動・停止（`serve.go`, `close.go`）
-- 全84 POSTエンドポイントのハンドリング（`handle_*.go`）
+- 全85 POSTエンドポイントのハンドリング（`handle_*.go`）
 - GkillDAOManagerの保持・提供
 - 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
@@ -481,11 +481,11 @@ sequenceDiagram
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts`（約3,400行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
+`src/client/classes/api/gkill-api.ts`（約3,500行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
 
 #### 主な責務
 
-- 全84エンドポイントへのHTTPリクエスト送信
+- 全85エンドポイントへのHTTPリクエスト送信
 - セッションIDの管理
 - リクエスト/レスポンスの型変換
 - エラーハンドリング
@@ -502,9 +502,9 @@ gkillはPiniaやVuexを使用せず、**Props/Emit**パターンのみで状態�
 
 | 種別 | 数 | 配置 |
 |---|---|---|
-| ページ | 14 | `pages/*.vue` |
-| ビュー | 177 | `pages/views/*.vue` |
-| ダイアログ | 95 | `pages/dialogs/*.vue` |
+| ページ | 15 | `pages/*.vue` |
+| ビュー | 185 | `pages/views/*.vue` |
+| ダイアログ | 100 | `pages/dialogs/*.vue` |
 
 ### テーマ
 

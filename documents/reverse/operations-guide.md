@@ -457,9 +457,9 @@ gkill MCP サーバーは3種類提供されている。いずれもOAuth 2.1認
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| Read専用 | `gkill-read-server.mjs` | 7 | 8808 | 読み取りのみ |
-| Write専用 | `gkill-write-server.mjs` | 14 (11 write + 3 read convenience) | 8809 | 書き込み中心 |
-| Read/Write統合 | `gkill-readwrite-server.mjs` | 18 (7 read + 11 write) | 8810 | 全機能 |
+| Read専用 | `gkill-read-server.mjs` | 8 | 8808 | 読み取りのみ |
+| Write専用 | `gkill-write-server.mjs` | 23 (20 write + 3 read convenience) | 8809 | 書き込み中心 |
+| Read/Write統合 | `gkill-readwrite-server.mjs` | 28 (8 read + 20 write) | 8810 | 全機能 |
 
 ### 11.1 起動
 

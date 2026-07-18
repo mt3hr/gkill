@@ -58,6 +58,17 @@
     <tr><td>読み書き両用</td><td>AI が記録の閲覧・追加・更新・削除をすべて行える</td></tr>
   </table>
 
+  <h2>ファイルの受け渡し</h2>
+  <p>ファイル記録（画像・動画・ドキュメント）をAIに見せる方法は、接続形態に応じて自動的に切り替わります。</p>
+  <table>
+    <tr><th>接続形態</th><th>受け渡し方法</th></tr>
+    <tr><td>ローカル接続（同じPC上のAI）</td><td>ファイルの保存場所（実パス）がAIに渡され、AIがファイルを直接読み取れます。</td></tr>
+    <tr><td>リモート接続（インターネット経由のAI）</td><td>有効期限付きの専用URLが発行され、AIはそのURLからファイルを取得します。画像はサムネイルと原寸の両方が渡されます。gkill本体を公開する必要はありません。</td></tr>
+  </table>
+  <div class="tip">
+    <strong>ヒント:</strong> 埋め込み転送のサイズ上限（既定8MB）は環境変数 <code>GKILL_MCP_MAX_FILE_BYTES</code>、URLの有効期限（既定1時間）は <code>GKILL_MCP_FILE_LINK_TTL_MS</code> で調整できます。
+  </div>
+
   <h2>設定方法（Claude Desktop）</h2>
   <p>Claude Desktop の設定ファイル（<code>claude_desktop_config.json</code>）に以下を追記します。</p>
 
