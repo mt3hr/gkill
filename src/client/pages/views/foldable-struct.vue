@@ -1,7 +1,8 @@
 <template>
-    <tr v-if="is_item()" :draggable="is_editable" @dragstart="drag_start" @drop="drop" :dropzone="is_editable"
-        :key="props.struct_obj.key" @dragover="dragover" class="foldable_struct_draggable"
-        @contextmenu.prevent.stop="onContextmenuItem">
+    <tr v-if="is_item()" :draggable="effective_draggable" @dragstart="drag_start" @drop="drop"
+        :dropzone="effective_draggable" :key="props.struct_obj.key" @dragover="dragover"
+        :class="effective_draggable ? 'foldable_struct_item foldable_struct_draggable' : 'foldable_struct_item'"
+        @contextmenu.prevent.stop="onContextmenuItem" v-long-press="onLongPressItem">
         <td>
             <table>
                 <tr>
@@ -15,9 +16,10 @@
             </table>
         </td>
     </tr>
-    <tr v-if="!is_item()" :draggable="is_editable" @dragstart="drag_start" @drop="drop" :dropzone="is_editable"
-        :key="props.struct_obj.key" @dragover="dragover" class="foldable_struct_draggable"
-        @contextmenu.prevent.stop="onContextmenuItem">
+    <tr v-if="!is_item()" :draggable="effective_draggable" @dragstart="drag_start" @drop="drop"
+        :dropzone="effective_draggable" :key="props.struct_obj.key" @dragover="dragover"
+        :class="effective_draggable ? 'foldable_struct_item foldable_struct_draggable' : 'foldable_struct_item'"
+        @contextmenu.prevent.stop="onContextmenuItem" v-long-press="onLongPressItem">
         <td>
             <table>
                 <tr>
@@ -71,6 +73,7 @@ const {
     struct_list,
     indeterminate_group,
     font_size_px,
+    effective_draggable,
 
     // Methods used in template
     is_item,
@@ -89,6 +92,7 @@ const {
 
     // Template event handlers
     onContextmenuItem,
+    onLongPressItem,
     onToggleOpenGroup,
     onChildReceivedErrors,
     onChildReceivedMessages,
@@ -118,8 +122,12 @@ defineExpose({ get_selected_items, handle_move_struct_obj, get_foldable_struct, 
     accent-color: rgb(var(--v-theme-primary));
 }
 
-.foldable_struct_draggable {
+.foldable_struct_item {
     user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.foldable_struct_draggable {
     touch-action: none;
 }
 </style>

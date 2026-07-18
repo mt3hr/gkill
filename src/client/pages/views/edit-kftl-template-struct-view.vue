@@ -51,7 +51,14 @@
             v-on="errorMessageRelayHandlers"
             ref="kftl_template_struct_context_menu"
             @requested_edit_kftl_template="(id: string) => show_edit_kftl_template_struct_dialog(id)"
+            @requested_move_up_kftl_template="(id: string) => move_kftl_template_struct_up(id)"
+            @requested_move_down_kftl_template="(id: string) => move_kftl_template_struct_down(id)"
+            @requested_move_kftl_template_to_folder="(id: string) => show_select_move_target_folder_dialog(id)"
             @requested_delete_kftl_template="(id: string) => show_confirm_delete_kftl_template_struct_dialog(id)" />
+        <SelectMoveTargetFolderDialog :application_config="application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            @requested_move_struct_obj_to_folder="move_kftl_template_struct_to_folder"
+            ref="select_move_target_folder_dialog" />
         <ConfirmDeleteKFTLTemplateStructDialog ref="confirm_delete_kftl_template_struct_dialog"
             :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
@@ -68,6 +75,7 @@ import FoldableStruct from './foldable-struct.vue'
 import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import KFTLTemplateStructContextMenu from './kftl-template-struct-context-menu.vue'
 import ConfirmDeleteKFTLTemplateStructDialog from '../dialogs/confirm-delete-kftl-template-struct-dialog.vue'
+import SelectMoveTargetFolderDialog from '../dialogs/select-move-target-folder-dialog.vue'
 import { useEditKftlTemplateStructView } from '@/classes/use-edit-kftl-template-struct-view'
 
 const props = defineProps<EditKFTLTemplateStructViewProps>()
@@ -81,6 +89,7 @@ const {
     add_new_kftl_template_struct_element_dialog,
     kftl_template_struct_context_menu,
     confirm_delete_kftl_template_struct_dialog,
+    select_move_target_folder_dialog,
 
     // State
     cloned_application_config,
@@ -97,6 +106,10 @@ const {
     add_kftl_template_struct_element,
     show_confirm_delete_kftl_template_struct_dialog,
     delete_kftl_template_struct,
+    move_kftl_template_struct_up,
+    move_kftl_template_struct_down,
+    show_select_move_target_folder_dialog,
+    move_kftl_template_struct_to_folder,
 
     // Template event handlers
     onDblclickedItem,

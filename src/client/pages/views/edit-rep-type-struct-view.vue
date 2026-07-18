@@ -50,7 +50,14 @@
             v-on="errorMessageRelayHandlers"
             ref="rep_type_struct_context_menu"
             @requested_edit_rep_type="(id: string) => show_edit_rep_type_struct_dialog(id)"
+            @requested_move_up_rep_type="(id: string) => move_rep_type_struct_up(id)"
+            @requested_move_down_rep_type="(id: string) => move_rep_type_struct_down(id)"
+            @requested_move_rep_type_to_folder="(id: string) => show_select_move_target_folder_dialog(id)"
             @requested_delete_rep_type="(id: string) => show_confirm_delete_rep_type_struct_dialog(id)" />
+        <SelectMoveTargetFolderDialog :application_config="application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            @requested_move_struct_obj_to_folder="move_rep_type_struct_to_folder"
+            ref="select_move_target_folder_dialog" />
         <ConfirmDeleteRepTypeStructDialog ref="confirm_delete_rep_type_struct_dialog"
             :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
@@ -67,6 +74,7 @@ import FoldableStruct from './foldable-struct.vue'
 import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import RepTypeStructContextMenu from './rep-type-struct-context-menu.vue'
 import ConfirmDeleteRepTypeStructDialog from '../dialogs/confirm-delete-rep-type-struct-dialog.vue'
+import SelectMoveTargetFolderDialog from '../dialogs/select-move-target-folder-dialog.vue'
 import { useEditRepTypeStructView } from '@/classes/use-edit-rep-type-struct-view'
 
 const props = defineProps<EditRepTypeStructViewProps>()
@@ -80,6 +88,7 @@ const {
     add_new_rep_type_struct_element_dialog,
     rep_type_struct_context_menu,
     confirm_delete_rep_type_struct_dialog,
+    select_move_target_folder_dialog,
 
     // State
     cloned_application_config,
@@ -96,6 +105,10 @@ const {
     add_rep_type_struct_element,
     show_confirm_delete_rep_type_struct_dialog,
     delete_rep_type_struct,
+    move_rep_type_struct_up,
+    move_rep_type_struct_down,
+    show_select_move_target_folder_dialog,
+    move_rep_type_struct_to_folder,
 
     // Template event handlers
     onDblclickedItem,
