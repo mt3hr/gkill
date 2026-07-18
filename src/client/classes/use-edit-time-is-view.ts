@@ -48,9 +48,7 @@ export function useEditTimeIsView(options: {
         try {
             is_loading.value = true
             cloned_kyou.value = props.kyou.clone()
-            await cloned_kyou.value.reload(false, true)
             await cloned_kyou.value.load_typed_datas()
-            await cloned_kyou.value.load_all()
             timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
             timeis_start_date_typed.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").toDate()
             timeis_start_time_string.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")

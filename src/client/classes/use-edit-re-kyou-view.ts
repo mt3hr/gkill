@@ -41,9 +41,7 @@ export function useEditReKyouView(options: {
         try {
             is_loading.value = true
             cloned_kyou.value = props.kyou.clone()
-            await cloned_kyou.value.reload(false, true)
             await cloned_kyou.value.load_typed_datas()
-            await cloned_kyou.value.load_all()
             related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
             related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
         } finally {
