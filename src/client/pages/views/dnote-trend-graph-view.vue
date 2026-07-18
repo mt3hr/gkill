@@ -1,5 +1,5 @@
 <template>
-  <div class="dnote_trend_graph_view_root" @dragover="dragover" @drop="drop"
+  <div class="dnote_trend_graph_view_root" @dragover="dragover" @drop="drop" @click="onGraphClick"
     @contextmenu.prevent.stop="onContextmenu">
     <!-- ドラッグはタイトルをハンドルにする（スクロール操作と干渉しにくい） -->
     <h2 class="dnote_trend_graph_title" :draggable="editable" :class="{ draggable: editable }"
@@ -70,6 +70,7 @@ const {
   drop,
 
   // Template event handlers
+  onGraphClick,
   onContextmenu,
 
   // Event relay objects
@@ -85,6 +86,8 @@ defineExpose({ load_trend_graph, reset })
 .dnote_trend_graph_view_root {
   width: 100%;
   padding: 0 4px;
+  /* ダブルタップズーム由来のclick遅延を除去する（パンスクロールは維持される） */
+  touch-action: manipulation;
 }
 
 /* 端のラベルがSVG境界で切れないようにする */
