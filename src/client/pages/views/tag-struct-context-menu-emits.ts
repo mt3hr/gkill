@@ -7,5 +7,8 @@ export interface TagStructContextMenuEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_edit_tag', id: string): void
+    (e: 'requested_move_up_tag', id: string): void
+    (e: 'requested_move_down_tag', id: string): void
+    (e: 'requested_move_tag_to_folder', id: string): void
     (e: 'requested_delete_tag', id: string): void
 }

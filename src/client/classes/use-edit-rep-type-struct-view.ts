@@ -7,6 +7,7 @@ import type { FolderStructElementData } from '@/classes/datas/config/folder-stru
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
+import { move_struct_up, move_struct_down, move_struct_to_folder } from '@/classes/foldable-struct-move'
 
 export function useEditRepTypeStructView(options: {
     props: EditRepTypeStructViewProps,
@@ -21,6 +22,7 @@ export function useEditRepTypeStructView(options: {
     const add_new_rep_type_struct_element_dialog = ref<ComponentRef | null>(null)
     const rep_type_struct_context_menu = ref<ComponentRef | null>(null)
     const confirm_delete_rep_type_struct_dialog = ref<ComponentRef | null>(null)
+    const select_move_target_folder_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
     const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
@@ -158,6 +160,22 @@ export function useEditRepTypeStructView(options: {
         rep_type_name_walk(cloned_application_config.value.rep_type_struct)
     }
 
+    function move_rep_type_struct_up(id: string): void {
+        move_struct_up(cloned_application_config.value.rep_type_struct, id)
+    }
+
+    function move_rep_type_struct_down(id: string): void {
+        move_struct_down(cloned_application_config.value.rep_type_struct, id)
+    }
+
+    function show_select_move_target_folder_dialog(id: string): void {
+        select_move_target_folder_dialog.value?.show(cloned_application_config.value.rep_type_struct, id)
+    }
+
+    function move_rep_type_struct_to_folder(struct_id: string, target_folder_id: string | null): void {
+        move_struct_to_folder(cloned_application_config.value.rep_type_struct, struct_id, target_folder_id)
+    }
+
     // ── Template event handlers ──
     function onDblclickedItem(_e: MouseEvent, id: string | null): void {
         if (id) show_edit_rep_type_struct_dialog(id)
@@ -182,6 +200,7 @@ export function useEditRepTypeStructView(options: {
         add_new_rep_type_struct_element_dialog,
         rep_type_struct_context_menu,
         confirm_delete_rep_type_struct_dialog,
+        select_move_target_folder_dialog,
 
         // State
         cloned_application_config,
@@ -198,6 +217,10 @@ export function useEditRepTypeStructView(options: {
         add_rep_type_struct_element,
         show_confirm_delete_rep_type_struct_dialog,
         delete_rep_type_struct,
+        move_rep_type_struct_up,
+        move_rep_type_struct_down,
+        show_select_move_target_folder_dialog,
+        move_rep_type_struct_to_folder,
 
         // Template event handlers
         onDblclickedItem,
