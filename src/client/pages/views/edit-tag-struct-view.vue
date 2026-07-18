@@ -48,7 +48,14 @@
             v-on="errorMessageRelayHandlers"
             ref="tag_struct_context_menu"
             @requested_edit_tag="(id: string) => show_edit_tag_struct_dialog(id)"
+            @requested_move_up_tag="(id: string) => move_tag_struct_up(id)"
+            @requested_move_down_tag="(id: string) => move_tag_struct_down(id)"
+            @requested_move_tag_to_folder="(id: string) => show_select_move_target_folder_dialog(id)"
             @requested_delete_tag="(id: string) => show_confirm_delete_tag_struct_dialog(id)" />
+        <SelectMoveTargetFolderDialog :application_config="application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            @requested_move_struct_obj_to_folder="move_tag_struct_to_folder"
+            ref="select_move_target_folder_dialog" />
         <ConfirmDeleteTagStructDialog ref="confirm_delete_tag_struct_dialog" :application_config="application_config"
             :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
@@ -65,6 +72,7 @@ import FoldableStruct from './foldable-struct.vue'
 import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import TagStructContextMenu from './tag-struct-context-menu.vue'
 import ConfirmDeleteTagStructDialog from '../dialogs/confirm-delete-tag-struct-dialog.vue'
+import SelectMoveTargetFolderDialog from '../dialogs/select-move-target-folder-dialog.vue'
 import { useEditTagStructView } from '@/classes/use-edit-tag-struct-view'
 
 const props = defineProps<EditTagStructViewProps>()
@@ -78,6 +86,7 @@ const {
     add_new_tag_struct_element_dialog,
     tag_struct_context_menu,
     confirm_delete_tag_struct_dialog,
+    select_move_target_folder_dialog,
 
     // State
     cloned_application_config,
@@ -94,6 +103,10 @@ const {
     add_tag_struct_element,
     show_confirm_delete_tag_struct_dialog,
     delete_tag_struct,
+    move_tag_struct_up,
+    move_tag_struct_down,
+    show_select_move_target_folder_dialog,
+    move_tag_struct_to_folder,
 
     // Template event handlers
     onDblclickedItem,

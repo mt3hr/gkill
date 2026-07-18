@@ -40,6 +40,9 @@
         <ConfirmDeleteRepStructDialog ref="confirm_delete_rep_struct_dialog" :application_config="application_config"
             :gkill_api="gkill_api"
             v-on="confirmDeleteHandlers" />
+        <SelectMoveTargetFolderDialog :application_config="application_config" :gkill_api="gkill_api"
+            v-on="selectMoveTargetFolderHandlers"
+            ref="select_move_target_folder_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
@@ -51,6 +54,7 @@ import EditRepStructElementDialog from '../dialogs/edit-rep-struct-element-dialo
 import FoldableStruct from './foldable-struct.vue'
 import RepStructContextMenu from './rep-struct-context-menu.vue'
 import ConfirmDeleteRepStructDialog from '../dialogs/confirm-delete-rep-struct-dialog.vue'
+import SelectMoveTargetFolderDialog from '../dialogs/select-move-target-folder-dialog.vue'
 import { useEditRepStructView } from '@/classes/use-edit-rep-struct-view'
 
 const props = defineProps<EditRepStructViewProps>()
@@ -62,6 +66,7 @@ const {
     add_new_rep_struct_element_dialog,
     rep_struct_context_menu,
     confirm_delete_rep_struct_dialog,
+    select_move_target_folder_dialog,
     cloned_application_config,
     reload_cloned_application_config,
     show_rep_contextmenu,
@@ -73,6 +78,7 @@ const {
     editRepHandlers,
     repContextMenuHandlers,
     confirmDeleteHandlers,
+    selectMoveTargetFolderHandlers,
 } = useEditRepStructView({ props, emits })
 
 defineExpose({ reload_cloned_application_config })

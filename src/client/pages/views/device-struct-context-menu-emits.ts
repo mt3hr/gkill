@@ -7,5 +7,8 @@ export interface DeviceStructContextMenuEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_edit_device', id: string): void
+    (e: 'requested_move_up_device', id: string): void
+    (e: 'requested_move_down_device', id: string): void
+    (e: 'requested_move_device_to_folder', id: string): void
     (e: 'requested_delete_device', id: string): void
 }
