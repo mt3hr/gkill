@@ -1,5 +1,9 @@
 import { i18n } from "@/i18n"
 
+export function format_day_of_week(time: Date): string {
+    return [i18n.global.t("SUNDAY_TITLE"), i18n.global.t("MONDAY_TITLE"), i18n.global.t("TUESDAY_TITLE"), i18n.global.t("WEDNESDAY_TITLE"), i18n.global.t("THURSDAY_TITLE"), i18n.global.t("FRIDAY_TITLE"), i18n.global.t("SATURDAY_TITLE")][time.getDay()]
+}
+
 export function format_time(time: Date) {
     const year: string | number = time.getFullYear()
     let month: string | number = time.getMonth() + 1
@@ -7,7 +11,7 @@ export function format_time(time: Date) {
     let hour: string | number = time.getHours()
     let minute: string | number = time.getMinutes()
     let second: string | number = time.getSeconds()
-    const day_of_week = [i18n.global.t("SUNDAY_TITLE"), i18n.global.t("MONDAY_TITLE"), i18n.global.t("TUESDAY_TITLE"), i18n.global.t("WEDNESDAY_TITLE"), i18n.global.t("THURSDAY_TITLE"), i18n.global.t("FRIDAY_TITLE"), i18n.global.t("SATURDAY_TITLE")][time.getDay()]
+    const day_of_week = format_day_of_week(time)
     month = ('0' + month).slice(-2)
     date = ('0' + date).slice(-2)
     hour = ('0' + hour).slice(-2)
