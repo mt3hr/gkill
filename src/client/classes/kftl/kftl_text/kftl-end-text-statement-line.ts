@@ -6,6 +6,7 @@ import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
+import { KFTL_ASCII_TEXT_SPLITTER_TITLE, matches_exact } from '../kftl-prefixes'
 
 export class KFTLEndTextStatementLine extends KFTLStatementLine {
 
@@ -30,7 +31,7 @@ export class KFTLEndTextStatementLine extends KFTLStatementLine {
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == i18n.global.t("KFTL_TEXT_SPLITTER_TITLE")
+        return matches_exact(line_text, "KFTL_TEXT_SPLITTER_TITLE", KFTL_ASCII_TEXT_SPLITTER_TITLE)
     }
 }
 

@@ -74,8 +74,9 @@ func (l *kftlRelatedTimeStatementLine) ApplyThisLineToRequestMap(_ context.Conte
 		req, _ = requestMap.Get(targetID)
 	}
 
-	// Parse the date (remove "？" prefix)
+	// Parse the date (remove "？" or "?" prefix)
 	dateStr := strings.TrimPrefix(l.lineText, splitterRelatedTime)
+	dateStr = strings.TrimPrefix(dateStr, splitterRelatedTimeAscii)
 	t, err := parseDateTime(dateStr)
 	if err != nil {
 		return fmt.Errorf("invalid related time %q: %w", dateStr, err)
