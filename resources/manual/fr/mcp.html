@@ -58,6 +58,17 @@
     <tr><td>Lecture et écriture</td><td>L'IA peut afficher, ajouter, mettre à jour et supprimer des enregistrements.</td></tr>
   </table>
 
+  <h2>Transmission des fichiers</h2>
+  <p>La manière de présenter les enregistrements de fichiers (images, vidéos, documents) à l'IA change automatiquement selon le type de connexion.</p>
+  <table>
+    <tr><th>Type de connexion</th><th>Méthode de transmission</th></tr>
+    <tr><td>Connexion locale (IA sur le même PC)</td><td>Le chemin réel du fichier est transmis à l'IA, qui peut le lire directement.</td></tr>
+    <tr><td>Connexion distante (IA via internet)</td><td>Une URL dédiée à durée limitée est émise et l'IA récupère le fichier depuis cette URL. Pour les images, la miniature et la taille originale sont toutes deux fournies. Il n'est pas nécessaire d'exposer gkill.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Astuce :</strong> La limite de taille du transfert intégré (8 Mo par défaut) se règle avec la variable d'environnement <code>GKILL_MCP_MAX_FILE_BYTES</code>, et la durée de validité de l'URL (1 heure par défaut) avec <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+  </div>
+
   <h2>Configuration (Claude Desktop)</h2>
   <p>Ajoutez ce qui suit au fichier de configuration de Claude Desktop (<code>claude_desktop_config.json</code>).</p>
 

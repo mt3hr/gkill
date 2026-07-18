@@ -25,10 +25,13 @@ gkill_server_api/
 ├── gkill_server_api_rate_limit.go   # ログインレートリミット
 ├── gkill_server_api_test.go         # 統合テスト
 ├── gkill_server_api_rate_limit_test.go # レートリミットテスト
-└── handle_*.go                      # 各エンドポイントのハンドラ（83ファイル）
+├── handle_get_idf_file_path_test.go # IDFファイルパス解決ハンドラテスト
+├── handle_get_idf_kyou_by_relative_path_test.go # 相対パス解決ハンドラテスト
+├── utils_ssrf_test.go               # httpGetBase64Data の SSRF 対策テスト
+└── handle_*.go                      # 各エンドポイントのハンドラ（86ファイル）
 ```
 
-**合計: 99ファイル**（基盤13 + ハンドラ83 + テスト2 + ABOUT_TEST.md 1）
+**合計: 105ファイル**（基盤13 + ハンドラ86 + テスト5 + ABOUT_TEST.md 1）
 
 ## GkillServerAPI 構造体
 
@@ -89,7 +92,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 ## ハンドラパターン
 
-全83ハンドラは共通のパターンに従う。`handle_add_kmemo.go` を例に:
+全86ハンドラは共通のパターンに従う。`handle_add_kmemo.go` を例に:
 
 ```
 1. Content-Type: application/json 設定

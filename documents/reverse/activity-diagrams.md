@@ -181,6 +181,21 @@ flowchart TD
     ApplyFilter --> Return([集計結果返却])
 ```
 
+### トレンドグラフの時系列集計フロー（DnoteTrendAggregator）
+
+集計要素「トレンドグラフ」は、KeyGetter によるグルーピングの代わりに集計粒度（日/週/月）で時系列バケットに振り分けて集計する。サーバーAPIは使用せず、すべてクライアント側で処理する。
+
+```mermaid
+flowchart TD
+    Start([トレンドグラフ集計要求]) --> LoadKyous[Kyouデータロード<br>取得済みKyousを使用]
+    LoadKyous --> ApplyPredicate[Predicateフィルタ適用<br>条件グループ]
+    ApplyPredicate --> Bucketize[集計粒度でバケット振り分け<br>日 / 週 / 月]
+    Bucketize --> AggregatePerBucket[バケットごとに<br>AggregateTargetで集計<br>件数/合計/平均等]
+    AggregatePerBucket --> ToNumber[集計値を数値化<br>agregated_value_to_number]
+    ToNumber --> Points([DnoteTrendPoint配列を返却])
+    Points --> Render[dnote-trend-graph-view.vue が<br>スパークライン描画<br>折れ線 / 棒]
+```
+
 ## 6. ZIP内容閲覧処理フロー
 
 ```mermaid

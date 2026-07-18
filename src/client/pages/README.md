@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 14 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（177 .vue）
-└── dialogs/                        # Dialog コンポーネント（95 .vue）
+├── views/                          # View コンポーネント（185 .vue）
+└── dialogs/                        # Dialog コンポーネント（100 .vue）
 ```
 
 ## 設計パターン
@@ -35,7 +35,7 @@ xxx-view-emits.ts     # Emits 定義
 
 ロジックは `classes/use-xxx-view.ts` Composable に分離。
 
-## ルートページ（14 .vue + 2 .ts）
+## ルートページ（15 .vue + 2 .ts）
 
 | ファイル | ルートパス | 説明 |
 |---------|----------|------|
@@ -47,6 +47,7 @@ xxx-view-emits.ts     # Emits 定義
 | `mkfl-page.vue` | `/mkfl` | Mkfl（ファイル管理）ページ |
 | `plaing-timeis-page.vue` | `/plaing` | 稼働中 TimeIs ページ |
 | `saihate-page.vue` | `/saihate` | Saihate（特殊ビュー）ページ |
+| `dashboard-page.vue` | `/dashboard` | ダッシュボード（日次サマリー）ページ |
 | `set-new-password-page.vue` | `/set_new_password` | 新パスワード設定ページ |
 | `regist-first-account-page.vue` | `/regist_first_account` | 初回アカウント登録 |
 | `shared-page.vue` | `/shared_page` | 共有ページ |
@@ -56,9 +57,9 @@ xxx-view-emits.ts     # Emits 定義
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（177 .vue）
+## views/ — 全 View コンポーネント一覧（185 .vue）
 
-### データ追加系（20コンポーネント）
+### データ追加系（21コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -76,6 +77,7 @@ xxx-view-emits.ts     # Emits 定義
 | `add-ryuu-item-view.vue` | Ryuu アイテム追加 |
 | `add-dnote-item-view.vue` | DNote アイテム追加 |
 | `add-dnote-list-view.vue` | DNote リスト追加 |
+| `add-dnote-trend-graph-view.vue` | DNote トレンドグラフ追加 |
 | `add-new-device-struct-element-view.vue` | デバイス構造要素追加 |
 | `add-new-foloder-view.vue` | フォルダ追加 |
 | `add-new-kftl_template-struct-element-view.vue` | KFTL テンプレート要素追加 |
@@ -83,7 +85,7 @@ xxx-view-emits.ts     # Emits 定義
 | `add-new-rep-type-struct-element-view.vue` | リポジトリ型要素追加 |
 | `add-new-tag-struct-element-view.vue` | タグ構造要素追加 |
 
-### データ編集系（27コンポーネント）
+### データ編集系（30コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -102,6 +104,7 @@ xxx-view-emits.ts     # Emits 定義
 | `edit-ryuu-item-view.vue` | Ryuu アイテム編集 |
 | `edit-folder-view.vue` | フォルダ編集 |
 | `edit-dnote-card.vue` / `edit-dnote-item-view.vue` / `edit-dnote-list-view.vue` | DNote 編集 |
+| `edit-dnote-trend-graph-view.vue` | DNote トレンドグラフ編集 |
 | `edit-dnote-predicate-group.vue` | DNote 述語グループ編集 |
 | `edit-device-struct-view.vue` / `edit-device-struct-element-view.vue` | デバイス構造編集 |
 | `edit-kftl-template-struct-view.vue` / `edit-kftl-template-struct-element-view.vue` | KFTL テンプレート編集 |
@@ -110,7 +113,7 @@ xxx-view-emits.ts     # Emits 定義
 | `edit-rep-type-struct-view.vue` / `edit-rep-type-struct-element-view.vue` | リポジトリ型構造編集 |
 | `edit-tag-struct-view.vue` / `edit-tag-struct-element-view.vue` | タグ構造編集 |
 
-### データ表示系（26コンポーネント）
+### データ表示系（24コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -128,7 +131,7 @@ xxx-view-emits.ts     # Emits 定義
 | `gps-log-map.vue` | GPS ログ地図表示 |
 | `kyou-count-calendar.vue` | Kyou カウントカレンダー |
 
-### 削除確認系（13コンポーネント）
+### 削除確認系（15コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -142,6 +145,7 @@ xxx-view-emits.ts     # Emits 定義
 | `confirm-delete-rep-view.vue` | リポジトリ削除確認 |
 | `confirm-delete-tag-struct-view.vue` | タグ構造削除確認 |
 | `confirm-delete-dnote-item-list-view.vue` / `confirm-delete-dnote-list-query-view.vue` | DNote 削除確認 |
+| `confirm-delete-dnote-trend-graph-view.vue` | DNote トレンドグラフ削除確認 |
 | `confirm-delete-related-kyou-query-view.vue` | 関連 Kyou クエリ削除確認 |
 
 ### 確認・操作系
@@ -173,6 +177,8 @@ xxx-view-emits.ts     # Emits 定義
 | `dnote-item-table-view.vue` / `dnote-list-table-view.vue` | DNote テーブル |
 | `dnote-list-view.vue` | DNote リスト |
 | `dnote-item-list-context-menu.vue` / `dnote-list-query-context-menu.vue` | DNote コンテキストメニュー |
+| `dnote-trend-graph-view.vue` / `dnote-trend-graph-table-view.vue` | DNote トレンドグラフ（スパークライン表示 / テーブル表示） |
+| `dnote-trend-graph-context-menu.vue` | DNote トレンドグラフ コンテキストメニュー |
 | `aggregated-list-item.vue` | 集計アイテム |
 
 ### コンテキストメニュー系
@@ -195,6 +201,7 @@ xxx-view-emits.ts     # Emits 定義
 | コンポーネント | 説明 |
 |--------------|------|
 | `find-query-editor-view.vue` | 検索クエリエディタ |
+| `mi-find-query-editor-view.vue` | Mi 検索クエリエディタ |
 | `keyword-query.vue` / `period-of-time-query.vue` | キーワード/期間 |
 | `tag-query.vue` / `rep-query.vue` | タグ/リポジトリ |
 | `time-is-query.vue` / `calendar-query.vue` / `map-query.vue` | TimeIs/カレンダー/地図 |
@@ -208,6 +215,7 @@ xxx-view-emits.ts     # Emits 定義
 |--------------|------|
 | `kftl-view.vue` / `kftl-line-label.vue` / `kftl-template-view.vue` | KFTL エディタ |
 | `mkfl-view.vue` | Mkfl ビュー |
+| `mi-kyou-count-calendar.vue` | Mi 件数カレンダー（検索条件に合致する日毎の件数表示） |
 | `plaing-timeis-view.vue` / `end-time-is-plaing-view.vue` | 稼働中 TimeIs |
 | `attached-tag.vue` / `attached-text.vue` / `attached-notification.vue` | 添付情報 |
 | `attached-time-is-plaing.vue` | 添付稼働 TimeIs |
@@ -223,19 +231,19 @@ xxx-view-emits.ts     # Emits 定義
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（95 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（100 .vue）
 
-### データ追加ダイアログ（19コンポーネント）
+### データ追加ダイアログ（20コンポーネント）
 
-`add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-nlog-dialog.vue`, `add-timeis-dialog.vue`, `add-urlog-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-foloder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
+`add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-nlog-dialog.vue`, `add-timeis-dialog.vue`, `add-urlog-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-foloder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
 
-### データ編集ダイアログ（27コンポーネント）
+### データ編集ダイアログ（29コンポーネント）
 
-`edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-folder-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`
+`edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-folder-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`
 
-### 削除確認ダイアログ（13コンポーネント）
+### 削除確認ダイアログ（15コンポーネント）
 
-`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`
+`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`
 
 ### その他ダイアログ
 
@@ -245,8 +253,10 @@ xxx-view-emits.ts     # Emits 定義
 | `confirm-logout-dialog.vue` | ログアウト確認 |
 | `confirm-re-kyou-dialog.vue` | ReKyou 確認 |
 | `confirm-reset-password-dialog.vue` | パスワードリセット確認 |
+| `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
 | `end-time-is-plaing-dialog.vue` | TimeIs 終了 |
 | `find-query-editor-dialog.vue` | 検索クエリエディタ |
+| `mi-find-query-editor-dialog.vue` | Mi 検索クエリエディタ |
 | `kftl-dialog.vue` / `kftl-template-dialog.vue` | KFTL |
 | `kyou-dialog.vue` / `kyou-histories-dialog.vue` / `kyou-list-view-dialog.vue` | Kyou |
 | `lantana-dialog.vue` | Lantana |

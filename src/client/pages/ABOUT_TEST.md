@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（12ルート全網羅 + CRUD/設定/回帰テスト、30ファイル192テスト）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、33ファイル207テスト）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## テストフレームワーク
 
@@ -11,7 +11,7 @@
 
 ## テストファイル一覧
 
-### E2E テスト（30ファイル, 192テスト）
+### E2E テスト（33ファイル, 207テスト）
 
 #### ページ表示・ナビゲーション系（12ファイル）
 
@@ -56,8 +56,11 @@
 | `src/client/__tests__/e2e/regression-fixes.spec.ts` | 修正済みバグ回帰テスト（7件） |
 | `src/client/__tests__/e2e/misc-features.spec.ts` / `misc-operations.spec.ts` | 見た目区別、ブックマークレット、GPS、共有リンク、再起動 |
 | `src/client/__tests__/e2e/clipboard-save.spec.ts` | Ctrl+V でクリップボード保存ダイアログ表示（RYKV/Mi）、テキスト入力中は抑制、ダイアログ閉じ、クリップボードテキストのプレビュー |
+| `src/client/__tests__/e2e/dashboard.spec.ts` | ダッシュボード画面（ナビゲーション、描画、JSエラーなし確認） |
+| `src/client/__tests__/e2e/dialog-history.spec.ts` | ダイアログ履歴不変条件（×/Escape/ブラウザバックで閉じてもバックスタックに使用済みエントリが残らない、複数ダイアログを開いたまま画面遷移可能） |
+| `src/client/__tests__/e2e/edit-readonly-loading.spec.ts` | Edit系ダイアログの Loading 中 readonly 化とロード完了後の編集可能復帰（API 遅延注入で検証） |
 
-### Composable ユニットテスト（7ファイル）
+### Composable ユニットテスト（8ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -68,12 +71,13 @@
 | `src/client/__tests__/unit/composables/page-composables.test.ts` | ページレベル Composable |
 | `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン |
 | `src/client/__tests__/unit/composables/save-clipboard-to-file-dialog.test.ts` | クリップボード保存ダイアログ Composable（初期状態、MIME判定、ファイルサイズ表示、load_clipboard エラーパス、save_or_confirm、useScopedCtrlVForClipboard キー処理） |
+| `src/client/__tests__/unit/composables/idf-kyou-view.test.ts` | IDFKyou ビュー Composable（Markdown リッチ表示、拡張子判定、相対リンクの対象記録解決） |
 
 ### ルーターテスト
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `src/client/__tests__/unit/router.test.ts` | 全12ルートの定義と遷移 |
+| `src/client/__tests__/unit/router.test.ts` | 全13ルートの定義と遷移 |
 
 ## E2E テストヘルパー
 

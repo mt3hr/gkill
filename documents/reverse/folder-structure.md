@@ -13,7 +13,7 @@ gkill/
 ├── dist/                   # フロントエンドビルド成果物（vite build出力先）
 ├── public/                 # 静的アセット（favicon.ico等）
 ├── release/                # リリースビルド成果物（クロスコンパイル時に生成）
-├── resources/              # リソースファイル（サンプルデータ等）
+├── resources/              # リソースファイル（HTMLマニュアル resources/manual/（7言語×20ページ）、サンプルデータ等）
 ├── node_modules/           # npm依存パッケージ（git管理外）
 ├── package.json            # npm設定・ビルドスクリプト定義
 ├── tsconfig*.json          # TypeScript設定
@@ -32,6 +32,7 @@ src/
 ├── android/      # Android APKラッパー
 ├── wear_os/      # Wear OSアプリ（phone_companion + watch_app）
 ├── mcp/          # MCPサーバー（AI連携用）
+├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_chatgpt, gkill_plugin_claudeai）
 ├── locales/      # i18nリソース（7言語対応）
 ├── tools/        # ユーティリティスクリプト
 └── README.md     # 実装資料への導線
@@ -47,7 +48,7 @@ src/client/
 ├── main.ts                 # エントリーポイント（Vuetify, Router, i18n登録）
 ├── serviceWorker.ts        # PWAサービスワーカー（Workbox, Push通知, Web Share Target）
 ├── router/
-│   └── index.ts            # ルーター定義（12ルート）
+│   └── index.ts            # ルーター定義（13ルート）
 ├── pages/                  # ルートページコンポーネント
 │   ├── login-page.vue
 │   ├── kftl-page.vue
@@ -56,16 +57,19 @@ src/client/
 │   ├── kyou-page.vue
 │   ├── mkfl-page.vue
 │   ├── plaing-timeis-page.vue
+│   ├── dashboard-page.vue
 │   ├── saihate-page.vue
 │   ├── set-new-password-page.vue
 │   ├── regist-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
-│   ├── views/              # ビューコンポーネント（175ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（93ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── shared-mi-page.vue
+│   ├── shared-rykv-page.vue
+│   ├── views/              # ビューコンポーネント（185ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（100ファイル、browse-zip-contents-dialog.vue 含む）
 ├── classes/
 │   ├── api/
-│   │   └── gkill-api.ts    # GkillAPI シングルトン（~3,400行、全API呼び出しを集約）
+│   │   └── gkill-api.ts    # GkillAPI シングルトン（~3,500行、全API呼び出しを集約）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）
 │   └── kftl/               # KFTLパーサー（44ステートメント型）
 └── plugins/
@@ -183,11 +187,12 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-├── gkill-read-server.mjs      # Read専用MCPサーバー（7ツール、port 8808）
-├── gkill-write-server.mjs     # Write専用MCPサーバー（14ツール、port 8809）
-├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（18ツール、port 8810）
+├── gkill-read-server.mjs      # Read専用MCPサーバー（8ツール、port 8808）
+├── gkill-write-server.mjs     # Write専用MCPサーバー（23ツール、port 8809）
+├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（28ツール、port 8810）
 └── lib/
     ├── access-log.mjs         # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
+    ├── file-link-store.mjs    # HTTPモード用ファイルリンクストア（期限付きトークンで /files/{token} 配信）
     ├── normalization.mjs      # Read入力正規化
     ├── write-normalization.mjs # Write入力正規化
     ├── validation.mjs         # 入力バリデーション
@@ -200,6 +205,20 @@ src/mcp/
 ```
 
 トランスポート: stdio（デフォルト）またはHTTP（OAuth 2.1認証付き）。
+
+### src/plugins/ — スタンドアロンプラグイン
+
+gkill本体とは独立してビルドされるプラグインバイナリです。各プラグインは自身の `go.mod`・`manifest.json`・実行ファイルを持ち、stdio の改行区切りJSONで gkill サーバーと通信します（プロトコル型は `src/server/gkill/api/gkill_plugin/`、作者向けSDKは `src/server/gkill/plugin/sdk/`）。
+
+```
+src/plugins/
+├── examples/
+│   └── gkill_example/         # サンプルプラグイン（固定のKyouレスポンスを返す）
+├── gkill_plugin_chatgpt/      # ChatGPT会話履歴プラグイン
+├── gkill_plugin_claudeai/     # Claude.ai会話履歴プラグイン
+├── ABOUT_TEST.md
+└── README.md
+```
 
 ### src/locales/ — i18nリソース
 
@@ -229,18 +248,18 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（71項目）
+│   ├── glossary.md                   # 用語集（80項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（74件）
+│   ├── usecase.md                    # ユースケース一覧（78件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
-│   ├── sequence-diagrams.md          # シーケンス図（22本: 正常系17 + 異常系5）
+│   ├── sequence-diagrams.md          # シーケンス図（27本: 正常系22 + 異常系5）
 │   ├── activity-diagrams.md          # アクティビティ図
 │   ├── state-machines.md             # ステートマシン図
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（80件）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（87件）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド
 │   ├── dvnf-rep-type-spec.md         # DVNF/RepType仕様

@@ -17,10 +17,10 @@ api/
 ├── find_kyou_context.go         # Kyou 検索コンテキスト
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
-├── gkill_server_api/            # HTTP ハンドラ（94ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（104ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
-│   ├── serve.go                 # gorilla/mux ルーター設定・全78ルート登録
+│   ├── serve.go                 # gorilla/mux ルーター設定・全85ルート登録
 │   ├── close.go                 # サーバ終了処理
 │   ├── auth.go                  # 認証処理
 │   ├── auth_context.go          # 認証コンテキスト
@@ -30,7 +30,7 @@ api/
 │   ├── web_push.go              # Web Push 通知
 │   ├── gkill_server_api_access_log.go # アクセスログ
 │   ├── gkill_server_api_rate_limit.go # レートリミット
-│   └── handle_*.go              # 各エンドポイントのハンドラ（79ファイル）
+│   └── handle_*.go              # 各エンドポイントのハンドラ（86ファイル）
 ├── find/                        # 検索クエリ型定義
 ├── gpslogs/                     # GPS ログパーサ
 ├── kftl/                        # KFTL パーサ → kftl/README.md 参照
@@ -53,12 +53,12 @@ api/
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（94ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（104ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
-`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全78エンドポイントを登録する。
-各エンドポイントは `handle_*.go`（79ファイル、1ハンドラ1ファイル）として分割されている。
+`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全85エンドポイントを登録する。
+各エンドポイントは `handle_*.go`（86ファイル、1ハンドラ1ファイル）として分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
 ### `find/`（5ファイル）— 検索クエリ型定義
@@ -88,21 +88,21 @@ api/
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用 |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（376定数） |
-| `message_codes.go` | メッセージコード定数（86定数） |
+| `error_codes.go` | エラーコード定数（388定数、ERR000001〜ERR000389・ERR000243欠番） |
+| `message_codes.go` | メッセージコード定数（80定数） |
 | `message_test.go` | コード形式テスト |
 
 ### `kftl/`（24ファイル）— KFTL パーサ
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 
-### `req_res/`（166ファイル）— Request/Response 構造体
+### `req_res/`（176ファイル）— Request/Response 構造体
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
 
-## 全エンドポイント一覧（78エンドポイント）
+## 全エンドポイント一覧（87エンドポイント定義・85登録）
 
-全エンドポイントは `POST /api/` 配下に配置。`gkill_server_api/serve.go` 内で gorilla/mux に登録。
+全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。`gkill_server_api/serve.go` 内で gorilla/mux に登録。`GetKFTLTemplate` と `GetGkillInfo` の2件はアドレス定義のみで未登録。
 
 ### 認証系（5エンドポイント）
 
@@ -194,7 +194,7 @@ api/
 | `ReloadRepositories` | リポジトリ再読み込み |
 | `UpdateCache` | キャッシュ更新 |
 
-### ファイル操作系（4エンドポイント）
+### ファイル操作系（7エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -202,6 +202,9 @@ api/
 | `UploadGPSLogFiles` | GPS ログファイルアップロード |
 | `OpenDirectory` | ディレクトリを OS で開く |
 | `OpenFile` | ファイルを OS で開く |
+| `BrowseZipContents` | IDFKyou の ZIP ファイル内容閲覧（展開・キャッシュ・パストラバーサル防止） |
+| `GetIDFKyouByRelativePath` | 基準 IDFKyou からの相対パスで同一 Rep 内のファイル記録を解決（Markdown 内相対リンク用） |
+| `GetIDFFilePath` | IDF ファイルの絶対パス解決（localhost からのリクエストのみ応答。MCP stdio クライアント用） |
 
 ### 共有系（5エンドポイント）
 
@@ -213,7 +216,16 @@ api/
 | `DeleteShareKyouListInfos` | 共有リスト情報削除 |
 | `GetSharedKyous` | 共有 Kyou 取得 |
 
-### 通知・TLS・トランザクション・その他（8エンドポイント）
+### プラグイン系（4エンドポイント）
+
+| エンドポイント | 説明 |
+|---------------|------|
+| `GetPluginList` | インストール済みプラグイン一覧取得（名前・バージョン・説明・rep_name・is_alive） |
+| `GetPluginContentHTML` | プラグイン Kyou のコンテンツ HTML 取得 |
+| `GetPluginConfigHTML` | プラグイン設定画面 HTML 取得 |
+| `PostPluginConfig` | プラグイン設定フォームのデータ保存 |
+
+### 通知・TLS・トランザクション・その他（11エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -223,8 +235,11 @@ api/
 | `CommitTX` | トランザクションコミット |
 | `DiscardTX` | トランザクション破棄 |
 | `URLogBookmarklet` | URLog ブックマークレットアドレス取得 |
+| `URLogBookmarkletPage` | URLog ブックマークレット導入ページ配信（GET） |
 | `SubmitKFTLText` | KFTL テキスト送信・実行 |
 | `GetKyousMCP` | MCP 用 Kyou 取得 |
+| `GetKFTLTemplate` | KFTL テンプレート取得（※アドレス定義のみ、未登録） |
+| `GetGkillInfo` | アプリケーション情報取得（※アドレス定義のみ、未登録） |
 
 ## 開発ガイドライン
 
