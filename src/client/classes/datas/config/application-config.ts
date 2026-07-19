@@ -100,14 +100,14 @@ export class ApplicationConfig {
     }
     async append_not_found_infos(): Promise<Array<GkillError>> {
         const errors = new Array<GkillError>()
-        errors.concat(await this.append_not_found_reps())
-        errors.concat(await this.append_not_found_devices())
-        errors.concat(await this.append_not_found_rep_types())
-        errors.concat(await this.append_not_found_tags())
-        errors.concat(await this.append_not_found_mi_boards())
-        errors.concat(await this.append_no_devices())
-        errors.concat(await this.append_no_tags())
-        errors.concat(await this.append_all_mi_board())
+        errors.push(...await this.append_not_found_reps())
+        errors.push(...await this.append_not_found_devices())
+        errors.push(...await this.append_not_found_rep_types())
+        errors.push(...await this.append_not_found_tags())
+        errors.push(...await this.append_not_found_mi_boards())
+        errors.push(...await this.append_no_devices())
+        errors.push(...await this.append_no_tags())
+        errors.push(...await this.append_all_mi_board())
         return errors
     }
     async load_all(): Promise<Array<GkillError>> {
@@ -352,6 +352,23 @@ export class ApplicationConfig {
             return res.errors
         }
 
+        const rep_type_map = generate_rep_type_map()
+
+        // 未カスタマイズ(name === rep_type_name)の既存エントリをローカライズ名に置き換える
+        let localize_default_name_walk = (_rep_type: RepTypeStructElementData): void => { }
+        localize_default_name_walk = (rep_type: RepTypeStructElementData): void => {
+            const localized_name = rep_type_map.get(rep_type.rep_type_name)
+            if (localized_name && rep_type.name === rep_type.rep_type_name) {
+                rep_type.name = localized_name
+            }
+            rep_type.children?.forEach(child_rep => {
+                if (child_rep) {
+                    localize_default_name_walk(child_rep)
+                }
+            })
+        }
+        localize_default_name_walk(this.rep_type_struct)
+
         const not_found = new Set<string>()
         res.rep_names.forEach(rep_name => {
             const rep_type_name = this.get_rep_type_from_rep_name(rep_name)
@@ -378,7 +395,6 @@ export class ApplicationConfig {
             }
         })
 
-        const rep_type_map = generate_rep_type_map()
         not_found.forEach(rep_type => {
             const rep_type_struct = new RepTypeStructElementData()
             rep_type_struct.key = rep_type
