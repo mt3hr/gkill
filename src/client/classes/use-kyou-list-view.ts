@@ -66,7 +66,6 @@ export function useKyouListView(options: {
 
     async function reload(): Promise<void> {
         if (props.query.is_image_only) {
-            match_kyous_for_image.value.splice(0)
             update_match_kyous_for_image()
         } else {
             match_kyous_for_image.value.splice(0)
@@ -74,7 +73,6 @@ export function useKyouListView(options: {
     }
 
     async function update_match_kyous_for_image(): Promise<void> {
-        match_kyous_for_image.value.splice(0)
         const match_kyous_for_image_result = new Array<Array<Kyou>>()
         for (let i = 0; props.matched_kyous && i < props.matched_kyous.length;) {
             const kyou_row_list = new Array<Kyou>()
@@ -87,8 +85,19 @@ export function useKyouListView(options: {
             }
             match_kyous_for_image_result.push(kyou_row_list)
         }
+        // 一度空にするとv-virtual-scrollのコンテンツ高さが0になりscrollTopがリセットされるため、
+        // 空にせず変更のあった行だけ置き換える
         for (let i = 0; i < match_kyous_for_image_result.length; i++) {
-            match_kyous_for_image.value.push(match_kyous_for_image_result[i])
+            const current_row = match_kyous_for_image.value[i]
+            const new_row = match_kyous_for_image_result[i]
+            const is_same_row = current_row && current_row.length === new_row.length
+                && current_row.every((kyou, j) => kyou === new_row[j])
+            if (!is_same_row) {
+                match_kyous_for_image.value[i] = new_row
+            }
+        }
+        if (match_kyous_for_image.value.length > match_kyous_for_image_result.length) {
+            match_kyous_for_image.value.splice(match_kyous_for_image_result.length)
         }
     }
 
