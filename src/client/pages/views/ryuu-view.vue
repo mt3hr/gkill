@@ -116,6 +116,7 @@ const {
     position: relative;
     width: -webkit-fill-available;
     min-width: 400px;
-    min-height: 20vh;
+    /* 編集時(ApplicationConfigからの表示)は最小高さを確保する */
+    min-height: v-bind('editable ? "500px" : "20vh"');
 }
 </style>
