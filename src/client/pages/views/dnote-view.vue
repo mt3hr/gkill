@@ -1,5 +1,5 @@
 <template>
-    <v-card class="dnote_view" :class="{ fill_height_mode: fill_height }">
+    <v-card class="dnote_view" :class="{ fill_height_mode: fill_height }" variant="flat">
         <v-overlay v-model="is_loading" :content-class="'dnote_progress_overlay'" class="align-center justify-center"
             contained persistent>
             <v-progress-circular indeterminate color="primary" class="align-center justify-center" />
@@ -21,10 +21,11 @@
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
                 <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE')
-                }}</div>
+                    }}</div>
             </div>
         </v-overlay>
-        <v-tabs v-if="dnote_definitions.length > 1 || editable" v-model="current_definition_index" show-arrows :center-active="false">
+        <v-tabs v-if="dnote_definitions.length > 1 || editable" v-model="current_definition_index" show-arrows
+            :center-active="false">
             <v-tab v-for="(def, i) in dnote_definitions" :key="i" :value="i">
                 {{ def.name }}
             </v-tab>
@@ -35,7 +36,8 @@
                 </template>
             </v-tooltip>
         </v-tabs>
-        <v-row v-if="editable && dnote_definitions.length > 0" class="pa-2 ma-0" align="center">
+        <v-row v-if="editable && dnote_definitions.length > 0" class="pa-2 ma-0" align="center"
+            style="max-height: fit-content">
             <v-col class="pa-0 ma-0">
                 <v-text-field v-model="dnote_definitions[current_definition_index].name"
                     :label="i18n.global.t('DNOTE_DEFINITION_NAME_LABEL')" density="compact" hide-details />
@@ -107,16 +109,19 @@
                 </v-list>
             </v-menu>
         </v-avatar>
-        <v-row v-if="editable" class="pa-0 ma-0">
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark @click="apply" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
-            </v-col>
-            <v-spacer />
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                }}</v-btn>
-            </v-col>
-        </v-row>
+        <v-card-action v-if="editable" class="dnote_actions">
+            <v-row class="pa-0 ma-0">
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn dark @click="apply" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
+                </v-col>
+                <v-spacer />
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
+                        i18n.global.t("CANCEL_TITLE")
+                        }}</v-btn>
+                </v-col>
+            </v-row>
+        </v-card-action>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
             v-on="errorsMessagesRelayHandlers"
             @requested_add_dnote_list_query="(query: DnoteListQuery) => onRequestedAddDnoteListQuery(query)"
@@ -297,5 +302,17 @@ defineExpose({ reload, abort, set_loading })
 
 .overlay_message {
     text-align: center;
+}
+
+/* 編集時(ダイアログ表示)はボタン行をダイアログ下端に張り付ける */
+.dnote_actions {
+    display: block;
+    flex: 0 0 auto;
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background-color: rgb(var(--v-theme-surface));
+    padding: 8px;
 }
 </style>
