@@ -4,7 +4,7 @@
             {{ i18n.global.t("DELETE_DNOTE_TREND_GRAPH_TITLE") }}
         </v-card-title>
         {{ dnote_trend_graph_query.title }}
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="emits('requested_delete_dnote_trend_graph', dnote_trend_graph_query.id)">{{

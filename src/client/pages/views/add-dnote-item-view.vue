@@ -6,13 +6,13 @@
         <v-select v-model="aggregate_target" :items="aggregate_targets" item-title="label" item-value="value"
             :label="i18n.global.t('DNOTE_AGGREGATE_TARGET')"></v-select>
         <PredicateGroup v-model="root_predicate" :is_root="true" />
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()">{{ i18n.global.t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="() => save()">{{ i18n.global.t("SAVE_TITLE") }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()">{{ i18n.global.t("SAVE_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset()">{{ i18n.global.t("RESET_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>

@@ -41,7 +41,7 @@
             </table>
         </v-card>
         <v-card-action>
-            <v-row class="pa-0 ma-0">
+            <v-row class="pa-0 ma-0 gkill-dialog-actions">
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{

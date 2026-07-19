@@ -86,14 +86,14 @@
           </v-alert>
 
           <!-- Actions -->
-          <v-card-actions class="pt-0">
-            <v-spacer />
-            <v-btn @click="hide">{{ i18n.global.t('CLOSE_TITLE') }}</v-btn>
+          <v-card-actions class="pt-0 flex-row-reverse gkill-dialog-actions">
             <v-btn ref="save_btn" color="primary" variant="flat"
               :disabled="!clipboard_blob || is_loading"
               @click="save_or_confirm" @keydown.enter.prevent="save_or_confirm">
               {{ i18n.global.t('SAVE_TITLE') }}
             </v-btn>
+            <v-btn @click="hide">{{ i18n.global.t('CLOSE_TITLE') }}</v-btn>
+            <v-spacer />
           </v-card-actions>
 
           <!-- Shortcut hint -->

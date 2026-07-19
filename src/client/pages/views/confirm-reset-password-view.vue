@@ -5,7 +5,7 @@
         </v-card-title>
         <div>{{ i18n.global.t("RESET_PASSWORD_MESSAGE") }}</div>
         <h1>{{ account.user_id }}</h1>
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="reset_password">{{ i18n.global.t("RESET_PASSWORD_TITLE") }}</v-btn>
             </v-col>

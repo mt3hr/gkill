@@ -500,6 +500,20 @@ div.v-sheet.v-picker.v-date-picker > .v-picker__header-wrapper {
   min-width: 0;
 }
 
+/* 日時入力(v-text-field, 56px)の隣に置くボタン群を入力の縦中央軸((56px-36px)/2=10px)に揃える */
+.gkill-field-side-buttons {
+  vertical-align: top;
+  padding-top: 10px;
+}
+
+/* ダイアログ下部のアクション行(保存/適用/キャンセル等)をスクロールしても見えるよう下部に固定する */
+.gkill-dialog-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background-color: rgb(var(--v-theme-surface));
+}
+
 .gkill-floating-dialog__resize-handle {
   position: absolute;
   right: 0;

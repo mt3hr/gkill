@@ -1,6 +1,6 @@
 <template>
     <div style="position: relative; min-height: 100px; flex: 1 1 auto; display: flex; flex-direction: column;">
-        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
+        <v-overlay v-if="is_loading" :model-value="true" class="align-center justify-center" contained persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
     <v-card v-if="cloned_kyou.typed_timeis" class="pa-2" variant="flat">
@@ -50,7 +50,7 @@
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <table class="pt-2">
+                <table class="gkill-field-side-buttons">
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="reset_start_date_time()"
@@ -98,7 +98,7 @@
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <table class="pt-2">
+                <table class="gkill-field-side-buttons">
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="reset_end_date_time()"
@@ -119,16 +119,16 @@
                 </table>
             </v-col>
         </v-row>
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
-                    i18n.global.t("RESET_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
+                    i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
-                    i18n.global.t("SAVE_TITLE")
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
+                    i18n.global.t("RESET_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>

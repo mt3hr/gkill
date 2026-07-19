@@ -18,7 +18,7 @@
                     class="plugin-config-iframe"
                 />
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions class="gkill-dialog-actions">
                 <v-spacer />
                 <v-btn @click="show = false">{{ i18n.global.t('CLOSE_TITLE') }}</v-btn>
             </v-card-actions>

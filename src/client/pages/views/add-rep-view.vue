@@ -15,7 +15,7 @@
         <v-select v-model="type" :items="rep_types" :label="i18n.global.t('REP_TYPE_TITLE')" />
         <v-text-field v-model="file" :label="i18n.global.t('FILE_PATH_TITLE')" />
         <v-card-action>
-            <v-row class="pa-0 ma-0">
+            <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="add_rep()" color="primary">{{ i18n.global.t("ADD_TITLE") }}</v-btn>
                 </v-col>

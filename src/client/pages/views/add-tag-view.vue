@@ -14,7 +14,7 @@
         </v-card-title>
         <v-text-field v-model="tag_name" :label="i18n.global.t('TAG_TITLE')" autofocus
             :readonly="is_requested_submit" :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]" />
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
@@ -70,15 +70,15 @@
                             </v-list-item>
                         </v-list>
                     </v-card-text>
-                    <v-row class="pa-0 ma-0">
-                        <v-spacer />
-                        <v-col cols="auto" class="pa-0 ma-0">
-                            <v-btn @click="cancel_save()">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
-                        </v-col>
+                    <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                         <v-col cols="auto" class="pa-0 ma-0">
                             <v-btn dark color="primary" @click="confirm_save()">{{ i18n.global.t("SAVE_TITLE")
                                 }}</v-btn>
                         </v-col>
+                        <v-col cols="auto" class="pa-0 ma-0">
+                            <v-btn @click="cancel_save()">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
+                        </v-col>
+                        <v-spacer />
                     </v-row>
                 </v-card>
             </div>

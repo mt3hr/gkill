@@ -4,7 +4,7 @@
             {{ i18n.global.t("DELETE_TAG_STRUCT_TITLE") }}
         </v-card-title>
         {{ tag_struct.tag_name }}
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" v-if="tag_struct && tag_struct.id"

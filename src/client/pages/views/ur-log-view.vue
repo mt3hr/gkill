@@ -9,7 +9,7 @@
         </table>
         <table>
             <tr>
-                <td>
+                <td class="urlog_favicon_cell">
                     <img v-if="kyou.typed_urlog" class="urlog_favicon"
                         :src="kyou.typed_urlog.favicon_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.favicon_image)" />
                 </td>
@@ -22,7 +22,7 @@
         </table>
         <table>
             <tr>
-                <td>
+                <td class="urlog_thumbnail_cell">
                     <img v-if="kyou.typed_urlog" class="urlog_thumbnail"
                         :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.thumbnail_image)" />
                 </td>
@@ -82,10 +82,13 @@ defineExpose({ show_context_menu })
 </script>
 
 <style lang="css" scoped>
+table {
+    width: 100%;
+    table-layout: fixed;
+}
+
 .urlog_title {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
 }
 
 .urlog_favicon {
@@ -109,10 +112,16 @@ defineExpose({ show_context_menu })
 }
 
 .urlog_url {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
     display: block;
+}
+
+.urlog_favicon_cell {
+    width: 28px;
+}
+
+.urlog_thumbnail_cell {
+    width: 83px;
 }
 
 .urlog_description {
