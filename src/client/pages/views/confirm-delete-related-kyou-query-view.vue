@@ -4,7 +4,7 @@
             {{ i18n.global.t("DELETE_RELATED_KYOU_QUERY_TITLE") }}
         </v-card-title>
         {{ related_kyou_query.title }}
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary"

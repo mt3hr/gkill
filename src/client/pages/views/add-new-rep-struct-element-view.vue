@@ -7,7 +7,7 @@
         <v-checkbox v-model="check_when_inited" hide-detail :label="i18n.global.t('IS_FORCE_HIDE_TITLE')" />
         <v-checkbox v-model="ignore_check_rep_rykv" hide-detail :label="i18n.global.t('IGNORE_CHECK_REP_RYKV_TITLE')" />
         <v-card-action>
-            <v-row class="pa-0 ma-0">
+            <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="emits_rep_name">{{ i18n.global.t("ADD_TITLE") }}</v-btn>
                 </v-col>

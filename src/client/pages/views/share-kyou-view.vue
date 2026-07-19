@@ -12,7 +12,7 @@
         <v-checkbox v-model="is_share_with_texts" :label="i18n.global.t('SHARE_KYOU_SHARE_WITH_TEXTS')" />
         <v-checkbox v-model="is_share_with_timeiss" :label="i18n.global.t('SHARE_KYOU_SHARE_WITH_TIMEISS')" />
         <v-checkbox v-model="is_share_with_locations" :label="i18n.global.t('SHARE_KYOU_SHARE_WITH_LOCATIONS')" />
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col class="pa-0 ma-0" cols="auto">
                 <v-btn dark color="primary" @click="share()">{{ i18n.global.t("OK_TITLE") }}</v-btn>

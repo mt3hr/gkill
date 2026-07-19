@@ -7,7 +7,7 @@
         <v-checkbox v-model="check_when_inited" hide-detail :label="i18n.global.t('CHECK_WHEN_INITED_TITLE')" />
         <v-checkbox v-model="is_force_hide" hide-detail :label="i18n.global.t('IS_FORCE_HIDE_TITLE')" />
         <v-card-action>
-            <v-row class="pa-0 ma-0">
+            <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="apply" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
                 </v-col>

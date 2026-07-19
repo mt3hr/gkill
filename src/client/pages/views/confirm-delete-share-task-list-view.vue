@@ -5,7 +5,7 @@
         </v-card-title>
         <div>{{ i18n.global.t("CONFIRM_DELETE_MESSAGE") }}</div>
         <div>{{ share_kyou_list_info.share_title }}</div>
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary"

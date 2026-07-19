@@ -1,6 +1,6 @@
 <template>
     <div style="position: relative; min-height: 100px; flex: 1 1 auto; display: flex; flex-direction: column;">
-        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
+        <v-overlay v-if="is_loading" :model-value="true" class="align-center justify-center" contained persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
     <v-card class="pa-2" variant="flat">
@@ -46,7 +46,7 @@
                                     @update:minute="show_notification_time_menu = false" />
                             </v-menu>
                         </td>
-                        <td>
+                        <td class="gkill-field-side-buttons">
                             <v-btn dark color="secondary" @click="reset_notification_date_time()"
                                 :disabled="is_busy">{{
                                     i18n.global.t("RESET_TITLE") }}</v-btn>
@@ -55,16 +55,16 @@
                 </table>
             </v-col>
         </v-row>
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
-                    i18n.global.t("RESET_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
+                    i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
-                    i18n.global.t("SAVE_TITLE")
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
+                    i18n.global.t("RESET_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>

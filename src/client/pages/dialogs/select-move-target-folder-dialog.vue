@@ -30,7 +30,7 @@
               </v-list-item-title>
             </v-list-item>
           </v-list>
-          <v-card-actions>
+          <v-card-actions class="gkill-dialog-actions">
             <v-btn color="secondary" @click="hide">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
           </v-card-actions>
         </v-card>

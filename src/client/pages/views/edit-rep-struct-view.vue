@@ -18,7 +18,7 @@
                         i18n.global.t("ADD_REP_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
-            <v-row class="pa-0 ma-0">
+            <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="apply" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
                 </v-col>
