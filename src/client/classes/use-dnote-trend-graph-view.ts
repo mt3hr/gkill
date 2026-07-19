@@ -149,13 +149,42 @@ export function useDnoteTrendGraphView(options: {
     }
 
     // ── Template event handlers ──
-    // タッチ端末で合成mousemoveが抑制されツールチップが出ないことがある(VSparklineはマウスイベントのみ対応)ため、
-    // タップ由来のclickを合成mousemoveへ変換してVuetify内部のツールチップ表示を確実に起動する
-    function onGraphClick(e: MouseEvent): void {
-        const root = e.currentTarget as HTMLElement | null
+    // VSparklineはマウスイベントのみ対応で、タッチ端末では合成mousemoveが抑制されることがある。
+    // さらに表示中のVTooltipはoutside-click(2回目以降のタップ)で内部状態だけが閉じ、
+    // propのtooltipVisibleがtrueのまま食い違うと以降再表示されない。
+    // そのためmouseleave→mousemoveの順で疑似イベントを送り、閉→開のサイクルを強制して毎回確実に表示する
+    function dispatch_tooltip_cycle(root: HTMLElement | null, clientX: number, clientY: number): void {
         const svg = root?.querySelector('svg')
         if (!svg) return
-        svg.dispatchEvent(new MouseEvent('mousemove', { clientX: e.clientX, clientY: e.clientY }))
+        svg.dispatchEvent(new MouseEvent('mouseleave'))
+        svg.dispatchEvent(new MouseEvent('mousemove', { clientX, clientY }))
+    }
+
+    const touch_start_point = { x: 0, y: 0, valid: false }
+
+    function onGraphTouchstart(e: TouchEvent): void {
+        if (e.touches.length !== 1) {
+            touch_start_point.valid = false
+            return
+        }
+        touch_start_point.x = e.touches[0].clientX
+        touch_start_point.y = e.touches[0].clientY
+        touch_start_point.valid = true
+    }
+
+    function onGraphTouchend(e: TouchEvent): void {
+        if (!touch_start_point.valid || e.changedTouches.length !== 1) return
+        touch_start_point.valid = false
+        const touch = e.changedTouches[0]
+        // 指が動いていたらスクロール等の操作なので何もしない
+        if (Math.hypot(touch.clientX - touch_start_point.x, touch.clientY - touch_start_point.y) > 10) return
+        // 合成マウスイベント(click等)による二重処理を防ぐ
+        e.preventDefault()
+        dispatch_tooltip_cycle(e.currentTarget as HTMLElement | null, touch.clientX, touch.clientY)
+    }
+
+    function onGraphClick(e: MouseEvent): void {
+        dispatch_tooltip_cycle(e.currentTarget as HTMLElement | null, e.clientX, e.clientY)
     }
 
     function onContextmenu(e: MouseEvent): void {
@@ -220,6 +249,8 @@ export function useDnoteTrendGraphView(options: {
         drop,
 
         // Template event handlers
+        onGraphTouchstart,
+        onGraphTouchend,
         onGraphClick,
         onContextmenu,
         onRequestedDeleteDnoteTrendGraph,

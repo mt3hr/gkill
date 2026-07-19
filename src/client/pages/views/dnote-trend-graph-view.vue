@@ -1,6 +1,6 @@
 <template>
   <div class="dnote_trend_graph_view_root" @dragover="dragover" @drop="drop" @click="onGraphClick"
-    @contextmenu.prevent.stop="onContextmenu">
+    @touchstart="onGraphTouchstart" @touchend="onGraphTouchend" @contextmenu.prevent.stop="onContextmenu">
     <!-- ドラッグはタイトルをハンドルにする（スクロール操作と干渉しにくい） -->
     <h2 class="dnote_trend_graph_title" :draggable="editable" :class="{ draggable: editable }"
       @dragstart="drag_start">
@@ -70,6 +70,8 @@ const {
   drop,
 
   // Template event handlers
+  onGraphTouchstart,
+  onGraphTouchend,
   onGraphClick,
   onContextmenu,
 
