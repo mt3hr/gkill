@@ -43,13 +43,13 @@
               </v-btn>
             </v-col>
           </v-row>
-          <v-row class="pa-0 ma-0 pt-2">
+          <v-row class="pa-0 ma-0 pt-2 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
-              <v-btn color="secondary" @click="onCancel">{{ i18n.global.t('CANCEL_TITLE') }}</v-btn>
+              <v-btn color="primary" @click="onSave">{{ i18n.global.t('SAVE_TITLE') }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-              <v-btn color="primary" @click="onSave">{{ i18n.global.t('SAVE_TITLE') }}</v-btn>
+              <v-btn color="secondary" @click="onCancel">{{ i18n.global.t('CANCEL_TITLE') }}</v-btn>
             </v-col>
           </v-row>
         </v-card>

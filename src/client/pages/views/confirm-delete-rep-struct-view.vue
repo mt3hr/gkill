@@ -4,7 +4,7 @@
             {{ i18n.global.t("DELETE_REP_STRUCT_TITLE") }}
         </v-card-title>
         {{ rep_struct.rep_name }}
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="emits('requested_delete_rep', rep_struct.id)">{{ i18n.global.t("DELETE_TITLE")

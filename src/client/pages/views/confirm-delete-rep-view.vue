@@ -5,7 +5,7 @@
         </v-card-title>
         <div>{{ i18n.global.t("CONFIRM_DELETE_MESSAGE") }}</div>
         <div>{{ props.repository.file }}</div>
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary"

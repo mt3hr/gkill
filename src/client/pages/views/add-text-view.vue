@@ -15,7 +15,7 @@
         <v-textarea v-model="text_value" :label="i18n.global.t('TEXT_TITLE')" autofocus
             :rules="[(v: string) => !!v || i18n.global.t('REQUIRED_FIELD_MESSAGE')]"
             :readonly="is_requested_submit" />
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{

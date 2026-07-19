@@ -10,7 +10,7 @@
         <v-text-field v-model="new_user_id" :label="i18n.global.t('USER_ID_TITLE')" />
         <v-checkbox v-model="do_not_initialize" :label="i18n.global.t('DO_INITIALIZE_ADD_ACCOUNT_MESSAGE')" />
         <v-card-action>
-            <v-row class="pa-0 ma-0">
+            <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="create_account" color="primary">{{ i18n.global.t("ADD_ACCOUNT_TITLE") }}</v-btn>
                 </v-col>

@@ -4,7 +4,7 @@
             {{ i18n.global.t("LOGOUT_TITLE") }}
         </v-card-title>
         <div>{{ i18n.global.t("CONFIRM_LOGOUT_MESSAGE") }}</div>
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="confirm_logout">{{ i18n.global.t("LOGOUT_TITLE") }}</v-btn>
             </v-col>

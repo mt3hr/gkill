@@ -200,6 +200,14 @@ defineExpose({ scroll_to, scroll_to_kyou, scroll_to_time, set_loading, get_is_lo
 .focused_list>* {
     background-color: rgb(var(--v-theme-background-focused));
 }
+
+/* リスト内ではURLogのURL・タイトルは折り返さず1行ellipsis表示にする (説明は折り返しのまま) */
+:deep(.urlog_url),
+:deep(.urlog_title) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 </style>
 <style lang="css" scoped>
 .kyou_list_view_card_wrap .kyou_list_view_card {
