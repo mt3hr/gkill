@@ -1,6 +1,6 @@
 <template>
     <div style="position: relative; min-height: 100px; flex: 1 1 auto; display: flex; flex-direction: column;">
-        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
+        <v-overlay v-if="is_loading" :model-value="true" class="align-center justify-center" contained persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
     <v-card v-if="cloned_kyou.typed_kmemo" class="pa-2" variant="flat">
@@ -16,7 +16,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="kmemo_value" label="Kmemo" autofocus :readonly="is_busy" />
+        <v-textarea v-model="kmemo_value" label="Kmemo" autofocus auto-grow :readonly="is_busy" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
@@ -49,7 +49,7 @@
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <table class="pt-2">
+                <table class="gkill-field-side-buttons">
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="reset_related_date_time()"
@@ -65,16 +65,16 @@
                 </table>
             </v-col>
         </v-row>
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
-                    i18n.global.t("RESET_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
+                    i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_busy">{{
-                    i18n.global.t("SAVE_TITLE")
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_busy">{{
+                    i18n.global.t("RESET_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>
@@ -129,3 +129,10 @@ const {
     crudRelayHandlers,
 } = useEditKmemoView({ props, emits })
 </script>
+<style lang="css" scoped>
+/* auto-growで伸びてもダイアログ(max-height: 92vh)からはみ出さないよう上限を設ける */
+:deep(.v-textarea textarea) {
+    max-height: 45vh;
+    overflow-y: auto !important;
+}
+</style>

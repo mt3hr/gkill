@@ -20,13 +20,13 @@
         </v-row>
         <v-text-field v-if="is_use_custom_find_kyou_query" type="number" v-model="find_duration_hour" min="0"
             :label="i18n.global.t('RYUU_FIND_DURATION_HOUR_TITLE')" />
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()">{{ i18n.global.t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="() => save()">{{ i18n.global.t("SAVE_TITLE") }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()">{{ i18n.global.t("SAVE_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset()">{{ i18n.global.t("RESET_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <FindQueryEditorDialog v-model="find_kyou_query" v-if="find_kyou_query" :application_config="application_config"

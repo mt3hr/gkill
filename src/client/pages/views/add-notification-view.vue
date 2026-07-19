@@ -43,7 +43,7 @@
                                     @update:minute="onCloseTimeMenu" />
                             </v-menu>
                         </td>
-                        <td>
+                        <td class="gkill-field-side-buttons">
                             <v-btn dark color="secondary" @click="reset_notification_date_time()"
                                 :disabled="is_requested_submit">{{
                                     i18n.global.t("RESET_TITLE") }}</v-btn>
@@ -52,7 +52,7 @@
                 </table>
             </v-col>
         </v-row>
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{

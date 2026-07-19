@@ -13,7 +13,7 @@
             </v-row>
         </v-card-title>
         {{ text.text }}
-        <v-row class="pa-0 ma-0">
+        <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="delete_text()">{{ i18n.global.t("DELETE_TITLE") }}</v-btn>
