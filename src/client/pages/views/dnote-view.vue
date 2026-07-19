@@ -206,6 +206,10 @@ defineExpose({ reload, abort, set_loading })
 .dnote_view {
     height: v-bind('fill_height ? app_content_height.toString().concat("px") : "auto"');
     overflow-y: v-bind('fill_height ? "hidden" : "visible"');
+    /* KyouListViewの幅(rykv-view.vueの:width="400")とあわせる */
+    min-width: 400px;
+    /* 編集時(ApplicationConfigからの表示)は最小高さを確保する */
+    min-height: v-bind('editable ? "500px" : "auto"');
 }
 
 /* fill_height_mode のときだけ flex column レイアウトを有効化 */
