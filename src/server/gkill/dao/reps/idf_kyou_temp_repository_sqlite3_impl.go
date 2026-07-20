@@ -603,6 +603,10 @@ func (i *idfKyouRepositoryTempSQLite3Impl) ClearVideoCache() error {
 	return nil
 }
 
+func (i *idfKyouRepositoryTempSQLite3Impl) ClearZipCache() error {
+	return nil
+}
+
 func (i *idfKyouRepositoryTempSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
 	return nil, fmt.Errorf("not implements idfKyouRepositoryTempSQLite3Impl.GetLatestDataRepositoryAddress")
 }

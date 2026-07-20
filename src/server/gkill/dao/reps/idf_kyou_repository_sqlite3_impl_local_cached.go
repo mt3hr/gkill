@@ -314,6 +314,10 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) ClearVideoCache() error {
 	return i.originalRep.ClearVideoCache()
 }
 
+func (i *idfKyouRepositorySQLite3ImplLocalCached) ClearZipCache() error {
+	return i.originalRep.ClearZipCache()
+}
+
 func (i *idfKyouRepositorySQLite3ImplLocalCached) UnWrapTyped() ([]IDFKyouRepository, error) {
 	return []IDFKyouRepository{i.originalRep}, nil
 }

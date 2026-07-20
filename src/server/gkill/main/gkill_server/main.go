@@ -40,6 +40,7 @@ func init() {
 	ServerCmd.AddCommand(common.GenerateVideoCacheCmd)
 	ServerCmd.AddCommand(common.OptimizeCmd)
 	ServerCmd.AddCommand(common.UpdateCacheCmd)
+	ServerCmd.AddCommand(common.ClearCacheCmd)
 }
 
 var (

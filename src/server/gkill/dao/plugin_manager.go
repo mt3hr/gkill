@@ -60,7 +60,7 @@ func newPluginManager(userID string) *PluginManager {
 
 // DiscoverPlugins は pluginsDir 以下を走査してプラグインを発見・登録する。
 // 配置パターン: {pluginsDir}/{pluginName}/ に manifest.json・実行ファイル・データを置く。
-// 例: plugins/testuser/gkill_claude/manifest.json, gkill_claude.exe, conversations.json
+// 例: plugins/mt3hr/gkill_claude/manifest.json, gkill_claude.exe, conversations.json
 // すでに登録済みのプラグインはスキップする（重複防止）。
 // 発見失敗は警告ログに記録し、gkill本体の起動を止めない。
 func (pm *PluginManager) DiscoverPlugins(ctx context.Context) error {

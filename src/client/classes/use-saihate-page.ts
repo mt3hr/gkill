@@ -297,7 +297,7 @@ export function useSaihatePage() {
         throw new SyntaxError(`Boolean expected, got ${JSON.stringify(value)}`)
     }
 
-    async function reload_repositories(clear_thumb_cache: boolean): Promise<void> {
+    async function reload_repositories(clear_file_caches: boolean): Promise<void> {
         const requested_reload_message = new GkillMessage()
         requested_reload_message.message = i18n.global.t("REQUESTED_RELOAD_TITLE")
         requested_reload_message.message_code = GkillMessageCodes.requested_reload
@@ -307,7 +307,9 @@ export function useSaihatePage() {
         is_loading.value = true
 
         const req = new ReloadRepositoriesRequest()
-        req.clear_thumb_cache = clear_thumb_cache
+        req.clear_thumb_cache = clear_file_caches
+        req.clear_video_cache = clear_file_caches
+        req.clear_zip_cache = clear_file_caches
         const res = await gkill_api.value.reload_repositories(req)
 
         await delete_gkill_config_cache()
@@ -344,7 +346,7 @@ export function useSaihatePage() {
             write_messages(res.messages)
         }
         await sleep(1500)
-        gkill_api.value.set_session_id("")
+        await gkill_api.value.clear_browser_datas()
         await resetDialogHistory()
         router.replace("/")
     }

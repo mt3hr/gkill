@@ -44,6 +44,7 @@ func init() {
 	AppCmd.AddCommand(common.GenerateVideoCacheCmd)
 	AppCmd.AddCommand(common.OptimizeCmd)
 	AppCmd.AddCommand(common.UpdateCacheCmd)
+	AppCmd.AddCommand(common.ClearCacheCmd)
 }
 
 var (

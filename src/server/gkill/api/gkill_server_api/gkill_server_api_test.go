@@ -8744,6 +8744,37 @@ func TestHandleReloadRepositories_Success(t *testing.T) {
 	}
 }
 
+func TestHandleReloadRepositories_ClearFileCaches(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	// clear_thumb_cache / clear_video_cache / clear_zip_cache をすべて立てても
+	// エラーなく再読み込みが完了すること（⑤⑥⑦削除パスの疎通確認）
+	req := &req_res.ReloadRepositoriesRequest{
+		SessionID:       sessionID,
+		LocaleName:      "en",
+		ClearThumbCache: true,
+		ClearVideoCache: true,
+		ClearZipCache:   true,
+	}
+	resp := postJSON(t, tsURL+"/api/reload_repositories", req)
+	defer resp.Body.Close()
+
+	var result struct {
+		Messages []*message.GkillMessage `json:"messages"`
+		Errors   []*message.GkillError   `json:"errors"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode reload repositories response: %v", err)
+	}
+	if len(result.Errors) > 0 {
+		t.Errorf("unexpected errors: %+v", result.Errors)
+	}
+}
+
 // --- Phase 2: GetUpdatedDatasByTime handler tests ---
 
 func TestHandleGetUpdatedDatasByTime_RequiresSession(t *testing.T) {

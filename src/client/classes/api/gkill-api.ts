@@ -2691,11 +2691,20 @@ export class GkillAPI {
                                 case "ERR000002": // AccountNotFoundError
                                 case "ERR000238": // AccountDisabledError
                                 case "ERR000373": // AccountSessionExpiredError
-                                        if (has_document) {
+                                        if (has_document && has_window) {
+                                                // リダイレクト前にブラウザ側の状態(①②・localStorage・全cookie)を掃除する。
+                                                // check_authは同期だが、window.location.replaceで即離脱するため
+                                                // 非同期のキャッシュ削除が中断されないようにawaitしてから遷移する。
+                                                void (async () => {
+                                                        try {
+                                                                await this.clear_browser_datas()
+                                                        } catch (_e) {
+                                                                // Cache API等が利用できない環境ではスキップ
+                                                        }
+                                                        window.location.replace("/")
+                                                })()
+                                        } else if (has_document) {
                                                 this.set_session_id("")
-                                        }
-                                        if (has_window) {
-                                                window.location.replace("/")
                                         }
                                         return
                         }

@@ -428,6 +428,15 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 `POST /api/update_cache`（または`gkill_server update_cache` CLIコマンド）を呼び出すと、全インメモリキャッシュを即時再構築する。サーバー再起動なしにリポジトリ変更を反映する際に使用する。
 
+#### キャッシュ削除
+
+ディスク上の派生キャッシュ（サムネイル・互換動画・ZIP展開）を削除する手段は2つある：
+
+- **CLI**: `gkill_server clear_cache <thumb|video|zip|all> <all|user_id...>` — 対象は必須指定（他サブコマンドと同様）。`all` を渡すとユーザーコンテキスト不要で `caches/thumb_cache` / `caches/video_cache` / `caches/zip_cache` ディレクトリを丸ごと削除する（全ユーザー対象。管理者メンテ向け）。user_id を1つ以上指定すると、各ユーザーのリポジトリを読み込み（`LoadIDFRepOnly`）、そのユーザーのIDFリポジトリ分のキャッシュのみ `IDFKyouReps.Clear{Thumb,Video,Zip}Cache()` で削除する。例: `clear_cache all mt3hr`（mt3hrの全種）、`clear_cache zip all`（全ユーザーのZIP）。
+- **画面のリロード（再読込）ボタン長押し**: `POST /api/reload_repositories` に `clear_thumb_cache` / `clear_video_cache` / `clear_zip_cache` フラグを立てて送信し、**ログイン中ユーザーのリポジトリ分のみ** サムネ・動画・ZIPキャッシュを削除してからリポジトリを再構築する（クリックはこれらフラグを立てず、キャッシュ削除は行わない）。
+
+いずれも消したキャッシュは次回アクセス時に遅延再生成される。
+
 ---
 
 ## 10. サーバー管理
@@ -452,6 +461,7 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 | `gkill_server generate_video_cache --user ユーザーID` | 動画キャッシュ生成 |
 | `gkill_server optimize --user ユーザーID` | データベース最適化（VACUUM） |
 | `gkill_server update_cache` | HTTP API経由でキャッシュ更新 |
+| `gkill_server clear_cache <thumb\|video\|zip\|all> <all\|user_id...>` | ディスク上の派生キャッシュを削除。対象は必須で、`all`で全体、user_id指定で該当ユーザーのリポジトリ分のみ |
 
 ## 11. MCP HTTPサーバーのデプロイ
 
