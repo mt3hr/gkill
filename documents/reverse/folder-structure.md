@@ -155,7 +155,8 @@ src/android/
 ├── app/
 │   └── src/main/
 │       ├── java/.../MainActivity.java   # WebView + gkill_server起動
-│       ├── assets/                      # gkill_serverバイナリ配置先
+│       ├── jniLibs/arm64-v8a/          # gkill_serverバイナリ配置先
+│       │   └── libgkill_server.so       #   （nativeLibraryDirから実行するため）
 │       └── AndroidManifest.xml
 ├── build.gradle
 ├── gradlew / gradlew.bat               # Gradleラッパー（Wear OSからコピーされる）
@@ -163,7 +164,7 @@ src/android/
     └── gradle-wrapper.jar
 ```
 
-- compileSdk=35, targetSdk=28, minSdk=26
+- compileSdk=36, targetSdk=36, minSdk=26
 
 ### src/wear_os/ — Wear OSアプリ
 
