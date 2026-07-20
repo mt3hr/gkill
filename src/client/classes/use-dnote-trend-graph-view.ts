@@ -49,9 +49,26 @@ export function useDnoteTrendGraphView(options: {
     })
 
     // 件数・合計系は0起点、平均系はオートスケール
-    const sparkline_min = computed(() => {
+    const is_zero_based = computed(() => {
         const type = model_value.value?.aggregate_target.to_json().type
-        return (typeof type === 'string' && (type.startsWith('AgregateCount') || type.startsWith('AgregateSum'))) ? 0 : undefined
+        return typeof type === 'string' && (type.startsWith('AgregateCount') || type.startsWith('AgregateSum'))
+    })
+
+    // 0起点でも、出費のように値が負になりうる系列では0を下限にすると
+    // VSparkline内部のスケールが反転・発散して描画座標が領域外に飛ぶ。
+    // 0は「必ず含める」だけにとどめ、実データの範囲は常に包含させる
+    const sparkline_min = computed(() => {
+        if (!is_zero_based.value) return undefined
+        const values = sparkline_values.value
+        if (values.length === 0) return 0
+        return Math.min(0, ...values)
+    })
+
+    const sparkline_max = computed(() => {
+        if (!is_zero_based.value) return undefined
+        const values = sparkline_values.value
+        if (values.length === 0) return 0
+        return Math.max(0, ...values)
     })
 
     const sparkline_tooltip = computed(() => ({
@@ -236,6 +253,7 @@ export function useDnoteTrendGraphView(options: {
         sparkline_values,
         sparkline_labels,
         sparkline_min,
+        sparkline_max,
         sparkline_tooltip,
         is_all_empty,
 
