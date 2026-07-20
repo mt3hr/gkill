@@ -12,6 +12,7 @@ export function createMockGkillAPI() {
     // Auth
     login: vi.fn().mockResolvedValue({ session_id: 'mock-session', messages: [], errors: [] }),
     logout: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    clear_browser_datas: vi.fn().mockResolvedValue(undefined),
     reset_password: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
     set_new_password: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
 
