@@ -6,4 +6,8 @@ type ReloadRepositoriesRequest struct {
 	LocaleName string `json:"locale_name"`
 
 	ClearThumbCache bool `json:"clear_thumb_cache"`
+
+	ClearVideoCache bool `json:"clear_video_cache"`
+
+	ClearZipCache bool `json:"clear_zip_cache"`
 }

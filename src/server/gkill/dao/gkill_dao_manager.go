@@ -1234,6 +1234,8 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 	}
 	delete(g.gkillRepositories[userID], device)
-	delete(g.gkillRepositories, userID)
+	if len(g.gkillRepositories[userID]) == 0 {
+		delete(g.gkillRepositories, userID)
+	}
 	return true, nil
 }

@@ -2480,6 +2480,15 @@ func (i *idfKyouRepositorySQLite3Impl) ClearVideoCache() error {
 	return nil
 }
 
+func (i *idfKyouRepositorySQLite3Impl) ClearZipCache() error {
+	// zip_cacheはrepName(=filepath.Base(contentDir))でキーされる
+	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
+	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "zip_cache", filepath.Base(dir)))
+
+	os.RemoveAll(cacheDir)
+	return nil
+}
+
 func (i *idfKyouRepositorySQLite3Impl) UnWrapTyped() ([]IDFKyouRepository, error) {
 	return []IDFKyouRepository{i}, nil
 }
