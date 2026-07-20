@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.gkill_android.mobile_app.src.gkill.mt3hr.gkill"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mt3hr.gkill"
         minSdk = 26
-        targetSdk = 28
+        targetSdk = 36
         versionCode = (findProperty("versionCode") as? String)?.toIntOrNull() ?: 1
         versionName = (findProperty("versionName") as? String) ?: "1.0.0"
 
@@ -33,8 +33,12 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    lint {
-        disable += "ExpiredTargetSdkVersion"
+    packaging {
+        jniLibs {
+            // gkill_server を libgkill_server.so として同梱し、nativeLibraryDir から実行する。
+            // 圧縮同梱にしないと APK 内に据え置かれ実体ファイルが作られず、exec できない
+            useLegacyPackaging = true
+        }
     }
 }
 

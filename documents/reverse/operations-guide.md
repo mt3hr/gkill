@@ -115,11 +115,13 @@ npm run release
 
 ### 3.4 Android
 
-1. gkill_server をクロスコンパイル:
+1. gkill_server をクロスコンパイル（環境変数 `NDK` が必要）:
    ```bash
-   GOOS=linux GOARCH=arm64 go build -o gkill_server ./src/server/gkill/main/gkill_server/
+   npm run build_android_arm64
    ```
-2. バイナリを `src/android/app/src/main/assets/gkill_server` に配置
+2. バイナリを `src/android/app/src/main/jniLibs/arm64-v8a/libgkill_server.so` に配置
+   （`npm run copy_android_release`。targetSdk 29以降はアプリのデータディレクトリ配下を
+   実行できないため、nativeLibraryDir から実行できるよう `lib*.so` 名で jniLibs に置く）
 3. APKビルド:
    ```bash
    cd src/android

@@ -16,6 +16,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import java.io.File
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -33,25 +35,19 @@ class MainActivity : AppCompatActivity() {
         private const val GKILL_HOME = "/sdcard/gkill"
     }
 
-    private fun copyServerBinary(): File {
-        val outputFile = File(filesDir, "gkill_server")
-
-        // バージョン更新時にバイナリを上書きするため、毎回コピーする
-        assets.open("gkill_server").use { inStream ->
-            outputFile.outputStream().use { outStream ->
-                inStream.copyTo(outStream)
-            }
-        }
-        outputFile.setReadable(true, true)
-        outputFile.setExecutable(true, true)
-
-        return outputFile
-    }
+    /**
+     * gkill_server は jniLibs に libgkill_server.so として同梱し、
+     * nativeLibraryDir から直接実行する。
+     * targetSdk 29以降、アプリのデータディレクトリ配下のファイルは
+     * W^X 制約により execve() できないため、実行可能な nativeLibraryDir を使う。
+     */
+    private fun serverBinary(): File =
+        File(applicationInfo.nativeLibraryDir, "libgkill_server.so")
 
     private fun startGkillServer() {
         Thread {
             try {
-                val gkillBinary = copyServerBinary()
+                val gkillBinary = serverBinary()
 
                 Log.i("gkill", "バイナリパス: ${gkillBinary.absolutePath}")
                 Log.i("gkill", "バイナリサイズ: ${gkillBinary.length()} bytes")
@@ -113,6 +109,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // targetSdk 35以降は edge-to-edge が強制されるため、
+        // システムバーぶんの余白を自前で確保して従来の見た目を維持する
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         val webView = findViewById<WebView>(R.id.webview)
         webView.visibility = View.GONE
