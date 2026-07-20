@@ -23,8 +23,8 @@ android/
     └── src/
         ├── main/
         │   ├── AndroidManifest.xml
-        │   ├── assets/
-        │   │   └── gkill_server          # gkill_server バイナリ（~45MB）
+        │   ├── jniLibs/arm64-v8a/
+        │   │   └── libgkill_server.so     # gkill_server バイナリ（~58MB）
         │   ├── ic_launcher-playstore.png  # Play Store 用アイコン
         │   ├── java/.../MainActivity.kt   # メインアクティビティ
         │   └── res/                       # Android リソース
@@ -39,7 +39,8 @@ android/
 パッケージ: `com.gkill_android.mobile_app.src.gkill.mt3hr.gkill`
 
 唯一のソースファイル。以下の処理を行う:
-1. assets から gkill_server バイナリを内部ストレージにコピー
+1. `nativeLibraryDir/libgkill_server.so` を起動（targetSdk 29以降、アプリのデータ
+   ディレクトリ配下は W^X 制約で実行できないため、jniLibs 経由で配置している）
 2. gkill_server プロセスを起動
 3. WebView で `http://localhost:9999` を表示
 
@@ -90,14 +91,17 @@ cd src/android
 
 **前提条件:**
 - Android SDK
-- gkill_server バイナリを `app/src/main/assets/gkill_server` に配置
+- gkill_server バイナリを `app/src/main/jniLibs/arm64-v8a/libgkill_server.so` に配置
 
 ## 開発ガイドライン
 
 ### gkill_server バイナリの更新
 
-1. Go バックエンドをクロスコンパイル（`GOOS=linux GOARCH=arm64`）
-2. 生成されたバイナリを `app/src/main/assets/gkill_server` に配置
+1. Go バックエンドをクロスコンパイル（`npm run build_android_arm64`。
+   `CGO_ENABLED=1 GOOS=android GOARCH=arm64` + NDK clang を使うため、環境変数 `NDK` が必要）
+2. 生成されたバイナリを `app/src/main/jniLibs/arm64-v8a/libgkill_server.so` に配置
+   （`npm run copy_android_release` が自動で行う。`lib*.so` という名前でないと
+   nativeLibraryDir に展開されないので、リネームは必須）
 3. APK をリビルド
 
 ### パッケージ名
