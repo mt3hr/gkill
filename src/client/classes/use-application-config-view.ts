@@ -267,13 +267,13 @@ javascript: (function () {
         }
         await sleep(1500)
 
-        props.gkill_api.set_session_id("")
+        await props.gkill_api.clear_browser_datas()
 
         await resetDialogHistory()
         router.replace("/")
     }
 
-    async function reload_repositories(clear_thumb_cache: boolean): Promise<void> {
+    async function reload_repositories(clear_file_caches: boolean): Promise<void> {
         const requested_reload_message = new GkillMessage()
         requested_reload_message.message = i18n.global.t("REQUESTED_RELOAD_TITLE")
         requested_reload_message.message_code = GkillMessageCodes.requested_reload
@@ -282,7 +282,9 @@ javascript: (function () {
 
         is_loading.value = true
         const req = new ReloadRepositoriesRequest()
-        req.clear_thumb_cache = clear_thumb_cache
+        req.clear_thumb_cache = clear_file_caches
+        req.clear_video_cache = clear_file_caches
+        req.clear_zip_cache = clear_file_caches
         const res = await props.gkill_api.reload_repositories(req)
         await delete_gkill_config_cache()
         await delete_gkill_kyou_cache(null)

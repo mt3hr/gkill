@@ -1,7 +1,11 @@
 package common
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 func TestAppNameDefault(t *testing.T) {
@@ -55,5 +59,70 @@ func TestOptimizeCmdNotNil(t *testing.T) {
 func TestUpdateCacheCmdNotNil(t *testing.T) {
 	if UpdateCacheCmd == nil {
 		t.Fatal("UpdateCacheCmd should not be nil")
+	}
+}
+
+func TestClearCacheCmdNotNil(t *testing.T) {
+	if ClearCacheCmd == nil {
+		t.Fatal("ClearCacheCmd should not be nil")
+	}
+	if ClearCacheCmd.Use != "clear_cache" {
+		t.Errorf("ClearCacheCmd.Use = %q, want %q", ClearCacheCmd.Use, "clear_cache")
+	}
+}
+
+// clear_cache all はディスク上の派生キャッシュ3種を全削除する
+func TestClearCacheCmd_All_RemovesAllDirs(t *testing.T) {
+	origCacheDir := gkill_options.CacheDir
+	t.Cleanup(func() { gkill_options.CacheDir = origCacheDir })
+
+	tmpDir := t.TempDir()
+	gkill_options.CacheDir = tmpDir
+
+	cacheNames := []string{"thumb_cache", "video_cache", "zip_cache"}
+	for _, name := range cacheNames {
+		dir := filepath.Join(tmpDir, name)
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			t.Fatalf("mkdir %s: %v", dir, err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "dummy"), []byte("x"), os.ModePerm); err != nil {
+			t.Fatalf("write dummy in %s: %v", dir, err)
+		}
+	}
+
+	ClearCacheCmd.Run(ClearCacheCmd, []string{"all", "all"})
+
+	for _, name := range cacheNames {
+		dir := filepath.Join(tmpDir, name)
+		if _, err := os.Stat(dir); !os.IsNotExist(err) {
+			t.Errorf("expected %s removed, stat err = %v", dir, err)
+		}
+	}
+}
+
+// clear_cache <mode> は指定した1種のみ削除し、他は残す
+func TestClearCacheCmd_SingleMode_LeavesOthers(t *testing.T) {
+	origCacheDir := gkill_options.CacheDir
+	t.Cleanup(func() { gkill_options.CacheDir = origCacheDir })
+
+	tmpDir := t.TempDir()
+	gkill_options.CacheDir = tmpDir
+
+	cacheNames := []string{"thumb_cache", "video_cache", "zip_cache"}
+	for _, name := range cacheNames {
+		if err := os.MkdirAll(filepath.Join(tmpDir, name), os.ModePerm); err != nil {
+			t.Fatalf("mkdir %s: %v", name, err)
+		}
+	}
+
+	ClearCacheCmd.Run(ClearCacheCmd, []string{"thumb", "all"})
+
+	if _, err := os.Stat(filepath.Join(tmpDir, "thumb_cache")); !os.IsNotExist(err) {
+		t.Errorf("expected thumb_cache removed, stat err = %v", err)
+	}
+	for _, name := range []string{"video_cache", "zip_cache"} {
+		if _, err := os.Stat(filepath.Join(tmpDir, name)); err != nil {
+			t.Errorf("expected %s to remain, stat err = %v", name, err)
+		}
 	}
 }

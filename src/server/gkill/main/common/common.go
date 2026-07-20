@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -153,6 +154,75 @@ var (
 			}
 		},
 		Short: `generate_video_cache 'user_id'`,
+	}
+
+	ClearCacheCmd = &cobra.Command{
+		Use:   "clear_cache",
+		Short: `clear_cache <thumb|video|zip|all> <all|user_id...>`,
+		Run: func(cmd *cobra.Command, args []string) {
+			// 第1引数: 対象キャッシュ種別, 第2引数以降: 対象ユーザー(または all)。
+			// 他のサブコマンド(generate_thumb_cache 等)と同様、対象は必須指定とする。
+			if len(args) < 2 {
+				cmd.Usage()
+				return
+			}
+
+			mode := args[0]
+			switch mode {
+			case "thumb", "video", "zip", "all":
+				// ok
+			default:
+				cmd.Usage()
+				return
+			}
+
+			targets := args[1:]
+
+			// all を明示指定した場合: ディスク上の派生キャッシュを全ユーザー分まとめて削除する
+			if slices.Contains(targets, "all") {
+				cacheRootDir := os.ExpandEnv(gkill_options.CacheDir)
+				clearCacheDir := func(name string) {
+					target := filepath.Join(cacheRootDir, name)
+					if err := os.RemoveAll(target); err != nil {
+						err = fmt.Errorf("error at clear cache %s: %w", target, err)
+						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+						fmt.Fprintf(os.Stderr, "%s\n", err)
+						return
+					}
+					fmt.Printf("cleared cache: %s\n", target)
+				}
+				switch mode {
+				case "thumb":
+					clearCacheDir("thumb_cache")
+				case "video":
+					clearCacheDir("video_cache")
+				case "zip":
+					clearCacheDir("zip_cache")
+				case "all":
+					clearCacheDir("thumb_cache")
+					clearCacheDir("video_cache")
+					clearCacheDir("zip_cache")
+				}
+				return
+			}
+
+			// ユーザー指定: 指定ユーザーのリポジトリ分のキャッシュのみ削除する
+			gkill_options.LoadIDFRepOnly = true
+			err := InitGkillServerAPI()
+			if err != nil {
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+			}
+
+			for _, targetUserID := range targets {
+				err := ClearCache(cmd.Context(), targetUserID, mode)
+				if err != nil {
+					err = fmt.Errorf("error at clear cache user id = %s: %w", targetUserID, err)
+					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+				} else {
+					fmt.Printf("cleared cache: user id = %s mode = %s\n", targetUserID, mode)
+				}
+			}
+		},
 	}
 
 	OptimizeCmd = &cobra.Command{
@@ -422,6 +492,35 @@ func GenerateVideoCache(ctx context.Context, userID string) error {
 	if err != nil {
 		err = fmt.Errorf("error at generate thumb cache: %w", err)
 		return err
+	}
+	return nil
+}
+
+// ClearCache は指定ユーザーのIDFリポジトリ分の派生キャッシュ(thumb/video/zip)を削除する。
+// mode は thumb|video|zip|all のいずれか。
+func ClearCache(ctx context.Context, userID string, mode string) error {
+	gkillServerAPI := GetGkillServerAPI()
+	device, err := gkillServerAPI.GetDevice()
+	if err != nil {
+		return fmt.Errorf("error at get device: %w", err)
+	}
+	repositories, err := GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		return fmt.Errorf("error at get gkill repositories: %w", err)
+	}
+	switch mode {
+	case "thumb":
+		return repositories.IDFKyouReps.ClearThumbCache()
+	case "video":
+		return repositories.IDFKyouReps.ClearVideoCache()
+	case "zip":
+		return repositories.IDFKyouReps.ClearZipCache()
+	case "all":
+		return errors.Join(
+			repositories.IDFKyouReps.ClearThumbCache(),
+			repositories.IDFKyouReps.ClearVideoCache(),
+			repositories.IDFKyouReps.ClearZipCache(),
+		)
 	}
 	return nil
 }
