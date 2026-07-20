@@ -10,8 +10,9 @@
     <v-progress-linear v-if="is_loading" indeterminate color="primary" />
     <!-- width/heightはviewBox値。CSSで幅100%表示され、アスペクト比8:1が保たれる -->
     <v-sparkline v-else :type="sparkline_type" :model-value="sparkline_values" :labels="sparkline_labels"
-      :min="sparkline_min" width="800" height="100" line-width="2" padding="16" smooth smooth-mode="monotone"
-      auto-draw="once" color="primary" label-size="10" show-labels interactive :tooltip="sparkline_tooltip" />
+      :min="sparkline_min" :max="sparkline_max" width="800" height="100" line-width="2" padding="16" smooth
+      smooth-mode="monotone" auto-draw="once" color="primary" label-size="10" show-labels interactive
+      :tooltip="sparkline_tooltip" />
 
     <div v-if="!is_loading && is_all_empty" class="text-center text-grey">
       {{ i18n.global.t('NO_RESULTS_MESSAGE') }}
@@ -57,6 +58,7 @@ const {
   sparkline_values,
   sparkline_labels,
   sparkline_min,
+  sparkline_max,
   sparkline_tooltip,
   is_all_empty,
 
@@ -92,9 +94,11 @@ defineExpose({ load_trend_graph, reset })
   touch-action: manipulation;
 }
 
-/* 端のラベルがSVG境界で切れないようにする */
+/* 端のラベルがSVG境界で切れないようにする。
+   ただし縦方向は自分の領域内に収め、上下のグラフに被らないようにする */
 .dnote_trend_graph_view_root :deep(svg) {
   overflow: visible;
+  clip-path: inset(0 -100% 0 -100%);
 }
 
 .dnote_trend_graph_title {
