@@ -537,6 +537,7 @@ Vuetifyで2つのテーマを定義しています。
 | `generate_video_cache` | 動画キャッシュ生成 |
 | `optimize` | リポジトリ最適化 |
 | `update_cache` | キャッシュ更新（稼働中サーバーにHTTPリクエスト） |
+| `clear_cache` | ディスク上の派生キャッシュ削除（`<thumb\|video\|zip\|all> <all\|user_id...>`。`all`で全体、user_id指定で該当ユーザー分のみ） |
 
 ## 11. プラグインリポジトリシステム
 

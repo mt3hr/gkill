@@ -49,6 +49,8 @@ type IDFKyouRepository interface {
 
 	ClearVideoCache() error
 
+	ClearZipCache() error
+
 	UnWrapTyped() ([]IDFKyouRepository, error)
 
 	UnWrap() ([]Repository, error)

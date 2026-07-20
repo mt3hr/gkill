@@ -811,6 +811,22 @@ func (i IDFKyouRepositories) ClearVideoCache() error {
 	return err
 }
 
+func (i IDFKyouRepositories) ClearZipCache() error {
+	unwrapedReps, err := i.UnWrapTyped()
+	if err != nil {
+		err = fmt.Errorf("error at clear zip cache at idf kyou repositories: %w", err)
+		return err
+	}
+	for _, unwrapedRep := range unwrapedReps {
+		err := unwrapedRep.ClearZipCache()
+		if err != nil {
+			err = fmt.Errorf("error at clear zip cache at idf kyou repositories in rep: %w", err)
+			return err
+		}
+	}
+	return err
+}
+
 func (i IDFKyouRepositories) UnWrapTyped() ([]IDFKyouRepository, error) {
 	unwraped := []IDFKyouRepository{}
 	for _, rep := range i {

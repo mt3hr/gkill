@@ -94,6 +94,34 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		}
 	}
 
+	if request.ClearVideoCache {
+		err = repositories.IDFKyouReps.ClearVideoCache()
+		if err != nil {
+			err = fmt.Errorf("error at clear video cache: %w", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			gkillError := &message.GkillError{
+				ErrorCode:    message.RepositoriesGetError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	if request.ClearZipCache {
+		err = repositories.IDFKyouReps.ClearZipCache()
+		if err != nil {
+			err = fmt.Errorf("error at clear zip cache: %w", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			gkillError := &message.GkillError{
+				ErrorCode:    message.RepositoriesGetError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
 	_, err = g.GkillDAOManager.CloseUserRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)

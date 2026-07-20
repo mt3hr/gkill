@@ -443,7 +443,7 @@ export function useDashboardPage() {
             write_messages(res.messages)
         }
         await sleep(1500)
-        gkill_api.value.set_session_id("")
+        await gkill_api.value.clear_browser_datas()
         await resetDialogHistory()
         router.replace("/")
     }
