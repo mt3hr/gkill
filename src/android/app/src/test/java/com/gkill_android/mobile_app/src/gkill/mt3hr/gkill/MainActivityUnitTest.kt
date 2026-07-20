@@ -31,12 +31,13 @@ class MainActivityUnitTest {
 
     /**
      * The gkill_server binary name should match what is expected
-     * in the assets and internal storage.
+     * in jniLibs and the native library directory.
+     * jniLibs から実体ファイルとして展開されるのは lib*.so にマッチする名前のみ。
      */
     @Test
     fun serverBinaryName_isGkillServer() {
-        val binaryName = "gkill_server"
-        assertEquals("gkill_server", binaryName)
+        val binaryName = "libgkill_server.so"
+        assertEquals("libgkill_server.so", binaryName)
     }
 
     /**
