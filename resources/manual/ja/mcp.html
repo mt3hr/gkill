@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,29 +30,31 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>AI連携</span></nav>
   <h1>AI連携</h1>
   <p>Claude などの AI アシスタントと gkill を連携することで、会話形式でライフログを検索・追加・編集できるようになります。</p>
 
   <h2>できること</h2>
   <table>
-    <tr><th>操作</th><th>例</th></tr>
+    <caption class="sr-only">できること</caption>
+    <tr><th scope="col">操作</th><th scope="col">例</th></tr>
     <tr><td>記録の検索</td><td>「先週のランチ記録を見せて」「今月の支出を集計して」</td></tr>
     <tr><td>記録の追加</td><td>「今日のメモを追加して」「タスクを作って」</td></tr>
     <tr><td>記録の更新・削除</td><td>「このタスクを完了にして」</td></tr>
@@ -52,7 +64,8 @@
 
   <h2>連携の種類</h2>
   <table>
-    <tr><th>種類</th><th>説明</th></tr>
+    <caption class="sr-only">連携の種類</caption>
+    <tr><th scope="col">種類</th><th scope="col">説明</th></tr>
     <tr><td>読み取り専用</td><td>AI が記録の閲覧・検索のみ行える。記録の追加・変更はできない</td></tr>
     <tr><td>書き込み専用</td><td>AI が記録の追加・更新・削除のみ行える</td></tr>
     <tr><td>読み書き両用</td><td>AI が記録の閲覧・追加・更新・削除をすべて行える</td></tr>
@@ -61,7 +74,8 @@
   <h2>ファイルの受け渡し</h2>
   <p>ファイル記録（画像・動画・ドキュメント）をAIに見せる方法は、接続形態に応じて自動的に切り替わります。</p>
   <table>
-    <tr><th>接続形態</th><th>受け渡し方法</th></tr>
+    <caption class="sr-only">ファイルの受け渡し</caption>
+    <tr><th scope="col">接続形態</th><th scope="col">受け渡し方法</th></tr>
     <tr><td>ローカル接続（同じPC上のAI）</td><td>ファイルの保存場所（実パス）がAIに渡され、AIがファイルを直接読み取れます。</td></tr>
     <tr><td>リモート接続（インターネット経由のAI）</td><td>有効期限付きの専用URLが発行され、AIはそのURLからファイルを取得します。画像はサムネイルと原寸の両方が渡されます。gkill本体を公開する必要はありません。</td></tr>
   </table>
@@ -93,13 +107,15 @@
 
   <h2>設定方法（Claude Code）</h2>
   <p>ターミナルで以下のコマンドを実行します。</p>
-  <pre><code># 読み取り専用で追加
-npx @anthropic-ai/claude-code mcp add gkill \
-  --command npx \
-  --args "-y,gkill-mcp-server" \
+  <pre><code># 読み取り専用で追加（環境変数は -- の前、実行コマンドは -- の後ろに書きます）
+claude mcp add gkill \
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=ユーザーID \
-  --env GKILL_PASSWORD_SHA256=ハッシュ値</code></pre>
+  --env GKILL_PASSWORD_SHA256=ハッシュ値 \
+  -- npx -y gkill-mcp-server</code></pre>
+  <div class="tip">
+    <strong>注意:</strong> <code>gkill-mcp-server</code> は現時点では npm に公開されていません。公開までは、リポジトリ同梱のMCPサーバー（<code>-- node src/mcp/gkill-readwrite-server.mjs</code> など）を実行コマンドに指定してください。
+  </div>
 
   <h2>リモートアクセス（外出先から利用する場合）</h2>
   <p>gkill サーバをインターネット経由でアクセスできる状態にした上で、<code>GKILL_BASE_URL</code> にそのアドレスを指定します。セキュリティのため TLS（HTTPS）を有効化することを推奨します。</p>
@@ -114,6 +130,7 @@ npx @anthropic-ai/claude-code mcp add gkill \
     <li><a href="application-config.html">設定画面</a></li>
   </ul>
 
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

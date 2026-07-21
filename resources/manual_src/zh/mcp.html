@@ -1,0 +1,78 @@
+<!-- title: AI 集成 - 帮助 -->
+  <nav class="breadcrumb"><a href="getting-started.html">入门</a> &gt; <span>AI 集成</span></nav>
+  <h1>AI 集成</h1>
+  <p>通过将 Claude 等 AI 助手与 gkill 连接，您可以通过自然对话搜索、添加和编辑生活日志记录。</p>
+
+  <h2>可以做的事情</h2>
+  <table>
+    <tr><th>操作</th><th>示例</th></tr>
+    <tr><td>搜索记录</td><td>"显示上周的午餐笔记" / "汇总本月支出"</td></tr>
+    <tr><td>添加记录</td><td>"添加今天的备忘录" / "创建一个任务"</td></tr>
+    <tr><td>更新 / 删除记录</td><td>"将此任务标记为已完成"</td></tr>
+    <tr><td>获取 GPS / 文件</td><td>"显示今天的路线"</td></tr>
+    <tr><td>查看设置</td><td>"列出我的模板"</td></tr>
+  </table>
+
+  <h2>集成类型</h2>
+  <table>
+    <tr><th>类型</th><th>说明</th></tr>
+    <tr><td>只读</td><td>AI 只能查看和搜索记录，不能添加或修改。</td></tr>
+    <tr><td>只写</td><td>AI 只能添加、更新和删除记录。</td></tr>
+    <tr><td>读写</td><td>AI 可以查看、添加、更新和删除记录。</td></tr>
+  </table>
+
+  <h2>文件的传递</h2>
+  <p>向AI展示文件记录（图片、视频、文档）的方式会根据连接形式自动切换。</p>
+  <table>
+    <tr><th>连接形式</th><th>传递方式</th></tr>
+    <tr><td>本地连接（同一台电脑上的AI）</td><td>文件的实际路径将传递给AI，AI可以直接读取文件。</td></tr>
+    <tr><td>远程连接（通过互联网的AI）</td><td>将签发带有效期的专用URL，AI从该URL获取文件。图片会同时提供缩略图和原尺寸版本。无需公开gkill本体。</td></tr>
+  </table>
+  <div class="tip">
+    <strong>提示：</strong> 嵌入传输的大小上限（默认8MB）可通过环境变量 <code>GKILL_MCP_MAX_FILE_BYTES</code> 调整，URL的有效期（默认1小时）可通过 <code>GKILL_MCP_FILE_LINK_TTL_MS</code> 调整。
+  </div>
+
+  <h2>设置方法（Claude Desktop）</h2>
+  <p>在 Claude Desktop 配置文件（<code>claude_desktop_config.json</code>）中添加以下内容。</p>
+
+  <h3>只读集成</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "您的用户ID",
+        "GKILL_PASSWORD_SHA256": "密码的SHA256哈希值"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>提示：</strong> <code>GKILL_PASSWORD_SHA256</code> 是密码的 SHA256 哈希值。可以使用操作系统提供的工具生成。
+  </div>
+
+  <h2>设置方法（Claude Code）</h2>
+  <pre><code>claude mcp add gkill \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=您的用户ID \
+  --env GKILL_PASSWORD_SHA256=哈希值 \
+  -- npx -y gkill-mcp-server</code></pre>
+  <div class="tip">
+    <strong>注意:</strong> gkill-mcp-server 目前尚未发布到 npm。在发布之前，请将仓库自带的 MCP 服务器指定为执行命令（例如 <code>-- node src/mcp/gkill-readwrite-server.mjs</code>）。
+  </div>
+
+  <h2>远程访问</h2>
+  <p>使 gkill 服务器可通过互联网访问，并将 <code>GKILL_BASE_URL</code> 设置为其公共地址。出于安全考虑，强烈建议启用 TLS（HTTPS）。</p>
+  <div class="tip">
+    <strong>提示：</strong> TLS 设置可从<a href="server-config.html">服务器设置</a>中配置。
+  </div>
+
+  <h2>相关页面</h2>
+  <ul>
+    <li><a href="getting-started.html">入门</a></li>
+    <li><a href="server-config.html">服务器设置</a></li>
+    <li><a href="application-config.html">应用程序设置</a></li>
+  </ul>

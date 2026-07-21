@@ -1,0 +1,27 @@
+name: "Docs Verify"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-docs:
+    name: Verify documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # verify_docs.mjs は Node 標準ライブラリのみ（依存インストール不要）
+      - name: Verify docs (counts / links / paths / mermaid)
+        run: node src/tools/verify_docs.mjs

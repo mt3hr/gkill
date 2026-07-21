@@ -8,10 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -19,22 +30,23 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Gestión de Cuentas</span></nav>
   <h1>Gesti&oacute;n de cuentas</h1>
   <p>Esta pantalla gestiona las cuentas de usuario. Solo los administradores pueden acceder.</p>
@@ -45,7 +57,8 @@
   <h2>Lista de cuentas</h2>
   <p>Las cuentas registradas se muestran en una lista. Cada fila de cuenta contiene los siguientes elementos:</p>
   <table>
-    <tr><th>Elemento</th><th>Descripci&oacute;n</th></tr>
+    <caption class="sr-only">Lista de cuentas</caption>
+    <tr><th scope="col">Elemento</th><th scope="col">Descripci&oacute;n</th></tr>
     <tr><td>Casilla de activar/desactivar</td><td>Alterna el estado de la cuenta entre activada y desactivada</td></tr>
     <tr><td>ID de usuario</td><td>Muestra el ID de usuario de la cuenta</td></tr>
     <tr><td>Bot&oacute;n de asignaci&oacute;n de almacenamiento</td><td>Asigna repositorios de datos al usuario</td></tr>
@@ -56,36 +69,37 @@
   <p><strong>Cerrar</strong>: Cierra la pantalla de gesti&oacute;n de cuentas.</p>
 
   <div class="tip">
-    <strong>Consejo:</strong> La cuenta <code>admin</code> se crea automaticamente cuando el servidor se inicia por primera vez. Las cuentas agregadas desde la pantalla de gestion de cuentas son usuarios normales (sin privilegios de administrador). Las cuentas se gestionan habilitandolas/deshabilitandolas en lugar de eliminarlas.
+    <strong>Consejo:</strong> La cuenta <code>admin</code> se crea automáticamente cuando el servidor se inicia por primera vez. Las cuentas agregadas desde la pantalla de gestión de cuentas son usuarios normales (sin privilegios de administrador). Las cuentas se gestionan habilitandolas/deshabilitandolas en lugar de eliminarlas.
   </div>
 
-  <h2>Procedimiento de restablecimiento de contrasena</h2>
+  <h2>Procedimiento de restablecimiento de contraseña</h2>
   <h3>Procedimiento del administrador</h3>
   <ol>
-    <li>Abra Configuracion del servidor &gt; Gestion de cuentas.</li>
-    <li>Pulse el boton "Restablecer contrasena" del usuario correspondiente.</li>
+    <li>Abra Configuración del servidor &gt; Gestión de cuentas.</li>
+    <li>Pulse el botón "Restablecer contraseña" del usuario correspondiente.</li>
     <li>Pulse Aceptar en el dialogo de confirmacion para generar el enlace de restablecimiento.</li>
     <li>Copie el enlace y compartalo con el usuario.</li>
   </ol>
   <h3>Procedimiento del usuario</h3>
   <ol>
     <li>Abra el enlace en el navegador.</li>
-    <li>Introduzca la nueva contrasena dos veces.</li>
-    <li>Pulse el boton "Establecer".</li>
-    <li>Sera redirigido a la pantalla de inicio de sesion; inicie sesion con la nueva contrasena.</li>
+    <li>Introduzca la nueva contraseña dos veces.</li>
+    <li>Pulse el botón "Establecer".</li>
+    <li>Será redirigido a la pantalla de inicio de sesión; inicie sesión con la nueva contraseña.</li>
   </ol>
   <div class="tip">
     <strong>Consejo:</strong> El enlace de restablecimiento es de un solo uso. Si ha caducado, solicite al administrador que genere uno nuevo.
   </div>
 
   <h2>Asignacion de almacenamiento</h2>
-  <p>El boton "Asignacion de almacenamiento" le permite asignar repositorios de datos a cada usuario. Consulte <a href="server-config.html">Gestion del almacenamiento</a> en la configuracion del servidor para obtener detalles sobre como agregar y administrar repositorios.</p>
+  <p>El botón "Asignacion de almacenamiento" le permite asignar repositorios de datos a cada usuario. Consulte <a href="server-config.html">Gestión del almacenamiento</a> en la configuración del servidor para obtener detalles sobre como agregar y administrar repositorios.</p>
 
   <h2>Documentos Relacionados</h2>
   <ul>
     <li><a href="server-config.html">Configuración del Servidor</a></li>
-    <li><a href="application-config.html">Configuracion</a></li>
+    <li><a href="application-config.html">Configuración</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

@@ -1,0 +1,80 @@
+<!-- title: AI連携 - ヘルプ -->
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>AI連携</span></nav>
+  <h1>AI連携</h1>
+  <p>Claude などの AI アシスタントと gkill を連携することで、会話形式でライフログを検索・追加・編集できるようになります。</p>
+
+  <h2>できること</h2>
+  <table>
+    <tr><th>操作</th><th>例</th></tr>
+    <tr><td>記録の検索</td><td>「先週のランチ記録を見せて」「今月の支出を集計して」</td></tr>
+    <tr><td>記録の追加</td><td>「今日のメモを追加して」「タスクを作って」</td></tr>
+    <tr><td>記録の更新・削除</td><td>「このタスクを完了にして」</td></tr>
+    <tr><td>GPS・ファイルの取得</td><td>「今日の移動経路を教えて」</td></tr>
+    <tr><td>設定の確認</td><td>「テンプレート一覧を見せて」</td></tr>
+  </table>
+
+  <h2>連携の種類</h2>
+  <table>
+    <tr><th>種類</th><th>説明</th></tr>
+    <tr><td>読み取り専用</td><td>AI が記録の閲覧・検索のみ行える。記録の追加・変更はできない</td></tr>
+    <tr><td>書き込み専用</td><td>AI が記録の追加・更新・削除のみ行える</td></tr>
+    <tr><td>読み書き両用</td><td>AI が記録の閲覧・追加・更新・削除をすべて行える</td></tr>
+  </table>
+
+  <h2>ファイルの受け渡し</h2>
+  <p>ファイル記録（画像・動画・ドキュメント）をAIに見せる方法は、接続形態に応じて自動的に切り替わります。</p>
+  <table>
+    <tr><th>接続形態</th><th>受け渡し方法</th></tr>
+    <tr><td>ローカル接続（同じPC上のAI）</td><td>ファイルの保存場所（実パス）がAIに渡され、AIがファイルを直接読み取れます。</td></tr>
+    <tr><td>リモート接続（インターネット経由のAI）</td><td>有効期限付きの専用URLが発行され、AIはそのURLからファイルを取得します。画像はサムネイルと原寸の両方が渡されます。gkill本体を公開する必要はありません。</td></tr>
+  </table>
+  <div class="tip">
+    <strong>ヒント:</strong> 埋め込み転送のサイズ上限（既定8MB）は環境変数 <code>GKILL_MCP_MAX_FILE_BYTES</code>、URLの有効期限（既定1時間）は <code>GKILL_MCP_FILE_LINK_TTL_MS</code> で調整できます。
+  </div>
+
+  <h2>設定方法（Claude Desktop）</h2>
+  <p>Claude Desktop の設定ファイル（<code>claude_desktop_config.json</code>）に以下を追記します。</p>
+
+  <h3>読み取り専用で連携する場合</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "あなたのユーザーID",
+        "GKILL_PASSWORD_SHA256": "パスワードのSHA256ハッシュ"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>ヒント:</strong> <code>GKILL_PASSWORD_SHA256</code> はパスワードをSHA256でハッシュ化した値です。コマンドプロンプト（Windows）で <code>certutil -hashfile - SHA256</code> などのツールで生成できます。
+  </div>
+
+  <h2>設定方法（Claude Code）</h2>
+  <p>ターミナルで以下のコマンドを実行します。</p>
+  <pre><code># 読み取り専用で追加（環境変数は -- の前、実行コマンドは -- の後ろに書きます）
+claude mcp add gkill \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=ユーザーID \
+  --env GKILL_PASSWORD_SHA256=ハッシュ値 \
+  -- npx -y gkill-mcp-server</code></pre>
+  <div class="tip">
+    <strong>注意:</strong> <code>gkill-mcp-server</code> は現時点では npm に公開されていません。公開までは、リポジトリ同梱のMCPサーバー（<code>-- node src/mcp/gkill-readwrite-server.mjs</code> など）を実行コマンドに指定してください。
+  </div>
+
+  <h2>リモートアクセス（外出先から利用する場合）</h2>
+  <p>gkill サーバをインターネット経由でアクセスできる状態にした上で、<code>GKILL_BASE_URL</code> にそのアドレスを指定します。セキュリティのため TLS（HTTPS）を有効化することを推奨します。</p>
+  <div class="tip">
+    <strong>ヒント:</strong> TLS の設定は<a href="server-config.html">サーバ設定</a>から行えます。
+  </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="getting-started.html">はじめに</a></li>
+    <li><a href="server-config.html">サーバ設定</a></li>
+    <li><a href="application-config.html">設定画面</a></li>
+  </ul>

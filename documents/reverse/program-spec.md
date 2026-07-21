@@ -193,12 +193,12 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 86ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 88ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
 
 #### 主な責務
 
 - HTTPサーバーの起動・停止（`serve.go`, `close.go`）
-- 全85 POSTエンドポイントのハンドリング（`handle_*.go`）
+- 全85エンドポイント（84 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ
 - GkillDAOManagerの保持・提供
 - 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
@@ -259,7 +259,7 @@ type AuthContext struct {
 
 ### ルーティング定義
 
-`gkill/api/gkill_server_api/gkill_server_api_address.go`で全エンドポイントのルートが定義されます。すべて`POST /api/{endpoint}`形式です。各ルートは`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でラップされたハンドラに紐づけられます。
+`gkill/api/gkill_server_api/gkill_server_api_address.go`で全エンドポイントのルートが定義されます。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。各ルートは`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でラップされたハンドラに紐づけられます。
 
 ### レスポンス構造
 
@@ -467,13 +467,13 @@ sequenceDiagram
 
 | 技術 | バージョン | 用途 |
 |---|---|---|
-| Vue 3 | ^3.5.35 | UIフレームワーク |
-| Vuetify 4 | ^4.1.1 | UIコンポーネントライブラリ |
-| Vue Router 5 | ^5.1.0 | ルーティング |
-| vue-i18n 11 | ^11.4.5 | 国際化（7言語） |
+| Vue 3 | ^3.5.31 | UIフレームワーク |
+| Vuetify 4 | ^4.0.4 | UIコンポーネントライブラリ |
+| Vue Router 5 | ^5.0.4 | ルーティング |
+| vue-i18n 11 | ^11.3.0 | 国際化（7言語） |
 | Vite 8 | ^8.0.16 | ビルドツール |
-| TypeScript 6 | ~6.0.3 | 型安全性 |
-| vite-plugin-pwa | ^1.3.0 | PWA対応 |
+| TypeScript 6 | ~6.0.0 | 型安全性 |
+| vite-plugin-pwa | ^1.2.0 | PWA対応 |
 
 ### ルート構成（13ルート）
 
@@ -506,7 +506,7 @@ gkillはPiniaやVuexを使用せず、**Props/Emit**パターンのみで状態�
 |---|---|---|
 | ページ | 15 | `pages/*.vue` |
 | ビュー | 185 | `pages/views/*.vue` |
-| ダイアログ | 100 | `pages/dialogs/*.vue` |
+| ダイアログ | 101 | `pages/dialogs/*.vue` |
 
 ### テーマ
 

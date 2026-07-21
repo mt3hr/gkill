@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,48 +30,81 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>En cours</span></nav>
   <h1>En cours</h1>
-  <p>Écran affichant la liste des sessions de suivi du temps actuellement en cours. Permet de gérer les activités dont le chronomètre est actif.</p>
+  <p>Écran affichant sous forme de liste les sessions de pointage actuellement en cours. Permet de gérer la mesure du temps active.</p>
 
   <h2>Boutons de la barre d'outils</h2>
   <table>
+    <caption class="sr-only">Boutons de la barre d'outils</caption>
     <tr>
-      <th>Bouton</th>
-      <th>Description</th>
+      <th scope="col">Bouton</th>
+      <th scope="col">Description</th>
     </tr>
     <tr>
-      <td><span class="icon">&#9881;</span> Parametres</td>
-      <td>Ouvre l'ecran des parametres de l'application.</td>
+      <td><span class="icon">&#9881;</span> Paramètres</td>
+      <td>Ouvre l'écran des paramètres de l'application.</td>
     </tr>
-    <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
+    <tr>
+      <td>&#10068; Aide</td>
+      <td>Affiche l'aide de l'écran actuel.</td>
+    </tr>
   </table>
 
   <h2>Fonctions principales</h2>
+
+  <h3>Liste des sessions en cours</h3>
+  <p>Les sessions de pointage actuellement actives sont affichées sous forme de liste. Chaque session comporte les informations suivantes.</p>
   <ul>
-    <li><strong>Liste des sessions actives :</strong> Affiche toutes les sessions de suivi du temps en cours.</li>
-    <li><strong>Arreter :</strong> Arrete une session en cours et enregistre l'heure de fin.</li>
-    <li><strong>FAB d'ajout rapide :</strong> En cliquant sur le bouton d'action flottant, vous pouvez creer rapidement des enregistrements de 10 types : Memo, Temps+Memo, Numerique, Signet, Horodatage, Tache, Depense, Humeur, Telechargement, Enregistrer le presse-papiers.</li>
+    <li>Nom de la session (titre)</li>
+    <li>Heure de début</li>
+    <li>Temps écoulé</li>
   </ul>
 
+  <h3>Arrêter une session</h3>
+  <p>En appuyant sur le bouton d'arrêt de chaque session, vous pouvez y mettre fin. L'heure de fin est enregistrée automatiquement.</p>
+
+  <h3>Bouton d'action flottant (« + »)</h3>
+  <p>En appuyant sur le bouton « + » en bas à droite, vous pouvez ajouter rapidement un nouvel enregistrement.</p>
+
+  <h2>Menu d'ajout</h2>
+  <table>
+    <caption class="sr-only">Menu d'ajout</caption>
+    <tr>
+      <th scope="col">Élément de menu</th>
+      <th scope="col">Description</th>
+    </tr>
+    <tr><td>Bloc-notes</td><td>Saisit une note textuelle au format bloc-notes.</td></tr>
+    <tr><td>Bloc-notes horodaté</td><td>Ouvre l'écran hybride combinant la saisie de notes et la liste des horodatages.</td></tr>
+    <tr><td>Enregistrements numériques</td><td>Enregistre des données numériques.</td></tr>
+    <tr><td>Signets</td><td>Enregistre une URL.</td></tr>
+    <tr><td>Suivi du temps</td><td>Démarre une nouvelle session de suivi du temps.</td></tr>
+    <tr><td>Tâches</td><td>Ajoute une nouvelle tâche.</td></tr>
+    <tr><td>Dépenses</td><td>Enregistre un montant.</td></tr>
+    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
+    <tr><td>Téléverser</td><td>Téléverse un fichier et l'enregistre.</td></tr>
+    <tr><td>Enregistrer le presse-papiers</td><td>Enregistre le contenu du presse-papiers (image, texte, PDF, etc.) directement comme fichier. Pratique pour capturer rapidement des captures d'écran ou des images copiées.</td></tr>
+  </table>
+
   <div class="tip">
-    <strong>Astuce :</strong> Les sessions actives affichent le temps ecoule en temps reel, facilitant le suivi de la duree de chaque activite.
+    <strong>Astuce :</strong> Si vous avez oublié d'arrêter un pointage, vous pouvez modifier l'enregistrement par la suite et corriger l'heure de fin.
   </div>
 
   <div class="tip">
@@ -71,12 +114,15 @@
   <div class="tip">
     <strong>Raccourci :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier. Utile pour sauvegarder rapidement des captures d'écran ou des images copiées.
   </div>
+
   <h2>Documents associés</h2>
   <ul>
     <li><a href="mkfl.html">Mémo pointage</a></li>
     <li><a href="kftl.html">Bloc-notes</a></li>
     <li><a href="saihate.html">Accueil</a></li>
   </ul>
+
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>
