@@ -29,6 +29,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 8. **[program-spec.md](program-spec.md)** — 主要プログラム仕様。初期化フロー、DAO構成、APIハンドラ、キャッシュシステム等の詳細です。
 8.1. **[plugin-system.md](plugin-system.md)** — プラグインシステム仕様。外部バイナリ連携・stdio通信・SQLiteキャッシュ・テーマ連携・PWAキャッシュの詳細です。
 9. **[sequence-diagrams.md](sequence-diagrams.md)** — シーケンス図。主要な処理フロー（ログイン、データ登録、MCP OAuth等）を理解します。
+9.1. **[scenario.md](scenario.md)** — 利用シナリオ集。チャネル横断（ブラウザ / モバイル / MCP / 共有 / プラグイン）の end-to-end 利用シナリオと、その裏で何が呼ばれどう動くかを UML で詳解します。
 10. **[activity-diagrams.md](activity-diagrams.md)** — アクティビティ図。詳細な処理ロジックのフローチャートです。
 11. **[state-machines.md](state-machines.md)** — ステートマシン図。エンティティの状態遷移を理解します。
 12. **[screen-transition.md](screen-transition.md)** — 画面遷移図。UIのページ・ダイアログ遷移を理解します。
@@ -52,17 +53,18 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [glossary.md](glossary.md) | ドメイン用語の定義（80項目） | 全員。用語確認時に随時参照 |
 | [design-philosophy.md](design-philosophy.md) | アーキテクチャ決定と設計思想 | 設計判断の背景を知りたいとき |
 | [folder-structure.md](folder-structure.md) | プロジェクトのフォルダ構成 | 初回参照、ファイル探索時 |
-| [usecase.md](usecase.md) | ユースケース一覧（78件） | 機能仕様の把握、テスト設計 |
+| [usecase.md](usecase.md) | ユースケース一覧（73件） | 機能仕様の把握、テスト設計 |
 | [er-diagram.md](er-diagram.md) | エンティティ関連図（Mermaid） | DB設計・データモデルの理解 |
 | [class-diagrams.md](class-diagrams.md) | Go/TSクラス階層（Mermaid） | コード構造の理解、実装時の参照 |
 | [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) | DVNF命名規則・RepType仕様 | リポジトリ管理、データ型の理解 |
 | [program-spec.md](program-spec.md) | 主要プログラム仕様（初期化、DAO、API、キャッシュ） | アーキテクチャの深い理解 |
 | [plugin-system.md](plugin-system.md) | プラグインシステム仕様（stdio通信、SQLiteキャッシュ、テーマ連携、PWAキャッシュ） | プラグイン開発・カスタマイズ時 |
 | [sequence-diagrams.md](sequence-diagrams.md) | 主要処理のシーケンス図（27本: 正常系22 + 異常系5） | 処理フローの理解、デバッグ |
+| [scenario.md](scenario.md) | 利用シナリオ集（チャネル横断 end-to-end フロー・UML多数） | 実利用フローの全体理解、オンボーディング |
 | [activity-diagrams.md](activity-diagrams.md) | 処理ロジックのフローチャート | 詳細な処理手順の確認 |
 | [state-machines.md](state-machines.md) | エンティティ状態遷移図 | 状態管理ロジックの理解 |
 | [screen-transition.md](screen-transition.md) | ページ・ダイアログ遷移図 | UI実装・改修時の参照 |
-| [screen-specs.md](screen-specs.md) | 画面仕様・項目定義（300コンポーネント） | UI実装・改修時の参照 |
+| [screen-specs.md](screen-specs.md) | 画面仕様・項目定義（301コンポーネント） | UI実装・改修時の参照 |
 | [frontend-architecture.md](frontend-architecture.md) | Vue 3フロントエンド設計ガイド | フロントエンド開発者向け |
 | [api-endpoints.md](api-endpoints.md) | 全APIエンドポイントのリファレンス（87件） | API利用・実装時の参照 |
 | [error-handling-and-security.md](error-handling-and-security.md) | エラー処理方針・セキュリティ設計 | エラー処理実装、セキュリティレビュー |
@@ -96,6 +98,9 @@ graph TD
 
     C --> F
     C --> G
+    C --> V[scenario.md<br/>利用シナリオ]
+    F --> V
+    K --> V
 
     D --> E
     E --> F
@@ -130,6 +135,7 @@ graph TD
     style R fill:#dfd,stroke:#333,stroke-width:2px
     style T fill:#dfd,stroke:#333,stroke-width:2px
     style U fill:#dfd,stroke:#333,stroke-width:2px
+    style V fill:#dfd,stroke:#333,stroke-width:2px
     style S fill:#ffd,stroke:#333,stroke-width:2px
 ```
 

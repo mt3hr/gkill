@@ -303,18 +303,6 @@ var (
 			if currentServerConfig.EnableTLS && !gkill_options.DisableTLSForce {
 				scheme = "https"
 			}
-			address := fmt.Sprintf("%s://localhost%s/api/update_cache", scheme, currentServerConfig.Address)
-
-			requestBody := &req_res.UpdateCacheRequest{
-				UserIDs: targetUserIDs,
-			}
-			jsonBody, err := json.Marshal(requestBody)
-			if err != nil {
-				err = fmt.Errorf("error at marshal update cache request: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
-			}
 
 			var httpClient *http.Client
 			if scheme == "https" {
@@ -326,6 +314,60 @@ var (
 				}
 			} else {
 				httpClient = &http.Client{}
+			}
+
+			// 認証: 引数配列の最後のユーザーIDでログインしてセッションIDを取得する
+			// （update_cacheは管理者セッションを要求するため、最後に管理者ユーザーIDを指定する）
+			authUserID := targetUserIDs[len(targetUserIDs)-1]
+			loginAddress := fmt.Sprintf("%s://localhost%s/api/login", scheme, currentServerConfig.Address)
+			loginJSONBody, err := json.Marshal(&req_res.LoginRequest{
+				UserID:         authUserID,
+				PasswordSha256: updateCachePasswordSha256,
+			})
+			if err != nil {
+				err = fmt.Errorf("error at marshal login request: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+			loginResp, err := httpClient.Post(loginAddress, "application/json", bytes.NewReader(loginJSONBody))
+			if err != nil {
+				err = fmt.Errorf("error at post login request to %s: %w", loginAddress, err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+			loginResponse := &req_res.LoginResponse{}
+			err = json.NewDecoder(loginResp.Body).Decode(loginResponse)
+			loginResp.Body.Close()
+			if err != nil {
+				err = fmt.Errorf("error at decode login response: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+			if len(loginResponse.Errors) != 0 {
+				for _, errMsg := range loginResponse.Errors {
+					fmt.Fprintf(os.Stderr, "%s: %s\n", errMsg.ErrorCode, errMsg.ErrorMessage)
+				}
+				return
+			}
+			if loginResponse.SessionID == "" {
+				fmt.Fprintf(os.Stderr, "error: login did not return a session id\n")
+				return
+			}
+
+			address := fmt.Sprintf("%s://localhost%s/api/update_cache", scheme, currentServerConfig.Address)
+			requestBody := &req_res.UpdateCacheRequest{
+				SessionID: loginResponse.SessionID,
+				UserIDs:   targetUserIDs,
+			}
+			jsonBody, err := json.Marshal(requestBody)
+			if err != nil {
+				err = fmt.Errorf("error at marshal update cache request: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
 			}
 			resp, err := httpClient.Post(address, "application/json", bytes.NewReader(jsonBody))
 			if err != nil {
@@ -352,8 +394,13 @@ var (
 				fmt.Fprintf(os.Stderr, "%s: %s\n", errMsg.ErrorCode, errMsg.ErrorMessage)
 			}
 		},
-		Short: `update_cache 'user_id'`,
+		Short: `update_cache 'user_id...' (認証は最後のuser_idで実施・管理者権限必須)`,
 	}
+)
+
+// update_cache サブコマンドの認証用フラグ（配列の最後のユーザーIDで管理者ログインする際のパスワード）
+var (
+	updateCachePasswordSha256 = ""
 )
 
 func init() {
@@ -369,6 +416,8 @@ func init() {
 	*/
 
 	IDFCmd.PersistentFlags().StringArrayVarP(&gkill_options.IDFIgnore, "ignore", "i", gkill_options.IDFIgnore, "ignore files")
+
+	UpdateCacheCmd.Flags().StringVar(&updateCachePasswordSha256, "password_sha256", "", "SHA256 hex of the password for the last user_id (used for authentication, default: empty)")
 }
 
 func InitGkillOptions() {

@@ -1,0 +1,148 @@
+<!-- title: Life Log View - Help -->
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Life Log View</span></nav>
+  <h1>Life Log View</h1>
+  <p>
+    The Life Log View is the primary life-log browsing screen. It displays all your recorded events as a timeline of image thumbnails and text entries, allowing you to review and explore your history.
+  </p>
+
+  <h2>Toolbar</h2>
+  <table>
+    <tr><th>Icon</th><th>Action</th></tr>
+    <tr><td><span class="icon">&#9776;</span> Sidebar</td><td>Show or hide the filter sidebar for narrowing down displayed records.</td></tr>
+    <tr><td><span class="icon">&#128196;</span> Detail</td><td>Show or hide the detail panel for the currently selected record.</td></tr>
+    <tr><td><span class="icon">&#128202;</span> Summary View Statistics</td><td>Show or hide the Summary View analytics panel with charts and statistics about your records.</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendar</td><td>Show or hide the calendar view for date-based navigation.</td></tr>
+    <tr><td><span class="icon">&#128506;</span> Map</td><td>Show or hide the GPS map view to see records plotted on a geographic map.</td></tr>
+    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
+    <tr><td>&#10068; Help</td><td>Display help for the current screen.</td></tr>
+  </table>
+
+  <h2>Thumbnail Grid</h2>
+  <p>Records are displayed as a multi-column grid of thumbnails and text previews. You can configure the number of columns from 1 to 10 in the application settings.</p>
+  <table>
+    <tr><th>Columns</th><th>Best For</th></tr>
+    <tr><td>1-2</td><td>Detailed reading on mobile devices. Shows more text per entry.</td></tr>
+    <tr><td>3-5</td><td>Balanced view on tablets and small desktops.</td></tr>
+    <tr><td>6-10</td><td>Overview browsing on large screens. Shows many records at once.</td></tr>
+  </table>
+
+  <h2>Filter Sidebar</h2>
+  <p>The sidebar provides powerful filtering options:</p>
+  <ul>
+    <li><strong>Date range:</strong> Set start and end dates to narrow the time period.</li>
+    <li><strong>Record type:</strong> Show only specific types (memos, bookmarks, files, etc.).</li>
+    <li><strong>Tags:</strong> Filter by one or more tags.</li>
+    <li><strong>Storage:</strong> Filter by data storage.</li>
+    <li><strong>Text search:</strong> Search within record content.</li>
+  </ul>
+
+  <h2>Detail Panel</h2>
+  <p>When enabled, selecting a record opens the detail panel showing its full content, tags, related timestamps, and edit controls. This is the same information shown in the Record view.</p>
+
+  <h2>Summary View Analytics</h2>
+  <p>The Summary View statistics panel shows charts and aggregate data about your records, including:</p>
+  <ul>
+    <li>Record count trends over time</li>
+    <li>Type distribution breakdowns</li>
+    <li>Tag usage frequency</li>
+    <li>Activity patterns</li>
+  </ul>
+
+  <h2>GPS Map View</h2>
+  <p>If GPS data is available (from GPX logs or geotagged files), records are plotted on an interactive map. This requires a Google Maps API key configured in Settings.</p>
+
+  <div class="tip">
+    <strong>Tip:</strong> The "Life Log View Display Days" can be configured in Settings. Set a shorter period for faster loading, or a longer period for broader browsing.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Adjust the number of image columns in Settings to match your screen size and browsing style. Fewer columns show more detail; more columns provide a broader overview.
+  </div>
+
+  <h2>FAB "+" Quick-Add Menu</h2>
+  <p>The floating action button (FAB) with a "+" icon at the bottom-right opens a quick-add menu for creating new records:</p>
+  <table>
+    <tr><th>Record Type</th><th>Description</th></tr>
+    <tr><td>Memo</td><td>Create a new text memo. Opens the memo creation dialog.</td></tr>
+    <tr><td>Time + Memo</td><td>Start a new time tracking session and simultaneously attach a memo to it.</td></tr>
+    <tr><td>Numeric</td><td>Record a numeric counter value (e.g., counting events or items).</td></tr>
+    <tr><td>Bookmark</td><td>Save a URL with an optional title and notes.</td></tr>
+    <tr><td>Time Log</td><td>Start a new time tracking session.</td></tr>
+    <tr><td>Task</td><td>Create a new task and assign it to a board.</td></tr>
+    <tr><td>Expense</td><td>Log a financial expense with amount and description.</td></tr>
+    <tr><td>Mood</td><td>Record your current mood on a scale of 0 to 10.</td></tr>
+    <tr><td>Upload</td><td>Upload a file or image from your device.</td></tr>
+    <tr><td>Save Clipboard</td><td>Save clipboard content (screenshot, image, text, PDF, etc.) directly as a file record.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> <strong>Long-press</strong> the "+" FAB button to directly open the Memo Pad for fast batch entry, skipping the quick-add menu entirely.
+  </div>
+
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+  </div>
+
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Ctrl+V to save clipboard content directly as a file. Useful for quickly saving screenshots or copied images.
+  </div>
+
+  <h2>Using Tags</h2>
+  <p>Tags are labels you can attach to records to categorize and organize them. Multiple tags can be attached to a single record.</p>
+  <h3>Adding a Tag</h3>
+  <ol>
+    <li>Long-press (mobile) or right-click (desktop) a record in the timeline.</li>
+    <li>Select "Add Tag" from the context menu.</li>
+    <li>Type the tag name and confirm. Existing tags will appear as suggestions.</li>
+  </ol>
+  <h3>Editing or Deleting a Tag</h3>
+  <ol>
+    <li>Long-press (mobile) or right-click (desktop) the tag displayed on a record.</li>
+    <li>Select "Edit Tag" or "Delete Tag" from the context menu.</li>
+  </ol>
+  <h3>Tag Structure</h3>
+  <p>In Settings → "Tag Structure", you can manage display names and ordering of tags. Placing frequently used tags higher makes them easier to find in the autocomplete list.</p>
+  <div class="tip">
+    <strong>Tip:</strong> In Notepad syntax, entering <code>#tagname</code> automatically attaches a tag when the text is submitted. See the <a href="kftl-syntax.html">Notepad Syntax Reference</a> for details.
+  </div>
+
+  <h2>File Upload Details</h2>
+  <p>From the "+" FAB menu, select "Upload" to save images, videos, documents, and other files to gkill.</p>
+  <h3>Steps</h3>
+  <ol>
+    <li>Select "Upload" from the "+" FAB menu.</li>
+    <li>Choose the target storage (a file management repository).</li>
+    <li>Confirm or adjust the record date/time associated with the file.</li>
+    <li>Select the file(s) to upload. Multiple files can be selected at once. You can also drag &amp; drop files onto the "Drop files here" zone in the dialog.</li>
+  </ol>
+  <h3>Supported File Types</h3>
+  <p>Images (JPEG, PNG, GIF, WEBP), videos (MP4, etc.), PDFs, ZIPs, and most common file formats are supported. ZIP files can be browsed after upload (right-click the record → "Browse ZIP Contents"). Markdown files (.md / .markdown) are rendered as rich text with headings and tables in list and detail views, and mermaid code blocks are rendered as diagrams.</p>
+  <h3>Upload Size Limit</h3>
+  <p>The monthly upload size limit is configured by the administrator in Server Config. If the limit is reached, an error message will appear. (A value of <code>-1</code> means unlimited.)</p>
+  <div class="tip">
+    <strong>Shortcut:</strong> Press Ctrl+V to save clipboard content (image, text, PDF, etc.) directly as a file. Ideal for quickly saving screenshots.
+  </div>
+
+  <h2>Using the GPS Map</h2>
+  <p>Enable the Map button in the toolbar to display GPS tracks on an interactive map for the currently selected time period.</p>
+  <h3>Uploading GPS Logs</h3>
+  <ol>
+    <li>Select "Upload" from the "+" FAB menu.</li>
+    <li>Choose a GPS log storage as the destination.</li>
+    <li>Select and upload your GPX file. You can also drag &amp; drop it onto the "Drop .gpx files here" zone.</li>
+    <li>Enable the Map button to view the track on the map.</li>
+  </ol>
+  <h3>Google Maps API Key</h3>
+  <p>A Google Maps API key is required for map display. Go to Settings (toolbar "Settings" → "Display Settings") and enter your key in the "Google Maps API Key" field.</p>
+  <div class="tip">
+    <strong>Tip:</strong> You can obtain a Google Maps API key from <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. Enable the Maps JavaScript API for your key.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="kyou.html">Records</a></li>
+    <li><a href="dnote.html">Aggregation View</a></li>
+    <li><a href="ryuu.html">Related Info</a></li>
+    <li><a href="kftl-syntax.html">Notepad Syntax Reference</a></li>
+    <li><a href="application-config.html">Settings</a></li>
+  </ul>

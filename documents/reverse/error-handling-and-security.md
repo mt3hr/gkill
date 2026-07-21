@@ -154,7 +154,7 @@ sequenceDiagram
 | ハッシュアルゴリズム | SHA256（クライアント側で計算） |
 | ソルト | なし |
 | 保存形式 | SHA256 hex文字列（nullable） |
-| 初期状態 | `nil`（パスワード未設定 → パスワードなしでログイン可） |
+| 初期状態 | `PasswordSha256 = nil` かつ `PasswordResetToken` 設定済み（→ パスワードリセット登録が必要。パスワードなしではログイン不可） |
 | 比較方式 | 文字列直接比較（`!=`） |
 
 > **セキュリティ上の注記:** SHA256（ソルトなし）はパスワードハッシュとしては脆弱であり、レインボーテーブル攻撃のリスクがあります。gkillはスタンドアロン利用を前提とした設計のため現状の実装となっていますが、リモート公開環境で運用する場合は、bcrypt/scrypt/Argon2等のソルト付きハッシュへの移行を検討すべきです。
@@ -197,7 +197,7 @@ sequenceDiagram
 
 上記以外からのリクエストには HTTP 403 Forbidden を返す。
 
-**実装箇所:** `src/server/gkill/api/gkill_server_api.go` (`filterLocalOnly` メソッド)
+**実装箇所:** `src/server/gkill/api/gkill_server_api/filter_local_only.go` (`filterLocalOnly` メソッド)
 
 #### エンドポイント別アクセス制御
 
@@ -255,12 +255,12 @@ sequenceDiagram
 ### 2.9 初期セットアップのセキュリティ
 
 初回起動時：
-1. `admin` アカウントが自動作成される（`PasswordSha256 = nil`）
-2. **パスワード未設定状態ではパスワードなしでログイン可能**
+1. `admin` アカウントが自動作成される（`PasswordSha256 = nil`、かつ `PasswordResetToken` が設定される）
+2. **`PasswordResetToken` が非nilのため、パスワードなしではログインできない**。ログイン処理はパスワード照合の前に `ERR000004`（`AccountPasswordResetTokenIsNotNilError`）で拒否する（`handle_login.go`）
 3. VAPID鍵ペアが自動生成される
 4. デフォルトデバイス `"gkill"` が作成される
 
-→ 初回起動後、速やかにパスワードを設定することを推奨。
+→ 初回アクセス時は初回アカウント登録画面（`/regist_first_account`）で `admin` のパスワードを設定して登録を完了する必要がある。
 
 ### 2.10 外部URL取得のSSRF対策
 

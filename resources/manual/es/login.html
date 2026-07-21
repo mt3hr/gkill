@@ -3,16 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pantalla de inicio de sesion - Ayuda</title>
+  <title>Pantalla de inicio de sesión - Ayuda</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,72 +30,75 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Inicio de Sesión</span></nav>
-  <h1>Pantalla de inicio de sesion</h1>
-  <p>Pantalla de autenticacion para iniciar sesion en gkill. Introduzca su ID de usuario y contrasena para acceder a la aplicacion.</p>
+  <h1>Pantalla de inicio de sesión</h1>
+  <p>Pantalla de autenticación para iniciar sesión en gkill. Introduzca su ID de usuario y contraseña para acceder a la aplicación.</p>
 
   <h2>Elementos de la pantalla</h2>
   <table>
+    <caption class="sr-only">Elementos de la pantalla</caption>
     <tr>
-      <th>Elemento</th>
-      <th>Descripcion</th>
+      <th scope="col">Elemento</th>
+      <th scope="col">Descripción</th>
     </tr>
     <tr>
       <td>Campo de ID de usuario</td>
       <td>Introduzca el ID de usuario de su cuenta gkill.</td>
     </tr>
     <tr>
-      <td>Campo de contrasena</td>
-      <td>Introduzca la contrasena de la cuenta.</td>
+      <td>Campo de contraseña</td>
+      <td>Introduzca la contraseña de la cuenta.</td>
     </tr>
     <tr>
-      <td>Boton de inicio de sesion</td>
-      <td>Ejecuta el inicio de sesion con las credenciales introducidas.</td>
+      <td>Botón de inicio de sesión</td>
+      <td>Ejecuta el inicio de sesión con las credenciales introducidas.</td>
     </tr>
     <tr>
-      <td>Indicador de version</td>
-      <td>Muestra el numero de version actual de gkill en la esquina superior derecha.</td>
+      <td>Indicador de versión</td>
+      <td>Muestra el número de versión actual de gkill en la esquina superior derecha.</td>
     </tr>
   </table>
 
   <h2>Procedimiento</h2>
   <ol>
     <li>Introduzca el ID de usuario de su cuenta en el campo correspondiente.</li>
-    <li>Introduzca la contrasena en el campo correspondiente.</li>
-    <li>Haga clic en el boton "Iniciar sesion" o pulse Enter para autenticarse.</li>
-    <li>Tras una autenticacion exitosa, sera redirigido a la pagina predeterminada configurada en los ajustes.</li>
+    <li>Introduzca la contraseña en el campo correspondiente.</li>
+    <li>Haga clic en el botón "Iniciar sesión" o pulse Enter para autenticarse.</li>
+    <li>Tras una autenticación exitosa, será redirigido a la página predeterminada configurada en los ajustes.</li>
   </ol>
 
   <div class="tip">
-    <strong>Consejo:</strong> En la primera ejecucion, se mostrara automaticamente una pantalla de registro de cuenta. Siga las instrucciones en pantalla para crear su cuenta de usuario y establecer la contrasena de administrador.
+    <strong>Consejo:</strong> En la primera ejecución, se mostrara automáticamente una pantalla de registro de cuenta. Siga las instrucciones en pantalla para crear su cuenta de usuario y establecer la contraseña de administrador.
   </div>
 
   <div class="tip">
-    <strong>Consejo:</strong> Tambien puede iniciar sesion pulsando Enter, lo que permite enviar directamente despues de introducir la contrasena.
+    <strong>Consejo:</strong> También puede iniciar sesión pulsando Enter, lo que permite enviar directamente después de introducir la contraseña.
   </div>
   <div class="tip"><strong>Sesión:</strong> La sesión se mantiene activa durante 30 días. Si la sesión caduca, se le redirigirá automáticamente a esta pantalla de inicio de sesión.</div>
   <div class="tip"><strong>Solución de problemas:</strong> Si no puede iniciar sesión, verifique su ID de usuario y contraseña.</div>
   <h2>Documentos Relacionados</h2>
   <ul>
     <li><a href="getting-started.html">Primeros Pasos</a></li>
-    <li><a href="tutorial.html">Tutorial (Basico + Avanzado)</a></li>
+    <li><a href="tutorial.html">Tutorial (Básico + Avanzado)</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>
