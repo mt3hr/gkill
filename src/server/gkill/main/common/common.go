@@ -26,6 +26,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_server_api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/hide_files"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
@@ -316,13 +317,52 @@ var (
 				httpClient = &http.Client{}
 			}
 
-			// 認証: 引数配列の最後のユーザーIDでログインしてセッションIDを取得する
-			// （update_cacheは管理者セッションを要求するため、最後に管理者ユーザーIDを指定する）
-			authUserID := targetUserIDs[len(targetUserIDs)-1]
+			// 認証: update_cacheは管理者セッションを要求するが、
+			// サブコマンドはサーバーと同一マシンで実行される前提なので、
+			// ローカルのaccount.dbから管理者アカウントとそのパスワードを引いて自動でログインする
+			accountDBFilename := filepath.Join(configDBRootDir, "account.db")
+			accountDAO, err := account.NewAccountDAOSQLite3Impl(ctx, accountDBFilename)
+			if err != nil {
+				err = fmt.Errorf("error at create account dao: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+			defer accountDAO.Close(ctx)
+
+			accounts, err := accountDAO.GetAllAccounts(ctx)
+			if err != nil {
+				err = fmt.Errorf("error at get all accounts: %w", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+			slices.SortFunc(accounts, func(a *account.Account, b *account.Account) int {
+				return strings.Compare(a.UserID, b.UserID)
+			})
+
+			var adminAccount *account.Account
+			for _, a := range accounts {
+				if a.IsAdmin && a.IsEnable && a.PasswordResetToken == nil {
+					adminAccount = a
+					break
+				}
+			}
+			if adminAccount == nil {
+				err = fmt.Errorf("error: no enabled admin account found in %s", accountDBFilename)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			}
+			adminPasswordSha256 := ""
+			if adminAccount.PasswordSha256 != nil {
+				adminPasswordSha256 = *adminAccount.PasswordSha256
+			}
+
 			loginAddress := fmt.Sprintf("%s://localhost%s/api/login", scheme, currentServerConfig.Address)
 			loginJSONBody, err := json.Marshal(&req_res.LoginRequest{
-				UserID:         authUserID,
-				PasswordSha256: updateCachePasswordSha256,
+				UserID:         adminAccount.UserID,
+				PasswordSha256: adminPasswordSha256,
 			})
 			if err != nil {
 				err = fmt.Errorf("error at marshal login request: %w", err)
@@ -356,6 +396,27 @@ var (
 				fmt.Fprintf(os.Stderr, "error: login did not return a session id\n")
 				return
 			}
+
+			// セッションを残さないように後始末する
+			defer func() {
+				logoutAddress := fmt.Sprintf("%s://localhost%s/api/logout", scheme, currentServerConfig.Address)
+				logoutJSONBody, err := json.Marshal(&req_res.LogoutRequest{
+					SessionID:     loginResponse.SessionID,
+					CloseDatabase: false,
+				})
+				if err != nil {
+					err = fmt.Errorf("error at marshal logout request: %w", err)
+					slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+					return
+				}
+				logoutResp, err := httpClient.Post(logoutAddress, "application/json", bytes.NewReader(logoutJSONBody))
+				if err != nil {
+					err = fmt.Errorf("error at post logout request to %s: %w", logoutAddress, err)
+					slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+					return
+				}
+				logoutResp.Body.Close()
+			}()
 
 			address := fmt.Sprintf("%s://localhost%s/api/update_cache", scheme, currentServerConfig.Address)
 			requestBody := &req_res.UpdateCacheRequest{
@@ -394,13 +455,8 @@ var (
 				fmt.Fprintf(os.Stderr, "%s: %s\n", errMsg.ErrorCode, errMsg.ErrorMessage)
 			}
 		},
-		Short: `update_cache 'user_id...' (認証は最後のuser_idで実施・管理者権限必須)`,
+		Short: `update_cache 'user_id...'`,
 	}
-)
-
-// update_cache サブコマンドの認証用フラグ（配列の最後のユーザーIDで管理者ログインする際のパスワード）
-var (
-	updateCachePasswordSha256 = ""
 )
 
 func init() {
@@ -416,8 +472,6 @@ func init() {
 	*/
 
 	IDFCmd.PersistentFlags().StringArrayVarP(&gkill_options.IDFIgnore, "ignore", "i", gkill_options.IDFIgnore, "ignore files")
-
-	UpdateCacheCmd.Flags().StringVar(&updateCachePasswordSha256, "password_sha256", "", "SHA256 hex of the password for the last user_id (used for authentication, default: empty)")
 }
 
 func InitGkillOptions() {
