@@ -331,7 +331,7 @@ JSON形式。各行に以下のフィールド:
 - キャッシュ上限調整: `--cache_clear_count_limit` でアイテム数を変更（デフォルト: 3000）
 - キャッシュ更新間隔: `--cache_update_duration` で変更（デフォルト: 1分）
 - API経由でキャッシュ更新: `POST /api/update_cache`
-- CLI: `gkill_server update_cache ユーザーID...` サブコマンド（他サブコマンドと同様に対象ユーザーIDの文字列配列を受け取る。**認証は配列の最後のユーザーID**で行うため、末尾に管理者ユーザーIDを指定する。パスワードは `--password_sha256` で指定可）
+- CLI: `gkill_server update_cache ユーザーID...` サブコマンド（他サブコマンドと同様に対象ユーザーIDの文字列配列を受け取る。**認証情報の指定は不要**。サーバーと同一マシンで実行する前提で、ローカルの `configs/account.db` から有効な管理者アカウントを自動選択してログインする）
 
 ### 7.5 フロントエンドが表示されない
 
@@ -444,7 +444,7 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 #### キャッシュ更新API
 
-`POST /api/update_cache`（または`gkill_server update_cache ユーザーID...` CLIコマンド）を呼び出すと、指定ユーザーのインメモリキャッシュを即時再構築する。サーバー再起動なしにリポジトリ変更を反映する際に使用する。**このエンドポイントは管理者セッション（`session_id`）を必須とする**（`wrapAuth` + `IsAdmin` 判定）。CLIサブコマンドは対象ユーザーIDの文字列配列を受け取り、**配列の最後のユーザーID**で `/api/login` してから呼び出す（末尾に管理者ユーザーIDを指定する。パスワードは `--password_sha256`、既定 空）。
+`POST /api/update_cache`（または`gkill_server update_cache ユーザーID...` CLIコマンド）を呼び出すと、指定ユーザーのインメモリキャッシュを即時再構築する。サーバー再起動なしにリポジトリ変更を反映する際に使用する。**このエンドポイントは管理者セッション（`session_id`）を必須とする**（`wrapAuth` + `IsAdmin` 判定）。CLIサブコマンドは対象ユーザーIDの文字列配列を受け取り、**認証情報の指定は不要**（サーバーと同一マシンで実行する前提で、ローカルの `configs/account.db` から有効な管理者アカウント＝`IsAdmin && IsEnable && パスワードリセット中でない を自動選択し、そのパスワードで `/api/login` → 実行 → `/api/logout` する）。
 
 #### キャッシュ削除
 
@@ -478,7 +478,7 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 | `gkill_server generate_thumb_cache ユーザーID` | サムネイルキャッシュ生成 |
 | `gkill_server generate_video_cache ユーザーID` | 動画キャッシュ生成 |
 | `gkill_server optimize ユーザーID` | データベース最適化（VACUUM） |
-| `gkill_server update_cache ユーザーID...` | HTTP API経由でキャッシュ更新（対象ユーザーIDの文字列配列。認証は配列の最後のユーザーIDで実施＝末尾に管理者を指定。パスワードは `--password_sha256`） |
+| `gkill_server update_cache ユーザーID...` | HTTP API経由でキャッシュ更新（対象ユーザーIDの文字列配列。認証情報の指定は不要。ローカルDBの管理者アカウントで自動ログインする） |
 | `gkill_server clear_cache <thumb\|video\|zip\|all> <all\|user_id...>` | ディスク上の派生キャッシュを削除。対象は必須で、`all`で全体、user_id指定で該当ユーザーのリポジトリ分のみ |
 
 ## 11. MCP HTTPサーバーのデプロイ
