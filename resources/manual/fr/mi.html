@@ -3,16 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tableau de taches - Aide</title>
+  <title>Tableau de tâches - Aide</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,81 +30,104 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Tâches</span></nav>
-  <h1>Tableau de taches</h1>
-  <p>Ecran de gestion des taches de style Kanban. Permet de gerer visuellement l'etat et la progression des taches.</p>
+  <h1>Tableau de tâches</h1>
+  <p>Écran de gestion des tâches de style Kanban. Les tâches sont classées par tableau, ce qui permet de saisir visuellement leur progression.</p>
 
   <h2>Boutons de la barre d'outils</h2>
   <table>
+    <caption class="sr-only">Boutons de la barre d'outils</caption>
     <tr>
-      <th>Bouton</th>
-      <th>Description</th>
+      <th scope="col">Bouton</th>
+      <th scope="col">Description</th>
     </tr>
     <tr>
-      <td><span class="icon">&#9776;</span> Barre laterale</td>
-      <td>Ouvre/ferme la barre laterale pour le filtrage et la navigation.</td>
+      <td><span class="icon">&#9776;</span> Barre latérale</td>
+      <td>Affiche/masque la barre latérale de recherche et de filtrage.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#128196;</span> Vue detaillee</td>
-      <td>Affiche/masque le panneau de details de la tache.</td>
+      <td><span class="icon">&#128196;</span> Vue détaillée</td>
+      <td>Affiche/masque le panneau de détails de l'enregistrement sélectionné.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Calendrier</td>
       <td>Affiche/masque la vue calendrier.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#9881;</span> Parametres</td>
-      <td>Ouvre l'ecran des parametres de l'application.</td>
+      <td><span class="icon">&#9881;</span> Paramètres</td>
+      <td>Ouvre l'écran des paramètres de l'application.</td>
     </tr>
     <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
   </table>
 
   <h2>Fonctions principales</h2>
+
+  <h3>Tableau Kanban</h3>
+  <p>Les tâches sont affichées classées par tableau (colonne). Chaque tableau représente un état ou une catégorie de tâche et facilite le suivi de la progression.</p>
+
+  <h3>Barre latérale (filtres)</h3>
+  <p>La barre latérale permet de définir les conditions de filtrage suivantes pour affiner les tâches.</p>
   <ul>
-    <li><strong>Colonnes du tableau :</strong> Les taches sont affichees en colonnes par etat ; vous pouvez changer l'etat par glisser-deposer.</li>
-    <li><strong>Filtres de la barre laterale :</strong> Filtre les taches par etiquettes, tableau, etat et autres conditions.</li>
-    <li><strong>Panneau de details :</strong> La selection d'une tache affiche les informations detaillees et les options d'edition.</li>
-    <li><strong>Vue calendrier :</strong> Permet de parcourir les taches sous forme de calendrier.</li>
+    <li>Recherche de texte</li>
+    <li>Filtrage par étiquettes</li>
+    <li>Spécification d'une période</li>
+    <li>Sélection du tableau</li>
+  </ul>
+
+  <h3>Panneau de détails</h3>
+  <p>Lorsqu'une tâche est sélectionnée, le panneau de détails affiche les informations suivantes.</p>
+  <ul>
+    <li>Titre et contenu de la tâche</li>
+    <li>Tableau d'appartenance</li>
+    <li>Informations d'échéance</li>
+    <li>Étiquettes attribuées</li>
+    <li>Enregistrements associés</li>
   </ul>
 
   <div class="tip">
-    <strong>Astuce :</strong> Vous pouvez configurer le paramètre « Nom du tableau de tâches par défaut » pour qu'il s'affiche automatiquement à chaque ouverture de cet écran.
+    <strong>Astuce :</strong> Le tableau affiché par défaut peut être modifié dans les paramètres, via l'option « Nom du tableau de tâches par défaut ».
   </div>
 
-  <h2>FAB (Bouton d'action flottant) "+"</h2>
-  <p>En cliquant sur le bouton "+", un menu se deploie pour creer rapidement des enregistrements :</p>
+  <div class="tip">
+    <strong>Astuce :</strong> En combinant les conditions de filtrage de la barre latérale, vous trouverez rapidement les tâches dont vous avez besoin.
+  </div>
+
+  <h2>FAB (Bouton d'action flottant) « + »</h2>
+  <p>En appuyant sur le bouton « + » en bas à droite, un menu d'ajout des différents enregistrements se déploie :</p>
   <table>
-    <tr><th>Type</th><th>Description</th></tr>
-    <tr><td>Memo</td><td>Cree une note textuelle.</td></tr>
-    <tr><td>Temps+Memo</td><td>Cree une note avec horodatage.</td></tr>
-    <tr><td>Numerique</td><td>Enregistre des donnees numeriques.</td></tr>
-    <tr><td>Signet</td><td>Enregistre un signet URL.</td></tr>
-    <tr><td>Journal de temps</td><td>Demarre une session de suivi du temps.</td></tr>
-    <tr><td>Tache</td><td>Cree une nouvelle tache.</td></tr>
-    <tr><td>Depense</td><td>Enregistre des informations de depense.</td></tr>
+    <caption class="sr-only">FAB (Bouton d'action flottant) « + »</caption>
+    <tr><th scope="col">Élément de menu</th><th scope="col">Description</th></tr>
+    <tr><td>Bloc-notes</td><td>Saisit une note textuelle au format bloc-notes.</td></tr>
+    <tr><td>Bloc-notes horodaté</td><td>Ouvre l'écran hybride combinant la saisie de notes et la liste des horodatages en cours.</td></tr>
+    <tr><td>Numérique</td><td>Enregistre des données numériques.</td></tr>
+    <tr><td>Signet</td><td>Enregistre une URL.</td></tr>
+    <tr><td>Journal de temps</td><td>Démarre une nouvelle session de suivi du temps.</td></tr>
+    <tr><td>Tâche</td><td>Ajoute une nouvelle tâche.</td></tr>
+    <tr><td>Dépense</td><td>Enregistre un montant.</td></tr>
     <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
-    <tr><td>Telechargement</td><td>Telecharge un fichier.</td></tr>
-    <tr><td>Enregistrer le presse-papiers</td><td>Enregistre le contenu du presse-papiers (capture d'ecran, image, texte, PDF, etc.) directement comme fichier.</td></tr>
+    <tr><td>Téléverser</td><td>Téléverse un fichier et l'enregistre.</td></tr>
+    <tr><td>Enregistrer le presse-papiers</td><td>Enregistre le contenu du presse-papiers (image, texte, PDF, etc.) directement comme fichier. Pratique pour capturer rapidement des captures d'écran ou des images copiées.</td></tr>
   </table>
 
   <div class="tip">
-    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'ecran de saisie du bloc-notes, permettant une saisie par lots rapide.
+    <strong>Appui long :</strong> Un appui long sur le bouton « + » ouvre directement le bloc-notes. Pratique lorsque vous souhaitez prendre une note rapidement.
   </div>
 
   <div class="tip">
@@ -104,11 +137,14 @@
   <div class="tip">
     <strong>Raccourci :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier. Utile pour sauvegarder rapidement des captures d'écran ou des images copiées.
   </div>
+
   <h2>Documents associés</h2>
   <ul>
     <li><a href="kftl-syntax.html">Référence syntaxe du bloc-notes</a></li>
     <li><a href="rykv.html">Vue journal de vie</a></li>
   </ul>
+
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

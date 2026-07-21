@@ -66,7 +66,7 @@ src/client/
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
 │   ├── views/              # ビューコンポーネント（185ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（100ファイル、browse-zip-contents-dialog.vue 含む）
+│   └── dialogs/            # ダイアログコンポーネント（101ファイル、browse-zip-contents-dialog.vue 含む）
 ├── classes/
 │   ├── api/
 │   │   └── gkill-api.ts    # GkillAPI シングルトン（~3,500行、全API呼び出しを集約）
@@ -98,14 +98,14 @@ src/server/
     │   ├── find_kyou_context.go    # 検索コンテキスト
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
-    │   ├── req_res/                # リクエスト/レスポンス構造体（164ファイル）
+    │   ├── req_res/                # リクエスト/レスポンス構造体（176ファイル）
     │   ├── kftl/                   # KFTLパーサー（バックエンド側）
     │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成）
     │   │   └── *.go                # 各ステートメント型実装
     │   └── gkill_server_api/       # HTTPハンドラ層（85+ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
-    │       ├── gkill_server_api_address.go  # ルーティング定義（80 POSTエンドポイント）
+    │       ├── gkill_server_api_address.go  # ルーティング定義（85エンドポイント：84 POST + 1 GET）
     │       ├── auth.go             # セッション認証ヘルパー
     │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
     │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
@@ -113,7 +113,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、80+ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、88ファイル）
     ├── dao/                        # データアクセス層
     │   ├── gkill_dao_manager.go    # DAOマネージャ（ConfigDAOs + GkillRepositories管理）
     │   ├── config_da_os.go          # ConfigDAOs構造体（8つの設定DAO）
@@ -234,7 +234,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-~765キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+836キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

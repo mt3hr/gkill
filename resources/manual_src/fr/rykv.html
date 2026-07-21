@@ -1,0 +1,165 @@
+<!-- title: Vue du journal de vie - Aide -->
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Vue journal de vie</span></nav>
+  <h1>Vue du journal de vie</h1>
+  <p>Écran pour parcourir les journaux de vie avec des miniatures. Prend en charge plusieurs modes d'affichage et fonctions de filtrage.</p>
+
+  <h2>Boutons de la barre d'outils</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9776;</span> Barre latérale</td>
+      <td>Ouvre/ferme la barre latérale pour le filtrage et la navigation.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128196;</span> Détails</td>
+      <td>Affiche/masque le panneau de détails de l'enregistrement.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128202;</span> Vue récapitulative</td>
+      <td>Affiche l'écran d'analyse statistique.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128197;</span> Calendrier</td>
+      <td>Affiche la vue calendrier.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128506;</span> Carte</td>
+      <td>Affiche les enregistrements avec des informations GPS sur la carte.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> Paramètres</td>
+      <td>Ouvre l'écran des paramètres de l'application.</td>
+    </tr>
+    <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
+  </table>
+
+  <h2>Fonctions principales</h2>
+
+  <h3>Affichage en liste avec miniatures d'images</h3>
+  <p>Affiche les enregistrements dans une grille à plusieurs colonnes. Les enregistrements contenant des images ou des fichiers affichent une miniature. Le nombre de colonnes peut être modifié de 1 à 10 dans l'écran des paramètres.</p>
+
+  <h3>Barre latérale (filtres et recherche)</h3>
+  <p>La barre latérale permet de spécifier les conditions suivantes pour affiner les enregistrements.</p>
+  <ul>
+    <li>Recherche textuelle (mot-clé)</li>
+    <li>Filtrage par étiquettes</li>
+    <li>Spécification d'une période</li>
+    <li>Sélection du type d'enregistrement</li>
+    <li>Sélection de l'emplacement de stockage des enregistrements</li>
+  </ul>
+
+  <h3>Ajouter une colonne de filtre</h3>
+  <p>Le bouton « + » permet d'ajouter une nouvelle colonne de filtre. Vous pouvez ainsi comparer côte à côte les résultats de conditions de filtrage différentes.</p>
+
+  <h3>Panneau de détails</h3>
+  <p>Lorsque vous sélectionnez un enregistrement, le panneau de détails affiche toutes les informations de cet enregistrement.</p>
+
+  <h3>Statistiques de la vue d'agrégation</h3>
+  <p>Affiche les statistiques et les résultats d'analyse des données d'enregistrement. Vous pouvez ainsi saisir les tendances et les schémas de vos enregistrements.</p>
+
+  <h3>Affichage de la carte GPS</h3>
+  <p>Affiche les données du journal GPS sur une carte. Les itinéraires de déplacement et les informations de localisation peuvent être vérifiés visuellement. La configuration d'une clé API Google Maps est nécessaire.</p>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Le nombre de colonnes d'images peut être modifié dans l'écran des paramètres. 1 à 2 colonnes sont recommandées sur smartphone, et 3 à 5 colonnes sur PC.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Il est pratique d'ajouter plusieurs colonnes de filtre et de comparer côte à côte des enregistrements répondant à des conditions différentes.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> La valeur par défaut de la période d'affichage peut être modifiée dans le paramètre « Jours d'affichage du journal de vie » de l'écran de configuration.
+  </div>
+
+  <h2>FAB (Bouton d'action flottant) "+"</h2>
+  <p>En cliquant sur le bouton "+", un menu se déploie pour créer rapidement des enregistrements :</p>
+  <table>
+    <tr><th>Type</th><th>Description</th></tr>
+    <tr><td>Mémo</td><td>Crée une note textuelle.</td></tr>
+    <tr><td>Temps+Mémo</td><td>Crée une note avec horodatage.</td></tr>
+    <tr><td>Numérique</td><td>Enregistre des données numériques.</td></tr>
+    <tr><td>Signet</td><td>Enregistre un signet URL.</td></tr>
+    <tr><td>Journal de temps</td><td>Démarre une session de suivi du temps.</td></tr>
+    <tr><td>Tâche</td><td>Crée une nouvelle tâche.</td></tr>
+    <tr><td>Dépense</td><td>Enregistre des informations de dépense.</td></tr>
+    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
+    <tr><td>Téléversement</td><td>Téléverse un fichier.</td></tr>
+    <tr><td>Enregistrer le presse-papiers</td><td>Enregistre le contenu du presse-papiers (capture d'écran, image, texte, PDF, etc.) directement comme fichier.</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'écran de saisie du bloc-notes, permettant une saisie par lots rapide.
+  </div>
+
+  <div class="tip">
+    <strong>Raccourci :</strong> Appuyez sur Entrée sur cet écran pour ouvrir le bloc-notes. C'est pratique pour ajouter rapidement des enregistrements.
+  </div>
+
+  <div class="tip">
+    <strong>Raccourci :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier. Utile pour sauvegarder rapidement des captures d'écran ou des images copiées.
+  </div>
+  <h2>Utilisation des étiquettes</h2>
+  <h3>Ajouter une étiquette</h3>
+  <ol>
+    <li>Maintenez appuyé ou faites un clic droit sur un enregistrement pour ouvrir le menu contextuel.</li>
+    <li>Sélectionnez "Ajouter une étiquette".</li>
+    <li>Tapez le nom de l'étiquette (les étiquettes existantes s'affichent comme suggestions).</li>
+  </ol>
+  <h3>Modifier ou supprimer une étiquette</h3>
+  <ol>
+    <li>Maintenez appuyé ou faites un clic droit sur l'étiquette à modifier.</li>
+    <li>Sélectionnez "Modifier" ou "Supprimer" dans le menu.</li>
+  </ol>
+  <h3>Gestion de la structure des étiquettes</h3>
+  <p>Vous pouvez gérer les noms d'affichage et l'ordre des étiquettes dans Paramètres &gt; Structure des étiquettes.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> En écrivant <code>#nom_etiquette</code> dans la syntaxe du bloc-notes, l'enregistrement sera automatiquement étiqueté. Consultez la <a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a> pour plus de détails.
+  </div>
+
+  <h2>Détails du téléversement de fichiers</h2>
+
+  <h3>Procédure d'utilisation</h3>
+  <ol>
+    <li>Appuyez sur le bouton « + » et sélectionnez « Téléverser un fichier ».</li>
+    <li>Sélectionnez l'emplacement de stockage de destination (dépôt pour la gestion de fichiers).</li>
+    <li>Confirmez et ajustez la date et l'heure associées.</li>
+    <li>Sélectionnez le ou les fichiers à téléverser (plusieurs fichiers possibles). Vous pouvez aussi glisser-déposer les fichiers dans la zone « Déposez les fichiers ici » de la boîte de dialogue.</li>
+  </ol>
+
+  <h3>Formats de fichiers pris en charge</h3>
+  <p>Images (JPEG/PNG/GIF/WEBP), vidéos (MP4, etc.), PDF, ZIP et autres.</p>
+  <p>Le contenu des fichiers ZIP peut être exploré (clic droit &gt; Ouvrir le contenu ZIP). Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux) dans les vues liste et détail, et les blocs de code mermaid sont rendus sous forme de diagrammes.</p>
+
+  <h3>Limite de taille de téléversement</h3>
+  <p>Selon la configuration du serveur (-1 pour illimité).</p>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier.
+  </div>
+
+  <h2>Utilisation de la carte GPS</h2>
+  <h3>Téléverser un enregistrement GPS</h3>
+  <ol>
+    <li>Appuyez sur le bouton "+" et sélectionnez "Téléverser un fichier".</li>
+    <li>Sélectionnez le dépôt destine aux enregistrements GPS.</li>
+    <li>Sélectionnez le fichier GPX. Vous pouvez aussi le glisser-déposer dans la zone « Déposez les fichiers .gpx ici ».</li>
+    <li>Activez le bouton de carte pour confirmer l'affichage.</li>
+  </ol>
+  <h3>Configurer la clé API Google Maps</h3>
+  <p>Allez dans Paramètres &gt; Paramètres d'affichage &gt; Clé API Google Maps et entrez votre clé.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> Obtenez votre clé API dans Google Cloud Console en activant l'API Maps JavaScript.
+  </div>
+
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="kyou.html">Détails de l'enregistrement</a></li>
+    <li><a href="dnote.html">Vue d'agrégation</a></li>
+    <li><a href="ryuu.html">Informations associées</a></li>
+    <li><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a></li>
+    <li><a href="application-config.html">Paramètres</a></li>
+  </ul>

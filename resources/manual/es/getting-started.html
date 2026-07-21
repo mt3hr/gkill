@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,30 +30,32 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <h1>Primeros Pasos</h1>
-  <p>gkill es una aplicacion para registrar y consultar registros de vida diaria (life logs).</p>
+  <p>gkill es una aplicación para registrar y consultar registros de vida diaria (life logs).</p>
 
   <h2>Lo que puedes hacer con gkill</h2>
   <table>
+    <caption class="sr-only">Lo que puedes hacer con gkill</caption>
     <tr>
-      <th>Tipo de registro</th>
-      <th>Descripcion</th>
+      <th scope="col">Tipo de registro</th>
+      <th scope="col">Descripción</th>
     </tr>
     <tr>
       <td>Nota</td>
@@ -67,7 +79,7 @@
     </tr>
     <tr>
       <td>Marcador</td>
-      <td>Guarda URLs de paginas web</td>
+      <td>Guarda URLs de páginas web</td>
     </tr>
     <tr>
       <td>Registro numérico</td>
@@ -75,51 +87,53 @@
     </tr>
     <tr>
       <td>Archivo</td>
-      <td>Sube y registra imagenes o documentos</td>
+      <td>Sube y registra imágenes o documentos</td>
     </tr>
   </table>
 
-  <h2>Configuracion inicial</h2>
+  <h2>Configuración inicial</h2>
   <h3>Como iniciar</h3>
   <table>
-    <tr><th>Entorno</th><th>Metodo de inicio</th></tr>
+    <caption class="sr-only">Como iniciar</caption>
+    <tr><th scope="col">Entorno</th><th scope="col">Metodo de inicio</th></tr>
     <tr><td>Windows</td><td>Ejecutar <code>gkill.exe</code> o <code>gkill_server.exe</code></td></tr>
     <tr><td>Navegador / PWA</td><td>Iniciar <code>gkill_server</code> y acceder a <code>http://localhost:9999</code> en el navegador</td></tr>
-    <tr><td>Android</td><td>Instalar el APK e iniciar la aplicacion. En el primer inicio se requiere el permiso «Acceso a todos los archivos» (los datos se guardan en <code>/sdcard/gkill</code>)</td></tr>
+    <tr><td>Android</td><td>Instalar el APK e iniciar la aplicación. En el primer inicio se requiere el permiso «Acceso a todos los archivos» (los datos se guardan en <code>/sdcard/gkill</code>)</td></tr>
   </table>
 
   <h3>Primer registro de cuenta</h3>
   <ol>
-    <li>Al iniciar gkill por primera vez, la pantalla de registro de cuenta aparecera automaticamente.</li>
-    <li>Ingrese un ID de usuario (este sera el nombre de su cuenta).</li>
-    <li>Ingrese una contrasena y vuelva a ingresarla para confirmar.</li>
-    <li>Ingrese una contrasena de administrador y confirmela (establece la contrasena de la cuenta <code>admin</code> creada automaticamente, utilizada para la gestion del servidor).</li>
-    <li>Presione el boton "Registrar" para crear la cuenta.</li>
-    <li>Sera redirigido a la pantalla de inicio de sesion. Inicie sesion con la cuenta que acaba de crear.</li>
+    <li>Al iniciar gkill por primera vez, la pantalla de registro de cuenta aparecera automáticamente.</li>
+    <li>Ingrese un ID de usuario (este será el nombre de su cuenta).</li>
+    <li>Ingrese una contraseña y vuelva a ingresarla para confirmar.</li>
+    <li>Ingrese una contraseña de administrador y confirmela (establece la contraseña de la cuenta <code>admin</code> creada automáticamente, utilizada para la gestión del servidor).</li>
+    <li>Presione el botón "Registrar" para crear la cuenta.</li>
+    <li>Será redirigido a la pantalla de inicio de sesión. Inicie sesión con la cuenta que acaba de crear.</li>
   </ol>
 
   <div class="tip">
-    <strong>Consejo:</strong> La cuenta <code>admin</code> se crea automaticamente cuando el servidor se inicia por primera vez. Esta pantalla establece la contrasena de <code>admin</code> y crea su cuenta de usuario normal al mismo tiempo.
+    <strong>Consejo:</strong> La cuenta <code>admin</code> se crea automáticamente cuando el servidor se inicia por primera vez. Esta pantalla establece la contraseña de <code>admin</code> y crea su cuenta de usuario normal al mismo tiempo.
   </div>
 
-  <p>Despues de iniciar sesion, se mostrara la pantalla predeterminada (Vista de registro de vida por defecto). Configure los ajustes basicos como el idioma y el tema oscuro en la pantalla de configuracion.</p>
+  <p>Después de iniciar sesión, se mostrara la pantalla predeterminada (Vista de registro de vida por defecto). Configure los ajustes basicos como el idioma y el tema oscuro en la pantalla de configuración.</p>
 
   <h2>Lista de pantallas</h2>
   <table>
+    <caption class="sr-only">Lista de pantallas</caption>
     <tr>
-      <th>Pantalla</th>
-      <th>Descripcion</th>
-      <th>Ayuda detallada</th>
+      <th scope="col">Pantalla</th>
+      <th scope="col">Descripción</th>
+      <th scope="col">Ayuda detallada</th>
     </tr>
     <tr>
       <td>Tutorial</td>
       <td>Desde operaciones basicas hasta tecnicas avanzadas</td>
-      <td><a href="tutorial.html">Tutorial (Basico + Avanzado)</a></td>
+      <td><a href="tutorial.html">Tutorial (Básico + Avanzado)</a></td>
     </tr>
     <tr>
-      <td>Inicio de sesion</td>
-      <td>Pantalla de autenticacion</td>
-      <td><a href="login.html">Ayuda de inicio de sesion</a></td>
+      <td>Inicio de sesión</td>
+      <td>Pantalla de autenticación</td>
+      <td><a href="login.html">Ayuda de inicio de sesión</a></td>
     </tr>
     <tr>
       <td>Saihate</td>
@@ -138,17 +152,17 @@
     </tr>
     <tr>
       <td>Bloc de notas de tiempo</td>
-      <td>Pantalla hibrida que combina la entrada de notas con la gestion de marcas de tiempo</td>
+      <td>Pantalla híbrida que combina la entrada de notas con la gestión de marcas de tiempo</td>
       <td><a href="mkfl.html">Ayuda del bloc de marcas</a></td>
     </tr>
     <tr>
       <td>Tareas</td>
-      <td>Gestion de tareas con tablero Kanban</td>
+      <td>Gestión de tareas con tablero Kanban</td>
       <td><a href="mi.html">Ayuda de tareas</a></td>
     </tr>
     <tr>
       <td>Vista de registros</td>
-      <td>Listado, busqueda y consulta de registros</td>
+      <td>Listado, búsqueda y consulta de registros</td>
       <td><a href="rykv.html">Ayuda de vista de registros</a></td>
     </tr>
     <tr>
@@ -162,9 +176,9 @@
       <td><a href="kyou.html">Ayuda de Registros</a></td>
     </tr>
     <tr>
-      <td>Configuracion</td>
-      <td>Configuracion de la aplicacion</td>
-      <td><a href="application-config.html">Ayuda de configuracion</a></td>
+      <td>Configuración</td>
+      <td>Configuración de la aplicación</td>
+      <td><a href="application-config.html">Ayuda de configuración</a></td>
     </tr>
     <tr>
       <td>Referencia de sintaxis del bloc de notas</td>
@@ -182,14 +196,14 @@
       </td>
     </tr>
     <tr>
-      <td>Gestion de cuentas</td>
+      <td>Gestión de cuentas</td>
       <td>Gestionar cuentas de usuario (Solo admin)</td>
-      <td><a href="manage-account.html">Ayuda de gestion de cuentas</a></td>
+      <td><a href="manage-account.html">Ayuda de gestión de cuentas</a></td>
     </tr>
     <tr>
-      <td>Configuracion del servidor</td>
-      <td>Configuracion de conexion y TLS del servidor (Solo admin)</td>
-      <td><a href="server-config.html">Ayuda de configuracion del servidor</a></td>
+      <td>Configuración del servidor</td>
+      <td>Configuración de conexión y TLS del servidor (Solo admin)</td>
+      <td><a href="server-config.html">Ayuda de configuración del servidor</a></td>
     </tr>
     <tr>
       <td>Integración con IA</td>
@@ -200,40 +214,41 @@
 
   <h2>Tu primer registro en 60 segundos</h2>
   <ol>
-    <li>Inicia sesion.</li>
+    <li>Inicia sesión.</li>
     <li>Se muestra la pantalla Vista de registro de vida.</li>
-    <li>Toca el boton "+" en la esquina inferior derecha de la pantalla.</li>
-    <li>Selecciona "Bloc de notas" en el menu.</li>
-    <li>Escribe lo que quieras registrar en el area de texto (por ejemplo: <code>Hoy almorce curry</code>).</li>
-    <li>Pulsa el boton "Guardar" y el registro aparecera inmediatamente en el cronograma de la Vista de registro de vida.</li>
+    <li>Toca el botón "+" en la esquina inferior derecha de la pantalla.</li>
+    <li>Selecciona "Bloc de notas" en el menú.</li>
+    <li>Escribe lo que quieras registrar en el área de texto (por ejemplo: <code>Hoy almorce curry</code>).</li>
+    <li>Pulsa el botón "Guardar" y el registro aparecera inmediatamente en el cronograma de la Vista de registro de vida.</li>
   </ol>
   <div class="tip">
-    <strong>Consejo:</strong> La forma basica de agregar registros es usando el boton "+" en la pantalla Vista de registro de vida. Una vez que aprendas la sintaxis del bloc de notas, podras registrar tareas, valores de estado de animo y mas de la misma manera. Consulta el <a href="tutorial.html">Tutorial</a> para mas detalles.
+    <strong>Consejo:</strong> La forma básica de agregar registros es usando el botón "+" en la pantalla Vista de registro de vida. Una vez que aprendas la sintaxis del bloc de notas, podras registrar tareas, valores de estado de ánimo y más de la misma manera. Consulta el <a href="tutorial.html">Tutorial</a> para más detalles.
   </div>
   <div class="tip">
-    <strong>Consejo:</strong> Tocar el boton "+" abre un menu; mantener pulsado abre directamente el bloc de notas.
+    <strong>Consejo:</strong> Tocar el botón "+" abre un menú; mantener pulsado abre directamente el bloc de notas.
   </div>
   <div class="tip">
-    <strong>Consejo:</strong> La pantalla Saihate tambien esta disponible para registros desde la pantalla de bloqueo o registros rapidos. Consulta la <a href="saihate.html">ayuda de Saihate</a> para mas detalles.
+    <strong>Consejo:</strong> La pantalla Saihate también está disponible para registros desde la pantalla de bloqueo o registros rápidos. Consulta la <a href="saihate.html">ayuda de Saihate</a> para más detalles.
   </div>
 
   <h2>Glosario</h2>
   <table>
+    <caption class="sr-only">Glosario</caption>
     <tr>
-      <th>Termino</th>
-      <th>Descripcion</th>
+      <th scope="col">Termino</th>
+      <th scope="col">Descripción</th>
     </tr>
     <tr>
       <td>Registro</td>
-      <td>Termino general para los registros en gkill. Abarca todos los tipos de registro, incluyendo notas, marcas de tiempo, tareas y mas</td>
+      <td>Termino general para los registros en gkill. Abarca todos los tipos de registro, incluyendo notas, marcas de tiempo, tareas y más</td>
     </tr>
     <tr>
       <td>Sintaxis del bloc de notas</td>
-      <td>Sintaxis de entrada de texto utilizada en el bloc de notas. Al agregar simbolos al inicio de cada linea, puedes crear diferentes tipos de registros a la vez</td>
+      <td>Sintaxis de entrada de texto utilizada en el bloc de notas. Al agregar simbolos al inicio de cada línea, puedes crear diferentes tipos de registros a la vez</td>
     </tr>
     <tr>
       <td>Marca de tiempo</td>
-      <td>Funcion de seguimiento de tiempo. Registra los tiempos de inicio y fin de trabajos o actividades</td>
+      <td>Función de seguimiento de tiempo. Registra los tiempos de inicio y fin de trabajos o actividades</td>
     </tr>
     <tr>
       <td>Saihate</td>
@@ -245,15 +260,15 @@
     </tr>
     <tr>
       <td>Vista de Agregación</td>
-      <td>Funcion para mostrar agregaciones y estadisticas de datos</td>
+      <td>Función para mostrar agregaciones y estadísticas de datos</td>
     </tr>
     <tr>
       <td>Información Relacionada</td>
-      <td>Funcion que busca y muestra automaticamente informacion relacionada</td>
+      <td>Función que busca y muestra automáticamente información relacionada</td>
     </tr>
     <tr>
       <td>Repositorio</td>
-      <td>Ubicacion de almacenamiento de registros. En la interfaz se muestra como «Repositorio». Puedes usar multiples repositorios para diferentes propositos</td>
+      <td>Ubicación de almacenamiento de registros. En la interfaz se muestra como «Repositorio». Puedes usar múltiples repositorios para diferentes propositos</td>
     </tr>
     <tr>
       <td>Perfil</td>
@@ -261,6 +276,7 @@
     </tr>
   </table>
 
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

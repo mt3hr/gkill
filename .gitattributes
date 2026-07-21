@@ -1,2 +1,8 @@
 src/android/gradlew text eol=lf
 *.bat text eol=crlf
+
+# マニュアル（生成物）・原稿フラグメント・docs ツールは LF 固定。
+# 生成鮮度チェック（verify_docs）が Windows/Linux で一致するようにするため。
+resources/manual/** text eol=lf
+resources/manual_src/** text eol=lf
+src/tools/*.mjs text eol=lf

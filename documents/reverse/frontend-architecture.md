@@ -4,13 +4,13 @@
 
 | カテゴリ | 技術 | バージョン |
 |---|---|---|
-| フレームワーク | Vue 3 (Composition API) | ^3.5.35 |
-| UIライブラリ | Vuetify 4 (Material Design) | ^4.1.1 |
-| ルーティング | Vue Router 5 | ^5.1.0 |
-| 国際化 | vue-i18n 11 | ^11.4.5 |
+| フレームワーク | Vue 3 (Composition API) | ^3.5.31 |
+| UIライブラリ | Vuetify 4 (Material Design) | ^4.0.4 |
+| ルーティング | Vue Router 5 | ^5.0.4 |
+| 国際化 | vue-i18n 11 | ^11.3.0 |
 | ビルドツール | Vite 8 | ^8.0.16 |
-| PWA | vite-plugin-pwa + Workbox | ^1.3.0 |
-| TypeScript | TypeScript 6 | ~6.0.3 |
+| PWA | vite-plugin-pwa + Workbox | ^1.2.0 |
+| TypeScript | TypeScript 6 | ~6.0.0 |
 | アイコン | @mdi/js (Material Design Icons) | ^7.4.47 |
 | 地図 | vue3-google-map + @googlemaps/js-api-loader | — |
 | 日時 | moment | ^2.30.1 |
@@ -57,7 +57,7 @@ src/client/
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
 │   ├── views/                       # Viewコンポーネント (185)
-│   └── dialogs/                     # ダイアログコンポーネント (100, Esc閉じ対応)
+│   └── dialogs/                     # ダイアログコンポーネント (101, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -117,7 +117,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 ### ダイアログ アクセシビリティ
 
-全100ダイアログは `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する:
+101ダイアログ中82件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
 
 | 機能 | 説明 |
 |------|------|

@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,31 +30,33 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Anmeldung</span></nav>
   <h1>Anmeldebildschirm</h1>
   <p>Authentifizierungsbildschirm zur Anmeldung bei gkill. Geben Sie Ihre Benutzer-ID und Ihr Passwort ein, um auf die Anwendung zuzugreifen.</p>
 
   <h2>Bildschirmelemente</h2>
   <table>
+    <caption class="sr-only">Bildschirmelemente</caption>
     <tr>
-      <th>Element</th>
-      <th>Beschreibung</th>
+      <th scope="col">Element</th>
+      <th scope="col">Beschreibung</th>
     </tr>
     <tr>
       <td>Benutzer-ID-Feld</td>
@@ -55,8 +67,8 @@
       <td>Geben Sie das Kontopasswort ein.</td>
     </tr>
     <tr>
-      <td>Anmeldeschaltflaeche</td>
-      <td>Fuehrt die Anmeldung mit den eingegebenen Zugangsdaten aus.</td>
+      <td>Anmeldeschaltfläche</td>
+      <td>Führt die Anmeldung mit den eingegebenen Zugangsdaten aus.</td>
     </tr>
     <tr>
       <td>Versionsanzeige</td>
@@ -68,7 +80,7 @@
   <ol>
     <li>Geben Sie die Benutzer-ID Ihres Kontos in das entsprechende Feld ein.</li>
     <li>Geben Sie das Passwort in das entsprechende Feld ein.</li>
-    <li>Klicken Sie auf die Schaltflaeche "Anmelden" oder druecken Sie die Eingabetaste zur Authentifizierung.</li>
+    <li>Klicken Sie auf die Schaltfläche "Anmelden" oder drücken Sie die Eingabetaste zur Authentifizierung.</li>
     <li>Nach erfolgreicher Authentifizierung werden Sie zur in den Einstellungen konfigurierten Standardseite weitergeleitet.</li>
   </ol>
 
@@ -77,11 +89,11 @@
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Die Sitzung nach der Anmeldung ist 30 Tage lang gueltig. Bis zum Ablauf ist keine erneute Anmeldung erforderlich.
+    <strong>Tipp:</strong> Die Sitzung nach der Anmeldung ist 30 Tage lang gültig. Bis zum Ablauf ist keine erneute Anmeldung erforderlich.
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Sie koennen sich auch mit der Eingabetaste anmelden, sodass Sie nach der Passworteingabe direkt absenden koennen.
+    <strong>Tipp:</strong> Sie können sich auch mit der Eingabetaste anmelden, sodass Sie nach der Passworteingabe direkt absenden können.
   </div>
   <div class="tip"><strong>Fehlerbehebung:</strong> Falls Sie sich nicht anmelden können, überprüfen Sie Ihre Benutzer-ID und Ihr Passwort.</div>
   <h2>Verwandte Dokumente</h2>
@@ -89,6 +101,7 @@
     <li><a href="getting-started.html">Erste Schritte</a></li>
     <li><a href="tutorial.html">Tutorial (Grundlagen + Fortgeschritten)</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

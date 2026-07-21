@@ -1,0 +1,238 @@
+<!-- title: Vista de agregación - Ayuda -->
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Vista de Agregación</span></nav>
+  <h1>Vista de agregación</h1>
+  <p>Pantalla para agregar y visualizar datos del registro de vida según condiciones. Se pueden definir tres tipos: «Elementos» para valores agregados individuales, «Listas» para agregaciones agrupadas por clave y «Gráficos de tendencia» para visualizar la evolución temporal.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> La vista de agregación es una función de alternancia dentro de la vista de registro de vida. Haga clic en el icono de agregación en la barra de herramientas de la vista de registro de vida para mostrarla.
+  </div>
+
+  <h2>Gestión de definiciones</h2>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Pestañas</td>
+      <td>Cada definición de agregación se muestra como una pestaña. Haga clic en una pestaña para cambiar.</td>
+    </tr>
+    <tr>
+      <td>Nombre de definición</td>
+      <td>Campo de texto para editar el nombre de la definición de agregación.</td>
+    </tr>
+    <tr>
+      <td>Botón ＋ (junto a pestañas)</td>
+      <td>Añade una nueva definición de agregación.</td>
+    </tr>
+    <tr>
+      <td>Botón eliminar</td>
+      <td>Elimina la definición de agregación que se muestra actualmente.</td>
+    </tr>
+  </table>
+
+  <h2>Elementos de la pantalla</h2>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Rango de fechas</td>
+      <td>Muestra el período objetivo de la agregación.</td>
+    </tr>
+    <tr>
+      <td>Botón de descarga</td>
+      <td>Descarga los resultados de agregación en formato JSON.</td>
+    </tr>
+    <tr>
+      <td>Botón ＋ (flotante)</td>
+      <td>Muestra un menú para seleccionar añadir un elemento, añadir una lista o agregar un gráfico de tendencia.</td>
+    </tr>
+  </table>
+
+  <h2>Elementos (valor agregado individual)</h2>
+  <p>Muestra el valor agregado de los datos que coinciden con las condiciones en el formato «Título: Prefijo [Resultado] Sufijo».</p>
+  <table>
+    <tr>
+      <th>Configuración</th>
+      <th>Tipo</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Título</td>
+      <td>Entrada de texto</td>
+      <td>Establece el nombre visible del elemento.</td>
+    </tr>
+    <tr>
+      <td>Prefijo</td>
+      <td>Entrada de texto</td>
+      <td>Texto que se muestra antes del valor agregado.</td>
+    </tr>
+    <tr>
+      <td>Sufijo</td>
+      <td>Entrada de texto</td>
+      <td>Texto que se muestra después del valor agregado.</td>
+    </tr>
+    <tr>
+      <td>Objetivo de agregación</td>
+      <td>Desplegable</td>
+      <td>Selecciona el método de agregación (cantidad, suma, promedio, máximo, mínimo, etc.).</td>
+    </tr>
+    <tr>
+      <td>Grupo de condiciones</td>
+      <td>Editor de condiciones</td>
+      <td>Filtra los objetivos de agregación con condiciones AND/OR.</td>
+    </tr>
+  </table>
+
+  <h2>Listas (agregación por grupo)</h2>
+  <p>Muestra los resultados agregados agrupados por clave en formato de lista.</p>
+  <table>
+    <tr>
+      <th>Configuración</th>
+      <th>Tipo</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Título / Prefijo / Sufijo</td>
+      <td>Entrada de texto</td>
+      <td>Misma configuración que los elementos.</td>
+    </tr>
+    <tr>
+      <td>Objetivo de agregación</td>
+      <td>Desplegable</td>
+      <td>Selecciona el método de agregación.</td>
+    </tr>
+    <tr>
+      <td>Clave de grupo</td>
+      <td>Desplegable</td>
+      <td>Selecciona el criterio de agrupación (título, tipo de datos, etiqueta, mes, día de la semana, fecha, etc.).</td>
+    </tr>
+    <tr>
+      <td>Grupo de condiciones</td>
+      <td>Editor de condiciones</td>
+      <td>Filtra los objetivos de agregación con condiciones AND/OR.</td>
+    </tr>
+  </table>
+
+  <h2>Gráfico de tendencia (agregación temporal)</h2>
+  <p>Agrega los datos que coinciden con las condiciones en períodos fijos y muestra la evolución como gráfico de línea o de barras. Al pasar el cursor sobre un punto del gráfico se muestra el valor agregado de cada período.</p>
+  <table>
+    <tr>
+      <th>Configuración</th>
+      <th>Tipo</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Título</td>
+      <td>Entrada de texto</td>
+      <td>Establece el nombre visible del gráfico de tendencia.</td>
+    </tr>
+    <tr>
+      <td>Objetivo de agregación</td>
+      <td>Desplegable</td>
+      <td>Selecciona el método de agregación (recuento, suma, promedio, máximo, mínimo, etc.).</td>
+    </tr>
+    <tr>
+      <td>Granularidad</td>
+      <td>Desplegable</td>
+      <td>Selecciona la unidad de período: «Diario», «Semanal» o «Mensual».</td>
+    </tr>
+    <tr>
+      <td>Tipo de gráfico</td>
+      <td>Desplegable</td>
+      <td>Selecciona «Línea» o «Barras».</td>
+    </tr>
+    <tr>
+      <td>Grupo de condiciones</td>
+      <td>Editor de condiciones</td>
+      <td>Filtra el objetivo de agregación con condiciones AND/OR.</td>
+    </tr>
+  </table>
+
+  <h2>Edición de grupo de condiciones</h2>
+  <table>
+    <tr>
+      <th>Elemento</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Lógica de unión</td>
+      <td>Seleccione AND / OR / NOT para configurar cómo se combinan las condiciones.</td>
+    </tr>
+    <tr>
+      <td>Añadir condición</td>
+      <td>Añade una nueva condición al grupo.</td>
+    </tr>
+    <tr>
+      <td>Añadir grupo</td>
+      <td>Añade un grupo de condiciones anidado.</td>
+    </tr>
+    <tr>
+      <td>Eliminar grupo</td>
+      <td>Elimina este grupo de condiciones.</td>
+    </tr>
+    <tr>
+      <td>Cada condición</td>
+      <td>Configura el tipo y valor de la condición (filtrar por tipo de datos, etiqueta, título, importe, valor de ánimo, etc.).</td>
+    </tr>
+  </table>
+
+  <h2>Operaciones</h2>
+  <table>
+    <tr>
+      <th>Operación</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Doble clic</td>
+      <td>Abre la pantalla de edición de un elemento, lista o gráfico de tendencia.</td>
+    </tr>
+    <tr>
+      <td>Clic derecho</td>
+      <td>Muestra el menú contextual (editar/eliminar).</td>
+    </tr>
+    <tr>
+      <td>Arrastrar y soltar</td>
+      <td>Permite cambiar el orden de visualización de elementos, listas y gráficos de tendencia.</td>
+    </tr>
+  </table>
+
+  <h2>Botones de acción inferiores</h2>
+  <table>
+    <tr>
+      <th>Botón</th>
+      <th>Descripción</th>
+    </tr>
+    <tr>
+      <td>Aplicar</td>
+      <td>Guarda los cambios de todas las definiciones.</td>
+    </tr>
+    <tr>
+      <td>Cancelar</td>
+      <td>Descarta los cambios y cierra el diálogo.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Los elementos son útiles para valores agregados individuales (ej: gastos totales del mes), las listas para agregaciones por grupo (ej: gastos por tienda) y los gráficos de tendencia para seguir la evolución (ej: cambios de ánimo semanales, evolución mensual de gastos).
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Combinando condiciones se pueden crear criterios de agregación complejos.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Con arrastrar y soltar puede cambiar libremente el orden de visualización de elementos y listas.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Los resultados de agregación se pueden descargar como JSON para analizarlos con herramientas externas.
+  </div>
+
+  <h2>Documentación relacionada</h2>
+  <ul>
+    <li><a href="application-config.html">Pantalla de configuración</a></li>
+    <li><a href="rykv.html">Vista de registro vital</a></li>
+    <li><a href="getting-started.html">Primeros pasos</a></li>
+  </ul>

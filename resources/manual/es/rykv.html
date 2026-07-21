@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,35 +30,37 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Vista de Registro de Vida</span></nav>
   <h1>Vista de registro de vida</h1>
-  <p>Pantalla para explorar los registros vitales con miniaturas. Admite multiples modos de visualizacion y funciones de filtrado.</p>
+  <p>Pantalla para explorar los registros vitales con miniaturas. Admite múltiples modos de visualización y funciones de filtrado.</p>
 
   <h2>Botones de la barra de herramientas</h2>
   <table>
+    <caption class="sr-only">Botones de la barra de herramientas</caption>
     <tr>
-      <th>Boton</th>
-      <th>Descripcion</th>
+      <th scope="col">Botón</th>
+      <th scope="col">Descripción</th>
     </tr>
     <tr>
       <td><span class="icon">&#9776;</span> Barra lateral</td>
-      <td>Abre/cierra la barra lateral para filtrado y navegacion.</td>
+      <td>Abre/cierra la barra lateral para filtrado y navegación.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128196;</span> Detalles</td>
@@ -56,7 +68,7 @@
     </tr>
     <tr>
       <td><span class="icon">&#128202;</span> Vista de resumen</td>
-      <td>Muestra la pantalla de analisis estadistico.</td>
+      <td>Muestra la pantalla de análisis estadístico.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Calendario</td>
@@ -64,58 +76,73 @@
     </tr>
     <tr>
       <td><span class="icon">&#128506;</span> Mapa</td>
-      <td>Muestra registros con informacion GPS en el mapa.</td>
+      <td>Muestra registros con información GPS en el mapa.</td>
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> Ajustes</td>
-      <td>Abre la pantalla de ajustes de la aplicacion.</td>
+      <td>Abre la pantalla de ajustes de la aplicación.</td>
     </tr>
     <tr><td>&#10068; Ayuda</td><td>Muestra la ayuda de la pantalla actual.</td></tr>
   </table>
 
   <h2>Funciones principales</h2>
+
+  <h3>Vista de lista con miniaturas de imagen</h3>
+  <p>Muestra los registros en una cuadrícula de varias columnas. Los registros que contienen imágenes o archivos muestran una miniatura. El número de columnas se puede cambiar de 1 a 10 en la pantalla de ajustes.</p>
+
+  <h3>Barra lateral (filtros y búsqueda)</h3>
+  <p>En la barra lateral puede especificar las siguientes condiciones para acotar los registros.</p>
   <ul>
-    <li><strong>Miniaturas multicolumna:</strong> Puede mostrar miniaturas en 1 a 10 columnas.</li>
-    <li><strong>Funcion de filtrado:</strong> Filtra registros desde la barra lateral por:
-      <ul>
-        <li>Busqueda de texto (palabra clave)</li>
-        <li>Filtro por etiqueta</li>
-        <li>Rango de fechas</li>
-        <li>Tipo de registro</li>
-        <li>Repositorio</li>
-      </ul>
-    </li>
-    <li><strong>Panel de detalles:</strong> Al seleccionar un registro, se muestra la informacion detallada.</li>
-    <li><strong>Analisis estadistico:</strong> Consulta datos estadisticos y tendencias de los registros.</li>
-    <li><strong>Visualizacion en mapa:</strong> Consulta registros con informacion de ubicacion en el mapa.</li>
+    <li>Búsqueda de texto (palabra clave)</li>
+    <li>Filtro por etiquetas</li>
+    <li>Especificación de un período</li>
+    <li>Selección del tipo de registro</li>
+    <li>Selección del lugar de almacenamiento de registros</li>
   </ul>
 
+  <h3>Añadir una columna de filtro</h3>
+  <p>Con el botón «+» puede añadir una nueva columna de filtro. Así puede comparar en paralelo los resultados de distintas condiciones de filtrado.</p>
+
+  <h3>Panel de detalles</h3>
+  <p>Al seleccionar un registro, el panel de detalles muestra toda la información de ese registro.</p>
+
+  <h3>Estadísticas de la vista de agregación</h3>
+  <p>Muestra los resultados estadísticos y de análisis de los datos de registro. Permite comprender las tendencias y los patrones de sus registros.</p>
+
+  <h3>Visualización del mapa GPS</h3>
+  <p>Muestra los datos del registro GPS sobre un mapa. Permite comprobar visualmente las rutas de desplazamiento y la información de ubicación. Requiere configurar una clave de API de Google Maps.</p>
+
   <div class="tip">
-    <strong>Consejo:</strong> Puede ajustar el numero de columnas de miniaturas (1-10) en los ajustes para adaptarse a diferentes tamanos de pantalla.
+    <strong>Consejo:</strong> El número de columnas de imagen se puede cambiar en la pantalla de ajustes. Se recomiendan 1-2 columnas en el smartphone y 3-5 columnas en el PC.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Resulta útil añadir varias columnas de filtro y comparar en paralelo registros con distintas condiciones.
   </div>
 
   <div class="tip">
     <strong>Consejo:</strong> El valor predeterminado del período de visualización se puede cambiar en la configuración con la opción «Días de visualización del registro de vida».
   </div>
 
-  <h2>FAB (Boton de accion flotante) "+"</h2>
-  <p>Al hacer clic en el boton "+", se despliega un menu para crear rapidamente registros:</p>
+  <h2>FAB (Botón de acción flotante) "+"</h2>
+  <p>Al hacer clic en el botón "+", se despliega un menú para crear rápidamente registros:</p>
   <table>
-    <tr><th>Tipo</th><th>Descripcion</th></tr>
+    <caption class="sr-only">FAB (Botón de acción flotante) "+"</caption>
+    <tr><th scope="col">Tipo</th><th scope="col">Descripción</th></tr>
     <tr><td>Memo</td><td>Crea una nota de texto.</td></tr>
     <tr><td>Tiempo+Memo</td><td>Crea una nota con marca de tiempo.</td></tr>
-    <tr><td>Numerico</td><td>Registra datos numericos.</td></tr>
+    <tr><td>Numérico</td><td>Registra datos numéricos.</td></tr>
     <tr><td>Marcador</td><td>Guarda un marcador de URL.</td></tr>
-    <tr><td>Registro de tiempo</td><td>Inicia una sesion de seguimiento de tiempo.</td></tr>
+    <tr><td>Registro de tiempo</td><td>Inicia una sesión de seguimiento de tiempo.</td></tr>
     <tr><td>Tarea</td><td>Crea una nueva tarea.</td></tr>
-    <tr><td>Gasto</td><td>Registra informacion de gastos.</td></tr>
-    <tr><td>Animo</td><td>Registra un valor de animo (0-10).</td></tr>
+    <tr><td>Gasto</td><td>Registra información de gastos.</td></tr>
+    <tr><td>Ánimo</td><td>Registra un valor de ánimo (0-10).</td></tr>
     <tr><td>Subir archivo</td><td>Sube un archivo.</td></tr>
     <tr><td>Guardar portapapeles</td><td>Guarda el contenido del portapapeles (captura de pantalla, imagen, texto, PDF, etc.) directamente como archivo.</td></tr>
   </table>
 
   <div class="tip">
-    <strong>Consejo:</strong> Mantenga pulsado el boton "+" para abrir directamente la pantalla de entrada del bloc de notas, lo que permite una entrada masiva rapida.
+    <strong>Consejo:</strong> Mantenga pulsado el botón "+" para abrir directamente la pantalla de entrada del bloc de notas, lo que permite una entrada masiva rápida.
   </div>
 
   <div class="tip">
@@ -128,31 +155,38 @@
   <h2>Uso de etiquetas</h2>
   <h3>Agregar una etiqueta</h3>
   <ol>
-    <li>Mantenga pulsado o haga clic derecho en un registro para abrir el menu contextual.</li>
+    <li>Mantenga pulsado o haga clic derecho en un registro para abrir el menú contextual.</li>
     <li>Seleccione "Agregar etiqueta".</li>
-    <li>Escriba el nombre de la etiqueta (se mostraran etiquetas existentes como sugerencias).</li>
+    <li>Escriba el nombre de la etiqueta (se mostrarán etiquetas existentes como sugerencias).</li>
   </ol>
   <h3>Editar o eliminar una etiqueta</h3>
   <ol>
     <li>Mantenga pulsado o haga clic derecho en la etiqueta que desea modificar.</li>
-    <li>Seleccione "Editar" o "Eliminar" del menu.</li>
+    <li>Seleccione "Editar" o "Eliminar" del menú.</li>
   </ol>
-  <h3>Gestion de la estructura de etiquetas</h3>
-  <p>Puede gestionar los nombres de visualizacion y el orden de las etiquetas en Configuracion &gt; Estructura de etiquetas.</p>
+  <h3>Gestión de la estructura de etiquetas</h3>
+  <p>Puede gestionar los nombres de visualización y el orden de las etiquetas en Configuración &gt; Estructura de etiquetas.</p>
   <div class="tip">
-    <strong>Consejo:</strong> Si escribe <code>#nombre_etiqueta</code> en la sintaxis del bloc de notas, el registro se etiquetara automaticamente. Consulta la <a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a> para mas detalles.
+    <strong>Consejo:</strong> Si escribe <code>#nombre_etiqueta</code> en la sintaxis del bloc de notas, el registro se etiquetará automáticamente. Consulta la <a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a> para más detalles.
   </div>
 
   <h2>Detalles de carga de archivos</h2>
+
+  <h3>Pasos de operación</h3>
   <ol>
-    <li>Toque el boton "+" y seleccione "Subir archivo".</li>
-    <li>Seleccione el repositorio de destino (repositorio para gestion de archivos).</li>
+    <li>Pulse el botón «+» y seleccione «Subir archivo».</li>
+    <li>Seleccione el lugar de almacenamiento de destino (repositorio para gestión de archivos).</li>
     <li>Confirme y ajuste la fecha y hora relacionadas.</li>
-    <li>Seleccione el archivo o archivos a subir (se admiten multiples archivos). También puede arrastrar y soltar archivos en la zona del diálogo que indica «Suelte los archivos aquí».</li>
+    <li>Seleccione el archivo o archivos a subir (se admiten múltiples archivos). También puede arrastrar y soltar archivos en la zona del diálogo que indica «Suelte los archivos aquí».</li>
   </ol>
-  <p><strong>Formatos admitidos:</strong> Imagenes (JPEG/PNG/GIF/WEBP), videos (MP4, etc.), PDF, ZIP y otros.</p>
-  <p>Los archivos ZIP pueden explorarse en su contenido (clic derecho &gt; Abrir contenido ZIP). Los archivos Markdown (.md / .markdown) se muestran con formato enriquecido (encabezados, tablas) en las vistas de lista y detalle, y los bloques de código mermaid se representan como diagramas.</p>
-  <p><strong>Limite de tamaño:</strong> Segun la configuracion del servidor (-1 para ilimitado).</p>
+
+  <h3>Formatos de archivo admitidos</h3>
+  <p>Imágenes (JPEG/PNG/GIF/WEBP), vídeos (MP4, etc.), PDF, ZIP y otros.</p>
+  <p>El contenido de los archivos ZIP puede explorarse (clic derecho &gt; Abrir contenido ZIP). Los archivos Markdown (.md / .markdown) se muestran con formato enriquecido (encabezados, tablas) en las vistas de lista y detalle, y los bloques de código mermaid se representan como diagramas.</p>
+
+  <h3>Límite de tamaño de carga</h3>
+  <p>Según la configuración del servidor (-1 para ilimitado).</p>
+
   <div class="tip">
     <strong>Consejo:</strong> Presione Ctrl+V para guardar el contenido del portapapeles directamente como archivo.
   </div>
@@ -160,13 +194,13 @@
   <h2>Uso del mapa GPS</h2>
   <h3>Subir un registro GPS</h3>
   <ol>
-    <li>Toque el boton "+" y seleccione "Subir archivo".</li>
+    <li>Toque el botón "+" y seleccione "Subir archivo".</li>
     <li>Seleccione el repositorio destinado al registro GPS.</li>
     <li>Seleccione el archivo GPX. También puede arrastrarlo y soltarlo en la zona que indica «Suelte los archivos .gpx aquí».</li>
-    <li>Active el boton de mapa para confirmar la visualizacion.</li>
+    <li>Active el botón de mapa para confirmar la visualización.</li>
   </ol>
   <h3>Configurar la clave de Google Maps API</h3>
-  <p>Vaya a Configuracion &gt; Configuracion de visualizacion &gt; Clave de Google Maps API e introduzca su clave.</p>
+  <p>Vaya a Configuración &gt; Configuración de visualización &gt; Clave de Google Maps API e introduzca su clave.</p>
   <div class="tip">
     <strong>Consejo:</strong> Obtenga su clave de API en Google Cloud Console activando la API de Maps JavaScript.
   </div>
@@ -177,8 +211,9 @@
     <li><a href="dnote.html">Vista de Agregación</a></li>
     <li><a href="ryuu.html">Información Relacionada</a></li>
     <li><a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a></li>
-    <li><a href="application-config.html">Configuracion</a></li>
+    <li><a href="application-config.html">Configuración</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

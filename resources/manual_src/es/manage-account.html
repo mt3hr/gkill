@@ -1,0 +1,52 @@
+<!-- title: Gesti&oacute;n de cuentas - Ayuda -->
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Gestión de Cuentas</span></nav>
+  <h1>Gesti&oacute;n de cuentas</h1>
+  <p>Esta pantalla gestiona las cuentas de usuario. Solo los administradores pueden acceder.</p>
+
+  <h2>Bot&oacute;n superior</h2>
+  <p>Pulse el bot&oacute;n <strong>A&ntilde;adir cuenta</strong> para crear una nueva cuenta.</p>
+
+  <h2>Lista de cuentas</h2>
+  <p>Las cuentas registradas se muestran en una lista. Cada fila de cuenta contiene los siguientes elementos:</p>
+  <table>
+    <tr><th>Elemento</th><th>Descripci&oacute;n</th></tr>
+    <tr><td>Casilla de activar/desactivar</td><td>Alterna el estado de la cuenta entre activada y desactivada</td></tr>
+    <tr><td>ID de usuario</td><td>Muestra el ID de usuario de la cuenta</td></tr>
+    <tr><td>Bot&oacute;n de asignaci&oacute;n de almacenamiento</td><td>Asigna repositorios de datos al usuario</td></tr>
+    <tr><td>Bot&oacute;n de restablecimiento de contrase&ntilde;a</td><td>Genera un enlace de restablecimiento de contrase&ntilde;a</td></tr>
+  </table>
+
+  <h2>Bot&oacute;n inferior</h2>
+  <p><strong>Cerrar</strong>: Cierra la pantalla de gesti&oacute;n de cuentas.</p>
+
+  <div class="tip">
+    <strong>Consejo:</strong> La cuenta <code>admin</code> se crea automáticamente cuando el servidor se inicia por primera vez. Las cuentas agregadas desde la pantalla de gestión de cuentas son usuarios normales (sin privilegios de administrador). Las cuentas se gestionan habilitandolas/deshabilitandolas en lugar de eliminarlas.
+  </div>
+
+  <h2>Procedimiento de restablecimiento de contraseña</h2>
+  <h3>Procedimiento del administrador</h3>
+  <ol>
+    <li>Abra Configuración del servidor &gt; Gestión de cuentas.</li>
+    <li>Pulse el botón "Restablecer contraseña" del usuario correspondiente.</li>
+    <li>Pulse Aceptar en el dialogo de confirmacion para generar el enlace de restablecimiento.</li>
+    <li>Copie el enlace y compartalo con el usuario.</li>
+  </ol>
+  <h3>Procedimiento del usuario</h3>
+  <ol>
+    <li>Abra el enlace en el navegador.</li>
+    <li>Introduzca la nueva contraseña dos veces.</li>
+    <li>Pulse el botón "Establecer".</li>
+    <li>Será redirigido a la pantalla de inicio de sesión; inicie sesión con la nueva contraseña.</li>
+  </ol>
+  <div class="tip">
+    <strong>Consejo:</strong> El enlace de restablecimiento es de un solo uso. Si ha caducado, solicite al administrador que genere uno nuevo.
+  </div>
+
+  <h2>Asignacion de almacenamiento</h2>
+  <p>El botón "Asignacion de almacenamiento" le permite asignar repositorios de datos a cada usuario. Consulte <a href="server-config.html">Gestión del almacenamiento</a> en la configuración del servidor para obtener detalles sobre como agregar y administrar repositorios.</p>
+
+  <h2>Documentos Relacionados</h2>
+  <ul>
+    <li><a href="server-config.html">Configuración del Servidor</a></li>
+    <li><a href="application-config.html">Configuración</a></li>
+  </ul>

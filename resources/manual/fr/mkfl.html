@@ -3,16 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bloc-notes horodate - Aide</title>
+  <title>Bloc-notes horodaté - Aide</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,76 +30,99 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Mémo pointage</span></nav>
-  <h1>Bloc-notes horodate</h1>
-  <p>Ecran combinant la saisie du bloc-notes et la gestion des sessions actives. La partie superieure est la zone de saisie du bloc-notes et la partie inferieure affiche la liste des sessions actives.</p>
+  <h1>Bloc-notes horodaté</h1>
+  <p>Écran hybride affichant simultanément la saisie de notes et les horodatages en cours. Il permet de gérer efficacement la prise de notes et la mesure du temps sur un seul écran.</p>
 
   <h2>Boutons de la barre d'outils</h2>
   <table>
+    <caption class="sr-only">Boutons de la barre d'outils</caption>
     <tr>
-      <th>Bouton</th>
-      <th>Description</th>
+      <th scope="col">Bouton</th>
+      <th scope="col">Description</th>
     </tr>
     <tr>
-      <td><span class="icon">&#9881;</span> Parametres</td>
-      <td>Ouvre l'ecran des parametres de l'application.</td>
+      <td><span class="icon">&#9881;</span> Paramètres</td>
+      <td>Ouvre l'écran des paramètres de l'application.</td>
     </tr>
     <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
   </table>
 
-  <h2>Disposition de l'ecran</h2>
+  <h2>Disposition de l'écran</h2>
   <table>
+    <caption class="sr-only">Disposition de l'écran</caption>
     <tr>
-      <th>Zone</th>
-      <th>Description</th>
+      <th scope="col">Zone</th>
+      <th scope="col">Description</th>
     </tr>
     <tr>
-      <td>Partie superieure (Bloc-notes)</td>
-      <td>Zone de saisie de texte pour entrer des enregistrements avec la syntaxe du bloc-notes.</td>
+      <td>Moitié supérieure : zone de saisie du bloc-notes</td>
+      <td>Il s'agit de la même zone de saisie de texte que l'écran du bloc-notes. Vous pouvez saisir des données avec la syntaxe du bloc-notes, insérer des modèles et enregistrer.</td>
     </tr>
     <tr>
-      <td>Partie inferieure (Sessions actives)</td>
-      <td>Affiche la liste des sessions de suivi du temps en cours.</td>
+      <td>Moitié inférieure : liste des horodatages en cours</td>
+      <td>Affiche la liste des sessions de pointage actuellement actives. L'arrêt de chaque session s'effectue également ici.</td>
     </tr>
   </table>
 
+  <h2>Caractéristiques principales</h2>
+  <ul>
+    <li><strong>Mise à jour automatique :</strong> Lorsque vous enregistrez un élément depuis la saisie du bloc-notes, la liste de la moitié inférieure est automatiquement actualisée. Les horodatages nouvellement démarrés apparaissent immédiatement dans la liste.</li>
+    <li><strong>Opération simultanée :</strong> Tout en rédigeant une note, vous pouvez consulter et arrêter les horodatages en cours.</li>
+    <li><strong>Intégration au bloc-notes :</strong> Si vous décrivez le démarrage et l'arrêt d'un horodatage avec la syntaxe du bloc-notes, cela se répercute en temps réel dans la liste du bas.</li>
+  </ul>
+
+  <h2>Procédure d'utilisation</h2>
+  <ol>
+    <li>Saisissez l'enregistrement avec la syntaxe du bloc-notes dans la zone de texte de la moitié supérieure.</li>
+    <li>Envoyez l'enregistrement avec le bouton d'enregistrement.</li>
+    <li>Si vous avez décrit le démarrage d'un horodatage, la nouvelle session apparaît dans la liste de la moitié inférieure.</li>
+    <li>Depuis la liste de la moitié inférieure, vous pouvez arrêter les sessions en cours.</li>
+  </ol>
+
+  <h2>FAB (Bouton d'action flottant) « + »</h2>
+  <p>En appuyant sur le bouton « + » en bas à droite, un menu d'ajout des différents enregistrements se déploie :</p>
+  <table>
+    <caption class="sr-only">FAB (Bouton d'action flottant) « + »</caption>
+    <tr><th scope="col">Élément de menu</th><th scope="col">Description</th></tr>
+    <tr><td>Bloc-notes</td><td>Saisit une note textuelle au format bloc-notes.</td></tr>
+    <tr><td>Bloc-notes horodaté</td><td>Ouvre l'écran hybride combinant la saisie de notes et la liste des horodatages.</td></tr>
+    <tr><td>Enregistrements numériques</td><td>Enregistre des données numériques.</td></tr>
+    <tr><td>Signets</td><td>Enregistre une URL.</td></tr>
+    <tr><td>Suivi du temps</td><td>Démarre une nouvelle session de suivi du temps.</td></tr>
+    <tr><td>Tâches</td><td>Ajoute une nouvelle tâche.</td></tr>
+    <tr><td>Dépenses</td><td>Enregistre un montant.</td></tr>
+    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
+    <tr><td>Téléverser</td><td>Téléverse un fichier et l'enregistre.</td></tr>
+  </table>
+
   <div class="tip">
-    <strong>Astuce :</strong> Apres l'enregistrement du texte du bloc-notes, la liste des sessions actives se rafraichit automatiquement, refletant immediatement les sessions nouvellement creees.
+    <strong>Appui long :</strong> Un appui long sur le bouton « + » ouvre directement le bloc-notes. Pratique lorsque vous souhaitez prendre une note rapidement.
   </div>
 
-  <h2>FAB (Bouton d'action flottant) "+"</h2>
-  <p>En cliquant sur le bouton "+", un menu se deploie pour creer rapidement des enregistrements :</p>
-  <table>
-    <tr><th>Type</th><th>Description</th></tr>
-    <tr><td>Mémo</td><td>Cree une note textuelle.</td></tr>
-    <tr><td>Bloc-notes d'entrées de temps</td><td>Cree une note avec horodatage.</td></tr>
-    <tr><td>Enregistrements numériques</td><td>Enregistre des donnees numeriques.</td></tr>
-    <tr><td>Signets</td><td>Enregistre un signet URL.</td></tr>
-    <tr><td>Suivi du temps</td><td>Demarre une session de suivi du temps.</td></tr>
-    <tr><td>Tâches</td><td>Cree une nouvelle tache.</td></tr>
-    <tr><td>Dépenses</td><td>Enregistre des informations de depense.</td></tr>
-    <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
-    <tr><td>Téléverser</td><td>Televerse un fichier.</td></tr>
-  </table>
+  <div class="tip">
+    <strong>Astuce :</strong> Pour la saisie quotidienne, cet écran est le plus efficace. Vous pouvez rédiger des notes tout en gérant votre temps de travail.
+  </div>
 
   <div class="tip">
-    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'ecran de saisie du bloc-notes, permettant une saisie par lots rapide.
+    <strong>Astuce :</strong> La saisie du bloc-notes de la moitié supérieure offre les mêmes fonctions que l'écran du bloc-notes. Les modèles sont également disponibles.
   </div>
 
   <div class="tip">
@@ -102,6 +135,8 @@
     <li><a href="kftl.html">Bloc-notes</a></li>
     <li><a href="plaing.html">En cours</a></li>
   </ul>
+
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

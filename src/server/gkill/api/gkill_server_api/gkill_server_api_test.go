@@ -161,7 +161,6 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	router.HandleFunc(gkillAPI.APIAddress.LogoutAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleLogout)).Methods(gkillAPI.APIAddress.LogoutMethod)
 	router.HandleFunc(gkillAPI.APIAddress.ResetPasswordAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleResetPassword)).Methods(gkillAPI.APIAddress.ResetPasswordMethod)
 	router.HandleFunc(gkillAPI.APIAddress.SetNewPasswordAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleSetNewPassword)).Methods(gkillAPI.APIAddress.SetNewPasswordMethod)
-	router.HandleFunc(gkillAPI.APIAddress.UpdateCacheAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUpdateCache)).Methods(gkillAPI.APIAddress.UpdateCacheMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UploadFilesAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUploadFiles)).Methods(gkillAPI.APIAddress.UploadFilesMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UploadGPSLogFilesAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUploadGPSLogFiles)).Methods(gkillAPI.APIAddress.UploadGPSLogFilesMethod)
 	router.HandleFunc(gkillAPI.APIAddress.BrowseZipContentsAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleBrowseZipContents)).Methods(gkillAPI.APIAddress.BrowseZipContentsMethod)
@@ -169,6 +168,7 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	// --- wrapAuth routes (authentication required, no repos) ---
 	router.HandleFunc(gkillAPI.APIAddress.GetApplicationConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetApplicationConfig)).Methods(gkillAPI.APIAddress.GetApplicationConfigMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetServerConfigsAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetServerConfigs)).Methods(gkillAPI.APIAddress.GetServerConfigsMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateCacheAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateCache)).Methods(gkillAPI.APIAddress.UpdateCacheMethod)
 	router.HandleFunc(gkillAPI.APIAddress.AddAccountAddress, gkillAPI.wrapAuth(gkillAPI.HandleAddAccount)).Methods(gkillAPI.APIAddress.AddAccountMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateAccountStatusAddress, gkillAPI.wrapAuth(gkillAPI.HandleUpdateAccountStatus)).Methods(gkillAPI.APIAddress.UpdateAccountStatusMethod)
 	router.HandleFunc(gkillAPI.APIAddress.ReloadRepositoriesAddress, gkillAPI.wrapAuth(gkillAPI.HandleReloadRepositories)).Methods(gkillAPI.APIAddress.ReloadRepositoriesMethod)
@@ -7515,10 +7515,14 @@ func TestHandleGetKyousMCP_InvalidSession(t *testing.T) {
 }
 
 func TestHandleUpdateCache_Success(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
+	// update_cache は管理者セッションを要求する
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+
 	updateReq := &req_res.UpdateCacheRequest{
+		SessionID:  sessionID,
 		UserIDs:    []string{"admin"},
 		LocaleName: "en",
 	}
@@ -7549,11 +7553,11 @@ func TestHandleUpdateCache_InvalidSession(t *testing.T) {
 	tsURL, _, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
-	// UpdateCache doesn't use session_id — it uses user_ids.
-	// But passing a non-existent user should trigger an error
-	// when trying to get repositories for that user.
+	// update_cache は有効な（管理者）セッションを要求するようになった。
+	// 不正な session_id は認証ミドルウェアで拒否されなければならない。
 	updateReq := &req_res.UpdateCacheRequest{
-		UserIDs:    []string{"nonexistent_user_xyz"},
+		SessionID:  "invalid_session_id",
+		UserIDs:    []string{"admin"},
 		LocaleName: "en",
 	}
 
@@ -7564,9 +7568,12 @@ func TestHandleUpdateCache_InvalidSession(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update cache response: %v", err)
 	}
-	// Verify the response is well-formed regardless of error presence
 	if resp.StatusCode != 200 {
 		t.Errorf("expected status 200, got %d", resp.StatusCode)
+	}
+	// 認証エラーが返ることを確認する
+	if len(updateResp.Errors) == 0 {
+		t.Fatal("expected an auth error for invalid session, got none")
 	}
 }
 

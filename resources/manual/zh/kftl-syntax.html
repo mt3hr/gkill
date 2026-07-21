@@ -12,9 +12,14 @@
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
     pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
     .back-link { margin-bottom: 16px; }
     .back-link a { color: #1976D2; text-decoration: none; }
     .back-link a:hover { text-decoration: underline; }
@@ -25,22 +30,23 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <a href="kftl.html">记事本</a> &gt; <span>记事本语法参考</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; 返回记事本帮助</a></div>
@@ -52,7 +58,8 @@
 <h2>语句一览</h2>
 
 <table>
-  <tr><th>前缀</th><th>ASCII</th><th>类型</th><th>说明</th></tr>
+  <caption class="sr-only">语句一览</caption>
+  <tr><th scope="col">前缀</th><th scope="col">ASCII</th><th scope="col">类型</th><th scope="col">说明</th></tr>
   <tr><td>（无）</td><td>（无）</td><td>备忘录</td><td>记录文本备忘</td></tr>
   <tr><td><code>。</code></td><td><code>#</code></td><td>标签</td><td>添加标签</td></tr>
   <tr><td><code>ーー</code></td><td><code>--</code></td><td>文本块</td><td>原样保留多行文本</td></tr>
@@ -221,6 +228,7 @@ https://example.com
     <li><a href="kftl-template-struct.html">模板结构</a></li>
   </ul>
 
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

@@ -1,0 +1,192 @@
+<!-- title: Settings - Help -->
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Settings</span></nav>
+  <h1>Settings (Application Config)</h1>
+  <p>This screen manages application-wide settings and data structure configuration. You can adjust display preferences, behavior options, and external integrations.</p>
+
+  <h2>Top Action Buttons</h2>
+  <table>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Server Settings (admin only)</td>
+      <td>Opens the server configuration screen for port, TLS, access restrictions, and other server-level settings. Only visible to administrator accounts.</td>
+    </tr>
+    <tr>
+      <td>Reload</td>
+      <td>Refreshes data from the server. Long-press to force a full reload.</td>
+    </tr>
+    <tr>
+      <td>Logout</td>
+      <td>Ends the current session and logs out.</td>
+    </tr>
+  </table>
+
+  <h2>General Settings</h2>
+  <table>
+    <tr>
+      <th>Setting</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Language</td>
+      <td>Dropdown</td>
+      <td>Choose the interface language: ja (Japanese), en (English), zh (Chinese), ko (Korean), es (Spanish), fr (French), de (German).</td>
+    </tr>
+    <tr>
+      <td>Dark Theme</td>
+      <td>Checkbox</td>
+      <td>Toggle dark mode on or off. Suitable for low-light environments.</td>
+    </tr>
+    <tr>
+      <td>Hot Reload</td>
+      <td>Checkbox</td>
+      <td>When enabled, the life log view automatically refreshes when data changes are detected.</td>
+    </tr>
+    <tr>
+      <td>Show Tags in List</td>
+      <td>Checkbox</td>
+      <td>Controls whether tags are displayed on record cards in list views.</td>
+    </tr>
+    <tr>
+      <td>Show Share Footer</td>
+      <td>Checkbox</td>
+      <td>Controls whether sharing options are displayed in the footer area.</td>
+    </tr>
+  </table>
+
+  <h2>Display Settings</h2>
+  <table>
+    <tr>
+      <th>Setting</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Life Log View Display Period</td>
+      <td>Checkbox + Number</td>
+      <td>Sets the number of days of records to display in the life log view. Set to -1 for unlimited. A shorter period loads faster.</td>
+    </tr>
+    <tr>
+      <td>Default Page</td>
+      <td>Dropdown</td>
+      <td>Choose which page is shown after login.</td>
+    </tr>
+    <tr>
+      <td>Life Log View Image Columns</td>
+      <td>Number (1-10)</td>
+      <td>Sets the number of columns for the thumbnail grid in the life log view. Adjust based on your screen size.</td>
+    </tr>
+    <tr>
+      <td>Default Task Board</td>
+      <td>Dropdown + Add button</td>
+      <td>Sets the default board shown on the task screen. Use the add button to create new boards.</td>
+    </tr>
+  </table>
+
+  <h2>External Integration</h2>
+  <table>
+    <tr>
+      <th>Setting</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Bookmarklet</td>
+      <td>Read-only</td>
+      <td>A JavaScript bookmarklet URL for your browser's bookmark bar. Use it to save bookmarks to gkill with one click from any webpage.</td>
+    </tr>
+    <tr>
+      <td>Google Map API Key</td>
+      <td>Text input</td>
+      <td>Enter your Google Map API key to enable GPS map features. The map view requires this key to function.</td>
+    </tr>
+  </table>
+
+  <h2>Data Structure Management</h2>
+  <p>These buttons open dedicated editors for managing how your data is organized.</p>
+  <table>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Tag Structure</td>
+      <td>Manage the tag hierarchy and tag groupings. Create, rename, reorder, and organize tags into parent-child relationships.</td>
+    </tr>
+    <tr>
+      <td>Storage Structure</td>
+      <td>Manage data storage locations. Add, remove, or configure where records are stored.</td>
+    </tr>
+    <tr>
+      <td>Profile Structure</td>
+      <td>Manage device and profile configurations. Edit per-device settings.</td>
+    </tr>
+    <tr>
+      <td>Record Type Structure</td>
+      <td>Manage which record types are stored in which storages.</td>
+    </tr>
+    <tr>
+      <td>Template Structure</td>
+      <td>Manage memo pad text templates for quick input. Create and edit boilerplate text entries.</td>
+    </tr>
+    <tr>
+      <td>Summary View</td>
+      <td>Manage data aggregation and summary view configurations.</td>
+    </tr>
+    <tr>
+      <td>Related Information</td>
+      <td>Manage related information structures.</td>
+    </tr>
+    <tr>
+      <td>Dashboard</td>
+      <td>Configure the search conditions for Aggregation View and tasks displayed on the Dashboard screen.</td>
+    </tr>
+  </table>
+
+  <h2>Bottom Action Buttons</h2>
+  <table>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Apply</td>
+      <td>Save all changes.</td>
+    </tr>
+    <tr>
+      <td>Cancel</td>
+      <td>Discard changes and close the screen.</td>
+    </tr>
+  </table>
+
+  <h2>Footer</h2>
+  <p>The bottom of the screen displays application information:</p>
+  <ul>
+    <li><strong>Version number</strong> — Clickable link to the project page.</li>
+    <li><strong>Build timestamp</strong> — Date and time when the application was built.</li>
+    <li><strong>Commit hash</strong> — The Git commit the build was created from.</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Tip:</strong> After changing settings, press "Apply" to save. Press "Cancel" to discard all changes.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> For smartphones, set image columns to 1-2. For desktop screens, 3-5 columns works well.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> To use GPS map features, enable the Maps JavaScript API in Google Cloud Console and enter the Google Map API Key in External Integration.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="server-config.html">Server Config (Admin only)</a></li>
+    <li><a href="manage-account.html">Account Management (Admin only)</a></li>
+    <li><a href="dnote.html">Aggregation View</a></li>
+    <li><a href="ryuu.html">Related Info</a></li>
+    <li><a href="kftl-template-struct.html">Template Structure</a></li>
+  </ul>

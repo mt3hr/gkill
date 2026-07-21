@@ -1,0 +1,78 @@
+<!-- title: Integración con IA - Ayuda -->
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros pasos</a> &gt; <span>Integración con IA</span></nav>
+  <h1>Integración con IA</h1>
+  <p>Al conectar asistentes de IA como Claude con gkill, puede buscar, agregar y editar sus registros de vida mediante conversación natural.</p>
+
+  <h2>Lo que puede hacer</h2>
+  <table>
+    <tr><th>Acción</th><th>Ejemplo</th></tr>
+    <tr><td>Buscar registros</td><td>"Muéstrame las notas del almuerzo de la semana pasada" / "Resume los gastos de este mes"</td></tr>
+    <tr><td>Agregar registros</td><td>"Agrega una nota para hoy" / "Crea una tarea"</td></tr>
+    <tr><td>Actualizar / eliminar registros</td><td>"Marca esta tarea como completada"</td></tr>
+    <tr><td>Obtener GPS / archivos</td><td>"Muéstrame mi ruta de hoy"</td></tr>
+    <tr><td>Verificar configuración</td><td>"Lista mis plantillas"</td></tr>
+  </table>
+
+  <h2>Tipos de integración</h2>
+  <table>
+    <tr><th>Tipo</th><th>Descripción</th></tr>
+    <tr><td>Solo lectura</td><td>La IA solo puede ver y buscar registros. No puede agregar ni modificar.</td></tr>
+    <tr><td>Solo escritura</td><td>La IA solo puede agregar, actualizar y eliminar registros.</td></tr>
+    <tr><td>Lectura y escritura</td><td>La IA puede ver, agregar, actualizar y eliminar registros.</td></tr>
+  </table>
+
+  <h2>Entrega de archivos</h2>
+  <p>La forma de mostrar los registros de archivos (imágenes, vídeos, documentos) a la IA cambia automáticamente según el tipo de conexión.</p>
+  <table>
+    <tr><th>Tipo de conexión</th><th>Método de entrega</th></tr>
+    <tr><td>Conexión local (IA en el mismo PC)</td><td>Se pasa a la IA la ruta real del archivo, que puede leerlo directamente.</td></tr>
+    <tr><td>Conexión remota (IA a través de internet)</td><td>Se emite una URL exclusiva con caducidad y la IA obtiene el archivo desde esa URL. Para las imágenes se proporcionan tanto la miniatura como el tamaño original. No es necesario exponer gkill.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo:</strong> El límite de tamaño de la transferencia incrustada (8MB por defecto) se ajusta con la variable de entorno <code>GKILL_MCP_MAX_FILE_BYTES</code>, y la caducidad de la URL (1 hora por defecto) con <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+  </div>
+
+  <h2>Configuración (Claude Desktop)</h2>
+  <p>Agregue lo siguiente al archivo de configuración de Claude Desktop (<code>claude_desktop_config.json</code>).</p>
+
+  <h3>Integración de solo lectura</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "su-id-de-usuario",
+        "GKILL_PASSWORD_SHA256": "hash-sha256-de-su-contraseña"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>Consejo:</strong> <code>GKILL_PASSWORD_SHA256</code> es el hash SHA256 de su contraseña. Puede generarlo con herramientas disponibles en su sistema operativo.
+  </div>
+
+  <h2>Configuración (Claude Code)</h2>
+  <pre><code>claude mcp add gkill \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=su-id-de-usuario \
+  --env GKILL_PASSWORD_SHA256=su-hash \
+  -- npx -y gkill-mcp-server</code></pre>
+  <div class="tip">
+    <strong>Nota:</strong> gkill-mcp-server aún no está publicado en npm. Hasta entonces, especifique el servidor MCP incluido en el repositorio como comando (por ejemplo, <code>-- node src/mcp/gkill-readwrite-server.mjs</code>).
+  </div>
+
+  <h2>Acceso remoto</h2>
+  <p>Haga que su servidor gkill sea accesible a través de Internet y configure <code>GKILL_BASE_URL</code> con su dirección pública. Se recomienda encarecidamente habilitar TLS (HTTPS) por seguridad.</p>
+  <div class="tip">
+    <strong>Consejo:</strong> La configuración de TLS se puede realizar desde <a href="server-config.html">Configuración del servidor</a>.
+  </div>
+
+  <h2>Páginas relacionadas</h2>
+  <ul>
+    <li><a href="getting-started.html">Primeros pasos</a></li>
+    <li><a href="server-config.html">Configuración del servidor</a></li>
+    <li><a href="application-config.html">Configuración de la aplicación</a></li>
+  </ul>

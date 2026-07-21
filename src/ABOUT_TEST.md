@@ -2,19 +2,36 @@
 
 ## 概要
 
-gkill プロジェクト全体で約2,310件のテストが存在する（Go テスト関数 ~577 + フロントエンドユニット 800 + E2E 207 + MCP 602 + Android 12 + Wear OS 114）。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
+gkill プロジェクト全体で約2,310件のテストが存在する（Go テスト関数 588 + フロントエンドユニット 790 + E2E 206 + MCP 602 + Android 12 + Wear OS 114）。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
 
 ## テスト統計
 
-| コンポーネント | テスト数 | フレームワーク |
+数値は **トップレベルのテスト宣言数**（静的カウント）であり、実行時のケース数とは一致しない。`t.Run` のサブテストや `it.each` / `test.each` のパラメタライズド展開により、実行時のケース数はこれより多くなる。
+
+| コンポーネント | テスト宣言数 | フレームワーク |
 |--------------|---------|---------------|
-| Go バックエンド (`server/`) | ~577 | Go `testing` |
-| フロントエンド ユニット (`client/`) | 800 | Vitest |
-| フロントエンド E2E (`client/`) | 207 | Playwright |
+| Go バックエンド (`server/`) | 588 | Go `testing` |
+| フロントエンド ユニット (`client/`) | 790 | Vitest |
+| フロントエンド E2E (`client/`) | 206 | Playwright |
 | MCP サーバ (`mcp/`) | 602 | Vitest |
 | Android (`android/`) | 12 | JUnit 4 |
 | Wear OS (`wear_os/`) | 114 | JUnit 4 + MockK |
 | **合計** | **~2,312** | |
+
+<details>
+<summary>カウント方法（再現手順）</summary>
+
+```bash
+# Go: トップレベルのテスト関数（t.Run サブテストは含まない）
+grep -rhE '^func Test' src/server --include=*.go | wc -l
+
+# フロントエンド ユニット / MCP / E2E: 行頭のテスト宣言
+grep -rhE '^\s*(it|test)(\.each)?\(' src/client/__tests__/unit --include=*.ts | wc -l
+grep -rhE '^\s*(it|test)(\.each)?\(' src/mcp --include=*.mjs | wc -l
+grep -rhE '^\s*test\(' src/client/__tests__/e2e --include=*.ts | wc -l
+```
+
+</details>
 
 ## テスト実行コマンド
 
@@ -41,9 +58,9 @@ gkill プロジェクト全体で約2,310件のテストが存在する（Go テ
 | `client/classes/kftl/` | [client/classes/kftl/ABOUT_TEST.md](client/classes/kftl/ABOUT_TEST.md) | KFTL パーサ (TypeScript) |
 | `client/pages/` | [client/pages/ABOUT_TEST.md](client/pages/ABOUT_TEST.md) | E2E + Composable + Router |
 | `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) | i18n 完全性検証（7言語） |
-| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（~577テスト） |
+| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（588テスト） |
 | `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) | API 共通基盤（FindFilter等） |
-| `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) | API ハンドラ統合テスト（handle_*.go 86ファイル） |
+| `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) | API ハンドラ統合テスト（handle_*.go 88ファイル） |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) | KFTL パーサ (Go) |
 | `server/gkill/api/req_res/` | [server/gkill/api/req_res/ABOUT_TEST.md](server/gkill/api/req_res/ABOUT_TEST.md) | JSON 往復テスト |
 | `server/gkill/dao/` | [server/gkill/dao/ABOUT_TEST.md](server/gkill/dao/ABOUT_TEST.md) | DAO 層全体 |
