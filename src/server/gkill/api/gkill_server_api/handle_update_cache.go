@@ -50,6 +50,19 @@ func (g *GkillServerAPI) HandleUpdateCache(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// 認証: 管理者セッションを要求する（任意ユーザーのキャッシュを更新しうる特権操作のため）
+	auth := AuthFromContext(r.Context())
+	if auth == nil || auth.Account == nil || !auth.Account.IsAdmin {
+		err = fmt.Errorf("account not has admin at update cache")
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotHasAdminError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_CACHE_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)

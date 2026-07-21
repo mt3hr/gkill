@@ -12,10 +12,17 @@
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
     pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
     .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -23,22 +30,23 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
-    body.dark .section-divider { border-top-color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .back-link a { color: #64B5F6; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>チュートリアル</span></nav>
   <h1>チュートリアル</h1>
   <p>gkillの使い方を基本編と応用編に分けて解説します。初めての方は基本編から順にお読みください。</p>
@@ -57,7 +65,8 @@
   <h2>画面の切り替え方</h2>
   <p>画面上部のツールバーに表示されている<strong>ページタイトル</strong>（例: 「ライフログビュー」「タスク」など）をタップすると、ドロップダウンメニューが開き、各画面に移動できます。</p>
   <table>
-    <tr><th>画面名</th><th>説明</th></tr>
+    <caption class="sr-only">画面の切り替え方</caption>
+    <tr><th scope="col">画面名</th><th scope="col">説明</th></tr>
     <tr><td>さいはて</td><td>ナビゲーションなしの記録追加専用画面（ロック画面やホーム画面からの直接起動向け）</td></tr>
     <tr><td>メモ帳</td><td>メモ帳構文でテキスト入力する画面</td></tr>
     <tr><td>打刻メモ帳</td><td>メモ入力と進行中の打刻を同時管理する画面</td></tr>
@@ -70,7 +79,8 @@
   <h2>ツールバーボタンの見方</h2>
   <p>ツールバー右側のボタンは、現在の画面内の表示を切り替えます。</p>
   <table>
-    <tr><th>ボタン</th><th>機能</th><th>表示される画面</th></tr>
+    <caption class="sr-only">ツールバーボタンの見方</caption>
+    <tr><th scope="col">ボタン</th><th scope="col">機能</th><th scope="col">表示される画面</th></tr>
     <tr><td><span class="icon">&#9776;</span> サイドバー</td><td>検索・フィルター用サイドバーの表示/非表示</td><td>ライフログビュー、タスク</td></tr>
     <tr><td><span class="icon">&#128196;</span> 詳細表示</td><td>選択した記録の詳細パネルの表示/非表示</td><td>ライフログビュー、タスク</td></tr>
     <tr><td><span class="icon">&#128202;</span> 集計ビュー</td><td>統計・分析ビューの表示/非表示</td><td>ライフログビュー</td></tr>
@@ -82,7 +92,8 @@
 
   <h2>画面使い分け早見表</h2>
   <table>
-    <tr><th>画面名</th><th>主な用途</th><th>こんなときに</th></tr>
+    <caption class="sr-only">画面使い分け早見表</caption>
+    <tr><th scope="col">画面名</th><th scope="col">主な用途</th><th scope="col">こんなときに</th></tr>
     <tr><td>ライフログビュー</td><td>記録の追加・一覧・検索</td><td>記録を追加・確認・検索したいとき（日常的な主要画面）</td></tr>
     <tr><td>メモ帳</td><td>テキストで一括入力</td><td>複数の記録をまとめて入力したいとき</td></tr>
     <tr><td>打刻メモ帳</td><td>メモ＋打刻の同時管理</td><td>作業しながらメモと時間を記録したいとき</td></tr>
@@ -122,7 +133,8 @@
   <p>gkillではさまざまな種類のライフログを記録できます。画面右下の「+」ボタンから記録を追加します。</p>
 
   <table>
-    <tr><th>記録タイプ</th><th>用途</th><th>入力例</th></tr>
+    <caption class="sr-only">2. 記録を追加する</caption>
+    <tr><th scope="col">記録タイプ</th><th scope="col">用途</th><th scope="col">入力例</th></tr>
     <tr><td>メモ</td><td>テキストメモを残す</td><td>「今日は天気が良かった」</td></tr>
     <tr><td>打刻</td><td>時間の記録（開始・終了）</td><td>「会議 10:00〜11:30」</td></tr>
     <tr><td>タスク</td><td>やるべきことを管理する</td><td>「レポートを書く」</td></tr>
@@ -217,7 +229,8 @@
 
   <h3>よく使う設定</h3>
   <table>
-    <tr><th>設定項目</th><th>説明</th></tr>
+    <caption class="sr-only">よく使う設定</caption>
+    <tr><th scope="col">設定項目</th><th scope="col">説明</th></tr>
     <tr><td>言語</td><td>UIの表示言語を変更します。</td></tr>
     <tr><td>ダークテーマ</td><td>暗い配色に切り替えます。</td></tr>
     <tr><td>起動時の画面</td><td>ログイン後に最初に表示するページを選択します。</td></tr>
@@ -235,7 +248,8 @@
 
   <h3>主要なプレフィックス</h3>
   <table>
-    <tr><th>プレフィックス</th><th>種類</th><th>例</th></tr>
+    <caption class="sr-only">主要なプレフィックス</caption>
+    <tr><th scope="col">プレフィックス</th><th scope="col">種類</th><th scope="col">例</th></tr>
     <tr><td>(なし)</td><td>メモ</td><td><code>今日は天気が良かった</code></td></tr>
     <tr><td><code>。</code></td><td>タグ</td><td><code>。日記、天気</code></td></tr>
     <tr><td><code>ーみ</code></td><td>タスク</td><td><code>ーみ</code> → 次行にタイトル</td></tr>
@@ -292,9 +306,10 @@
 
   <h2>9. 打刻で時間を記録する</h2>
   <table>
+    <caption class="sr-only">9. 打刻で時間を記録する</caption>
     <tr>
-      <th>画面名</th>
-      <th>用途</th>
+      <th scope="col">画面名</th>
+      <th scope="col">用途</th>
     </tr>
     <tr>
       <td>打刻メモ帳</td>
@@ -373,7 +388,8 @@
     <li>共有URLが生成されます。用途に応じて以下のURLを使い分けます。</li>
   </ol>
   <table>
-    <tr><th>URL種別</th><th>用途</th></tr>
+    <caption class="sr-only">共有リンクの生成手順</caption>
+    <tr><th scope="col">URL種別</th><th scope="col">用途</th></tr>
     <tr><td>ローカルURL</td><td>同じ端末内でのアクセス（localhost）</td></tr>
     <tr><td>LAN URL</td><td>同じネットワーク内の他の端末からのアクセス</td></tr>
     <tr><td>WAN URL</td><td>インターネット経由での外部アクセス</td></tr>
@@ -382,7 +398,8 @@
   <h3>共有データの制御</h3>
   <p>共有時に、どのデータを含めるかを選択できます。</p>
   <table>
-    <tr><th>オプション</th><th>説明</th></tr>
+    <caption class="sr-only">共有データの制御</caption>
+    <tr><th scope="col">オプション</th><th scope="col">説明</th></tr>
     <tr><td>タグ</td><td>記録に付けられたタグを共有に含める</td></tr>
     <tr><td>テキスト</td><td>記録のテキスト内容を共有に含める</td></tr>
     <tr><td>打刻</td><td>打刻の時間情報を共有に含める</td></tr>
@@ -420,6 +437,9 @@
   <div class="tip">
     <strong>ヒント:</strong> 定期的にホームディレクトリをバックアップすることを推奨します。特に <code>datas/</code> と <code>configs/</code> ディレクトリが重要です。
   </div>
+  <div class="tip">
+    <strong>注意:</strong> リポジトリの保存先はホームディレクトリの外に設定することもできます。外部フォルダに置いたファイル（IDF監視フォルダ、Gitリポジトリ、外部に配置したデータベースなど）を使っている場合は、ホームディレクトリのコピーだけではそれらを取りこぼします。設定しているすべてのリポジトリの保存先も、あわせてバックアップ対象に含めてください。
+  </div>
 
   <h2>関連ドキュメント</h2>
   <ul>
@@ -430,6 +450,7 @@
     <li><a href="mi.html">タスク画面</a></li>
     <li><a href="rykv.html">ライフログビュー画面</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

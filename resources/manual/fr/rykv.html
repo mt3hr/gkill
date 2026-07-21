@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,43 +30,45 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Vue journal de vie</span></nav>
   <h1>Vue du journal de vie</h1>
-  <p>Ecran pour parcourir les journaux de vie avec des miniatures. Prend en charge plusieurs modes d'affichage et fonctions de filtrage.</p>
+  <p>Écran pour parcourir les journaux de vie avec des miniatures. Prend en charge plusieurs modes d'affichage et fonctions de filtrage.</p>
 
   <h2>Boutons de la barre d'outils</h2>
   <table>
+    <caption class="sr-only">Boutons de la barre d'outils</caption>
     <tr>
-      <th>Bouton</th>
-      <th>Description</th>
+      <th scope="col">Bouton</th>
+      <th scope="col">Description</th>
     </tr>
     <tr>
-      <td><span class="icon">&#9776;</span> Barre laterale</td>
-      <td>Ouvre/ferme la barre laterale pour le filtrage et la navigation.</td>
+      <td><span class="icon">&#9776;</span> Barre latérale</td>
+      <td>Ouvre/ferme la barre latérale pour le filtrage et la navigation.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#128196;</span> Details</td>
-      <td>Affiche/masque le panneau de details de l'enregistrement.</td>
+      <td><span class="icon">&#128196;</span> Détails</td>
+      <td>Affiche/masque le panneau de détails de l'enregistrement.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#128202;</span> Vue recapitulative</td>
-      <td>Affiche l'ecran d'analyse statistique.</td>
+      <td><span class="icon">&#128202;</span> Vue récapitulative</td>
+      <td>Affiche l'écran d'analyse statistique.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Calendrier</td>
@@ -67,33 +79,45 @@
       <td>Affiche les enregistrements avec des informations GPS sur la carte.</td>
     </tr>
     <tr>
-      <td><span class="icon">&#9881;</span> Parametres</td>
-      <td>Ouvre l'ecran des parametres de l'application.</td>
+      <td><span class="icon">&#9881;</span> Paramètres</td>
+      <td>Ouvre l'écran des paramètres de l'application.</td>
     </tr>
     <tr><td>&#10068; Aide</td><td>Affiche l'aide de l'écran actuel.</td></tr>
   </table>
 
-  <h2>Barre latérale de filtrage</h2>
-  <p>La barre latérale offre de puissantes options de filtrage :</p>
+  <h2>Fonctions principales</h2>
+
+  <h3>Affichage en liste avec miniatures d'images</h3>
+  <p>Affiche les enregistrements dans une grille à plusieurs colonnes. Les enregistrements contenant des images ou des fichiers affichent une miniature. Le nombre de colonnes peut être modifié de 1 à 10 dans l'écran des paramètres.</p>
+
+  <h3>Barre latérale (filtres et recherche)</h3>
+  <p>La barre latérale permet de spécifier les conditions suivantes pour affiner les enregistrements.</p>
   <ul>
-    <li><strong>Plage de dates :</strong> Définissez les dates de début et de fin pour restreindre la période.</li>
-    <li><strong>Type d'enregistrement :</strong> Affichez uniquement des types spécifiques (mémos, signets, fichiers, etc.).</li>
-    <li><strong>Étiquettes :</strong> Filtrez par une ou plusieurs étiquettes.</li>
-    <li><strong>Dépôt :</strong> Filtrez par dépôt de stockage des données.</li>
-    <li><strong>Recherche textuelle :</strong> Recherchez dans le contenu des enregistrements.</li>
+    <li>Recherche textuelle (mot-clé)</li>
+    <li>Filtrage par étiquettes</li>
+    <li>Spécification d'une période</li>
+    <li>Sélection du type d'enregistrement</li>
+    <li>Sélection de l'emplacement de stockage des enregistrements</li>
   </ul>
 
-  <h2>Fonctions principales</h2>
-  <ul>
-    <li><strong>Miniatures multicolonnes :</strong> Affichage des miniatures sur 1 a 10 colonnes.</li>
-    <li><strong>Fonction de filtrage :</strong> Filtre les enregistrements par type, etiquette, plage de dates, etc. depuis la barre laterale.</li>
-    <li><strong>Panneau de details :</strong> La selection d'un enregistrement affiche les informations detaillees.</li>
-    <li><strong>Analyse statistique :</strong> Consultez les donnees statistiques et les tendances des enregistrements.</li>
-    <li><strong>Affichage sur carte :</strong> Consultez les enregistrements avec des informations de localisation sur la carte.</li>
-  </ul>
+  <h3>Ajouter une colonne de filtre</h3>
+  <p>Le bouton « + » permet d'ajouter une nouvelle colonne de filtre. Vous pouvez ainsi comparer côte à côte les résultats de conditions de filtrage différentes.</p>
+
+  <h3>Panneau de détails</h3>
+  <p>Lorsque vous sélectionnez un enregistrement, le panneau de détails affiche toutes les informations de cet enregistrement.</p>
+
+  <h3>Statistiques de la vue d'agrégation</h3>
+  <p>Affiche les statistiques et les résultats d'analyse des données d'enregistrement. Vous pouvez ainsi saisir les tendances et les schémas de vos enregistrements.</p>
+
+  <h3>Affichage de la carte GPS</h3>
+  <p>Affiche les données du journal GPS sur une carte. Les itinéraires de déplacement et les informations de localisation peuvent être vérifiés visuellement. La configuration d'une clé API Google Maps est nécessaire.</p>
 
   <div class="tip">
-    <strong>Astuce :</strong> Vous pouvez ajuster le nombre de colonnes de miniatures (1-10) dans les parametres pour s'adapter a differentes tailles d'ecran.
+    <strong>Astuce :</strong> Le nombre de colonnes d'images peut être modifié dans l'écran des paramètres. 1 à 2 colonnes sont recommandées sur smartphone, et 3 à 5 colonnes sur PC.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Il est pratique d'ajouter plusieurs colonnes de filtre et de comparer côte à côte des enregistrements répondant à des conditions différentes.
   </div>
 
   <div class="tip">
@@ -101,23 +125,24 @@
   </div>
 
   <h2>FAB (Bouton d'action flottant) "+"</h2>
-  <p>En cliquant sur le bouton "+", un menu se deploie pour creer rapidement des enregistrements :</p>
+  <p>En cliquant sur le bouton "+", un menu se déploie pour créer rapidement des enregistrements :</p>
   <table>
-    <tr><th>Type</th><th>Description</th></tr>
-    <tr><td>Memo</td><td>Cree une note textuelle.</td></tr>
-    <tr><td>Temps+Memo</td><td>Cree une note avec horodatage.</td></tr>
-    <tr><td>Numerique</td><td>Enregistre des donnees numeriques.</td></tr>
+    <caption class="sr-only">FAB (Bouton d'action flottant) "+"</caption>
+    <tr><th scope="col">Type</th><th scope="col">Description</th></tr>
+    <tr><td>Mémo</td><td>Crée une note textuelle.</td></tr>
+    <tr><td>Temps+Mémo</td><td>Crée une note avec horodatage.</td></tr>
+    <tr><td>Numérique</td><td>Enregistre des données numériques.</td></tr>
     <tr><td>Signet</td><td>Enregistre un signet URL.</td></tr>
-    <tr><td>Journal de temps</td><td>Demarre une session de suivi du temps.</td></tr>
-    <tr><td>Tache</td><td>Cree une nouvelle tache.</td></tr>
-    <tr><td>Depense</td><td>Enregistre des informations de depense.</td></tr>
+    <tr><td>Journal de temps</td><td>Démarre une session de suivi du temps.</td></tr>
+    <tr><td>Tâche</td><td>Crée une nouvelle tâche.</td></tr>
+    <tr><td>Dépense</td><td>Enregistre des informations de dépense.</td></tr>
     <tr><td>Humeur</td><td>Enregistre une valeur d'humeur (0-10).</td></tr>
-    <tr><td>Telechargement</td><td>Telecharge un fichier.</td></tr>
-    <tr><td>Enregistrer le presse-papiers</td><td>Enregistre le contenu du presse-papiers (capture d'ecran, image, texte, PDF, etc.) directement comme fichier.</td></tr>
+    <tr><td>Téléversement</td><td>Téléverse un fichier.</td></tr>
+    <tr><td>Enregistrer le presse-papiers</td><td>Enregistre le contenu du presse-papiers (capture d'écran, image, texte, PDF, etc.) directement comme fichier.</td></tr>
   </table>
 
   <div class="tip">
-    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'ecran de saisie du bloc-notes, permettant une saisie par lots rapide.
+    <strong>Astuce :</strong> Un appui long sur le bouton "+" ouvre directement l'écran de saisie du bloc-notes, permettant une saisie par lots rapide.
   </div>
 
   <div class="tip">
@@ -130,47 +155,54 @@
   <h2>Utilisation des étiquettes</h2>
   <h3>Ajouter une étiquette</h3>
   <ol>
-    <li>Maintenez appuye ou faites un clic droit sur un enregistrement pour ouvrir le menu contextuel.</li>
-    <li>Selectionnez "Ajouter une etiquette".</li>
-    <li>Tapez le nom de l'etiquette (les etiquettes existantes s'affichent comme suggestions).</li>
+    <li>Maintenez appuyé ou faites un clic droit sur un enregistrement pour ouvrir le menu contextuel.</li>
+    <li>Sélectionnez "Ajouter une étiquette".</li>
+    <li>Tapez le nom de l'étiquette (les étiquettes existantes s'affichent comme suggestions).</li>
   </ol>
   <h3>Modifier ou supprimer une étiquette</h3>
   <ol>
-    <li>Maintenez appuye ou faites un clic droit sur l'etiquette a modifier.</li>
-    <li>Selectionnez "Modifier" ou "Supprimer" dans le menu.</li>
+    <li>Maintenez appuyé ou faites un clic droit sur l'étiquette à modifier.</li>
+    <li>Sélectionnez "Modifier" ou "Supprimer" dans le menu.</li>
   </ol>
   <h3>Gestion de la structure des étiquettes</h3>
-  <p>Vous pouvez gerer les noms d'affichage et l'ordre des etiquettes dans Parametres &gt; Structure des etiquettes.</p>
+  <p>Vous pouvez gérer les noms d'affichage et l'ordre des étiquettes dans Paramètres &gt; Structure des étiquettes.</p>
   <div class="tip">
-    <strong>Astuce :</strong> En ecrivant <code>#nom_etiquette</code> dans la syntaxe du bloc-notes, l'enregistrement sera automatiquement etiquete. Consultez la <a href="kftl-syntax.html">Reference de syntaxe du bloc-notes</a> pour plus de details.
+    <strong>Astuce :</strong> En écrivant <code>#nom_etiquette</code> dans la syntaxe du bloc-notes, l'enregistrement sera automatiquement étiqueté. Consultez la <a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a> pour plus de détails.
   </div>
 
-  <h2>Détails du téléchargement de fichiers</h2>
+  <h2>Détails du téléversement de fichiers</h2>
+
+  <h3>Procédure d'utilisation</h3>
   <ol>
-    <li>Appuyez sur le bouton "+" et selectionnez "Telecharger un fichier".</li>
-    <li>Selectionnez le depot de destination (depot pour la gestion de fichiers).</li>
-    <li>Confirmez et ajustez la date et l'heure associees.</li>
-    <li>Selectionnez le ou les fichiers a telecharger (plusieurs fichiers possibles). Vous pouvez aussi glisser-déposer les fichiers dans la zone « Déposez les fichiers ici » de la boîte de dialogue.</li>
+    <li>Appuyez sur le bouton « + » et sélectionnez « Téléverser un fichier ».</li>
+    <li>Sélectionnez l'emplacement de stockage de destination (dépôt pour la gestion de fichiers).</li>
+    <li>Confirmez et ajustez la date et l'heure associées.</li>
+    <li>Sélectionnez le ou les fichiers à téléverser (plusieurs fichiers possibles). Vous pouvez aussi glisser-déposer les fichiers dans la zone « Déposez les fichiers ici » de la boîte de dialogue.</li>
   </ol>
-  <p><strong>Formats pris en charge :</strong> Images (JPEG/PNG/GIF/WEBP), videos (MP4, etc.), PDF, ZIP et autres.</p>
-  <p>Les fichiers ZIP peuvent etre explores dans leur contenu (clic droit &gt; Ouvrir le contenu ZIP). Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux) dans les vues liste et détail, et les blocs de code mermaid sont rendus sous forme de diagrammes.</p>
-  <p><strong>Limite de taille :</strong> Selon la configuration du serveur (-1 pour illimite).</p>
+
+  <h3>Formats de fichiers pris en charge</h3>
+  <p>Images (JPEG/PNG/GIF/WEBP), vidéos (MP4, etc.), PDF, ZIP et autres.</p>
+  <p>Le contenu des fichiers ZIP peut être exploré (clic droit &gt; Ouvrir le contenu ZIP). Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux) dans les vues liste et détail, et les blocs de code mermaid sont rendus sous forme de diagrammes.</p>
+
+  <h3>Limite de taille de téléversement</h3>
+  <p>Selon la configuration du serveur (-1 pour illimité).</p>
+
   <div class="tip">
     <strong>Astuce :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier.
   </div>
 
   <h2>Utilisation de la carte GPS</h2>
-  <h3>Telecharger un enregistrement GPS</h3>
+  <h3>Téléverser un enregistrement GPS</h3>
   <ol>
-    <li>Appuyez sur le bouton "+" et selectionnez "Telecharger un fichier".</li>
-    <li>Selectionnez le depot destine aux enregistrements GPS.</li>
-    <li>Selectionnez le fichier GPX. Vous pouvez aussi le glisser-déposer dans la zone « Déposez les fichiers .gpx ici ».</li>
+    <li>Appuyez sur le bouton "+" et sélectionnez "Téléverser un fichier".</li>
+    <li>Sélectionnez le dépôt destine aux enregistrements GPS.</li>
+    <li>Sélectionnez le fichier GPX. Vous pouvez aussi le glisser-déposer dans la zone « Déposez les fichiers .gpx ici ».</li>
     <li>Activez le bouton de carte pour confirmer l'affichage.</li>
   </ol>
-  <h3>Configurer la cle API Google Maps</h3>
-  <p>Allez dans Parametres &gt; Parametres d'affichage &gt; Cle API Google Maps et entrez votre cle.</p>
+  <h3>Configurer la clé API Google Maps</h3>
+  <p>Allez dans Paramètres &gt; Paramètres d'affichage &gt; Clé API Google Maps et entrez votre clé.</p>
   <div class="tip">
-    <strong>Astuce :</strong> Obtenez votre cle API dans Google Cloud Console en activant l'API Maps JavaScript.
+    <strong>Astuce :</strong> Obtenez votre clé API dans Google Cloud Console en activant l'API Maps JavaScript.
   </div>
 
   <h2>Documents associés</h2>
@@ -181,6 +213,7 @@
     <li><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a></li>
     <li><a href="application-config.html">Paramètres</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

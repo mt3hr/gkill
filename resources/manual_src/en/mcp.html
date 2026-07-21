@@ -1,0 +1,80 @@
+<!-- title: AI Integration - Help -->
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>AI Integration</span></nav>
+  <h1>AI Integration</h1>
+  <p>By connecting AI assistants such as Claude to gkill, you can search, add, and edit your life log records through natural conversation.</p>
+
+  <h2>What You Can Do</h2>
+  <table>
+    <tr><th>Action</th><th>Example</th></tr>
+    <tr><td>Search records</td><td>"Show me last week's lunch notes" / "Summarize this month's expenses"</td></tr>
+    <tr><td>Add records</td><td>"Add a memo for today" / "Create a task"</td></tr>
+    <tr><td>Update / delete records</td><td>"Mark this task as done"</td></tr>
+    <tr><td>Retrieve GPS / files</td><td>"Show my route for today"</td></tr>
+    <tr><td>Check settings</td><td>"List my templates"</td></tr>
+  </table>
+
+  <h2>Integration Types</h2>
+  <table>
+    <tr><th>Type</th><th>Description</th></tr>
+    <tr><td>Read-only</td><td>AI can view and search records only. Adding or modifying records is not allowed.</td></tr>
+    <tr><td>Write-only</td><td>AI can add, update, and delete records only.</td></tr>
+    <tr><td>Read &amp; Write</td><td>AI can view, add, update, and delete records.</td></tr>
+  </table>
+
+  <h2>File Delivery</h2>
+  <p>How file records (images, videos, documents) are shown to the AI switches automatically depending on the connection type.</p>
+  <table>
+    <tr><th>Connection Type</th><th>Delivery Method</th></tr>
+    <tr><td>Local connection (AI on the same PC)</td><td>The file's actual path is passed to the AI, which can read the file directly.</td></tr>
+    <tr><td>Remote connection (AI over the internet)</td><td>An expiring dedicated URL is issued, and the AI fetches the file from that URL. For images, both a thumbnail and the full-size version are provided. There is no need to expose gkill itself.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> The size limit for embedded transfer (default 8MB) can be adjusted with the <code>GKILL_MCP_MAX_FILE_BYTES</code> environment variable, and the URL expiration (default 1 hour) with <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+  </div>
+
+  <h2>Setup (Claude Desktop)</h2>
+  <p>Add the following to the Claude Desktop configuration file (<code>claude_desktop_config.json</code>).</p>
+
+  <h3>Read-only integration</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "your-user-id",
+        "GKILL_PASSWORD_SHA256": "sha256-hash-of-your-password"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>Tip:</strong> <code>GKILL_PASSWORD_SHA256</code> is the SHA256 hash of your password. You can generate it using tools available on your operating system or online SHA256 calculators.
+  </div>
+
+  <h2>Setup (Claude Code)</h2>
+  <p>Run the following command in your terminal.</p>
+  <pre><code># Add read-only integration
+claude mcp add gkill \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=your-user-id \
+  --env GKILL_PASSWORD_SHA256=your-hash \
+  -- npx -y gkill-mcp-server</code></pre>
+  <div class="tip">
+    <strong>Note:</strong> gkill-mcp-server is not yet published to npm. Until then, specify the bundled MCP server as the command (e.g. <code>-- node src/mcp/gkill-readwrite-server.mjs</code>).
+  </div>
+
+  <h2>Remote Access (Accessing from Outside Your Local Network)</h2>
+  <p>Make your gkill server accessible over the internet, then set <code>GKILL_BASE_URL</code> to its public address. Enabling TLS (HTTPS) is strongly recommended for security.</p>
+  <div class="tip">
+    <strong>Tip:</strong> TLS settings can be configured from <a href="server-config.html">Server Settings</a>.
+  </div>
+
+  <h2>Related</h2>
+  <ul>
+    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="server-config.html">Server Settings</a></li>
+    <li><a href="application-config.html">Application Settings</a></li>
+  </ul>

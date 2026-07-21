@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,22 +30,23 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Tasks</span></nav>
   <h1>Task Board</h1>
   <p>
@@ -44,7 +55,8 @@
 
   <h2>Toolbar</h2>
   <table>
-    <tr><th>Icon</th><th>Action</th></tr>
+    <caption class="sr-only">Toolbar</caption>
+    <tr><th scope="col">Icon</th><th scope="col">Action</th></tr>
     <tr><td><span class="icon">&#9776;</span> Sidebar Toggle</td><td>Show or hide the filter sidebar for narrowing down displayed tasks.</td></tr>
     <tr><td><span class="icon">&#128196;</span> Detail View Toggle</td><td>Show or hide the detail panel that displays full information for the selected task.</td></tr>
     <tr><td><span class="icon">&#128197;</span> Calendar Toggle</td><td>Show or hide the calendar view.</td></tr>
@@ -62,7 +74,8 @@
 
   <h2>Task Status</h2>
   <table>
-    <tr><th>Status</th><th>Description</th></tr>
+    <caption class="sr-only">Task Status</caption>
+    <tr><th scope="col">Status</th><th scope="col">Description</th></tr>
     <tr><td>Open</td><td>The task is active and not yet started or in progress.</td></tr>
     <tr><td>Checked</td><td>The task has been marked as in-progress or acknowledged.</td></tr>
     <tr><td>Completed</td><td>The task is finished and done.</td></tr>
@@ -99,7 +112,8 @@
   <h2>FAB "+" Quick-Add Menu</h2>
   <p>The floating action button (FAB) with a "+" icon at the bottom-right opens a quick-add menu for creating new records:</p>
   <table>
-    <tr><th>Record Type</th><th>Description</th></tr>
+    <caption class="sr-only">FAB "+" Quick-Add Menu</caption>
+    <tr><th scope="col">Record Type</th><th scope="col">Description</th></tr>
     <tr><td>Memo</td><td>Create a new text memo. Opens the memo creation dialog.</td></tr>
     <tr><td>Time + Memo</td><td>Start a new time tracking session and simultaneously attach a memo to it.</td></tr>
     <tr><td>Numeric</td><td>Record a numeric counter value (e.g., counting events or items).</td></tr>
@@ -129,6 +143,7 @@
     <li><a href="kftl-syntax.html">Memo Pad Syntax Reference</a></li>
     <li><a href="rykv.html">Life Log View</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

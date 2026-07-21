@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,39 +30,41 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Aufgaben</span></nav>
   <h1>Aufgaben-Board</h1>
-  <p>Kanban-artiger Aufgabenverwaltungsbildschirm. Ermoeglicht die visuelle Verwaltung von Aufgabenstatus und -fortschritt.</p>
+  <p>Kanban-artiger Aufgabenverwaltungsbildschirm. Aufgaben werden nach Board klassifiziert, sodass sich der Fortschritt visuell erfassen lässt.</p>
 
-  <h2>Symbolleistenschaltflaechen</h2>
+  <h2>Symbolleistenschaltflächen</h2>
   <table>
+    <caption class="sr-only">Symbolleistenschaltflächen</caption>
     <tr>
-      <th>Schaltflaeche</th>
-      <th>Beschreibung</th>
+      <th scope="col">Schaltfläche</th>
+      <th scope="col">Beschreibung</th>
     </tr>
     <tr>
       <td><span class="icon">&#9776;</span> Seitenleiste</td>
-      <td>Oeffnet/schliesst die Seitenleiste zum Filtern und Navigieren.</td>
+      <td>Öffnet/schließt die Seitenleiste zum Suchen und Filtern.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128196;</span> Detailansicht</td>
-      <td>Zeigt/verbirgt das Detailpanel der Aufgabe.</td>
+      <td>Zeigt/verbirgt das Detailpanel des ausgewählten Eintrags.</td>
     </tr>
     <tr>
       <td><span class="icon">&#128197;</span> Kalender</td>
@@ -60,41 +72,62 @@
     </tr>
     <tr>
       <td><span class="icon">&#9881;</span> Einstellungen</td>
-      <td>Oeffnet den Einstellungsbildschirm der Anwendung.</td>
+      <td>Öffnet den Einstellungsbildschirm der Anwendung.</td>
     </tr>
-    <tr><td>&#10068; Hilfe</td><td>Zeigt die Hilfe fuer den aktuellen Bildschirm an.</td></tr>
+    <tr><td>&#10068; Hilfe</td><td>Zeigt die Hilfe für den aktuellen Bildschirm an.</td></tr>
   </table>
 
   <h2>Hauptfunktionen</h2>
+
+  <h3>Kanban-Board</h3>
+  <p>Aufgaben werden nach Board (Spalte) klassifiziert angezeigt. Jedes Board steht für einen Status oder eine Kategorie der Aufgabe und unterstützt so die Fortschrittsverwaltung.</p>
+
+  <h3>Seitenleiste (Filter)</h3>
+  <p>In der Seitenleiste lassen sich die folgenden Filterbedingungen einstellen, um Aufgaben einzugrenzen.</p>
   <ul>
-    <li><strong>Board-Spalten:</strong> Aufgaben werden nach Status in Spalten angezeigt; der Status kann per Drag-and-Drop geaendert werden.</li>
-    <li><strong>Seitenleistenfilter:</strong> Filtert Aufgaben nach Tags, Board, Status und anderen Kriterien.</li>
-    <li><strong>Detailpanel:</strong> Bei Auswahl einer Aufgabe werden detaillierte Informationen und Bearbeitungsoptionen angezeigt.</li>
-    <li><strong>Kalenderansicht:</strong> Ermoeglicht das Durchsuchen von Aufgaben im Kalenderformat.</li>
+    <li>Textsuche</li>
+    <li>Filtern nach Tags</li>
+    <li>Angabe eines Zeitraums</li>
+    <li>Auswahl des Boards</li>
+  </ul>
+
+  <h3>Detailpanel</h3>
+  <p>Bei Auswahl einer Aufgabe werden im Detailpanel die folgenden Informationen angezeigt.</p>
+  <ul>
+    <li>Titel und Inhalt der Aufgabe</li>
+    <li>Zugehöriges Board</li>
+    <li>Fristinformationen</li>
+    <li>Zugewiesene Tags</li>
+    <li>Zugehörige Einträge</li>
   </ul>
 
   <div class="tip">
-    <strong>Tipp:</strong> Sie koennen in den Einstellungen unter „Standard-Boardname für Aufgaben" ein Standard-Board festlegen, das bei jedem Oeffnen dieses Bildschirms automatisch angezeigt wird.
+    <strong>Tipp:</strong> Das standardmäßig angezeigte Board lässt sich in den Einstellungen unter „Standard-Boardname für Aufgaben“ ändern.
   </div>
 
-  <h2>FAB (Floating-Action-Schaltflaeche) "+"</h2>
-  <p>Durch Klicken auf die "+"-Schaltflaeche oeffnet sich ein Menue zum schnellen Erstellen von Datensaetzen:</p>
+  <div class="tip">
+    <strong>Tipp:</strong> Durch Kombinieren der Filterbedingungen in der Seitenleiste finden Sie die benötigten Aufgaben schnell.
+  </div>
+
+  <h2>FAB (Floating-Action-Schaltfläche) „+“</h2>
+  <p>Durch Tippen auf die „+“-Schaltfläche unten rechts öffnet sich ein Menü zum Hinzufügen verschiedener Einträge:</p>
   <table>
-    <tr><th>Typ</th><th>Beschreibung</th></tr>
-    <tr><td>Memo</td><td>Erstellt eine Textnotiz.</td></tr>
-    <tr><td>Zeit+Memo</td><td>Erstellt eine Notiz mit Zeitstempel.</td></tr>
+    <caption class="sr-only">FAB (Floating-Action-Schaltfläche) „+“</caption>
+    <tr><th scope="col">Menüpunkt</th><th scope="col">Beschreibung</th></tr>
+    <tr><td>Notizblock</td><td>Gibt eine Textnotiz im Notizblockformat ein.</td></tr>
+    <tr><td>Zeit-Notizblock</td><td>Öffnet den Hybridbildschirm aus Notizeingabe und Liste der laufenden Zeiterfassungen.</td></tr>
     <tr><td>Numerisch</td><td>Zeichnet numerische Daten auf.</td></tr>
-    <tr><td>Lesezeichen</td><td>Speichert ein URL-Lesezeichen.</td></tr>
-    <tr><td>Zeitprotokoll</td><td>Startet eine Zeiterfassungssitzung.</td></tr>
-    <tr><td>Aufgabe</td><td>Erstellt eine neue Aufgabe.</td></tr>
-    <tr><td>Ausgabe</td><td>Zeichnet Ausgabeninformationen auf.</td></tr>
-    <tr><td>Stimmung</td><td>Zeichnet einen Stimmungswert (0-10) auf.</td></tr>
-    <tr><td>Hochladen</td><td>Laedt eine Datei hoch.</td></tr>
-    <tr><td>Zwischenablage speichern</td><td>Speichert den Inhalt der Zwischenablage (Screenshot, Bild, Text, PDF usw.) direkt als Datei.</td></tr>
+    <tr><td>Lesezeichen</td><td>Speichert eine URL.</td></tr>
+    <tr><td>Zeitprotokoll</td><td>Startet eine neue Zeiterfassungssitzung.</td></tr>
+    <tr><td>Aufgabe</td><td>Fügt eine neue Aufgabe hinzu.</td></tr>
+    <tr><td>Ausgabe</td><td>Zeichnet einen Betrag auf.</td></tr>
+    <tr><td>Stimmung</td><td>Zeichnet einen Stimmungswert (0–10) auf.</td></tr>
+    <tr><td>Hochladen</td><td>Lädt eine Datei hoch und zeichnet sie auf.</td></tr>
+    <tr><td>Zwischenablage speichern</td><td>Speichert den Inhalt der Zwischenablage (Bild, Text, PDF usw.) direkt als Datei. Screenshots oder kopierte Bilder lassen sich so schnell erfassen.</td></tr>
   </table>
 
   <div class="tip">
-    <strong>Tipp:</strong> Langes Druecken der "+"-Schaltflaeche oeffnet direkt den Notizblock-Eingabebildschirm fuer eine schnelle Stapeleingabe.
+    <strong>Langes Drücken:</strong> Langes Drücken der „+“-Schaltfläche öffnet direkt den Notizblock. Praktisch, wenn Sie schnell eine Notiz erfassen möchten.
   </div>
 
   <div class="tip">
@@ -102,13 +135,16 @@
   </div>
 
   <div class="tip">
-    <strong>Tastenkürzel:</strong> Drücken Sie Ctrl+V, um den Inhalt der Zwischenablage direkt als Datei zu speichern. Nützlich zum schnellen Speichern von Screenshots oder kopierten Bildern.
+    <strong>Tastenkürzel:</strong> Drücken Sie Strg+V, um den Inhalt der Zwischenablage direkt als Datei zu speichern. Nützlich zum schnellen Speichern von Screenshots oder kopierten Bildern.
   </div>
+
   <h2>Verwandte Dokumente</h2>
   <ul>
     <li><a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a></li>
     <li><a href="rykv.html">Lebenslogansicht</a></li>
   </ul>
+
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

@@ -12,10 +12,17 @@
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
     pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
     .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -23,22 +30,23 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
-    body.dark .section-divider { border-top-color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .back-link a { color: #64B5F6; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>教程</span></nav>
   <h1>教程</h1>
   <p>本教程分为基础篇和进阶篇，介绍gkill的使用方法。初次使用的用户请从基础篇开始依次阅读。</p>
@@ -57,7 +65,8 @@
   <h2>切换页面</h2>
   <p>点击页面顶部工具栏中显示的<strong>页面标题</strong>（如"生活日志视图"、"任务"等），将打开下拉菜单，可以导航到各个页面。</p>
   <table>
-    <tr><th>页面名</th><th>说明</th></tr>
+    <caption class="sr-only">切换页面</caption>
+    <tr><th scope="col">页面名</th><th scope="col">说明</th></tr>
     <tr><td>Saihate</td><td>无导航的专用记录添加页面（适用于从锁定屏幕或主屏幕直接启动）</td></tr>
     <tr><td>记事本</td><td>使用记事本语法输入文本的页面</td></tr>
     <tr><td>打卡记事本</td><td>同时管理备忘录输入和进行中的打卡</td></tr>
@@ -70,7 +79,8 @@
   <h2>工具栏按钮说明</h2>
   <p>工具栏右侧的按钮用于切换当前页面内的显示。</p>
   <table>
-    <tr><th>按钮</th><th>功能</th><th>显示页面</th></tr>
+    <caption class="sr-only">工具栏按钮说明</caption>
+    <tr><th scope="col">按钮</th><th scope="col">功能</th><th scope="col">显示页面</th></tr>
     <tr><td><span class="icon">&#9776;</span> 侧边栏</td><td>显示/隐藏搜索和筛选侧边栏</td><td>生活日志视图、任务</td></tr>
     <tr><td><span class="icon">&#128196;</span> 详细视图</td><td>显示/隐藏所选记录的详细面板</td><td>生活日志视图、任务</td></tr>
     <tr><td><span class="icon">&#128202;</span> 汇总视图</td><td>显示/隐藏统计分析视图</td><td>生活日志视图</td></tr>
@@ -82,7 +92,8 @@
 
   <h2>画面使用快速参考</h2>
   <table>
-    <tr><th>画面</th><th>主要用途</th><th>适用场景</th></tr>
+    <caption class="sr-only">画面使用快速参考</caption>
+    <tr><th scope="col">画面</th><th scope="col">主要用途</th><th scope="col">适用场景</th></tr>
     <tr><td>生活日志视图</td><td>添加、浏览和搜索记录</td><td>想要添加、查看或搜索记录时（日常主要页面）</td></tr>
     <tr><td>记事本</td><td>批量文本输入</td><td>想要一次输入多条记录时</td></tr>
     <tr><td>打卡记事本</td><td>备忘录＋打卡管理</td><td>想要同时记录备忘录和时间时</td></tr>
@@ -122,7 +133,8 @@
   <p>gkill可以记录各种类型的生活日志。通过页面右下角的"+"按钮来添加记录。</p>
 
   <table>
-    <tr><th>记录类型</th><th>用途</th><th>输入示例</th></tr>
+    <caption class="sr-only">2. 添加记录</caption>
+    <tr><th scope="col">记录类型</th><th scope="col">用途</th><th scope="col">输入示例</th></tr>
     <tr><td>备忘录</td><td>留下文本备忘</td><td>"今天天气很好"</td></tr>
     <tr><td>打卡</td><td>时间记录（开始/结束）</td><td>"会议 10:00~11:30"</td></tr>
     <tr><td>任务</td><td>管理待办事项</td><td>"写报告"</td></tr>
@@ -217,7 +229,8 @@
 
   <h3>常用设置</h3>
   <table>
-    <tr><th>设置项</th><th>说明</th></tr>
+    <caption class="sr-only">常用设置</caption>
+    <tr><th scope="col">设置项</th><th scope="col">说明</th></tr>
     <tr><td>语言</td><td>更改UI的显示语言。</td></tr>
     <tr><td>深色主题</td><td>切换为暗色配色方案。</td></tr>
     <tr><td>启动页面</td><td>选择登录后首先显示的页面。</td></tr>
@@ -235,7 +248,8 @@
 
   <h3>主要前缀</h3>
   <table>
-    <tr><th>前缀</th><th>类型</th><th>示例</th></tr>
+    <caption class="sr-only">主要前缀</caption>
+    <tr><th scope="col">前缀</th><th scope="col">类型</th><th scope="col">示例</th></tr>
     <tr><td>（无）</td><td>备忘录</td><td><code>今天天气很好</code></td></tr>
     <tr><td><code>。</code></td><td>标签</td><td><code>。日记、天气</code></td></tr>
     <tr><td><code>ーみ</code></td><td>任务</td><td><code>ーみ</code> → 下一行输入标题</td></tr>
@@ -292,9 +306,10 @@
 
   <h2>9. 使用打卡记录时间</h2>
   <table>
+    <caption class="sr-only">9. 使用打卡记录时间</caption>
     <tr>
-      <th>页面名</th>
-      <th>用途</th>
+      <th scope="col">页面名</th>
+      <th scope="col">用途</th>
     </tr>
     <tr>
       <td>打卡记事本</td>
@@ -373,7 +388,8 @@
     <li>将生成共享URL。根据用途使用相应的URL：</li>
   </ol>
   <table>
-    <tr><th>URL类型</th><th>用途</th></tr>
+    <caption class="sr-only">生成共享链接的步骤</caption>
+    <tr><th scope="col">URL类型</th><th scope="col">用途</th></tr>
     <tr><td>本地URL</td><td>同一设备内访问（localhost）</td></tr>
     <tr><td>局域网URL</td><td>同一网络内其他设备访问</td></tr>
     <tr><td>广域网URL</td><td>通过互联网进行外部访问</td></tr>
@@ -382,7 +398,8 @@
   <h3>共享数据控制</h3>
   <p>共享时，您可以选择包含哪些数据。</p>
   <table>
-    <tr><th>选项</th><th>说明</th></tr>
+    <caption class="sr-only">共享数据控制</caption>
+    <tr><th scope="col">选项</th><th scope="col">说明</th></tr>
     <tr><td>标签</td><td>在共享中包含记录的标签</td></tr>
     <tr><td>文本</td><td>在共享中包含记录的文本内容</td></tr>
     <tr><td>打卡</td><td>在共享中包含打卡时间信息</td></tr>
@@ -420,6 +437,9 @@
   <div class="tip">
     <strong>提示：</strong> 建议定期备份主目录。其中 <code>datas/</code> 和 <code>configs/</code> 目录尤为重要。
   </div>
+  <div class="tip">
+    <strong>注意：</strong> 仓库的保存位置也可以设置在主目录之外。如果您使用了放置在外部文件夹中的文件（IDF 监视文件夹、Git 仓库、外部数据库等），仅复制主目录会遗漏这些内容。请务必将所有已配置仓库的保存位置一并纳入备份对象。
+  </div>
 
   <h2>相关文档</h2>
   <ul>
@@ -430,6 +450,7 @@
     <li><a href="mi.html">任务页面</a></li>
     <li><a href="rykv.html">生活日志视图页面</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

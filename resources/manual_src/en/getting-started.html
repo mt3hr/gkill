@@ -1,0 +1,225 @@
+<!-- title: Getting Started - Help -->
+  <h1>Getting Started</h1>
+  <p>gkill is an application for recording and browsing daily life logs.</p>
+
+  <h2>What You Can Do with gkill</h2>
+  <table>
+    <tr>
+      <th>Record Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Memo</td>
+      <td>Record text memos</td>
+    </tr>
+    <tr>
+      <td>Time Stamp</td>
+      <td>Record start and end times</td>
+    </tr>
+    <tr>
+      <td>Task</td>
+      <td>Manage tasks on a Kanban board</td>
+    </tr>
+    <tr>
+      <td>Mood</td>
+      <td>Record your mood as a value from 0 to 10</td>
+    </tr>
+    <tr>
+      <td>Expense</td>
+      <td>Record expense amounts and details</td>
+    </tr>
+    <tr>
+      <td>Bookmark</td>
+      <td>Save web page URLs</td>
+    </tr>
+    <tr>
+      <td>Numeric Record</td>
+      <td>Record arbitrary numeric data</td>
+    </tr>
+    <tr>
+      <td>File</td>
+      <td>Upload and record images or documents</td>
+    </tr>
+  </table>
+
+  <h2>Initial Setup</h2>
+  <h3>How to Launch</h3>
+  <table>
+    <tr><th>Environment</th><th>Launch Method</th></tr>
+    <tr><td>Windows</td><td>Run <code>gkill.exe</code> or <code>gkill_server.exe</code></td></tr>
+    <tr><td>Browser / PWA</td><td>Start <code>gkill_server</code> and access <code>http://localhost:9999</code> in your browser</td></tr>
+    <tr><td>Android</td><td>Install the APK and launch the app. On first launch, the "All files access" permission is required (data is stored in <code>/sdcard/gkill</code>)</td></tr>
+  </table>
+
+  <h3>First Account Registration</h3>
+  <ol>
+    <li>When you launch gkill for the first time, the account registration screen will appear automatically.</li>
+    <li>Enter a user ID (this will be your account name).</li>
+    <li>Enter a password, then enter it again for confirmation.</li>
+    <li>Enter an Admin Password and confirm it (this sets the password for the auto-created <code>admin</code> account, used for server management).</li>
+    <li>Press the "Register" button to create your account.</li>
+    <li>You will be redirected to the login screen. Log in with the account you just created.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Tip:</strong> The <code>admin</code> account is automatically created when the server starts for the first time. This screen sets the <code>admin</code> Admin Password and creates your regular user account at the same time.
+  </div>
+
+  <p>After login, the default screen (Life Log View by default) will be displayed. Configure basic settings such as language and dark theme in the settings screen.</p>
+
+  <h2>Screen List</h2>
+  <table>
+    <tr>
+      <th>Screen</th>
+      <th>Description</th>
+      <th>Detailed Help</th>
+    </tr>
+    <tr>
+      <td>Tutorial</td>
+      <td>From basic operations to advanced techniques</td>
+      <td><a href="tutorial.html">Tutorial (Basic + Advanced)</a></td>
+    </tr>
+    <tr>
+      <td>Login</td>
+      <td>Authentication screen</td>
+      <td><a href="login.html">Login Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Lightweight screen specialized for adding records. Convenient for quickly jotting down notes or time entries</td>
+      <td><a href="saihate.html">Saihate Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Dashboard</td>
+      <td>View Aggregation View, GPS map, and tasks for the selected date in one screen</td>
+      <td><a href="dashboard.html">Dashboard Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Notepad</td>
+      <td>Add records in bulk via text input</td>
+      <td><a href="kftl.html">Notepad Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Stamp Notepad</td>
+      <td>A screen to manage memo input and running time stamps simultaneously</td>
+      <td><a href="mkfl.html">Stamp Notepad Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Tasks</td>
+      <td>Task management with Kanban board</td>
+      <td><a href="mi.html">Tasks Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Life Log View</td>
+      <td>List, search, and browse records</td>
+      <td><a href="rykv.html">Life Log View Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>In Progress</td>
+      <td>Manage running time tracking sessions</td>
+      <td><a href="plaing.html">In Progress Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Records</td>
+      <td>Detailed view of individual records</td>
+      <td><a href="kyou.html">Records Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Settings</td>
+      <td>Application settings</td>
+      <td><a href="application-config.html">Settings Screen Help</a></td>
+    </tr>
+    <tr>
+      <td>Notepad Syntax Reference</td>
+      <td>Symbol and format reference for notepad syntax</td>
+      <td><a href="kftl-syntax.html">Notepad Syntax Reference Help</a></td>
+    </tr>
+    <tr>
+      <td>Template Structure</td>
+      <td>Template structure definitions for notepad</td>
+      <td><a href="kftl-template-struct.html">Template Structure Help</a></td>
+    </tr>
+    <tr>
+      <td colspan="3" style="font-size: 0.9em; color: #666;">
+        ※ <a href="dnote.html">Aggregation View</a> and <a href="ryuu.html">Related Info</a> are features within the LifeLog View screen. Toggle them from the toolbar.
+      </td>
+    </tr>
+    <tr>
+      <td>Account Management</td>
+      <td>Manage user accounts (Admin only)</td>
+      <td><a href="manage-account.html">Account Management Help</a></td>
+    </tr>
+    <tr>
+      <td>Server Config</td>
+      <td>Server connection and TLS settings (Admin only)</td>
+      <td><a href="server-config.html">Server Config Help</a></td>
+    </tr>
+    <tr>
+      <td>AI Integration</td>
+      <td>Connect AI assistants such as Claude to gkill</td>
+      <td><a href="mcp.html">AI Integration Help</a></td>
+    </tr>
+  </table>
+
+  <h2>Your First Record in 60 Seconds</h2>
+  <ol>
+    <li>Log in.</li>
+    <li>The Life Log View appears (by default, Life Log View opens immediately after login).</li>
+    <li>Tap the "+" button at the bottom right of the screen.</li>
+    <li>Select "Notepad" from the menu.</li>
+    <li>Enter what you want to record in the text area (e.g., <code>Had curry for lunch today</code>).</li>
+    <li>Press the "Save" button — your record is created and immediately appears in the Life Log View timeline.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> Adding records through the <strong>"+" button in the Life Log View</strong> is the standard approach. You can confirm your records right there in the same screen. See the <a href="tutorial.html">Tutorial</a> for details.
+  </div>
+  <div class="tip">
+    <strong>Tip:</strong> Tapping the "+" button opens a menu; long-pressing opens the Notepad directly.
+  </div>
+  <div class="tip">
+    <strong>Tip:</strong> For lock-screen access or quick capture, use the "Saihate" screen. See <a href="saihate.html">Saihate Screen Help</a> for details.
+  </div>
+
+  <h2>Glossary</h2>
+  <table>
+    <tr>
+      <th>Term</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Record</td>
+      <td>A general term for records in gkill. It encompasses all record types including memos, time stamps, tasks, and more</td>
+    </tr>
+    <tr>
+      <td>Notepad Syntax</td>
+      <td>A text input syntax used in the Notepad. By adding symbols at the beginning of each line, you can create different types of records at once</td>
+    </tr>
+    <tr>
+      <td>Time Stamp</td>
+      <td>A time tracking feature. Records the start and end times of work or activities</td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>A screen for safely adding records even from the lock screen. Functions as a hub for adding various records</td>
+    </tr>
+    <tr>
+      <td>Life Log View</td>
+      <td>A screen for listing and searching records</td>
+    </tr>
+    <tr>
+      <td>Aggregation View</td>
+      <td>A feature for displaying data aggregation and statistics</td>
+    </tr>
+    <tr>
+      <td>Related Info</td>
+      <td>A feature that automatically searches for and displays related information</td>
+    </tr>
+    <tr>
+      <td>Storage</td>
+      <td>A storage location for records. You can use multiple storages for different purposes</td>
+    </tr>
+    <tr>
+      <td>Profile</td>
+      <td>A collection of settings grouped by device</td>
+    </tr>
+  </table>

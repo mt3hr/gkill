@@ -1,0 +1,395 @@
+<!-- title: Tutorial - Help -->
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Tutorial</span></nav>
+  <h1>Tutorial</h1>
+  <p>This tutorial explains how to use gkill, divided into a Basics section and an Advanced section. If you are new to gkill, please read through the Basics section first.</p>
+
+  <div class="tip">
+    <strong>About this dialog:</strong> This help dialog allows mouse clicks and touch events to pass through to the screen behind it. You can interact with the app while keeping this dialog open.
+  </div>
+
+  <div class="tip">
+    <strong>Using on smartphones:</strong> gkill works as a PWA (Progressive Web App). Select "Add to Home Screen" (iOS Safari) or "Install App" (Android Chrome) from your browser menu to launch it directly from your home screen like a native app.
+  </div>
+
+  <h2>Terminology</h2>
+  <p>In gkill, data types are called "record types" (Memo, Time Stamp, Task, etc.) and the screens where you operate are called "screen names" (Notepad, Timestamp Notepad, Task, etc.). For example, "Memo" refers to the type of text memo data, while "Notepad" refers to the screen used to input that data. Items shown in the "+" button menu such as "Notepad" and "Time Stamp" are screen names for adding each type of record.</p>
+
+  <h2>Switching Between Screens</h2>
+  <p>Tap the <strong>page title</strong> displayed in the toolbar at the top of the screen (e.g., "Life Log View", "Task", etc.) to open a dropdown menu and navigate to each screen.</p>
+  <table>
+    <tr><th>Screen Name</th><th>Description</th></tr>
+    <tr><td>Saihate</td><td>Dedicated screen for adding records without navigation (for direct launch from lock screen or home screen)</td></tr>
+    <tr><td>Notepad</td><td>Text input screen using Notepad syntax</td></tr>
+    <tr><td>Timestamp Notepad</td><td>Screen for memo input and active timestamp management</td></tr>
+    <tr><td>Life Log View</td><td>Add records ("+" button), browse, search, and view records</td></tr>
+    <tr><td>Task</td><td>Kanban board task management</td></tr>
+    <tr><td>Running</td><td>Active timestamp session management</td></tr>
+    <tr><td>Record</td><td>Detailed view of an individual record</td></tr>
+  </table>
+
+  <h2>Toolbar Button Guide</h2>
+  <p>The buttons on the right side of the toolbar toggle views within the current screen.</p>
+  <table>
+    <tr><th>Button</th><th>Function</th><th>Available On</th></tr>
+    <tr><td><span class="icon">&#9776;</span> Sidebar</td><td>Show/hide search and filter sidebar</td><td>Life Log View, Task</td></tr>
+    <tr><td><span class="icon">&#128196;</span> Detail View</td><td>Show/hide the detail panel for a selected record</td><td>Life Log View, Task</td></tr>
+    <tr><td><span class="icon">&#128202;</span> Aggregation</td><td>Show/hide statistics and analysis view</td><td>Life Log View</td></tr>
+    <tr><td><span class="icon">&#128197;</span> Calendar</td><td>Show/hide calendar view</td><td>Life Log View, Task</td></tr>
+    <tr><td><span class="icon">&#128506;</span> Map</td><td>Show/hide GPS map display</td><td>Life Log View</td></tr>
+    <tr><td>&#10068; Help</td><td>Show help for the current screen</td><td>All</td></tr>
+    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open settings screen</td><td>All</td></tr>
+  </table>
+
+  <h2>Screen Quick Reference</h2>
+  <table>
+    <tr><th>Screen</th><th>Main Purpose</th><th>When to Use</th></tr>
+    <tr><td>Life Log View</td><td>Add, browse, and search records</td><td>When you want to add, review, or search records (primary everyday screen)</td></tr>
+    <tr><td>Notepad</td><td>Batch text input</td><td>When you want to enter multiple records at once</td></tr>
+    <tr><td>Timestamp Notepad</td><td>Memo + timestamp management</td><td>When you want to record memos and time simultaneously</td></tr>
+    <tr><td>Saihate</td><td>Quick recording from lock screen</td><td>When you want to record instantly from the lock screen or widget</td></tr>
+    <tr><td>Task</td><td>Kanban board task management</td><td>When you want to organize and manage things to do</td></tr>
+    <tr><td>Running</td><td>Active timestamp management</td><td>When you want to check or end active timestamps</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tip for beginners:</strong> Start by adding records with the "+" button in "Life Log View." Records you add can be reviewed right away in the Life Log View timeline.
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Basics</h2>
+
+  <h2>1. Logging In to gkill</h2>
+  <h3>First Launch</h3>
+  <p>When you launch gkill for the first time, the account registration screen will appear automatically.</p>
+  <ol>
+    <li>Enter a user ID (this will be your account name).</li>
+    <li>Enter a password, then enter it again for confirmation.</li>
+    <li>Enter an Admin Password and confirm it (this sets the password for the auto-created <code>admin</code> account, used for server management).</li>
+    <li>Press the "Register" button to create your account.</li>
+    <li>You will be redirected to the login screen. Log in with the account you just created.</li>
+  </ol>
+
+  <h3>Regular Login</h3>
+  <ol>
+    <li>Enter your account user ID in the user ID field.</li>
+    <li>Enter your password in the password field.</li>
+    <li>Click the "Login" button or press the Enter key.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> Your login session is valid for 30 days. You do not need to log in again until it expires.
+  </div>
+
+  <h2>2. Adding Records</h2>
+  <p>gkill allows you to record various types of life logs. Add records using the "+" button at the bottom right of the screen.</p>
+
+  <table>
+    <tr><th>Record Type</th><th>Purpose</th><th>Example</th></tr>
+    <tr><td>Memo</td><td>Save a text memo</td><td>"The weather was nice today"</td></tr>
+    <tr><td>Time Stamp</td><td>Record time (start/end)</td><td>"Meeting 10:00-11:30"</td></tr>
+    <tr><td>Task</td><td>Manage things to do</td><td>"Write the report"</td></tr>
+    <tr><td>Expense</td><td>Record spending</td><td>"Convenience store: rice ball 150 yen"</td></tr>
+    <tr><td>Mood</td><td>Record mood as a value from 0 to 10</td><td>"7"</td></tr>
+    <tr><td>Numeric Records</td><td>Record numeric data</td><td>"Weight: 65.5"</td></tr>
+    <tr><td>Bookmark</td><td>Save a URL</td><td>"https://example.com"</td></tr>
+    <tr><td>File</td><td>Upload images or files</td><td>Photos, PDFs, etc.</td></tr>
+    <tr><td>Save Clipboard</td><td>Save clipboard content as a file</td><td>Screenshots, copied images, etc.</td></tr>
+  </table>
+
+  <h3>How to Add a Record</h3>
+  <ol>
+    <li>Tap the "+" button at the bottom right of the screen.</li>
+    <li>Select the type of record you want to add.</li>
+    <li>Fill in the input form with the content.</li>
+    <li>Press the "Save" button to save the record.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> Using the Notepad screen, you can enter multiple records at once as text. See "3. Entering Multiple Records at Once with Notepad" below for details.
+  </div>
+
+  <h2>3. Entering Multiple Records at Once with Notepad</h2>
+  <p>On the Notepad screen, you can create multiple records at once simply by writing text.</p>
+
+  <h3>Basic Usage</h3>
+  <ol>
+    <li>Open the Notepad screen (select "Notepad" from the "+" button menu).</li>
+    <li>Enter the content you want to record in the text area.</li>
+    <li>Press the "Save" button (you can also type <code>!</code> and submit).</li>
+  </ol>
+
+  <h3>Entering with Templates</h3>
+  <p>Using templates, you can insert boilerplate text with a single tap.</p>
+  <ol>
+    <li>On the Notepad screen, select a template from the template list.</li>
+    <li>The template content will be inserted into the text area.</li>
+    <li>Edit the content as needed, then save.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> It is convenient to pre-register frequently used record patterns as templates. You can manage them from "Template Structure" in the settings screen.
+  </div>
+
+  <h2>4. Viewing and Searching Records</h2>
+  <p>On the Life Log View screen, you can display and search past records.</p>
+
+  <h3>Basic Operations</h3>
+  <ol>
+    <li>Open the Life Log View screen from the navigation at the top of the screen.</li>
+    <li>Records are displayed in chronological order.</li>
+    <li>Change the date to view records for a specific day.</li>
+  </ol>
+
+  <h3>Search and Filtering</h3>
+  <ul>
+    <li><strong>Filter by tag:</strong> Display only records with a specific tag.</li>
+    <li><strong>Date range:</strong> Narrow down the period by specifying a start and end date.</li>
+    <li><strong>Text search:</strong> Search for records containing specific keywords.</li>
+  </ul>
+  <div class="tip">
+    <strong>Tip:</strong> Reducing the "Life Log View display days" setting will speed up loading.
+  </div>
+
+  <h2>5. Managing Tasks</h2>
+  <p>On the Task screen, you can manage tasks in a Kanban board format.</p>
+
+  <h3>Creating a Task</h3>
+  <ol>
+    <li>Open the Task screen.</li>
+    <li>Add a task from the "+" button.</li>
+    <li>Enter the title, board name, deadline, etc.</li>
+    <li>Once saved, the task will appear on the specified board.</li>
+  </ol>
+
+  <h3>Completing a Task</h3>
+  <ol>
+    <li>Tap a completed task to open its details.</li>
+    <li>Add a checkmark to mark the task as complete.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> Creating multiple boards for categories like "Work," "Personal," and "Shopping" makes it easier to stay organized.
+  </div>
+
+  <h2>6. Changing Settings</h2>
+  <p>You can customize the application behavior from the settings screen.</p>
+
+  <h3>How to Open Settings</h3>
+  <ol>
+    <li>Tap the gear icon in the toolbar at the top of the screen.</li>
+    <li>The settings screen will open.</li>
+  </ol>
+
+  <h3>Common Settings</h3>
+  <table>
+    <tr><th>Setting</th><th>Description</th></tr>
+    <tr><td>Language</td><td>Change the UI display language.</td></tr>
+    <tr><td>Dark Theme</td><td>Switch to a dark color scheme.</td></tr>
+    <tr><td>Startup Screen</td><td>Select the page to display first after login.</td></tr>
+    <tr><td>Life Log View Image Columns</td><td>Adjust the number of image thumbnail columns.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> After changing settings, press the "Apply" button. Pressing "Cancel" will discard your changes.
+  </div>
+
+  <hr class="section-divider">
+  <h2 style="color: #1976D2;">Advanced</h2>
+
+  <h2>7. Mastering Notepad Syntax</h2>
+  <p>Using Notepad syntax, you can create various types of records all at once simply by adding a prefix at the beginning of each line.</p>
+
+  <h3>Main Prefixes</h3>
+  <table>
+    <tr><th>Prefix</th><th>Type</th><th>Example</th></tr>
+    <tr><td>(none)</td><td>Memo</td><td><code>The weather was nice today</code></td></tr>
+    <tr><td><code>.</code></td><td>Tag</td><td><code>.diary, weather</code></td></tr>
+    <tr><td><code>-mi</code></td><td>Task</td><td><code>-mi</code> followed by the title on the next line</td></tr>
+    <tr><td><code>-ta</code></td><td>Time Stamp Start</td><td><code>-ta</code> followed by the title on the next line</td></tr>
+    <tr><td><code>-e</code></td><td>Time Stamp End</td><td><code>-e</code> followed by the title on the next line</td></tr>
+    <tr><td><code>-n</code></td><td>Expense</td><td><code>-n</code> followed by store name, item, amount on subsequent lines</td></tr>
+    <tr><td><code>-ra</code></td><td>Mood</td><td><code>-ra</code> followed by a value (0-10) on the next line</td></tr>
+    <tr><td><code>,</code></td><td>Separator</td><td>Splits into the next record</td></tr>
+    <tr><td><code>!</code></td><td>Save</td><td>Finishes input and saves</td></tr>
+  </table>
+
+  <h3>Example of Batch Input for Multiple Records</h3>
+  <pre>Today's diary
+.diary
+,
+-mi
+Go shopping
+,
+-n
+Supermarket
+Apples
+200
+Milk
+180
+,
+-ra
+8
+!</pre>
+  <p>In this example, four records are created at once: a memo, a task, an expense, and a mood entry.</p>
+  <div class="tip">
+    <strong>Tip:</strong> For detailed syntax, see the <a href="kftl-syntax.html">Notepad Syntax Reference</a>.
+  </div>
+
+  <h2>8. Using Templates Effectively</h2>
+  <p>By saving frequently used Notepad syntax patterns as templates, you can save yourself the trouble of typing them every time.</p>
+
+  <h3>Managing Templates</h3>
+  <ol>
+    <li>Open the settings screen.</li>
+    <li>Click the "Template Structure" button.</li>
+    <li>You can add, edit, and delete templates.</li>
+  </ol>
+
+  <h3>Example of Creating a Template</h3>
+  <p>For example, to create a daily diary template:</p>
+  <pre>.diary
+,
+-ra
+</pre>
+  <p>Using this template, a diary framework is inserted with a single tap on the Notepad screen, and you only need to add the memo content and mood value to complete the record.</p>
+  <div class="tip">
+    <strong>Tip:</strong> Using folders to organize templates by category makes them easier to find.
+  </div>
+
+  <h2>9. Recording Time with Time Stamps</h2>
+  <table>
+    <tr>
+      <th>Screen Name</th>
+      <th>Purpose</th>
+    </tr>
+    <tr>
+      <td>Stamp Notepad</td>
+      <td>Enter memos with timestamps. File uploads are also possible.</td>
+    </tr>
+    <tr>
+      <td>In Progress</td>
+      <td>List of currently active time tracking sessions. You can end sessions here.</td>
+    </tr>
+    <tr>
+      <td>Notepad</td>
+      <td>Start and end time tracking via text using notepad syntax. Can be combined with other records in bulk.</td>
+    </tr>
+  </table>
+  <p>Using the time stamp feature, you can accurately record work time and activity durations. "Stamp Notepad" is a dedicated screen for memo input combined with active session management, while "Notepad" lets you start/end time tracking via prefixes alongside other records in bulk.</p>
+
+  <h3>Basic Time Stamp Operations</h3>
+  <ol>
+    <li><strong>Start:</strong> Use the <code>-ta</code> prefix in Notepad, or add a time stamp from the "+" menu. Specify a title and start time.</li>
+    <li><strong>End:</strong> Use the <code>-e</code> prefix in Notepad, or enter the end time in the time stamp edit screen. The time stamp with the matching title will be ended.</li>
+  </ol>
+
+  <h3>Managing Active Time Stamps</h3>
+  <p>On the time stamp list screen, you can check currently active time stamps.</p>
+  <ul>
+    <li>Active time stamps are displayed in a list.</li>
+    <li>Tap to set the end time.</li>
+  </ul>
+  <div class="tip">
+    <strong>Tip:</strong> Using the Notepad syntax <code>-ie</code>, no error will occur even if there is no matching time stamp. You can safely end without existence checking.
+  </div>
+
+  <h2>10. Analyzing Data with the Aggregation View</h2>
+  <p>The Aggregation View within the LifeLog View screen lets you visualize recorded data with summary tables.</p>
+
+  <h3>How to Use the Aggregation View</h3>
+  <ol>
+    <li>Click the aggregation icon in the LifeLog View toolbar to show the Aggregation View.</li>
+    <li>Select the aggregation type and period.</li>
+    <li>Data will be displayed in summary tables.</li>
+  </ol>
+
+  <h3>Aggregation Settings</h3>
+  <p>You can manage aggregation methods and view configurations from the "Aggregation View" button in the settings screen.</p>
+  <div class="tip">
+    <strong>Tip:</strong> Viewing the trends of mood values and expense data over time can reveal patterns in your daily life.
+  </div>
+
+  <h2>11. Using External Integrations</h2>
+
+  <h3>Recording URLs with Bookmarklets</h3>
+  <p>By registering a bookmarklet in your browser's bookmark bar, you can save the web page you are viewing to gkill with a single click.</p>
+  <ol>
+    <li>Copy the URL displayed in "Bookmarklet" in the settings screen.</li>
+    <li>Register it as a new bookmark in your browser's bookmark bar.</li>
+    <li>When viewing a web page you want to save, click the registered bookmark.</li>
+  </ol>
+
+  <h3>GPS Recording and Map Display</h3>
+  <p>If you are recording GPS logs, you can display your movement history on a map.</p>
+  <ol>
+    <li>Set the "Google Map API Key" in the settings screen.</li>
+    <li>If GPS data has been recorded, the map display will be available in the Life Log View.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> To obtain a Google Map API key, enable the Maps JavaScript API in the Google Cloud Console.
+  </div>
+
+  <h2>12. Sharing Records</h2>
+  <p>In gkill, you can generate share links to share records with others.</p>
+
+  <h3>How to Generate a Share Link</h3>
+  <ol>
+    <li>Open the detail view or context menu for the record you want to share.</li>
+    <li>Select "Share."</li>
+    <li>A share URL will be generated. Use the appropriate URL for your purpose:</li>
+  </ol>
+  <table>
+    <tr><th>URL Type</th><th>Purpose</th></tr>
+    <tr><td>Local URL</td><td>Access from the same device (localhost)</td></tr>
+    <tr><td>LAN URL</td><td>Access from other devices on the same network</td></tr>
+    <tr><td>WAN URL</td><td>External access via the internet</td></tr>
+  </table>
+
+  <h3>Shared Data Control</h3>
+  <p>When sharing, you can choose which data to include.</p>
+  <table>
+    <tr><th>Option</th><th>Description</th></tr>
+    <tr><td>Tags</td><td>Include tags attached to the record</td></tr>
+    <tr><td>Text</td><td>Include the text content of the record</td></tr>
+    <tr><td>Time Stamps</td><td>Include time stamp information</td></tr>
+    <tr><td>Location</td><td>Include GPS location information</td></tr>
+    <tr><td>Time Only</td><td>Include only the time information of the record</td></tr>
+  </table>
+
+  <div class="tip">
+    <strong>Tip:</strong> To use LAN or WAN URLs, you need to configure the server address in the server settings.
+  </div>
+
+  <h3>For Recipients of Shared Links</h3>
+  <p>Opening a shared link lets you view records without a gkill account.</p>
+  <ul>
+    <li>The range of displayed records is determined by the link creator's settings.</li>
+    <li>You cannot edit or delete records (view only).</li>
+    <li>If the link is no longer valid, please contact the sender.</li>
+  </ul>
+
+  <h2>13. Data Backup and Management</h2>
+
+  <h3>Server Settings (For Administrators)</h3>
+  <p>When logged in with an administrator account, a "Server Settings" button will appear in the settings screen.</p>
+  <ul>
+    <li><strong>Port Number:</strong> Change the port the server listens on (default: 9999).</li>
+    <li><strong>TLS Settings:</strong> Enable HTTPS communication.</li>
+    <li><strong>Access Restriction:</strong> Restrict access to local only.</li>
+  </ul>
+
+  <h3>Account Management</h3>
+  <p>Administrators can add, enable, and disable user accounts on the "Account Management" screen.</p>
+
+  <h3>Data Backup</h3>
+  <p>All gkill data is stored in the home directory (default: <code>~/gkill</code>; <code>/sdcard/gkill</code> in the Android app). Backing up this directory will preserve all your data.</p>
+  <div class="tip">
+    <strong>Tip:</strong> It is recommended to back up the home directory regularly. The <code>datas/</code> and <code>configs/</code> directories are particularly important.
+  </div>
+  <div class="tip">
+    <strong>Note:</strong> Repository locations can also be set outside the home directory. If you use files placed in external folders (IDF-watched folders, Git repositories, externally located databases, etc.), copying only the home directory will miss them. Be sure to include the location of every configured repository in your backup as well.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="getting-started.html">Getting Started (Initial Setup Guide)</a></li>
+    <li><a href="kftl-syntax.html">Notepad Syntax Reference</a></li>
+    <li><a href="kftl-template-struct.html">Template Structure</a></li>
+    <li><a href="application-config.html">Settings Screen</a></li>
+    <li><a href="mi.html">Task Screen</a></li>
+    <li><a href="rykv.html">Life Log View Screen</a></li>
+  </ul>
