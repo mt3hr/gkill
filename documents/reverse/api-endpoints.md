@@ -354,7 +354,7 @@ MCPサーバは8つのReadツールを提供（`gkill_get_kyous`, `gkill_get_mi_
 |---|---|
 | `/api/urlog_bookmarklet` | URLogブックマークレット用エンドポイント。ブラウザのブックマークレットから現在のページのURL・タイトルをURLogとして直接追加する。ログイン時にブックマークレット専用セッション（`ApplicationName="urlog_bookmarklet"`）が自動作成され、通常のセッションとは分離される |
 | `/api/urlog_bookmarklet_page` | URLogブックマークレット導入ページ配信（GET）。ブックマークレット登録用のHTMLページを返す |
-| `/api/update_cache` | キャッシュ更新トリガー。**管理者セッション必須**（`wrapAuth` + `IsAdmin`）。`session_id` と `user_ids` を受け取り、指定ユーザーのインメモリキャッシュを再構築する。CLI `gkill_server update_cache ユーザーID...` は対象ユーザーIDの文字列配列を受け取り、**配列の最後のユーザーID**で `/api/login`（管理者）してから呼び出す |
+| `/api/update_cache` | キャッシュ更新トリガー。**管理者セッション必須**（`wrapAuth` + `IsAdmin`）。`session_id` と `user_ids` を受け取り、指定ユーザーのインメモリキャッシュを再構築する。CLI `gkill_server update_cache ユーザーID...` は対象ユーザーIDの文字列配列を受け取り、**認証情報の指定は不要**（ローカルの `configs/account.db` から有効な管理者アカウントを自動選択して `/api/login` してから呼び出し、完了後に `/api/logout` する） |
 | `/api/get_gkill_info` | アプリケーション情報取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。将来の拡張用と推定） |
 
 ## プラグイン（4件）
