@@ -5,7 +5,7 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、86ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、88ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（176ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、16ファイル）
@@ -44,43 +44,51 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 #### `/api/get_kyous` — 記録一覧取得
 
+リクエストは `GetKyousRequest`（`session_id` + `query` + `locale_name`）。**検索条件は `query` オブジェクト（`FindQuery`）で包む**。出典: `src/server/gkill/api/req_res/get_kyous_request.go`, `src/server/gkill/api/find/find_query.go`。
+
 `FindQuery` の主要フィールド：
 
 | フィールド | 型 | 説明 |
 |---|---|---|
-| `session_id` | string | セッションID |
 | `use_words` | bool | テキスト検索を使用するか |
-| `words` | []string | 検索キーワード（AND条件） |
+| `words` | []string | 検索キーワード |
+| `words_and` | bool | `words` をAND条件にするか（false=OR） |
 | `not_words` | []string | 除外キーワード |
 | `use_tags` | bool | タグフィルタを使用するか |
-| `tags` | []string | タグ名一覧（AND条件） |
+| `tags` | []string | タグ名一覧 |
+| `tags_and` | bool | `tags` をAND条件にするか |
 | `use_reps` | bool | リポジトリフィルタを使用するか |
 | `reps` | []string | リポジトリ名一覧 |
-| `use_time_is_end_time` | bool | TimeIsの終了時刻フィルタを使用するか |
-| `calendar_start_time` | string | 検索開始日時（RFC3339） |
-| `calendar_end_time` | string | 検索終了日時（RFC3339） |
-| `page_size` | int | 1ページあたりの件数 |
-| `page` | int | ページ番号（0始まり） |
-| `locale_name` | string | ロケール名 |
+| `use_timeis` | bool | TimeIsフィルタを使用するか |
+| `include_end_timeis` | bool | 終了済みTimeIsを含めるか |
+| `use_calendar` | bool | 日付範囲フィルタを使用するか |
+| `calendar_start_date` | string | 検索開始日時（RFC3339） |
+| `calendar_end_date` | string | 検索終了日時（RFC3339） |
+| `only_latest_data` | bool | 最新データのみ取得するか |
+| `include_deleted_data` | bool | 削除済みデータを含めるか |
+
+> ページング用の `page` / `page_size` フィールドは存在しない。`FindQuery` にページング機構はない。
 
 ```json
 // リクエスト例
 {
   "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "use_words": true,
-  "words": ["今日", "作業"],
-  "use_tags": false,
-  "tags": [],
-  "use_reps": false,
-  "reps": [],
-  "calendar_start_time": "2026-06-01T00:00:00+09:00",
-  "calendar_end_time":   "2026-06-30T23:59:59+09:00",
-  "page_size": 50,
-  "page": 0,
+  "query": {
+    "use_words": true,
+    "words": ["今日", "作業"],
+    "words_and": true,
+    "use_tags": false,
+    "tags": [],
+    "use_reps": false,
+    "reps": [],
+    "use_calendar": true,
+    "calendar_start_date": "2026-06-01T00:00:00+09:00",
+    "calendar_end_date":   "2026-06-30T23:59:59+09:00"
+  },
   "locale_name": "ja"
 }
 
-// レスポンス例
+// レスポンス例（GetKyousResponse。messages / errors / kyous のみ）
 {
   "kyous": [
     {
@@ -92,10 +100,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
       "update_time": "2026-06-21T10:00:00+09:00",
       "is_deleted": false,
       "rep_name": "kmemo_desktop",
-      "data_type": "kmemo",
-      "typed_kmemo": {
-        "content": "今日の作業ログ"
-      }
+      "data_type": "kmemo"
     }
   ],
   "messages": [],
@@ -103,13 +108,17 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 }
 ```
 
+> `Kyou` の実体（`typed_kmemo` など `typed_*` フィールド）はサーバーの `get_kyous` レスポンスには含まれない。クライアントが必要に応じて後から個別ロードする値。
+
 #### `/api/submit_kftl_text` — KFTLテキスト送信
 
+`/`系プレフィックス（`/mi` `/mood` `/num` `/expense` `/url` `/start` `/end` `/timeis` `/end?` `/endt` `/endt?`）は**行全体が完全一致**する必要があり、値は**次の行**に書く。`/mood 8` のようなインライン記法は無効。値付きの例: `/mood`＋改行＋`8`、`/num`＋改行＋`体重`＋改行＋`65.5`。例外として `#`(タグ) と `?`(関連時刻) のみ行内に内容を続けられる。出典: `src/server/gkill/api/kftl/kftl_factory.go`。
+
 ```json
-// リクエスト例
+// リクエスト例（\n は改行。/mood と /num の値は次行に置く）
 {
   "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "kftl_text": "今日の朝食\n#食事\n/mood 8\n/num 体重 65.5",
+  "kftl_text": "今日の朝食\n#食事\n/mood\n8\n/num\n体重\n65.5",
   "locale_name": "ja"
 }
 
@@ -124,25 +133,41 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 #### `/api/upload_files` — ファイルアップロード
 
-multipart/form-data で送信する（JSONではない）。
+**JSON で送信する（multipart/form-data ではない）**。ファイル本体は base64（データURI）文字列として JSON に含める。出典: `handle_upload_files.go`, `upload_files_request.go`, `file_data.go`, `file_upload_conflict_behavior.go`, `upload_files_response.go`。
 
 | フィールド | 型 | 説明 |
 |---|---|---|
-| `session_id` | string（フォームフィールド） | セッションID |
-| `rep_name` | string（フォームフィールド） | アップロード先リポジトリ名（directory型） |
-| `related_time` | string（フォームフィールド） | 関連日時（RFC3339） |
-| `files` | file[]（multipart） | アップロードファイル（複数可） |
+| `session_id` | string | セッションID |
+| `target_rep_name` | string | アップロード先リポジトリ名 |
+| `conflict_behavior` | string | 衝突時の挙動: `"override"` / `"rename"` / `"merge"` |
+| `files` | FileData[] | アップロードファイル（複数可） |
+| `locale_name` | string | ロケール名 |
 
-```
-// レスポンス例（成功時）
+`FileData`: `file_name` / `data_base64` / `last_modified`(RFC3339)。
+
+```json
+// リクエスト例
 {
-  "add_idf_kyous": [
+  "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "target_rep_name": "files_desktop",
+  "conflict_behavior": "rename",
+  "files": [
+    {
+      "file_name": "photo.jpg",
+      "data_base64": "data:image/jpeg;base64,/9j/4AAQ...",
+      "last_modified": "2026-06-21T10:00:00+09:00"
+    }
+  ],
+  "locale_name": "ja"
+}
+
+// レスポンス例（UploadFilesResponse。uploaded_kyous を返す）
+{
+  "uploaded_kyous": [
     {
       "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-      "file_name": "photo.jpg",
-      "rep_name": "files_desktop",
-      "is_image": true,
-      "is_zip": false
+      "data_type": "idf_kyou",
+      "rep_name": "files_desktop"
     }
   ],
   "messages": [],
@@ -309,7 +334,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_gps_log` | GPSログ取得（日付範囲指定） |
 
-## MCP連携（1件 + MCPツール7つ）
+## MCP連携（1件 + MCPツール8つ）
 
 | パス | 説明 |
 |---|---|
@@ -329,7 +354,7 @@ MCPサーバは8つのReadツールを提供（`gkill_get_kyous`, `gkill_get_mi_
 |---|---|
 | `/api/urlog_bookmarklet` | URLogブックマークレット用エンドポイント。ブラウザのブックマークレットから現在のページのURL・タイトルをURLogとして直接追加する。ログイン時にブックマークレット専用セッション（`ApplicationName="urlog_bookmarklet"`）が自動作成され、通常のセッションとは分離される |
 | `/api/urlog_bookmarklet_page` | URLogブックマークレット導入ページ配信（GET）。ブックマークレット登録用のHTMLページを返す |
-| `/api/update_cache` | キャッシュ更新トリガー |
+| `/api/update_cache` | キャッシュ更新トリガー。**管理者セッション必須**（`wrapAuth` + `IsAdmin`）。`session_id` と `user_ids` を受け取り、指定ユーザーのインメモリキャッシュを再構築する。CLI `gkill_server update_cache ユーザーID...` は対象ユーザーIDの文字列配列を受け取り、**配列の最後のユーザーID**で `/api/login`（管理者）してから呼び出す |
 | `/api/get_gkill_info` | アプリケーション情報取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。将来の拡張用と推定） |
 
 ## プラグイン（4件）

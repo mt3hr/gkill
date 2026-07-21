@@ -8,8 +8,8 @@ gkill プロジェクトでは約2,300件の自動テストを整備していま
 
 | コンポーネント | テスト数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | ~577 | 52 | Go `testing` |
-| フロントエンド ユニット | 800 | 55 | Vitest |
+| Go バックエンド | ~588 | 52 | Go `testing` |
+| フロントエンド ユニット | 800 | 57 | Vitest |
 | フロントエンド E2E | 207 | 33（+auth.setup.ts） | Playwright |
 | MCP サーバ | 602 | 18 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
@@ -35,7 +35,7 @@ npm test
 | コマンド | 対象 | 所要時間目安 |
 |---------|------|------------|
 | `npm run test_server` | Go バックエンド全体 | 数十秒 |
-| `npm run test_client` | フロントエンド（ユニット + E2E） | 1〜2分 |
+| `npm run test_client` | フロントエンド（ユニット + E2E） | 20分前後（E2Eを含むため） |
 | `npm run test_client_unit` | フロントエンド ユニットのみ | 数十秒 |
 | `npm run test_client_e2e` | フロントエンド E2E のみ（gkill_server 自動起動・停止） | 20分前後 |
 | `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
@@ -74,10 +74,13 @@ npx vitest watch
 ### Playwright E2E テスト
 
 ```bash
-# E2E テスト実行（gkill_server + Vite を自動起動・停止）
+# 事前に必須: 最新フロントエンドを埋め込んだ gkill_server をインストール
+npm run install_server
+
+# E2E テスト実行（gkill_server を自動起動・停止）
 npm run test_client_e2e
 
-# 特定ファイル（事前に gkill_server と Vite dev server を手動起動する必要あり）
+# 特定ファイル（事前に gkill_server を手動起動する必要あり）
 npx playwright test src/client/__tests__/e2e/login.spec.ts
 
 # ヘッドフルモード（ブラウザ表示）
@@ -91,26 +94,49 @@ npx playwright test --debug
 
 `npm run test_client_e2e` は `src/client/__tests__/e2e/run-e2e.mjs` を実行し、以下を自動で行います：
 
-1. `$HOME/gkill_test` ディレクトリを削除・再作成（クリーン状態）
-2. `gkill_server --gkill_home_dir "$HOME/gkill_test" --disable_tls --log none` を起動
-3. gkill_server がポート 9999 で応答するまで待機（最大 30 秒）
-4. `npx playwright test` を実行（Playwright が Vite dev server を自動起動）
+1. 残存 `gkill_server` プロセスを停止し、`$HOME/gkill_test` ディレクトリを削除・再作成（クリーン状態）
+2. **インストール済みの `gkill_server` バイナリ**を `--gkill_home_dir "$HOME/gkill_test" --disable_tls --log none` で起動
+3. `http://127.0.0.1:9999/` が応答するまで待機（最大 30 秒、500ms間隔）
+4. `npx playwright test` を実行
 5. テスト完了後に gkill_server を停止
 
-これにより毎回クリーンな状態（admin アカウント/パスワードなし）でテストが実行されます。初回テスト実行時、`helpers.ts` の `loginAsAdmin()` がサーバから reset_token を取得し、`/regist_first_account` ページで自動的にアカウント登録とパスワード設定を行います。
+これにより毎回クリーンな状態でテストが実行されます。初回テスト実行時、`helpers.ts` の `loginAsAdmin()` がサーバから reset_token を取得し、`/regist_first_account` ページで自動的にアカウント登録とパスワード設定を行います（初期 admin は `PasswordResetToken` が設定されているため、この登録なしにはログインできません）。
 
-> **Note:** `npx playwright test` を直接実行する場合は、事前に gkill_server（テスト用 home）と Vite dev server を手動で起動する必要があります：
+> **重要 — Vite は自動起動されません。** `run-e2e.mjs` は Vite dev server を起動せず、`playwright.config.ts` にも `webServer` 設定はありません。テスト対象は **`go install` 済み `gkill_server` バイナリに埋め込まれたフロントエンド**です。
+>
+> - `npm run test_client_e2e` を単独実行する前に **`npm run install_server` が必要**です。これを省くと、以前ビルドした古いフロントエンドを試験してしまいます。
+> - `npm test` は先に `install_server` を実行するため、常に最新ビルドを試験します。
+> - Vite dev server を試験対象にしたい場合は、`npm run dev` を別途起動したうえで接続先を上書きします:
+>   ```bash
+>   GKILL_E2E_BASE_URL=http://localhost:5173 npx playwright test
+>   ```
+>   `playwright.config.ts` の `baseURL` は `process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999'` です。
+
+> **Note:** `npx playwright test` を直接実行する場合は、事前にテスト用 gkill_server を手動で起動する必要があります：
 > ```bash
 > # ターミナル 1: テスト用サーバ起動
 > rm -rf ~/gkill_test && mkdir -p ~/gkill_test
 > npm run test_e2e_server
 >
-> # ターミナル 2: Vite dev server 起動
-> npm run dev
->
-> # ターミナル 3: テスト実行
+> # ターミナル 2: テスト実行
 > npx playwright test
 > ```
+
+### ドキュメント検証（docs CI）
+
+自動テストとは別に、ドキュメントの整合性を検証する軽量ツール（Node 標準のみ）がある。CI（`.github/workflows/docs.yml`）で PR / push 時に実行される。
+
+```bash
+npm run verify_docs                    # 件数・リンク・パス・Mermaid・マニュアルa11y/生成鮮度を検証
+node src/tools/verify_docs.mjs --parity # 構造パリティ・レポート（日本語=正本との各言語ズレ）
+```
+
+主な検査項目:
+- **件数ドリフト**: docs 記載の件数（handler=88 / req_res=176 / view=185 / dialog=101 / endpoint=85 / i18nキー=836 等）をコードから再計算して突合。
+- **相互リンク・参照パス・Mermaid**: reverse資料内の `.md` リンク・`src/...` パス・Mermaid ブロックを検査。
+- **マニュアル**: `resources/manual_src` からの生成鮮度、アクセシビリティ不変条件（`<main>`／全表 `<caption>`／全 `th` に `scope`）、7言語のページ構成一致、内部リンク。
+
+詳細なワークフローは [dev-setup.md](dev-setup.md)（ドキュメント・マニュアルのツール）を参照。
 
 ## 3. テストアーキテクチャ
 

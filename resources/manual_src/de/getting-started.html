@@ -1,0 +1,225 @@
+<!-- title: Erste Schritte - Hilfe -->
+  <h1>Erste Schritte</h1>
+  <p>gkill ist eine Anwendung zum Aufzeichnen und Durchsuchen von taglichen Lebenslogs.</p>
+
+  <h2>Was Sie mit gkill tun können</h2>
+  <table>
+    <tr>
+      <th>Aufzeichnungstyp</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Notiz</td>
+      <td>Zeichnet Textnotizen auf</td>
+    </tr>
+    <tr>
+      <td>Zeitstempel</td>
+      <td>Zeichnet Start- und Endzeiten auf</td>
+    </tr>
+    <tr>
+      <td>Aufgabe</td>
+      <td>Verwaltet Aufgaben auf einem Kanban-Board</td>
+    </tr>
+    <tr>
+      <td>Stimmung</td>
+      <td>Zeichnet die Stimmung als Wert von 0 bis 10 auf</td>
+    </tr>
+    <tr>
+      <td>Ausgabe</td>
+      <td>Zeichnet Ausgabenbetrage und Details auf</td>
+    </tr>
+    <tr>
+      <td>Lesezeichen</td>
+      <td>Speichert URLs von Webseiten</td>
+    </tr>
+    <tr>
+      <td>Numerische Aufzeichnung</td>
+      <td>Zeichnet beliebige numerische Daten auf</td>
+    </tr>
+    <tr>
+      <td>Datei</td>
+      <td>Ladt Bilder oder Dokumente hoch und zeichnet sie auf</td>
+    </tr>
+  </table>
+
+  <h2>Ersteinrichtung</h2>
+  <h3>So starten Sie</h3>
+  <table>
+    <tr><th>Umgebung</th><th>Startmethode</th></tr>
+    <tr><td>Windows</td><td><code>gkill.exe</code> oder <code>gkill_server.exe</code> ausfuhren</td></tr>
+    <tr><td>Browser / PWA</td><td><code>gkill_server</code> starten und <code>http://localhost:9999</code> im Browser aufrufen</td></tr>
+    <tr><td>Android</td><td>APK installieren und App starten. Beim ersten Start ist die Berechtigung „Zugriff auf alle Dateien" erforderlich (Daten werden in <code>/sdcard/gkill</code> gespeichert)</td></tr>
+  </table>
+
+  <h3>Erste Kontoregistrierung</h3>
+  <ol>
+    <li>Beim ersten Start von gkill wird der Kontoregistrierungsbildschirm automatisch angezeigt.</li>
+    <li>Geben Sie eine Benutzer-ID ein (dies wird Ihr Kontoname).</li>
+    <li>Geben Sie ein Passwort ein und geben Sie es zur Bestätigung erneut ein.</li>
+    <li>Geben Sie ein Admin-Passwort ein und bestätigen Sie es (dies setzt das Passwort des automatisch erstellten <code>admin</code>-Kontos, das für die Serververwaltung verwendet wird).</li>
+    <li>Drücken Sie die Schaltfläche "Registrieren", um das Konto zu erstellen.</li>
+    <li>Sie werden zum Anmeldebildschirm weitergeleitet. Melden Sie sich mit dem gerade erstellten Konto an.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Hinweis:</strong> Das <code>admin</code>-Konto wird beim ersten Serverstart automatisch erstellt. Dieser Bildschirm setzt das <code>admin</code>-Passwort und erstellt gleichzeitig Ihr normales Benutzerkonto.
+  </div>
+
+  <p>Nach der Anmeldung wird der Standardbildschirm angezeigt (standardmäßig die Lebensprotokoll-Ansicht). Konfigurieren Sie im Einstellungsbildschirm grundlegende Einstellungen wie Sprache und dunkles Design.</p>
+
+  <h2>Bildschirmliste</h2>
+  <table>
+    <tr>
+      <th>Bildschirm</th>
+      <th>Beschreibung</th>
+      <th>Detaillierte Hilfe</th>
+    </tr>
+    <tr>
+      <td>Tutorial</td>
+      <td>Von Grundlagen bis zu fortgeschrittenen Techniken</td>
+      <td><a href="tutorial.html">Tutorial (Grundlagen + Fortgeschritten)</a></td>
+    </tr>
+    <tr>
+      <td>Anmeldung</td>
+      <td>Authentifizierungsbildschirm</td>
+      <td><a href="login.html">Hilfe zur Anmeldung</a></td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Kompakte Ansicht zum schnellen Hinzufügen von Einträgen. Praktisch für schnelle Notizen oder Zeitstempel</td>
+      <td><a href="saihate.html">Hilfe zu Saihate</a></td>
+    </tr>
+    <tr>
+      <td>Dashboard</td>
+      <td>Aggregationsansicht, GPS-Karte und Aufgaben für das ausgewählte Datum auf einem Bildschirm anzeigen</td>
+      <td><a href="dashboard.html">Dashboard-Hilfe</a></td>
+    </tr>
+    <tr>
+      <td>Notizblock</td>
+      <td>Eintr&auml;ge per Texteingabe gesammelt hinzuf&uuml;gen</td>
+      <td><a href="kftl.html">Hilfe zum Notizblock</a></td>
+    </tr>
+    <tr>
+      <td>Stempel-Notizblock</td>
+      <td>Hybridbildschirm f&uuml;r Notizeingabe und Zeiterfassungsverwaltung</td>
+      <td><a href="mkfl.html">Hilfe zum Stempel-Notizblock</a></td>
+    </tr>
+    <tr>
+      <td>Aufgaben</td>
+      <td>Aufgabenverwaltung mit Kanban-Board</td>
+      <td><a href="mi.html">Hilfe zu Aufgaben</a></td>
+    </tr>
+    <tr>
+      <td>Lebenslog-Ansicht</td>
+      <td>Auflisten, Suchen und Durchsuchen von Aufzeichnungen</td>
+      <td><a href="rykv.html">Hilfe zur Lebenslog-Ansicht</a></td>
+    </tr>
+    <tr>
+      <td>Laufend</td>
+      <td>Laufende Zeiterfassungssitzungen verwalten</td>
+      <td><a href="plaing.html">Hilfe zu Laufend</a></td>
+    </tr>
+    <tr>
+      <td>Datens&auml;tze</td>
+      <td>Detailansicht einzelner Aufzeichnungen</td>
+      <td><a href="kyou.html">Hilfe zu Datens&auml;tze</a></td>
+    </tr>
+    <tr>
+      <td>Einstellungen</td>
+      <td>Anwendungseinstellungen</td>
+      <td><a href="application-config.html">Hilfe zu Einstellungen</a></td>
+    </tr>
+    <tr>
+      <td>Notizblock-Syntaxreferenz</td>
+      <td>Symbol- und Formatreferenz der Notizblock-Syntax</td>
+      <td><a href="kftl-syntax.html">Hilfe zur Notizblock-Syntaxreferenz</a></td>
+    </tr>
+    <tr>
+      <td>Vorlagenstruktur</td>
+      <td>Vorlagenstrukturdefinitionen des Notizblocks</td>
+      <td><a href="kftl-template-struct.html">Hilfe zur Vorlagenstruktur</a></td>
+    </tr>
+    <tr>
+      <td colspan="3" style="font-size: 0.9em; color: #666;">
+        ※ <a href="dnote.html">Aggregationsansicht</a> und <a href="ryuu.html">Verwandte Infos</a> sind Funktionen innerhalb der LifeLog-Ansicht. Sie können über die Symbolleiste umgeschaltet werden.
+      </td>
+    </tr>
+    <tr>
+      <td>Kontoverwaltung</td>
+      <td>Benutzerkonten verwalten (Nur Admin)</td>
+      <td><a href="manage-account.html">Hilfe zur Kontoverwaltung</a></td>
+    </tr>
+    <tr>
+      <td>Server-Konfiguration</td>
+      <td>Server-Verbindung und TLS-Einstellungen (Nur Admin)</td>
+      <td><a href="server-config.html">Hilfe zur Server-Konfiguration</a></td>
+    </tr>
+    <tr>
+      <td>KI-Integration</td>
+      <td>KI-Assistenten wie Claude mit gkill verbinden</td>
+      <td><a href="mcp.html">KI-Integration Hilfe</a></td>
+    </tr>
+  </table>
+
+  <h2>Ihre erste Aufzeichnung in 60 Sekunden</h2>
+  <ol>
+    <li>Melden Sie sich an.</li>
+    <li>Der Bildschirm Lebenslog-Ansicht wird angezeigt.</li>
+    <li>Tippen Sie auf die "+"-Schaltfl&auml;che unten rechts auf dem Bildschirm.</li>
+    <li>Wählen Sie "Notizblock".</li>
+    <li>Geben Sie im Textbereich ein, was Sie aufzeichnen mochten (z. B.: <code>Heute gab es Curry zum Mittagessen</code>).</li>
+    <li>Drücken Sie die Schaltfläche "Speichern" und die Aufzeichnung erscheint sofort im Zeitstrahl der Lebenslog-Ansicht.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tipp:</strong> Die Grundmethode zum Hinzufügen von Aufzeichnungen ist die Verwendung der "+"-Schaltfläche im Bildschirm Lebenslog-Ansicht. Sobald Sie die Notizblock-Syntax erlernt haben, können Sie Aufgaben, Stimmungswerte und mehr auf die gleiche Weise aufzeichnen. Weitere Details finden Sie im <a href="tutorial.html">Tutorial</a>.
+  </div>
+  <div class="tip">
+    <strong>Tipp:</strong> Durch Tippen auf die "+"-Schaltfläche öffnet sich ein Menü; langes Drucken öffnet direkt den Notizblock.
+  </div>
+  <div class="tip">
+    <strong>Tipp:</strong> Der Saihate-Bildschirm ist auch für Aufzeichnungen vom Sperrbildschirm oder für schnelle Aufzeichnungen verfügbar. Weitere Details finden Sie in der <a href="saihate.html">Saihate-Hilfe</a>.
+  </div>
+
+  <h2>Glossar</h2>
+  <table>
+    <tr>
+      <th>Begriff</th>
+      <th>Beschreibung</th>
+    </tr>
+    <tr>
+      <td>Datensatz</td>
+      <td>Allgemeiner Begriff für Aufzeichnungen in gkill. Umfasst alle Aufzeichnungstypen einschließlich Notizen, Zeitstempel, Aufgaben und mehr</td>
+    </tr>
+    <tr>
+      <td>Notizblock-Syntax</td>
+      <td>Texteingabesyntax, die im Notizblock verwendet wird. Durch Hinzufügen von Symbolen am Anfang jeder Zeile können verschiedene Arten von Aufzeichnungen gleichzeitig erstellt werden</td>
+    </tr>
+    <tr>
+      <td>Zeitstempel</td>
+      <td>Zeiterfassungsfunktion. Zeichnet die Start- und Endzeiten von Arbeiten oder Aktivitaten auf</td>
+    </tr>
+    <tr>
+      <td>Saihate</td>
+      <td>Bildschirm zum sicheren Hinzufügen von Aufzeichnungen auch vom Sperrbildschirm aus. Dient als Hub zum Hinzufügen von Aufzeichnungen</td>
+    </tr>
+    <tr>
+      <td>Lebenslog-Ansicht</td>
+      <td>Bildschirm zum Auflisten und Suchen von Aufzeichnungen</td>
+    </tr>
+    <tr>
+      <td>Aggregationsansicht</td>
+      <td>Funktion zur Anzeige von Datenaggregationen und Statistiken</td>
+    </tr>
+    <tr>
+      <td>Verwandte Informationen</td>
+      <td>Funktion, die automatisch nach verwandten Informationen sucht und diese anzeigt</td>
+    </tr>
+    <tr>
+      <td>Ablage</td>
+      <td>Speicherort für Aufzeichnungen. Sie können mehrere Ablagen für verschiedene Zwecke verwenden</td>
+    </tr>
+    <tr>
+      <td>Profil</td>
+      <td>Eine Sammlung von Einstellungen, die nach Gerat gruppiert sind</td>
+    </tr>
+  </table>

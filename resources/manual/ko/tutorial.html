@@ -12,10 +12,17 @@
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
     pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
     .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -23,22 +30,23 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
-    body.dark .section-divider { border-top-color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
+    body.dark .back-link a { color: #64B5F6; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">시작하기</a> &gt; <span>튜토리얼</span></nav>
   <h1>튜토리얼</h1>
   <p>gkill 사용법을 기본편과 응용편으로 나누어 설명합니다. 처음 사용하시는 분은 기본편부터 순서대로 읽어주세요.</p>
@@ -57,7 +65,8 @@
   <h2>화면 전환 방법</h2>
   <p>화면 상단 툴바에 표시된 <strong>페이지 제목</strong>(예: "라이프로그 뷰", "태스크" 등)을 탭하면 드롭다운 메뉴가 열려 각 화면으로 이동할 수 있습니다.</p>
   <table>
-    <tr><th>화면명</th><th>설명</th></tr>
+    <caption class="sr-only">화면 전환 방법</caption>
+    <tr><th scope="col">화면명</th><th scope="col">설명</th></tr>
     <tr><td>사이하테</td><td>내비게이션 없는 기록 추가 전용 화면（잠금 화면이나 홈 화면에서 직접 실행하는 경우에 적합）</td></tr>
     <tr><td>메모장</td><td>메모장 구문으로 텍스트를 입력하는 화면</td></tr>
     <tr><td>타임스탬프 메모장</td><td>메모 입력과 진행 중인 타임스탬프를 동시에 관리</td></tr>
@@ -70,7 +79,8 @@
   <h2>툴바 버튼 안내</h2>
   <p>툴바 오른쪽의 버튼은 현재 화면 내의 표시를 전환합니다.</p>
   <table>
-    <tr><th>버튼</th><th>기능</th><th>표시되는 화면</th></tr>
+    <caption class="sr-only">툴바 버튼 안내</caption>
+    <tr><th scope="col">버튼</th><th scope="col">기능</th><th scope="col">표시되는 화면</th></tr>
     <tr><td><span class="icon">&#9776;</span> 사이드바</td><td>검색/필터용 사이드바 표시/숨기기</td><td>라이프로그 뷰, 태스크</td></tr>
     <tr><td><span class="icon">&#128196;</span> 상세 보기</td><td>선택한 기록의 상세 패널 표시/숨기기</td><td>라이프로그 뷰, 태스크</td></tr>
     <tr><td><span class="icon">&#128202;</span> 집계 뷰</td><td>통계/분석 뷰 표시/숨기기</td><td>라이프로그 뷰</td></tr>
@@ -82,7 +92,8 @@
 
   <h2>화면 사용 빠른 참조</h2>
   <table>
-    <tr><th>화면</th><th>주요 용도</th><th>이럴 때 사용</th></tr>
+    <caption class="sr-only">화면 사용 빠른 참조</caption>
+    <tr><th scope="col">화면</th><th scope="col">주요 용도</th><th scope="col">이럴 때 사용</th></tr>
     <tr><td>라이프로그 뷰</td><td>기록 추가・조회・검색</td><td>기록을 추가하거나 확인・검색하고 싶을 때（일상적인 주요 화면）</td></tr>
     <tr><td>메모장</td><td>텍스트 일괄 입력</td><td>여러 기록을 한꺼번에 입력하고 싶을 때</td></tr>
     <tr><td>타임스탬프 메모장</td><td>메모＋타임스탬프 관리</td><td>메모와 시간을 동시에 기록하고 싶을 때</td></tr>
@@ -122,7 +133,8 @@
   <p>gkill에서는 다양한 종류의 라이프로그를 기록할 수 있습니다. 화면 오른쪽 하단의 "+" 버튼으로 기록을 추가합니다.</p>
 
   <table>
-    <tr><th>기록 유형</th><th>용도</th><th>입력 예</th></tr>
+    <caption class="sr-only">2. 기록 추가하기</caption>
+    <tr><th scope="col">기록 유형</th><th scope="col">용도</th><th scope="col">입력 예</th></tr>
     <tr><td>메모</td><td>텍스트 메모를 남기기</td><td>"오늘은 날씨가 좋았다"</td></tr>
     <tr><td>타임스탬프</td><td>시간 기록 (시작/종료)</td><td>"회의 10:00~11:30"</td></tr>
     <tr><td>태스크</td><td>해야 할 일을 관리하기</td><td>"보고서 작성하기"</td></tr>
@@ -217,7 +229,8 @@
 
   <h3>자주 사용하는 설정</h3>
   <table>
-    <tr><th>설정 항목</th><th>설명</th></tr>
+    <caption class="sr-only">자주 사용하는 설정</caption>
+    <tr><th scope="col">설정 항목</th><th scope="col">설명</th></tr>
     <tr><td>언어</td><td>UI 표시 언어를 변경합니다.</td></tr>
     <tr><td>다크 테마</td><td>어두운 색상으로 전환합니다.</td></tr>
     <tr><td>시작 화면</td><td>로그인 후 처음 표시할 페이지를 선택합니다.</td></tr>
@@ -235,7 +248,8 @@
 
   <h3>주요 접두사</h3>
   <table>
-    <tr><th>접두사</th><th>종류</th><th>예</th></tr>
+    <caption class="sr-only">주요 접두사</caption>
+    <tr><th scope="col">접두사</th><th scope="col">종류</th><th scope="col">예</th></tr>
     <tr><td>(없음)</td><td>메모</td><td><code>오늘은 날씨가 좋았다</code></td></tr>
     <tr><td><code>。</code></td><td>태그</td><td><code>。일기、날씨</code></td></tr>
     <tr><td><code>ーみ</code></td><td>태스크</td><td><code>ーみ</code> → 다음 행에 제목</td></tr>
@@ -292,9 +306,10 @@
 
   <h2>9. 타임스탬프로 시간 기록하기</h2>
   <table>
+    <caption class="sr-only">9. 타임스탬프로 시간 기록하기</caption>
     <tr>
-      <th>화면명</th>
-      <th>용도</th>
+      <th scope="col">화면명</th>
+      <th scope="col">용도</th>
     </tr>
     <tr>
       <td>타임스탬프 메모장</td>
@@ -373,7 +388,8 @@
     <li>공유 URL이 생성됩니다. 용도에 따라 적절한 URL을 사용하세요:</li>
   </ol>
   <table>
-    <tr><th>URL 유형</th><th>용도</th></tr>
+    <caption class="sr-only">공유 링크 생성 절차</caption>
+    <tr><th scope="col">URL 유형</th><th scope="col">용도</th></tr>
     <tr><td>로컬 URL</td><td>같은 기기 내 접속 (localhost)</td></tr>
     <tr><td>LAN URL</td><td>같은 네트워크 내 다른 기기에서 접속</td></tr>
     <tr><td>WAN URL</td><td>인터넷을 통한 외부 접속</td></tr>
@@ -382,7 +398,8 @@
   <h3>공유 데이터 제어</h3>
   <p>공유 시 포함할 데이터를 선택할 수 있습니다.</p>
   <table>
-    <tr><th>옵션</th><th>설명</th></tr>
+    <caption class="sr-only">공유 데이터 제어</caption>
+    <tr><th scope="col">옵션</th><th scope="col">설명</th></tr>
     <tr><td>태그</td><td>기록에 붙은 태그를 공유에 포함</td></tr>
     <tr><td>텍스트</td><td>기록의 텍스트 내용을 공유에 포함</td></tr>
     <tr><td>타임스탬프</td><td>타임스탬프 시간 정보를 공유에 포함</td></tr>
@@ -420,6 +437,9 @@
   <div class="tip">
     <strong>힌트:</strong> 정기적으로 홈 디렉터리를 백업하는 것을 권장합니다. 특히 <code>datas/</code>와 <code>configs/</code> 디렉터리가 중요합니다.
   </div>
+  <div class="tip">
+    <strong>참고:</strong> 리포지토리 저장 위치는 홈 디렉터리 외부로도 설정할 수 있습니다. 외부 폴더에 둔 파일(IDF 감시 폴더, Git 리포지토리, 외부에 배치한 데이터베이스 등)을 사용하는 경우 홈 디렉터리만 복사하면 누락됩니다. 설정한 모든 리포지토리의 저장 위치도 함께 백업 대상에 포함하세요.
+  </div>
 
   <h2>관련 문서</h2>
   <ul>
@@ -430,6 +450,7 @@
     <li><a href="mi.html">태스크 화면</a></li>
     <li><a href="rykv.html">라이프로그 뷰 화면</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

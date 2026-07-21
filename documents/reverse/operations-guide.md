@@ -164,18 +164,19 @@ cd src/wear_os
 2. 自動的に以下が作成される:
    - `$HOME/gkill/` ディレクトリ構造
    - 全設定データベース（configs/配下）
-   - `admin` アカウント（パスワード未設定）
+   - `admin` アカウント（`PasswordSha256 = nil` かつ `PasswordResetToken` が設定された状態）
    - VAPID鍵ペア（Web Push用）
    - デフォルトデバイス `"gkill"`
 3. ブラウザで `http://localhost:9999` にアクセス
 
-### 4.2 パスワード設定
+### 4.2 初回アカウント登録とパスワード設定
 
-初回ログイン時、`admin` アカウントはパスワードなしでログイン可能。
+初回起動時の `admin` アカウントには `PasswordResetToken` が設定されているため、**パスワードなしではログインできない**。`PasswordResetToken` が非nilのアカウントは、ログイン処理でパスワード照合より前に `ERR000004`（`AccountPasswordResetTokenIsNotNilError`）で拒否される（`handle_login.go`）。
 
-**速やかにパスワードを設定すること：**
-1. ログイン後、設定画面でパスワードを変更
-2. 以降は SHA256(パスワード) で認証
+**正しい初期導線：**
+1. ブラウザで `http://localhost:9999` にアクセスすると初回アカウント登録画面（`/regist_first_account`）に誘導される
+2. ここで `admin` のパスワードを設定して初回登録を完了する
+3. 以降は SHA256(パスワード) で認証
 
 ### 4.3 リポジトリ設定
 
@@ -216,6 +217,23 @@ cp -r $HOME/gkill/datas/ /backup/gkill_datas_$(date +%Y%m%d)/
 # TLS証明書（使用時のみ）
 cp -r $HOME/gkill/tls/ /backup/gkill_tls_$(date +%Y%m%d)/
 ```
+
+**重要 — 外部ディレクトリのリポジトリを取りこぼさないこと:** 上記の `configs/` `datas/` `tls/` コピーだけでは**完全バックアップにならない**。ユーザーがリポジトリ設定で `$HOME/gkill/` の外（任意の外部ディレクトリ）を指定している場合、そのデータは含まれない。完全バックアップには、まず登録済みリポジトリのパス一覧を確認し、外部ディレクトリも個別にコピーする必要がある。
+
+```bash
+# 1. 登録済みリポジトリのパス一覧を設定DBから確認
+#    リポジトリ定義は configs/ 配下の設定DB（rep 一覧）に保存されている。
+#    アプリケーション設定画面（リポジトリ管理）でも一覧を確認できる。
+sqlite3 $HOME/gkill/configs/*.db "SELECT file FROM REP;" 2>/dev/null | sort -u
+#    （テーブル/カラム名は環境により異なる場合がある。設定画面での確認が確実）
+
+# 2. $HOME/gkill/ の外にあるリポジトリを個別にコピー（例）
+cp -r /path/to/external/repo/ /backup/gkill_external_repo_$(date +%Y%m%d)/
+```
+
+**バックアップ後の検証:**
+- コピー先の SQLite3 ファイルが破損していないか確認する（`sqlite3 <file> "PRAGMA integrity_check;"` が `ok` を返すこと）。
+- 外部リポジトリを含む全リポジトリパスがバックアップに含まれているか、手順1の一覧と突き合わせる。
 
 **注意:** サーバー稼働中のSQLite3ファイルコピーはデータ破損のリスクがある。必ずサーバーを停止してからコピーすること。
 
@@ -313,7 +331,7 @@ JSON形式。各行に以下のフィールド:
 - キャッシュ上限調整: `--cache_clear_count_limit` でアイテム数を変更（デフォルト: 3000）
 - キャッシュ更新間隔: `--cache_update_duration` で変更（デフォルト: 1分）
 - API経由でキャッシュ更新: `POST /api/update_cache`
-- CLI: `gkill_server update_cache` サブコマンド
+- CLI: `gkill_server update_cache ユーザーID...` サブコマンド（他サブコマンドと同様に対象ユーザーIDの文字列配列を受け取る。**認証は配列の最後のユーザーID**で行うため、末尾に管理者ユーザーIDを指定する。パスワードは `--password_sha256` で指定可）
 
 ### 7.5 フロントエンドが表示されない
 
@@ -334,7 +352,7 @@ JSON形式。各行に以下のフィールド:
 2. 破損DBの特定（ログで確認）
 3. バックアップからリストア
 4. バックアップがない場合: `sqlite3 broken.db ".recover" | sqlite3 repaired.db` で修復を試みる
-5. `gkill_server optimize --user ユーザーID` でDB最適化
+5. `gkill_server optimize ユーザーID` でDB最適化
 
 ---
 
@@ -375,15 +393,15 @@ VAPID鍵ペアは初回サーバー起動時に自動生成され、`server_conf
 
 - **同時書き込み:** SQLite3はライターロックを使用するため、高頻度の同時書き込みには不向き
 - **データ量:** 単一テーブルに大量レコードがある場合、Append-Only設計のため履歴蓄積でサイズが増加
-- **最適化:** `gkill_server optimize --user ユーザーID` でVACUUM実行
+- **最適化:** `gkill_server optimize ユーザーID` でVACUUM実行
 
 ### 9.3 サムネイル・動画キャッシュ
 
 大量のファイル（idf_kyou）がある場合、サムネイル/動画キャッシュの事前生成で表示速度を改善:
 
 ```bash
-gkill_server generate_thumb_cache --user ユーザーID
-gkill_server generate_video_cache --user ユーザーID
+gkill_server generate_thumb_cache ユーザーID
+gkill_server generate_video_cache ユーザーID
 ```
 
 ### 9.4 キャッシュアーキテクチャ詳細
@@ -426,7 +444,7 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 #### キャッシュ更新API
 
-`POST /api/update_cache`（または`gkill_server update_cache` CLIコマンド）を呼び出すと、全インメモリキャッシュを即時再構築する。サーバー再起動なしにリポジトリ変更を反映する際に使用する。
+`POST /api/update_cache`（または`gkill_server update_cache ユーザーID...` CLIコマンド）を呼び出すと、指定ユーザーのインメモリキャッシュを即時再構築する。サーバー再起動なしにリポジトリ変更を反映する際に使用する。**このエンドポイントは管理者セッション（`session_id`）を必須とする**（`wrapAuth` + `IsAdmin` 判定）。CLIサブコマンドは対象ユーザーIDの文字列配列を受け取り、**配列の最後のユーザーID**で `/api/login` してから呼び出す（末尾に管理者ユーザーIDを指定する。パスワードは `--password_sha256`、既定 空）。
 
 #### キャッシュ削除
 
@@ -457,10 +475,10 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 | `gkill_server version` | バージョン・ビルド情報表示 |
 | `gkill_server idf` | ディレクトリファイルのインデックス作成 |
 | `gkill_server dvnf` | DVNF処理 |
-| `gkill_server generate_thumb_cache --user ユーザーID` | サムネイルキャッシュ生成 |
-| `gkill_server generate_video_cache --user ユーザーID` | 動画キャッシュ生成 |
-| `gkill_server optimize --user ユーザーID` | データベース最適化（VACUUM） |
-| `gkill_server update_cache` | HTTP API経由でキャッシュ更新 |
+| `gkill_server generate_thumb_cache ユーザーID` | サムネイルキャッシュ生成 |
+| `gkill_server generate_video_cache ユーザーID` | 動画キャッシュ生成 |
+| `gkill_server optimize ユーザーID` | データベース最適化（VACUUM） |
+| `gkill_server update_cache ユーザーID...` | HTTP API経由でキャッシュ更新（対象ユーザーIDの文字列配列。認証は配列の最後のユーザーIDで実施＝末尾に管理者を指定。パスワードは `--password_sha256`） |
 | `gkill_server clear_cache <thumb\|video\|zip\|all> <all\|user_id...>` | ディスク上の派生キャッシュを削除。対象は必須で、`all`で全体、user_id指定で該当ユーザーのリポジトリ分のみ |
 
 ## 11. MCP HTTPサーバーのデプロイ

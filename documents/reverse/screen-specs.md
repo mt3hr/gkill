@@ -11,8 +11,8 @@
 | ルート | 13 |
 | ページコンポーネント | 15 |
 | ビューコンポーネント | 185 |
-| ダイアログコンポーネント | 100 |
-| **コンポーネント合計** | **300**（ルートを除く） |
+| ダイアログコンポーネント | 101 |
+| **コンポーネント合計** | **301**（ルートを除く。ビュー185 + ダイアログ101 + ページ15） |
 
 ## 1. ルート定義
 
@@ -502,7 +502,7 @@ DnoteView はダッシュボードのほか rykv 画面からも利用される�
 | ファイル名 | 入力 | テキスト入力 |
 | 日時 | 入力 | 日付・時刻ピッカー |
 
-**削除確認:** `confirm-delete-idf-kyou-view.vue` / `confirm-delete-idf-kyou-dialog.vue`
+**削除確認:** `confirm-delete-idf-kyou-dialog.vue`（ダイアログのみ。`-view.vue` は存在しない）
 
 **コンテキストメニュー:** `idf-kyou-context-menu.vue`
 
@@ -526,7 +526,7 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 | `mi-extruct-check-state-query.vue` | タスク完了状態フィルタ |
 | `find-query-editor-view.vue` | 高度な検索条件ビルダー（汎用Kyou向け） |
 | `mi-find-query-editor-view.vue` | MI専用検索条件エディタ（チェック状態フィルタ・ソート順・キーワード・タグ・TimeIs・地図・時間帯フィルタ対応） |
-| `rykv-query-editor-sidebar.vue` | RYKV画面用検索サイドバー |
+| `rykv-query-editor-side-bar.vue` | RYKV画面用検索サイドバー |
 | `mi-query-editor-sidebar.vue` | Mi画面用検索サイドバー |
 | `clear-query-button.vue` | フィルタリセットボタン |
 | `search-button.vue` | 検索実行ボタン |

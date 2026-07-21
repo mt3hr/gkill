@@ -1,0 +1,238 @@
+<!-- title: Vue d'agrégation - Aide -->
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Vue d'agrégation</span></nav>
+  <h1>Vue d'agrégation</h1>
+  <p>Écran d'agrégation et de visualisation des données du journal de vie selon des conditions. Trois types peuvent être définis : les « Éléments » pour des valeurs agrégées individuelles, les « Listes » pour des agrégations groupées par clé et les « Graphiques de tendance » pour visualiser l'évolution dans le temps.</p>
+  <div class="tip">
+    <strong>Astuce :</strong> La vue d'agrégation est une fonctionnalité à bascule intégrée à la vue journal de vie. Cliquez sur l'icône d'agrégation dans la barre d'outils de la vue journal de vie pour l'afficher.
+  </div>
+
+  <h2>Gestion des définitions</h2>
+  <table>
+    <tr>
+      <th>Élément</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Onglets</td>
+      <td>Chaque définition d'agrégation est affichée sous forme d'onglet. Cliquez sur un onglet pour basculer entre les définitions.</td>
+    </tr>
+    <tr>
+      <td>Nom de la définition</td>
+      <td>Champ de texte permettant de modifier le nom de la définition d'agrégation.</td>
+    </tr>
+    <tr>
+      <td>Bouton ＋ (à côté des onglets)</td>
+      <td>Ajoute une nouvelle définition d'agrégation.</td>
+    </tr>
+    <tr>
+      <td>Bouton supprimer</td>
+      <td>Supprime la définition d'agrégation actuellement affichée.</td>
+    </tr>
+  </table>
+
+  <h2>Éléments de l'écran</h2>
+  <table>
+    <tr>
+      <th>Élément</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Plage de dates</td>
+      <td>Affiche la période utilisée pour l'agrégation.</td>
+    </tr>
+    <tr>
+      <td>Bouton de téléchargement</td>
+      <td>Télécharge les résultats d'agrégation au format JSON.</td>
+    </tr>
+    <tr>
+      <td>Bouton ＋ (flottant)</td>
+      <td>Affiche un menu pour choisir entre l'ajout d'un Élément, d'une Liste ou d'un graphique de tendance.</td>
+    </tr>
+  </table>
+
+  <h2>Éléments (valeur agrégée unique)</h2>
+  <p>Affiche les valeurs agrégées des données correspondant aux conditions au format : « Titre : Préfixe [Résultat agrégé] Suffixe ».</p>
+  <table>
+    <tr>
+      <th>Paramètre</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Titre</td>
+      <td>Saisie de texte</td>
+      <td>Définit le nom d'affichage de l'élément.</td>
+    </tr>
+    <tr>
+      <td>Préfixe</td>
+      <td>Saisie de texte</td>
+      <td>Texte affiché avant la valeur agrégée.</td>
+    </tr>
+    <tr>
+      <td>Suffixe</td>
+      <td>Saisie de texte</td>
+      <td>Texte affiché après la valeur agrégée.</td>
+    </tr>
+    <tr>
+      <td>Cible d'agrégation</td>
+      <td>Liste déroulante</td>
+      <td>Sélectionne la méthode d'agrégation (comptage, somme, moyenne, max, min, etc.).</td>
+    </tr>
+    <tr>
+      <td>Groupe de conditions</td>
+      <td>Éditeur de conditions</td>
+      <td>Filtre les cibles d'agrégation à l'aide de conditions AND/OR.</td>
+    </tr>
+  </table>
+
+  <h2>Listes (agrégation groupée)</h2>
+  <p>Affiche les résultats d'agrégation groupés par clé sous forme de liste.</p>
+  <table>
+    <tr>
+      <th>Paramètre</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Titre / Préfixe / Suffixe</td>
+      <td>Saisie de texte</td>
+      <td>Mêmes paramètres que pour les Éléments.</td>
+    </tr>
+    <tr>
+      <td>Cible d'agrégation</td>
+      <td>Liste déroulante</td>
+      <td>Sélectionne la méthode d'agrégation.</td>
+    </tr>
+    <tr>
+      <td>Clé de groupement</td>
+      <td>Liste déroulante</td>
+      <td>Sélectionne le critère de groupement (titre, type de données, étiquette, mois, jour de la semaine, date, etc.).</td>
+    </tr>
+    <tr>
+      <td>Groupe de conditions</td>
+      <td>Éditeur de conditions</td>
+      <td>Filtre les cibles d'agrégation à l'aide de conditions AND/OR.</td>
+    </tr>
+  </table>
+
+  <h2>Graphique de tendance (agrégation temporelle)</h2>
+  <p>Agrège les données correspondant aux conditions par périodes fixes et affiche l'évolution sous forme de graphique en ligne ou en barres. Survolez un point du graphique pour afficher la valeur agrégée de chaque période.</p>
+  <table>
+    <tr>
+      <th>Paramètre</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Titre</td>
+      <td>Saisie de texte</td>
+      <td>Définit le nom affiché du graphique de tendance.</td>
+    </tr>
+    <tr>
+      <td>Cible d'agrégation</td>
+      <td>Liste déroulante</td>
+      <td>Sélectionne la méthode d'agrégation (nombre, somme, moyenne, maximum, minimum, etc.).</td>
+    </tr>
+    <tr>
+      <td>Granularité</td>
+      <td>Liste déroulante</td>
+      <td>Sélectionne l'unité de période : « Quotidien », « Hebdomadaire » ou « Mensuel ».</td>
+    </tr>
+    <tr>
+      <td>Type de graphique</td>
+      <td>Liste déroulante</td>
+      <td>Sélectionne « Ligne » ou « Barres ».</td>
+    </tr>
+    <tr>
+      <td>Groupe de conditions</td>
+      <td>Éditeur de conditions</td>
+      <td>Filtre la cible d'agrégation avec des conditions AND/OR.</td>
+    </tr>
+  </table>
+
+  <h2>Édition du groupe de conditions</h2>
+  <table>
+    <tr>
+      <th>Élément</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Logique de combinaison</td>
+      <td>Sélectionnez AND / OR / NOT pour définir comment les conditions sont combinées.</td>
+    </tr>
+    <tr>
+      <td>Ajouter une condition</td>
+      <td>Ajoute une nouvelle condition au groupe.</td>
+    </tr>
+    <tr>
+      <td>Ajouter un groupe</td>
+      <td>Ajoute un groupe de conditions imbriqué.</td>
+    </tr>
+    <tr>
+      <td>Supprimer le groupe</td>
+      <td>Supprime ce groupe de conditions.</td>
+    </tr>
+    <tr>
+      <td>Chaque condition</td>
+      <td>Définit le type et la valeur de la condition (filtrer par type de données, étiquette, titre, montant, valeur d'humeur, etc.).</td>
+    </tr>
+  </table>
+
+  <h2>Opérations</h2>
+  <table>
+    <tr>
+      <th>Opération</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Double-clic</td>
+      <td>Ouvre l'éditeur de l'élément, de la liste ou du graphique de tendance.</td>
+    </tr>
+    <tr>
+      <td>Clic droit</td>
+      <td>Affiche le menu contextuel (Modifier / Supprimer).</td>
+    </tr>
+    <tr>
+      <td>Glisser-déposer</td>
+      <td>Modifie l'ordre d'affichage des éléments, des listes et des graphiques de tendance.</td>
+    </tr>
+  </table>
+
+  <h2>Boutons d'action inférieurs</h2>
+  <table>
+    <tr>
+      <th>Bouton</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Appliquer</td>
+      <td>Enregistre toutes les modifications des définitions.</td>
+    </tr>
+    <tr>
+      <td>Annuler</td>
+      <td>Annule les modifications et ferme le dialogue.</td>
+    </tr>
+  </table>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Les Éléments sont utiles pour des valeurs agrégées uniques (ex : total des dépenses du mois), les Listes pour des agrégations par groupe (ex : dépenses par magasin) et les graphiques de tendance pour suivre l'évolution (ex : humeur par semaine, dépenses par mois).
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Combiner les conditions permet de créer des requêtes d'agrégation complexes.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Utilisez le glisser-déposer pour réordonner librement l'affichage des éléments et des listes.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Les résultats d'agrégation peuvent être téléchargés en JSON pour une analyse avec des outils externes.
+  </div>
+
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="application-config.html">Écran de configuration</a></li>
+    <li><a href="rykv.html">Vue journal de vie</a></li>
+    <li><a href="getting-started.html">Premiers pas</a></li>
+  </ul>

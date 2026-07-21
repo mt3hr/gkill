@@ -82,7 +82,25 @@ gkill_server version
 | `npm run put_version_info_embed` | `version.json`（コミットハッシュ+ビルド日時+バージョン）を生成 |
 | `npm run copy_dist_to_app_embed` | `dist/`をembedディレクトリにコピー |
 | `npm run copy_i18n_to_app_embed` | `src/locales/`をembedディレクトリにコピー |
-| `npm run prepare_install` | 上記4つを順次実行（clean → version → build → copy） |
+| `npm run build_manuals` | `resources/manual_src/` の原稿から `resources/manual/`（7言語HTMLマニュアル）を生成 |
+| `npm run copy_manual_to_app_embed` | `resources/manual/`（7言語HTMLマニュアル）をembedディレクトリにコピー |
+| `npm run clean_dist` | `dist/`をクリーン |
+| `npm run prepare_install` | 上記を順次実行（clean_dist → clean_app_embed → version生成 → build → copy html / i18n → build_manuals → copy manual） |
+
+### ドキュメント・マニュアルのツール
+
+ドキュメントとマニュアルの整合性を保つためのツール群（いずれも Node 標準のみ・依存なし）。
+
+| コマンド / スクリプト | 説明 |
+|---|---|
+| `npm run verify_docs` | ドキュメント検証（`src/tools/verify_docs.mjs`）。件数（handler/req_res/view/dialog/endpoint/i18nキー）をコードから突合、reverse資料の相互リンク・参照パス・Mermaid、マニュアルの生成鮮度・アクセシビリティ（`<main>`/`<caption>`/`th scope`）・言語構成一致・リンクを検査。CI（`.github/workflows/docs.yml`）で実行される |
+| `node src/tools/verify_docs.mjs --parity` | 構造パリティ・レポート（日本語=正本に対する各言語マニュアルの見出し/表構造のズレを表示） |
+| `npm run build_manuals` | `resources/manual_src/{lang}/{page}.html`（原稿フラグメント）＋ `_layout.html`（共有レイアウト）から 140 マニュアルを生成。`<main>`/表 `<caption>`/`th scope` を自動付与 |
+| `node src/tools/manual_ascii_fix.mjs` | fr/es マニュアルの ASCII 代替表記（アクセント欠落）を辞書ベースで是正（コード/pre/href は保護。要ネイティブレビューの初回パス） |
+
+**マニュアル編集の流儀:** マニュアルは手書きHTMLではなく `resources/manual_src/` の原稿（HTMLフラグメント）を編集し、`npm run build_manuals` で `resources/manual/` を再生成する。`resources/manual/` を直接編集しても `verify_docs` の生成鮮度チェックで検出される。共通の head/style/テーマスクリプトは `_layout.html` に集約されている。
+
+> **注意:** `src/tools/extract_manual_src.mjs` は「元の手書きマニュアル」から原稿を切り出す**一度きりの移行専用**ツール。生成済み（`<main>` を含む）マニュアルに対しては安全ガードで実行を拒否する。
 
 ### クロスコンパイル
 
@@ -136,24 +154,28 @@ export MCP_OAUTH_ISSUER=http://localhost:8808  # リモート時は公開URL
 
 ## 4. ビルドパイプライン詳細
 
-`npm run install_server` は以下の7ステップを順次実行します。
+`npm run install_server`（内部で `prepare_install`）は以下のステップを順次実行します。埋め込みコピーは html / i18n / manual の3系統です。
 
 ```mermaid
 graph TD
-    A["1. clean_app_embed<br/>embed用ディレクトリ削除"] --> B["2. put_version_info_embed<br/>version.json生成"]
-    B --> C["3. type-check<br/>vue-tscによる型チェック"]
-    B --> D["3. build-only<br/>vite buildによるビルド"]
-    C --> E["4. copy_dist_to_app_embed<br/>dist/をembed/html/にコピー"]
+    Z["1. clean_dist<br/>dist/削除"] --> A["2. clean_app_embed<br/>embed用ディレクトリ削除"]
+    A --> B["3. put_version_info_embed<br/>version.json生成"]
+    B --> C["4. type-check<br/>vue-tscによる型チェック"]
+    B --> D["4. build-only<br/>vite buildによるビルド"]
+    C --> E["5. copy_dist_to_app_embed<br/>dist/をembed/html/にコピー"]
     D --> E
-    E --> F["5. copy_i18n_to_app_embed<br/>locales/をembed/i18n/にコピー"]
-    F --> G["6. go install<br/>Goバイナリをビルド・インストール"]
+    E --> F["6. copy_i18n_to_app_embed<br/>locales/をembed/i18n/にコピー"]
+    F --> H["7. copy_manual_to_app_embed<br/>manual/をembed/manual/にコピー"]
+    H --> G["8. go install<br/>Goバイナリをビルド・インストール"]
 
+    style Z fill:#fdd,stroke:#333
     style A fill:#fdd,stroke:#333
     style B fill:#ffd,stroke:#333
     style C fill:#ddf,stroke:#333
     style D fill:#ddf,stroke:#333
     style E fill:#dfd,stroke:#333
     style F fill:#dfd,stroke:#333
+    style H fill:#dfd,stroke:#333
     style G fill:#fdf,stroke:#333
 ```
 
@@ -291,7 +313,7 @@ npm run setup_gkill_develop_env
 
 | 症状 | 原因 | 解決方法 |
 |---|---|---|
-| `vue-tsc`でメモリ不足 | Node.jsのヒープメモリ制限 | `npm run type-check`は`--max-old-space-size=4096`付きで実行されます |
+| `vue-tsc`でメモリ不足 | Node.jsのヒープメモリ制限 | `npm run type-check`は`--max-old-space-size=8192`付きで実行されます |
 | `go.mod`のエラー | モジュール定義の不整合 | `npm run go_mod`で再生成 |
 | Wear OSビルドで`gradlew not found` | Gradleラッパー未コピー | `npm run setup_wear_os_gradle`を実行 |
 

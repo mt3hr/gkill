@@ -50,7 +50,7 @@ npm install
 npm run install_server
 ```
 
-4. gkill_server を少なくとも1回起動して初期設定が完了していること（初回起動で `admin` ユーザーが作成されます）
+4. gkill_server を少なくとも1回起動し、**初回アカウント登録（`/regist_first_account`）まで完了していること**。初回起動で `admin` ユーザーは作成されますが、`PasswordResetToken` が設定された状態のため、パスワードを設定するまで MCP サーバーからの認証は失敗します
 
 ---
 
@@ -102,7 +102,7 @@ $hash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
 python3 -c "import hashlib; print(hashlib.sha256('あなたのパスワード'.encode()).hexdigest())"
 ```
 
-> **補足**: 初期状態では `admin` ユーザーのパスワードは空文字列です。空文字列のSHA256ハッシュは `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` です。
+> **補足**: 初回起動直後の `admin` ユーザーは `PasswordResetToken` が設定されており、パスワード未設定のままではログインできません（MCPサーバーからの認証も失敗します）。先に gkill のブラウザ画面で初回アカウント登録（`/regist_first_account`）を行い、`admin` のパスワードを設定してから、そのパスワードのSHA256ハッシュを `GKILL_PASSWORD_SHA256` に指定してください。
 
 ---
 
@@ -459,13 +459,13 @@ Claude Code からリモートのMCPサーバーに接続する場合は、HTTP�
 
 ### 8.2 Claude Code での設定
 
-Claude Code で以下のコマンドを実行します:
+Claude Code で以下のシェルコマンドを実行します:
 
 ```
-/mcp add --transport http gkill-readwrite https://mcp.example.com/mcp
+claude mcp add --transport http gkill-readwrite https://mcp.example.com/mcp
 ```
 
-OAuth認証フローが自動的に開始されます。ブラウザでgkillにログインして認可を完了してください。
+登録後、Claude Code のセッション内スラッシュコマンド `/mcp` から認証操作を行うと OAuth 認証フローが開始されます。ブラウザでgkillにログインして認可を完了してください（`claude mcp add ...` はシェルCLI、`/mcp` はセッション内コマンドで、役割が異なります）。
 
 ---
 
@@ -552,15 +552,23 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 | `GKILL_SESSION_ID` | いいえ | — | 既存セッションIDを直接指定（ログインスキップ） |
 | `GKILL_LOCALE` | いいえ | `ja` | ロケール（ja, en, zh, ko, es, fr, de） |
 | `GKILL_INSECURE` | いいえ | `false` | `true` でTLS証明書検証をスキップ |
+| `GKILL_FETCH_TIMEOUT_MS` | いいえ | `120000` | gkill_serverへのHTTPリクエストのタイムアウト（ミリ秒） |
 
 ※ `GKILL_PASSWORD_SHA256` と `GKILL_PASSWORD` はどちらか一方を指定。SHA256版を推奨。
+
+### ファイルアクセス
+
+| 変数名 | 必須 | デフォルト | 説明 |
+|---|---|---|---|
+| `GKILL_MCP_MAX_FILE_BYTES` | いいえ | `8388608`（8MB） | `get_idf_file` がbase64で返すファイルサイズの上限（`lib/constants.mjs`） |
+| `GKILL_MCP_FILE_LINK_TTL_MS` | いいえ | `3600000`（1時間） | HTTPモードで発行するファイルURLトークンの有効期限（`lib/file-link-store.mjs`） |
 
 ### トランスポート（HTTP モード用）
 
 | 変数名 | 必須 | デフォルト | 説明 |
 |---|---|---|---|
 | `MCP_TRANSPORT` | いいえ | `stdio` | `stdio` または `http` |
-| `MCP_PORT` | いいえ | `8808` | HTTPサーバーのポート番号 |
+| `MCP_PORT` | いいえ | サーバーごとに異なる（Read `8808` / Write `8809` / ReadWrite `8810`） | HTTPサーバーのポート番号 |
 | `MCP_OAUTH_ISSUER` | HTTP時はい | `http://localhost:<port>` | OAuthメタデータのissuer URL。リモート接続時はクライアントがアクセス可能な公開URLを指定 |
 
 ### アクセスログ
@@ -610,7 +618,7 @@ gkillは3種類のMCPサーバーを提供しています。用途に応じて�
       "env": {
         "GKILL_BASE_URL": "http://127.0.0.1:9999",
         "GKILL_USER": "admin",
-        "GKILL_PASSWORD_SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "GKILL_PASSWORD_SHA256": "<設定したパスワードのSHA256ハッシュ>"
       }
     }
   }

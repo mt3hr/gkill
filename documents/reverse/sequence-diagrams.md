@@ -1,6 +1,6 @@
 # gkill シーケンス図
 
-コードの API ハンドラ実装（`gkill_server_api.go`）およびMCPサーバ実装（`gkill-read-server.mjs`）から抽出した主要フローのシーケンス図。
+コードの API ハンドラ実装（`gkill/api/gkill_server_api/` パッケージ、`handle_*.go`）およびMCPサーバ実装（`gkill-read-server.mjs`）から抽出した主要フローのシーケンス図。
 
 ## 1. ログイン
 

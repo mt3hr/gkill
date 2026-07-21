@@ -1,0 +1,78 @@
+<!-- title: KI-Integration - Hilfe -->
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>KI-Integration</span></nav>
+  <h1>KI-Integration</h1>
+  <p>Durch die Verbindung von KI-Assistenten wie Claude mit gkill können Sie Ihre Lebensprotokoll-Einträge per natürlicher Konversation suchen, hinzufügen und bearbeiten.</p>
+
+  <h2>Was Sie tun können</h2>
+  <table>
+    <tr><th>Aktion</th><th>Beispiel</th></tr>
+    <tr><td>Einträge suchen</td><td>„Zeige mir meine Mittagessen-Notizen der letzten Woche" / „Fasse diesen Monat Ausgaben zusammen"</td></tr>
+    <tr><td>Einträge hinzufügen</td><td>„Füge eine Notiz für heute hinzu" / „Erstelle eine Aufgabe"</td></tr>
+    <tr><td>Einträge aktualisieren / löschen</td><td>„Markiere diese Aufgabe als erledigt"</td></tr>
+    <tr><td>GPS / Dateien abrufen</td><td>„Zeige meine heutige Route"</td></tr>
+    <tr><td>Einstellungen prüfen</td><td>„Liste meine Vorlagen auf"</td></tr>
+  </table>
+
+  <h2>Integrationstypen</h2>
+  <table>
+    <tr><th>Typ</th><th>Beschreibung</th></tr>
+    <tr><td>Nur-Lesen</td><td>Die KI kann Einträge nur anzeigen und suchen. Hinzufügen oder Ändern ist nicht möglich.</td></tr>
+    <tr><td>Nur-Schreiben</td><td>Die KI kann Einträge nur hinzufügen, aktualisieren und löschen.</td></tr>
+    <tr><td>Lesen &amp; Schreiben</td><td>Die KI kann Einträge anzeigen, hinzufügen, aktualisieren und löschen.</td></tr>
+  </table>
+
+  <h2>Dateiübergabe</h2>
+  <p>Wie Dateieinträge (Bilder, Videos, Dokumente) der KI gezeigt werden, wechselt automatisch je nach Verbindungsart.</p>
+  <table>
+    <tr><th>Verbindungsart</th><th>Übergabemethode</th></tr>
+    <tr><td>Lokale Verbindung (KI auf demselben PC)</td><td>Der tatsächliche Dateipfad wird an die KI übergeben, die die Datei direkt lesen kann.</td></tr>
+    <tr><td>Remote-Verbindung (KI über das Internet)</td><td>Eine zeitlich begrenzte dedizierte URL wird ausgestellt, und die KI ruft die Datei über diese URL ab. Bei Bildern werden sowohl Miniaturansicht als auch Originalgröße bereitgestellt. gkill selbst muss nicht öffentlich zugänglich sein.</td></tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp:</strong> Die Größenbeschränkung für die eingebettete Übertragung (Standard 8 MB) kann mit der Umgebungsvariable <code>GKILL_MCP_MAX_FILE_BYTES</code> angepasst werden, die URL-Gültigkeitsdauer (Standard 1 Stunde) mit <code>GKILL_MCP_FILE_LINK_TTL_MS</code>.
+  </div>
+
+  <h2>Einrichtung (Claude Desktop)</h2>
+  <p>Fügen Sie Folgendes zur Claude-Desktop-Konfigurationsdatei (<code>claude_desktop_config.json</code>) hinzu.</p>
+
+  <h3>Nur-Lesen-Integration</h3>
+  <pre><code>{
+  "mcpServers": {
+    "gkill": {
+      "command": "npx",
+      "args": ["-y", "gkill-mcp-server"],
+      "env": {
+        "GKILL_BASE_URL": "http://localhost:9999",
+        "GKILL_USER": "ihre-benutzer-id",
+        "GKILL_PASSWORD_SHA256": "sha256-hash-ihres-passworts"
+      }
+    }
+  }
+}</code></pre>
+
+  <div class="tip">
+    <strong>Tipp:</strong> <code>GKILL_PASSWORD_SHA256</code> ist der SHA256-Hash Ihres Passworts. Sie können ihn mit den auf Ihrem Betriebssystem verfügbaren Tools generieren.
+  </div>
+
+  <h2>Einrichtung (Claude Code)</h2>
+  <pre><code>claude mcp add gkill \
+  --env GKILL_BASE_URL=http://localhost:9999 \
+  --env GKILL_USER=ihre-benutzer-id \
+  --env GKILL_PASSWORD_SHA256=ihr-hash \
+  -- npx -y gkill-mcp-server</code></pre>
+  <div class="tip">
+    <strong>Hinweis:</strong> gkill-mcp-server ist noch nicht auf npm veröffentlicht. Geben Sie bis dahin den im Repository enthaltenen MCP-Server als Befehl an (z. B. <code>-- node src/mcp/gkill-readwrite-server.mjs</code>).
+  </div>
+
+  <h2>Fernzugriff</h2>
+  <p>Machen Sie Ihren gkill-Server über das Internet zugänglich und setzen Sie <code>GKILL_BASE_URL</code> auf seine öffentliche Adresse. Aus Sicherheitsgründen wird die Aktivierung von TLS (HTTPS) dringend empfohlen.</p>
+  <div class="tip">
+    <strong>Tipp:</strong> TLS-Einstellungen können unter <a href="server-config.html">Servereinstellungen</a> konfiguriert werden.
+  </div>
+
+  <h2>Verwandte Seiten</h2>
+  <ul>
+    <li><a href="getting-started.html">Erste Schritte</a></li>
+    <li><a href="server-config.html">Servereinstellungen</a></li>
+    <li><a href="application-config.html">Anwendungseinstellungen</a></li>
+  </ul>

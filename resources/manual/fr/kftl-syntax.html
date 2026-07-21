@@ -12,9 +12,14 @@
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 0.95em; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
     pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
+    .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
     .back-link { margin-bottom: 16px; }
     .back-link a { color: #1976D2; text-decoration: none; }
     .back-link a:hover { text-decoration: underline; }
@@ -25,63 +30,65 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <a href="kftl.html">Bloc-notes</a> &gt; <span>Référence syntaxe du bloc-notes</span></nav>
 
 <div class="back-link"><a href="kftl.html">&larr; Retour a l'aide du bloc-notes</a></div>
 
 <h1>Référence de syntaxe du bloc-notes</h1>
 
-<p>La syntaxe du bloc-notes est un format d'enregistrement textuel utilise dans gkill. Grace aux prefixes en debut de ligne, vous pouvez saisir differents types de donnees en une seule fois. Voici les 18 types d'instructions.</p>
+<p>La syntaxe du bloc-notes est un format d'enregistrement textuel utilise dans gkill. Grace aux prefixes en debut de ligne, vous pouvez saisir differents types de données en une seule fois. Voici les 18 types d'instructions.</p>
 
 <h2>Apercu des instructions</h2>
 
 <table>
-  <tr><th>Prefixe</th><th>ASCII</th><th>Type</th><th>Description</th></tr>
-  <tr><td>(aucun)</td><td>(aucun)</td><td>Memo</td><td>Enregistrer une note textuelle</td></tr>
-  <tr><td><code>。</code></td><td><code>#</code></td><td>Etiquette</td><td>Attribuer des etiquettes</td></tr>
+  <caption class="sr-only">Apercu des instructions</caption>
+  <tr><th scope="col">Prefixe</th><th scope="col">ASCII</th><th scope="col">Type</th><th scope="col">Description</th></tr>
+  <tr><td>(aucun)</td><td>(aucun)</td><td>Mémo</td><td>Enregistrer une note textuelle</td></tr>
+  <tr><td><code>。</code></td><td><code>#</code></td><td>Etiquette</td><td>Attribuer des étiquettes</td></tr>
   <tr><td><code>ーー</code></td><td><code>--</code></td><td>Bloc de texte</td><td>Conserver le texte multiligne tel quel</td></tr>
-  <tr><td><code>、</code></td><td><code>,</code></td><td>Separateur</td><td>Diviser en un nouvel enregistrement</td></tr>
-  <tr><td><code>、、</code></td><td><code>,,</code></td><td>Separateur (+1 sec)</td><td>Diviser et incrementer l'horodatage d'1 seconde</td></tr>
-  <tr><td><code>？</code></td><td><code>?</code></td><td>Heure associee</td><td>Definir une date/heure associee</td></tr>
-  <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Enregistrement numerique</td><td>Enregistrer une valeur numerique</td></tr>
-  <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Tache</td><td>Creer une tache</td></tr>
+  <tr><td><code>、</code></td><td><code>,</code></td><td>Séparateur</td><td>Diviser en un nouvel enregistrement</td></tr>
+  <tr><td><code>、、</code></td><td><code>,,</code></td><td>Séparateur (+1 sec)</td><td>Diviser et incrementer l'horodatage d'1 seconde</td></tr>
+  <tr><td><code>？</code></td><td><code>?</code></td><td>Heure associée</td><td>Definir une date/heure associée</td></tr>
+  <tr><td><code>ーか</code></td><td><code>/num</code></td><td>Enregistrement numérique</td><td>Enregistrer une valeur numérique</td></tr>
+  <tr><td><code>ーみ</code></td><td><code>/mi</code></td><td>Tâche</td><td>Créer une tâche</td></tr>
   <tr><td><code>ーら</code></td><td><code>/mood</code></td><td>Humeur</td><td>Enregistrer une valeur d'humeur (0-10)</td></tr>
-  <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>Depense</td><td>Enregistrer des informations de depense</td></tr>
+  <tr><td><code>ーん</code></td><td><code>/expense</code></td><td>Dépense</td><td>Enregistrer des informations de dépense</td></tr>
   <tr><td><code>ーち</code></td><td><code>/timeis</code></td><td>Journal de temps (complet)</td><td>Enregistrer le temps avec debut et fin</td></tr>
-  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>Debut du journal de temps</td><td>Demarrer un journal de temps</td></tr>
+  <tr><td><code>ーた</code></td><td><code>/start</code></td><td>Debut du journal de temps</td><td>Démarrer un journal de temps</td></tr>
   <tr><td><code>ーえ</code></td><td><code>/end</code></td><td>Fin du journal de temps</td><td>Terminer un journal de temps correspondant</td></tr>
   <tr><td><code>ーいえ</code></td><td><code>/end?</code></td><td>Fin du journal de temps (si existant)</td><td>Terminer si existant (sans erreur)</td></tr>
-  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Terminer journal par etiquette</td><td>Terminer un journal de temps par nom d'etiquette</td></tr>
-  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Terminer journal par etiquette (si existant)</td><td>Terminer par etiquette si existant</td></tr>
+  <tr><td><code>ーたえ</code></td><td><code>/endt</code></td><td>Terminer journal par étiquette</td><td>Terminer un journal de temps par nom d'étiquette</td></tr>
+  <tr><td><code>ーいたえ</code></td><td><code>/endt?</code></td><td>Terminer journal par étiquette (si existant)</td><td>Terminer par étiquette si existant</td></tr>
   <tr><td><code>ーう</code></td><td><code>/url</code></td><td>Signet</td><td>Enregistrer un signet URL</td></tr>
   <tr><td><code>！</code></td><td><code>!</code></td><td>Sauvegarder</td><td>Terminer le document et sauvegarder</td></tr>
 </table>
 
-<h2>Detail de chaque instruction</h2>
+<h2>Détail de chaque instruction</h2>
 
-<h3>1. Memo (sans prefixe)</h3>
-<p>Les lignes sans prefixe deviennent du texte de memo. Plusieurs lignes consecutives sont combinees en un seul memo.</p>
+<h3>1. Mémo (sans prefixe)</h3>
+<p>Les lignes sans prefixe deviennent du texte de mémo. Plusieurs lignes consecutives sont combinees en un seul mémo.</p>
 <pre>Il a fait beau aujourd'hui
 Je suis alle me promener</pre>
 
 <h3>2. Etiquette : <code>#</code></h3>
-<p>Prefixez avec <code>#</code> pour specifier des etiquettes. Separez plusieurs etiquettes avec <code>,</code>.</p>
+<p>Prefixez avec <code>#</code> pour specifier des étiquettes. Separez plusieurs étiquettes avec <code>,</code>.</p>
 <pre>#journal,meteo</pre>
 
 <h3>3. Bloc de texte : <code>--</code></h3>
@@ -92,33 +99,33 @@ bloc de texte
 multiligne
 --</pre>
 
-<h3>4. Separateur : <code>,</code></h3>
+<h3>4. Séparateur : <code>,</code></h3>
 <p>Divise en un nouvel enregistrement. Tout ce qui suit appartient a un nouvel enregistrement.</p>
-<pre>Premier memo
+<pre>Premier mémo
 ,
-Deuxieme memo</pre>
+Deuxieme mémo</pre>
 
-<h3>5. Separateur (+1 seconde) : <code>,,</code></h3>
+<h3>5. Séparateur (+1 seconde) : <code>,,</code></h3>
 <p>Identique au separateur mais incremente l'horodatage d'1 seconde.</p>
-<pre>Premier memo
+<pre>Premier mémo
 ,,
-Memo une seconde plus tard</pre>
+Mémo une seconde plus tard</pre>
 
-<h3>6. Heure associee : <code>?</code></h3>
-<p>Definit une heure associee. Format : <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code> ou <code>?YYYY-MM-DD HH:MM:SS</code></p>
+<h3>6. Heure associée : <code>?</code></h3>
+<p>Definit une heure associée. Format : <code>?YYYY-MM-DD</code>, <code>?YYYY-MM-DD HH:MM</code> ou <code>?YYYY-MM-DD HH:MM:SS</code></p>
 <pre>?2025-03-15 14:30</pre>
 
 <div class="tip">
   <strong>Note :</strong> <code>#</code> en début de ligne est interprété comme préfixe de tag, et <code>?</code> comme date/heure. Pour inclure ces caractères comme texte littéral, encadrez-les dans un bloc de texte (<code>--</code>).
 </div>
 
-<h3>7. Enregistrement numerique : <code>/num</code></h3>
-<p>Ligne suivante : titre, puis ligne suivante : valeur numerique.</p>
+<h3>7. Enregistrement numérique : <code>/num</code></h3>
+<p>Ligne suivante : titre, puis ligne suivante : valeur numérique.</p>
 <pre>/num
 Poids
 65.5</pre>
 
-<h3>8. Tache : <code>/mi</code></h3>
+<h3>8. Tâche : <code>/mi</code></h3>
 <p>Lignes suivantes : titre, nom du tableau, date limite, heure de debut estimee, heure de fin estimee (tout est optionnel sauf le titre).</p>
 <pre>/mi
 Rediger le rapport
@@ -130,7 +137,7 @@ Travail
 <pre>/mood
 7</pre>
 
-<h3>10. Depense : <code>/expense</code></h3>
+<h3>10. Dépense : <code>/expense</code></h3>
 <p>Ligne suivante : nom du magasin, puis paires de (nom de l'article, montant) repetees.</p>
 <pre>/expense
 Superette
@@ -156,7 +163,7 @@ Debut du travail</pre>
 Debut du travail</pre>
 
 <h3>13. Fin du journal de temps : <code>/end</code></h3>
-<p>Ligne suivante : titre. Trouve un journal de temps demarre correspondant et le termine.</p>
+<p>Ligne suivante : titre. Trouve un journal de temps démarre correspondant et le termine.</p>
 <pre>/end
 Debut du travail</pre>
 
@@ -165,13 +172,13 @@ Debut du travail</pre>
 <pre>/end?
 Debut du travail</pre>
 
-<h3>15. Terminer journal par etiquette : <code>/endt</code></h3>
-<p>Ligne suivante : nom de l'etiquette. Trouve et termine un journal de temps par son etiquette.</p>
+<h3>15. Terminer journal par étiquette : <code>/endt</code></h3>
+<p>Ligne suivante : nom de l'étiquette. Trouve et termine un journal de temps par son étiquette.</p>
 <pre>/endt
 travail</pre>
 
-<h3>16. Terminer journal par etiquette (si existant) : <code>/endt?</code></h3>
-<p>Identique a Terminer journal par etiquette mais ne produit pas d'erreur si aucun journal correspondant n'existe.</p>
+<h3>16. Terminer journal par étiquette (si existant) : <code>/endt?</code></h3>
+<p>Identique a Terminer journal par étiquette mais ne produit pas d'erreur si aucun journal correspondant n'existe.</p>
 <pre>/endt?
 travail</pre>
 
@@ -182,7 +189,7 @@ https://example.com
 Site favori</pre>
 
 <h3>18. Sauvegarder : <code>!</code></h3>
-<p>Termine le document et execute le processus de sauvegarde.</p>
+<p>Termine le document et exécuté le processus de sauvegarde.</p>
 <pre>!</pre>
 
 <h2>Exemple complet</h2>
@@ -215,13 +222,14 @@ Lecture
   <strong>Astuce :</strong> Utilisez <code>,</code> pour separer plusieurs enregistrements dans un meme document. Ajouter <code>!</code> a la fin declenche la sauvegarde automatique.
 </div>
 
-  <h2>Documents associes</h2>
+  <h2>Documents associés</h2>
   <ul>
     <li><a href="kftl.html">Bloc-notes</a></li>
     <li><a href="mkfl.html">Bloc-notes tampon</a></li>
-    <li><a href="kftl-template-struct.html">Structure de modele</a></li>
+    <li><a href="kftl-template-struct.html">Structure de modèle</a></li>
   </ul>
 
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>

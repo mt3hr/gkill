@@ -8,11 +8,21 @@
     body { font-family: 'Segoe UI', sans-serif; padding: 16px; line-height: 1.8; max-width: 680px; margin: 0 auto; color: #333; }
     h1 { font-size: 1.3em; border-bottom: 2px solid #1976D2; padding-bottom: 8px; color: #1976D2; }
     h2 { font-size: 1.1em; margin-top: 1.5em; color: #444; }
+    h3 { font-size: 1.0em; margin-top: 1.2em; color: #555; }
     table { border-collapse: collapse; width: 100%; margin: 8px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.95em; }
     th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; line-height: 1.5; }
     .icon { font-size: 1.2em; }
     .tip { background: #E3F2FD; border-left: 4px solid #1976D2; padding: 8px 12px; margin: 12px 0; font-size: 0.9em; }
+    .section-divider { border: none; border-top: 2px solid #1976D2; margin: 2em 0; }
+    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
+    .breadcrumb a { color: #1976D2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .back-link { margin-bottom: 16px; }
+    .back-link a { color: #1976D2; text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
     body.dark { background: #212121; color: #e0e0e0; }
     body.dark h1 { color: #64B5F6; border-bottom-color: #64B5F6; }
     body.dark h2 { color: #bbb; }
@@ -20,39 +30,41 @@
     body.dark table th { background: #333; }
     body.dark table th, body.dark table td { border-color: #444; }
     body.dark .tip { background: #1a2733; border-left-color: #64B5F6; }
+    body.dark .section-divider { border-top-color: #64B5F6; }
     body.dark code { background: #333; }
     body.dark pre { background: #2a2a2a; }
     body.dark a { color: #64B5F6; }
     body.dark .back-link a { color: #64B5F6; }
-    .breadcrumb { font-size: 0.85em; margin-bottom: 12px; color: #666; }
-    .breadcrumb a { color: #1976D2; text-decoration: none; }
-    .breadcrumb a:hover { text-decoration: underline; }
     body.dark .breadcrumb { color: #999; }
     body.dark .breadcrumb a { color: #64B5F6; }
     /* scrollbar (gkill theme) */
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-thumb { background: #1976D2; width: 6px; border-radius: 5px; }
     body.dark *::-webkit-scrollbar-thumb { background: #64B5F6; }
+    /* a11y: visually-hidden（スクリーンリーダー用キャプション等） */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   </style>
 </head>
 <body>
+<main>
   <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Einstellungen</span></nav>
   <h1>Anwendungseinstellungen</h1>
-  <p>Bildschirm zur Verwaltung der globalen Anwendungseinstellungen und der Datenstruktur. Sie koennen Anzeigeeinstellungen, Verhaltensoptionen und externe Integrationen anpassen.</p>
+  <p>Bildschirm zur Verwaltung der globalen Anwendungseinstellungen und der Datenstruktur. Sie können Anzeigeeinstellungen, Verhaltensoptionen und externe Integrationen anpassen.</p>
 
-  <h2>Obere Aktionsschaltflaechen</h2>
+  <h2>Obere Aktionsschaltflächen</h2>
   <table>
+    <caption class="sr-only">Obere Aktionsschaltflächen</caption>
     <tr>
-      <th>Schaltflaeche</th>
-      <th>Beschreibung</th>
+      <th scope="col">Schaltfläche</th>
+      <th scope="col">Beschreibung</th>
     </tr>
     <tr>
       <td>Servereinstellungen (nur Administratoren)</td>
-      <td>Oeffnet den Serverkonfigurationsbildschirm fuer Port, TLS, Zugriffsbeschraenkungen usw. Nur fuer Administratorkonten sichtbar.</td>
+      <td>Öffnet den Serverkonfigurationsbildschirm für Port, TLS, Zugriffsbeschränkungen usw. Nur für Administratorkonten sichtbar.</td>
     </tr>
     <tr>
       <td>Neu laden</td>
-      <td>Aktualisiert die Daten vom Server. Langes Druecken erzwingt ein vollstaendiges Neuladen.</td>
+      <td>Aktualisiert die Daten vom Server. Langes Drücken erzwingt ein vollständiges Neuladen.</td>
     </tr>
     <tr>
       <td>Abmelden</td>
@@ -62,104 +74,108 @@
 
   <h2>Allgemeine Einstellungen</h2>
   <table>
+    <caption class="sr-only">Allgemeine Einstellungen</caption>
     <tr>
-      <th>Einstellung</th>
-      <th>Typ</th>
-      <th>Beschreibung</th>
+      <th scope="col">Einstellung</th>
+      <th scope="col">Typ</th>
+      <th scope="col">Beschreibung</th>
     </tr>
     <tr>
       <td>Sprache</td>
       <td>Dropdown</td>
-      <td>Waehlen Sie die Oberflaechensprache: ja (Japanisch), en (Englisch), zh (Chinesisch), ko (Koreanisch), es (Spanisch), fr (Franzoesisch), de (Deutsch).</td>
+      <td>Wählen Sie die Oberflächensprache: ja (Japanisch), en (Englisch), zh (Chinesisch), ko (Koreanisch), es (Spanisch), fr (Französisch), de (Deutsch).</td>
     </tr>
     <tr>
       <td>Dunkles Thema</td>
-      <td>Kontrollkaestchen</td>
-      <td>Aktiviert oder deaktiviert den Dunkelmodus. Geeignet fuer Umgebungen mit wenig Licht.</td>
+      <td>Kontrollkästchen</td>
+      <td>Aktiviert oder deaktiviert den Dunkelmodus. Geeignet für Umgebungen mit wenig Licht.</td>
     </tr>
     <tr>
       <td>Hot-Reload</td>
-      <td>Kontrollkaestchen</td>
-      <td>Wenn aktiviert, wird die Lebensprotokoll-Ansicht automatisch aktualisiert, wenn Datenaenderungen erkannt werden.</td>
+      <td>Kontrollkästchen</td>
+      <td>Wenn aktiviert, wird die Lebensprotokoll-Ansicht automatisch aktualisiert, wenn Datenänderungen erkannt werden.</td>
     </tr>
     <tr>
       <td>Tags in Liste anzeigen</td>
-      <td>Kontrollkaestchen</td>
+      <td>Kontrollkästchen</td>
       <td>Steuert, ob Tags auf den Datensatzkarten in Listenansichten angezeigt werden.</td>
     </tr>
     <tr>
       <td>Freigabe-Fu&szlig;zeile anzeigen</td>
-      <td>Kontrollkaestchen</td>
-      <td>Steuert, ob Freigabeoptionen im Fusszeilenbereich angezeigt werden.</td>
+      <td>Kontrollkästchen</td>
+      <td>Steuert, ob Freigabeoptionen im Fußzeilenbereich angezeigt werden.</td>
     </tr>
   </table>
 
   <h2>Anzeigeeinstellungen</h2>
   <table>
+    <caption class="sr-only">Anzeigeeinstellungen</caption>
     <tr>
-      <th>Einstellung</th>
-      <th>Typ</th>
-      <th>Beschreibung</th>
+      <th scope="col">Einstellung</th>
+      <th scope="col">Typ</th>
+      <th scope="col">Beschreibung</th>
     </tr>
     <tr>
       <td>Anzeigezeitraum des Lebensprotokolls</td>
-      <td>Kontrollkaestchen + Zahl</td>
-      <td>Legt die Anzahl der Tage fest, die in der Lebensprotokoll-Ansicht angezeigt werden. -1 fuer unbegrenzt. Ein kuerzerer Zeitraum laedt schneller.</td>
+      <td>Kontrollkästchen + Zahl</td>
+      <td>Legt die Anzahl der Tage fest, die in der Lebensprotokoll-Ansicht angezeigt werden. -1 für unbegrenzt. Ein kürzerer Zeitraum lädt schneller.</td>
     </tr>
     <tr>
       <td>Standardseite</td>
       <td>Dropdown</td>
-      <td>Waehlen Sie die Seite, die nach der Anmeldung angezeigt wird.</td>
+      <td>Wählen Sie die Seite, die nach der Anmeldung angezeigt wird.</td>
     </tr>
     <tr>
       <td>Bildspalten des Lebensprotokolls</td>
       <td>Zahl (1-10)</td>
-      <td>Legt die Anzahl der Spalten fuer das Miniaturbildraster in der Lebensprotokoll-Ansicht fest. Passen Sie es an Ihre Bildschirmgroesse an.</td>
+      <td>Legt die Anzahl der Spalten für das Miniaturbildraster in der Lebensprotokoll-Ansicht fest. Passen Sie es an Ihre Bildschirmgröße an.</td>
     </tr>
     <tr>
       <td>Standard-Aufgabentafel</td>
-      <td>Dropdown + Hinzufuegen-Schaltflaeche</td>
-      <td>Legt die Standardtafel im Aufgabenbildschirm fest. Verwenden Sie die Hinzufuegen-Schaltflaeche, um neue Tafeln zu erstellen.</td>
+      <td>Dropdown + Hinzufuegen-Schaltfläche</td>
+      <td>Legt die Standardtafel im Aufgabenbildschirm fest. Verwenden Sie die Hinzufuegen-Schaltfläche, um neue Tafeln zu erstellen.</td>
     </tr>
   </table>
 
   <h2>Externe Integration</h2>
   <table>
+    <caption class="sr-only">Externe Integration</caption>
     <tr>
-      <th>Einstellung</th>
-      <th>Typ</th>
-      <th>Beschreibung</th>
+      <th scope="col">Einstellung</th>
+      <th scope="col">Typ</th>
+      <th scope="col">Beschreibung</th>
     </tr>
     <tr>
       <td>Bookmarklet</td>
-      <td>Schreibgeschuetzt</td>
-      <td>Eine JavaScript-Bookmarklet-URL fuer die Lesezeichenleiste Ihres Browsers. Ermoeglicht das Speichern von Lesezeichen in gkill mit einem Klick von jeder Webseite.</td>
+      <td>Schreibgeschützt</td>
+      <td>Eine JavaScript-Bookmarklet-URL für die Lesezeichenleiste Ihres Browsers. Ermöglicht das Speichern von Lesezeichen in gkill mit einem Klick von jeder Webseite.</td>
     </tr>
     <tr>
-      <td>Google Map API-Schluessel</td>
+      <td>Google Map API-Schlüssel</td>
       <td>Texteingabe</td>
-      <td>Geben Sie Ihren Google Map API-Schluessel ein, um GPS-Kartenfunktionen zu aktivieren. Die Kartenansicht benoetigt diesen Schluessel.</td>
+      <td>Geben Sie Ihren Google Map API-Schlüssel ein, um GPS-Kartenfunktionen zu aktivieren. Die Kartenansicht benötigt diesen Schlüssel.</td>
     </tr>
   </table>
 
   <h2>Datenstrukturverwaltung</h2>
-  <p>Diese Schaltflaechen oeffnen spezielle Editoren zur Verwaltung der Organisation Ihrer Daten.</p>
+  <p>Diese Schaltflächen öffnen spezielle Editoren zur Verwaltung der Organisation Ihrer Daten.</p>
   <table>
+    <caption class="sr-only">Datenstrukturverwaltung</caption>
     <tr>
-      <th>Schaltflaeche</th>
-      <th>Beschreibung</th>
+      <th scope="col">Schaltfläche</th>
+      <th scope="col">Beschreibung</th>
     </tr>
     <tr>
       <td>Tag-Struktur</td>
-      <td>Verwaltet die Tag-Hierarchie und Tag-Gruppierungen. Sie koennen Tags erstellen, umbenennen, neu anordnen und in Eltern-Kind-Beziehungen organisieren.</td>
+      <td>Verwaltet die Tag-Hierarchie und Tag-Gruppierungen. Sie können Tags erstellen, umbenennen, neu anordnen und in Eltern-Kind-Beziehungen organisieren.</td>
     </tr>
     <tr>
       <td>Ablagestruktur</td>
-      <td>Verwaltet Datenspeicherorte und Ablagen. Sie koennen hinzufuegen, entfernen oder konfigurieren, wo Datensaetze gespeichert werden.</td>
+      <td>Verwaltet Datenspeicherorte und Ablagen. Sie können hinzufuegen, entfernen oder konfigurieren, wo Datensätze gespeichert werden.</td>
     </tr>
     <tr>
       <td>Profilstruktur</td>
-      <td>Verwaltet Geraete- und Profilkonfigurationen. Ermoeglicht die Bearbeitung geraetespezifischer Einstellungen.</td>
+      <td>Verwaltet Geräte- und Profilkonfigurationen. Ermöglicht die Bearbeitung gerätespezifischer Einstellungen.</td>
     </tr>
     <tr>
       <td>Datensatztyp-Struktur</td>
@@ -167,15 +183,15 @@
     </tr>
     <tr>
       <td>Vorlagenstruktur</td>
-      <td>Verwaltet Notizblock-Textvorlagen fuer die Schnelleingabe. Sie koennen vorgefertigte Texteintraege erstellen und bearbeiten.</td>
+      <td>Verwaltet Notizblock-Textvorlagen für die Schnelleingabe. Sie können vorgefertigte Texteinträge erstellen und bearbeiten.</td>
     </tr>
     <tr>
       <td>Zusammenfassungsansicht</td>
       <td>Verwaltet Datenaggregation und Konfigurationen der Zusammenfassungsansichten.</td>
     </tr>
     <tr>
-      <td>Zugehoerige Informationen</td>
-      <td>Verwaltet die Strukturen zugehoeriger Informationen.</td>
+      <td>Zugehörige Informationen</td>
+      <td>Verwaltet die Strukturen zugehöriger Informationen.</td>
     </tr>
     <tr>
       <td>Dashboard</td>
@@ -183,11 +199,12 @@
     </tr>
   </table>
 
-  <h2>Untere Aktionsschaltflaechen</h2>
+  <h2>Untere Aktionsschaltflächen</h2>
   <table>
+    <caption class="sr-only">Untere Aktionsschaltflächen</caption>
     <tr>
-      <th>Schaltflaeche</th>
-      <th>Beschreibung</th>
+      <th scope="col">Schaltfläche</th>
+      <th scope="col">Beschreibung</th>
     </tr>
     <tr>
       <td>Anwenden</td>
@@ -195,11 +212,11 @@
     </tr>
     <tr>
       <td>Abbrechen</td>
-      <td>Verwirft Aenderungen und schliesst den Bildschirm.</td>
+      <td>Verwirft Aenderungen und schließt den Bildschirm.</td>
     </tr>
   </table>
 
-  <h2>Fusszeile</h2>
+  <h2>Fußzeile</h2>
   <p>Am unteren Bildschirmrand werden Anwendungsinformationen angezeigt:</p>
   <ul>
     <li><strong>Versionsnummer</strong> — Klickbarer Link zur Projektseite.</li>
@@ -208,15 +225,15 @@
   </ul>
 
   <div class="tip">
-    <strong>Tipp:</strong> Druecken Sie nach dem Aendern der Einstellungen auf "Anwenden", um zu speichern. Druecken Sie "Abbrechen", um alle Aenderungen zu verwerfen.
+    <strong>Tipp:</strong> Drücken Sie nach dem Aendern der Einstellungen auf "Anwenden", um zu speichern. Drücken Sie "Abbrechen", um alle Aenderungen zu verwerfen.
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Fuer Smartphones stellen Sie die Bildspalten auf 1-2 ein. Fuer Desktop-Bildschirme eignen sich 3-5 Spalten gut.
+    <strong>Tipp:</strong> Für Smartphones stellen Sie die Bildspalten auf 1-2 ein. Für Desktop-Bildschirme eignen sich 3-5 Spalten gut.
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Um GPS-Kartenfunktionen zu nutzen, aktivieren Sie die Maps JavaScript API in der Google Cloud Console und geben Sie den API-Schluessel unter Externe Integration ein.
+    <strong>Tipp:</strong> Um GPS-Kartenfunktionen zu nutzen, aktivieren Sie die Maps JavaScript API in der Google Cloud Console und geben Sie den API-Schlüssel unter Externe Integration ein.
   </div>
   <h2>Verwandte Dokumente</h2>
   <ul>
@@ -226,6 +243,7 @@
     <li><a href="ryuu.html">Verwandte Informationen</a></li>
     <li><a href="kftl-template-struct.html">Vorlagenstruktur</a></li>
   </ul>
+</main>
 <script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='dark'){document.body.classList.add('dark');document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(h&&!h.startsWith('http')&&!h.startsWith('#')&&h.indexOf('?')===-1){a.setAttribute('href',h+'?theme=dark')}})}})()</script>
 </body>
 </html>
