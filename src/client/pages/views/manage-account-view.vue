@@ -15,29 +15,31 @@
         </v-card-title>
         <v-card variant="flat" class="manage_account_list_view_card">
             <table class="manage_account_list_view">
-                <tr v-for="account in cloned_accounts" :key="account.user_id">
-                    <td>
-                        <v-checkbox v-model="account.is_enable"
-                            @click="update_is_enable_account(account, !account.is_enable)" />
-                    </td>
-                    <td>
-                        {{ account.user_id }}
-                    </td>
-                    <td>
-                        <v-btn dark color="primary" @click="show_allocate_rep_dialog(account)">{{
-                            i18n.global.t("ALLOCATE_REP_TITLE") }}</v-btn>
-                    </td>
-                    <td>
-                        <v-btn dark color="primary" v-if="!account.password_reset_token"
-                            @click="show_confirm_reset_password_dialog(account)">{{
-                                i18n.global.t("RESETED_PASSWORD_TITLE")
-                            }}</v-btn>
-                        <v-btn dark color="primary" v-if="account.password_reset_token"
-                            @click="show_show_password_reset_link_dialog(account)">{{
-                                i18n.global.t("RESETTING_PASSWORD_TITLE")
-                            }}</v-btn>
-                    </td>
-                </tr>
+                <tbody>
+                    <tr v-for="account in cloned_accounts" :key="account.user_id">
+                        <td>
+                            <v-checkbox v-model="account.is_enable"
+                                @click="update_is_enable_account(account, !account.is_enable)" />
+                        </td>
+                        <td>
+                            {{ account.user_id }}
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" @click="show_allocate_rep_dialog(account)">{{
+                                i18n.global.t("ALLOCATE_REP_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" v-if="!account.password_reset_token"
+                                @click="show_confirm_reset_password_dialog(account)">{{
+                                    i18n.global.t("RESETED_PASSWORD_TITLE")
+                                }}</v-btn>
+                            <v-btn dark color="primary" v-if="account.password_reset_token"
+                                @click="show_show_password_reset_link_dialog(account)">{{
+                                    i18n.global.t("RESETTING_PASSWORD_TITLE")
+                                }}</v-btn>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </v-card>
         <v-card-action>

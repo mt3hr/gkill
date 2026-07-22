@@ -89,88 +89,90 @@
                 </v-overlay>
             </div>
             <table class="rykv_view_table" v-show="inited">
-                <tr>
-                    <td valign="top" v-for="query, index in querys" :key="query.query_id"
-                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
-                            :application_config="application_config" :gkill_api="gkill_api"
-                            :matched_kyous="match_kyous_list[index]" :query="query"
-                            :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                            :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
-                            :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="!is_shared_rykv_view"
-                            :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
-                            :show_rep_name="!is_shared_rykv_view" :force_show_latest_kyou_info="true"
-                            :show_content_only="false" :show_timeis_plaing_end_button="false"
-                            v-on="crudRelayHandlers"
-                            @scroll_list="(position: number) => onColumnScrollList(index, position)"
-                            @clicked_list_view="() => onColumnClickedListView(index)"
-                            @clicked_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
-                            @focused_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
-                            @requested_change_focus_kyou="(is_focus: boolean) => onColumnRequestedChangeFocusKyou(index, is_focus)"
-                            @requested_search="() => onColumnRequestedSearch(index)"
-                            @requested_change_is_image_only_view="(is_image_only: boolean) => onColumnRequestedChangeImageOnlyView(index, is_image_only)"
-                            @requested_close_column="close_list_view(index)"
-                            @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
-                            @requested_reload_list="() => onColumnRequestedReloadList(index)"
-                            @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
-                            ref="kyou_list_views" />
-                    </td>
-                    <td valign="top" v-if="!is_shared_rykv_view"
-                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <v-btn class="rykv_add_column_button rounded-sm mx-auto" :height="app_content_height.valueOf()"
-                            :width="30" :color="'primary'" @click="onAddColumnClick" icon="mdi-plus" variant="text"
-                            :style="{ background: 'rgb(var(--v-theme-background))' }" />
-                    </td>
-                    <td valign="top" v-if="is_show_kyou_detail_view"
-                        class="rykv_kyou_detail_view_wrap"
-                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <div class="kyou_detail_view dummy" ref="kyou_detail_view_element">
-                            <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
-                                :is_image_request_to_thumb_size="false" :application_config="application_config"
-                                :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false"
-                                :kyou="focused_kyou" :show_checkbox="false"
-                                :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                                :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="!is_shared_rykv_view"
-                                :height="'auto'" :is_readonly_mi_check="is_shared_rykv_view" :width="'auto'"
+                <tbody>
+                    <tr>
+                        <td valign="top" v-for="query, index in querys" :key="query.query_id"
+                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
+                                :application_config="application_config" :gkill_api="gkill_api"
+                                :matched_kyous="match_kyous_list[index]" :query="query"
+                                :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
                                 :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
-                                :show_attached_timeis="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
-                                class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
-                                :show_attached_tags="true" :show_attached_texts="true"
-                                :show_attached_notifications="true"
-                                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
-                        </div>
-                        <div class="ryuu_view dummy">
-                            <RyuuView v-if="focused_kyou && default_query" :application_config="application_config"
-                                :gkill_api="gkill_api" :target_kyou="focused_kyou" :editable="false"
-                                :find_kyou_query_default="default_query"
-                                :matched_kyous="match_kyous_list[focused_column_index] ?? null"
-                                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }" />
-                        </div>
-                    </td>
-                    <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
-                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <Dnote class="rykv_dnote_wrap" :app_content_height="app_content_height"
-                            :app_content_width="app_content_width" :application_config="application_config"
-                            :gkill_api="gkill_api" :query="focused_query" :checked_kyous="focused_column_checked_kyous"
-                            :editable="false" :fill_height="true"
-                            v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }"
-                            ref="dnote_view" />
-                    </td>
-                    <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
-                            :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
-                            :marker_time="gps_log_map_marker_time" :app_content_height="app_content_height"
-                            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
-                            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
-                            @requested_focus_time="(date: Date) => onGpsLogMapRequestedFocusTime(date)" />
-                    </td>
-                    <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
-                            :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="false"
-                            @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
-                    </td>
-                </tr>
+                                :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="!is_shared_rykv_view"
+                                :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
+                                :show_rep_name="!is_shared_rykv_view" :force_show_latest_kyou_info="true"
+                                :show_content_only="false" :show_timeis_plaing_end_button="false"
+                                v-on="crudRelayHandlers"
+                                @scroll_list="(position: number) => onColumnScrollList(index, position)"
+                                @clicked_list_view="() => onColumnClickedListView(index)"
+                                @clicked_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
+                                @focused_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
+                                @requested_change_focus_kyou="(is_focus: boolean) => onColumnRequestedChangeFocusKyou(index, is_focus)"
+                                @requested_search="() => onColumnRequestedSearch(index)"
+                                @requested_change_is_image_only_view="(is_image_only: boolean) => onColumnRequestedChangeImageOnlyView(index, is_image_only)"
+                                @requested_close_column="close_list_view(index)"
+                                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
+                                @requested_reload_list="() => onColumnRequestedReloadList(index)"
+                                @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
+                                ref="kyou_list_views" />
+                        </td>
+                        <td valign="top" v-if="!is_shared_rykv_view"
+                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <v-btn class="rykv_add_column_button rounded-sm mx-auto" :height="app_content_height.valueOf()"
+                                :width="30" :color="'primary'" @click="onAddColumnClick" icon="mdi-plus" variant="text"
+                                :style="{ background: 'rgb(var(--v-theme-background))' }" />
+                        </td>
+                        <td valign="top" v-if="is_show_kyou_detail_view"
+                            class="rykv_kyou_detail_view_wrap"
+                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <div class="kyou_detail_view dummy" ref="kyou_detail_view_element">
+                                <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
+                                    :is_image_request_to_thumb_size="false" :application_config="application_config"
+                                    :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false"
+                                    :kyou="focused_kyou" :show_checkbox="false"
+                                    :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+                                    :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                                    :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="!is_shared_rykv_view"
+                                    :height="'auto'" :is_readonly_mi_check="is_shared_rykv_view" :width="'auto'"
+                                    :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
+                                    :show_attached_timeis="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
+                                    class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
+                                    :show_attached_tags="true" :show_attached_texts="true"
+                                    :show_attached_notifications="true"
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
+                            </div>
+                            <div class="ryuu_view dummy">
+                                <RyuuView v-if="focused_kyou && default_query" :application_config="application_config"
+                                    :gkill_api="gkill_api" :target_kyou="focused_kyou" :editable="false"
+                                    :find_kyou_query_default="default_query"
+                                    :matched_kyous="match_kyous_list[focused_column_index] ?? null"
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }" />
+                            </div>
+                        </td>
+                        <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
+                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <Dnote class="rykv_dnote_wrap" :app_content_height="app_content_height"
+                                :app_content_width="app_content_width" :application_config="application_config"
+                                :gkill_api="gkill_api" :query="focused_query" :checked_kyous="focused_column_checked_kyous"
+                                :editable="false" :fill_height="true"
+                                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }"
+                                ref="dnote_view" />
+                        </td>
+                        <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
+                                :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
+                                :marker_time="gps_log_map_marker_time" :app_content_height="app_content_height"
+                                @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+                                @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+                                @requested_focus_time="(date: Date) => onGpsLogMapRequestedFocusTime(date)" />
+                        </td>
+                        <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
+                                :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="false"
+                                @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             <AddKCDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"

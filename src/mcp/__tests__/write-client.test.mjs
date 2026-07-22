@@ -1,10 +1,20 @@
 /**
  * Tests for GkillWriteClient from gkill-write-server.mjs.
  *
- * All network calls are mocked via globalThis.fetch so no real server is needed.
+ * All network calls are mocked via undici's fetch so no real server is needed.
+ * サーバ側は `import { fetch } from "undici"` で undici の fetch を直接使うため、
+ * globalThis.fetch を差し替えてもモックが効かない点に注意。
  */
 
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
+
+// Agent は実体が必要なので importOriginal でスプレッドし、fetch だけ差し替える。
+vi.mock("undici", async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, fetch: vi.fn() };
+});
+
+import { fetch as undiciFetch } from "undici";
 import { GkillWriteClient } from "../gkill-write-server.mjs";
 
 // ---------------------------------------------------------------------------
@@ -12,27 +22,26 @@ import { GkillWriteClient } from "../gkill-write-server.mjs";
 // ---------------------------------------------------------------------------
 
 function mockFetchOk(body = {}) {
-  globalThis.fetch = vi.fn().mockResolvedValue({
+  undiciFetch.mockResolvedValue({
     ok: true,
     json: () => Promise.resolve(body),
   });
 }
 
 function _mockFetchError(status, body = {}) {
-  globalThis.fetch = vi.fn().mockResolvedValue({
+  undiciFetch.mockResolvedValue({
     ok: false,
     status,
     json: () => Promise.resolve(body),
   });
 }
 
-// Save and restore env + fetch between tests.
+// Save and restore env between tests.
 let savedEnv;
-let savedFetch;
 
 beforeEach(() => {
   savedEnv = { ...process.env };
-  savedFetch = globalThis.fetch;
+  undiciFetch.mockReset();
   delete process.env.GKILL_BASE_URL;
   delete process.env.GKILL_USER;
   delete process.env.GKILL_PASSWORD_SHA256;
@@ -45,7 +54,7 @@ beforeEach(() => {
 
 afterEach(() => {
   process.env = savedEnv;
-  globalThis.fetch = savedFetch;
+  undiciFetch.mockReset();
 });
 
 // ---------------------------------------------------------------------------
@@ -198,7 +207,7 @@ describe("callWrite", () => {
 
     // First call = login, second = actual API call
     let callCount = 0;
-    globalThis.fetch = vi.fn().mockImplementation(() => {
+    undiciFetch.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
         return Promise.resolve({
@@ -222,7 +231,7 @@ describe("callWrite", () => {
     process.env.GKILL_PASSWORD_SHA256 = "hash";
 
     let callCount = 0;
-    globalThis.fetch = vi.fn().mockImplementation(() => {
+    undiciFetch.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
         // Initial login
@@ -265,7 +274,7 @@ describe("callWrite", () => {
     client.sessionId = "default-sess";
     const _result = await client.callWrite("/api/add_kmemo", { kmemo: {} }, true, "override-sess");
 
-    const callBody = JSON.parse(globalThis.fetch.mock.calls[0][1].body);
+    const callBody = JSON.parse(undiciFetch.mock.calls[0][1].body);
     expect(callBody.session_id).toBe("override-sess");
   });
 });

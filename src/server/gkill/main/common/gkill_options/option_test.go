@@ -63,6 +63,53 @@ func TestDefaultCacheUpdateDuration(t *testing.T) {
 	}
 }
 
+func TestDefaultServerAddress(t *testing.T) {
+	if ServerAddress != "" {
+		t.Errorf("ServerAddress = %q, want empty", ServerAddress)
+	}
+}
+
+func TestResolveServerAddress(t *testing.T) {
+	defer func() { ServerAddress = "" }()
+
+	ServerAddress = ""
+	if got := ResolveServerAddress(":9999"); got != ":9999" {
+		t.Errorf("ResolveServerAddress(:9999) = %q, want :9999", got)
+	}
+
+	ServerAddress = "127.0.0.1:53271"
+	if got := ResolveServerAddress(":9999"); got != "127.0.0.1:53271" {
+		t.Errorf("ResolveServerAddress(:9999) = %q, want 127.0.0.1:53271", got)
+	}
+
+	ServerAddress = ""
+	if got := ResolveServerAddress(":9999"); got != ":9999" {
+		t.Errorf("ResolveServerAddress(:9999) = %q, want :9999 after reset", got)
+	}
+}
+
+func TestServerAddressPortSuffix(t *testing.T) {
+	defer func() { ServerAddress = "" }()
+
+	testCases := []struct {
+		override   string
+		configured string
+		want       string
+	}{
+		{"", ":9999", ":9999"},
+		{"127.0.0.1:53271", ":9999", ":53271"},
+		{":53271", ":9999", ":53271"},
+		{"[::1]:53271", ":9999", ":53271"},
+		{"invalid", ":9999", "invalid"},
+	}
+	for _, testCase := range testCases {
+		ServerAddress = testCase.override
+		if got := ServerAddressPortSuffix(testCase.configured); got != testCase.want {
+			t.Errorf("ServerAddressPortSuffix(%q) with override %q = %q, want %q", testCase.configured, testCase.override, got, testCase.want)
+		}
+	}
+}
+
 func TestIDFIgnoreNotEmpty(t *testing.T) {
 	if len(IDFIgnore) == 0 {
 		t.Error("IDFIgnore should not be empty")

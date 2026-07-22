@@ -3,13 +3,13 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi,
-  makeUniqueLabel, pageContainsText,
+  makeUniqueLabel, expectPageToContainText,
 } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
   apiReachable = await checkGkillApiViaVite()
 })
 
@@ -54,8 +54,7 @@ test.describe('Search and Summary Flows', () => {
         await page.waitForTimeout(2000)
 
         // Verify the record appears in results
-        const found = await pageContainsText(page, label)
-        expect(found).toBe(true)
+        await expectPageToContainText(page, label)
       }
     } else {
       // If sidebar search not directly accessible, verify the page loads with content
@@ -134,8 +133,7 @@ test.describe('Search and Summary Flows', () => {
         await searchBtn.click()
         await page.waitForTimeout(2000)
 
-        const found = await pageContainsText(page, label)
-        expect(found).toBe(true)
+        await expectPageToContainText(page, label)
       }
     } else {
       // If sidebar search not directly accessible, verify the page loads with content

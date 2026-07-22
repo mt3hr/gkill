@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
-import { submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing, makeUniqueLabel, pageContainsText } from './crud-helpers'
+import { submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing, makeUniqueLabel, pageContainsText, expectPageToContainText } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
   apiReachable = await checkGkillApiViaVite()
 })
 
@@ -21,8 +21,7 @@ test.describe('KFTL CRUD Flows', () => {
     const label = makeUniqueLabel('kmemo_kftl')
     await submitKftlText(page, label)
     await navigateToRykv(page)
-    const found = await pageContainsText(page, label)
-    expect(found).toBe(true)
+    await expectPageToContainText(page, label)
   })
 
   test('submit kmemo with tag via KFTL', async ({ page }) => {
@@ -31,9 +30,7 @@ test.describe('KFTL CRUD Flows', () => {
     await submitKftlText(page, `。${tagName}\n${label}`)
     await navigateToRykv(page)
     // Check for either the kmemo content or the tag name on the page
-    const foundLabel = await pageContainsText(page, label)
-    const foundTag = await pageContainsText(page, tagName)
-    expect(foundLabel || foundTag).toBe(true)
+    await expect.poll(async () => await pageContainsText(page, label) || await pageContainsText(page, tagName), { timeout: 30000 }).toBe(true)
   })
 
   test('submit lantana via KFTL', async ({ page }) => {
@@ -49,21 +46,20 @@ test.describe('KFTL CRUD Flows', () => {
     const label = makeUniqueLabel('mi_kftl')
     await submitKftlText(page, `ーみ\n${label}`)
     await navigateToMi(page)
-    const found = await pageContainsText(page, label)
-    expect(found).toBe(true)
+    await expectPageToContainText(page, label)
   })
 
   test('submit timeis start via KFTL', async ({ page }) => {
     const label = makeUniqueLabel('timeis_kftl')
     await submitKftlText(page, `ーた\n${label}`)
     await navigateToPlaing(page)
-    const found = await pageContainsText(page, label)
-    expect(found).toBe(true)
+    await expectPageToContainText(page, label)
   })
 
   test('submit nlog via KFTL', async ({ page }) => {
     // Nlog: amount and shop name
-    await submitKftlText(page, 'ーん\n999\nテスト店舗_kftl')
+    // ーん の後は 店名 → 品目 → 金額 の3行 (kftl-nlog-*-statement-line.ts)
+    await submitKftlText(page, 'ーん\nテスト店舗_kftl\nテスト品目\n999')
     await navigateToRykv(page)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
@@ -82,9 +78,7 @@ test.describe('KFTL CRUD Flows', () => {
     const label2 = makeUniqueLabel('split2')
     await submitKftlText(page, `${label1}\n、\n${label2}`)
     await navigateToRykv(page)
-    const found1 = await pageContainsText(page, label1)
-    const found2 = await pageContainsText(page, label2)
-    expect(found1).toBe(true)
-    expect(found2).toBe(true)
+    await expectPageToContainText(page, label1)
+    await expectPageToContainText(page, label2)
   })
 })

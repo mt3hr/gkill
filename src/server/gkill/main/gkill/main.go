@@ -30,6 +30,7 @@ func init() {
 	common.AppName = "gkill"
 	cobra.MousetrapHelpText = "" // Windowsでマウスから起動しても怒られないようにする
 	AppCmd.PersistentFlags().StringVar(&gkill_options.GkillHomeDir, "gkill_home_dir", gkill_options.GkillHomeDir, "")
+	AppCmd.PersistentFlags().StringVar(&gkill_options.ServerAddress, "address", gkill_options.ServerAddress, "")
 	AppCmd.PersistentFlags().BoolVar(&gkill_options.DisableTLSForce, "disable_tls", gkill_options.DisableTLSForce, "")
 	AppCmd.PersistentFlags().BoolVar(&gkill_options.IsCacheInMemory, "cache_in_memory", gkill_options.IsCacheInMemory, "")
 	AppCmd.PersistentFlags().BoolVar(&gkill_options.CacheRepsLocalStorage, "cache_reps_local", gkill_options.CacheRepsLocalStorage, "")
@@ -121,7 +122,7 @@ var (
 			} else {
 				address += "http://localhost"
 			}
-			address += serverConfig.Address
+			address += gkill_options.ServerAddressPortSuffix(serverConfig.Address)
 
 			// Initialize astilectron
 			baseDirectoryPath := filepath.Clean(os.ExpandEnv(gkill_options.LibDir))
