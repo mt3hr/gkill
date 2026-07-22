@@ -1,0 +1,14 @@
+name: "gkill CodeQL config"
+
+# セキュリティに加えて品質クエリも実行する
+queries:
+  - uses: security-and-quality
+
+# 解析対象から外すパス
+paths-ignore:
+  # ビルド時にのみ実行される補助スクリプト群。
+  # 製品バイナリには含まれず、入力も自リポジトリ内のファイルに限られる。
+  - src/tools/**
+
+  # マニュアルの生成物（.gitignoreで無視しているが明示しておく）
+  - resources/manual/**
