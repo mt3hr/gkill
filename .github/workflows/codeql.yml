@@ -90,8 +90,8 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
-          # より広範囲の検査を行いたい場合は、以下を有効化できる
-          # queries: security-extended
+          # 実行するクエリスイートと解析対象パスは設定ファイル側で定義している
+          config-file: ./.github/codeql/codeql-config.yml
 
       # ------------------------------------------------------------
       # Gradle Wrapper確認
