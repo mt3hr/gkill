@@ -4,7 +4,70 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
+import vuetify from 'vite-plugin-vuetify'
+import type { Plugin } from 'vite'
 import package_json from './package.json'
+
+/**
+ * Material Design Icons のWebフォントを woff2 のみに絞る。
+ *
+ * @mdi/font の CSS は @font-face で eot/woff2/woff/ttf の4形式を列挙しているため、
+ * 何もしないと Vite が4ファイル全部 (計3.6MB) を出力してしまう。
+ * gkill の対象は PWA / WebView (Android minSdk 26) なので woff2 非対応環境は無い。
+ * url() の参照を消せば Vite はそのアセットを出力しない。
+ */
+function mdiWoff2Only(): Plugin {
+  return {
+    name: 'gkill-mdi-woff2-only',
+    enforce: 'pre',
+    transform: {
+      // filter を付けないと全モジュール (3900件超) でフック呼び出しが発生してビルドが遅くなる
+      filter: { id: '**/@mdi/font/**/*.css' },
+      handler(code: string) {
+        const replaced = code
+          // 単独の eot 指定 (IE互換用の1行目)
+          .replace(/src:\s*url\([^)]*\.eot[^)]*\);/g, '')
+          // src リスト内の eot / woff / ttf エントリ
+          .replace(/url\([^)]*\.eot[^)]*\)\s*format\(["']embedded-opentype["']\),?\s*/g, '')
+          .replace(/,?\s*url\([^)]*\.woff\?[^)]*\)\s*format\(["']woff["']\)/g, '')
+          .replace(/,?\s*url\([^)]*\.ttf[^)]*\)\s*format\(["']truetype["']\)/g, '')
+        return replaced === code ? null : { code: replaced, map: null }
+      },
+    },
+  }
+}
+
+/**
+ * PWA の precache から除外するチャンク。
+ *
+ * mermaid は classes/mermaid-render.ts で動的 import しており、mermaid記法を含む記録を
+ * 開いたときだけ必要。precache に入れると全ユーザがインストール時に3.3MB落とすことになる。
+ */
+const precacheGlobIgnores = [
+  '**/node_modules/**/*',
+  'assets/*Diagram-*.js',
+  'assets/*diagram-*.js',
+  'assets/diagram-*.js',
+  'assets/chunk-*.js',
+  'assets/cytoscape.esm-*.js',
+  'assets/katex-*.js',
+  'assets/dagre-*.js',
+  'assets/graphlib-*.js',
+  'assets/rough.esm-*.js',
+  'assets/mermaid*.js',
+  'assets/*-definition-*.js',
+  'assets/swimlanes-*.js',
+  'assets/cose-bilkent-*.js',
+  'assets/purify.es-*.js',
+  'assets/marked.esm-*.js',
+  // ja以外のロケール (i18n.ts で動的import)。使う1言語だけランタイムキャッシュされればよい
+  'assets/en-*.js',
+  'assets/zh-*.js',
+  'assets/ko-*.js',
+  'assets/es-*.js',
+  'assets/fr-*.js',
+  'assets/de-*.js',
+]
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -17,11 +80,15 @@ export default defineConfig(() => {
       minify: minify,
     },
     plugins: [
+      mdiWoff2Only(),
       vue({
         script: {
           propsDestructure: true,
         },
       }),
+      // テンプレートで実際に使われている Vuetify コンポーネントだけを import する。
+      // これが無いと plugins/vuetify.ts の一括登録で全コンポーネント + 全CSSがバンドルされる
+      vuetify({ autoImport: true }),
       ...(process.env.NODE_ENV !== 'production' ? [vueDevTools()] : []),
       VitePWA({
         registerType: 'autoUpdate',
@@ -51,9 +118,11 @@ export default defineConfig(() => {
         } as any,
         injectManifest: {
           maximumFileSizeToCacheInBytes: 10 * 1024 ** 2,
+          globIgnores: precacheGlobIgnores,
         },
         workbox: {
           maximumFileSizeToCacheInBytes: 10 * 1024 ** 2,
+          globIgnores: precacheGlobIgnores,
         },
       }),
     ],

@@ -179,7 +179,7 @@ import type { GetPluginConfigHTMLRequest } from "./req_res/get-plugin-config-htm
 import { GetPluginConfigHTMLResponse } from "./req_res/get-plugin-config-html-response"
 import type { PostPluginConfigRequest } from "./req_res/post-plugin-config-request"
 import { PostPluginConfigResponse } from "./req_res/post-plugin-config-response"
-import { i18n } from "@/i18n"
+import { i18n, set_locale } from "@/i18n"
 import { GkillErrorCodes } from "./message/gkill_error"
 import { TagStructElementData } from "../datas/config/tag-struct-element-data"
 import { DeviceStructElementData } from "../datas/config/device-struct-element-data"
@@ -2920,7 +2920,7 @@ export class GkillAPI {
                 return locale_name
         }
 
-        apply_locale(): void {
+        async apply_locale(): Promise<void> {
                 let locale: 'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de' = 'ja'
                 const locale_in_cookie = this.get_locale_name_from_cookie()
                 switch (locale_in_cookie) {
@@ -2949,7 +2949,7 @@ export class GkillAPI {
                                 }
                 }
 
-                i18n.global.locale = locale
+                await set_locale(locale)
         }
 
         private last_cache_update_time_cookie_key = "last_cache_update_time"

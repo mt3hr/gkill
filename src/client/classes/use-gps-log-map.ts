@@ -1,6 +1,6 @@
 import moment from 'moment'
 import { computed, nextTick, ref, watch, type Ref } from 'vue'
-import { GoogleMap } from 'vue3-google-map'
+import type { GoogleMap } from 'vue3-google-map'
 import type { GPSLogMapEmits } from '@/pages/views/gps-log-map-emits'
 import type { GPSLogMapProps } from '@/pages/views/gps-log-map-props'
 import { GetGPSLogRequest } from '@/classes/api/req_res/get-gps-log-request'
