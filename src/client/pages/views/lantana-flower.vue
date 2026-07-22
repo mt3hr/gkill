@@ -18,7 +18,7 @@
 import type { LantanaFlowerEmits } from './lantana-flower-emits'
 import type { LantanaFlowerProps } from './lantana-flower-props'
 import { LantanaFlowerState } from '@/classes/lantana/lantana-flower-state';
-import lantana_icon from '/public/lantana_icon.png'
+import lantana_icon from '@/assets/lantana_icon.webp'
 import { useLantanaFlower } from '@/classes/use-lantana-flower'
 
 const props = defineProps<LantanaFlowerProps>()

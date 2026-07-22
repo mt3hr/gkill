@@ -404,14 +404,21 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 		return false
 	}
 
+	// 静的アセットはリダイレクトしない。
+	// ビルド成果物は基本 /assets/ 配下 (content hash付き) に出るので prefix 判定で拾えるが、
+	// Sec-Fetch-* ヘッダを送らない古いWebView経由だと上の早期returnを通らずここまで来るため、
+	// 拡張子でも拾えるようにしている。
 	p := r.URL.Path
 	if strings.HasPrefix(p, "/assets/") ||
 		strings.HasSuffix(p, ".js") ||
 		strings.HasSuffix(p, ".css") ||
 		strings.HasSuffix(p, ".map") ||
 		strings.HasSuffix(p, ".png") ||
+		strings.HasSuffix(p, ".webp") ||
+		strings.HasSuffix(p, ".avif") ||
 		strings.HasSuffix(p, ".svg") ||
 		strings.HasSuffix(p, ".ico") ||
+		strings.HasSuffix(p, ".woff2") ||
 		strings.HasSuffix(p, ".webmanifest") {
 		return false
 	}

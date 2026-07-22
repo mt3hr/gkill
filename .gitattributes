@@ -1,4 +1,7 @@
+# gradlew は Linux/WSL から直接実行するため LF 固定。
+# CRLF で checkout されるとビルドスクリプト側が毎回 LF へ書き換えて作業ツリーが汚れる。
 src/android/gradlew text eol=lf
+src/wear_os/gradlew text eol=lf
 *.bat text eol=crlf
 
 # マニュアル（生成物）・原稿フラグメント・docs ツールは LF 固定。
