@@ -6,6 +6,7 @@ import '@mdi/font/css/materialdesignicons.css'
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from "./i18n"
 import { vLongPress } from "./classes/long-press"
+import { GkillAPI } from "./classes/api/gkill-api"
 
 registerSW()
 
@@ -28,6 +29,10 @@ window.addEventListener("unhandledrejection", (event) => {
         event.preventDefault()
     }
 })
+
+// ロケールのメッセージ(ja以外)は動的importなので、mount前にロードを終わらせる。
+// App.vue の setup 内で呼ぶと、ロード完了までの間だけ日本語が表示されてしまう
+await GkillAPI.get_gkill_api().apply_locale()
 
 const app = createApp(App)
 app.directive('long-press', vLongPress)

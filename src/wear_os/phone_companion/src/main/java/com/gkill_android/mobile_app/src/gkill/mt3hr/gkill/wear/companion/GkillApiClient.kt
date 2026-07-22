@@ -131,7 +131,7 @@ class GkillApiClient(
         return try {
             client.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return Pair(null, "HTTP ${resp.code}")
-                val respJson = resp.body?.string() ?: return Pair(null, "レスポンスが空です")
+                val respJson = resp.body.string().ifEmpty { return Pair(null, "レスポンスが空です") }
                 val loginResp = json.decodeFromString(LoginResponse.serializer(), respJson)
                 if (!loginResp.errors.isNullOrEmpty()) {
                     Pair(null, loginResp.errors.first().error_message)
@@ -162,7 +162,7 @@ class GkillApiClient(
         return try {
             client.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return null
-                val respJson = resp.body?.string() ?: return null
+                val respJson = resp.body.string().ifEmpty { return null }
                 val configResp = json.decodeFromString(GetApplicationConfigResponse.serializer(), respJson)
                 if (!configResp.errors.isNullOrEmpty()) return null
                 configResp.application_config?.kftl_template_struct?.toString()
@@ -203,7 +203,7 @@ class GkillApiClient(
                     Log.e(tag, "get_kyous failed: HTTP ${resp.code}")
                     return null
                 }
-                resp.body?.string() ?: return null
+                resp.body.string().ifEmpty { return null }
             }
             val kyousJson = json.parseToJsonElement(kyousRespBody).jsonObject
             val errors = kyousJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
@@ -234,7 +234,7 @@ class GkillApiClient(
                 val timeisRespBody = try {
                     client.newCall(timeisReq).execute().use { resp ->
                         if (!resp.isSuccessful) return@use null
-                        resp.body?.string()
+                        resp.body.string().ifEmpty { null }
                     }
                 } catch (e: Exception) {
                     Log.e(tag, "get_timeis failed for $kyouId", e)
@@ -294,7 +294,7 @@ class GkillApiClient(
                 .build()
             val timeisRespBody = client.newCall(timeisReq).execute().use { resp ->
                 if (!resp.isSuccessful) return "HTTP ${resp.code}"
-                resp.body?.string() ?: return "empty response"
+                resp.body.string().ifEmpty { return "empty response" }
             }
             val timeisJson = json.parseToJsonElement(timeisRespBody).jsonObject
             val timeisErrors = timeisJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
@@ -324,7 +324,7 @@ class GkillApiClient(
                 .build()
             return client.newCall(updateReq).execute().use { resp ->
                 if (!resp.isSuccessful) return "HTTP ${resp.code}"
-                val respBody = resp.body?.string() ?: return "empty response"
+                val respBody = resp.body.string().ifEmpty { return "empty response" }
                 val updateJson = json.parseToJsonElement(respBody).jsonObject
                 val updateErrors = updateJson["errors"]?.let { if (it is JsonNull) null else it.jsonArray }
                 if (updateErrors != null && updateErrors.isNotEmpty()) {
@@ -408,7 +408,7 @@ class GkillApiClient(
         return try {
             client.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return "HTTP ${resp.code}"
-                val respJson = resp.body?.string() ?: return "empty response"
+                val respJson = resp.body.string().ifEmpty { return "empty response" }
                 val submitResp = json.decodeFromString(SubmitKFTLTextResponse.serializer(), respJson)
                 if (!submitResp.errors.isNullOrEmpty()) submitResp.errors.first().error_message else null
             }

@@ -1,4 +1,4 @@
-import { i18n } from '@/i18n'
+import { i18n, set_locale } from '@/i18n'
 import { computed, type Ref, ref, watch } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
@@ -75,7 +75,7 @@ export function useApplicationConfigView(options: {
         cloned_application_config.value = props.application_config.clone()
     })
 
-    watch(() => locale_name.value, () => {
+    watch(() => locale_name.value, async () => {
         let locale: 'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de' = 'ja'
         switch (locale_name.value) {
             case 'ja':
@@ -91,7 +91,7 @@ export function useApplicationConfigView(options: {
                 locale = 'ja'
         }
         props.gkill_api.set_locale_name_to_cookie(locale)
-        i18n.global.locale = locale
+        await set_locale(locale)
     })
 
     watch(() => is_checked_use_rykv_period.value, () => {

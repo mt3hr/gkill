@@ -14,7 +14,7 @@
                 <tr>
                     <td class="urlog_favicon_cell">
                         <img v-if="kyou.typed_urlog" class="urlog_favicon"
-                            :src="kyou.typed_urlog.favicon_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.favicon_image)" />
+                            :src="kyou.typed_urlog.favicon_image === '' ? noimage : base64ToDataURI(kyou.typed_urlog.favicon_image)" />
                     </td>
                     <td>
                         <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link"
@@ -29,7 +29,7 @@
                 <tr>
                     <td class="urlog_thumbnail_cell">
                         <img v-if="kyou.typed_urlog" class="urlog_thumbnail"
-                            :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.thumbnail_image)" />
+                            :src="kyou.typed_urlog.thumbnail_image === '' ? noimage : base64ToDataURI(kyou.typed_urlog.thumbnail_image)" />
                     </td>
                     <td>
                         <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>
@@ -65,6 +65,7 @@ import type { URLogViewProps } from './ur-log-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import URLogContextMenu from './ur-log-context-menu.vue'
 import { useURLogView } from '@/classes/use-ur-log-view'
+import noimage from '@/assets/noimage.webp'
 
 const props = defineProps<URLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
