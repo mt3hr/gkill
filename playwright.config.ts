@@ -9,9 +9,14 @@ export default defineConfig({
   testDir: 'src/client/__tests__/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  // リトライで通ったテストはpassedではなくflakyとして別集計されるので、
+  // フレークを隠さずに件数を可視化したまま実行できる
+  retries: process.env.CI ? 2 : 1,
+  // 全ワーカーが1台のSQLiteバックエンドに集中するため、既定 (CPU数の半分) だと
+  // 負荷でタイムアウトする。4に絞る
+  workers: process.env.CI ? 1 : 4,
+  // open: 'never' にしないと失敗時にレポートサーバ(:9323)が立ち上がってrun-e2e.mjsがブロックされる
+  reporter: [['html', { open: 'never' }]],
   timeout: 60000,
   globalSetup: './src/client/__tests__/e2e/global-setup.ts',
   globalTeardown: './src/client/__tests__/e2e/global-teardown.ts',

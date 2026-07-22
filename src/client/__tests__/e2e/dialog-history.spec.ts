@@ -3,7 +3,7 @@ import { checkGkillServer } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv,
-  makeUniqueLabel, findKyouByText,
+  makeUniqueLabel, waitForKyouByText,
 } from './crud-helpers'
 
 /**
@@ -26,17 +26,19 @@ test.beforeAll(async () => {
  * (view-history.spec.ts と同じ操作。RykvDialogHost 管理のダイアログが開く)
  */
 async function openHistoryFor(page: Page, text: string): Promise<boolean> {
-  const record = findKyouByText(page, text)
-  if (await record.count() === 0) return false
+  const dialogs = page.locator('.gkill-floating-dialog')
+  const before = await dialogs.count()
 
+  // 並列実行だとリスト描画が間に合わないことがあるので、対象が出るまで待つ
+  const record = await waitForKyouByText(page, text)
   await record.click({ button: 'right', force: true })
-  await page.waitForTimeout(1000)
 
   const historyMenuItem = page.locator('.v-list-item, [role="menuitem"]').filter({ hasText: /履歴|histor/i }).first()
-  if (await historyMenuItem.count() === 0) return false
-
+  await expect(historyMenuItem).toBeVisible({ timeout: 15000 })
   await historyMenuItem.click()
-  await page.waitForTimeout(2000)
+
+  // ダイアログが1枚増えるまで待つ
+  await expect(dialogs).toHaveCount(before + 1, { timeout: 15000 })
   return true
 }
 
@@ -51,7 +53,7 @@ async function closeTopDialogWithX(page: Page): Promise<boolean> {
   if (await closeBtn.count() === 0) return false
   await closeBtn.click()
   // popstate 経由の非同期クローズを待つ
-  await page.waitForTimeout(1000)
+  await expect(dialogs).toHaveCount(n - 1, { timeout: 15000 })
   return true
 }
 
@@ -80,8 +82,7 @@ test.describe('Dialog History Invariants', () => {
 
     // 戻る1回で /rykv を離れて /kftl に戻れること (エントリが残っていると /rykv のまま)
     await page.goBack({ waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(1500)
-    expect(page.url()).toContain('/kftl')
+    await page.waitForURL(/\/kftl/, { timeout: 15000 })
   })
 
   // ブラウザバックでダイアログが閉じ、ページには留まる
@@ -95,14 +96,12 @@ test.describe('Dialog History Invariants', () => {
     await expect(page.locator('.gkill-floating-dialog').last()).toBeVisible()
 
     await page.goBack({ waitUntil: 'commit' })
-    await page.waitForTimeout(1500)
-    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 5000 })
+    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 15000 })
     expect(page.url()).toContain('/rykv')
 
     // もう1回戻ると /kftl へ
     await page.goBack({ waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(1500)
-    expect(page.url()).toContain('/kftl')
+    await page.waitForURL(/\/kftl/, { timeout: 15000 })
   })
 
   // ①バック ②× ③Escape を混ぜて開閉してもスタックが残らない (報告された再現手順)
@@ -115,8 +114,7 @@ test.describe('Dialog History Invariants', () => {
     let opened = await openHistoryFor(page, label)
     expect(opened).toBe(true)
     await page.goBack({ waitUntil: 'commit' })
-    await page.waitForTimeout(1500)
-    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 5000 })
+    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 15000 })
     expect(page.url()).toContain('/rykv')
 
     // 2回目: ×ボタンで閉じる (②)
@@ -131,14 +129,12 @@ test.describe('Dialog History Invariants', () => {
     opened = await openHistoryFor(page, label)
     expect(opened).toBe(true)
     await page.keyboard.press('Escape')
-    await page.waitForTimeout(1500)
-    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 5000 })
+    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 15000 })
     expect(page.url()).toContain('/rykv')
 
     // 混在開閉の後でも、戻る1回で /kftl に戻れること
     await page.goBack({ waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(1500)
-    expect(page.url()).toContain('/kftl')
+    await page.waitForURL(/\/kftl/, { timeout: 15000 })
   })
 
   // 複数ダイアログを開いたまま APP_BAR プルダウンで別ページへ遷移できること
@@ -163,9 +159,8 @@ test.describe('Dialog History Invariants', () => {
     const item = page.locator('.v-overlay .v-list-item-title').filter({ hasText: /タスク|task/i }).first()
     await expect(item).toBeVisible()
     await item.click()
-    await page.waitForTimeout(3000)
 
     // 遷移が実行されること (会計バグがあると /rykv のまま止まる)
-    expect(page.url()).toContain('/mi')
+    await page.waitForURL(/\/mi/, { timeout: 15000 })
   })
 })

@@ -1,6 +1,7 @@
 package gkill_options
 
 import (
+	"net"
 	"runtime"
 	"time"
 )
@@ -16,6 +17,9 @@ var (
 	DataDirectoryDefault = "$HOME/gkill/datas"
 
 	PreLoadUserNames = []string{}
+
+	// ServerAddress はリッスンアドレスのCLI上書き。空文字なら設定DBのADDRESSを使う
+	ServerAddress = ""
 
 	IsCacheInMemory = true
 	IsOutputLog     = false
@@ -67,3 +71,22 @@ var (
 	CacheReKyouReps       = &IsCacheInMemory
 	CacheGitCommitLogReps = &IsCacheInMemory
 )
+
+// ResolveServerAddress は--addressが指定されていればそれを、なければ設定DBの値を返す
+func ResolveServerAddress(configured string) string {
+	if ServerAddress != "" {
+		return ServerAddress
+	}
+	return configured
+}
+
+// ServerAddressPortSuffix は "http://localhost%s" のような組み立てに使う ":ポート" 部分を返す。
+// --addressにホストが含まれていても (127.0.0.1:9999 等) ポートだけを取り出す
+func ServerAddressPortSuffix(configured string) string {
+	address := ResolveServerAddress(configured)
+	_, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return address
+	}
+	return ":" + port
+}

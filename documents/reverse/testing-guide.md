@@ -94,33 +94,33 @@ npx playwright test --debug
 
 `npm run test_client_e2e` は `src/client/__tests__/e2e/run-e2e.mjs` を実行し、以下を自動で行います：
 
-1. 残存 `gkill_server` プロセスを停止し、`$HOME/gkill_test` ディレクトリを削除・再作成（クリーン状態）
-2. **インストール済みの `gkill_server` バイナリ**を `--gkill_home_dir "$HOME/gkill_test" --disable_tls --log none` で起動
-3. `http://127.0.0.1:9999/` が応答するまで待機（最大 30 秒、500ms間隔）
-4. `npx playwright test` を実行
-5. テスト完了後に gkill_server を停止
+1. 残存 `gkill_server` プロセスのうち **コマンドラインに `gkill_test` を含むものだけ**を停止し、`$HOME/gkill_test` ディレクトリを削除・再作成（クリーン状態）
+2. **空きポートを 2 つ採番**（gkill_server 用 / Vite 用、`free-port.mjs`）
+3. **インストール済みの `gkill_server` バイナリ**を `--gkill_home_dir "$HOME/gkill_test" --address 127.0.0.1:<空きポート> --disable_tls --log none` で起動し、応答するまで待機（最大 30 秒、500ms間隔）
+4. **Vite dev server** を空きポートで起動（`GKILL_API_PROXY_TARGET` でテスト用 gkill_server に `/api` をproxy）
+5. `GKILL_E2E_BASE_URL` / `GKILL_E2E_VITE_URL` を渡して `npx playwright test` を実行
+6. テスト完了後に Vite と gkill_server を停止
 
 これにより毎回クリーンな状態でテストが実行されます。初回テスト実行時、`helpers.ts` の `loginAsAdmin()` がサーバから reset_token を取得し、`/regist_first_account` ページで自動的にアカウント登録とパスワード設定を行います（初期 admin は `PasswordResetToken` が設定されているため、この登録なしにはログインできません）。
 
-> **重要 — Vite は自動起動されません。** `run-e2e.mjs` は Vite dev server を起動せず、`playwright.config.ts` にも `webServer` 設定はありません。テスト対象は **`go install` 済み `gkill_server` バイナリに埋め込まれたフロントエンド**です。
+> **ポートは固定ではありません。** 開発機で本番 `gkill_server` が :9999 を占有していても衝突しないよう、E2E が使うポートは毎回 OS から空きポートを採番します。プロセス停止も `gkill_test` を含むものに限定しているため、常駐している本番サーバを巻き込みません。
+
+> **Vite の役割。** テスト対象（`baseURL`）は **`go install` 済み `gkill_server` バイナリに埋め込まれたフロントエンド**です。Vite dev server は `check-server.ts` の `checkGkillApiViaVite()` ゲート用に起動され、これが無いと CRUD 系 22 spec が skip されます。Vite の `/api` proxy 先は `GKILL_API_PROXY_TARGET` でテスト用サーバに固定されるため、本番の :9999 に書き込む事故は起きません。
 >
 > - `npm run test_client_e2e` を単独実行する前に **`npm run install_server` が必要**です。これを省くと、以前ビルドした古いフロントエンドを試験してしまいます。
 > - `npm test` は先に `install_server` を実行するため、常に最新ビルドを試験します。
-> - Vite dev server を試験対象にしたい場合は、`npm run dev` を別途起動したうえで接続先を上書きします:
->   ```bash
->   GKILL_E2E_BASE_URL=http://localhost:5173 npx playwright test
->   ```
->   `playwright.config.ts` の `baseURL` は `process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999'` です。
 
-> **Note:** `npx playwright test` を直接実行する場合は、事前にテスト用 gkill_server を手動で起動する必要があります：
+> **Note:** `npx playwright test` を直接実行する場合は、事前にテスト用 gkill_server を手動で起動し、接続先を環境変数で渡す必要があります：
 > ```bash
-> # ターミナル 1: テスト用サーバ起動
+> # ターミナル 1: テスト用サーバ起動（:19999 で起動する）
 > rm -rf ~/gkill_test && mkdir -p ~/gkill_test
 > npm run test_e2e_server
 >
 > # ターミナル 2: テスト実行
-> npx playwright test
+> GKILL_E2E_BASE_URL=http://localhost:19999 npx playwright test
 > ```
+> `playwright.config.ts` の `baseURL` は `process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999'`、
+> Vite ゲートの接続先は `process.env.GKILL_E2E_VITE_URL ?? 'http://localhost:5173'` です。
 
 ### ドキュメント検証（docs CI）
 
@@ -266,7 +266,7 @@ src/client/__tests__/
 |-------------|-----------|
 | `view-history.spec.ts` | Lantana/Mi/Nlog/URLog/ReKyou/Tag/Text の閲覧+履歴ダイアログ+リポスト+NoImage確認 |
 | `dialog-history.spec.ts` | ダイアログ履歴不変条件: ×/Escape/ブラウザバックのどれで閉じてもバックスタックに使用済みエントリが残らないこと（閉じた後、戻る1回でページを離れる）、複数ダイアログを開いたまま APP_BAR プルダウンで画面遷移できること |
-| `edit-readonly-loading.spec.ts` | Edit系ダイアログ: Loading 中は入力フォームが readonly になり、ロード完了後に編集可能へ戻ること（API 遅延注入で検証） |
+| `edit-readonly-loading.spec.ts` | Edit系ダイアログ: 保存中は入力フォームが readonly になること（`/api/update_kmemo` の遅延注入で検証）。readonly は `is_busy = is_loading \|\| is_requested_submit` にバインドされているが、リストから開いた Kyou は `clone()` が `is_typed_data_loaded` を引き継ぐため `load_typed_datas()` が早期 return し load 側は観測可能なウィンドウにならない。そのため確実に到達する保存中（`is_requested_submit`）側を検証する |
 
 #### 認証フロー系（1 spec file）
 

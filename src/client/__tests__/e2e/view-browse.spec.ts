@@ -3,13 +3,13 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing,
-  makeUniqueLabel, pageContainsText, findKyouByText,
+  makeUniqueLabel, expectPageToContainText, findKyouByText,
 } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
   apiReachable = await checkGkillApiViaVite()
 })
 
@@ -57,8 +57,7 @@ test.describe('View/Browse Flows', () => {
 
     // Navigate to rykv and verify both appear
     await navigateToRykv(page)
-    const foundKmemo = await pageContainsText(page, kmemoLabel)
-    expect(foundKmemo).toBe(true)
+    await expectPageToContainText(page, kmemoLabel)
   })
 
   test('mi board shows task records', async ({ page }) => {
@@ -79,9 +78,6 @@ test.describe('View/Browse Flows', () => {
     await page.waitForTimeout(2000)
 
     await navigateToPlaing(page)
-    // Additional wait for Plaing page to fetch and render data
-    await page.waitForTimeout(2000)
-    const found = await pageContainsText(page, label)
-    expect(found).toBe(true)
+    await expectPageToContainText(page, label)
   })
 })

@@ -1,19 +1,21 @@
 [versions]
-agp = "8.9.0"
-kotlin = "2.0.21"
-playServicesWearable = "18.2.0"
-wearCompose = "1.4.0"
-okhttp = "4.12.0"
-kotlinxSerializationJson = "1.7.3"
-kotlinxCoroutines = "1.9.0"
-androidxCoreKtx = "1.15.0"
-androidxAppcompat = "1.7.0"
-material = "1.12.0"
-androidxActivityCompose = "1.9.3"
-androidxLifecycleViewmodelCompose = "2.8.7"
-wear-tiles = "1.4.0"
-protolayout = "1.2.0"
-concurrentFutures = "1.2.0"
+agp = "9.3.0"
+kotlin = "2.4.10"
+playServicesWearable = "20.0.1"
+wearCompose = "1.6.2"
+okhttp = "5.4.0"
+kotlinxSerializationJson = "1.11.0"
+kotlinxCoroutines = "1.11.0"
+androidxCoreKtx = "1.19.0"
+androidxAppcompat = "1.7.1"
+material = "1.14.0"
+androidxActivityCompose = "1.13.0"
+androidxLifecycleViewmodelCompose = "2.11.0"
+wear-tiles = "1.6.1"
+protolayout = "1.4.1"
+concurrentFutures = "1.3.0"
+junit = "4.13.2"
+mockk = "1.14.11"
 
 [libraries]
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
@@ -33,9 +35,12 @@ wear-tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "wea
 protolayout = { group = "androidx.wear.protolayout", name = "protolayout", version.ref = "protolayout" }
 protolayout-material = { group = "androidx.wear.protolayout", name = "protolayout-material", version.ref = "protolayout" }
 concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "concurrentFutures" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

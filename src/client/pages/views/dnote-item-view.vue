@@ -4,22 +4,24 @@
     @contextmenu.prevent.stop="onContextmenu"
     @dblclick="onDblclick">
     <table>
-      <tr>
-        <td>
-          <span class="title"><span>{{ model_value!.title }}</span><span>:</span></span>
-        </td>
-        <td><span>{{ model_value!.prefix }}</span></td>
-        <td>
-          <span class="value">
-            <span v-if="!is_lantana_type" :class="value_class">{{ value }}</span>
-            <span v-else>
-              <LantanaFlowersView :gkill_api="gkill_api" :application_config="application_config" :mood="mood_value"
-                :editable="false" />
-            </span>
-          </span>
-        </td>
-        <td><span>{{ model_value!.suffix }}</span></td>
-      </tr>
+        <tbody>
+          <tr>
+            <td>
+              <span class="title"><span>{{ model_value!.title }}</span><span>:</span></span>
+            </td>
+            <td><span>{{ model_value!.prefix }}</span></td>
+            <td>
+              <span class="value">
+                <span v-if="!is_lantana_type" :class="value_class">{{ value }}</span>
+                <span v-else>
+                  <LantanaFlowersView :gkill_api="gkill_api" :application_config="application_config" :mood="mood_value"
+                    :editable="false" />
+                </span>
+              </span>
+            </td>
+            <td><span>{{ model_value!.suffix }}</span></td>
+          </tr>
+        </tbody>
     </table>
 
     <KyouListViewDialog v-model="related_kyous" :kyou_height="180" :width="400" :application_config="application_config"

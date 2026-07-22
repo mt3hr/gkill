@@ -108,11 +108,11 @@ type GkillRepositories struct {
 	updateCacheTicker     *time.Ticker
 	isClosed              bool
 
-	cancelPreFunc    context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
-	updateCacheMutex sync.RWMutex
+	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
 
-	updateReqGen atomic.Uint64
-	lastHandled  atomic.Uint64
+	// 値コピーしてはいけない同期状態。cloneRepositoriesWithoutReKyouがGkillRepositoriesを
+	// 値コピーするため、ポインタで保持して複製ではなく共有されるようにしている。
+	syncStateRef *gkillRepositoriesSync
 
 	CacheMemoryDBMutex *sync.RWMutex
 	CacheMemoryDB      *sql.DB
@@ -120,6 +120,30 @@ type GkillRepositories struct {
 	TempMemoryDB       *sql.DB
 
 	SkipUpdateCache *bool // fsnotifyによるUpdateCacheの再帰トリガーを防止するためのフラグ。GkillDAOManagerのskipUpdateCacheと同じポインタを共有する。
+}
+
+// gkillRepositoriesSyncはGkillRepositoriesの同期状態。
+// sync.RWMutexとatomic.Uint64は値コピーしてはいけないため、この構造体にまとめて
+// GkillRepositoriesからはポインタで参照する。
+type gkillRepositoriesSync struct {
+	updateCacheMutex sync.RWMutex
+
+	updateReqGen atomic.Uint64
+	lastHandled  atomic.Uint64
+}
+
+// gkillRepositoriesSyncInitMutexはsyncStateの遅延初期化を保護する。
+var gkillRepositoriesSyncInitMutex sync.Mutex
+
+// syncStateは同期状態を返す。
+// GkillRepositories{}リテラルで生成された場合に備えて遅延初期化する。
+func (g *GkillRepositories) syncState() *gkillRepositoriesSync {
+	gkillRepositoriesSyncInitMutex.Lock()
+	defer gkillRepositoriesSyncInitMutex.Unlock()
+	if g.syncStateRef == nil {
+		g.syncStateRef = &gkillRepositoriesSync{}
+	}
+	return g.syncStateRef
 }
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
@@ -209,7 +233,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 
 		TempReps: TempReps,
 
-		updateCacheMutex: sync.RWMutex{},
+		syncStateRef: &gkillRepositoriesSync{},
 
 		TempMemoryDB:       TempMemoryDB,
 		CacheMemoryDB:      CacheMemoryDB,
@@ -221,12 +245,13 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		LastUpdatedLatestDataRepositoryAddressCacheFindTime: time.Unix(0, 0),
 	}
 
+	syncState := repositories.syncState()
 	go func() {
 		defer ticker.Stop()
 		for !repositories.isClosed {
 			<-ticker.C
-			currentGen := repositories.updateReqGen.Load()
-			lastGen := repositories.lastHandled.Load()
+			currentGen := syncState.updateReqGen.Load()
+			lastGen := syncState.lastHandled.Load()
 			if currentGen == lastGen {
 				continue
 			}
@@ -239,7 +264,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 					continue
 				}
 				repositories.IsUpdateCacheNextTick = false
-				repositories.lastHandled.Store(currentGen)
+				syncState.lastHandled.Store(currentGen)
 			}
 		}
 	}()
@@ -476,8 +501,9 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 		return ctx.Err()
 	}
 	defer func() { updateCacheThreadPool <- struct{}{} }()
-	g.updateCacheMutex.Lock()
-	defer g.updateCacheMutex.Unlock()
+	updateCacheMutex := &g.syncState().updateCacheMutex
+	updateCacheMutex.Lock()
+	defer updateCacheMutex.Unlock()
 
 	// UpdateCache実行中にfsnotifyがファイル変更を検出してUpdateCacheを再帰的にトリガーするのを防ぐ
 	if g.SkipUpdateCache != nil {
@@ -599,7 +625,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 }
 
 func (g *GkillRepositories) UpdateCacheNextTick() {
-	g.updateReqGen.Add(1)
+	g.syncState().updateReqGen.Add(1)
 	g.IsUpdateCacheNextTick = true
 }
 

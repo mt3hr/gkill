@@ -6,21 +6,23 @@
         <v-row class="pa-0 ma-0">
             <v-col class="pa-0 ma-0" cols="auto">
                 <table>
-                    <tr>
-                        <td>
-                            <span>{{ dnote_list_query.prefix }}</span>
-                        </td>
-                        <td>
-                            <span v-if="!is_lantana_type" :class="value_class" v-html="aggregated_item.value"></span>
-                            <span v-if="is_lantana_type">
-                                <LantanaFlowersView :gkill_api="gkill_api" :application_config="application_config"
-                                    :mood="mood_value" :editable="false" />
-                            </span>
-                        </td>
-                        <td>
-                            <span>{{ dnote_list_query.suffix }}</span>
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span>{{ dnote_list_query.prefix }}</span>
+                            </td>
+                            <td>
+                                <span v-if="!is_lantana_type" :class="value_class" v-html="aggregated_item.value"></span>
+                                <span v-if="is_lantana_type">
+                                    <LantanaFlowersView :gkill_api="gkill_api" :application_config="application_config"
+                                        :mood="mood_value" :editable="false" />
+                                </span>
+                            </td>
+                            <td>
+                                <span>{{ dnote_list_query.suffix }}</span>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </v-col>
         </v-row>

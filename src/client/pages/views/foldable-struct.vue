@@ -5,14 +5,16 @@
         @contextmenu.prevent.stop="onContextmenuItem" v-long-press="onLongPressItem">
         <td>
             <table>
-                <tr>
-                    <td v-if="is_show_checkbox">
-                        <input type="checkbox" class="checkbox_in_foldable_struct" v-model="check"
-                            @change="update_check_item_by_user" :indeterminate.prop="(struct_obj).indeterminate" />
-                    </td>
-                    <td class="tree_item ml-1" @dblclick="dblclick_item_by_user"
-                        @click.prevent.stop="click_item_by_user">{{ struct_obj.name }}</td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td v-if="is_show_checkbox">
+                            <input type="checkbox" class="checkbox_in_foldable_struct" v-model="check"
+                                @change="update_check_item_by_user" :indeterminate.prop="(struct_obj).indeterminate" />
+                        </td>
+                        <td class="tree_item ml-1" @dblclick="dblclick_item_by_user"
+                            @click.prevent.stop="click_item_by_user">{{ struct_obj.name }}</td>
+                    </tr>
+                </tbody>
             </table>
         </td>
     </tr>
@@ -22,19 +24,21 @@
         @contextmenu.prevent.stop="onContextmenuItem" v-long-press="onLongPressItem">
         <td>
             <table>
-                <tr>
-                    <td v-if="is_show_checkbox">
-                        <input type="checkbox" class="checkbox_in_foldable_struct" v-model="check"
-                            @change="change_group_by_user" :indeterminate="indeterminate_group" />
-                    </td>
-                    <td>
-                        <span v-if="open_group" style="cursor: default" @click="onToggleOpenGroup">▽</span>
-                        <span v-if="!open_group" style="cursor: default" @click="onToggleOpenGroup">▷</span>
-                    </td>
-                    <td @click="click_group_by_user">
-                        <div class="tree_item">{{ folder_name }}</div>
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td v-if="is_show_checkbox">
+                            <input type="checkbox" class="checkbox_in_foldable_struct" v-model="check"
+                                @change="change_group_by_user" :indeterminate="indeterminate_group" />
+                        </td>
+                        <td>
+                            <span v-if="open_group" style="cursor: default" @click="onToggleOpenGroup">▽</span>
+                            <span v-if="!open_group" style="cursor: default" @click="onToggleOpenGroup">▷</span>
+                        </td>
+                        <td @click="click_group_by_user">
+                            <div class="tree_item">{{ folder_name }}</div>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             <table class="ml-4" v-if="open_group">
                 <FoldableStruct v-show="open_group" v-for="child_struct, index in struct_list"

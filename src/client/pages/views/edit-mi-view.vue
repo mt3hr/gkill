@@ -19,173 +19,187 @@
         <v-text-field class="input text" type="text" v-model="mi_title" :label="i18n.global.t('MI_TITLE_TITLE')"
             autofocus :readonly="is_busy" />
         <table>
-            <tr>
-                <td>
-                    <v-select class="select" v-model="mi_board_name" :items="mi_board_names"
-                        :readonly="is_busy" :label="i18n.global.t('MI_BOARD_NAME_TITLE')" />
-                </td>
-                <td>
-                    <v-btn color="primary" @click="show_new_board_name_dialog()" icon="mdi-plus" dark size="small"
-                        :disabled="is_busy"></v-btn>
-                </td>
-            </tr>
+            <tbody>
+                <tr>
+                    <td>
+                        <v-select class="select" v-model="mi_board_name" :items="mi_board_names"
+                            :readonly="is_busy" :label="i18n.global.t('MI_BOARD_NAME_TITLE')" />
+                    </td>
+                    <td>
+                        <v-btn color="primary" @click="show_new_board_name_dialog()" icon="mdi-plus" dark size="small"
+                            :disabled="is_busy"></v-btn>
+                    </td>
+                </tr>
+            </tbody>
         </table>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
-                    <tr>
-                        <td>
-                            <v-menu :disabled="is_busy" v-model="show_start_date_menu" :close-on-content-click="false"
-                                transition="scale-transition" offset-y min-width="auto">
-                                <template #activator="{ props }">
-                                    <v-text-field v-model="mi_estimate_start_date_string"
-                                        :label="i18n.global.t('MI_START_DATE_TITLE')" readonly v-bind="props"
-                                        min-width="120" />
-                                </template>
-                                <v-date-picker v-model="mi_estimate_start_date_typed"
-                                    @update:model-value="show_start_date_menu = false" locale="ja-JP" />
-                            </v-menu>
-                        </td>
-                        <td>
-                            <v-menu :disabled="is_busy" v-model="show_start_time_menu" :close-on-content-click="false"
-                                transition="scale-transition" offset-y min-width="auto">
-                                <template #activator="{ props }">
-                                    <v-text-field v-model="mi_estimate_start_time_string"
-                                        :label="i18n.global.t('MI_START_TIME_TITLE')" min-width="120" readonly
-                                        v-bind="props" />
-                                </template>
-                                <v-time-picker v-model="mi_estimate_start_time_string" format="24hr"
-                                    @update:minute="show_start_time_menu = false" />
-                            </v-menu>
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <v-menu :disabled="is_busy" v-model="show_start_date_menu" :close-on-content-click="false"
+                                    transition="scale-transition" offset-y min-width="auto">
+                                    <template #activator="{ props }">
+                                        <v-text-field v-model="mi_estimate_start_date_string"
+                                            :label="i18n.global.t('MI_START_DATE_TITLE')" readonly v-bind="props"
+                                            min-width="120" />
+                                    </template>
+                                    <v-date-picker v-model="mi_estimate_start_date_typed"
+                                        @update:model-value="show_start_date_menu = false" locale="ja-JP" />
+                                </v-menu>
+                            </td>
+                            <td>
+                                <v-menu :disabled="is_busy" v-model="show_start_time_menu" :close-on-content-click="false"
+                                    transition="scale-transition" offset-y min-width="auto">
+                                    <template #activator="{ props }">
+                                        <v-text-field v-model="mi_estimate_start_time_string"
+                                            :label="i18n.global.t('MI_START_TIME_TITLE')" min-width="120" readonly
+                                            v-bind="props" />
+                                    </template>
+                                    <v-time-picker v-model="mi_estimate_start_time_string" format="24hr"
+                                        @update:minute="show_start_time_menu = false" />
+                                </v-menu>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
                 <table class="gkill-field-side-buttons">
-                    <tr>
-                        <td>
-                            <v-btn dark color="secondary" @click="clear_estimate_start_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("CLEAR_TITLE") }}</v-btn>
-                        </td>
-                        <td>
-                            <v-btn dark color="secondary" @click="reset_estimate_start_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("RESET_TITLE") }}</v-btn>
-                        </td>
-                        <td>
-                            <v-btn dark color="primary" @click="now_to_estimate_start_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <v-btn dark color="secondary" @click="clear_estimate_start_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("CLEAR_TITLE") }}</v-btn>
+                            </td>
+                            <td>
+                                <v-btn dark color="secondary" @click="reset_estimate_start_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("RESET_TITLE") }}</v-btn>
+                            </td>
+                            <td>
+                                <v-btn dark color="primary" @click="now_to_estimate_start_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
-                    <tr>
-                        <td>
-                            <v-menu :disabled="is_busy" v-model="show_end_date_menu" :close-on-content-click="false"
-                                transition="scale-transition" offset-y min-width="auto">
-                                <template #activator="{ props }">
-                                    <v-text-field v-model="mi_estimate_end_date_string"
-                                        :label="i18n.global.t('MI_END_DATE_TITLE')" readonly v-bind="props"
-                                        min-width="120" />
-                                </template>
-                                <v-date-picker v-model="mi_estimate_end_date_typed"
-                                    @update:model-value="show_end_date_menu = false" locale="ja-JP" />
-                            </v-menu>
-                        </td>
-                        <td>
-                            <v-menu :disabled="is_busy" v-model="show_end_time_menu" :close-on-content-click="false"
-                                transition="scale-transition" offset-y min-width="auto">
-                                <template #activator="{ props }">
-                                    <v-text-field v-model="mi_estimate_end_time_string"
-                                        :label="i18n.global.t('MI_END_TIME_TITLE')" min-width="120" readonly
-                                        v-bind="props" />
-                                </template>
-                                <v-time-picker v-model="mi_estimate_end_time_string" format="24hr"
-                                    @update:minute="show_end_time_menu = false" />
-                            </v-menu>
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <v-menu :disabled="is_busy" v-model="show_end_date_menu" :close-on-content-click="false"
+                                    transition="scale-transition" offset-y min-width="auto">
+                                    <template #activator="{ props }">
+                                        <v-text-field v-model="mi_estimate_end_date_string"
+                                            :label="i18n.global.t('MI_END_DATE_TITLE')" readonly v-bind="props"
+                                            min-width="120" />
+                                    </template>
+                                    <v-date-picker v-model="mi_estimate_end_date_typed"
+                                        @update:model-value="show_end_date_menu = false" locale="ja-JP" />
+                                </v-menu>
+                            </td>
+                            <td>
+                                <v-menu :disabled="is_busy" v-model="show_end_time_menu" :close-on-content-click="false"
+                                    transition="scale-transition" offset-y min-width="auto">
+                                    <template #activator="{ props }">
+                                        <v-text-field v-model="mi_estimate_end_time_string"
+                                            :label="i18n.global.t('MI_END_TIME_TITLE')" min-width="120" readonly
+                                            v-bind="props" />
+                                    </template>
+                                    <v-time-picker v-model="mi_estimate_end_time_string" format="24hr"
+                                        @update:minute="show_end_time_menu = false" />
+                                </v-menu>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
                 <table class="gkill-field-side-buttons">
-                    <tr>
-                        <td>
-                            <v-btn dark color="secondary" @click="clear_estimate_end_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("CLEAR_TITLE") }}</v-btn>
-                        </td>
-                        <td>
-                            <v-btn dark color="secondary" @click="reset_estimate_end_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("RESET_TITLE") }}</v-btn>
-                        </td>
-                        <td>
-                            <v-btn dark color="primary" @click="now_to_estimate_end_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <v-btn dark color="secondary" @click="clear_estimate_end_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("CLEAR_TITLE") }}</v-btn>
+                            </td>
+                            <td>
+                                <v-btn dark color="secondary" @click="reset_estimate_end_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("RESET_TITLE") }}</v-btn>
+                            </td>
+                            <td>
+                                <v-btn dark color="primary" @click="now_to_estimate_end_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
-                    <tr>
-                        <td>
-                            <v-menu :disabled="is_busy" v-model="show_limit_date_menu" :close-on-content-click="false"
-                                transition="scale-transition" offset-y min-width="auto">
-                                <template #activator="{ props }">
-                                    <v-text-field v-model="mi_limit_date_string"
-                                        :label="i18n.global.t('MI_LIMIT_DATE_TITLE')" readonly v-bind="props"
-                                        min-width="120" />
-                                </template>
-                                <v-date-picker v-model="mi_limit_date_typed"
-                                    @update:model-value="show_limit_date_menu = false" locale="ja-JP" />
-                            </v-menu>
-                        </td>
-                        <td>
-                            <v-menu :disabled="is_busy" v-model="show_limit_time_menu" :close-on-content-click="false"
-                                transition="scale-transition" offset-y min-width="auto">
-                                <template #activator="{ props }">
-                                    <v-text-field v-model="mi_limit_time_string"
-                                        :label="i18n.global.t('MI_LIMIT_TIME_TITLE')" min-width="120" readonly
-                                        v-bind="props" />
-                                </template>
-                                <v-time-picker v-model="mi_limit_time_string" format="24hr"
-                                    @update:minute="show_limit_time_menu = false" />
-                            </v-menu>
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <v-menu :disabled="is_busy" v-model="show_limit_date_menu" :close-on-content-click="false"
+                                    transition="scale-transition" offset-y min-width="auto">
+                                    <template #activator="{ props }">
+                                        <v-text-field v-model="mi_limit_date_string"
+                                            :label="i18n.global.t('MI_LIMIT_DATE_TITLE')" readonly v-bind="props"
+                                            min-width="120" />
+                                    </template>
+                                    <v-date-picker v-model="mi_limit_date_typed"
+                                        @update:model-value="show_limit_date_menu = false" locale="ja-JP" />
+                                </v-menu>
+                            </td>
+                            <td>
+                                <v-menu :disabled="is_busy" v-model="show_limit_time_menu" :close-on-content-click="false"
+                                    transition="scale-transition" offset-y min-width="auto">
+                                    <template #activator="{ props }">
+                                        <v-text-field v-model="mi_limit_time_string"
+                                            :label="i18n.global.t('MI_LIMIT_TIME_TITLE')" min-width="120" readonly
+                                            v-bind="props" />
+                                    </template>
+                                    <v-time-picker v-model="mi_limit_time_string" format="24hr"
+                                        @update:minute="show_limit_time_menu = false" />
+                                </v-menu>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
                 <table class="gkill-field-side-buttons">
-                    <tr>
-                        <td>
-                            <v-btn dark color="secondary" @click="clear_limit_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("CLEAR_TITLE") }}</v-btn>
-                        </td>
-                        <td>
-                            <v-btn dark color="secondary" @click="reset_limit_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("RESET_TITLE") }}</v-btn>
-                        </td>
-                        <td>
-                            <v-btn dark color="primary" @click="now_to_limit_date_time()"
-                                :disabled="is_busy">{{
-                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <v-btn dark color="secondary" @click="clear_limit_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("CLEAR_TITLE") }}</v-btn>
+                            </td>
+                            <td>
+                                <v-btn dark color="secondary" @click="reset_limit_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("RESET_TITLE") }}</v-btn>
+                            </td>
+                            <td>
+                                <v-btn dark color="primary" @click="now_to_limit_date_time()"
+                                    :disabled="is_busy">{{
+                                        i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </v-col>
         </v-row>

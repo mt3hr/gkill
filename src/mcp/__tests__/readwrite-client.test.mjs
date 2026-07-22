@@ -1,10 +1,20 @@
 /**
  * Tests for GkillClient from gkill-readwrite-server.mjs.
  *
- * All network calls are mocked via globalThis.fetch so no real server is needed.
+ * All network calls are mocked via undici's fetch so no real server is needed.
+ * サーバ側は `import { fetch } from "undici"` で undici の fetch を直接使うため、
+ * globalThis.fetch を差し替えてもモックが効かない点に注意。
  */
 
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
+
+// Agent は実体が必要なので importOriginal でスプレッドし、fetch だけ差し替える。
+vi.mock("undici", async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, fetch: vi.fn() };
+});
+
+import { fetch as undiciFetch } from "undici";
 import { GkillClient } from "../gkill-readwrite-server.mjs";
 
 // ---------------------------------------------------------------------------
@@ -12,18 +22,17 @@ import { GkillClient } from "../gkill-readwrite-server.mjs";
 // ---------------------------------------------------------------------------
 
 function mockFetchOk(body = {}) {
-  globalThis.fetch = vi.fn().mockResolvedValue({
+  undiciFetch.mockResolvedValue({
     ok: true,
     json: () => Promise.resolve(body),
   });
 }
 
 let savedEnv;
-let savedFetch;
 
 beforeEach(() => {
   savedEnv = { ...process.env };
-  savedFetch = globalThis.fetch;
+  undiciFetch.mockReset();
   delete process.env.GKILL_BASE_URL;
   delete process.env.GKILL_USER;
   delete process.env.GKILL_PASSWORD_SHA256;
@@ -36,7 +45,7 @@ beforeEach(() => {
 
 afterEach(() => {
   process.env = savedEnv;
-  globalThis.fetch = savedFetch;
+  undiciFetch.mockReset();
 });
 
 // ---------------------------------------------------------------------------
@@ -133,7 +142,7 @@ describe("callApi", () => {
     process.env.GKILL_PASSWORD_SHA256 = "hash";
 
     let callCount = 0;
-    globalThis.fetch = vi.fn().mockImplementation(() => {
+    undiciFetch.mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
         return Promise.resolve({
@@ -157,7 +166,7 @@ describe("callApi", () => {
     process.env.GKILL_PASSWORD_SHA256 = "hash";
 
     let callCount = 0;
-    globalThis.fetch = vi.fn().mockImplementation(() => {
+    undiciFetch.mockImplementation(() => {
       callCount++;
       if (callCount === 1) return Promise.resolve({ ok: true, json: () => Promise.resolve({ session_id: "old", errors: [] }) });
       if (callCount === 2) return Promise.resolve({ ok: true, json: () => Promise.resolve({ errors: [{ error_code: "ERR000013" }] }) });
@@ -176,7 +185,7 @@ describe("callApi", () => {
 // ---------------------------------------------------------------------------
 describe("fetchFile", () => {
   test("fetches file with session cookie", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
+    undiciFetch.mockResolvedValue({
       ok: true,
       headers: { get: () => "image/png" },
       arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)),
@@ -187,7 +196,7 @@ describe("fetchFile", () => {
     expect(result.contentType).toBe("image/png");
     expect(result.buffer).toBeInstanceOf(Buffer);
 
-    const headers = globalThis.fetch.mock.calls[0][1].headers;
+    const headers = undiciFetch.mock.calls[0][1].headers;
     expect(headers.Cookie).toContain("sess-123");
   });
 });

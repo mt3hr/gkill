@@ -59,7 +59,7 @@ gkill_server version
 
 | コマンド | 説明 |
 |---|---|
-| `npm run dev` | Vite開発サーバー起動（フロントエンドのみ、HMR対応） |
+| `npm run dev` | Vite開発サーバー起動（フロントエンドのみ、HMR対応）。`-- --api=<url>` で接続先gkill_serverを指定 |
 | `npm run build` | フロントエンドビルド（vue-tsc型チェック + vite build を並列実行） |
 | `npm run lint` | ESLintによるコード検査・自動修正（.vue/.ts/.js対象） |
 | `npm run preview` | ビルド済みフロントエンドのプレビュー |
@@ -226,6 +226,16 @@ npm run dev
 
 Viteの開発サーバーが起動し、HMR（Hot Module Replacement）が有効になります。フロントエンドのみの開発時に使用します。
 
+接続先のgkill_serverは`--api`で指定できます（既定は`http://localhost:9999`）。
+
+```bash
+npm run dev -- --api=http://127.0.0.1:19999
+npm run dev -- --api=19999          # ポート番号だけなら 127.0.0.1 を補完
+npm run dev -- --api=19999 --port 5180  # --api以外の引数はそのままviteへ渡る
+```
+
+`npm run dev`は`src/tools/dev.mjs`経由でViteを起動します（Viteは未知のCLIオプションをエラーにするため）。`--api`の値は環境変数`GKILL_API_PROXY_TARGET`としてViteに渡され、`vite.config.ts`のproxyが`/api`・`/files`・`/zip_cache`・`/resources/manual`をまとめてその宛先へ転送します。環境変数を直接指定しても同じです（`--api`のほうが優先）。
+
 ### バックエンド起動
 
 ```bash
@@ -238,6 +248,7 @@ go run .
 | フラグ | デフォルト | 説明 |
 |---|---|---|
 | `--gkill_home_dir` | `$HOME/gkill` | ホームディレクトリ |
+| `--address` | （なし） | リッスンアドレスを上書き（例: `:19999`, `127.0.0.1:19999`）。未指定なら設定DBの値 |
 | `--disable_tls` | `false` | TLSを無効化 |
 | `--cache_in_memory` | `true` | インメモリキャッシュ有効化 |
 | `--cache_reps_local` | `false` | ローカルキャッシュ有効化 |
@@ -246,7 +257,7 @@ go run .
 
 ### フロント＋バック同時開発
 
-フロントエンド開発サーバー（`npm run dev`）とバックエンド（`go run`）を同時に起動して開発できます。フロントエンドからバックエンドAPIへのプロキシ設定は`vite.config.ts`を確認してください。
+フロントエンド開発サーバー（`npm run dev`）とバックエンド（`go run`）を同時に起動して開発できます。バックエンドを既定以外のポートで立てた場合は`npm run dev -- --api=<url>`で向き先を合わせてください。プロキシ設定の実体は`vite.config.ts`の`server.proxy`です。
 
 ## 7. Android NDK/SDK設定
 

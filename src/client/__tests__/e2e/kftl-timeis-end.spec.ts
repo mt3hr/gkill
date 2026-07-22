@@ -3,13 +3,13 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToPlaing,
-  makeUniqueLabel, pageContainsText,
+  makeUniqueLabel, expectPageToContainText,
 } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
   apiReachable = await checkGkillApiViaVite()
 })
 
@@ -26,8 +26,7 @@ test.describe('KFTL TimeIs End Flows', () => {
     const label = makeUniqueLabel('timeis_end_title')
     await submitKftlText(page, `ーた\n${label}`)
     await navigateToPlaing(page)
-    const started = await pageContainsText(page, label)
-    expect(started).toBe(true)
+    await expectPageToContainText(page, label)
 
     // End it by title
     await submitKftlText(page, `ーえ\n${label}`)
@@ -43,8 +42,7 @@ test.describe('KFTL TimeIs End Flows', () => {
     const label = makeUniqueLabel('timeis_end_ifexist')
     await submitKftlText(page, `ーた\n${label}`)
     await navigateToPlaing(page)
-    const started = await pageContainsText(page, label)
-    expect(started).toBe(true)
+    await expectPageToContainText(page, label)
 
     // End it with "if exists" — should succeed without error
     await submitKftlText(page, `ーいえ\n${label}`)
@@ -66,8 +64,7 @@ test.describe('KFTL TimeIs End Flows', () => {
     const tagName = makeUniqueLabel('endtag')
     await submitKftlText(page, `。${tagName}\nーた\n${label}`)
     await navigateToPlaing(page)
-    const started = await pageContainsText(page, label)
-    expect(started).toBe(true)
+    await expectPageToContainText(page, label)
 
     // End all TimeIs with that tag
     await submitKftlText(page, `ーたえ\n${tagName}`)
@@ -83,8 +80,7 @@ test.describe('KFTL TimeIs End Flows', () => {
     const tagName = makeUniqueLabel('endtagie')
     await submitKftlText(page, `。${tagName}\nーた\n${label}`)
     await navigateToPlaing(page)
-    const started = await pageContainsText(page, label)
-    expect(started).toBe(true)
+    await expectPageToContainText(page, label)
 
     // End with "if tag exists" — should succeed
     await submitKftlText(page, `ーいたえ\n${tagName}`)

@@ -3,14 +3,14 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing,
-  makeUniqueLabel, pageContainsText, clickFabButton, clickDialogButton,
+  makeUniqueLabel, expectPageToContainText, clickFabButton, clickDialogButton,
   findKyouByText,
 } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
   apiReachable = await checkGkillApiViaVite()
 })
 
@@ -45,8 +45,7 @@ test.describe('GUI Add Dialog Flows', () => {
 
         // Verify on Mi board
         await navigateToMi(page)
-        const found = await pageContainsText(page, label)
-        expect(found).toBe(true)
+        await expectPageToContainText(page, label)
       }
     }
   })
@@ -124,8 +123,7 @@ test.describe('GUI Add Dialog Flows', () => {
         await page.waitForTimeout(2000)
 
         await navigateToPlaing(page)
-        const found = await pageContainsText(page, label)
-        expect(found).toBe(true)
+        await expectPageToContainText(page, label)
       }
     }
   })
@@ -235,8 +233,7 @@ test.describe('GUI Add Dialog Flows', () => {
 
         // Verify on Mi board
         await navigateToMi(page)
-        const found = await pageContainsText(page, label)
-        expect(found).toBe(true)
+        await expectPageToContainText(page, label)
       }
     }
   })
@@ -269,8 +266,7 @@ test.describe('GUI Add Dialog Flows', () => {
       await page.waitForTimeout(2000)
 
       await navigateToPlaing(page)
-      const found = await pageContainsText(page, label)
-      expect(found).toBe(true)
+      await expectPageToContainText(page, label)
     }
   })
 
