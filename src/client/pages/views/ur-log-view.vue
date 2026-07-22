@@ -1,35 +1,41 @@
 <template>
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <table>
-            <tr>
-                <td>
-                    <div class="urlog_title">{{ kyou.typed_urlog?.title }}</div>
-                </td>
-            </tr>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="urlog_title">{{ kyou.typed_urlog?.title }}</div>
+                    </td>
+                </tr>
+            </tbody>
         </table>
         <table>
-            <tr>
-                <td class="urlog_favicon_cell">
-                    <img v-if="kyou.typed_urlog" class="urlog_favicon"
-                        :src="kyou.typed_urlog.favicon_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.favicon_image)" />
-                </td>
-                <td>
-                    <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link"
-                        class="urlog_url">{{
-                            kyou.typed_urlog.url }}</a>
-                </td>
-            </tr>
+            <tbody>
+                <tr>
+                    <td class="urlog_favicon_cell">
+                        <img v-if="kyou.typed_urlog" class="urlog_favicon"
+                            :src="kyou.typed_urlog.favicon_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.favicon_image)" />
+                    </td>
+                    <td>
+                        <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link"
+                            class="urlog_url">{{
+                                kyou.typed_urlog.url }}</a>
+                    </td>
+                </tr>
+            </tbody>
         </table>
         <table>
-            <tr>
-                <td class="urlog_thumbnail_cell">
-                    <img v-if="kyou.typed_urlog" class="urlog_thumbnail"
-                        :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.thumbnail_image)" />
-                </td>
-                <td>
-                    <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>
-                </td>
-            </tr>
+            <tbody>
+                <tr>
+                    <td class="urlog_thumbnail_cell">
+                        <img v-if="kyou.typed_urlog" class="urlog_thumbnail"
+                            :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : base64ToDataURI(kyou.typed_urlog.thumbnail_image)" />
+                    </td>
+                    <td>
+                        <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>
+                    </td>
+                </tr>
+            </tbody>
         </table>
         <URLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" ref="context_menu"

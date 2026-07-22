@@ -302,7 +302,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
-	port := serverConfig.Address
+	port := gkill_options.ResolveServerAddress(serverConfig.Address)
 
 	g.PrintStartedMessage()
 	serveCtx, serveCancel := context.WithCancel(ctx)

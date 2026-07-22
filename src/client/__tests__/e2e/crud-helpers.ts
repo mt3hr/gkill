@@ -11,8 +11,18 @@ export function makeUniqueLabel(prefix: string): string {
 /**
  * Submit KFTL text via the KFTL page.
  * Navigates to /kftl, fills textarea, and clicks save.
+ *
+ * 保存完了は固定sleepではなく実シグナルで待つ。
+ * 成功時のみ clear() が走って textarea が空になり、エラー時は内容が残る
+ * (use-kftl-view.ts の submit()/clear() を参照)。
+ * エラーを期待する呼び出しでは expectSuccess: false を渡すこと。
  */
-export async function submitKftlText(page: Page, text: string): Promise<void> {
+export async function submitKftlText(
+  page: Page,
+  text: string,
+  options: { expectSuccess?: boolean } = {},
+): Promise<void> {
+  const { expectSuccess = true } = options
   await page.goto('/kftl', { waitUntil: 'domcontentloaded' })
   await page.waitForSelector('#app', { timeout: 15000 })
   // Use id selector for the KFTL textarea
@@ -24,7 +34,11 @@ export async function submitKftlText(page: Page, text: string): Promise<void> {
   await textarea.fill(text)
   await page.waitForTimeout(500)
   await saveButton.click()
-  await page.waitForTimeout(2000)
+  if (expectSuccess) {
+    await expect(textarea).toHaveValue('', { timeout: 30000 })
+  } else {
+    await page.waitForTimeout(2000)
+  }
 }
 
 /**
@@ -69,11 +83,40 @@ export async function navigateToSettings(page: Page): Promise<void> {
 
 /**
  * Check if the page contains the given text anywhere in #app.
+ * 一度読むだけでリトライしない。アサーションには使わず、
+ * expectPageToContainText / waitForPageText を使うこと。
  */
 export async function pageContainsText(page: Page, text: string): Promise<boolean> {
   const app = page.locator('#app')
   const content = await app.textContent()
   return content != null && content.includes(text)
+}
+
+/**
+ * #app に text が現れるまで待って検証する (自動リトライ)。
+ * 描画待ちの固定sleepに依存しないための土台。
+ */
+export async function expectPageToContainText(page: Page, text: string, timeout = 30000): Promise<void> {
+  await expect(page.locator('#app')).toContainText(text, { timeout })
+}
+
+/**
+ * #app から text が消えるまで待って検証する (削除確認用)。
+ */
+export async function expectPageNotToContainText(page: Page, text: string, timeout = 30000): Promise<void> {
+  await expect(page.locator('#app')).not.toContainText(text, { timeout })
+}
+
+/**
+ * text が現れれば true、timeoutまで待って現れなければ false。条件分岐用。
+ */
+export async function waitForPageText(page: Page, text: string, timeout = 15000): Promise<boolean> {
+  try {
+    await expect(page.locator('#app')).toContainText(text, { timeout })
+    return true
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -143,18 +186,22 @@ export async function clickFabButton(page: Page): Promise<void> {
  */
 export async function dismissFloatingDialogs(page: Page): Promise<void> {
   const floatingDialogs = page.locator('.gkill-floating-dialog')
-  const count = await floatingDialogs.count()
-  for (let i = 0; i < count; i++) {
-    // Try to close the dialog by clicking a close button or pressing Escape
-    const closeBtn = floatingDialogs.nth(i).locator('button').filter({ hasText: /×|閉じる|close/i }).first()
-    if (await closeBtn.count() > 0) {
-      await closeBtn.click()
-      await page.waitForTimeout(500)
+  // チュートリアルダイアログの閉じるボタンはアイコンのみ (mdi-close) でテキストを持たないため、
+  // hasText だけでは掴めない。掴み損ねると iframe やチェックボックスが
+  // 後続クリックのポインタイベントを奪ってテストが落ちる。
+  // 閉じたことを確認するまでリトライする。
+  for (let attempt = 0; attempt < 5; attempt++) {
+    if (await floatingDialogs.count() === 0) {
+      return
     }
-  }
-  // Also try pressing Escape to close any modal
-  if (count > 0) {
-    await page.keyboard.press('Escape')
+    const closeBtn = floatingDialogs.first()
+      .locator('button:has(.mdi-close), button:has-text("×"), button:has-text("閉じる"), button:has-text("close")')
+      .first()
+    if (await closeBtn.count() > 0) {
+      await closeBtn.click({ force: true }).catch(() => { /* 閉じかけている最中は無視 */ })
+    } else {
+      await page.keyboard.press('Escape')
+    }
     await page.waitForTimeout(500)
   }
 }
@@ -165,4 +212,16 @@ export async function dismissFloatingDialogs(page: Page): Promise<void> {
  */
 export function findKyouByText(page: Page, text: string) {
   return page.locator('#app').locator(`text=${text}`).first()
+}
+
+/**
+ * findKyouByText の待機つき版。
+ * リストの描画が終わるまで待ってから locator を返す。
+ * 並列実行時は描画が間に合わずに count 0 になることがあるため、
+ * 「対象が見つかっていること」を前提にするテストはこちらを使う。
+ */
+export async function waitForKyouByText(page: Page, text: string, timeout = 30000) {
+  const record = findKyouByText(page, text)
+  await record.waitFor({ state: 'visible', timeout })
+  return record
 }

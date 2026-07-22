@@ -3,13 +3,13 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi,
-  makeUniqueLabel, pageContainsText, clickDialogButton, findKyouByText,
+  makeUniqueLabel, expectPageToContainText, clickDialogButton, findKyouByText,
 } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
   apiReachable = await checkGkillApiViaVite()
 })
 
@@ -49,8 +49,7 @@ test.describe('GUI Edit Dialog Flows', () => {
 
           // Verify edited content appears
           await navigateToRykv(page)
-          const found = await pageContainsText(page, editedLabel)
-          expect(found).toBe(true)
+          await expectPageToContainText(page, editedLabel)
         }
       }
     }
@@ -80,8 +79,7 @@ test.describe('GUI Edit Dialog Flows', () => {
           await page.waitForTimeout(2000)
 
           await navigateToMi(page)
-          const found = await pageContainsText(page, editedLabel)
-          expect(found).toBe(true)
+          await expectPageToContainText(page, editedLabel)
         }
       }
     }
@@ -100,7 +98,8 @@ test.describe('GUI Edit Dialog Flows', () => {
   })
 
   test('edit nlog via context menu', async ({ page }) => {
-    await submitKftlText(page, 'ーん\n777\n編集テスト店')
+    // ーん の後は 店名 → 品目 → 金額 の3行 (kftl-nlog-*-statement-line.ts)
+    await submitKftlText(page, 'ーん\n編集テスト店\nテスト品目\n777')
     await navigateToRykv(page)
 
     const record = findKyouByText(page, '編集テスト店')

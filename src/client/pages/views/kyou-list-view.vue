@@ -44,25 +44,27 @@
                 @scrollend.prevent="onScrollEnd" ref="kyou_list_image_view">
                 <template v-slot:default="{ item }">
                     <table>
-                        <tr>
-                            <td v-for="kyou in item" :key="kyou.id">
-                                <KyouView class="kyou_image_in_list" :application_config="application_config"
-                                    :draggable="draggable" :key="kyou.id" :gkill_api="gkill_api" :highlight_targets="[]"
-                                    :is_image_view="true" :kyou="kyou" :show_checkbox="false" :show_content_only="true"
-                                    :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                                    :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                    :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
-                                    :height="'100%'" :width="'100%'" :is_readonly_mi_check="true"
-                                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                                    :show_attached_timeis="false" :show_rep_name="true"
-                                    :force_show_latest_kyou_info="force_show_latest_kyou_info" :show_update_time="false"
-                                    :show_related_time="!(query.for_mi && kyou.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
-                                    :show_attached_tags="false" :show_attached_texts="false"
-                                    :show_attached_notifications="false" :is_image_request_to_thumb_size="true"
-                                    @focused_kyou="onFocusedKyou" @clicked_kyou="onClickedKyou"
-                                    v-on="crudRelayHandlers" />
-                            </td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <td v-for="kyou in item" :key="kyou.id">
+                                    <KyouView class="kyou_image_in_list" :application_config="application_config"
+                                        :draggable="draggable" :key="kyou.id" :gkill_api="gkill_api" :highlight_targets="[]"
+                                        :is_image_view="true" :kyou="kyou" :show_checkbox="false" :show_content_only="true"
+                                        :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+                                        :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                                        :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
+                                        :height="'100%'" :width="'100%'" :is_readonly_mi_check="true"
+                                        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                                        :show_attached_timeis="false" :show_rep_name="true"
+                                        :force_show_latest_kyou_info="force_show_latest_kyou_info" :show_update_time="false"
+                                        :show_related_time="!(query.for_mi && kyou.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
+                                        :show_attached_tags="false" :show_attached_texts="false"
+                                        :show_attached_notifications="false" :is_image_request_to_thumb_size="true"
+                                        @focused_kyou="onFocusedKyou" @clicked_kyou="onClickedKyou"
+                                        v-on="crudRelayHandlers" />
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </template>
             </v-virtual-scroll>

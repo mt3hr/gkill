@@ -1,11 +1,15 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
+    // AGP 9 は Kotlin サポートを内蔵しているため kotlin-android プラグインは適用しない
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.gkill_android.mobile_app.src.gkill.mt3hr.gkill"
-    compileSdk = 36
+    // androidx 1.19.0 系が compileSdk 37 以上を要求する。
+    // targetSdk は実行時挙動が変わるため 36 のまま据え置く。
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.mt3hr.gkill"
@@ -27,11 +31,13 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
     packaging {
         jniLibs {
@@ -50,7 +56,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
-    testImplementation("io.mockk:mockk:1.13.13")
+    testImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

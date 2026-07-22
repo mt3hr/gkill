@@ -8,26 +8,26 @@
             </v-row>
         </v-card-title>
         <v-card variant="flat">
-            <p>
             <pre>{{ i18n.global.t("GENERATE_OREORE_TLS_FILE_MESSAGE") }}</pre>
-            </p>
             <table>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("TLS_CERT_FILE_TITLE") }}：
-                    </td>
-                    <td>
-                        {{ server_config.tls_cert_file }}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("TLS_KEY_FILE_TITLE") }}：
-                    </td>
-                    <td>
-                        {{ server_config.tls_key_file }}
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("TLS_CERT_FILE_TITLE") }}：
+                        </td>
+                        <td>
+                            {{ server_config.tls_cert_file }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("TLS_KEY_FILE_TITLE") }}：
+                        </td>
+                        <td>
+                            {{ server_config.tls_key_file }}
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </v-card>
         <v-card-action>

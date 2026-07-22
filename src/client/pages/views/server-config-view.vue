@@ -18,126 +18,130 @@
         </v-card-title>
         <v-card variant="flat">
             <table>
-                <tr>
-                    <td>
-                        <v-select v-model="device" :items="devices" :label="i18n.global.t('PROFILE_TITLE')" />
-                    </td>
-                    <td>
-                        <table>
-                            <tr>
-                                <td>
-                                    <v-btn color="primary" @click="show_new_device_name_dialog()" icon="mdi-plus" dark
-                                        size="small"></v-btn>
-                                </td>
-                                <td>
-                                    <v-btn color="secondary" v-if="cloned_server_configs.length >= 2"
-                                        @click="delete_current_server_config()" dark>{{ i18n.global.t("DELETE_TITLE")
-                                        }}</v-btn>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="server_config.is_local_only_access" hide-detail
-                            :label="i18n.global.t('USE_LOCAL_ACCSESS_ONLY_TITLE')" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="server_config.use_gkill_notification" hide-detail
-                            :label="i18n.global.t('USE_GKILL_NOTIFICATION_TITLE')" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="server_config.enable_tls" hide-detail
-                            :label="i18n.global.t('ENABLE_TLS_TITLE')" />
-                    </td>
-                    <v-btn dark color="primary" @click="show_confirm_generate_tls_files_dialog">{{
-                        i18n.global.t("GENERATE_OREORE_TLS_TITLE") }}</v-btn>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("ADDRESS_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.address"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("LAN_HOSTNAME_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.lan_hostname"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("GLOBAL_HOSTNAME_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.global_hostname"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("TLS_CERT_FILE_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.tls_cert_file"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("TLS_KEY_FILE_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.tls_key_file"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("OPEN_DIRECTORY_COMMAND_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.open_directory_command"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("OPEN_FILE_COMMAND_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.open_file_command"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("URLOG_TIMEOUT_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field type="number" min="5" v-model="server_config.urlog_timeout"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("URLOG_USERAGENT_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.urlog_useragent"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("USER_DATA_DIRECTORY_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="server_config.user_data_directory"></v-text-field>
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>
+                            <v-select v-model="device" :items="devices" :label="i18n.global.t('PROFILE_TITLE')" />
+                        </td>
+                        <td>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <v-btn color="primary" @click="show_new_device_name_dialog()" icon="mdi-plus" dark
+                                                size="small"></v-btn>
+                                        </td>
+                                        <td>
+                                            <v-btn color="secondary" v-if="cloned_server_configs.length >= 2"
+                                                @click="delete_current_server_config()" dark>{{ i18n.global.t("DELETE_TITLE")
+                                                }}</v-btn>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <v-checkbox v-model="server_config.is_local_only_access" hide-detail
+                                :label="i18n.global.t('USE_LOCAL_ACCSESS_ONLY_TITLE')" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <v-checkbox v-model="server_config.use_gkill_notification" hide-detail
+                                :label="i18n.global.t('USE_GKILL_NOTIFICATION_TITLE')" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <v-checkbox v-model="server_config.enable_tls" hide-detail
+                                :label="i18n.global.t('ENABLE_TLS_TITLE')" />
+                        </td>
+                        <v-btn dark color="primary" @click="show_confirm_generate_tls_files_dialog">{{
+                            i18n.global.t("GENERATE_OREORE_TLS_TITLE") }}</v-btn>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("ADDRESS_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.address"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("LAN_HOSTNAME_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.lan_hostname"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("GLOBAL_HOSTNAME_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.global_hostname"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("TLS_CERT_FILE_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.tls_cert_file"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("TLS_KEY_FILE_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.tls_key_file"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("OPEN_DIRECTORY_COMMAND_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.open_directory_command"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("OPEN_FILE_COMMAND_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.open_file_command"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("URLOG_TIMEOUT_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field type="number" min="5" v-model="server_config.urlog_timeout"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("URLOG_USERAGENT_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.urlog_useragent"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("USER_DATA_DIRECTORY_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="server_config.user_data_directory"></v-text-field>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </v-card>
         <v-card-action>

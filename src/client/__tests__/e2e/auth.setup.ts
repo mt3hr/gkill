@@ -10,7 +10,8 @@ const E2E_USER = 'e2e_user'
 export const STORAGE_STATE = path.join(__dirname, '.auth/user.json')
 
 // GKILL_E2E_BASE_URL でテスト対象サーバを上書きできる (既定: http://localhost:9999)
-const gkillPort = Number(new URL(process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999').port || 9999)
+const gkillUrl = new URL(process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999')
+const gkillPort = Number(gkillUrl.port || 9999)
 
 /**
  * Get the password reset token from gkill_server's redirect response.
@@ -20,7 +21,7 @@ const gkillPort = Number(new URL(process.env.GKILL_E2E_BASE_URL ?? 'http://local
 function getResetToken(): Promise<string> {
   return new Promise((resolve) => {
     const req = http.request(
-      { hostname: '127.0.0.1', port: gkillPort, path: '/', method: 'GET', timeout: 5000 },
+      { hostname: gkillUrl.hostname, port: gkillPort, path: '/', method: 'GET', timeout: 5000 },
       (res) => {
         const location = res.headers['location'] || ''
         const match = location.match(/reset_token=([^&]+)/)
@@ -44,9 +45,10 @@ setup('register and login', async ({ page }) => {
   if (token) {
     await page.goto(`/regist_first_account?reset_token=${token}`, { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
 
+    // 固定sleepではなく入力欄が描画されるまで待つ (5つ目まで揃ってから count を読む)
     const inputs = page.locator('input')
+    await expect(inputs.nth(4)).toBeVisible({ timeout: 30000 })
     const inputCount = await inputs.count()
     expect(inputCount).toBeGreaterThanOrEqual(5)
 
@@ -62,15 +64,17 @@ setup('register and login', async ({ page }) => {
     const registerBtn = page.locator('button').filter({ hasText: /登録|regist/i }).first()
     await expect(registerBtn).toBeVisible()
     await registerBtn.click()
-    await page.waitForTimeout(8000)
+    // 登録完了で router.replace("/") される (use-regist-first-account-view.ts)
+    await page.waitForURL((url) => url.pathname === '/', { timeout: 60000 })
   }
 
   // 2. Login
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.waitForSelector('#app', { timeout: 15000 })
-  await page.waitForTimeout(2000)
 
+  // 固定sleepではなくログインフォームが描画されるまで待つ
   const inputs = page.locator('input')
+  await expect(inputs.nth(1)).toBeVisible({ timeout: 30000 })
   expect(await inputs.count()).toBeGreaterThanOrEqual(2)
 
   await inputs.nth(0).fill(E2E_USER)
@@ -79,8 +83,9 @@ setup('register and login', async ({ page }) => {
   const loginButton = page.locator('button').filter({ hasText: /ログイン|login/i })
   await expect(loginButton.first()).toBeVisible()
   await loginButton.first().click()
-  // Wait for session cookie to be set (may take several seconds)
-  await page.waitForTimeout(5000)
+  // ログイン成功で router.replace("/" + default_page) される (use-login-view.ts)。
+  // 固定sleepではなく "/" から離れることを待つ
+  await page.waitForURL((url) => url.pathname !== '/', { timeout: 60000 })
 
   // Verify login succeeded (redirected away from login page)
   const url = page.url()

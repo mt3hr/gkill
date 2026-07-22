@@ -12,7 +12,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Start Vite dev server (frontend only) |
+| `npm run dev` | Start Vite dev server (frontend only). `-- --api=<url>` selects the backend |
 | `npm run build` | Build frontend (`vue-tsc --build` + `vite build` in parallel) |
 | `npm run lint` | ESLint with auto-fix (flat config, `eslint.config.js`) |
 | `npm run install_server` | Full build: frontend → embed → `go install` (headless HTTP server) |
@@ -22,7 +22,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm test` | Run all tests (server + client + MCP + Android + Wear OS) |
 | `npm run test_server` | Go tests (`cd src/server && go test ./...`) |
 | `npm run test_client_unit` | Vitest unit tests |
-| `npm run test_client_e2e` | Playwright E2E tests (gkill_server自動起動・停止、`$HOME/gkill_test`使用) |
+| `npm run test_client_e2e` | Playwright E2E tests (gkill_server + Vite を空きポートで自動起動・停止、`$HOME/gkill_test`使用) |
 | `npm run test_mcp` | MCP server tests (Vitest) |
 | `npm run release` | Cross-compile release for all platforms |
 
@@ -30,7 +30,11 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 
 **Prerequisites:** Go 1.26.0+, Node.js 20.19+ (24.x recommended), `npm i`
 
-**E2E test environment:** `$HOME/gkill_test` as dedicated gkill home. `npm run test_client_e2e` automatically cleans, starts gkill_server (fresh admin, no password), runs Playwright, and stops the server. See `src/client/__tests__/e2e/run-e2e.mjs`.
+**Dev server backend target:** `npm run dev` runs `src/tools/dev.mjs`, a thin wrapper that strips `--api` / `--api-target` (Vite errors on unknown CLI options) and passes the value to Vite as `GKILL_API_PROXY_TARGET`; all other args pass through untouched. Accepts a full URL, a bare port (`--api=19999` → `http://127.0.0.1:19999`), or `host:port`. Precedence: `--api` > `GKILL_API_PROXY_TARGET` > `http://localhost:9999`. `vite.config.ts` proxies `/api`, `/files`, `/zip_cache` and `/resources/manual` to that target — SPA routes (`/rykv`, `/kftl`, `/mi`, …) are deliberately not proxied since vue-router owns them in dev.
+
+**E2E test environment:** `$HOME/gkill_test` as dedicated gkill home. `npm run test_client_e2e` automatically cleans, starts gkill_server (fresh admin, no password) and a Vite dev server, runs Playwright, and stops both. See `src/client/__tests__/e2e/run-e2e.mjs`.
+
+**Ports are never fixed in tests.** `run-e2e.mjs` allocates free ports from the OS (`src/client/__tests__/e2e/free-port.mjs`) and passes them as `--address 127.0.0.1:<port>` (gkill_server) and `--port <port> --strictPort` (Vite), so a production gkill_server occupying `:9999` never collides. The ports reach the tests via `GKILL_E2E_BASE_URL` / `GKILL_E2E_VITE_URL` (read by `playwright.config.ts`, `check-server.ts`, `auth.setup.ts`), and Vite's `/api` proxy target via `GKILL_API_PROXY_TARGET` (`vite.config.ts`) — which also prevents E2E writes from ever reaching a production server. Leftover-process cleanup only kills `gkill_server` processes whose command line contains `gkill_test`. Nothing else in `npm test` binds a fixed port: Go tests use `httptest` (ephemeral), and MCP/Android/Wear OS tests bind none.
 
 **Test details:** See `documents/reverse/testing-guide.md`, `src/ABOUT_TEST.md` for per-directory test specs.
 
@@ -67,6 +71,7 @@ Both use cobra for CLI with shared subcommands: `version`, `idf`, `dvnf`, `gener
 | Flag | Default | Description |
 |---|---|---|
 | `--gkill_home_dir` | `$HOME/gkill` | Home directory for all data/config/logs |
+| `--address` | (none) | Override listen address (e.g. `:19999`, `127.0.0.1:19999`). Runtime-only override — the config DB `ADDRESS` value is left untouched, so the settings UI may show a different address than the one actually bound. Resolved via `gkill_options.ResolveServerAddress` / `ServerAddressPortSuffix` |
 | `--disable_tls` | `false` | Disable TLS enforcement |
 | `--cache_in_memory` | `true` | Cache repository data in memory |
 | `--cache_reps_local` | `false` | Cache repositories locally |
