@@ -72,66 +72,68 @@
                 </v-overlay>
             </div>
             <table class="mi_view_table" v-show="inited">
-                <tr>
-                    <td valign="top" v-for="query, index in querys" :key="query.query_id"
-                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <v-card dropzone="true" @dragenter.prevent.stop="() => { }"
-                            @drop.prevent.stop="(e: DragEvent) => on_drop_board_task(e, query)"
-                            @dragover.prevent.stop="(e: DragEvent) => on_dragover_board_task(e, query)">
-                            <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
-                            <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                            }}</v-card-title>
-                            <KyouListView :kyou_height="56 + 35" :width="400" :draggable="true"
-                                :list_height="kyou_list_view_height.valueOf() - 48"
-                                :application_config="application_config" :gkill_api="gkill_api"
-                                :matched_kyous="match_kyous_list[index]" :query="query"
-                                :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                                :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
-                                :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-                                :show_rep_name="false" :force_show_latest_kyou_info="true" :show_content_only="false"
-                                :show_timeis_plaing_end_button="false"
-                                v-on="crudRelayHandlers"
-                                @scroll_list="(position: number) => onColumnScrollList(index, position)"
-                                @clicked_list_view="() => onColumnClickedListView(index)"
-                                @clicked_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
-                                @focused_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
-                                @requested_change_focus_kyou="(is_focus: boolean) => onColumnRequestedChangeFocusKyou(index, is_focus)"
-                                @requested_search="() => onColumnRequestedSearch(index)"
-                                @requested_change_is_image_only_view="(is_image_only: boolean) => onColumnRequestedChangeImageOnlyView(index, is_image_only)"
-                                @requested_close_column="close_list_view(index)"
-                                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
-                                @requested_reload_list="() => reload_list(index)"
-                                @requested_update_check_kyous="(kyous: Kyou[], checked: boolean) => update_check_kyous(kyous, checked)"
-                                @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
-                                ref="kyou_list_views" />
-                        </v-card>
-                    </td>
-                    <td valign="top" v-if="is_show_kyou_detail_view"
-                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <div class="kyou_detail_view dummy">
-                            <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
-                                :is_image_request_to_thumb_size="false" :application_config="application_config"
-                                :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false"
-                                :kyou="focused_kyou" :show_checkbox="false"
-                                :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                                :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true" :height="'unset'"
-                                :is_readonly_mi_check="false" :width="'unset'"
-                                :enable_context_menu="enable_context_menu" :show_update_time="false"
-                                :show_related_time="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
-                                :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
-                                :show_attached_tags="false" :show_attached_texts="false"
-                                :show_attached_notifications="false"
-                                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
-                        </div>
-                    </td>
-                    <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <MiKyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
-                            :gkill_api="gkill_api" :kyous="focused_kyous_list" :mi_sort_type="focused_query.mi_sort_type"
-                            @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td valign="top" v-for="query, index in querys" :key="query.query_id"
+                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <v-card dropzone="true" @dragenter.prevent.stop="() => { }"
+                                @drop.prevent.stop="(e: DragEvent) => on_drop_board_task(e, query)"
+                                @dragover.prevent.stop="(e: DragEvent) => on_dragover_board_task(e, query)">
+                                <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
+                                <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
+                                }}</v-card-title>
+                                <KyouListView :kyou_height="56 + 35" :width="400" :draggable="true"
+                                    :list_height="kyou_list_view_height.valueOf() - 48"
+                                    :application_config="application_config" :gkill_api="gkill_api"
+                                    :matched_kyous="match_kyous_list[index]" :query="query"
+                                    :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
+                                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                                    :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
+                                    :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
+                                    :show_rep_name="false" :force_show_latest_kyou_info="true" :show_content_only="false"
+                                    :show_timeis_plaing_end_button="false"
+                                    v-on="crudRelayHandlers"
+                                    @scroll_list="(position: number) => onColumnScrollList(index, position)"
+                                    @clicked_list_view="() => onColumnClickedListView(index)"
+                                    @clicked_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
+                                    @focused_kyou="(kyou: Kyou) => onColumnClickedKyou(index, kyou)"
+                                    @requested_change_focus_kyou="(is_focus: boolean) => onColumnRequestedChangeFocusKyou(index, is_focus)"
+                                    @requested_search="() => onColumnRequestedSearch(index)"
+                                    @requested_change_is_image_only_view="(is_image_only: boolean) => onColumnRequestedChangeImageOnlyView(index, is_image_only)"
+                                    @requested_close_column="close_list_view(index)"
+                                    @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
+                                    @requested_reload_list="() => reload_list(index)"
+                                    @requested_update_check_kyous="(kyous: Kyou[], checked: boolean) => update_check_kyous(kyous, checked)"
+                                    @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
+                                    ref="kyou_list_views" />
+                            </v-card>
+                        </td>
+                        <td valign="top" v-if="is_show_kyou_detail_view"
+                            :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <div class="kyou_detail_view dummy">
+                                <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
+                                    :is_image_request_to_thumb_size="false" :application_config="application_config"
+                                    :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false"
+                                    :kyou="focused_kyou" :show_checkbox="false"
+                                    :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+                                    :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                                    :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true" :height="'unset'"
+                                    :is_readonly_mi_check="false" :width="'unset'"
+                                    :enable_context_menu="enable_context_menu" :show_update_time="false"
+                                    :show_related_time="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
+                                    :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
+                                    :show_attached_tags="false" :show_attached_texts="false"
+                                    :show_attached_notifications="false"
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
+                            </div>
+                        </td>
+                        <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                            <MiKyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
+                                :gkill_api="gkill_api" :kyous="focused_kyous_list" :mi_sort_type="focused_query.mi_sort_type"
+                                @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu"

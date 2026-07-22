@@ -18,22 +18,24 @@
             </v-row>
         </v-card-title>
         <table class="kftl_input">
-            <tr>
-                <td>
-                    <div class="kftl_line_label line_label_wrap">
-                        <KFTLLineLabel v-for="(line_label_data, index) in line_label_datas"
-                            :key="index" :application_config="application_config"
-                            :gkill_api="gkill_api" :line_label_data="line_label_data"
-                            :style="line_label_styles[index]" />
-                    </div>
-                </td>
-                <td>
-                    <div class="kftl_text_area_wrap">
-                        <textarea id="kftl_text_area" class="kftl_text_area" v-model="text_area_content"
-                            :readonly="is_requested_submit" autofocus></textarea>
-                    </div>
-                </td>
-            </tr>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="kftl_line_label line_label_wrap">
+                            <KFTLLineLabel v-for="(line_label_data, index) in line_label_datas"
+                                :key="index" :application_config="application_config"
+                                :gkill_api="gkill_api" :line_label_data="line_label_data"
+                                :style="line_label_styles[index]" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="kftl_text_area_wrap">
+                            <textarea id="kftl_text_area" class="kftl_text_area" v-model="text_area_content"
+                                :readonly="is_requested_submit" autofocus></textarea>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
         </table>
         <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api"
             :template="application_config.kftl_template_struct"

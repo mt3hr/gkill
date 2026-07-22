@@ -58,7 +58,7 @@ func (g *GkillServerAPI) PrintStartedMessage() {
 		return
 	}
 
-	port := serverConfig.Address
+	port := gkill_options.ServerAddressPortSuffix(serverConfig.Address)
 	protocol := "http"
 	if serverConfig.EnableTLS && !gkill_options.DisableTLSForce {
 		protocol = "https"

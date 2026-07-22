@@ -304,6 +304,7 @@ var (
 			if currentServerConfig.EnableTLS && !gkill_options.DisableTLSForce {
 				scheme = "https"
 			}
+			portSuffix := gkill_options.ServerAddressPortSuffix(currentServerConfig.Address)
 
 			var httpClient *http.Client
 			if scheme == "https" {
@@ -359,7 +360,7 @@ var (
 				adminPasswordSha256 = *adminAccount.PasswordSha256
 			}
 
-			loginAddress := fmt.Sprintf("%s://localhost%s/api/login", scheme, currentServerConfig.Address)
+			loginAddress := fmt.Sprintf("%s://localhost%s/api/login", scheme, portSuffix)
 			loginJSONBody, err := json.Marshal(&req_res.LoginRequest{
 				UserID:         adminAccount.UserID,
 				PasswordSha256: adminPasswordSha256,
@@ -399,7 +400,7 @@ var (
 
 			// セッションを残さないように後始末する
 			defer func() {
-				logoutAddress := fmt.Sprintf("%s://localhost%s/api/logout", scheme, currentServerConfig.Address)
+				logoutAddress := fmt.Sprintf("%s://localhost%s/api/logout", scheme, portSuffix)
 				logoutJSONBody, err := json.Marshal(&req_res.LogoutRequest{
 					SessionID:     loginResponse.SessionID,
 					CloseDatabase: false,
@@ -418,7 +419,7 @@ var (
 				logoutResp.Body.Close()
 			}()
 
-			address := fmt.Sprintf("%s://localhost%s/api/update_cache", scheme, currentServerConfig.Address)
+			address := fmt.Sprintf("%s://localhost%s/api/update_cache", scheme, portSuffix)
 			requestBody := &req_res.UpdateCacheRequest{
 				SessionID: loginResponse.SessionID,
 				UserIDs:   targetUserIDs,

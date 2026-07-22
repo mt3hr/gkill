@@ -3,13 +3,13 @@ import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv,
-  makeUniqueLabel, pageContainsText, findKyouByText,
+  makeUniqueLabel, pageContainsText, expectPageToContainText, findKyouByText,
 } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
   apiReachable = await checkGkillApiViaVite()
 })
 
@@ -93,7 +93,8 @@ test.describe('View/Browse History Flows', () => {
   // 項番59: Nlog閲覧+履歴+リポスト
   test('view nlog with history and repost', async ({ page }) => {
     const shopName = makeUniqueLabel('nlog_view_shop')
-    await submitKftlText(page, `ーん\n500\n${shopName}`)
+    // ーん の後は 店名 → 品目 → 金額 の3行 (kftl-nlog-*-statement-line.ts)
+    await submitKftlText(page, `ーん\n${shopName}\nテスト品目\n500`)
     await navigateToRykv(page)
 
     // Open history
@@ -118,8 +119,7 @@ test.describe('View/Browse History Flows', () => {
     await navigateToRykv(page)
 
     // Verify the record appears
-    const found = await pageContainsText(page, label)
-    expect(found).toBe(true)
+    await expectPageToContainText(page, label)
 
     // Check for NoImage fallback (when favicon/image is not available)
     const images = page.locator('#app img')
@@ -151,8 +151,7 @@ test.describe('View/Browse History Flows', () => {
 
     // Navigate and verify repost is visible
     await navigateToRykv(page)
-    const found = await pageContainsText(page, label)
-    expect(found).toBe(true)
+    await expectPageToContainText(page, label)
 
     // Try to open history on the record
     const _historyOpened = await openHistoryFor(page, label)

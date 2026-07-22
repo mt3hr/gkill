@@ -4,12 +4,13 @@ import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi,
   makeUniqueLabel, confirmDelete, findKyouByText,
+  expectPageToContainText, expectPageNotToContainText, waitForPageText,
 } from './crud-helpers'
 
 let apiReachable = false
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
   apiReachable = await checkGkillApiViaVite()
 })
 
@@ -48,16 +49,14 @@ test.describe('GUI Delete Flows', () => {
     await navigateToRykv(page)
 
     // Verify it exists
-    let found = await pageContainsText(page, label)
-    expect(found).toBe(true)
+    await expectPageToContainText(page, label)
 
     // Delete it
     const deleted = await deleteViaContextMenu(page, label)
     if (deleted) {
       // Reload and verify it's gone
       await navigateToRykv(page)
-      found = await pageContainsText(page, label)
-      expect(found).toBe(false)
+      await expectPageNotToContainText(page, label)
     }
   })
 
@@ -66,14 +65,12 @@ test.describe('GUI Delete Flows', () => {
     await submitKftlText(page, `ーみ\n${label}`)
     await navigateToMi(page)
 
-    let found = await pageContainsText(page, label)
-    expect(found).toBe(true)
+    await expectPageToContainText(page, label)
 
     const deleted = await deleteViaContextMenu(page, label)
     if (deleted) {
       await navigateToMi(page)
-      found = await pageContainsText(page, label)
-      expect(found).toBe(false)
+      await expectPageNotToContainText(page, label)
     }
   })
 
@@ -87,11 +84,11 @@ test.describe('GUI Delete Flows', () => {
 
   test('delete nlog via context menu', async ({ page }) => {
     const shopName = makeUniqueLabel('nlog_del_shop')
-    await submitKftlText(page, `ーん\n100\n${shopName}`)
+    // ーん の後は 店名 → 品目 → 金額 の3行 (kftl-nlog-*-statement-line.ts)
+    await submitKftlText(page, `ーん\n${shopName}\nテスト品目\n100`)
     await navigateToRykv(page)
 
-    const found = await pageContainsText(page, shopName)
-    if (found) {
+    if (await waitForPageText(page, shopName)) {
       await deleteViaContextMenu(page, shopName)
     }
     const app = page.locator('#app')
@@ -103,8 +100,7 @@ test.describe('GUI Delete Flows', () => {
     await submitKftlText(page, `ーう\nhttps://example.com/${label}\n${label}`)
     await navigateToRykv(page)
 
-    const found = await pageContainsText(page, label)
-    if (found) {
+    if (await waitForPageText(page, label)) {
       await deleteViaContextMenu(page, label)
     }
     const app = page.locator('#app')
@@ -116,8 +112,7 @@ test.describe('GUI Delete Flows', () => {
     await submitKftlText(page, `ーた\n${label}`)
     await navigateToRykv(page)
 
-    const found = await pageContainsText(page, label)
-    if (found) {
+    if (await waitForPageText(page, label)) {
       await deleteViaContextMenu(page, label)
     }
     const app = page.locator('#app')

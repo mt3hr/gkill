@@ -18,7 +18,7 @@ import { navigateToRykv, navigateToMi } from './crud-helpers'
 let serverAlive = false
 test.beforeAll(async () => {
   serverAlive = await checkGkillServer()
-  test.skip(!serverAlive, 'gkill server (localhost:9999) is not running')
+  test.skip(!serverAlive, 'gkill server is not running')
 })
 
 test.describe('Clipboard Save to File', () => {

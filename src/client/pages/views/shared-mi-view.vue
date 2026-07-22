@@ -10,61 +10,65 @@
                 </v-overlay>
             </div>
             <table class="mi_view_table" v-show="!is_loading">
-                <tr>
-                    <td valign="top">
-                        <v-card>
-                            <v-card-title>{{ share_title }}</v-card-title>
-                            <KyouListView :kyou_height="56 + 35" :width="400" :show_timeis_plaing_end_button="false"
-                                :list_height="kyou_list_view_height.valueOf() - 48"
-                                :application_config="application_config" :gkill_api="gkill_api"
-                                :matched_kyous="match_kyous" :query="new FindKyouQuery()"
-                                :is_focused_list="true" :closable="false" :is_readonly_mi_check="true"
-                                :show_checkbox="false" :show_footer="false" :enable_context_menu="false"
-                                :enable_dialog="false" :show_content_only="false"
-                                :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-                                :show_rep_name="false" :force_show_latest_kyou_info="true"
-                                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
-                                @focused_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
-                                @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
-                                v-on="crudRelayHandlers"
-                                @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)"
-                                @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
-                                ref="kyou_list_view" />
-                        </v-card>
-                    </td>
-                    <td valign="top" v-if="is_show_kyou_detail_view">
-                        <table>
-                            <tr>
-                                <td valign="top">
-                                    <KyouCountCalendar v-show="is_show_kyou_count_calendar"
-                                        :application_config="application_config" :gkill_api="gkill_api"
-                                        :kyous="match_kyous" :for_mi="true" class="kyou_list_calendar_in_share_mi_view"
-                                        @requested_focus_time="(time: Date) => { focused_time = time }" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td valign="top" v-if="is_show_kyou_detail_view">
-                                    <div class="kyou_detail_view dummy">
-                                        <KyouView v-if="focused_kyou && is_show_kyou_detail_view" :is_image_request_to_thumb_size="false"
-                                            :application_config="application_config" :gkill_api="gkill_api"
-                                            :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
-                                            :show_checkbox="false" :show_content_only="false"
-                                            :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                                            :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                            :show_attached_timeis="true" :show_timeis_elapsed_time="false"
-                                            :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
-                                            :is_readonly_mi_check="true" :width="400" :enable_context_menu="false"
-                                            :show_rep_name="false" :force_show_latest_kyou_info="true"
-                                            :enable_dialog="false" :show_update_time="false" :show_related_time="true"
-                                            class="kyou_detail_view" :show_attached_tags="true"
-                                            :show_attached_texts="true" :show_attached_notifications="true"
-                                            v-on="{ ...crudRelayHandlers, ...rykvDialogHandler }" />
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td valign="top">
+                            <v-card>
+                                <v-card-title>{{ share_title }}</v-card-title>
+                                <KyouListView :kyou_height="56 + 35" :width="400" :show_timeis_plaing_end_button="false"
+                                    :list_height="kyou_list_view_height.valueOf() - 48"
+                                    :application_config="application_config" :gkill_api="gkill_api"
+                                    :matched_kyous="match_kyous" :query="new FindKyouQuery()"
+                                    :is_focused_list="true" :closable="false" :is_readonly_mi_check="true"
+                                    :show_checkbox="false" :show_footer="false" :enable_context_menu="false"
+                                    :enable_dialog="false" :show_content_only="false"
+                                    :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
+                                    :show_rep_name="false" :force_show_latest_kyou_info="true"
+                                    @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
+                                    @focused_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
+                                    @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
+                                    v-on="crudRelayHandlers"
+                                    @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)"
+                                    @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)"
+                                    ref="kyou_list_view" />
+                            </v-card>
+                        </td>
+                        <td valign="top" v-if="is_show_kyou_detail_view">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td valign="top">
+                                            <KyouCountCalendar v-show="is_show_kyou_count_calendar"
+                                                :application_config="application_config" :gkill_api="gkill_api"
+                                                :kyous="match_kyous" :for_mi="true" class="kyou_list_calendar_in_share_mi_view"
+                                                @requested_focus_time="(time: Date) => { focused_time = time }" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td valign="top" v-if="is_show_kyou_detail_view">
+                                            <div class="kyou_detail_view dummy">
+                                                <KyouView v-if="focused_kyou && is_show_kyou_detail_view" :is_image_request_to_thumb_size="false"
+                                                    :application_config="application_config" :gkill_api="gkill_api"
+                                                    :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
+                                                    :show_checkbox="false" :show_content_only="false"
+                                                    :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+                                                    :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                                                    :show_attached_timeis="true" :show_timeis_elapsed_time="false"
+                                                    :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
+                                                    :is_readonly_mi_check="true" :width="400" :enable_context_menu="false"
+                                                    :show_rep_name="false" :force_show_latest_kyou_info="true"
+                                                    :enable_dialog="false" :show_update_time="false" :show_related_time="true"
+                                                    class="kyou_detail_view" :show_attached_tags="true"
+                                                    :show_attached_texts="true" :show_attached_notifications="true"
+                                                    v-on="{ ...crudRelayHandlers, ...rykvDialogHandler }" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="false" :enable_dialog="false"
