@@ -8,7 +8,7 @@ import { GkillAPI } from './classes/api/gkill-api';
 import SaihateStarsOverlay from './pages/views/saihate-stars-overlay.vue'
 import SnowFallOverlay from './pages/views/snow-fall-overlay.vue';
 
-GkillAPI.get_gkill_api().apply_locale()
+// ロケール適用 (メッセージの動的ロードを含む) は main.ts が mount 前に済ませている
 
 const theme = useTheme()
 const use_dark_theme = GkillAPI.get_gkill_api().get_use_dark_theme()

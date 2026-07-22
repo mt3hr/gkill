@@ -4,6 +4,8 @@
 /release/*
 /**/embed/**/*
 /**/assets/*
+# src/client/assets/ はビルド生成物ではなくソース(コンポーネントがimportする画像)なので追跡する
+!/src/client/assets/*
 /**/jniLibs/**/*.so
 /**/*.exe
 

@@ -4,6 +4,7 @@ import { isUrl } from './classes/looks-like-url';
 import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
+import { CacheFirst } from 'workbox-strategies'
 import { shouldCacheResponse, parseBoolLoose } from './classes/service-worker-utils';
 
 export default null
@@ -18,6 +19,15 @@ cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST, {
   directoryIndex: null as unknown as string,
 })
+
+// precache から外した遅延チャンク (mermaid系など) のランタイムキャッシュ。
+// vite.config.ts の precacheGlobIgnores で precache 対象外にしているぶんをここで拾う。
+// ファイル名に content hash が付いていて中身が変わることは無いので CacheFirst でよい。
+// precache 済みのアセットは上の precacheAndRoute が先にルートを持つのでここには来ない。
+registerRoute(
+  ({ url, request }) => request.destination === 'script' && url.pathname.startsWith('/assets/'),
+  new CacheFirst({ cacheName: 'gkill-lazy-chunk-cache' }),
+)
 
 // SPA の app-shell (index.html) フォールバック。ただし / と /api/ は除外
 registerRoute(

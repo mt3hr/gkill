@@ -1,7 +1,8 @@
+// コンポーネント/ディレクティブは vite-plugin-vuetify (autoImport) が
+// テンプレートでの使用箇所を見て個別にimportする。ここで一括登録すると
+// 未使用のものまで全部バンドルされるので登録しないこと。
 import "vuetify/styles"
 import { createVuetify, type ThemeDefinition } from "vuetify"
-import * as components from "vuetify/components"
-import * as directives from "vuetify/directives"
 import { aliases, mdi } from "vuetify/iconsets/mdi"
 
 const gkill_theme: ThemeDefinition = {
@@ -46,8 +47,6 @@ const gkill_dark_theme: ThemeDefinition = {
 }
 
 const vuetify = createVuetify({
-	components,
-	directives,
 	icons: {
 		defaultSet: "mdi",
 		aliases,
