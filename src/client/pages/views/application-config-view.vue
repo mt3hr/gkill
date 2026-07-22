@@ -26,145 +26,153 @@
         </v-card-title>
         <v-card variant="flat">
             <table>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("LOCALE_TITLE") }}
-                    </td>
-                    <td>
-                        <v-row class="pa-0 ma-0">
-                            <v-col class="pa-0 ma-0">
-                                <v-select class="select" v-model="locale_name" :items="[
-                                    { locale_title: i18n.global.t('LOCALE_JA_TITLE'), locale_name: 'ja' },
-                                    { locale_title: i18n.global.t('LOCALE_EN_TITLE'), locale_name: 'en' },
-                                    { locale_title: i18n.global.t('LOCALE_ZH_TITLE'), locale_name: 'zh' },
-                                    { locale_title: i18n.global.t('LOCALE_KO_TITLE'), locale_name: 'ko' },
-                                    { locale_title: i18n.global.t('LOCALE_ES_TITLE'), locale_name: 'es' },
-                                    { locale_title: i18n.global.t('LOCALE_FR_TITLE'), locale_name: 'fr' },
-                                    { locale_title: i18n.global.t('LOCALE_DE_TITLE'), locale_name: 'de' },
-                                ]" item-title="locale_title" item-value="locale_name" />
-                            </v-col>
-                        </v-row>
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("LOCALE_TITLE") }}
+                        </td>
+                        <td>
+                            <v-row class="pa-0 ma-0">
+                                <v-col class="pa-0 ma-0">
+                                    <v-select class="select" v-model="locale_name" :items="[
+                                        { locale_title: i18n.global.t('LOCALE_JA_TITLE'), locale_name: 'ja' },
+                                        { locale_title: i18n.global.t('LOCALE_EN_TITLE'), locale_name: 'en' },
+                                        { locale_title: i18n.global.t('LOCALE_ZH_TITLE'), locale_name: 'zh' },
+                                        { locale_title: i18n.global.t('LOCALE_KO_TITLE'), locale_name: 'ko' },
+                                        { locale_title: i18n.global.t('LOCALE_ES_TITLE'), locale_name: 'es' },
+                                        { locale_title: i18n.global.t('LOCALE_FR_TITLE'), locale_name: 'fr' },
+                                        { locale_title: i18n.global.t('LOCALE_DE_TITLE'), locale_name: 'de' },
+                                    ]" item-title="locale_title" item-value="locale_name" />
+                                </v-col>
+                            </v-row>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             <table>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="use_dark_theme" hide-detail :label="i18n.global.t('DARK_THEME_TITLE')" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="rykv_hot_reload" hide-detail :label="i18n.global.t('HOT_RELOAD_TITLE')" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="show_tags_in_list" hide-detail
-                            :label="i18n.global.t('SHOW_TAGS_IN_LIST')" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="is_show_share_footer" hide-detail
-                            :label="i18n.global.t('SHOW_SHARE_FOOTER')" />
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>
+                            <v-checkbox v-model="use_dark_theme" hide-detail :label="i18n.global.t('DARK_THEME_TITLE')" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <v-checkbox v-model="rykv_hot_reload" hide-detail :label="i18n.global.t('HOT_RELOAD_TITLE')" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <v-checkbox v-model="show_tags_in_list" hide-detail
+                                :label="i18n.global.t('SHOW_TAGS_IN_LIST')" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <v-checkbox v-model="is_show_share_footer" hide-detail
+                                :label="i18n.global.t('SHOW_SHARE_FOOTER')" />
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             <table>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="is_checked_use_rykv_period" hide-detail
-                            :label="i18n.global.t('RYKV_DEFAULT_PERIOD_TITLE')" />
-                    </td>
-                    <td v-show="rykv_default_period !== -1">
-                        <v-text-field type="number" min="-1" v-model="rykv_default_period" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("DEFAULT_VIEW_TITLE") }}
-                    </td>
-                    <td>
-                        <v-row class="pa-0 ma-0">
-                            <v-col class="pa-0 ma-0">
-                                <v-select class="select" v-model="default_page" :items="pages" item-title="app_name"
-                                    item-value="page_name" />
-                            </v-col>
-                        </v-row>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("RYKV_IMAGE_LIST_COLUMN_NUMBER_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field type="number" min="1" max="10" v-model="rykv_image_list_column_number" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("MI_DEFAULT_BOARD_NAME_TITLE") }}
-                    </td>
-                    <td>
-                        <v-row class="pa-0 ma-0">
-                            <v-col class="pa-0 ma-0">
-                                <v-select class="select" v-model="mi_default_board" :items="mi_board_names" />
-                            </v-col>
-                            <v-col class="pa-0 ma-0 pt-2">
-                                <v-btn color="primary" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
-                                    size="small"></v-btn>
-                            </v-col>
-                        </v-row>
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>
+                            <v-checkbox v-model="is_checked_use_rykv_period" hide-detail
+                                :label="i18n.global.t('RYKV_DEFAULT_PERIOD_TITLE')" />
+                        </td>
+                        <td v-show="rykv_default_period !== -1">
+                            <v-text-field type="number" min="-1" v-model="rykv_default_period" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("DEFAULT_VIEW_TITLE") }}
+                        </td>
+                        <td>
+                            <v-row class="pa-0 ma-0">
+                                <v-col class="pa-0 ma-0">
+                                    <v-select class="select" v-model="default_page" :items="pages" item-title="app_name"
+                                        item-value="page_name" />
+                                </v-col>
+                            </v-row>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("RYKV_IMAGE_LIST_COLUMN_NUMBER_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field type="number" min="1" max="10" v-model="rykv_image_list_column_number" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("MI_DEFAULT_BOARD_NAME_TITLE") }}
+                        </td>
+                        <td>
+                            <v-row class="pa-0 ma-0">
+                                <v-col class="pa-0 ma-0">
+                                    <v-select class="select" v-model="mi_default_board" :items="mi_board_names" />
+                                </v-col>
+                                <v-col class="pa-0 ma-0 pt-2">
+                                    <v-btn color="primary" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
+                                        size="small"></v-btn>
+                                </v-col>
+                            </v-row>
+                        </td>
+                    </tr>
 
-                <tr>
-                    <td>
-                        {{ i18n.global.t("URLOG_BOOKMARKLET_ADDRESS_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="urlog_bookmarklet" readonly
-                            @focus="$event.target.select()"></v-text-field>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {{ i18n.global.t("GOOGLE_MAP_API_KEY_TITLE") }}
-                    </td>
-                    <td>
-                        <v-text-field v-model="google_map_api_key"></v-text-field>
-                    </td>
-                </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("URLOG_BOOKMARKLET_ADDRESS_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="urlog_bookmarklet" readonly
+                                @focus="$event.target.select()"></v-text-field>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ i18n.global.t("GOOGLE_MAP_API_KEY_TITLE") }}
+                        </td>
+                        <td>
+                            <v-text-field v-model="google_map_api_key"></v-text-field>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             <table>
-                <tr>
-                    <td>
-                        <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
-                            i18n.global.t("EDIT_TAG_STRUCT_TITLE")
-                        }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
-                            i18n.global.t("EDIT_REP_STRUCT_TITLE")
-                        }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{
-                            i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
-                        }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
-                            i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-btn dark color="primary" @click="show_edit_kftl_template_dialog">{{
-                            i18n.global.t("EDIT_KFTL_TEMPLATE_STRUCT_TITLE") }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_dnote_dialog">{{
-                            i18n.global.t("EDIT_DNOTE_TITLE") }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_ryuu_dialog">{{
-                            i18n.global.t("EDIT_RYUU_TITLE") }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_dashboard_dialog">{{
-                            i18n.global.t("EDIT_DASHBOARD_TITLE") }}</v-btn>
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>
+                            <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
+                                i18n.global.t("EDIT_TAG_STRUCT_TITLE")
+                            }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
+                                i18n.global.t("EDIT_REP_STRUCT_TITLE")
+                            }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_device_dialog">{{
+                                i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
+                            }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
+                                i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <v-btn dark color="primary" @click="show_edit_kftl_template_dialog">{{
+                                i18n.global.t("EDIT_KFTL_TEMPLATE_STRUCT_TITLE") }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_dnote_dialog">{{
+                                i18n.global.t("EDIT_DNOTE_TITLE") }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_ryuu_dialog">{{
+                                i18n.global.t("EDIT_RYUU_TITLE") }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_dashboard_dialog">{{
+                                i18n.global.t("EDIT_DASHBOARD_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
             <a href="https://github.com/mt3hr/gkill" style="color:inherit;text-decoration:none;" target="_blank">
                 <p class="gkill_version_info">gkill v-{{ application_config.version }} ({{

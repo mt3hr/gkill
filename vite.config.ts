@@ -9,6 +9,9 @@ import package_json from './package.json'
 // https://vitejs.dev/config/
 export default defineConfig(() => {
   const minify = (process.env.MINIFY ?? 'false') === 'true'
+  // GKILL_API_PROXY_TARGET でproxy先を上書きできる
+  // (`npm run dev -- --api=<url>` がこれを設定する。E2Eが空きポートで立てたサーバ向けにも使う)
+  const api_target = process.env.GKILL_API_PROXY_TARGET ?? 'http://localhost:9999'
   return {
     build: {
       minify: minify,
@@ -55,8 +58,13 @@ export default defineConfig(() => {
       }),
     ],
     server: {
+      // gkill_serverが配信する非SPAパスをまとめてproxyする。
+      // SPAルート (/rykv, /kftl, /mi など) はvue-routerが処理するのでproxyしない
       proxy: {
-        '/api': 'http://localhost:9999',
+        '/api': api_target,
+        '/files': api_target, // IDFファイル・サムネイル
+        '/zip_cache': api_target, // ZIP展開キャッシュ
+        '/resources/manual': api_target, // ヘルプHTML
       },
     },
     resolve: {

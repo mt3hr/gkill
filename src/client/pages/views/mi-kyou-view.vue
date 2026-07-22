@@ -4,14 +4,16 @@
         <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0" :style="mi_title_style">
                 <table class="pa-0 ma-0">
-                    <tr>
-                        <td class="pa-0 ma-0">
-                            <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
-                        </td>
-                        <td class="pa-0 ma-0">
-                            <div class="py-1 mi_title">{{ kyou.typed_mi.title }}</div>
-                        </td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <td class="pa-0 ma-0">
+                                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
+                            </td>
+                            <td class="pa-0 ma-0">
+                                <div class="py-1 mi_title">{{ kyou.typed_mi.title }}</div>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </v-col>
             <v-spacer />

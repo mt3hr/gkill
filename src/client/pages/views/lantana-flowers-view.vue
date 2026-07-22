@@ -1,27 +1,29 @@
 <template>
     <table>
-        <tr class="lantana_icon_tr">
-            <td class="lantana_icon_td">
-                <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
-                    :state="flower_state_1" @clicked_left="set_mood(1)" @clicked_right="set_mood(2)" />
-            </td>
-            <td class="lantana_icon_td">
-                <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
-                    :state="flower_state_2" @clicked_left="set_mood(3)" @clicked_right="set_mood(4)" />
-            </td>
-            <td class="lantana_icon_td">
-                <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
-                    :state="flower_state_3" @clicked_left="set_mood(5)" @clicked_right="set_mood(6)" />
-            </td>
-            <td class="lantana_icon_td">
-                <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
-                    :state="flower_state_4" @clicked_left="set_mood(7)" @clicked_right="set_mood(8)" />
-            </td>
-            <td class="lantana_icon_td">
-                <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
-                    :state="flower_state_5" @clicked_left="set_mood(9)" @clicked_right="set_mood(10)" />
-            </td>
-        </tr>
+        <tbody>
+            <tr class="lantana_icon_tr">
+                <td class="lantana_icon_td">
+                    <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
+                        :state="flower_state_1" @clicked_left="set_mood(1)" @clicked_right="set_mood(2)" />
+                </td>
+                <td class="lantana_icon_td">
+                    <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
+                        :state="flower_state_2" @clicked_left="set_mood(3)" @clicked_right="set_mood(4)" />
+                </td>
+                <td class="lantana_icon_td">
+                    <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
+                        :state="flower_state_3" @clicked_left="set_mood(5)" @clicked_right="set_mood(6)" />
+                </td>
+                <td class="lantana_icon_td">
+                    <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
+                        :state="flower_state_4" @clicked_left="set_mood(7)" @clicked_right="set_mood(8)" />
+                </td>
+                <td class="lantana_icon_td">
+                    <LantanaFlower :application_config="application_config" :editable="editable" :gkill_api="gkill_api"
+                        :state="flower_state_5" @clicked_left="set_mood(9)" @clicked_right="set_mood(10)" />
+                </td>
+            </tr>
+        </tbody>
     </table>
 </template>
 <script setup lang="ts">

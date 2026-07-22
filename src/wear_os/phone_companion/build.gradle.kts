@@ -1,18 +1,21 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
+    // AGP 9 は Kotlin サポートを内蔵しているため kotlin-android プラグインは適用しない
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
     namespace = "com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.companion"
-    compileSdk = 35
+    // androidx 1.19.0 系が compileSdk 37 以上を要求する
+    compileSdk = 37
 
     defaultConfig {
         // Must match the watch_app applicationId for Wearable MessageClient to work
         applicationId = "com.mt3hr.gkill.wear"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = (findProperty("versionCode") as? String)?.toIntOrNull() ?: 1
         versionName = (findProperty("versionName") as? String) ?: "1.0.0"
     }
@@ -27,16 +30,19 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
 }
 
 dependencies {
-    wearApp(project(":watch_app"))
+    // AGP 9 で wearApp 設定 (Wear 1.x 時代の埋め込み配布) は削除された。
+    // watch_app は :watch_app:assembleDebug で個別にビルドし、個別に adb install する
     implementation(libs.play.services.wearable)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
@@ -45,8 +51,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("io.mockk:mockk:1.13.13")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
 }

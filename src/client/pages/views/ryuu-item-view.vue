@@ -4,67 +4,71 @@
         @contextmenu.prevent.stop="(e: PointerEvent) => { if (editable) { show_context_menu(e) } }"
         @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }">
         <table>
-            <tr>
-                <td>
-                    <span>
-                        {{ model_value?.title }}
-                    </span>
-                </td>
-                <td>
-                    <span>:</span>
-                </td>
-                <td>
-                    <v-row class="pa-0 ma-0">
-                        <v-col class="pa-0 ma-0" cols="auto">
-                            <table>
-                                <tr>
-                                    <td>
-                                        <span>{{ model_value?.prefix }}</span>
-                                    </td>
+            <tbody>
+                <tr>
+                    <td>
+                        <span>
+                            {{ model_value?.title }}
+                        </span>
+                    </td>
+                    <td>
+                        <span>:</span>
+                    </td>
+                    <td>
+                        <v-row class="pa-0 ma-0">
+                            <v-col class="pa-0 ma-0" cols="auto">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <span>{{ model_value?.prefix }}</span>
+                                            </td>
 
-                                    <td v-if="is_no_data">
-                                        ---
-                                    </td>
+                                            <td v-if="is_no_data">
+                                                ---
+                                            </td>
 
-                                    <td v-if="match_kyou && !is_no_data">
-                                        <span
-                                            v-if="(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana)">
-                                            <LantanaFlowersView :gkill_api="gkill_api"
-                                                :application_config="application_config"
-                                                :mood="match_kyou.typed_lantana.mood" :editable="false" />
-                                        </span>
+                                            <td v-if="match_kyou && !is_no_data">
+                                                <span
+                                                    v-if="(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana)">
+                                                    <LantanaFlowersView :gkill_api="gkill_api"
+                                                        :application_config="application_config"
+                                                        :mood="match_kyou.typed_lantana.mood" :editable="false" />
+                                                </span>
 
-                                        <span v-if="(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)">
-                                            {{ match_kyou.typed_kc.num_value }}
-                                        </span>
+                                                <span v-if="(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)">
+                                                    {{ match_kyou.typed_kc.num_value }}
+                                                </span>
 
-                                        <KyouView :is_image_request_to_thumb_size="false"
-                                            v-if="!(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana) && !(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
-                                            :application_config="application_config" :gkill_api="gkill_api"
-                                            :highlight_targets="[]" :is_image_view="false" :kyou="match_kyou"
-                                            :show_checkbox="false" :show_content_only="true"
-                                            :show_mi_create_time="false" :show_mi_estimate_end_time="false"
-                                            :show_mi_estimate_start_time="false" :show_mi_limit_time="false"
-                                            :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="false"
-                                            :height="'fit-content'" :enable_context_menu="enable_context_menu"
-                                            :enable_dialog="false" :enable_md_link_dialog="enable_dialog"
-                                            :show_attached_timeis="false"
-                                            :show_update_time="false" :show_related_time="false" :width="'fit-content'"
-                                            :is_readonly_mi_check="true" :show_rep_name="false"
-                                            :force_show_latest_kyou_info="true" :show_attached_tags="true"
-                                            :show_attached_texts="true" :show_attached_notifications="true"
-                                            v-on="kyouViewRelayHandlers" />
-                                    </td>
+                                                <KyouView :is_image_request_to_thumb_size="false"
+                                                    v-if="!(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana) && !(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
+                                                    :application_config="application_config" :gkill_api="gkill_api"
+                                                    :highlight_targets="[]" :is_image_view="false" :kyou="match_kyou"
+                                                    :show_checkbox="false" :show_content_only="true"
+                                                    :show_mi_create_time="false" :show_mi_estimate_end_time="false"
+                                                    :show_mi_estimate_start_time="false" :show_mi_limit_time="false"
+                                                    :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="false"
+                                                    :height="'fit-content'" :enable_context_menu="enable_context_menu"
+                                                    :enable_dialog="false" :enable_md_link_dialog="enable_dialog"
+                                                    :show_attached_timeis="false"
+                                                    :show_update_time="false" :show_related_time="false" :width="'fit-content'"
+                                                    :is_readonly_mi_check="true" :show_rep_name="false"
+                                                    :force_show_latest_kyou_info="true" :show_attached_tags="true"
+                                                    :show_attached_texts="true" :show_attached_notifications="true"
+                                                    v-on="kyouViewRelayHandlers" />
+                                            </td>
 
-                                    <td>
-                                        <span>{{ model_value?.suffix }}</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </v-col>
-                    </v-row>
-                </td>
-            </tr>
+                                            <td>
+                                                <span>{{ model_value?.suffix }}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </v-col>
+                        </v-row>
+                    </td>
+                </tr>
+            </tbody>
         </table>
 
         <RyuuItemContextMenu :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"

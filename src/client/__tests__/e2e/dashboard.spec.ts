@@ -4,7 +4,7 @@ import { loginAsAdmin } from './helpers'
 
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
-  test.skip(!alive, 'gkill server (localhost:9999) is not running')
+  test.skip(!alive, 'gkill server is not running')
 })
 
 test.describe('Dashboard', () => {

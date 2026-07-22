@@ -29,18 +29,20 @@ const locale: Ref<string> = ref(i18n.global.locale)
     <SaihateStarsOverlay v-if="theme.global.name.value === 'gkill_dark_theme'" />
     <SnowFallOverlay v-if="theme.global.name.value === 'gkill_theme'" />
     <table>
-      <tr>
-        <td>
-          <div id="control-height"></div>
-        </td>
-        <td>
-          <v-app>
-<VLocaleProvider :locale="locale">
-              <RouterView />
-            </VLocaleProvider>
-          </v-app>
-        </td>
-      </tr>
+        <tbody>
+          <tr>
+            <td>
+              <div id="control-height"></div>
+            </td>
+            <td>
+              <v-app>
+    <VLocaleProvider :locale="locale">
+                  <RouterView />
+                </VLocaleProvider>
+              </v-app>
+            </td>
+          </tr>
+        </tbody>
     </table>
   </div>
 </template>
@@ -272,7 +274,7 @@ body::-webkit-scrollbar {
   border-radius: var(--gkill-scrollbar-thumb-radius);
 }
 
-table > tr > td {
+table > tbody > tr > td {
     padding: 0;
     margin: 0;
 }

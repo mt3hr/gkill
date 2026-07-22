@@ -1,10 +1,20 @@
 /**
  * Tests for GkillReadClient from gkill-read-server.mjs.
  *
- * All network calls are mocked via globalThis.fetch so no real server is needed.
+ * All network calls are mocked via undici's fetch so no real server is needed.
+ * gkill-read-server.mjs は `import { fetch } from "undici"` で undici の fetch を
+ * 直接使うため、globalThis.fetch を差し替えてもモックが効かない点に注意。
  */
 
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
+
+// Agent は実体が必要なので importOriginal でスプレッドし、fetch だけ差し替える。
+vi.mock("undici", async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, fetch: vi.fn() };
+});
+
+import { fetch as undiciFetch } from "undici";
 import { GkillReadClient } from "../gkill-read-server.mjs";
 
 // ---------------------------------------------------------------------------
@@ -12,27 +22,26 @@ import { GkillReadClient } from "../gkill-read-server.mjs";
 // ---------------------------------------------------------------------------
 
 function mockFetchOk(body = {}) {
-  globalThis.fetch = vi.fn().mockResolvedValue({
+  undiciFetch.mockResolvedValue({
     ok: true,
     json: () => Promise.resolve(body),
   });
 }
 
 function mockFetchError(status, body = {}) {
-  globalThis.fetch = vi.fn().mockResolvedValue({
+  undiciFetch.mockResolvedValue({
     ok: false,
     status,
     json: () => Promise.resolve(body),
   });
 }
 
-// Save and restore env + fetch between tests.
+// Save and restore env between tests.
 let savedEnv;
-let savedFetch;
 
 beforeEach(() => {
   savedEnv = { ...process.env };
-  savedFetch = globalThis.fetch;
+  undiciFetch.mockReset();
   // Clear gkill-related env vars so defaults are used.
   delete process.env.GKILL_BASE_URL;
   delete process.env.GKILL_USER;
@@ -46,7 +55,7 @@ beforeEach(() => {
 
 afterEach(() => {
   process.env = savedEnv;
-  globalThis.fetch = savedFetch;
+  undiciFetch.mockReset();
 });
 
 // ---------------------------------------------------------------------------
@@ -163,9 +172,9 @@ describe("login", () => {
     const sessionId = await client.login();
 
     expect(sessionId).toBe("test-session");
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(undiciFetch).toHaveBeenCalledTimes(1);
 
-    const [url, opts] = globalThis.fetch.mock.calls[0];
+    const [url, opts] = undiciFetch.mock.calls[0];
     expect(url).toBe("http://127.0.0.1:9999/api/login");
     expect(opts.method).toBe("POST");
     expect(JSON.parse(opts.body)).toEqual({
@@ -183,7 +192,7 @@ describe("login", () => {
     const sessionId = await client.login();
 
     expect(sessionId).toBe("existing-session");
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(undiciFetch).not.toHaveBeenCalled();
   });
 
   test("throws when credentials are missing", async () => {
@@ -204,9 +213,9 @@ describe("post", () => {
     const result = await client.post("/api/test", { key: "value" });
 
     expect(result).toEqual(responseBody);
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    expect(undiciFetch).toHaveBeenCalledTimes(1);
 
-    const [url, opts] = globalThis.fetch.mock.calls[0];
+    const [url, opts] = undiciFetch.mock.calls[0];
     expect(url).toBe("http://127.0.0.1:9999/api/test");
     expect(opts.method).toBe("POST");
     expect(opts.headers["Content-Type"]).toBe("application/json");
@@ -221,7 +230,7 @@ describe("post", () => {
   });
 
   test("throws GkillApiError on network failure", async () => {
-    globalThis.fetch = vi.fn().mockRejectedValue(new Error("ECONNREFUSED"));
+    undiciFetch.mockRejectedValue(new Error("ECONNREFUSED"));
 
     const client = new GkillReadClient();
     await expect(client.post("/api/down", {})).rejects.toThrow("Network error");
