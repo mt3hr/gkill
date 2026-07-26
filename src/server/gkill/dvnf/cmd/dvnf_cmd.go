@@ -20,6 +20,7 @@ func init() {
 	pf := DVNFCmd.PersistentFlags()
 	pf.BoolVarP(&rootOpt.createNew, createNewKey, createNewKeyP, false, "新たにdvnfを作成します")
 	pf.BoolVar(&rootOpt.autoCreate, autoCreateKey, true, "1つも存在しなかったときに自動で作成します。")
+	pf.StringVar(&rootOpt.device, deviceKey, "", "dvnf名に使う端末名。省略時はこの端末の名前を使います。他の端末で集めたものを取り込むときに指定します")
 	err := viper.BindPFlags(pf)
 	if err != nil {
 		panic(err)
@@ -56,8 +57,27 @@ func init() {
 			}
 		}
 
+		// この端末の設定が見つからない場合でも、--device が指定されていれば動かせるようにする。
+		if currentServerConfig == nil {
+			if rootOpt.device == "" {
+				err = fmt.Errorf("this device has no enabled server config. specify --%s", deviceKey)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				return
+			}
+			config.Directory = os.ExpandEnv(fmt.Sprintf("$HOME/%s", rootOpt.device))
+			config.Device = rootOpt.device
+			config.TimeLength = 8
+			return
+		}
+
+		// dvnfのルートはこの端末のものを使う。
+		// --device は生成する名前の端末部分だけを差し替えるためのもので、
+		// 他の端末で集めたものを、この端末のdvnfへ端末名を保ったまま取り込むのに使う。
 		config.Directory = os.ExpandEnv(fmt.Sprintf("$HOME/%s", currentServerConfig.Device))
 		config.Device = currentServerConfig.Device
+		if rootOpt.device != "" {
+			config.Device = rootOpt.device
+		}
 		config.TimeLength = 8
 	}
 }
@@ -66,6 +86,7 @@ var (
 	rootOpt = struct {
 		createNew  bool
 		autoCreate bool
+		device     string
 	}{}
 
 	config = &Config{}
@@ -83,6 +104,7 @@ const (
 	createNewKeyP  = "n"
 	configFileName = "dvnf_config"
 	autoCreateKey  = "auto_create"
+	deviceKey      = "device"
 )
 
 var (
