@@ -109,6 +109,7 @@ export function useEditDeviceStructView(options: {
         device_struct_element.device_name = folder_struct_element.folder_name
         device_struct_element.children = new Array<DeviceStructElementData>()
         device_struct_element.key = folder_struct_element.folder_name
+        device_struct_element.name = folder_struct_element.folder_name
         cloned_application_config.value.device_struct.children?.push(device_struct_element)
     }
 
