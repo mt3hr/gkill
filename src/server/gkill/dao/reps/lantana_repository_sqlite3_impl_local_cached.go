@@ -8,16 +8,15 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 type lantanaRepositorySQLite3ImplLocalCached struct {
+	userID               string
 	originalDBFileName   string
 	localCacheDBFileName string
 	originalRep          LantanaRepository
@@ -29,8 +28,8 @@ type lantanaRepositorySQLite3ImplLocalCached struct {
 	lastUpdateCacheChanged bool
 }
 
-func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool) (LantanaRepository, error) {
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(filename, ":", ""))
+func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool) (LantanaRepository, error) {
+	localCacheDBFileName := localRepCacheDBFileName(userID, filename)
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -86,6 +85,7 @@ func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, filename st
 	}
 
 	cachedRep := &lantanaRepositorySQLite3ImplLocalCached{
+		userID:               userID,
 		originalDBFileName:   filename,
 		localCacheDBFileName: localCacheDBFileName,
 		originalRep:          originalRep,
@@ -137,13 +137,24 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		return err
 	}
 
-	err = os.Remove(l.localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at remove %s: %w", l.localCacheDBFileName, err)
-		return err
+	// ローカルキャッシュファイルを消せなくても致命的なエラーにはしない。
+	// 別のRepositoryや別プロセスが同じファイルを開いていると
+	// Windowsでは削除が共有違反で失敗する。
+	// ここで error を返すと GetRepositories 全体が失敗し、
+	// リポジトリがキャッシュに登録されないままリクエスト毎に再ロードされ続けるため、
+	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
+	if err = os.Remove(l.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
+		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", l.localCacheDBFileName, "error", err)
+		l.lastUpdateCacheChanged = false
+		reopenedRep, reopenErr := NewLantanaRepositorySQLite3Impl(ctx, l.localCacheDBFileName, l.fullConnect)
+		if reopenErr != nil {
+			return fmt.Errorf("error at reopen local cached rep %s: %w", l.localCacheDBFileName, reopenErr)
+		}
+		l.localCachedRep = reopenedRep
+		return nil
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(l.originalDBFileName, ":", ""))
+	localCacheDBFileName := localRepCacheDBFileName(l.userID, l.originalDBFileName)
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
