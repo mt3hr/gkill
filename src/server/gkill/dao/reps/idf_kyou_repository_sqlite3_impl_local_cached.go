@@ -9,18 +9,16 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-func NewIDFDirRepLocalCached(ctx context.Context, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(dbFilename, ":", ""))
+func NewIDFDirRepLocalCached(ctx context.Context, userID string, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
+	localCacheDBFileName := localRepCacheDBFileName(userID, dbFilename)
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -76,6 +74,7 @@ func NewIDFDirRepLocalCached(ctx context.Context, dir, dbFilename string, fullCo
 	}
 
 	cachedRep := &idfKyouRepositorySQLite3ImplLocalCached{
+		userID:               userID,
 		originalDBFileName:   dbFilename,
 		localCacheDBFileName: localCacheDBFileName,
 		originalRep:          originalRep,
@@ -94,6 +93,7 @@ func NewIDFDirRepLocalCached(ctx context.Context, dir, dbFilename string, fullCo
 }
 
 type idfKyouRepositorySQLite3ImplLocalCached struct {
+	userID               string
 	originalDBFileName   string
 	localCacheDBFileName string
 	originalRep          IDFKyouRepository
@@ -148,13 +148,24 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		return err
 	}
 
-	err = os.Remove(i.localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at remove %s: %w", i.localCacheDBFileName, err)
-		return err
+	// ローカルキャッシュファイルを消せなくても致命的なエラーにはしない。
+	// 別のRepositoryや別プロセスが同じファイルを開いていると
+	// Windowsでは削除が共有違反で失敗する。
+	// ここで error を返すと GetRepositories 全体が失敗し、
+	// リポジトリがキャッシュに登録されないままリクエスト毎に再ロードされ続けるため、
+	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
+	if err = os.Remove(i.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
+		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", i.localCacheDBFileName, "error", err)
+		i.lastUpdateCacheChanged = false
+		reopenedRep, reopenErr := NewIDFDirRep(ctx, i.contentDir, i.localCacheDBFileName, i.fullConnect, i.r, i.autoIDF, i.idfIgnore, i.repositoriesRef)
+		if reopenErr != nil {
+			return fmt.Errorf("error at reopen local cached rep %s: %w", i.localCacheDBFileName, reopenErr)
+		}
+		i.localCachedRep = reopenedRep
+		return nil
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(i.originalDBFileName, ":", ""))
+	localCacheDBFileName := localRepCacheDBFileName(i.userID, i.originalDBFileName)
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

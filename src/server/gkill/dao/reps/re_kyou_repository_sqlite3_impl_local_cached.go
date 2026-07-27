@@ -8,16 +8,15 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 type reKyouRepositorySQLite3ImplLocalCached struct {
+	userID               string
 	originalDBFileName   string
 	localCacheDBFileName string
 	originalRep          ReKyouRepository
@@ -29,8 +28,8 @@ type reKyouRepositorySQLite3ImplLocalCached struct {
 	lastUpdateCacheChanged bool
 }
 
-func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename string, fullConnect bool, reps *GkillRepositories) (ReKyouRepository, error) {
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(filename, ":", ""))
+func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool, reps *GkillRepositories) (ReKyouRepository, error) {
+	localCacheDBFileName := localRepCacheDBFileName(userID, filename)
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -86,6 +85,7 @@ func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename str
 	}
 
 	cachedRep := &reKyouRepositorySQLite3ImplLocalCached{
+		userID:               userID,
 		originalDBFileName:   filename,
 		localCacheDBFileName: localCacheDBFileName,
 		originalRep:          originalRep,
@@ -138,13 +138,24 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 		return err
 	}
 
-	err = os.Remove(r.localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at remove %s: %w", r.localCacheDBFileName, err)
-		return err
+	// ローカルキャッシュファイルを消せなくても致命的なエラーにはしない。
+	// 別のRepositoryや別プロセスが同じファイルを開いていると
+	// Windowsでは削除が共有違反で失敗する。
+	// ここで error を返すと GetRepositories 全体が失敗し、
+	// リポジトリがキャッシュに登録されないままリクエスト毎に再ロードされ続けるため、
+	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
+	if err = os.Remove(r.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
+		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", r.localCacheDBFileName, "error", err)
+		r.lastUpdateCacheChanged = false
+		reopenedRep, reopenErr := NewReKyouRepositorySQLite3Impl(ctx, r.localCacheDBFileName, r.fullConnect, r.reps)
+		if reopenErr != nil {
+			return fmt.Errorf("error at reopen local cached rep %s: %w", r.localCacheDBFileName, reopenErr)
+		}
+		r.localCachedRep = reopenedRep
+		return nil
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", strings.ReplaceAll(r.originalDBFileName, ":", ""))
+	localCacheDBFileName := localRepCacheDBFileName(r.userID, r.originalDBFileName)
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

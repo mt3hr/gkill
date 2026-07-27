@@ -510,6 +510,42 @@ func InitGkillServerAPI() error {
 	return nil
 }
 
+// PreLoadRepositories は --pre_load_users で指定されたユーザのリポジトリを
+// バックグラウンドで先に読み込んでおく。
+//
+// リポジトリの構築はユーザの規模によっては数分かかる。
+// プリロードしていないとその待ち時間が最初のリクエストに丸ごと乗るため、
+// 起動直後のアクセスが延々と待たされることになる。
+// サーバのリッスン開始を遅らせないようゴルーチンで実行し、
+// 失敗しても起動は続行する。
+func PreLoadRepositories(ctx context.Context, gkillServerAPI *gkill_server_api.GkillServerAPI) {
+	if len(gkill_options.PreLoadUserNames) == 0 || gkillServerAPI == nil {
+		return
+	}
+
+	device, err := gkillServerAPI.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device for pre load users: %w", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		return
+	}
+
+	go func() {
+		for _, userID := range gkill_options.PreLoadUserNames {
+			if ctx.Err() != nil {
+				return
+			}
+			startTime := time.Now()
+			if _, err := gkillServerAPI.GkillDAOManager.GetRepositories(userID, device); err != nil {
+				err = fmt.Errorf("error at pre load repositories. user id = %s device = %s: %w", userID, device, err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				continue
+			}
+			slog.Log(ctx, gkill_log.Info, "pre loaded repositories", "userID", userID, "device", device, "elapsed", time.Since(startTime).String())
+		}
+	}()
+}
+
 func LaunchGkillServerAPI(ctx context.Context) error {
 	defer func() {
 		err := gkillServerAPI.Close()
@@ -520,6 +556,7 @@ func LaunchGkillServerAPI(ctx context.Context) error {
 
 	var err error
 	for {
+		PreLoadRepositories(ctx, gkillServerAPI)
 		err = gkillServerAPI.Serve(ctx)
 		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {

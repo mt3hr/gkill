@@ -110,6 +110,7 @@ export function useEditRepTypeStructView(options: {
         rep_type_struct_element.rep_type_name = folder_struct_element.folder_name
         rep_type_struct_element.children = new Array<RepTypeStructElementData>()
         rep_type_struct_element.key = folder_struct_element.folder_name
+        rep_type_struct_element.name = folder_struct_element.folder_name
         cloned_application_config.value.rep_type_struct.children?.push(rep_type_struct_element)
     }
 
