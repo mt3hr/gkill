@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { ApplicationConfig } from "../datas/config/application-config"
+import { FOLDABLE_STRUCT_ROOT_KEY } from "@/pages/views/foldable-struct-model"
 import type { AddAccountRequest } from "./req_res/add-account-request"
 import type { AddAccountResponse } from "./req_res/add-account-response"
 import type { AddKmemoRequest } from "./req_res/add-kmemo-request"
@@ -1782,6 +1783,19 @@ export class GkillAPI {
                         application_config.kftl_template_struct.id = this.generate_uuid()
                         application_config.kftl_template_struct.children = []
                         application_config.kftl_template_struct.is_dir = true
+                }
+
+                // ルートノードのname/keyがブランクのままDBに保存されないようにする
+                for (const root_struct of [
+                        application_config.tag_struct,
+                        application_config.rep_struct,
+                        application_config.rep_type_struct,
+                        application_config.device_struct,
+                        application_config.mi_board_struct,
+                        application_config.kftl_template_struct,
+                ]) {
+                        if (!root_struct.name) root_struct.name = FOLDABLE_STRUCT_ROOT_KEY
+                        if (!root_struct.key) root_struct.key = FOLDABLE_STRUCT_ROOT_KEY
                 }
                 if (!application_config.dnote_json_data) {
                         application_config.dnote_json_data = [[], []]

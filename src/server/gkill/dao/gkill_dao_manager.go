@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"sync"
 
@@ -27,6 +28,11 @@ import (
 )
 
 type GkillDAOManager struct {
+	// stateMutex は下記4マップ自体へのアクセスを保護する。
+	// 同時リクエストでマップの読み書きが競合すると
+	// concurrent map read and map write でプロセスが即死するため必須。
+	// 時間のかかるリポジトリ構築中は保持しない。構築の排他は initializingMutex が担う。
+	stateMutex               sync.Mutex
 	initializingMutex        map[string]map[string]*sync.RWMutex
 	gkillRepositories        map[string]map[string]*reps.GkillRepositories
 	gkillNotificators        map[string]map[string]*GkillNotificator
@@ -129,6 +135,47 @@ func (g *GkillDAOManager) GetRouter() *mux.Router {
 	return g.router
 }
 
+// lookupRepositories は userID/device に対応する初期化用ミューテックスと、
+// すでに構築済みならそのリポジトリを返す。
+// マップが未初期化なら初期化し、ミューテックスがなければ作って登録する。
+func (g *GkillDAOManager) lookupRepositories(userID string, device string) (*sync.RWMutex, *reps.GkillRepositories, bool) {
+	g.stateMutex.Lock()
+	defer g.stateMutex.Unlock()
+
+	if g.initializingMutex == nil {
+		g.initializingMutex = map[string]map[string]*sync.RWMutex{}
+	}
+	if g.gkillRepositories == nil {
+		g.gkillRepositories = map[string]map[string]*reps.GkillRepositories{}
+	}
+	if _, exist := g.initializingMutex[userID]; !exist {
+		g.initializingMutex[userID] = map[string]*sync.RWMutex{}
+	}
+	if _, exist := g.initializingMutex[userID][device]; !exist {
+		g.initializingMutex[userID][device] = &sync.RWMutex{}
+	}
+	if _, exist := g.gkillRepositories[userID]; !exist {
+		g.gkillRepositories[userID] = map[string]*reps.GkillRepositories{}
+	}
+
+	repositories, exist := g.gkillRepositories[userID][device]
+	return g.initializingMutex[userID][device], repositories, exist
+}
+
+// storeRepositories は構築済みリポジトリをマップに登録する。
+func (g *GkillDAOManager) storeRepositories(userID string, device string, repositories *reps.GkillRepositories) {
+	g.stateMutex.Lock()
+	defer g.stateMutex.Unlock()
+
+	if g.gkillRepositories == nil {
+		g.gkillRepositories = map[string]map[string]*reps.GkillRepositories{}
+	}
+	if _, exist := g.gkillRepositories[userID]; !exist {
+		g.gkillRepositories[userID] = map[string]*reps.GkillRepositories{}
+	}
+	g.gkillRepositories[userID][device] = repositories
+}
+
 func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.GkillRepositories, error) {
 	if userID == "" || device == "" {
 		err := fmt.Errorf("userID or device is blank. userID=%s device=%s", userID, device)
@@ -138,40 +185,16 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	ctx := context.Background()
 	var err error
 
-	// nilだったら初期化する
-	if g.initializingMutex == nil {
-		g.initializingMutex = map[string]map[string]*sync.RWMutex{}
-	}
-	if g.gkillRepositories == nil {
-		g.gkillRepositories = map[string]map[string]*reps.GkillRepositories{}
-	}
+	// マップの初期化と参照。マップ自体の操作中だけ stateMutex を保持する
+	initializingMutex, repositories, existRepsInDevice := g.lookupRepositories(userID, device)
 
-	// 初期化中だったらちょっとまつ
-	initializeMutexInUser, existRepsInUsers := g.initializingMutex[userID]
-	if !existRepsInUsers {
-		g.initializingMutex[userID] = map[string]*sync.RWMutex{}
-		initializeMutexInUser = g.initializingMutex[userID]
-	}
-	_, existMutexsInDevice := initializeMutexInUser[device]
-	if !existMutexsInDevice {
-		g.initializingMutex[userID][device] = &sync.RWMutex{}
-	}
-
-	// すでに存在していればそれを、存在していなければ作っていれる。Rep
-	repositoriesInUser, existRepsInUsers := g.gkillRepositories[userID]
-	if !existRepsInUsers {
-		g.gkillRepositories[userID] = map[string]*reps.GkillRepositories{}
-		repositoriesInUser = g.gkillRepositories[userID]
-	}
-
-	repositories, existRepsInDevice := repositoriesInUser[device]
 	if !existRepsInDevice {
 		// 初期化中だったら終わるまで待つ
-		g.initializingMutex[userID][device].Lock()
-		defer g.initializingMutex[userID][device].Unlock()
+		initializingMutex.Lock()
+		defer initializingMutex.Unlock()
 
 		// 初期化がおわり、値が入っていればそれを使う
-		if repositories, exist := g.gkillRepositories[userID][device]; exist {
+		if _, repositories, exist := g.lookupRepositories(userID, device); exist {
 			return repositories, nil
 		}
 
@@ -199,6 +222,23 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			disableReps = append(disableReps, filepath.Clean(os.ExpandEnv(rep.File)))
 		}
 
+		// 同一設定が二重登録されていたりglobどうしが重なっていたりすると、
+		// 同じファイルに対するRepositoryが複数生成されてしまう。
+		// そうなるとKyouが重複するうえ、ローカルキャッシュ有効時は
+		// 同じキャッシュファイルを複数のRepが同時に開いて削除し合い、UpdateCacheが失敗する。
+		// 解決後の (Type, ファイルパス) で重複排除する。
+		// 書き込み用repが必ず残るよう、先に書き込み用を前に寄せておく。
+		slices.SortStableFunc(repositoriesDefine, func(a, b *user_config.Repository) int {
+			if a.UseToWrite == b.UseToWrite {
+				return 0
+			}
+			if a.UseToWrite {
+				return -1
+			}
+			return 1
+		})
+		loadedRepKeys := map[string]struct{}{}
+
 		for _, rep := range repositoriesDefine {
 			if !rep.IsEnable {
 				continue
@@ -220,6 +260,13 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					continue
 				}
 
+				loadedRepKey := rep.Type + "\x00" + filename
+				if _, loaded := loadedRepKeys[loadedRepKey]; loaded {
+					slog.Log(ctx, gkill_log.Debug, "skip duplicated repository define", "userID", userID, "device", device, "type", rep.Type, "file", filename)
+					continue
+				}
+				loadedRepKeys[loadedRepKey] = struct{}{}
+
 				parentDir := filepath.Dir(filename)
 				err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
 				if err != nil {
@@ -234,7 +281,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var kmemoRep reps.KmemoRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						kmemoRep, err = reps.NewKmemoRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						kmemoRep, err = reps.NewKmemoRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						kmemoRep, err = reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -280,7 +327,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var kcRep reps.KCRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						kcRep, err = reps.NewKCRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						kcRep, err = reps.NewKCRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						kcRep, err = reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -326,7 +373,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var urlogRep reps.URLogRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						urlogRep, err = reps.NewURLogRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						urlogRep, err = reps.NewURLogRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						urlogRep, err = reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -372,7 +419,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var timeisRep reps.TimeIsRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						timeisRep, err = reps.NewTimeIsRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						timeisRep, err = reps.NewTimeIsRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						timeisRep, err = reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -418,7 +465,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var miRep reps.MiRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						miRep, err = reps.NewMiRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						miRep, err = reps.NewMiRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						miRep, err = reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -464,7 +511,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var nlogRep reps.NlogRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						nlogRep, err = reps.NewNlogRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						nlogRep, err = reps.NewNlogRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						nlogRep, err = reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -510,7 +557,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var lantanaRep reps.LantanaRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						lantanaRep, err = reps.NewLantanaRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						lantanaRep, err = reps.NewLantanaRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						lantanaRep, err = reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -556,7 +603,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var tagRep reps.TagRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						tagRep, err = reps.NewTagRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						tagRep, err = reps.NewTagRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						tagRep, err = reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -603,7 +650,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var textRep reps.TextRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						textRep, err = reps.NewTextRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						textRep, err = reps.NewTextRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						textRep, err = reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -650,7 +697,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var notificationRep reps.NotificationRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						notificationRep, err = reps.NewNotificationRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+						notificationRep, err = reps.NewNotificationRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite)
 					} else {
 						notificationRep, err = reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					}
@@ -696,7 +743,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					var reKyouRep reps.ReKyouRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						reKyouRep, err = reps.NewReKyouRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite, repositories)
+						reKyouRep, err = reps.NewReKyouRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite, repositories)
 					} else {
 						reKyouRep, err = reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
 					}
@@ -749,7 +796,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 					var idfKyouRep reps.IDFKyouRepository
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
-						idfKyouRep, err = reps.NewIDFDirRepLocalCached(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
+						idfKyouRep, err = reps.NewIDFDirRepLocalCached(ctx, userID, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
 					} else {
 						idfKyouRep, err = reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
 					}
@@ -984,8 +1031,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			err = fmt.Errorf("error at update cache in get repositories: %w", err)
 			return nil, err
 		}
-		g.gkillRepositories[userID][device] = repositories
-		repositories = repositoriesInUser[device]
+		g.storeRepositories(userID, device, repositories)
 
 		if _, err := g.GetNotificator(userID, device); err != nil {
 			slog.Log(context.Background(), gkill_log.Warn, "error at get notificator", "error", err, "userID", userID, "device", device)
@@ -997,6 +1043,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 // getOrCreatePluginManager はユーザID別のPluginManagerを取得または作成する。
 func (g *GkillDAOManager) getOrCreatePluginManager(userID string) *PluginManager {
+	g.stateMutex.Lock()
+	defer g.stateMutex.Unlock()
+
 	if g.pluginManagers == nil {
 		g.pluginManagers = map[string]*PluginManager{}
 	}
@@ -1019,36 +1068,57 @@ func (g *GkillDAOManager) GetPluginManager(userID string) *PluginManager {
 }
 
 func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNotificator, error) {
-	// nilだったら初期化する
+	// すでに存在していればそれを返す。マップ操作中だけ stateMutex を保持する
+	if notificator, exist := g.lookupNotificator(userID, device); exist {
+		return notificator, nil
+	}
+
+	// Notificatorの初期化
+	gkillRepositories, err := g.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories in get notificator: %w", err)
+		return nil, err
+	}
+
+	gkillNotificator, err := NewGkillNotificator(context.Background(), g, gkillRepositories)
+	if err != nil {
+		err = fmt.Errorf("error at new gkill notificator: %w", err)
+		return nil, err
+	}
+
+	g.stateMutex.Lock()
+	defer g.stateMutex.Unlock()
 	if g.gkillNotificators == nil {
 		g.gkillNotificators = map[string]map[string]*GkillNotificator{}
 	}
-
-	// すでに存在していればそれを、存在していなければ作る。Notificator
-	notificatorInUser, existNotificatorsInUsers := g.gkillNotificators[userID]
-	if !existNotificatorsInUsers {
+	if _, exist := g.gkillNotificators[userID]; !exist {
 		g.gkillNotificators[userID] = map[string]*GkillNotificator{}
-		notificatorInUser = g.gkillNotificators[userID]
 	}
-
-	notificator, existNotificatorsInDevice := notificatorInUser[device]
-	if !existNotificatorsInDevice {
-		// Notificatorの初期化
-		gkillRepositories, err := g.GetRepositories(userID, device)
-		if err != nil {
-			err = fmt.Errorf("error at get repositories in get notificator: %w", err)
-			return nil, err
+	// 並行して先に作られていたらそちらを使い、自分が作ったほうは閉じる
+	if existing, exist := g.gkillNotificators[userID][device]; exist {
+		if closeErr := gkillNotificator.Close(context.Background()); closeErr != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at close duplicated notificator", "error", closeErr)
 		}
-
-		gkillNotificator, err := NewGkillNotificator(context.Background(), g, gkillRepositories)
-		if err != nil {
-			err = fmt.Errorf("error at new gkill notificator: %w", err)
-			return nil, err
-		}
-		g.gkillNotificators[userID][device] = gkillNotificator
-		notificator = g.gkillNotificators[userID][device]
+		return existing, nil
 	}
-	return notificator, nil
+	g.gkillNotificators[userID][device] = gkillNotificator
+	return gkillNotificator, nil
+}
+
+// lookupNotificator は構築済みNotificatorがあれば返す。
+func (g *GkillDAOManager) lookupNotificator(userID string, device string) (*GkillNotificator, bool) {
+	g.stateMutex.Lock()
+	defer g.stateMutex.Unlock()
+
+	if g.gkillNotificators == nil {
+		return nil, false
+	}
+	notificatorInUser, exist := g.gkillNotificators[userID]
+	if !exist {
+		return nil, false
+	}
+	notificator, exist := notificatorInUser[device]
+	return notificator, exist
 }
 
 func (g *GkillDAOManager) Close() error {
@@ -1060,7 +1130,19 @@ func (g *GkillDAOManager) Close() error {
 		err = fmt.Errorf("error at close file rep watch cache updater. : %w : %w", e, err)
 	}
 
-	for userID, repInDevices := range g.gkillRepositories {
+	// マップをいったん切り離してからクローズする。
+	// クローズには時間がかかるので stateMutex は保持しない
+	g.stateMutex.Lock()
+	gkillRepositories := g.gkillRepositories
+	gkillNotificators := g.gkillNotificators
+	pluginManagers := g.pluginManagers
+	g.gkillRepositories = nil
+	g.gkillNotificators = nil
+	g.pluginManagers = nil
+	g.initializingMutex = nil
+	g.stateMutex.Unlock()
+
+	for userID, repInDevices := range gkillRepositories {
 		for repName, repInDevice := range repInDevices {
 			err = repInDevice.Close(ctx)
 			if err != nil {
@@ -1073,9 +1155,8 @@ func (g *GkillDAOManager) Close() error {
 
 		}
 	}
-	g.gkillRepositories = nil
 
-	for userID, notificatorInDevices := range g.gkillNotificators {
+	for userID, notificatorInDevices := range gkillNotificators {
 		for _, notificator := range notificatorInDevices {
 			err = notificator.Close(ctx)
 			if err != nil {
@@ -1087,9 +1168,8 @@ func (g *GkillDAOManager) Close() error {
 			}
 		}
 	}
-	g.gkillNotificators = nil
 
-	for userID, pm := range g.pluginManagers {
+	for userID, pm := range pluginManagers {
 		if e := pm.CloseAll(ctx); e != nil {
 			if allErrors != nil {
 				allErrors = fmt.Errorf("error at close plugins user id = %s: %w: %w", userID, e, allErrors)
@@ -1098,7 +1178,6 @@ func (g *GkillDAOManager) Close() error {
 			}
 		}
 	}
-	g.pluginManagers = nil
 
 	if g.ConfigDAOs != nil {
 		err = g.ConfigDAOs.AccountDAO.Close(ctx)
@@ -1153,12 +1232,21 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	var err error
 	ctx := context.TODO()
 
+	g.stateMutex.Lock()
 	repsInDevices, exist := g.gkillRepositories[userID]
-	if !exist {
-		return false, nil
+	var reps *reps.GkillRepositories
+	if exist {
+		reps, exist = repsInDevices[device]
 	}
+	if exist {
+		// 以降のクローズ処理中に他のリクエストが同じRepを掴まないよう、先にマップから外す
+		delete(g.gkillRepositories[userID], device)
+		if len(g.gkillRepositories[userID]) == 0 {
+			delete(g.gkillRepositories, userID)
+		}
+	}
+	g.stateMutex.Unlock()
 
-	reps, exist := repsInDevices[device]
 	if !exist {
 		return false, nil
 	}
@@ -1232,10 +1320,6 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	if err != nil {
 		err = fmt.Errorf("error at close repositories: %w", err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
-	}
-	delete(g.gkillRepositories[userID], device)
-	if len(g.gkillRepositories[userID]) == 0 {
-		delete(g.gkillRepositories, userID)
 	}
 	return true, nil
 }
