@@ -110,6 +110,7 @@ export function useEditTagStructView(options: {
         tag_struct_element.tag_name = folder_struct_element.folder_name
         tag_struct_element.children = new Array<TagStructElementData>()
         tag_struct_element.key = folder_struct_element.folder_name
+        tag_struct_element.name = folder_struct_element.folder_name
         cloned_application_config.value.tag_struct.children?.push(tag_struct_element)
     }
 

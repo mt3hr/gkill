@@ -736,10 +736,13 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		OnlyLatestData: false,
 	}
 
-	allIDFKyous, err := i.idfRep.FindIDFKyou(ctx, query)
-	if err != nil {
-		err = fmt.Errorf("error at get all idf kyou at update cache: %w", err)
-		return err
+	// フルリビルド対象のIDFKyouを一度にまとめて1つのスライスへ載せると、
+	// ファイル数の多いユーザ（数十万件規模）ではそれだけで数GBに達する。
+	// 下層が複数リポジトリの集合なら、リポジトリ単位に取得とINSERTを回して、
+	// 同時にメモリへ載る件数を1リポジトリ分に抑える。
+	idfRepsForFetch := []IDFKyouRepository{i.idfRep}
+	if idfReps, ok := i.idfRep.(IDFKyouRepositories); ok && len(idfReps) != 0 {
+		idfRepsForFetch = idfReps
 	}
 
 	i.m.Lock()
@@ -826,42 +829,49 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
 		}
 	}()
 
-	for _, idfKyou := range allIDFKyous {
-		select {
-		case <-ctx.Done():
-			err = ctx.Err()
-			return err
-		default:
+	for _, idfRep := range idfRepsForFetch {
+		idfKyous, err := idfRep.FindIDFKyou(ctx, query)
+		if err != nil {
+			return fmt.Errorf("error at get all idf kyou at update cache: %w", err)
 		}
-		err = func() error {
-			queryArgs := []any{
-				idfKyou.IsDeleted,
-				idfKyou.ID,
-				idfKyou.RepName,
-				idfKyou.TargetFile,
-				idfKyou.CreateApp,
-				idfKyou.CreateDevice,
-				idfKyou.CreateUser,
-				idfKyou.UpdateApp,
-				idfKyou.UpdateDevice,
-				idfKyou.UpdateUser,
-				idfKyou.ContentPath,
-				idfKyou.RepName,
-				idfKyou.RelatedTime.Unix(),
-				idfKyou.CreateTime.Unix(),
-				idfKyou.UpdateTime.Unix(),
-			}
 
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
-			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+		for _, idfKyou := range idfKyous {
+			select {
+			case <-ctx.Done():
+				err = ctx.Err()
+				return err
+			default:
+			}
+			err = func() error {
+				queryArgs := []any{
+					idfKyou.IsDeleted,
+					idfKyou.ID,
+					idfKyou.RepName,
+					idfKyou.TargetFile,
+					idfKyou.CreateApp,
+					idfKyou.CreateDevice,
+					idfKyou.CreateUser,
+					idfKyou.UpdateApp,
+					idfKyou.UpdateDevice,
+					idfKyou.UpdateUser,
+					idfKyou.ContentPath,
+					idfKyou.RepName,
+					idfKyou.RelatedTime.Unix(),
+					idfKyou.CreateTime.Unix(),
+					idfKyou.UpdateTime.Unix(),
+				}
+
+				slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+				_, err = insertStmt.ExecContext(ctx, queryArgs...)
+				if err != nil {
+					err = fmt.Errorf("error at insert in to idf %s: %w", idfKyou.ID, err)
+					return err
+				}
+				return nil
+			}()
 			if err != nil {
-				err = fmt.Errorf("error at insert in to idf %s: %w", idfKyou.ID, err)
 				return err
 			}
-			return nil
-		}()
-		if err != nil {
-			return err
 		}
 	}
 	err = tx.Commit()
