@@ -216,14 +216,14 @@ class MainActivity : AppCompatActivity() {
         startGkillServer()
         waitUntilServerStarts { url ->
             findViewById<View>(R.id.loading_layout).visibility = View.GONE
-            webView.apply {
-                // onCreateで設定済みだが、読み込み直前にも明示しておく。
-                // 読み込むのは自前サーバだけなので content:// と file:// は塞ぐ
-                settings.allowContentAccess = false
-                settings.allowFileAccess = false
-                visibility = View.VISIBLE
-                loadUrl(url)
-            }
+            // onCreateで設定済みだが、読み込み直前にも明示しておく。
+            // 読み込むのは自前サーバだけなので content:// と file:// は塞ぐ。
+            // applyでまとめるとレシーバがラムダ経由になり静的解析が追えないため、
+            // onCreate側と同じくwebViewを明示的に書く
+            webView.settings.allowContentAccess = false
+            webView.settings.allowFileAccess = false
+            webView.visibility = View.VISIBLE
+            webView.loadUrl(url)
         }
     }
 
