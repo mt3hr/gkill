@@ -21,6 +21,16 @@ import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
 
+// ドラッグ&ドロップで受け取ったJSONからMiに写してよいフィールド。
+// 内容は Mi.clone() が複製しているフィールドと同じ
+const MI_DROP_ALLOWED_KEYS = new Set([
+    "is_deleted", "id", "rep_name", "related_time", "data_type",
+    "create_time", "create_app", "create_device", "create_user",
+    "update_time", "update_app", "update_user", "update_device",
+    "title", "is_checked", "board_name",
+    "limit_time", "estimate_start_time", "estimate_end_time",
+])
+
 export function useMiView(options: {
     props: miViewProps,
     emits: miViewEmits,
@@ -580,9 +590,8 @@ export function useMiView(options: {
             const json_mi = JSON.parse(e.dataTransfer!.getData("gkill_mi"))
             const parsed_mi = new Mi()
             for (const key in json_mi) {
-                // DataTransferのJSONは外部由来なので、Miが実際に持つプロパティ以外は捨てる。
-                // new Mi()はコンストラクタで全フィールドを初期化しているためホワイトリストとして使える
-                if (!Object.prototype.hasOwnProperty.call(parsed_mi, key)) {
+                // DataTransferのJSONは外部由来なので、許可したフィールド以外は捨てる
+                if (!MI_DROP_ALLOWED_KEYS.has(key)) {
                     continue
                 }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
