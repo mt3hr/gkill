@@ -10,6 +10,7 @@ import {
   makeKyouWithLantana,
   makeKyouWithMi,
   makeKyouWithTags,
+  makeKyouWithURLog,
 } from '../../helpers/factory'
 
 import TagGetter from '@/classes/dnote/dnote-key-getter/tag-getter'
@@ -124,5 +125,17 @@ describe('TitleGetter', () => {
     const kyou = asKyou(makeKyouWithKmemo('メモ内容'))
     const keys = getter.get_keys(kyou)
     expect(keys).toEqual(['メモ内容'])
+  })
+
+  test('returns title for urlog', () => {
+    const kyou = asKyou(makeKyouWithURLog('ページタイトル', 'https://example.com/page'))
+    const keys = getter.get_keys(kyou)
+    expect(keys).toEqual(['ページタイトル'])
+  })
+
+  test('falls back to url when urlog title is empty', () => {
+    const kyou = asKyou(makeKyouWithURLog('', 'https://example.com/page'))
+    const keys = getter.get_keys(kyou)
+    expect(keys).toEqual(['https://example.com/page'])
   })
 })
