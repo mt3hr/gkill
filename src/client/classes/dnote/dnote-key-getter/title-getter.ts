@@ -14,6 +14,8 @@ export default class TitleGetter implements DnoteKeyGetter {
             return [loaded_kyou.typed_kc.title]
         } else if (loaded_kyou.data_type.startsWith("timeis") && loaded_kyou.typed_timeis) {
             return [loaded_kyou.typed_timeis.title]
+        } else if (loaded_kyou.data_type.startsWith("urlog") && loaded_kyou.typed_urlog) {
+            return [loaded_kyou.typed_urlog.title ? loaded_kyou.typed_urlog.title : loaded_kyou.typed_urlog.url]
         } else if (loaded_kyou.data_type.startsWith("nlog") && loaded_kyou.typed_nlog) {
             return [loaded_kyou.typed_nlog.title]
         } else if (loaded_kyou.data_type.startsWith("mi") && loaded_kyou.typed_mi) {

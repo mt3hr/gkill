@@ -370,6 +370,16 @@ export function makeKyouWithTimeis(title = 'テストタイムイズ', overrides
   }
 }
 
+export function makeKyouWithURLog(title = 'Example', url = 'https://example.com', overrides: Record<string, unknown> = {}) {
+  return {
+    ...makeKyou({ data_type: 'urlog', related_time: new Date('2025-03-15T09:00:00+09:00') }),
+    typed_urlog: makeURLog({ title, url }),
+    attached_tags: [],
+    attached_texts: [],
+    ...overrides,
+  }
+}
+
 export function makeKyouWithTags(tags: string[], overrides: Record<string, unknown> = {}) {
   return {
     ...makeKyou({ related_time: new Date('2025-03-15T09:00:00+09:00') }),
