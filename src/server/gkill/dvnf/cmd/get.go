@@ -91,7 +91,8 @@ func runGet(_ *cobra.Command, _ []string) {
 	// childがあろうとなかろうと、createNewならば作る
 	opt := newDVNFOption(dvnfdir, getOpt.ext)
 	if rootOpt.createNew {
-		dvnfdir, err = dvnf.CreateNewDVNF(opt, true)
+		// 作成したパスは直後のGetLatestDVNFで取り直すので捨てる
+		_, err = dvnf.CreateNewDVNF(opt, true)
 		if err != nil {
 			err = fmt.Errorf("failed to create new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
 			log.Fatal(err)

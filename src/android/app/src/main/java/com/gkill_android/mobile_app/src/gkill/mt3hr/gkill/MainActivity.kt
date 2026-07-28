@@ -121,12 +121,28 @@ class MainActivity : AppCompatActivity() {
 
         val webView = findViewById<WebView>(R.id.webview)
         webView.visibility = View.GONE
+        // gkillのクライアントはVue SPAなのでJavaScriptは必須
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+        // 読み込むのは自前サーバ(127.0.0.1)だけなので、
+        // content:// と file:// 経由の他アプリ・ローカルファイルへのアクセスは塞ぐ
+        webView.settings.allowContentAccess = false
+        webView.settings.allowFileAccess = false
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                view.loadUrl(request.url.toString())
-                return true  // 外部に飛ばさずWebView内で処理
+                val url = request.url
+                if (isLocalServerUrl(url)) {
+                    view.loadUrl(url.toString())
+                    return true  // 外部に飛ばさずWebView内で処理
+                }
+                // 自前サーバ以外へのリンクはWebView内で開かず、端末のブラウザに任せる
+                return try {
+                    startActivity(Intent(Intent.ACTION_VIEW, url))
+                    true
+                } catch (e: Exception) {
+                    Log.w("gkill", "外部URLを開けませんでした: $url", e)
+                    true
+                }
             }
         }
 
@@ -209,6 +225,21 @@ class MainActivity : AppCompatActivity() {
         gkillServerProcess = null
     }
 
+    /**
+     * WebView内で開いてよいURLかどうか。
+     * このアプリが表示するのは同梱のgkill_serverだけなので、ループバックに限定する。
+     */
+    private fun isLocalServerUrl(url: Uri): Boolean {
+        val scheme = url.scheme?.lowercase()
+        if (scheme != "http" && scheme != "https") {
+            return false
+        }
+        return when (url.host?.lowercase()) {
+            "localhost", "127.0.0.1", "::1", "[::1]" -> true
+            else -> false
+        }
+    }
+
     private fun killExistingGkillServer() {
         try {
             gkillServerProcess?.destroy()
@@ -217,13 +248,14 @@ class MainActivity : AppCompatActivity() {
             Log.w("gkill", "保存プロセスkill失敗", e)
         }
         try {
-            val ps = Runtime.getRuntime().exec("ps -A")
+            // PATHを差し替えられても別バイナリが動かないよう絶対パスで叩く
+            val ps = Runtime.getRuntime().exec(arrayOf("/system/bin/ps", "-A"))
             ps.inputStream.bufferedReader().useLines { lines ->
                 lines.filter { it.contains("gkill_server") }.forEach { line ->
                     val parts = line.trim().split(Regex("\\s+"))
                     if (parts.size >= 2) {
                         val pid = parts[1]
-                        Runtime.getRuntime().exec(arrayOf("kill", "-9", pid)).waitFor()
+                        Runtime.getRuntime().exec(arrayOf("/system/bin/kill", "-9", pid)).waitFor()
                         Log.d("gkill", "Killed gkill_server pid=$pid")
                     }
                 }

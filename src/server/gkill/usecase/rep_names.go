@@ -19,7 +19,7 @@ func (uc *UsecaseContext) GetAllTagNames(ctx context.Context, repositories *reps
 	allTagNames, err := repositories.GetAllTagNames(context.Background())
 	if err != nil {
 		err = fmt.Errorf("error at get all tag names user id = %s device = %s: %w", userID, device, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetAllTagNamesError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}),
@@ -37,7 +37,7 @@ func (uc *UsecaseContext) GetAllRepNames(ctx context.Context, repositories *reps
 	allRepNames, err := repositories.GetAllRepNames(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all rep names user id = %s device = %s: %w", userID, device, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetAllRepNamesError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_REP_NAMES_MESSAGE"}),

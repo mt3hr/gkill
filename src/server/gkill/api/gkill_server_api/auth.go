@@ -17,7 +17,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 	loginSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
 	if loginSession == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", sessionID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionNotFoundError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ACCOUNT_AUTH_MESSAGE"}),
@@ -26,7 +26,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 	}
 	if time.Now().After(loginSession.ExpirationTime) {
 		err = fmt.Errorf("session expired for session id = %s", sessionID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionExpiredError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "SESSION_EXPIRED_MESSAGE"}),
@@ -46,7 +46,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 	account, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(ctx, loginSession.UserID)
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", loginSession.UserID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ACCOUNT_AUTH_MESSAGE"}),
@@ -65,7 +65,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 
 	if !account.IsEnable {
 		err = fmt.Errorf("error at disable account user id = %s: %w", loginSession.UserID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountDisabledError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "ACCOUNT_DISABLED_MESSAGE"}),

@@ -36,6 +36,10 @@ import type { ConfirmDeleteTagStructDialogEmits } from './confirm-delete-tag-str
 import type { ConfirmDeleteTagStructDialogProps } from './confirm-delete-tag-struct-dialog-props';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data';
+import { i18n } from '@/i18n'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
 defineProps<ConfirmDeleteTagStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteTagStructDialogEmits>()
@@ -43,12 +47,8 @@ defineExpose({ show, hide })
 
 const tag_struct: Ref<TagStructElementData> = ref(new TagStructElementData())
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data';
-import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("confirm-delete-tag-struct-dialog", {
   centerMode: "always",
   onEscape: () => hide(),

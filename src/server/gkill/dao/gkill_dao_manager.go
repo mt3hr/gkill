@@ -111,18 +111,18 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	// plugins/ ベースディレクトリを作成する
 	pluginsBaseDir := filepath.Join(os.ExpandEnv(gkill_options.GkillHomeDir), "plugins")
 	if err := os.MkdirAll(pluginsBaseDir, fs.ModePerm); err != nil {
-		slog.Warn(fmt.Sprintf("plugins base dir create failed: %v", err))
+		slog.Warn(fmt.Sprintf("plugins base dir create failed: %q", err))
 	}
 
 	// 全ユーザの plugins/{userID}/ ディレクトリを作成する
 	accounts, err := gkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(ctx)
 	if err != nil {
-		slog.Warn(fmt.Sprintf("get all accounts failed (plugin dir creation skipped): %v", err))
+		slog.Warn(fmt.Sprintf("get all accounts failed (plugin dir creation skipped): %q", err))
 	} else {
 		for _, acc := range accounts {
 			userPluginsDir := filepath.Join(pluginsBaseDir, acc.UserID)
 			if err := os.MkdirAll(userPluginsDir, fs.ModePerm); err != nil {
-				slog.Warn(fmt.Sprintf("plugin user dir create failed for %s: %v", acc.UserID, err))
+				slog.Warn(fmt.Sprintf("plugin user dir create failed for %q: %q", acc.UserID, err))
 				continue
 			}
 		}
@@ -262,7 +262,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 				loadedRepKey := rep.Type + "\x00" + filename
 				if _, loaded := loadedRepKeys[loadedRepKey]; loaded {
-					slog.Log(ctx, gkill_log.Debug, "skip duplicated repository define", "userID", userID, "device", device, "type", rep.Type, "file", filename)
+					slog.Log(ctx, gkill_log.Debug, "skip duplicated repository define", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "type", fmt.Sprintf("%q", rep.Type), "file", fmt.Sprintf("%q", filename))
 					continue
 				}
 				loadedRepKeys[loadedRepKey] = struct{}{}
@@ -1019,7 +1019,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		// プラグインリポジトリを追加（デバイス非依存、ユーザ別）
 		pm := g.getOrCreatePluginManager(userID)
 		if discoverErr := pm.DiscoverPlugins(ctx); discoverErr != nil {
-			slog.Warn(fmt.Sprintf("plugin discovery error for user %s: %v", userID, discoverErr))
+			slog.Warn(fmt.Sprintf("plugin discovery error for user %q: %q", userID, discoverErr))
 		}
 		for _, pluginRepo := range pm.GetRepositories() {
 			repositories.PluginReps = append(repositories.PluginReps, pluginRepo.(reps.PluginRepository))
@@ -1034,7 +1034,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		g.storeRepositories(userID, device, repositories)
 
 		if _, err := g.GetNotificator(userID, device); err != nil {
-			slog.Log(context.Background(), gkill_log.Warn, "error at get notificator", "error", err, "userID", userID, "device", device)
+			slog.Log(context.Background(), gkill_log.Warn, "error at get notificator", "error", fmt.Sprintf("%q", err), "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device))
 		}
 	}
 
@@ -1062,7 +1062,7 @@ func (g *GkillDAOManager) getOrCreatePluginManager(userID string) *PluginManager
 func (g *GkillDAOManager) GetPluginManager(userID string) *PluginManager {
 	pm := g.getOrCreatePluginManager(userID)
 	if discoverErr := pm.DiscoverPlugins(context.Background()); discoverErr != nil {
-		slog.Warn(fmt.Sprintf("plugin discovery error for user %s: %v", userID, discoverErr))
+		slog.Warn(fmt.Sprintf("plugin discovery error for user %q: %q", userID, discoverErr))
 	}
 	return pm
 }
@@ -1311,7 +1311,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 		err = g.fileRepWatchCacheUpdater.RemoveWatchFileRep(filename, userID)
 		if err != nil {
 			err = fmt.Errorf("error at remove watch file rep. filename = %s userID = %s: %w", filename, userID, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -1319,7 +1319,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	err = reps.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close repositories: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 	return true, nil
 }

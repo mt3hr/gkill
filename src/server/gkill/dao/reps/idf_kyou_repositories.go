@@ -743,7 +743,7 @@ func (i IDFKyouRepositories) GenerateThumbCache(ctx context.Context) error {
 			err := unwrapedRep.GenerateThumbCache(ctx)
 			if err != nil {
 				err = fmt.Errorf("error at generate thumb cache at idf kyou repositories in rep: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 			}
 		})
 		if err != nil {
@@ -784,7 +784,7 @@ func (i IDFKyouRepositories) GenerateVideoCache(ctx context.Context) error {
 			err := unwrapedRep.GenerateVideoCache(ctx)
 			if err != nil {
 				err = fmt.Errorf("error at generate video cache at idf kyou repositories in rep: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 			}
 		})
 		if err != nil {

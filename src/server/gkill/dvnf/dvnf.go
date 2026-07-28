@@ -137,9 +137,7 @@ func GetDVNFs(opt *Option) ([]string, error) {
 	// dvnfの正規雨表現パターンを作成する
 	pattern := ""
 	if opt.Name != "" {
-		if pattern != "" {
-			pattern += "_"
-		}
+		// patternはここでは必ず空なので区切り文字は不要
 		pattern += opt.Name
 	}
 	if opt.Device != "" {
@@ -216,9 +214,7 @@ func NewDVNF(opt *Option) (string, error) {
 
 	dvnf := ""
 	if opt.Name != "" {
-		if dvnf != "" {
-			dvnf += "_"
-		}
+		// dvnfはここでは必ず空なので区切り文字は不要
 		dvnf += opt.Name
 	}
 	if opt.Device != "" {

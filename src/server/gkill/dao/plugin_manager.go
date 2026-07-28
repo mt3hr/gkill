@@ -70,13 +70,13 @@ func (pm *PluginManager) DiscoverPlugins(ctx context.Context) error {
 	}
 	if err := os.MkdirAll(pm.pluginsDir, os.ModePerm); err != nil {
 		// ディレクトリ作成失敗はプラグイン無しとして扱う（警告のみ）
-		slog.Warn(fmt.Sprintf("plugin dir create failed for user %s: %v", pm.userID, err))
+		slog.Warn(fmt.Sprintf("plugin dir create failed for user %q: %q", pm.userID, err))
 		return nil
 	}
 
 	entries, err := os.ReadDir(pm.pluginsDir)
 	if err != nil {
-		slog.Warn(fmt.Sprintf("plugin dir read failed for user %s: %v", pm.userID, err))
+		slog.Warn(fmt.Sprintf("plugin dir read failed for user %q: %q", pm.userID, err))
 		return nil
 	}
 
@@ -102,19 +102,19 @@ func (pm *PluginManager) DiscoverPlugins(ctx context.Context) error {
 			}
 		}
 		if alreadyLoaded {
-			slog.Info(fmt.Sprintf("plugin already loaded, skipping: %s", manifest.Name))
+			slog.Info(fmt.Sprintf("plugin already loaded, skipping: %q", manifest.Name))
 			continue
 		}
 
 		// プロトコルバージョン確認
 		if manifest.ProtocolVersion != "1" {
-			slog.Warn(fmt.Sprintf("plugin %s uses unsupported protocol version %s, skipping", manifest.Name, manifest.ProtocolVersion))
+			slog.Warn(fmt.Sprintf("plugin %q uses unsupported protocol version %q, skipping", manifest.Name, manifest.ProtocolVersion))
 			continue
 		}
 
 		repo := reps.NewPluginRepository(pm.userID, pluginDir, *manifest)
 		pm.plugins = append(pm.plugins, repo)
-		slog.Info(fmt.Sprintf("plugin discovered: %s (user=%s, repName=%s)", manifest.Name, pm.userID, manifest.RepName))
+		slog.Info(fmt.Sprintf("plugin discovered: %q (user=%q, repName=%q)", manifest.Name, pm.userID, manifest.RepName))
 	}
 
 	return nil

@@ -12,3 +12,10 @@ paths-ignore:
 
   # マニュアルの生成物（.gitignoreで無視しているが明示しておく）
   - resources/manual/**
+
+  # テストコード。製品バイナリには含まれず、入力も自リポジトリ内に限られる。
+  # os.tmpdir() をテストだけが使っているために、テイントを追われた lib 側が
+  # js/insecure-temporary-file として報告されるのを避ける。
+  # なお paths-ignore が効くのは js-ts のようにビルドせず解析する言語だけで、
+  # autobuild の go / manual build の java-kotlin では無視される。
+  - "**/__tests__/**"

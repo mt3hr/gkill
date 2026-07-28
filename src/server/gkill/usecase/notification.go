@@ -23,7 +23,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 	existNotification, err := repositories.GetNotification(ctx, notification.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
@@ -32,7 +32,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 	}
 	if existNotification != nil {
 		err = fmt.Errorf("exist notification id = %s", notification.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.AlreadyExistNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
@@ -44,7 +44,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 		err = repositories.WriteNotificationRep.AddNotificationInfo(ctx, notification)
 		if err != nil {
 			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
@@ -55,14 +55,14 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 			err = repositories.NotificationReps[0].AddNotificationInfo(ctx, notification)
 			if err != nil {
 				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(ctx, notification, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
@@ -74,7 +74,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 	repName, err := repositories.WriteNotificationRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
@@ -93,13 +93,13 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[notification.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	addedNotification, err := repositories.GetNotification(ctx, notification.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
@@ -118,7 +118,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 	_, err := repositories.GetNotification(ctx, notification.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
@@ -130,7 +130,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		err = repositories.WriteNotificationRep.AddNotificationInfo(ctx, notification)
 		if err != nil {
 			err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
@@ -141,14 +141,14 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 			err = repositories.NotificationReps[0].AddNotificationInfo(ctx, notification)
 			if err != nil {
 				err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(ctx, notification, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateNotificationError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
@@ -160,7 +160,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 	repName, err := repositories.WriteNotificationRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
@@ -179,13 +179,13 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[notification.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	updatedNotification, err := repositories.GetNotification(ctx, notification.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
@@ -197,7 +197,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 	existNotification, err := repositories.GetNotification(ctx, notification.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
@@ -206,7 +206,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 	}
 	if existNotification == nil {
 		err = fmt.Errorf("not exist notification id = %s", notification.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.NotFoundNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
@@ -224,7 +224,7 @@ func (uc *UsecaseContext) GetNotificationsByTargetID(ctx context.Context, reposi
 	notifications, err := repositories.GetNotificationsByTargetID(ctx, targetID)
 	if err != nil {
 		err = fmt.Errorf("error at get notifications by target id user id = %s device = %s target id = %s: %w", userID, device, targetID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationsByTargetIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
@@ -254,7 +254,7 @@ func (uc *UsecaseContext) GetNotificationHistoriesByNotificationID(ctx context.C
 
 	if err != nil {
 		err = fmt.Errorf("error at get notification histories by notification id user id = %s device = %s target id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationHistoriesByNotificationIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),

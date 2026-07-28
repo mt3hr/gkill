@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   CREATE_TIME_UNIX NOT NULL,
   UPDATE_TIME_UNIX NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create git commit log table statement %s: %w", dbName, err)
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create git commit log table to %s: %w", dbName, err)
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create git commit log index unix statement %s: %w", dbName, err)
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create git commit log git commit log index unix to %s: %w", dbName, err)
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   CREATE_TIME_UNIX NOT NULL,
   UPDATE_TIME_UNIX NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createSQL))
 	_, err = db.ExecContext(ctx, createSQL)
 	if err != nil {
 		db.Close()
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 
 	// インデックス作成
 	indexSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = db.ExecContext(ctx, indexSQL)
 	if err != nil {
 		db.Close()
@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName+"_REF_HASHES") + ` 
   REF_HASH TEXT NOT NULL,
   PRIMARY KEY (REP_NAME, REF_NAME)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", refHashesSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", refHashesSQL))
 	_, err = db.ExecContext(ctx, refHashesSQL)
 	if err != nil {
 		db.Close()
@@ -228,7 +228,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := g.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -241,7 +241,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from git commit log: %w", err)
@@ -350,7 +350,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := g.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -363,7 +363,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from git commit log %s: %w", id, err)
@@ -469,7 +469,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := g.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -482,7 +482,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from git commit log %s: %w", id, err)
@@ -614,7 +614,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 			bgCtx := context.Background()
 			err := g.doIncrementalUpdate(bgCtx, newIDs, deletedIDs, currentRefHashes)
 			if err != nil {
-				slog.Log(bgCtx, gkill_log.Warn, "error at background git commit log cache build", "error", err)
+				slog.Log(bgCtx, gkill_log.Warn, "error at background git commit log cache build", "error", fmt.Sprintf("%q", err))
 			} else {
 				slog.Log(bgCtx, gkill_log.Info, "git commit log cache build completed", "numCommits", len(newIDs))
 			}
@@ -658,7 +658,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) doIncrementalUpdate(ctx contex
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at incremental update", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at incremental update", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -716,7 +716,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
   ?,
   ?
 )`
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
 		insertStmt, err := tx.PrepareContext(ctx, insertSQL)
 		if err != nil {
 			return fmt.Errorf("error at prepare insert statement: %w", err)
@@ -746,7 +746,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(g.dbName) + ` (
 				gitCommitLog.CreateTime.Unix(),
 				gitCommitLog.UpdateTime.Unix(),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", insertSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				return fmt.Errorf("error at insert git commit log %s: %w", gitCommitLog.ID, err)
@@ -816,7 +816,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) saveRefHashes(ctx context.Cont
 
 	tx, err := g.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Warn, "error at begin transaction for save ref hashes", "error", err)
+		slog.Log(ctx, gkill_log.Warn, "error at begin transaction for save ref hashes", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	isCommitted := false
@@ -828,14 +828,14 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) saveRefHashes(ctx context.Cont
 
 	_, err = tx.ExecContext(ctx, "DELETE FROM "+tableName)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Warn, "error at delete ref hashes", "error", err)
+		slog.Log(ctx, gkill_log.Warn, "error at delete ref hashes", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
 	insertSQL := "INSERT INTO " + tableName + " (REP_NAME, REF_NAME, REF_HASH) VALUES (?, ?, ?)"
 	stmt, err := tx.PrepareContext(ctx, insertSQL)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Warn, "error at prepare insert ref hashes", "error", err)
+		slog.Log(ctx, gkill_log.Warn, "error at prepare insert ref hashes", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	defer stmt.Close()
@@ -844,14 +844,14 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) saveRefHashes(ctx context.Cont
 		for refName, refHash := range refs {
 			_, err = stmt.ExecContext(ctx, repName, refName, refHash)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Warn, "error at insert ref hash", "error", err)
+				slog.Log(ctx, gkill_log.Warn, "error at insert ref hash", "error", fmt.Sprintf("%q", err))
 				return
 			}
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		slog.Log(ctx, gkill_log.Warn, "error at commit ref hashes", "error", err)
+		slog.Log(ctx, gkill_log.Warn, "error at commit ref hashes", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	isCommitted = true
@@ -1001,7 +1001,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := g.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -1014,7 +1014,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from git commit log: %w", err)
@@ -1216,7 +1216,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := g.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get git_commit_log histories sql %s: %w", id, err)
@@ -1229,7 +1229,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query: %w", err)

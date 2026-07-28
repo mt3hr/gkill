@@ -41,6 +41,10 @@ import EditKFTLTemplateStructElementView from '../views/edit-kftl-template-struc
 import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
+import { i18n } from '@/i18n'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
 defineProps<EditKFTLTemplateStructElementDialogProps>()
 const emits = defineEmits<EditKFTLTemplateStructElementDialogEmits>()
@@ -49,12 +53,8 @@ defineExpose({ show, hide })
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 const kftl_template_struct: Ref<KFTLTemplateStructElementData> = ref(new KFTLTemplateStructElementData())
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
-import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("edit-kftl-template-struct-element-dialog", {
   centerMode: "always",
   onEscape: () => hide(),

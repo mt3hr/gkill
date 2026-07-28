@@ -29,10 +29,13 @@ type lantanaRepositorySQLite3ImplLocalCached struct {
 }
 
 func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool) (LantanaRepository, error) {
-	localCacheDBFileName := localRepCacheDBFileName(userID, filename)
+	localCacheDBFileName, err := localRepCacheDBFileName(userID, filename)
+	if err != nil {
+		return nil, err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
-	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
+	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at mk dir %s: %w", localCacheDBParentDirName, err)
 		return nil, err
@@ -144,7 +147,7 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 	// リポジトリがキャッシュに登録されないままリクエスト毎に再ロードされ続けるため、
 	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
 	if err = os.Remove(l.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
-		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", l.localCacheDBFileName, "error", err)
+		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", l.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
 		l.lastUpdateCacheChanged = false
 		reopenedRep, reopenErr := NewLantanaRepositorySQLite3Impl(ctx, l.localCacheDBFileName, l.fullConnect)
 		if reopenErr != nil {
@@ -154,7 +157,10 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		return nil
 	}
 
-	localCacheDBFileName := localRepCacheDBFileName(l.userID, l.originalDBFileName)
+	localCacheDBFileName, err := localRepCacheDBFileName(l.userID, l.originalDBFileName)
+	if err != nil {
+		return err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

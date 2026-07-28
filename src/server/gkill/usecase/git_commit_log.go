@@ -19,7 +19,7 @@ func (uc *UsecaseContext) GetGitCommitLog(ctx context.Context, repositories *rep
 	gitCommitLog, err := repositories.GitCommitLogReps.GetGitCommitLog(ctx, id, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get gitCommitLog user id = %s device = %s id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetGitCommitLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}),

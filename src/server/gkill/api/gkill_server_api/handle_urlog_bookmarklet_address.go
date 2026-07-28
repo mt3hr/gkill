@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -40,7 +39,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse urlog bookmarklet request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -48,7 +47,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	// アカウントを取得
 	account, gkillError, err := g.getAccountFromSessionIDWithApplicationName(r.Context(), request.SessionID, "urlog_bookmarklet", request.LocaleName)
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		_ = gkillError
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -58,7 +57,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -66,7 +65,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -76,7 +75,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		imgBase64, err = httpGetBase64Data(request.ImageURL)
 		if err != nil {
 			err = fmt.Errorf("error at http get base 64 data from %s: %w", request.ImageURL, err)
-			log.Printf("err = %+v\n", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		}
 	}
 	var faviconBase64 string
@@ -84,7 +83,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		faviconBase64, err = httpGetBase64Data(request.FaviconURL)
 		if err != nil {
 			err = fmt.Errorf("error at http get base 64 data from %s: %w", request.FaviconURL, err)
-			log.Printf("err = %+v\n", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
@@ -111,13 +110,13 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	existURLog, err := repositories.URLogReps.GetURLog(r.Context(), urlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if existURLog != nil {
 		err = fmt.Errorf("exist urlog id = %s", urlog.ID)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
@@ -126,7 +125,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -135,7 +134,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
 	if err != nil {
 		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -145,7 +144,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), *urlog)
 	if err != nil {
 		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -155,14 +154,14 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		err = repositories.URLogReps[0].AddURLogInfo(r.Context(), *urlog)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	}
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
@@ -182,7 +181,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	// 通知する
@@ -190,7 +189,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	var currentServerConfig *server_config.ServerConfig
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(r.Context())
 	if err != nil {
-		slog.Log(r.Context(), gkill_log.Error, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	for _, serverConfig := range serverConfigs {
@@ -200,7 +199,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	}
 	if currentServerConfig == nil {
 		err = fmt.Errorf("current server config is not found. in gkill notificator")
-		slog.Log(r.Context(), gkill_log.Error, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -208,7 +207,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	notificationTargets, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.GetGkillNotificationTargets(r.Context(), userID, currentServerConfig.GkillNotificationPublicKey)
 	if err != nil {
 		err = fmt.Errorf("get notification target. in gkill notificator.: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -226,7 +225,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	contentJSONb, err := json.Marshal(content)
 	if err != nil {
 		err = fmt.Errorf("error at marshal webpush content: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -242,7 +241,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		})
 		if err != nil {
 			err = fmt.Errorf("error at send gkill notification: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		if resp.Body != nil {
 			defer func() {
@@ -257,7 +256,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 			_, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(r.Context(), notificationTarget.ID)
 			if err != nil {
 				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}

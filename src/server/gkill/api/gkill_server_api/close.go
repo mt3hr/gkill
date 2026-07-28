@@ -17,7 +17,7 @@ func (g *GkillServerAPI) Close() error {
 			shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			if err := g.server.Shutdown(shutdownCtx); err != nil {
-				slog.Log(context.Background(), gkill_log.Warn, "error at shutdown http server", "error", err)
+				slog.Log(context.Background(), gkill_log.Warn, "error at shutdown http server", "error", fmt.Sprintf("%q", err))
 			}
 		}
 		if g.GkillDAOManager != nil {
@@ -48,13 +48,13 @@ func (g *GkillServerAPI) PrintStartedMessage() {
 	ctx := context.Background()
 	device, err := g.GetDevice()
 	if err != nil {
-		slog.Log(ctx, gkill_log.Debug, "Error getting device information", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "Error getting device information", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Debug, "Error getting server configuration", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "Error getting server configuration", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
