@@ -76,5 +76,20 @@ export const KYOUS_QUERY_DATETIME_FIELDS = new Map([
   ["update_time", { allowDateOnly: true, endOfDay: false }],
 ]);
 
+// normalizeKyouQuery が受け付けるクエリキー全体。
+// 個別の集合から導出するので、フィールドを足すときはここを触らなくてよい。
+export const KYOUS_QUERY_ALL_FIELDS = new Set([
+  ...KYOUS_QUERY_BOOLEAN_FIELDS,
+  ...KYOUS_QUERY_STRING_ARRAY_FIELDS,
+  ...KYOUS_QUERY_NUMBER_FIELDS,
+  ...KYOUS_QUERY_INTEGER_FIELDS.keys(),
+  ...KYOUS_QUERY_DATETIME_FIELDS.keys(),
+  // 上の集合に属さない、個別に検証しているキー
+  "period_of_time_week_of_days",
+  "mi_board_name",
+  "mi_check_state",
+  "mi_sort_type",
+]);
+
 export const MI_CHECK_STATES = new Set(["all", "checked", "uncheck"]);
 export const MI_SORT_TYPES = new Set(["create_time", "estimate_start_time", "estimate_end_time", "limit_time"]);
