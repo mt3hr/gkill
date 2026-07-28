@@ -51,7 +51,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 	serverConfigs, err := gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.Background())
 	if err != nil {
 		err = fmt.Errorf("error at get all server configs: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	if len(serverConfigs) == 0 {
@@ -85,7 +85,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		serverConfigs, err = gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.Background())
 		if err != nil {
 			err = fmt.Errorf("error at get all server configs: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			return nil, err
 		}
 	}

@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
   DEVICE NOT NULL,
   TX_ID NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table statement %s: %w", filename, err)
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table to %s: %w", filename, err)
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_MI ON MI (ID, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create MI index statement %s: %w", filename, err)
@@ -76,14 +76,14 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 
 	if err != nil {
@@ -212,7 +212,7 @@ INSERT INTO MI (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
@@ -265,7 +265,7 @@ INSERT INTO MI (
 		device,
 		txID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to mi %s: %w", mi.ID, err)
@@ -322,7 +322,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
@@ -335,7 +335,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from mi temp: %w", err)
@@ -452,7 +452,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get mi by txid sql: %w", err)
@@ -468,7 +468,7 @@ AND DEVICE = ?
 	queryArgs := []any{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI: %w", err)
@@ -558,7 +558,7 @@ WHERE TX_ID = ?
 AND USER_ID = ?
 AND DEVICE = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp mi kyou by TXID sql: %w", err)
@@ -576,7 +576,7 @@ AND DEVICE = ?
 		userID,
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp mi kyou by TXID sql: %w", err)

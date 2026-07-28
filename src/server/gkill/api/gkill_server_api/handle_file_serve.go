@@ -22,7 +22,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		sharedID = strings.ReplaceAll(sharedIDCookie.Value, "shared_id", "")
@@ -38,7 +38,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if account == nil || gkillError != nil || err != nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		userID = account.UserID
@@ -47,14 +47,14 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil || sharedKyouInfo == nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		userID = sharedKyouInfo.UserID
 	} else {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -62,7 +62,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -70,7 +70,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -83,7 +83,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	for _, idfRep := range idfRepImpls {
@@ -91,7 +91,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			err = fmt.Errorf("error at handle file serve: %w", err)
-			slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+			slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		if repName == targetRepName {
@@ -103,7 +103,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	if targetIDFRep == nil {
 		w.WriteHeader(http.StatusNotFound)
 		err = fmt.Errorf("error at handle file serve: %w", err)
-		slog.Log(r.Context(), gkill_log.Error, "finish", "error", err)
+		slog.Log(r.Context(), gkill_log.Error, "finish", "error", fmt.Sprintf("%q", err))
 		return
 	}
 

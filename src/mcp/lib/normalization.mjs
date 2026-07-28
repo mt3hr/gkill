@@ -84,6 +84,12 @@ export function normalizeKyouQuery(query) {
 
   for (const [key, value] of Object.entries(source)) {
     const field = `query.${key}`;
+    // 未知キーは gkill 側へそのまま渡す仕様なので、
+    // プロトタイプを汚染しうるキーだけはここで拒否する。
+    // query は MCP 経由で AI クライアントが自由に組み立てられる。
+    if (key === "__proto__" || key === "constructor" || key === "prototype") {
+      throw invalidArgument(field, "is not supported", value);
+    }
     if (KYOUS_QUERY_BOOLEAN_FIELDS.has(key)) {
       normalized[key] = assertBoolean(value, field);
       continue;

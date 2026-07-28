@@ -22,7 +22,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 	existReKyou, err := repositories.ReKyouReps.GetReKyou(ctx, rekyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
@@ -31,7 +31,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 	}
 	if existReKyou != nil {
 		err = fmt.Errorf("exist rekyou id = %s", rekyou.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.AlreadyExistReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
@@ -43,7 +43,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 		err = repositories.WriteReKyouRep.AddReKyouInfo(ctx, rekyou)
 		if err != nil {
 			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
@@ -54,14 +54,14 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(ctx, rekyou)
 			if err != nil {
 				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(ctx, rekyou, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
@@ -73,7 +73,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 	repName, err := repositories.WriteReKyouRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
@@ -92,7 +92,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[rekyou.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
@@ -105,7 +105,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 	_, err := repositories.ReKyouReps.GetReKyou(ctx, rekyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_UPDATED_GET_MESSAGE"}),
@@ -117,7 +117,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 		err = repositories.WriteReKyouRep.AddReKyouInfo(ctx, rekyou)
 		if err != nil {
 			err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
@@ -128,14 +128,14 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(ctx, rekyou)
 			if err != nil {
 				err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(ctx, rekyou, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateReKyouError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
@@ -147,7 +147,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 	repName, err := repositories.WriteReKyouRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_UPDATED_GET_MESSAGE"}),
@@ -166,13 +166,13 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[rekyou.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	existReKyou, err := repositories.ReKyouReps.GetReKyou(ctx, rekyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
@@ -181,7 +181,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 	}
 	if existReKyou == nil {
 		err = fmt.Errorf("not exist rekyou id = %s", rekyou.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.NotFoundReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
@@ -199,7 +199,7 @@ func (uc *UsecaseContext) GetReKyouHistories(ctx context.Context, repositories *
 	rekyouHistories, err := repositories.ReKyouReps.GetReKyouHistoriesByRepName(ctx, id, repName)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),

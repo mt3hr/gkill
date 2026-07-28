@@ -29,10 +29,13 @@ type kmemoRepositorySQLite3ImplLocalCached struct {
 }
 
 func NewKmemoRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool) (KmemoRepository, error) {
-	localCacheDBFileName := localRepCacheDBFileName(userID, filename)
+	localCacheDBFileName, err := localRepCacheDBFileName(userID, filename)
+	if err != nil {
+		return nil, err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
-	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
+	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at mk dir %s: %w", localCacheDBParentDirName, err)
 		return nil, err
@@ -144,7 +147,7 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 	// リポジトリがキャッシュに登録されないままリクエスト毎に再ロードされ続けるため、
 	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
 	if err = os.Remove(k.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
-		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", k.localCacheDBFileName, "error", err)
+		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", k.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
 		k.lastUpdateCacheChanged = false
 		reopenedRep, reopenErr := NewKmemoRepositorySQLite3Impl(ctx, k.localCacheDBFileName, k.fullConnect)
 		if reopenErr != nil {
@@ -154,7 +157,10 @@ func (k *kmemoRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 		return nil
 	}
 
-	localCacheDBFileName := localRepCacheDBFileName(k.userID, k.originalDBFileName)
+	localCacheDBFileName, err := localRepCacheDBFileName(k.userID, k.originalDBFileName)
+	if err != nil {
+		return err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

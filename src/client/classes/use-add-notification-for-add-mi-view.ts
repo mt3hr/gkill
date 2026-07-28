@@ -60,11 +60,9 @@ export function useAddNotificationForAddMiView(options: {
         new_notification.create_time = new Date(Date.now())
         new_notification.create_user = props.application_config.user_id
         new_notification.update_app = "gkill"
-        new_notification.update_app = "gkill"
         new_notification.update_device = props.application_config.device
         new_notification.update_time = new Date(Date.now())
         new_notification.update_user = props.application_config.user_id
-        new_notification.related_time = new Date(Date.now())
         return new_notification
     }
 

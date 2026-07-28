@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 )
 `
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF table statement %s: %w", dbName, err)
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF table to %s: %w", dbName, err)
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + ` (ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF index unix statement %s: %w", dbName, err)
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF index unix to %s: %w", dbName, err)
@@ -129,7 +129,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   ?,
   ?
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addIDFKyouInfoSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", addIDFKyouInfoSQL))
 	addIDFKyouInfoStmt, err := cacheDB.PrepareContext(ctx, addIDFKyouInfoSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add idf kyou info sql: %w", err)
@@ -205,7 +205,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
@@ -218,7 +218,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf: %w", err)
@@ -283,14 +283,10 @@ WHERE
 			if targetRepName == "" || targetRepName == "." {
 				targetRepName = idf.RepName
 			}
-			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
-			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
-			idf.IsAudio = isAudio(idf.TargetFile)
-			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
@@ -452,7 +448,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -465,7 +461,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf: %w", err)
@@ -515,14 +511,10 @@ WHERE
 			if targetRepName == "" || targetRepName == "." {
 				targetRepName = idf.RepName
 			}
-			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
-			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
-			idf.IsAudio = isAudio(idf.TargetFile)
-			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
@@ -613,7 +605,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -626,7 +618,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf: %w", err)
@@ -676,14 +668,10 @@ WHERE
 			if targetRepName == "" || targetRepName == "." {
 				targetRepName = idf.RepName
 			}
-			// 対象IDFRepsからファイルURLを取得（targetRepName解決後に構築）
-			idf.FileURL = buildIDFFileURL(targetRepName, idf.TargetFile)
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
-			idf.IsAudio = isAudio(idf.TargetFile)
-			idf.IsZip = isZip(idf.TargetFile)
 
 			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
@@ -759,7 +747,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -816,7 +804,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
   ?,
   ?
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add idf sql: %w", err)
@@ -861,7 +849,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
 					idfKyou.UpdateTime.Unix(),
 				}
 
-				slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+				slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 				_, err = insertStmt.ExecContext(ctx, queryArgs...)
 				if err != nil {
 					err = fmt.Errorf("error at insert in to idf %s: %w", idfKyou.ID, err)
@@ -976,7 +964,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
@@ -989,7 +977,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf: %w", err)
@@ -1198,7 +1186,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
@@ -1211,7 +1199,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf: %w", err)
@@ -1327,7 +1315,7 @@ ORDER BY UPDATE_TIME_UNIX DESC
 		backslashPath,
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get idf kyou by target file sql: %w", err)
@@ -1340,7 +1328,7 @@ ORDER BY UPDATE_TIME_UNIX DESC
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf: %w", err)
@@ -1471,7 +1459,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
@@ -1484,7 +1472,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf: %w", err)
@@ -1582,7 +1570,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context,
 		idfKyou.UpdateTime.Unix(),
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", i.addIDFKyouInfoSQL, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", i.addIDFKyouInfoSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err := i.addIDFKyouInfoStmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to idf %s: %w", idfKyou.ID, err)

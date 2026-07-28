@@ -22,7 +22,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 	existURLog, err := repositories.URLogReps.GetURLog(ctx, urlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
@@ -31,7 +31,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 	}
 	if existURLog != nil {
 		err = fmt.Errorf("exist urlog id = %s", urlog.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.AlreadyExistURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
@@ -43,7 +43,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 		err = repositories.WriteURLogRep.AddURLogInfo(ctx, urlog)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
@@ -54,14 +54,14 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 			err = repositories.URLogReps[0].AddURLogInfo(ctx, urlog)
 			if err != nil {
 				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(ctx, urlog, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
@@ -73,7 +73,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 	repName, err := repositories.WriteURLogRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
@@ -91,7 +91,7 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[urlog.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	return nil, nil
@@ -104,7 +104,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 	_, err := repositories.URLogReps.GetURLog(ctx, urlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
@@ -116,7 +116,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 		err = repositories.WriteURLogRep.AddURLogInfo(ctx, urlog)
 		if err != nil {
 			err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
@@ -127,14 +127,14 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 			err = repositories.URLogReps[0].AddURLogInfo(ctx, urlog)
 			if err != nil {
 				err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(ctx, urlog, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateURLogError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
@@ -146,7 +146,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 	repName, err := repositories.WriteURLogRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
@@ -164,13 +164,13 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[urlog.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	existURLog, err := repositories.URLogReps.GetURLog(ctx, urlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
@@ -179,7 +179,7 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 	}
 	if existURLog == nil {
 		err = fmt.Errorf("not exist urlog id = %s", urlog.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.NotFoundURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
@@ -197,7 +197,7 @@ func (uc *UsecaseContext) GetURLogHistories(ctx context.Context, repositories *r
 	urlogHistories, err := repositories.URLogReps.GetURLogHistoriesByRepName(ctx, id, repName)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_URLOG_MESSAGE"}),

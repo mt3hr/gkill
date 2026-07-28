@@ -78,8 +78,8 @@ export function useEditIDFKyouView(options: {
             }
 
             // 更新がなかったらエラーメッセージを出力する
-            if (moment(idf_kyou.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime() &&
-                moment(idf_kyou.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime()) {
+            // この画面で編集できるのは関連日時だけなので、それだけを比較する
+            if (moment(idf_kyou.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime()) {
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.idf_kyou_is_no_update
                 error.error_message = i18n.global.t("IDF_KYOU_IS_NO_UPDATE_MESSAGE")

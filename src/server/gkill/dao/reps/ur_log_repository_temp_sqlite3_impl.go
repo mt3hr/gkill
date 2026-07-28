@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
   DEVICE NOT NULL,
   TX_ID NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create URLOG table statement %s: %w", filename, err)
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create URLOG table to %s: %w", filename, err)
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_URLOG ON URLOG (ID, RELATED_TIME, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create URLOG index statement %s: %w", filename, err)
@@ -75,14 +75,14 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create URLOG index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 
 	if err != nil {
@@ -210,7 +210,7 @@ INSERT INTO URLOG (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add urlog sql %s: %w", urlog.ID, err)
@@ -244,7 +244,7 @@ INSERT INTO URLOG (
 		device,
 		txID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -295,7 +295,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
@@ -308,7 +308,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from urlog temp: %w", err)
@@ -424,7 +424,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog by tx id sql %s: %w", txID, err)
@@ -437,7 +437,7 @@ AND DEVICE = ?
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -521,7 +521,7 @@ WHERE TX_ID = ?
 AND USER_ID = ?
 AND DEVICE = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp urlog kyou by TXID sql: %w", err)
@@ -539,7 +539,7 @@ AND DEVICE = ?
 		userID,
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp urlog kyou by TXID sql: %w", err)

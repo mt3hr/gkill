@@ -288,7 +288,7 @@ func (g *GkillServerAPI) getTLSFileNames(device string) (certFileName string, pe
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
 	if err != nil {
 		err = fmt.Errorf("error at get server config device = %s: %w", device, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		return "", "", err
 	}
 	return serverConfig.TLSCertFile, serverConfig.TLSKeyFile, nil
@@ -426,7 +426,7 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get all account config")
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAllAccountConfigError,
 			ErrorMessage: api.GetLocalizer("").MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ACCOUNT_CONFIG_MESSAGE"}),
@@ -453,7 +453,7 @@ func (g *GkillServerAPI) GetDevice() (string, error) {
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all server configs: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		return "", err
 	}
 

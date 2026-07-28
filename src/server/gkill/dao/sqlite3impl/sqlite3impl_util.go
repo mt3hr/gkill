@@ -490,7 +490,7 @@ ORDER BY name;
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()

@@ -45,7 +45,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse upload files response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUploadFilesResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -58,7 +58,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse upload files request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUploadFilesRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -81,7 +81,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -93,7 +93,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -108,7 +108,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		repName, err := idfRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name from idf rep: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidStatusGetRepNameError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -133,7 +133,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 
 	if targetRep == nil {
 		err := fmt.Errorf("error at not found target idf rep %s: %w", request.TargetRepName, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundTargetIDFRepError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -156,7 +156,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		dbPath, err := targetRep.GetPath(r.Context(), "")
 		if err != nil {
 			err := fmt.Errorf("error at get target rep path at %s: %w", request.TargetRepName, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -169,7 +169,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		estimateCreateFileName, err := g.resolveFileName(repDir, fileInfo.FileName, request.ConflictBehavior)
 		if err != nil {
 			err := fmt.Errorf("error at resolve save file name at %s filename= %s: %w", request.TargetRepName, fileInfo.FileName, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -190,7 +190,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 			if err != nil {
 				err := fmt.Errorf("error at open file filename= %s: %w", filename, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				gkillError = &message.GkillError{
 					ErrorCode:    message.GetRepPathError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -207,7 +207,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			_, err = io.Copy(file, decoder)
 			if err != nil {
 				err = fmt.Errorf("error at copy file content filename= %s: %w", filename, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				gkillErrorCh <- &message.GkillError{
 					ErrorCode:    message.GetRepPathError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -260,7 +260,7 @@ errloop:
 	repName, err := targetRep.GetRepName(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get rep name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError = &message.GkillError{
 			ErrorCode:    message.GetRepPathError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -279,7 +279,7 @@ loop:
 				err = targetRep.AddIDFKyouInfo(r.Context(), *idfKyou)
 				if err != nil {
 					err := fmt.Errorf("error at add idf kyou info at %s: %w", request.TargetRepName, err)
-					slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 					gkillError = &message.GkillError{
 						ErrorCode:    message.GetRepPathError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
@@ -291,7 +291,7 @@ loop:
 					err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), *idfKyou)
 					if err != nil {
 						err = fmt.Errorf("error at add idf kyou info to cache rep at %s: %w", request.TargetRepName, err)
-						slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+						slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 					}
 				}
 
@@ -307,7 +307,7 @@ loop:
 				_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
 				if err != nil {
 					err = fmt.Errorf("error at update or add latest data repository address: %w", err)
-					slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				}
 			}
 		default:
@@ -320,7 +320,7 @@ loop:
 		kyou, err := targetRep.GetKyou(r.Context(), idfKyouID, nil)
 		if err != nil {
 			err := fmt.Errorf("error at get kyou at %s: %w", request.TargetRepName, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError = &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_GET_KYOU_MESSAGE"}),

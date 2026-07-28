@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
@@ -13,7 +14,7 @@ func GetVersion() (*GkillVersionData, error) {
 	assetsFileName := "embed/version.json"
 	versionJSONFile, err := EmbedFS.Open(assetsFileName)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 	}
 	defer func() {
 		err := versionJSONFile.Close()
