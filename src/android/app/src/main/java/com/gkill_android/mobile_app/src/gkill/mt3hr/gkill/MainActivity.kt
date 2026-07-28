@@ -217,6 +217,10 @@ class MainActivity : AppCompatActivity() {
         waitUntilServerStarts { url ->
             findViewById<View>(R.id.loading_layout).visibility = View.GONE
             webView.apply {
+                // onCreateで設定済みだが、読み込み直前にも明示しておく。
+                // 読み込むのは自前サーバだけなので content:// と file:// は塞ぐ
+                settings.allowContentAccess = false
+                settings.allowFileAccess = false
                 visibility = View.VISIBLE
                 loadUrl(url)
             }
