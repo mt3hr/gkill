@@ -27,6 +27,10 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    // WebViewはonCreateで一度だけ取得して設定を済ませる。
+    // 使う場所ごとにfindViewByIdすると、設定漏れのインスタンスが生まれる。
+    private lateinit var webView: WebView
+
     private var gkillServerProcess: Process? = null
     private var serverUrlLatch = CountDownLatch(1)
     private var detectedServerUrl = "http://localhost:9999"
@@ -119,7 +123,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        val webView = findViewById<WebView>(R.id.webview)
+        webView = findViewById(R.id.webview)
         webView.visibility = View.GONE
         // gkillのクライアントはVue SPAなのでJavaScriptは必須
         webView.settings.javaScriptEnabled = true
@@ -212,7 +216,7 @@ class MainActivity : AppCompatActivity() {
         startGkillServer()
         waitUntilServerStarts { url ->
             findViewById<View>(R.id.loading_layout).visibility = View.GONE
-            findViewById<WebView>(R.id.webview).apply {
+            webView.apply {
                 visibility = View.VISIBLE
                 loadUrl(url)
             }
