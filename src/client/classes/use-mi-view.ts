@@ -580,6 +580,11 @@ export function useMiView(options: {
             const json_mi = JSON.parse(e.dataTransfer!.getData("gkill_mi"))
             const parsed_mi = new Mi()
             for (const key in json_mi) {
+                // DataTransferのJSONは外部由来なので、Miが実際に持つプロパティ以外は捨てる。
+                // new Mi()はコンストラクタで全フィールドを初期化しているためホワイトリストとして使える
+                if (!Object.prototype.hasOwnProperty.call(parsed_mi, key)) {
+                    continue
+                }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (parsed_mi as any)[key] = (json_mi as any)[key]
 

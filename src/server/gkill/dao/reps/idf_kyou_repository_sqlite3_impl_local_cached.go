@@ -18,10 +18,13 @@ import (
 )
 
 func NewIDFDirRepLocalCached(ctx context.Context, userID string, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
-	localCacheDBFileName := localRepCacheDBFileName(userID, dbFilename)
+	localCacheDBFileName, err := localRepCacheDBFileName(userID, dbFilename)
+	if err != nil {
+		return nil, err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
-	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
+	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at mk dir %s: %w", localCacheDBParentDirName, err)
 		return nil, err
@@ -155,7 +158,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 	// リポジトリがキャッシュに登録されないままリクエスト毎に再ロードされ続けるため、
 	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
 	if err = os.Remove(i.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
-		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", i.localCacheDBFileName, "error", err)
+		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", i.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
 		i.lastUpdateCacheChanged = false
 		reopenedRep, reopenErr := NewIDFDirRep(ctx, i.contentDir, i.localCacheDBFileName, i.fullConnect, i.r, i.autoIDF, i.idfIgnore, i.repositoriesRef)
 		if reopenErr != nil {
@@ -165,7 +168,10 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		return nil
 	}
 
-	localCacheDBFileName := localRepCacheDBFileName(i.userID, i.originalDBFileName)
+	localCacheDBFileName, err := localRepCacheDBFileName(i.userID, i.originalDBFileName)
+	if err != nil {
+		return err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

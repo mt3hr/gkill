@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO" (
   FIND_QUERY_JSON NOT NULL,
   VIEW_TYPE NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO table statement %s: %w", filename, err)
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO table to %s: %w", filename, err)
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO_OPTIONS" (
   VALUE NOT NULL,
   PRIMARY KEY (SHARE_ID, KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err = db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO_OPTIONS table statement %s: %w", filename, err)
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO_OPTIONS" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO_OPTIONS table to %s: %w", filename, err)
@@ -210,7 +210,7 @@ FROM SHARE_KYOU_INFO
 		shareKyouInfoDefaultValue["IS_SHARE_WITH_LOCATIONS"],
 	)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all kyou share infos sql: %w", err)
@@ -223,7 +223,7 @@ FROM SHARE_KYOU_INFO
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -353,7 +353,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		shareKyouInfoDefaultValue["IS_SHARE_WITH_LOCATIONS"],
 	)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou share infos sql: %w", err)
@@ -370,7 +370,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "query args", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "query args", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -500,7 +500,7 @@ WHERE SHARE_ID = ?
 		shareKyouInfoDefaultValue["IS_SHARE_WITH_LOCATIONS"],
 	)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou share infos sql: %w", err)
@@ -516,7 +516,7 @@ WHERE SHARE_ID = ?
 	queryArgs := []any{
 		sharedID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "query args", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "query args", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -599,12 +599,12 @@ INSERT INTO SHARE_KYOU_INFO (
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add kyou share info sql: %w", err)
@@ -626,7 +626,7 @@ INSERT INTO SHARE_KYOU_INFO (
 		kyouShareInfo.FindQueryJSON,
 		kyouShareInfo.ViewType,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", queryArgs))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -666,13 +666,13 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	}()
 
 	for key, value := range insertValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", optionsSQL)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", optionsSQL))
 		queryArgs := []any{
 			kyouShareInfo.ShareID,
 			key,
 			value,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", optionsSQL, queryArgs)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", optionsSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 		_, err = optionsStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at add share kyou info options sql: %w", err)
@@ -713,12 +713,12 @@ WHERE SHARE_ID = ?
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update kyou share info sql: %w", err)
@@ -740,7 +740,7 @@ WHERE SHARE_ID = ?
 		kyouShareInfo.ViewType,
 		kyouShareInfo.ShareID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", queryArgs))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -819,12 +819,12 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 
 	// レコード自体が存在しなかったらいれる
 	for key, value := range insertValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 		queryArgs := []any{
 			kyouShareInfo.ShareID,
 			key,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", checkExistSQL, queryArgs)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", checkExistSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 		row := checkExistStmt.QueryRowContext(ctx, queryArgs...)
 		err = row.Err()
 		if err != nil {
@@ -839,13 +839,13 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 			return false, err
 		}
 		if recordCount == 0 {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
 			queryArgs := []any{
 				kyouShareInfo.ShareID,
 				key,
 				value,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -854,13 +854,13 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 				return false, err
 			}
 		} else {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", updateOptionsSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateOptionsSQL))
 			queryArgs := []any{
 				value,
 				kyouShareInfo.ShareID,
 				key,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", updateOptionsSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateOptionsSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			_, err = updateOptionStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -872,7 +872,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	}
 
 	// 更新する
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	queryArgs = []any{
 		kyouShareInfo.ID,
 		kyouShareInfo.UserID,
@@ -882,7 +882,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		kyouShareInfo.ViewType,
 		kyouShareInfo.ShareID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at update share kyou info options sql: %w", err)
@@ -916,12 +916,12 @@ WHERE SHARE_ID = ?
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete kyou share info sql: %w", err)
@@ -937,7 +937,7 @@ WHERE SHARE_ID = ?
 	queryArgs := []any{
 		shareID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", queryArgs))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -948,7 +948,7 @@ WHERE SHARE_ID = ?
 DELETE FROM SHARE_KYOU_INFO_OPTIONS
 WHERE SHARE_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", optionsSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", optionsSQL))
 	stmt, err = tx.PrepareContext(ctx, optionsSQL)
 	if err != nil {
 		err = fmt.Errorf("error at delete share kyou info options sql: %w", err)
@@ -965,7 +965,7 @@ WHERE SHARE_ID = ?
 	queryArgs = []any{
 		shareID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", optionsSQL, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", optionsSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at delete share kyou info options sql: %w", err)
@@ -999,7 +999,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -1012,7 +1012,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -1020,7 +1020,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -1033,7 +1033,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -1047,7 +1047,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1061,7 +1061,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
@@ -1069,7 +1069,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertCurrentVersionSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1083,7 +1083,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1092,7 +1092,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)

@@ -17,7 +17,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 	var currentServerConfig *server_config.ServerConfig
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 	for _, serverConfig := range serverConfigs {
@@ -27,7 +27,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 	}
 	if currentServerConfig == nil {
 		err = fmt.Errorf("current server config is not found. in gkill notificator")
-		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -35,7 +35,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 	notificationTargets, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.GetGkillNotificationTargets(ctx, userID, currentServerConfig.GkillNotificationPublicKey)
 	if err != nil {
 		err = fmt.Errorf("get notification target. in gkill notificator.: %w", err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -49,7 +49,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 	contentJSONb, err := json.Marshal(content)
 	if err != nil {
 		err = fmt.Errorf("error at marshal webpush content: %w", err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -65,7 +65,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 		})
 		if err != nil {
 			err = fmt.Errorf("error at send gkill notification: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		if resp.Body != nil {
 			defer func() {
@@ -80,7 +80,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 			_, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(ctx, notificationTarget.ID)
 			if err != nil {
 				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}

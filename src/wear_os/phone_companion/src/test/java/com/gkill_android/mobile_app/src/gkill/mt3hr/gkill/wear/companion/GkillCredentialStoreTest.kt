@@ -23,6 +23,28 @@ class GkillCredentialStoreTest {
     // In-memory storage backing the mocked SharedPreferences
     private val storage = mutableMapOf<String, String?>()
 
+    /**
+     * Android Keystoreはユニットテストでは使えないため、
+     * 前後を目印で挟むだけの差し替え可能な暗号器を使う。
+     * 「秘密値がそのままの形では保存されない」ことを検証するのが目的。
+     */
+    private class FakeSecretCipher : GkillSecretCipher {
+        override fun encrypt(plain: String): String? = "$PREFIX$plain$SUFFIX"
+
+        override fun decrypt(stored: String): String? =
+            stored.removePrefix(PREFIX).removeSuffix(SUFFIX)
+
+        override fun isEncrypted(stored: String): Boolean = stored.startsWith(PREFIX)
+
+        companion object {
+            const val PREFIX = "fakeenc:"
+            const val SUFFIX = ":end"
+        }
+    }
+
+    private fun encrypted(plain: String): String =
+        "${FakeSecretCipher.PREFIX}$plain${FakeSecretCipher.SUFFIX}"
+
     @Before
     fun setUp() {
         storage.clear()
@@ -56,7 +78,7 @@ class GkillCredentialStoreTest {
             context.getSharedPreferences("gkill_wear_prefs", Context.MODE_PRIVATE)
         } returns prefs
 
-        store = GkillCredentialStore(context)
+        store = GkillCredentialStore(context, FakeSecretCipher())
     }
 
     // -----------------------------------------------------------------------
@@ -113,17 +135,45 @@ class GkillCredentialStoreTest {
     }
 
     @Test
-    fun setPasswordSha256_storesValue() {
+    fun setPasswordSha256_storesEncryptedValue() {
         val hash = "abc123def456"
         store.setPasswordSha256(hash)
-        verify { editor.putString("password_sha256", hash) }
+        verify { editor.putString("password_sha256", encrypted(hash)) }
         verify { editor.apply() }
+        assertNotEquals(hash, storage["password_sha256"])
     }
 
     @Test
-    fun getPasswordSha256_returnsStoredValue() {
+    fun getPasswordSha256_returnsDecryptedValue() {
+        storage["password_sha256"] = encrypted("sha256hash")
+        assertEquals("sha256hash", store.getPasswordSha256())
+    }
+
+    @Test
+    fun getPasswordSha256_readsLegacyPlainTextValue() {
+        // 暗号化前のバージョンが書いた値も読めること
         storage["password_sha256"] = "sha256hash"
         assertEquals("sha256hash", store.getPasswordSha256())
+    }
+
+    @Test
+    fun setPasswordSha256_removesKey_whenEmpty() {
+        storage["password_sha256"] = encrypted("sha256hash")
+        store.setPasswordSha256("")
+        verify { editor.remove("password_sha256") }
+        assertEquals("", store.getPasswordSha256())
+    }
+
+    @Test
+    fun getPasswordSha256_returnsEmpty_whenDecryptFails() {
+        // 鍵が変わって復号できなくなった場合は空扱いにして再ログインさせる
+        storage["password_sha256"] = "${FakeSecretCipher.PREFIX}broken"
+        val brokenStore = GkillCredentialStore(context, object : GkillSecretCipher {
+            override fun encrypt(plain: String): String? = null
+            override fun decrypt(stored: String): String? = null
+            override fun isEncrypted(stored: String): Boolean = true
+        })
+        assertEquals("", brokenStore.getPasswordSha256())
     }
 
     // -----------------------------------------------------------------------
@@ -135,14 +185,21 @@ class GkillCredentialStoreTest {
     }
 
     @Test
-    fun setSessionId_storesValue() {
+    fun setSessionId_storesEncryptedValue() {
         store.setSessionId("session-abc")
-        verify { editor.putString("session_id", "session-abc") }
+        verify { editor.putString("session_id", encrypted("session-abc")) }
         verify { editor.apply() }
+        assertNotEquals("session-abc", storage["session_id"])
     }
 
     @Test
-    fun getSessionId_returnsStoredValue() {
+    fun getSessionId_returnsDecryptedValue() {
+        storage["session_id"] = encrypted("my-session")
+        assertEquals("my-session", store.getSessionId())
+    }
+
+    @Test
+    fun getSessionId_readsLegacyPlainTextValue() {
         storage["session_id"] = "my-session"
         assertEquals("my-session", store.getSessionId())
     }

@@ -20,12 +20,13 @@ import type { CalendarQueryEmits } from './calendar-query-emits'
 import type { CalendarQueryProps } from './calendar-query-props'
 import { VDatePicker } from 'vuetify/components';
 import { useCalendarQuery } from '@/classes/use-calendar-query'
+import { ref } from 'vue'
+
 const calendar = ref<InstanceType<typeof VDatePicker> | null>(null)
 
 const props = defineProps<CalendarQueryProps>()
 const emits = defineEmits<CalendarQueryEmits>()
 
-import { ref } from 'vue'
 
 const {
     query,

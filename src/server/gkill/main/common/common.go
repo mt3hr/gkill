@@ -76,7 +76,7 @@ var (
 					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), filename, idDBFilename, true, router, autoIDF, &idfIgnore, nil)
 					if err != nil {
 						err = fmt.Errorf("error at new idf dir rep: %w", err)
-						slog.Log(cmd.Context(), gkill_log.Debug, "error", "error", err)
+						slog.Log(cmd.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 						fmt.Printf("skip idf: %s\n", filename)
 						continue
 					}
@@ -116,14 +116,14 @@ var (
 
 			err := InitGkillServerAPI()
 			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 			}
 
 			for _, targetUserID := range targetUserIDs {
 				err := GenerateThumbCache(cmd.Context(), targetUserID)
 				if err != nil {
 					err = fmt.Errorf("error at generate thumb cache user id = %s: %w", targetUserID, err)
-					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				}
 			}
 		},
@@ -143,14 +143,14 @@ var (
 
 			err := InitGkillServerAPI()
 			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 			}
 
 			for _, targetUserID := range targetUserIDs {
 				err := GenerateVideoCache(cmd.Context(), targetUserID)
 				if err != nil {
 					err = fmt.Errorf("error at generate video cache user id = %s: %w", targetUserID, err)
-					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				}
 			}
 		},
@@ -186,7 +186,7 @@ var (
 					target := filepath.Join(cacheRootDir, name)
 					if err := os.RemoveAll(target); err != nil {
 						err = fmt.Errorf("error at clear cache %s: %w", target, err)
-						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 						fmt.Fprintf(os.Stderr, "%s\n", err)
 						return
 					}
@@ -211,14 +211,14 @@ var (
 			gkill_options.LoadIDFRepOnly = true
 			err := InitGkillServerAPI()
 			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 			}
 
 			for _, targetUserID := range targets {
 				err := ClearCache(cmd.Context(), targetUserID, mode)
 				if err != nil {
 					err = fmt.Errorf("error at clear cache user id = %s: %w", targetUserID, err)
-					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				} else {
 					fmt.Printf("cleared cache: user id = %s mode = %s\n", targetUserID, mode)
 				}
@@ -239,18 +239,18 @@ var (
 
 			err := InitGkillServerAPI()
 			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 			}
 			gkillServerAPI := GetGkillServerAPI()
 			device, err := gkillServerAPI.GetDevice()
 			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 			}
 
 			for _, targetUserID := range targetUserIDs {
 				_, err = gkillServerAPI.GkillDAOManager.GetRepositories(targetUserID, device)
 				if err != nil {
-					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				}
 			}
 		},
@@ -272,7 +272,7 @@ var (
 			serverConfigDAO, err := server_config.NewServerConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "server_config.db"))
 			if err != nil {
 				err = fmt.Errorf("error at create server config dao: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -281,7 +281,7 @@ var (
 			serverConfigs, err := serverConfigDAO.GetAllServerConfigs(ctx)
 			if err != nil {
 				err = fmt.Errorf("error at get all server configs: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -295,7 +295,7 @@ var (
 			}
 			if currentServerConfig == nil {
 				err = fmt.Errorf("error: no enabled device found in server configs")
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -325,7 +325,7 @@ var (
 			accountDAO, err := account.NewAccountDAOSQLite3Impl(ctx, accountDBFilename)
 			if err != nil {
 				err = fmt.Errorf("error at create account dao: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -334,7 +334,7 @@ var (
 			accounts, err := accountDAO.GetAllAccounts(ctx)
 			if err != nil {
 				err = fmt.Errorf("error at get all accounts: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -351,7 +351,7 @@ var (
 			}
 			if adminAccount == nil {
 				err = fmt.Errorf("error: no enabled admin account found in %s", accountDBFilename)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -367,14 +367,14 @@ var (
 			})
 			if err != nil {
 				err = fmt.Errorf("error at marshal login request: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
 			loginResp, err := httpClient.Post(loginAddress, "application/json", bytes.NewReader(loginJSONBody))
 			if err != nil {
 				err = fmt.Errorf("error at post login request to %s: %w", loginAddress, err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -383,7 +383,7 @@ var (
 			loginResp.Body.Close()
 			if err != nil {
 				err = fmt.Errorf("error at decode login response: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -407,13 +407,13 @@ var (
 				})
 				if err != nil {
 					err = fmt.Errorf("error at marshal logout request: %w", err)
-					slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+					slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 					return
 				}
 				logoutResp, err := httpClient.Post(logoutAddress, "application/json", bytes.NewReader(logoutJSONBody))
 				if err != nil {
 					err = fmt.Errorf("error at post logout request to %s: %w", logoutAddress, err)
-					slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+					slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 					return
 				}
 				logoutResp.Body.Close()
@@ -427,14 +427,14 @@ var (
 			jsonBody, err := json.Marshal(requestBody)
 			if err != nil {
 				err = fmt.Errorf("error at marshal update cache request: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
 			resp, err := httpClient.Post(address, "application/json", bytes.NewReader(jsonBody))
 			if err != nil {
 				err = fmt.Errorf("error at post update cache request to %s: %w", address, err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -444,7 +444,7 @@ var (
 			err = json.NewDecoder(resp.Body).Decode(response)
 			if err != nil {
 				err = fmt.Errorf("error at decode update cache response: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
@@ -526,7 +526,7 @@ func PreLoadRepositories(ctx context.Context, gkillServerAPI *gkill_server_api.G
 	device, err := gkillServerAPI.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device for pre load users: %w", err)
-		slog.Log(ctx, gkill_log.Error, "error", "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return
 	}
 
@@ -538,10 +538,10 @@ func PreLoadRepositories(ctx context.Context, gkillServerAPI *gkill_server_api.G
 			startTime := time.Now()
 			if _, err := gkillServerAPI.GkillDAOManager.GetRepositories(userID, device); err != nil {
 				err = fmt.Errorf("error at pre load repositories. user id = %s device = %s: %w", userID, device, err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				continue
 			}
-			slog.Log(ctx, gkill_log.Info, "pre loaded repositories", "userID", userID, "device", device, "elapsed", time.Since(startTime).String())
+			slog.Log(ctx, gkill_log.Info, "pre loaded repositories", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "elapsed", time.Since(startTime).String())
 		}
 	}()
 }
@@ -566,7 +566,7 @@ func LaunchGkillServerAPI(ctx context.Context) error {
 				}
 				// HandleUpdateServerConfigs → リスタート（ループ継続）
 			} else {
-				slog.Log(context.Background(), gkill_log.Error, "error at gkill server api serve", "error", err)
+				slog.Log(context.Background(), gkill_log.Error, "error at gkill server api serve", "error", fmt.Sprintf("%q", err))
 				return err
 			}
 		}

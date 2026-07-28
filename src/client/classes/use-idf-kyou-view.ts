@@ -197,33 +197,11 @@ export function useIDFKyouView(options: {
     }
 
     function buildMediaUrl(fileUrl: string, isVideoThumb: boolean): string {
-        let is_added_query = false
         if (isVideoThumb) {
-            if (!is_added_query) {
-                fileUrl += "?"
-            } else {
-                fileUrl += "&"
-            }
-            fileUrl += "is_video=true"
-            is_added_query = true
-
-            if (!is_added_query) {
-                fileUrl += "?"
-            } else {
-                fileUrl += "&"
-            }
-            fileUrl += "thumb=400x400"
-            is_added_query = true
-            return fileUrl
+            return fileUrl + "?is_video=true&thumb=400x400"
         }
         if (props.is_image_request_to_thumb_size) {
-            if (!is_added_query) {
-                fileUrl += "?"
-            } else {
-                fileUrl += "&"
-            }
-            fileUrl += "thumb=400x400"
-            is_added_query = true
+            return fileUrl + "?thumb=400x400"
         }
         return fileUrl
     }

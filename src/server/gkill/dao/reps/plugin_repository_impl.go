@@ -100,7 +100,7 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 		started: true,
 	}
 
-	slog.Info(fmt.Sprintf("plugin started: %s (user=%s)", p.manifest.Name, p.userID))
+	slog.Info(fmt.Sprintf("plugin started: %q (user=%q)", p.manifest.Name, p.userID))
 	return nil
 }
 
@@ -191,7 +191,7 @@ func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin
 			return nil, err
 		}
 		// プロセスクラッシュ時のみ1回リトライ（自動再起動）
-		slog.Warn(fmt.Sprintf("plugin %s error, retrying: %v", p.manifest.Name, err))
+		slog.Warn(fmt.Sprintf("plugin %q error, retrying: %q", p.manifest.Name, err))
 		p.proc.started = false
 		if startErr := p.ensureStarted(); startErr != nil {
 			return nil, fmt.Errorf("plugin restart failed %s: %w (original: %v)", p.manifest.Name, startErr, err)
@@ -216,7 +216,7 @@ func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQu
 
 	resp, err := p.callCommand(ctx, req)
 	if err != nil {
-		slog.Error(fmt.Sprintf("plugin find_kyous error %s: %v", p.manifest.Name, err))
+		slog.Error(fmt.Sprintf("plugin find_kyous error %q: %q", p.manifest.Name, err))
 		return map[string][]Kyou{p.manifest.RepName: {}}, nil
 	}
 
@@ -296,12 +296,12 @@ func (p *pluginRepositoryImpl) Close(_ context.Context) error {
 	select {
 	case <-done:
 	case <-time.After(5 * time.Second):
-		slog.Warn(fmt.Sprintf("plugin %s did not exit in time, killing", p.manifest.Name))
+		slog.Warn(fmt.Sprintf("plugin %q did not exit in time, killing", p.manifest.Name))
 		p.proc.cmd.Process.Kill() //nolint:errcheck
 	}
 
 	p.proc.started = false
-	slog.Info(fmt.Sprintf("plugin closed: %s", p.manifest.Name))
+	slog.Info(fmt.Sprintf("plugin closed: %q", p.manifest.Name))
 	return nil
 }
 

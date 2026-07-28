@@ -35,7 +35,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse get idf file path response to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetIDFFilePathRequestDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -47,7 +47,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse get idf file path request from json: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetIDFFilePathRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -66,7 +66,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 	// 絶対パスは同一マシンのクライアントにしか意味がないので、ローカルリクエスト以外には返さない
 	if !isLocalRequest(r) {
 		err = fmt.Errorf("get idf file path from non local request: remote addr = %s", r.RemoteAddr)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFFilePathNotLocalRequestError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_IDF_FILE_PATH_NO_AUTH_MESSAGE"}),
@@ -79,7 +79,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -91,7 +91,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -103,7 +103,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 	idfRepImpls, err := repositories.IDFKyouReps.UnWrapTyped()
 	if err != nil {
 		err = fmt.Errorf("error at unwrap idf kyou reps: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFFilePathError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -118,7 +118,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 		repName, err := idfRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetIDFFilePathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -132,7 +132,7 @@ func (g *GkillServerAPI) HandleGetIDFFilePath(w http.ResponseWriter, r *http.Req
 		targetIDFKyou, err := idfRep.GetIDFKyouByTargetFile(r.Context(), request.FileName)
 		if err != nil {
 			err = fmt.Errorf("error at get idf kyou by target file %s: %w", request.FileName, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetIDFFilePathError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),

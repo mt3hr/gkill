@@ -2935,7 +2935,7 @@ export class GkillAPI {
         }
 
         async apply_locale(): Promise<void> {
-                let locale: 'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de' = 'ja'
+                let locale: 'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de'
                 const locale_in_cookie = this.get_locale_name_from_cookie()
                 switch (locale_in_cookie) {
                         case 'ja':

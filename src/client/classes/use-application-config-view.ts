@@ -76,7 +76,7 @@ export function useApplicationConfigView(options: {
     })
 
     watch(() => locale_name.value, async () => {
-        let locale: 'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de' = 'ja'
+        let locale: 'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de'
         switch (locale_name.value) {
             case 'ja':
             case 'en':

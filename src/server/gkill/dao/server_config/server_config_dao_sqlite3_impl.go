@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
   VALUE,
   PRIMARY KEY(DEVICE, KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create SERVER_CONFIG table statement %s: %w", filename, err)
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create SERVER_CONFIG table to %s: %w", filename, err)
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_SERVER_CONFIG ON SERVER_CONFIG (DEVICE, KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create SERVER_CONFIG index statement %s: %w", filename, err)
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create SERVER_CONFIG index to %s: %w", filename, err)
@@ -386,7 +386,7 @@ GROUP BY DEVICE
 		serverConfigDefaultValue["LAN_HOSTNAME"],
 		serverConfigDefaultValue["GLOBAL_HOSTNAME"],
 	)
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all server configs sql: %w", err)
@@ -399,7 +399,7 @@ GROUP BY DEVICE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -681,7 +681,7 @@ HAVING DEVICE = ?
 		serverConfigDefaultValue["LAN_HOSTNAME"],
 		serverConfigDefaultValue["GLOBAL_HOSTNAME"],
 	)
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get server config sql: %w", err)
@@ -697,7 +697,7 @@ HAVING DEVICE = ?
 	queryArgs := []any{
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -778,7 +778,7 @@ INSERT INTO SERVER_CONFIG (
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -818,7 +818,7 @@ INSERT INTO SERVER_CONFIG (
 	}()
 
 	for key, value := range insertValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 		queryArgs := []any{
 			serverConfig.Device,
 			key,
@@ -829,7 +829,7 @@ INSERT INTO SERVER_CONFIG (
 			key,
 			sqlite3impl.MaskSensitiveValueForLog(key, value),
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 		_, err = stmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
@@ -855,7 +855,7 @@ func (s *serverConfigDAOSQLite3Impl) UpdateServerConfigs(ctx context.Context, se
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -944,12 +944,12 @@ INSERT INTO SERVER_CONFIG (
 		}
 		// レコード自体が存在しなかったらいれる
 		for key, value := range updateValuesMap {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 			queryArgs := []any{
 				serverConfig.Device,
 				key,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", checkExistSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", checkExistSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			row := checkExistStmt.QueryRowContext(ctx, queryArgs...)
 			err = row.Err()
 			if err != nil {
@@ -964,7 +964,7 @@ INSERT INTO SERVER_CONFIG (
 				return false, err
 			}
 			if recordCount == 0 {
-				slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
+				slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
 				queryArgs := []any{
 					serverConfig.Device,
 					key,
@@ -975,7 +975,7 @@ INSERT INTO SERVER_CONFIG (
 					key,
 					sqlite3impl.MaskSensitiveValueForLog(key, value),
 				}
-				slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgsForLog)
+				slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 				_, err = countStmt.ExecContext(ctx, queryArgs...)
 
 				if err != nil {
@@ -988,7 +988,7 @@ INSERT INTO SERVER_CONFIG (
 
 		// 更新する
 		for key, value := range updateValuesMap {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 			queryArgs := []any{
 				value,
 				serverConfig.Device,
@@ -999,7 +999,7 @@ INSERT INTO SERVER_CONFIG (
 				serverConfig.Device,
 				key,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 			_, err = updateStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -1016,7 +1016,7 @@ WHERE KEY = 'ENABLE_THIS_DEVICE'
 AND VALUE = ?
 GROUP BY DEVICE
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", checkEnableDeviceCountSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", checkEnableDeviceCountSQL))
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
@@ -1033,7 +1033,7 @@ GROUP BY DEVICE
 	queryArgs := []any{
 		true,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", checkEnableDeviceCountSQL, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", checkEnableDeviceCountSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -1057,7 +1057,7 @@ GROUP BY DEVICE
 				&enableCount,
 			)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				break
 			}
 			enableDeviceCount += enableCount
@@ -1093,7 +1093,7 @@ func (s *serverConfigDAOSQLite3Impl) UpdateServerConfig(ctx context.Context, ser
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -1169,12 +1169,12 @@ INSERT INTO SERVER_CONFIG (
 
 	// レコード自体が存在しなかったらいれる
 	for key, value := range updateValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 		queryArgs := []any{
 			serverConfig.Device,
 			key,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", checkExistSQL, queryArgs)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", checkExistSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 		row := stmt.QueryRowContext(ctx, queryArgs...)
 		err = row.Err()
 		if err != nil {
@@ -1189,7 +1189,7 @@ INSERT INTO SERVER_CONFIG (
 			return false, err
 		}
 		if recordCount == 0 {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
 			queryArgs := []any{
 				serverConfig.Device,
 				key,
@@ -1200,7 +1200,7 @@ INSERT INTO SERVER_CONFIG (
 				key,
 				sqlite3impl.MaskSensitiveValueForLog(key, value),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgsForLog)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 			_, err = countStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -1224,7 +1224,7 @@ INSERT INTO SERVER_CONFIG (
 	}()
 
 	for key, value := range updateValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 		queryArgs := []any{
 			value,
 			serverConfig.Device,
@@ -1235,7 +1235,7 @@ INSERT INTO SERVER_CONFIG (
 			serverConfig.Device,
 			key,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgsForLog)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 		_, err = updateStmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
@@ -1252,7 +1252,7 @@ WHERE KEY = 'ENABLE_THIS_DEVICE'
 AND VALUE = ?
 GROUP BY DEVICE
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
@@ -1268,7 +1268,7 @@ GROUP BY DEVICE
 	queryArgs := []any{
 		true,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1293,7 +1293,7 @@ GROUP BY DEVICE
 				&enableCount,
 			)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				break
 			}
 			enableDeviceCount += enableCount
@@ -1323,7 +1323,7 @@ func (s *serverConfigDAOSQLite3Impl) DeleteServerConfig(ctx context.Context, dev
 DELETE FROM SERVER_CONFIG 
 WHERE DEVICE = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete server config sql: %w", err)
@@ -1339,7 +1339,7 @@ WHERE DEVICE = ?
 	queryArgs := []any{
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1362,7 +1362,7 @@ func (s *serverConfigDAOSQLite3Impl) DeleteWriteServerConfigs(ctx context.Contex
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -1371,7 +1371,7 @@ func (s *serverConfigDAOSQLite3Impl) DeleteWriteServerConfigs(ctx context.Contex
 	deleteSQL := `
 DELETE FROM SERVER_CONFIG 
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", deleteSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", deleteSQL))
 
 	stmt, err := tx.PrepareContext(ctx, deleteSQL)
 	if err != nil {
@@ -1385,7 +1385,7 @@ DELETE FROM SERVER_CONFIG
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", deleteSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", deleteSQL))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -1450,8 +1450,8 @@ INSERT INTO SERVER_CONFIG (
 				key,
 				sqlite3impl.MaskSensitiveValueForLog(key, value),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgsForLog)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
@@ -1468,7 +1468,7 @@ WHERE KEY = 'ENABLE_THIS_DEVICE'
 AND VALUE = ?
 GROUP BY DEVICE
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", checkEnableDeviceCountSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", checkEnableDeviceCountSQL))
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
@@ -1484,7 +1484,7 @@ GROUP BY DEVICE
 	queryArgsCheckEnableDevice := []any{
 		true,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", checkEnableDeviceCountSQL, queryArgsCheckEnableDevice)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", checkEnableDeviceCountSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsCheckEnableDevice)))
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, queryArgsCheckEnableDevice...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -1548,7 +1548,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -1561,7 +1561,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -1569,7 +1569,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -1582,7 +1582,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -1596,7 +1596,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1610,7 +1610,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
@@ -1618,7 +1618,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertCurrentVersionSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1632,7 +1632,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1641,7 +1641,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)

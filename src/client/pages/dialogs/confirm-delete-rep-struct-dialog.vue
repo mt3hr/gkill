@@ -36,6 +36,10 @@ import type { ConfirmDeleteRepStructDialogEmits } from './confirm-delete-rep-str
 import type { ConfirmDeleteRepStructDialogProps } from './confirm-delete-rep-struct-dialog-props.ts';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data';
+import { i18n } from '@/i18n'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
 defineProps<ConfirmDeleteRepStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteRepStructDialogEmits>()
@@ -43,12 +47,8 @@ defineExpose({ show, hide })
 
 const rep_struct: Ref<RepStructElementData> = ref(new RepStructElementData())
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data';
-import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("confirm-delete-rep-struct-dialog", {
   centerMode: "always",
   onEscape: () => hide(),
