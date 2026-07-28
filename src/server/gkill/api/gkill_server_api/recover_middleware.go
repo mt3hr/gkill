@@ -16,10 +16,10 @@ func (g *GkillServerAPI) recoverMiddleware(next http.Handler) http.Handler {
 			if rec := recover(); rec != nil {
 				stack := debug.Stack()
 				slog.Log(r.Context(), gkill_log.Error, "panic recovered",
-					"panic", fmt.Sprintf("%v", rec),
+					"panic", fmt.Sprintf("%q", fmt.Sprint(rec)),
 					"stack", string(stack),
 					"method", r.Method,
-					"path", r.URL.Path,
+					"path", fmt.Sprintf("%q", r.URL.Path),
 				)
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusInternalServerError)

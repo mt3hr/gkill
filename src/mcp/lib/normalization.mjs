@@ -25,6 +25,7 @@ import {
   KYOUS_QUERY_NUMBER_FIELDS,
   KYOUS_QUERY_INTEGER_FIELDS,
   KYOUS_QUERY_DATETIME_FIELDS,
+  KYOUS_QUERY_ALL_FIELDS,
   MI_CHECK_STATES,
   MI_SORT_TYPES,
 } from "./constants.mjs";
@@ -84,12 +85,6 @@ export function normalizeKyouQuery(query) {
 
   for (const [key, value] of Object.entries(source)) {
     const field = `query.${key}`;
-    // 未知キーは gkill 側へそのまま渡す仕様なので、
-    // プロトタイプを汚染しうるキーだけはここで拒否する。
-    // query は MCP 経由で AI クライアントが自由に組み立てられる。
-    if (key === "__proto__" || key === "constructor" || key === "prototype") {
-      throw invalidArgument(field, "is not supported", value);
-    }
     if (KYOUS_QUERY_BOOLEAN_FIELDS.has(key)) {
       normalized[key] = assertBoolean(value, field);
       continue;
@@ -135,7 +130,12 @@ export function normalizeKyouQuery(query) {
       normalized[key] = sortType;
       continue;
     }
-    normalized[key] = value;
+    // 未知キーは受け付けない。
+    // query は MCP 経由で AI クライアントが自由に組み立てられるため、
+    // 検証していないキーでの動的な書き込みを残すとプロトタイプ汚染の経路になる。
+    throw invalidArgument(field, "is not supported", value, {
+      allowed: Array.from(KYOUS_QUERY_ALL_FIELDS).sort(),
+    });
   }
 
   // filter group の自動活性化:
