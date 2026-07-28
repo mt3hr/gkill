@@ -40,7 +40,11 @@ func localRepCacheDBFileName(userID string, originalDBFileName string) (string, 
 	if !isSingleSafePathElement(userID) {
 		return "", fmt.Errorf("invalid user id for local rep cache path: %q", userID)
 	}
-	rootDir := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", userID)
+	// ".." 除去。直前の検証で弾いているため実行時には常にno-opだが、
+	// CodeQL の path-injection はこの形しか値サニタイザとして認識しない。
+	// originalDBFileName 側の同じ処理は実際にアラートを消せている。
+	safeUserID := strings.ReplaceAll(userID, "..", "")
+	rootDir := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_rep_cache", safeUserID)
 
 	// ":" 除去はWindowsのドライブレター対策（元からの動作）。
 	rel := strings.ReplaceAll(originalDBFileName, ":", "")

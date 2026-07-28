@@ -259,10 +259,16 @@ describe("normalizeKyouQuery", () => {
     expect(result.only_latest_data).toBe(true);
   });
 
-  test("passes through unknown keys unchanged", () => {
-    const result = normalizeKyouQuery({ some_future_field: "value" });
-    expect(result.some_future_field).toBe("value");
-    expect(result.only_latest_data).toBe(true);
+  test("throws for unknown keys", () => {
+    expect(() => normalizeKyouQuery({ some_future_field: "value" })).toThrow(GkillApiError);
+  });
+
+  test("throws for prototype polluting keys", () => {
+    // オブジェクトリテラルの __proto__ はプロトタイプ設定になり自身のプロパティにならないため、
+    // 実際の経路と同じくJSONパースで作る
+    expect(() => normalizeKyouQuery(JSON.parse('{"__proto__": {"polluted": true}}'))).toThrow(GkillApiError);
+    expect(() => normalizeKyouQuery({ constructor: {} })).toThrow(GkillApiError);
+    expect(() => normalizeKyouQuery({ prototype: {} })).toThrow(GkillApiError);
   });
 
   test("throws for non-object query", () => {

@@ -115,6 +115,28 @@ jobs:
           chmod +x src/wear_os/gradlew
 
       # ------------------------------------------------------------
+      # CodeQL解析用のKotlinバージョン固定
+      #
+      # CodeQLのKotlin extractorは 2.4.10 未満にしか対応しておらず、
+      # 2.4.10 のままだと compileDebugKotlin が
+      # KotlinVersionTooRecentError で落ちて解析が一切行われない
+      # (java-kotlinの解析結果が0件のままになる)。
+      # ここでの書き換えはCIの作業ツリー限りで、コミットはしない。
+      # CodeQLが 2.4.10 に対応したらこのステップごと削除する。
+      # ------------------------------------------------------------
+      - name: Pin Kotlin version for CodeQL
+        if: matrix.language == 'java-kotlin'
+        shell: bash
+        run: |
+          sed -i 's/^kotlin = ".*"/kotlin = "2.4.0"/' \
+            src/android/gradle/libs.versions.toml \
+            src/wear_os/gradle/libs.versions.toml
+
+          grep -n '^kotlin' \
+            src/android/gradle/libs.versions.toml \
+            src/wear_os/gradle/libs.versions.toml
+
+      # ------------------------------------------------------------
       # AndroidアプリのKotlin / Javaをビルド
       #
       # 対象:
