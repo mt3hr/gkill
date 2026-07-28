@@ -13,7 +13,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		/*
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
@@ -29,7 +29,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
 	if err != nil {
 		err = fmt.Errorf("error at get serverConfig device = %s: %w", device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		/*
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetServerConfigError,
@@ -42,7 +42,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	}
 	if serverConfig == nil {
 		err = fmt.Errorf("error at server config is nil device = %s: %w", device, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return false
 	}

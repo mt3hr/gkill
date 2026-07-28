@@ -39,7 +39,7 @@ func init() {
 		serverConfigDAO, err := server_config.NewServerConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "server_config.db"))
 		if err != nil {
 			err = fmt.Errorf("error at get serverConfig: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			return
 		}
 
@@ -47,7 +47,7 @@ func init() {
 		serverConfigs, err := serverConfigDAO.GetAllServerConfigs(ctx)
 		if err != nil {
 			err = fmt.Errorf("error at get serverConfig: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			return
 		}
 		for _, serverConfig := range serverConfigs {
@@ -61,7 +61,7 @@ func init() {
 		if currentServerConfig == nil {
 			if rootOpt.device == "" {
 				err = fmt.Errorf("this device has no enabled server config. specify --%s", deviceKey)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				return
 			}
 			config.Directory = os.ExpandEnv(fmt.Sprintf("$HOME/%s", rootOpt.device))

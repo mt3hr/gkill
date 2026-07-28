@@ -21,10 +21,12 @@ export class KFTLStartTimeIsEndStatementLine extends KFTLStatementLine {
     }
 
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        let request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
+        // この行は区切りでしかなく、実際のリクエストは次行の
+        // KFTLTimeIsEndTitleStatementLine が同じtarget_idに上書きする。
+        // ここではプロトタイプが未登録のときに用意するだけでよい
+        const request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
         if (!request) {
             request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
-            request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
         }
     }
 

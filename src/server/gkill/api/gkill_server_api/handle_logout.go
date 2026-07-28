@@ -30,7 +30,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at parse logout request to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidLogoutResponseDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGOUT_MESSAGE"}),
@@ -43,7 +43,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at parse logout request to json: %w", err)
-		slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidLogoutRequestDataError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGOUT_MESSAGE"}),
@@ -57,7 +57,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if err != nil {
 				err = fmt.Errorf("error account from session id = %s: %w", request.SessionID, err)
-				slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -65,7 +65,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		device, err := g.GetDevice()
 		if err != nil {
 			err = fmt.Errorf("error at get device name: %w", err)
-			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -77,7 +77,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		_, err = g.GkillDAOManager.CloseUserRepositories(account.UserID, device)
 		if err != nil {
 			err = fmt.Errorf("error at close repository user id = %s device = %s: %w", account.UserID, device, err)
-			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
@@ -91,7 +91,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at delete login session id = %s: %w", request.SessionID, err)
-			slog.Log(r.Context(), gkill_log.Warn, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountLogoutInternalServerError,

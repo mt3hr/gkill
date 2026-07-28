@@ -35,7 +35,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			err := json.NewEncoder(w).Encode(response)
 			if err != nil {
 				err = fmt.Errorf("error at parse update server config response to json: %w", err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				gkillError := &message.GkillError{
 					ErrorCode:    message.InvalidUpdateServerConfigResponseDataError,
 					ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
@@ -48,7 +48,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		err := json.NewDecoder(r.Body).Decode(request)
 		if err != nil {
 			err = fmt.Errorf("error at parse update server config request to json: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateServerConfigRequestDataError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
@@ -64,7 +64,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		// adminじゃなかったら弾く
 		if !auth.Account.IsAdmin {
 			err = fmt.Errorf("%s is not admin", userID)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountNotHasAdminError,
 				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "NO_ADMIN_PRIVILEGE_MESSAGE"}),
@@ -82,7 +82,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 				_, err := os.Stat(os.ExpandEnv(serverConfig.TLSCertFile))
 				if err != nil {
 					err = fmt.Errorf("not found tls cert file user id = %s device = %s: %w", userID, device, err)
-					slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 					gkillError := &message.GkillError{
 						ErrorCode:    message.NotFoundTLSCertFileError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "CERT_FILE_NOT_CREATED_MESSAGE"}),
@@ -93,7 +93,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 				_, err = os.Stat(os.ExpandEnv(serverConfig.TLSKeyFile))
 				if err != nil {
 					err = fmt.Errorf("not found tls key file user id = %s device = %s: %w", userID, device, err)
-					slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 					gkillError := &message.GkillError{
 						ErrorCode:    message.NotFoundTLSCertFileError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "CERT_FILE_NOT_CREATED_MESSAGE"}),
@@ -111,7 +111,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 				if err != nil {
 					err = fmt.Errorf("error at generate vapid keys: %w", err)
 
-					slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 					gkillError := &message.GkillError{
 						ErrorCode:    message.GenerateVAPIDKeysError,
 						ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "KEY_GENERATION_ERROR_MESSAGE"}),
@@ -127,7 +127,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		if !ok || err != nil {
 			if err != nil {
 				err = fmt.Errorf("error at update server config user user id = %s device = %s: %w", userID, device, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.UpdateServerConfigError,
@@ -141,7 +141,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		if err != nil {
 			if err != nil {
 				err = fmt.Errorf("error at close gkill dao manager: %w", err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.UpdateServerConfigError,

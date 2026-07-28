@@ -27,14 +27,14 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
 			err = fmt.Errorf("error at encode get plugin content html response: %w", err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	}()
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
 		err = fmt.Errorf("error at decode get plugin content html request: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.InvalidGetPluginContentHTMLRequestDataError,
 			ErrorMessage: "プラグインコンテンツHTML取得リクエストのパースに失敗しました",
@@ -58,7 +58,7 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 	html, err := pluginRepo.GetContentHTML(r.Context(), request.KyouID)
 	if err != nil {
 		err = fmt.Errorf("error at get plugin content html %s %s: %w", request.RepName, request.KyouID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.GetPluginContentHTMLError,
 			ErrorMessage: fmt.Sprintf("プラグインコンテンツHTMLの取得に失敗しました: %s", err.Error()),

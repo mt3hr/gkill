@@ -36,18 +36,18 @@ import type { EditRepTypeStructElementDialogProps } from './edit-rep-type-struct
 import EditRepTypeStructElementView from '../views/edit-rep-type-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
+import { i18n } from '@/i18n'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
 defineProps<EditRepTypeStructElementDialogProps>()
 const emits = defineEmits<EditRepTypeStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const rep_type_struct: Ref<RepTypeStructElementData> = ref(new RepTypeStructElementData())
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
-import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("edit-rep-type-struct-element-dialog", {
   centerMode: "always",
   onEscape: () => hide(),

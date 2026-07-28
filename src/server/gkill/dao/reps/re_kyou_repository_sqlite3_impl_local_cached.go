@@ -29,10 +29,13 @@ type reKyouRepositorySQLite3ImplLocalCached struct {
 }
 
 func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool, reps *GkillRepositories) (ReKyouRepository, error) {
-	localCacheDBFileName := localRepCacheDBFileName(userID, filename)
+	localCacheDBFileName, err := localRepCacheDBFileName(userID, filename)
+	if err != nil {
+		return nil, err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
-	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
+	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at mk dir %s: %w", localCacheDBParentDirName, err)
 		return nil, err
@@ -145,7 +148,7 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	// リポジトリがキャッシュに登録されないままリクエスト毎に再ロードされ続けるため、
 	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
 	if err = os.Remove(r.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
-		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", r.localCacheDBFileName, "error", err)
+		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", r.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
 		r.lastUpdateCacheChanged = false
 		reopenedRep, reopenErr := NewReKyouRepositorySQLite3Impl(ctx, r.localCacheDBFileName, r.fullConnect, r.reps)
 		if reopenErr != nil {
@@ -155,7 +158,10 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 		return nil
 	}
 
-	localCacheDBFileName := localRepCacheDBFileName(r.userID, r.originalDBFileName)
+	localCacheDBFileName, err := localRepCacheDBFileName(r.userID, r.originalDBFileName)
+	if err != nil {
+		return err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

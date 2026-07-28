@@ -36,18 +36,18 @@ import type { EditDeviceStructElementDialogProps } from './edit-device-struct-el
 import EditDeviceStructElementView from '../views/edit-device-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error.js'
 import type { GkillMessage } from '@/classes/api/gkill-message.js'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data.js'
+import { i18n } from '@/i18n'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
 defineProps<EditDeviceStructElementDialogProps>()
 const emits = defineEmits<EditDeviceStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const device_struct: Ref<DeviceStructElementData> = ref(new DeviceStructElementData())
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data.js'
-import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("edit-device-struct-element-dialog", {
   centerMode: "always",
   onEscape: () => hide(),

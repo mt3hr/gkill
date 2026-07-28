@@ -33,7 +33,7 @@ func (uc *UsecaseContext) GetKyouHistories(ctx context.Context, repositories *re
 
 	if err != nil {
 		err = fmt.Errorf("error at get kyou user id = %s device = %s id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKyouError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
@@ -55,7 +55,7 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 	if len(gkillErrors) != 0 || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		return nil, gkillErrors, nil
 	}

@@ -100,7 +100,7 @@ export function useFoldableStruct(options: {
             if (all_checked) {
                 check.value = true
                 indeterminate_group.value = false
-            } else if (exist_checked && !all_checked) {
+            } else if (exist_checked) {
                 check.value = false
                 indeterminate_group.value = true
             } else {
@@ -242,7 +242,7 @@ export function useFoldableStruct(options: {
 
         // ドロップされたものを移動。
         // 移動する場所の決定
-        let drop_type: DropTypeFoldableStruct = DropTypeFoldableStruct.up_element
+        let drop_type: DropTypeFoldableStruct
         if (props.struct_obj.children) { // フォルダの場合
             if (e.offsetY <= tr_size.value.valueOf() * (1 / 3)) {
                 drop_type = DropTypeFoldableStruct.up_element

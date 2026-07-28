@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
   IS_WATCH_TARGET_FOR_UPDATE_REP NOT NULL,
   IS_ENABLE NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create REPOSITORY table statement %s: %w", filename, err)
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REPOSITORY table to %s: %w", filename, err)
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_REPOSITORY ON REPOSITORY (USER_ID);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create REPOSITORY index statement %s: %w", filename, err)
@@ -80,14 +80,14 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REPOSITORY index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 
 	if err != nil {
@@ -126,7 +126,7 @@ SELECT
   IS_ENABLE
 FROM REPOSITORY
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all repositories sql: %w", err)
@@ -139,7 +139,7 @@ FROM REPOSITORY
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -204,7 +204,7 @@ SELECT
 FROM REPOSITORY
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories sql: %w", err)
@@ -221,7 +221,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -285,7 +285,7 @@ func (r *repositoryDAOSQLite3Impl) DeleteWriteRepositories(ctx context.Context, 
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -294,7 +294,7 @@ func (r *repositoryDAOSQLite3Impl) DeleteWriteRepositories(ctx context.Context, 
 DELETE FROM REPOSITORY
 WHERE USER_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete repository sql: %w", err)
@@ -310,7 +310,7 @@ WHERE USER_ID = ?
 	queryArgs := []any{
 		userID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -354,7 +354,7 @@ INSERT INTO REPOSITORY (
 	}()
 
 	for _, repository := range repositories {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
 
 		queryArgs := []any{
 			repository.ID,
@@ -367,7 +367,7 @@ INSERT INTO REPOSITORY (
 			repository.IsWatchTargetForUpdateRep,
 			repository.IsEnable,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgs)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 		_, err = insertStmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
@@ -426,12 +426,12 @@ INSERT INTO REPOSITORY (
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add repository sql: %w", err)
@@ -455,7 +455,7 @@ INSERT INTO REPOSITORY (
 		repository.IsWatchTargetForUpdateRep,
 		repository.IsEnable,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		return false, err
@@ -486,7 +486,7 @@ func (r *repositoryDAOSQLite3Impl) AddRepositories(ctx context.Context, reposito
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -528,7 +528,7 @@ INSERT INTO REPOSITORY (
 	}()
 
 	for _, repository := range repositories {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 		queryArgs := []any{
 			repository.ID,
 			repository.UserID,
@@ -540,7 +540,7 @@ INSERT INTO REPOSITORY (
 			repository.IsWatchTargetForUpdateRep,
 			repository.IsEnable,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 		_, err = stmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
@@ -589,12 +589,12 @@ WHERE ID = ?
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update repository sql: %w", err)
@@ -617,7 +617,7 @@ WHERE ID = ?
 		repository.IsExecuteIDFWhenReload,
 		repository.IsEnable,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		return false, err
@@ -642,7 +642,7 @@ func (r *repositoryDAOSQLite3Impl) DeleteRepository(ctx context.Context, id stri
 DELETE FROM REPOSITORY
 WHERE ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete repository sql: %w", err)
@@ -658,7 +658,7 @@ WHERE ID = ?
 	queryArgs := []any{
 		id,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -674,7 +674,7 @@ func (r *repositoryDAOSQLite3Impl) DeleteAllRepositoriesByUser(ctx context.Conte
 DELETE FROM REPOSITORY
 WHERE USER_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete repository sql: %w", err)
@@ -690,7 +690,7 @@ WHERE USER_ID = ?
 	queryArgs := []any{
 		userID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -713,7 +713,7 @@ SELECT DEVICE FROM REPOSITORY WHERE USER_ID = ? GROUP BY DEVICE
 	selectDeviceQueryArgs := []any{
 		userID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectDeviceSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectDeviceSQL))
 	stmt, err := tx.PrepareContext(ctx, selectDeviceSQL)
 	if err != nil {
 		return err
@@ -724,7 +724,7 @@ SELECT DEVICE FROM REPOSITORY WHERE USER_ID = ? GROUP BY DEVICE
 			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
 	}()
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", selectDeviceSQL, selectDeviceQueryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectDeviceSQL), "query", fmt.Sprintf("%q", fmt.Sprint(selectDeviceQueryArgs)))
 	rows, err := stmt.QueryContext(ctx, selectDeviceQueryArgs...)
 	if err != nil {
 		return err
@@ -874,13 +874,13 @@ GROUP BY TYPE, DEVICE
 	}
 
 	for _, targetDevice := range devices {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSQL)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSQL))
 
 		queryArgs := []any{
 			userID,
 			targetDevice,
 		}
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", selectSQL, queryArgs)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 		rows, err := selectStmt.QueryContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
@@ -905,7 +905,7 @@ GROUP BY TYPE, DEVICE
 					&count,
 				)
 				if err != nil {
-					slog.Log(ctx, gkill_log.Error, "error", "error", err)
+					slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 					// err = fmt.Errorf("error at get use to write repository count: %w", err)
 					err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるようにしてください。対象：「%s」「%s」「%d」", targetDevice, repType, count)
 					return err

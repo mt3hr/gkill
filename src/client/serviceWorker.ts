@@ -7,12 +7,13 @@ import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { CacheFirst } from 'workbox-strategies'
 import { shouldCacheResponse, parseBoolLoose } from './classes/service-worker-utils';
 
+declare let clients: Clients;
+declare let self: ServiceWorkerGlobalScope
+
 export default null
 
 self.skipWaiting()
 clientsClaim()
-declare let clients: Clients;
-declare let self: ServiceWorkerGlobalScope
 
 cleanupOutdatedCaches()
 

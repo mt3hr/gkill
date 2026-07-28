@@ -364,7 +364,7 @@ export function useDnoteView(options: {
         estimate_aggregate_task.value += dnote_list_item_table_view_data.value.length
         estimate_aggregate_task.value += dnote_trend_graph_view_data.value.length
 
-        const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous, false, true)
+        const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous)
         const kyou_is_loaded = true
         const waitPromises = new Array<Promise<unknown>>()
         waitPromises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
@@ -423,24 +423,18 @@ export function useDnoteView(options: {
         nextTick(() => emits('requested_close_dialog'))
     }
 
-    // 進捗表示のためかか共通からコピー
-    async function load_kyous(ac: AbortController, kyous: Array<Kyou>, get_latest_data: boolean, clone: boolean): Promise<Array<Kyou>> {
+    // 進捗表示のためかか共通からコピー。
+    // 呼び出し元はここ1箇所で「複製して関連データを読む」用途しかないため、
+    // 元実装にあった get_latest_data / clone の分岐は落としてある
+    async function load_kyous(ac: AbortController, kyous: Array<Kyou>): Promise<Array<Kyou>> {
         const cloned_kyous = new Array<Kyou>()
         for (let i = 0; i < kyous.length; i++) {
-            let kyou: Kyou = kyous[i]
+            const kyou: Kyou = kyous[i].clone()
+            kyou.abort_controller = ac
             const waitPromises = []
-            if (clone) {
-                kyou = kyous[i].clone()
-                kyou.abort_controller = ac
-            }
-            if (get_latest_data) {
-                await kyou.reload(false, true)
-            }
-            if (clone || get_latest_data) {
-                waitPromises.push(kyou.load_typed_datas())
-                waitPromises.push(kyou.load_attached_tags())
-                waitPromises.push(kyou.load_attached_texts())
-            }
+            waitPromises.push(kyou.load_typed_datas())
+            waitPromises.push(kyou.load_attached_tags())
+            waitPromises.push(kyou.load_attached_texts())
             await Promise.all(waitPromises)
             cloned_kyous.push(kyou)
             getted_kyous_count.value++

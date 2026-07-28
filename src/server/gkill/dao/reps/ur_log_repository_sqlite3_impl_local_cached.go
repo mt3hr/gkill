@@ -29,10 +29,13 @@ type urlogRepositorySQLite3ImplLocalCached struct {
 }
 
 func NewURLogRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool) (URLogRepository, error) {
-	localCacheDBFileName := localRepCacheDBFileName(userID, filename)
+	localCacheDBFileName, err := localRepCacheDBFileName(userID, filename)
+	if err != nil {
+		return nil, err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
-	err := os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
+	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at mk dir %s: %w", localCacheDBParentDirName, err)
 		return nil, err
@@ -144,7 +147,7 @@ func (u *urlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 	// リポジトリがキャッシュに登録されないままリクエスト毎に再ロードされ続けるため、
 	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
 	if err = os.Remove(u.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
-		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", u.localCacheDBFileName, "error", err)
+		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", u.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
 		u.lastUpdateCacheChanged = false
 		reopenedRep, reopenErr := NewURLogRepositorySQLite3Impl(ctx, u.localCacheDBFileName, u.fullConnect)
 		if reopenErr != nil {
@@ -154,7 +157,10 @@ func (u *urlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 		return nil
 	}
 
-	localCacheDBFileName := localRepCacheDBFileName(u.userID, u.originalDBFileName)
+	localCacheDBFileName, err := localRepCacheDBFileName(u.userID, u.originalDBFileName)
+	if err != nil {
+		return err
+	}
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)

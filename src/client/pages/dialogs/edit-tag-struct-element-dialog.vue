@@ -36,18 +36,18 @@ import type { EditTagStructElementDialogProps } from './edit-tag-struct-element-
 import EditTagStructElementView from '../views/edit-tag-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
+import { i18n } from '@/i18n'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
 defineProps<EditTagStructElementDialogProps>()
 const emits = defineEmits<EditTagStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const tag_struct: Ref<TagStructElementData> = ref(new TagStructElementData())
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
-import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("edit-tag-struct-element-dialog", {
   centerMode: "always",
   onEscape: () => hide(),
