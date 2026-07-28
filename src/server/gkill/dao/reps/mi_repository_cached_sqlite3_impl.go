@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   CREATE_TIME_UNIX NOT NULL,
   UPDATE_TIME_UNIX NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table statement %s: %w", dbName, err)
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table to %s: %w", dbName, err)
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create mi index unix statement %s: %w", dbName, err)
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create mi index unix to %s: %w", dbName, err)
@@ -134,7 +134,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addMiInfoSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", addMiInfoSQL))
 	addMiInfoStmt, err := cacheDB.PrepareContext(ctx, addMiInfoSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add mi info sql: %w", err)
@@ -146,7 +146,7 @@ SELECT
   DISTINCT BOARD_NAME
 FROM ` + sqlite3impl.QuoteIdent(dbName) + `
 ` + fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", dbName, dbName) + " GROUP BY BOARD_NAME"
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", getBoardNamesSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", getBoardNamesSQL))
 	getBoardNamesStmt, err := cacheDB.PrepareContext(ctx, getBoardNamesSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get board names sql: %w", err)
@@ -396,7 +396,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgs = append(queryArgs, queryArgsForStart...)
 	queryArgs = append(queryArgs, queryArgsForEnd...)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
@@ -409,7 +409,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -712,7 +712,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	queryArgs = append(queryArgs, queryArgsForStart...)
 	queryArgs = append(queryArgs, queryArgsForEnd...)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
@@ -725,7 +725,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1025,7 +1025,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgs = append(queryArgs, queryArgsForStart...)
 	queryArgs = append(queryArgs, queryArgsForEnd...)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
@@ -1038,7 +1038,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1140,7 +1140,7 @@ func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -1202,7 +1202,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(m.dbName) + ` (
   ?
 )`
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi sql: %w", err)
@@ -1261,7 +1261,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(m.dbName) + ` (
 				mi.CreateTime.Unix(),
 				mi.UpdateTime.Unix(),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at insert in to mi %s: %w", mi.ID, err)
@@ -1587,7 +1587,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	}
 	sql := strings.Join(sqlSegments, " UNION ")
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
@@ -1600,7 +1600,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1940,7 +1940,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	}
 	sql := strings.Join(sqlSegments, " UNION ")
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
@@ -1953,7 +1953,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -2295,7 +2295,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	}
 	sql := strings.Join(sqlSegments, " UNION ")
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
@@ -2308,7 +2308,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -2424,7 +2424,7 @@ func (m *miRepositoryCachedSQLite3Impl) AddMiInfo(ctx context.Context, mi Mi) er
 		mi.CreateTime.Unix(),
 		mi.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", m.addMiInfoSQL, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", m.addMiInfoSQL), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err := m.addMiInfoStmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to mi %s: %w", mi.ID, err)
@@ -2438,7 +2438,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetBoardNames(ctx context.Context) ([]st
 	defer m.m.RUnlock()
 	var err error
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", m.getBoardNamesSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", m.getBoardNamesSQL))
 	rows, err := m.getBoardNamesStmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select board names from MI: %w", err)

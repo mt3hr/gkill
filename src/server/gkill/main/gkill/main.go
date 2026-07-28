@@ -82,7 +82,7 @@ var (
 
 					if err != nil {
 						err = fmt.Errorf("error at get device name: %w", err)
-						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 					}
 					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
 				}

@@ -23,7 +23,7 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 	existText, err := repositories.GetText(ctx, text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
@@ -32,7 +32,7 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 	}
 	if existText != nil {
 		err = fmt.Errorf("exist text id = %s", text.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.AlreadyExistTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
@@ -44,7 +44,7 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 		err = repositories.WriteTextRep.AddTextInfo(ctx, text)
 		if err != nil {
 			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddTextError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
@@ -55,14 +55,14 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 			err = repositories.TextReps[0].AddTextInfo(ctx, text)
 			if err != nil {
 				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(ctx, text, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.AddTextError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
@@ -74,7 +74,7 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 	repName, err := repositories.WriteTextRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
@@ -93,13 +93,13 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[text.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	addedText, err := repositories.GetText(ctx, text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
@@ -118,7 +118,7 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 	_, err := repositories.GetText(ctx, text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
@@ -130,7 +130,7 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 		err = repositories.WriteTextRep.AddTextInfo(ctx, text)
 		if err != nil {
 			err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateTextError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
@@ -142,14 +142,14 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 			err = repositories.TextReps[0].AddTextInfo(ctx, text)
 			if err != nil {
 				err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(ctx, text, *txID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillErrors = append(gkillErrors, &message.GkillError{
 				ErrorCode:    message.UpdateTextError,
 				ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
@@ -161,7 +161,7 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 	repName, err := repositories.WriteTextRep.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
@@ -180,13 +180,13 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[text.ID])
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	updatedText, err := repositories.GetText(ctx, text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
@@ -198,7 +198,7 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 	existText, err := repositories.GetText(ctx, text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
@@ -207,7 +207,7 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 	}
 	if existText == nil {
 		err = fmt.Errorf("not exist text id = %s", text.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.NotFoundTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
@@ -225,7 +225,7 @@ func (uc *UsecaseContext) GetTextsByTargetID(ctx context.Context, repositories *
 	texts, err := repositories.GetTextsByTargetID(ctx, targetID)
 	if err != nil {
 		err = fmt.Errorf("error at get texts by target id user id = %s device = %s target id = %s: %w", userID, device, targetID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextsByTargetIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
@@ -255,7 +255,7 @@ func (uc *UsecaseContext) GetTextHistoriesByTextID(ctx context.Context, reposito
 
 	if err != nil {
 		err = fmt.Errorf("error at get text histories by text id user id = %s device = %s target id = %s: %w", userID, device, id, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextHistoriesByTextIDError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),

@@ -6,7 +6,7 @@
  * :9999 を掴んでいることがあり、固定ポートだと起動できない・本番に向けて
  * テストが走ってしまうため。
  */
-import { execSync, spawn } from 'node:child_process'
+import { execFileSync, execSync, spawn } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import http from 'node:http'
@@ -123,7 +123,10 @@ try {
   // 5. Run Playwright tests (追加引数はそのままplaywrightに渡す: npm run test_client_e2e -- foo.spec.ts --workers=1)
   const playwrightArgs = process.argv.slice(2)
   try {
-    execSync(['npx playwright test', ...playwrightArgs].join(' '), {
+    // シェルを経由させないため、Vite起動と同じくnodeでCLIを直接叩く。
+    // npx経由だと追加引数がそのままシェルに解釈される
+    const playwrightBin = path.join(process.cwd(), 'node_modules', '@playwright', 'test', 'cli.js')
+    execFileSync(process.execPath, [playwrightBin, 'test', ...playwrightArgs], {
       stdio: 'inherit',
       cwd: process.cwd(),
       env: {

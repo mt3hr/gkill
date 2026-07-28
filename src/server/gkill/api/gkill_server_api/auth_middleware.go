@@ -60,7 +60,7 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 		// ボディを読み取り
 		rawBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", fmt.Sprintf("%q", err))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -105,7 +105,7 @@ func (g *GkillServerAPI) authMiddleware(next http.Handler) http.Handler {
 		device, err := g.GetDevice()
 		if err != nil {
 			err = fmt.Errorf("error at get device name in auth middleware: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			w.Header().Set("Content-Type", "application/json")
 			errResp := struct {
 				Errors []*message.GkillError `json:"errors"`
@@ -140,7 +140,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		// ボディを読み取り
 		rawBody, err := io.ReadAll(r.Body)
 		if err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error at read request body in auth middleware", "error", fmt.Sprintf("%q", err))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -184,7 +184,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		device, err := g.GetDevice()
 		if err != nil {
 			err = fmt.Errorf("error at get device name in auth middleware: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			w.Header().Set("Content-Type", "application/json")
 			errResp := struct {
 				Errors []*message.GkillError `json:"errors"`
@@ -204,7 +204,7 @@ func (g *GkillServerAPI) authWithReposMiddleware(next http.Handler) http.Handler
 		repositories, err := g.GkillDAOManager.GetRepositories(account.UserID, device)
 		if err != nil {
 			err = fmt.Errorf("error at get repositories user id = %s device = %s in auth middleware: %w", account.UserID, device, err)
-			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			w.Header().Set("Content-Type", "application/json")
 			errResp := struct {
 				Errors []*message.GkillError `json:"errors"`

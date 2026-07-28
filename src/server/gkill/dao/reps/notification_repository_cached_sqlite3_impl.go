@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   CREATE_TIME_UNIX NOT NULL,
   UPDATE_TIME_UNIX NOT NULL
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", dbName, err)
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", dbName, err)
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_UNIX") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(ID, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create notification index unix statement %s: %w", dbName, err)
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexUnixSQL))
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create notification index unix to %s: %w", dbName, err)
@@ -123,7 +123,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", addNotificationInfoSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", addNotificationInfoSQL))
 	addNotificationInfoStmt, err := cacheDB.PrepareContext(ctx, addNotificationInfoSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add notification info sql: %w", err)
@@ -200,7 +200,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get NOTIFICATION histories sql: %w", err)
@@ -213,7 +213,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -361,7 +361,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get notification histories sql: %w", err)
@@ -374,7 +374,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -492,7 +492,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get notification histories sql: %w", err)
@@ -505,7 +505,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -620,7 +620,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get notification between notification time sql: %w", err)
@@ -633,7 +633,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -731,7 +731,7 @@ func (n *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		if !isCommitted {
 			err := tx.Rollback()
 			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache: %w", "error", err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at update cache", "error", fmt.Sprintf("%q", err))
 			}
 		}
 	}()
@@ -789,7 +789,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
   ?
 )`
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add NOTIFICATION sql: %w", err)
@@ -825,7 +825,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
 				notification.CreateTime.Unix(),
 				notification.UpdateTime.Unix(),
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at insert in to NOTIFICATION %s: %w", notification.ID, err)
@@ -919,7 +919,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get notification histories sql: %w", err)
@@ -932,7 +932,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -1011,7 +1011,7 @@ func (n *notificationRepositoryCachedSQLite3Impl) AddNotificationInfo(ctx contex
 		notification.CreateTime.Unix(),
 		notification.UpdateTime.Unix(),
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", n.addNotificationInfoSQL, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", n.addNotificationInfoSQL), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err := n.addNotificationInfoStmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

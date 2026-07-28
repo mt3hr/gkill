@@ -36,18 +36,18 @@ import type { EditRepStructElementDialogProps } from './edit-rep-struct-element-
 import EditRepStructElementView from '../views/edit-rep-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
+import { i18n } from '@/i18n'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
 defineProps<EditRepStructElementDialogProps>()
 const emits = defineEmits<EditRepStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const rep_struct: Ref<RepStructElementData> = ref(new RepStructElementData())
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
-import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("edit-rep-struct-element-dialog", {
   centerMode: "always",
   onEscape: () => hide(),

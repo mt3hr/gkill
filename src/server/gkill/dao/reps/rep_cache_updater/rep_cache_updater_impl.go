@@ -268,7 +268,7 @@ func (h *watcherHub) runEventLoop() {
 			if !ok {
 				return
 			}
-			slog.Log(context.Background(), gkill_log.Warn, "fsnotify error", "error", err)
+			slog.Log(context.Background(), gkill_log.Warn, "fsnotify error", "error", fmt.Sprintf("%q", err))
 		}
 	}
 }
@@ -342,7 +342,7 @@ func (h *watcherHub) runUpdateCoalesced(key string) {
 				continue
 			}
 			if err := rep.UpdateCache(context.TODO()); err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at update cache. filename = %s: %v\n", filename, err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at update cache", "filename", fmt.Sprintf("%q", filename), "error", fmt.Sprintf("%q", err))
 				// 継続するかは好み。ここは「他repは続ける」運用にしてる
 			}
 		}

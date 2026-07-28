@@ -4,8 +4,14 @@ import android.content.Context
 
 /**
  * Stores gkill server credentials and session in SharedPreferences.
+ *
+ * password_sha256 と session_id は [GkillSecretCipher] で暗号化して保存する。
+ * 旧バージョンが平文で書いた値も読めるようにしてあり、次の書き込みで暗号化される。
  */
-class GkillCredentialStore(context: Context) {
+class GkillCredentialStore(
+    context: Context,
+    private val cipher: GkillSecretCipher = AndroidKeystoreSecretCipher(),
+) {
     private val prefs = context.getSharedPreferences("gkill_wear_prefs", Context.MODE_PRIVATE)
 
     fun getServerUrl(): String =
@@ -21,10 +27,10 @@ class GkillCredentialStore(context: Context) {
         prefs.edit().putString("user_id", id).apply()
     }
 
-    fun getPasswordSha256(): String = prefs.getString("password_sha256", "") ?: ""
+    fun getPasswordSha256(): String = getSecret("password_sha256")
 
     fun setPasswordSha256(hash: String) {
-        prefs.edit().putString("password_sha256", hash).apply()
+        setSecret("password_sha256", hash)
     }
 
     fun getAllowSelfSignedCert(): Boolean = prefs.getBoolean("allow_self_signed_cert", false)
@@ -33,13 +39,35 @@ class GkillCredentialStore(context: Context) {
         prefs.edit().putBoolean("allow_self_signed_cert", allow).apply()
     }
 
-    fun getSessionId(): String = prefs.getString("session_id", "") ?: ""
+    fun getSessionId(): String = getSecret("session_id")
 
     fun setSessionId(id: String) {
-        prefs.edit().putString("session_id", id).apply()
+        setSecret("session_id", id)
     }
 
     fun clearSession() {
         prefs.edit().remove("session_id").apply()
+    }
+
+    private fun getSecret(key: String): String {
+        val stored = prefs.getString(key, "") ?: ""
+        if (stored.isEmpty()) {
+            return ""
+        }
+        if (!cipher.isEncrypted(stored)) {
+            // 旧バージョンが平文で書いた値。次の書き込みで暗号化される
+            return stored
+        }
+        return cipher.decrypt(stored) ?: ""
+    }
+
+    private fun setSecret(key: String, value: String) {
+        if (value.isEmpty()) {
+            prefs.edit().remove(key).apply()
+            return
+        }
+        // 暗号化できなかった場合は平文で残さず、保存自体を諦める
+        val encrypted = cipher.encrypt(value) ?: return
+        prefs.edit().putString(key, encrypted).apply()
     }
 }

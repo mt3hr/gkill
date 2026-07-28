@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table statement %s: %w", filename, err)
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table to %s: %w", filename, err)
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG ON TAG (ID, RELATED_TIME, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG index statement %s: %w", filename, err)
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG index to %s: %w", filename, err)
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_TARGET_ID ON TAG (TARGET_ID, UPDATE_TIME DESC);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexTargetIDSQL))
 	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID index statement %s: %w", filename, err)
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexTargetIDSQL))
 	_, err = indexTargetIDStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID index to %s: %w", filename, err)
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_ID_UPDATE_TIME ON TAG (ID, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexIDUpdateTimeSQL))
 	indexIDUpdateTimeStmt, err := db.PrepareContext(ctx, indexIDUpdateTimeSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
@@ -146,14 +146,14 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexIDUpdateTimeSQL))
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME table to %s: %w", filename, err)
@@ -263,7 +263,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find tags sql: %w", err)
@@ -276,7 +276,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -433,7 +433,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
@@ -446,7 +446,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -595,7 +595,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag by name sql %s: %w", tagname, err)
@@ -608,7 +608,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -753,7 +753,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get target id sql %s: %w", target_id, err)
@@ -766,7 +766,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -937,7 +937,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
@@ -950,7 +950,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -1076,7 +1076,7 @@ INSERT INTO TAG (
   ?,
   ?
 )`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add tag sql %s: %w", tag.ID, err)
@@ -1104,7 +1104,7 @@ INSERT INTO TAG (
 		tag.UpdateDevice,
 		tag.UpdateUser,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
@@ -1140,7 +1140,7 @@ FROM TAG
 WHERE 0 = 0
 
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all tag names sql: %w", err)
@@ -1153,7 +1153,7 @@ WHERE 0 = 0
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select all tag names from TAG: %w", err)
@@ -1262,7 +1262,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags sql: %w", err)
@@ -1275,7 +1275,7 @@ WHERE
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "params", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -1387,7 +1387,7 @@ SELECT IS_DELETED, ID AS TARGET_ID, TARGET_ID AS TARGET_ID_IN_DATA,
        ? AS LATEST_DATA_REPOSITORY_NAME, UPDATE_TIME AS DATA_UPDATE_TIME
 FROM TAG
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		return nil, err
@@ -1443,7 +1443,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
   VALUE,
   PRIMARY KEY(KEY)
 );`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
 	stmt, err := db.PrepareContext(ctx, createTableSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
@@ -1456,7 +1456,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
@@ -1464,7 +1464,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
@@ -1477,7 +1477,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		}
 	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create gkill meta info index: %w", err)
@@ -1491,7 +1491,7 @@ SELECT
 FROM GKILL_META_INFO
 WHERE KEY = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
 	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1505,7 +1505,7 @@ WHERE KEY = ?
 	}()
 	dbSchemaVersion := ""
 	queryArgs := []any{schemaVersionKey}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
 		// データがなかったら今のバージョンをいれる
@@ -1513,7 +1513,7 @@ WHERE KEY = ?
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertCurrentVersionSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
 			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1527,7 +1527,7 @@ VALUES(?, ?)`
 				}
 			}()
 			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)
@@ -1536,7 +1536,7 @@ VALUES(?, ?)`
 			}
 
 			queryArgs = []any{schemaVersionKey}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 			if err != nil {
 				err = fmt.Errorf("error at get schema version sql: %w", err)

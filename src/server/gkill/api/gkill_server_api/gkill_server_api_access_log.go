@@ -2,6 +2,7 @@ package gkill_server_api
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -68,7 +69,7 @@ func (g *GkillServerAPI) accessLogMiddleware(next http.Handler) http.Handler {
 		slog.Log(ctx, gkill_log.Access, "access",
 			"remote_addr", extractIP(r.RemoteAddr),
 			"method", r.Method,
-			"path", r.URL.Path,
+			"path", fmt.Sprintf("%q", r.URL.Path),
 			"status", rec.statusCode,
 			"duration", time.Since(start).String(),
 			"user_id", info.UserID,
