@@ -503,68 +503,108 @@ func (a *itemAppender) addNotice(text string) {
 	a.items = append(a.items, turnItem{Kind: "notice", Text: text})
 }
 
-// buildTurns はメイントランスクリプトのレコード列をターンに分割する。
+// buildMessages はメイントランスクリプトのレコード列を発言単位に分割する。
+// 人間の発言と Claude のテキスト応答がそれぞれ1件になり、
+// ツール実行と thinking は直近の Claude の発言に折りたたんで付ける。
 // agentsByToolUseID / agentsByID はサブエージェントの紐付けに使う。
-func buildTurns(records []logRecord, agentsByToolUseID, agentsByID map[string]*subAgent) []turn {
+func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string]*subAgent) []message {
 	sessionTitle, project, branch := scanSessionMeta(records)
 	toolUseIDToAgentID := scanAgentIDsFromResults(records)
 
-	var turns []turn
-	var cur *turn
+	var messages []message
+	var cur *message
 	var app *itemAppender
+	// text より前に来た thinking / tool_use を溜めておき、次の発言に付ける。
+	// 実データでは thinking → text → tool_use の順が多く、先頭の thinking を捨てないため。
+	pending := &itemAppender{}
 
+	newAppender := func() *itemAppender {
+		a := &itemAppender{items: pending.items}
+		pending = &itemAppender{}
+		return a
+	}
 	flush := func() {
 		if cur == nil {
 			return
 		}
 		cur.Items = app.items
-		turns = append(turns, *cur)
+		messages = append(messages, *cur)
 		cur = nil
 		app = nil
+	}
+	// 開いている発言があればそこへ、無ければ保留へ積む
+	target := func() *itemAppender {
+		if app != nil {
+			return app
+		}
+		return pending
+	}
+	touch := func(rec logRecord) {
+		if cur != nil && !rec.Timestamp.IsZero() && rec.Timestamp.After(cur.UpdateTime) {
+			cur.UpdateTime = rec.Timestamp
+		}
 	}
 
 	for _, rec := range records {
 		if isHumanPrompt(rec) {
 			flush()
-			prompt := strings.TrimSpace(extractText(rec.Message.contentOrEmpty()))
+			// 人間の発言に切り替わるので、行き場のない保留分は捨てる
+			pending = &itemAppender{}
 			if rec.UUID == "" {
 				// IDが無いレコードはKyouにできないので捨てる
 				continue
 			}
-			cur = &turn{
+			messages = append(messages, message{
 				ID:           rec.UUID,
+				Role:         roleHuman,
 				SessionID:    rec.SessionID,
 				SessionTitle: sessionTitle,
 				Project:      project,
 				Branch:       branch,
-				Prompt:       prompt,
+				Text:         strings.TrimSpace(extractText(rec.Message.contentOrEmpty())),
 				RelatedTime:  rec.Timestamp,
 				UpdateTime:   rec.Timestamp,
-			}
-			app = &itemAppender{}
+			})
 			continue
-		}
-		if cur == nil {
-			// 最初の人間プロンプトより前のレコードは捨てる
-			continue
-		}
-		if !rec.Timestamp.IsZero() && rec.Timestamp.After(cur.UpdateTime) {
-			cur.UpdateTime = rec.Timestamp
 		}
 
 		switch rec.Type {
 		case "user":
 			if rec.PromptSource == "system" {
-				app.addNotice(extractText(rec.Message.contentOrEmpty()))
+				target().addNotice(extractText(rec.Message.contentOrEmpty()))
+				touch(rec)
 			}
 			// tool_result は表示しない
 		case "assistant":
 			for _, b := range extractBlocks(rec.Message.contentOrEmpty()) {
 				switch b.Type {
 				case "text":
-					app.addText(b.Text)
+					if strings.TrimSpace(b.Text) == "" {
+						continue
+					}
+					if rec.UUID == "" {
+						// IDが無いとKyouにできないので、開いている発言に足すだけにする
+						target().addText(b.Text)
+						touch(rec)
+						continue
+					}
+					// テキストが来たら発言が切り替わる。保留分は新しい発言に付ける
+					flush()
+					cur = &message{
+						ID:           rec.UUID,
+						Role:         roleAssistant,
+						SessionID:    rec.SessionID,
+						SessionTitle: sessionTitle,
+						Project:      project,
+						Branch:       branch,
+						Text:         strings.TrimSpace(b.Text),
+						RelatedTime:  rec.Timestamp,
+						UpdateTime:   rec.Timestamp,
+					}
+					app = newAppender()
 				case "thinking":
-					app.addThinking(b.Thinking)
+					target().addThinking(b.Thinking)
+					touch(rec)
 				case "tool_use":
 					tc := toolCall{
 						Name:    b.Name,
@@ -573,13 +613,14 @@ func buildTurns(records []logRecord, agentsByToolUseID, agentsByID map[string]*s
 					if agent := lookupSubAgent(b.ID, agentsByToolUseID, agentsByID, toolUseIDToAgentID); agent != nil {
 						tc.Agent = agent
 					}
-					app.addTool(tc)
+					target().addTool(tc)
+					touch(rec)
 				}
 			}
 		}
 	}
 	flush()
-	return turns
+	return messages
 }
 
 // lookupSubAgent は tool_use.id からサブエージェントを引く。
@@ -683,14 +724,14 @@ func (m *logMessage) contentOrEmpty() json.RawMessage {
 }
 
 // searchTextOf は検索対象のテキストを組み立てる。
-// プロンプト・Claudeのテキスト応答・ツール名・サブエージェントの説明のほか、
-// プロジェクト名とブランチ名も含める。
+// 発言本文・ツール名・サブエージェントの説明のほか、
+// セッションタイトル・プロジェクト名・ブランチ名も含める。
 // これらはKyouのタグにはしない(gkillのタグ一覧にはプラグインのタグが載らないため、
 // rykvの既定のタグ絞り込み「no tags」から漏れて何も表示されなくなる)。
 // 代わりにワード検索で引けるようにし、表示は詳細HTMLのチップで行う。
-func searchTextOf(t turn) string {
+func searchTextOf(t message) string {
 	var sb strings.Builder
-	sb.WriteString(t.Prompt)
+	sb.WriteString(t.Text)
 	sb.WriteString("\n")
 	sb.WriteString(t.SessionTitle)
 	sb.WriteString("\n")

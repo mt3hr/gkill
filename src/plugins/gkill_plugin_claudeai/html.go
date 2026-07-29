@@ -1,48 +1,158 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
+	"path/filepath"
+	"strings"
 )
 
+// configHTMLHead は設定画面の共通ヘッダ。
+// 設定ダイアログはテーマをpostMessageしてこないので、OSの配色設定に追従させる。
+const configHTMLHead = `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+:root {
+  --bg: #ffffff;
+  --text: #333333;
+  --muted: #888888;
+  --border: #cccccc;
+  --ok-bg: #f0fff4;
+  --ok-border: #44aa66;
+  --warn-bg: #fff8f0;
+  --warn-border: #cc8844;
+  --code-bg: #eeeeee;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #212121;
+    --text: #e0e0e0;
+    --muted: #999999;
+    --border: #555555;
+    --ok-bg: #1e3a26;
+    --ok-border: #44aa66;
+    --warn-bg: #3a2e1e;
+    --warn-border: #cc8844;
+    --code-bg: #383838;
+  }
+}
+body { font-family: sans-serif; margin: 16px; background: var(--bg); color: var(--text); }
+h2 { font-size: 1.1em; margin-top: 0; }
+h3 { font-size: 0.95em; margin-bottom: 4px; }
+.ok { background: var(--ok-bg); border-left: 4px solid var(--ok-border);
+  padding: 12px; border-radius: 4px; margin: 12px 0; }
+.warn { background: var(--warn-bg); border-left: 4px solid var(--warn-border);
+  padding: 12px; border-radius: 4px; margin: 12px 0; }
+code { background: var(--code-bg); padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+ul, ol { margin: 4px 0; padding-left: 20px; font-size: 0.85em; }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px;
+  padding: 8px; font-size: 0.85em; overflow-x: auto; }
+.hint { font-size: 0.8em; color: var(--muted); margin-top: 4px; }
+.tag { font-size: 0.75em; background: var(--code-bg); color: var(--muted);
+  border-radius: 8px; padding: 0 6px; }
+table { border-collapse: collapse; font-size: 0.85em; margin: 8px 0; }
+td { padding: 2px 12px 2px 0; }
+td.k { color: var(--muted); }
+</style>
+</head><body>`
+
+// maxShownExpanded は展開結果として設定画面に並べる最大件数。
+const maxShownExpanded = 20
+
 // renderConfigHTML は設定画面のHTMLを返す。
-func renderConfigHTML(pluginDir string) string {
-	convs, err := loadConversations(pluginDir)
+//
+// gkillの設定ダイアログは設定HTMLを表示するだけで、保存(post_plugin_config)を呼ぶ導線が
+// まだ無い。プラグイン側から本体を変更するわけにもいかないので、ここでは編集フォームを出さず、
+// 現状の表示とconfig.jsonの編集手順の案内にとどめる。
+func renderConfigHTML(pluginDir string, patterns []string, src expandedSource) string {
+	var sb strings.Builder
+	sb.WriteString(configHTMLHead)
+	sb.WriteString(`<h2>Claude.ai チャット履歴プラグイン</h2>`)
+
+	found := findConversationFiles(src)
+	convs, err := loadConversations(src)
 
 	if err != nil {
-		return fmt.Sprintf(`<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<style>
-body{font-family:sans-serif;margin:16px;}
-.info{background:#f0f4ff;border-left:4px solid #4466cc;padding:12px;border-radius:4px;margin:12px 0;}
-code{background:#eee;padding:2px 6px;border-radius:3px;font-size:0.9em;}
-</style></head><body>
-<h2>Claude.ai チャット履歴プラグイン</h2>
-<div class="info">
-<p><strong>セットアップ方法</strong></p>
-<ol>
-<li>Claude.ai にログイン → 左下のアカウントアイコン → <strong>Settings</strong></li>
-<li>「Privacy」→「<strong>Export data</strong>」をクリック</li>
-<li>ZIPが届いたら解凍し、<code>conversations.json</code> を取り出す</li>
-<li>このプラグインのフォルダに配置する</li>
-</ol>
-<p>配置先: <code>%s/conversations.json</code></p>
-</div>
-<p style="color:#888">現在: ファイルが見つかりません</p>
-</body></html>`, html.EscapeString(pluginDir))
+		sb.WriteString(`<div class="warn">`)
+		sb.WriteString(`<p><strong>データが読み込めていません</strong></p>`)
+		sb.WriteString(`<p><code>` + html.EscapeString(err.Error()) + `</code></p>`)
+		sb.WriteString(`<p>エクスポート手順:</p><ol>`)
+		sb.WriteString(`<li>Claude.ai にログイン → 左下のアカウントアイコン → <strong>Settings</strong></li>`)
+		sb.WriteString(`<li>「Privacy」→「<strong>Export data</strong>」をクリック</li>`)
+		sb.WriteString(`<li>ZIPが届いたら解凍し、<code>conversations.json</code> を取り出す</li>`)
+		sb.WriteString(`<li>下の「データソース」で指定したフォルダに置く</li>`)
+		sb.WriteString(`</ol></div>`)
+	} else {
+		sb.WriteString(`<div class="ok">`)
+		fmt.Fprintf(&sb, `<p>✓ <strong>%d 件</strong>の会話を読み込んでいます</p>`, len(convs))
+		sb.WriteString(`<p>データを更新するには、Claude.ai から再エクスポートして ` +
+			`<code>conversations.json</code> を置き換えてください。</p>`)
+		sb.WriteString(`</div>`)
 	}
 
-	return fmt.Sprintf(`<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<style>
-body{font-family:sans-serif;margin:16px;}
-.ok{background:#f0fff4;border-left:4px solid #44aa66;padding:12px;border-radius:4px;margin:12px 0;}
-code{background:#eee;padding:2px 6px;border-radius:3px;font-size:0.9em;}
-</style></head><body>
-<h2>Claude.ai チャット履歴プラグイン</h2>
-<div class="ok">
-<p>✓ <strong>%d 件</strong>の会話が読み込まれています</p>
-<p>データを更新するには、Claude.ai から再エクスポートして <code>conversations.json</code> を置き換えてください。</p>
-</div>
-</body></html>`, len(convs))
+	sb.WriteString(`<table>`)
+	fmt.Fprintf(&sb, `<tr><td class="k">読み込んだファイル数</td><td>%d</td></tr>`, len(found))
+	fmt.Fprintf(&sb, `<tr><td class="k">会話数</td><td>%d</td></tr>`, len(convs))
+	sb.WriteString(`</table>`)
+
+	if len(src.Missing) > 0 {
+		sb.WriteString(`<div class="warn"><p>次の指定は何にもマッチしませんでした:</p><ul>`)
+		for _, d := range src.Missing {
+			sb.WriteString(`<li><code>` + html.EscapeString(d) + `</code></li>`)
+		}
+		sb.WriteString(`</ul></div>`)
+	}
+
+	sb.WriteString(`<h3>設定されている指定</h3><ul>`)
+	for _, p := range patterns {
+		sb.WriteString(`<li><code>` + html.EscapeString(p) + `</code>`)
+		if hasGlobMeta(p) {
+			sb.WriteString(` <span class="tag">パターン</span>`)
+		}
+		sb.WriteString(`</li>`)
+	}
+	sb.WriteString(`</ul>`)
+
+	fmt.Fprintf(&sb, `<h3>見つかったファイル (%d)</h3><ul>`, len(found))
+	for i, f := range found {
+		if i >= maxShownExpanded {
+			fmt.Fprintf(&sb, `<li>ほか %d 件</li>`, len(found)-i)
+			break
+		}
+		sb.WriteString(`<li><code>` + html.EscapeString(f) + `</code></li>`)
+	}
+	sb.WriteString(`</ul>`)
+
+	sb.WriteString(`<h3>データソースを変える</h3>`)
+	sb.WriteString(`<p>このプラグインのフォルダに <code>config.json</code> を置いてください。</p>`)
+	sb.WriteString(`<p>配置先: <code>` + html.EscapeString(filepath.Join(pluginDir, "config.json")) + `</code></p>`)
+	sb.WriteString(`<pre>` + html.EscapeString(sampleConfigJSON()) + `</pre>`)
+	sb.WriteString(`<div class="hint">` +
+		`<code>source_dirs</code> は<strong>配列で複数指定</strong>できます(1つなら文字列でも可)。` +
+		`ワイルドカード <code>*</code> <code>**</code> <code>?</code> <code>[]</code> が使えます — ` +
+		`マッチしたフォルダは再帰的に走査して <code>conversations.json</code> を探し、` +
+		`マッチしたファイルはそのまま読みます。` +
+		`先頭の <code>~</code> と環境変数(<code>$HOME</code> など)も展開されます` +
+		`(ただしgkillをWindowsサービスで動かしている場合は実行アカウントのホームになるため、絶対パスが確実です)。` +
+		`キーごと省略するか空にすると、このプラグインのフォルダを見ます。` +
+		`変更は次の検索から反映されます(gkillの再起動は不要)。</div>`)
+
+	sb.WriteString(`</body></html>`)
+	return sb.String()
+}
+
+// sampleConfigJSON は設定画面に出す config.json の記入例。
+func sampleConfigJSON() string {
+	sample := map[string]any{
+		configKeySourceDirs: []string{
+			"~/Kyou/ClaudeAIExport",
+			"~/Dropbox/claude_export/conversations.json",
+		},
+	}
+	data, err := json.MarshalIndent(sample, "", "  ")
+	if err != nil {
+		return "{}"
+	}
+	return string(data)
 }

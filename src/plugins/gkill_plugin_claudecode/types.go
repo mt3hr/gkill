@@ -67,21 +67,30 @@ type agentMeta struct {
 	SpawnDepth  int    `json:"spawnDepth"`
 }
 
-// turn は1ターン(人間のプロンプト起点、次の人間の入力まで)を表す。
-// これがそのまま1Kyouになる。
-type turn struct {
+// 発言者。
+const (
+	roleHuman     = "human"
+	roleAssistant = "assistant"
+)
+
+// message は1つの発言を表す。これがそのまま1Kyouになる。
+// ChatGPT / Claude.ai プラグインと粒度を揃えており、
+// 人間の発言と Claude のテキスト応答がそれぞれ別のKyouになる。
+// ツール実行とthinkingは独立したKyouにはせず、Claudeの発言に折りたたんで付ける。
+type message struct {
 	ID           string     `json:"id"`
+	Role         string     `json:"role"`
 	SessionID    string     `json:"session_id"`
 	SessionTitle string     `json:"session_title"`
 	Project      string     `json:"project"`
 	Branch       string     `json:"branch"`
-	Prompt       string     `json:"prompt"`
+	Text         string     `json:"text"`
 	RelatedTime  time.Time  `json:"related_time"`
 	UpdateTime   time.Time  `json:"update_time"`
 	Items        []turnItem `json:"items"`
 }
 
-// turnItem はターン本文の時系列要素。連続する同種の要素はまとめられている。
+// turnItem は発言に付随する時系列要素。連続する同種の要素はまとめられている。
 type turnItem struct {
 	// Kind は "text"(Claudeのテキスト応答) / "thinking" / "tools" / "notice"(システム通知)。
 	Kind     string     `json:"kind"`

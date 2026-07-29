@@ -2,7 +2,10 @@ module github.com/mt3hr/gkill_plugin_claudeai
 
 go 1.26.4
 
-require github.com/mt3hr/gkill/src/server v0.0.0
+require (
+	github.com/mattn/go-zglob v0.0.6
+	github.com/mt3hr/gkill/src/server v0.0.0
+)
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
