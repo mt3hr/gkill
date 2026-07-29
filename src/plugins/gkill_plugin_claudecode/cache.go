@@ -13,7 +13,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
 
-// pluginCache はトランスクリプトから組み立てたターンをSQLite3にキャッシュする。
+// pluginCache はトランスクリプトから組み立てた発言をSQLite3にキャッシュする。
 // {pluginDir}/cache.db に保存し、ファイル単位のmtime/サイズで差分更新する。
 // ソースは146MB規模になるため、毎回全部を読み直さないことが重要。
 type pluginCache struct {
@@ -23,9 +23,10 @@ type pluginCache struct {
 
 var globalCache = &pluginCache{}
 
-// turnSummary はFindKyous用の軽量な行。body_jsonは読まない。
-type turnSummary struct {
-	TurnID          string
+// messageSummary はFindKyous用の軽量な行。body_jsonは読まない。
+type messageSummary struct {
+	MessageID       string
+	Role            string
 	SessionID       string
 	SessionTitle    string
 	Project         string
@@ -38,7 +39,7 @@ type turnSummary struct {
 // cacheStats は設定画面に出す統計。
 type cacheStats struct {
 	FileCount     int
-	TurnCount     int
+	MessageCount  int
 	LastScanUnix  int64
 	LastScanError string
 }
@@ -61,13 +62,38 @@ func (c *pluginCache) openDB(pluginDir string) error {
 	return nil
 }
 
+// cacheSchemaVersion はキャッシュのスキーマ版。
+// 構造を変えたら上げること。古いDBは作り直される(キャッシュなので捨ててよい)。
+const cacheSchemaVersion = "2"
+
 // initSchema はテーブルを作成する。
+// 記録している版が違えば、作り直しのため既存のテーブルを落とす。
 func initSchema(db *sql.DB) error {
-	_, err := db.Exec(`
-CREATE TABLE IF NOT EXISTS cache_meta (
+	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS cache_meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
-);
+);`); err != nil {
+		return fmt.Errorf("error at init cache_meta: %w", err)
+	}
+
+	var version string
+	_ = db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'schema_version'`).Scan(&version)
+	if version != cacheSchemaVersion {
+		if _, err := db.Exec(`
+DROP TABLE IF EXISTS message_cache;
+DROP TABLE IF EXISTS turn_cache;
+DROP TABLE IF EXISTS file_cache;
+DELETE FROM cache_meta;
+`); err != nil {
+			return fmt.Errorf("error at drop old schema: %w", err)
+		}
+		if _, err := db.Exec(`INSERT OR REPLACE INTO cache_meta(key,value) VALUES('schema_version', ?)`,
+			cacheSchemaVersion); err != nil {
+			return fmt.Errorf("error at record schema version: %w", err)
+		}
+	}
+
+	_, err := db.Exec(`
 CREATE TABLE IF NOT EXISTS file_cache (
   path       TEXT PRIMARY KEY,
   mtime_unix INTEGER NOT NULL,
@@ -75,22 +101,23 @@ CREATE TABLE IF NOT EXISTS file_cache (
   kind       TEXT NOT NULL,
   session_id TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS turn_cache (
-  turn_id           TEXT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS message_cache (
+  message_id        TEXT PRIMARY KEY,
+  role              TEXT NOT NULL,
   source_path       TEXT NOT NULL,
   session_id        TEXT NOT NULL,
   session_title     TEXT NOT NULL,
   project           TEXT NOT NULL,
   branch            TEXT NOT NULL,
-  prompt_text       TEXT NOT NULL,
+  message_text      TEXT NOT NULL,
   search_text       TEXT NOT NULL,
   body_json         TEXT NOT NULL,
   related_time_unix INTEGER NOT NULL,
   update_time_unix  INTEGER NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_turn_time    ON turn_cache(related_time_unix);
-CREATE INDEX IF NOT EXISTS idx_turn_session ON turn_cache(session_id);
-CREATE INDEX IF NOT EXISTS idx_turn_src     ON turn_cache(source_path);
+CREATE INDEX IF NOT EXISTS idx_msg_time    ON message_cache(related_time_unix);
+CREATE INDEX IF NOT EXISTS idx_msg_session ON message_cache(session_id);
+CREATE INDEX IF NOT EXISTS idx_msg_src     ON message_cache(source_path);
 `)
 	if err != nil {
 		return fmt.Errorf("error at init schema: %w", err)
@@ -98,8 +125,8 @@ CREATE INDEX IF NOT EXISTS idx_turn_src     ON turn_cache(source_path);
 	return nil
 }
 
-// GetTurns はFindKyous用に全ターンの要約を返す。呼び出し前に差分更新する。
-func (c *pluginCache) GetTurns(pluginDir string, src expandedSource) ([]turnSummary, error) {
+// GetMessages はFindKyous用に全発言の要約を返す。呼び出し前に差分更新する。
+func (c *pluginCache) GetMessages(pluginDir string, src expandedSource) ([]messageSummary, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -111,32 +138,32 @@ func (c *pluginCache) GetTurns(pluginDir string, src expandedSource) ([]turnSumm
 	}
 
 	rows, err := c.db.Query(`
-		SELECT turn_id, session_id, session_title, project, branch, search_text,
+		SELECT message_id, role, session_id, session_title, project, branch, search_text,
 		       related_time_unix, update_time_unix
-		FROM turn_cache ORDER BY related_time_unix DESC`)
+		FROM message_cache ORDER BY related_time_unix DESC`)
 	if err != nil {
-		return nil, fmt.Errorf("error at query turns: %w", err)
+		return nil, fmt.Errorf("error at query messages: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
-	var turns []turnSummary
+	var messages []messageSummary
 	for rows.Next() {
-		var t turnSummary
-		if err := rows.Scan(&t.TurnID, &t.SessionID, &t.SessionTitle, &t.Project, &t.Branch,
+		var t messageSummary
+		if err := rows.Scan(&t.MessageID, &t.Role, &t.SessionID, &t.SessionTitle, &t.Project, &t.Branch,
 			&t.SearchText, &t.RelatedTimeUnix, &t.UpdateTimeUnix); err != nil {
 			continue
 		}
-		turns = append(turns, t)
+		messages = append(messages, t)
 	}
-	return turns, nil
+	return messages, nil
 }
 
-// GetTurn はGetContentHTML用に、ターン1件を本文込みで返す。
-func (c *pluginCache) GetTurn(pluginDir string, src expandedSource, turnID string) (turn, error) {
+// GetMessage はGetContentHTML用に、発言1件を本文込みで返す。
+func (c *pluginCache) GetMessage(pluginDir string, src expandedSource, messageID string) (message, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	var t turn
+	var t message
 	if err := c.openDB(pluginDir); err != nil {
 		return t, err
 	}
@@ -145,12 +172,12 @@ func (c *pluginCache) GetTurn(pluginDir string, src expandedSource, turnID strin
 	}
 
 	var bodyJSON string
-	row := c.db.QueryRow(`SELECT body_json FROM turn_cache WHERE turn_id = ?`, turnID)
+	row := c.db.QueryRow(`SELECT body_json FROM message_cache WHERE message_id = ?`, messageID)
 	if err := row.Scan(&bodyJSON); err != nil {
-		return t, fmt.Errorf("turn not found: %s", turnID)
+		return t, fmt.Errorf("message not found: %s", messageID)
 	}
 	if err := json.Unmarshal([]byte(bodyJSON), &t); err != nil {
-		return t, fmt.Errorf("error at parse cached turn %s: %w", turnID, err)
+		return t, fmt.Errorf("error at parse cached message %s: %w", messageID, err)
 	}
 	return t, nil
 }
@@ -170,7 +197,7 @@ func (c *pluginCache) GetStats(pluginDir string, src expandedSource) cacheStats 
 	}
 
 	_ = c.db.QueryRow(`SELECT COUNT(*) FROM file_cache WHERE kind != ?`, kindOther).Scan(&stats.FileCount)
-	_ = c.db.QueryRow(`SELECT COUNT(*) FROM turn_cache`).Scan(&stats.TurnCount)
+	_ = c.db.QueryRow(`SELECT COUNT(*) FROM message_cache`).Scan(&stats.MessageCount)
 	var lastScan string
 	if err := c.db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'last_scan_unix'`).Scan(&lastScan); err == nil {
 		stats.LastScanUnix, _ = strconv.ParseInt(lastScan, 10, 64)
@@ -260,8 +287,8 @@ func (c *pluginCache) refresh(src expandedSource) error {
 	}()
 
 	for _, path := range removedPaths {
-		if _, err := tx.Exec(`DELETE FROM turn_cache WHERE source_path = ?`, path); err != nil {
-			return fmt.Errorf("error at delete turns of %s: %w", path, err)
+		if _, err := tx.Exec(`DELETE FROM message_cache WHERE source_path = ?`, path); err != nil {
+			return fmt.Errorf("error at delete messages of %s: %w", path, err)
 		}
 		if _, err := tx.Exec(`DELETE FROM file_cache WHERE path = ?`, path); err != nil {
 			return fmt.Errorf("error at delete file cache %s: %w", path, err)
@@ -269,8 +296,8 @@ func (c *pluginCache) refresh(src expandedSource) error {
 	}
 
 	for sid := range dirtySessions {
-		if _, err := tx.Exec(`DELETE FROM turn_cache WHERE session_id = ?`, sid); err != nil {
-			return fmt.Errorf("error at delete turns of session %s: %w", sid, err)
+		if _, err := tx.Exec(`DELETE FROM message_cache WHERE session_id = ?`, sid); err != nil {
+			return fmt.Errorf("error at delete messages of session %s: %w", sid, err)
 		}
 		agentsByID, agentsByToolUseID := loadSubAgents(subsOf[sid], metasOf[sid])
 		for _, mainFile := range mainsOf[sid] {
@@ -278,8 +305,8 @@ func (c *pluginCache) refresh(src expandedSource) error {
 			if rerr != nil && len(records) == 0 {
 				continue
 			}
-			for _, t := range buildTurns(records, agentsByToolUseID, agentsByID) {
-				if err := insertTurn(tx, mainFile.Path, t); err != nil {
+			for _, t := range buildMessages(records, agentsByToolUseID, agentsByID) {
+				if err := insertMessage(tx, mainFile.Path, t); err != nil {
 					return err
 				}
 			}
@@ -336,21 +363,21 @@ func loadSubAgents(subs, metas []scannedFile) (byID, byToolUseID map[string]*sub
 	return byID, byToolUseID
 }
 
-// insertTurn は1ターンをキャッシュに書き込む。
-func insertTurn(tx *sql.Tx, sourcePath string, t turn) error {
+// insertMessage は1発言をキャッシュに書き込む。
+func insertMessage(tx *sql.Tx, sourcePath string, t message) error {
 	body, err := json.Marshal(t)
 	if err != nil {
-		return fmt.Errorf("error at marshal turn %s: %w", t.ID, err)
+		return fmt.Errorf("error at marshal message %s: %w", t.ID, err)
 	}
 	_, err = tx.Exec(`
-		INSERT OR REPLACE INTO turn_cache(
-			turn_id, source_path, session_id, session_title, project, branch,
-			prompt_text, search_text, body_json, related_time_unix, update_time_unix)
-		VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
-		t.ID, sourcePath, t.SessionID, t.SessionTitle, t.Project, t.Branch,
-		t.Prompt, searchTextOf(t), string(body), t.RelatedTime.Unix(), t.UpdateTime.Unix())
+		INSERT OR REPLACE INTO message_cache(
+			message_id, role, source_path, session_id, session_title, project, branch,
+			message_text, search_text, body_json, related_time_unix, update_time_unix)
+		VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
+		t.ID, t.Role, sourcePath, t.SessionID, t.SessionTitle, t.Project, t.Branch,
+		t.Text, searchTextOf(t), string(body), t.RelatedTime.Unix(), t.UpdateTime.Unix())
 	if err != nil {
-		return fmt.Errorf("error at insert turn %s: %w", t.ID, err)
+		return fmt.Errorf("error at insert message %s: %w", t.ID, err)
 	}
 	return nil
 }

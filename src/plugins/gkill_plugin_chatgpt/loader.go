@@ -1,44 +1,44 @@
 package main
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 )
 
 const conversationsFile = "conversations.json"
 
-// findConversationFiles は pluginDir 内の会話JSONファイルパスを返す。
-// 新形式（conversations-000.json など）を優先し、なければ旧形式（conversations.json）を返す。
-func findConversationFiles(pluginDir string) ([]string, error) {
-	numbered, err := filepath.Glob(filepath.Join(pluginDir, "conversations-*.json"))
-	if err != nil {
-		return nil, fmt.Errorf("ファイル検索に失敗しました: %w", err)
-	}
-	if len(numbered) > 0 {
-		sort.Strings(numbered)
-		return numbered, nil
-	}
-	single := filepath.Join(pluginDir, conversationsFile)
-	if _, err := os.Stat(single); err == nil {
-		return []string{single}, nil
-	}
-	return nil, nil
+// isNumberedConversationFile は新形式（conversations-000.json など）かどうかを判定する。
+func isNumberedConversationFile(name string) bool {
+	lower := strings.ToLower(name)
+	return strings.HasPrefix(lower, "conversations-") && strings.HasSuffix(lower, ".json")
 }
 
-// loadConversations は pluginDir 内の conversations*.json を読み込む。
+// isSingleConversationFile は旧形式（conversations.json）かどうかを判定する。
+func isSingleConversationFile(name string) bool {
+	return strings.EqualFold(name, conversationsFile)
+}
+
+// findConversationFiles はデータソースから会話JSONファイルを集める。
+// 新形式（conversations-000.json など）を優先し、なければ旧形式（conversations.json）を返す。
+func findConversationFiles(src expandedSource) []string {
+	if numbered := collectSourceFiles(src, isNumberedConversationFile); len(numbered) > 0 {
+		return numbered
+	}
+	return collectSourceFiles(src, isSingleConversationFile)
+}
+
+// loadConversations はデータソースの conversations*.json を読み込む。
 // 新形式（conversations-000.json, conversations-001.json...）と
 // 旧形式（conversations.json）の両方に対応する。
-func loadConversations(pluginDir string) ([]chatGPTConversation, error) {
-	paths, err := findConversationFiles(pluginDir)
-	if err != nil {
-		return nil, err
-	}
+func loadConversations(src expandedSource) ([]chatGPTConversation, error) {
+	paths := findConversationFiles(src)
 	if len(paths) == 0 {
-		return nil, fmt.Errorf("conversations.json または conversations-NNN.json が見つかりません。ChatGPT からエクスポートしたZIPを解凍し、JSONファイルを %s に配置してください", pluginDir)
+		return nil, fmt.Errorf("conversations.json または conversations-NNN.json が見つかりません。ChatGPT からエクスポートしたZIPを解凍し、JSONファイルをデータソースに指定したフォルダへ配置してください")
 	}
 
 	var all []chatGPTConversation
@@ -85,7 +85,7 @@ func getMessages(conv *chatGPTConversation) []chatGPTMessage {
 		}
 		all = append(all, msgWithTime{msg: m, time: t})
 	}
-	sort.Slice(all, func(i, j int) bool { return all[i].time < all[j].time })
+	slices.SortFunc(all, func(a, b msgWithTime) int { return cmp.Compare(a.time, b.time) })
 	msgs := make([]chatGPTMessage, len(all))
 	for i, a := range all {
 		msgs[i] = a.msg

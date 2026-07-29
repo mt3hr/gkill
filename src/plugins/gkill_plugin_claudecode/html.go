@@ -74,20 +74,20 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 	sb.WriteString(configHTMLHead)
 	sb.WriteString(`<h2>Claude Code チャットログプラグイン</h2>`)
 
-	if stats.TurnCount > 0 {
+	if stats.MessageCount > 0 {
 		sb.WriteString(`<div class="ok">`)
-		fmt.Fprintf(&sb, `<p>✓ <strong>%d ターン</strong>を読み込んでいます</p>`, stats.TurnCount)
+		fmt.Fprintf(&sb, `<p>✓ <strong>%d 件の発言</strong>を読み込んでいます</p>`, stats.MessageCount)
 		sb.WriteString(`</div>`)
 	} else {
 		sb.WriteString(`<div class="warn">`)
-		sb.WriteString(`<p>まだターンが読み込まれていません。</p>`)
+		sb.WriteString(`<p>まだ発言が読み込まれていません。</p>`)
 		sb.WriteString(`<p>Claude Code のセッションログが入ったフォルダを、下の手順で指定してください。</p>`)
 		sb.WriteString(`</div>`)
 	}
 
 	sb.WriteString(`<table>`)
 	fmt.Fprintf(&sb, `<tr><td class="k">対象ファイル数</td><td>%d</td></tr>`, stats.FileCount)
-	fmt.Fprintf(&sb, `<tr><td class="k">ターン数</td><td>%d</td></tr>`, stats.TurnCount)
+	fmt.Fprintf(&sb, `<tr><td class="k">発言数</td><td>%d</td></tr>`, stats.MessageCount)
 	fmt.Fprintf(&sb, `<tr><td class="k">最終スキャン</td><td>%s</td></tr>`,
 		html.EscapeString(formatUnix(stats.LastScanUnix)))
 	sb.WriteString(`</table>`)

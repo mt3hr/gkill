@@ -1,11 +1,11 @@
 # gkill_plugin_claudecode
 
 Claude Code のチャットログ（セッション JSONL）を gkill タイムラインに表示するプラグイン。
-**1ターン = 1 Kyou** として扱う。ターンは人間のプロンプトを起点とし、次の人間の入力が来るまでの
-Claude の応答・ツール実行をひとまとめにする。
+**1メッセージ = 1 Kyou** として扱う。人間の発言と Claude のテキスト応答がそれぞれ別の Kyou になり、
+ChatGPT / Claude.ai プラグインと粒度が揃う。
 
-Claude.ai プラグインが「1メッセージ = 1 Kyou」なのに対し、Claude Code は1セッションのツール実行が
-数百回に及ぶため、会話の区切り（ターン）を単位にしている。
+ツール実行と thinking は独立した Kyou にはせず、**直近の Claude の発言に折りたたんで**付ける
+（1セッションでツール実行が数百回に及ぶため）。
 
 ## セットアップ
 
@@ -26,6 +26,14 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_claudecode/
 ├── gkill_plugin_claudecode   # ビルドしたバイナリ（.exe は自動補完）
 ├── config.json               # データソースのフォルダ指定（任意。次項参照）
 └── cache.db                  # 自動生成されるキャッシュ
+```
+
+`manifest.json` はバイナリに埋め込まれているので、配置先で吐かせることもできる。
+配布スクリプト（`scripts/UpdateGkillPlugins.ps1` / `termux-tasker/update_gkill_plugins.sh`）は
+バイナリだけを配り、`manifest.json` が無ければこれで生成する。バイナリと必ず一致する。
+
+```bash
+./gkill_plugin_claudecode --gkill-print-manifest > manifest.json
 ```
 
 ### 3. データソースのフォルダを指定する
@@ -55,7 +63,7 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_claudecode/
 | `C:\logs\**\*.jsonl` | `**` で階層をまたいで jsonl だけ拾う |
 
 先頭の `~` と環境変数（`$HOME` など）も展開される。同じセッションが複数の指定に含まれても、
-ターンIDが UUID なので重複は自然に統合される。
+Kyou の ID が UUID なので重複は自然に統合される。
 
 > **Windows サービスで動かしている場合の注意**
 > `GkillServer` は LocalSystem で動くことがある。Go の `os.UserHomeDir()` は Windows では
@@ -66,7 +74,7 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_claudecode/
 **編集は次の検索から反映される**（gkill の再起動は不要）。SDK は `config.json` をプロセス起動時に
 一度しか読まないため、このプラグインは毎回 `sdk.LoadConfig` で読み直している。
 
-現在の設定・パターンの展開結果・読み込み状況（対象ファイル数・ターン数・最終スキャン時刻）は、
+現在の設定・パターンの展開結果・読み込み状況（対象ファイル数・発言数・最終スキャン時刻）は、
 gkill のプラグイン設定画面（`get_config_html`）で確認できる。何にもマッチしなかった指定もそこに出る。
 **設定画面は表示のみで保存はできない** — gkill 側に保存を呼ぶ導線が無いため。`config.json` を直接編集する。
 
@@ -79,27 +87,35 @@ gkill のプラグイン設定画面（`get_config_html`）で確認できる。
 
 | ファイル | 用途 |
 |---|---|
-| `<セッションID>.jsonl` | メインのトランスクリプト。ここからターンを切り出す |
-| `agent-<ID>.jsonl` | サブエージェントの会話。親ターンの Agent ツール実行に折りたたんで表示 |
+| `<セッションID>.jsonl` | メインのトランスクリプト。ここから発言を切り出す |
+| `agent-<ID>.jsonl` | サブエージェントの会話。Agent ツールを実行した発言に折りたたんで表示 |
 | `agent-<ID>.meta.json` | サブエージェントの種別・説明・`toolUseId`。親との紐付けに使う |
 | `history.jsonl` | 対象外（プロンプト履歴のみで会話の文脈がない） |
 
-ターン本文には次を入れる。
+Kyou になるのは次の2種類。
 
-- 人間の発言と Claude のテキスト応答（展開表示）
-- ツール実行（折りたたみ。ツール名と**入力の1行要約**のみ。実行結果は保持しない）
-- thinking（折りたたみ）
-- サブエージェントの会話（折りたたみ）
-- `task-notification` などシステム発の入力（1行の注記として、直前のターンに吸収）
+| 発言 | 内容 |
+|---|---|
+| 人間の発言 | プロンプト本文。青背景で「あなた」と表示 |
+| Claude の発言 | テキスト応答。グレー背景で「Claude」と表示 |
+
+Claude の発言には次が折りたたみで付く。**その発言の前後に現れたもの**をまとめる
+（実データでは `thinking → text → tool_use` の順が多いため、テキストの前に来た thinking も拾う）。
+
+- ツール実行（ツール名と**入力の1行要約**のみ。実行結果は保持しない）
+- thinking
+- サブエージェントの会話
+- `task-notification` などシステム発の入力（1行の注記）
 
 ## 動作の要点
 
-- **ターンID** はプロンプトレコードの `uuid`。同じセッションが複数フォルダにあっても重複しない
+- **Kyou の ID** は各レコードの `uuid`。同じセッションが複数フォルダにあっても重複しない
 - **タグは付けない**。gkill のタグ一覧（`get_all_tag_names`）にはプラグインが返したタグが載らず、
   タグを付けると rykv の既定の絞り込み「no tags」から漏れて何も表示されなくなるため。
   プロジェクト名とブランチ名は詳細HTMLのチップで表示し、ワード検索の対象にも含めている
 - **キャッシュ** は `cache.db`（SQLite3）。ファイル単位で mtime とサイズを見て、
-  変化のあったセッションだけ作り直す。146MB 規模のソースでも初回のみ数秒、以降は 1 秒未満
+  変化のあったセッションだけ作り直す。146MB 規模のソース（3389 発言）で初回12秒、以降は1秒未満。
+  スキーマを変えたときは `cache_meta` の `schema_version` を見て自動で作り直す
 - **長い行**への対応: トランスクリプトには100万文字を超える行が実在するため、
   `bufio.Scanner` ではなく `bufio.Reader.ReadString` で読む
 
@@ -117,12 +133,12 @@ gkill のプラグイン設定画面（`get_config_html`）で確認できる。
 | ファイル | 内容 |
 |---|---|
 | `main.go` | エントリポイント、SDK ハンドラ登録、検索フィルタ |
-| `loader.go` | 指定のパターン展開・フォルダ走査・JSONL パース・ターン分割・サブエージェント紐付け |
+| `loader.go` | 指定のパターン展開・フォルダ走査・JSONL パース・発言の切り出し・サブエージェント紐付け |
 | `cache.go` | SQLite3 キャッシュ（ファイル単位の差分更新） |
-| `render.go` | ターン詳細の HTML 生成 |
+| `render.go` | 発言の詳細 HTML 生成 |
 | `html.go` | 設定画面の HTML 生成 |
-| `types.go` | JSONL レコードとターンの型定義 |
-| `loader_test.go` | ターン分割・種別判定・要約のユニットテスト |
+| `types.go` | JSONL レコードと発言の型定義 |
+| `loader_test.go` | 発言の切り出し・種別判定・要約のユニットテスト |
 | `testdata/` | テスト用の合成トランスクリプト |
 | `manifest.json` | プラグインメタ情報 |
 | `go.mod` | 独立 Go モジュール |
