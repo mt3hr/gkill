@@ -1,0 +1,3 @@
+{"type":"user","uuid":"SU1","isSidechain":true,"agentId":"abc123def456","sessionId":"S1","promptSource":"typed","timestamp":"2026-01-01T01:00:55Z","message":{"role":"user","content":"調べてください"}}
+{"type":"assistant","uuid":"SA1","isSidechain":true,"agentId":"abc123def456","sessionId":"S1","timestamp":"2026-01-01T01:00:57Z","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_s1","name":"Grep","input":{"pattern":"foo"}}]}}
+{"type":"assistant","uuid":"SA2","isSidechain":true,"agentId":"abc123def456","sessionId":"S1","timestamp":"2026-01-01T01:00:58Z","message":{"role":"assistant","content":[{"type":"text","text":"調べました"}]}}

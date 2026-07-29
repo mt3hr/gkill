@@ -1,0 +1,14 @@
+{"type":"mode","mode":"normal","sessionId":"S1"}
+{"type":"system","subtype":"init","sessionId":"S1","cwd":"C:\\work\\myproj","gitBranch":"main","timestamp":"2026-01-01T00:00:00Z"}
+{"type":"ai-title","aiTitle":"テストセッション","sessionId":"S1"}
+{"type":"assistant","uuid":"A0","timestamp":"2026-01-01T00:30:00Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"text","text":"最初の人間プロンプトより前なので捨てられる"}]}}
+{"type":"user","uuid":"U1","promptSource":"typed","timestamp":"2026-01-01T01:00:00Z","sessionId":"S1","cwd":"C:\\work\\myproj","gitBranch":"main","message":{"role":"user","content":"最初の質問"}}
+{"type":"assistant","uuid":"A1","timestamp":"2026-01-01T01:00:10Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"thinking","thinking":"考え中"}]}}
+{"type":"assistant","uuid":"A2","timestamp":"2026-01-01T01:00:20Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"text","text":"調べます"}]}}
+{"type":"assistant","uuid":"A3","timestamp":"2026-01-01T01:00:30Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_1","name":"Bash","input":{"command":"ls -la","description":"一覧"}}]}}
+{"type":"user","uuid":"U2","timestamp":"2026-01-01T01:00:40Z","sessionId":"S1","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_1","content":[{"type":"text","text":"ツールの結果は保持しない"}]}]}}
+{"type":"assistant","uuid":"A4","timestamp":"2026-01-01T01:00:50Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_2","name":"Agent","input":{"description":"調査","subagent_type":"Explore","prompt":"調べて"}}]}}
+{"type":"user","uuid":"U3","promptSource":"system","timestamp":"2026-01-01T01:01:00Z","sessionId":"S1","message":{"role":"user","content":"<task-notification>サブエージェントが完了しました</task-notification>"}}
+{"type":"assistant","uuid":"A5","timestamp":"2026-01-01T01:01:10Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"text","text":"できました"}]}}
+{"type":"user","uuid":"U4","promptSource":"typed","timestamp":"2026-01-01T02:00:00Z","sessionId":"S1","message":{"role":"user","content":[{"type":"text","text":"2つめの質問"}]}}
+{"type":"assistant","uuid":"A6","timestamp":"2026-01-01T02:00:10Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"text","text":"はい"}]}}
