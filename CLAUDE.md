@@ -55,6 +55,8 @@ src/
               #   examples/gkill_example/  — sample plugin (fixed Kyou response)
               #   gkill_plugin_chatgpt/    — ChatGPT conversation history plugin
               #   gkill_plugin_claudeai/   — Claude.ai conversation history plugin
+              #   gkill_plugin_claudecode/ — Claude Code chat log plugin (1 turn = 1 Kyou,
+              #                              source folder configurable, SQLite differential cache)
 ```
 
 ### Two Deployment Modes
