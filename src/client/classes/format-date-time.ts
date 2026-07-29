@@ -25,6 +25,22 @@ export function format_number(n: number): string {
     return new Intl.NumberFormat(locale).format(n)
 }
 
+/**
+ * 0時からの経過ミリ秒を時刻として "HH:mm" に整形する。
+ * 経過時間ではなく時刻を出すためのものなので format_duration とは使い分けること。
+ */
+export function format_time_of_day(milli_second_of_day: number | null): string {
+    if (milli_second_of_day === null || !Number.isFinite(milli_second_of_day)) {
+        return ""
+    }
+    const total_minutes = Math.round(milli_second_of_day / 60_000)
+    // 59分30秒以降を丸めると24:00になるので0時へ戻す
+    const minutes_in_day = ((total_minutes % 1_440) + 1_440) % 1_440
+    const hours = Math.floor(minutes_in_day / 60)
+    const minutes = minutes_in_day % 60
+    return ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2)
+}
+
 export function format_duration(duration_milli_second: number | null): string {
     if (!duration_milli_second || duration_milli_second === 0) {
         return ""

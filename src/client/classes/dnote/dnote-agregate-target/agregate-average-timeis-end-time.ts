@@ -1,31 +1,27 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAgregateTarget from "../dnote-agregate-target";
-import AverageInfo from "./average-info";
-import { format_duration } from "@/classes/format-date-time";
+import TimeOfDayAverageInfo, { milli_second_of_day } from "./time-of-day-average-info";
+import { format_time_of_day } from "@/classes/format-date-time";
 
 export default class AgregateAverageTimeIsEndTime implements DnoteAgregateTarget {
     static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
         return new AgregateAverageTimeIsEndTime()
     }
     async append_agregate_element_value(average_value_timeis: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
-        const cloned_typed_average_info_timeis = average_value_timeis === null ? new AverageInfo() : (average_value_timeis as AverageInfo).clone()
-        cloned_typed_average_info_timeis.total_value = cloned_typed_average_info_timeis.total_value === null ? 0 : cloned_typed_average_info_timeis.total_value as number
+        const cloned_typed_average_info_timeis = average_value_timeis === null ? new TimeOfDayAverageInfo() : (average_value_timeis as TimeOfDayAverageInfo).clone()
 
         if (kyou.typed_timeis && kyou.typed_timeis.end_time) {
-            const end_time = new Date(`1970-01-01T${kyou.typed_timeis.end_time.getHours().toString().padStart(2, '0')}:${kyou.typed_timeis.end_time.getMinutes().toString().padStart(2, '0')}:${kyou.typed_timeis.end_time.getSeconds().toString().padStart(2, '0')}`).getTime()
-            cloned_typed_average_info_timeis.total_value += end_time
-            cloned_typed_average_info_timeis.total_count++
+            cloned_typed_average_info_timeis.append(milli_second_of_day(kyou.typed_timeis.end_time))
         }
 
         return cloned_typed_average_info_timeis
     }
-    async result_to_string(duration_milli_second: unknown): Promise<string> {
-        if (duration_milli_second === 0) {
+    async result_to_string(average_value_timeis: unknown): Promise<string> {
+        if (average_value_timeis === null) {
             return ""
         }
-        const diff = duration_milli_second as number
-        return format_duration(diff)
+        return format_time_of_day((average_value_timeis as TimeOfDayAverageInfo).average_milli_second_of_day())
     }
     to_json(): Record<string, unknown> {
         return {

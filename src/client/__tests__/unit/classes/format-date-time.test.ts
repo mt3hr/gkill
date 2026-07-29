@@ -6,7 +6,29 @@ import { i18n } from '../../helpers/setup-i18n'
 // Mock the @/i18n module to use our test i18n instance
 vi.mock('@/i18n', () => ({ i18n }))
 
-import { format_time, format_duration } from '@/classes/format-date-time'
+import { format_time, format_duration, format_time_of_day } from '@/classes/format-date-time'
+
+const HOUR = 60 * 60 * 1000
+const MINUTE = 60 * 1000
+
+describe('format_time_of_day', () => {
+  test('formats milliseconds from midnight as HH:mm', () => {
+    expect(format_time_of_day(0)).toBe('00:00')
+    expect(format_time_of_day(9 * HOUR + 5 * MINUTE)).toBe('09:05')
+    expect(format_time_of_day(23 * HOUR + 59 * MINUTE)).toBe('23:59')
+  })
+
+  test('returns empty string for null and non-finite values', () => {
+    expect(format_time_of_day(null)).toBe('')
+    expect(format_time_of_day(NaN)).toBe('')
+  })
+
+  test('wraps back to 00:00 instead of showing 24:00', () => {
+    // 23:59:45 は分に丸めると 24:00 になる
+    expect(format_time_of_day(23 * HOUR + 59 * MINUTE + 45_000)).toBe('00:00')
+    expect(format_time_of_day(24 * HOUR)).toBe('00:00')
+  })
+})
 
 describe('format_time', () => {
   test('formats a known date correctly', () => {
