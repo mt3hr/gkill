@@ -50,7 +50,7 @@ plugins/
 | [`gkill_example`](examples/gkill_example/README.md) | `example_kyou` | サンプル実装。固定Kyouを2件返す |
 | [`gkill_plugin_claudeai`](gkill_plugin_claudeai/README.md) | `claude_conversation` | Claude.ai のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_chatgpt`](gkill_plugin_chatgpt/README.md) | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
-| [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを1メッセージ=1Kyouでタイムライン表示 |
+| [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを、自分の発言と一連の応答に分けてタイムライン表示 |
 
 ---
 

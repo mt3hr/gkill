@@ -73,10 +73,14 @@ const (
 	roleAssistant = "assistant"
 )
 
-// message は1つの発言を表す。これがそのまま1Kyouになる。
-// ChatGPT / Claude.ai プラグインと粒度を揃えており、
-// 人間の発言と Claude のテキスト応答がそれぞれ別のKyouになる。
-// ツール実行とthinkingは独立したKyouにはせず、Claudeの発言に折りたたんで付ける。
+// message は1つのKyouになる単位。
+// ChatGPT / Claude.ai プラグインと粒度を揃えており、次の2種類がある。
+//
+//	roleHuman     : 人間の発言1つ。本文は Text に入る
+//	roleAssistant : その発言に対する一連の応答。次の人間の発言までをまとめて1つにする。
+//	                テキスト・thinking・ツール実行・システム通知が時系列で Items に入る
+//
+// Claude の応答はツール実行を挟んで何度も分かれるが、まとめて1件として扱う。
 type message struct {
 	ID           string     `json:"id"`
 	Role         string     `json:"role"`
