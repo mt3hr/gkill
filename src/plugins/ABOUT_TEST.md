@@ -2,7 +2,8 @@
 
 ## 概要
 
-`src/plugins/` 配下の各プラグイン（gkill_plugin_claudeai, gkill_plugin_chatgpt, examples/gkill_example）には独自のテストファイルは存在しない。
+`src/plugins/` 配下のプラグインのうち、gkill_plugin_claudeai, gkill_plugin_chatgpt,
+examples/gkill_example には独自のテストファイルは存在しない。
 
 プラグイン機能のテストは以下でカバーされている：
 
@@ -10,6 +11,16 @@
 |---|---|
 | `src/server/gkill/api/gkill_server_api/` | プラグインのロード・subprocess起動・stdio通信・クラッシュ後自動再起動の統合テスト |
 | `src/server/gkill/dao/reps/` | `plugin_repository_impl.go` のリポジトリ層テスト |
+| `src/plugins/gkill_plugin_claudecode/loader_test.go` | ターン分割・ファイル種別判定・サブエージェント紐付け・ツール要約・HTML生成のユニットテスト（`testdata/` の合成トランスクリプトを使用） |
+
+## 実行方法
+
+プラグインは独立した Go モジュールなので、`npm test`（`src/server` のみ対象）には含まれない。
+テストを持つプラグインは個別に実行する。
+
+```bash
+cd src/plugins/gkill_plugin_claudecode && go test ./...
+```
 
 ## プラグイン SDK
 
