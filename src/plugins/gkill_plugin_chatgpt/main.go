@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"os"
+	"slices"
 	"strings"
 
 	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
@@ -10,6 +12,13 @@ import (
 
 const repName = "ChatGPT"
 const dataType = "chatgpt_conversation"
+
+// manifest.json をバイナリに埋め込み、--gkill-print-manifest で出力できるようにする。
+// 配置スクリプトが manifest.json を用意できるようにするため。
+// バイナリと manifest が必ず一致するので、別々に配る必要がない。
+//
+//go:embed manifest.json
+var manifestJSON []byte
 
 func extractpluginDir(args []string) string {
 	for i, a := range args {
@@ -21,6 +30,15 @@ func extractpluginDir(args []string) string {
 }
 
 func main() {
+	// manifest.json の出力だけして終わる。sdk.Run より前に処理する
+	// (sdk.Run の flag.Parse は知らないフラグを受け取るとエラー終了するため)
+	if slices.Contains(os.Args[1:], "--gkill-print-manifest") {
+		if _, err := os.Stdout.Write(manifestJSON); err != nil {
+			os.Exit(1)
+		}
+		return
+	}
+
 	pluginDir := extractpluginDir(os.Args)
 
 	sdk.Run(sdk.Handler{
