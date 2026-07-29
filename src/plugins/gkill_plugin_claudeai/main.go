@@ -14,6 +14,10 @@ import (
 const repName = "Claude.ai"
 const dataType = "claude_conversation"
 
+// configKeySourceDirs は config.json に書くデータソースの指定。
+// 未設定ならプラグインフォルダ自身を見る(従来どおりの配置で動く)。
+const configKeySourceDirs = "source_dirs"
+
 // manifest.json をバイナリに埋め込み、--gkill-print-manifest で出力できるようにする。
 // 配置スクリプトが manifest.json を用意できるようにするため。
 // バイナリと manifest が必ず一致するので、別々に配る必要がない。
@@ -28,6 +32,25 @@ func extractpluginDir(args []string) string {
 		}
 	}
 	return ""
+}
+
+// sourcePatternsOf はデータソースの指定を取り出す。
+// SDKはconfig.jsonを起動時に一度しか読まないが、この設定は手で書き換えるものなので
+// 毎回読み直して即座に反映されるようにする。
+func sourcePatternsOf(pluginDir string, cfg sdk.Config) []string {
+	c := cfg
+	if latest, err := sdk.LoadConfig(pluginDir); err == nil {
+		c = latest
+	}
+	if c == nil {
+		return parseSourcePatterns(nil, pluginDir)
+	}
+	return parseSourcePatterns(c[configKeySourceDirs], pluginDir)
+}
+
+// sourceOf は設定を実在するフォルダ・ファイルへ展開する。
+func sourceOf(pluginDir string, cfg sdk.Config) expandedSource {
+	return expandSourcePatterns(sourcePatternsOf(pluginDir, cfg))
 }
 
 func main() {
@@ -46,7 +69,7 @@ func main() {
 		RepName: repName,
 
 		FindKyous: func(ctx context.Context, q sdk.Query, cfg sdk.Config) ([]sdk.Kyou, error) {
-			msgs, err := globalCache.GetMessages(pluginDir)
+			msgs, err := globalCache.GetMessages(pluginDir, sourceOf(pluginDir, cfg))
 			if err != nil {
 				return []sdk.Kyou{}, nil
 			}
@@ -95,7 +118,7 @@ func main() {
 		},
 
 		GetContentHTML: func(ctx context.Context, kyouID string, cfg sdk.Config) (string, error) {
-			convTitle, msg, err := globalCache.GetMsgByID(pluginDir, kyouID)
+			convTitle, msg, err := globalCache.GetMsgByID(pluginDir, sourceOf(pluginDir, cfg), kyouID)
 			if err != nil {
 				return "<html><body><p>メッセージが見つかりません</p></body></html>", nil
 			}
@@ -103,7 +126,9 @@ func main() {
 		},
 
 		GetConfigHTML: func(ctx context.Context, cfg sdk.Config) (string, error) {
-			return renderConfigHTML(pluginDir), nil
+			patterns := sourcePatternsOf(pluginDir, cfg)
+			src := expandSourcePatterns(patterns)
+			return renderConfigHTML(pluginDir, patterns, src), nil
 		},
 	})
 }

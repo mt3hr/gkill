@@ -1,7 +1,7 @@
 {"type":"mode","mode":"normal","sessionId":"S1"}
 {"type":"system","subtype":"init","sessionId":"S1","cwd":"C:\\work\\myproj","gitBranch":"main","timestamp":"2026-01-01T00:00:00Z"}
 {"type":"ai-title","aiTitle":"テストセッション","sessionId":"S1"}
-{"type":"assistant","uuid":"A0","timestamp":"2026-01-01T00:30:00Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"text","text":"最初の人間プロンプトより前なので捨てられる"}]}}
+{"type":"assistant","uuid":"A0","timestamp":"2026-01-01T00:30:00Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"text","text":"人間の発言より前に出た挨拶"}]}}
 {"type":"user","uuid":"U1","promptSource":"typed","timestamp":"2026-01-01T01:00:00Z","sessionId":"S1","cwd":"C:\\work\\myproj","gitBranch":"main","message":{"role":"user","content":"最初の質問"}}
 {"type":"assistant","uuid":"A1","timestamp":"2026-01-01T01:00:10Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"thinking","thinking":"考え中"}]}}
 {"type":"assistant","uuid":"A2","timestamp":"2026-01-01T01:00:20Z","sessionId":"S1","message":{"role":"assistant","content":[{"type":"text","text":"調べます"}]}}
