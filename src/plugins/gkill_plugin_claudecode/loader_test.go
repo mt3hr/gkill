@@ -58,46 +58,47 @@ func TestProbeTranscriptClassifiesFiles(t *testing.T) {
 	}
 }
 
-func TestBuildMessagesSplitsPerMessage(t *testing.T) {
+func TestBuildMessagesSplitsHumanAndResponse(t *testing.T) {
 	messages := loadFixtureMessages(t)
 
-	// 人間の発言と Claude の発言がそれぞれ1件になる
+	// 人間の発言が1件、それに続く一連の応答がまとめて1件になる
 	want := []struct {
 		id   string
 		role string
-		text string
 	}{
-		{"A0", roleAssistant, "人間の発言より前に出た挨拶"},
-		{"U1", roleHuman, "最初の質問"},
-		{"A2", roleAssistant, "調べます"},
-		{"A5", roleAssistant, "できました"},
-		{"U4", roleHuman, "2つめの質問"},
-		{"A6", roleAssistant, "はい"},
+		{"A0", roleAssistant}, // 人間の発言より前の応答
+		{"U1", roleHuman},     // 最初の質問
+		{"A1", roleAssistant}, // 「調べます」〜「できました」までを1件にまとめる
+		{"U4", roleHuman},     // 2つめの質問
+		{"A6", roleAssistant},
 	}
 	if len(messages) != len(want) {
 		var got []string
 		for _, m := range messages {
-			got = append(got, m.ID)
+			got = append(got, m.ID+"/"+m.Role)
 		}
 		t.Fatalf("messages = %v (%d件), want %d件", got, len(messages), len(want))
 	}
 	for i, w := range want {
-		if messages[i].ID != w.id {
-			t.Errorf("messages[%d].ID = %s, want %s", i, messages[i].ID, w.id)
-		}
-		if messages[i].Role != w.role {
-			t.Errorf("messages[%d].Role = %s, want %s", i, messages[i].Role, w.role)
-		}
-		if messages[i].Text != w.text {
-			t.Errorf("messages[%d].Text = %q, want %q", i, messages[i].Text, w.text)
+		if messages[i].ID != w.id || messages[i].Role != w.role {
+			t.Errorf("messages[%d] = %s/%s, want %s/%s",
+				i, messages[i].ID, messages[i].Role, w.id, w.role)
 		}
 	}
 
-	// contentがブロック配列の人間の発言もテキストを取り出せる
-	if messages[4].Text != "2つめの質問" {
-		t.Errorf("ブロック配列の発言 = %q", messages[4].Text)
+	// 人間の発言は本文が Text に入る
+	if messages[1].Text != "最初の質問" {
+		t.Errorf("人間の発言 = %q, want 最初の質問", messages[1].Text)
 	}
-	// セッション情報は全発言に付く
+	// contentがブロック配列でもテキストを取り出せる
+	if messages[3].Text != "2つめの質問" {
+		t.Errorf("ブロック配列の発言 = %q, want 2つめの質問", messages[3].Text)
+	}
+	// 応答側は Text を使わず Items に入れる
+	if messages[2].Text != "" {
+		t.Errorf("応答の Text = %q, want 空", messages[2].Text)
+	}
+	// セッション情報は全件に付く
 	for _, m := range messages {
 		if m.SessionTitle != "テストセッション" || m.Project != "myproj" || m.Branch != "main" {
 			t.Errorf("%s: セッション情報が欠けている (%q/%q/%q)", m.ID, m.SessionTitle, m.Project, m.Branch)
@@ -105,53 +106,56 @@ func TestBuildMessagesSplitsPerMessage(t *testing.T) {
 	}
 }
 
-func TestBuildMessagesAttachesToolsAndThinking(t *testing.T) {
+func TestBuildMessagesGroupsWholeResponse(t *testing.T) {
 	messages := loadFixtureMessages(t)
 
-	// A2「調べます」に、その前の thinking と その後の tool_use・通知が付く
-	target := messages[2]
-	if target.ID != "A2" {
-		t.Fatalf("messages[2].ID = %s, want A2", target.ID)
+	// 分かれていた応答(thinking → 調べます → ツール → 通知 → できました)が1件にまとまる
+	res := messages[2]
+	if res.ID != "A1" {
+		t.Fatalf("messages[2].ID = %s, want A1", res.ID)
 	}
 	var kinds []string
-	for _, item := range target.Items {
+	for _, item := range res.Items {
 		kinds = append(kinds, item.Kind)
 	}
-	wantKinds := []string{"thinking", "tools", "notice"}
+	wantKinds := []string{"thinking", "text", "tools", "notice", "text"}
 	if strings.Join(kinds, ",") != strings.Join(wantKinds, ",") {
-		t.Fatalf("A2 の要素 = %v, want %v", kinds, wantKinds)
+		t.Fatalf("応答の要素 = %v, want %v", kinds, wantKinds)
 	}
 
-	// text より前に来た thinking が拾われている
-	if len(target.Items[0].Thinking) != 1 || target.Items[0].Thinking[0] != "考え中" {
-		t.Errorf("thinking = %v, want [考え中]", target.Items[0].Thinking)
+	if res.Items[1].Text != "調べます" {
+		t.Errorf("最初のテキスト = %q, want 調べます", res.Items[1].Text)
 	}
-	// text より後の tool_use がまとまって付く
-	tools := target.Items[1].Tools
+	if res.Items[4].Text != "できました" {
+		t.Errorf("最後のテキスト = %q, want できました", res.Items[4].Text)
+	}
+	if len(res.Items[0].Thinking) != 1 || res.Items[0].Thinking[0] != "考え中" {
+		t.Errorf("thinking = %v, want [考え中]", res.Items[0].Thinking)
+	}
+	tools := res.Items[2].Tools
 	if len(tools) != 2 {
 		t.Fatalf("tools = %d件, want 2 (BashとAgent)", len(tools))
 	}
 	if tools[0].Name != "Bash" || tools[0].Summary != "ls -la" {
 		t.Errorf("tools[0] = %+v, want Bash / ls -la", tools[0])
 	}
-	// UpdateTime は取り込んだ最後のレコードの時刻
-	if got := target.UpdateTime.UTC().Format("15:04:05"); got != "01:01:00" {
-		t.Errorf("A2 の UpdateTime = %s, want 01:01:00", got)
-	}
 
-	// 次の text で切り替わるので、A5 にはツールが付かない
-	if len(messages[3].Items) != 0 {
-		t.Errorf("A5 に要素が付いている: %v", messages[3].Items)
+	// 開始時刻は最初のレコード、更新時刻は最後に取り込んだレコード
+	if got := res.RelatedTime.UTC().Format("15:04:05"); got != "01:00:10" {
+		t.Errorf("RelatedTime = %s, want 01:00:10", got)
+	}
+	if got := res.UpdateTime.UTC().Format("15:04:05"); got != "01:01:10" {
+		t.Errorf("UpdateTime = %s, want 01:01:10", got)
 	}
 }
 
 func TestBuildMessagesAbsorbsSystemPrompt(t *testing.T) {
 	messages := loadFixtureMessages(t)
 
-	// task-notification は独立した発言にならず、直近のClaude発言に注記として入る
+	// task-notification は独立したKyouにならず、応答の注記として入る
 	for _, m := range messages {
 		if strings.Contains(m.Text, "task-notification") {
-			t.Fatalf("%s: task-notification が発言になっている", m.ID)
+			t.Fatalf("%s: task-notification がKyouになっている", m.ID)
 		}
 	}
 	var notices int
@@ -171,7 +175,7 @@ func TestBuildMessagesAbsorbsSystemPrompt(t *testing.T) {
 func TestBuildMessagesLinksSubAgent(t *testing.T) {
 	messages := loadFixtureMessages(t)
 
-	tools := messages[2].Items[1].Tools
+	tools := messages[2].Items[2].Tools
 	agentCall := tools[1]
 	if agentCall.Name != "Agent" {
 		t.Fatalf("tools[1].Name = %s, want Agent", agentCall.Name)
@@ -406,10 +410,12 @@ func TestRenderMessageHTMLEscapesAndFolds(t *testing.T) {
 		t.Error("人間の発言が human として描画されていない")
 	}
 
-	// Claude の発言
+	// Claude の応答
 	assistantHTML := renderMessageHTML(messages[2])
-	if !strings.Contains(assistantHTML, "調べます") {
-		t.Error("Claudeの発言本文が出力されていない")
+	for _, want := range []string{"調べます", "できました"} {
+		if !strings.Contains(assistantHTML, want) {
+			t.Errorf("応答本文に %q が出力されていない", want)
+		}
 	}
 	if !strings.Contains(assistantHTML, `class="msg assistant"`) || !strings.Contains(assistantHTML, "Claude") {
 		t.Error("Claudeの発言が assistant として描画されていない")
@@ -444,7 +450,7 @@ func TestSearchTextIncludesMessageAndTools(t *testing.T) {
 	messages := loadFixtureMessages(t)
 	text := searchTextOf(messages[2])
 
-	for _, want := range []string{"調べます", "テストセッション", "myproj", "main", "Bash", "ls -la", "Explore", "調査"} {
+	for _, want := range []string{"調べます", "できました", "テストセッション", "myproj", "main", "Bash", "ls -la", "Explore", "調査"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("検索テキストに %q が含まれていない", want)
 		}

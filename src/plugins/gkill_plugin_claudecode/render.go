@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// maxHTMLBytes は1発言のHTMLの上限。
+// maxHTMLBytes は1KyouのHTMLの上限。
 // gkill側の読み取りバッファは32MBだが、そこまで大きいものは表示できないので手前で打ち切る。
 const maxHTMLBytes = 4 * 1024 * 1024
 
@@ -112,8 +112,8 @@ details[open] > summary::before { content: "\25BE "; }
 </script>
 </head><body>`
 
-// renderMessageHTML は1発言の詳細HTMLを組み立てる。
-// ChatGPT / Claude.ai プラグインと同じく、発言者ごとに背景色とラベルを変える。
+// renderMessageHTML は1Kyouの詳細HTMLを組み立てる。
+// ChatGPT / Claude.ai プラグインと同じく、自分の発言か応答かで背景色とラベルを変える。
 func renderMessageHTML(t message) string {
 	var sb strings.Builder
 	sb.WriteString(turnHTMLHead)
@@ -173,7 +173,7 @@ func renderMessageHTML(t message) string {
 	return sb.String()
 }
 
-// renderSummaryLine は発言に付随するツール実行回数とthinking件数の1行サマリを作る。
+// renderSummaryLine は応答に含まれるツール実行回数とthinking件数の1行サマリを作る。
 func renderSummaryLine(items []turnItem) string {
 	counts := map[string]int{}
 	var order []string
@@ -345,9 +345,9 @@ func toolGroupLabelPlain(tools []toolCall) string {
 	return "🔧 " + strings.Join(parts, "  ")
 }
 
-// renderNotFoundHTML は発言が見つからなかったときのHTML。
+// renderNotFoundHTML は対象が見つからなかったときのHTML。
 func renderNotFoundHTML() string {
-	return turnHTMLHead + `<p>発言が見つかりません</p></body></html>`
+	return turnHTMLHead + `<p>見つかりません</p></body></html>`
 }
 
 // formatUnix は設定画面表示用に時刻を整形する。
