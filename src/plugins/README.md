@@ -50,7 +50,7 @@ plugins/
 | [`gkill_example`](examples/gkill_example/README.md) | `example_kyou` | サンプル実装。固定Kyouを2件返す |
 | [`gkill_plugin_claudeai`](gkill_plugin_claudeai/README.md) | `claude_conversation` | Claude.ai のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_chatgpt`](gkill_plugin_chatgpt/README.md) | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
-| [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを1ターン=1Kyouでタイムライン表示 |
+| [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを1メッセージ=1Kyouでタイムライン表示 |
 
 ---
 
@@ -72,6 +72,9 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 2. 配置先ディレクトリに `manifest.json`・実行ファイル・`conversations.json` を置く
 3. gkill_server を再起動する（または gkill 設定画面でプラグインをリロードする）
 
+`conversations.json` を別の場所に置きたい場合は、プラグインフォルダの `config.json` で
+`source_dirs` を指定する（`gkill_plugin_claudecode` と同じ書式。ワイルドカード可）。
+
 ### gkill_plugin_chatgpt
 
 1. ChatGPT の設定ページからデータをエクスポートし ZIP を解凍する
@@ -79,6 +82,8 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
    - 新形式: `conversations-000.json`, `conversations-001.json`, ... （複数ファイル）
    - 旧形式: `conversations.json`（単一ファイル）
 3. gkill_server を再起動する
+
+こちらも `config.json` の `source_dirs` で別フォルダを指定できる。
 
 ### gkill_plugin_claudecode
 
@@ -128,6 +133,17 @@ gkill_server はプラグインをサブプロセスとして起動し、stdin/s
 
 ```
 {executable} --gkill-plugin-dir {pluginDir} --gkill-user-id {userID} --gkill-protocol-version 1
+```
+
+### manifest.json の出力
+
+提供プラグインは `manifest.json` を `//go:embed` でバイナリに埋め込んでおり、
+`--gkill-print-manifest` で標準出力に吐いて終了する（stdio ループには入らない）。
+配布スクリプトがバイナリだけを配り、配置先で `manifest.json` を作れるようにするため。
+バイナリと manifest が必ず一致する。
+
+```bash
+./gkill_plugin_xxx --gkill-print-manifest > manifest.json
 ```
 
 ### コマンド一覧
