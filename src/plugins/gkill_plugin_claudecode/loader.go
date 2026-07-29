@@ -503,41 +503,46 @@ func (a *itemAppender) addNotice(text string) {
 	a.items = append(a.items, turnItem{Kind: "notice", Text: text})
 }
 
-// buildMessages はメイントランスクリプトのレコード列を発言単位に分割する。
-// 人間の発言と Claude のテキスト応答がそれぞれ1件になり、
-// ツール実行と thinking は直近の Claude の発言に折りたたんで付ける。
+// buildMessages はメイントランスクリプトのレコード列をKyouの単位に分ける。
+// 人間の発言が1件、それに続く一連の応答がまとめて1件になる。
+// 応答はツール実行を挟んで何度も分かれるが、次の人間の発言までを1つとして扱う。
 // agentsByToolUseID / agentsByID はサブエージェントの紐付けに使う。
 func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string]*subAgent) []message {
 	sessionTitle, project, branch := scanSessionMeta(records)
 	toolUseIDToAgentID := scanAgentIDsFromResults(records)
 
 	var messages []message
-	var cur *message
+	var cur *message // 組み立て中の応答
 	var app *itemAppender
-	// text より前に来た thinking / tool_use を溜めておき、次の発言に付ける。
-	// 実データでは thinking → text → tool_use の順が多く、先頭の thinking を捨てないため。
-	pending := &itemAppender{}
 
-	newAppender := func() *itemAppender {
-		a := &itemAppender{items: pending.items}
-		pending = &itemAppender{}
-		return a
-	}
 	flush := func() {
 		if cur == nil {
 			return
 		}
-		cur.Items = app.items
-		messages = append(messages, *cur)
+		if len(app.items) > 0 {
+			cur.Items = app.items
+			messages = append(messages, *cur)
+		}
 		cur = nil
 		app = nil
 	}
-	// 開いている発言があればそこへ、無ければ保留へ積む
-	target := func() *itemAppender {
-		if app != nil {
-			return app
+	// 応答のまとまりを開く。IDと開始時刻は最初のレコードのものを使う。
+	// システム通知だけのKyouができないよう、assistantレコードでのみ開く。
+	open := func(rec logRecord) {
+		if cur != nil || rec.UUID == "" {
+			return
 		}
-		return pending
+		cur = &message{
+			ID:           rec.UUID,
+			Role:         roleAssistant,
+			SessionID:    rec.SessionID,
+			SessionTitle: sessionTitle,
+			Project:      project,
+			Branch:       branch,
+			RelatedTime:  rec.Timestamp,
+			UpdateTime:   rec.Timestamp,
+		}
+		app = &itemAppender{}
 	}
 	touch := func(rec logRecord) {
 		if cur != nil && !rec.Timestamp.IsZero() && rec.Timestamp.After(cur.UpdateTime) {
@@ -548,8 +553,6 @@ func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string
 	for _, rec := range records {
 		if isHumanPrompt(rec) {
 			flush()
-			// 人間の発言に切り替わるので、行き場のない保留分は捨てる
-			pending = &itemAppender{}
 			if rec.UUID == "" {
 				// IDが無いレコードはKyouにできないので捨てる
 				continue
@@ -570,41 +573,27 @@ func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string
 
 		switch rec.Type {
 		case "user":
-			if rec.PromptSource == "system" {
-				target().addNotice(extractText(rec.Message.contentOrEmpty()))
+			// task-notification などシステム発の入力。応答の一部として注記に入れる
+			if rec.PromptSource == "system" && app != nil {
+				app.addNotice(extractText(rec.Message.contentOrEmpty()))
 				touch(rec)
 			}
 			// tool_result は表示しない
 		case "assistant":
-			for _, b := range extractBlocks(rec.Message.contentOrEmpty()) {
+			blocks := extractBlocks(rec.Message.contentOrEmpty())
+			if len(blocks) == 0 {
+				continue
+			}
+			open(rec)
+			if app == nil {
+				continue
+			}
+			for _, b := range blocks {
 				switch b.Type {
 				case "text":
-					if strings.TrimSpace(b.Text) == "" {
-						continue
-					}
-					if rec.UUID == "" {
-						// IDが無いとKyouにできないので、開いている発言に足すだけにする
-						target().addText(b.Text)
-						touch(rec)
-						continue
-					}
-					// テキストが来たら発言が切り替わる。保留分は新しい発言に付ける
-					flush()
-					cur = &message{
-						ID:           rec.UUID,
-						Role:         roleAssistant,
-						SessionID:    rec.SessionID,
-						SessionTitle: sessionTitle,
-						Project:      project,
-						Branch:       branch,
-						Text:         strings.TrimSpace(b.Text),
-						RelatedTime:  rec.Timestamp,
-						UpdateTime:   rec.Timestamp,
-					}
-					app = newAppender()
+					app.addText(b.Text)
 				case "thinking":
-					target().addThinking(b.Thinking)
-					touch(rec)
+					app.addThinking(b.Thinking)
 				case "tool_use":
 					tc := toolCall{
 						Name:    b.Name,
@@ -613,10 +602,10 @@ func buildMessages(records []logRecord, agentsByToolUseID, agentsByID map[string
 					if agent := lookupSubAgent(b.ID, agentsByToolUseID, agentsByID, toolUseIDToAgentID); agent != nil {
 						tc.Agent = agent
 					}
-					target().addTool(tc)
-					touch(rec)
+					app.addTool(tc)
 				}
 			}
+			touch(rec)
 		}
 	}
 	flush()
