@@ -22,12 +22,23 @@ plugins/
 │   ├── html.go
 │   ├── go.mod
 │   └── manifest.json
-└── gkill_plugin_chatgpt/        # ChatGPT チャット履歴プラグイン
+├── gkill_plugin_chatgpt/        # ChatGPT チャット履歴プラグイン
+│   ├── main.go
+│   ├── loader.go
+│   ├── cache.go
+│   ├── types.go
+│   ├── html.go
+│   ├── go.mod
+│   └── manifest.json
+└── gkill_plugin_claudecode/     # Claude Code チャットログプラグイン
     ├── main.go
     ├── loader.go
     ├── cache.go
     ├── types.go
+    ├── render.go
     ├── html.go
+    ├── loader_test.go
+    ├── testdata/
     ├── go.mod
     └── manifest.json
 ```
@@ -39,6 +50,7 @@ plugins/
 | [`gkill_example`](examples/gkill_example/README.md) | `example_kyou` | サンプル実装。固定Kyouを2件返す |
 | [`gkill_plugin_claudeai`](gkill_plugin_claudeai/README.md) | `claude_conversation` | Claude.ai のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_chatgpt`](gkill_plugin_chatgpt/README.md) | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
+| [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを1ターン=1Kyouでタイムライン表示 |
 
 ---
 
@@ -66,6 +78,16 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 2. 配置先ディレクトリに `manifest.json`・実行ファイルと、次のどちらかを置く:
    - 新形式: `conversations-000.json`, `conversations-001.json`, ... （複数ファイル）
    - 旧形式: `conversations.json`（単一ファイル）
+3. gkill_server を再起動する
+
+### gkill_plugin_claudecode
+
+データファイルの配置は不要。読み込むフォルダはプラグインフォルダの `config.json` で指定する。
+
+1. 配置先ディレクトリに `manifest.json`・実行ファイルを置く
+2. 既定の `~/.claude/projects` 以外を読ませたい場合は、同じディレクトリに `config.json` を置く
+   （`{"source_dirs": ["<フォルダ>", "<パターン>"]}`。配列で複数指定でき、`*` / `**` などの
+   ワイルドカードが使える。編集は次の検索から反映される）
 3. gkill_server を再起動する
 
 ---
@@ -250,6 +272,10 @@ go build -o gkill_plugin_claudeai .
 # gkill_plugin_chatgpt
 cd src/plugins/gkill_plugin_chatgpt
 go build -o gkill_plugin_chatgpt .
+
+# gkill_plugin_claudecode
+cd src/plugins/gkill_plugin_claudecode
+go build -o gkill_plugin_claudecode .
 ```
 
 ---
