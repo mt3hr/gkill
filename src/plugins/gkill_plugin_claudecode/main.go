@@ -66,13 +66,13 @@ func main() {
 		RepName: repName,
 
 		FindKyous: func(_ context.Context, q sdk.Query, cfg sdk.Config) ([]sdk.Kyou, error) {
-			turns, err := globalCache.GetTurns(pluginDir, sourceOf(pluginDir, cfg))
+			messages, err := globalCache.GetMessages(pluginDir, sourceOf(pluginDir, cfg))
 			if err != nil {
 				return []sdk.Kyou{}, nil
 			}
 
 			var kyous []sdk.Kyou
-			for _, t := range turns {
+			for _, t := range messages {
 				relatedTime := unixToTime(t.RelatedTimeUnix)
 
 				// カレンダーフィルタ
@@ -83,7 +83,7 @@ func main() {
 					continue
 				}
 
-				// ワードフィルタ（ターン単位）
+				// ワードフィルタ（発言単位）
 				if !matchWordsText(t.SearchText, q) {
 					continue
 				}
@@ -94,7 +94,7 @@ func main() {
 				}
 
 				kyous = append(kyous, sdk.Kyou{
-					ID:          t.TurnID,
+					ID:          t.MessageID,
 					RepName:     repName,
 					DataType:    dataType,
 					RelatedTime: relatedTime,
@@ -112,11 +112,11 @@ func main() {
 		},
 
 		GetContentHTML: func(_ context.Context, kyouID string, cfg sdk.Config) (string, error) {
-			t, err := globalCache.GetTurn(pluginDir, sourceOf(pluginDir, cfg), kyouID)
+			t, err := globalCache.GetMessage(pluginDir, sourceOf(pluginDir, cfg), kyouID)
 			if err != nil {
 				return renderNotFoundHTML(), nil
 			}
-			return renderTurnHTML(t), nil
+			return renderMessageHTML(t), nil
 		},
 
 		GetConfigHTML: func(_ context.Context, cfg sdk.Config) (string, error) {

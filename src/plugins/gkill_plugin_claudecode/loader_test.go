@@ -14,8 +14,8 @@ const (
 	histFixture  = "testdata/history.jsonl"
 )
 
-// loadFixtureTurns はフィクスチャからターンを組み立てる。
-func loadFixtureTurns(t *testing.T) []turn {
+// loadFixtureMessages はフィクスチャから発言を組み立てる。
+func loadFixtureMessages(t *testing.T) []message {
 	t.Helper()
 
 	agentRecords, err := readRecords(agentFixture)
@@ -34,7 +34,7 @@ func loadFixtureTurns(t *testing.T) []turn {
 	if err != nil {
 		t.Fatalf("error at read main fixture: %v", err)
 	}
-	return buildTurns(records, byToolUseID, byID)
+	return buildMessages(records, byToolUseID, byID)
 }
 
 func TestProbeTranscriptClassifiesFiles(t *testing.T) {
@@ -58,52 +58,104 @@ func TestProbeTranscriptClassifiesFiles(t *testing.T) {
 	}
 }
 
-func TestBuildTurnsSplitsOnHumanPrompts(t *testing.T) {
-	turns := loadFixtureTurns(t)
+func TestBuildMessagesSplitsPerMessage(t *testing.T) {
+	messages := loadFixtureMessages(t)
 
-	if len(turns) != 2 {
-		t.Fatalf("turns = %d, want 2", len(turns))
+	// 人間の発言と Claude の発言がそれぞれ1件になる
+	want := []struct {
+		id   string
+		role string
+		text string
+	}{
+		{"A0", roleAssistant, "人間の発言より前に出た挨拶"},
+		{"U1", roleHuman, "最初の質問"},
+		{"A2", roleAssistant, "調べます"},
+		{"A5", roleAssistant, "できました"},
+		{"U4", roleHuman, "2つめの質問"},
+		{"A6", roleAssistant, "はい"},
 	}
-	if turns[0].ID != "U1" {
-		t.Errorf("turns[0].ID = %s, want U1", turns[0].ID)
+	if len(messages) != len(want) {
+		var got []string
+		for _, m := range messages {
+			got = append(got, m.ID)
+		}
+		t.Fatalf("messages = %v (%d件), want %d件", got, len(messages), len(want))
 	}
-	if turns[1].ID != "U4" {
-		t.Errorf("turns[1].ID = %s, want U4", turns[1].ID)
-	}
-	if turns[0].Prompt != "最初の質問" {
-		t.Errorf("turns[0].Prompt = %q, want 最初の質問", turns[0].Prompt)
-	}
-	// contentがブロック配列の人間プロンプトもテキストを取り出せること
-	if turns[1].Prompt != "2つめの質問" {
-		t.Errorf("turns[1].Prompt = %q, want 2つめの質問", turns[1].Prompt)
-	}
-	if turns[0].SessionTitle != "テストセッション" {
-		t.Errorf("SessionTitle = %q, want テストセッション", turns[0].SessionTitle)
-	}
-	if turns[0].Project != "myproj" {
-		t.Errorf("Project = %q, want myproj", turns[0].Project)
-	}
-	if turns[0].Branch != "main" {
-		t.Errorf("Branch = %q, want main", turns[0].Branch)
-	}
-	// 最初の人間プロンプトより前のassistantレコードは捨てられること
-	for _, item := range turns[0].Items {
-		if strings.Contains(item.Text, "捨てられる") {
-			t.Errorf("最初の人間プロンプトより前の要素がターンに含まれている")
+	for i, w := range want {
+		if messages[i].ID != w.id {
+			t.Errorf("messages[%d].ID = %s, want %s", i, messages[i].ID, w.id)
+		}
+		if messages[i].Role != w.role {
+			t.Errorf("messages[%d].Role = %s, want %s", i, messages[i].Role, w.role)
+		}
+		if messages[i].Text != w.text {
+			t.Errorf("messages[%d].Text = %q, want %q", i, messages[i].Text, w.text)
 		}
 	}
-	// UpdateTimeはターン最終レコードの時刻
-	if got := turns[0].UpdateTime.UTC().Format("15:04:05"); got != "01:01:10" {
-		t.Errorf("turns[0].UpdateTime = %s, want 01:01:10", got)
+
+	// contentがブロック配列の人間の発言もテキストを取り出せる
+	if messages[4].Text != "2つめの質問" {
+		t.Errorf("ブロック配列の発言 = %q", messages[4].Text)
+	}
+	// セッション情報は全発言に付く
+	for _, m := range messages {
+		if m.SessionTitle != "テストセッション" || m.Project != "myproj" || m.Branch != "main" {
+			t.Errorf("%s: セッション情報が欠けている (%q/%q/%q)", m.ID, m.SessionTitle, m.Project, m.Branch)
+		}
 	}
 }
 
-func TestBuildTurnsAbsorbsSystemPrompt(t *testing.T) {
-	turns := loadFixtureTurns(t)
+func TestBuildMessagesAttachesToolsAndThinking(t *testing.T) {
+	messages := loadFixtureMessages(t)
 
-	// task-notification は独立したターンにならず、直前のターンにnoticeとして入る
+	// A2「調べます」に、その前の thinking と その後の tool_use・通知が付く
+	target := messages[2]
+	if target.ID != "A2" {
+		t.Fatalf("messages[2].ID = %s, want A2", target.ID)
+	}
+	var kinds []string
+	for _, item := range target.Items {
+		kinds = append(kinds, item.Kind)
+	}
+	wantKinds := []string{"thinking", "tools", "notice"}
+	if strings.Join(kinds, ",") != strings.Join(wantKinds, ",") {
+		t.Fatalf("A2 の要素 = %v, want %v", kinds, wantKinds)
+	}
+
+	// text より前に来た thinking が拾われている
+	if len(target.Items[0].Thinking) != 1 || target.Items[0].Thinking[0] != "考え中" {
+		t.Errorf("thinking = %v, want [考え中]", target.Items[0].Thinking)
+	}
+	// text より後の tool_use がまとまって付く
+	tools := target.Items[1].Tools
+	if len(tools) != 2 {
+		t.Fatalf("tools = %d件, want 2 (BashとAgent)", len(tools))
+	}
+	if tools[0].Name != "Bash" || tools[0].Summary != "ls -la" {
+		t.Errorf("tools[0] = %+v, want Bash / ls -la", tools[0])
+	}
+	// UpdateTime は取り込んだ最後のレコードの時刻
+	if got := target.UpdateTime.UTC().Format("15:04:05"); got != "01:01:00" {
+		t.Errorf("A2 の UpdateTime = %s, want 01:01:00", got)
+	}
+
+	// 次の text で切り替わるので、A5 にはツールが付かない
+	if len(messages[3].Items) != 0 {
+		t.Errorf("A5 に要素が付いている: %v", messages[3].Items)
+	}
+}
+
+func TestBuildMessagesAbsorbsSystemPrompt(t *testing.T) {
+	messages := loadFixtureMessages(t)
+
+	// task-notification は独立した発言にならず、直近のClaude発言に注記として入る
+	for _, m := range messages {
+		if strings.Contains(m.Text, "task-notification") {
+			t.Fatalf("%s: task-notification が発言になっている", m.ID)
+		}
+	}
 	var notices int
-	for _, item := range turns[0].Items {
+	for _, item := range messages[2].Items {
 		if item.Kind == "notice" {
 			notices++
 			if !strings.Contains(item.Text, "サブエージェントが完了しました") {
@@ -116,31 +168,10 @@ func TestBuildTurnsAbsorbsSystemPrompt(t *testing.T) {
 	}
 }
 
-func TestBuildTurnsGroupsToolsAndThinking(t *testing.T) {
-	turns := loadFixtureTurns(t)
+func TestBuildMessagesLinksSubAgent(t *testing.T) {
+	messages := loadFixtureMessages(t)
 
-	var kinds []string
-	for _, item := range turns[0].Items {
-		kinds = append(kinds, item.Kind)
-	}
-	want := []string{"thinking", "text", "tools", "notice", "text"}
-	if strings.Join(kinds, ",") != strings.Join(want, ",") {
-		t.Fatalf("item kinds = %v, want %v", kinds, want)
-	}
-
-	tools := turns[0].Items[2].Tools
-	if len(tools) != 2 {
-		t.Fatalf("tools = %d, want 2 (BashとAgentが連続しているのでまとまる)", len(tools))
-	}
-	if tools[0].Name != "Bash" || tools[0].Summary != "ls -la" {
-		t.Errorf("tools[0] = %+v, want Bash / ls -la", tools[0])
-	}
-}
-
-func TestBuildTurnsLinksSubAgent(t *testing.T) {
-	turns := loadFixtureTurns(t)
-
-	tools := turns[0].Items[2].Tools
+	tools := messages[2].Items[1].Tools
 	agentCall := tools[1]
 	if agentCall.Name != "Agent" {
 		t.Fatalf("tools[1].Name = %s, want Agent", agentCall.Name)
@@ -363,40 +394,57 @@ func TestHasGlobMeta(t *testing.T) {
 	}
 }
 
-func TestRenderTurnHTMLEscapesAndFolds(t *testing.T) {
-	turns := loadFixtureTurns(t)
-	html := renderTurnHTML(turns[0])
+func TestRenderMessageHTMLEscapesAndFolds(t *testing.T) {
+	messages := loadFixtureMessages(t)
 
-	if !strings.Contains(html, "最初の質問") {
-		t.Error("プロンプトが出力されていない")
+	// 人間の発言
+	humanHTML := renderMessageHTML(messages[1])
+	if !strings.Contains(humanHTML, "最初の質問") {
+		t.Error("人間の発言本文が出力されていない")
 	}
-	if !strings.Contains(html, "<details>") {
+	if !strings.Contains(humanHTML, `class="msg human"`) || !strings.Contains(humanHTML, "あなた") {
+		t.Error("人間の発言が human として描画されていない")
+	}
+
+	// Claude の発言
+	assistantHTML := renderMessageHTML(messages[2])
+	if !strings.Contains(assistantHTML, "調べます") {
+		t.Error("Claudeの発言本文が出力されていない")
+	}
+	if !strings.Contains(assistantHTML, `class="msg assistant"`) || !strings.Contains(assistantHTML, "Claude") {
+		t.Error("Claudeの発言が assistant として描画されていない")
+	}
+	if !strings.Contains(assistantHTML, "<details>") {
 		t.Error("折りたたみが出力されていない")
 	}
-	if !strings.Contains(html, "🤖") {
+	if !strings.Contains(assistantHTML, "🤖") {
 		t.Error("サブエージェントの折りたたみが出力されていない")
 	}
-	if !strings.Contains(html, "Bash ×1") {
+	if !strings.Contains(assistantHTML, "Bash ×1") {
 		t.Error("ツール集計が出力されていない")
 	}
 	// ツールの実行結果は保持しない
-	if strings.Contains(html, "ツールの結果は保持しない") {
+	if strings.Contains(assistantHTML, "ツールの結果は保持しない") {
 		t.Error("tool_result の内容が出力されている")
+	}
+	// チップは残す
+	if !strings.Contains(assistantHTML, `class="chip"`) {
+		t.Error("プロジェクト/ブランチのチップが出ていない")
 	}
 
 	// HTMLエスケープの確認
-	escaped := turns[0]
-	escaped.Prompt = `<script>alert("x")</script>`
-	if strings.Contains(renderTurnHTML(escaped), "<script>alert") {
-		t.Error("プロンプトがエスケープされていない")
+	escaped := messages[1]
+	escaped.Text = `<script>alert("x")</script>`
+	if strings.Contains(renderMessageHTML(escaped), "<script>alert") {
+		t.Error("発言本文がエスケープされていない")
 	}
 }
 
-func TestSearchTextIncludesPromptAndTools(t *testing.T) {
-	turns := loadFixtureTurns(t)
-	text := searchTextOf(turns[0])
+func TestSearchTextIncludesMessageAndTools(t *testing.T) {
+	messages := loadFixtureMessages(t)
+	text := searchTextOf(messages[2])
 
-	for _, want := range []string{"最初の質問", "テストセッション", "調べます", "Bash", "ls -la", "Explore", "調査"} {
+	for _, want := range []string{"調べます", "テストセッション", "myproj", "main", "Bash", "ls -la", "Explore", "調査"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("検索テキストに %q が含まれていない", want)
 		}

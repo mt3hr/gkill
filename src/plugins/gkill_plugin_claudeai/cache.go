@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -81,7 +80,7 @@ CREATE INDEX IF NOT EXISTS idx_msg_time ON msg_cache(related_time_unix);
 }
 
 // GetMsgByID はGetContentHTML用に、msgIDに対応するメッセージ1件と会話タイトルを返す。
-func (c *pluginCache) GetMsgByID(pluginDir string, msgID string) (convTitle string, msg cachedMessage, err error) {
+func (c *pluginCache) GetMsgByID(pluginDir string, src expandedSource, msgID string) (convTitle string, msg cachedMessage, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -89,14 +88,14 @@ func (c *pluginCache) GetMsgByID(pluginDir string, msgID string) (convTitle stri
 		return
 	}
 
-	srcPath := filepath.Join(pluginDir, conversationsFile)
-	needRebuild, e := c.needsRebuild(srcPath)
+	signature := sourceSignature(findConversationFiles(src))
+	needRebuild, e := c.needsRebuild(signature)
 	if e != nil {
 		err = e
 		return
 	}
 	if needRebuild {
-		if e := c.rebuild(pluginDir, srcPath); e != nil {
+		if e := c.rebuild(src, signature); e != nil {
 			err = e
 			return
 		}
@@ -119,7 +118,7 @@ func (c *pluginCache) GetMsgByID(pluginDir string, msgID string) (convTitle stri
 
 // GetMessages はFindKyous用に全メッセージを返す。
 // conversations.jsonのmtimeが変わっていればキャッシュを再構築する。
-func (c *pluginCache) GetMessages(pluginDir string) ([]cachedMessage, error) {
+func (c *pluginCache) GetMessages(pluginDir string, src expandedSource) ([]cachedMessage, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -127,13 +126,13 @@ func (c *pluginCache) GetMessages(pluginDir string) ([]cachedMessage, error) {
 		return nil, err
 	}
 
-	srcPath := filepath.Join(pluginDir, conversationsFile)
-	needRebuild, err := c.needsRebuild(srcPath)
+	signature := sourceSignature(findConversationFiles(src))
+	needRebuild, err := c.needsRebuild(signature)
 	if err != nil {
 		return nil, err
 	}
 	if needRebuild {
-		if err := c.rebuild(pluginDir, srcPath); err != nil {
+		if err := c.rebuild(src, signature); err != nil {
 			return nil, err
 		}
 	}
@@ -141,7 +140,7 @@ func (c *pluginCache) GetMessages(pluginDir string) ([]cachedMessage, error) {
 }
 
 // GetConvForMsg はGetContentHTML用に、msgIDが属する会話の全メッセージと会話タイトルを返す。
-func (c *pluginCache) GetConvForMsg(pluginDir string, msgID string) (convTitle string, msgs []cachedMessage, err error) {
+func (c *pluginCache) GetConvForMsg(pluginDir string, src expandedSource, msgID string) (convTitle string, msgs []cachedMessage, err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -149,14 +148,14 @@ func (c *pluginCache) GetConvForMsg(pluginDir string, msgID string) (convTitle s
 		return
 	}
 
-	srcPath := filepath.Join(pluginDir, conversationsFile)
-	needRebuild, e := c.needsRebuild(srcPath)
+	signature := sourceSignature(findConversationFiles(src))
+	needRebuild, e := c.needsRebuild(signature)
 	if e != nil {
 		err = e
 		return
 	}
 	if needRebuild {
-		if e := c.rebuild(pluginDir, srcPath); e != nil {
+		if e := c.rebuild(src, signature); e != nil {
 			err = e
 			return
 		}
@@ -193,35 +192,25 @@ func (c *pluginCache) GetConvForMsg(pluginDir string, msgID string) (convTitle s
 	return
 }
 
-// needsRebuild はソースファイルのmtimeとキャッシュのmtimeを比較する。
-func (c *pluginCache) needsRebuild(srcPath string) (bool, error) {
-	info, err := os.Stat(srcPath)
-	if err != nil {
-		return false, fmt.Errorf("error at stat %s: %w", srcPath, err)
-	}
-	srcMtime := info.ModTime().Unix()
-
-	var cached int64
-	row := c.db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'source_mtime_unix'`)
+// needsRebuild は全ソースファイルの署名(path:mtime:size)とキャッシュのものを比較する。
+// データソースは複数フォルダを指定でき、エクスポートは丸ごと入れ替わるものなので、
+// どれか1つでも変わっていたら全部作り直す。
+func (c *pluginCache) needsRebuild(signature string) (bool, error) {
+	var cached string
+	row := c.db.QueryRow(`SELECT value FROM cache_meta WHERE key = 'source_signature'`)
 	if err := row.Scan(&cached); err != nil {
 		// まだキャッシュなし
 		return true, nil
 	}
-	return srcMtime != cached, nil
+	return signature != cached, nil
 }
 
 // rebuild はconversations.jsonを読み込んでキャッシュを再構築する。
-func (c *pluginCache) rebuild(pluginDir, srcPath string) error {
-	convs, err := loadConversations(pluginDir)
+func (c *pluginCache) rebuild(src expandedSource, signature string) error {
+	convs, err := loadConversations(src)
 	if err != nil {
 		return err
 	}
-
-	info, err := os.Stat(srcPath)
-	if err != nil {
-		return err
-	}
-	srcMtime := info.ModTime().Unix()
 
 	tx, err := c.db.Begin()
 	if err != nil {
@@ -261,7 +250,7 @@ func (c *pluginCache) rebuild(pluginDir, srcPath string) error {
 		}
 	}
 
-	if _, err = tx.Exec(`INSERT OR REPLACE INTO cache_meta(key,value) VALUES('source_mtime_unix', ?)`, fmt.Sprintf("%d", srcMtime)); err != nil {
+	if _, err = tx.Exec(`INSERT OR REPLACE INTO cache_meta(key,value) VALUES('source_signature', ?)`, signature); err != nil {
 		return err
 	}
 	return tx.Commit()

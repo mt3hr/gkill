@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// maxHTMLBytes は1ターンのHTMLの上限。
+// maxHTMLBytes は1発言のHTMLの上限。
 // gkill側の読み取りバッファは32MBだが、そこまで大きいものは表示できないので手前で打ち切る。
 const maxHTMLBytes = 4 * 1024 * 1024
 
@@ -112,8 +112,9 @@ details[open] > summary::before { content: "\25BE "; }
 </script>
 </head><body>`
 
-// renderTurnHTML は1ターンの詳細HTMLを組み立てる。
-func renderTurnHTML(t turn) string {
+// renderMessageHTML は1発言の詳細HTMLを組み立てる。
+// ChatGPT / Claude.ai プラグインと同じく、発言者ごとに背景色とラベルを変える。
+func renderMessageHTML(t message) string {
 	var sb strings.Builder
 	sb.WriteString(turnHTMLHead)
 
@@ -135,13 +136,18 @@ func renderTurnHTML(t turn) string {
 		sb.WriteString(`</div>`)
 	}
 
-	// 人間の発言
-	sb.WriteString(`<div class="msg human"><div class="sender">あなた</div>`)
-	sb.WriteString(html.EscapeString(t.Prompt))
+	class, sender := "assistant", "Claude"
+	if t.Role == roleHuman {
+		class, sender = "human", "あなた"
+	}
+	sb.WriteString(`<div class="msg `)
+	sb.WriteString(class)
+	sb.WriteString(`"><div class="sender">`)
+	sb.WriteString(sender)
 	sb.WriteString(`</div>`)
+	sb.WriteString(html.EscapeString(t.Text))
 
-	// Claudeの応答
-	sb.WriteString(`<div class="msg assistant"><div class="sender">Claude</div>`)
+	// ツール実行とthinkingはこの発言に付随するものとして折りたたむ
 	if summary := renderSummaryLine(t.Items); summary != "" {
 		sb.WriteString(`<div class="summary-line">`)
 		sb.WriteString(summary)
@@ -154,6 +160,7 @@ func renderTurnHTML(t turn) string {
 		}
 		renderItem(&sb, item)
 	}
+
 	ts := ""
 	if !t.RelatedTime.IsZero() {
 		ts = t.RelatedTime.Local().Format("2006-01-02 15:04")
@@ -166,7 +173,7 @@ func renderTurnHTML(t turn) string {
 	return sb.String()
 }
 
-// renderSummaryLine はターン全体のツール実行回数とthinking件数の1行サマリを作る。
+// renderSummaryLine は発言に付随するツール実行回数とthinking件数の1行サマリを作る。
 func renderSummaryLine(items []turnItem) string {
 	counts := map[string]int{}
 	var order []string
@@ -338,9 +345,9 @@ func toolGroupLabelPlain(tools []toolCall) string {
 	return "🔧 " + strings.Join(parts, "  ")
 }
 
-// renderNotFoundHTML はターンが見つからなかったときのHTML。
+// renderNotFoundHTML は発言が見つからなかったときのHTML。
 func renderNotFoundHTML() string {
-	return turnHTMLHead + `<p>ターンが見つかりません</p></body></html>`
+	return turnHTMLHead + `<p>発言が見つかりません</p></body></html>`
 }
 
 // formatUnix は設定画面表示用に時刻を整形する。
