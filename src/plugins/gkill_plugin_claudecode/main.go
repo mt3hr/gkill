@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"os"
+	"slices"
 	"strings"
 
 	sdk "github.com/mt3hr/gkill/src/server/gkill/plugin/sdk"
@@ -10,6 +12,13 @@ import (
 
 // configKeySourceDirs は config.json に保存するデータソースフォルダのキー。
 const configKeySourceDirs = "source_dirs"
+
+// manifest.json をバイナリに埋め込み、--gkill-print-manifest で出力できるようにする。
+// 配置スクリプトが manifest.json を用意できるようにするため。
+// バイナリと manifest が必ず一致するので、別々に配る必要がない。
+//
+//go:embed manifest.json
+var manifestJSON []byte
 
 func extractPluginDir(args []string) string {
 	for i, a := range args {
@@ -42,6 +51,15 @@ func sourceOf(pluginDir string, cfg sdk.Config) expandedSource {
 }
 
 func main() {
+	// manifest.json の出力だけして終わる。sdk.Run より前に処理する
+	// (sdk.Run の flag.Parse は知らないフラグを受け取るとエラー終了するため)
+	if slices.Contains(os.Args[1:], "--gkill-print-manifest") {
+		if _, err := os.Stdout.Write(manifestJSON); err != nil {
+			os.Exit(1)
+		}
+		return
+	}
+
 	pluginDir := extractPluginDir(os.Args)
 
 	sdk.Run(sdk.Handler{
