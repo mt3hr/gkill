@@ -7,6 +7,7 @@ import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { copy_kyou_content } from '@/classes/kyou-content-text'
 
 export function useAttachedTimeisPlaingContextMenu(options: { props: AttachedTimeisPlaingContextMenuProps, emits: KyouViewEmits }) {
     const { props, emits } = options
@@ -22,7 +23,7 @@ export function useAttachedTimeisPlaingContextMenu(options: { props: AttachedTim
     const is_show: Ref<boolean> = ref(false)
     const position_x: Ref<number> = ref(0)
     const position_y: Ref<number> = ref(0)
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * 4))), position_y.value.valueOf())}px; }`)
+    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * 5))), position_y.value.valueOf())}px; }`)
 
     function reload_cloned_timeis_kyou(): void {
         cloned_timeis_kyou.value = props.timeis_kyou.clone()
@@ -46,6 +47,17 @@ export function useAttachedTimeisPlaingContextMenu(options: { props: AttachedTim
 
     async function show_timeis_histories_dialog(): Promise<void> {
         emits('requested_open_rykv_dialog', 'kyou_histories', cloned_timeis_kyou.value)
+    }
+
+    async function copy_content(): Promise<void> {
+        const res = await copy_kyou_content(cloned_timeis_kyou.value, props.gkill_api)
+        if (res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
     }
 
     async function copy_id(): Promise<void> {
@@ -72,6 +84,7 @@ export function useAttachedTimeisPlaingContextMenu(options: { props: AttachedTim
         hide,
         show_edit_timeis_dialog,
         show_timeis_histories_dialog,
+        copy_content,
         copy_id,
         show_confirm_delete_timeis_dialog,
     }

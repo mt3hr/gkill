@@ -24,6 +24,9 @@
             <v-list-item @click="show_add_notification_dialog()">
                 <v-list-item-title>{{ i18n.global.t("ADD_NOTIFICATION_TITLE") }}</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="copy_content()">
+                <v-list-item-title>{{ i18n.global.t("COPY_CONTENT_TITLE") }}</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="copy_id()">
                 <v-list-item-title>{{ i18n.global.t("COPY_ID_TITLE") }}</v-list-item-title>
             </v-list-item>
@@ -53,6 +56,7 @@ const {
 
     // Business logic
     show,
+    copy_content,
     copy_id,
     show_add_tag_dialog,
     show_add_text_dialog,

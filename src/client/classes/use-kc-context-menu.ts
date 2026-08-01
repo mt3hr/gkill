@@ -4,6 +4,7 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import { OpenDirectoryRequest } from '@/classes/api/req_res/open-directory-request'
 import { OpenFileRequest } from '@/classes/api/req_res/open-file-request'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { copy_kyou_content } from '@/classes/kyou-content-text'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { Tag } from '@/classes/datas/tag'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
@@ -23,7 +24,7 @@ export function useKCContextMenu(options: {
     const tag_history: Ref<string[]> = ref([])
 
     // ── Computed ──
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * (8 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
+    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * (9 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
 
     // ── Business logic ──
     async function show(e: PointerEvent): Promise<void> {
@@ -31,6 +32,17 @@ export function useKCContextMenu(options: {
         position_x.value = e.clientX
         position_y.value = e.clientY
         is_show.value = true
+    }
+
+    async function copy_content(): Promise<void> {
+        const res = await copy_kyou_content(props.kyou, props.gkill_api)
+        if (res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
     }
 
     async function copy_id(): Promise<void> {
@@ -142,6 +154,7 @@ export function useKCContextMenu(options: {
 
         // Business logic
         show,
+        copy_content,
         copy_id,
         show_edit_kc_dialog,
         show_add_tag_dialog,
