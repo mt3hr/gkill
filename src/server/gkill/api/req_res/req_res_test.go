@@ -3,6 +3,7 @@ package req_res
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
 )
@@ -571,5 +572,109 @@ func TestIDFPayloadMCPDTO_OmitsEmptyMimeType(t *testing.T) {
 
 	if _, ok := raw["mime_type"]; ok {
 		t.Error("mime_type should be omitted when empty")
+	}
+}
+
+func TestPluginPayloadMCPDTO_JSONRoundTrip(t *testing.T) {
+	original := PluginPayloadMCPDTO{
+		Kind:        "plugin",
+		DataType:    "claude_code_message",
+		RepName:     "Claude Code",
+		KyouID:      "b1a1f0c4-0000-4000-8000-000000000001",
+		PluginName:  "gkill_plugin_claudecode",
+		Description: "Claude Codeのチャットログ",
+	}
+
+	data, err := json.Marshal(original)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	var decoded PluginPayloadMCPDTO
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+
+	if decoded != original {
+		t.Errorf("decoded = %+v, want %+v", decoded, original)
+	}
+
+	// Verify JSON field names
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal to map: %v", err)
+	}
+	// MCPクライアントはrep_nameとkyou_idをそのままget_plugin_content_htmlに渡すので、
+	// このフィールド名が変わるとプラグイン内容取得が壊れる。
+	for _, field := range []string{"kind", "data_type", "rep_name", "kyou_id", "plugin_name", "description"} {
+		if _, ok := raw[field]; !ok {
+			t.Errorf("JSON missing expected field %q", field)
+		}
+	}
+}
+
+func TestPluginPayloadMCPDTO_OmitsEmptyOptionalFields(t *testing.T) {
+	original := PluginPayloadMCPDTO{
+		Kind:     "plugin",
+		DataType: "claude_code_message",
+		RepName:  "Claude Code",
+		KyouID:   "id-1",
+	}
+
+	data, err := json.Marshal(original)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal to map: %v", err)
+	}
+
+	for _, field := range []string{"plugin_name", "description"} {
+		if _, ok := raw[field]; ok {
+			t.Errorf("%q should be omitted when empty", field)
+		}
+	}
+	for _, field := range []string{"kind", "data_type", "rep_name", "kyou_id"} {
+		if _, ok := raw[field]; !ok {
+			t.Errorf("JSON missing expected field %q", field)
+		}
+	}
+}
+
+func TestKyouMCPDTO_CarriesPluginPayload(t *testing.T) {
+	dto := KyouMCPDTO{
+		DataType:    "claude_code_message",
+		RelatedTime: time.Date(2026, 7, 30, 10, 0, 0, 0, time.UTC),
+		Payload: PluginPayloadMCPDTO{
+			Kind:     "plugin",
+			DataType: "claude_code_message",
+			RepName:  "Claude Code",
+			KyouID:   "id-1",
+		},
+	}
+
+	data, err := json.Marshal(dto)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	var raw struct {
+		DataType string              `json:"data_type"`
+		Payload  PluginPayloadMCPDTO `json:"payload"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+
+	if raw.DataType != "claude_code_message" {
+		t.Errorf("data_type = %q, want %q", raw.DataType, "claude_code_message")
+	}
+	if raw.Payload.Kind != "plugin" {
+		t.Errorf("payload.kind = %q, want %q", raw.Payload.Kind, "plugin")
+	}
+	if raw.Payload.KyouID != "id-1" {
+		t.Errorf("payload.kyou_id = %q, want %q", raw.Payload.KyouID, "id-1")
 	}
 }
