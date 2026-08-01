@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import type { EditTimeIsViewProps } from '@/pages/views/edit-time-is-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -39,9 +39,6 @@ export function useEditTimeIsView(options: {
     const show_start_time_menu = ref(false)
     const show_end_date_menu = ref(false)
     const show_end_time_menu = ref(false)
-
-    // ── Watchers ──
-    watch(() => props.kyou, () => load())
 
     // ── Business logic ──
     async function load(): Promise<void> {

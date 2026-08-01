@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import type { EditKCViewProps } from '@/pages/views/edit-kc-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { Kyou } from '@/classes/datas/kyou'
@@ -32,9 +32,6 @@ export function useEditKCView(options: {
     const show_kyou: Ref<boolean> = ref(false)
     const show_related_date_menu = ref(false)
     const show_related_time_menu = ref(false)
-
-    // ── Watchers ──
-    watch(() => props.kyou, () => load())
 
     // ── Business logic ──
     async function load(): Promise<void> {

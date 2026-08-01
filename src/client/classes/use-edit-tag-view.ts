@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import type { EditTagViewProps } from '@/pages/views/edit-tag-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request'
@@ -26,9 +26,6 @@ export function useEditTagView(options: {
     const cloned_tag: Ref<Tag> = ref(props.tag.clone())
     const tag_name: Ref<string> = ref(props.tag.tag)
     const show_kyou: Ref<boolean> = ref(false)
-
-    // ── Watchers ──
-    watch([() => props.kyou, () => props.tag], () => load())
 
     // ── Business logic ──
     async function load(): Promise<void> {
