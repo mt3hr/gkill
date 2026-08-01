@@ -1,7 +1,7 @@
 import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import { Tag } from '@/classes/datas/tag'
-import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
+import { tag_exists_in_tag_struct } from '@/classes/tag-struct'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
@@ -35,16 +35,6 @@ export function useAddTagView(options: {
     })
 
     // ── Business logic ──
-    function tag_exists_in_struct(tag_name: string, struct: TagStructElementData): boolean {
-        if (struct.tag_name === tag_name) return true
-        if (struct.children) {
-            for (const child of struct.children) {
-                if (tag_exists_in_struct(tag_name, child)) return true
-            }
-        }
-        return false
-    }
-
     async function save(): Promise<void> {
         try {
             is_requested_submit.value = true
@@ -61,7 +51,7 @@ export function useAddTagView(options: {
 
             // TagStructに存在しないタグを検出
             const tag_names = tag_name.value.split("、")
-            const not_found = tag_names.filter(t => !tag_exists_in_struct(t, props.application_config.tag_struct))
+            const not_found = tag_names.filter(t => !tag_exists_in_tag_struct(t, props.application_config.tag_struct))
             if (not_found.length > 0) {
                 unknown_tags.value = not_found
                 show_confirm_unknown_tag_dialog.value = true
