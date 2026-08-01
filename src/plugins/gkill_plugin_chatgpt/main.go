@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"os"
 	"slices"
 	"strings"
@@ -16,6 +17,42 @@ const dataType = "chatgpt_conversation"
 // configKeySourceDirs は config.json に書くデータソースの指定。
 // 未設定ならプラグインフォルダ自身を見る(従来どおりの配置で動く)。
 const configKeySourceDirs = "source_dirs"
+
+// JSONにはコメントが書けないので、読み飛ばされるキーで書式を書き残す。
+// parseSourcePatterns は source_dirs しか見ないため、残っていても害はない。
+const (
+	configKeyComment           = "_comment"
+	configKeyExampleSourceDirs = "_example_source_dirs"
+)
+
+// defaultConfig は config.json が無いときに書き出す既定設定。
+// pluginDir に依存しない値にすること(--gkill-print-config から同じものを出すため)。
+func defaultConfig() sdk.Config {
+	return sdk.Config{
+		configKeyComment: "source_dirs にフォルダかファイルのパスを書きます。" +
+			"* ** ? [] のワイルドカード、先頭の ~ と環境変数($HOME など)が使えます。" +
+			"フォルダを指定すると再帰的に走査して conversations-000.json などの新形式、" +
+			"無ければ conversations.json を探し、ファイルを直接指定するとその中身をそのまま読みます。" +
+			"空にするとこのプラグインのフォルダを見ます。" +
+			"編集は次の検索から反映されます(gkillの再起動は不要)。" +
+			"_ で始まるキーは説明用なので消して構いません。",
+		configKeyExampleSourceDirs: []string{
+			"~/Kyou/ChatGPTExport",
+			"D:/Dropbox/chatgpt_export/**/conversations*.json",
+		},
+		configKeySourceDirs: []string{},
+	}
+}
+
+// printDefaultConfig は既定の config.json を標準出力に書く。--gkill-print-config 用。
+func printDefaultConfig() error {
+	data, err := json.MarshalIndent(defaultConfig(), "", "  ")
+	if err != nil {
+		return err
+	}
+	_, err = os.Stdout.Write(append(data, '\n'))
+	return err
+}
 
 // manifest.json をバイナリに埋め込み、--gkill-print-manifest で出力できるようにする。
 // 配置スクリプトが manifest.json を用意できるようにするため。
@@ -62,10 +99,20 @@ func main() {
 		return
 	}
 
+	// 既定の config.json の出力だけして終わる。配置スクリプトが用意できるようにするため。
+	// 通常はプラグイン起動時に自動生成されるので、これを使う必要はない。
+	if slices.Contains(os.Args[1:], "--gkill-print-config") {
+		if err := printDefaultConfig(); err != nil {
+			os.Exit(1)
+		}
+		return
+	}
+
 	pluginDir := extractpluginDir(os.Args)
 
 	sdk.Run(sdk.Handler{
-		RepName: repName,
+		RepName:       repName,
+		DefaultConfig: defaultConfig(),
 
 		FindKyous: func(ctx context.Context, q sdk.Query, cfg sdk.Config) ([]sdk.Kyou, error) {
 			msgs, err := globalCache.GetMessages(pluginDir, sourceOf(pluginDir, cfg))

@@ -126,8 +126,11 @@ func renderConfigHTML(pluginDir string, patterns []string, src expandedSource) s
 	sb.WriteString(`</ul>`)
 
 	sb.WriteString(`<h3>データソースを変える</h3>`)
-	sb.WriteString(`<p>このプラグインのフォルダに <code>config.json</code> を置いてください。</p>`)
-	sb.WriteString(`<p>配置先: <code>` + html.EscapeString(filepath.Join(pluginDir, "config.json")) + `</code></p>`)
+	sb.WriteString(`<p>このプラグインのフォルダ(<code>manifest.json</code> と同じ場所)の ` +
+		`<code>config.json</code> を編集してください。` +
+		`プラグインの起動時に無ければ自動で作られます。</p>`)
+	sb.WriteString(`<p>編集するファイル: <code>` +
+		html.EscapeString(filepath.Join(pluginDir, "config.json")) + `</code></p>`)
 	sb.WriteString(`<pre>` + html.EscapeString(sampleConfigJSON()) + `</pre>`)
 	sb.WriteString(`<div class="hint">` +
 		`<code>source_dirs</code> は<strong>配列で複数指定</strong>できます(1つなら文字列でも可)。` +
@@ -144,14 +147,9 @@ func renderConfigHTML(pluginDir string, patterns []string, src expandedSource) s
 }
 
 // sampleConfigJSON は設定画面に出す config.json の記入例。
+// 自動生成される内容そのものを見せる。
 func sampleConfigJSON() string {
-	sample := map[string]any{
-		configKeySourceDirs: []string{
-			"~/Kyou/ChatGPTExport",
-			"~/Dropbox/chatgpt_export",
-		},
-	}
-	data, err := json.MarshalIndent(sample, "", "  ")
+	data, err := json.MarshalIndent(defaultConfig(), "", "  ")
 	if err != nil {
 		return "{}"
 	}

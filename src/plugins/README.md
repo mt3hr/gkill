@@ -63,37 +63,68 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
   manifest.json
   {実行ファイル}          # Linux/macOS: gkill_plugin_xxx
                           # Windows:      gkill_plugin_xxx.exe
-  conversations.json      # データファイル（必要なプラグインのみ）
+  config.json             # データソース設定（初回起動時に自動生成される）
+  conversations.json      # データファイル（プラグインフォルダに直接置く場合のみ）
 ```
 
 ### gkill_plugin_claudeai
 
 1. Claude.ai の設定ページからデータをエクスポートし `conversations.json` を取得する
-2. 配置先ディレクトリに `manifest.json`・実行ファイル・`conversations.json` を置く
-3. gkill_server を再起動する（または gkill 設定画面でプラグインをリロードする）
+2. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
+3. 同じディレクトリに `config.json` が自動生成されるので、`source_dirs` に
+   `conversations.json` を置いたフォルダ（またはファイル）を書く
 
-`conversations.json` を別の場所に置きたい場合は、プラグインフォルダの `config.json` で
-`source_dirs` を指定する（`gkill_plugin_claudecode` と同じ書式。ワイルドカード可）。
+`source_dirs` を空のままにすると、従来どおりプラグインフォルダ自身を見る。
 
 ### gkill_plugin_chatgpt
 
 1. ChatGPT の設定ページからデータをエクスポートし ZIP を解凍する
-2. 配置先ディレクトリに `manifest.json`・実行ファイルと、次のどちらかを置く:
    - 新形式: `conversations-000.json`, `conversations-001.json`, ... （複数ファイル）
    - 旧形式: `conversations.json`（単一ファイル）
-3. gkill_server を再起動する
+2. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
+3. 自動生成された `config.json` の `source_dirs` に、解凍先フォルダを書く
 
-こちらも `config.json` の `source_dirs` で別フォルダを指定できる。
+こちらも `source_dirs` が空ならプラグインフォルダ自身を見る。
 
 ### gkill_plugin_claudecode
 
-データファイルの配置は不要。読み込むフォルダはプラグインフォルダの `config.json` で指定する。
+データファイルの配置は不要。読み込むフォルダは `config.json` で指定する。
 
-1. 配置先ディレクトリに `manifest.json`・実行ファイルを置く
-2. 既定の `~/.claude/projects` 以外を読ませたい場合は、同じディレクトリに `config.json` を置く
-   （`{"source_dirs": ["<フォルダ>", "<パターン>"]}`。配列で複数指定でき、`*` / `**` などの
-   ワイルドカードが使える。編集は次の検索から反映される）
-3. gkill_server を再起動する
+1. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
+2. 自動生成される `config.json` の `source_dirs` は既定で `~/.claude/projects`。
+   他の場所を読ませたい場合は書き換える
+
+---
+
+## config.json（データソース設定）
+
+`manifest.json` と同じフォルダに置く設定ファイル。プラグインの初回起動時に既定値で
+**自動生成される**ので、生成されたファイルを手で編集して使う。既存ファイルは上書きされない。
+
+```json
+{
+  "_comment": "書式の説明（読み飛ばされるので消してよい）",
+  "_example_source_dirs": ["~/Kyou/ClaudeAIExport", "D:/Dropbox/claude_export/**/conversations*.json"],
+  "source_dirs": []
+}
+```
+
+| キー | 説明 |
+|---|---|
+| `source_dirs` | データソースの指定。配列で複数指定できる（1つなら文字列でも可） |
+| `_` 始まりのキー | 書式の説明用。プラグインは読まないので消してよい |
+
+`source_dirs` の書式:
+
+- **フォルダ** を指定すると再帰的に走査し、そのプラグインが読むファイル名（`conversations.json`、
+  `*.jsonl` など）を探す
+- **ファイル** を直接指定すると、名前が規則に合わなくてもそのまま読む
+- ワイルドカード `*` `**` `?` `[]` が使える（[go-zglob](https://github.com/mattn/go-zglob)）
+- 先頭の `~` と環境変数（`$HOME` など）を展開する。ただし gkill を Windows サービスで動かして
+  いる場合は**実行アカウントのホーム**になるため、絶対パスのほうが確実
+- 空にすると各プラグインの既定（claudeai / chatgpt はプラグインフォルダ自身、
+  claudecode は `~/.claude/projects`）を使う
+- 編集は**次の検索から反映される**（gkill_server の再起動は不要）
 
 ---
 
@@ -144,6 +175,15 @@ gkill_server はプラグインをサブプロセスとして起動し、stdin/s
 
 ```bash
 ./gkill_plugin_xxx --gkill-print-manifest > manifest.json
+```
+
+### config.json の出力
+
+同様に `--gkill-print-config` で既定の `config.json` を標準出力に吐いて終了する。
+通常はプラグインの起動時に自動生成されるので、配置スクリプトで先に用意したいとき以外は不要。
+
+```bash
+./gkill_plugin_xxx --gkill-print-config > config.json
 ```
 
 ### コマンド一覧
@@ -268,6 +308,16 @@ func main() {
 ```go
 // 設定値取得（デフォルト値付き）
 msg := cfg.Get("message", "Hello!")
+```
+
+`Handler.DefaultConfig` を設定しておくと、`config.json` が無いときに
+その内容で自動生成される（既存ファイルは上書きしない）。nil なら何も生成しない。
+
+```go
+sdk.Run(sdk.Handler{
+    DefaultConfig: sdk.Config{"source_dirs": []string{}},
+    // ...
+})
 ```
 
 ---
