@@ -140,6 +140,16 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		})
 		return
 	}
+	err = repositories.TempReps.MiReKyouTempRep.DeleteByTXID(r.Context(), txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete mirekyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxGetMiReKyouError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		})
+		return
+	}
 	err = repositories.TempReps.TagTempRep.DeleteByTXID(r.Context(), txID, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at delete tag by tx id %s user id = %s device = %s: %w", txID, userID, device, err)

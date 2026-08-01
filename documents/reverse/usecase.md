@@ -51,6 +51,7 @@ graph LR
         UC_GPSLOG[ログファイルを<br>アップロードし記録する]
         UC_CLIPBOARD[クリップボードの内容を<br>ファイルとして保存する]
         UC_REKYOU[情報をリポストする]
+        UC_MIREKYOU[既存の情報を<br>タスク化する]
     end
 
     subgraph "整理用メタデータ機能"
@@ -152,6 +153,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0306 | 支出情報を追加する | `AddNlog` |
 | UC-0307 | タイムスタンプを追加する | `AddTimeis` |
 | UC-0308 | リポストする | `AddRekyou` |
+| UC-0309 | 既存の情報をタスク化する | `AddMiReKyou` |
 
 ### 2.4 情報編集
 
@@ -166,6 +168,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0407 | タイムスタンプを編集する | `UpdateTimeis` |
 | UC-0408 | ファイル情報を編集する | `UpdateIDFKyou` |
 | UC-0409 | リポストを編集する | `UpdateRekyou` |
+| UC-0410 | リポストタスクを編集する | `UpdateMiReKyou` |
 
 ### 2.5 情報削除（論理削除）
 

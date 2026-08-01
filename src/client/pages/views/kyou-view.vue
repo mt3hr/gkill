@@ -86,6 +86,12 @@
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 v-on="crudRelayHandlers"
                 ref="rekyou_view" />
+            <MiReKyouView v-if="cloned_kyou.typed_mirekyou" :mirekyou="cloned_kyou.typed_mirekyou" :draggable=draggable
+                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                :kyou="cloned_kyou" :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                v-on="crudRelayHandlers"
+                ref="mirekyou_view" />
             <GitCommitLogView v-if="cloned_kyou.typed_git_commit_log" :git_commit_log="cloned_kyou.typed_git_commit_log"
                 :draggable=draggable :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="highlight_targets" :kyou="cloned_kyou"
@@ -130,6 +136,7 @@ import LantanaView from './lantana-view.vue'
 import miKyouView from './mi-kyou-view.vue'
 import NlogView from './nlog-view.vue'
 import ReKyouView from './re-kyou-view.vue'
+import MiReKyouView from './mi-re-kyou-view.vue'
 import TimeIsView from './time-is-view.vue'
 import URLogView from './ur-log-view.vue'
 import PluginHtmlView from './plugin-html-view.vue'
@@ -152,6 +159,7 @@ const {
     urlog_view,
     idf_kyou_view,
     rekyou_view,
+    mirekyou_view,
     git_commit_log_view,
     plugin_html_view,
 
