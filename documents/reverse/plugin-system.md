@@ -107,6 +107,18 @@ cmd := exec.CommandContext(context.Background(),
 | `src/server/gkill/api/gkill_plugin/` | `PluginRequest`, `PluginResponse`, `PluginKyou`, `PluginQuery`, `PluginManifest` |
 | `src/server/gkill/plugin/sdk/` | プラグイン側 SDK（`sdk.Run()`, `sdk.Handler`, `sdk.Kyou`, `sdk.Query`） |
 
+### 設定ファイル（config.json）
+
+プラグインの設定は `manifest.json` と同じフォルダ（`--gkill-plugin-dir` で渡される
+`$GKILL_HOME/plugins/{userID}/{プラグイン名}/`）の `config.json` に置く。
+
+`sdk.Run()` は起動時に `sdk.EnsureConfig()` を呼び、`Handler.DefaultConfig` が設定されていて
+`config.json` が無ければ既定値で生成する。**既存ファイルは決して上書きしない**。
+`DefaultConfig` が nil（`gkill_example` など）なら何も生成しない。
+
+gkill 側の設定ダイアログ（`plugin-config-dialog.vue`）は表示のみで保存導線が無いため、
+実際の設定変更は生成された `config.json` を手で編集して行う。
+
 ---
 
 ## 5. 並行制御

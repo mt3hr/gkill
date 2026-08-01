@@ -24,7 +24,11 @@ cd src/plugins/gkill_plugin_claudecode && go test ./...
 
 ## プラグイン SDK
 
-`src/server/gkill/plugin/sdk/` の SDK 自体にもテストは存在しない。SDK は単純な stdin/stdout ループのため、実際のプラグインバイナリを通じた統合テストで品質を担保する。
+`src/server/gkill/plugin/sdk/config_test.go` で `EnsureConfig`（config.json の自動生成）をテストしている。
+生成される／既存ファイルを上書きしない／`DefaultConfig` が nil なら作らない／`pluginDir` が空なら
+カレントディレクトリを汚さない、の4点。`src/server` のテストなので `npm run test_server` で走る。
+
+stdin/stdout ループ本体にはテストが無く、実際のプラグインバイナリを通じた統合テストで品質を担保する。
 
 ## 新しいプラグインのテスト方針
 

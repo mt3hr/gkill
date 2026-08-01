@@ -25,4 +25,8 @@ type Handler struct {
 
 	// RepName はリポジトリ表示名（manifest.jsonのrep_nameと一致させること）。
 	RepName string
+
+	// DefaultConfig はconfig.jsonが無いときに書き出す既定設定。
+	// nilなら生成しない。既存のconfig.jsonは上書きされない。
+	DefaultConfig Config
 }
