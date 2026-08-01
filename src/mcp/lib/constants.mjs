@@ -91,5 +91,14 @@ export const KYOUS_QUERY_ALL_FIELDS = new Set([
   "mi_sort_type",
 ]);
 
+// gkill_get_plugin_content の format 引数。既定は text。
+// プラグインのコンテンツHTMLは表示用のCSS/JSでほとんどが埋まっているため、
+// 生HTMLを既定で返すとトークンを浪費するだけになる。
+export const PLUGIN_CONTENT_FORMATS = new Set(["text", "html", "both"]);
+export const DEFAULT_PLUGIN_CONTENT_FORMAT = "text";
+// テキスト変換後の既定の上限文字数。長い会話ログ1件でも収まるように取っている。
+export const DEFAULT_PLUGIN_CONTENT_MAX_TEXT_LENGTH = 20000;
+export const MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH = 200000;
+
 export const MI_CHECK_STATES = new Set(["all", "checked", "uncheck"]);
 export const MI_SORT_TYPES = new Set(["create_time", "estimate_start_time", "estimate_end_time", "limit_time"]);

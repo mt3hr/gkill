@@ -350,6 +350,7 @@ GitCommitLogContextMenu と同一の項目を提供する。
 |---|---|---|---|
 | gkill_plugin_chatgpt | ChatGPT | `chatgpt_conversation` | `src/plugins/gkill_plugin_chatgpt/` |
 | gkill_plugin_claudeai | Claude.ai | `claude_conversation` | `src/plugins/gkill_plugin_claudeai/` |
+| gkill_plugin_claudecode | ClaudeCode | `claude_code_turn` | `src/plugins/gkill_plugin_claudecode/` |
 
 ### ビルド手順
 
@@ -359,9 +360,52 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_chatgpt.exe .
 
 cd src/plugins/gkill_plugin_claudeai
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudeai.exe .
+
+cd src/plugins/gkill_plugin_claudecode
+GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudecode.exe .
 ```
 
 デプロイ先: `$GKILL_HOME/plugins/{userID}/{pluginName}/`
+
+---
+
+## 13. MCP からのプラグイン内容取得
+
+AIクライアント（MCP）からもプラグインの記録を読める。プラグインKyouの本文はgkill本体に保存されていない（`convertPluginKyouToKyou` は Texts / Tags / ImageSource を落とし、メタデータだけをKyouにする）ので、AIに本文を届けるには画面と同じく `GetContentHTML` を経由するしかない。
+
+### 提供ツール（read / write / readwrite の3サーバ共通）
+
+| ツール名 | gkill API | 説明 |
+|---|---|---|
+| `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / is_alive） |
+| `gkill_get_plugin_content` | `/api/get_plugin_content_html` | プラグインKyou 1件の本文 |
+
+いずれも読み取り専用。設定書き換え（`/api/post_plugin_config`）はMCPに公開していない。
+
+### 取得導線
+
+```
+gkill_get_plugin_list        … どのプラグインが入っているか（data_type / rep_name）を知る
+  ↓
+gkill_get_kyous              … payload.kind = "plugin" のKyouが返る
+                               （data_type / rep_name / kyou_id / plugin_name / description）
+  ↓
+gkill_get_plugin_content     … rep_name + kyou_id を渡して本文を取得
+```
+
+`handle_get_kyous_mcp.go` のペイロード構築は既存 data_type の switch で分岐しており、そのどれにも当たらないKyouは `repositories.PluginReps` から `rep_name` で manifest を引き当てて `PluginPayloadMCPDTO`（`kind: "plugin"`）にする。`kyou_id` をペイロードに載せているのは、`include_id` 指定なしでもコンテンツ取得ができるようにするため（idfペイロードが `rep_name` / `file_name` を常に載せているのと同じ考え方）。
+
+### HTML → テキスト変換
+
+`gkill_get_plugin_content` の `format` は既定 `text`。プラグインのコンテンツHTMLは `<style>` と `<script>` を含む完結したHTML文書で、バイト数の大半が表示用のボイラープレートになるため、そのまま返すとAIのトークンを浪費するだけになる。MCPサーバ側（`src/mcp/lib/html-text.mjs`）で正規表現ベースの軽量変換をかける:
+
+- `<script>` / `<style>` / コメントは中身ごと破棄
+- `<br>` とブロック要素の境界を改行に変換（タグ隣接だけで空行ができないよう、内部マーカー経由で連続をまとめる）
+- `<details>` / `<summary>`（ツール実行・thinkingの折りたたみ）の中身は残す
+- HTMLエンティティをデコード（`&amp;` は最後に処理し、エスケープ済みマークアップが復活しないようにする）
+- `max_text_length`（既定20000文字）を超えたら切り詰め、`text_truncated: true` を返す
+
+`format: "html"` で生HTML、`format: "both"` で両方返す。
 
 ---
 
@@ -371,4 +415,5 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudeai.exe .
 - [api-endpoints.md](api-endpoints.md) — `get_plugin_content_html` エンドポイント
 - [frontend-architecture.md](frontend-architecture.md) — `plugin-html-view.vue` コンポーネント・PWAキャッシュ
 - [sequence-diagrams.md](sequence-diagrams.md) — プラグインコンテンツHTML取得シーケンス
+- [`src/mcp/README.md`](../../src/mcp/README.md) — MCPのプラグインツール（`gkill_get_plugin_list` / `gkill_get_plugin_content`）
 - [glossary.md](glossary.md) — PluginKyou, PluginRepository 用語定義
