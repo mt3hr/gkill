@@ -6,6 +6,7 @@ import (
 	sqllib "database/sql"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -424,7 +425,9 @@ WHERE
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommonはquery.OnlyLatestDataを見ないので、ローカル変数側でも指定する。
+	// UpdateTime未指定なら編集前のバージョンを返さないよう最新版のみを対象にする
+	onlyLatestData := updateTime == nil
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
@@ -508,7 +511,11 @@ WHERE
 	if len(tags) == 0 {
 		return nil, nil
 	}
-	return &tags[0], nil
+	// ORDER BYを付けていないので、UpdateTimeが最新の行を明示的に選ぶ
+	latestTag := slices.MaxFunc(tags, func(a, b Tag) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestTag, nil
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]Tag, error) {
@@ -1104,7 +1111,9 @@ WHERE
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
-	var onlyLatestData bool
+	// 編集前のタグ名を混ぜないよう、IDごとの最新版のみを対象にする。
+	// IS_DELETEDはrep跨ぎで最新版を決めたあとに判定するのでここでは落とさない
+	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true

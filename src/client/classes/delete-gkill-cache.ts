@@ -60,3 +60,17 @@ export async function delete_gkill_all_tag_names_cache(): Promise<void> {
         // Cache API が利用できない環境ではスキップ
     }
 }
+
+// タグの追加・更新でそのKyouに紐づくタグ一覧が変わるため、ServiceWorkerが
+// target_id単位でキャッシュした /api/get_tags_by_id の古い一覧を捨てる。
+// 捨てないと改名前のタグ名がKyouに付いたまま表示され続ける
+export async function delete_gkill_attached_tags_cache(target_id: string): Promise<void> {
+    if (!target_id) {
+        return
+    }
+    try {
+        await delete_gkill_kyou_cache(target_id)
+    } catch (_e) {
+        // Cache API が利用できない環境ではスキップ
+    }
+}

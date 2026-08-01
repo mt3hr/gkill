@@ -1345,6 +1345,44 @@ func TestCachedTag_OnlyLatestVersionIsVisible(t *testing.T) {
 	if len(newNameTags) != 1 {
 		t.Errorf("expected 1 tag for 'なぎさ', got %d", len(newNameTags))
 	}
+
+	got, err := repo.GetTag(ctx, "cached-tag-renamed", nil)
+	if err != nil {
+		t.Fatalf("GetTag failed: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetTag returned nil")
+	}
+	if got.Tag != "なぎさ" {
+		t.Errorf("Tag = %q, want %q (latest version)", got.Tag, "なぎさ")
+	}
+
+	oldUpdateTime := renamedOld.UpdateTime
+	gotOld, err := repo.GetTag(ctx, "cached-tag-renamed", &oldUpdateTime)
+	if err != nil {
+		t.Fatalf("GetTag with update time failed: %v", err)
+	}
+	if gotOld == nil {
+		t.Fatal("GetTag with update time returned nil")
+	}
+	if gotOld.Tag != "なきさ" {
+		t.Errorf("Tag = %q, want %q (specified version)", gotOld.Tag, "なきさ")
+	}
+
+	// IDごとの最新版のみ。IS_DELETEDはrep跨ぎで最新版を決めたあとに判定する設計なので
+	// ここでは削除済みも返る
+	allTags, err := repo.GetAllTags(ctx)
+	if err != nil {
+		t.Fatalf("GetAllTags failed: %v", err)
+	}
+	if len(allTags) != 2 {
+		t.Fatalf("expected 2 tags (latest version only), got %d: %v", len(allTags), allTags)
+	}
+	for _, tag := range allTags {
+		if tag.Tag == "なきさ" {
+			t.Errorf("renamed-away version should not be returned: %v", tag)
+		}
+	}
 }
 
 // ===========================================================================
