@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"sync"
 	"testing"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -1286,5 +1287,62 @@ func TestTempReKyou_DeleteByTXID(t *testing.T) {
 	}
 	if len(rekyous) != 0 {
 		t.Errorf("expected 0 rekyous after delete, got %d", len(rekyous))
+	}
+}
+
+// TestCachedTag_OnlyLatestVersionIsVisible は、--cache_in_memory=true (既定) で実際に使われる
+// キャッシュ版リポジトリでも、IDごとの最新版だけが見えることを確認する。
+// この構成では全タグrepが1つのキャッシュDBにまとめられるので、
+// 別repに新しい版があるケースもここで解決される
+func TestCachedTag_OnlyLatestVersionIsVisible(t *testing.T) {
+	repo := newCachedTagRepo(t)
+	ctx := context.Background()
+
+	renamedOld := makeTag("cached-tag-renamed", "cached-target", "なきさ")
+	renamedNew := makeTag("cached-tag-renamed", "cached-target", "なぎさ")
+	renamedNew.UpdateTime = renamedOld.UpdateTime.Add(1 * time.Minute)
+
+	deletedOld := makeTag("cached-tag-deleted", "cached-target-2", "削除されるタグ")
+	deletedNew := makeTag("cached-tag-deleted", "cached-target-2", "削除されるタグ")
+	deletedNew.UpdateTime = deletedOld.UpdateTime.Add(1 * time.Minute)
+	deletedNew.IsDeleted = true
+
+	for _, tag := range []Tag{renamedOld, renamedNew, deletedOld, deletedNew} {
+		if err := repo.AddTagInfo(ctx, tag); err != nil {
+			t.Fatalf("AddTagInfo failed: %v", err)
+		}
+	}
+
+	names, err := repo.GetAllTagNames(ctx)
+	if err != nil {
+		t.Fatalf("GetAllTagNames failed: %v", err)
+	}
+	nameSet := map[string]struct{}{}
+	for _, name := range names {
+		nameSet[name] = struct{}{}
+	}
+	if _, exist := nameSet["なぎさ"]; !exist {
+		t.Errorf("tag name %q should be returned, got %v", "なぎさ", names)
+	}
+	for _, notWant := range []string{"なきさ", "削除されるタグ"} {
+		if _, exist := nameSet[notWant]; exist {
+			t.Errorf("tag name %q should not be returned, got %v", notWant, names)
+		}
+	}
+
+	oldNameTags, err := repo.GetTagsByTagName(ctx, "なきさ")
+	if err != nil {
+		t.Fatalf("GetTagsByTagName failed: %v", err)
+	}
+	if len(oldNameTags) != 0 {
+		t.Errorf("expected 0 tags for renamed-away name 'なきさ', got %d", len(oldNameTags))
+	}
+
+	newNameTags, err := repo.GetTagsByTagName(ctx, "なぎさ")
+	if err != nil {
+		t.Fatalf("GetTagsByTagName failed: %v", err)
+	}
+	if len(newNameTags) != 1 {
+		t.Errorf("expected 1 tag for 'なぎさ', got %d", len(newNameTags))
 	}
 }

@@ -186,12 +186,21 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	// 編集前のタグ名・削除済みのタグ名を返さないよう、IDごとの最新版かつ未削除の行のみを見る。
+	// このrep単体でのスコープ判定なので、最新版が別repにあるケースは集約側(TagRepositories)が解決する
 	getAllTagNamesTableName := sqlite3impl.QuoteIdent(dbName)
 	getAllTagNamesSQL := `
 SELECT
   DISTINCT TAG
-FROM ` + getAllTagNamesTableName + `
-` + fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", getAllTagNamesTableName, getAllTagNamesTableName) + " GROUP BY TAG "
+FROM ` + getAllTagNamesTableName + ` AS TAG1
+WHERE TAG1.IS_DELETED = 0
+  AND NOT EXISTS (
+    SELECT 1
+    FROM ` + getAllTagNamesTableName + ` AS TAG2
+    WHERE TAG2.ID = TAG1.ID
+      AND TAG2.UPDATE_TIME_UNIX > TAG1.UPDATE_TIME_UNIX
+  )
+`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", getAllTagNamesSQL))
 	getAllTagNamesStmt, err := cacheDB.PrepareContext(ctx, getAllTagNamesSQL)
 	if err != nil {
@@ -543,7 +552,8 @@ WHERE
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
-	var onlyLatestData bool
+	// 編集前のタグ名でヒットしないよう、IDごとの最新版のみを対象にする
+	onlyLatestData := true
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
