@@ -581,7 +581,8 @@ WHERE
 	tableName := "TAG"
 	tableNameAlias := "TAG"
 	whereCounter := 0
-	var onlyLatestData bool
+	// 編集前のタグ名でヒットしないよう、IDごとの最新版のみを対象にする
+	onlyLatestData := true
 	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
@@ -739,7 +740,8 @@ WHERE
 	tableName := "TAG"
 	tableNameAlias := "TAG"
 	whereCounter := 0
-	var onlyLatestData bool
+	// キャッシュ版(NOT EXISTSアンチジョイン)と揃えて、IDごとの最新版のみを対象にする
+	onlyLatestData := true
 	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false
@@ -1133,11 +1135,14 @@ func (t *tagRepositorySQLite3Impl) GetAllTagNames(ctx context.Context) ([]string
 		}()
 	}
 
+	// 編集前のタグ名・削除済みのタグ名を返さないよう、IDごとの最新版かつ未削除の行のみを見る。
+	// このrep単体でのスコープ判定なので、最新版が別repにあるケースは集約側(TagRepositories)が解決する
 	sql := `
 SELECT
   DISTINCT TAG
 FROM TAG
-WHERE 0 = 0
+WHERE IS_DELETED = 0
+  AND UPDATE_TIME = ( SELECT UPDATE_TIME FROM TAG AS INNER_TABLE WHERE INNER_TABLE.ID = TAG.ID ORDER BY datetime(INNER_TABLE.UPDATE_TIME) DESC LIMIT 1 )
 
 `
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))

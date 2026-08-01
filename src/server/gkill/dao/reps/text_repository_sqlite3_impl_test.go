@@ -110,3 +110,52 @@ func TestTextGetHistories(t *testing.T) {
 		t.Errorf("expected 2 history entries, got %d", len(histories))
 	}
 }
+
+// TestTextOnlyLatestVersionIsVisible は、TEXTテーブルがappend-onlyであることを踏まえ、
+// IDごとにUPDATE_TIMEが最大の版だけが見えることを確認する。
+// 編集前の本文で検索にヒットしてはいけない
+func TestTextOnlyLatestVersionIsVisible(t *testing.T) {
+	repo := newTempTextRepo(t)
+	ctx := context.Background()
+
+	old := makeText("text-edited", "target-edited", "編集前の本文")
+	edited := makeText("text-edited", "target-edited", "編集後の本文")
+	edited.UpdateTime = old.UpdateTime.Add(1 * time.Minute)
+
+	for _, text := range []Text{old, edited} {
+		if err := repo.AddTextInfo(ctx, text); err != nil {
+			t.Fatalf("AddTextInfo failed: %v", err)
+		}
+	}
+
+	t.Run("GetTextsByTargetID", func(t *testing.T) {
+		texts, err := repo.GetTextsByTargetID(ctx, "target-edited")
+		if err != nil {
+			t.Fatalf("GetTextsByTargetID failed: %v", err)
+		}
+		if len(texts) != 1 {
+			t.Fatalf("expected 1 text (latest version only), got %d: %v", len(texts), texts)
+		}
+		if texts[0].Text != "編集後の本文" {
+			t.Errorf("Text = %q, want %q", texts[0].Text, "編集後の本文")
+		}
+	})
+
+	t.Run("FindTexts", func(t *testing.T) {
+		oldTexts, err := repo.FindTexts(ctx, makeWordFindQuery([]string{"編集前"}))
+		if err != nil {
+			t.Fatalf("FindTexts failed: %v", err)
+		}
+		if len(oldTexts) != 0 {
+			t.Errorf("expected 0 texts for pre-edit word '編集前', got %d", len(oldTexts))
+		}
+
+		newTexts, err := repo.FindTexts(ctx, makeWordFindQuery([]string{"編集後"}))
+		if err != nil {
+			t.Fatalf("FindTexts failed: %v", err)
+		}
+		if len(newTexts) != 1 {
+			t.Errorf("expected 1 text for '編集後', got %d", len(newTexts))
+		}
+	})
+}
