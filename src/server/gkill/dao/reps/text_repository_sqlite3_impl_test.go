@@ -111,6 +111,46 @@ func TestTextGetHistories(t *testing.T) {
 	}
 }
 
+// TestTextRepositoriesGetTextPicksLatestAcrossReps は、同一本文IDの新しい版が
+// 別のrepにあるとき、rep跨ぎ集約が最新版を選ぶことを確認する。
+// repの並び順に依らず最新版が選ばれること
+func TestTextRepositoriesGetTextPicksLatestAcrossReps(t *testing.T) {
+	ctx := context.Background()
+
+	oldVersion := makeText("cross-rep-text", "cross-rep-target", "編集前の本文")
+	newVersion := makeText("cross-rep-text", "cross-rep-target", "編集後の本文")
+	newVersion.UpdateTime = oldVersion.UpdateTime.Add(1 * time.Minute)
+
+	for _, order := range []string{"old_first", "new_first"} {
+		t.Run(order, func(t *testing.T) {
+			repWithOld := newTempTextRepo(t)
+			repWithNew := newTempTextRepo(t)
+			if err := repWithOld.AddTextInfo(ctx, oldVersion); err != nil {
+				t.Fatalf("AddTextInfo failed: %v", err)
+			}
+			if err := repWithNew.AddTextInfo(ctx, newVersion); err != nil {
+				t.Fatalf("AddTextInfo failed: %v", err)
+			}
+
+			textReps := TextRepositories{repWithOld, repWithNew}
+			if order == "new_first" {
+				textReps = TextRepositories{repWithNew, repWithOld}
+			}
+
+			got, err := textReps.GetText(ctx, "cross-rep-text", nil)
+			if err != nil {
+				t.Fatalf("GetText failed: %v", err)
+			}
+			if got == nil {
+				t.Fatal("GetText returned nil")
+			}
+			if got.Text != "編集後の本文" {
+				t.Errorf("Text = %q, want %q (latest version)", got.Text, "編集後の本文")
+			}
+		})
+	}
+}
+
 // TestTextOnlyLatestVersionIsVisible は、TEXTテーブルがappend-onlyであることを踏まえ、
 // IDごとにUPDATE_TIMEが最大の版だけが見えることを確認する。
 // 編集前の本文で検索にヒットしてはいけない
@@ -138,6 +178,35 @@ func TestTextOnlyLatestVersionIsVisible(t *testing.T) {
 		}
 		if texts[0].Text != "編集後の本文" {
 			t.Errorf("Text = %q, want %q", texts[0].Text, "編集後の本文")
+		}
+	})
+
+	t.Run("GetText", func(t *testing.T) {
+		got, err := repo.GetText(ctx, "text-edited", nil)
+		if err != nil {
+			t.Fatalf("GetText failed: %v", err)
+		}
+		if got == nil {
+			t.Fatal("GetText returned nil")
+		}
+		if got.Text != "編集後の本文" {
+			t.Errorf("Text = %q, want %q (latest version)", got.Text, "編集後の本文")
+		}
+		if !got.UpdateTime.Equal(edited.UpdateTime) {
+			t.Errorf("UpdateTime = %v, want %v (latest version)", got.UpdateTime, edited.UpdateTime)
+		}
+
+		// UpdateTimeを指定した場合は履歴表示用にその版が取れる
+		oldUpdateTime := old.UpdateTime
+		gotOld, err := repo.GetText(ctx, "text-edited", &oldUpdateTime)
+		if err != nil {
+			t.Fatalf("GetText with update time failed: %v", err)
+		}
+		if gotOld == nil {
+			t.Fatal("GetText with update time returned nil")
+		}
+		if gotOld.Text != "編集前の本文" {
+			t.Errorf("Text = %q, want %q (specified version)", gotOld.Text, "編集前の本文")
 		}
 	})
 
