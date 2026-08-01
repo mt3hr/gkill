@@ -30,6 +30,9 @@
             <v-list-item @click="show_kyou_histories_dialog()">
                 <v-list-item-title>{{ i18n.global.t("KYOU_HISTORIES_TITLE") }}</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="copy_content()">
+                <v-list-item-title>{{ i18n.global.t("COPY_CONTENT_TITLE") }}</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="copy_id()">
                 <v-list-item-title>{{ i18n.global.t("COPY_ID_TITLE") }}</v-list-item-title>
             </v-list-item>
@@ -62,6 +65,7 @@ const {
 
     // Business logic
     show,
+    copy_content,
     copy_id,
     show_edit_nlog_dialog,
     show_add_tag_dialog,
