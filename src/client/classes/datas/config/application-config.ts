@@ -168,6 +168,32 @@ export class ApplicationConfig {
         return new Array<GkillError>()
     }
     async append_not_found_tags(): Promise<Array<GkillError>> {
+        const collect_not_found = (tag_names: Array<string>): Set<string> => {
+            const not_found = new Set<string>()
+            tag_names.forEach(tag_name => {
+                let exist = false
+                let tag_name_walk = (_tag: TagStructElementData): void => { }
+                tag_name_walk = (tag: TagStructElementData): void => {
+                    const tag_children = tag.children
+                    if (tag_name === tag.tag_name) {
+                        exist = true
+                    }
+                    if (tag_children) {
+                        tag_children.forEach(child_tag => {
+                            if (child_tag) {
+                                tag_name_walk(child_tag)
+                            }
+                        })
+                    }
+                }
+                tag_name_walk(this.tag_struct)
+                if (!exist) {
+                    not_found.add(tag_name)
+                }
+            })
+            return not_found
+        }
+
         const req = new GetAllTagNamesRequest()
 
         const res = await GkillAPI.get_gkill_api().get_all_tag_names(req)
@@ -175,28 +201,19 @@ export class ApplicationConfig {
             return res.errors
         }
 
-        const not_found = new Set<string>()
-        res.tag_names.forEach(tag_name => {
-            let exist = false
-            let tag_name_walk = (_tag: TagStructElementData): void => { }
-            tag_name_walk = (tag: TagStructElementData): void => {
-                const tag_children = tag.children
-                if (tag_name === tag.tag_name) {
-                    exist = true
-                }
-                if (tag_children) {
-                    tag_children.forEach(child_tag => {
-                        if (child_tag) {
-                            tag_name_walk(child_tag)
-                        }
-                    })
-                }
+        let not_found = collect_not_found(res.tag_names)
+
+        // TagStructは永続化されるので、ServiceWorkerがキャッシュした古い一覧に含まれる
+        // 編集前のタグ名を書き込まないよう、追加するものがあるときだけサーバに問い直す
+        if (not_found.size !== 0) {
+            const reget_req = new GetAllTagNamesRequest()
+            reget_req.force_reget = true
+            const reget_res = await GkillAPI.get_gkill_api().get_all_tag_names(reget_req)
+            if (reget_res.errors && reget_res.errors.length !== 0) {
+                return reget_res.errors
             }
-            tag_name_walk(this.tag_struct)
-            if (!exist) {
-                not_found.add(tag_name)
-            }
-        })
+            not_found = collect_not_found(reget_res.tag_names)
+        }
 
         not_found.forEach(tag_name => {
             const tag_struct = new TagStructElementData()

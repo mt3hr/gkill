@@ -9,6 +9,7 @@ vi.mock('@/i18n', () => ({ i18n }))
 vi.mock('@/classes/delete-gkill-cache', () => ({
   default: vi.fn().mockResolvedValue(undefined),
   delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
+  delete_gkill_all_tag_names_cache: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { GkillAPI } from '@/classes/api/gkill-api'
