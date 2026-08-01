@@ -33,6 +33,12 @@ import {
   normalizeUpdateTagArgs,
   normalizeUpdateTextArgs,
 } from "./lib/write-normalization.mjs";
+import {
+  PLUGIN_TOOLS,
+  handlePluginToolCall,
+  isPluginToolName,
+  summarizePluginToolPayload,
+} from "./lib/plugin-tools.mjs";
 import { OAuthServer } from "./lib/oauth-server.mjs";
 import { McpAccessLog, parseMcpLogLevel } from "./lib/access-log.mjs";
 
@@ -89,6 +95,10 @@ const GET_ENDPOINT_MAP = {
 // ---------------------------------------------------------------------------
 
 function summarizeWritePayload(name, payload) {
+  const pluginSummary = summarizePluginToolPayload(name, payload);
+  if (pluginSummary !== null) {
+    return pluginSummary;
+  }
   switch (name) {
     case "gkill_add_kmemo":
       return `Created kmemo: ${payload.added_kmemo?.id || "unknown"}`;
@@ -657,6 +667,7 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  ...PLUGIN_TOOLS,
 ];
 
 // ---------------------------------------------------------------------------
@@ -866,6 +877,14 @@ class McpWriteServer {
   async handleToolCall(name, args) {
     const sid = this.currentSessionId;
     const userId = this.currentUserId || this.client.userId;
+
+    if (isPluginToolName(name)) {
+      return handlePluginToolCall(
+        (pathname, body) => this.client.callWrite(pathname, body, true, sid),
+        name,
+        args,
+      );
+    }
 
     switch (name) {
       // ----- Write tools -----

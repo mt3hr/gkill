@@ -13,6 +13,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
@@ -232,6 +233,15 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	// プラグインをrep_name別に引けるようにする。
+	// プラグインKyouの本文はgkill側に保存されないため、ペイロードには
+	// コンテンツHTML取得に必要なrep_name/kyou_idを載せる。
+	pluginManifestByRepName := map[string]gkill_plugin.PluginManifest{}
+	for _, pluginRep := range repositories.PluginReps {
+		manifest := pluginRep.GetManifest()
+		pluginManifestByRepName[manifest.RepName] = manifest
+	}
+
 	// attached TimeIs を一括取得
 	var allTimeIs []reps.TimeIs
 	if request.ShouldIncludeTimeIs() {
@@ -390,6 +400,19 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 					LimitTime:         m.LimitTime,
 					EstimateStartTime: m.EstimateStartTime,
 					EstimateEndTime:   m.EstimateEndTime,
+				}
+			}
+		default:
+			// 既存のdata_typeに該当しないKyouはプラグイン由来。
+			// data_typeはプラグインが自由に決めるので、rep_nameで引き当てる。
+			if manifest, ok := pluginManifestByRepName[kyou.RepName]; ok {
+				payload = req_res.PluginPayloadMCPDTO{
+					Kind:        "plugin",
+					DataType:    kyou.DataType,
+					RepName:     kyou.RepName,
+					KyouID:      kyou.ID,
+					PluginName:  manifest.Name,
+					Description: manifest.Description,
 				}
 			}
 		}

@@ -374,6 +374,7 @@ MCPサーバは8つのReadツールを提供（`gkill_get_kyous`, `gkill_get_mi_
 | 主要フィールド | `session_id`, `locale_name` |
 | レスポンス型 | `GetPluginListResponse` |
 | レスポンスフィールド | `plugins: Array<PluginInfo>`（`name`, `version`, `description`, `data_type`, `rep_name`, `is_alive`） |
+| 備考 | MCPの `gkill_get_plugin_list` もこのエンドポイントをそのまま使う |
 | 備考 | `is_alive` はプラグインプロセスの生存状態を示す。プロセスが起動済みの場合 `true`、停止中は `false` |
 
 ### get_plugin_content_html 詳細
@@ -385,7 +386,7 @@ MCPサーバは8つのReadツールを提供（`gkill_get_kyous`, `gkill_get_mi_
 | レスポンス型 | `GetPluginContentHTMLResponse` |
 | レスポンスフィールド | `html` — iframe srcdoc に直接セット |
 | PWAキャッシュキー | `/cache/api/plugin_content_html/{kyou_id}` |
-| 備考 | キャッシュ識別子に `kyou_id` を使用（他エンドポイントの `id` / `target_id` とは命名が異なる） |
+| 備考 | キャッシュ識別子に `kyou_id` を使用（他エンドポイントの `id` / `target_id` とは命名が異なる）。MCPの `gkill_get_plugin_content` もこのエンドポイントを叩き、既定でHTMLをプレーンテキストに変換してAIに返す |
 
 ### post_plugin_config 詳細
 

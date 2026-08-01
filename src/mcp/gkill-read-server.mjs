@@ -19,6 +19,12 @@ import {
   MAX_IDF_FILE_BYTES,
 } from "./lib/constants.mjs";
 import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs } from "./lib/normalization.mjs";
+import {
+  PLUGIN_TOOLS,
+  handlePluginToolCall,
+  isPluginToolName,
+  summarizePluginToolPayload,
+} from "./lib/plugin-tools.mjs";
 import { OAuthServer } from "./lib/oauth-server.mjs";
 import { McpAccessLog, parseMcpLogLevel } from "./lib/access-log.mjs";
 import { FileLinkStore } from "./lib/file-link-store.mjs";
@@ -47,7 +53,7 @@ const FIND_QUERY_SCHEMA = {
     "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings. " +
     "General rule: each filter group requires its use_X flag set to true to activate (e.g., use_calendar:true activates calendar_start/end_date; use_words:true activates words). Without the flag, the related fields are ignored. " +
     "Recommended filtering strategy: fetch ApplicationConfig and all tag names first, then build a visible-tag allowlist — a tag is visible when is_force_hide=false AND check_when_inited=true in ApplicationConfig tag_struct. Pass visible tags via tags/timeis_tags with use_tags/use_timeis_tags=true. For repositories, prefer checked leaf rep_types from ApplicationConfig and treat unchecked leaf rep_type leaves as inferred hidden sources. " +
-    "Payload varies by data_type: kmemo body is in texts[], lantana has mood (0-10), nlog has title/shop/amount, timeis has title/start_time/end_time, mi has title/is_checked/board_name/limit_time, urlog has title/url, kc has title/num_value, idf has file_name/is_image/is_video/is_audio/rep_name/mime_type. To view/read an idf file, prefer in this order: (1) file_path in the payload — read it directly from the local filesystem (local clients only); (2) file_url in the payload — fetch that URL to get the bytes, no auth needed, works for any size (images: file_url is a downscaled thumbnail, file_url_full is the original); (3) gkill_get_idf_file tool with rep_name and file_name — base64 fallback, capped in size. git_commit_log has commit_message.",
+    "Payload varies by data_type: kmemo body is in texts[], lantana has mood (0-10), nlog has title/shop/amount, timeis has title/start_time/end_time, mi has title/is_checked/board_name/limit_time, urlog has title/url, kc has title/num_value, idf has file_name/is_image/is_video/is_audio/rep_name/mime_type. To view/read an idf file, prefer in this order: (1) file_path in the payload — read it directly from the local filesystem (local clients only); (2) file_url in the payload — fetch that URL to get the bytes, no auth needed, works for any size (images: file_url is a downscaled thumbnail, file_url_full is the original); (3) gkill_get_idf_file tool with rep_name and file_name — base64 fallback, capped in size. git_commit_log has commit_message. Plugin-provided entries (any data_type that is not one of the built-ins above) have payload.kind='plugin' carrying data_type/rep_name/kyou_id/plugin_name; their body is not stored in gkill, so pass rep_name and kyou_id to gkill_get_plugin_content to read it.",
   properties: {
     update_cache: { type: "boolean", description: "Force cache refresh before query." },
     is_deleted: { type: "boolean", description: "Include soft-deleted entries." },
@@ -156,6 +162,10 @@ const FIND_QUERY_SCHEMA = {
 
 
 function summarizeToolPayload(name, payload) {
+  const pluginSummary = summarizePluginToolPayload(name, payload);
+  if (pluginSummary !== null) {
+    return pluginSummary;
+  }
   switch (name) {
     case "gkill_get_kyous": {
       const returnedCount = payload.returned_count ?? 0;
@@ -265,7 +275,7 @@ const TOOLS = [
       "Each result contains data_type, related_time, tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
-      "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), mi (task). " +
+      "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), mi (task). Plugins add their own data_type values (e.g. claude_conversation) — list them with gkill_get_plugin_list and read their bodies with gkill_get_plugin_content. " +
       "Most used query fields: use_calendar + calendar_start/end_date, use_words + words, use_tags + tags, for_mi. Advanced: use_map, use_plaing, use_period_of_time, use_update_time. " +
       "Common query patterns: " +
       "Date range: {use_calendar:true, calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}. " +
@@ -455,6 +465,7 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  ...PLUGIN_TOOLS,
 ];
 
 class GkillReadClient {
@@ -730,6 +741,13 @@ class McpServer {
 
   async handleToolCall(name, args) {
     const sid = this.currentSessionId;
+    if (isPluginToolName(name)) {
+      return handlePluginToolCall(
+        (pathname, body) => this.client.callRead(pathname, body, true, sid),
+        name,
+        args,
+      );
+    }
     switch (name) {
       case "gkill_get_kyous": {
         const normalized = normalizeKyouArgs(args);
