@@ -10,8 +10,12 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { DiscardTXRequest } from '@/classes/api/req_res/discard-tx-request'
 import { CommitTXRequest } from '@/classes/api/req_res/commit-tx-request'
+import { tag_exists_in_tag_struct } from '@/classes/tag-struct'
+import { useFloatingDialog } from '@/classes/use-floating-dialog'
+import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { KFTLProps } from '@/pages/views/kftl-props'
 import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
+import type { KFTLRequest } from '@/classes/kftl/kftl-request'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -40,6 +44,14 @@ export function useKftlView(options: {
     const line_label_styles: Ref<Array<Record<string, string>>> = ref(new Array<Record<string, string>>())
     const invalid_line_numbers: Ref<Array<number>> = ref(new Array<number>())
     const is_requested_submit: Ref<boolean> = ref(true)
+    const show_confirm_unknown_tag_dialog: Ref<boolean> = ref(false)
+    const unknown_tags: Ref<string[]> = ref([])
+
+    // ── Dialog UI ──
+    useDialogHistoryStack(show_confirm_unknown_tag_dialog)
+    const confirm_dialog_ui = useFloatingDialog("kftl-confirm-unknown-tag-dialog", {
+        centerMode: "always",
+    })
 
     // ── Computed ──
     const text_area_width_px = computed(() => text_area_width.value.toString().concat("px"))
@@ -206,7 +218,44 @@ export function useKftlView(options: {
         return text.replace("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n", "\n")
     }
 
+    // 追加されるタグのうち、TagStructに存在しないものを重複なく集める
+    function collect_unknown_tags(kftl_requests: Array<KFTLRequest>): Array<string> {
+        const unknown = new Array<string>()
+        for (let i = 0; i < kftl_requests.length; i++) {
+            const tags = kftl_requests[i].get_tags()
+            for (let j = 0; j < tags.length; j++) {
+                const tag = tags[j]
+                if (tag === "") {
+                    continue
+                }
+                if (tag_exists_in_tag_struct(tag, props.application_config.tag_struct)) {
+                    continue
+                }
+                if (unknown.includes(tag)) {
+                    continue
+                }
+                unknown.push(tag)
+            }
+        }
+        return unknown
+    }
+
     async function submit(): Promise<void> {
+        await do_submit(false)
+    }
+
+    function cancel_submit(): void {
+        closeDialogViaHistory(show_confirm_unknown_tag_dialog)
+        unknown_tags.value = []
+    }
+
+    async function confirm_submit(): Promise<void> {
+        closeDialogViaHistory(show_confirm_unknown_tag_dialog)
+        unknown_tags.value = []
+        await do_submit(true)
+    }
+
+    async function do_submit(skip_unknown_tag_check: boolean): Promise<void> {
         try {
             if (invalid_line_numbers.value.length != 0) {
                 const error = new GkillError()
@@ -218,6 +267,19 @@ export function useKftlView(options: {
             }
             const statement = new KFTLStatement(text_area_content.value)
             const kftl_requests = await statement.generate_requests()
+
+            // TagStructに存在しないタグを検出したら、送信前に確認を取る
+            if (!skip_unknown_tag_check) {
+                const not_found = collect_unknown_tags(kftl_requests)
+                if (not_found.length > 0) {
+                    unknown_tags.value = not_found
+                    // 保存マーカーを消しておかないと、確認中の入力で再度submitされてしまう
+                    text_area_content.value = remove_save_marker(text_area_content.value)
+                    show_confirm_unknown_tag_dialog.value = true
+                    return
+                }
+            }
+
             let last_added_request_time = new Date(Date.now()) // 「、、」でずれた分をPlaingTimeIsにわたすための考慮。リロード時刻より大きかった場合はこの値でTimeIsをリロードする
             let errors = new Array<GkillError>()
             const tx_id = kftl_requests.length > 0 ? kftl_requests[0].get_tx_id() : null
@@ -299,6 +361,11 @@ export function useKftlView(options: {
         line_label_styles,
         is_requested_submit,
         title_height,
+        show_confirm_unknown_tag_dialog,
+        unknown_tags,
+
+        // Dialog UI
+        confirm_dialog_ui,
 
         // Computed
         text_area_width_px,
@@ -310,6 +377,8 @@ export function useKftlView(options: {
 
         // Business logic
         submit,
+        cancel_submit,
+        confirm_submit,
         show_kftl_template_dialog,
         paste_template,
         focus_kftl_text_area,
