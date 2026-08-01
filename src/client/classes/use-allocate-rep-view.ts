@@ -32,6 +32,7 @@ export function useAllocateRepView(options: {
         "tag",
         "text",
         "rekyou",
+        "mirekyou",
         "directory",
         "gpslog",
         "git_commit_log",

@@ -11,6 +11,7 @@ import { Lantana } from './lantana'
 import { Mi } from './mi'
 import { Nlog } from './nlog'
 import { ReKyou } from './re-kyou'
+import { MiReKyou } from './mi-re-kyou'
 import { TimeIs } from './time-is'
 import { URLog } from './ur-log'
 import { InfoIdentifier } from './info-identifier'
@@ -25,6 +26,7 @@ import { GetMiRequest } from '../api/req_res/get-mi-request'
 import { GetLantanaRequest } from '../api/req_res/get-lantana-request'
 import { GetGitCommitLogRequest } from '../api/req_res/get-git-commit-log-request'
 import { GetReKyouRequest } from '../api/req_res/get-re-kyou-request'
+import { GetMiReKyouRequest } from '../api/req_res/get-mi-re-kyou-request'
 import { GetIDFKyouRequest } from '../api/req_res/get-idf-kyou-request'
 import { GkillErrorCodes } from '../api/message/gkill_error'
 import { i18n } from '@/i18n'
@@ -45,6 +47,7 @@ export class Kyou extends InfoBase {
     typed_idf_kyou: IDFKyou | null
     typed_git_commit_log: GitCommitLog | null
     typed_rekyou: ReKyou | null
+    typed_mirekyou: MiReKyou | null
     // typed_plugin は既存のデータ型に該当しないプラグインKyouの場合にセットされる。
     // rep_name でプラグインを特定し、GetContentHTML でView HTMLを取得する。
     typed_plugin: { rep_name: string } | null
@@ -122,7 +125,12 @@ export class Kyou extends InfoBase {
             const e = await this.load_typed_timeis(query)
             errors = errors.concat(e)
         }
-        if (this.data_type.startsWith("mi")) {
+        // mirekyou_* は "mi" で始まるためMiより先に判定し、Mi側からは除外する
+        if (this.data_type.startsWith("mirekyou")) {
+            const e = await this.load_typed_mirekyou(query)
+            errors = errors.concat(e)
+        }
+        if (this.data_type.startsWith("mi") && !this.data_type.startsWith("mirekyou")) {
             const e = await this.load_typed_mi(query)
             errors = errors.concat(e)
         }
@@ -149,6 +157,7 @@ export class Kyou extends InfoBase {
             this.data_type.startsWith("kmemo") || this.data_type.startsWith("kc") ||
             this.data_type.startsWith("urlog") || this.data_type.startsWith("nlog") ||
             this.data_type.startsWith("timeis") || this.data_type.startsWith("mi") ||
+            this.data_type.startsWith("mirekyou") ||
             this.data_type.startsWith("lantana") || this.data_type.startsWith("idf") ||
             this.data_type.startsWith("git") || this.data_type.startsWith("rekyou")
         if (!is_known_data_type) {
@@ -619,6 +628,52 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
+    async load_typed_mirekyou(_query?: FindKyouQuery): Promise<Array<GkillError>> {
+        const req = new GetMiReKyouRequest()
+        req.abort_controller = this.abort_controller
+
+        req.id = this.id
+        const res = await GkillAPI.get_gkill_api().get_mirekyou(req)
+        if (res.errors && res.errors.length != 0) {
+            return res.errors
+        }
+
+        if (!res.mirekyou_histories || res.mirekyou_histories.length < 1) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.not_found_mi_rekyou
+            error.error_message = i18n.global.t('NOT_FOUND_MI_REKYOU_ERROR_MESSAGE')
+            return [error]
+        }
+
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.mirekyou_histories.length; i++) {
+            const mirekyou = new MiReKyou()
+            for (const key in res.mirekyou_histories[i]) {
+                (mirekyou as any)[key] = (res.mirekyou_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (mirekyou as any)[key]) {
+                    (mirekyou as any)[key] = new Date((mirekyou as any)[key])
+                }
+            }
+            res.mirekyou_histories[i] = mirekyou
+        }
+
+        let match_mirekyou: MiReKyou | null = null
+        res.mirekyou_histories.forEach(mirekyou => {
+            if (Math.floor(mirekyou.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
+                match_mirekyou = mirekyou
+            }
+        })
+        if (!match_mirekyou && res.mirekyou_histories.length > 0) {
+            match_mirekyou = res.mirekyou_histories.reduce((latest, mirekyou) =>
+                mirekyou.update_time > latest.update_time ? mirekyou : latest
+            )
+        }
+        this.typed_mirekyou = match_mirekyou
+        return new Array<GkillError>()
+    }
+
     async clear_typed_datas(): Promise<Array<GkillError>> {
         this.typed_kmemo = null
         this.typed_kc = null
@@ -630,6 +685,7 @@ export class Kyou extends InfoBase {
         this.typed_idf_kyou = null
         this.typed_git_commit_log = null
         this.typed_rekyou = null
+        this.typed_mirekyou = null
         return new Array<GkillError>()
     }
 
@@ -677,39 +733,47 @@ export class Kyou extends InfoBase {
         this.image_source = latest_kyou.image_source
 
         if (query) {
-            await this.load_typed_mi()
-            if (this.typed_mi) {
+            // MiReKyouもMiと同じ並び替え規則に従うが、data_typeの接頭辞だけ変える
+            const is_mi_rekyou = this.data_type.startsWith("mirekyou")
+            if (is_mi_rekyou) {
+                await this.load_typed_mirekyou()
+            } else {
+                await this.load_typed_mi()
+            }
+            const typed_task: Mi | MiReKyou | null = is_mi_rekyou ? this.typed_mirekyou : this.typed_mi
+            if (typed_task) {
+                const prefix = is_mi_rekyou ? "mirekyou" : "mi"
                 switch (query.mi_sort_type) {
                     case MiSortType.estimate_start_time:
-                        if (this.typed_mi?.estimate_start_time) {
-                            this.related_time = this.typed_mi.estimate_start_time
-                            this.data_type = "mi_start"
+                        if (typed_task.estimate_start_time) {
+                            this.related_time = typed_task.estimate_start_time
+                            this.data_type = prefix + "_start"
                         } else {
                             this.related_time = this.create_time
-                            this.data_type = "mi_create"
+                            this.data_type = prefix + "_create"
                         }
                         break;
                     case MiSortType.estimate_end_time:
-                        if (this.typed_mi?.estimate_end_time) {
-                            this.related_time = this.typed_mi.estimate_end_time
-                            this.data_type = "mi_end"
+                        if (typed_task.estimate_end_time) {
+                            this.related_time = typed_task.estimate_end_time
+                            this.data_type = prefix + "_end"
                         } else {
                             this.related_time = this.create_time
-                            this.data_type = "mi_create"
+                            this.data_type = prefix + "_create"
                         }
                         break;
                     case MiSortType.limit_time:
-                        if (this.typed_mi?.limit_time) {
-                            this.related_time = this.typed_mi.limit_time
-                            this.data_type = "mi_limit"
+                        if (typed_task.limit_time) {
+                            this.related_time = typed_task.limit_time
+                            this.data_type = prefix + "_limit"
                         } else {
                             this.related_time = this.create_time
-                            this.data_type = "mi_create"
+                            this.data_type = prefix + "_create"
                         }
                         break;
                     default:
                         this.related_time = this.update_time
-                        this.data_type = "mi_create"
+                        this.data_type = prefix + "_create"
                         break;
                 }
             }
@@ -744,6 +808,7 @@ export class Kyou extends InfoBase {
         cloned_kyou.typed_idf_kyou = this.typed_idf_kyou
         cloned_kyou.typed_git_commit_log = this.typed_git_commit_log
         cloned_kyou.typed_rekyou = this.typed_rekyou
+        cloned_kyou.typed_mirekyou = this.typed_mirekyou
         cloned_kyou.typed_plugin = this.typed_plugin
         cloned_kyou.is_typed_data_loaded = this.is_typed_data_loaded
         cloned_kyou.attached_tags = this.attached_tags.slice()
@@ -780,6 +845,7 @@ export class Kyou extends InfoBase {
         this.typed_idf_kyou = null
         this.typed_git_commit_log = null
         this.typed_rekyou = null
+        this.typed_mirekyou = null
         this.typed_plugin = null
         this.is_typed_data_loaded = false
     }

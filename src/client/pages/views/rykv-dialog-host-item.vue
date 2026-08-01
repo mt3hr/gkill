@@ -39,6 +39,12 @@
   <EditReKyouDialog v-else-if="item.kind === 'edit_re_kyou'" ref="dialog" :application_config="application_config"
     :gkill_api="gkill_api" :highlight_targets="[]" :kyou="item.kyou"
     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" v-on="dialog_events" />
+  <AddMiReKyouDialog v-else-if="item.kind === 'add_mi_re_kyou'" ref="dialog" :application_config="application_config"
+    :gkill_api="gkill_api" :highlight_targets="[]" :kyou="item.kyou"
+    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" v-on="dialog_events" />
+  <EditMiReKyouDialog v-else-if="item.kind === 'edit_mi_re_kyou'" ref="dialog" :application_config="application_config"
+    :gkill_api="gkill_api" :highlight_targets="[]" :kyou="item.kyou"
+    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" v-on="dialog_events" />
   <AddTagDialog v-else-if="item.kind === 'add_tag'" ref="dialog" :application_config="application_config"
     :gkill_api="gkill_api" :highlight_targets="[]" :kyou="item.kyou"
     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" v-on="dialog_events" />
@@ -150,6 +156,8 @@ import EditMiDialog from '../dialogs/edit-mi-dialog.vue'
 import EditNlogDialog from '../dialogs/edit-nlog-dialog.vue'
 import EditNotificationDialog from '../dialogs/edit-notification-dialog.vue'
 import EditReKyouDialog from '../dialogs/edit-re-kyou-dialog.vue'
+import AddMiReKyouDialog from '../dialogs/add-mi-re-kyou-dialog.vue'
+import EditMiReKyouDialog from '../dialogs/edit-mi-re-kyou-dialog.vue'
 import EditTagDialog from '../dialogs/edit-tag-dialog.vue'
 import EditTextDialog from '../dialogs/edit-text-dialog.vue'
 import EditTimeIsDialog from '../dialogs/edit-time-is-dialog.vue'

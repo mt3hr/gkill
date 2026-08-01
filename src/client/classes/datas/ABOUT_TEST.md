@@ -27,6 +27,7 @@ Vitest
 | `src/client/__tests__/unit/datas/idf-kyou.test.ts` | IDFKyou（ファイル） |
 | `src/client/__tests__/unit/datas/notification-data.test.ts` | Notification（通知） |
 | `src/client/__tests__/unit/datas/re-kyou.test.ts` | ReKyou（リポスト） |
+| `src/client/__tests__/unit/datas/mi-re-kyou.test.ts` | MiReKyou（リポストタスク: target_id + Miのスケジュール項目、タイトルなし） |
 | `src/client/__tests__/unit/datas/info-base.test.ts` | InfoBase（情報ベース） |
 | `src/client/__tests__/unit/datas/info-identifier.test.ts` | InfoIdentifier（情報識別子） |
 | `src/client/__tests__/unit/datas/meta-info-base.test.ts` | MetaInfoBase（メタ情報ベース） |

@@ -1346,3 +1346,199 @@ func TestCachedTag_OnlyLatestVersionIsVisible(t *testing.T) {
 		t.Errorf("expected 1 tag for 'なぎさ', got %d", len(newNameTags))
 	}
 }
+
+// ===========================================================================
+// MiReKyou Repository Tests — Cached / Temp
+// ===========================================================================
+
+func newCachedMiReKyouRepo(t *testing.T) MiReKyouRepository {
+	t.Helper()
+	ctx := context.Background()
+	baseRepo := newTempMiReKyouRepo(t)
+	cacheDB := openMemoryDB(t)
+	m := &sync.RWMutex{}
+	repo, err := NewMiReKyouRepositoryCachedSQLite3Impl(ctx, baseRepo, nil, cacheDB, m, "MIREKYOU_CACHE")
+	if err != nil {
+		t.Fatalf("failed to create cached mirekyou repo: %v", err)
+	}
+	t.Cleanup(func() { repo.Close(ctx) })
+	return repo
+}
+
+func newMiReKyouTempRepo(t *testing.T) MiReKyouTempRepository {
+	t.Helper()
+	ctx := context.Background()
+	db := openMemoryDB(t)
+	m := &sync.RWMutex{}
+	repo, err := NewMiReKyouTempRepositorySQLite3Impl(ctx, db, m)
+	if err != nil {
+		t.Fatalf("failed to create mirekyou temp repo: %v", err)
+	}
+	return repo
+}
+
+func TestCachedMiReKyou_AddAndFind(t *testing.T) {
+	repo := newCachedMiReKyouRepo(t)
+	ctx := context.Background()
+
+	mirekyou := makeMiReKyou("cached-mirekyou-001", "target-001")
+	mirekyou.BoardName = "work"
+	if err := repo.AddMiReKyouInfo(ctx, mirekyou); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	mirekyous, err := repo.FindMiReKyou(ctx, makeDefaultFindQuery())
+	if err != nil {
+		t.Fatalf("FindMiReKyou failed: %v", err)
+	}
+	found := false
+	for _, m := range mirekyous {
+		if m.ID == "cached-mirekyou-001" {
+			found = true
+			if m.TargetID != "target-001" {
+				t.Errorf("TargetID = %q, want %q", m.TargetID, "target-001")
+			}
+			if m.BoardName != "work" {
+				t.Errorf("BoardName = %q, want %q", m.BoardName, "work")
+			}
+		}
+	}
+	if !found {
+		t.Error("追加したMiReKyouがキャッシュから引けない")
+	}
+}
+
+// TestCachedMiReKyou_OnlyLatestVersionIsVisible はキャッシュがID毎の最新版だけを持つことを確認する。
+func TestCachedMiReKyou_OnlyLatestVersionIsVisible(t *testing.T) {
+	repo := newCachedMiReKyouRepo(t)
+	ctx := context.Background()
+
+	m1 := makeMiReKyou("cached-mirekyou-ver", "target-ver")
+	m1.BoardName = "old"
+	if err := repo.AddMiReKyouInfo(ctx, m1); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	m2 := makeMiReKyou("cached-mirekyou-ver", "target-ver")
+	m2.BoardName = "new"
+	m2.UpdateTime = m2.UpdateTime.Add(time.Hour)
+	if err := repo.AddMiReKyouInfo(ctx, m2); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	// FindMiReKyouはMiのFindMiと同じく射影ごとに行を返すので、
+	// 同一IDで複数行返ること自体は正しい。すべてが最新版であることを確認する
+	mirekyous, err := repo.FindMiReKyou(ctx, makeDefaultFindQuery())
+	if err != nil {
+		t.Fatalf("FindMiReKyou failed: %v", err)
+	}
+	ids := map[string]bool{}
+	for _, m := range mirekyous {
+		ids[m.ID] = true
+		if m.ID != "cached-mirekyou-ver" {
+			continue
+		}
+		if m.BoardName != "new" {
+			t.Errorf("BoardName = %q, want %q (古い版がキャッシュに残っている)", m.BoardName, "new")
+		}
+	}
+	if len(ids) != 1 {
+		t.Errorf("expected 1 unique cached id, got %d", len(ids))
+	}
+}
+
+func TestCachedMiReKyou_UpdateCacheRebuildsFromUnderlyingRep(t *testing.T) {
+	ctx := context.Background()
+	baseRepo := newTempMiReKyouRepo(t)
+	cacheDB := openMemoryDB(t)
+	m := &sync.RWMutex{}
+	repo, err := NewMiReKyouRepositoryCachedSQLite3Impl(ctx, baseRepo, nil, cacheDB, m, "MIREKYOU_CACHE_REBUILD")
+	if err != nil {
+		t.Fatalf("failed to create cached mirekyou repo: %v", err)
+	}
+	t.Cleanup(func() { repo.Close(ctx) })
+
+	// 下層リポジトリへ直接書いてからキャッシュを更新する
+	mirekyou := makeMiReKyou("rebuild-mirekyou-001", "target-rebuild")
+	if err := baseRepo.AddMiReKyouInfo(ctx, mirekyou); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	if err := repo.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache failed: %v", err)
+	}
+
+	mirekyous, err := repo.GetMiReKyousAllLatest(ctx)
+	if err != nil {
+		t.Fatalf("GetMiReKyousAllLatest failed: %v", err)
+	}
+	if len(mirekyous) != 1 || mirekyous[0].ID != "rebuild-mirekyou-001" {
+		t.Errorf("キャッシュ更新後に下層の内容が反映されていない: %+v", mirekyous)
+	}
+}
+
+func TestTempMiReKyou_AddAndGetByTXID(t *testing.T) {
+	repo := newMiReKyouTempRepo(t)
+	ctx := context.Background()
+
+	mirekyou := makeMiReKyou("temp-mirekyou-001", "target-001")
+	if err := repo.AddMiReKyouInfo(ctx, mirekyou, "tx-mrk-001", "user-001", "device-001"); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	mirekyous, err := repo.GetMiReKyousByTXID(ctx, "tx-mrk-001", "user-001", "device-001")
+	if err != nil {
+		t.Fatalf("GetMiReKyousByTXID failed: %v", err)
+	}
+	if len(mirekyous) != 1 {
+		t.Fatalf("expected 1 mirekyou, got %d", len(mirekyous))
+	}
+	if mirekyous[0].TargetID != "target-001" {
+		t.Errorf("TargetID = %q, want %q", mirekyous[0].TargetID, "target-001")
+	}
+}
+
+func TestTempMiReKyou_DeleteByTXID(t *testing.T) {
+	repo := newMiReKyouTempRepo(t)
+	ctx := context.Background()
+
+	mirekyou := makeMiReKyou("temp-mirekyou-del", "target-001")
+	if err := repo.AddMiReKyouInfo(ctx, mirekyou, "tx-mrk-del", "user-001", "device-001"); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	if err := repo.DeleteByTXID(ctx, "tx-mrk-del", "user-001", "device-001"); err != nil {
+		t.Fatalf("DeleteByTXID failed: %v", err)
+	}
+
+	mirekyous, err := repo.GetMiReKyousByTXID(ctx, "tx-mrk-del", "user-001", "device-001")
+	if err != nil {
+		t.Fatalf("GetMiReKyousByTXID failed: %v", err)
+	}
+	if len(mirekyous) != 0 {
+		t.Errorf("expected 0 mirekyous after delete, got %d", len(mirekyous))
+	}
+}
+
+// TestTempMiReKyou_TXIDIsolation は別TXのデータが混ざらないことを確認する。
+func TestTempMiReKyou_TXIDIsolation(t *testing.T) {
+	repo := newMiReKyouTempRepo(t)
+	ctx := context.Background()
+
+	m1 := makeMiReKyou("temp-mirekyou-tx1", "target-tx1")
+	if err := repo.AddMiReKyouInfo(ctx, m1, "tx-a", "user-001", "device-001"); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+	m2 := makeMiReKyou("temp-mirekyou-tx2", "target-tx2")
+	if err := repo.AddMiReKyouInfo(ctx, m2, "tx-b", "user-001", "device-001"); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	mirekyous, err := repo.GetMiReKyousByTXID(ctx, "tx-a", "user-001", "device-001")
+	if err != nil {
+		t.Fatalf("GetMiReKyousByTXID failed: %v", err)
+	}
+	if len(mirekyous) != 1 || mirekyous[0].ID != "temp-mirekyou-tx1" {
+		t.Errorf("別TXのMiReKyouが混ざっている: %+v", mirekyous)
+	}
+}

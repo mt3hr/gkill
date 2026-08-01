@@ -279,10 +279,12 @@ export function useRykvView(options: {
         }
         const q = base_query.clone()
         q.for_mi = true
-        switch (data_type) {
-            case "mi_start": q.mi_sort_type = MiSortType.estimate_start_time; break
-            case "mi_end": q.mi_sort_type = MiSortType.estimate_end_time; break
-            case "mi_limit": q.mi_sort_type = MiSortType.limit_time; break
+        // MiReKyouはmirekyou_*で来るので接頭辞を落として同じ扱いにする
+        const suffix = data_type.startsWith("mirekyou_") ? data_type.slice("mirekyou_".length) : data_type.slice("mi_".length)
+        switch (suffix) {
+            case "start": q.mi_sort_type = MiSortType.estimate_start_time; break
+            case "end": q.mi_sort_type = MiSortType.estimate_end_time; break
+            case "limit": q.mi_sort_type = MiSortType.limit_time; break
             default: q.mi_sort_type = MiSortType.create_time; break
         }
         return q

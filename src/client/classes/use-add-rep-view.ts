@@ -34,6 +34,7 @@ export function useAddRepView(options: { props: AddRepViewProps, emits: AddRepVi
         "tag",
         "text",
         "rekyou",
+        "mirekyou",
         "directory",
         "gpslog",
         "git_commit_log",

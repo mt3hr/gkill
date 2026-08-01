@@ -9,4 +9,5 @@ export default [
     { label: i18n.global.t("REP_TYPE_MI"), value: "mi" },
     { label: i18n.global.t("REP_TYPE_LANTANA"), value: "lantana" },
     { label: i18n.global.t("REP_TYPE_REKYOU"), value: "rekyou" },
+    { label: i18n.global.t("REP_TYPE_MIREKYOU"), value: "mirekyou" },
 ]

@@ -21,6 +21,9 @@
             <v-list-item @click="show_confirm_rekyou_dialog()">
                 <v-list-item-title>{{ i18n.global.t("REKYOU_TITLE") }}</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="show_add_mi_re_kyou_dialog()">
+                <v-list-item-title>{{ i18n.global.t("ADD_MI_REKYOU_TITLE") }}</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="show_add_notification_dialog()">
                 <v-list-item-title>{{ i18n.global.t("ADD_NOTIFICATION_TITLE") }}</v-list-item-title>
             </v-list-item>
@@ -62,6 +65,7 @@ const {
     show_add_text_dialog,
     show_add_notification_dialog,
     show_confirm_rekyou_dialog,
+    show_add_mi_re_kyou_dialog,
     open_folder,
     open_file,
     add_tag_from_history,

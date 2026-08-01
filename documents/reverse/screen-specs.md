@@ -326,6 +326,33 @@ DnoteView はダッシュボードのほか rykv 画面からも利用される�
 | チェック状態 | 入力 | 完了状態の変更 |
 | 通知設定 | 入力 | 通知の追加・編集 |
 
+#### リポストタスク（MiReKyou）
+
+既存のKyouをタスク化したもの。mi画面ではMiと同じ板に並び、同じ並び替え・チェック操作・板間ドラッグ移動ができる。
+タイトルは持たず、カード内には対象Kyouがそのまま描画される。
+
+**追加:** `add-mi-re-kyou-view.vue` / `add-mi-re-kyou-dialog.vue`
+（各Kyouのコンテキストメニュー「タスクにする」から開く）
+
+| 項目 | 種別 | 説明 |
+|---|---|---|
+| ボード | 入力 | 所属ボードの選択（新規板名の追加も可） |
+| 見積開始/終了 | 入力 | 日付・時刻ピッカー（クリア/現在ボタン付き） |
+| 期限 | 入力 | 日付・時刻ピッカー（クリア/現在ボタン付き） |
+| 通知設定 | 入力 | 期限通知の追加 |
+| 対象Kyou | 表示 | タスク化する対象のプレビュー |
+
+**表示:** `mi-re-kyou-view.vue`
+
+| 項目 | 種別 | 説明 |
+|---|---|---|
+| チェック状態 | 表示/操作 | 完了/未完了トグル |
+| ボード名 | 表示 | 所属ボード |
+| 対象Kyou | 表示 | リポスト元のKyouをそのまま描画 |
+| 見積開始/終了・期限 | 表示 | 設定されている場合のみ表示 |
+
+**編集:** `edit-mi-re-kyou-view.vue` / `edit-mi-re-kyou-dialog.vue`（タイトル欄なし）
+
 ### 3.3 timeis（打刻）画面仕様
 
 **追加:** `add-timeis-view.vue` / `add-timeis-dialog.vue`
@@ -613,6 +640,7 @@ Teleport to body
 | `add-tag-dialog.vue` | タグ |
 | `add-text-dialog.vue` | テキスト |
 | `add-notification-dialog.vue` | 通知 |
+| `add-mi-re-kyou-dialog.vue` | リポストタスク（既存Kyouのコンテキストメニュー「タスクにする」から開く） |
 
 #### データ編集ダイアログ
 
@@ -630,6 +658,7 @@ Teleport to body
 | `edit-notification-dialog.vue` | 通知 |
 | `edit-idf-kyou-dialog.vue` | ファイル |
 | `edit-re-kyou-dialog.vue` | リポスト |
+| `edit-mi-re-kyou-dialog.vue` | リポストタスク（板名・開始/終了/期限。タイトル欄なし） |
 
 #### 削除確認ダイアログ
 
@@ -745,6 +774,7 @@ CRUDリレーイベント:
 | `kc-context-menu.vue` | 数値 |
 | `idf-kyou-context-menu.vue` | ファイル（`is_zip=true` 時に「ZIP内容を閲覧」メニュー追加） |
 | `re-kyou-context-menu.vue` | リポスト |
+| `mi-re-kyou-context-menu.vue` | リポストタスク |
 | `git-commit-log-context-menu.vue` | Gitコミット |
 | `attached-tag-context-menu.vue` | 付帯タグ |
 | `attached-text-context-menu.vue` | 付帯テキスト |

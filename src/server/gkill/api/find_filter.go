@@ -359,8 +359,11 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		findCtx.ParsedFindQuery.UseRepTypes
 
 	if findCtx.ParsedFindQuery.ForMi {
-		// ForMiだったらMi以外は無視する
+		// ForMiだったらMi/MiReKyou以外は無視する
 		for _, rep := range repositories.MiReps {
+			typeMatchReps = append(typeMatchReps, rep)
+		}
+		for _, rep := range repositories.MiReKyouReps.MiReKyouRepositories {
 			typeMatchReps = append(typeMatchReps, rep)
 		}
 	} else if findCtx.ParsedFindQuery.IsImageOnly {
@@ -407,6 +410,10 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 				}
 			case "rekyou":
 				for _, rep := range repositories.ReKyouReps.ReKyouRepositories {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "mirekyou":
+				for _, rep := range repositories.MiReKyouReps.MiReKyouRepositories {
 					typeMatchReps = append(typeMatchReps, rep)
 				}
 			case "directory":
@@ -834,6 +841,38 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 		}
 	}
 
+	// MiReKyouもMiと同じ扱いで板に並べる。Miへ変換してから同じパイプラインに乗せる
+	mireKyouIDs := map[string]struct{}{}
+	withoutCreatedMiReKyous, err := findCtx.Repositories.MiReKyouReps.FindMiReKyou(ctx, &withoutCreatedMiFindQuery)
+	if err != nil {
+		err = fmt.Errorf("error at get without created mirekyous: %w", err)
+		return nil, err
+	}
+	for _, mirekyou := range withoutCreatedMiReKyous {
+		mi := mirekyou.ToMi()
+		mireKyouIDs[mi.ID] = struct{}{}
+		if existMi, exist := allMis[mi.ID]; exist {
+			if mi.UpdateTime.After(existMi.UpdateTime) {
+				allMis[mi.ID] = mi
+			}
+		} else {
+			allMis[mi.ID] = mi
+		}
+	}
+
+	withCreatedMiReKyous, err := findCtx.Repositories.MiReKyouReps.FindMiReKyou(ctx, findCtx.ParsedFindQuery)
+	if err != nil {
+		err = fmt.Errorf("error at get all mirekyous: %w", err)
+		return nil, err
+	}
+	for _, mirekyou := range withCreatedMiReKyous {
+		mi := mirekyou.ToMi()
+		mireKyouIDs[mi.ID] = struct{}{}
+		if _, exist := allMis[mi.ID]; !exist {
+			allMis[mi.ID] = mi
+		}
+	}
+
 	// チェック状態から対象Miを抽出する
 	targetMis := []reps.Mi{}
 	for _, mi := range allMis {
@@ -865,6 +904,7 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 	}
 
 	findCtx.MatchMisAtFilterMi = allMis
+	findCtx.MiReKyouIDs = mireKyouIDs
 	findCtx.MatchKyousCurrent = filteredKyous
 	return nil, nil
 }
@@ -1357,21 +1397,27 @@ func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) 
 	for _, mi := range findCtx.MatchMisAtFilterMi {
 		kyous, exist := findCtx.MatchKyousCurrent[mi.ID]
 		if exist {
+			// MiReKyou由来のものはクライアントがtyped_mirekyouを引けるよう接頭辞を変える
+			dataTypePrefix := "mi"
+			if _, isMiReKyou := findCtx.MiReKyouIDs[mi.ID]; isMiReKyou {
+				dataTypePrefix = "mirekyou"
+			}
+
 			kyous[0].DataType = mi.DataType
 			if string(findCtx.ParsedFindQuery.MiSortType) == string(find.CreateTime) {
-				kyous[0].DataType = "mi_create"
+				kyous[0].DataType = dataTypePrefix + "_create"
 				kyous[0].RelatedTime = mi.CreateTime
 			} else if string(findCtx.ParsedFindQuery.MiSortType) == string(find.EstimateStartTime) && mi.EstimateStartTime != nil {
-				kyous[0].DataType = "mi_start"
+				kyous[0].DataType = dataTypePrefix + "_start"
 				kyous[0].RelatedTime = *mi.EstimateStartTime
 			} else if string(findCtx.ParsedFindQuery.MiSortType) == string(find.EstimateEndTime) && mi.EstimateEndTime != nil {
-				kyous[0].DataType = "mi_end"
+				kyous[0].DataType = dataTypePrefix + "_end"
 				kyous[0].RelatedTime = *mi.EstimateEndTime
 			} else if string(findCtx.ParsedFindQuery.MiSortType) == string(find.LimitTime) && mi.LimitTime != nil {
-				kyous[0].DataType = "mi_limit"
+				kyous[0].DataType = dataTypePrefix + "_limit"
 				kyous[0].RelatedTime = *mi.LimitTime
 			} else {
-				kyous[0].DataType = "mi_create"
+				kyous[0].DataType = dataTypePrefix + "_create"
 				kyous[0].RelatedTime = mi.UpdateTime
 			}
 

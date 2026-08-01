@@ -70,6 +70,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.HandleFunc(g.APIAddress.AddMiAddress, g.wrapAuthRepos(g.HandleAddMi)).Methods(g.APIAddress.AddMiMethod)
 	router.HandleFunc(g.APIAddress.AddLantanaAddress, g.wrapAuthRepos(g.HandleAddLantana)).Methods(g.APIAddress.AddLantanaMethod)
 	router.HandleFunc(g.APIAddress.AddRekyouAddress, g.wrapAuthRepos(g.HandleAddRekyou)).Methods(g.APIAddress.AddRekyouMethod)
+	router.HandleFunc(g.APIAddress.AddMiReKyouAddress, g.wrapAuthRepos(g.HandleAddMiReKyou)).Methods(g.APIAddress.AddMiReKyouMethod)
 	// Update handlers
 	router.HandleFunc(g.APIAddress.UpdateTagAddress, g.wrapAuthRepos(g.HandleUpdateTag)).Methods(g.APIAddress.UpdateTagMethod)
 	router.HandleFunc(g.APIAddress.UpdateTextAddress, g.wrapAuthRepos(g.HandleUpdateText)).Methods(g.APIAddress.UpdateTextMethod)
@@ -83,6 +84,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.HandleFunc(g.APIAddress.UpdateIDFKyouAddress, g.wrapAuthRepos(g.HandleUpdateIDFKyou)).Methods(g.APIAddress.UpdateIDFKyouMethod)
 	router.HandleFunc(g.APIAddress.UpdateMiAddress, g.wrapAuthRepos(g.HandleUpdateMi)).Methods(g.APIAddress.UpdateMiMethod)
 	router.HandleFunc(g.APIAddress.UpdateRekyouAddress, g.wrapAuthRepos(g.HandleUpdateRekyou)).Methods(g.APIAddress.UpdateRekyouMethod)
+	router.HandleFunc(g.APIAddress.UpdateMiReKyouAddress, g.wrapAuthRepos(g.HandleUpdateMiReKyou)).Methods(g.APIAddress.UpdateMiReKyouMethod)
 	// Get handlers
 	router.HandleFunc(g.APIAddress.GetKyousAddress, g.wrapAuthRepos(g.HandleGetKyous)).Methods(g.APIAddress.GetKyousMethod)
 	router.HandleFunc(g.APIAddress.GetKyouAddress, g.wrapAuthRepos(g.HandleGetKyou)).Methods(g.APIAddress.GetKyouMethod)
@@ -94,6 +96,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.HandleFunc(g.APIAddress.GetMiAddress, g.wrapAuthRepos(g.HandleGetMi)).Methods(g.APIAddress.GetMiMethod)
 	router.HandleFunc(g.APIAddress.GetLantanaAddress, g.wrapAuthRepos(g.HandleGetLantana)).Methods(g.APIAddress.GetLantanaMethod)
 	router.HandleFunc(g.APIAddress.GetRekyouAddress, g.wrapAuthRepos(g.HandleGetRekyou)).Methods(g.APIAddress.GetRekyouMethod)
+	router.HandleFunc(g.APIAddress.GetMiReKyouAddress, g.wrapAuthRepos(g.HandleGetMiReKyou)).Methods(g.APIAddress.GetMiReKyouMethod)
 	router.HandleFunc(g.APIAddress.GetGitCommitLogAddress, g.wrapAuthRepos(g.HandleGetGitCommitLog)).Methods(g.APIAddress.GetGitCommitLogMethod)
 	router.HandleFunc(g.APIAddress.GetIDFKyouAddress, g.wrapAuthRepos(g.HandleGetIDFKyou)).Methods(g.APIAddress.GetIDFKyouMethod)
 	router.HandleFunc(g.APIAddress.GetMiBoardListAddress, g.wrapAuthRepos(g.HandleGetMiBoardList)).Methods(g.APIAddress.GetMiBoardListMethod)

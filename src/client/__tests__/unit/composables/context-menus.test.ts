@@ -127,6 +127,11 @@ describe('useKmemoContextMenu', () => {
     expect(emits).toHaveBeenCalledWith('requested_open_rykv_dialog', 'confirm_re_kyou', props.kyou)
   })
 
+  test('show_add_mi_re_kyou_dialog() emits with add_mi_re_kyou', async () => {
+    await menu.show_add_mi_re_kyou_dialog()
+    expect(emits).toHaveBeenCalledWith('requested_open_rykv_dialog', 'add_mi_re_kyou', props.kyou)
+  })
+
   test('add_tag_from_history() splits on \\u3001 and calls add_tag for each', async () => {
     props.gkill_api.add_tag.mockResolvedValue({
       messages: [{ message_code: 'MSG_OK' }],

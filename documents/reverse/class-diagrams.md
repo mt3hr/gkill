@@ -134,6 +134,19 @@ classDiagram
         %% 共通メタフィールド省略
     }
 
+    class MiReKyou {
+        +bool IsDeleted
+        +string ID
+        +string TargetID
+        +bool IsChecked
+        +string BoardName
+        +time.Time LimitTime
+        +time.Time EstimateStartTime
+        +time.Time EstimateEndTime
+        %% タイトルは持たない。表示は対象Kyouを描画する
+        %% 共通メタフィールド省略
+    }
+
     class IDFKyou {
         +bool IsDeleted
         +string ID
@@ -148,6 +161,7 @@ classDiagram
     Text --> Kyou : TARGET_ID で紐づく
     Notification --> Kyou : TARGET_ID で紐づく
     ReKyou --> Kyou : TARGET_ID でリポスト
+    MiReKyou --> Kyou : TARGET_ID でタスク化
 
     note for Kyou "全データ型の集約ビュー表現\nDataType フィールドで型を識別\nAPI レスポンスで統一的に返却"
 ```
@@ -272,6 +286,7 @@ classDiagram
 | Text | TextRepository | TextRepositorySqlite3Impl | TextRepositoryCachedSqlite3Impl | TextTempRepository |
 | Notification | NotificationRepository | NotificationRepositorySqlite3Impl | NotificationRepositoryCachedSqlite3Impl | NotificationTempRepository |
 | ReKyou | ReKyouRepository | ReKyouRepositorySqlite3Impl | ReKyouRepositoryCachedSqlite3Impl | ReKyouTempRepository |
+| MiReKyou | MiReKyouRepository | MiReKyouRepositorySqlite3Impl | MiReKyouRepositoryCachedSqlite3Impl | MiReKyouTempRepository |
 | IDFKyou | IDFKyouRepository | IDFKyouRepositorySqlite3Impl | IDFKyouRepositoryCachedSqlite3Impl | IDFKyouTempRepository |
 | GitCommitLog | GitCommitLogRepository | GitCommitLogRepositoryLocalDirImpl | GitCommitLogRepositoryCachedSqlite3Impl | — |
 | GPSLog | GPSLogRepository | GPSLogRepositoryGpxDirImpl | — | — |
@@ -301,6 +316,7 @@ classDiagram
         +LantanaRepositories LantanaReps
         +IDFKyouRepositories IDFKyouReps
         +ReKyouRepositories ReKyouReps
+        +MiReKyouRepositories MiReKyouReps
         +GitCommitLogRepositories GitCommitLogReps
         +GPSLogRepositories GPSLogReps
         +TagRepository WriteTagRep
@@ -315,6 +331,7 @@ classDiagram
         +LantanaRepository WriteLantanaRep
         +IDFKyouRepository WriteIDFKyouRep
         +ReKyouRepository WriteReKyouRep
+        +MiReKyouRepository WriteMiReKyouRep
     }
 
     class TempReps {
@@ -326,6 +343,7 @@ classDiagram
         +NlogTempRepository NlogTempRep
         +NotificationTempRepository NotificationTempRep
         +ReKyouTempRepository ReKyouTempRep
+        +MiReKyouTempRepository MiReKyouTempRep
         +TagTempRepository TagTempRep
         +TextTempRepository TextTempRep
         +TimeIsTempRepository TimeIsTempRep
@@ -512,6 +530,7 @@ classDiagram
         +IDFKyou? typed_idf_kyou
         +GitCommitLog? typed_git_commit_log
         +ReKyou? typed_rekyou
+        +MiReKyou? typed_mirekyou
         +load_attached_histories(query?) Promise
         +load_all(query?) Promise
     }
@@ -577,6 +596,15 @@ classDiagram
         +string target_id
     }
 
+    class MiReKyou {
+        +string target_id
+        +boolean is_checked
+        +string board_name
+        +Date limit_time
+        +Date estimate_start_time
+        +Date estimate_end_time
+    }
+
     class IDFKyou {
         +string target_rep_name
         +string target_file
@@ -605,6 +633,7 @@ classDiagram
     InfoBase <|-- Tag : extends
     InfoBase <|-- Text : extends
     InfoBase <|-- ReKyou : extends
+    InfoBase <|-- MiReKyou : extends
     InfoBase <|-- IDFKyou : extends
 
     Kyou o-- Kmemo : typed_kmemo
@@ -616,6 +645,7 @@ classDiagram
     Kyou o-- TimeIs : typed_timeis
     Kyou o-- IDFKyou : typed_idf_kyou
     Kyou o-- ReKyou : typed_rekyou
+    Kyou o-- MiReKyou : typed_mirekyou
 
     GkillAPI ..> Kyou : returns
     GkillAPI ..> Kmemo : returns

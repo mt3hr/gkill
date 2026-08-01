@@ -10,7 +10,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 
 ## テストファイル一覧
 
-### SQLite3 リポジトリ実装テスト（12ファイル）
+### SQLite3 リポジトリ実装テスト（13ファイル）
 
 | ファイル | テスト対象 |
 |---------|-----------|
@@ -25,13 +25,14 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | `text_repository_sqlite3_impl_test.go` | Text（テキスト注釈）リポジトリ |
 | `notification_repository_sqlite3_impl_test.go` | Notification（通知）リポジトリ |
 | `re_kyou_repository_sqlite3_impl_test.go` | ReKyou（リポスト）リポジトリ |
+| `mi_re_kyou_repository_sqlite3_impl_test.go` | MiReKyou（リポストタスク）リポジトリ。5射影・板名フィルタ・履歴・最新データ位置 |
 | `idf_kyou_repository_sqlite3_impl_test.go` | IDFKyou（ファイル）リポジトリ |
 
 ### キャッシュ・一時・ユーティリティテスト
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `cached_and_temp_test.go` | キャッシュ層 / 一時リポジトリ層の動作検証 |
+| `cached_and_temp_test.go` | キャッシュ層 / 一時リポジトリ層の動作検証（MiReKyou のキャッシュ再構築・TX分離を含む） |
 | `re_kyou_granular_cache_test.go` | ReKyou のグラニュラーキャッシュ動作検証 |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
 | `cache/latest_data_repository_address_dao_sqlite3_impl_test.go` | キャッシュアドレス DAO |

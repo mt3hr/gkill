@@ -202,6 +202,33 @@ export function makeReKyou(overrides: Record<string, unknown> = {}) {
   }
 }
 
+export function makeMiReKyou(overrides: Record<string, unknown> = {}) {
+  return {
+    is_deleted: false,
+    id: 'test-mirekyou-id',
+    rep_name: 'test-rep',
+    related_time: '2025-03-15T09:00:00+09:00',
+    data_type: 'mirekyou_create',
+    create_time: '2025-03-15T09:00:00+09:00',
+    create_app: 'gkill',
+    create_device: 'test-device',
+    create_user: 'admin',
+    update_time: '2025-03-15T09:00:00+09:00',
+    update_app: 'gkill',
+    update_device: 'test-device',
+    update_user: 'admin',
+    target_id: 'test-target-id',
+    is_checked: false,
+    board_name: 'default',
+    limit_time: null,
+    estimate_start_time: null,
+    estimate_end_time: null,
+    attached_kyou: null,
+    attached_histories: [],
+    ...overrides,
+  }
+}
+
 export function makeInfoBase(overrides: Record<string, unknown> = {}) {
   return {
     is_deleted: false,
