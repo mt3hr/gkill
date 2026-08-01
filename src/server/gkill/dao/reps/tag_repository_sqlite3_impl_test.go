@@ -166,3 +166,107 @@ func TestTagGetHistories(t *testing.T) {
 		t.Errorf("expected 2 history entries, got %d", len(histories))
 	}
 }
+
+// TestTagOnlyLatestVersionIsVisible は、TAGテーブルがappend-onlyであることを踏まえ、
+// IDごとにUPDATE_TIMEが最大の版だけが見えることを確認する。
+// 編集前のタグ名がタグ名一覧に出たり検索にヒットしたりしてはいけない
+func TestTagOnlyLatestVersionIsVisible(t *testing.T) {
+	repo := newTempTagRepo(t)
+	ctx := context.Background()
+
+	// リネームされたタグ (お避け -> お酒)
+	renamedOld := makeTag("tag-renamed", "target-renamed", "お避け")
+	renamedNew := makeTag("tag-renamed", "target-renamed", "お酒")
+	renamedNew.UpdateTime = renamedOld.UpdateTime.Add(1 * time.Minute)
+
+	// 削除されたタグ
+	deletedOld := makeTag("tag-deleted", "target-deleted", "ろ！麻雀")
+	deletedNew := makeTag("tag-deleted", "target-deleted", "ろ！麻雀")
+	deletedNew.UpdateTime = deletedOld.UpdateTime.Add(1 * time.Minute)
+	deletedNew.IsDeleted = true
+
+	// 生きているタグ
+	alive := makeTag("tag-alive", "target-renamed", "gkill")
+
+	for _, tag := range []Tag{renamedOld, renamedNew, deletedOld, deletedNew, alive} {
+		if err := repo.AddTagInfo(ctx, tag); err != nil {
+			t.Fatalf("AddTagInfo failed: %v", err)
+		}
+	}
+
+	t.Run("GetAllTagNames", func(t *testing.T) {
+		names, err := repo.GetAllTagNames(ctx)
+		if err != nil {
+			t.Fatalf("GetAllTagNames failed: %v", err)
+		}
+		nameSet := map[string]struct{}{}
+		for _, name := range names {
+			nameSet[name] = struct{}{}
+		}
+		for _, want := range []string{"お酒", "gkill"} {
+			if _, exist := nameSet[want]; !exist {
+				t.Errorf("tag name %q should be returned, got %v", want, names)
+			}
+		}
+		for _, notWant := range []string{"お避け", "ろ！麻雀"} {
+			if _, exist := nameSet[notWant]; exist {
+				t.Errorf("tag name %q should not be returned, got %v", notWant, names)
+			}
+		}
+	})
+
+	t.Run("GetTagsByTagName", func(t *testing.T) {
+		oldNameTags, err := repo.GetTagsByTagName(ctx, "お避け")
+		if err != nil {
+			t.Fatalf("GetTagsByTagName failed: %v", err)
+		}
+		if len(oldNameTags) != 0 {
+			t.Errorf("expected 0 tags for renamed-away name 'お避け', got %d", len(oldNameTags))
+		}
+
+		newNameTags, err := repo.GetTagsByTagName(ctx, "お酒")
+		if err != nil {
+			t.Fatalf("GetTagsByTagName failed: %v", err)
+		}
+		if len(newNameTags) != 1 {
+			t.Fatalf("expected 1 tag for 'お酒', got %d", len(newNameTags))
+		}
+		if !newNameTags[0].UpdateTime.Equal(renamedNew.UpdateTime) {
+			t.Errorf("UpdateTime = %v, want %v (latest version)", newNameTags[0].UpdateTime, renamedNew.UpdateTime)
+		}
+	})
+
+	t.Run("GetTagsByTargetID", func(t *testing.T) {
+		tags, err := repo.GetTagsByTargetID(ctx, "target-renamed")
+		if err != nil {
+			t.Fatalf("GetTagsByTargetID failed: %v", err)
+		}
+		// tag-renamed と tag-alive の最新版のみ。tag-renamedの旧版は含まれない
+		if len(tags) != 2 {
+			t.Fatalf("expected 2 tags for target-renamed, got %d: %v", len(tags), tags)
+		}
+		for _, tag := range tags {
+			if tag.Tag == "お避け" {
+				t.Errorf("renamed-away version should not be returned: %v", tag)
+			}
+		}
+	})
+
+	t.Run("FindTags", func(t *testing.T) {
+		oldNameTags, err := repo.FindTags(ctx, makeWordFindQuery([]string{"お避け"}))
+		if err != nil {
+			t.Fatalf("FindTags failed: %v", err)
+		}
+		if len(oldNameTags) != 0 {
+			t.Errorf("expected 0 tags for renamed-away name 'お避け', got %d", len(oldNameTags))
+		}
+
+		newNameTags, err := repo.FindTags(ctx, makeWordFindQuery([]string{"お酒"}))
+		if err != nil {
+			t.Fatalf("FindTags failed: %v", err)
+		}
+		if len(newNameTags) != 1 {
+			t.Errorf("expected 1 tag for 'お酒', got %d", len(newNameTags))
+		}
+	})
+}

@@ -163,7 +163,7 @@ import type { ReloadRepositoriesResponse } from "./req_res/reload-repositories-r
 import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-infos-response"
 import { GetUpdatedDatasByTimeRequest } from "./req_res/get-updated-datas-by-time-request"
 import { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
-import delete_gkill_kyou_cache, { delete_gkill_config_cache } from "../delete-gkill-cache"
+import delete_gkill_kyou_cache, { delete_gkill_all_tag_names_cache, delete_gkill_config_cache } from "../delete-gkill-cache"
 import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
@@ -647,6 +647,7 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: AddTagResponse = json
                 this.check_auth(response)
+                await delete_gkill_all_tag_names_cache()
                 return response
         }
 
@@ -823,6 +824,7 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: UpdateTagResponse = json
                 this.check_auth(response)
+                await delete_gkill_all_tag_names_cache()
                 return response
         }
 

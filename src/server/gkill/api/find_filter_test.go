@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -84,6 +85,68 @@ func TestReplaceLatestKyouInfos_ExcludeStaleKeepLatest(t *testing.T) {
 		for _, kyou := range kept {
 			if !kyou.UpdateTime.Equal(latestUpdateTime) {
 				t.Errorf("disableCache=%v: 古い版が残っている: %#v", disableCache, kyou)
+			}
+		}
+	}
+}
+
+// findTags はタグ名でタグを引く。TAGテーブルはappend-onlyなので、
+// リネームされたタグの旧版が残っており、旧名で検索するとヒットしてしまっていた。
+// isLatestData は --cache_in_memory=true (既定) だと常にtrueを返すno-opなので、
+// DisableLatestDataRepositoryCache の両ブランチで旧名がヒットしないことを確認する。
+func TestFindTags_ExcludeRenamedAwayVersion(t *testing.T) {
+	ctx := context.Background()
+
+	tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filepath.Join(t.TempDir(), "tag.db"), true)
+	if err != nil {
+		t.Fatalf("failed to create tag repository: %v", err)
+	}
+	t.Cleanup(func() { tagRep.Close(ctx) })
+
+	baseTime := time.Date(2026, 6, 27, 19, 2, 0, 0, time.Local)
+	latestTime := baseTime.Add(1 * time.Minute)
+	newTag := func(tagName string, updateTime time.Time) reps.Tag {
+		return reps.Tag{
+			ID: "tag-renamed", TargetID: "target-1", Tag: tagName,
+			RelatedTime: baseTime, CreateTime: baseTime, UpdateTime: updateTime,
+			CreateApp: "test", CreateDevice: "test", CreateUser: "test",
+			UpdateApp: "test", UpdateDevice: "test", UpdateUser: "test",
+		}
+	}
+	for _, tag := range []reps.Tag{newTag("お避け", baseTime), newTag("お酒", latestTime)} {
+		if err := tagRep.AddTagInfo(ctx, tag); err != nil {
+			t.Fatalf("AddTagInfo failed: %v", err)
+		}
+	}
+
+	latestDataAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{
+		"tag-renamed": {TargetID: "tag-renamed", DataUpdateTime: latestTime},
+	}
+
+	for _, disableCache := range []bool{true, false} {
+		for _, c := range []struct {
+			tagName   string
+			wantCount int
+		}{
+			{"お避け", 0}, // 編集前のタグ名ではヒットしない
+			{"お酒", 1},  // 最新のタグ名ではヒットする
+		} {
+			findCtx := &FindKyouContext{
+				DisableLatestDataRepositoryCache: disableCache,
+				ParsedFindQuery:                  &find.FindQuery{UseTags: true, Tags: []string{c.tagName}},
+				Repositories: &reps.GkillRepositories{
+					TagReps:                       reps.TagRepositories{tagRep},
+					LatestDataRepositoryAddresses: latestDataAddresses,
+				},
+				MatchTags: map[string]reps.Tag{},
+			}
+
+			f := &FindFilter{}
+			if _, err := f.findTags(ctx, findCtx); err != nil {
+				t.Fatalf("findTags failed: %v", err)
+			}
+			if len(findCtx.MatchTags) != c.wantCount {
+				t.Errorf("disableCache=%v tag=%q: MatchTags = %d, want %d", disableCache, c.tagName, len(findCtx.MatchTags), c.wantCount)
 			}
 		}
 	}
