@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import type { EditTextViewProps } from '@/pages/views/edit-text-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { UpdateTextRequest } from '@/classes/api/req_res/update-text-request'
@@ -26,9 +26,6 @@ export function useEditTextView(options: {
     const cloned_text: Ref<Text> = ref(props.text.clone())
     const text_value: Ref<string> = ref(cloned_text.value.text)
     const show_kyou: Ref<boolean> = ref(false)
-
-    // ── Watchers ──
-    watch([() => props.kyou, () => props.text], () => load())
 
     // ── Business logic ──
     async function load(): Promise<void> {

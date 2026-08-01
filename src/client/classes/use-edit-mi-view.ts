@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import type { EditMiViewProps } from '@/pages/views/edit-mi-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import moment from 'moment'
@@ -51,9 +51,6 @@ export function useEditMiView(options: {
     const show_end_time_menu = ref(false)
     const show_limit_date_menu = ref(false)
     const show_limit_time_menu = ref(false)
-
-    // ── Watchers ──
-    watch(() => props.kyou, () => load())
 
     // ── Business logic ──
     async function load(): Promise<void> {
