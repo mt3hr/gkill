@@ -24,31 +24,38 @@ go build -o gkill_plugin_claudecode.exe .
 $GKILL_HOME/plugins/{userID}/gkill_plugin_claudecode/
 ├── manifest.json             # このディレクトリの manifest.json をコピー
 ├── gkill_plugin_claudecode   # ビルドしたバイナリ（.exe は自動補完）
-├── config.json               # データソースのフォルダ指定（任意。次項参照）
+├── config.json               # データソースのフォルダ指定（初回起動時に自動生成。次項参照）
 └── cache.db                  # 自動生成されるキャッシュ
 ```
 
 `manifest.json` はバイナリに埋め込まれているので、配置先で吐かせることもできる。
 配布スクリプト（`scripts/UpdateGkillPlugins.ps1` / `termux-tasker/update_gkill_plugins.sh`）は
 バイナリだけを配り、`manifest.json` が無ければこれで生成する。バイナリと必ず一致する。
+既定の `config.json` も同様に吐ける（通常は起動時に自動生成されるので不要）。
 
 ```bash
 ./gkill_plugin_claudecode --gkill-print-manifest > manifest.json
+./gkill_plugin_claudecode --gkill-print-config   > config.json
 ```
 
 ### 3. データソースのフォルダを指定する
 
-プラグインフォルダに `config.json` を置く。未設定なら `~/.claude/projects` を使うので、
-既定の場所で足りるなら置かなくてよい。
+プラグインの初回起動時に、`manifest.json` と同じフォルダに `config.json` が
+**自動生成される**。これを編集してデータソースを指定する。既存ファイルは上書きされない。
+既定値は `~/.claude/projects` なので、既定の場所で足りるなら触らなくてよい。
 
 ```json
 {
+  "_comment": "書式の説明（読み飛ばされるので消してよい）",
+  "_example_source_dirs": ["~/.claude/projects", "D:/backup/ClaudeCode_*/**/*.jsonl"],
   "source_dirs": [
     "C:\\Users\\user\\.claude\\projects",
-    "~/DevPC/ClaudeCode_*"
+    "~/PC/ClaudeCode_*"
   ]
 }
 ```
+
+`_` で始まるキーは書式の説明用。プラグインは読まないので消してよい。
 
 **複数指定**は配列で書く（1つなら文字列でも可。文字列を改行 `\n` で区切ってもよい）。
 
@@ -59,7 +66,7 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_claudecode/
 |---|---|
 | `C:\Users\user\.claude\projects` | そのフォルダを再帰的に走査 |
 | `~/.claude/projects/C--Users-user-Git-*` | 特定のプロジェクトだけを選ぶ |
-| `~/DevPC/ClaudeCode_*` | dvnf の日付付きフォルダをパターンで拾う |
+| `~/PC/ClaudeCode_*` | dvnf の日付付きフォルダをパターンで拾う |
 | `C:\logs\**\*.jsonl` | `**` で階層をまたいで jsonl だけ拾う |
 
 先頭の `~` と環境変数（`$HOME` など）も展開される。同じセッションが複数の指定に含まれても、
@@ -72,7 +79,8 @@ Kyou の ID が UUID なので重複は自然に統合される。
 > サービス配下では**絶対パスで書くのが確実**。
 
 **編集は次の検索から反映される**（gkill の再起動は不要）。SDK は `config.json` をプロセス起動時に
-一度しか読まないため、このプラグインは毎回 `sdk.LoadConfig` で読み直している。
+一度しか読まない（無ければそこで既定値を書き出す）ため、このプラグインは毎回 `sdk.LoadConfig` で
+読み直している。
 
 現在の設定・パターンの展開結果・読み込み状況（対象ファイル数・Kyou数・最終スキャン時刻）は、
 gkill のプラグイン設定画面（`get_config_html`）で確認できる。何にもマッチしなかった指定もそこに出る。

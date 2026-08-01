@@ -59,7 +59,8 @@ func Run(h Handler) {
 		os.Exit(1)
 	}
 
-	cfg, err := LoadConfig(*pluginDir)
+	// config.jsonが無ければ雛形を作ってから読む。手で編集できるようにするため。
+	cfg, err := EnsureConfig(*pluginDir, h.DefaultConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error at load config: %v\n", err)
 		// 設定読み込み失敗は致命的ではないので続行
