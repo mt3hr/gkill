@@ -386,10 +386,10 @@ func TestExpandHome(t *testing.T) {
 func TestHasGlobMeta(t *testing.T) {
 	cases := map[string]bool{
 		`C:\Users\user\.claude\projects`: false,
-		`C:\Users\user\DevPC\Claude*`:   true,
-		`C:\logs\**\*.jsonl`:              true,
-		`C:\logs\file?.jsonl`:             true,
-		`C:\logs\[ab].jsonl`:              true,
+		`C:\Users\user\PC\Claude*`:       true,
+		`C:\logs\**\*.jsonl`:             true,
+		`C:\logs\file?.jsonl`:            true,
+		`C:\logs\[ab].jsonl`:             true,
 	}
 	for pattern, want := range cases {
 		if got := hasGlobMeta(pattern); got != want {

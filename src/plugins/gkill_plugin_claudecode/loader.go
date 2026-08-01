@@ -130,7 +130,7 @@ type expandedSource struct {
 // 例:
 //
 //	C:\Users\user\.claude\projects        → そのディレクトリを再帰走査
-//	C:\Users\user\DevPC\ClaudeCode_*     → マッチした各ディレクトリを再帰走査
+//	C:\Users\user\PC\ClaudeCode_*     → マッチした各ディレクトリを再帰走査
 //	C:\logs\**\*.jsonl                     → マッチした各ファイルを対象
 func expandSourcePatterns(patterns []string) expandedSource {
 	var result expandedSource
