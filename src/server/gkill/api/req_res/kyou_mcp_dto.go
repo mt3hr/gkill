@@ -87,6 +87,19 @@ type IDFPayloadMCPDTO struct {
 	FilePath string `json:"file_path,omitempty"`
 }
 
+// PluginPayloadMCPDTO はプラグインが提供するKyouのペイロード。
+// プラグインKyouの本文はgkill側に保存されておらず、プラグインから
+// コンテンツHTMLとして取り出すしかないので、その取得に必要な
+// rep_name / kyou_id をペイロードに含める（idfのrep_name/file_nameと同じ考え方）。
+type PluginPayloadMCPDTO struct {
+	Kind        string `json:"kind"` // "plugin"
+	DataType    string `json:"data_type"`
+	RepName     string `json:"rep_name"`
+	KyouID      string `json:"kyou_id"`
+	PluginName  string `json:"plugin_name,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
 type GitPayloadMCPDTO struct {
 	Kind          string `json:"kind"` // "git_commit_log"
 	CommitMessage string `json:"commit_message"`

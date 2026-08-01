@@ -248,6 +248,67 @@ describe("handleToolCall — entity defaults", () => {
 });
 
 // ---------------------------------------------------------------------------
+// handleToolCall — plugin tools
+// ---------------------------------------------------------------------------
+describe("handleToolCall — plugin tools", () => {
+  test("dispatches gkill_get_plugin_list to /api/get_plugin_list", async () => {
+    const mockClient = createMockClient({
+      callApi: vi.fn().mockResolvedValue({
+        plugins: [{ name: "gkill_plugin_claudecode", rep_name: "Claude Code", is_alive: true }],
+        errors: [],
+      }),
+    });
+    const server = new McpServer(mockClient);
+
+    const result = await server.handleToolCall("gkill_get_plugin_list", {});
+
+    expect(mockClient.callApi).toHaveBeenCalledWith("/api/get_plugin_list", {}, true, null);
+    expect(result.plugins).toHaveLength(1);
+  });
+
+  test("dispatches gkill_get_plugin_content to /api/get_plugin_content_html and converts to text", async () => {
+    const mockClient = createMockClient({
+      callApi: vi.fn().mockResolvedValue({
+        html: "<html><head><style>p{color:red}</style></head><body><p>会話の本文</p></body></html>",
+        errors: [],
+      }),
+    });
+    const server = new McpServer(mockClient);
+
+    const result = await server.handleToolCall("gkill_get_plugin_content", {
+      rep_name: "Claude Code",
+      kyou_id: "kyou-1",
+    });
+
+    expect(mockClient.callApi).toHaveBeenCalledWith(
+      "/api/get_plugin_content_html",
+      { rep_name: "Claude Code", kyou_id: "kyou-1" },
+      true,
+      null,
+    );
+    expect(result.text).toBe("会話の本文");
+    expect(result.html).toBeUndefined();
+  });
+
+  test("returns raw html when format=html", async () => {
+    const html = "<html><body><p>本文</p></body></html>";
+    const mockClient = createMockClient({
+      callApi: vi.fn().mockResolvedValue({ html, errors: [] }),
+    });
+    const server = new McpServer(mockClient);
+
+    const result = await server.handleToolCall("gkill_get_plugin_content", {
+      rep_name: "r",
+      kyou_id: "k",
+      format: "html",
+    });
+
+    expect(result.html).toBe(html);
+    expect(result.text).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // handleToolCall — unknown tool
 // ---------------------------------------------------------------------------
 describe("handleToolCall — error cases", () => {
@@ -280,9 +341,9 @@ describe("JSON-RPC protocol", () => {
     expect(response.result).toEqual({});
   });
 
-  test("tools/list returns 28 tools", async () => {
+  test("tools/list returns 30 tools", async () => {
     const response = await server.handleMessage({ jsonrpc: "2.0", id: 3, method: "tools/list" });
-    expect(response.result.tools).toHaveLength(28);
+    expect(response.result.tools).toHaveLength(30);
   });
 
   test("tools/list includes all expected tool names", async () => {
@@ -318,6 +379,9 @@ describe("JSON-RPC protocol", () => {
     expect(names).toContain("gkill_update_kc");
     expect(names).toContain("gkill_update_tag");
     expect(names).toContain("gkill_update_text");
+    // Plugin tools
+    expect(names).toContain("gkill_get_plugin_list");
+    expect(names).toContain("gkill_get_plugin_content");
   });
 
   test("unknown method returns error", async () => {
