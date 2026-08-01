@@ -141,6 +141,53 @@ describe("handleToolCall", () => {
     expect(result.mi_default_board).toBe("default");
   });
 
+  test("dispatches gkill_get_plugin_list to /api/get_plugin_list", async () => {
+    mockClient.callRead.mockResolvedValue({
+      plugins: [{ name: "gkill_plugin_claudecode", rep_name: "Claude Code", is_alive: true }],
+      errors: [],
+    });
+
+    const result = await server.handleToolCall("gkill_get_plugin_list", {});
+
+    expect(mockClient.callRead).toHaveBeenCalledWith("/api/get_plugin_list", {}, true, null);
+    expect(result.plugins).toHaveLength(1);
+  });
+
+  test("dispatches gkill_get_plugin_content to /api/get_plugin_content_html and converts to text", async () => {
+    mockClient.callRead.mockResolvedValue({
+      html: "<html><head><style>p{color:red}</style></head><body><p>会話の本文</p></body></html>",
+      errors: [],
+    });
+
+    const result = await server.handleToolCall("gkill_get_plugin_content", {
+      rep_name: "Claude Code",
+      kyou_id: "kyou-1",
+    });
+
+    expect(mockClient.callRead).toHaveBeenCalledWith(
+      "/api/get_plugin_content_html",
+      { rep_name: "Claude Code", kyou_id: "kyou-1" },
+      true,
+      null,
+    );
+    expect(result.text).toBe("会話の本文");
+    expect(result.html).toBeUndefined();
+  });
+
+  test("passes currentSessionId to plugin tools too", async () => {
+    mockClient.callRead.mockResolvedValue({ html: "<p>x</p>", errors: [] });
+    server.currentSessionId = "oauth-session-xyz";
+
+    await server.handleToolCall("gkill_get_plugin_content", { rep_name: "r", kyou_id: "k" });
+
+    expect(mockClient.callRead).toHaveBeenCalledWith(
+      "/api/get_plugin_content_html",
+      expect.any(Object),
+      true,
+      "oauth-session-xyz",
+    );
+  });
+
   test("throws for unknown tool name", async () => {
     await expect(server.handleToolCall("nonexistent_tool", {})).rejects.toThrow(
       "Unknown tool: nonexistent_tool",
@@ -227,12 +274,14 @@ describe("handleMessage", () => {
     expect(response.jsonrpc).toBe("2.0");
     expect(response.id).toBe(2);
     expect(Array.isArray(response.result.tools)).toBe(true);
-    expect(response.result.tools.length).toBe(8);
+    expect(response.result.tools.length).toBe(10);
 
     const toolNames = response.result.tools.map((t) => t.name);
     expect(toolNames).toContain("gkill_get_kyous");
     expect(toolNames).toContain("gkill_get_all_tag_names");
     expect(toolNames).toContain("gkill_get_idf_file");
+    expect(toolNames).toContain("gkill_get_plugin_list");
+    expect(toolNames).toContain("gkill_get_plugin_content");
   });
 
   test("responds to tools/call with tool result", async () => {

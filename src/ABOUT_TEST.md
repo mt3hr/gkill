@@ -2,7 +2,7 @@
 
 ## 概要
 
-gkill プロジェクト全体で約2,310件のテストが存在する（Go テスト関数 588 + フロントエンドユニット 790 + E2E 206 + MCP 602 + Android 12 + Wear OS 114）。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
+gkill プロジェクト全体で約2,380件のテストが存在する（Go テスト関数 594 + フロントエンドユニット 790 + E2E 206 + MCP 661 + Android 12 + Wear OS 114）。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントをカバーしている。
 
 ## テスト統計
 
@@ -10,10 +10,10 @@ gkill プロジェクト全体で約2,310件のテストが存在する（Go テ
 
 | コンポーネント | テスト宣言数 | フレームワーク |
 |--------------|---------|---------------|
-| Go バックエンド (`server/`) | 588 | Go `testing` |
+| Go バックエンド (`server/`) | 594 | Go `testing` |
 | フロントエンド ユニット (`client/`) | 790 | Vitest |
 | フロントエンド E2E (`client/`) | 206 | Playwright |
-| MCP サーバ (`mcp/`) | 602 | Vitest |
+| MCP サーバ (`mcp/`) | 661 | Vitest |
 | Android (`android/`) | 12 | JUnit 4 |
 | Wear OS (`wear_os/`) | 114 | JUnit 4 + MockK |
 | **合計** | **~2,312** | |
@@ -68,7 +68,7 @@ grep -rhE '^\s*test\(' src/client/__tests__/e2e --include=*.ts | wc -l
 | `server/gkill/usecase/` | [server/gkill/usecase/ABOUT_TEST.md](server/gkill/usecase/ABOUT_TEST.md) | ビジネスロジック層（間接テスト） |
 | `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) | DVNF ファイル管理 |
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) | CLI エントリポイント |
-| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（602テスト） |
+| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（661テスト） |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（114テスト） |
 | `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) | プラグイン（独自テストなし、API統合テストでカバー） |
