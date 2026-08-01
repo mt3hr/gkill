@@ -9,6 +9,7 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
         'mi',
         'lantana',
         'rekyou',
+        'mirekyou',
         'git_commit_log',
         'idf_kyou',
         'tags_by_id',

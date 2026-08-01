@@ -64,6 +64,8 @@ type GkillRepositories struct {
 
 	ReKyouReps ReKyouRepositories
 
+	MiReKyouReps MiReKyouRepositories
+
 	GitCommitLogReps GitCommitLogRepositories
 
 	GPSLogReps GPSLogRepositories
@@ -95,6 +97,8 @@ type GkillRepositories struct {
 	WriteIDFKyouRep IDFKyouRepository
 
 	WriteReKyouRep ReKyouRepository
+
+	WriteMiReKyouRep MiReKyouRepository
 
 	WriteGPSLogRep GPSLogRepository
 
@@ -312,6 +316,10 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 		return err
 	}
 	if err := g.ReKyouReps.Close(ctx); err != nil {
+		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+		return err
+	}
+	if err := g.MiReKyouReps.Close(ctx); err != nil {
 		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return err
 	}
@@ -611,6 +619,21 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			return err
 		}
 		if err := persistLatestDataRepositoryAddresses(reKyouAddrs, time.Now()); err != nil {
+			return err
+		}
+	}
+
+	// MiReKyouもReKyouと同じくターゲット解決のため他repのアドレス確定後に更新する
+	if gkill_options.CacheMiReKyouReps != nil && *gkill_options.CacheMiReKyouReps && len(g.MiReKyouReps.MiReKyouRepositories) > 0 {
+		if err := g.MiReKyouReps.UpdateCache(ctx); err != nil {
+			return err
+		}
+
+		miReKyouAddrs, err := g.MiReKyouReps.GetLatestDataRepositoryAddress(ctx, false)
+		if err != nil {
+			return err
+		}
+		if err := persistLatestDataRepositoryAddresses(miReKyouAddrs, time.Now()); err != nil {
 			return err
 		}
 	}

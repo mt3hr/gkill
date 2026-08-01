@@ -1,0 +1,17 @@
+package req_res
+
+import "github.com/mt3hr/gkill/src/server/gkill/dao/reps"
+
+type UpdateMiReKyouRequest struct {
+	SessionID string `json:"session_id"`
+
+	MiReKyou reps.MiReKyou `json:"mirekyou"`
+
+	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
+
+	UpdatedKyou *reps.Kyou `json:"updated_kyou"`
+
+	WantResponseKyou bool `json:"want_response_kyou"`
+}

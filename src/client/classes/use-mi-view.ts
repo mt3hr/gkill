@@ -15,7 +15,9 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { Tag } from '@/classes/datas/tag'
 import { Mi } from '@/classes/datas/mi'
+import { MiReKyou } from '@/classes/datas/mi-re-kyou'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
+import { UpdateMiReKyouRequest } from '@/classes/api/req_res/update-mi-re-kyou-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
@@ -30,6 +32,34 @@ const MI_DROP_ALLOWED_KEYS = new Set([
     "title", "is_checked", "board_name",
     "limit_time", "estimate_start_time", "estimate_end_time",
 ])
+
+// MiReKyou版。MiReKyouはtitleを持たず、代わりにtarget_idを持つ
+const MI_REKYOU_DROP_ALLOWED_KEYS = new Set([
+    "is_deleted", "id", "rep_name", "related_time", "data_type",
+    "create_time", "create_app", "create_device", "create_user",
+    "update_time", "update_app", "update_user", "update_device",
+    "target_id", "is_checked", "board_name",
+    "limit_time", "estimate_start_time", "estimate_end_time",
+])
+
+// DataTransferのJSONは外部由来なので、許可したフィールド以外は捨てる
+function parse_dropped_task<T extends object>(json: unknown, instance: T, allowed_keys: Set<string>): T {
+    for (const key in json as object) {
+        if (!allowed_keys.has(key)) {
+            continue
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (instance as any)[key] = (json as any)[key]
+
+        // 時刻はDate型に変換
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (key.endsWith("time") && (instance as any)[key]) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (instance as any)[key] = new Date((instance as any)[key])
+        }
+    }
+    return instance
+}
 
 export function useMiView(options: {
     props: miViewProps,
@@ -143,7 +173,7 @@ export function useMiView(options: {
     }
 
     function isTargetMiKyou(kyou: Kyou, miId: string): boolean {
-        return kyou.typed_mi?.id === miId || kyou.id === miId
+        return kyou.typed_mi?.id === miId || kyou.typed_mirekyou?.id === miId || kyou.id === miId
     }
 
     function findKyouInstancesByMiId(miId: string): Array<{ columnIndex: number, rowIndex: number, kyou: Kyou }> {
@@ -185,19 +215,20 @@ export function useMiView(options: {
         column.push(kyou)
     }
 
-    function patchKyouMiBoardName(kyou: Kyou, updatedMi: Mi): void {
-        if (!kyou.typed_mi) {
-            kyou.typed_mi = new Mi()
-        }
-        kyou.typed_mi.id = updatedMi.id
-        kyou.typed_mi.board_name = updatedMi.board_name
-        kyou.typed_mi.update_app = updatedMi.update_app
-        kyou.typed_mi.update_device = updatedMi.update_device
-        kyou.typed_mi.update_user = updatedMi.update_user
-        kyou.typed_mi.update_time = updatedMi.update_time
+    function patchKyouMiBoardName(kyou: Kyou, updatedMi: Mi | MiReKyou): void {
+        // MiReKyouのKyouにはtyped_mirekyouが載っているのでそちらを更新する
+        const target = (updatedMi instanceof MiReKyou || kyou.typed_mirekyou)
+            ? (kyou.typed_mirekyou ??= new MiReKyou())
+            : (kyou.typed_mi ??= new Mi())
+        target.id = updatedMi.id
+        target.board_name = updatedMi.board_name
+        target.update_app = updatedMi.update_app
+        target.update_device = updatedMi.update_device
+        target.update_user = updatedMi.update_user
+        target.update_time = updatedMi.update_time
     }
 
-    function applyBoardMoveLocally(miId: string, beforeBoard: string, afterBoard: string, updatedMi: Mi): void {
+    function applyBoardMoveLocally(miId: string, beforeBoard: string, afterBoard: string, updatedMi: Mi | MiReKyou): void {
         const instances = findKyouInstancesByMiId(miId)
         if (instances.length === 0) {
             return
@@ -585,67 +616,82 @@ export function useMiView(options: {
     }
 
     async function on_drop_board_task(e: DragEvent, find_kyou_query: FindKyouQuery) {
-        let mi: Mi
+        // MiとMiReKyouのどちらがドロップされたか判定する
+        const mi_json = e.dataTransfer!.getData("gkill_mi")
+        const mirekyou_json = e.dataTransfer!.getData("gkill_mi_re_kyou")
+        let task: Mi | MiReKyou
         try {
-            const json_mi = JSON.parse(e.dataTransfer!.getData("gkill_mi"))
-            const parsed_mi = new Mi()
-            for (const key in json_mi) {
-                // DataTransferのJSONは外部由来なので、許可したフィールド以外は捨てる
-                if (!MI_DROP_ALLOWED_KEYS.has(key)) {
-                    continue
-                }
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (parsed_mi as any)[key] = (json_mi as any)[key]
-
-                // 時刻はDate型に変換
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if (key.endsWith("time") && (parsed_mi as any)[key]) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (parsed_mi as any)[key] = new Date((parsed_mi as any)[key])
-                }
+            if (mirekyou_json !== "") {
+                task = parse_dropped_task(JSON.parse(mirekyou_json), new MiReKyou(), MI_REKYOU_DROP_ALLOWED_KEYS)
+            } else if (mi_json !== "") {
+                task = parse_dropped_task(JSON.parse(mi_json), new Mi(), MI_DROP_ALLOWED_KEYS)
+            } else {
+                return
             }
-            mi = parsed_mi
         } catch (e: unknown) {
             console.error(e)
             return
         }
 
-        if (!mi.id || mi.id == "") {
+        if (!task.id || task.id == "") {
             return
         }
 
         e!.preventDefault()
         e!.stopPropagation()
 
-        const before_board_name = mi.board_name
+        const before_board_name = task.board_name
         const after_board_name = find_kyou_query.mi_board_name
         if (before_board_name === after_board_name || !find_kyou_query.use_mi_board_name) {
             return
         }
 
-        mi.board_name = find_kyou_query.mi_board_name
-        mi.update_app = "gkill"
-        mi.update_device = props.application_config.device
-        mi.update_time = new Date(Date.now())
-        mi.update_user = props.application_config.user_id
+        task.board_name = find_kyou_query.mi_board_name
+        task.update_app = "gkill"
+        task.update_device = props.application_config.device
+        task.update_time = new Date(Date.now())
+        task.update_user = props.application_config.user_id
 
-        const req = new UpdateMiRequest()
-        req.mi = mi
-        req.want_response_kyou = true
-        const res = await props.gkill_api.update_mi(req)
-        if (res.errors && res.errors.length !== 0) {
-            emits('received_errors', res.errors)
-            return
+        let updated_task: Mi | MiReKyou = task
+        let updated_kyou: Kyou | null = null
+        if (task instanceof MiReKyou) {
+            const req = new UpdateMiReKyouRequest()
+            req.mirekyou = task
+            req.want_response_kyou = true
+            const res = await props.gkill_api.update_mirekyou(req)
+            if (res.errors && res.errors.length !== 0) {
+                emits('received_errors', res.errors)
+                return
+            }
+            if (res.messages && res.messages.length !== 0) {
+                emits('received_messages', res.messages)
+            }
+            if (res.updated_mirekyou && res.updated_mirekyou.id !== "") {
+                updated_task = res.updated_mirekyou
+            }
+            updated_kyou = res.updated_kyou
+        } else {
+            const req = new UpdateMiRequest()
+            req.mi = task
+            req.want_response_kyou = true
+            const res = await props.gkill_api.update_mi(req)
+            if (res.errors && res.errors.length !== 0) {
+                emits('received_errors', res.errors)
+                return
+            }
+            if (res.messages && res.messages.length !== 0) {
+                emits('received_messages', res.messages)
+            }
+            if (res.updated_mi && res.updated_mi.id !== "") {
+                updated_task = res.updated_mi
+            }
+            updated_kyou = res.updated_kyou
         }
-        if (res.messages && res.messages.length !== 0) {
-            emits('received_messages', res.messages)
-        }
 
-        const updatedMi = (res.updated_mi && res.updated_mi.id !== "") ? res.updated_mi : mi
-        applyBoardMoveLocally(mi.id, before_board_name, after_board_name, updatedMi)
+        applyBoardMoveLocally(task.id, before_board_name, after_board_name, updated_task)
 
-        if (res.updated_kyou) {
-            emits('updated_kyou', res.updated_kyou)
+        if (updated_kyou) {
+            emits('updated_kyou', updated_kyou)
         }
     }
 

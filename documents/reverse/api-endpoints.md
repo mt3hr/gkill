@@ -213,6 +213,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 | `/api/add_mi` | Mi | タスク追加 |
 | `/api/add_lantana` | Lantana | 気分値（0-10）追加 |
 | `/api/add_rekyou` | ReKyou | リポスト追加 |
+| `/api/add_mirekyou` | MiReKyou | リポストタスク追加 |
 | `/api/add_tag` | Tag | タグ追加（対象KyouのIDを指定） |
 | `/api/add_text` | Text | テキスト注釈追加（対象KyouのIDを指定） |
 | `/api/add_gkill_notification` | Notification | 通知追加（対象KyouのIDを指定） |
@@ -232,6 +233,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_lantana` | Lantana | 気分値更新 |
 | `/api/update_idf_kyou` | IDFKyou | ファイル参照更新 |
 | `/api/update_rekyou` | ReKyou | リポスト更新 |
+| `/api/update_mirekyou` | MiReKyou | リポストタスク更新 |
 | `/api/update_tag` | Tag | タグ更新 |
 | `/api/update_text` | Text | テキスト注釈更新 |
 | `/api/update_gkill_notification` | Notification | 通知更新 |
@@ -250,6 +252,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/get_mi` | Mi取得 |
 | `/api/get_lantana` | Lantana取得 |
 | `/api/get_rekyou` | ReKyou取得 |
+| `/api/get_mirekyou` | MiReKyou取得 |
 | `/api/get_git_commit_log` | Gitコミットログ取得 |
 | `/api/get_idf_kyou` | IDFKyou（ファイル参照）取得 |
 | `/api/get_updated_datas_by_time` | 指定時刻以降に更新されたデータ取得 |

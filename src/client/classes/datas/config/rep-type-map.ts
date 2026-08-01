@@ -11,5 +11,6 @@ export function generate_rep_type_map(): Map<string, string> {
     map.set("Mi", i18n.global.t("REP_TYPE_MI"))
     map.set("Lantana", i18n.global.t("REP_TYPE_LANTANA"))
     map.set("ReKyou", i18n.global.t("REP_TYPE_REKYOU"))
+    map.set("MiReKyou", i18n.global.t("REP_TYPE_MIREKYOU"))
     return map
 }

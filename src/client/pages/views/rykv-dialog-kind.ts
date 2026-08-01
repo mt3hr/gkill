@@ -16,6 +16,8 @@ export type RykvDialogKind =
   | 'edit_urlog'
   | 'edit_idf_kyou'
   | 'edit_re_kyou'
+  | 'add_mi_re_kyou'
+  | 'edit_mi_re_kyou'
   | 'add_tag'
   | 'add_text'
   | 'add_notification'

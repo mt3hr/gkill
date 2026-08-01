@@ -17,6 +17,8 @@ import type { AddNlogRequest } from "./req_res/add-nlog-request"
 import type { AddNlogResponse } from "./req_res/add-nlog-response"
 import type { AddReKyouRequest } from "./req_res/add-re-kyou-request"
 import type { AddReKyouResponse } from "./req_res/add-re-kyou-response"
+import type { AddMiReKyouRequest } from "./req_res/add-mi-re-kyou-request"
+import type { AddMiReKyouResponse } from "./req_res/add-mi-re-kyou-response"
 import type { AddShareKyouListInfoRequest } from "./req_res/add-share-kyou-list-infos-request"
 import { AddShareKyouListInfoResponse } from "./req_res/add-share-kyou-list-info-response"
 import type { AddTagRequest } from "./req_res/add-tag-request"
@@ -57,6 +59,8 @@ import type { GetNlogRequest } from "./req_res/get-nlog-request"
 import { GetNlogResponse } from "./req_res/get-nlog-response"
 import type { GetReKyouRequest } from "./req_res/get-re-kyou-request"
 import { GetReKyouResponse } from "./req_res/get-re-kyou-response"
+import type { GetMiReKyouRequest } from "./req_res/get-mi-re-kyou-request"
+import { GetMiReKyouResponse } from "./req_res/get-mi-re-kyou-response"
 import type { GetShareKyouListInfosRequest } from "./req_res/get-share-kyou-list-infos-request"
 import type { GetSharedKyousRequest } from "./req_res/get-shared-kyous-request"
 import { GetSharedKyousResponse } from "./req_res/get-shared-kyous-response"
@@ -96,6 +100,8 @@ import type { UpdateNlogRequest } from "./req_res/update-nlog-request"
 import type { UpdateNlogResponse } from "./req_res/update-nlog-response"
 import type { UpdateReKyouRequest } from "./req_res/update-re-kyou-request"
 import type { UpdateReKyouResponse } from "./req_res/update-re-kyou-response"
+import type { UpdateMiReKyouRequest } from "./req_res/update-mi-re-kyou-request"
+import type { UpdateMiReKyouResponse } from "./req_res/update-mi-re-kyou-response"
 import type { UpdateShareKyouListInfoRequest } from "./req_res/update-share-kyou-list-info-request"
 import { UpdateShareKyouListInfoResponse } from "./req_res/update-share-kyou-list-info-response"
 import type { UpdateTagRequest } from "./req_res/update-tag-request"
@@ -129,6 +135,7 @@ import { TimeIs } from "../datas/time-is"
 import { Mi } from "../datas/mi"
 import { Lantana } from "../datas/lantana"
 import { ReKyou } from "../datas/re-kyou"
+import { MiReKyou } from "../datas/mi-re-kyou"
 import { GitCommitLog } from "../datas/git-commit-log"
 import { IDFKyou } from "../datas/idf-kyou"
 import type { GetIDFKyouRequest } from "./req_res/get-idf-kyou-request"
@@ -223,6 +230,7 @@ export class GkillAPI {
         add_mi_address: string
         add_lantana_address: string
         add_rekyou_address: string
+        add_mirekyou_address: string
         update_tag_address: string
         update_text_address: string
         update_notification_address: string
@@ -235,6 +243,7 @@ export class GkillAPI {
         update_idf_kyou_address: string
         update_mi_address: string
         update_rekyou_address: string
+        update_mirekyou_address: string
         get_kyous_address: string
         get_kyou_address: string
         get_kmemo_address: string
@@ -245,6 +254,7 @@ export class GkillAPI {
         get_mi_address: string
         get_lantana_address: string
         get_rekyou_address: string
+        get_mirekyou_address: string
         get_git_commit_log_address: string
         get_idf_kyou_address: string
         get_mi_board_list_address: string
@@ -314,6 +324,7 @@ export class GkillAPI {
         add_mi_method: string
         add_lantana_method: string
         add_rekyou_method: string
+        add_mirekyou_method: string
         update_tag_method: string
         update_text_method: string
         update_notification_method: string
@@ -326,6 +337,7 @@ export class GkillAPI {
         update_lantana_method: string
         update_idf_kyou_method: string
         update_rekyou_method: string
+        update_mirekyou_method: string
         get_kyous_method: string
         get_kyou_method: string
         get_kmemo_method: string
@@ -338,6 +350,7 @@ export class GkillAPI {
         get_git_commit_log_method: string
         get_idf_kyou_method: string
         get_rekyou_method: string
+        get_mirekyou_method: string
         get_rekyous_method: string
         get_git_commit_logs_method: string
         get_mi_board_list_method: string
@@ -408,6 +421,7 @@ export class GkillAPI {
                 this.add_mi_address = "/api/add_mi"
                 this.add_lantana_address = "/api/add_lantana"
                 this.add_rekyou_address = "/api/add_rekyou"
+                this.add_mirekyou_address = "/api/add_mirekyou"
                 this.update_tag_address = "/api/update_tag"
                 this.update_text_address = "/api/update_text"
                 this.update_notification_address = "/api/update_gkill_notification"
@@ -420,6 +434,7 @@ export class GkillAPI {
                 this.update_idf_kyou_address = "/api/update_idf_kyou"
                 this.update_mi_address = "/api/update_mi"
                 this.update_rekyou_address = "/api/update_rekyou"
+                this.update_mirekyou_address = "/api/update_mirekyou"
                 this.get_kyous_address = "/api/get_kyous"
                 this.get_kyou_address = "/api/get_kyou"
                 this.get_kmemo_address = "/api/get_kmemo"
@@ -430,6 +445,7 @@ export class GkillAPI {
                 this.get_mi_address = "/api/get_mi"
                 this.get_lantana_address = "/api/get_lantana"
                 this.get_rekyou_address = "/api/get_rekyou"
+                this.get_mirekyou_address = "/api/get_mirekyou"
                 this.get_git_commit_log_address = "/api/get_git_commit_log"
                 this.get_idf_kyou_address = "/api/get_idf_kyou"
                 this.get_mi_board_list_address = "/api/get_mi_board_list"
@@ -497,6 +513,7 @@ export class GkillAPI {
                 this.add_mi_method = "POST"
                 this.add_lantana_method = "POST"
                 this.add_rekyou_method = "POST"
+                this.add_mirekyou_method = "POST"
                 this.update_tag_method = "POST"
                 this.update_text_method = "POST"
                 this.update_notification_method = "POST"
@@ -509,6 +526,7 @@ export class GkillAPI {
                 this.update_lantana_method = "POST"
                 this.update_idf_kyou_method = "POST"
                 this.update_rekyou_method = "POST"
+                this.update_mirekyou_method = "POST"
                 this.get_kyous_method = "POST"
                 this.get_kyou_method = "POST"
                 this.get_kmemo_method = "POST"
@@ -521,6 +539,7 @@ export class GkillAPI {
                 this.get_git_commit_log_method = "POST"
                 this.get_idf_kyou_method = "POST"
                 this.get_rekyou_method = "POST"
+                this.get_mirekyou_method = "POST"
                 this.get_rekyous_method = "POST"
                 this.get_git_commit_logs_method = "POST"
                 this.get_mi_board_list_method = "POST"
@@ -811,6 +830,22 @@ export class GkillAPI {
                 return response
         }
 
+        async add_mirekyou(req: AddMiReKyouRequest): Promise<AddMiReKyouResponse> {
+                const res = await this.gkill_fetch(this.add_mirekyou_address, {
+                        'method': this.add_mirekyou_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                        credentials: 'include',
+                })
+                const json = await res.json()
+                const response: AddMiReKyouResponse = json
+                this.check_auth(response)
+                return response
+        }
+
         async update_tag(req: UpdateTagRequest): Promise<UpdateTagResponse> {
                 const res = await this.gkill_fetch(this.update_tag_address, {
                         'method': this.update_tag_method,
@@ -1000,6 +1035,22 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateReKyouResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async update_mirekyou(req: UpdateMiReKyouRequest): Promise<UpdateMiReKyouResponse> {
+                const res = await this.gkill_fetch(this.update_mirekyou_address, {
+                        'method': this.update_mirekyou_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: UpdateMiReKyouResponse = json
                 this.check_auth(response)
                 return response
         }
@@ -1385,6 +1436,44 @@ export class GkillAPI {
                                 }
                         }
                         response.rekyou_histories[i] = rekyou
+                }
+
+                this.check_auth(response)
+                return response
+        }
+
+        async get_mirekyou(req: GetMiReKyouRequest): Promise<GetMiReKyouResponse> {
+                const res = await this.gkill_fetch(this.get_mirekyou_address, {
+                        'method': this.get_mirekyou_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: GetMiReKyouResponse = json
+                if (!response.mirekyou_histories) {
+                        response.mirekyou_histories = new Array<MiReKyou>()
+                }
+
+                for (const key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.mirekyou_histories.length; i++) {
+                        const mirekyou = new MiReKyou()
+                        for (const key in response.mirekyou_histories[i]) {
+                                (mirekyou as any)[key] = (response.mirekyou_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (mirekyou as any)[key]) {
+                                        (mirekyou as any)[key] = new Date((mirekyou as any)[key])
+                                }
+                        }
+                        response.mirekyou_histories[i] = mirekyou
                 }
 
                 this.check_auth(response)
@@ -3052,6 +3141,7 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         public urlogs: Array<URLog> = []
         public idf_kyous: Array<IDFKyou> = []
         public rekyous: Array<ReKyou> = []
+        public mirekyous: Array<MiReKyou> = []
         public git_commit_logs: Array<GitCommitLog> = []
         public gps_logs: Array<GPSLog> = []
         public attached_tags: Array<Tag> = []
@@ -3123,6 +3213,10 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                 throw new Error("not implements")
         }
 
+        async add_mirekyou(_req: AddMiReKyouRequest): Promise<AddMiReKyouResponse> {
+                throw new Error("not implements")
+        }
+
         async update_tag(_req: UpdateTagRequest): Promise<UpdateTagResponse> {
                 throw new Error("not implements")
         }
@@ -3168,6 +3262,10 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         }
 
         async update_rekyou(_req: UpdateReKyouRequest): Promise<UpdateReKyouResponse> {
+                throw new Error("not implements")
+        }
+
+        async update_mirekyou(_req: UpdateMiReKyouRequest): Promise<UpdateMiReKyouResponse> {
                 throw new Error("not implements")
         }
 
@@ -3302,6 +3400,17 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                         const rekyou = this.rekyous[i]
                         if (req.id == rekyou.id) {
                                 res.rekyou_histories.push(rekyou)
+                        }
+                }
+                return res
+        }
+
+        async get_mirekyou(req: GetMiReKyouRequest): Promise<GetMiReKyouResponse> {
+                const res = new GetMiReKyouResponse()
+                for (let i = 0; i < this.mirekyous.length; i++) {
+                        const mirekyou = this.mirekyous[i]
+                        if (req.id == mirekyou.id) {
+                                res.mirekyou_histories.push(mirekyou)
                         }
                 }
                 return res
