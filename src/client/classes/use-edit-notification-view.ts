@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import type { EditNotificationViewProps } from '@/pages/views/edit-notification-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import moment from 'moment'
@@ -34,9 +34,6 @@ export function useEditNotificationView(options: {
 
     const show_notification_date_menu = ref(false)
     const show_notification_time_menu = ref(false)
-
-    // ── Watchers ──
-    watch([() => props.kyou, () => props.notification], () => load())
 
     // ── Business logic ──
     async function load(): Promise<void> {
