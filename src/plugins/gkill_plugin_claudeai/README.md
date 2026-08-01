@@ -23,19 +23,23 @@ go build -o gkill_plugin_claudeai.exe .
 $GKILL_HOME/plugins/{userID}/gkill_plugin_claudeai/
 ├── manifest.json           # このディレクトリの manifest.json をコピー
 ├── gkill_plugin_claudeai   # ビルドしたバイナリ（.exe は自動補完）
+├── config.json             # データソース設定（初回起動時に自動生成される）
 └── conversations.json      # Claude.ai からエクスポートしたデータ
+                            # （config.json で別フォルダを指定するなら不要）
 ```
 
-### 4. データソースのフォルダを指定する（任意）
+### 4. データソースのフォルダを指定する
 
-既定ではプラグインフォルダ直下を見る。別の場所（Dropbox や `~/Kyou` など）に置いたエクスポートを
-読ませたい場合は、プラグインフォルダに `config.json` を置く。
+プラグインの初回起動時に、`manifest.json` と同じフォルダに `config.json` が
+**自動生成される**。これを編集してデータソースを指定する。既存ファイルは上書きされない。
 
 ```json
 {
+  "_comment": "書式の説明（読み飛ばされるので消してよい）",
+  "_example_source_dirs": ["~/Kyou/ClaudeAIExport", "D:/Dropbox/claude_export/**/conversations*.json"],
   "source_dirs": [
-    "~/Kyou/Claude.aiExport",
-    "~/Dropbox/export"
+    "~/Kyou/ClaudeAIExport",
+    "D:/Dropbox/export"
   ]
 }
 ```
@@ -45,16 +49,20 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_claudeai/
   `conversations.json` を探し、マッチしたファイルはそのまま読む
 - 先頭の `~` と環境変数（`$HOME` など）を展開する
   （Windows サービスとして動かす場合は実行アカウントのホームになるため、絶対パスが確実）
+- `source_dirs` を空にすると、プラグインフォルダ直下を見る（従来どおりの配置）
+- `_` で始まるキーは書式の説明用。プラグインは読まないので消してよい
 - 編集は次の検索から反映される（gkill の再起動は不要）
 
 現在の指定と見つかったファイルは、gkill のプラグイン設定画面で確認できる。
 
-### manifest.json の出力
+### manifest.json / config.json の出力
 
 `manifest.json` はバイナリに埋め込まれている。配置先で吐かせることもできる。
+既定の `config.json` も同様に吐ける（通常は起動時に自動生成されるので不要）。
 
 ```bash
 ./gkill_plugin_claudeai --gkill-print-manifest > manifest.json
+./gkill_plugin_claudeai --gkill-print-config   > config.json
 ```
 
 ## プラグイン情報

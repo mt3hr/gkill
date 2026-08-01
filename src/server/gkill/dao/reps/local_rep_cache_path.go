@@ -24,7 +24,7 @@ func isSingleSafePathElement(element string) bool {
 // localRepCacheDBFileName は元DBファイルに対応するローカルキャッシュDBのパスを返す。
 //
 // 複数のユーザが同じファイルをリポジトリとして共有していることがある
-// （たとえば testuser と testuser_all がどちらも datas/testuser/Kmemo.db を参照している）。
+// （たとえば user1 と user2 がどちらも datas/user/Kmemo.db を参照している）。
 // パスを元DBファイル名だけから決めると、そうした複数のRepositoryが
 // まったく同じキャッシュファイルを掴むことになる。
 // UpdateCache は「自分のハンドルを閉じる → ファイルを削除 → 再コピー」で動くため、

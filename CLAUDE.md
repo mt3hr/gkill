@@ -58,8 +58,11 @@ src/
               #   gkill_plugin_claudecode/ — Claude Code chat log plugin (one Kyou per human
               #                              message + one per its whole response run,
               #                              source folder configurable, SQLite differential cache)
-              # All three plugins take `source_dirs` in config.json (folders/globs) and can print
-              # their embedded manifest.json via --gkill-print-manifest
+              # All three plugins take `source_dirs` in config.json (folders/globs), auto-create
+              # that config.json next to manifest.json on first start (existing files are never
+              # overwritten, via sdk.EnsureConfig + Handler.DefaultConfig), and can print their
+              # embedded manifest.json / default config.json via --gkill-print-manifest /
+              # --gkill-print-config
 ```
 
 ### Two Deployment Modes
