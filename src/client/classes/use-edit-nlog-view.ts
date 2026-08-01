@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import { GkillError } from '@/classes/api/gkill-error'
 import moment from 'moment'
 import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request'
@@ -33,9 +33,6 @@ export function useEditNlogView(options: {
     const show_kyou: Ref<boolean> = ref(false)
     const show_related_date_menu = ref(false)
     const show_related_time_menu = ref(false)
-
-    // ── Watchers ──
-    watch(() => props.kyou, () => load())
 
     // ── CRUD relay handlers ──
     const crudRelayHandlers = {
