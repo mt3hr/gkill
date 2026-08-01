@@ -75,6 +75,7 @@ export function useRykvView(options: {
     const received_init_request = ref(false)
     const skip_search_this_tick = ref(false)
     const abort_controllers: Ref<Array<AbortController>> = ref([])
+    const dnote_reload_seq = ref(0) // Dnote再集計の世代番号。列を連打したとき古い再集計が後勝ちしないようにする
     const kyou_detail_view_width: Ref<number> = ref(400) // KyouDetailViewの初期幅とあわせる。ryuuの最大幅に使う
 
     // ── Computed ──
@@ -142,23 +143,12 @@ export function useRykvView(options: {
         if (props.is_shared_rykv_view) {
             return
         }
-        dnote_view.value?.abort()
         if (is_show_dnote.value) {
-            update_focused_kyous_list(focused_column_index.value)
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
-            if (!kyou_list_view) {
-                return
-            }
-            while (kyou_list_view.get_is_loading()) {
-                await sleep(500)
-            }
-            nextTick(() => {
-                dnote_view.value?.reload(focused_kyous_list.value, focused_query.value)
-            })
+            await reload_dnote_for_column(focused_column_index.value)
         } else {
-            dnote_view.value?.abort()
+            // 実行中の再集計を無効化してから止める
+            dnote_reload_seq.value++
+            await dnote_view.value?.abort()
         }
     })
 
@@ -191,6 +181,72 @@ export function useRykvView(options: {
             return
         }
         focused_kyous_list.value = match_kyous_list.value[column_index]
+    }
+
+    // 指定列の内容でDnoteを再集計する。
+    // Dnote非表示・共有画面・列が存在しない場合は何もしない
+    async function reload_dnote_for_column(column_index: number): Promise<void> {
+        if (props.is_shared_rykv_view) {
+            return
+        }
+        if (!is_show_dnote.value) {
+            return
+        }
+        const target_query = querys.value[column_index]
+        if (!target_query) {
+            return
+        }
+
+        const seq = ++dnote_reload_seq.value
+        update_focused_kyous_list(column_index)
+
+        // Dnoteはv-ifでマウントされるのでrefが生えるまで1tick待つ
+        await nextTick()
+        if (seq !== dnote_reload_seq.value) {
+            return
+        }
+        await dnote_view.value?.abort()
+        if (seq !== dnote_reload_seq.value) {
+            return
+        }
+
+        // 対象列がまだ検索中なら終わるまで待つ
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const kyou_list_view = kyou_list_views.value?.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === target_query.query_id)[0] as any
+        if (kyou_list_view && kyou_list_view.get_is_loading()) {
+            dnote_view.value?.set_loading(true)
+            while (kyou_list_view.get_is_loading()) {
+                await sleep(500)
+                if (seq !== dnote_reload_seq.value) {
+                    return
+                }
+            }
+            // 待っている間に検索結果が差し替わっているので取り直す
+            update_focused_kyous_list(column_index)
+        }
+
+        try {
+            await dnote_view.value?.reload(focused_kyous_list.value, target_query)
+        } catch (err: unknown) {
+            // abortは握りつぶす
+            if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {
+                console.error(err)
+            }
+        }
+    }
+
+    // 列フォーカスを切り替える。列が実際に変わったときだけDnoteを再集計する
+    function focus_column(index: number): void {
+        const is_column_changed = focused_column_index.value !== index
+        focused_column_index.value = index
+        focused_query.value = querys.value[index]
+        if (is_show_kyou_count_calendar.value || is_show_dnote.value) {
+            update_focused_kyous_list(index)
+        }
+        if (is_column_changed) {
+            // 同じ列内の連続クリックでは重い再集計を走らせない
+            reload_dnote_for_column(index)
+        }
     }
 
     function removeKyouFromListById(list: Array<Kyou>, deletedId: string): void {
@@ -354,7 +410,11 @@ export function useRykvView(options: {
     async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean, preserve_scroll?: boolean): Promise<void> {
         const query_id = query.query_id
         let my_abort_controller: AbortController | null = null
-        await dnote_view.value?.abort()
+        // フォーカス列の検索のときだけDnoteを止める。他列の検索で集計中の内容を消さない
+        if (column_index === focused_column_index.value) {
+            dnote_reload_seq.value++
+            await dnote_view.value?.abort()
+        }
         // 検索する。Tickでまとめる
         try {
             if (!force_search) {
@@ -435,7 +495,8 @@ export function useRykvView(options: {
 
             match_kyous_list.value[column_index] = res.kyous
             if (!props.is_shared_rykv_view) {
-                if (is_show_kyou_count_calendar.value || is_show_dnote.value) {
+                // フォーカス列以外の検索完了でfocused_kyous_listを汚染しない
+                if (column_index === focused_column_index.value && (is_show_kyou_count_calendar.value || is_show_dnote.value)) {
                     update_focused_kyous_list(column_index)
                 }
             }
@@ -454,7 +515,9 @@ export function useRykvView(options: {
                     }
                     skip_search_this_tick.value = false
                 }
-                dnote_view.value?.reload(focused_kyous_list.value, focused_query.value)
+                if (column_index === focused_column_index.value) {
+                    reload_dnote_for_column(column_index)
+                }
             })
         } catch (err: unknown) {
             // abortは握りつぶす
@@ -506,8 +569,8 @@ export function useRykvView(options: {
             props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
             nextTick(() => {
                 skip_search_this_tick.value = true
-                focused_column_index.value = 0
-                focused_query.value = querys.value[0]
+                // 削除で-1にしてあるのでfocus_columnが「切り替わった」と判定しDnoteを再集計する
+                focus_column(0)
             })
         })
     }
@@ -532,7 +595,8 @@ export function useRykvView(options: {
             focused_query.value = query
         }
         if (inited.value) {
-            focused_column_index.value = querys.value.length - 1
+            // 列追加もフォーカス切り替えなのでDnoteを追従させる
+            focus_column(querys.value.length - 1)
         }
         props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
         props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
@@ -634,18 +698,13 @@ export function useRykvView(options: {
             return
         }
         skip_search_this_tick.value = true
-        focused_query.value = querys.value[index]
-        if (is_show_kyou_count_calendar.value || is_show_dnote.value) {
-            update_focused_kyous_list(index)
-        }
-        focused_column_index.value = index
+        focus_column(index)
         nextTick(() => skip_search_this_tick.value = false)
     }
 
     function onColumnClickedKyou(index: number, kyou: Kyou): void {
         skip_search_this_tick.value = true
-        focused_column_index.value = index
-        focused_query.value = querys.value[index]
+        focus_column(index)
         clicked_kyou_in_list_view(index, kyou)
         gps_log_map_start_time.value = kyou.related_time
         gps_log_map_end_time.value = kyou.related_time
