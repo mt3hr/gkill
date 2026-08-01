@@ -190,7 +190,7 @@ loop:
 				continue loop
 			}
 			if matchTag != nil {
-				if matchTagInRep.UpdateTime.Before(matchTag.UpdateTime) {
+				if matchTagInRep.UpdateTime.After(matchTag.UpdateTime) {
 					matchTag = matchTagInRep
 				}
 			} else {
@@ -595,6 +595,11 @@ func (t TagRepositories) AddTagInfo(ctx context.Context, tag Tag) error {
 	return err
 }
 
+// GetAllTagNames は全repのタグ名一覧を返す。
+// 各repのGetAllTagNamesは自分のrep内での最新版しか見えず、そのまま束ねると
+// 別repに新版があるタグの編集前の名前が混ざる。そのためGetAllTags経由で
+// rep跨ぎにIDごとの最新版を決めてから名前を集める。各repのGetAllTagNamesに
+// 差し替えないこと
 func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 	tagNames := []string{}
 	tagNamesMap := map[string]struct{}{}

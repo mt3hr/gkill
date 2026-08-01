@@ -6,6 +6,7 @@ import (
 	sqllib "database/sql"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -424,7 +425,9 @@ WHERE
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias := sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter := 0
-	onlyLatestData := false
+	// GenerateFindSQLCommonはquery.OnlyLatestDataを見ないので、ローカル変数側でも指定する。
+	// UpdateTime未指定なら編集前のバージョンを返さないよう最新版のみを対象にする
+	onlyLatestData := updateTime == nil
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TEXT"}
 	ignoreFindWord := false
@@ -509,7 +512,11 @@ WHERE
 	if len(texts) == 0 {
 		return nil, nil
 	}
-	return &texts[0], nil
+	// ORDER BYを付けていないので、UpdateTimeが最新の行を明示的に選ぶ
+	latestText := slices.MaxFunc(texts, func(a, b Text) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestText, nil
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]Text, error) {
