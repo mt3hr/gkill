@@ -167,6 +167,46 @@ func TestTagGetHistories(t *testing.T) {
 	}
 }
 
+// TestTagRepositoriesGetTagPicksLatestAcrossReps は、同一タグIDの新しい版が
+// 別のrepにあるとき、rep跨ぎ集約が最新版を選ぶことを確認する。
+// repの並び順に依らず最新版が選ばれること
+func TestTagRepositoriesGetTagPicksLatestAcrossReps(t *testing.T) {
+	ctx := context.Background()
+
+	oldVersion := makeTag("cross-rep-tag", "cross-rep-target", "株式会社イノフェックス")
+	newVersion := makeTag("cross-rep-tag", "cross-rep-target", "イノフェックス株式会社")
+	newVersion.UpdateTime = oldVersion.UpdateTime.Add(1 * time.Minute)
+
+	for _, order := range []string{"old_first", "new_first"} {
+		t.Run(order, func(t *testing.T) {
+			repWithOld := newTempTagRepo(t)
+			repWithNew := newTempTagRepo(t)
+			if err := repWithOld.AddTagInfo(ctx, oldVersion); err != nil {
+				t.Fatalf("AddTagInfo failed: %v", err)
+			}
+			if err := repWithNew.AddTagInfo(ctx, newVersion); err != nil {
+				t.Fatalf("AddTagInfo failed: %v", err)
+			}
+
+			tagReps := TagRepositories{repWithOld, repWithNew}
+			if order == "new_first" {
+				tagReps = TagRepositories{repWithNew, repWithOld}
+			}
+
+			got, err := tagReps.GetTag(ctx, "cross-rep-tag", nil)
+			if err != nil {
+				t.Fatalf("GetTag failed: %v", err)
+			}
+			if got == nil {
+				t.Fatal("GetTag returned nil")
+			}
+			if got.Tag != "イノフェックス株式会社" {
+				t.Errorf("Tag = %q, want %q (latest version)", got.Tag, "イノフェックス株式会社")
+			}
+		})
+	}
+}
+
 // TestTagOnlyLatestVersionIsVisible は、TAGテーブルがappend-onlyであることを踏まえ、
 // IDごとにUPDATE_TIMEが最大の版だけが見えることを確認する。
 // 編集前のタグ名がタグ名一覧に出たり検索にヒットしたりしてはいけない
@@ -246,6 +286,52 @@ func TestTagOnlyLatestVersionIsVisible(t *testing.T) {
 			t.Fatalf("expected 2 tags for target-renamed, got %d: %v", len(tags), tags)
 		}
 		for _, tag := range tags {
+			if tag.Tag == "お避け" {
+				t.Errorf("renamed-away version should not be returned: %v", tag)
+			}
+		}
+	})
+
+	t.Run("GetTag", func(t *testing.T) {
+		got, err := repo.GetTag(ctx, "tag-renamed", nil)
+		if err != nil {
+			t.Fatalf("GetTag failed: %v", err)
+		}
+		if got == nil {
+			t.Fatal("GetTag returned nil")
+		}
+		if got.Tag != "お酒" {
+			t.Errorf("Tag = %q, want %q (latest version)", got.Tag, "お酒")
+		}
+		if !got.UpdateTime.Equal(renamedNew.UpdateTime) {
+			t.Errorf("UpdateTime = %v, want %v (latest version)", got.UpdateTime, renamedNew.UpdateTime)
+		}
+
+		// UpdateTimeを指定した場合は履歴表示用にその版が取れる
+		oldUpdateTime := renamedOld.UpdateTime
+		gotOld, err := repo.GetTag(ctx, "tag-renamed", &oldUpdateTime)
+		if err != nil {
+			t.Fatalf("GetTag with update time failed: %v", err)
+		}
+		if gotOld == nil {
+			t.Fatal("GetTag with update time returned nil")
+		}
+		if gotOld.Tag != "お避け" {
+			t.Errorf("Tag = %q, want %q (specified version)", gotOld.Tag, "お避け")
+		}
+	})
+
+	t.Run("GetAllTags", func(t *testing.T) {
+		allTags, err := repo.GetAllTags(ctx)
+		if err != nil {
+			t.Fatalf("GetAllTags failed: %v", err)
+		}
+		// tag-renamed / tag-deleted / tag-alive の最新版のみ。旧版は含まれない。
+		// IS_DELETEDはrep跨ぎで最新版を決めたあとに判定する設計なので、ここでは削除済みも返る
+		if len(allTags) != 3 {
+			t.Fatalf("expected 3 tags (latest version only), got %d: %v", len(allTags), allTags)
+		}
+		for _, tag := range allTags {
 			if tag.Tag == "お避け" {
 				t.Errorf("renamed-away version should not be returned: %v", tag)
 			}

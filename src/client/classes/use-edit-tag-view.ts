@@ -73,9 +73,9 @@ export function useEditTagView(options: {
             updated_tag.update_time = new Date(Date.now())
             updated_tag.update_user = props.application_config.user_id
 
-            // 更新リクエストを飛ばす
+            // 更新リクエストを飛ばす。
+            // target_id側のキャッシュ破棄はGkillAPI.update_tagが応答受領後に行う
             await delete_gkill_kyou_cache(updated_tag.id)
-            await delete_gkill_kyou_cache(updated_tag.target_id)
             const req = new UpdateTagRequest()
             req.tag = updated_tag
             const res = await props.gkill_api.update_tag(req)

@@ -190,7 +190,7 @@ loop:
 				continue loop
 			}
 			if matchText != nil {
-				if matchTextInRep.UpdateTime.Before(matchText.UpdateTime) {
+				if matchTextInRep.UpdateTime.After(matchText.UpdateTime) {
 					matchText = matchTextInRep
 				}
 			} else {

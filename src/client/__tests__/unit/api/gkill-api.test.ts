@@ -10,9 +10,11 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
   default: vi.fn().mockResolvedValue(undefined),
   delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
   delete_gkill_all_tag_names_cache: vi.fn().mockResolvedValue(undefined),
+  delete_gkill_attached_tags_cache: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { GkillAPI } from '@/classes/api/gkill-api'
+import { delete_gkill_attached_tags_cache } from '@/classes/delete-gkill-cache'
 
 describe('GkillAPI', () => {
   describe('singleton access', () => {
@@ -238,6 +240,30 @@ describe('GkillAPI', () => {
           body: JSON.stringify(req),
         })
       )
+    })
+
+    // タグを付けたKyouのタグ一覧キャッシュを捨てないと、
+    // 改名前のタグ名が付いたまま表示され続ける
+    test('add_tag drops the cached tag list of the tagged kyou', async () => {
+      const mockResponse = { messages: [], errors: [] }
+      ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        json: () => Promise.resolve(mockResponse),
+      })
+      vi.mocked(delete_gkill_attached_tags_cache).mockClear()
+
+      const api = GkillAPI.get_instance()
+      const tag = makeTag()
+      const req = {
+        session_id: 'test-session',
+        tag,
+        tx_id: null,
+        abort_controller: new AbortController(),
+        force_reget: false,
+        locale_name: 'ja',
+      }
+      await api.add_tag(req as never)
+
+      expect(delete_gkill_attached_tags_cache).toHaveBeenCalledWith(tag.target_id)
     })
   })
 
@@ -980,6 +1006,29 @@ describe('GkillAPI', () => {
           body: JSON.stringify(req),
         })
       )
+    })
+
+    // タグ改名後にKyouのタグ一覧キャッシュを捨てないと、改名前の名前が残り続ける
+    test('update_tag drops the cached tag list of the tagged kyou', async () => {
+      const mockResponse = { messages: [], errors: [] }
+      ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        json: () => Promise.resolve(mockResponse),
+      })
+      vi.mocked(delete_gkill_attached_tags_cache).mockClear()
+
+      const api = GkillAPI.get_instance()
+      const tag = makeTag({ tag: 'updated-tag' })
+      const req = {
+        session_id: 'test-session',
+        tag,
+        tx_id: null,
+        abort_controller: new AbortController(),
+        force_reget: false,
+        locale_name: 'ja',
+      }
+      await api.update_tag(req as never)
+
+      expect(delete_gkill_attached_tags_cache).toHaveBeenCalledWith(tag.target_id)
     })
 
     test('update_timeis sends POST to /api/update_timeis with session_id and timeis', async () => {
