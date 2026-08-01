@@ -25,6 +25,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 | **TimeIs** | 打刻帳 | 時間記録（打刻）。タイトル・開始時刻（`StartTime`）・終了時刻（`EndTime`）で状況を記録する。`EndTime` が null の場合は「実行中」状態 | Time is ??? |
 | **IDFKyou** | ファイル | ファイル参照。対象リポジトリ名・ファイルパスを持ち、画像/動画/音声のフラグを保持する。`IsZip` フラグでZIPファイルかどうかを識別し、ZIPの場合はコンテキストメニューから内容閲覧が可能 | gkill ID allocate to File |
 | **ReKyou** | リポスト | 既存 Kyou の再投稿。`TargetID` で参照先の Kyou を指定する | Re（再）+ Kyou |
+| **MiReKyou** | リポストタスク | 既存 Kyou をタスク化したもの。`TargetID` で参照先の Kyou を指定し、Mi と同じボード名・期限・開始/終了予定・チェック状態を持つ。タイトルは持たず、表示は参照先 Kyou をそのまま描画する | Mi + ReKyou |
 
 ### 外部データ取り込み型
 
@@ -178,7 +179,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **CreateUser** | string | 作成ユーザ名 |
 | **UpdateApp / UpdateDevice / UpdateUser** | string | 更新元のアプリ・デバイス・ユーザ |
 | **IsDeleted** | bool | 論理削除フラグ。`true` のレコードが INSERT されることで論理削除を実現する |
-| **TargetID** | string | Tag / Text / Notification / ReKyou が参照する対象 Kyou の ID |
+| **TargetID** | string | Tag / Text / Notification / ReKyou / MiReKyou が参照する対象 Kyou の ID |
 
 ## 9. その他の用語
 

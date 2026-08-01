@@ -26,6 +26,9 @@ type FindKyouContext struct {
 	MatchTimeIssAtFindTimeIs         map[string]reps.TimeIs `json:"match_time_iss_at_find_time_is"`
 	MatchTimeIssAtFilterTags         map[string]reps.TimeIs `json:"match_time_iss_at_filter_tags"`
 	MatchMisAtFilterMi               map[string]reps.Mi     `json:"match_mis_at_filter_mi"`
+	// MiReKyouIDs はMatchMisAtFilterMiのうちMiReKyou由来のIDです。
+	// DataTypeの接頭辞をmi_かmirekyou_かで切り替えるために使います。
+	MiReKyouIDs map[string]struct{} `json:"mirekyou_ids"`
 	MatchTimeIsTags                  map[string]reps.Tag    `json:"match_time_is_tags"`
 	MatchTimeIsTexts                 map[string]reps.Text   `json:"match_time_is_texts"`
 	MatchKyousCurrent                map[string][]reps.Kyou `json:"match_kyous_current"`

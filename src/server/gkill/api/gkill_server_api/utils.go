@@ -177,6 +177,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 	repTypeFileNameMap["text"] = "Text.db"
 	repTypeFileNameMap["notification"] = "Notification.db"
 	repTypeFileNameMap["rekyou"] = "ReKyou.db"
+	repTypeFileNameMap["mirekyou"] = "MiReKyou.db"
 
 	for repType, repFileName := range repTypeFileNameMap {
 		repFileFullName := filepath.Join(userDataRootDirectory, repFileName)

@@ -18,6 +18,7 @@ import type TimeIsView from '@/pages/views/time-is-view.vue'
 import type UrLogView from '@/pages/views/ur-log-view.vue'
 import type IdfKyouView from '@/pages/views/idf-kyou-view.vue'
 import type ReKyouView from '@/pages/views/re-kyou-view.vue'
+import type MiReKyouView from '@/pages/views/mi-re-kyou-view.vue'
 import type GitCommitLogView from '@/pages/views/git-commit-log-view.vue'
 import type PluginHtmlView from '@/pages/views/plugin-html-view.vue'
 
@@ -37,6 +38,7 @@ export function useKyouView(options: {
     const urlog_view = ref<InstanceType<typeof UrLogView> | null>(null)
     const idf_kyou_view = ref<InstanceType<typeof IdfKyouView> | null>(null)
     const rekyou_view = ref<InstanceType<typeof ReKyouView> | null>(null)
+    const mirekyou_view = ref<InstanceType<typeof MiReKyouView> | null>(null)
     const git_commit_log_view = ref<InstanceType<typeof GitCommitLogView> | null>(null)
     const plugin_html_view = ref<InstanceType<typeof PluginHtmlView> | null>(null)
 
@@ -135,6 +137,7 @@ export function useKyouView(options: {
         urlog_view.value?.show_context_menu(e)
         idf_kyou_view.value?.show_context_menu(e)
         rekyou_view.value?.show_context_menu(e)
+        mirekyou_view.value?.show_context_menu(e)
         git_commit_log_view.value?.show_context_menu(e)
         plugin_html_view.value?.show_context_menu(e)
     }
@@ -187,6 +190,7 @@ export function useKyouView(options: {
         urlog_view,
         idf_kyou_view,
         rekyou_view,
+        mirekyou_view,
         git_commit_log_view,
         plugin_html_view,
 

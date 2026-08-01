@@ -30,7 +30,7 @@
 | `src/client/__tests__/e2e/regist-first-account.spec.ts` | `/regist_first_account` — 初回アカウント登録 |
 | `src/client/__tests__/e2e/set-new-password.spec.ts` | `/set_new_password` — パスワード再設定 |
 
-#### CRUD 操作フロー系（8ファイル）
+#### CRUD 操作フロー系（9ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -42,6 +42,7 @@
 | `src/client/__tests__/e2e/view-browse.spec.ts` | 履歴ダイアログ、混合データ型、Mi ボード/Plaing 表示、ZIPブラウズ |
 | `src/client/__tests__/e2e/view-history.spec.ts` | Lantana/Mi/Nlog/URLog/ReKyou/Tag/Text の履歴+リポスト+NoImage確認 |
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
+| `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）をAPI経由で通し確認: 作成→Mi画面検索→更新→板一覧→対象削除で消える |
 
 #### 認証・ユースケース・設定系（9ファイル）
 

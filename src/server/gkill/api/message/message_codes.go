@@ -83,4 +83,7 @@ const (
 	UpdateCacheSuccessMessage              = "MSG000078"
 	RegisterGkillNotificationSuccessMessage = "MSG000079"
 	BrowseZipContentsSuccessMessage         = "MSG000080"
+	AddMiReKyouSuccessMessage               = "MSG000081"
+	UpdateMiReKyouSuccessMessage            = "MSG000082"
+	GetMiReKyouSuccessMessage               = "MSG000083"
 )

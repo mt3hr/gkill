@@ -206,6 +206,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		}
 		repositories.SkipUpdateCache = g.skipUpdateCache
 		repositories.ReKyouReps.GkillRepositories = repositories
+		repositories.MiReKyouReps.GkillRepositories = repositories
 
 		repositoriesDefine, err := g.ConfigDAOs.RepositoryDAO.GetRepositories(ctx, userID, device)
 		if err != nil {
@@ -783,6 +784,52 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 					}
 
+				case "mirekyou":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
+					var miReKyouRep reps.MiReKyouRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						miReKyouRep, err = reps.NewMiReKyouRepositorySQLite3ImplLocalCached(ctx, userID, filename, rep.UseToWrite, repositories)
+					} else {
+						miReKyouRep, err = reps.NewMiReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
+					}
+					if err != nil {
+						return nil, err
+					}
+					repositories.MiReKyouReps.MiReKyouRepositories = append(repositories.MiReKyouReps.MiReKyouRepositories, miReKyouRep)
+					if rep.UseToWrite {
+						newPath, _ := miReKyouRep.GetPath(ctx, "")
+						if repositories.WriteMiReKyouRep != nil {
+							existPath, _ := repositories.WriteMiReKyouRep.GetPath(ctx, "")
+							err := fmt.Errorf("error conflict write miReKyou rep %s %s", existPath, newPath)
+							return nil, err
+						}
+						repositories.WriteMiReKyouRep = miReKyouRep
+					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					if rep.IsWatchTargetForUpdateRep {
+						rep := miReKyouRep
+						enableUpdateRepsCache := false
+						enableUpdateLatestDataRepositoryCache := true
+						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+						ignoreFileNamePrefixes := []string{}
+						repFilename, err := rep.GetPath(ctx, "")
+						if err != nil {
+							repName, _ := rep.GetRepName(ctx)
+							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+							return nil, err
+						}
+						repFilename = filepath.ToSlash(repFilename)
+
+						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+						if err != nil {
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							return nil, err
+						}
+					}
+
 				case "directory":
 					autoIDF := rep.IsExecuteIDFWhenReload
 					parentDir := filepath.Join(filename, ".gkill")
@@ -969,6 +1016,17 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			}
 			repositories.ReKyouReps = reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{cachedReKyouRep}, GkillRepositories: repositories}
 		}
+		if *gkill_options.CacheMiReKyouReps {
+			// キャッシュ差し替え前の実体を固定化して自己参照を防ぐ
+			originalMiReKyouReps := append([]reps.MiReKyouRepository(nil), repositories.MiReKyouReps.MiReKyouRepositories...)
+			mirekyouRepositories := reps.MiReKyouRepositories{MiReKyouRepositories: originalMiReKyouReps, GkillRepositories: repositories}
+			cachedMiReKyouRep, err := reps.NewMiReKyouRepositoryCachedSQLite3Impl(ctx, &mirekyouRepositories, repositories, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_MIREKYOU")
+			if err != nil {
+				err = fmt.Errorf("error at new cached mirekyou rep: %w", err)
+				return nil, err
+			}
+			repositories.MiReKyouReps = reps.MiReKyouRepositories{MiReKyouRepositories: []reps.MiReKyouRepository{cachedMiReKyouRep}, GkillRepositories: repositories}
+		}
 		if *gkill_options.CacheGitCommitLogReps {
 			// Phase 1: GitCommitLog専用の永続ファイルベースSQLite DBを使用
 			// Phase 4: 初回フルリビルドはバックグラウンドで実行
@@ -1013,6 +1071,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.Reps = append(repositories.Reps, rep)
 		}
 		for _, rep := range repositories.ReKyouReps.ReKyouRepositories {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.MiReKyouReps.MiReKyouRepositories {
 			repositories.Reps = append(repositories.Reps, rep)
 		}
 

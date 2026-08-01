@@ -24,7 +24,7 @@ export function usePluginHtmlContextMenu(options: {
     const tag_history: Ref<string[]> = ref([])
 
     // ── Computed ──
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - (+ 8 + (48 * (6 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
+    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - (+ 8 + (48 * (7 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
 
     // ── Business logic ──
     async function show(e: PointerEvent): Promise<void> {
@@ -69,6 +69,10 @@ export function usePluginHtmlContextMenu(options: {
 
     async function show_confirm_rekyou_dialog(): Promise<void> {
         emits('requested_open_rykv_dialog', 'confirm_re_kyou', props.kyou)
+    }
+
+    async function show_add_mi_re_kyou_dialog(): Promise<void> {
+        emits('requested_open_rykv_dialog', 'add_mi_re_kyou', props.kyou)
     }
 
     async function open_folder(): Promise<void> {
@@ -148,6 +152,7 @@ export function usePluginHtmlContextMenu(options: {
         show_add_text_dialog,
         show_add_notification_dialog,
         show_confirm_rekyou_dialog,
+        show_add_mi_re_kyou_dialog,
         open_folder,
         open_file,
         add_tag_from_history,

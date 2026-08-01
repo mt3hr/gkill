@@ -12,6 +12,7 @@ type TempReps struct {
 	KmemoTempRep        KmemoTempRepository
 	LantanaTempRep      LantanaTempRepository
 	MiTempRep           MiTempRepository
+	MiReKyouTempRep     MiReKyouTempRepository
 	NlogTempRep         NlogTempRepository
 	NotificationTempRep NotificationTempRepository
 	ReKyouTempRep       ReKyouTempRepository
@@ -41,6 +42,10 @@ func NewTempReps(db *sql.DB, m *sync.RWMutex) (*TempReps, error) {
 		return nil, err
 	}
 	miTempRep, err := NewMiTempRepositorySQLite3Impl(ctx, db, m)
+	if err != nil {
+		return nil, err
+	}
+	mirekyouTempRep, err := NewMiReKyouTempRepositorySQLite3Impl(ctx, db, m)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +84,7 @@ func NewTempReps(db *sql.DB, m *sync.RWMutex) (*TempReps, error) {
 		KmemoTempRep:        kmemoTempRep,
 		LantanaTempRep:      lantanaTempRep,
 		MiTempRep:           miTempRep,
+		MiReKyouTempRep:     mirekyouTempRep,
 		NlogTempRep:         nlogTempRep,
 		NotificationTempRep: notificationTempRep,
 		ReKyouTempRep:       rekyouTempRep,

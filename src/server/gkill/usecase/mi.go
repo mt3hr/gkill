@@ -213,5 +213,27 @@ func (uc *UsecaseContext) GetMiBoardList(ctx context.Context, repositories *reps
 		return nil, gkillErrors, nil
 	}
 
-	return miBoardNames, nil, nil
+	// MiReKyouだけが存在する板も一覧に出す
+	miReKyouBoardNames, err := repositories.MiReKyouReps.GetBoardNames(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get mirekyou board names user id = %s device = %s: %w", userID, device, err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.GetMiBoardNamesError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		})
+		return nil, gkillErrors, nil
+	}
+
+	existBoardNames := map[string]struct{}{}
+	allBoardNames := []string{}
+	for _, boardName := range append(miBoardNames, miReKyouBoardNames...) {
+		if _, exist := existBoardNames[boardName]; exist {
+			continue
+		}
+		existBoardNames[boardName] = struct{}{}
+		allBoardNames = append(allBoardNames, boardName)
+	}
+
+	return allBoardNames, nil, nil
 }

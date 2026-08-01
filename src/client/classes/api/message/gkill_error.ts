@@ -86,6 +86,10 @@ export enum GkillErrorCodes {
     kc_num_value_is_blank = "ERR900085",
     required_certificate = "ERR900086",
     copied_local_share_kyou_link = "ERR900087",
-    network_error = "ERR900088"
+    network_error = "ERR900088",
+    not_found_mi_rekyou = "ERR900089",
+    not_found_mi_rekyou_target = "ERR900090",
+    client_mi_rekyou_is_null = "ERR900091",
+    mi_rekyou_is_no_update = "ERR900092"
 }
 
