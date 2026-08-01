@@ -32,8 +32,8 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
 }
 
 
-export async function delete_gkill_config_cache(): Promise<void> {
-    const data_types = [
+export async function delete_gkill_config_cache(target_data_types: Array<string> | null = null): Promise<void> {
+    const data_types = target_data_types ?? [
         'application_config',
         'all_rep_names',
         'all_tag_names',
@@ -48,4 +48,14 @@ export async function delete_gkill_config_cache(): Promise<void> {
         wait_promises.push(cache.delete(new Request(cacheKey)))
     }
     await Promise.all(wait_promises)
+}
+
+// タグの追加・更新でタグ名一覧が変わるため、キャッシュされた古い一覧を捨てる。
+// 古い一覧を読むと編集前のタグ名がApplicationConfigのTagStructに追加されてしまう
+export async function delete_gkill_all_tag_names_cache(): Promise<void> {
+    try {
+        await delete_gkill_config_cache(['all_tag_names'])
+    } catch (_e) {
+        // Cache API が利用できない環境ではスキップ
+    }
 }

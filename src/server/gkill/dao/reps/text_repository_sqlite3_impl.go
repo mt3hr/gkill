@@ -586,7 +586,8 @@ WHERE
 	tableName := "TEXT"
 	tableNameAlias := "TEXT"
 	whereCounter := 0
-	var onlyLatestData bool
+	// キャッシュ版(NOT EXISTSアンチジョイン)と揃えて、IDごとの最新版のみを対象にする
+	onlyLatestData := true
 	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false

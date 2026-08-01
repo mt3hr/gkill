@@ -503,8 +503,8 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 }
 
 func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// 全タグ取得用検索クエリ
-	findTagsQuery := &find.FindQuery{IsDeleted: false}
+	// 全タグ取得用検索クエリ。IDごとの最新版のみを対象にする
+	findTagsQuery := &find.FindQuery{IsDeleted: false, OnlyLatestData: true}
 
 	allTagsList, err := collectFromRepos([]reps.TagRepository(findCtx.Repositories.TagReps), func(tagRep reps.TagRepository) ([]reps.Tag, error) {
 		return tagRep.FindTags(ctx, findTagsQuery)
@@ -614,6 +614,8 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 		UseWords: true,
 		Words:    findCtx.ParsedFindQuery.Tags,
 		WordsAnd: false,
+		// 編集前のタグ名でヒットしないよう、IDごとの最新版のみを対象にする
+		OnlyLatestData: true,
 	}
 	matchTags, err := findCtx.Repositories.TagReps.FindTags(ctx, query)
 	if err != nil {
@@ -1495,6 +1497,8 @@ func (f *FindFilter) findTextsGeneric(
 		Words:    w,
 		NotWords: nw,
 		WordsAnd: wordsAnd,
+		// 編集前の本文でヒットしないよう、IDごとの最新版のみを対象にする
+		OnlyLatestData: true,
 	}
 
 	repos := make([]reps.TextRepository, 0, len(findCtx.Repositories.TextReps))
