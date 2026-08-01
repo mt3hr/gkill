@@ -9,6 +9,7 @@ import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-request'
 import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request'
+import { UpdateMiReKyouRequest } from '@/classes/api/req_res/update-mi-re-kyou-request'
 import { UpdateIDFKyouRequest } from '@/classes/api/req_res/update-idf-kyou-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { ConfirmDeleteKyouViewProps } from '@/pages/views/confirm-delete-kyou-view-props'
@@ -76,7 +77,12 @@ export function useConfirmDeleteKyouView(options: {
             const e = await delete_timeis()
             errors = errors.concat(e)
         }
-        if (cloned_kyou.value.data_type.startsWith("mi")) {
+        // mirekyou_* は "mi" で始まるためMiより先に判定し、Mi側からは除外する
+        if (cloned_kyou.value.data_type.startsWith("mirekyou")) {
+            const e = await delete_mi_re_kyou()
+            errors = errors.concat(e)
+        }
+        if (cloned_kyou.value.data_type.startsWith("mi") && !cloned_kyou.value.data_type.startsWith("mirekyou")) {
             const e = await delete_mi()
             errors = errors.concat(e)
         }
@@ -225,6 +231,21 @@ export function useConfirmDeleteKyouView(options: {
 
     async function delete_git_commit_log(): Promise<Array<GkillError>> {
         throw new Error("not implements")
+    }
+
+    async function delete_mi_re_kyou(): Promise<Array<GkillError>> {
+        await delete_gkill_kyou_cache(cloned_kyou.value.id)
+        const req = new UpdateMiReKyouRequest()
+        req.mirekyou = cloned_kyou.value.typed_mirekyou!.clone()
+        req.mirekyou.is_deleted = true
+
+        req.mirekyou.update_app = "gkill"
+        req.mirekyou.update_device = props.application_config.device
+        req.mirekyou.update_time = new Date(Date.now())
+        req.mirekyou.update_user = props.application_config.user_id
+
+        const res = await props.gkill_api.update_mirekyou(req)
+        return res.errors
     }
 
     async function delete_rekyou(): Promise<Array<GkillError>> {

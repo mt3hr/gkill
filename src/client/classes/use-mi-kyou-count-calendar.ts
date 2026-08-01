@@ -37,15 +37,19 @@ export function useMiKyouCountCalendar(options: {
 
     // ── Business logic ──
     function get_kyou_date(kyou: Kyou): Date | null {
+        // MiReKyouはmirekyou_*、Miはmi_*で来るのでどちらも同じ射影として扱う
+        const is_projection = (suffix: string): boolean =>
+            kyou.data_type === "mi_" + suffix || kyou.data_type === "mirekyou_" + suffix
+
         switch (props.mi_sort_type) {
             case MiSortType.create_time:
-                return kyou.data_type === "mi_create" ? kyou.related_time : null
+                return is_projection("create") ? kyou.related_time : null
             case MiSortType.estimate_start_time:
-                return kyou.data_type === "mi_start" ? kyou.related_time : null
+                return is_projection("start") ? kyou.related_time : null
             case MiSortType.estimate_end_time:
-                return kyou.data_type === "mi_end" ? kyou.related_time : null
+                return is_projection("end") ? kyou.related_time : null
             case MiSortType.limit_time:
-                return kyou.data_type === "mi_limit" ? kyou.related_time : null
+                return is_projection("limit") ? kyou.related_time : null
             default:
                 return kyou.related_time
         }

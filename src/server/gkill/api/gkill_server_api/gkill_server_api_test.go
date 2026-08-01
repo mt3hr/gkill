@@ -839,7 +839,7 @@ func addTestRepositories(t *testing.T, gkillAPI *GkillServerAPI, tmpDir string) 
 	types := []string{
 		"directory", "gpslog",
 		"kmemo", "kc", "lantana", "mi", "nlog", "notification",
-		"rekyou", "tag", "text", "timeis", "urlog",
+		"rekyou", "mirekyou", "tag", "text", "timeis", "urlog",
 	}
 
 	// SQLite types that need a real (empty) SQLite database file so that
@@ -847,6 +847,7 @@ func addTestRepositories(t *testing.T, gkillAPI *GkillServerAPI, tmpDir string) 
 	sqliteTypes := map[string]bool{
 		"kmemo": true, "kc": true, "lantana": true, "mi": true,
 		"nlog": true, "notification": true, "rekyou": true,
+		"mirekyou": true,
 		"tag": true, "text": true, "timeis": true, "urlog": true,
 	}
 
@@ -5923,11 +5924,12 @@ func TestHandleUpdateUserReps(t *testing.T) {
 	types := []string{
 		"directory", "gpslog",
 		"kmemo", "kc", "lantana", "mi", "nlog", "notification",
-		"rekyou", "tag", "text", "timeis", "urlog",
+		"rekyou", "mirekyou", "tag", "text", "timeis", "urlog",
 	}
 	sqliteTypes := map[string]bool{
 		"kmemo": true, "kc": true, "lantana": true, "mi": true,
 		"nlog": true, "notification": true, "rekyou": true,
+		"mirekyou": true,
 		"tag": true, "text": true, "timeis": true, "urlog": true,
 	}
 
@@ -8412,11 +8414,12 @@ func TestHandleUpdateUserReps_DuplicateWriteDetected(t *testing.T) {
 	types := []string{
 		"directory", "gpslog",
 		"kmemo", "kc", "lantana", "mi", "nlog", "notification",
-		"rekyou", "tag", "text", "timeis", "urlog",
+		"rekyou", "mirekyou", "tag", "text", "timeis", "urlog",
 	}
 	sqliteTypes := map[string]bool{
 		"kmemo": true, "kc": true, "lantana": true, "mi": true,
 		"nlog": true, "notification": true, "rekyou": true,
+		"mirekyou": true,
 		"tag": true, "text": true, "timeis": true, "urlog": true,
 	}
 

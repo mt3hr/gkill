@@ -157,6 +157,18 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	mirekyous, err := repositories.TempReps.MiReKyouTempRep.GetMiReKyousByTXID(r.Context(), txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get mirekyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetMiReKyouError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	tags, err := repositories.TempReps.TagTempRep.GetTagsByTXID(r.Context(), txID, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get tag by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
@@ -578,6 +590,64 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[rekyou.ID])
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		}
+	}
+
+	for _, mirekyou := range mirekyous {
+		if repositories.WriteMiReKyouRep == nil {
+			err = fmt.Errorf("not exist write mirekyou rep user id = %s device = %s", userID, device)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddMiReKyouError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_REKYOU_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		err = repositories.WriteMiReKyouRep.AddMiReKyouInfo(r.Context(), mirekyou)
+		if err != nil {
+			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddMiReKyouError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_REKYOU_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		if len(repositories.MiReKyouReps.MiReKyouRepositories) == 1 && *gkill_options.CacheMiReKyouReps {
+			err = repositories.MiReKyouReps.MiReKyouRepositories[0].AddMiReKyouInfo(r.Context(), mirekyou)
+			if err != nil {
+				err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
+				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			}
+		}
+
+		repName, err := repositories.WriteMiReKyouRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, mirekyou.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetMiReKyouError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_REKYOU_ADDED_GET_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		repositories.LatestDataRepositoryAddresses[mirekyou.ID] = gkill_cache.LatestDataRepositoryAddress{
+			IsDeleted:                              mirekyou.IsDeleted,
+			TargetID:                               mirekyou.ID,
+			TargetIDInData:                         &mirekyou.TargetID,
+			DataUpdateTime:                         mirekyou.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		}
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[mirekyou.ID])
+		if err != nil {
+			err = fmt.Errorf("error at add or update latest data repository address for mirekyou user id = %s device = %s id = %s: %w", userID, device, mirekyou.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	}

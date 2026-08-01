@@ -154,6 +154,25 @@ erDiagram
         text UPDATE_USER
     }
 
+    MIREKYOU {
+        text IS_DELETED
+        text ID
+        text TARGET_ID
+        text IS_CHECKED
+        text BOARD_NAME
+        text LIMIT_TIME
+        text ESTIMATE_START_TIME
+        text ESTIMATE_END_TIME
+        text CREATE_TIME
+        text CREATE_APP
+        text CREATE_USER
+        text CREATE_DEVICE
+        text UPDATE_TIME
+        text UPDATE_APP
+        text UPDATE_DEVICE
+        text UPDATE_USER
+    }
+
     TAG {
         text IS_DELETED
         text ID
@@ -233,6 +252,12 @@ erDiagram
     REKYOU }o--|| KMEMO : "TARGET_ID (repost)"
     REKYOU }o--|| KC : "TARGET_ID (repost)"
     REKYOU }o--|| MI : "TARGET_ID (repost)"
+    MIREKYOU ||--o{ TAG : "TARGET_ID"
+    MIREKYOU ||--o{ TEXT : "TARGET_ID"
+    MIREKYOU ||--o{ NOTIFICATION : "TARGET_ID"
+    MIREKYOU }o--|| KMEMO : "TARGET_ID (task)"
+    MIREKYOU }o--|| KC : "TARGET_ID (task)"
+    MIREKYOU }o--|| URLOG : "TARGET_ID (task)"
 ```
 
 ### 説明
@@ -241,6 +266,7 @@ erDiagram
 - **ID は主キーではない**（Append-Only 方式のため、同一 ID が複数行存在）
 - TAG, TEXT, NOTIFICATION は `TARGET_ID` で任意の Kyou に紐づく
 - REKYOU は `TARGET_ID` で他の Kyou をリポスト
+- MIREKYOU は `TARGET_ID` で他の Kyou をタスク化する。MI と同じ板名・期限・開始/終了予定・チェック状態を持ち、タイトルは持たない
 
 ## 2. アカウント・設定系 ER 図
 
@@ -409,7 +435,7 @@ SQLite3 実装（`application_config_dao_sqlite3_impl.go`）では、SELECT/INSE
 
 以下のテーブルは **ID に主キー制約がない**:
 - KMEMO, KC, LANTANA, MI, NLOG, URLOG, TIMEIS
-- TAG, TEXT, NOTIFICATION, REKYOU, IDF
+- TAG, TEXT, NOTIFICATION, REKYOU, MIREKYOU, IDF
 - GIT_COMMIT_LOG
 
 同一 ID のレコードが複数行存在し、`UPDATE_TIME` が最新のものが有効。
