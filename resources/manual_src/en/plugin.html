@@ -1,0 +1,159 @@
+<!-- title: Plugins - Help -->
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Plugins</span></nav>
+  <h1>Plugins</h1>
+  <p>With a plugin installed, records left in services other than gkill appear in the same list as your gkill records. It is meant to let you look back on "what was I doing that day" in one place.</p>
+
+  <h2>Available plugins</h2>
+  <p>Three plugins are provided as standard.</p>
+  <table>
+    <tr>
+      <th>Plugin</th>
+      <th>What it imports</th>
+    </tr>
+    <tr>
+      <td>ChatGPT</td>
+      <td>Conversation history exported from ChatGPT</td>
+    </tr>
+    <tr>
+      <td>Claude.ai</td>
+      <td>Conversation history exported from Claude.ai</td>
+    </tr>
+    <tr>
+      <td>ClaudeCode</td>
+      <td>Chat logs from Claude Code</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> These names are also used when you narrow records by storage in the sidebar of the record list. To see only plugin records, filter by these names.
+  </div>
+
+  <h2>How to install</h2>
+  <p>Installing a plugin means putting files in place. Follow the steps in order.</p>
+  <ol>
+    <li>Put the plugin executable in the <code>plugins</code> folder inside the gkill home folder. The exact place is a folder named after your user ID, then a folder named after the plugin, both created under <code>plugins</code>.</li>
+    <li>Start gkill. The first time the plugin is loaded, a settings file named <code>config.json</code> is created automatically in the same folder.</li>
+    <li>Open <code>config.json</code> in a text editor and write the folder that holds the data you want to import into <code>source_dirs</code>.</li>
+    <li>Search in the <a href="rykv.html">Life Log View</a> and the records appear in the list just like any other record.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> If <code>config.json</code> already exists, gkill never overwrites it. Your settings will not be lost when you edit them.
+  </div>
+
+  <h3>How to write the source folder</h3>
+  <p>You can write either a folder path or a file path in <code>source_dirs</code>. The rules are as follows.</p>
+  <table>
+    <tr>
+      <th>Notation</th>
+      <th>Meaning</th>
+    </tr>
+    <tr>
+      <td>A path starting with <code>~</code></td>
+      <td>A location relative to your own home folder</td>
+    </tr>
+    <tr>
+      <td><code>*</code> <code>**</code> <code>?</code> <code>[]</code></td>
+      <td>Treats part of a folder or file name as "anything"</td>
+    </tr>
+    <tr>
+      <td>When you give a folder</td>
+      <td>It searches down through the sub-folders to find the target files</td>
+    </tr>
+    <tr>
+      <td>When you give a file directly</td>
+      <td>It reads the contents of that file as-is</td>
+    </tr>
+    <tr>
+      <td>When you leave it empty</td>
+      <td>ChatGPT and Claude.ai look in the plugin folder; ClaudeCode looks in the standard Claude Code location</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> Entries in <code>config.json</code> that start with <code>_</code> (an underscore) are only there to explain the format. You may delete them.
+  </div>
+  <div class="tip">
+    <strong>Tip:</strong> You do not need to restart gkill after editing <code>config.json</code>. The new settings are used from your next search onward.
+  </div>
+
+  <h2>What you can and cannot do</h2>
+  <p>Records imported by a plugin are <strong>read-only</strong>. gkill cannot change them, so that your original data stays intact.</p>
+  <table>
+    <tr>
+      <th>Operation</th>
+      <th>Available?</th>
+    </tr>
+    <tr>
+      <td>Add Tag / Add tag from history</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Add Text</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Add Notification</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Repost</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Make Task</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Copy content / Copy ID</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>No (not shown in the menu)</td>
+    </tr>
+    <tr>
+      <td>Delete</td>
+      <td>No (not shown in the menu)</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> If you tag the imported conversations, you can find them later with the tag filter in the <a href="rykv.html">Life Log View</a>.
+  </div>
+
+  <h2>Importing everything again</h2>
+  <p>What a plugin imports is kept on disk to make display fast. If you have replaced a large part of the source and want everything read again, stop gkill and run the following command.</p>
+  <pre>gkill_server clear_cache plugin YOUR_USER_ID</pre>
+  <p>The next time you start gkill and search, the data is read from the source again.</p>
+
+  <h2>When nothing shows up</h2>
+  <table>
+    <tr>
+      <th>Symptom</th>
+      <th>What to check</th>
+    </tr>
+    <tr>
+      <td>No records at all</td>
+      <td>Check that the source files really exist in the folder you wrote in <code>source_dirs</code>. A typo in the path is the most common cause.</td>
+    </tr>
+    <tr>
+      <td>The settings file is not created</td>
+      <td>Check that the executable is in the right place. The folder names are your user ID, then the plugin name, in that order.</td>
+    </tr>
+    <tr>
+      <td>The content stays old</td>
+      <td>Import everything again with the procedure above.</td>
+    </tr>
+    <tr>
+      <td>"Failed to fetch plugin content" is displayed</td>
+      <td>The plugin executable may not be starting. Check that it is not damaged and that you have permission to run it.</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Note:</strong> There is currently no way to change plugin settings from the screen. Edit <code>config.json</code> directly instead.
+  </div>
+
+  <h2>Related Documents</h2>
+  <ul>
+    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="rykv.html">Life Log View</a></li>
+    <li><a href="kyou.html">Record View</a></li>
+    <li><a href="mcp.html">AI Integration</a></li>
+  </ul>

@@ -58,26 +58,55 @@
     <tr>
       <td>Bedingungsgruppe</td>
       <td>Bedingungseditor</td>
-      <td>Filtert die Übereinstimmungsziele mithilfe von AND/OR-Bedingungen.</td>
+      <td>Filtert die Übereinstimmungsziele mithilfe von AND/OR-Bedingungen. Es gibt auch Bedingungen, die mit dem ausgewählten Eintrag vergleichen (siehe unten).</td>
     </tr>
     <tr>
-      <td>Zeitlicher Übereinstimmungstyp</td>
+      <td>Extraktionsbedingung</td>
       <td>Dropdown</td>
       <td>Wählt die Methode der zeitlichen Übereinstimmung.</td>
     </tr>
     <tr>
-      <td>Suchzeitraum (Stunden)</td>
+      <td>Suchbereich (n Stunden)</td>
       <td>Numerische Eingabe</td>
       <td>Gibt den Zeitbereich für die Suche nach zugehörigen Einträgen in Stunden an.</td>
     </tr>
     <tr>
-      <td>Benutzerdefinierte Suchabfrage</td>
+      <td>Suchkriterien anpassen</td>
       <td>Kontrollkästchen ＋ Schaltfläche</td>
       <td>Aktivieren Sie diese Option, um eine benutzerdefinierte Suchabfrage zu verwenden. Die Schaltfläche öffnet den Abfrageeditor.</td>
     </tr>
   </table>
 
-  <h2>Zeitliche Übereinstimmungstypen</h2>
+  <h3>Bedingungen, die mit dem ausgewählten Eintrag vergleichen</h3>
+  <p>In einer Bedingungsgruppe können Sie auch Bedingungen wählen, die mit dem gerade ausgewählten Eintrag vergleichen. Nützlich, wenn „Einträge mit denselben Tags" oder „Einträge derselben Art" automatisch aufgelistet werden sollen.</p>
+  <table>
+    <tr>
+      <th>Bedingung</th>
+      <th>Bedeutung</th>
+    </tr>
+    <tr>
+      <td>Titel gleich Ziel</td>
+      <td>Zeigt nur Einträge, deren Titel mit dem des ausgewählten Eintrags übereinstimmt.</td>
+    </tr>
+    <tr>
+      <td>Alle Tags gleich Ziel</td>
+      <td>Zeigt nur Einträge, deren Tags alle mit denen des ausgewählten Eintrags übereinstimmen.</td>
+    </tr>
+    <tr>
+      <td>Einige Tags gleich Ziel</td>
+      <td>Zeigt Einträge, die mindestens ein Tag mit dem ausgewählten Eintrag gemeinsam haben.</td>
+    </tr>
+    <tr>
+      <td>Datentyp gleich Ziel</td>
+      <td>Zeigt nur Einträge derselben Art (Notiz, Zeitstempel usw.) wie der ausgewählte Eintrag.</td>
+    </tr>
+    <tr>
+      <td>ID gleich Ziel</td>
+      <td>Zeigt ausschließlich den ausgewählten Eintrag selbst.</td>
+    </tr>
+  </table>
+
+  <h2>Extraktionsbedingungen</h2>
   <table>
     <tr>
       <th>Typ</th>
@@ -134,7 +163,7 @@
   </div>
 
   <div class="tip">
-    <strong>Tipp:</strong> Ein kürzerer Suchzeitraum liefert nur zeitlich nähere Einträge.
+    <strong>Tipp:</strong> Ein kürzerer Suchbereich liefert nur zeitlich nähere Einträge.
   </div>
 
   <div class="tip">

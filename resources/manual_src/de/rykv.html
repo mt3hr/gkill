@@ -109,6 +109,8 @@
     <li>Wählen Sie "Tag hinzufügen".</li>
     <li>Geben Sie den Tag-Namen ein (vorhandene Tags werden als Vorschläge angezeigt).</li>
   </ol>
+  <p>Wenn Sie ein kürzlich verwendetes Tag anhängen möchten, nutzen Sie „Tag aus Verlauf hinzufügen" im Kontextmenü: Sie wählen es einfach aus der Liste.</p>
+  <p>Geben Sie einen bisher nie verwendeten Tag-Namen ein, wird vor dem Speichern nachgefragt: „Dies ist ein neues Tag. Möchten Sie es hinzufügen?" Das verhindert, dass sich durch Tippfehler sehr ähnliche Tags ansammeln.</p>
   <h3>Ein Tag bearbeiten oder löschen</h3>
   <ol>
     <li>Halten Sie das zu ändernde Tag gedrückt oder klicken Sie mit der rechten Maustaste darauf.</li>
@@ -132,14 +134,37 @@
 
   <h3>Unterstützte Dateiformate</h3>
   <p>Bilder (JPEG/PNG/GIF/WEBP), Videos (MP4 usw.), PDF, ZIP und andere.</p>
-  <p>Der Inhalt von ZIP-Dateien kann durchsucht werden (Rechtsklick &gt; ZIP-Inhalt öffnen). Markdown-Dateien (.md / .markdown) werden in Listen- und Detailansicht formatiert dargestellt (Überschriften, Tabellen), und mermaid-Codeblöcke werden als Diagramme gerendert.</p>
+  <p>Markdown-Dateien (.md / .markdown) werden in Listen- und Detailansicht formatiert dargestellt (Überschriften, Tabellen), und mermaid-Codeblöcke werden als Diagramme gerendert.</p>
 
   <h3>Beschränkung der Upload-Größe</h3>
-  <p>Gemäß Serverkonfiguration (-1 für unbegrenzt).</p>
+  <p>Die monatliche Obergrenze für Uploads legt der Administrator unter „Monatliche Upload-Größenbeschränkung" in der Serverkonfiguration fest. Der Anfangswert ist <code>-1</code> (unbegrenzt).</p>
 
   <div class="tip">
     <strong>Tipp:</strong> Drücken Sie Strg+V, um den Inhalt der Zwischenablage direkt als Datei zu speichern.
   </div>
+
+  <h2>Den Inhalt einer ZIP-Datei ansehen</h2>
+  <p>Den Inhalt hochgeladener ZIP-Dateien können Sie direkt am Bildschirm öffnen, ohne ihn auf den Rechner zu entpacken. Dateien mit der Endung <code>.cbz</code> werden ebenfalls als ZIP behandelt.</p>
+  <h3>So öffnen Sie ihn</h3>
+  <ol>
+    <li>Tippen und halten Sie (mobil) bzw. klicken Sie mit der rechten Maustaste (Desktop) auf den Eintrag der ZIP-Datei.</li>
+    <li>Wählen Sie im Kontextmenü „ZIP-Inhalt durchsuchen".</li>
+    <li>Die Ordner und Dateien in der ZIP-Datei werden als Liste angezeigt.</li>
+  </ol>
+  <h3>Darin navigieren</h3>
+  <ul>
+    <li>Ein Klick auf einen Ordner führt hinein. Zum Zurückgehen nutzen Sie den Navigationspfad oben oder „..".</li>
+    <li>Ein Klick auf eine Bilddatei öffnet die Vorschau; von dort blättern Sie direkt zum nächsten Bild.</li>
+    <li>Einzelne Dateien lassen sich auch herunterladen.</li>
+    <li>Zu große Dateien lassen sich nicht in der Vorschau anzeigen; darauf weist eine Meldung hin.</li>
+  </ul>
+  <div class="tip">
+    <strong>Tipp:</strong> „ZIP-Inhalt durchsuchen" erscheint nur im Menü, wenn Sie den Eintrag einer ZIP-Datei auswählen. Bei anderen Einträgen wird es nicht angezeigt.
+  </div>
+
+  <h2>Einen Eintrag zur Aufgabe machen und den Inhalt kopieren</h2>
+  <p>Einen Eintrag, um den Sie sich später kümmern möchten, können Sie zur Aufgabe machen, ohne seinen Inhalt umzuschreiben. Wählen Sie im Kontextmenü des Eintrags „Als Aufgabe anlegen", legen Sie Boardname, Fälligkeit sowie geplanten Beginn und geplantes Ende fest und speichern Sie. Die erstellte Aufgabe erscheint auch in der <a href="mi.html">Aufgabenansicht</a> und lässt sich als erledigt abhaken.</p>
+  <p>Mit „Inhalt kopieren" im Kontextmenü kopieren Sie den Text des Eintrags in die Zwischenablage. Mit „ID kopieren" kopieren Sie die ID des Eintrags.</p>
 
   <h2>GPS-Karte verwenden</h2>
   <h3>Eine GPS-Aufzeichnung hochladen</h3>
@@ -162,4 +187,5 @@
     <li><a href="ryuu.html">Verwandte Informationen</a></li>
     <li><a href="kftl-syntax.html">Notizblock-Syntaxreferenz</a></li>
     <li><a href="application-config.html">Einstellungen</a></li>
+    <li><a href="plugin.html">Plugins</a></li>
   </ul>

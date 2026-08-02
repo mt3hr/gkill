@@ -14,7 +14,7 @@ gkill/
 ├── public/                 # 静的アセット（favicon.ico等）
 ├── release/                # リリースビルド成果物（クロスコンパイル時に生成）
 ├── resources/              # リソースファイル
-│   ├── manual/             # 生成済みHTMLマニュアル（7言語×20ページ、go:embed対象）
+│   ├── manual/             # 生成済みHTMLマニュアル（7言語×21ページ、go:embed対象）
 │   ├── manual_src/         # マニュアルの原本（7言語 + _layout.html）。build_manuals.mjs の入力
 │   └── gkill_sample_data/  # サンプルデータ
 ├── .github/                # GitHub Actions ワークフロー

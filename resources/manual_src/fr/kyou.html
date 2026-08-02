@@ -59,6 +59,14 @@
       <td>Affiche les enregistrements republiés à une autre date/heure.</td>
     </tr>
     <tr>
+      <td>Tâche de repost</td>
+      <td>Un enregistrement existant rendu utilisable comme tâche. Le contenu de l'enregistrement d'origine est affiché tel quel, avec une échéance et une case à cocher.</td>
+    </tr>
+    <tr>
+      <td>Enregistrement d'extension</td>
+      <td>Un enregistrement importé par une extension depuis un service autre que gkill. Voir <a href="plugin.html">Extensions</a> pour les détails.</td>
+    </tr>
+    <tr>
       <td>Journal GPS</td>
       <td>Affiche les données de journal de localisation GPS.</td>
     </tr>
@@ -81,23 +89,34 @@
   </ul>
 
   <h2>Menu contextuel</h2>
-  <p>Un clic droit (ou un appui long) sur un enregistrement affiche un menu contextuel avec les options suivantes :</p>
+  <p>Faites un clic droit (ou un appui long sur mobile) sur un enregistrement pour ouvrir le menu contextuel. Les éléments affichés varient légèrement selon le type d'enregistrement.</p>
   <ul>
-    <li>Modifier</li>
-    <li>Supprimer</li>
-    <li>Partager</li>
-    <li>Ajouter/Modifier une étiquette</li>
-    <li>Ajouter/Modifier un texte</li>
-    <li>Ajouter/Modifier une notification</li>
-    <li>Historique</li>
-    <li>Copier l'ID</li>
+    <li><strong>Ajouter un tag depuis l'historique:</strong> Choisissez parmi les tags récemment utilisés et ajoutez-le aussitôt.</li>
+    <li><strong>Ajouter un tag / Modifier un tag:</strong> Ajoute ou modifie des tags.</li>
+    <li><strong>Ajouter du texte / Modifier le texte:</strong> Ajoute ou modifie un texte complémentaire.</li>
+    <li><strong>Repost:</strong> Remet cet enregistrement dans la liste à l'heure actuelle.</li>
+    <li><strong>Transformer en tâche:</strong> Transforme cet enregistrement en tâche sans réécrire son contenu.</li>
+    <li><strong>Ajouter une notification / Modifier la notification:</strong> Ajoute ou modifie un rappel.</li>
+    <li><strong>Modifier:</strong> Modifie le contenu de l'enregistrement.</li>
+    <li><strong>Historique:</strong> Consulte l'historique des modifications des tags, textes et notifications.</li>
+    <li><strong>Copier le contenu:</strong> Copie le corps de l'enregistrement dans le presse-papiers.</li>
+    <li><strong>Copier l'ID:</strong> Copie l'identifiant de l'enregistrement dans le presse-papiers.</li>
+    <li><strong>Parcourir le contenu ZIP:</strong> Affiché uniquement pour les enregistrements de fichiers ZIP ; ouvre leur contenu à l'écran.</li>
+    <li><strong>Ouvrir le dossier / Ouvrir le fichier:</strong> Affiché uniquement lorsque gkill s'exécute sur le même appareil ; ouvre le fichier avec l'application par défaut du système.</li>
+    <li><strong>Partager:</strong> Génère un lien de partage.</li>
+    <li><strong>Supprimer:</strong> Supprime l'enregistrement.</li>
   </ul>
 
   <div class="tip">
     <strong>Astuce :</strong> Vous pouvez ajouter ou modifier des étiquettes directement depuis l'écran de détails de l'enregistrement.
   </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Les enregistrements importés par une extension sont en lecture seule. « Modifier » et « Supprimer » ne s'affichent pas, mais vous pouvez ajouter des tags et des textes ou utiliser « Transformer en tâche ».
+  </div>
   <h2>Documents associés</h2>
   <ul>
     <li><a href="rykv.html">Vue journal de vie</a></li>
     <li><a href="mi.html">Tâches</a></li>
+    <li><a href="plugin.html">Extensions</a></li>
   </ul>

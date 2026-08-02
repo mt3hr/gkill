@@ -59,6 +59,14 @@
       <td>Zeigt Einträge an, die zu einem anderen Datum/Uhrzeit erneut gepostet wurden.</td>
     </tr>
     <tr>
+      <td>Repost-Aufgabe</td>
+      <td>Ein vorhandener Eintrag, der als Aufgabe genutzt werden kann. Der Inhalt des ursprünglichen Eintrags wird unverändert angezeigt, mit Fälligkeit und Erledigt-Haken.</td>
+    </tr>
+    <tr>
+      <td>Plugin-Eintrag</td>
+      <td>Ein Eintrag, den ein Plugin aus einem anderen Dienst als gkill importiert hat. Siehe <a href="plugin.html">Plugins</a> für Details.</td>
+    </tr>
+    <tr>
       <td>GPS-Log</td>
       <td>Zeigt GPS-Standortlogdaten an.</td>
     </tr>
@@ -81,23 +89,34 @@
   </ul>
 
   <h2>Kontextmenü</h2>
-  <p>Ein Rechtsklick (oder langes Drücken) auf einen Datensatz zeigt ein Kontextmenü an. Die folgenden Aktionen sind verfügbar:</p>
+  <p>Klicken Sie mit der rechten Maustaste (oder tippen und halten Sie auf dem Mobilgerät) auf einen Eintrag, um das Kontextmenü zu öffnen. Die angezeigten Einträge unterscheiden sich je nach Eintragstyp leicht.</p>
   <ul>
-    <li><strong>Bearbeiten:</strong> Den Inhalt des Datensatzes bearbeiten.</li>
-    <li><strong>Löschen:</strong> Den Datensatz löschen.</li>
-    <li><strong>Teilen:</strong> Einen Freigabelink erstellen.</li>
-    <li><strong>Tag hinzufuegen / Tag bearbeiten:</strong> Tags hinzufuegen oder bearbeiten.</li>
-    <li><strong>Text hinzufuegen / Text bearbeiten:</strong> Ergänzenden Text hinzufuegen oder bearbeiten.</li>
-    <li><strong>Benachrichtigung hinzufuegen / Benachrichtigung bearbeiten:</strong> Erinnerungsbenachrichtigungen hinzufuegen oder bearbeiten.</li>
-    <li><strong>Verlauf:</strong> Den Aenderungsverlauf von Tags, Texten und Benachrichtigungen einsehen.</li>
-    <li><strong>ID kopieren:</strong> Die ID des Datensatzes in die Zwischenablage kopieren.</li>
+    <li><strong>Tag aus Verlauf hinzufügen:</strong> Wählen Sie aus zuletzt verwendeten Tags und hängen Sie eines sofort an.</li>
+    <li><strong>Tag hinzufügen / Tag bearbeiten:</strong> Fügt Tags hinzu oder bearbeitet sie.</li>
+    <li><strong>Text hinzufügen / Text bearbeiten:</strong> Fügt einen ergänzenden Text hinzu oder bearbeitet ihn.</li>
+    <li><strong>Repost:</strong> Zeigt diesen Eintrag erneut zur aktuellen Uhrzeit in der Liste an.</li>
+    <li><strong>Als Aufgabe anlegen:</strong> Macht diesen Eintrag zur Aufgabe, ohne seinen Inhalt umzuschreiben.</li>
+    <li><strong>Benachrichtigung hinzufügen / bearbeiten:</strong> Fügt eine Erinnerung hinzu oder bearbeitet sie.</li>
+    <li><strong>Bearbeiten:</strong> Bearbeitet den Inhalt des Eintrags.</li>
+    <li><strong>Verlauf:</strong> Zeigt den Änderungsverlauf von Tags, Texten und Benachrichtigungen.</li>
+    <li><strong>Inhalt kopieren:</strong> Kopiert den Text des Eintrags in die Zwischenablage.</li>
+    <li><strong>ID kopieren:</strong> Kopiert die ID des Eintrags in die Zwischenablage.</li>
+    <li><strong>ZIP-Inhalt durchsuchen:</strong> Nur bei Einträgen von ZIP-Dateien sichtbar; öffnet den Inhalt am Bildschirm.</li>
+    <li><strong>Ordner öffnen / Datei öffnen:</strong> Nur sichtbar, wenn gkill auf demselben Gerät läuft; öffnet die Datei mit der Standard-App des Systems.</li>
+    <li><strong>Teilen:</strong> Erzeugt einen Freigabelink.</li>
+    <li><strong>Löschen:</strong> Löscht den Eintrag.</li>
   </ul>
 
   <div class="tip">
     <strong>Tipp:</strong> Sie können Tags direkt aus dem Detailbildschirm des Datensatzes hinzufuegen oder bearbeiten.
   </div>
+
+  <div class="tip">
+    <strong>Tipp:</strong> Von einem Plugin importierte Einträge sind schreibgeschützt. „Bearbeiten" und „Löschen" werden nicht angezeigt, aber Sie können Tags und Texte hinzufügen oder „Als Aufgabe anlegen" verwenden.
+  </div>
   <h2>Verwandte Dokumente</h2>
   <ul>
     <li><a href="rykv.html">Lebenslogansicht</a></li>
     <li><a href="mi.html">Aufgaben</a></li>
+    <li><a href="plugin.html">Plugins</a></li>
   </ul>

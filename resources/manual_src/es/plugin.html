@@ -1,0 +1,159 @@
+<!-- title: Complementos - Ayuda -->
+  <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Complementos</span></nav>
+  <h1>Complementos</h1>
+  <p>Si instala un complemento, los registros que quedaron en servicios distintos de gkill aparecerán en la misma lista que sus registros de gkill. Sirve para poder repasar en un solo sitio «qué estuve haciendo aquel día».</p>
+
+  <h2>Complementos disponibles</h2>
+  <p>De serie se incluyen estos tres.</p>
+  <table>
+    <tr>
+      <th>Complemento</th>
+      <th>Qué importa</th>
+    </tr>
+    <tr>
+      <td>ChatGPT</td>
+      <td>Historial de conversaciones exportado desde ChatGPT</td>
+    </tr>
+    <tr>
+      <td>Claude.ai</td>
+      <td>Historial de conversaciones exportado desde Claude.ai</td>
+    </tr>
+    <tr>
+      <td>ClaudeCode</td>
+      <td>Registros de chat de Claude Code</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo:</strong> Estos nombres también se usan al filtrar por «repositorio» en la barra lateral de la lista de registros. Si solo quiere ver los registros de los complementos, filtre por estos nombres.
+  </div>
+
+  <h2>Cómo instalarlos</h2>
+  <p>Instalar un complemento consiste en colocar archivos. Siga los pasos en orden.</p>
+  <ol>
+    <li>Coloque el ejecutable del complemento en la carpeta <code>plugins</code> que hay dentro de la carpeta de inicio de gkill. El sitio exacto es dentro de una carpeta con su ID de usuario y, dentro de esta, otra con el nombre del complemento, ambas creadas bajo <code>plugins</code>.</li>
+    <li>Inicie gkill. La primera vez que se carga el complemento, se crea automáticamente el archivo de configuración <code>config.json</code> en esa misma carpeta.</li>
+    <li>Abra <code>config.json</code> con un editor de texto y escriba en <code>source_dirs</code> la carpeta donde están los datos que quiere importar.</li>
+    <li>Al buscar en la <a href="rykv.html">Vista de registro de vida</a>, aparecerán en la lista igual que cualquier otro registro.</li>
+  </ol>
+  <div class="tip">
+    <strong>Consejo:</strong> Si ya existe un <code>config.json</code>, gkill nunca lo sobrescribe. Puede cambiar la configuración sin miedo a perderla.
+  </div>
+
+  <h3>Cómo escribir la carpeta de origen</h3>
+  <p>En <code>source_dirs</code> puede escribir tanto la ruta de una carpeta como la de un archivo. Las reglas son estas.</p>
+  <table>
+    <tr>
+      <th>Forma de escribirlo</th>
+      <th>Significado</th>
+    </tr>
+    <tr>
+      <td>Una ruta que empieza por <code>~</code></td>
+      <td>Indica una ubicación relativa a su propia carpeta personal</td>
+    </tr>
+    <tr>
+      <td><code>*</code> <code>**</code> <code>?</code> <code>[]</code></td>
+      <td>Trata una parte del nombre de carpeta o de archivo como «cualquier cosa»</td>
+    </tr>
+    <tr>
+      <td>Si indica una carpeta</td>
+      <td>Busca hacia abajo por las subcarpetas hasta encontrar los archivos de destino</td>
+    </tr>
+    <tr>
+      <td>Si indica un archivo directamente</td>
+      <td>Lee el contenido de ese archivo tal cual</td>
+    </tr>
+    <tr>
+      <td>Si lo deja vacío</td>
+      <td>ChatGPT y Claude.ai miran la carpeta del complemento; ClaudeCode mira la ubicación estándar de Claude Code</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo:</strong> Las claves de <code>config.json</code> que empiezan por <code>_</code> (guion bajo) solo están ahí para explicar el formato. Puede borrarlas.
+  </div>
+  <div class="tip">
+    <strong>Consejo:</strong> No hace falta reiniciar gkill después de editar <code>config.json</code>. La nueva configuración se usa a partir de la siguiente búsqueda.
+  </div>
+
+  <h2>Lo que se puede y lo que no se puede hacer</h2>
+  <p>Los registros importados por un complemento son de <strong>solo lectura</strong>. Para no dañar los datos de origen, gkill no puede modificarlos.</p>
+  <table>
+    <tr>
+      <th>Operación</th>
+      <th>¿Disponible?</th>
+    </tr>
+    <tr>
+      <td>Agregar etiqueta / Agregar etiqueta del historial</td>
+      <td>Sí</td>
+    </tr>
+    <tr>
+      <td>Agregar texto</td>
+      <td>Sí</td>
+    </tr>
+    <tr>
+      <td>Agregar notificación</td>
+      <td>Sí</td>
+    </tr>
+    <tr>
+      <td>Repost</td>
+      <td>Sí</td>
+    </tr>
+    <tr>
+      <td>Convertir en tarea</td>
+      <td>Sí</td>
+    </tr>
+    <tr>
+      <td>Copiar contenido / Copiar ID</td>
+      <td>Sí</td>
+    </tr>
+    <tr>
+      <td>Editar</td>
+      <td>No (no aparece en el menú)</td>
+    </tr>
+    <tr>
+      <td>Eliminar</td>
+      <td>No (no aparece en el menú)</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo:</strong> Si etiqueta las conversaciones importadas, después podrá encontrarlas con el filtro de etiquetas de la <a href="rykv.html">Vista de registro de vida</a>.
+  </div>
+
+  <h2>Cuando quiera volver a importarlo todo</h2>
+  <p>Lo que importa un complemento se guarda para que la visualización sea rápida. Si ha cambiado buena parte del origen y quiere que se lea todo de nuevo, detenga gkill y ejecute la orden siguiente.</p>
+  <pre>gkill_server clear_cache plugin ID_DE_USUARIO</pre>
+  <p>La próxima vez que inicie gkill y busque, los datos se leerán otra vez desde el origen.</p>
+
+  <h2>Cuando no se muestra bien</h2>
+  <table>
+    <tr>
+      <th>Síntoma</th>
+      <th>Qué comprobar</th>
+    </tr>
+    <tr>
+      <td>No aparece ningún registro</td>
+      <td>Compruebe que los archivos de origen existen de verdad en la carpeta que escribió en <code>source_dirs</code>. Un error al escribir la ruta es la causa más habitual.</td>
+    </tr>
+    <tr>
+      <td>No se crea el archivo de configuración</td>
+      <td>Compruebe que el ejecutable está en el sitio correcto. Los nombres de las carpetas son su ID de usuario y luego el nombre del complemento, en ese orden.</td>
+    </tr>
+    <tr>
+      <td>El contenido sigue siendo el antiguo</td>
+      <td>Vuelva a importarlo todo con el procedimiento anterior.</td>
+    </tr>
+    <tr>
+      <td>Aparece «Error al obtener el contenido del complemento»</td>
+      <td>Puede que el ejecutable del complemento no se esté iniciando. Compruebe que no está dañado y que tiene permiso para ejecutarlo.</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Nota:</strong> Por ahora no hay forma de cambiar la configuración de los complementos desde la pantalla. Para cambiarla, edite <code>config.json</code> directamente.
+  </div>
+
+  <h2>Documentos relacionados</h2>
+  <ul>
+    <li><a href="getting-started.html">Primeros Pasos</a></li>
+    <li><a href="rykv.html">Vista de registro de vida</a></li>
+    <li><a href="kyou.html">Vista de registro</a></li>
+    <li><a href="mcp.html">Integración con IA</a></li>
+  </ul>

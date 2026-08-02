@@ -1,66 +1,107 @@
 <!-- title: Home Hub - Help -->
-  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Home</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Home Hub</span></nav>
   <h1>Home Hub</h1>
-  <p>
-    A screen for safely recording even from the lock screen. It serves as a quick-add hub where you can rapidly create any type of record.
-  </p>
-  <p>Saihate is a lightweight hub specialized for adding new records. It omits browsing and editing functions, so there is no risk of accidentally modifying existing records. It operates within an authenticated session, meaning it is only accessible while logged in.</p>
+  <p>A screen for safely adding records even from the lock screen. It works as a hub for quickly creating any type of record.</p>
+  <p>The Home Hub has no browsing or editing features; it is dedicated to adding. There is no risk of changing an existing record by mistake. It runs inside an authenticated session, so it is only available while you are logged in.</p>
   <div class="tip">
-    <strong>When to use which screen:</strong> Use Saihate when you want to quickly jot down a memo or time entry, Life Log View when you want to browse or search your records, and Notepad when you want to batch-enter records via text input.
+    <strong>Which screen to use:</strong> Use the Home Hub when you want to jot down a memo or a timestamp quickly, the Life Log View when you want to look back through or search your records, and the Memo Pad when you want to enter several records at once as text.
   </div>
 
   <h2>Toolbar</h2>
   <table>
-    <tr><th>Icon / Action</th><th>Description</th></tr>
-    <tr><td><span class="icon">&#128260;</span> Reload</td><td>Tap to reload the current data. <strong>Long-press</strong> to force a full reload, bypassing the cache.</td></tr>
-    <tr><td>Logout</td><td>Tap to log out and return to the login screen.</td></tr>
-    <tr><td>&#10068; Help</td><td>Display help for the current screen.</td></tr>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128260;</span> Reload</td>
+      <td>Reloads the data. <strong>Long-press:</strong> performs a forced reload.</td>
+    </tr>
+    <tr>
+      <td>Logout</td>
+      <td>Logs you out.</td>
+    </tr>
+    <tr>
+      <td>&#10068; Help</td>
+      <td>Displays help for the current screen.</td>
+    </tr>
   </table>
 
-  <h2>Navigation</h2>
-  <p>The Home Hub provides navigation links to all main screens:</p>
-  <ul>
-    <li><strong>Memo Pad</strong> &mdash; Open the Memo Pad.</li>
-    <li><strong>Tasks</strong> &mdash; Open the task board.</li>
-    <li><strong>Life Log View</strong> &mdash; Open the life-log browser.</li>
-    <li><strong>In Progress</strong> &mdash; View active time sessions.</li>
-    <li><strong>Time Tracking + Memo</strong> &mdash; Open the combined memo + time tracking view.</li>
-  </ul>
+  <h2>Floating Action Button (+)</h2>
+  <p>Tapping the "+" button at the bottom right of the screen opens the menu for adding records.</p>
 
-  <h2>FAB "+" Quick-Add Menu</h2>
-  <p>The floating action button (FAB) with a "+" icon at the bottom-right opens a quick-add menu for creating new records:</p>
   <table>
-    <tr><th>Record Type</th><th>Description</th></tr>
-    <tr><td>Memo</td><td>Create a new text memo. Opens the memo creation dialog.</td></tr>
-    <tr><td>Time + Memo</td><td>Start a new time tracking session and simultaneously attach a memo to it.</td></tr>
-    <tr><td>Numeric</td><td>Record a numeric counter value (e.g., counting events or items).</td></tr>
-    <tr><td>Bookmark</td><td>Save a URL with an optional title and notes.</td></tr>
-    <tr><td>Time Log</td><td>Start a new time tracking session.</td></tr>
-    <tr><td>Task</td><td>Create a new task and assign it to a board.</td></tr>
-    <tr><td>Expense</td><td>Log a financial expense with amount and description.</td></tr>
-    <tr><td>Mood</td><td>Record your current mood on a scale of 0 to 10.</td></tr>
-    <tr><td>Upload</td><td>Upload a file or image from your device.</td></tr>
+    <tr>
+      <th>Menu item</th>
+      <th>What it adds</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Memo Pad</td>
+      <td>Text entry</td>
+      <td>Opens the screen for entering memos and other records with memo pad syntax.</td>
+    </tr>
+    <tr>
+      <td>Time Tracking + Memo</td>
+      <td>Text and timestamps</td>
+      <td>Opens the screen that manages memo entry and running timestamps side by side.</td>
+    </tr>
+    <tr>
+      <td>Numeric Record</td>
+      <td>Record a number</td>
+      <td>Records any numeric data.</td>
+    </tr>
+    <tr>
+      <td>Bookmark</td>
+      <td>Record a URL</td>
+      <td>Saves the URL of a web page as a bookmark.</td>
+    </tr>
+    <tr>
+      <td>Time Log</td>
+      <td>Start timing</td>
+      <td>Starts a new timestamp session.</td>
+    </tr>
+    <tr>
+      <td>Task</td>
+      <td>Add a task</td>
+      <td>Creates a new task.</td>
+    </tr>
+    <tr>
+      <td>Expense</td>
+      <td>Record an amount</td>
+      <td>Records the amount and details of an expense.</td>
+    </tr>
+    <tr>
+      <td>Mood</td>
+      <td>Record a mood (0-10)</td>
+      <td>Records how you feel right now as a number from 0 to 10.</td>
+    </tr>
+    <tr>
+      <td>Upload</td>
+      <td>Upload a file</td>
+      <td>Uploads and records files such as images or documents.</td>
+    </tr>
   </table>
 
   <div class="tip">
-    <strong>Tip:</strong> <strong>Long-press</strong> the "+" FAB button to directly open the Memo Pad for fast batch entry, skipping the quick-add menu entirely.
+    <strong>Long-press:</strong> Long-pressing the "+" button opens the Memo Pad directly. Handy when you want to take a note quickly.
   </div>
 
   <div class="tip">
-    <strong>Tip:</strong> Home Hub is the default landing page after login. If you prefer a different screen, you can change the "Default View on Startup" in Settings.
+    <strong>Tip:</strong> The screen shown first after login can be changed with "Default View on Startup" in the settings screen.
   </div>
 
   <div class="tip">
-    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. Convenient when you want to add a record quickly.
   </div>
 
   <h2>Related Documents</h2>
   <ul>
     <li><a href="getting-started.html">Getting Started</a></li>
-    <li><a href="kftl.html">Notepad</a></li>
-    <li><a href="mkfl.html">Punch Memo</a></li>
-    <li><a href="mi.html">Tasks</a></li>
+    <li><a href="kftl.html">Memo Pad</a></li>
+    <li><a href="mkfl.html">Time Tracking + Memo</a></li>
+    <li><a href="mi.html">Task Board</a></li>
     <li><a href="rykv.html">Life Log View</a></li>
-    <li><a href="plaing.html">In Progress</a></li>
+    <li><a href="plaing.html">Active Sessions</a></li>
     <li><a href="application-config.html">Settings</a></li>
   </ul>

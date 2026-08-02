@@ -109,6 +109,8 @@
     <li>Sélectionnez "Ajouter une étiquette".</li>
     <li>Tapez le nom de l'étiquette (les étiquettes existantes s'affichent comme suggestions).</li>
   </ol>
+  <p>Pour appliquer un tag récemment utilisé, servez-vous de « Ajouter un tag depuis l'historique » dans le menu contextuel : il suffit de le choisir dans la liste.</p>
+  <p>Si vous saisissez un nom de tag encore jamais utilisé, une confirmation « C'est un nouveau tag. Voulez-vous l'ajouter ? » apparaît avant l'enregistrement. Elle évite que des tags très proches se multiplient à cause de fautes de frappe.</p>
   <h3>Modifier ou supprimer une étiquette</h3>
   <ol>
     <li>Maintenez appuyé ou faites un clic droit sur l'étiquette à modifier.</li>
@@ -132,14 +134,37 @@
 
   <h3>Formats de fichiers pris en charge</h3>
   <p>Images (JPEG/PNG/GIF/WEBP), vidéos (MP4, etc.), PDF, ZIP et autres.</p>
-  <p>Le contenu des fichiers ZIP peut être exploré (clic droit &gt; Ouvrir le contenu ZIP). Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux) dans les vues liste et détail, et les blocs de code mermaid sont rendus sous forme de diagrammes.</p>
+  <p>Les fichiers Markdown (.md / .markdown) sont affichés en texte enrichi (titres, tableaux) dans les vues liste et détail, et les blocs de code mermaid sont rendus sous forme de diagrammes.</p>
 
   <h3>Limite de taille de téléversement</h3>
-  <p>Selon la configuration du serveur (-1 pour illimité).</p>
+  <p>La limite mensuelle de taille de téléversement est définie par l'administrateur dans « Limite mensuelle de taille de téléversement » de la configuration du serveur. La valeur initiale est <code>-1</code> (illimité).</p>
 
   <div class="tip">
     <strong>Astuce :</strong> Appuyez sur Ctrl+V pour enregistrer le contenu du presse-papiers directement en tant que fichier.
   </div>
+
+  <h2>Voir le contenu d'un fichier ZIP</h2>
+  <p>Vous pouvez ouvrir le contenu des fichiers ZIP téléversés directement à l'écran, sans les extraire sur votre ordinateur. Les fichiers dont l'extension est <code>.cbz</code> sont eux aussi traités comme des ZIP.</p>
+  <h3>Comment l'ouvrir</h3>
+  <ol>
+    <li>Appuyez longuement (mobile) ou faites un clic droit (bureau) sur l'enregistrement du fichier ZIP.</li>
+    <li>Choisissez « Parcourir le contenu ZIP » dans le menu contextuel.</li>
+    <li>Les dossiers et fichiers contenus dans le ZIP s'affichent sous forme de liste.</li>
+  </ol>
+  <h3>Se déplacer à l'intérieur</h3>
+  <ul>
+    <li>Un clic sur un dossier vous fait entrer dedans. Pour remonter d'un niveau, utilisez le fil d'Ariane en haut de l'écran ou « .. ».</li>
+    <li>Un clic sur une image ouvre l'aperçu, et vous pouvez passer directement à l'image suivante.</li>
+    <li>Vous pouvez aussi télécharger chaque fichier séparément.</li>
+    <li>Les fichiers trop volumineux ne peuvent pas être prévisualisés ; un message vous en informe.</li>
+  </ul>
+  <div class="tip">
+    <strong>Astuce :</strong> « Parcourir le contenu ZIP » n'apparaît dans le menu que lorsque vous sélectionnez l'enregistrement d'un fichier ZIP. Il ne s'affiche pas pour les autres enregistrements.
+  </div>
+
+  <h2>Transformer un enregistrement en tâche et copier son contenu</h2>
+  <p>Un enregistrement que vous souhaitez traiter plus tard peut devenir une tâche sans en réécrire le contenu. Choisissez « Transformer en tâche » dans le menu contextuel de l'enregistrement, renseignez le nom du tableau, l'échéance et les dates de début et de fin prévues, puis enregistrez. La tâche créée apparaît aussi dans la <a href="mi.html">Vue des tâches</a> et peut être cochée comme terminée.</p>
+  <p>En choisissant « Copier le contenu » dans le menu contextuel, vous copiez le corps de l'enregistrement dans le presse-papiers. « Copier l'ID » copie l'identifiant de l'enregistrement.</p>
 
   <h2>Utilisation de la carte GPS</h2>
   <h3>Téléverser un enregistrement GPS</h3>
@@ -162,4 +187,5 @@
     <li><a href="ryuu.html">Informations associées</a></li>
     <li><a href="kftl-syntax.html">Référence de syntaxe du bloc-notes</a></li>
     <li><a href="application-config.html">Paramètres</a></li>
+    <li><a href="plugin.html">Extensions</a></li>
   </ul>

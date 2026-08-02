@@ -1,9 +1,9 @@
 <!-- title: Related Information - Help -->
-  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Related Info</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Related Information</span></nav>
   <h1>Related Information</h1>
   <p>A screen for defining conditions to automatically search and display records related to a life log entry. You can set up queries per definition to visualize record relationships.</p>
   <div class="tip">
-    <strong>Tip:</strong> Related Info is a sub-view that appears when you select a record in the LifeLog View screen. It is accessible from the LifeLog View.
+    <strong>Tip:</strong> Related Info is a sub-view that appears when you select a record in the Life Log View screen. It is accessible from the Life Log View.
   </div>
 
   <h2>Definition Management</h2>
@@ -56,28 +56,57 @@
       <td>Text displayed after the matched value.</td>
     </tr>
     <tr>
-      <td>Predicate Group</td>
+      <td>Condition Group</td>
       <td>Condition Editor</td>
-      <td>Filters match targets using AND/OR conditions.</td>
+      <td>Filters match targets using AND/OR conditions. Conditions that compare against the record you selected are also available (see below).</td>
     </tr>
     <tr>
-      <td>Related Time Match Type</td>
+      <td>Extraction Condition</td>
       <td>Dropdown</td>
       <td>Selects how time-based relevance is determined.</td>
     </tr>
     <tr>
-      <td>Search Duration (hours)</td>
+      <td>Search Range (n hours)</td>
       <td>Numeric Input</td>
       <td>Specifies the time range in hours for searching related records.</td>
     </tr>
     <tr>
-      <td>Custom Search Query</td>
+      <td>Customize Search Criteria</td>
       <td>Checkbox + Button</td>
-      <td>Enable to use a custom search query. Click the button to open the search query editor.</td>
+      <td>Enable to use a Customize Search Criteria. Click the button to open the search query editor.</td>
     </tr>
   </table>
 
-  <h2>Related Time Match Types</h2>
+  <h3>Conditions that compare with the selected record</h3>
+  <p>In a condition group you can also narrow down by comparing with the record you currently have selected. Use this when you want records with "the same tags" or "the same kind" listed automatically.</p>
+  <table>
+    <tr>
+      <th>Condition</th>
+      <th>Meaning</th>
+    </tr>
+    <tr>
+      <td>Title equals target</td>
+      <td>Shows only records whose title is the same as the selected record.</td>
+    </tr>
+    <tr>
+      <td>All tags equal target</td>
+      <td>Shows only records whose tags are all the same as the selected record.</td>
+    </tr>
+    <tr>
+      <td>Some tags equal target</td>
+      <td>Shows records that share at least one tag with the selected record.</td>
+    </tr>
+    <tr>
+      <td>Data type equals target</td>
+      <td>Shows only records of the same kind (memo, timestamp, etc.) as the selected record.</td>
+    </tr>
+    <tr>
+      <td>ID equals target</td>
+      <td>Shows only the selected record itself.</td>
+    </tr>
+  </table>
+
+  <h2>Extraction Conditions</h2>
   <table>
     <tr>
       <th>Type</th>

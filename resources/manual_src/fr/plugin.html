@@ -1,0 +1,159 @@
+<!-- title: Extensions - Aide -->
+  <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Extensions</span></nav>
+  <h1>Extensions</h1>
+  <p>Avec une extension installée, les enregistrements laissés dans des services autres que gkill apparaissent dans la même liste que vos enregistrements gkill. Cela vous permet de revenir en un seul endroit sur « ce que je faisais ce jour-là ».</p>
+
+  <h2>Extensions disponibles</h2>
+  <p>Trois extensions sont fournies en standard.</p>
+  <table>
+    <tr>
+      <th>Extension</th>
+      <th>Ce qu'elle importe</th>
+    </tr>
+    <tr>
+      <td>ChatGPT</td>
+      <td>Historique des conversations exporté depuis ChatGPT</td>
+    </tr>
+    <tr>
+      <td>Claude.ai</td>
+      <td>Historique des conversations exporté depuis Claude.ai</td>
+    </tr>
+    <tr>
+      <td>ClaudeCode</td>
+      <td>Journaux de discussion de Claude Code</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Astuce :</strong> Ces noms servent aussi lorsque vous filtrez par « dépôt » dans la barre latérale de la liste des enregistrements. Pour ne voir que les enregistrements des extensions, filtrez par ces noms.
+  </div>
+
+  <h2>Comment les installer</h2>
+  <p>Installer une extension consiste à placer des fichiers. Suivez les étapes dans l'ordre.</p>
+  <ol>
+    <li>Placez l'exécutable de l'extension dans le dossier <code>plugins</code> situé dans le dossier personnel de gkill. L'emplacement exact se trouve dans un dossier portant votre identifiant, puis un dossier portant le nom de l'extension, tous deux créés sous <code>plugins</code>.</li>
+    <li>Démarrez gkill. Au premier chargement de l'extension, le fichier de configuration <code>config.json</code> est créé automatiquement dans ce même dossier.</li>
+    <li>Ouvrez <code>config.json</code> dans un éditeur de texte et indiquez dans <code>source_dirs</code> le dossier contenant les données à importer.</li>
+    <li>En effectuant une recherche dans la <a href="rykv.html">Vue du journal de vie</a>, ils s'affichent dans la liste comme n'importe quel autre enregistrement.</li>
+  </ol>
+  <div class="tip">
+    <strong>Astuce :</strong> Si un <code>config.json</code> existe déjà, gkill ne l'écrase jamais. Vos réglages ne seront pas perdus lorsque vous les modifierez.
+  </div>
+
+  <h3>Comment indiquer le dossier source</h3>
+  <p>Dans <code>source_dirs</code>, vous pouvez indiquer aussi bien un chemin de dossier qu'un chemin de fichier. Les règles sont les suivantes.</p>
+  <table>
+    <tr>
+      <th>Écriture</th>
+      <th>Signification</th>
+    </tr>
+    <tr>
+      <td>Un chemin commençant par <code>~</code></td>
+      <td>Indique un emplacement relatif à votre propre dossier personnel</td>
+    </tr>
+    <tr>
+      <td><code>*</code> <code>**</code> <code>?</code> <code>[]</code></td>
+      <td>Traite une partie du nom de dossier ou de fichier comme « n'importe quoi »</td>
+    </tr>
+    <tr>
+      <td>Si vous indiquez un dossier</td>
+      <td>Il explore les sous-dossiers en profondeur pour trouver les fichiers visés</td>
+    </tr>
+    <tr>
+      <td>Si vous indiquez directement un fichier</td>
+      <td>Il lit le contenu de ce fichier tel quel</td>
+    </tr>
+    <tr>
+      <td>Si vous le laissez vide</td>
+      <td>ChatGPT et Claude.ai regardent le dossier de l'extension ; ClaudeCode regarde l'emplacement standard de Claude Code</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Astuce :</strong> Les entrées de <code>config.json</code> commençant par <code>_</code> (tiret bas) ne sont là que pour expliquer le format. Vous pouvez les supprimer.
+  </div>
+  <div class="tip">
+    <strong>Astuce :</strong> Il n'est pas nécessaire de redémarrer gkill après avoir modifié <code>config.json</code>. Les nouveaux réglages s'appliquent dès la recherche suivante.
+  </div>
+
+  <h2>Ce qui est possible et ce qui ne l'est pas</h2>
+  <p>Les enregistrements importés par une extension sont en <strong>lecture seule</strong>. Afin de ne pas altérer les données d'origine, gkill ne peut pas les modifier.</p>
+  <table>
+    <tr>
+      <th>Opération</th>
+      <th>Possible ?</th>
+    </tr>
+    <tr>
+      <td>Ajouter un tag / Ajouter un tag depuis l'historique</td>
+      <td>Oui</td>
+    </tr>
+    <tr>
+      <td>Ajouter du texte</td>
+      <td>Oui</td>
+    </tr>
+    <tr>
+      <td>Ajouter une notification</td>
+      <td>Oui</td>
+    </tr>
+    <tr>
+      <td>Repost</td>
+      <td>Oui</td>
+    </tr>
+    <tr>
+      <td>Transformer en tâche</td>
+      <td>Oui</td>
+    </tr>
+    <tr>
+      <td>Copier le contenu / Copier l'ID</td>
+      <td>Oui</td>
+    </tr>
+    <tr>
+      <td>Modifier</td>
+      <td>Non (n'apparaît pas dans le menu)</td>
+    </tr>
+    <tr>
+      <td>Supprimer</td>
+      <td>Non (n'apparaît pas dans le menu)</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Astuce :</strong> Si vous ajoutez des tags aux conversations importées, vous pourrez ensuite les retrouver avec le filtre par tags de la <a href="rykv.html">Vue du journal de vie</a>.
+  </div>
+
+  <h2>Pour tout réimporter</h2>
+  <p>Ce qu'une extension importe est conservé afin d'accélérer l'affichage. Si vous avez remplacé une grande partie de la source et souhaitez tout relire, arrêtez gkill puis exécutez la commande suivante.</p>
+  <pre>gkill_server clear_cache plugin IDENTIFIANT</pre>
+  <p>Au prochain démarrage de gkill, une recherche relira les données depuis la source.</p>
+
+  <h2>Si rien ne s'affiche correctement</h2>
+  <table>
+    <tr>
+      <th>Symptôme</th>
+      <th>À vérifier</th>
+    </tr>
+    <tr>
+      <td>Aucun enregistrement n'apparaît</td>
+      <td>Vérifiez que les fichiers source existent bien dans le dossier indiqué dans <code>source_dirs</code>. Une erreur de saisie dans le chemin en est la cause la plus fréquente.</td>
+    </tr>
+    <tr>
+      <td>Le fichier de configuration n'est pas créé</td>
+      <td>Vérifiez que l'exécutable est au bon endroit. Les noms de dossiers sont votre identifiant, puis le nom de l'extension, dans cet ordre.</td>
+    </tr>
+    <tr>
+      <td>Le contenu reste l'ancien</td>
+      <td>Réimportez tout en suivant la procédure ci-dessus.</td>
+    </tr>
+    <tr>
+      <td>« Échec de la récupération du contenu de l'extension » s'affiche</td>
+      <td>L'exécutable de l'extension ne démarre peut-être pas. Vérifiez qu'il n'est pas endommagé et que vous avez le droit de l'exécuter.</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Remarque :</strong> Il n'existe pour l'instant aucun moyen de modifier les réglages des extensions depuis l'écran. Modifiez directement <code>config.json</code>.
+  </div>
+
+  <h2>Documents associés</h2>
+  <ul>
+    <li><a href="getting-started.html">Premiers pas</a></li>
+    <li><a href="rykv.html">Vue du journal de vie</a></li>
+    <li><a href="kyou.html">Vue d'enregistrement</a></li>
+    <li><a href="mcp.html">Intégration IA</a></li>
+  </ul>

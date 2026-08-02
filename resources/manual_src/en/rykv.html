@@ -1,148 +1,226 @@
 <!-- title: Life Log View - Help -->
   <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Life Log View</span></nav>
   <h1>Life Log View</h1>
-  <p>
-    The Life Log View is the primary life-log browsing screen. It displays all your recorded events as a timeline of image thumbnails and text entries, allowing you to review and explore your history.
-  </p>
+  <p>A screen that lists your whole life log with image thumbnails. You can use several filter columns to look at your data under different conditions at the same time.</p>
 
   <h2>Toolbar</h2>
   <table>
-    <tr><th>Icon</th><th>Action</th></tr>
-    <tr><td><span class="icon">&#9776;</span> Sidebar</td><td>Show or hide the filter sidebar for narrowing down displayed records.</td></tr>
-    <tr><td><span class="icon">&#128196;</span> Detail</td><td>Show or hide the detail panel for the currently selected record.</td></tr>
-    <tr><td><span class="icon">&#128202;</span> Summary View Statistics</td><td>Show or hide the Summary View analytics panel with charts and statistics about your records.</td></tr>
-    <tr><td><span class="icon">&#128197;</span> Calendar</td><td>Show or hide the calendar view for date-based navigation.</td></tr>
-    <tr><td><span class="icon">&#128506;</span> Map</td><td>Show or hide the GPS map view to see records plotted on a geographic map.</td></tr>
-    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
-    <tr><td>&#10068; Help</td><td>Display help for the current screen.</td></tr>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9776;</span> Sidebar</td>
+      <td>Shows or hides the sidebar used for searching and filtering.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128196;</span> Detail view</td>
+      <td>Shows or hides the detail panel for the selected record.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128202;</span> Aggregation View</td>
+      <td>Shows or hides the statistics and analysis view.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128197;</span> Calendar</td>
+      <td>Shows or hides the calendar view.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128506;</span> Map</td>
+      <td>Shows or hides the map view for GPS logs.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> Settings</td>
+      <td>Opens the application settings screen.</td>
+    </tr>
+    <tr>
+      <td>&#10068; Help</td>
+      <td>Displays help for the current screen.</td>
+    </tr>
   </table>
 
-  <h2>Thumbnail Grid</h2>
-  <p>Records are displayed as a multi-column grid of thumbnails and text previews. You can configure the number of columns from 1 to 10 in the application settings.</p>
-  <table>
-    <tr><th>Columns</th><th>Best For</th></tr>
-    <tr><td>1-2</td><td>Detailed reading on mobile devices. Shows more text per entry.</td></tr>
-    <tr><td>3-5</td><td>Balanced view on tablets and small desktops.</td></tr>
-    <tr><td>6-10</td><td>Overview browsing on large screens. Shows many records at once.</td></tr>
-  </table>
+  <h2>Main Features</h2>
 
-  <h2>Filter Sidebar</h2>
-  <p>The sidebar provides powerful filtering options:</p>
+  <h3>List with image thumbnails</h3>
+  <p>Records are shown in a multi-column grid layout. Records containing images or files show a thumbnail. The number of columns can be set from 1 to 10 in the settings screen.</p>
+
+  <h3>Sidebar (filter and search)</h3>
+  <p>The sidebar lets you narrow down records with the following conditions.</p>
   <ul>
-    <li><strong>Date range:</strong> Set start and end dates to narrow the time period.</li>
-    <li><strong>Record type:</strong> Show only specific types (memos, bookmarks, files, etc.).</li>
-    <li><strong>Tags:</strong> Filter by one or more tags.</li>
-    <li><strong>Storage:</strong> Filter by data storage.</li>
-    <li><strong>Text search:</strong> Search within record content.</li>
+    <li>Text search (keyword)</li>
+    <li>Filter by tag</li>
+    <li>Date range</li>
+    <li>Record type selection</li>
+    <li>Storage selection</li>
   </ul>
 
-  <h2>Detail Panel</h2>
-  <p>When enabled, selecting a record opens the detail panel showing its full content, tags, related timestamps, and edit controls. This is the same information shown in the Record view.</p>
+  <h3>Adding filter columns</h3>
+  <p>The "+" button adds a new filter column. You can place the results of different filter conditions side by side and compare them.</p>
 
-  <h2>Summary View Analytics</h2>
-  <p>The Summary View statistics panel shows charts and aggregate data about your records, including:</p>
-  <ul>
-    <li>Record count trends over time</li>
-    <li>Type distribution breakdowns</li>
-    <li>Tag usage frequency</li>
-    <li>Activity patterns</li>
-  </ul>
+  <h3>Detail panel</h3>
+  <p>When you select a record, the detail panel shows all of its information.</p>
 
-  <h2>GPS Map View</h2>
-  <p>If GPS data is available (from GPX logs or geotagged files), records are plotted on an interactive map. This requires a Google Maps API key configured in Settings.</p>
+  <h3>Aggregation View statistics</h3>
+  <p>Shows statistics and analysis of your record data, so you can see trends and patterns.</p>
+
+  <h3>GPS map display</h3>
+  <p>Shows GPS log data on a map. You can see your routes and locations visually. A Google Maps API key must be configured.</p>
 
   <div class="tip">
-    <strong>Tip:</strong> The "Life Log View Display Days" can be configured in Settings. Set a shorter period for faster loading, or a longer period for broader browsing.
+    <strong>Tip:</strong> The number of image columns can be changed in the settings screen. 1-2 columns work well on a phone, 3-5 on a PC.
   </div>
 
   <div class="tip">
-    <strong>Tip:</strong> Adjust the number of image columns in Settings to match your screen size and browsing style. Fewer columns show more detail; more columns provide a broader overview.
+    <strong>Tip:</strong> Adding several filter columns is handy for comparing records under different conditions side by side.
   </div>
 
-  <h2>FAB "+" Quick-Add Menu</h2>
-  <p>The floating action button (FAB) with a "+" icon at the bottom-right opens a quick-add menu for creating new records:</p>
+  <div class="tip">
+    <strong>Tip:</strong> The default display period can be changed with "Life Log View Display Days" in the settings screen.
+  </div>
+
+  <h2>Floating Action Button (+)</h2>
+  <p>Tapping the "+" button at the bottom right of the screen opens the menu for adding records.</p>
   <table>
-    <tr><th>Record Type</th><th>Description</th></tr>
-    <tr><td>Memo</td><td>Create a new text memo. Opens the memo creation dialog.</td></tr>
-    <tr><td>Time + Memo</td><td>Start a new time tracking session and simultaneously attach a memo to it.</td></tr>
-    <tr><td>Numeric</td><td>Record a numeric counter value (e.g., counting events or items).</td></tr>
-    <tr><td>Bookmark</td><td>Save a URL with an optional title and notes.</td></tr>
-    <tr><td>Time Log</td><td>Start a new time tracking session.</td></tr>
-    <tr><td>Task</td><td>Create a new task and assign it to a board.</td></tr>
-    <tr><td>Expense</td><td>Log a financial expense with amount and description.</td></tr>
-    <tr><td>Mood</td><td>Record your current mood on a scale of 0 to 10.</td></tr>
-    <tr><td>Upload</td><td>Upload a file or image from your device.</td></tr>
-    <tr><td>Save Clipboard</td><td>Save clipboard content (screenshot, image, text, PDF, etc.) directly as a file record.</td></tr>
+    <tr>
+      <th>Menu item</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Memo Pad</td>
+      <td>Enters a text memo in memo pad form.</td>
+    </tr>
+    <tr>
+      <td>Time Tracking + Memo</td>
+      <td>Opens the hybrid screen with memo entry and the list of timestamps.</td>
+    </tr>
+    <tr>
+      <td>Numeric Record</td>
+      <td>Records numeric data.</td>
+    </tr>
+    <tr>
+      <td>Bookmark</td>
+      <td>Saves a URL.</td>
+    </tr>
+    <tr>
+      <td>Time Log</td>
+      <td>Starts a new timestamp session.</td>
+    </tr>
+    <tr>
+      <td>Task</td>
+      <td>Adds a new task.</td>
+    </tr>
+    <tr>
+      <td>Expense</td>
+      <td>Records an amount.</td>
+    </tr>
+    <tr>
+      <td>Mood</td>
+      <td>Records a mood value (0-10).</td>
+    </tr>
+    <tr>
+      <td>Upload</td>
+      <td>Uploads and records a file.</td>
+    </tr>
+    <tr>
+      <td>Save Clipboard</td>
+      <td>Saves the clipboard contents (image, text, PDF and so on) directly as a file. Handy for quickly recording screenshots or copied images.</td>
+    </tr>
   </table>
 
   <div class="tip">
-    <strong>Tip:</strong> <strong>Long-press</strong> the "+" FAB button to directly open the Memo Pad for fast batch entry, skipping the quick-add menu entirely.
+    <strong>Long-press:</strong> Long-pressing the "+" button opens the Memo Pad directly. Handy when you want to take a note quickly.
   </div>
 
   <div class="tip">
-    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. Convenient when you want to add a record quickly.
   </div>
 
   <div class="tip">
-    <strong>Shortcut:</strong> Press Ctrl+V to save clipboard content directly as a file. Useful for quickly saving screenshots or copied images.
+    <strong>Shortcut:</strong> Press Ctrl+V to save the clipboard contents directly as a file. Useful for quickly recording screenshots or images.
   </div>
 
   <h2>Using Tags</h2>
-  <p>Tags are labels you can attach to records to categorize and organize them. Multiple tags can be attached to a single record.</p>
-  <h3>Adding a Tag</h3>
+  <p>Tags are labels for sorting and organising records. A single record can carry several tags.</p>
+  <h3>Adding a tag</h3>
   <ol>
     <li>Long-press (mobile) or right-click (desktop) a record in the timeline.</li>
-    <li>Select "Add Tag" from the context menu.</li>
-    <li>Type the tag name and confirm. Existing tags will appear as suggestions.</li>
+    <li>Choose "Add Tag" from the context menu.</li>
+    <li>Type the tag name and add it. Existing tags appear as suggestions.</li>
   </ol>
-  <h3>Editing or Deleting a Tag</h3>
+  <p>To attach a tag you used recently, use "Add tag from history" in the context menu: you just pick it from the list.</p>
+  <p>If you type a tag name you have never used before, you are asked "This is a new tag. Do you want to add it?" before saving. This check stops near-duplicate tags piling up because of typos.</p>
+  <h3>Editing or deleting a tag</h3>
   <ol>
-    <li>Long-press (mobile) or right-click (desktop) the tag displayed on a record.</li>
-    <li>Select "Edit Tag" or "Delete Tag" from the context menu.</li>
+    <li>Long-press (mobile) or right-click (desktop) the tag shown on a record.</li>
+    <li>Choose "Edit Tag" or "Delete Tag" from the context menu.</li>
   </ol>
-  <h3>Tag Structure</h3>
-  <p>In Settings → "Tag Structure", you can manage display names and ordering of tags. Placing frequently used tags higher makes them easier to find in the autocomplete list.</p>
+  <h3>Tag structure</h3>
+  <p>"Tag Structure" in the settings screen lets you manage the display names and order of tags. Putting frequently used tags near the top makes them easier to find in the suggestion list.</p>
   <div class="tip">
-    <strong>Tip:</strong> In Notepad syntax, entering <code>#tagname</code> automatically attaches a tag when the text is submitted. See the <a href="kftl-syntax.html">Notepad Syntax Reference</a> for details.
+    <strong>Tip:</strong> Typing <code>#tagname</code> in memo pad syntax attaches the tag automatically when the text is submitted. See the <a href="kftl-syntax.html">Memo Pad Syntax Reference</a> for details.
   </div>
 
   <h2>File Upload Details</h2>
-  <p>From the "+" FAB menu, select "Upload" to save images, videos, documents, and other files to gkill.</p>
+  <p>"Upload" in the "+" button menu saves files such as images, videos and documents to gkill.</p>
   <h3>Steps</h3>
   <ol>
-    <li>Select "Upload" from the "+" FAB menu.</li>
-    <li>Choose the target storage (a file management repository).</li>
-    <li>Confirm or adjust the record date/time associated with the file.</li>
-    <li>Select the file(s) to upload. Multiple files can be selected at once. You can also drag &amp; drop files onto the "Drop files here" zone in the dialog.</li>
+    <li>Choose "Upload" from the "+" button.</li>
+    <li>Choose the target storage (one meant for files).</li>
+    <li>Check and adjust the related date and time (when the file was recorded).</li>
+    <li>Select the files and upload them. Several files can be selected at once. You can also drag and drop files onto the "Drop files here" area in the dialog.</li>
   </ol>
-  <h3>Supported File Types</h3>
-  <p>Images (JPEG, PNG, GIF, WEBP), videos (MP4, etc.), PDFs, ZIPs, and most common file formats are supported. ZIP files can be browsed after upload (right-click the record → "Browse ZIP Contents"). Markdown files (.md / .markdown) are rendered as rich text with headings and tables in list and detail views, and mermaid code blocks are rendered as diagrams.</p>
-  <h3>Upload Size Limit</h3>
-  <p>The monthly upload size limit is configured by the administrator in Server Config. If the limit is reached, an error message will appear. (A value of <code>-1</code> means unlimited.)</p>
+  <h3>Supported file types</h3>
+  <p>Images (JPEG, PNG, GIF, WEBP), videos (MP4 and so on), PDF, ZIP and most other common file formats are supported. Markdown files (.md / .markdown) are shown as rich text with headings and tables in the list and detail views, and mermaid code blocks are rendered as diagrams.</p>
+  <h3>Upload size limit</h3>
+  <p>The monthly upload size limit is set by the administrator under "Monthly Upload Size Limit" in the server settings. The initial value is <code>-1</code> (unlimited).</p>
   <div class="tip">
-    <strong>Shortcut:</strong> Press Ctrl+V to save clipboard content (image, text, PDF, etc.) directly as a file. Ideal for quickly saving screenshots.
+    <strong>Shortcut:</strong> Press Ctrl+V to save an image or text from the clipboard directly as a file. Ideal for quickly recording screenshots.
   </div>
 
-  <h2>Using the GPS Map</h2>
-  <p>Enable the Map button in the toolbar to display GPS tracks on an interactive map for the currently selected time period.</p>
-  <h3>Uploading GPS Logs</h3>
+  <h2>Looking Inside a ZIP File</h2>
+  <p>You can open the contents of an uploaded ZIP file right on screen, without extracting it to your computer. Files with the extension <code>.cbz</code> are treated as ZIP files too.</p>
+  <h3>How to open it</h3>
   <ol>
-    <li>Select "Upload" from the "+" FAB menu.</li>
-    <li>Choose a GPS log storage as the destination.</li>
-    <li>Select and upload your GPX file. You can also drag &amp; drop it onto the "Drop .gpx files here" zone.</li>
-    <li>Enable the Map button to view the track on the map.</li>
+    <li>Long-press (mobile) or right-click (desktop) the record of the ZIP file.</li>
+    <li>Choose "Browse ZIP contents" from the context menu.</li>
+    <li>The folders and files inside the ZIP are shown as a list.</li>
   </ol>
-  <h3>Google Maps API Key</h3>
-  <p>A Google Maps API key is required for map display. Go to Settings (toolbar "Settings" → "Display Settings") and enter your key in the "Google Maps API Key" field.</p>
+  <h3>Moving around inside</h3>
+  <ul>
+    <li>Clicking a folder takes you into it. To go back up a level, use the breadcrumb trail at the top of the screen or "..".</li>
+    <li>Clicking an image file opens a preview, and you can page straight on to the next image.</li>
+    <li>Individual files can also be downloaded.</li>
+    <li>Files that are too large cannot be previewed, and a message says so.</li>
+  </ul>
   <div class="tip">
-    <strong>Tip:</strong> You can obtain a Google Maps API key from <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. Enable the Maps JavaScript API for your key.
+    <strong>Tip:</strong> "Browse ZIP contents" only appears in the menu when you select the record of a ZIP file. It is not shown for other records.
+  </div>
+
+  <h2>Making a Record a Task and Copying Its Content</h2>
+  <p>A record you want to deal with later can become a task without rewriting its content. Choose "Make Task" in the record's context menu, set the board name, due date and the planned start and end, then save. The task you create also appears on the <a href="mi.html">Task Board</a> and can be checked off.</p>
+  <p>Choosing "Copy content" in the context menu copies the body of the record to the clipboard. "Copy ID" copies the record's ID.</p>
+
+  <h2>Using the GPS Map</h2>
+  <p>Turning on the map button in the toolbar shows the GPS route for the period of the records on a map.</p>
+  <h3>Uploading GPS logs</h3>
+  <ol>
+    <li>Choose "Upload" from the "+" button.</li>
+    <li>Choose a storage meant for GPS logs as the destination.</li>
+    <li>Select and upload your GPX file. You can also drag and drop it onto the "Drop GPX files here" area.</li>
+    <li>After uploading, turn on the map button to see the route.</li>
+  </ol>
+  <h3>Setting the Google Maps API key</h3>
+  <p>A Google Maps API key is required for the map. Enter your key under "Google Maps API Key" in the settings screen (toolbar "Settings" → "Display Settings") and save.</p>
+  <div class="tip">
+    <strong>Tip:</strong> You can obtain a Google Maps API key from <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. The key needs the Maps JavaScript API enabled.
   </div>
 
   <h2>Related Documents</h2>
   <ul>
-    <li><a href="kyou.html">Records</a></li>
+    <li><a href="kyou.html">Record View</a></li>
     <li><a href="dnote.html">Aggregation View</a></li>
-    <li><a href="ryuu.html">Related Info</a></li>
-    <li><a href="kftl-syntax.html">Notepad Syntax Reference</a></li>
+    <li><a href="ryuu.html">Related Information</a></li>
+    <li><a href="kftl-syntax.html">Memo Pad Syntax Reference</a></li>
+    <li><a href="plugin.html">Plugins</a></li>
     <li><a href="application-config.html">Settings</a></li>
   </ul>

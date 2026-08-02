@@ -58,10 +58,10 @@
     <tr>
       <td>Groupe de conditions</td>
       <td>Éditeur de conditions</td>
-      <td>Filtre les cibles de correspondance à l'aide de conditions AND/OR.</td>
+      <td>Filtre les cibles de correspondance à l'aide de conditions AND/OR. Des conditions qui comparent avec l'enregistrement sélectionné sont également disponibles (voir ci-dessous).</td>
     </tr>
     <tr>
-      <td>Type de correspondance temporelle</td>
+      <td>Condition d'extraction</td>
       <td>Liste déroulante</td>
       <td>Sélectionne la méthode de correspondance temporelle.</td>
     </tr>
@@ -71,13 +71,42 @@
       <td>Spécifie la plage horaire de recherche des enregistrements associés, en heures.</td>
     </tr>
     <tr>
-      <td>Requête de recherche personnalisée</td>
+      <td>Personnaliser les critères de recherche</td>
       <td>Case à cocher ＋ bouton</td>
       <td>Activez cette option pour utiliser une requête de recherche personnalisée. Le bouton ouvre l'éditeur de requête.</td>
     </tr>
   </table>
 
-  <h2>Types de correspondance temporelle</h2>
+  <h3>Conditions qui comparent avec l'enregistrement sélectionné</h3>
+  <p>Dans un groupe de conditions, vous pouvez aussi choisir des conditions qui comparent avec l'enregistrement actuellement sélectionné. Utile pour faire apparaître automatiquement « les enregistrements portant les mêmes tags » ou « les enregistrements du même type ».</p>
+  <table>
+    <tr>
+      <th>Condition</th>
+      <th>Signification</th>
+    </tr>
+    <tr>
+      <td>Le titre est égal à la cible</td>
+      <td>N'affiche que les enregistrements dont le titre est identique à celui de l'enregistrement sélectionné.</td>
+    </tr>
+    <tr>
+      <td>Tous les tags sont égaux à la cible</td>
+      <td>N'affiche que les enregistrements dont tous les tags sont identiques à ceux de l'enregistrement sélectionné.</td>
+    </tr>
+    <tr>
+      <td>Une partie des tags est égale à la cible</td>
+      <td>Affiche les enregistrements qui partagent au moins un tag avec l'enregistrement sélectionné.</td>
+    </tr>
+    <tr>
+      <td>Le type de données est égal à la cible</td>
+      <td>N'affiche que les enregistrements du même type (note, horodatage, etc.) que l'enregistrement sélectionné.</td>
+    </tr>
+    <tr>
+      <td>L'ID est égal à la cible</td>
+      <td>N'affiche que l'enregistrement sélectionné lui-même.</td>
+    </tr>
+  </table>
+
+  <h2>Conditions d'extraction</h2>
   <table>
     <tr>
       <th>Type</th>
