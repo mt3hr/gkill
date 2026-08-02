@@ -288,7 +288,7 @@ $HOME/gkill/
 │   ├── share_kyou_info.db  # 共有設定
 │   └── gkill_notification_target.db  # プッシュ通知ターゲット
 ├── datas/                  # ユーザーデータ（デフォルトデータディレクトリ）
-├── caches/                 # キャッシュファイル（thumb_cache/, video_cache/, zip_cache/, local_rep_cache/, git_commit_log_cache/ 等）
+├── caches/                 # キャッシュファイル（thumb_cache/, video_cache/, zip_cache/, local_rep_cache/, git_commit_log_cache/, plugin_cache/ 等）
 ├── logs/                   # ログファイル（JSON形式、レベル別分割）
 │   ├── gkill_error.log
 │   ├── gkill_warn.log

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -12,7 +11,8 @@ import (
 )
 
 // pluginCache はconversations.jsonをSQLite3にキャッシュする。
-// {pluginDir}/cache.db に保存し、ソースファイルのmtimeで無効化する。
+// gkillのキャッシュディレクトリ配下(cacheDBPath参照)に保存し、
+// ソースファイルのmtimeで無効化する。
 type pluginCache struct {
 	mu sync.RWMutex
 	db *sql.DB
@@ -36,7 +36,7 @@ func (c *pluginCache) openDB(pluginDir string) error {
 	if c.db != nil {
 		return nil
 	}
-	dbPath := filepath.Join(pluginDir, "cache.db")
+	dbPath := cacheDBPath(pluginDir)
 	db, err := sqlite3impl.GetSQLiteDBConnection(context.Background(), dbPath)
 	if err != nil {
 		return fmt.Errorf("error at open cache db %s: %w", dbPath, err)
