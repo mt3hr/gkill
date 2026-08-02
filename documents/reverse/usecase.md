@@ -9,7 +9,7 @@ astah モデル（`gkill_model.asta`）のユースケース記述 + コード�
 | **ユーザ** | gkill にログインしてライフログの記録・閲覧・管理を行う利用者。全認証済みユースケースの主アクター |
 | **管理者 (admin)** | アカウント作成・サーバー設定変更の権限を持つユーザ。初回起動時に自動作成される `admin` アカウント |
 | **共有閲覧者** | 認証不要で共有リンク経由でKyouやタスクを閲覧する外部利用者 |
-| **MCP クライアント** | MCP サーバー経由で gkill のデータを読み取るAIアシスタント等の外部システム |
+| **MCP クライアント** | MCP サーバー経由で gkill のデータを読み書きするAIアシスタント等の外部システム。Read サーバー（10ツール）は読み取りのみ、Write（25ツール）/ ReadWrite（30ツール）は追加・更新・削除も行える |
 | **Wear OS ウォッチ** | Wearable Data Layer 経由でテンプレート取得・KFTL テキスト送信を行うウォッチアプリ |
 | **ブックマークレット** | ブラウザ上で動作し、URLog（ブックマーク）を直接追加するJavaScript |
 
@@ -24,7 +24,8 @@ astah モデル（`gkill_model.asta`）のユースケース記述 + コード�
 - 認証・アカウント管理
 - サーバー設定・リポジトリ管理
 - Web Push 通知
-- MCP 連携（読み取り専用）
+- MCP 連携（読み取り / 書き込みの両方）
+- プラグイン連携（外部プラグインの一覧取得・コンテンツ表示・設定）
 - Wear OS 連携
 
 **スコープ外:**
@@ -94,6 +95,7 @@ graph LR
     User --> UC_GPSLOG
     User --> UC_CLIPBOARD
     User --> UC_REKYOU
+    User --> UC_MIREKYOU
     User --> UC_TAG
     User --> UC_TEXT
     User --> UC_NOTIF
@@ -115,11 +117,14 @@ graph LR
 
 ## 2. 機能カテゴリ別ユースケース一覧
 
-> **件数について:** ユースケースは **73件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 76 行で、一部のユースケースは複数カテゴリに再掲されているため行数のほうが多くなる。件数を引用する際はユニーク ID 数（73）を使うこと。
+> **件数について:** ユースケースは **82件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 87 行で、一部のユースケースは複数カテゴリに再掲されているため行数のほうが多くなる。件数を引用する際はユニーク ID 数（82）を使うこと。
+>
+> 数え直すときは **4桁に限定**すること。`UC-[0-9]+` だと本文中の「UC-04xx」「UC-05xx」という
+> 記述（後述の欠番の説明）まで拾ってしまい、2件多く数えられる。
 >
 > ```bash
-> grep -oE 'UC-[0-9]+' documents/reverse/usecase.md | sort -u | wc -l   # 73
-> grep -cE '^\|\s*UC-[0-9]+' documents/reverse/usecase.md               # 76
+> grep -oE 'UC-[0-9]{4}' documents/reverse/usecase.md | sort -u | wc -l   # 82
+> grep -cE '^\|\s*UC-[0-9]{4}' documents/reverse/usecase.md               # 87
 > ```
 
 ### 2.1 認証
@@ -137,6 +142,7 @@ graph LR
 | UC-ID | ユースケース名 | API エンドポイント |
 |-------|---------------|------------------|
 | UC-0201 | KFTL でデータを記録する | `SubmitKFTLText` |
+| UC-0202 | KFTL 送信前に未知のタグを確認する | なし（クライアント完結。`collect_unknown_tags()` が既存タグに無いタグを検出し、確認ダイアログで承認されるまで送信しない） |
 
 KFTL 経由で以下の全データ型を記録可能:
 Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
@@ -194,7 +200,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 |-------|---------------|------------------|
 | UC-0701 | Kyou を検索・一覧表示する | `GetKyous` |
 | UC-0702 | 個別 Kyou を取得する | `GetKyou` |
-| UC-0703 | 各データ型を個別取得する | `GetKmemo`, `GetKC`, `GetURLog`, `GetNlog`, `GetTimeis`, `GetMi`, `GetLantana`, `GetRekyou`, `GetGitCommitLog`, `GetIDFKyou` |
+| UC-0703 | 各データ型を個別取得する | `GetKmemo`, `GetKC`, `GetURLog`, `GetNlog`, `GetTimeis`, `GetMi`, `GetLantana`, `GetRekyou`, `GetMiReKyou`, `GetGitCommitLog`, `GetIDFKyou` |
 | UC-0704 | タグ履歴を取得する | `GetTagsByTargetID`, `GetTagHistoriesByTagID` |
 | UC-0705 | テキスト履歴を取得する | `GetTextsByTargetID`, `GetTextHistoriesByTextID` |
 | UC-0706 | 通知履歴を取得する | `GetNotificationsByTargetID`, `GetNotificationHistoriesByNotificationID` |
@@ -206,6 +212,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0712 | 集計ビューにトレンドグラフを追加・編集・削除する | `GetKyous`（時系列集計は `DnoteTrendAggregator` によるクライアント側処理）+ `UpdateApplicationConfig`（定義保存） |
 | UC-0713 | Markdown ファイル内の相対リンクから対象記録を開く | `GetIDFKyouByRelativePath` |
 | UC-0714 | ZIP ファイルの内容を閲覧する | `BrowseZipContents` |
+| UC-0715 | 全リポジトリ名を取得する | `GetAllRepNames` |
 
 ### 2.8 ファイルアップロード
 
@@ -264,6 +271,13 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1110 | ファイルを開く | `OpenFile` |
 | UC-1111 | MCP 経由で IDF ファイルの実データを取得する | `GetIDFFile` |
 | UC-1112 | MCP 経由で IDF ファイルの絶対パスを取得する | `GetIDFFilePath`（localhost からのリクエストのみ応答） |
+| UC-1113 | プラグイン一覧を取得する | `GetPluginList`（呼び出し元は MCP の `gkill_get_plugin_list` のみ） |
+| UC-1114 | プラグイン Kyou のコンテンツ HTML を取得する | `GetPluginContentHTML` |
+| UC-1115 | プラグイン設定画面の HTML を取得する | `GetPluginConfigHTML`（UI 導線は未実装） |
+| UC-1116 | プラグイン設定を保存する | `PostPluginConfig`（クライアント実装は無く、実際は `config.json` を手で編集する） |
+| UC-1117 | Kyou の内容 / ID をクリップボードにコピーする | なし（クライアント完結。`classes/kyou-content-text.ts`） |
+| UC-1118 | ディスク上の派生キャッシュを削除する | なし（CLI `clear_cache <thumb\|video\|zip\|plugin\|all> <all\|user_id...>`） |
+| UC-1119 | 起動時に指定ユーザのリポジトリを先読みする | なし（CLI フラグ `--pre_load_users`） |
 
 ## 3. ユースケース記述（astah モデルから抽出）
 

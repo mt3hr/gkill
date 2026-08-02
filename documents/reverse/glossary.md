@@ -33,9 +33,13 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 |------|------|
 | **GitCommitLog** | ローカル Git リポジトリからコミットログを読み取ってキャッシュする型。コミットメッセージ・追加行数（`Addition`）・削除行数（`Deletion`）を含む |
 | **GPSLog** | GPX ファイルから GPS 位置情報を読み取る型 |
-| **PluginKyou** | 外部プラグインバイナリが提供する Kyou。`DataType` はプラグイン定義による（例: `chatgpt_conversation`, `claude_conversation`）。コンテンツ表示は `GetContentHTML` が返す HTML を iframe (srcdoc) で描画する |
-| **PluginRepository** | プラグインバイナリをサブプロセスとして起動し stdio 改行区切り JSON で通信するリポジトリ実装（`src/server/gkill/dao/reps/plugin_repository_impl.go`） |
-| **プラグインディレクトリ** | `$GKILL_HOME/plugins/{userID}/{pluginName}/` — manifest.json・実行ファイル・キャッシュ DB を格納するディレクトリ |
+| **PluginKyou** | 外部プラグインバイナリが提供する Kyou。`DataType` はプラグイン定義による（例: `chatgpt_conversation`, `claude_conversation`, `claude_code_turn`）。コンテンツ表示は `GetContentHTML` が返す HTML を iframe (srcdoc) で描画する |
+| **PluginRepository** | プラグインバイナリをサブプロセスとして起動し stdio 改行区切り JSON で通信するリポジトリ実装（`src/server/gkill/dao/reps/plugin_repository_impl.go`）。`RepType` を持たず4層パターンにも属さない |
+| **PluginManager** | ユーザごとにプラグインディレクトリを走査し、`manifest.json` を持つものを `PluginRepository` として登録する（`src/server/gkill/dao/plugin_manager.go`） |
+| **PluginManifest** | プラグインのメタデータ（`protocol_version`, `name`, `version`, `description`, `data_type`, `rep_name`, `executable`, `min_gkill_version` の8フィールド）。`name` はディレクトリ名と一致させる。同梱プラグインはバイナリに `//go:embed` しており `--gkill-print-manifest` で出力できる |
+| **プラグインディレクトリ** | `$GKILL_HOME/plugins/{userID}/{pluginName}/` — manifest.json・実行ファイル・`config.json` を格納するディレクトリ |
+| **plugin_cache** | プラグインの SQLite3 キャッシュ置き場。`$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db`。プラグインディレクトリではなく gkill のキャッシュディレクトリ配下にあるため `clear_cache plugin` で削除できる |
+| **source_dirs** | プラグインの `config.json` で取り込み元フォルダを指定するキー。グロブ・`~`・環境変数を展開し、検索のたびに読み直される |
 
 ### メタデータ型
 
@@ -49,6 +53,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 
 | 用語 | UI表示名 | ルート | 説明 | 由来 |
 |------|---------|-------|------|------|
+| **Login** | ログイン | `/` | ログイン画面。ルート直下に割り当てられている | — |
 | **KFTL** | メモ帳 | `/kftl` | テキストベース記録入力画面。KFTL 構文（後述）を使って複数データ型を一括入力できる | Key Fairy Textbase Lifelogger。記録導線を「あける」鍵開けの妖精 |
 | **Rykv** | ライフログビュー | `/rykv` | メインの閲覧・検索画面。タイムライン形式でKyouを表示し、Dnote（集計）や Ryuu（関連情報）も統合 | RYuuKyouViewer。流れるように見える（タイムライン無限スクロール）、留める、龍のように（歴史と知を連想） |
 | **Mi** | タスク | `/mi` | タスク管理画面。ボード形式で Mi を表示し、チェック状態のフィルタ・ソート・共有機能を提供 | — |
@@ -69,10 +74,13 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 
 | ルート | 説明 |
 |-------|------|
-| `/shared_page` | 共有リンクから Kyou を閲覧する画面（認証不要） |
-| `/shared_mi` | 共有リンクからタスクを閲覧する画面（認証不要） |
+| `/shared_page` | 共有リンクから Kyou / タスクを閲覧する画面（認証不要）。`view_type` に応じて内部で振り分ける |
+| `/shared_mi` | 旧・共有タスク閲覧URL。実体は `/shared_page?share_id=…` へのリダイレクタ |
 | `/set_new_password` | パスワードリセットリンクから新パスワードを設定する画面 |
 | `/regist_first_account` | 初回起動時のアカウント登録画面 |
+
+> `/shared_rykv` はサーバ側（`serve.go`）では SPA が配信されるが、
+> `src/client/router/index.ts` に対応するルート定義が無い。
 
 ## 4. KFTL 構文
 
@@ -80,26 +88,33 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 
 ### プレフィックス一覧
 
-| プレフィックス | データ型 | 説明 |
-|---------------|---------|------|
-| （なし） | Kmemo | デフォルト。プレフィックスなしの行はテキストメモとして扱われる |
-| `。` | Tag | タグを追加する。`。タグ名` の形式 |
-| `ーー` | Text | テキスト注釈の開始/終了。`ーー` で囲まれた範囲がテキスト |
-| `？` | RelatedTime | 関連時刻を指定する。`？時刻` の形式 |
-| `、` | Split | 区切り。現在のステートメントを終了し、次のステートメントを開始する |
-| `、、` | SplitNextSecond | 区切り＋時刻の `AddSecond` を +1 する |
-| `ーか` | KC | 数値記録の開始。後続行でタイトル → 数値を入力 |
-| `ーみ` | Mi | タスクの開始。後続行でタイトル → [ボード名] → [期限] → [開始予定] → [終了予定] を入力 |
-| `ーら` | Lantana | 気分値の開始。後続行で気分値（0〜10）を入力 |
-| `ーん` | Nlog | 支出の開始。後続行で店名 → タイトル → 金額を入力 |
-| `ーう` | URLog | ブックマークの開始。後続行でタイトル → URL を入力 |
-| `ーた` | TimeIs Start | TimeIs 開始のみ（`StartTime` を設定、`EndTime` = null） |
-| `ーえ` | TimeIs End | タイトル指定で実行中の TimeIs を終了する |
-| `ーいえ` | TimeIs End If Exist | 存在する場合のみ TimeIs を終了する |
-| `ーたえ` | TimeIs End By Tag | タグ名指定で実行中の TimeIs を終了する |
-| `ーいたえ` | TimeIs End By Tag If Exist | タグ名指定で、存在する場合のみ TimeIs を終了する |
-| `ーち` | TimeIs | 開始と終了を同時に設定する（`StartTime` + `EndTime` 両方を記録） |
-| `！` | Save | 保存実行。パースを終了してリクエストを実行する |
+プレフィックスは**日本語と ASCII の2系統**があり、サーバ側パーサ（`kftl_factory.go:8-45`）と
+クライアント側パーサ（`kftl-prefixes.ts:6-22`）のどちらも両方を受理する。
+
+| 日本語 | ASCII | データ型 | 説明 |
+|---|---|---------|------|
+| （なし） | （なし） | Kmemo | デフォルト。プレフィックスなしの行はテキストメモとして扱われる |
+| `。` | `#` | Tag | タグを追加する。`。タグ名` の形式 |
+| `ーー` | `--` | Text | テキスト注釈の開始/終了。`ーー` で囲まれた範囲がテキスト |
+| `？` | `?` | RelatedTime | 関連時刻を指定する。`？時刻` の形式 |
+| `、` | `,` | Split | 区切り。現在のステートメントを終了し、次のステートメントを開始する |
+| `、、` | `,,` | SplitNextSecond | 区切り＋時刻の `AddSecond` を +1 する |
+| `ーか` | `/num` | KC | 数値記録の開始。後続行でタイトル → 数値を入力 |
+| `ーみ` | `/mi` | Mi | タスクの開始。後続行でタイトル → [ボード名] → [期限] → [開始予定] → [終了予定] を入力 |
+| `ーら` | `/mood` | Lantana | 気分値の開始。後続行で気分値（0〜10）を入力 |
+| `ーん` | `/expense` | Nlog | 支出の開始。後続行で店名 → タイトル → 金額を入力 |
+| `ーう` | `/url` | URLog | ブックマークの開始。後続行でタイトル → URL を入力 |
+| `ーた` | `/start` | TimeIs Start | TimeIs 開始のみ（`StartTime` を設定、`EndTime` = null） |
+| `ーえ` | `/end` | TimeIs End | タイトル指定で実行中の TimeIs を終了する |
+| `ーいえ` | `/end?` | TimeIs End If Exist | 存在する場合のみ TimeIs を終了する |
+| `ーたえ` | `/endt` | TimeIs End By Tag | タグ名指定で実行中の TimeIs を終了する |
+| `ーいたえ` | `/endt?` | TimeIs End By Tag If Exist | タグ名指定で、存在する場合のみ TimeIs を終了する |
+| `ーち` | `/timeis` | TimeIs | 開始と終了を同時に設定する（`StartTime` + `EndTime` 両方を記録） |
+| `！` | `!` | Save | 保存実行。パースを終了してリクエストを実行する |
+
+> クライアント側では日本語プレフィックスは**固定リテラルではなく i18n キー経由**で解決される
+> （`kftl-prefixes.ts:25-27` の `matches_exact(line, i18n_key, ascii_prefix)`）。
+> つまりロケールによって変わりうる。ASCII 側は固定。
 
 ### KFTL パーサの主要コンポーネント
 
@@ -117,7 +132,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（87定義・85登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 88ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（90定義・88登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 92ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -195,7 +210,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **ZipEntry** | ZIP内のファイルエントリ情報。ファイル名・サイズ・パス等を含む。`/api/browse_zip_contents` のレスポンスとして返却される |
 | **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す |
 | **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する |
-| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、8ツール）・**Write専用**（`gkill-write-server.mjs`、23ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、28ツール）。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
+| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、10ツール）・**Write専用**（`gkill-write-server.mjs`、25ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、30ツール）。いずれも共通のプラグインツール2つ（`lib/plugin-tools.mjs` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
 
 ## 10. 主要ファイルパス相互参照
 
@@ -205,11 +220,11 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全87エンドポイントのパス・メソッド定義 |
-| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（88ファイル、1ハンドラ1ファイル） |
+| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全90エンドポイントのパス・メソッド定義（うち88登録） |
+| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 92ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
-| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（176ファイル） |
-| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000389 の定数定義（ERR000243は欠番） |
+| リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（182ファイル） |
+| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000401 の定数定義（計400件。ERR000243は欠番） |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
 | KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |
 | Embed（SPA埋め込み） | `src/server/gkill/api/embed.go` | `//go:embed embed` ディレクティブ |
@@ -231,8 +246,8 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
-| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（~3,500行） |
-| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（160ファイル） |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（~3,660行） |
+| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（168ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
 | ダッシュボードページ | `src/client/pages/dashboard-page.vue` | `/dashboard` ルートのページコンポーネント |
@@ -240,24 +255,25 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | EditDashboardDialog | `src/client/pages/dialogs/edit-dashboard-dialog.vue` | ダッシュボード設定編集ダイアログ |
 | MiFindQueryEditorView | `src/client/pages/views/mi-find-query-editor-view.vue` | MI専用検索条件エディタビュー |
 | MiFindQueryEditorDialog | `src/client/pages/dialogs/mi-find-query-editor-dialog.vue` | MI専用検索条件エディタダイアログ |
-| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（44ステートメント型） |
+| KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（41ステートメント型。`kftl_*/` 配下の具象クラス数） |
 | Dnote ユーティリティ | `src/client/classes/dnote/` | 集計機能ユーティリティ |
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（836キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（855キー/言語） |
 
 ### その他
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| MCP サーバー（Read） | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（8ツール、stdio/HTTP） |
-| MCP サーバー（Write） | `src/mcp/gkill-write-server.mjs` | 書き込み専用MCPサーバー（23ツール、stdio/HTTP） |
-| MCP サーバー（ReadWrite） | `src/mcp/gkill-readwrite-server.mjs` | 読み書き統合MCPサーバー（28ツール、stdio/HTTP） |
+| MCP サーバー（Read） | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（10ツール = 固有8 + プラグイン2、stdio/HTTP） |
+| MCP サーバー（Write） | `src/mcp/gkill-write-server.mjs` | 書き込み専用MCPサーバー（25ツール = 固有23 + プラグイン2、stdio/HTTP） |
+| MCP サーバー（ReadWrite） | `src/mcp/gkill-readwrite-server.mjs` | 読み書き統合MCPサーバー（30ツール = 固有28 + プラグイン2、stdio/HTTP） |
+| MCP プラグインツール | `src/mcp/lib/plugin-tools.mjs` | 3サーバ共通の `gkill_get_plugin_list` / `gkill_get_plugin_content`（読み取りのみ。`post_plugin_config` は公開しない） |
 | MCP アクセスログ | `src/mcp/lib/access-log.mjs` | MCPサーバのアクセスログモジュール。`MCP_LOG` 環境変数で制御 |
 | Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
 | Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |
-| ビルド設定 | `package.json` | npm scripts、依存関係、バージョン () |
+| ビルド設定 | `package.json` | npm scripts、依存関係、バージョン |
 | Vite 設定 | `vite.config.ts` | ビルド設定・PWA・エイリアス |
 | TypeScript 設定 | `tsconfig.app.json` | フロントエンド TypeScript 設定 |
 | ESLint 設定 | `eslint.config.js` | リンター設定（flat config） |

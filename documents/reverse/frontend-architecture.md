@@ -4,18 +4,24 @@
 
 | カテゴリ | 技術 | バージョン |
 |---|---|---|
-| フレームワーク | Vue 3 (Composition API) | ^3.5.31 |
-| UIライブラリ | Vuetify 4 (Material Design) | ^4.0.4 |
-| ルーティング | Vue Router 5 | ^5.0.4 |
-| 国際化 | vue-i18n 11 | ^11.3.0 |
-| ビルドツール | Vite 8 | ^8.0.16 |
+| フレームワーク | Vue 3 (Composition API) | ^3.5.40 |
+| UIライブラリ | Vuetify 4 (Material Design) | ^4.1.5 |
+| ルーティング | Vue Router 5 | ^5.2.0 |
+| 国際化 | vue-i18n 11 | ^11.4.7 |
+| ビルドツール | Vite 8 | ^8.1.5 |
 | PWA | vite-plugin-pwa + Workbox | ^1.2.0 |
 | TypeScript | TypeScript 6 | ~6.0.0 |
-| アイコン | @mdi/js (Material Design Icons) | ^7.4.47 |
+| アイコン | @mdi/font (Material Design Icons) | ^7.4.47 |
 | 地図 | vue3-google-map + @googlemaps/js-api-loader | — |
 | 日時 | moment | ^2.30.1 |
-| 型チェック | vue-tsc 3 | ^3.3.4 |
-| リンター | ESLint 10 + eslint-plugin-vue 10 (flat config) | ^10.4.1 |
+| Markdown描画 | marked + dompurify | ^18.0.7 / ^3.4.12 |
+| 図表描画 | mermaid | ^11.16.0 |
+| 型チェック | vue-tsc 3 | ^3.3.7 |
+| リンター | ESLint 10 + eslint-plugin-vue 10 (flat config) | ^10.7.0 / ^10.10.0 |
+| ユニットテスト | Vitest + jsdom | ^4.1.10 / ^29.0.1 |
+| E2Eテスト | @playwright/test | ^1.58.2 |
+
+> バージョンは `package.json` の値。表を更新するときは `package.json` を正とすること。
 
 ## 2. ディレクトリ構成
 
@@ -24,22 +30,32 @@ src/client/
 ├── App.vue                          # ルートコンポーネント
 ├── main.ts                          # エントリポイント
 ├── i18n.ts                          # i18n設定
-├── serviceWorker.ts                 # PWA Service Worker (~279行)
+├── serviceWorker.ts                 # PWA Service Worker (~328行)
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,500行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,660行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (162ファイル、サーバー側は176ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (168ファイル、サーバー側は182ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
-│   ├── kftl/                        # KFTLパーサー (44 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)
+│   ├── kftl/                        # KFTLパーサー (41 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)
 │   ├── dnote/                       # Dnote集計ユーティリティ（トレンドグラフ集計 dnote-trend-aggregator.ts・dnote-trend/ 含む）
 │   ├── lantana/                     # 気分値関連クラス
+│   ├── component-ref.ts             # ComponentRef 型（any をここに封じ込める）
+│   ├── kyou-content-text.ts         # Kyou の内容/IDのクリップボードコピー
+│   ├── markdown-to-html.ts          # marked + dompurify による Markdown 描画
+│   ├── mermaid-render.ts            # Mermaid 図の描画
+│   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、231ファイル）
+├── assets/                          # 画像等の静的アセット
+├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
+│   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
+│   ├── helpers/                    # テストヘルパー
+│   └── unit/                       # ユニットテスト（api / classes / composables / datas / dnote）
 ├── pages/                           # ルートページコンポーネント (15ファイル)
 │   ├── login-page.vue
 │   ├── kftl-page.vue
@@ -56,8 +72,8 @@ src/client/
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/                       # Viewコンポーネント (185)
-│   └── dialogs/                     # ダイアログコンポーネント (101, Esc閉じ対応)
+│   ├── views/                       # Viewコンポーネント (189)
+│   └── dialogs/                     # ダイアログコンポーネント (103, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -77,8 +93,8 @@ Page（ルートページ）
 | 層 | 配置 | 件数 | 責務 |
 |---|---|---|---|
 | **Page** | `pages/*.vue` | 15 | ルーティング先。ページ全体のレイアウト（13ルート＋共有用2ページ） |
-| **View** | `pages/views/*.vue` | 185 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 100 | モーダル操作（確認、詳細編集等） |
+| **View** | `pages/views/*.vue` | 189 | データ型ごとの追加/編集/一覧表示 |
+| **Dialog** | `pages/dialogs/*.vue` | 103 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -94,11 +110,26 @@ Page（ルートページ）
 |---|---|
 | `plugin-html-view.vue` | `GetPluginContentHTMLResponse.html` を iframe srcdoc に展開して表示。postMessage でダークテーマ通知・高さ動的調整を行う |
 | `plugin-html-context-menu.vue` | プラグインKyou用コンテキストメニュー（タグ追加・テキスト追加・リポスト等）|
-| `plugin-config-dialog.vue` | `GetPluginConfigHTMLResponse.html` を iframe srcdoc に展開してプラグイン設定フォームを表示 |
+| `plugin-config-dialog.vue` | `GetPluginConfigHTMLResponse.html` を iframe srcdoc に展開してプラグイン設定フォームを表示。**どこからも import されていない孤児コンポーネント**で、現状は画面から到達できない |
 
 **postMessage 通信パターン:**
 - 親 → iframe: `{ gkill_theme: 'dark' | 'light' }` — テーマ変更通知（CSS変数切替用）
 - iframe → 親: `{ gkill_iframe_size: { width, height } }` — コンテンツサイズ通知（iframe高さ自動調整用）
+
+### MiReKyou コンポーネント
+
+既存の Kyou をタスク化する MiReKyou（`typed_mirekyou`）の追加・編集・表示を担う。
+タイトルを持たず、`target_id` で指す対象 Kyou を併せて描画するのが Mi との違い。
+
+| コンポーネント | 説明 |
+|---|---|
+| `mi-re-kyou-view.vue` | MiReKyou 本体の表示。対象 Kyou を `attached_kyou` として読み込んで描画する |
+| `mi-re-kyou-context-menu.vue` | MiReKyou 用コンテキストメニュー |
+| `add-mi-re-kyou-view.vue` / `add-mi-re-kyou-dialog.vue` | タスク化（追加） |
+| `edit-mi-re-kyou-view.vue` / `edit-mi-re-kyou-dialog.vue` | 編集 |
+
+スケジュール項目（期限・見積開始・見積終了）の入力は `use-mi-re-kyou-schedule-fields.ts` に共通化されている。
+データモデルは `classes/datas/mi-re-kyou.ts`、時刻フィールドはいずれも `Date | null`。
 
 ### Dnoteトレンドグラフ コンポーネント
 
@@ -117,7 +148,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 ### ダイアログ アクセシビリティ
 
-101ダイアログ中82件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
+103ダイアログ中82件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
 
 | 機能 | 説明 |
 |------|------|
@@ -166,14 +197,25 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（210ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（231ファイル） |
+
+### ComponentRef 型
+
+子コンポーネントへの `ref` は `ComponentRef` 型（`src/client/classes/component-ref.ts`）を使う。
+
+```typescript
+export type ComponentRef = Record<string, any>
+```
+
+`@typescript-eslint/no-explicit-any` を error にしているため、`any` をこの1ファイルに封じ込めるための型。
+テンプレート ref 経由で子の公開メソッドを呼ぶ箇所（約50のコンポーザブル）で使われる。
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約3,500行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,660行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- 全85エンドポイントに対応するメソッドを持つ
+- 全88登録エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは86件）
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 
@@ -194,6 +236,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 |---|---|---|
 | `gkill-post-kyou-cache` | データ系エンドポイント | get_kyou, get_kmemo, get_plugin_content_html 等のPOSTレスポンスをキャッシュ |
 | `gkill-post-config-cache` | 設定系エンドポイント | get_application_config, get_all_tag_names 等 |
+| `gkill-lazy-chunk-cache` | 遅延ロードされる JS チャンク | `CacheFirst`。動的 import されたチャンクをキャッシュする |
 
 **キャッシュ有効性検証:**
 - `_histories` フィールドの存在チェック
@@ -271,13 +314,15 @@ Service Worker が `/share-target` POSTを処理：
 
 | コード | 言語 | キー数 |
 |---|---|---|
-| `ja` | 日本語 | 784 |
-| `en` | 英語 | 784 |
-| `zh` | 中国語 | 784 |
-| `ko` | 韓国語 | 784 |
-| `es` | スペイン語 | 784 |
-| `fr` | フランス語 | 784 |
-| `de` | ドイツ語 | 784 |
+| `ja` | 日本語 | 855 |
+| `en` | 英語 | 855 |
+| `zh` | 中国語 | 855 |
+| `ko` | 韓国語 | 855 |
+| `es` | スペイン語 | 855 |
+| `fr` | フランス語 | 855 |
+| `de` | ドイツ語 | 855 |
+
+> キー数は全ロケールで一致している必要がある（`npm run verify_docs` が検査する）。
 
 ### ロケールファイル
 
@@ -285,6 +330,18 @@ Service Worker が `/share-target` POSTを処理：
 - 形式: フラットなキー・バリュー（ネストなし）
 - キー例: `LOGIN_TITLE`, `RESET_PASSWORD_TITLE`, `SAIHATE_PAGE_TITLE`
 - **フロント・バックエンド共有:** ビルド時に `src/locales/` → `src/server/gkill/api/embed/i18n/locales/` にコピー
+
+### 読み込み方式（ja のみ静的バンドル）
+
+`src/client/i18n.ts` はメインチャンクに **`ja` だけを静的 import** し、残り6言語は
+`locale_loaders` 経由で**動的 import** する。`set_locale()` が呼ばれた時点で該当ロケールを取得する。
+
+メインチャンクを約 352KB 削減するための意図的な最適化なので、
+「全ロケールを最初に読む」形に戻さないこと。
+
+> i18n キーを追加したら `src/locales/` を Go の embed 先へコピーする必要がある。
+> 忘れるとバックエンドの `MustLocalizeMessage` が panic する。
+> 通常は `npm run install_server`（`prepare_install`）が自動で行う。
 
 ## 9. ビルド設定
 
@@ -441,6 +498,15 @@ Service Worker が `/share-target` POSTを処理：
 - ブラウザバックで最上位ダイアログを閉じる（depth比較でback/forwardを判別）
 - ブラウザフォワードではダイアログを閉じない
 - プログラマティック閉じ（Escape含む）時は履歴を巻き戻し
+
+公開API:
+
+| 関数 | 用途 |
+|---|---|
+| `useDialogHistoryStack(show)` | ダイアログの `show` ref を履歴スタックに登録する |
+| `closeDialogViaHistory()` | **プログラムからダイアログを閉じるときの唯一の正しい手段**。約44のコンポーザブルが使う。`show.value = false` を直接書くと履歴とずれる |
+| `closeTopDialog()` | 最上位のダイアログだけを閉じる |
+| `resetDialogHistory()` | 履歴スタックを初期化する。ページリダイレクト時に使う（例: `old-shared-mi-page.vue`） |
 
 ### 日付・数値のロケール対応
 

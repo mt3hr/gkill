@@ -2,19 +2,32 @@
 
 ## 1. 概要
 
-gkill プロジェクトでは約2,380件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
+gkill プロジェクトでは約2,340件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
 
 ### テスト統計
 
 | コンポーネント | テスト数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | ~594 | 52 | Go `testing` |
-| フロントエンド ユニット | 800 | 57 | Vitest |
-| フロントエンド E2E | 207 | 33（+auth.setup.ts） | Playwright |
+| Go バックエンド | 590 | 57 | Go `testing` |
+| フロントエンド ユニット | 765 | 61 | Vitest |
+| フロントエンド E2E | 193 | 33（+auth.setup.ts） | Playwright |
 | MCP サーバ | 661 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 114 | 9 | JUnit 4 + MockK |
-| **合計** | **~2,388** | **173** | |
+| **合計** | **約2,335** | **182** | |
+
+数え直すコマンド:
+
+```bash
+grep -rhE '^func Test' src/server --include=*.go | wc -l          # Go テスト数
+find src/server -name '*_test.go' | wc -l                          # Go テストファイル数
+grep -rhE "^\s*(it|test)\(" src/client/__tests__/unit | wc -l      # クライアント ユニット
+grep -rhE "^\s*test\(" src/client/__tests__/e2e --include=*.spec.ts | wc -l  # E2E
+```
+
+> `src/plugins/*` の Go テスト（`cache_path_test.go`、`loader_test.go` 等）は
+> 各プラグインが**独立した Go モジュール**のため、上記の集計にも `npm test` にも含まれない
+> （`test_server` は `cd src/server && go test ./...`）。実行方法は `src/plugins/ABOUT_TEST.md` を参照。
 
 ### テスト仕様書
 
@@ -28,12 +41,18 @@ gkill プロジェクトでは約2,380件の自動テストを整備していま
 npm test
 ```
 
-このコマンドは以下の全テストを順次実行します：server → client → MCP → Android → Wear OS
+このコマンドは以下を順次実行します：
+`install_server`（ビルド） → **`verify_docs`（docs CI）** → server → client → MCP → Android → Wear OS
+
+`verify_docs` を重いテスト群より前に置いているのは、実行が速く失敗が早いため。
+また `install_server` の後に置くのは、`checkManuals()` の生成鮮度チェックを
+マニュアル再生成後の状態で走らせるため。
 
 ### コンポーネント別実行
 
 | コマンド | 対象 | 所要時間目安 |
 |---------|------|------------|
+| `npm run verify_docs` | ドキュメントの件数・リンク・参照パス・Mermaid・マニュアル | 数秒 |
 | `npm run test_server` | Go バックエンド全体 | 数十秒 |
 | `npm run test_client` | フロントエンド（ユニット + E2E） | 20分前後（E2Eを含むため） |
 | `npm run test_client_unit` | フロントエンド ユニットのみ | 数十秒 |
@@ -132,7 +151,7 @@ node src/tools/verify_docs.mjs --parity # 構造パリティ・レポート（�
 ```
 
 主な検査項目:
-- **件数ドリフト**: docs 記載の件数（handler=88 / req_res=176 / view=185 / dialog=101 / endpoint=85 / i18nキー=836 等）をコードから再計算して突合。
+- **件数ドリフト**: docs 記載の件数（handler / req_res / view / dialog / endpoint / i18nキー 等）をコードから再計算して突合。実測値は `node src/tools/verify_docs.mjs --list` で確認できる。`npm test` にも組み込まれているため、コードを変えて件数が動いたらテストが落ちる。
 - **相互リンク・参照パス・Mermaid**: reverse資料内の `.md` リンク・`src/...` パス・Mermaid ブロックを検査。
 - **マニュアル**: `resources/manual_src` からの生成鮮度、アクセシビリティ不変条件（`<main>`／全表 `<caption>`／全 `th` に `scope`）、7言語のページ構成一致、内部リンク。
 
@@ -145,13 +164,21 @@ node src/tools/verify_docs.mjs --parity # 構造パリティ・レポート（�
 ```
 src/server/gkill/
 ├── api/
-│   ├── gkill_server_api_test.go      ← 統合テスト（全エンドポイント）
 │   ├── find_filter_test.go            ← 検索フィルタ
 │   ├── find/find_query_test.go        ← クエリビルダー
 │   ├── gpslogs/gpslogs_test.go        ← GPS ログ解析
 │   ├── message/message_test.go        ← メッセージフォーマット
 │   ├── kftl/                          ← KFTL パーサ（3ファイル）
-│   └── req_res/req_res_test.go        ← JSON 往復テスト
+│   ├── req_res/req_res_test.go        ← JSON 往復テスト
+│   └── gkill_server_api/              ← ハンドラ層（6ファイル）
+│       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
+│       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
+│       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
+│       ├── handle_get_idf_kyou_by_relative_path_test.go ← 相対パス解決
+│       ├── handle_get_shared_kyous_test.go       ← 共有Kyou取得
+│       └── utils_ssrf_test.go                    ← SSRF対策
+├── plugin/
+│   └── sdk/                           ← プラグインSDK（sdk_test.go, config_test.go）
 ├── dao/
 │   ├── gkill_dao_manager_test.go      ← DAO マネージャ
 │   ├── account/                       ← アカウント CRUD
@@ -162,7 +189,7 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（16ファイル）
+│   └── reps/                          ← リポジトリ実装（17ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
@@ -174,7 +201,8 @@ src/server/gkill/
 
 - **インメモリ SQLite3**: 全 DAO テストはインメモリデータベースを使用し、テスト間の隔離を保証
 - **4層リポジトリパターン**: interface → SQLite3 実装 → キャッシュ実装 → 一時実装の各層をそれぞれテスト
-- **統合テスト**: `gkill_server_api_test.go` が全11データ型の CRUD を HTTP ハンドラレベルで検証（ZIP内容閲覧含む）
+- **統合テスト**: `gkill_server_api/gkill_server_api_test.go` が全11データ型の CRUD を HTTP ハンドラレベルで検証（ZIP内容閲覧含む）
+- **`usecase/` にテストは無い**: 意図的にテストを置いていない。理由は [`src/server/gkill/usecase/ABOUT_TEST.md`](../../src/server/gkill/usecase/ABOUT_TEST.md) を参照
 - **テストヘルパー**: `reps/testhelper_test.go` が共通のテストデータ生成・DB セットアップを提供
 
 ### 3.2 フロントエンド ユニット（`src/client/__tests__/unit/`）
@@ -183,7 +211,7 @@ src/server/gkill/
 src/client/__tests__/
 ├── unit/
 │   ├── api/gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
-│   ├── classes/                       ← ユーティリティ（9ファイル）
+│   ├── classes/                       ← ユーティリティ（10ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -193,7 +221,7 @@ src/client/__tests__/
 │   │   ├── markdown-to-html.test.ts
 │   │   ├── mermaid-render.test.ts
 │   │   └── use-dialog-history-stack.test.ts
-│   ├── datas/                         ← データモデル（23ファイル）
+│   ├── datas/                         ← データモデル（27ファイル）
 │   ├── dnote/                         ← D-note モジュール（6ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
 │   ├── composables/                   ← Vue Composable（8ファイル）
@@ -293,14 +321,16 @@ src/client/__tests__/
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `regression-fixes.spec.ts` | 修正済みバグの回帰テスト: Kmemo必須チェック、ローカルアクセス設定、タグ/Device/RepType構造追加、ApplicationConfig適用、ファイルアップロード |
-| `misc-features.spec.ts` | Notification/Text 見た目区別、TimeIs 履歴終了ボタン非表示、コンテキストメニュー重複チェック |
 | `misc-operations.spec.ts` | ブックマークレット確認、GPSログアップロード、無効共有リンクエラー表示、サーバコンフィグ適用で再起動 |
+| `mi-re-kyou.spec.ts` | MiReKyou（既存記録のタスク化）の追加・編集・表示 |
 
 #### ヘルパーファイル
 
 | ファイル | 用途 |
 |---------|------|
 | `run-e2e.mjs` | E2E テストランナー（gkill_server 自動起動・停止、`$HOME/gkill_test` クリーン） |
+| `free-port.mjs` | `getFreePort()` / `getFreePorts()` — OS から空きポートを採番する。ポートを固定しないための要 |
+| `auth.setup.ts` | Playwright の `setup` プロジェクト。ログイン済み `storageState` を作って以降のテストで再利用する |
 | `helpers.ts` | `loginAsAdmin()` — 初回起動時の自動登録（reset_token取得→regist_first_account）+ テストユーザでのログイン |
 | `check-server.ts` | `checkGkillServer()`, `checkGkillApiViaVite()` — サーバヘルスチェック |
 | `crud-helpers.ts` | KFTL 送信（`#kftl_text_area` + 保存ボタン有効化待機）、ページナビゲーション（フローティングダイアログ自動閉じ）、コンテキストメニュー操作（`force: true`）、FAB クリック（`.position-fixed button`） |
@@ -341,7 +371,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
 | `write-server.test.mjs` | McpWriteServer（25ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `write-tool-handlers.test.mjs` | Write 23ツール定義（update系9ツール含む）・summarize関数 |
+| `write-tool-handlers.test.mjs` | Write 固有23ツール定義（update系9ツール含む。プラグイン2ツールを足して公開は25）・summarize関数 |
 
 **Read/Write統合サーバ:**
 
@@ -349,7 +379,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 |-------------|-----------|
 | `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
 | `readwrite-server.test.mjs` | McpServer統合（全30ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
-| `readwrite-tool-handlers.test.mjs` | 統合28ツール定義・summarize関数 |
+| `readwrite-tool-handlers.test.mjs` | 統合の固有28ツール定義（プラグイン2ツールを足して公開は30）・summarize関数 |
 
 ### 3.5 Android / Wear OS
 
@@ -367,7 +397,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 |---------|------|
 | `vitest.config.ts` | フロントエンドユニットテスト設定（jsdom, Vue 3, パスエイリアス） |
 | `vitest.config.mcp.ts` | MCP サーバテスト設定（Node.js 環境, shebang 除去） |
-| `playwright.config.ts` | E2E テスト設定（baseURL, タイムアウト, Vite webServer, globalSetup/Teardown） |
+| `playwright.config.ts` | E2E テスト設定（`baseURL`、`timeout: 60000`、`retries: CI?2:1`、`workers: CI?1:4`、`projects: setup/default` + `storageState`、`globalSetup`/`globalTeardown`）。**`webServer` は使っていない** — gkill_server と Vite の起動は `run-e2e.mjs` が行う |
 | `src/client/__tests__/e2e/run-e2e.mjs` | E2E テストランナー（gkill_server 自動起動・停止、`$HOME/gkill_test` クリーン） |
 | `src/server/go.mod` | Go テストの依存管理 |
 | `src/android/app/build.gradle.kts` | Android テスト設定 |
@@ -376,7 +406,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 
 ## 5. テストカバレッジの範囲
 
-### Go バックエンド（30パッケージにテスト有）
+### Go バックエンド（31ディレクトリにテスト有）
 
 ```mermaid
 graph LR
@@ -472,12 +502,12 @@ npm install
 
 ### Go テスト
 
-- Go 1.26.0 以上
+- Go 1.26.4 以上（`src/server/go.mod` の `go` ディレクティブ）
 - 追加のセットアップ不要（インメモリ DB 使用のため）
 
 ### フロントエンド ユニットテスト
 
-- Node.js 20.19 以上（24.x推奨）
+- Node.js 20.19 以上（24.x推奨）。`package.json` に `engines` フィールドは無いため、この要件はドキュメント上の約束
 - 追加のセットアップ不要
 
 ### フロントエンド E2E テスト

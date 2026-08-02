@@ -19,7 +19,8 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run install_app` | Full build: frontend → embed → `go install` (desktop app with go-astilectron window) |
 | `npm run go_install` | Go install only (skip frontend rebuild) |
 | `npm run go_mod` | Regenerate `go.mod` and `go.sum` from scratch |
-| `npm test` | Run all tests (server + client + MCP + Android + Wear OS) |
+| `npm test` | Run all tests (docs verification + server + client + MCP + Android + Wear OS) |
+| `npm run verify_docs` | Docs CI: checks doc counts against code, cross-links, referenced paths, Mermaid blocks, manual freshness. `--list` prints the measured metrics |
 | `npm run test_server` | Go tests (`cd src/server && go test ./...`) |
 | `npm run test_client_unit` | Vitest unit tests |
 | `npm run test_client_e2e` | Playwright E2E tests (gkill_server + Vite を空きポートで自動起動・停止、`$HOME/gkill_test`使用) |
@@ -98,12 +99,12 @@ Module: `github.com/mt3hr/gkill/src/server` (Go 1.26.4)
 
 Key packages:
 - `gkill/api/` — Shared infrastructure: `embed.go` (`//go:embed` serves Vue SPA at `/`), `version.go`, `gkill_version_data.go`, `find_filter.go`, `find_filter_helpers.go`, `find_kyou_context.go`
-- `gkill/api/gkill_server_api/` — HTTP API handlers (88 files, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
-- `gkill/api/req_res/` — Request/response structs for every endpoint (176 files)
+- `gkill/api/gkill_server_api/` — HTTP API handlers (92 files, 1 handler per file). `GkillServerAPI` struct with `serve.go`, `close.go`, route definitions in `gkill_server_api_address.go`. Auth middleware (`auth.go`, `auth_context.go`, `auth_middleware.go`) extracts session→account→device→repositories via `AuthContext`, `authMiddleware`, `authWithReposMiddleware`. Handler registration uses wrapper functions: `wrapNoAuth` (no session), `wrapAuth` (session + account), `wrapAuthRepos` (session + account + device + repositories). Utility files: `filter_local_only.go`, `utils.go`, `web_push.go`. ZIP browsing: `handle_browse_zip_contents.go` (path traversal prevention, Shift_JIS→UTF-8, singleflight dedup).
+- `gkill/api/req_res/` — Request/response structs for every endpoint (182 files)
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou` (stdio newline-delimited JSON)
 - `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{FindKyous, GetContentHTML, GetConfigHTML})` starts the stdio JSON message loop. Plugins are standalone binaries in `src/plugins/`
-- `gkill/usecase/` — HTTP-independent business logic (16 files). Extracted from handlers to enable reuse without HTTP context. Functions operate on DAO/repository types directly.
+- `gkill/usecase/` — HTTP-independent business logic (17 files). Extracted from handlers to enable reuse without HTTP context. Functions operate on DAO/repository types directly.
 - `gkill/dao/` — Data access layer with `GkillDAOManager` managing SQLite3 databases
 - `gkill/dao/reps/` — Repository interfaces and implementations for each data type. `plugin_repository_impl.go` manages plugin subprocess lifecycle (start, mutex-guarded stdio, auto-restart on crash)
 - `gkill/main/common/` — Shared CLI commands, server initialization, logging
@@ -174,5 +175,5 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 ## Documentation
 
 - `resources/manual/` — HTML manuals (7 languages, 20 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
-- `documents/reverse/` — Reverse-engineered design documents (24 files). See `documents/reverse/README.md` for index. Key files: glossary.md (80 terms), api-endpoints.md (90 endpoints, 88 registered), usecase.md (80 use cases), sequence-diagrams.md (27 diagrams), scenario.md (cross-channel end-to-end usage scenarios with UML), testing-guide.md
+- `documents/reverse/` — Reverse-engineered design documents (24 files). See `documents/reverse/README.md` for index. Key files: glossary.md (86 terms), api-endpoints.md (90 endpoints, 88 registered), usecase.md (82 use cases), sequence-diagrams.md (27 diagrams), scenario.md (cross-channel end-to-end usage scenarios with UML), testing-guide.md. `npm run verify_docs` (`src/tools/verify_docs.mjs`) machine-checks the counts, cross-links, referenced paths, Mermaid blocks, and manual freshness — it runs as part of `npm test`, so update the docs when a count changes.
 - `src/ABOUT_TEST.md` — Test specification index, links to 22 subdirectory `ABOUT_TEST.md` files

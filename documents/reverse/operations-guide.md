@@ -267,7 +267,7 @@ gkill_server --log trace_sql # SQL文も含め全出力
 | `debug` | デバッグ以上 | `gkill_debug.log` |
 | `trace` | トレース以上 | `gkill_trace.log` |
 | `trace_sql` | SQL文含む全て | `gkill_trace_sql.log` |
-| `none` | ログ出力なし | — |
+| `none` | ログ出力なし（**既定値**） | — |
 
 `--log access` を指定すると、全HTTPリクエストのアクセスログ（リモートIP、メソッド、パス、ステータスコード、所要時間、ユーザID）が `gkill_access.log` に記録されます。
 
@@ -474,8 +474,8 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 | コマンド | 説明 |
 |---|---|
 | `gkill_server version` | バージョン・ビルド情報表示 |
-| `gkill_server idf` | ディレクトリファイルのインデックス作成 |
-| `gkill_server dvnf` | DVNF処理 |
+| `gkill_server idf` | ディレクトリファイルのインデックス作成。`-i`/`--ignore` で除外指定。**`gkill_server` にのみ登録**されており、デスクトップアプリ `gkill` からは使えない |
+| `gkill_server dvnf` | DVNF処理（`get [dvnfPath]` / `copy src target` / `move src target`）。共通フラグ `--new`/`-n`、`--auto_create`、`--device`。この端末に有効な ServerConfig が無い場合は `--device` が必須。詳細は [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) |
 | `gkill_server generate_thumb_cache ユーザーID` | サムネイルキャッシュ生成 |
 | `gkill_server generate_video_cache ユーザーID` | 動画キャッシュ生成 |
 | `gkill_server optimize ユーザーID` | データベース最適化（VACUUM） |
@@ -488,9 +488,13 @@ gkill MCP サーバーは3種類提供されている。いずれもOAuth 2.1認
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| Read専用 | `gkill-read-server.mjs` | 8 | 8808 | 読み取りのみ |
-| Write専用 | `gkill-write-server.mjs` | 23 (20 write + 3 read convenience) | 8809 | 書き込み中心 |
-| Read/Write統合 | `gkill-readwrite-server.mjs` | 28 (8 read + 20 write) | 8810 | 全機能 |
+| Read専用 | `gkill-read-server.mjs` | 10 (8 read + 2 plugin) | 8808 | 読み取りのみ |
+| Write専用 | `gkill-write-server.mjs` | 25 (20 write + 3 read convenience + 2 plugin) | 8809 | 書き込み中心 |
+| Read/Write統合 | `gkill-readwrite-server.mjs` | 30 (8 read + 20 write + 2 plugin) | 8810 | 全機能 |
+
+プラグインツール2つ（`gkill_get_plugin_list` / `gkill_get_plugin_content`）は
+`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` に展開したもので、
+3サーバ共通・読み取り専用（`post_plugin_config` は公開しない）。
 
 ### 11.1 起動
 
@@ -521,13 +525,14 @@ MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER="https://<公開ホスト名>"
 | `MCP_PORT` | `8808`/`8809`/`8810` | HTTPサーバーポート（サーバーごとにデフォルト異なる） |
 | `MCP_OAUTH_ISSUER` | `http://localhost:<port>` | OAuthメタデータのissuer URL。**リモートアクセス時は必須**（公開URL）|
 | `GKILL_INSECURE` | `false` | `true` でgkillバックエンドへのTLS証明書検証をスキップ |
+| `GKILL_HOME` | `$HOME/gkill` | MCPサーバがログ（`logs/`）とトークン永続化ファイル（`configs/`）を置く場所の解決に使う |
 | `MCP_LOG` | `info` | MCPアクセスログレベル（`none`/`error`/`warn`/`info`/`debug`/`trace`） |
 
 #### アクセスログファイル
 
 | サーバー | ログファイル | トークン永続化ファイル |
 |---|---|---|
-| Read | `gkill_mcp_read_access.log` | `mcp_oauth_state.json` |
+| Read | `gkill_mcp_read_access.log` | `mcp_oauth_read_state.json` |
 | Write | `gkill_mcp_write_access.log` | `mcp_oauth_write_state.json` |
 | ReadWrite | `gkill_mcp_readwrite_access.log` | `mcp_oauth_readwrite_state.json` |
 

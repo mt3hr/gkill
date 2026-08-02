@@ -10,9 +10,9 @@
 |---|---|
 | ルート | 13 |
 | ページコンポーネント | 15 |
-| ビューコンポーネント | 185 |
-| ダイアログコンポーネント | 101 |
-| **コンポーネント合計** | **301**（ルートを除く。ビュー185 + ダイアログ101 + ページ15） |
+| ビューコンポーネント | 189 |
+| ダイアログコンポーネント | 103 |
+| **コンポーネント合計** | **307**（ルートを除く。ビュー189 + ダイアログ103 + ページ15） |
 
 ## 1. ルート定義
 
@@ -59,8 +59,17 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 | KFTLテキストエリア | 入力 | 複数行テキスト入力（KFTL書式） |
 | テンプレートボタン群 | 操作 | 定型文テンプレートの挿入 |
 | 送信ボタン | 操作 | KFTLテキストの送信・実行 |
+| 未知タグ確認 | 表示 | 送信前に、既存タグに無いタグが含まれていれば確認を求める（後述） |
 | ナビゲーションメニュー | 操作 | rykv/mi/kftl/plaing/mkfl/saihate間の切替 |
 | ローディングオーバーレイ | 表示 | 非同期処理中の表示 |
+
+**未知タグ確認:** 送信ボタンを押すと、リクエスト構築後・実行前に `collect_unknown_tags()`
+（`classes/use-kftl-view.ts`）が既存タグに無いタグを収集する。1件でもあれば実行を中断して
+確認を表示し、承認されたら `do_submit(skip_unknown_tag_check = true)` で再実行する。
+タイプミスによるタグの乱立を防ぐための仕組み。
+
+この確認は `Teleport` でインライン描画されるため、対応する `*-dialog.vue` ファイルは存在しない。
+同じ仕組みは `add-tag-view.vue` にもある（i18n キー `CONFIRM_UNKNOWN_TAG_MESSAGE`）。
 
 ### 2.3 タスクボード画面（`/mi`）
 
@@ -102,7 +111,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 
 **コンポーネント:** `kyou-page.vue` → `kyou-view.vue`
 
-個別の記録を詳細表示する多態コンポーネントです。全14データ型に対応します。
+個別の記録を詳細表示する多態コンポーネントです。全12データ型（kmemo / kc / urlog / nlog / timeis / mi / lantana / idf_kyou / git_commit_log / rekyou / mirekyou / plugin）に対応します。
 
 | 項目 | 種別 | 説明 |
 |---|---|---|
@@ -119,7 +128,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 
 ### 2.6 打刻メモ帳画面（`/mkfl`）
 
-**コンポーネント:** `mkfl-page.vue` → `kftl-view.vue` + `plaing-timeis-view.vue`
+**コンポーネント:** `mkfl-page.vue` → `mkfl-view.vue` → `kftl-view.vue` + `plaing-timeis-view.vue`
 
 打刻（TimeIs）とメモ（KFTL入力）を組み合わせた複合入力画面です。画面を上下に分割し、上半分でKFTLテキスト入力、下半分で稼働中のTimeIsを表示します。
 
@@ -178,6 +187,17 @@ DnoteView はダッシュボードのほか rykv 画面からも利用される�
 | 集計項目 | `dnote-item-view.vue` | 単一の集計値（件数・合計・平均等）を表示 |
 | 集計リスト | `dnote-list-view.vue` | 条件に合致するKyou一覧を表示 |
 | トレンドグラフ | `dnote-trend-graph-view.vue` | 時系列の集計値をスパークライン（折れ線/棒）で表示。集計粒度（日/週/月）・グラフ種別を設定可能。ダブルクリックで編集、右クリックでコンテキストメニュー（編集/削除）、ドラッグ&ドロップで並べ替え |
+| トレンドグラフ（表） | `dnote-trend-graph-table-view.vue` | 集計値のテーブル表示 |
+
+Dnote 関連のコンポーネントは他に以下がある（追加・編集・削除確認の3点セット）。
+
+| 種別 | コンポーネント |
+|---|---|
+| ビュー | `dnote-item-table-view.vue`, `dnote-list-table-view.vue`, `dnote-item-list-view.vue`, `edit-dnote-card.vue`, `edit-dnote-predicate-group.vue`, `aggregated-list-item.vue`, `dnote-trend-graph-context-menu.vue` |
+| ダイアログ | `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue` |
+
+集計は全てクライアント側で行われ、専用のバックエンドAPIは存在しない
+（`classes/dnote/dnote-trend-aggregator.ts`、`classes/dnote/dnote-trend/`）。
 
 #### FABメニュー（右下）
 
@@ -217,6 +237,8 @@ DnoteView はダッシュボードのほか rykv 画面からも利用される�
 | └ Mi入力 | 操作 | タスク追加ダイアログ |
 | └ Nlog入力 | 操作 | 支出記録ダイアログ |
 | └ Lantana入力 | 操作 | 気分記録ダイアログ |
+| └ ファイルアップロード | 操作 | ファイルアップロードダイアログ |
+| ヘルプボタン | 操作 | ヘルプダイアログ（`help-dialog.vue`） |
 | リロードボタン | 操作 | データ再読込 |
 | ログアウトボタン | 操作 | ログアウト確認ダイアログ |
 
@@ -233,7 +255,7 @@ DnoteView はダッシュボードのほか rykv 画面からも利用される�
 
 ### 2.11 初回アカウント登録画面（`/regist_first_account`）
 
-**コンポーネント:** `regist-first-account-page.vue`
+**コンポーネント:** `regist-first-account-page.vue` → `regist-first-account-view.vue`（入力フォームの実体はビュー側）
 
 初回起動時のアカウント作成画面です。
 
@@ -268,13 +290,17 @@ DnoteView はダッシュボードのほか rykv 画面からも利用される�
 | notification | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | idf_kyou | — | — | ✅ | ✅ | ✅ | ✅ | — |
 | re_kyou | — | — | ✅ | ✅ | ✅ | ✅ | — |
+| mi_re_kyou | ✅ | ✅ | ✅ | ✅ | ✅ | — | — |
+| git_commit_log | — | — | — | — | ✅ | — | — |
+| plugin | — | — | — | — | ✅ | — | — |
 | kyou (共通) | — | — | — | — | ✅ | ✅ | ✅ |
 
 **備考:**
 - **kmemo**: 追加はKFTL経由で行う
 - **idf_kyou**: 追加はMKFL（ファイルアップロード）経由で行う
-- **re_kyou**: 追加は既存記録のコンテキストメニューから行う
-- **kyou-view**: 全14データ型を多態的に表示する統合コンポーネント
+- **re_kyou** / **mi_re_kyou**: 追加は既存記録のコンテキストメニューから行う
+- **git_commit_log** / **plugin**: 読み取り専用。gkill 側から追加・編集・削除はできない
+- **kyou-view**: 全12データ型を多態的に表示する統合コンポーネント（`kyou.ts` の `typed_*` スロットと1対1）
 - **削除確認・履歴**: 個別の「—」は専用コンポーネントが存在しないことを示す。全データ型の削除確認は `confirm-delete-kyou-view` (共通)、履歴表示は `kyou-histories-view` (共通) で対応する
 
 ### 3.1 kmemo（テキストメモ）画面仕様
@@ -627,6 +653,9 @@ Teleport to body
 
 ### ダイアログ一覧（カテゴリ別）
 
+> ダイアログは全部で103件ある。以下は主要なものをカテゴリ別に整理したもので、網羅的な一覧ではない。
+> 実体は `src/client/pages/dialogs/*.vue` を参照。
+
 #### データ追加ダイアログ
 
 | ダイアログ | 対象データ型 |
@@ -668,8 +697,9 @@ Teleport to body
 | `confirm-delete-text-dialog.vue` | テキスト |
 | `confirm-delete-notification-dialog.vue` | 通知 |
 | `confirm-delete-idf-kyou-dialog.vue` | ファイル |
-| `confirm-re-kyou-dialog.vue` | リポスト |
 | `confirm-logout-dialog.vue` | ログアウト |
+
+`confirm-re-kyou-dialog.vue` は削除ではなく**リポスト実行の確認**なので、上表には含めない。
 
 #### 履歴ダイアログ
 
@@ -690,6 +720,52 @@ Teleport to body
 | `create-account-dialog.vue` | アカウント作成 |
 | `edit-folder-dialog.vue` | フォルダ編集 |
 | `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
+| `edit-dnote-dialog.vue` | Dnote（集計ビュー）設定 |
+| `edit-ryuu-dialog.vue` | Ryuu（関連情報ビュー）設定 |
+| `new-board-name-dialog.vue` | Mi ボード名の新規作成 |
+| `new-device-name-dialog.vue` | デバイス名の新規作成 |
+| `add-rep-dialog.vue` / `allocate-rep-dialog.vue` | リポジトリ追加・割当 |
+| `confirm-generate-tls-files-dialog.vue` | TLS証明書生成確認 |
+| `confirm-reset-password-dialog.vue` / `show-password-reset-link-dialog.vue` | パスワードリセット |
+| `plugin-config-dialog.vue` | プラグイン設定（**孤児コンポーネント。画面から到達する導線が無い**） |
+
+構造編集系（タグ構造・リポジトリ構造・RepType構造・KFTLテンプレート構造・デバイス）は
+`add-new-*-struct-element-dialog.vue` / `edit-*-struct[-element]-dialog.vue` /
+`confirm-delete-*-struct-dialog.vue` の3点セットが対象ごとに用意されている。
+
+#### プラグイン関連コンポーネント
+
+| コンポーネント | 種別 | 説明 |
+|---|---|---|
+| `plugin-html-view.vue` | ビュー | プラグインが返す HTML を iframe `srcdoc` で描画。`sandbox="allow-scripts allow-forms"`、`scrolling="no"`、高さは postMessage（`gkill_iframe_size`）で親が調整し、未確定時は 80px |
+| `plugin-html-context-menu.vue` | ビュー | プラグインKyou用コンテキストメニュー |
+| `plugin-config-dialog.vue` | ダイアログ | プラグイン設定フォーム（未マウント） |
+
+テーマは親から `gkill_theme` を postMessage して CSS 変数を切り替える。
+
+#### Ryuu（関連情報）コンポーネント
+
+`rykv-view.vue` に埋め込まれる関連情報ビュー。
+
+| コンポーネント | 種別 |
+|---|---|
+| `ryuu-view.vue` / `ryuu-item-view.vue` | ビュー |
+| `add-ryuu-item-view.vue` / `edit-ryuu-item-view.vue` | ビュー |
+| `ryuu-item-context-menu.vue` | コンテキストメニュー |
+| `add-ryuu-item-dialog.vue` / `edit-ryuu-item-dialog.vue` / `edit-ryuu-dialog.vue` / `confirm-delete-ryuu-item-dialog.vue` | ダイアログ |
+
+#### Rykv ダイアログホスト
+
+Rykv 配下のダイアログは個別に配置されるのではなく、`rykv-dialog-host.vue` /
+`rykv-dialog-host-item.vue` が一括でホストする。開けるダイアログの種類は
+`rykv-dialog-kind.ts` の `RykvDialogKind`（28種）で定義される。
+
+#### ヘルプ・チュートリアル
+
+| ダイアログ | 対象 |
+|---|---|
+| `help-dialog.vue` | 各ページのツールバーから開くヘルプ |
+| `tutorial-dialog.vue` | チュートリアル |
 
 #### 検索条件エディタダイアログ
 
@@ -763,6 +839,20 @@ CRUDリレーイベント:
 
 右クリック（`contextmenu.prevent`）で表示されるコンテキストメニューが各データ型に用意されています。
 
+#### Kyou 系コンテキストメニューの共通項目
+
+データ型ごとの編集・削除に加え、Kyou 系のメニューはおおむね以下を共通で持ちます。
+
+| 項目 | i18n キー | 説明 |
+|---|---|---|
+| タスク化 | `ADD_MI_REKYOU_TITLE` | この Kyou を対象にした MiReKyou を追加する |
+| タグ追加 | — | 付帯タグを追加。直近使用タグのクイック追加サブメニューを持つ |
+| テキスト追加 | — | 付帯テキストを追加 |
+| 通知追加 | `ADD_NOTIFICATION_TITLE` | 付帯通知を追加 |
+| 内容コピー | `COPY_CONTENT_TITLE` | Kyou の内容をクリップボードへコピー（`classes/kyou-content-text.ts`） |
+| IDコピー | `COPY_ID_TITLE` | Kyou の ID をクリップボードへコピー |
+| フォルダを開く / ファイルを開く | — | `application_config.session_is_local` が真のときのみ表示 |
+
 | コンテキストメニュー | 対象 |
 |---|---|
 | `kmemo-context-menu.vue` | テキストメモ |
@@ -776,6 +866,8 @@ CRUDリレーイベント:
 | `re-kyou-context-menu.vue` | リポスト |
 | `mi-re-kyou-context-menu.vue` | リポストタスク |
 | `git-commit-log-context-menu.vue` | Gitコミット |
+| `plugin-html-context-menu.vue` | プラグインKyou（編集・削除なし） |
+| `dnote-trend-graph-context-menu.vue` | Dnoteトレンドグラフ |
 | `attached-tag-context-menu.vue` | 付帯タグ |
 | `attached-text-context-menu.vue` | 付帯テキスト |
 | `attached-notification-context-menu.vue` | 付帯通知 |
