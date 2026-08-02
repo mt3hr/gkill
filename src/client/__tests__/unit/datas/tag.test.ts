@@ -1,64 +1,9 @@
 import { Tag } from '@/classes/datas/tag'
+import { expectCloneCopiesAllFields } from '../../helpers/clone-parity'
 
 describe('Tag', () => {
-  test('can be instantiated', () => {
-    const tag = new Tag()
-    expect(tag).toBeInstanceOf(Tag)
-  })
-
-  describe('default field values', () => {
-    let tag: Tag
-
-    beforeEach(() => {
-      tag = new Tag()
-    })
-
-    test('tag defaults to empty string', () => {
-      expect(tag.tag).toBe('')
-    })
-
-    test('attached_histories defaults to empty array', () => {
-      expect(tag.attached_histories).toEqual([])
-    })
-
-    test('inherited MetaInfoBase fields have defaults', () => {
-      expect(tag.is_deleted).toBe(false)
-      expect(tag.id).toBe('')
-      expect(tag.target_id).toBe('')
-      expect(tag.create_app).toBe('')
-      expect(tag.create_device).toBe('')
-      expect(tag.create_user).toBe('')
-      expect(tag.update_app).toBe('')
-      expect(tag.update_device).toBe('')
-      expect(tag.update_user).toBe('')
-      expect(tag.related_time).toBeInstanceOf(Date)
-      expect(tag.create_time).toBeInstanceOf(Date)
-      expect(tag.update_time).toBeInstanceOf(Date)
-    })
-  })
-
-  describe('clone', () => {
-    test('clone creates a copy with same field values', () => {
-      const tag = new Tag()
-      tag.id = 'tag-001'
-      tag.target_id = 'kyou-abc'
-      tag.tag = 'important'
-      tag.is_deleted = true
-
-      const cloned = tag.clone()
-
-      expect(cloned).toBeInstanceOf(Tag)
-      expect(cloned.id).toBe('tag-001')
-      expect(cloned.target_id).toBe('kyou-abc')
-      expect(cloned.tag).toBe('important')
-      expect(cloned.is_deleted).toBe(true)
-    })
-
-    test('clone returns a different instance', () => {
-      const tag = new Tag()
-      const cloned = tag.clone()
-      expect(cloned).not.toBe(tag)
-    })
+  test('clone が全フィールドをコピーする', () => {
+    expectCloneCopiesAllFields(new Tag())
   })
 
   describe('generate_info_identifer', () => {

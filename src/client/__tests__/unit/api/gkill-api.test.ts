@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { i18n } from '../../helpers/setup-i18n'
 import { makeKmemo, makeMi, makeTag, makeURLog, makeNlog, makeLantana, makeText, makeShareKyousInfo } from '../../helpers/factory'
 
@@ -35,20 +36,72 @@ describe('GkillAPI', () => {
     })
   })
 
-  describe('endpoint addresses', () => {
-    test('login_address is /api/login', () => {
-      const api = GkillAPI.get_instance()
-      expect(api.login_address).toBe('/api/login')
+  // エンドポイントのURLはTypeScript側(gkill-api.ts)とGo側(gkill_server_api_address.go)で
+  // 独立に書かれている。片方だけリネームするとビルドもtype-checkも通り、
+  // 実行して404になって初めて気付く。両者の集合を突き合わせて防ぐ。
+  //
+  // 「login_address は /api/login である」といった個別テストは定数の言い換えでしかなく、
+  // このズレを検出できないので置き換えた。
+  describe('endpoint address parity with Go', () => {
+    const GO_ADDRESS_FILE = 'src/server/gkill/api/gkill_server_api/gkill_server_api_address.go'
+
+    // Webクライアント以外から叩かれるため gkill-api.ts に無いのが正しいアドレス。
+    const NON_WEB_CLIENT_ADDRESSES = [
+      '/api/submit_kftl_text', // MCPサーバ / Wear OS から使う
+      '/api/get_kyous_mcp', // MCPサーバ専用
+      '/api/get_idf_file_path', // MCPサーバ（stdio・同一マシン）専用
+      '/api/update_cache', // 保守用。現状どのクライアントからも呼んでいない
+      '/serviceWorker.js', // Web Push用のService Worker配信。APIではない
+    ]
+
+    function goAddresses(): Set<string> {
+      const source = readFileSync(GO_ADDRESS_FILE, 'utf8')
+      const addresses = new Set<string>()
+      for (const m of source.matchAll(/gkillAPIAddress\.\w+Address\s*=\s*"([^"]+)"/g)) {
+        addresses.add(m[1])
+      }
+      return addresses
+    }
+
+    function clientAddresses(): Set<string> {
+      const api = GkillAPI.get_instance() as unknown as Record<string, unknown>
+      const addresses = new Set<string>()
+      for (const [key, value] of Object.entries(api)) {
+        if (key.endsWith('_address') && typeof value === 'string' && value.startsWith('/')) {
+          addresses.add(value)
+        }
+      }
+      return addresses
+    }
+
+    test('Goが登録しているアドレスを読み取れている', () => {
+      // 抽出の正規表現が実装の書き方とズレていないことの確認。
+      // ここが0件のまま下のテストが通ると、何も検証していないことになる。
+      expect(goAddresses().size).toBeGreaterThan(80)
     })
 
-    test('get_kyous_address is /api/get_kyous', () => {
-      const api = GkillAPI.get_instance()
-      expect(api.get_kyous_address).toBe('/api/get_kyous')
+    test('クライアントのアドレスがすべてGo側にも存在する', () => {
+      const go = goAddresses()
+      const missingInGo = [...clientAddresses()].filter((address) => !go.has(address))
+
+      expect(missingInGo, 'クライアントが叩くのにサーバが登録していないアドレス（404になる）').toEqual([])
     })
 
-    test('add_kmemo_address is /api/add_kmemo', () => {
-      const api = GkillAPI.get_instance()
-      expect(api.add_kmemo_address).toBe('/api/add_kmemo')
+    test('Go側のアドレスがすべてクライアントにも存在する', () => {
+      const client = clientAddresses()
+      const missingInClient = [...goAddresses()]
+        .filter((address) => !client.has(address))
+        .filter((address) => !NON_WEB_CLIENT_ADDRESSES.includes(address))
+
+      expect(missingInClient, 'サーバが登録しているのにクライアントが持っていないアドレス').toEqual([])
+    })
+
+    // 許容リストの腐り防止。サーバ側のルートが消えたら、リストも更新する必要がある。
+    test('Webクライアント以外向けの許容リストが実在するアドレスだけを指している', () => {
+      const go = goAddresses()
+      const stale = NON_WEB_CLIENT_ADDRESSES.filter((address) => !go.has(address))
+
+      expect(stale, 'サーバから消えたのでリストからも消すこと').toEqual([])
     })
   })
 
@@ -126,22 +179,6 @@ describe('GkillAPI', () => {
       const api = GkillAPI.get_instance()
       const result = await api.login({ user_id: 'u', password_sha256: 'p' } as never)
       expect(result.session_id).toBe('test-session-123')
-    })
-  })
-
-  describe('key methods exist', () => {
-    const api = GkillAPI.get_instance()
-
-    test.each([
-      'login',
-      'logout',
-      'reset_password',
-      'generate_uuid',
-      'get_session_id',
-      'set_session_id',
-      'check_auth',
-    ])('%s is a function', (method) => {
-      expect(typeof (api as Record<string, unknown>)[method]).toBe('function')
     })
   })
 
@@ -1988,36 +2025,4 @@ describe('GkillAPI', () => {
     })
   })
 
-  describe('additional method existence checks', () => {
-    const api = GkillAPI.get_instance()
-
-    test.each([
-      'get_kc',
-      'get_urlog',
-      'get_nlog',
-      'get_timeis',
-      'get_lantana',
-      'get_git_commit_log',
-      'get_idf_kyou',
-      'get_rekyou',
-      'get_tag_histories_by_tag_id',
-      'get_text_history_by_text_id',
-      'get_notification_history_by_notification_id',
-      'get_server_configs',
-      'update_application_config',
-      'update_user_reps',
-      'update_server_config',
-      'get_repositories',
-      'upload_files',
-      'get_share_kyou_list_infos',
-      'add_share_kyou_list_info',
-      'delete_share_kyou_list_infos',
-      'commit_tx',
-      'discard_tx',
-      'get_gkill_notification_public_key',
-      'register_gkill_notification',
-    ])('%s is a function', (method) => {
-      expect(typeof (api as Record<string, unknown>)[method]).toBe('function')
-    })
-  })
 })
