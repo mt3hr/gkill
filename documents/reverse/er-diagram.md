@@ -469,7 +469,7 @@ API レスポンスでは `DataType` フィールドとしてコード側で付�
 | **Notification** | `UPDATE_TIME`（通常検索）, `NOTIFICATION_TIME`（日時範囲検索） | コンテキストに応じて使い分け。通常のfindでは `UPDATE_TIME`、通知日時の範囲指定では `NOTIFICATION_TIME` を使用 |
 | **MiReKyou** | `CREATE_TIME`, `UPDATE_TIME`, `LIMIT_TIME`, `ESTIMATE_START_TIME`, `ESTIMATE_END_TIME` | Mi と同じ5観点。`mi_re_kyou_sql.go` の射影ごとに `mirekyou_create` / `mirekyou_check` / `mirekyou_limit` / `mirekyou_start` / `mirekyou_end` の `DATA_TYPE` が付く |
 
-## 8. 派生テーブル（キャッシュ層・一時層）
+## 6. 派生テーブル（キャッシュ層・一時層）
 
 前節までは各データ型の**元テーブル**の定義。実際には同じデータに対して、用途別に別スキーマのテーブルが生成される。
 

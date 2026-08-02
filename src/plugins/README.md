@@ -13,27 +13,32 @@ plugins/
 │   └── gkill_example/          # サンプルプラグイン（固定Kyouを返す）
 │       ├── main.go
 │       ├── go.mod
-│       └── manifest.json
+│       ├── manifest.json
+│       └── README.md
 ├── gkill_plugin_claudeai/       # Claude.ai チャット履歴プラグイン
 │   ├── main.go
 │   ├── loader.go
+│   ├── source.go
 │   ├── cache.go
 │   ├── cache_path.go
 │   ├── types.go
 │   ├── html.go
 │   ├── cache_path_test.go
-│   ├── go.mod
-│   └── manifest.json
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
 ├── gkill_plugin_chatgpt/        # ChatGPT チャット履歴プラグイン
 │   ├── main.go
 │   ├── loader.go
+│   ├── source.go
 │   ├── cache.go
 │   ├── cache_path.go
 │   ├── types.go
 │   ├── html.go
 │   ├── cache_path_test.go
-│   ├── go.mod
-│   └── manifest.json
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
 └── gkill_plugin_claudecode/     # Claude Code チャットログプラグイン
     ├── main.go
     ├── loader.go
@@ -45,8 +50,9 @@ plugins/
     ├── loader_test.go
     ├── cache_path_test.go
     ├── testdata/
-    ├── go.mod
-    └── manifest.json
+    ├── go.mod / go.sum
+    ├── manifest.json
+    └── README.md
 ```
 
 ## 提供プラグイン

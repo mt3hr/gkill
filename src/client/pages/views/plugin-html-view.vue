@@ -46,7 +46,12 @@
             :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog"
             v-on="crudRelayHandlers"
+            @requested_show_plugin_config="show_plugin_config"
             ref="context_menu" />
+        <!-- プラグイン設定ダイアログはプラグイン固有なので rykv のダイアログホストではなく
+             ここで直接持つ。rep_name はコンテキストメニューから受け取る。 -->
+        <PluginConfigDialog v-model:show="is_show_plugin_config" :rep_name="plugin_config_rep_name"
+            :application_config="application_config" />
     </div>
 </template>
 
@@ -54,6 +59,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { i18n } from '@/i18n'
 import PluginHtmlContextMenu from './plugin-html-context-menu.vue'
+import PluginConfigDialog from '../dialogs/plugin-config-dialog.vue'
 import type { PluginHtmlViewProps } from './plugin-html-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { usePluginHtmlView } from '@/classes/use-plugin-html-view'
@@ -68,6 +74,14 @@ const {
     show_context_menu,
     crudRelayHandlers,
 } = usePluginHtmlView({ props, emits })
+
+// プラグイン設定ダイアログの表示状態。コンテキストメニューから rep_name を受けて開く。
+const is_show_plugin_config = ref<boolean>(false)
+const plugin_config_rep_name = ref<string>('')
+function show_plugin_config(rep_name: string): void {
+    plugin_config_rep_name.value = rep_name
+    is_show_plugin_config.value = true
+}
 
 // ダイアログ表示時にiframeのsrcdocナビゲーションがpushStateより後にならないよう、
 // srcdocには定数ローダーを使い、コンテンツはpostMessageで注入する。

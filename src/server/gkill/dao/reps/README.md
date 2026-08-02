@@ -193,6 +193,24 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 | `re_kyou_temp_repository.go` | 一時リポジトリインタフェース |
 | `re_kyou_repository_temp_sqlite3_impl.go` | 一時リポジトリ実装 |
 
+### MiReKyou（既存記録のタスク化）— 9ファイル
+
+タイトルを持たず `target_id` で元の Kyou を指す Mi。表示内容は常に元の Kyou から解決する。
+`data_type` は `mirekyou_create` / `_check` / `_limit` / `_start` / `_end` の5射影に分かれるため、
+前方一致で判定するコードは **`mirekyou` を `mi` より先に**評価すること。
+
+| ファイル | 層 |
+|---------|---|
+| `mi_re_kyou.go` | エンティティ定義 |
+| `mi_re_kyou_sql.go` | SQL 定義（5射影の生成を含む） |
+| `mi_re_kyou_repository.go` | インタフェース |
+| `mi_re_kyou_repositories.go` | 集約インタフェース |
+| `mi_re_kyou_repository_sqlite3_impl.go` | SQLite3 実装 |
+| `mi_re_kyou_repository_cached_sqlite3_impl.go` | キャッシュ付き実装 |
+| `mi_re_kyou_repository_sqlite3_impl_local_cached.go` | ローカルキャッシュ実装 |
+| `mi_re_kyou_temp_repository.go` | 一時リポジトリインタフェース |
+| `mi_re_kyou_repository_temp_sqlite3_impl.go` | 一時リポジトリ実装 |
+
 ### IDFKyou（ファイル）— 9ファイル
 
 | ファイル | 層 |
@@ -239,6 +257,12 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 |---------|------|
 | `idf_thumb_file_server.go` | サムネイル画像のファイルサーバ |
 | `idf_video_file_server.go` | 動画ファイルのファイルサーバ |
+
+### 共通ユーティリティ — 1ファイル
+
+| ファイル | 説明 |
+|---------|------|
+| `local_rep_cache_path.go` | ローカルキャッシュ実装のキャッシュ DB パス解決。パス要素として使える値かを検証してからパスを組み立てる |
 
 ## サブディレクトリ
 

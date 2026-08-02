@@ -2,7 +2,7 @@
 
 ## 概要
 
-フロントエンドで使用する全23種のTypeScriptデータモデルクラスをテストする。各モデルのデフォルトコンストラクション、フィールド代入、シリアライゼーションを検証している。
+フロントエンドで使用する TypeScript データモデルクラスをテストする（27ファイル）。各モデルのデフォルトコンストラクション、フィールド代入、シリアライゼーションを検証している。
 
 ## テストフレームワーク
 
@@ -43,6 +43,7 @@ Vitest
 | ファイル | テスト内容 |
 |---------|-----------|
 | `src/client/__tests__/unit/datas/attached-histories.test.ts` | 11エンティティの `load_attached_histories` / `load_attached_datas` |
+| `src/client/__tests__/unit/datas/append-not-found-tags.test.ts` | ApplicationConfig のタグ構造に未登録タグを自動追加する処理 |
 
 ## テスト内容
 

@@ -15,11 +15,12 @@
 
   <h2>Integrationstypen</h2>
   <table>
-    <tr><th>Typ</th><th>Beschreibung</th></tr>
-    <tr><td>Nur-Lesen</td><td>Die KI kann Einträge nur anzeigen und suchen. Hinzufügen oder Ändern ist nicht möglich.</td></tr>
-    <tr><td>Nur-Schreiben</td><td>Die KI kann Einträge nur hinzufügen, aktualisieren und löschen.</td></tr>
-    <tr><td>Lesen &amp; Schreiben</td><td>Die KI kann Einträge anzeigen, hinzufügen, aktualisieren und löschen.</td></tr>
+    <tr><th>Typ</th><th>Was er kann</th><th>Auszuf&uuml;hrende Datei</th><th>Werkzeuge</th><th>Port (HTTP)</th></tr>
+    <tr><td>Nur-Lesen</td><td>Eintr&auml;ge nur anzeigen und suchen. Hinzuf&uuml;gen oder &Auml;ndern ist nicht m&ouml;glich</td><td>gkill-read-server.mjs</td><td>10</td><td>8808</td></tr>
+    <tr><td>Nur-Schreiben</td><td>Eintr&auml;ge hinzuf&uuml;gen, aktualisieren und l&ouml;schen. Kann zudem Ablage-, Tag- und Board-Namen lesen</td><td>gkill-write-server.mjs</td><td>25</td><td>8809</td></tr>
+    <tr><td>Lesen &amp; Schreiben</td><td>Eintr&auml;ge anzeigen, hinzuf&uuml;gen, aktualisieren und l&ouml;schen</td><td>gkill-readwrite-server.mjs</td><td>30</td><td>8810</td></tr>
   </table>
+  <p>Jeder Typ enth&auml;lt zwei zus&auml;tzliche Werkzeuge zum Lesen von Eintr&auml;gen, die &uuml;ber Erweiterungen importiert wurden.</p>
 
   <h2>Dateiübergabe</h2>
   <p>Wie Dateieinträge (Bilder, Videos, Dokumente) der KI gezeigt werden, wechselt automatisch je nach Verbindungsart.</p>
@@ -39,8 +40,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "npx",
-      "args": ["-y", "gkill-mcp-server"],
+      "command": "node",
+      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "ihre-benutzer-id",
@@ -59,15 +60,21 @@
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=ihre-benutzer-id \
   --env GKILL_PASSWORD_SHA256=ihr-hash \
-  -- npx -y gkill-mcp-server</code></pre>
+  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
   <div class="tip">
-    <strong>Hinweis:</strong> gkill-mcp-server ist noch nicht auf npm veröffentlicht. Geben Sie bis dahin den im Repository enthaltenen MCP-Server als Befehl an (z. B. <code>-- node src/mcp/gkill-readwrite-server.mjs</code>).
+    <strong>Tipp:</strong> Passen Sie den obigen Pfad an den Ort an, an dem Sie die gkill-Quellen abgelegt haben. Um den Typ zu wechseln, ersetzen Sie den Dateinamen durch <code>gkill-write-server.mjs</code> oder <code>gkill-readwrite-server.mjs</code>.
   </div>
 
-  <h2>Fernzugriff</h2>
-  <p>Machen Sie Ihren gkill-Server über das Internet zugänglich und setzen Sie <code>GKILL_BASE_URL</code> auf seine öffentliche Adresse. Aus Sicherheitsgründen wird die Aktivierung von TLS (HTTPS) dringend empfohlen.</p>
+  <h2>Aus der Ferne nutzen (HTTP-Verbindung)</h2>
+  <p>Wenn die KI nicht auf demselben PC l&auml;uft, kann der MCP-Server selbst per HTTP lauschen, sodass eine KI aus dem Internet eine Verbindung herstellt. Dieser Modus autorisiert die Verbindung per OAuth, daher muss gkill selbst nicht im Internet ver&ouml;ffentlicht werden.</p>
+  <pre><code># Beispiel: Lesen &amp; Schreiben per HTTP bereitstellen
+MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+GKILL_BASE_URL=http://localhost:9999 \
+GKILL_USER=ihre-benutzer-id \
+GKILL_PASSWORD_SHA256=ihr-hash \
+node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
   <div class="tip">
-    <strong>Tipp:</strong> TLS-Einstellungen können unter <a href="server-config.html">Servereinstellungen</a> konfiguriert werden.
+    <strong>Tipp:</strong> Sie k&ouml;nnen auch den gkill-Server selbst im Internet ver&ouml;ffentlichen. Setzen Sie dann <code>GKILL_BASE_URL</code> auf seine &ouml;ffentliche Adresse und aktivieren Sie TLS (HTTPS) unter <a href="server-config.html">Servereinstellungen</a>.
   </div>
 
   <h2>Verwandte Seiten</h2>

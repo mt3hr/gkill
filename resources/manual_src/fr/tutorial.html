@@ -18,13 +18,13 @@
   <p>Appuyez sur le <strong>titre de la page</strong> affiche dans la barre d'outils en haut de l'écran pour ouvrir un menu deroulant et naviguer vers chaque écran.</p>
   <table>
     <tr><th>Nom de l'écran</th><th>Description</th></tr>
-    <tr><td>Saihate</td><td>Écran dedie a l'ajout d'enregistrements sans navigation (pour le lancement direct depuis l'écran de verrouillage ou l'écran d'accueil)</td></tr>
-    <tr><td>Bloc-notes</td><td>Écran de saisie de texte avec la syntaxe Bloc-notes</td></tr>
-    <tr><td>Bloc-notes d'horodatage</td><td>Gestion simultanee des mémos et des horodatages actifs</td></tr>
     <tr><td>Vue du journal de vie</td><td>Ajouter des enregistrements (bouton "+"), parcourir, rechercher et consulter</td></tr>
     <tr><td>Tâches</td><td>Gestion des tâches en tableau Kanban</td></tr>
+    <tr><td>Bloc-notes</td><td>Écran de saisie de texte avec la syntaxe Bloc-notes</td></tr>
     <tr><td>En cours</td><td>Gestion des sessions d'horodatage actives</td></tr>
-    <tr><td>Enregistrement</td><td>Vue détaillée d'un enregistrement individuel</td></tr>
+    <tr><td>Bloc-notes d'entrées de temps</td><td>Gestion simultanee des mémos et des horodatages actifs</td></tr>
+    <tr><td>Tableau de bord</td><td>Voir sur un seul écran l'agrégation, la carte GPS et les tâches du jour sélectionné</td></tr>
+    <tr><td>Saihate</td><td>Écran dedie a l'ajout d'enregistrements sans navigation (pour le lancement direct depuis l'écran de verrouillage ou l'écran d'accueil)</td></tr>
   </table>
 
   <h2>Guide des boutons de la barre d'outils</h2>
@@ -349,19 +349,21 @@ Lait
   </div>
 
   <h2>12. Partager des enregistrements</h2>
-  <p>Dans gkill, vous pouvez générer des liens de partage pour partager des enregistrements avec d'autres personnes.</p>
+  <p>Dans gkill, vous pouvez transformer les critères de recherche que vous utilisez actuellement en un lien de partage et le montrer à d'autres personnes. Ce qui est partagé n'est pas un seul enregistrement, mais tous les enregistrements correspondant à ces critères.</p>
 
   <h3>Comment générer un lien de partage</h3>
   <ol>
-    <li>Ouvrez la vue détaillée ou le menu contextuel de l'enregistrement que vous souhaitez partager.</li>
-    <li>Sélectionnez "Partager".</li>
+    <li>Activez « Afficher le pied de page de partage » dans l'écran des paramètres. Cette option est désactivée par défaut, il suffit donc de le faire une fois au début.</li>
+    <li>Ouvrez la barre latérale sur la vue de journal de vie ou sur l'écran des tâches. Le pied de page de partage apparaît en bas de la barre latérale.</li>
+    <li>Ajustez les conditions de filtrage dans la barre latérale jusqu'à obtenir ce que vous souhaitez partager.</li>
+    <li>Appuyez sur le bouton « Partager » à l'extrémité gauche du pied de page, définissez le titre, le type de vue de partage et les données à inclure, puis enregistrez.</li>
     <li>Une URL de partage sera générée. Utilisez l'URL appropriee selon votre besoin :</li>
   </ol>
   <table>
     <tr><th>Type d'URL</th><th>Usage</th></tr>
-    <tr><td>URL locale</td><td>Accès depuis le meme appareil (localhost)</td></tr>
-    <tr><td>URL LAN</td><td>Accès depuis d'autres appareils sur le meme reseau</td></tr>
-    <tr><td>URL WAN</td><td>Accès externe via Internet</td></tr>
+    <tr><td>Local</td><td>Accès depuis le meme appareil (localhost)</td></tr>
+    <tr><td>Réseau local</td><td>Accès depuis d'autres appareils sur le meme reseau</td></tr>
+    <tr><td>Global</td><td>Accès externe via Internet</td></tr>
   </table>
 
   <h3>Controle des données partagees</h3>
@@ -376,7 +378,7 @@ Lait
   </table>
 
   <div class="tip">
-    <strong>Conseil :</strong> Pour utiliser les URLs LAN ou WAN, vous devez configurer l'adresse IP du serveur dans les paramètres du serveur.
+    <strong>Conseil :</strong> Pour utiliser les URLs Réseau local ou Global, vous devez configurer l'adresse du serveur dans les paramètres du serveur. Les liens déjà créés peuvent être listés, modifiés et supprimés depuis « Gestion des partages », à l'extrémité droite du pied de page de partage.
   </div>
 
   <h3>Pour les destinataires de liens partages</h3>
@@ -406,7 +408,7 @@ Lait
     <strong>Astuce :</strong> Il est recommandé de sauvegarder régulièrement le répertoire personnel. Les répertoires <code>datas/</code> et <code>configs/</code> sont particulièrement importants.
   </div>
   <div class="tip">
-    <strong>Remarque :</strong> L'emplacement des dépôts peut aussi être défini en dehors du répertoire personnel. Si vous utilisez des fichiers placés dans des dossiers externes (dossiers surveillés par IDF, dépôts Git, bases de données situées à l'extérieur, etc.), copier uniquement le répertoire personnel les omettra. Veillez à inclure également dans votre sauvegarde l'emplacement de tous les dépôts configurés.
+    <strong>Remarque :</strong> L'emplacement des dépôts peut aussi être défini en dehors du répertoire personnel. Si vous utilisez des fichiers placés dans des dossiers externes (fichiers placés dans des dossiers externes, historiques de commits Git, bases de données situées à l’extérieur, etc.), copier uniquement le répertoire personnel les omettra. Veillez à inclure également dans votre sauvegarde l'emplacement de tous les dépôts configurés.
   </div>
 
   <h2>Documents associés</h2>

@@ -9,11 +9,11 @@ import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { Tag } from '@/classes/datas/tag'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { PluginHtmlContextMenuProps } from '@/pages/views/plugin-html-context-menu-props'
-import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
+import type { PluginHtmlContextMenuEmits } from '@/pages/views/plugin-html-context-menu-emits'
 
 export function usePluginHtmlContextMenu(options: {
     props: PluginHtmlContextMenuProps,
-    emits: KyouViewEmits,
+    emits: PluginHtmlContextMenuEmits,
 }) {
     const { props, emits } = options
 
@@ -24,7 +24,9 @@ export function usePluginHtmlContextMenu(options: {
     const tag_history: Ref<string[]> = ref([])
 
     // ── Computed ──
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - (+ 8 + (48 * (7 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
+    // 常時表示は8項目（タグ追加 / テキスト追加 / リポスト / タスク化 / 通知追加 /
+    // 内容コピー / IDコピー / プラグイン設定）。タグ履歴とローカル限定2項目は条件付き。
+    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - (+ 8 + (48 * (8 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
 
     // ── Business logic ──
     async function show(e: PointerEvent): Promise<void> {
@@ -73,6 +75,16 @@ export function usePluginHtmlContextMenu(options: {
 
     async function show_add_mi_re_kyou_dialog(): Promise<void> {
         emits('requested_open_rykv_dialog', 'add_mi_re_kyou', props.kyou)
+    }
+
+    // プラグインの設定ダイアログは rykv のダイアログホストではなく
+    // PluginHtmlView が直接持つ（プラグイン固有で他の Kyou 型と共有しないため）。
+    async function show_plugin_config_dialog(): Promise<void> {
+        const rep_name = props.kyou.typed_plugin?.rep_name
+        if (!rep_name) {
+            return
+        }
+        emits('requested_show_plugin_config', rep_name)
     }
 
     async function open_folder(): Promise<void> {
@@ -153,6 +165,7 @@ export function usePluginHtmlContextMenu(options: {
         show_add_notification_dialog,
         show_confirm_rekyou_dialog,
         show_add_mi_re_kyou_dialog,
+        show_plugin_config_dialog,
         open_folder,
         open_file,
         add_tag_from_history,

@@ -306,17 +306,12 @@ export ANDROID_HOME=/path/to/android-sdk
 
 ## 8. Wear OSビルド前準備
 
-Wear OSプロジェクト（`src/wear_os/`）はGradleラッパーを含んでいません。ビルド前に`src/android/`からコピーする必要があります。
+Gradleラッパー（`gradlew` / `gradlew.bat` / `gradle/wrapper/gradle-wrapper.jar` /
+`gradle/wrapper/gradle-wrapper.properties`）は`src/wear_os/`にコミット済みなので、
+通常このステップは不要です。`src/android/`側とバージョンを揃え直したいときだけ実行してください。
 
 ```bash
-# 自動コピー
 npm run setup_wear_os_gradle
-
-# 手動の場合
-cp src/android/gradlew src/wear_os/
-cp src/android/gradlew.bat src/wear_os/
-mkdir -p src/wear_os/gradle/wrapper
-cp src/android/gradle/wrapper/gradle-wrapper.jar src/wear_os/gradle/wrapper/
 ```
 
 ### Wear OSビルド
@@ -356,7 +351,7 @@ npm run setup_gkill_develop_env
 |---|---|---|
 | `vue-tsc`でメモリ不足 | Node.jsのヒープメモリ制限 | `npm run type-check`は`--max-old-space-size=8192`付きで実行されます |
 | `go.mod`のエラー | モジュール定義の不整合 | `npm run go_mod`で再生成 |
-| Wear OSビルドで`gradlew not found` | Gradleラッパー未コピー | `npm run setup_wear_os_gradle`を実行 |
+| Wear OSビルドで`gradlew not found` | ラッパーが壊れている/消えている（通常はコミット済み） | `npm run setup_wear_os_gradle`で`src/android/`から入れ直す |
 
 ## 関連資料
 
