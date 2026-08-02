@@ -3,7 +3,12 @@
 // factory to verify the data shape.
 
 import { describe, test, expect } from 'vitest'
-import { makeReKyou } from '../../helpers/factory'
+// 実クラスを触るテストのために、循環importを本番と同じ順で解いておく
+import '@/classes/api/gkill-api'
+import { ReKyou } from '@/classes/datas/re-kyou'
+import type { Kyou } from '@/classes/datas/kyou'
+import { makeKyou, makeReKyou } from '../../helpers/factory'
+import { expectCloneCopiesAllFields } from '../../helpers/clone-parity'
 
 describe('ReKyou (factory-based)', () => {
   test('makeReKyou returns object with all required fields', () => {
@@ -50,5 +55,24 @@ describe('ReKyou (factory-based)', () => {
     const b = makeReKyou()
     a.id = 'modified'
     expect(b.id).toBe('test-rekyou-id')
+  })
+})
+
+describe('ReKyou.clone', () => {
+  test('clone が全フィールドをコピーする', () => {
+    expectCloneCopiesAllFields(new ReKyou(), { exclude: ['attached_histories'] })
+  })
+
+  test('clone は参照先を引き継がない', () => {
+    // MiReKyou と同じ扱い。clone した ReKyou は UpdateReKyouRequest にそのまま入り
+    // JSON.stringify されるので、参照先一式と全履歴を写すと更新リクエストが太る。
+    const rekyou = new ReKyou()
+    rekyou.attached_kyou = makeKyou() as unknown as Kyou
+    rekyou.attached_histories = [new ReKyou()]
+
+    const cloned = rekyou.clone()
+
+    expect(cloned.attached_kyou).toBeNull()
+    expect(cloned.attached_histories).toEqual([])
   })
 })

@@ -1,41 +1,56 @@
 <template>
-    <v-card elevation="0" @contextmenu.prevent.stop="show_context_menu" :width="width" :height="height"
-        :draggable="effective_draggable" @dragstart="(e: DragEvent) => on_drag_start(e)">
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
-            </v-col>
-            <v-spacer />
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-card-title>
-                    <div class="py-1 mi_board_name">{{ mirekyou.board_name }}</div>
-                </v-card-title>
-            </v-col>
-        </v-row>
-        <KyouView :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="false" :is_image_view="false"
-            :kyou="target_kyou" :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
-            :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-            :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true" :height="'unset'" :width="width"
-            :is_readonly_mi_check="false" :enable_context_menu="false" :show_attached_timeis="false"
-            :enable_dialog="enable_dialog" :show_rep_name="true" :force_show_latest_kyou_info="true"
-            :show_update_time="false" :show_related_time="true" :show_attached_tags="true" :show_attached_texts="true"
-            :show_attached_notifications="true"
-            v-on="crudRelayHandlers"
-            @dblclick.prevent.stop="() => { }" />
-        <div>
-            <div v-if="mirekyou.estimate_start_time">
-                <span>{{ i18n.global.t("MI_START_DATE_TIME_TITLE") }}：</span>
-                <span>{{ format_time(mirekyou.estimate_start_time) }}</span>
+    <!--
+        一覧の行では高さを指定しない。
+        行の高さは外側KyouViewのヘッダ(related_time / rep_name)と分け合うことになるので、
+        行高をそのまま受け取ると必ずヘッダのぶんだけはみ出して日時が切れる。
+        内容なりの高さにしておけば、ヘッダが出ても出なくても行に収まる。
+    -->
+    <v-card class="mirekyou_card" elevation="0" @contextmenu.prevent.stop="show_context_menu" :width="width"
+        :height="is_compact ? undefined : height" :draggable="effective_draggable"
+        @dragstart="(e: DragEvent) => on_drag_start(e)">
+        <div class="mirekyou_head">
+            <!-- 既定のdensityだと56pxあり、板名と日時と合わせると行に収まらない -->
+            <v-checkbox v-model="is_checked_mi" hide-details density="compact" @click="clicked_mi_check()" />
+            <!-- 既存の記録をタスクにしたものであることをMiと区別できるようにする -->
+            <v-icon class="mirekyou_mark" size="16">mdi-subdirectory-arrow-right</v-icon>
+            <div class="py-1 mi_title mirekyou_summary" :title="target_summary">{{ target_summary }}</div>
+            <v-card-title class="mirekyou_board">
+                <div class="py-1 mi_board_name">{{ mirekyou.board_name }}</div>
+            </v-card-title>
+        </div>
+        <div class="mirekyou_times">
+            <!-- 一覧の行には1行しか入らないので、先に来る日時だけを出す -->
+            <div v-if="is_compact && primary_time">
+                <span>{{ i18n.global.t(primary_time.label_key) }}：</span>
+                <span>{{ format_time(primary_time.time) }}</span>
             </div>
-            <div v-if="mirekyou.estimate_end_time">
-                <span>{{ i18n.global.t("MI_END_DATE_TIME_TITLE") }}：</span>
-                <span>{{ format_time(mirekyou.estimate_end_time) }}</span>
-            </div>
-            <div v-if="mirekyou.limit_time">
-                <span>{{ i18n.global.t("MI_LIMIT_DATE_TIME_TITLE") }}：</span>
-                <span>{{ format_time(mirekyou.limit_time) }}</span>
-            </div>
+            <template v-if="!is_compact">
+                <div v-if="mirekyou.estimate_start_time">
+                    <span>{{ i18n.global.t("MI_START_DATE_TIME_TITLE") }}：</span>
+                    <span>{{ format_time(mirekyou.estimate_start_time) }}</span>
+                </div>
+                <div v-if="mirekyou.estimate_end_time">
+                    <span>{{ i18n.global.t("MI_END_DATE_TIME_TITLE") }}：</span>
+                    <span>{{ format_time(mirekyou.estimate_end_time) }}</span>
+                </div>
+                <div v-if="mirekyou.limit_time">
+                    <span>{{ i18n.global.t("MI_LIMIT_DATE_TIME_TITLE") }}：</span>
+                    <span>{{ format_time(mirekyou.limit_time) }}</span>
+                </div>
+            </template>
+        </div>
+        <div v-if="!is_compact" class="mirekyou_target">
+            <KyouView :application_config="application_config" :gkill_api="gkill_api"
+                :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="false" :is_image_view="false"
+                :kyou="target_kyou" :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
+                :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true" :height="'unset'" :width="width"
+                :is_readonly_mi_check="false" :enable_context_menu="false" :show_attached_timeis="false"
+                :enable_dialog="enable_dialog" :show_rep_name="true" :force_show_latest_kyou_info="true"
+                :show_update_time="false" :show_related_time="true" :show_attached_tags="true" :show_attached_texts="true"
+                :show_attached_notifications="true"
+                v-on="crudRelayHandlers"
+                @dblclick.prevent.stop="() => { }" />
         </div>
         <MiReKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou"
@@ -60,7 +75,10 @@ const {
     context_menu,
     target_kyou,
     is_checked_mi,
+    target_summary,
     effective_draggable,
+    is_compact,
+    primary_time,
     show_context_menu,
     clicked_mi_check,
     on_drag_start,
@@ -69,3 +87,52 @@ const {
 
 defineExpose({ show_context_menu })
 </script>
+<style lang="css" scoped>
+/*
+ * 一覧の行は高さが固定でoverflow:hiddenなので、はみ出した分は切り落とされる。
+ * headと日時の高さを先に確定させ、余りを参照先に配ることで日時が切れないようにする。
+ */
+.mirekyou_card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mirekyou_head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* 参照先の本文は1行に収め、溢れたら三点リーダにする。全文はtitle属性で読める */
+.mirekyou_summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mirekyou_mark {
+    flex: 0 0 auto;
+}
+
+/* 字面はMi行に合わせてv-card-titleのままにし、行に収めるためpaddingだけ落とす */
+.mirekyou_board {
+    flex: 0 0 auto;
+    padding: 0;
+}
+
+/* margin-top:autoで下端に寄せる。related_timeが出ても出なくても切れない */
+.mirekyou_times {
+    flex: 0 0 auto;
+    margin-top: auto;
+}
+
+.mirekyou_target {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+</style>

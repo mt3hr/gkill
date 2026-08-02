@@ -17,6 +17,20 @@ import (
 type Repositories []Repository
 
 func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	return r.findKyous(ctx, query, true)
+}
+
+// FindKyousSequential は各リポジトリを並列化せずに順に検索します。
+//
+// あるリポジトリのFindKyousの中からさらにRepositories.FindKyousを呼ぶ場面
+// （ReKyou/MiReKyouがワード検索をターゲットへ委譲するとき）で使ってください。
+// threads.Goはプールのスロットを呼び出し元で同期取得するため、
+// スロットを保持したまま子のスロットを待つ入れ子を作るとプールが枯渇して止まります。
+func (r Repositories) FindKyousSequential(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	return r.findKyous(ctx, query, false)
+}
+
+func (r Repositories) findKyous(ctx context.Context, query *find.FindQuery, parallel bool) (map[string][]Kyou, error) {
 	// update_cache=trueの場合、並列dispatch前に逐次UpdateCacheする。
 	// threads.Goのネスト（FindKyous並列→UpdateCache内の並列）でスレッドプールが枯渇しデッドロックするのを防止する。
 	if query.UpdateCache {
@@ -37,10 +51,10 @@ func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range r {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		findInRep := func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				repName, _ := rep.GetRepName(ctx)
@@ -49,7 +63,12 @@ func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map
 				return
 			}
 			ch <- matchKyousInRep
-		})
+		}
+		if !parallel {
+			findInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, findInRep)
 		if err != nil {
 			errch <- err
 		}

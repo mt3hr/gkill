@@ -23,6 +23,10 @@ type MiReKyouRepositories struct {
 
 // cloneRepositoriesWithoutMiReKyou はMiReKyou自身を除いたGkillRepositoriesを作ります。
 // MiReKyouのターゲット検索で自己参照による無限再帰が起きないようにするためのものです。
+//
+// ここへReKyouRepsを足してはいけません。
+// ReKyou側（collectNonReKyouRepositories）はMiReKyouを含んでいるので、
+// 両方向に含めるとReKyou→MiReKyou→ReKyou→…で無限再帰します。この非対称は意図的です。
 func cloneRepositoriesWithoutMiReKyou(original *GkillRepositories, withoutMiReKyouReps Repositories) *GkillRepositories {
 	cloned := *original
 	cloned.Reps = append(Repositories(nil), withoutMiReKyouReps...)
