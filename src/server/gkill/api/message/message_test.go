@@ -2,192 +2,129 @@ package message
 
 import (
 	"encoding/json"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"regexp"
 	"testing"
 )
 
-func TestErrorCodes_NonEmpty(t *testing.T) {
-	errorCodes := map[string]string{
-		"AccountInvalidLoginRequestDataError":     AccountInvalidLoginRequestDataError,
-		"AccountNotFoundError":                    AccountNotFoundError,
-		"AccountIsNotEnableError":                 AccountIsNotEnableError,
-		"AccountInvalidPasswordError":             AccountInvalidPasswordError,
-		"AccountLoginInternalServerError":         AccountLoginInternalServerError,
-		"AccountSessionNotFoundError":             AccountSessionNotFoundError,
-		"RepositoriesGetError":                    RepositoriesGetError,
-		"AddTagError":                             AddTagError,
-		"GetTagError":                             GetTagError,
-		"AddKmemoError":                           AddKmemoError,
-		"GetKmemoError":                           GetKmemoError,
-		"AddURLogError":                           AddURLogError,
-		"AddTimeIsError":                          AddTimeIsError,
-		"AddLantanaError":                         AddLantanaError,
-		"AddMiError":                              AddMiError,
-		"GetMiError":                              GetMiError,
-		"AddReKyouError":                          AddReKyouError,
-		"AddMiReKyouError":                        AddMiReKyouError,
-		"GetMiReKyouError":                        GetMiReKyouError,
-		"UpdateMiReKyouError":                     UpdateMiReKyouError,
-		"GetKyouError":                            GetKyouError,
-		"AddKCError":                              AddKCError,
-		"GetKCError":                              GetKCError,
-		"SubmitKFTLTextError":                     SubmitKFTLTextError,
-		"NotImplementsError":                      NotImplementsError,
-		"InvalidURLogBookmarkletRequestDataError": InvalidURLogBookmarkletRequestDataError,
-		"UpdateCacheError":                        UpdateCacheError,
-		"CommitTxGetKmemoError":                   CommitTxGetKmemoError,
-		"AccountSessionExpiredError":              AccountSessionExpiredError,
-		"LoginRateLimitError":                     LoginRateLimitError,
+// エラーコード / メッセージコードは、クライアントが error_code で分岐したり
+// ログを追跡したりするための識別子。重複すると別々の障害が同じコードになって
+// 区別できなくなる。
+//
+// 以前はここに定数名を手書きした map / slice があり、それを対象に
+// 「空でない」「重複しない」「形式が正しい」を確認していた。しかし
+//   - 「空でない」は const 宣言時点でコンパイラが保証している
+//   - 手書きゆえ、新しい定数を追加して書き忘れると重複チェックを素通りする
+//     （実際 error_codes.go の400定数に対し、重複を見ていたのは29個だけだった）
+//
+// ため、ソースを go/parser で読んで全定数を対象にする形に変えている。
+// 新しいコードを足しても、テスト側を触らずに検査対象へ入る。
+//
+// この網羅チェックを入れた時点で message_codes.go に重複が2件あった
+// （MSG000027: GetKmemo/GetURLog、MSG000045: UpdateTagStruct/UpdateRepStruct）。
+// いずれもコピペ時に採番を振り直し忘れたもので、GetURLogSuccessMessage を
+// MSG000084、UpdateRepStructSuccessMessage を MSG000085 に振り直して解消済み。
+
+// parseConstStrings は指定ファイルのトップレベル const 宣言から
+// 「定数名 → 文字列リテラル値」を取り出す。
+func parseConstStrings(t *testing.T, filename string) map[string]string {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, filename, nil, 0)
+	if err != nil {
+		t.Fatalf("parse %s: %v", filename, err)
 	}
 
-	for name, code := range errorCodes {
-		if code == "" {
-			t.Errorf("Error code %s is empty", name)
+	consts := map[string]string{}
+	for _, decl := range file.Decls {
+		genDecl, ok := decl.(*ast.GenDecl)
+		if !ok || genDecl.Tok != token.CONST {
+			continue
+		}
+		for _, spec := range genDecl.Specs {
+			valueSpec, ok := spec.(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+			for i, name := range valueSpec.Names {
+				if i >= len(valueSpec.Values) {
+					continue
+				}
+				lit, ok := valueSpec.Values[i].(*ast.BasicLit)
+				if !ok || lit.Kind != token.STRING {
+					continue
+				}
+				// リテラルの前後のダブルクォートを外す
+				consts[name.Name] = lit.Value[1 : len(lit.Value)-1]
+			}
+		}
+	}
+
+	if len(consts) == 0 {
+		t.Fatalf("%s から定数を1つも読み取れなかった（定義の書き方が変わった可能性がある）", filename)
+	}
+	return consts
+}
+
+// assertUniqueAndFormatted は全定数が一意で、指定の形式に合っていることを確認する。
+func assertUniqueAndFormatted(t *testing.T, consts map[string]string, pattern *regexp.Regexp) {
+	t.Helper()
+
+	seenBy := map[string]string{}
+	for name, value := range consts {
+		if value == "" {
+			t.Errorf("%s が空文字", name)
+			continue
+		}
+		if !pattern.MatchString(value) {
+			t.Errorf("%s = %q が形式 %s に合っていない", name, value, pattern)
+		}
+		if first, dup := seenBy[value]; dup {
+			t.Errorf("コード %q が重複している: %s と %s", value, first, name)
+			continue
+		}
+		seenBy[value] = name
+	}
+}
+
+// TestErrorCodes_UniqueAndFormatted は error_codes.go の全定数を対象に
+// ERR + 6桁 の形式と一意性を確認する。
+func TestErrorCodes_UniqueAndFormatted(t *testing.T) {
+	consts := parseConstStrings(t, "error_codes.go")
+	t.Logf("検査対象のエラーコード: %d 件", len(consts))
+	assertUniqueAndFormatted(t, consts, regexp.MustCompile(`^ERR\d{6}$`))
+}
+
+// TestMessageCodes_UniqueAndFormatted は message_codes.go の全定数を対象に
+// MSG + 6桁 の形式と一意性を確認する。
+func TestMessageCodes_UniqueAndFormatted(t *testing.T) {
+	consts := parseConstStrings(t, "message_codes.go")
+	t.Logf("検査対象のメッセージコード: %d 件", len(consts))
+	assertUniqueAndFormatted(t, consts, regexp.MustCompile(`^MSG\d{6}$`))
+}
+
+// TestErrorAndMessageCodes_DoNotCollide はエラーコードとメッセージコードで
+// 同じ値が使われていないことを確認する。接頭辞が違うので本来ぶつからないが、
+// 片方に ERR/MSG を取り違えて書いた場合をここで拾う。
+func TestErrorAndMessageCodes_DoNotCollide(t *testing.T) {
+	errorCodes := parseConstStrings(t, "error_codes.go")
+	messageCodes := parseConstStrings(t, "message_codes.go")
+
+	errorValues := map[string]string{}
+	for name, value := range errorCodes {
+		errorValues[value] = name
+	}
+	for name, value := range messageCodes {
+		if errName, collides := errorValues[value]; collides {
+			t.Errorf("コード %q がエラー(%s)とメッセージ(%s)の両方で使われている", value, errName, name)
 		}
 	}
 }
 
-func TestErrorCodes_UniqueValues(t *testing.T) {
-	codes := []string{
-		AccountInvalidLoginRequestDataError,
-		AccountNotFoundError,
-		AccountIsNotEnableError,
-		AccountInvalidPasswordError,
-		AccountLoginInternalServerError,
-		AccountSessionNotFoundError,
-		RepositoriesGetError,
-		AddTagError,
-		GetTagError,
-		AddKmemoError,
-		GetKmemoError,
-		AddURLogError,
-		AddTimeIsError,
-		AddLantanaError,
-		AddMiError,
-		GetMiError,
-		AddReKyouError,
-		AddMiReKyouError,
-		GetMiReKyouError,
-		UpdateMiReKyouError,
-		GetKyouError,
-		AddKCError,
-		GetKCError,
-		SubmitKFTLTextError,
-		NotImplementsError,
-		UpdateCacheError,
-		CommitTxGetKmemoError,
-		AccountSessionExpiredError,
-		LoginRateLimitError,
-	}
-
-	seen := make(map[string]bool)
-	for _, code := range codes {
-		if seen[code] {
-			t.Errorf("Duplicate error code value: %s", code)
-		}
-		seen[code] = true
-	}
-}
-
-func TestErrorCodes_Format(t *testing.T) {
-	pattern := regexp.MustCompile(`^ERR\d{6}$`)
-
-	codes := map[string]string{
-		"AccountInvalidLoginRequestDataError":     AccountInvalidLoginRequestDataError,
-		"AccountNotFoundError":                    AccountNotFoundError,
-		"AccountInvalidPasswordError":             AccountInvalidPasswordError,
-		"RepositoriesGetError":                    RepositoriesGetError,
-		"AddKmemoError":                           AddKmemoError,
-		"GetKmemoError":                           GetKmemoError,
-		"AddMiError":                              AddMiError,
-		"AddKCError":                              AddKCError,
-		"SubmitKFTLTextError":                     SubmitKFTLTextError,
-		"UpdateCacheError":                        UpdateCacheError,
-		"NotImplementsError":                      NotImplementsError,
-		"CommitTxDeleteURLogError":                CommitTxDeleteURLogError,
-		"NotFoundTLSCertFileError":                NotFoundTLSCertFileError,
-		"NotFoundTLSKeyFileError":                 NotFoundTLSKeyFileError,
-		"GetAccountSessionsError":                 GetAccountSessionsError,
-		"AddURLogLoginSessionError":               AddURLogLoginSessionError,
-		"InvalidURLogBookmarkletRequestDataError": InvalidURLogBookmarkletRequestDataError,
-		"UpdateTagError":                          UpdateTagError,
-		"UpdateNotificationError":                 UpdateNotificationError,
-		"GetKyousMCPError":                        GetKyousMCPError,
-		"AccountSessionExpiredError":              AccountSessionExpiredError,
-		"LoginRateLimitError":                     LoginRateLimitError,
-	}
-
-	for name, code := range codes {
-		if !pattern.MatchString(code) {
-			t.Errorf("Error code %s = %q does not match format ERR + 6 digits", name, code)
-		}
-	}
-}
-
-func TestMessageCodes_NonEmpty(t *testing.T) {
-	messageCodes := map[string]string{
-		"LoginSuccessMessage":                     LoginSuccessMessage,
-		"LogoutSuccessMessage":                    LogoutSuccessMessage,
-		"PasswordResetSuccessMessage":             PasswordResetSuccessMessage,
-		"SetNewPasswordSuccessMessage":            SetNewPasswordSuccessMessage,
-		"AddTagSuccessMessage":                    AddTagSuccessMessage,
-		"AddKmemoSuccessMessage":                  AddKmemoSuccessMessage,
-		"AddURLogSuccessMessage":                  AddURLogSuccessMessage,
-		"AddNlogSuccessMessage":                   AddNlogSuccessMessage,
-		"AddTimeIsSuccessMessage":                 AddTimeIsSuccessMessage,
-		"AddLantanaSuccessMessage":                AddLantanaSuccessMessage,
-		"AddMiSuccessMessage":                     AddMiSuccessMessage,
-		"UpdateMiSuccessMessage":                  UpdateMiSuccessMessage,
-		"GetKyousSuccessMessage":                  GetKyousSuccessMessage,
-		"GetApplicationConfigSuccessMessage":      GetApplicationConfigSuccessMessage,
-		"AddAccountSuccessMessage":                AddAccountSuccessMessage,
-		"SubmitKFTLTextSuccessMessage":            SubmitKFTLTextSuccessMessage,
-		"GetKyousMCPSuccessMessage":               GetKyousMCPSuccessMessage,
-		"UpdateCacheSuccessMessage":               UpdateCacheSuccessMessage,
-		"CommitTxSuccessMessage":                  CommitTxSuccessMessage,
-		"RegisterGkillNotificationSuccessMessage": RegisterGkillNotificationSuccessMessage,
-	}
-
-	for name, code := range messageCodes {
-		if code == "" {
-			t.Errorf("Message code %s is empty", name)
-		}
-	}
-}
-
-func TestMessageCodes_Format(t *testing.T) {
-	pattern := regexp.MustCompile(`^MSG\d{6}$`)
-
-	codes := map[string]string{
-		"LoginSuccessMessage":                     LoginSuccessMessage,
-		"LogoutSuccessMessage":                    LogoutSuccessMessage,
-		"AddKmemoSuccessMessage":                  AddKmemoSuccessMessage,
-		"AddMiSuccessMessage":                     AddMiSuccessMessage,
-		"GetKyousSuccessMessage":                  GetKyousSuccessMessage,
-		"GetApplicationConfigSuccessMessage":      GetApplicationConfigSuccessMessage,
-		"AddAccountSuccessMessage":                AddAccountSuccessMessage,
-		"SubmitKFTLTextSuccessMessage":            SubmitKFTLTextSuccessMessage,
-		"GetKyousMCPSuccessMessage":               GetKyousMCPSuccessMessage,
-		"UpdateCacheSuccessMessage":               UpdateCacheSuccessMessage,
-		"CommitTxSuccessMessage":                  CommitTxSuccessMessage,
-		"TLSFileCreateSuccessMessage":             TLSFileCreateSuccessMessage,
-		"AddKCSuccessMessage":                     AddKCSuccessMessage,
-		"UpdateKCSuccessMessage":                  UpdateKCSuccessMessage,
-		"RebootingMessage":                        RebootingMessage,
-		"OpenDirectorySuccessMessage":             OpenDirectorySuccessMessage,
-		"OpenFileSuccessMessage":                  OpenFileSuccessMessage,
-		"ReloadRepositoriesSuccessMessage":        ReloadRepositoriesSuccessMessage,
-		"GetPlaingTimeIsSuccessMessage":           GetPlaingTimeIsSuccessMessage,
-		"RegisterGkillNotificationSuccessMessage": RegisterGkillNotificationSuccessMessage,
-	}
-
-	for name, code := range codes {
-		if !pattern.MatchString(code) {
-			t.Errorf("Message code %s = %q does not match format MSG + 6 digits", name, code)
-		}
-	}
-}
-
+// TestGkillError_JSONRoundTrip は、クライアントが参照するフィールド名を固定する。
 func TestGkillError_JSONRoundTrip(t *testing.T) {
 	original := GkillError{
 		ErrorCode:    AccountNotFoundError,
@@ -199,33 +136,26 @@ func TestGkillError_JSONRoundTrip(t *testing.T) {
 		t.Fatalf("Marshal failed: %v", err)
 	}
 
-	var restored GkillError
-	err = json.Unmarshal(data, &restored)
-	if err != nil {
-		t.Fatalf("Unmarshal failed: %v", err)
-	}
-
-	if restored.ErrorCode != original.ErrorCode {
-		t.Errorf("ErrorCode: got %q, want %q", restored.ErrorCode, original.ErrorCode)
-	}
-	if restored.ErrorMessage != original.ErrorMessage {
-		t.Errorf("ErrorMessage: got %q, want %q", restored.ErrorMessage, original.ErrorMessage)
-	}
-
-	// Verify JSON field names
 	var raw map[string]any
-	err = json.Unmarshal(data, &raw)
-	if err != nil {
+	if err := json.Unmarshal(data, &raw); err != nil {
 		t.Fatalf("Unmarshal to map failed: %v", err)
 	}
-	if _, ok := raw["error_code"]; !ok {
-		t.Error("JSON should contain 'error_code' field")
+	for _, field := range []string{"error_code", "error_message"} {
+		if _, ok := raw[field]; !ok {
+			t.Errorf("JSON にフィールド %q が無い: %s", field, data)
+		}
 	}
-	if _, ok := raw["error_message"]; !ok {
-		t.Error("JSON should contain 'error_message' field")
+
+	var restored GkillError
+	if err := json.Unmarshal(data, &restored); err != nil {
+		t.Fatalf("Unmarshal failed: %v", err)
+	}
+	if restored != original {
+		t.Errorf("restored = %+v, want %+v", restored, original)
 	}
 }
 
+// TestGkillMessage_JSONRoundTrip は、クライアントが参照するフィールド名を固定する。
 func TestGkillMessage_JSONRoundTrip(t *testing.T) {
 	original := GkillMessage{
 		MessageCode: LoginSuccessMessage,
@@ -237,29 +167,21 @@ func TestGkillMessage_JSONRoundTrip(t *testing.T) {
 		t.Fatalf("Marshal failed: %v", err)
 	}
 
-	var restored GkillMessage
-	err = json.Unmarshal(data, &restored)
-	if err != nil {
-		t.Fatalf("Unmarshal failed: %v", err)
-	}
-
-	if restored.MessageCode != original.MessageCode {
-		t.Errorf("MessageCode: got %q, want %q", restored.MessageCode, original.MessageCode)
-	}
-	if restored.Message != original.Message {
-		t.Errorf("Message: got %q, want %q", restored.Message, original.Message)
-	}
-
-	// Verify JSON field names
 	var raw map[string]any
-	err = json.Unmarshal(data, &raw)
-	if err != nil {
+	if err := json.Unmarshal(data, &raw); err != nil {
 		t.Fatalf("Unmarshal to map failed: %v", err)
 	}
-	if _, ok := raw["message_code"]; !ok {
-		t.Error("JSON should contain 'message_code' field")
+	for _, field := range []string{"message_code", "message"} {
+		if _, ok := raw[field]; !ok {
+			t.Errorf("JSON にフィールド %q が無い: %s", field, data)
+		}
 	}
-	if _, ok := raw["message"]; !ok {
-		t.Error("JSON should contain 'message' field")
+
+	var restored GkillMessage
+	if err := json.Unmarshal(data, &restored); err != nil {
+		t.Fatalf("Unmarshal failed: %v", err)
+	}
+	if restored != original {
+		t.Errorf("restored = %+v, want %+v", restored, original)
 	}
 }

@@ -2,647 +2,209 @@ package req_res
 
 import (
 	"encoding/json"
+	"slices"
+	"sort"
 	"testing"
 	"time"
-
-	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
 )
 
-func TestLoginRequest_JSONRoundTrip(t *testing.T) {
-	original := LoginRequest{
-		UserID:         "testuser",
-		PasswordSha256: "abc123def456",
-		LocaleName:     "ja",
-	}
+// req_res のリクエスト/レスポンス構造体は、TypeScriptクライアントとMCPサーバが
+// 直接依存しているワイヤ形式そのもの。Goの型を変えなくても json タグを1つ書き換えれば
+// クライアントが黙って壊れるので、ここでは「JSONのフィールド名」を契約として固定する。
+//
+// 以前はここに構造体 → JSON → 構造体 の往復テストが19本あったが、カスタムMarshaler
+// を持たない素の構造体の往復は encoding/json 自体のテストであり、タグ名を変えても
+// 落ちなかった（往復では常に一致するため）。実際に壊れる箇所を見るテストに置き換えている。
 
-	data, err := json.Marshal(original)
+// marshalKeys は構造体をJSONにしたときのトップレベルのキー一覧を返す。
+func marshalKeys(t *testing.T, v any) []string {
+	t.Helper()
+
+	data, err := json.Marshal(v)
 	if err != nil {
 		t.Fatalf("Marshal: %v", err)
 	}
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("Unmarshal to map: %v", err)
+	}
+	keys := make([]string, 0, len(raw))
+	for k := range raw {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
 
-	var decoded LoginRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
+// TestRequestResponse_JSONFieldNames は、クライアント/MCPが参照するJSONフィールド名を固定する。
+// フィールドを増やす分には落ちないが、既存フィールドのリネーム・削除で落ちる。
+func TestRequestResponse_JSONFieldNames(t *testing.T) {
+	tests := []struct {
+		name  string
+		value any
+		want  []string
+	}{
+		// --- 認証 ---
+		{"LoginRequest", LoginRequest{}, []string{"user_id", "password_sha256", "locale_name"}},
+		{"LoginResponse", LoginResponse{}, []string{"session_id", "messages", "errors"}},
+
+		// --- 追加/更新（TSクライアントが組み立てる） ---
+		{"AddKmemoRequest", AddKmemoRequest{}, []string{"session_id", "kmemo", "tx_id", "locale_name", "added_kyou", "want_response_kyou"}},
+		{"UpdateKmemoRequest", UpdateKmemoRequest{}, []string{"session_id", "kmemo", "tx_id", "locale_name", "updated_kyou", "want_response_kyou"}},
+		// MiReKyouのペイロードキーは "mirekyou"（"mi_re_kyou" ではない）
+		{"AddMiReKyouRequest", AddMiReKyouRequest{}, []string{"session_id", "mirekyou", "tx_id", "locale_name", "added_kyou", "want_response_kyou"}},
+		{"UpdateMiReKyouRequest", UpdateMiReKyouRequest{}, []string{"session_id", "mirekyou", "tx_id", "locale_name", "updated_kyou", "want_response_kyou"}},
+		{"GetMiReKyouRequest", GetMiReKyouRequest{}, []string{"session_id", "id", "update_time", "rep_name", "locale_name"}},
+		{"GetMiReKyouResponse", GetMiReKyouResponse{}, []string{"messages", "errors", "mirekyou_histories"}},
+
+		// --- 検索 ---
+		{"GetKyousRequest", GetKyousRequest{}, []string{"session_id", "query", "locale_name"}},
+		{"GetKyousResponse", GetKyousResponse{}, []string{"messages", "errors", "kyous"}},
+		{"GetSharedKyousRequest", GetSharedKyousRequest{}, []string{"shared_id", "locale_name"}},
+		{"GetMiBoardResponse", GetMiBoardResponse{}, []string{"messages", "errors", "boards"}},
+		{"GetAllTagNamesResponse", GetAllTagNamesResponse{}, []string{"messages", "errors", "tag_names"}},
+
+		// --- MCPサーバが参照する ---
+		{"GetKyousMCPRequest", GetKyousMCPRequest{}, []string{"session_id", "query", "locale_name", "limit", "cursor", "max_size_mb", "include_id", "is_include_timeis"}},
+
+		// --- その他 ---
+		{"SubmitKFTLTextRequest", SubmitKFTLTextRequest{}, []string{"session_id", "kftl_text", "locale_name"}},
+		{"AddShareKyouListInfoRequest", AddShareKyouListInfoRequest{}, []string{"session_id", "share_kyou_list_info", "locale_name"}},
+		{"CommitTxRequest", CommitTxRequest{}, []string{"session_id", "tx_id", "locale_name"}},
 	}
 
-	if decoded.UserID != original.UserID {
-		t.Errorf("UserID = %q, want %q", decoded.UserID, original.UserID)
-	}
-	if decoded.PasswordSha256 != original.PasswordSha256 {
-		t.Errorf("PasswordSha256 = %q, want %q", decoded.PasswordSha256, original.PasswordSha256)
-	}
-	if decoded.LocaleName != original.LocaleName {
-		t.Errorf("LocaleName = %q, want %q", decoded.LocaleName, original.LocaleName)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := marshalKeys(t, tt.value)
+			for _, want := range tt.want {
+				if !slices.Contains(got, want) {
+					t.Errorf("フィールド %q が無い（リネーム/削除するとクライアントが壊れる）: got %q", want, got)
+				}
+			}
+		})
 	}
 }
 
-func TestAddKmemoRequest_JSONRoundTrip(t *testing.T) {
-	txid := "tx-001"
-	original := AddKmemoRequest{
-		SessionID:        "session-abc",
-		TXID:             &txid,
-		LocaleName:       "en",
-		WantResponseKyou: true,
+// TestGetKyousMCPRequest_ShouldIncludeTimeIs は is_include_timeis の三値
+// （未指定 / true / false）の解釈を確認する。
+// *bool にしているのは「未指定なら true」を表すためで、省略時にTimeIsが
+// 落ちるとMCPクライアント側の記録内容が黙って減る。
+func TestGetKyousMCPRequest_ShouldIncludeTimeIs(t *testing.T) {
+	yes, no := true, false
+
+	tests := []struct {
+		name string
+		json string
+		set  *bool
+		want bool
+	}{
+		{"未指定はtrue", `{"session_id":"s"}`, nil, true},
+		{"明示true", `{"session_id":"s","is_include_timeis":true}`, &yes, true},
+		{"明示false", `{"session_id":"s","is_include_timeis":false}`, &no, false},
 	}
 
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// 構造体を直接組んだ場合
+			req := GetKyousMCPRequest{IsIncludeTimeIs: tt.set}
+			if got := req.ShouldIncludeTimeIs(); got != tt.want {
+				t.Errorf("ShouldIncludeTimeIs() = %v, want %v", got, tt.want)
+			}
 
-	var decoded AddKmemoRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.TXID == nil {
-		t.Fatal("TXID should not be nil after unmarshal")
-	}
-	if *decoded.TXID != txid {
-		t.Errorf("TXID = %q, want %q", *decoded.TXID, txid)
-	}
-	if decoded.WantResponseKyou != true {
-		t.Errorf("WantResponseKyou = %v, want true", decoded.WantResponseKyou)
+			// JSONから復元した場合（MCPサーバが実際に通る経路）
+			var decoded GetKyousMCPRequest
+			if err := json.Unmarshal([]byte(tt.json), &decoded); err != nil {
+				t.Fatalf("Unmarshal: %v", err)
+			}
+			if got := decoded.ShouldIncludeTimeIs(); got != tt.want {
+				t.Errorf("JSON経由の ShouldIncludeTimeIs() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
-func TestGetKyousResponse_JSONRoundTrip(t *testing.T) {
-	original := GetKyousResponse{
-		Messages: nil,
-		Errors:   nil,
-		Kyous:    nil,
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded GetKyousResponse
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	// nil slices should marshal as null and unmarshal back to nil
-	if decoded.Messages != nil {
-		t.Error("expected nil Messages")
-	}
-}
-
-func TestLoginRequest_JSONFieldNames(t *testing.T) {
-	req := LoginRequest{
-		UserID:         "user1",
-		PasswordSha256: "hash",
-		LocaleName:     "ja",
-	}
-	data, _ := json.Marshal(req)
-	s := string(data)
-
-	// Verify JSON field names match expected format
-	for _, field := range []string{`"user_id"`, `"password_sha256"`, `"locale_name"`} {
-		if !contains(s, field) {
-			t.Errorf("JSON missing field %s in %s", field, s)
-		}
-	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && searchString(s, substr)
-}
-
-func searchString(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
-
-func TestAddMiRequest_JSONRoundTrip(t *testing.T) {
-	txid := "tx-mi-001"
-	original := AddMiRequest{
-		SessionID:        "session-mi",
-		TXID:             &txid,
-		LocaleName:       "ja",
-		WantResponseKyou: true,
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded AddMiRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.TXID == nil {
-		t.Fatal("TXID should not be nil after unmarshal")
-	}
-	if *decoded.TXID != txid {
-		t.Errorf("TXID = %q, want %q", *decoded.TXID, txid)
-	}
-	if decoded.LocaleName != original.LocaleName {
-		t.Errorf("LocaleName = %q, want %q", decoded.LocaleName, original.LocaleName)
-	}
-	if decoded.WantResponseKyou != true {
-		t.Errorf("WantResponseKyou = %v, want true", decoded.WantResponseKyou)
-	}
-}
-
-func TestAddLantanaRequest_JSONRoundTrip(t *testing.T) {
-	txid := "tx-lantana-001"
-	original := AddLantanaRequest{
-		SessionID:        "session-lantana",
-		TXID:             &txid,
-		LocaleName:       "en",
-		WantResponseKyou: false,
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded AddLantanaRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.TXID == nil {
-		t.Fatal("TXID should not be nil after unmarshal")
-	}
-	if *decoded.TXID != txid {
-		t.Errorf("TXID = %q, want %q", *decoded.TXID, txid)
-	}
-	if decoded.WantResponseKyou != false {
-		t.Error("WantResponseKyou should be false")
-	}
-}
-
-func TestAddNlogRequest_JSONRoundTrip(t *testing.T) {
-	txid := "tx-nlog-001"
-	original := AddNlogRequest{
-		SessionID:        "session-nlog",
-		TXID:             &txid,
-		LocaleName:       "ja",
-		WantResponseKyou: true,
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded AddNlogRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.TXID == nil {
-		t.Fatal("TXID should not be nil after unmarshal")
-	}
-	if *decoded.TXID != txid {
-		t.Errorf("TXID = %q, want %q", *decoded.TXID, txid)
-	}
-	if decoded.WantResponseKyou != true {
-		t.Errorf("WantResponseKyou = %v, want true", decoded.WantResponseKyou)
-	}
-}
-
-func TestUpdateKmemoRequest_JSONRoundTrip(t *testing.T) {
-	txid := "tx-update-kmemo-001"
-	original := UpdateKmemoRequest{
-		SessionID:        "session-update-kmemo",
-		TXID:             &txid,
-		LocaleName:       "en",
-		WantResponseKyou: true,
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded UpdateKmemoRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.TXID == nil {
-		t.Fatal("TXID should not be nil after unmarshal")
-	}
-	if *decoded.TXID != txid {
-		t.Errorf("TXID = %q, want %q", *decoded.TXID, txid)
-	}
-	if decoded.LocaleName != original.LocaleName {
-		t.Errorf("LocaleName = %q, want %q", decoded.LocaleName, original.LocaleName)
-	}
-	if decoded.WantResponseKyou != true {
-		t.Errorf("WantResponseKyou = %v, want true", decoded.WantResponseKyou)
-	}
-}
-
-func TestGetMiBoardResponse_JSONRoundTrip(t *testing.T) {
-	original := GetMiBoardResponse{
-		Boards: []string{"board_a", "board_b", "board_c"},
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded GetMiBoardResponse
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if len(decoded.Boards) != len(original.Boards) {
-		t.Fatalf("Boards length = %d, want %d", len(decoded.Boards), len(original.Boards))
-	}
-	for i, b := range original.Boards {
-		if decoded.Boards[i] != b {
-			t.Errorf("Boards[%d] = %q, want %q", i, decoded.Boards[i], b)
-		}
-	}
-}
-
-func TestGetAllTagNamesResponse_JSONRoundTrip(t *testing.T) {
-	original := GetAllTagNamesResponse{
-		TagNames: []string{"tag_x", "tag_y", "tag_z"},
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded GetAllTagNamesResponse
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if len(decoded.TagNames) != len(original.TagNames) {
-		t.Fatalf("TagNames length = %d, want %d", len(decoded.TagNames), len(original.TagNames))
-	}
-	for i, tn := range original.TagNames {
-		if decoded.TagNames[i] != tn {
-			t.Errorf("TagNames[%d] = %q, want %q", i, decoded.TagNames[i], tn)
-		}
-	}
-}
-
-func TestAddShareKyouListInfoRequest_JSONRoundTrip(t *testing.T) {
-	original := AddShareKyouListInfoRequest{
-		SessionID: "session-share",
-		ShareKyouListInfo: &ShareKyouListInfo{
-			ShareID:       "share-001",
-			UserID:        "user1",
-			Device:        "device1",
-			ShareTitle:    "my share",
-			FindQueryJSON: share_kyou_info.JSONString(`{"use_words":true}`),
-			ViewType:      "list",
+// TestMCPPayloadDTO_JSONFieldNames は、MCPサーバの payload.kind による分岐が
+// 依存しているフィールド名を固定する。
+func TestMCPPayloadDTO_JSONFieldNames(t *testing.T) {
+	tests := []struct {
+		name  string
+		value any
+		want  []string
+	}{
+		{"KmemoPayloadMCPDTO", KmemoPayloadMCPDTO{Kind: "kmemo"}, []string{"kind", "content"}},
+		{"KCPayloadMCPDTO", KCPayloadMCPDTO{Kind: "kc"}, []string{"kind", "title", "num_value"}},
+		{"TimeIsPayloadMCPDTO", TimeIsPayloadMCPDTO{Kind: "timeis"}, []string{"kind", "title", "start_time"}},
+		{
+			"IDFPayloadMCPDTO",
+			IDFPayloadMCPDTO{Kind: "idf", MimeType: "image/jpeg"},
+			[]string{"kind", "file_name", "is_image", "is_video", "is_audio", "rep_name", "mime_type"},
 		},
-		LocaleName: "ja",
+		{
+			"PluginPayloadMCPDTO",
+			PluginPayloadMCPDTO{Kind: "plugin", PluginName: "p", Description: "d"},
+			[]string{"kind", "data_type", "rep_name", "kyou_id", "plugin_name", "description"},
+		},
 	}
 
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded AddShareKyouListInfoRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.ShareKyouListInfo == nil {
-		t.Fatal("ShareKyouListInfo should not be nil")
-	}
-	if decoded.ShareKyouListInfo.ShareID != "share-001" {
-		t.Errorf("ShareID = %q, want %q", decoded.ShareKyouListInfo.ShareID, "share-001")
-	}
-	if decoded.ShareKyouListInfo.ShareTitle != "my share" {
-		t.Errorf("ShareTitle = %q, want %q", decoded.ShareKyouListInfo.ShareTitle, "my share")
-	}
-	if decoded.LocaleName != original.LocaleName {
-		t.Errorf("LocaleName = %q, want %q", decoded.LocaleName, original.LocaleName)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := marshalKeys(t, tt.value)
+			for _, want := range tt.want {
+				if !slices.Contains(got, want) {
+					t.Errorf("フィールド %q が無い（MCPサーバが参照している）: got %q", want, got)
+				}
+			}
+		})
 	}
 }
 
-func TestCommitTxRequest_JSONRoundTrip(t *testing.T) {
-	original := CommitTxRequest{
-		SessionID:  "session-commit",
-		TXID:       "tx-commit-001",
-		LocaleName: "en",
+// TestMCPPayloadDTO_OmitsEmptyOptionalFields は omitempty の契約を固定する。
+// MCPのレスポンスは1リクエストで数百件返るため、空フィールドが載ると
+// max_size_mb の上限にすぐ達してしまう。
+func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       any
+		wantOmitted []string
+	}{
+		{
+			"IDFPayloadMCPDTO",
+			IDFPayloadMCPDTO{Kind: "idf", FileName: "data.bin", RepName: "files_repo"},
+			[]string{"mime_type"},
+		},
+		{
+			"PluginPayloadMCPDTO",
+			PluginPayloadMCPDTO{Kind: "plugin", DataType: "claude_code_message", RepName: "Claude Code", KyouID: "id-1"},
+			[]string{"plugin_name", "description"},
+		},
+		{
+			"TimeIsPayloadMCPDTO",
+			TimeIsPayloadMCPDTO{Kind: "timeis", Title: "作業", StartTime: time.Now()},
+			[]string{"end_time"},
+		},
+		{
+			"KyouMCPDTO",
+			KyouMCPDTO{DataType: "kmemo", RelatedTime: time.Now()},
+			[]string{"id", "tags", "texts", "notifications", "timeis", "payload"},
+		},
 	}
 
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded CommitTxRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.TXID != original.TXID {
-		t.Errorf("TXID = %q, want %q", decoded.TXID, original.TXID)
-	}
-	if decoded.LocaleName != original.LocaleName {
-		t.Errorf("LocaleName = %q, want %q", decoded.LocaleName, original.LocaleName)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := marshalKeys(t, tt.value)
+			for _, omitted := range tt.wantOmitted {
+				if slices.Contains(got, omitted) {
+					t.Errorf("空の %q が出力されている（omitempty が外れている）: got %q", omitted, got)
+				}
+			}
+		})
 	}
 }
 
-func TestGetApplicationConfigResponse_JSONRoundTrip(t *testing.T) {
-	original := GetApplicationConfigResponse{
-		ApplicationConfig: nil,
-		Messages:          nil,
-		Errors:            nil,
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded GetApplicationConfigResponse
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.ApplicationConfig != nil {
-		t.Error("ApplicationConfig should be nil")
-	}
-	if decoded.Messages != nil {
-		t.Error("Messages should be nil")
-	}
-	if decoded.Errors != nil {
-		t.Error("Errors should be nil")
-	}
-}
-
-func TestUpdateServerConfigsRequest_JSONRoundTrip(t *testing.T) {
-	original := UpdateServerConfigsRequest{
-		SessionID:     "session-server-cfg",
-		ServerConfigs: nil,
-		LocaleName:    "ja",
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded UpdateServerConfigsRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.ServerConfigs != nil {
-		t.Error("ServerConfigs should be nil")
-	}
-	if decoded.LocaleName != original.LocaleName {
-		t.Errorf("LocaleName = %q, want %q", decoded.LocaleName, original.LocaleName)
-	}
-}
-
-func TestSubmitKFTLTextRequest_JSONRoundTrip(t *testing.T) {
-	original := SubmitKFTLTextRequest{
-		SessionID:  "session-kftl",
-		KFTLText:   "kmemo hoge\nfuga\n.",
-		LocaleName: "ja",
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded SubmitKFTLTextRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.KFTLText != original.KFTLText {
-		t.Errorf("KFTLText = %q, want %q", decoded.KFTLText, original.KFTLText)
-	}
-	if decoded.LocaleName != original.LocaleName {
-		t.Errorf("LocaleName = %q, want %q", decoded.LocaleName, original.LocaleName)
-	}
-}
-
-func TestGetKyousMCPRequest_JSONRoundTrip(t *testing.T) {
-	includeTimeIs := false
-	original := GetKyousMCPRequest{
-		SessionID:       "session-mcp",
-		LocaleName:      "en",
-		Limit:           25,
-		Cursor:          "2025-01-01T00:00:00Z",
-		MaxSizeMB:       2.5,
-		IsIncludeTimeIs: &includeTimeIs,
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded GetKyousMCPRequest
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.SessionID != original.SessionID {
-		t.Errorf("SessionID = %q, want %q", decoded.SessionID, original.SessionID)
-	}
-	if decoded.Limit != original.Limit {
-		t.Errorf("Limit = %d, want %d", decoded.Limit, original.Limit)
-	}
-	if decoded.Cursor != original.Cursor {
-		t.Errorf("Cursor = %q, want %q", decoded.Cursor, original.Cursor)
-	}
-	if decoded.MaxSizeMB != original.MaxSizeMB {
-		t.Errorf("MaxSizeMB = %f, want %f", decoded.MaxSizeMB, original.MaxSizeMB)
-	}
-	if decoded.IsIncludeTimeIs == nil || *decoded.IsIncludeTimeIs != false {
-		t.Error("IsIncludeTimeIs should be false")
-	}
-	if decoded.ShouldIncludeTimeIs() != false {
-		t.Error("ShouldIncludeTimeIs() should return false")
-	}
-}
-
-func TestIDFPayloadMCPDTO_JSONRoundTrip(t *testing.T) {
-	original := IDFPayloadMCPDTO{
-		Kind:     "idf",
-		FileName: "photo.jpg",
-		IsImage:  true,
-		IsVideo:  false,
-		IsAudio:  false,
-		RepName:  "images_repo",
-		MimeType: "image/jpeg",
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded IDFPayloadMCPDTO
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded.Kind != original.Kind {
-		t.Errorf("Kind = %q, want %q", decoded.Kind, original.Kind)
-	}
-	if decoded.FileName != original.FileName {
-		t.Errorf("FileName = %q, want %q", decoded.FileName, original.FileName)
-	}
-	if decoded.IsImage != original.IsImage {
-		t.Errorf("IsImage = %v, want %v", decoded.IsImage, original.IsImage)
-	}
-	if decoded.RepName != original.RepName {
-		t.Errorf("RepName = %q, want %q", decoded.RepName, original.RepName)
-	}
-	if decoded.MimeType != original.MimeType {
-		t.Errorf("MimeType = %q, want %q", decoded.MimeType, original.MimeType)
-	}
-
-	// Verify JSON field names
-	var raw map[string]any
-	if err := json.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("Unmarshal to map: %v", err)
-	}
-	for _, field := range []string{"kind", "file_name", "is_image", "is_video", "is_audio", "rep_name", "mime_type"} {
-		if _, ok := raw[field]; !ok {
-			t.Errorf("JSON missing expected field %q", field)
-		}
-	}
-}
-
-func TestIDFPayloadMCPDTO_OmitsEmptyMimeType(t *testing.T) {
-	original := IDFPayloadMCPDTO{
-		Kind:     "idf",
-		FileName: "data.bin",
-		RepName:  "files_repo",
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var raw map[string]any
-	if err := json.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("Unmarshal to map: %v", err)
-	}
-
-	if _, ok := raw["mime_type"]; ok {
-		t.Error("mime_type should be omitted when empty")
-	}
-}
-
-func TestPluginPayloadMCPDTO_JSONRoundTrip(t *testing.T) {
-	original := PluginPayloadMCPDTO{
-		Kind:        "plugin",
-		DataType:    "claude_code_message",
-		RepName:     "Claude Code",
-		KyouID:      "b1a1f0c4-0000-4000-8000-000000000001",
-		PluginName:  "gkill_plugin_claudecode",
-		Description: "Claude Codeのチャットログ",
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var decoded PluginPayloadMCPDTO
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
-
-	if decoded != original {
-		t.Errorf("decoded = %+v, want %+v", decoded, original)
-	}
-
-	// Verify JSON field names
-	var raw map[string]any
-	if err := json.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("Unmarshal to map: %v", err)
-	}
-	// MCPクライアントはrep_nameとkyou_idをそのままget_plugin_content_htmlに渡すので、
-	// このフィールド名が変わるとプラグイン内容取得が壊れる。
-	for _, field := range []string{"kind", "data_type", "rep_name", "kyou_id", "plugin_name", "description"} {
-		if _, ok := raw[field]; !ok {
-			t.Errorf("JSON missing expected field %q", field)
-		}
-	}
-}
-
-func TestPluginPayloadMCPDTO_OmitsEmptyOptionalFields(t *testing.T) {
-	original := PluginPayloadMCPDTO{
-		Kind:     "plugin",
-		DataType: "claude_code_message",
-		RepName:  "Claude Code",
-		KyouID:   "id-1",
-	}
-
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("Marshal: %v", err)
-	}
-
-	var raw map[string]any
-	if err := json.Unmarshal(data, &raw); err != nil {
-		t.Fatalf("Unmarshal to map: %v", err)
-	}
-
-	for _, field := range []string{"plugin_name", "description"} {
-		if _, ok := raw[field]; ok {
-			t.Errorf("%q should be omitted when empty", field)
-		}
-	}
-	for _, field := range []string{"kind", "data_type", "rep_name", "kyou_id"} {
-		if _, ok := raw[field]; !ok {
-			t.Errorf("JSON missing expected field %q", field)
-		}
-	}
-}
-
+// TestKyouMCPDTO_CarriesPluginPayload は KyouMCPDTO.Payload が any 型でも
+// 具体的なペイロードがそのままネストして出ることを確認する。
+// MCPクライアントは payload.kind を見て分岐するので、ここが崩れると
+// gkill_get_plugin_content に渡す rep_name / kyou_id が取れなくなる。
 func TestKyouMCPDTO_CarriesPluginPayload(t *testing.T) {
 	dto := KyouMCPDTO{
 		DataType:    "claude_code_message",
@@ -673,6 +235,9 @@ func TestKyouMCPDTO_CarriesPluginPayload(t *testing.T) {
 	}
 	if raw.Payload.Kind != "plugin" {
 		t.Errorf("payload.kind = %q, want %q", raw.Payload.Kind, "plugin")
+	}
+	if raw.Payload.RepName != "Claude Code" {
+		t.Errorf("payload.rep_name = %q, want %q", raw.Payload.RepName, "Claude Code")
 	}
 	if raw.Payload.KyouID != "id-1" {
 		t.Errorf("payload.kyou_id = %q, want %q", raw.Payload.KyouID, "id-1")

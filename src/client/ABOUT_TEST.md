@@ -2,7 +2,7 @@
 
 ## 概要
 
-Vue 3 フロントエンドのテスト。ユニットテスト（790テスト、57ファイル）と E2E テスト（206テスト、33ファイル）の合計996テストで、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
+Vue 3 フロントエンドのテスト。ユニットテスト（765テスト、61ファイル）と E2E テスト（200テスト、33ファイル）の合計965テストで、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
 
 ## テストフレームワーク
 
@@ -13,7 +13,7 @@ Vue 3 フロントエンドのテスト。ユニットテスト（790テスト�
 
 ```
 src/client/__tests__/
-├── unit/                    # ユニットテスト (790テスト, 57ファイル)
+├── unit/                    # ユニットテスト (766テスト, 61ファイル)
 │   ├── api/                 #   GkillAPI クライアント
 │   ├── classes/             #   ユーティリティクラス (9ファイル, markdown-to-html / mermaid-render / use-dialog-history-stack 含む)
 │   ├── datas/               #   データモデル (23ファイル, dashboard-config.test.ts 含む)
@@ -23,7 +23,7 @@ src/client/__tests__/
 │   ├── router.test.ts       #   ルーター (13ルート, dashboard 含む)
 │   ├── i18n-completeness.test.ts  #  i18n 完全性 (7ロケール)
 │   └── service-worker.test.ts     #  Service Worker
-├── e2e/                     # E2E テスト (206テスト, 33 specファイル + auth.setup.ts)
+├── e2e/                     # E2E テスト (200テスト, 33 specファイル + auth.setup.ts)
 │   ├── helpers.ts           #   初回登録 + ログイン
 │   ├── crud-helpers.ts      #   KFTL送信、ナビゲーション、コンテキストメニュー、FAB
 │   ├── check-server.ts      #   サーバヘルスチェック
@@ -36,7 +36,7 @@ src/client/__tests__/
 
 ## テスト内容
 
-### ユニットテスト (790テスト, 57ファイル)
+### ユニットテスト (766テスト, 61ファイル)
 
 | カテゴリ | テスト数（概算） | 内容 |
 |---------|----------------|------|
@@ -50,7 +50,7 @@ src/client/__tests__/
 | Service Worker | 1ファイル | Workbox プリキャッシュ、POST キャッシュ、プッシュ通知、`/zip_cache/.*` denylist |
 | ユーティリティ | 9ファイル | deep-equals, format-date-time, looks-like-url, long-press, save-as, delete-gkill-cache, markdown-to-html, mermaid-render, use-dialog-history-stack |
 
-### E2E テスト (206テスト, 33 specファイル)
+### E2E テスト (200テスト, 33 specファイル)
 
 全13ルートを Playwright で検証。CRUD操作フロー（KFTL記録→追加→編集→削除→閲覧）、認証フロー（ログイン/ログアウト/初回登録）、KFTL TimeIs終了全バリエーション、履歴・リポスト表示、Mi操作（板間移動/完了状態/共有）、サーバ設定/ユーザ設定の機能テスト、ZIPファイルブラウズダイアログ（コンテキストメニューからの起動、ZIP内コンテンツ表示）、修正済みバグの回帰テスト、ダッシュボード画面（日付ナビゲーション、FAB、設定ボタン）をカバー。
 

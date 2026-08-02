@@ -442,3 +442,92 @@ export function makeShareKyousInfo(overrides: Record<string, unknown> = {}) {
     ...overrides,
   }
 }
+
+// --- ApplicationConfig の木構造（FindKyouQuery のテスト用） ---
+//
+// FindKyouQuery は ApplicationConfig を `import type` でしか参照しないので、
+// 実クラスを import せずに必要なフィールドだけ持つプレーンオブジェクトを渡せる。
+// 実クラスは GkillAPI を巻き込んで循環 import になるため、こちらを使う。
+
+export function makeRepStructElement(overrides: Record<string, unknown> = {}) {
+  return {
+    name: '',
+    id: '',
+    rep_name: '',
+    check_when_inited: false,
+    ignore_check_rep_rykv: false,
+    children: null,
+    key: '',
+    is_checked: false,
+    indeterminate: false,
+    parent_folder_id: null,
+    seq: 0,
+    is_dir: false,
+    is_open_default: false,
+    ...overrides,
+  }
+}
+
+export function makeDeviceStructElement(overrides: Record<string, unknown> = {}) {
+  return {
+    name: '',
+    id: '',
+    device_name: '',
+    check_when_inited: false,
+    children: null,
+    key: '',
+    is_checked: false,
+    indeterminate: false,
+    is_dir: false,
+    is_open_default: false,
+    ...overrides,
+  }
+}
+
+export function makeRepTypeStructElement(overrides: Record<string, unknown> = {}) {
+  return {
+    name: '',
+    id: '',
+    rep_type_name: '',
+    check_when_inited: false,
+    children: null,
+    key: '',
+    is_checked: false,
+    indeterminate: false,
+    is_dir: false,
+    is_open_default: false,
+    ...overrides,
+  }
+}
+
+export function makeTagStructElement(overrides: Record<string, unknown> = {}) {
+  return {
+    name: '',
+    id: '',
+    tag_name: '',
+    check_when_inited: false,
+    is_force_hide: false,
+    children: null,
+    key: '',
+    is_checked: false,
+    indeterminate: false,
+    is_dir: false,
+    is_open_default: false,
+    ...overrides,
+  }
+}
+
+/**
+ * FindKyouQuery が参照する範囲の ApplicationConfig を作る。
+ * 各 struct はルート要素で、実データは children にぶら下がる。
+ */
+export function makeApplicationConfig(overrides: Record<string, unknown> = {}) {
+  return {
+    rykv_default_period: -1,
+    rep_struct: makeRepStructElement({ name: 'root' }),
+    device_struct: makeDeviceStructElement({ name: 'root' }),
+    rep_type_struct: makeRepTypeStructElement({ name: 'root' }),
+    tag_struct: makeTagStructElement({ name: 'root' }),
+    ...overrides,
+  }
+}

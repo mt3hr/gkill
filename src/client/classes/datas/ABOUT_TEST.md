@@ -38,12 +38,52 @@ Vitest
 | `src/client/__tests__/unit/datas/dashboard-config.test.ts` | DashboardConfig（ダッシュボード設定: MI検索条件・Dnote検索条件） |
 | `src/client/__tests__/unit/datas/rep-type-map.test.ts` | RepTypeローカライズマップ・ApplicationConfig未定義RepType自動追加時の表示名ローカライズ |
 
+上記に加えて、エンティティ横断のテストが1つある。
+
+| ファイル | テスト内容 |
+|---------|-----------|
+| `src/client/__tests__/unit/datas/attached-histories.test.ts` | 11エンティティの `load_attached_histories` / `load_attached_datas` |
+
 ## テスト内容
 
-各テストファイルで以下を検証:
-- デフォルトコンストラクタによるインスタンス生成
-- 各フィールドへの値代入と取得
-- JSON シリアライゼーション / デシリアライゼーション
+### `clone()` のフィールド網羅
+
+データモデルの `clone()` は「全フィールドを1行ずつ手で写す」実装になっており、
+フィールドを増やしたときに `clone()` への追記を忘れるのが典型的な壊れ方。
+その場合コピー元では値が入っているのにコピー先だけ既定値になり、
+画面上はエラーにならず「編集ダイアログで値が消える」といった形で表面化する。
+
+各テストは `__tests__/helpers/clone-parity.ts` の
+`expectCloneCopiesAllFields(new Xxx())` 1行でこれを確認する。
+ヘルパは全フィールドに型に応じた非既定値を詰めてから `clone()` し、
+値が変わっていないフィールドを列挙して落とす。
+
+意図的にコピーされないフィールド（`attached_*`、`is_attached_*_loaded`、
+`is_checked_kyou`）はヘルパ側の既定除外リストにある。いずれも
+「必要になった時点で読み直す」遅延ロード用の入れ物と、その読み込み済みフラグ。
+
+> 以前は各ファイルに「代表的な4フィールドだけ確認する clone テスト」があったが、
+> それでは肝心のフィールド取りこぼしを検出できなかった。
+> あわせて `can be instantiated`（`instanceof` の確認）や
+> `xxx defaults to empty string`（コンストラクタでの代入の確認）といった
+> TypeScript が保証済みのテストも削除している。
+
+### `load_attached_histories` の横断テスト
+
+各モデルの履歴読み込みは
+「自分のIDで履歴取得APIを呼ぶ → errors なら attached_histories を触らず返す →
+成功したら詰める」という共通の形をしている。エンティティごとに呼ぶAPIと
+レスポンスのキーが違い（`get_kmemo` → `kmemo_histories`、
+`get_tag_histories_by_tag_id` → `tag_histories` など）、
+ここを取り違えると「履歴だけ常に空」という静かな壊れ方をする。
+
+`attached-histories.test.ts` が11エンティティ分をテーブル駆動で確認する。
+
+`load_attached_datas` は abort 由来の例外を握りつぶす。画面遷移や検索のやり直しで
+AbortController が発火したときに呼び出し側へ例外を投げないための処理で、
+`try { return await ... } catch { ... }` の await が抜けていると catch に入らず素通りする
+（async 関数で `return promise` は try/catch に捕まらない）。
+この await 漏れは実際に12箇所あり、修正済み。
 
 ## 実行方法
 
