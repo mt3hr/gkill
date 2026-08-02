@@ -55,7 +55,7 @@ export function useReKyouContextMenu(options: {
         emits('received_messages', messages)
     }
 
-    async function show_edit_idf_kyou_dialog(): Promise<void> {
+    async function show_edit_re_kyou_dialog(): Promise<void> {
         emits('requested_open_rykv_dialog', 'edit_re_kyou', props.kyou)
     }
 
@@ -160,7 +160,7 @@ export function useReKyouContextMenu(options: {
         show,
         copy_content,
         copy_id,
-        show_edit_idf_kyou_dialog,
+        show_edit_re_kyou_dialog,
         show_add_tag_dialog,
         show_add_text_dialog,
         show_add_notification_dialog,

@@ -73,7 +73,9 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
   const url = new URL(request.url)
   if (request.method === 'POST' && (
-    // Kyou系
+    // Kyou系。
+    // ここを増やしたら delete-gkill-cache.ts の data_types にも足すこと。
+    // 足さないと更新後も古いキャッシュが返り続ける
     url.pathname === '/api/get_kyou' ||
     url.pathname === '/api/get_kmemo' ||
     url.pathname === '/api/get_kc' ||
@@ -83,6 +85,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     url.pathname === '/api/get_mi' ||
     url.pathname === '/api/get_lantana' ||
     url.pathname === '/api/get_rekyou' ||
+    url.pathname === '/api/get_mirekyou' ||
     url.pathname === '/api/get_git_commit_log' ||
     url.pathname === '/api/get_idf_kyou' ||
     url.pathname === '/api/get_tags_by_id' ||

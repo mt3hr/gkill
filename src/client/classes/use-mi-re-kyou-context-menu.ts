@@ -24,7 +24,7 @@ export function useMiReKyouContextMenu(options: {
     const tag_history: Ref<string[]> = ref([])
 
     // ── Computed ──
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - (+ 8 + (48 * (8 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
+    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - (+ 8 + (48 * (9 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
 
     // ── Business logic ──
     async function show(e: PointerEvent): Promise<void> {
@@ -57,6 +57,12 @@ export function useMiReKyouContextMenu(options: {
 
     async function show_edit_mi_re_kyou_dialog(): Promise<void> {
         emits('requested_open_rykv_dialog', 'edit_mi_re_kyou', props.kyou)
+    }
+
+    // MiReKyou自体もリポストできる（他のKyou種別と同じ）。
+    // 「タスクにする」だけは無い。MiReKyouのMiReKyouは意味がないため
+    async function show_confirm_rekyou_dialog(): Promise<void> {
+        emits('requested_open_rykv_dialog', 'confirm_re_kyou', props.kyou)
     }
 
     async function show_add_tag_dialog(): Promise<void> {
@@ -153,6 +159,7 @@ export function useMiReKyouContextMenu(options: {
         copy_content,
         copy_id,
         show_edit_mi_re_kyou_dialog,
+        show_confirm_rekyou_dialog,
         show_add_tag_dialog,
         show_add_text_dialog,
         show_add_notification_dialog,
