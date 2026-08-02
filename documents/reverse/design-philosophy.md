@@ -68,7 +68,15 @@ gkill は「速攻の記録」を重視する:
 | Text | TEXT | テキスト注釈 | TARGET_ID, TEXT |
 | Notification | NOTIFICATION | 通知 | TARGET_ID, NOTIFICATION_TIME, CONTENT, IS_NOTIFICATED |
 | ReKyou | REKYOU | リポスト | TARGET_ID |
+| MiReKyou | MIREKYOU | 既存記録のタスク化 | TARGET_ID, IS_CHECKED, BOARD_NAME, LIMIT_TIME, ESTIMATE_START_TIME, ESTIMATE_END_TIME（TITLE は持たない） |
 | IDFKyou | IDF | ファイル | TARGET_REP_NAME, TARGET_FILE |
+| GitCommitLog | （リポジトリごとに動的生成） | Gitコミット履歴 | COMMIT_HASH, ADDITION, DELETION 等（読み取り専用） |
+| GPSLog | （GPXファイル） | GPS位置ログ | LATITUDE, LONGITUDE, ALTITUDE 等（読み取り専用） |
+| PluginKyou | （なし。プラグインが保持） | 外部プラグインが提供する記録 | プラグイン定義（`data_type` は `chatgpt_conversation` 等） |
+
+MiReKyou はタイトルを持たず、`TARGET_ID` が指す Kyou を描画することで表示が成立する。
+Mi と同じスケジュール項目を持つが、`DATA_TYPE` は `mirekyou_create` / `_check` / `_limit` /
+`_start` / `_end` の5種に射影される（いずれも `mi` で始まるので前方一致判定の順序に注意）。
 
 ### メタ情報の設計
 
@@ -291,4 +299,7 @@ Page（ルートページ、Vue Router で遷移）
 
 - **Android**: gkill_server バイナリを APK に同梱、WebView で表示
 - **Wear OS**: Pixel Watch から KFTL テンプレートベースの記録（Wearable Data Layer 経由）
-- **MCP Server**: AI エージェントからの読み取りアクセス
+- **MCP Server**: AI エージェントからのアクセス。Read（10ツール、読み取りのみ）に加え、
+  Write（25ツール）と ReadWrite（30ツール）があり、追加・更新・削除も行える
+- **プラグイン**: 外部データ源を独立バイナリとして後付けする拡張機構（stdio の改行区切り JSON）。
+  gkill 本体を変更せずにデータ型を増やせる。詳細は [plugin-system.md](plugin-system.md)

@@ -43,14 +43,14 @@ stateDiagram-v2
 
 KFTL テキスト経由では以下のプレフィックスで状態遷移:
 
-| プレフィックス | 操作 | 遷移 |
-|-------------|------|------|
-| `ーた` | TimeIs Start | 未記録 → 実行中（START_TIMEのみ） |
-| `ーえ` | TimeIs End | 実行中 → 終了済み（タイトル指定） |
-| `ーいえ` | TimeIs End If Exist | 実行中 → 終了済み（存在する場合のみ） |
-| `ーたえ` | TimeIs End By Tag | 実行中 → 終了済み（タグ名指定） |
-| `ーいたえ` | TimeIs End By Tag If Exist | 実行中 → 終了済み（タグ名指定、存在する場合のみ） |
-| `ーち` | TimeIs | 未記録 → 終了済み（START+END 同時設定） |
+| 日本語 | ASCII | 操作 | 遷移 |
+|---|---|------|------|
+| `ーた` | `/start` | TimeIs Start | 未記録 → 実行中（START_TIMEのみ） |
+| `ーえ` | `/end` | TimeIs End | 実行中 → 終了済み（タイトル指定） |
+| `ーいえ` | `/end?` | TimeIs End If Exist | 実行中 → 終了済み（存在する場合のみ） |
+| `ーたえ` | `/endt` | TimeIs End By Tag | 実行中 → 終了済み（タグ名指定） |
+| `ーいたえ` | `/endt?` | TimeIs End By Tag If Exist | 実行中 → 終了済み（タグ名指定、存在する場合のみ） |
+| `ーち` | `/timeis` | TimeIs | 未記録 → 終了済み（START+END 同時設定） |
 
 ## 2. Mi（タスク）の状態遷移
 
@@ -93,11 +93,27 @@ Mi 画面では `MiCheckState` で表示対象を絞り込み:
 
 ### Mi のソート（MiSortType）
 
-| ソート | 基準 |
+`src/client/classes/api/find_query/mi-sort-type.ts` の enum に定義されている4種。
+
+| ソート | 値 |
 |-------|------|
-| 期限順 | LIMIT_TIME |
-| 作成日時順 | CREATE_TIME |
-| 更新日時順 | UPDATE_TIME |
+| 作成日時順 | `create_time` |
+| 見積開始時刻順 | `estimate_start_time` |
+| 見積終了時刻順 | `estimate_end_time` |
+| 期限順 | `limit_time` |
+
+`update_time` によるソートは存在しない。
+
+### ボードのチェックボックス状態（CheckState）
+
+表示フィルタの `MiCheckState`（`{ all, checked, uncheck }`）とは別に、
+ボード上のチェックボックス UI 用の三状態がある（`src/client/pages/views/check-state.ts`）。
+
+| 状態 | 意味 |
+|---|---|
+| `checked` | 配下が全て完了 |
+| `unchecked` | 配下が全て未完了 |
+| `indeterminate` | 完了と未完了が混在 |
 
 ## 3. セッションの状態遷移
 
@@ -106,14 +122,26 @@ stateDiagram-v2
     [*] --> 未認証: アプリケーション起動
 
     未認証 --> 認証済み: Login成功<br>(session_id発行)
+    未認証 --> レート制限中: ログイン失敗が<br>15分で10回に到達<br>(ERR000374)
+    レート制限中 --> 未認証: ウィンドウ経過後<br>(スライディングウィンドウ)
+
+    未認証 --> アカウント無効: IsEnable=false<br>(ERR000238)
+    未認証 --> パスワードリセット中: リセットトークン発行<br>(/set_new_password へ誘導)
+    パスワードリセット中 --> 未認証: 新パスワード設定完了
 
     認証済み --> 未認証: Logout<br>(session削除)
 
-    認証済み --> 期限切れ: 30日経過<br>(EXPIRATION_TIME超過)
+    認証済み --> 期限切れ: 30日経過<br>(EXPIRATION_TIME超過, ERR000373)
 
     期限切れ --> 未認証: 再ログイン必要
 
     認証済み --> 認証済み: API呼び出し<br>(session_id検証OK)
+
+    note right of レート制限中
+        gkill_server_api_rate_limit.go
+        IP単位 / 15分 / 10回
+        インメモリのスライディングウィンドウ
+    end note
 
     note right of 未認証
         ログイン画面を表示
@@ -141,11 +169,15 @@ stateDiagram-v2
 
 ## 4. KFTL パース時の行状態遷移
 
-kftlFactory の `prevLineIsMetaInfo` フラグに基づく行解釈の状態遷移。
+kftlFactory の `prev_line_is_meta_info` フラグに基づく行解釈の状態遷移。
+
+> **初期値に注意:** コンストラクタは `prev_line_is_meta_info = false` で初期化する。
+> `true` にするのは `reset()` のみ（`kftl-statement-line-constructor-factory.ts`）。
 
 ```mermaid
 stateDiagram-v2
-    [*] --> メタ情報行: factory初期化<br>(prevLineIsMetaInfo=true)
+    [*] --> データ行: factory初期化<br>(prev_line_is_meta_info=false)
+    [*] --> メタ情報行: reset()<br>(prev_line_is_meta_info=true)
 
     メタ情報行 --> メタ情報行: タグ行「。」<br>テキスト行「ーー」<br>関連時刻行「？」
     メタ情報行 --> データ行: データ型プレフィックス<br>(ーか, ーみ, ーら, etc.)
@@ -155,13 +187,13 @@ stateDiagram-v2
     データ行 --> データ行: データ型固有の後続行<br>(タイトル, 数値, URL等)
 
     note right of メタ情報行
-        prevLineIsMetaInfo = true
+        prev_line_is_meta_info = true
         次の行がメタ情報かデータかを
         プレフィックスで判定
     end note
 
     note right of データ行
-        prevLineIsMetaInfo = false
+        prev_line_is_meta_info = false
         現在のデータ型に応じた
         後続行を処理
         (KC:タイトル→数値, Mi:タイトル→期限, etc.)
@@ -172,21 +204,26 @@ stateDiagram-v2
 
 各データ型のKFTL入力は複数行で構成される:
 
-| データ型 | 行シーケンス |
+| データ型 | 行シーケンス（日本語 / ASCII） |
 |---------|------------|
-| Kmemo | (テキスト内容) |
-| KC | `ーか` → タイトル → 数値 |
-| Lantana | `ーら` → 気分値(0-10) |
-| Mi | `ーみ` → タイトル → [ボード名] → [期限] → [開始予定] → [終了予定] |
-| Nlog | `ーん` → 店名 → タイトル → 金額 |
-| URLog | `ーう` → タイトル → URL |
-| TimeIs | `ーち` → タイトル → [開始時刻] → [終了時刻] |
-| TimeIs Start | `ーた` → タイトル |
-| TimeIs End | `ーえ` → タイトル |
-| Tag | `。タグ名` |
-| Text | `ーー` → テキスト内容 → `ーー`(終了) |
-| Related Time | `？時刻` |
-| Split | `、` |
+| Kmemo | (テキスト内容。プレフィックスなし) |
+| KC | `ーか` / `/num` → タイトル → 数値 |
+| Lantana | `ーら` / `/mood` → 気分値(0-10) |
+| Mi | `ーみ` / `/mi` → タイトル → [ボード名] → [期限] → [開始予定] → [終了予定] |
+| Nlog | `ーん` / `/expense` → 店名 → タイトル → 金額 |
+| URLog | `ーう` / `/url` → タイトル → URL |
+| TimeIs | `ーち` / `/timeis` → タイトル → [開始時刻] → [終了時刻] |
+| TimeIs Start | `ーた` / `/start` → タイトル |
+| TimeIs End | `ーえ` / `/end` → タイトル |
+| TimeIs End If Exist | `ーいえ` / `/end?` → タイトル |
+| TimeIs End By Tag | `ーたえ` / `/endt` → タグ名 |
+| TimeIs End By Tag If Exist | `ーいたえ` / `/endt?` → タグ名 |
+| Tag | `。タグ名` / `#タグ名` |
+| Text | `ーー` / `--` → テキスト内容 → `ーー` / `--`(終了) |
+| Related Time | `？時刻` / `?時刻` |
+| Split | `、` / `,` |
+| Split (+1秒) | `、、` / `,,` |
+| Save | `！` / `!` |
 
 ## 5. Wear OS 通信の状態遷移
 
@@ -275,3 +312,109 @@ stateDiagram-v2
         履歴ダイアログからは参照可能
     end note
 ```
+
+## 7. MiReKyou（既存記録のタスク化）の状態遷移
+
+MiReKyou は Mi と同じ完了/期限のライフサイクルを持つが、`target_id` で別の Kyou を指すため
+**対象 Kyou が失われた状態**という Mi には無い状態を持つ。タイトルを持たず、
+表示は対象 Kyou を描画することで成立する。
+
+```mermaid
+stateDiagram-v2
+    [*] --> 未完了: AddMiReKyou<br>(target_id + スケジュール項目)
+
+    未完了 --> 完了: UpdateMiReKyou<br>(IS_CHECKED=true)
+    完了 --> 未完了: UpdateMiReKyou<br>(IS_CHECKED=false)
+
+    未完了 --> 未完了: UpdateMiReKyou<br>(ボード名/期限/見積の編集)
+    完了 --> 完了: UpdateMiReKyou<br>(ボード名/期限/見積の編集)
+
+    未完了 --> 論理削除: UpdateMiReKyou<br>(IS_DELETED=true)
+    完了 --> 論理削除: UpdateMiReKyou<br>(IS_DELETED=true)
+
+    未完了 --> 対象Kyou欠損: 対象Kyouが削除された
+    完了 --> 対象Kyou欠損: 対象Kyouが削除された
+
+    note right of 対象Kyou欠損
+        load_attached_kyou() が対象を解決できない
+        GkillErrorCodes.not_found_mi_rekyou_target
+        タイトルを持たないため
+        表示する内容が無くなる
+    end note
+```
+
+### DATA_TYPE の射影
+
+MiReKyou は Mi と同様、1レコードから複数の時刻観点で射影される。
+`DATA_TYPE` はその観点を表す。
+
+| DATA_TYPE | RELATED_TIME の導出元 |
+|---|---|
+| `mirekyou_create` | `CREATE_TIME` |
+| `mirekyou_check` | `UPDATE_TIME` |
+| `mirekyou_limit` | `LIMIT_TIME` |
+| `mirekyou_start` | `ESTIMATE_START_TIME` |
+| `mirekyou_end` | `ESTIMATE_END_TIME` |
+
+> いずれも `mi` で始まるため、`DATA_TYPE` を前方一致で判定する箇所では
+> **`mirekyou` を `mi` より先に**評価しないと Mi として誤判定される。
+
+## 8. プラグインプロセスのライフサイクル
+
+`pluginRepositoryImpl`（`src/server/gkill/dao/reps/plugin_repository_impl.go`）が管理する
+サブプロセスの状態遷移。
+
+```mermaid
+stateDiagram-v2
+    [*] --> 未起動: PluginManager が manifest.json を発見
+
+    未起動 --> 起動中: ensureStarted()<br>(exec.CommandContext(context.Background()))
+
+    起動中 --> 起動中: callCommand()<br>mu.Lock() で直列化
+
+    起動中 --> 未起動: stdin/stdout 失敗<br>(started=false)
+    起動中 --> 未起動: 既定30秒のタイムアウト<br>→ Process.Kill()
+    起動中 --> 未起動: close コマンド
+
+    未起動 --> 起動中: クラッシュ後の自動再起動<br>(1回だけリトライ)
+
+    note right of 起動中
+        started = true
+        stdio 改行区切り JSON で通信
+        Scanner バッファ 32MB（親側）
+    end note
+
+    note right of 未起動
+        started = false
+        次の callCommand() で
+        ensureStarted() が呼ばれる
+    end note
+```
+
+**リトライの例外:** クラッシュ時の自動再起動は1回だけ行われるが、
+`context` のタイムアウト／キャンセルが原因の失敗ではリトライしない。
+タイムアウトを再試行すると待ち時間が倍増するため。
+
+## 9. ダイアログ履歴スタック
+
+`src/client/classes/use-dialog-history-stack.ts` が管理する、ダイアログ開閉とブラウザ履歴の同期。
+
+```mermaid
+stateDiagram-v2
+    [*] --> 閉: 初期状態
+
+    閉 --> 開: useDialogHistoryStack が監視する show=true<br>history.pushState(depth)
+
+    開 --> 開: 子ダイアログを開く<br>depth+1 で push
+
+    開 --> 閉: ブラウザバック<br>(depth比較で back と判定)
+    開 --> 閉: closeDialogViaHistory()<br>(履歴を巻き戻してから閉じる)
+    開 --> 閉: closeTopDialog()<br>(最上位のみ)
+
+    開 --> 開: ブラウザフォワード<br>(閉じない)
+
+    閉 --> 閉: resetDialogHistory()<br>(ページリダイレクト時にスタックを初期化)
+```
+
+**重要:** プログラムから閉じるときに `show.value = false` を直接書くと履歴とずれる。
+必ず `closeDialogViaHistory()` を使うこと。約44のコンポーザブルがこの規約に従っている。
