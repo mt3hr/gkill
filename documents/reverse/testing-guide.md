@@ -2,19 +2,23 @@
 
 ## 1. 概要
 
-gkill プロジェクトでは約2,340件の自動テストを整備しています。Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
+gkill プロジェクトには Go バックエンド、Vue 3 フロントエンド、MCP サーバ、Android、Wear OS の各コンポーネントにテストが存在し、データアクセス層から API 統合、UI の E2E テストまで幅広くカバーしています。
 
 ### テスト統計
 
-| コンポーネント | テスト数 | テストファイル数 | フレームワーク |
+> **これは静的計数**（ソースに書かれたテスト宣言の数）であり、実行時にレポートされる件数とは一致しません。
+> `it.each` / `test.each` の展開、`skip`、Playwright のプロジェクト数によって実行件数は増減します。
+> 下表の数値は `npm run verify_docs -- --list` が算出するメトリクスと同じ定義です。
+
+| コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 590 | 57 | Go `testing` |
-| フロントエンド ユニット | 765 | 61 | Vitest |
-| フロントエンド E2E | 193 | 33（+auth.setup.ts） | Playwright |
+| Go バックエンド | 592 | 57 | Go `testing` |
+| フロントエンド ユニット | 808 | 64 | Vitest |
+| フロントエンド E2E | 195 | 34（+auth.setup.ts） | Playwright |
 | MCP サーバ | 661 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
-| Wear OS | 114 | 9 | JUnit 4 + MockK |
-| **合計** | **約2,335** | **182** | |
+| Wear OS | 118 | 9 | JUnit 4 + MockK |
+| **合計** | **2,386** | **186** | |
 
 数え直すコマンド:
 
@@ -26,8 +30,10 @@ grep -rhE "^\s*test\(" src/client/__tests__/e2e --include=*.spec.ts | wc -l  # E
 ```
 
 > `src/plugins/*` の Go テスト（`cache_path_test.go`、`loader_test.go` 等）は
-> 各プラグインが**独立した Go モジュール**のため、上記の集計にも `npm test` にも含まれない
-> （`test_server` は `cd src/server && go test ./...`）。実行方法は `src/plugins/ABOUT_TEST.md` を参照。
+> 各プラグインが**独立した Go モジュール**のため、上記の集計（`src/server` 基準）には含まれない
+> （`test_server` は `cd src/server && go test ./...`）。実行は `npm run test_plugins`
+> （`src/tools/test_plugins.mjs` が go.mod を持つディレクトリを探して1つずつ回す）が担当し、
+> `npm test` からも呼ばれる。詳細は `src/plugins/ABOUT_TEST.md` を参照。
 
 ### テスト仕様書
 
@@ -42,7 +48,7 @@ npm test
 ```
 
 このコマンドは以下を順次実行します：
-`install_server`（ビルド） → **`verify_docs`（docs CI）** → server → client → MCP → Android → Wear OS
+`install_server`（ビルド） → **`verify_docs`（docs CI）** → server → client → MCP → plugins → Android → Wear OS
 
 `verify_docs` を重いテスト群より前に置いているのは、実行が速く失敗が早いため。
 また `install_server` の後に置くのは、`checkManuals()` の生成鮮度チェックを
@@ -59,6 +65,7 @@ npm test
 | `npm run test_client_e2e` | フロントエンド E2E のみ（gkill_server 自動起動・停止） | 20分前後 |
 | `npm run test_e2e_server` | E2E 用 gkill_server 単体起動 (`$HOME/gkill_test`) | — |
 | `npm run test_mcp` | MCP サーバ | 数秒 |
+| `npm run test_plugins` | 同梱プラグイン（独立 Go モジュール4つ） | 数秒 |
 | `npm run test_android` | Android | Gradle 依存 |
 | `npm run test_wear_os` | Wear OS | Gradle 依存 |
 
@@ -210,8 +217,10 @@ src/server/gkill/
 ```
 src/client/__tests__/
 ├── unit/
-│   ├── api/gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
-│   ├── classes/                       ← ユーティリティ（10ファイル）
+│   ├── api/                           ← API クライアント（2ファイル）
+│   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
+│   │   └── find-kyou-query.test.ts   ← 検索クエリビルダー
+│   ├── classes/                       ← ユーティリティ（11ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -220,11 +229,16 @@ src/client/__tests__/
 │   │   ├── delete-gkill-cache.test.ts
 │   │   ├── markdown-to-html.test.ts
 │   │   ├── mermaid-render.test.ts
+│   │   ├── foldable-struct-move.test.ts
+│   │   ├── kyou-content-text.test.ts  ← 内容コピー / IDコピー
 │   │   └── use-dialog-history-stack.test.ts
 │   ├── datas/                         ← データモデル（27ファイル）
 │   ├── dnote/                         ← D-note モジュール（6ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
-│   ├── composables/                   ← Vue Composable（8ファイル）
+│   ├── composables/                   ← Vue Composable（10ファイル。add-views / edit-views /
+│   │                                     confirm-delete / context-menus / page-composables /
+│   │                                     query-composables / idf-kyou-view / re-kyou-view /
+│   │                                     mi-re-kyou-view / save-clipboard-to-file-dialog）
 │   ├── router.test.ts                 ← ルーター（13ルート）
 │   ├── i18n-completeness.test.ts      ← i18n 完全性（7ロケール）
 │   └── service-worker.test.ts         ← Service Worker
@@ -244,7 +258,7 @@ src/client/__tests__/
 
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
-全13ルートを Playwright で検証し、CRUD 操作フローもカバー（33 specファイル + auth.setup.ts、207テスト）。各テストでは以下を共通チェック：
+全13ルートを Playwright で検証し、CRUD 操作フローもカバー（34 specファイル + auth.setup.ts、195テスト宣言）。各テストでは以下を共通チェック：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
@@ -323,6 +337,7 @@ src/client/__tests__/
 | `regression-fixes.spec.ts` | 修正済みバグの回帰テスト: Kmemo必須チェック、ローカルアクセス設定、タグ/Device/RepType構造追加、ApplicationConfig適用、ファイルアップロード |
 | `misc-operations.spec.ts` | ブックマークレット確認、GPSログアップロード、無効共有リンクエラー表示、サーバコンフィグ適用で再起動 |
 | `mi-re-kyou.spec.ts` | MiReKyou（既存記録のタスク化）の追加・編集・表示 |
+| `re-kyou.spec.ts` | リポストの行を右クリックしたとき、元の記録ではなくリポスト自身のコンテキストメニューが出ること |
 
 #### ヘルパーファイル
 
@@ -388,8 +403,8 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 - インストルメンテーションテスト: Android フレームワーク統合
 
 **Wear OS** (`src/wear_os/`): JUnit 4 + MockK
-- phone_companion（4テスト）: 認証ストア、Activity、API クライアント（MockWebServer）、メッセージハンドリング
-- watch_app（5テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル
+- phone_companion（4ファイル / 60テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer）、メッセージハンドリング
+- watch_app（5ファイル / 58テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル
 
 ## 4. テスト設定ファイル
 
@@ -444,7 +459,7 @@ graph LR
 graph LR
     subgraph "ユニットテスト"
         F1[GkillAPI<br/>全メソッド]
-        F2[22 データモデル]
+        F2[27 データモデル]
         F3[KFTL パーサ]
         F4[D-note モジュール]
         F5[Composable]
@@ -540,11 +555,7 @@ cd src/android && ./gradlew test
 ### Wear OS テスト
 
 ```bash
-# gradlew を android/ からコピー（初回のみ）
-cp src/android/gradlew src/wear_os/
-cp src/android/gradlew.bat src/wear_os/
-cp -r src/android/gradle src/wear_os/
-
+# gradlew はコミット済みなのでコピー不要
 cd src/wear_os && ./gradlew test
 ```
 

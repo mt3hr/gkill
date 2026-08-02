@@ -11,7 +11,7 @@ KeyGetter でグルーピングし、AggregateTarget で集計値を算出する
 ```
 dnote/
 ├── (ルートファイル 18個)         # コア型定義 + トレンドグラフ集計（dnote-trend-aggregator.ts）
-├── dnote-agregate-target/      # 集計対象（20ファイル）
+├── dnote-agregate-target/      # 集計対象（21ファイル）
 ├── dnote-filter/               # フィルタ（2ファイル）
 ├── dnote-key-getter/           # グルーピングキー（9ファイル）
 ├── dnote-predicate/            # 検索条件述語（33ファイル）
@@ -75,7 +75,7 @@ dnote/
 | `related-time-match-type.ts` | 関連時刻マッチ型 |
 | `aggregate-grouping-list-result-record.ts` | グルーピング集計結果レコード |
 
-## `dnote-agregate-target/`（20ファイル）— 集計対象
+## `dnote-agregate-target/`（21ファイル）— 集計対象
 
 グループごとの集計値を算出するクラス群。
 
@@ -144,7 +144,7 @@ dnote/
 | `lantana-mood-getter.ts` | Lantana 気分値 |
 | `nlog-shop-name-getter.ts` | Nlog 店名 |
 
-## `dnote-predicate/`（34ファイル）— 検索条件述語
+## `dnote-predicate/`（33ファイル）— 検索条件述語
 
 AND / OR / NOT の論理演算で組み合わせ可能な述語群（33 .ts ファイル + 1 サブディレクトリ）。
 

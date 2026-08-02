@@ -136,7 +136,7 @@ src/server/
     │   └── gkill_server_api/       # HTTPハンドラ層（108ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
-    │       ├── gkill_server_api_address.go  # ルーティング定義（90エンドポイント定義・88登録：87 POST + 1 GET）
+    │       ├── gkill_server_api_address.go  # ルーティング定義（90エンドポイント定義・88登録：89 POST + 1 GET）
     │       ├── auth.go             # セッション認証ヘルパー
     │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
     │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
@@ -156,7 +156,7 @@ src/server/
     │   │   ├── *_repository_sqlite3_impl.go        # SQLite3実装
     │   │   ├── *_repository_cached_sqlite3_impl.go # キャッシュ付き実装
     │   │   ├── *_repository_temp_sqlite3_impl.go   # テンポラリ実装
-    │   │   ├── mi_re_kyou*.go              # MiReKyou（既存記録のタスク化、9ファイル）
+    │   │   ├── mi_re_kyou*.go              # MiReKyou（既存記録のタスク化、10ファイル）
     │   │   ├── plugin_repository.go        # プラグインリポジトリ インターフェース
     │   │   ├── plugin_repository_impl.go   # サブプロセス管理・stdio JSON通信
     │   │   ├── cache/              # LatestDataRepositoryAddress 等のキャッシュDAO
@@ -192,17 +192,17 @@ Androidプロジェクト（Gradle）。WebViewでgkill_serverを内包して起
 src/android/
 ├── app/
 │   └── src/main/
-│       ├── java/.../MainActivity.java   # WebView + gkill_server起動
+│       ├── java/.../MainActivity.kt     # WebView + gkill_server起動
 │       ├── jniLibs/arm64-v8a/          # gkill_serverバイナリ配置先
 │       │   └── libgkill_server.so       #   （nativeLibraryDirから実行するため）
 │       └── AndroidManifest.xml
-├── build.gradle
-├── gradlew / gradlew.bat               # Gradleラッパー（Wear OSからコピーされる）
+├── build.gradle.kts
+├── gradlew / gradlew.bat               # Gradleラッパー（Wear OSへコピーする元）
 └── gradle/wrapper/
     └── gradle-wrapper.jar
 ```
 
-- compileSdk=36, targetSdk=36, minSdk=26
+- compileSdk=37, targetSdk=36, minSdk=26（compileSdk だけ 37 なのは androidx 1.19.0 系の要求。targetSdk は実行時挙動が変わるため 36 据え置き）
 
 ### src/wear_os/ — Wear OSアプリ
 
@@ -214,11 +214,11 @@ src/wear_os/
 │   └── src/main/java/...  # gkill_serverへのKFTL送信中継
 ├── watch_app/              # 腕時計側アプリ
 │   └── src/main/java/...  # KFTL入力UI
-├── settings.gradle
-└── build.gradle
+├── settings.gradle.kts
+└── build.gradle.kts
 ```
 
-**注意:** ビルド前に`src/android/`から`gradlew`, `gradlew.bat`, `gradle-wrapper.jar`をコピーする必要があります（`npm run setup_wear_os_gradle`）。
+**補足:** Gradleラッパー（`gradlew` / `gradlew.bat` / `gradle-wrapper.jar` / `gradle-wrapper.properties`）は`src/wear_os/`にコミット済みなので、コピーは通常不要です。`src/android/`側と揃え直したいときだけ`npm run setup_wear_os_gradle`を実行してください。
 
 ### src/mcp/ — MCPサーバー
 
@@ -262,14 +262,16 @@ src/plugins/
 └── README.md
 ```
 
-各プラグインは独立した `go.mod` を持つ別モジュール。`manifest.json` をバイナリに `//go:embed` しており、
-`--gkill-print-manifest` / `--gkill-print-config` で内容を標準出力に書き出せる。
-`gkill_example` 以外の3つは `config.json` の `source_dirs` で取り込み元フォルダを指定し、
+各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン3本（chatgpt / claudeai / claudecode）は
+`manifest.json` をバイナリに `//go:embed` しており、`--gkill-print-manifest` / `--gkill-print-config` で
+内容を標準出力に書き出せる（`gkill_example` は埋め込みもフラグも `DefaultConfig` も持たない）。
+この3本は `config.json` の `source_dirs` で取り込み元フォルダを指定し、
 SQLite3 キャッシュを `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置く
 （各プラグインの `cache_path.go`）。
 
-> `src/plugins/*` の Go テストは別モジュールのため、`npm test`（`cd src/server && go test ./...`）では
-> 実行されない。実行方法は `src/plugins/ABOUT_TEST.md` を参照。
+> `src/plugins/*` の Go テストは別モジュールのため、`npm run test_server`（`cd src/server && go test ./...`）
+> では実行されない。`npm run test_plugins` が各モジュールを回し、`npm test` からも呼ばれる。
+> 実行方法は `src/plugins/ABOUT_TEST.md` を参照。
 
 ### src/locales/ — i18nリソース
 
@@ -284,7 +286,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-855キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+856キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
@@ -316,7 +318,7 @@ documents/
 │   ├── usecase.md                    # ユースケース一覧（82件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
-│   ├── sequence-diagrams.md          # シーケンス図（27本: 正常系22 + 異常系5）
+│   ├── sequence-diagrams.md          # シーケンス図（28本: 正常系23 + 異常系5）
 │   ├── activity-diagrams.md          # アクティビティ図
 │   ├── state-machines.md             # ステートマシン図
 │   ├── screen-transition.md          # 画面遷移図

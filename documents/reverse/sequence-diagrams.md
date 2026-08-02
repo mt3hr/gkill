@@ -50,7 +50,9 @@ sequenceDiagram
 
 ## 3. Kyou データ追加（例: Kmemo）
 
-全データ型（KC, Lantana, Mi, Nlog, URLog, TimeIs, ReKyou）も同様のフロー。
+全データ型（KC, Lantana, Mi, Nlog, URLog, TimeIs, ReKyou, MiReKyou）も同様のフロー。
+MiReKyou は `/api/add_mirekyou` / `/api/update_mirekyou` / `/api/get_mirekyou` を使い、
+タイトルを持たず `target_id` で元の Kyou を指す点だけが異なる。
 
 ```mermaid
 sequenceDiagram
@@ -64,7 +66,7 @@ sequenceDiagram
     User->>UI: Kmemo内容入力・保存ボタン
     UI->>GkillAPI: addKmemo(session_id, kmemo)
     GkillAPI->>API: POST /api/add_kmemo<br>{session_id, kmemo, want_response_kyou}
-    API->>API: getAccountFromSessionID(session_id)
+    API->>API: wrapAuthRepos ミドルウェアで認証済み（AuthFromContext）
     API->>DAOMgr: GetRepositories(user_id, device)
     DAOMgr-->>API: GkillRepositories
     API->>KmemoRep: GetKmemo(id) [存在チェック]
@@ -95,7 +97,7 @@ sequenceDiagram
 
     User->>UI: Kmemo編集・保存ボタン
     UI->>API: POST /api/update_kmemo<br>{session_id, kmemo}
-    API->>API: getAccountFromSessionID(session_id)
+    API->>API: wrapAuthRepos ミドルウェアで認証済み（AuthFromContext）
     API->>API: GetRepositories(user_id, device)
     API->>KmemoRep: GetKmemo(id) [存在チェック]
     KmemoRep-->>API: existing_kmemo (存在確認)
@@ -140,11 +142,11 @@ sequenceDiagram
 
     User->>UI: 検索条件入力・検索実行
     UI->>API: POST /api/get_kyous<br>{session_id, query: FindQuery}
-    API->>API: getAccountFromSessionID(session_id)
-    API->>API: query.OnlyLatestData = true (強制)
+    API->>API: wrapAuthRepos ミドルウェアで認証済み（AuthFromContext）
+    API->>API: usecase 層で query.OnlyLatestData = true (強制)
     API->>Filter: FindKyous(query, repos)
     Filter->>Repos: 全リポジトリからデータ取得
-    Note right of Repos: KmemoReps, KCReps,<br>LantanaReps, MiReps,<br>NlogReps, URLogReps,<br>TimeIsReps, IDFKyouReps,<br>ReKyouReps, GitCommitLogReps
+    Note right of Repos: KmemoReps, KCReps,<br>LantanaReps, MiReps,<br>NlogReps, URLogReps,<br>TimeIsReps, IDFKyouReps,<br>ReKyouReps, MiReKyouReps,<br>GitCommitLogReps, GPSLogReps,<br>PluginReps
     Repos-->>Filter: 全Kyou候補
     Filter->>Cache: GetLatestDataRepositoryAddresses
     Cache-->>Filter: リポジトリ位置情報
@@ -170,9 +172,14 @@ sequenceDiagram
 
     User->>UI: KFTLテキスト入力<br>(プレフィックス付き複数行)
     User->>UI: 保存ボタン or 「！」入力
+    UI->>UI: collect_unknown_tags()<br>(use-kftl-view.ts:222)
+    alt 未使用のタグが含まれる
+        UI-->>User: 「新しいタグです。追加しますか？」と確認
+        User->>UI: 承認（do_submit(skip_unknown_tag_check=true) で再送）
+    end
     UI->>API: POST /api/submit_kftl_text<br>{session_id, kftl_text}
     API->>Handler: handleSubmitKFTLText
-    Handler->>Handler: getAccountFromSessionID
+    Handler->>Handler: wrapAuthRepos ミドルウェアで認証済み（AuthFromContext）
     Handler->>Handler: GetRepositories + GetApplicationConfig
     Handler->>Stmt: GenerateAndExecuteRequests
     Stmt->>Factory: newKFTLFactory().reset()
@@ -194,6 +201,10 @@ sequenceDiagram
     API-->>UI: {messages}
     UI-->>User: 保存成功メッセージ
 ```
+
+> **新規タグの確認ゲート**は完全にクライアント側の処理。`do_submit(skip_unknown_tag_check)`
+> （`use-kftl-view.ts:258,272`）が未確認のときだけ `collect_unknown_tags()` を呼び、
+> 打ち間違いで似たタグが増えるのを防ぐ。サーバ側は確認の有無を関知しない。
 
 ## 8. ファイルアップロード
 
@@ -237,7 +248,7 @@ sequenceDiagram
 
     User->>UI: タグ名入力・対象Kyou指定
     UI->>API: POST /api/add_tag<br>{session_id, tag: {TARGET_ID, TAG}}
-    API->>API: getAccountFromSessionID
+    API->>API: wrapAuthRepos ミドルウェアで認証済み（AuthFromContext）
     API->>API: GetRepositories
     API->>TagRep: GetTag(id) [存在チェック]
     TagRep-->>API: nil (未存在)
@@ -286,7 +297,7 @@ sequenceDiagram
 
     User->>UI: 設定画面を開く
     UI->>API: POST /api/get_application_config<br>{session_id, locale_name}
-    API->>API: getAccountFromSessionID
+    API->>API: wrapAuth ミドルウェアで認証済み（AuthFromContext）
     API->>AppConfigDAO: GetApplicationConfig(user_id, device)
     AppConfigDAO-->>API: ApplicationConfig
     API-->>UI: {application_config}
@@ -556,8 +567,8 @@ sequenceDiagram
 ## 19. プラグイン一覧取得（get_plugin_list）
 
 > **呼び出し元は MCP のみ。** gkill のフロントエンドにこのエンドポイントを叩く導線は無い
-> （`gkill-api.ts` に `get_plugin_list()` の定義はあるが呼び出し元が存在せず、
-> `plugin-config-dialog.vue` はどこからも import されていない孤児コンポーネント）。
+> （`gkill-api.ts` に `get_plugin_list()` の定義はあるが呼び出し元が存在しない）。
+> 設定ダイアログは `rep_name` をコンテキストメニューから直接受け取るため、一覧を引く必要がない。
 
 ```mermaid
 sequenceDiagram
@@ -583,14 +594,13 @@ sequenceDiagram
 
 ## 20. プラグイン設定 HTML 取得（get_plugin_config_html）
 
-> `plugin-config-dialog.vue` はこのエンドポイントを呼ぶ実装を持つが、
-> コンポーネント自体がどこからも import されていないため画面上に到達する経路が無い。
-> 下図は「実装されている呼び出し順序」であり、現行 UI で辿れるフローではない。
+> プラグイン Kyou を右クリック →「プラグイン設定」で `plugin-config-dialog.vue` が開き、
+> このエンドポイントを呼ぶ。保存後にも呼び直して表示を更新する。
 
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
-    participant UI as plugin-config-dialog.vue<br>（未マウント）
+    participant UI as plugin-config-dialog.vue
     participant API as GkillServerAPI
     participant PluginRepo as pluginRepositoryImpl
     participant Plugin as プラグインバイナリ
@@ -615,16 +625,15 @@ sequenceDiagram
 
 ## 21. プラグイン設定保存（post_plugin_config）
 
-> **クライアント側の実装は存在しない。** `plugin-config-dialog.vue` にフォーム送信処理は無く、
-> `gkill-api.ts` の `post_plugin_config()` にも呼び出し元が無い。MCP も
-> `post_plugin_config` を公開していない（プラグインツールは読み取り専用）。
-> つまりこのエンドポイントは**サーバ側とプラグイン SDK 側だけが実装済み**の状態。
-> 実際の設定変更は `config.json` を手で編集して行う。
+> iframe には `allow-same-origin` を与えていないので、設定フォームは自力で API を叩けない。
+> iframe が `postMessage({ gkill_plugin_config: {...} })` で親に依頼し、親（ダイアログ）が
+> このエンドポイントを呼ぶ。結果は `{ gkill_plugin_config_result: { ok, error } }` で iframe へ返す。
+> MCP は `post_plugin_config` を公開していない（プラグインツールは読み取り専用）。
 
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
-    participant UI as plugin-config-dialog.vue<br>（送信処理は未実装）
+    participant UI as plugin-config-dialog.vue
     participant API as GkillServerAPI
     participant PluginRepo as pluginRepositoryImpl
     participant Plugin as プラグインバイナリ
@@ -683,6 +692,36 @@ sequenceDiagram
     Note right of UI: iframe が theme を受信し<br>data-theme 属性を更新 → CSS 変数切り替え
     UI-->>UI: iframe → postMessage({gkill_iframe_size:{width, height}})
     UI->>UI: iframe_content_height 更新 → iframe 高さ自動調整
+```
+
+### 23. MCP からのプラグイン本文取得（gkill_get_plugin_content）
+
+プラグインKyouの本文は gkill 本体に保存されていない。`get_kyous` が返すのはメタデータと
+`payload.kind="plugin"`（`rep_name` / `kyou_id`）だけなので、AI に本文を届けるには画面と同じく
+`get_plugin_content_html` を経由する。表示用の CSS/JS がバイト数の大半を占めるため、
+MCP 側は既定で HTML をプレーンテキストへ変換して返す。
+
+```mermaid
+sequenceDiagram
+    actor Client as MCPクライアント（Claude等）
+    participant MCP as MCPサーバ<br>gkill_get_plugin_content
+    participant HT as lib/html-text.mjs
+    participant API as GkillServerAPI
+    participant PluginRepo as pluginRepositoryImpl
+
+    Client->>MCP: gkill_get_plugin_content<br>{rep_name, kyou_id, format?, max_text_length?}
+    MCP->>API: POST /api/get_plugin_content_html
+    API->>PluginRepo: GetContentHTML(ctx, kyouID)
+    PluginRepo-->>API: html string
+    API-->>MCP: {html, messages, errors}
+    alt format = "text"（既定）
+        MCP->>HT: htmlToText(html)
+        HT->>HT: script / style / コメントを中身ごと除去 → テキスト抽出
+        HT-->>MCP: text（既定 20000 文字で打ち切り）
+        MCP-->>Client: テキスト本文
+    else format = "html" / "both"
+        MCP-->>Client: HTML（"both" はテキストも同梱）
+    end
 ```
 
 ---

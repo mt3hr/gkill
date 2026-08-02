@@ -30,7 +30,7 @@ src/client/
 ├── App.vue                          # ルートコンポーネント
 ├── main.ts                          # エントリポイント
 ├── i18n.ts                          # i18n設定
-├── serviceWorker.ts                 # PWA Service Worker (~328行)
+├── serviceWorker.ts                 # PWA Service Worker
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
@@ -110,7 +110,7 @@ Page（ルートページ）
 |---|---|
 | `plugin-html-view.vue` | `GetPluginContentHTMLResponse.html` を iframe srcdoc に展開して表示。postMessage でダークテーマ通知・高さ動的調整を行う |
 | `plugin-html-context-menu.vue` | プラグインKyou用コンテキストメニュー（タグ追加・テキスト追加・リポスト等）|
-| `plugin-config-dialog.vue` | `GetPluginConfigHTMLResponse.html` を iframe srcdoc に展開してプラグイン設定フォームを表示。**どこからも import されていない孤児コンポーネント**で、現状は画面から到達できない |
+| `plugin-config-dialog.vue` | `GetPluginConfigHTMLResponse.html` を iframe srcdoc に展開してプラグイン設定フォームを表示。`plugin-html-view.vue` が保持し、コンテキストメニューの「プラグイン設定」から開く。保存は iframe からの postMessage を受けて親が `post_plugin_config` を呼ぶ |
 
 **postMessage 通信パターン:**
 - 親 → iframe: `{ gkill_theme: 'dark' | 'light' }` — テーマ変更通知（CSS変数切替用）
@@ -173,8 +173,8 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 | `/` | `login` | login-page.vue | ログイン画面 |
 | `/kftl` | `kftl` | kftl-page.vue | KFTLテキスト入力 |
 | `/mi` | `mi` | mi-page.vue | タスク管理 |
-| `/rykv` | `rykv` | rykv-page.vue | 関連情報ビュー |
-| `/kyou` | `kyou` | kyou-page.vue | ライフイベント一覧 |
+| `/rykv` | `rykv` | rykv-page.vue | ライフログビュー（Ryuu「関連情報」はこの画面内の機能） |
+| `/kyou` | `kyou` | kyou-page.vue | 記録詳細 |
 | `/mkfl` | `mkfl` | mkfl-page.vue | 打刻メモ帳（KFTL入力+TimeIs表示） |
 | `/plaing` | `plaing` | plaing-timeis-page.vue | アクティブ打刻一覧 |
 | `/dashboard` | `dashboard` | dashboard-page.vue | 日次サマリー（Dnote・GPS・MI一覧） |
@@ -223,7 +223,7 @@ export type ComponentRef = Record<string, any>
 
 ### Service Worker
 
-定義: `src/client/serviceWorker.ts`（~279行）
+定義: `src/client/serviceWorker.ts`
 
 **Workbox設定:**
 - `registerType: 'autoUpdate'`（自動更新）
@@ -314,13 +314,13 @@ Service Worker が `/share-target` POSTを処理：
 
 | コード | 言語 | キー数 |
 |---|---|---|
-| `ja` | 日本語 | 855 |
-| `en` | 英語 | 855 |
-| `zh` | 中国語 | 855 |
-| `ko` | 韓国語 | 855 |
-| `es` | スペイン語 | 855 |
-| `fr` | フランス語 | 855 |
-| `de` | ドイツ語 | 855 |
+| `ja` | 日本語 | 856 |
+| `en` | 英語 | 856 |
+| `zh` | 中国語 | 856 |
+| `ko` | 韓国語 | 856 |
+| `es` | スペイン語 | 856 |
+| `fr` | フランス語 | 856 |
+| `de` | ドイツ語 | 856 |
 
 > キー数は全ロケールで一致している必要がある（`npm run verify_docs` が検査する）。
 

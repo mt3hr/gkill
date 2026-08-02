@@ -179,7 +179,9 @@ func main() {
 				cfg = sdk.Config{}
 			}
 			if v, ok := form[configKeySourceDirs]; ok {
-				cfg[configKeySourceDirs] = strings.TrimSpace(v)
+				// 設定画面のテキストエリアは1行1指定。config.json には配列で書き戻す
+				// (1行の文字列でも parseSourcePatterns は読めるが、配列のほうが手で編集しやすい)。
+				cfg[configKeySourceDirs] = splitSourceDirsForm(v)
 			}
 			// 対象から外れたフォルダのターンは、次回のスキャンで
 			// 「消えたファイル」として自動的にキャッシュから削除される。
@@ -230,3 +232,18 @@ func matchWordsText(text string, q sdk.Query) bool {
 // タグを付けるとrykvの既定の絞り込み「no tags」から漏れて何も表示されなくなる。
 // Claude.ai/ChatGPTプラグインも同様にタグを扱わない。
 // プロジェクト名やブランチ名は searchTextOf に含めてワード検索で引けるようにしている。
+
+// splitSourceDirsForm は設定画面のテキストエリア(1行1指定)を config.json 用の配列にする。
+// 空行は落とす。展開(~ や環境変数)はしない —— 書いたとおりを保存し、
+// 読み出し時に parseSourcePatterns が展開する。
+func splitSourceDirsForm(v string) []string {
+	dirs := make([]string, 0)
+	for line := range strings.SplitSeq(v, "\n") {
+		line = strings.TrimSpace(strings.TrimSuffix(line, "\r"))
+		if line == "" {
+			continue
+		}
+		dirs = append(dirs, line)
+	}
+	return dirs
+}

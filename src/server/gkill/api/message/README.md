@@ -61,4 +61,4 @@ type GkillMessage struct {
 
 - [gkill_server_api/README.md](../gkill_server_api/README.md) — ハンドラ層（エラー・メッセージを生成）
 - [usecase/README.md](../../usecase/README.md) — ユースケース層（GkillError を返却）
-- [documents/reverse/error-handling-and-security.md](../../../../documents/reverse/error-handling-and-security.md) — エラーハンドリング設計
+- [documents/reverse/error-handling-and-security.md](../../../../../documents/reverse/error-handling-and-security.md) — エラーハンドリング設計

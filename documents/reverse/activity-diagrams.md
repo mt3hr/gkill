@@ -113,6 +113,11 @@ flowchart TD
     Sort --> Return([フィルタ結果返却])
 ```
 
+> **タグ・テキストも「ID ごとの最新版のみ」が検索対象。** 付随データの取得クエリは
+> ID ごとに `UpdateTime` 最新の1件へ絞り込む（`find_filter.go:513,624,656`）。
+> このため**タグ名を編集したあと、編集前の古いタグ名で検索してもヒットしない**。
+> `FindKyouContext.isLatestData`（`find_kyou_context.go:39`）が同じ判定を共有する。
+
 ## 3. Repository 4層のデータ取得フロー
 
 ```mermaid
@@ -307,7 +312,7 @@ flowchart TD
     FetchResult --> Return
 ```
 
-## 10. プラグインコンテンツ HTML の描画フロー
+## 9. プラグインコンテンツ HTML の描画フロー
 
 ```mermaid
 flowchart TD
@@ -339,7 +344,7 @@ flowchart TD
 iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）で動くため
 セッション Cookie にアクセスできない。テーマとサイズの受け渡しに postMessage を使うのはこのため。
 
-## 11. プラグイン設定の保存フロー
+## 10. プラグイン設定の保存フロー
 
 ```mermaid
 flowchart TD
@@ -348,17 +353,17 @@ flowchart TD
     Which -->|現状の唯一の手段| EditFile[config.json を手で編集]
     EditFile --> Reload([次回の検索時に読み直される])
 
-    Which -->|未実装| Api[POST /api/post_plugin_config]
+    Which --> Api[POST /api/post_plugin_config]
     Api --> Sdk[プラグイン SDK の PostConfig ハンドラ]
     Sdk --> Save["SaveConfig が config.json (0600) に書き込み"]
 ```
 
-サーバ側とプラグイン SDK 側は実装済みだが、**クライアントに送信導線が無い**。
-`plugin-config-dialog.vue` はどこからも import されておらず、
-`gkill-api.ts` の `post_plugin_config()` にも呼び出し元が無い。
-MCP のプラグインツールも読み取り専用で `post_plugin_config` を公開していない。
+保存はプラグイン Kyou のコンテキストメニュー「プラグイン設定」→ `plugin-config-dialog.vue` から行う。
+iframe には `allow-same-origin` を与えていないため、iframe 内のフォームは
+`postMessage({ gkill_plugin_config: {...} })` で親に保存を依頼し、親が `post_plugin_config` を呼ぶ。
+MCP のプラグインツールは読み取り専用で `post_plugin_config` を公開していない。
 
-## 12. クリップボードからファイル保存するフロー
+## 11. クリップボードからファイル保存するフロー
 
 ```mermaid
 flowchart TD
@@ -372,7 +377,7 @@ flowchart TD
 実装は `classes/use-save-clipboard-to-file-dialog.ts` と
 `classes/use-scoped-ctrl-v-for-clipboard.ts`。専用の API は追加していない。
 
-## 13. MiReKyou 作成フロー
+## 12. MiReKyou 作成フロー
 
 ```mermaid
 flowchart TD

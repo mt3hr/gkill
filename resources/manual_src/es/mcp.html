@@ -15,11 +15,12 @@
 
   <h2>Tipos de integración</h2>
   <table>
-    <tr><th>Tipo</th><th>Descripción</th></tr>
-    <tr><td>Solo lectura</td><td>La IA solo puede ver y buscar registros. No puede agregar ni modificar.</td></tr>
-    <tr><td>Solo escritura</td><td>La IA solo puede agregar, actualizar y eliminar registros.</td></tr>
-    <tr><td>Lectura y escritura</td><td>La IA puede ver, agregar, actualizar y eliminar registros.</td></tr>
+    <tr><th>Tipo</th><th>Qué puede hacer</th><th>Archivo a ejecutar</th><th>Herramientas</th><th>Puerto (HTTP)</th></tr>
+    <tr><td>Solo lectura</td><td>Solo ver y buscar registros. No puede agregar ni modificar</td><td>gkill-read-server.mjs</td><td>10</td><td>8808</td></tr>
+    <tr><td>Solo escritura</td><td>Agregar, actualizar y eliminar registros. También puede obtener nombres de repositorios, etiquetas y tableros</td><td>gkill-write-server.mjs</td><td>25</td><td>8809</td></tr>
+    <tr><td>Lectura y escritura</td><td>Ver, agregar, actualizar y eliminar registros</td><td>gkill-readwrite-server.mjs</td><td>30</td><td>8810</td></tr>
   </table>
+  <p>Todos los tipos incluyen dos herramientas adicionales para leer registros importados por complementos.</p>
 
   <h2>Entrega de archivos</h2>
   <p>La forma de mostrar los registros de archivos (imágenes, vídeos, documentos) a la IA cambia automáticamente según el tipo de conexión.</p>
@@ -39,8 +40,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "npx",
-      "args": ["-y", "gkill-mcp-server"],
+      "command": "node",
+      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "su-id-de-usuario",
@@ -59,15 +60,21 @@
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=su-id-de-usuario \
   --env GKILL_PASSWORD_SHA256=su-hash \
-  -- npx -y gkill-mcp-server</code></pre>
+  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
   <div class="tip">
-    <strong>Nota:</strong> gkill-mcp-server aún no está publicado en npm. Hasta entonces, especifique el servidor MCP incluido en el repositorio como comando (por ejemplo, <code>-- node src/mcp/gkill-readwrite-server.mjs</code>).
+    <strong>Consejo:</strong> Ajuste la ruta anterior al lugar donde colocó el código fuente de gkill. Para cambiar el tipo, sustituya el nombre del archivo por <code>gkill-write-server.mjs</code> o <code>gkill-readwrite-server.mjs</code>.
   </div>
 
-  <h2>Acceso remoto</h2>
-  <p>Haga que su servidor gkill sea accesible a través de Internet y configure <code>GKILL_BASE_URL</code> con su dirección pública. Se recomienda encarecidamente habilitar TLS (HTTPS) por seguridad.</p>
+  <h2>Uso remoto (conexión HTTP)</h2>
+  <p>Si la IA no está en el mismo PC, puede hacer que el propio servidor MCP escuche por HTTP para que una IA en internet se conecte. Este modo autoriza la conexión mediante OAuth, por lo que no necesita exponer gkill a internet.</p>
+  <pre><code># Ejemplo: servir lectura y escritura por HTTP
+MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+GKILL_BASE_URL=http://localhost:9999 \
+GKILL_USER=su-id-de-usuario \
+GKILL_PASSWORD_SHA256=su-hash \
+node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
   <div class="tip">
-    <strong>Consejo:</strong> La configuración de TLS se puede realizar desde <a href="server-config.html">Configuración del servidor</a>.
+    <strong>Consejo:</strong> También puede publicar el propio servidor gkill en internet. En ese caso, configure <code>GKILL_BASE_URL</code> con su dirección pública y habilite TLS (HTTPS) desde <a href="server-config.html">Configuración del servidor</a>.
   </div>
 
   <h2>Páginas relacionadas</h2>

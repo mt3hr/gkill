@@ -15,11 +15,12 @@
 
   <h2>Integration Types</h2>
   <table>
-    <tr><th>Type</th><th>Description</th></tr>
-    <tr><td>Read-only</td><td>AI can view and search records only. Adding or modifying records is not allowed.</td></tr>
-    <tr><td>Write-only</td><td>AI can add, update, and delete records only.</td></tr>
-    <tr><td>Read &amp; Write</td><td>AI can view, add, update, and delete records.</td></tr>
+    <tr><th>Type</th><th>What it can do</th><th>File to run</th><th>Tools</th><th>Port (HTTP)</th></tr>
+    <tr><td>Read-only</td><td>View and search records only. Adding or modifying is not allowed</td><td>gkill-read-server.mjs</td><td>10</td><td>8808</td></tr>
+    <tr><td>Write-only</td><td>Add, update and delete records. It can also read storage names, tag names and board names</td><td>gkill-write-server.mjs</td><td>25</td><td>8809</td></tr>
+    <tr><td>Read &amp; Write</td><td>View, add, update and delete records</td><td>gkill-readwrite-server.mjs</td><td>30</td><td>8810</td></tr>
   </table>
+  <p>Every type includes two extra tools for reading records imported by plugins.</p>
 
   <h2>File Delivery</h2>
   <p>How file records (images, videos, documents) are shown to the AI switches automatically depending on the connection type.</p>
@@ -39,8 +40,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "npx",
-      "args": ["-y", "gkill-mcp-server"],
+      "command": "node",
+      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "your-user-id",
@@ -61,15 +62,21 @@ claude mcp add gkill \
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=your-user-id \
   --env GKILL_PASSWORD_SHA256=your-hash \
-  -- npx -y gkill-mcp-server</code></pre>
+  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
   <div class="tip">
-    <strong>Note:</strong> gkill-mcp-server is not yet published to npm. Until then, specify the bundled MCP server as the command (e.g. <code>-- node src/mcp/gkill-readwrite-server.mjs</code>).
+    <strong>Tip:</strong> Adjust the path above to wherever you placed the gkill source. To change the type, swap the file name for <code>gkill-write-server.mjs</code> or <code>gkill-readwrite-server.mjs</code>.
   </div>
 
-  <h2>Remote Access (Accessing from Outside Your Local Network)</h2>
-  <p>Make your gkill server accessible over the internet, then set <code>GKILL_BASE_URL</code> to its public address. Enabling TLS (HTTPS) is strongly recommended for security.</p>
+  <h2>Using it Remotely (HTTP Connection)</h2>
+  <p>If the AI is not on the same PC, you can have the MCP server itself listen over HTTP so an AI on the internet can connect. This mode authorises the connection with OAuth, so you do not need to expose gkill itself to the internet.</p>
+  <pre><code># Example: serve read &amp; write over HTTP
+MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+GKILL_BASE_URL=http://localhost:9999 \
+GKILL_USER=your-user-id \
+GKILL_PASSWORD_SHA256=your-hash \
+node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
   <div class="tip">
-    <strong>Tip:</strong> TLS settings can be configured from <a href="server-config.html">Server Settings</a>.
+    <strong>Tip:</strong> You can also publish the gkill server itself to the internet. In that case set <code>GKILL_BASE_URL</code> to its public address and enable TLS (HTTPS) from <a href="server-config.html">Server Settings</a>.
   </div>
 
   <h2>Related</h2>

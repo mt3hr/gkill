@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 86ファイル）に対する統合テストを含む。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装89ファイル（+ テスト3ファイル））に対する統合テストを含む。
 
 ## テストフレームワーク
 
@@ -41,12 +41,12 @@ Go `testing` パッケージ
   データ層を触るハンドラテストは両モードで回すこと。
 - **セッション管理**: ログイン、セッション検証、アカウント管理、セッション有効期限切れ検出（ERR000373）
 - **認証ミドルウェア**: `TestAuthMiddleware_RejectsInvalidSession` が
-  セッションを要求する全48エンドポイント × 空セッション / 不正セッション の
-  96サブテストを1つのフィクスチャで回す。
-  `wrapAuth` / `wrapAuthRepos` のミドルウェア経由のものと、
+  セッションを要求する全51エンドポイント × 空セッション / 不正セッション の
+  102サブテストを1つのフィクスチャで回す。
+  内訳は `wrapAuth` / `wrapAuthRepos` のミドルウェア経由が48、
   `wrapNoAuth` だがハンドラ自身が `getAccountFromSessionID` する
-  3エンドポイント（UploadFiles / UploadGPSLogFiles / BrowseZipContents）を
-  分けて扱い、いずれも `AccountSessionNotFoundError` を返すことまで確認する。
+  3エンドポイント（UploadFiles / UploadGPSLogFiles / BrowseZipContents）。
+  いずれも `AccountSessionNotFoundError` を返すことまで確認する。
 
   > 以前はエンドポイントごとに `Test*_InvalidSession` / `Test*_RequiresSession` を
   > 48本持っていたが、1本ごとにサーバとDAO一式をグローバルmutex下で起動していたため

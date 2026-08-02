@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、33ファイル200テスト）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、34 specファイル195テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -74,7 +74,7 @@ const record = await waitForKyouByText(page, label)
 
 ## テストファイル一覧
 
-### E2E テスト（33ファイル, 200テスト）
+### E2E テスト（34 specファイル, 195テスト宣言）
 
 #### ページ表示・ナビゲーション系（12ファイル）
 
@@ -124,7 +124,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/dialog-history.spec.ts` | ダイアログ履歴不変条件（×/Escape/ブラウザバックで閉じてもバックスタックに使用済みエントリが残らない、複数ダイアログを開いたまま画面遷移可能） |
 | `src/client/__tests__/e2e/edit-readonly-loading.spec.ts` | Edit系ダイアログの Loading 中 readonly 化とロード完了後の編集可能復帰（API 遅延注入で検証） |
 
-### Composable ユニットテスト（8ファイル）
+### Composable ユニットテスト（10ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -136,6 +136,8 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/unit/composables/query-composables.test.ts` | クエリ操作 Composable パターン |
 | `src/client/__tests__/unit/composables/save-clipboard-to-file-dialog.test.ts` | クリップボード保存ダイアログ Composable（初期状態、MIME判定、ファイルサイズ表示、load_clipboard エラーパス、save_or_confirm、useScopedCtrlVForClipboard キー処理） |
 | `src/client/__tests__/unit/composables/idf-kyou-view.test.ts` | IDFKyou ビュー Composable（Markdown リッチ表示、拡張子判定、相対リンクの対象記録解決） |
+| `src/client/__tests__/unit/composables/re-kyou-view.test.ts` | ReKyou ビュー Composable（元の記録の解決、リポスト自身のメニュー表示） |
+| `src/client/__tests__/unit/composables/mi-re-kyou-view.test.ts` | MiReKyou ビュー Composable（既存記録のタスク化。タイトルを持たず target_id 先の内容を表示する） |
 
 ### ルーターテスト
 
@@ -149,6 +151,9 @@ const record = await waitForKyouByText(page, label)
 - `src/client/__tests__/e2e/crud-helpers.ts` — KFTL送信、ページナビゲーション、コンテキストメニュー、FABクリック、フローティングダイアログ自動閉じ。固定sleepは持たず、`waitForKyouByText`（対象が見つかるまで待つ）/ `clickContextMenuItem`（項目が表示されるまで待つ）/ `clickDialogButton`（書き込みAPIの応答を待ち、errors が空かも見る）のようにweb-firstな待機で組んである
 - `src/client/__tests__/e2e/check-server.ts` — サーバヘルスチェック
 - `src/client/__tests__/e2e/run-e2e.mjs` — テストランナー（gkill_server自動起動・停止）
+- `src/client/__tests__/e2e/free-port.mjs` — OS から空きポートを採番（本番 gkill_server の :9999 と衝突させないため）
+- `src/client/__tests__/e2e/auth.setup.ts` — Playwright の setup プロジェクト。ログイン状態を作って保存する
+- `src/client/__tests__/e2e/global-setup.ts` / `global-teardown.ts` — テスト全体の前後処理
 
 ## 実行方法
 

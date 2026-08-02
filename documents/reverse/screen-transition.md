@@ -341,7 +341,7 @@ stateDiagram-v2
 | `help-dialog.vue` | 各ページのツールバー | ヘルプ表示 |
 | `tutorial-dialog.vue` | 各ページのツールバー | チュートリアル表示 |
 | `save-clipboard-to-file-dialog.vue` | Ctrl+V（rykv / mi / plaing / dashboard） | クリップボードの内容をファイルとして保存 |
-| `plugin-config-dialog.vue` | （なし） | プラグイン設定。**どこからも import されていない孤児コンポーネント**で、現状は到達経路が無い |
+| `plugin-config-dialog.vue` | `plugin-html-view.vue` | プラグイン設定。プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く |
 
 ### KFTL の未知タグ確認
 
