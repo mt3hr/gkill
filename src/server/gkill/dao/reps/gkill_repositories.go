@@ -1488,7 +1488,10 @@ loop:
 						matchTexts[text.ID] = text
 					}
 				} else {
-					matchTexts[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+					// キーはIDだけにする。ID+UpdateTimeにすると版ごとに別エントリになり、
+					// 上の「UpdateTimeが新しい方で上書き」がいつまでも成立しないため、
+					// 編集すると新旧が両方出て、削除しても削除前の版が残っていた。
+					matchTexts[text.ID] = text
 				}
 			}
 		default:
@@ -1567,7 +1570,8 @@ loop:
 						matchNotifications[notification.ID] = notification
 					}
 				} else {
-					matchNotifications[notification.ID+notification.UpdateTime.Format(sqlite3impl.TimeLayout)] = notification
+					// キーはIDだけにする。理由は GetTextsByTargetID と同じ。
+					matchNotifications[notification.ID] = notification
 				}
 			}
 		default:

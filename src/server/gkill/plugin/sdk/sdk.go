@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"time"
 )
@@ -67,8 +68,17 @@ func Run(h Handler) {
 		cfg = Config{}
 	}
 
-	encoder := json.NewEncoder(os.Stdout)
-	scanner := bufio.NewScanner(os.Stdin)
+	if runLoop(h, cfg, *pluginDir, *userID, os.Stdin, os.Stdout) {
+		os.Exit(0)
+	}
+}
+
+// runLoop は改行区切りJSONのメッセージループ本体。
+// Run から stdin/stdout を渡して使う。入出力を引数にしているのはテストのため。
+// close コマンドを受け取って終了した場合に true を返す（Run はこのとき os.Exit(0) する）。
+func runLoop(h Handler, cfg Config, pluginDir, userID string, in io.Reader, out io.Writer) bool {
+	encoder := json.NewEncoder(out)
+	scanner := bufio.NewScanner(in)
 	// 大きなレスポンスに備えてバッファを拡張
 	buf := make([]byte, 1024*1024)
 	scanner.Buffer(buf, len(buf))
@@ -91,7 +101,7 @@ func Run(h Handler) {
 			_ = encoder.Encode(resp)
 
 		case "close":
-			os.Exit(0)
+			return true
 
 		case "get_rep_name":
 			resp := pluginResponse{ID: req.ID, RepName: h.RepName}
@@ -103,7 +113,7 @@ func Run(h Handler) {
 				continue
 			}
 			q := pluginQueryToQuery(req.Query)
-			kyous, err := h.FindKyous(newCtx(*userID), q, cfg)
+			kyous, err := h.FindKyous(newCtx(userID), q, cfg)
 			if err != nil {
 				writeError(encoder, req.ID, err.Error())
 				continue
@@ -113,7 +123,7 @@ func Run(h Handler) {
 
 		case "get_kyou":
 			if h.GetKyou != nil {
-				kyou, err := h.GetKyou(newCtx(*userID), req.KyouID, cfg)
+				kyou, err := h.GetKyou(newCtx(userID), req.KyouID, cfg)
 				if err != nil {
 					writeError(encoder, req.ID, err.Error())
 					continue
@@ -122,7 +132,7 @@ func Run(h Handler) {
 				_ = encoder.Encode(resp)
 			} else if h.FindKyous != nil {
 				// フォールバック: FindKyousで代替
-				kyous, err := h.FindKyous(newCtx(*userID), Query{}, cfg)
+				kyous, err := h.FindKyous(newCtx(userID), Query{}, cfg)
 				if err != nil {
 					writeError(encoder, req.ID, err.Error())
 					continue
@@ -142,7 +152,7 @@ func Run(h Handler) {
 
 		case "get_content_html":
 			if h.GetContentHTML != nil {
-				html, err := h.GetContentHTML(newCtx(*userID), req.KyouID, cfg)
+				html, err := h.GetContentHTML(newCtx(userID), req.KyouID, cfg)
 				if err != nil {
 					writeError(encoder, req.ID, err.Error())
 					continue
@@ -158,7 +168,7 @@ func Run(h Handler) {
 
 		case "get_config_html":
 			if h.GetConfigHTML != nil {
-				html, err := h.GetConfigHTML(newCtx(*userID), cfg)
+				html, err := h.GetConfigHTML(newCtx(userID), cfg)
 				if err != nil {
 					writeError(encoder, req.ID, err.Error())
 					continue
@@ -173,12 +183,12 @@ func Run(h Handler) {
 
 		case "post_config":
 			if h.PostConfig != nil {
-				newCfg, err := h.PostConfig(newCtx(*userID), req.FormData, cfg)
+				newCfg, err := h.PostConfig(newCtx(userID), req.FormData, cfg)
 				if err != nil {
 					writeError(encoder, req.ID, err.Error())
 					continue
 				}
-				if err := SaveConfig(*pluginDir, newCfg); err != nil {
+				if err := SaveConfig(pluginDir, newCfg); err != nil {
 					writeError(encoder, req.ID, err.Error())
 					continue
 				}
@@ -188,7 +198,7 @@ func Run(h Handler) {
 				for k, v := range req.FormData {
 					cfg[k] = v
 				}
-				if err := SaveConfig(*pluginDir, cfg); err != nil {
+				if err := SaveConfig(pluginDir, cfg); err != nil {
 					writeError(encoder, req.ID, err.Error())
 					continue
 				}
@@ -200,6 +210,8 @@ func Run(h Handler) {
 			writeError(encoder, req.ID, fmt.Sprintf("unknown command: %s", req.Command))
 		}
 	}
+	// stdinが閉じられてループを抜けた場合。closeコマンドではないので false。
+	return false
 }
 
 func newCtx(userID string) context.Context {

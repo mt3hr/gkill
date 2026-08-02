@@ -271,11 +271,6 @@ export class GkillAPI {
         update_application_config_address: string
         upload_files_address: string
         upload_gpslog_files_address: string
-        update_tag_struct_address: string
-        update_rep_struct_address: string
-        update_device_struct_address: string
-        update_rep_type_struct_address: string
-        update_kftl_template_address: string
         update_account_status_address: string
         update_user_reps_address: string
         update_server_configs_address: string
@@ -462,11 +457,6 @@ export class GkillAPI {
                 this.upload_files_address = "/api/upload_files"
                 this.upload_gpslog_files_address = "/api/upload_gpslog_files"
                 this.update_application_config_address = "/api/update_application_config"
-                this.update_tag_struct_address = "/api/update_tag_struct"
-                this.update_rep_struct_address = "/api/update_rep_struct"
-                this.update_device_struct_address = "/api/update_device_struct"
-                this.update_rep_type_struct_address = "/api/update_rep_type_struct"
-                this.update_kftl_template_address = "/api/update_kftl_template"
                 this.update_account_status_address = "/api/update_account_status"
                 this.update_user_reps_address = "/api/update_user_reps"
                 this.update_server_configs_address = "/api/update_server_configs"

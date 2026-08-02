@@ -71,13 +71,18 @@ export function useSharedPage() {
             application_config.value = (await gkill_api_for_share.value.get_application_config(new GetApplicationConfigRequest())).application_config
             share_title.value = res.title
             view_type.value = res.view_type
-            is_loading.value = false
         } catch (e) {
             console.error(e)
             const error = new GkillError()
             error.error_code = GkillErrorCodes.failed_shared_kyous
             error.error_message = i18n.global.t("FAILED_LOAD_MESSAGE")
             write_errors([error])
+        } finally {
+            // 成功・失敗どちらでも読み込み中を解除する。
+            // 以前は成功パスの末尾でしか false にしていなかったため、
+            // 無効・失効した共有IDを開くとオーバーレイが出たままになり、
+            // 出したエラーもオーバーレイの裏に隠れて利用者に伝わらなかった。
+            is_loading.value = false
         }
     }
 

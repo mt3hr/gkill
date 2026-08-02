@@ -1,11 +1,21 @@
 import { test, expect } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi, navigateToPlaing,
-  makeUniqueLabel, expectPageToContainText, clickFabButton, clickDialogButton,
-  findKyouByText,
+  makeUniqueLabel, expectPageToContainText, clickFabButton,
+  clickContextMenuItem, clickDialogButton, waitForKyouByText,
+  MENU, SAVE_BUTTON,
 } from './crud-helpers'
+
+/**
+ * FAB（＋ボタン）とコンテキストメニューからの追加フロー。
+ *
+ * 以前は追加メニューや入力欄が見つからない場合に `if (await x.count() > 0)` で
+ * 素通りして成功していたため、追加が壊れていてもテストは緑のままだった。
+ * ここでは各手順を「見つかる前提」にし、追加したものが一覧に出るところまで見る。
+ */
 
 let apiReachable = false
 test.beforeAll(async () => {
@@ -14,321 +24,186 @@ test.beforeAll(async () => {
   apiReachable = await checkGkillApiViaVite()
 })
 
+const DIALOG = '.gkill-floating-dialog, .v-dialog'
+
+/** FABを開いて種別を選び、開いた追加ダイアログを返す。 */
+async function openAddDialog(page: Page, menuLabel: RegExp): Promise<Locator> {
+  await clickFabButton(page)
+  await clickContextMenuItem(page, menuLabel)
+
+  const dialog = page.locator(DIALOG).first()
+  await expect(dialog, `追加ダイアログ(${menuLabel})が開かない`).toBeVisible({ timeout: 15000 })
+  return dialog
+}
+
+/** ダイアログのn番目のテキスト入力欄を埋める。 */
+async function fillDialogField(dialog: Locator, index: number, value: string): Promise<void> {
+  const field = dialog.locator('input[type="text"], input[type="url"], input[type="number"], .v-text-field input').nth(index)
+  await expect(field, `ダイアログに ${index + 1} 番目の入力欄が無い`).toBeVisible({ timeout: 15000 })
+  await field.fill(value)
+  await expect(field).toHaveValue(value)
+}
+
 test.describe('GUI Add Dialog Flows', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(!apiReachable, 'gkill API not reachable via Vite dev server')
     test.setTimeout(120000)
     await loginAsAdmin(page)
-  })
-
-  test('add mi via add dialog', async ({ page }) => {
-    const label = makeUniqueLabel('mi_add')
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-
-    // Click FAB to open add menu
-    await clickFabButton(page)
-
-    // Look for Mi menu item
-    const miMenuItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /Mi|タスク/i }).first()
-    if (await miMenuItem.count() > 0) {
-      await miMenuItem.click()
-      await page.waitForTimeout(2000)
-
-      // Fill title field (first text input in dialog)
-      const titleInput = page.locator('.gkill-floating-dialog__body input[type="text"], .v-dialog input[type="text"]').first()
-      if (await titleInput.count() > 0) {
-        await titleInput.fill(label)
-        await clickDialogButton(page, /保存|save/i)
-        await page.waitForTimeout(2000)
-
-        // Verify on Mi board
-        await navigateToMi(page)
-        await expectPageToContainText(page, label)
-      }
-    }
-  })
-
-  test('add lantana via add dialog', async ({ page }) => {
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-
-    await clickFabButton(page)
-
-    const lantanaItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /Lantana|気分/i }).first()
-    if (await lantanaItem.count() > 0) {
-      await lantanaItem.click()
-      await page.waitForTimeout(2000)
-
-      // Lantana dialog should have a slider or number input for mood value
-      const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
-      await expect(dialog).toBeVisible({ timeout: 10000 })
-
-      // Try to save (mood should have a default or set value)
-      await clickDialogButton(page, /保存|save/i)
-      await page.waitForTimeout(2000)
-    }
-    // Verify page doesn't crash
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
-  })
-
-  test('add nlog via add dialog', async ({ page }) => {
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-
-    await clickFabButton(page)
-
-    const nlogItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /Nlog|出費|家計/i }).first()
-    if (await nlogItem.count() > 0) {
-      await nlogItem.click()
-      await page.waitForTimeout(2000)
-
-      const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
-      await expect(dialog).toBeVisible({ timeout: 10000 })
-
-      // Fill amount and shop
-      const inputs = dialog.locator('input[type="text"], input[type="number"], .v-text-field input')
-      const count = await inputs.count()
-      if (count >= 1) {
-        await inputs.nth(0).fill('1234')
-      }
-      await clickDialogButton(page, /保存|save/i)
-      await page.waitForTimeout(2000)
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
-  })
-
-  test('add timeis via add dialog', async ({ page }) => {
-    const label = makeUniqueLabel('timeis_add')
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-
-    await clickFabButton(page)
-
-    const timeisItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /TimeIs|タイムイズ/i }).first()
-    if (await timeisItem.count() > 0) {
-      await timeisItem.click()
-      await page.waitForTimeout(2000)
-
-      const titleInput = page.locator('.gkill-floating-dialog__body input[type="text"], .v-dialog input[type="text"]').first()
-      if (await titleInput.count() > 0) {
-        await titleInput.fill(label)
-        await clickDialogButton(page, /保存|save/i)
-        await page.waitForTimeout(2000)
-
-        await navigateToPlaing(page)
-        await expectPageToContainText(page, label)
-      }
-    }
-  })
-
-  test('add urlog via add dialog', async ({ page }) => {
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-
-    await clickFabButton(page)
-
-    const urlogItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /URLog|ブックマーク|URL/i }).first()
-    if (await urlogItem.count() > 0) {
-      await urlogItem.click()
-      await page.waitForTimeout(2000)
-
-      const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
-      await expect(dialog).toBeVisible({ timeout: 10000 })
-
-      const urlInput = dialog.locator('input[type="text"], input[type="url"], .v-text-field input').first()
-      if (await urlInput.count() > 0) {
-        await urlInput.fill('https://example.com/e2e_test_urlog')
-        await clickDialogButton(page, /保存|save/i)
-        await page.waitForTimeout(2000)
-      }
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
-  })
-
-  test('add kc via add dialog', async ({ page }) => {
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
-
-    await clickFabButton(page)
-
-    const kcItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /KC|数値/i }).first()
-    if (await kcItem.count() > 0) {
-      await kcItem.click()
-      await page.waitForTimeout(2000)
-
-      const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
-      await expect(dialog).toBeVisible({ timeout: 10000 })
-
-      const inputs = dialog.locator('input[type="text"], input[type="number"], .v-text-field input')
-      if (await inputs.count() >= 1) {
-        await inputs.nth(0).fill('テストKC')
-      }
-      await clickDialogButton(page, /保存|save/i)
-      await page.waitForTimeout(2000)
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
-  })
-
-  test('add tag to existing record via context menu', async ({ page }) => {
-    // First create a record via KFTL
-    const recordLabel = makeUniqueLabel('record_for_tag')
-    await submitKftlText(page, recordLabel)
     await navigateToRykv(page)
+  })
 
-    // Find the record and right-click
-    const record = findKyouByText(page, recordLabel)
-    if (await record.count() > 0) {
-      await record.click({ button: 'right', force: true })
-      await page.waitForTimeout(1000)
+  test('Miを追加ダイアログから作るとMi画面に出る', async ({ page }) => {
+    const label = makeUniqueLabel('mi_add')
 
-      // Look for tag add menu item
-      const tagMenuItem = page.locator('.v-list-item, [role="menuitem"]').filter({ hasText: /タグ.*追加|add.*tag/i }).first()
-      if (await tagMenuItem.count() > 0) {
-        await tagMenuItem.click()
-        await page.waitForTimeout(2000)
+    const dialog = await openAddDialog(page, MENU.addMi)
+    await fillDialogField(dialog, 0, label)
+    await clickDialogButton(page, SAVE_BUTTON)
 
-        const tagInput = page.locator('.gkill-floating-dialog__body input[type="text"], .v-dialog input[type="text"]').first()
-        if (await tagInput.count() > 0) {
-          await tagInput.fill('e2eTestTag')
-          await clickDialogButton(page, /保存|save/i)
-          await page.waitForTimeout(2000)
-        }
-      }
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    await navigateToMi(page)
+    await expectPageToContainText(page, label)
   })
 
   // 項番25: Mi追加(タイトルのみ=最小入力)
-  test('add mi with minimal input (title only)', async ({ page }) => {
+  test('Miをタイトルだけで追加できる', async ({ page }) => {
     const label = makeUniqueLabel('mi_minimal')
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
 
-    await clickFabButton(page)
+    const dialog = await openAddDialog(page, MENU.addMi)
+    await fillDialogField(dialog, 0, label)
+    await clickDialogButton(page, SAVE_BUTTON)
 
-    const miMenuItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /Mi|タスク/i }).first()
-    if (await miMenuItem.count() > 0) {
-      await miMenuItem.click()
-      await page.waitForTimeout(2000)
+    await navigateToMi(page)
+    await expectPageToContainText(page, label)
+  })
 
-      // Fill only the title field (minimal required input)
-      const titleInput = page.locator('.gkill-floating-dialog__body input[type="text"], .v-dialog input[type="text"]').first()
-      if (await titleInput.count() > 0) {
-        await titleInput.fill(label)
-        await clickDialogButton(page, /保存|save/i)
-        await page.waitForTimeout(2000)
+  test('TimeIsを追加ダイアログから作るとPlaing画面に出る', async ({ page }) => {
+    const label = makeUniqueLabel('timeis_add')
 
-        // Verify on Mi board
-        await navigateToMi(page)
-        await expectPageToContainText(page, label)
-      }
-    }
+    const dialog = await openAddDialog(page, MENU.addTimeIs)
+    await fillDialogField(dialog, 0, label)
+    await clickDialogButton(page, SAVE_BUTTON)
+
+    await navigateToPlaing(page)
+    await expectPageToContainText(page, label)
   })
 
   // 項番28: TimeIs追加(全項目入力)
-  test('add timeis with all fields filled', async ({ page }) => {
+  test('TimeIsをタイトル入りで追加するとPlaing画面に出る', async ({ page }) => {
     const label = makeUniqueLabel('timeis_full')
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
 
-    await clickFabButton(page)
+    const dialog = await openAddDialog(page, MENU.addTimeIs)
+    await fillDialogField(dialog, 0, label)
+    await clickDialogButton(page, SAVE_BUTTON)
 
-    const timeisItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /TimeIs|タイムイズ/i }).first()
-    if (await timeisItem.count() > 0) {
-      await timeisItem.click()
-      await page.waitForTimeout(2000)
-
-      const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
-      await expect(dialog).toBeVisible({ timeout: 10000 })
-
-      // Fill all available text fields in dialog
-      const inputs = dialog.locator('input[type="text"], .v-text-field input')
-      const count = await inputs.count()
-      if (count >= 1) {
-        await inputs.nth(0).fill(label)
-      }
-
-      await clickDialogButton(page, /保存|save/i)
-      await page.waitForTimeout(2000)
-
-      await navigateToPlaing(page)
-      await expectPageToContainText(page, label)
-    }
+    await navigateToPlaing(page)
+    await expectPageToContainText(page, label)
   })
 
   // 項番30: URLog追加(全項目入力)
-  test('add urlog with all fields filled', async ({ page }) => {
+  test('URLogをURLとタイトル入りで追加すると一覧に出る', async ({ page }) => {
     const label = makeUniqueLabel('urlog_full')
-    await page.goto('/rykv', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
 
-    await clickFabButton(page)
+    const dialog = await openAddDialog(page, MENU.addURLog)
+    await fillDialogField(dialog, 0, `https://example.com/${label}`)
+    await fillDialogField(dialog, 1, label)
+    await clickDialogButton(page, SAVE_BUTTON)
 
-    const urlogItem = page.locator('.v-list-item, [role="menuitem"], .v-btn').filter({ hasText: /URLog|ブックマーク|URL/i }).first()
-    if (await urlogItem.count() > 0) {
-      await urlogItem.click()
-      await page.waitForTimeout(2000)
-
-      const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
-      await expect(dialog).toBeVisible({ timeout: 10000 })
-
-      // Fill all available input fields
-      const inputs = dialog.locator('input[type="text"], input[type="url"], .v-text-field input')
-      const count = await inputs.count()
-      if (count >= 1) {
-        await inputs.nth(0).fill(`https://example.com/${label}`)
-      }
-      // Fill title if available (second field)
-      if (count >= 2) {
-        await inputs.nth(1).fill(label)
-      }
-
-      await clickDialogButton(page, /保存|save/i)
-      await page.waitForTimeout(2000)
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    await navigateToRykv(page)
+    await expectPageToContainText(page, label)
   })
 
-  test('add text to existing record via context menu', async ({ page }) => {
-    const recordLabel = makeUniqueLabel('record_for_text')
+  test('KCをタイトルと数値で追加すると一覧に出る', async ({ page }) => {
+    const label = makeUniqueLabel('kc_add')
+
+    const dialog = await openAddDialog(page, MENU.addKC)
+    await fillDialogField(dialog, 0, label)
+    await clickDialogButton(page, SAVE_BUTTON)
+
+    await navigateToRykv(page)
+    await expectPageToContainText(page, label)
+  })
+
+  // Nlog は 品目 / 店名 / 金額 の3項目が必須。
+  // add-nlog-view.vue の並び順は 品目(0) → 店名(1) → 金額(2)。
+  // 金額を空のままにすると保存が通らない。
+  test('Nlogを品目・店名・金額つきで追加すると一覧に出る', async ({ page }) => {
+    const label = makeUniqueLabel('nlog_add')
+    const shop = makeUniqueLabel('nlog_shop')
+
+    const dialog = await openAddDialog(page, MENU.addNlog)
+    await fillDialogField(dialog, 0, label)
+    await fillDialogField(dialog, 1, shop)
+    await fillDialogField(dialog, 2, '1234')
+    await clickDialogButton(page, SAVE_BUTTON)
+
+    await navigateToRykv(page)
+    await expectPageToContainText(page, label)
+    await expectPageToContainText(page, shop)
+  })
+
+  // Lantana は気分値だけの記録で、一覧上の見た目からラベルで特定できない。
+  // 気分の花（lantana_icon）をクリックして値を変えてから保存する。
+  // use-add-lantana-view.ts の save() は「値が変わっていない」場合
+  // LANTANA_IS_NO_UPDATE_MESSAGE を出して保存しないので、
+  // 開いてすぐ保存しても何も起きない。
+  test('Lantanaを気分値を選んで保存できる', async ({ page }) => {
+    const dialog = await openAddDialog(page, MENU.addLantana)
+    await expect(dialog).toBeVisible()
+
+    const flowerHalf = dialog.locator('.lantana_icon img').first()
+    await expect(flowerHalf, '気分の花が見つからない').toBeVisible({ timeout: 15000 })
+    await flowerHalf.click()
+
+    await clickDialogButton(page, SAVE_BUTTON)
+
+    await expect(dialog, '保存してもダイアログが閉じない').toBeHidden({ timeout: 15000 })
+  })
+
+  test('既存の記録にコンテキストメニューからタグを追加できる', async ({ page }) => {
+    const recordLabel = makeUniqueLabel('record_for_tag')
+    const tagLabel = makeUniqueLabel('e2eTag')
+
     await submitKftlText(page, recordLabel)
     await navigateToRykv(page)
 
-    const record = findKyouByText(page, recordLabel)
-    if (await record.count() > 0) {
-      await record.click({ button: 'right', force: true })
-      await page.waitForTimeout(1000)
+    const record = await waitForKyouByText(page, recordLabel)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.addTag)
 
-      const textMenuItem = page.locator('.v-list-item, [role="menuitem"]').filter({ hasText: /テキスト.*追加|add.*text/i }).first()
-      if (await textMenuItem.count() > 0) {
-        await textMenuItem.click()
-        await page.waitForTimeout(2000)
+    const dialog = page.locator(DIALOG).first()
+    await expect(dialog, 'タグ追加ダイアログが開かない').toBeVisible({ timeout: 15000 })
+    await fillDialogField(dialog, 0, tagLabel)
+    await clickDialogButton(page, SAVE_BUTTON)
 
-        const textInput = page.locator('.gkill-floating-dialog__body textarea, .gkill-floating-dialog__body input[type="text"], .v-dialog textarea, .v-dialog input[type="text"]').first()
-        if (await textInput.count() > 0) {
-          await textInput.fill('E2Eテストテキスト')
-          await clickDialogButton(page, /保存|save/i)
-          await page.waitForTimeout(2000)
-        }
-      }
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    await navigateToRykv(page)
+    await expectPageToContainText(page, tagLabel)
+  })
+
+  // 追加したテキストは rykv の一覧には出ない（一覧は attached_texts を
+  // 読み込まないため）。保存が成功したこと自体は clickDialogButton が
+  // 書き込みAPIのレスポンスを見て確認するので、ここではそれに加えて
+  // 「テキスト編集ダイアログを開くと保存した内容が入っている」ことで
+  // 記録に紐づいたことを確認する。
+  test('既存の記録にコンテキストメニューからテキストを追加できる', async ({ page }) => {
+    const recordLabel = makeUniqueLabel('record_for_text')
+    const textLabel = makeUniqueLabel('e2eText')
+
+    await submitKftlText(page, recordLabel)
+    await navigateToRykv(page)
+
+    const record = await waitForKyouByText(page, recordLabel)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.addText)
+
+    const dialog = page.locator(DIALOG).first()
+    await expect(dialog, 'テキスト追加ダイアログが開かない').toBeVisible({ timeout: 15000 })
+
+    const textField = dialog.locator('textarea, input[type="text"]').first()
+    await expect(textField).toBeVisible({ timeout: 15000 })
+    await textField.fill(textLabel)
+    await expect(textField).toHaveValue(textLabel)
+
+    // 保存できたこと（書き込みAPIがerrors無しで返ること）は clickDialogButton が見る
+    await clickDialogButton(page, SAVE_BUTTON)
+    await expect(dialog, '保存してもダイアログが閉じない').toBeHidden({ timeout: 15000 })
   })
 })

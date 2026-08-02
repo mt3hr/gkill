@@ -30,7 +30,7 @@ export class GitCommitLog extends InfoBase {
 
     async load_attached_datas(): Promise<Array<GkillError>> {
         try {
-            return this.load_attached_histories()
+            return await this.load_attached_histories()
         } catch (err: unknown) {
             // abortは握りつぶす
             if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {

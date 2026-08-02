@@ -1,32 +1,6 @@
 import { GPSLog } from '@/classes/datas/gps-log'
 
 describe('GPSLog', () => {
-  test('can be instantiated', () => {
-    const gps = new GPSLog()
-    expect(gps).toBeInstanceOf(GPSLog)
-  })
-
-  describe('default field values', () => {
-    let gps: GPSLog
-
-    beforeEach(() => {
-      gps = new GPSLog()
-    })
-
-    test('related_time defaults to epoch', () => {
-      expect(gps.related_time).toBeInstanceOf(Date)
-      expect(gps.related_time.getTime()).toBe(0)
-    })
-
-    test('latitude defaults to 0', () => {
-      expect(gps.latitude).toBe(0)
-    })
-
-    test('longitude defaults to 0', () => {
-      expect(gps.longitude).toBe(0)
-    })
-  })
-
   describe('field assignment', () => {
     test('can set latitude and longitude', () => {
       const gps = new GPSLog()

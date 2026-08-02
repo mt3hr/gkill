@@ -7,15 +7,16 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 const CURRENT_SCHEMA_VERSION_NOTIFICATION_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
@@ -474,7 +475,11 @@ WHERE
 	if len(notifications) == 0 {
 		return nil, nil
 	}
-	return &notifications[0], nil
+	// ORDER BYを付けていないので、UpdateTimeが最新の行を明示的に選ぶ
+	latestNotification := slices.MaxFunc(notifications, func(a, b Notification) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestNotification, nil
 }
 
 func (n *notificationRepositorySQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]Notification, error) {
