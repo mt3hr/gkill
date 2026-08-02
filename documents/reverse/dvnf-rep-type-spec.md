@@ -6,8 +6,8 @@ DVNF（DeVice Name Folder Naming Framework）は、gkillで使用されるファ
 
 ### ソースコード
 
-- パッケージ: `gkill/dvnf/dvnf.go`
-- コマンド: `gkill/dvnf/cmd/`
+- パッケージ: `src/server/gkill/dvnf/dvnf.go`
+- コマンド: `src/server/gkill/dvnf/cmd/`
 
 ## 2. DVNF命名規則
 
@@ -82,11 +82,34 @@ backup_server_2026
 
 `gkill dvnf` サブコマンドで以下の操作が可能です。
 
-| コマンド | 説明 |
+| コマンド | 引数 | 説明 |
+|---|---|---|
+| `dvnf get [dvnfPath]` | 0〜1 | **dvnfディレクトリのパスを取得する**。引数を省略した場合は dvnf のルートフォルダを返す |
+| `dvnf move src target` | 2 | ファイルやディレクトリを **dvnfディレクトリへ移動する**。移動元が存在しないときは何もせず、移動先の親ディレクトリが無ければ作成する |
+| `dvnf copy src target` | 2 | ファイルやディレクトリを **dvnfディレクトリへコピーする** |
+
+> 3コマンドとも「dvnfディレクトリを起点に」動く。ファイルを検索して一覧するコマンドではない点に注意。
+
+#### 共通（永続）フラグ
+
+| フラグ | 短縮 | 既定 | 説明 |
+|---|---|---|---|
+| `--new` | `-n` | `false` | 新たに dvnf を作成する |
+| `--auto_create` | — | `true` | 1つも存在しなかったときに自動で作成する |
+| `--device` | — | （この端末名） | dvnf名に使う端末名。**生成する名前の端末部分だけ**を差し替える（dvnfのルートはこの端末のものを使う）。他の端末で集めたものを端末名を保ったまま取り込むときに指定する |
+
+> **`--device` が必須になるケース:** この端末に対応する有効な `ServerConfig` が存在しない場合、
+> `--device` を指定しないとコマンドは
+> `this device has no enabled server config. specify --device` で終了する
+> （`dvnf/cmd/dvnf_cmd.go:60-68`）。このとき dvnf のルートは `$HOME/{device}`、TimeLength は 8 になる。
+
+#### コマンド別フラグ
+
+| コマンド | フラグ |
 |---|---|
-| `dvnf get` | 条件に一致するDVNFファイル/ディレクトリの一覧取得 |
-| `dvnf copy` | DVNFファイルのコピー |
-| `dvnf move` | DVNFファイルの移動 |
+| `get` | `--all`/`-a`（最新だけでなくマッチする全 dvnf を取得）、`--create_sub_directory`/`-s`、`--ext`/`-e`（既定 `true`） |
+| `copy` | `--ignore`/`-i`、`--override`/`-w`（既定 `true`）、`--fast`（既定 `true`）、`--file`/`-f`、`--ext`/`-e`、`--copy_lastmod`（既定 `true`）、`--robo` |
+| `move` | `--ignore`/`-i`、`--delete_directory`/`-d`、`--override`/`-w`、`--file`/`-f`、`--ext`/`-e`、`--robo` |
 
 ## 4. RepType（リポジトリ種別）
 
@@ -114,7 +137,7 @@ type Repository struct {
 
 ### RepType一覧
 
-`gkill_dao_manager.go`の`GetRepositories`メソッド内のswitch文で定義されている全14種のRepTypeです。
+`gkill_dao_manager.go`の`GetRepositories`メソッド内のswitch文で定義されている全15種のRepTypeです。
 
 | RepType | データ型 | リポジトリインターフェース | 説明 |
 |---|---|---|---|
@@ -129,6 +152,7 @@ type Repository struct {
 | `text` | テキスト | `TextRepository` | 記録への補足テキスト |
 | `notification` | 通知 | `NotificationRepository` | プッシュ通知設定 |
 | `rekyou` | リポスト | `ReKyouRepository` | 既存記録の再投稿 |
+| `mirekyou` | タスク化した記録 | `MiReKyouRepository` | 既存記録をタスク化したもの（`target_id` + Mi のスケジュール項目。タイトルは持たない） |
 | `directory` | ファイル | `IDFKyouRepository` | ファイル管理（IDF対応） |
 | `gpslog` | GPS | `GPSLogRepository`（GPXDirRep） | GPSログ（GPXファイル） |
 | `git_commit_log` | Gitコミット | `GitCommitLogRepository`（GitRep） | Gitリポジトリのコミット履歴 |
@@ -136,6 +160,8 @@ type Repository struct {
 ### RepType → Repository マッピング
 
 `GkillDAOManager.GetRepositories()`内のswitch文により、RepTypeに応じた適切なリポジトリ実装が生成されます。
+
+> **プラグインリポジトリは switch 文の外で生成されます。** `RepType` を持たず、リポジトリ定義（`user_config.Repository`）の行も持ちません。`PluginManager.DiscoverPlugins()` が `$GKILL_HOME/plugins/{userID}/` を走査し、`manifest.json` を持つディレクトリを `PluginRepository` として登録して `repositories.PluginReps` と `repositories.Reps` の両方に追加します（`gkill_dao_manager.go:1081-1087`）。詳細は [plugin-system.md](plugin-system.md) を参照。
 
 ```mermaid
 graph LR
@@ -159,7 +185,7 @@ graph LR
 
 ### 実装バリエーションの選択ロジック
 
-各RepType（`directory`, `gpslog`, `git_commit_log`を除く）は以下の条件で実装が選択されます。
+各RepType（`directory`, `gpslog`, `git_commit_log` と、RepType を持たないプラグインを除く）は以下の条件で実装が選択されます。
 
 1. **書き込み用（`UseToWrite=true`）**: 常に通常の`SQLite3Impl`を使用
 2. **ローカルキャッシュ（`CacheRepsLocalStorage=true`）**: `SQLite3ImplLocalCached`を使用
@@ -188,7 +214,7 @@ graph LR
 
 ## 5. リポジトリの4層パターン
 
-RepTypeごとに以下の4層でリポジトリが実装されています（`directory`, `gpslog`, `git_commit_log`を除く）。
+RepTypeごとに以下の4層でリポジトリが実装されています（`directory`, `gpslog`, `git_commit_log` と、RepType を持たないプラグインを除く）。
 
 | 層 | ファイル名パターン | 役割 |
 |---|---|---|
@@ -282,9 +308,16 @@ RykvPageのフローティングアクションボタン（FAB）を押すと表
 | ファイルアップロード | IDFKyou | `directory` | ファイル選択ダイアログ |
 | GPSログアップロード | GPSLog | `gpslog` | GPXファイル選択 |
 
+既存のKyouからは、コンテキストメニュー経由で MiReKyou（`mirekyou`）を作成できる。
+FABからの新規作成ではなく「既存の記録をタスク化する」操作なので、上表には含まれない。
+
 ### コンテキストメニュー（編集操作）とRepTypeの対応
 
 Kyouの長押し/右クリックで表示されるコンテキストメニューの編集項目は、`data_type`フィールド（=RepType）に応じて動的に表示/非表示が切り替わる：
+
+全データ型に共通の項目として、**タスク化（MiReKyou追加）**、**内容コピー**、**IDコピー** がある。
+また `application_config.session_is_local` が真のときのみ **フォルダを開く / ファイルを開く** が表示される。
+下表は、それらに加えてデータ型ごとに変わる部分を示す。
 
 | data_type | 表示される操作 |
 |---|---|
@@ -293,10 +326,16 @@ Kyouの長押し/右クリックで表示されるコンテキストメニュー
 | `urlog` | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認、URLを開く |
 | `timeis` | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認、終了（進行中の場合） |
 | `mi` | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認 |
+| `mirekyou_*` | 編集、削除、タグ追加、テキスト追加、通知追加、履歴確認（対象Kyouも併せて描画される） |
 | `directory`（IDFKyou） | 編集、削除、タグ追加、テキスト追加、通知追加、リポスト、履歴確認、ファイルを開く、ZIPを閲覧（is_zip=true時） |
 | `gpslog` | 削除、タグ追加、テキスト追加、通知追加（編集なし） |
 | `git_commit_log` | タグ追加、テキスト追加、通知追加（編集なし） |
 | `rekyou` | 削除のみ（元のKyouをRykv上でフォロー表示） |
+| プラグイン（`claude_conversation` 等） | タグ追加、テキスト追加、通知追加、内容コピー、IDコピー（編集・削除なし。`plugin-html-context-menu.vue`） |
+
+> **`mirekyou` の data_type は前方一致に注意。** 実際の値は `mirekyou_create` / `mirekyou_check` /
+> `mirekyou_limit` / `mirekyou_start` / `mirekyou_end` の5種で、いずれも `mi` で始まる。
+> プレフィックスで判定する箇所では **`mirekyou` を `mi` より先に**評価しないと Mi として誤判定される。
 
 ## 10. 特殊RepTypeのディレクトリレイアウト
 
@@ -352,14 +391,23 @@ DVNFコマンドでGPXファイルをアップロード後、`/api/upload_gpslog
 `gkill dvnf` サブコマンドの実際の使用例：
 
 ```bash
-# directory型リポジトリ内のファイル一覧を取得
-gkill dvnf get --directory /home/user/photos --name photo --device desktop --time-length 8 --extension .jpg
+# dvnfのルートフォルダのパスを取得する
+gkill_server dvnf get
 
-# DVNFファイルのコピー（タイムスタンプを現在日時に更新）
-gkill dvnf copy --src /home/user/photos/photo_desktop_20260101.jpg --dest-dir /home/user/photos_backup
+# dvnf配下の photos ディレクトリのパスを取得する（無ければ自動作成）
+gkill_server dvnf get photos
 
-# DVNFファイルの移動（アーカイブ）
-gkill dvnf move --src /home/user/photos/photo_desktop_20260101.jpg --dest-dir /home/user/archive
+# マッチするすべてのdvnfを取得する（既定は最新のみ）
+gkill_server dvnf get photos --all
+
+# ファイルをdvnfディレクトリへコピーする
+gkill_server dvnf copy /home/user/photo.jpg photos
+
+# ファイルをdvnfディレクトリへ移動し、空になった移動元ディレクトリを削除する
+gkill_server dvnf move /home/user/photo.jpg photos --delete_directory
+
+# 他の端末で集めたものを、端末名を保ったままこの端末のdvnfへ取り込む
+gkill_server dvnf copy /mnt/share/photo.jpg photos --device desktop
 ```
 
 ## 関連資料

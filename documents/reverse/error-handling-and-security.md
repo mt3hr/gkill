@@ -28,7 +28,12 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **388件** のエラーコードが存在する（ERR000001〜ERR000389、ERR000243は欠番）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **400件** のエラーコードが存在する（ERR000001〜ERR000401、ERR000243は欠番）。
+
+```bash
+# 数え直すとき
+grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | wc -l
+```
 
 #### 認証系（ERR000001〜ERR000017）
 
@@ -63,6 +68,7 @@ type GkillMessage struct {
 | `ERR000385`〜`ERR000386` | InvalidGetIDFKyouByRelativePathRequestDataError / GetIDFKyouByRelativePathError | Markdown相対リンク解決（IDFKyou相対パス解決）のパース/処理エラー |
 | `ERR000387`〜`ERR000388` | InvalidGetIDFFilePathRequestDataError / GetIDFFilePathError | IDFファイル絶対パス解決のパース/処理エラー |
 | `ERR000389` | GetIDFFilePathNotLocalRequestError | IDFファイル絶対パス解決を localhost 以外からリクエストした場合の拒否エラー |
+| `ERR000390`〜`ERR000401` | InvalidAddMiReKyouRequestDataError 〜 CommitTxGetMiReKyouError | MiReKyou（既存記録のタスク化）系の追加・取得・更新・トランザクションのパース/処理エラー（12件） |
 
 ### 1.3 HTTPステータスコードの使い分け
 
@@ -239,6 +245,26 @@ sequenceDiagram
 - デスクトップアプリ（go-astilectron）は同一オリジンで動作
 - MCP HTTPサーバー（`src/mcp/gkill-read-server.mjs`）は別プロセスで動作するため、gkill_server APIへのアクセスはサーバー間通信（fetch）であり、ブラウザのCORS制約は適用されない。ただし、MCP HTTPサーバー自体がOAuth 2.1の認可エンドポイントを提供する際、Claude.ai/ChatGPT等のクライアントからのリダイレクトはブラウザ経由で行われるため、CORS設定は不要（リダイレクトベースのフローのため）
 
+### 2.7.1 CSRF と2系統の認証
+
+**CSRF トークンは実装していない**（コードベースに `csrf` の語は1つも無い）。
+gkill には認証経路が2系統あり、CSRF に対する強さが異なる。
+
+| 経路 | 認証情報の運び方 | CSRF 耐性 |
+|---|---|---|
+| JSON API（`/api/*`） | `session_id` を**リクエストボディ**に入れる（`auth_middleware.go`） | 高い。クロスサイトから `Content-Type: application/json` の任意ボディを送るにはプリフライトが必要で、ブラウザが遮る |
+| ファイル配信（`/files/*`, `/zip_cache/*`） | **cookie**（`gkill_session_id`） | cookie 依存のため相対的に弱い |
+
+JSON API 側がボディで `session_id` を運ぶ設計になっているため、CSRF トークンが無くても
+主要な書き込み操作は保護される。一方 cookie 側には以下の性質がある
+（`gkill-api.ts` の `set_session_id()` が `document.cookie` で設定している）。
+
+- `SameSite` / `Secure` / `HttpOnly` のいずれも指定していない
+- `max-age` が **400日**。サーバ側のセッション有効期限（30日）より長い
+- JavaScript から設定しているため `HttpOnly` は原理的に付けられない
+
+この cookie で守られているのはファイル配信（GET）のみで、データ変更操作は行えない。
+
 ### 2.8 ZIPファイル展開のセキュリティ
 
 `/api/browse_zip_contents` エンドポイントは、IDFKyouのZIPファイルを展開してブラウジングする機能を提供する。以下のセキュリティ対策が実装されている。
@@ -249,8 +275,8 @@ sequenceDiagram
 | **シンボリックリンク** | シンボリックリンクエントリはスキップする |
 | **Shift_JISファイル名** | ZIP内のファイル名がShift_JISでエンコードされている場合にUTF-8にデコードして正しく表示する |
 | **アトミック展開** | 一時ディレクトリに展開後、成功時のみ最終パスにリネームする。展開途中で失敗した場合は中間ファイルが残らない |
-| **認証** | `/zip_cache/` ファイルサーバーはセッション認証付きでアクセスを制御する |
-| **キャッシュパス** | リポジトリ名とファイルのSHA1ハッシュをキーとして `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に展開。同一ファイルの再展開を回避する |
+| **認証** | `/zip_cache/` ファイルサーバーはルータ上は `wrapNoAuth` で登録され、認証は**ハンドラ内部で cookie**（`gkill_session_id`）を読んで行う。`/files/` も同様 |
+| **キャッシュパス** | リポジトリ名と**ZIPファイルパス文字列**のSHA1ハッシュをキーとして `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に展開。ファイル内容のハッシュではないため、同じパスのまま中身を差し替えると古いキャッシュが再利用される |
 
 ### 2.9 初期セットアップのセキュリティ
 
