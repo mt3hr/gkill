@@ -22,6 +22,7 @@ Vitest
 | `src/client/__tests__/unit/classes/markdown-to-html.test.ts` | Markdown → HTML 変換（見出し・表・コード・画像、サニタイズ） |
 | `src/client/__tests__/unit/classes/mermaid-render.test.ts` | Markdown 内 Mermaid コードブロックの図描画 |
 | `src/client/__tests__/unit/classes/foldable-struct-move.test.ts` | Struct ツリーの移動ロジック（上へ/下へ/フォルダへ移動） |
+| `src/client/__tests__/unit/classes/kyou-content-text.test.ts` | Kyou の内容 / ID のクリップボードコピー用テキスト生成 |
 
 ## テスト内容
 

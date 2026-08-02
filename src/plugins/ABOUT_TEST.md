@@ -18,10 +18,14 @@
 
 ## 実行方法
 
-プラグインは独立した Go モジュールなので、`npm test`（`src/server` のみ対象）には含まれない。
-テストを持つプラグインは個別に実行する。
+プラグインは独立した Go モジュールなので `cd src/server && go test ./...`（`npm run test_server`）では実行されない。
+モジュールを1つずつ回す `npm run test_plugins`（`src/tools/test_plugins.mjs`）を用意しており、`npm test` からも呼ばれる。
 
 ```bash
+# 全プラグインまとめて（go.mod を持つディレクトリを自動で探して回る）
+npm run test_plugins
+
+# 個別に実行する場合
 cd src/plugins/gkill_plugin_claudecode && go test ./...
 cd src/plugins/gkill_plugin_chatgpt    && go test ./...
 cd src/plugins/gkill_plugin_claudeai   && go test ./...
@@ -29,11 +33,13 @@ cd src/plugins/gkill_plugin_claudeai   && go test ./...
 
 ## プラグイン SDK
 
-`src/server/gkill/plugin/sdk/config_test.go` で `EnsureConfig`（config.json の自動生成）をテストしている。
-生成される／既存ファイルを上書きしない／`DefaultConfig` が nil なら作らない／`pluginDir` が空なら
-カレントディレクトリを汚さない、の4点。`src/server` のテストなので `npm run test_server` で走る。
+SDK 自体のテストは `src/server/gkill/plugin/sdk/` にあり、`src/server` のテストなので
+`npm run test_server` で走る。詳細は [server/gkill/plugin/sdk/ABOUT_TEST.md](../server/gkill/plugin/sdk/ABOUT_TEST.md) を参照。
 
-stdin/stdout ループ本体にはテストが無く、実際のプラグインバイナリを通じた統合テストで品質を担保する。
+- `config_test.go`（4テスト）— `EnsureConfig`（config.json の自動生成）。生成される／既存ファイルを
+  上書きしない／`DefaultConfig` が nil なら作らない／`pluginDir` が空ならカレントディレクトリを汚さない。
+- `sdk_test.go`（14テスト）— `Run()` の stdin/stdout ループ本体（`TestRunLoop_*`）。コマンド分岐、
+  未実装時のフォールバック、壊れた JSON でも止まらないこと、`close` / stdin クローズでの終了などを固定している。
 
 ## 新しいプラグインのテスト方針
 

@@ -132,15 +132,8 @@ npm run release
 
 ### 3.5 Wear OS
 
-**前提:** `src/android/` から Gradle Wrapper をコピーする必要がある。
-
-```bash
-cp src/android/gradlew src/wear_os/
-cp src/android/gradlew.bat src/wear_os/
-mkdir -p src/wear_os/gradle/wrapper
-cp src/android/gradle/wrapper/gradle-wrapper.jar src/wear_os/gradle/wrapper/
-cp src/android/gradle/wrapper/gradle-wrapper.properties src/wear_os/gradle/wrapper/
-```
+**前提:** Gradle Wrapper は `src/wear_os/` にコミット済みなので、事前のコピーは不要。
+`src/android/` 側と揃え直したいときだけ `npm run setup_wear_os_gradle` を実行する。
 
 ビルド:
 ```bash

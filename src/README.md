@@ -26,7 +26,7 @@ gkill はライフログアプリケーション。テキストメモ、ブッ�
 │  //go:embed  (1バイナリに埋め込み)         │
 ├─────────────────────────────────────────┤
 │  バックエンド (Go + gorilla/mux)         │  ← src/server/
-│  ・85 POST API エンドポイント             │
+│  ・88 POST API エンドポイント             │
 │  ・SQLite3 (pure Go)                      │
 │  ・cobra CLI                             │
 ├─────────────────────────────────────────┤
@@ -56,8 +56,10 @@ gkill はライフログアプリケーション。テキストメモ、ブッ�
 | **TimeIs** | タイムスタンプ | 「作業中」（開始〜終了時刻） |
 | **IDFKyou** | ファイル | 画像、動画、ドキュメント等 |
 | **ReKyou** | リポスト | 既存 Kyou の再投稿 |
+| **MiReKyou** | リポストタスク | 既存 Kyou をそのままタスク化（タイトルを持たず `target_id` で元の Kyou を指す） |
 | **GitCommitLog** | Git コミットログ | リポジトリの自動収集 |
 | **GPSLog** | GPS ログ | 位置情報記録 |
+| **PluginKyou** | プラグイン記録 | 外部プラグインが提供する記録（本文は gkill に保存せず、都度プラグインから取得） |
 
 ### メタ情報
 
@@ -77,18 +79,24 @@ src/
 │   │   ├── dnote/   #     Dynamic Note (集計・フィルタ)
 │   │   └── kftl/    #     KFTL パーサ
 │   └── pages/       #   Vue ページ・ビュー・ダイアログ
-│       ├── views/   #     View コンポーネント (185個)
-│       └── dialogs/ #     Dialog コンポーネント (100個)
+│       ├── views/   #     View コンポーネント (189個)
+│       └── dialogs/ #     Dialog コンポーネント (103個)
 ├── server/          # Go バックエンド
 │   └── gkill/
-│       ├── api/     #   HTTP API (85エンドポイント)
+│       ├── api/     #   HTTP API (88エンドポイント)
 │       │   ├── kftl/    #   KFTL パーサ
-│       │   └── req_res/ #   Request/Response 構造体 (176ファイル)
+│       │   └── req_res/ #   Request/Response 構造体 (182ファイル)
 │       ├── dao/     #   データアクセス層 (SQLite3)
 │       │   └── reps/#   メインリポジトリ (4層実装)
+│       ├── plugin/  #   プラグイン作者向け Go SDK (sdk.Run / sdk.Handler)
 │       ├── dvnf/    #   データバージョニング
 │       ├── usecase/ #   ユースケース層 (HTTP非依存ビジネスロジック)
 │       └── main/    #   CLI エントリポイント
+├── plugins/         # スタンドアロンプラグイン（各々が独立した go.mod）
+│   ├── examples/gkill_example/   # サンプル実装
+│   ├── gkill_plugin_chatgpt/     # ChatGPT 会話履歴
+│   ├── gkill_plugin_claudeai/    # Claude.ai 会話履歴
+│   └── gkill_plugin_claudecode/  # Claude Code チャットログ
 ├── android/         # Android APK ラッパー
 ├── wear_os/         # Wear OS (Pixel Watch) KFTL 入力アプリ
 │   ├── phone_companion/  # スマホ側コンパニオン
@@ -116,20 +124,31 @@ npm run go_install
 ```
 
 ビルドフロー:
-1. `dist/` をクリーン
-2. `version.json` 生成
-3. `vite build`（型チェック + フロントエンドビルド）
+1. `dist/` と埋め込みディレクトリをクリーン
+2. `version.json` 生成（コミットハッシュ + ビルド時刻 + バージョン）
+3. `vue-tsc` 型チェック + `vite build`
 4. `dist/` → `server/gkill/api/embed/html/` にコピー
 5. `locales/` → `server/gkill/api/embed/i18n/locales/` にコピー
-6. `go install`
+6. `build_manuals`（`resources/manual_src/` → `resources/manual/`）
+7. `resources/manual/` → `server/gkill/api/embed/manual/` にコピー
+8. `go install`
 
 **前提条件:**
-- Go 1.26.0+、Node.js 20.19+（24.x推奨）
+- Go 1.26.4+（`src/server/go.mod` が `go 1.26.4`）、Node.js 20.19+（24.x推奨）
+- `package.json` に `engines` フィールドは無いため、Node のバージョンは強制されない
 
 ## `tools/` ディレクトリ
 
 | ファイル | 説明 |
 |---------|------|
+| `dev.mjs` | `npm run dev` のラッパー。`--api` を `GKILL_API_PROXY_TARGET` に変換して Vite に渡す |
+| `manual_build.mjs` | マニュアル生成の共有ロジック（`manual_src` のフラグメント + `_layout.html`） |
+| `build_manuals.mjs` | `resources/manual_src/` → `resources/manual/` の書き出し |
+| `manual_a11y.mjs` | マニュアル HTML のアクセシビリティ補正（`<caption>` 付与・`th` の `scope` 等） |
+| `manual_ascii_fix.mjs` | マニュアル原稿の記号正規化 |
+| `extract_manual_src.mjs` | 生成済みマニュアルから `manual_src` フラグメントを抽出（移行用） |
+| `verify_docs.mjs` | docs CI。件数・リンク・参照パス・Mermaid・マニュアルを検証 |
+| `verify_release_artifacts.mjs` | リリース成果物の存在確認 |
 | `license_getter.ps1` | 依存ライブラリのライセンス情報を収集する PowerShell スクリプト |
 
 ## 開発ガイドライン
@@ -140,17 +159,24 @@ npm run go_install
 
 ### テスト
 
-約2,312件の自動テストが存在する。詳細は [ABOUT_TEST.md](ABOUT_TEST.md) を参照。
+テストの本数や内訳は実行環境で変わるため、ここでは持たない。各ディレクトリの内容と件数は
+[ABOUT_TEST.md](ABOUT_TEST.md)（索引）を参照。静的計数の実測値は `npm run verify_docs -- --list` で確認できる。
 
 | コマンド | 対象 |
 |---------|------|
-| `npm test` | 全テスト |
-| `npm run test_server` | Go バックエンド (~577テスト) |
-| `npm run test_client_unit` | フロントエンド ユニット (800テスト) |
-| `npm run test_client_e2e` | フロントエンド E2E (207テスト) |
-| `npm run test_mcp` | MCP サーバ (602テスト) |
-| `npm run test_android` | Android (12テスト) |
-| `npm run test_wear_os` | Wear OS (114テスト) |
+| `npm test` | 全テスト（先に `install_server` と `verify_docs` を実行する） |
+| `npm run verify_docs` | ドキュメント検証（件数・リンク・参照パス・Mermaid・マニュアル） |
+| `npm run test_server` | Go バックエンド |
+| `npm run test_client_unit` | フロントエンド ユニット（Vitest） |
+| `npm run test_client_e2e` | フロントエンド E2E（Playwright。gkill_server と Vite を自動起動・停止） |
+| `npm run test_mcp` | MCP サーバ |
+| `npm run test_plugins` | 同梱プラグイン（`src/plugins/` の独立 Go モジュール） |
+| `npm run test_android` | Android |
+| `npm run test_wear_os` | Wear OS |
+
+`src/plugins/` の各プラグインは独立した Go モジュールのため `test_server` では実行されない。
+代わりに `npm run test_plugins` が全モジュールを回す（`npm test` からも呼ばれる）。
+詳細は [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) を参照。
 
 ### 設計パターン
 
@@ -181,6 +207,7 @@ npm run go_install
 | `client/pages/` | [client/pages/README.md](client/pages/README.md) |
 | `server/` | [server/README.md](server/README.md) |
 | `server/gkill/api/` | [server/gkill/api/README.md](server/gkill/api/README.md) |
+| `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/README.md](server/gkill/api/gkill_server_api/README.md) |
 | `server/gkill/api/find/` | [server/gkill/api/find/README.md](server/gkill/api/find/README.md) |
 | `server/gkill/api/message/` | [server/gkill/api/message/README.md](server/gkill/api/message/README.md) |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/README.md](server/gkill/api/kftl/README.md) |
@@ -188,12 +215,15 @@ npm run go_install
 | `server/gkill/dao/` | [server/gkill/dao/README.md](server/gkill/dao/README.md) |
 | `server/gkill/dao/reps/` | [server/gkill/dao/reps/README.md](server/gkill/dao/reps/README.md) |
 | `server/gkill/main/` | [server/gkill/main/README.md](server/gkill/main/README.md) |
+| `server/gkill/main/common/` | [server/gkill/main/common/README.md](server/gkill/main/common/README.md) |
+| `server/gkill/usecase/` | [server/gkill/usecase/README.md](server/gkill/usecase/README.md) |
+| `server/gkill/plugin/` | [server/gkill/plugin/README.md](server/gkill/plugin/README.md) |
 | `server/gkill/dvnf/` | [server/gkill/dvnf/README.md](server/gkill/dvnf/README.md) |
 | `android/` | [android/README.md](android/README.md) |
 | `wear_os/` | [wear_os/README.md](wear_os/README.md) |
 | `locales/` | [locales/README.md](locales/README.md) |
 | `mcp/` | [mcp/README.md](mcp/README.md) |
-| `plugins/` | [plugins/README.md](plugins/README.md) |
+| `plugins/` | [plugins/README.md](plugins/README.md)（各プラグインにも個別の README がある: [gkill_example](plugins/examples/gkill_example/README.md) / [chatgpt](plugins/gkill_plugin_chatgpt/README.md) / [claudeai](plugins/gkill_plugin_claudeai/README.md) / [claudecode](plugins/gkill_plugin_claudecode/README.md)） |
 | `tools/` | [tools/README.md](tools/README.md) |
 
 ## 各サブディレクトリの ABOUT_TEST.md
@@ -212,12 +242,15 @@ npm run go_install
 | `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) |
 | `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) |
 | `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) |
+| `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) |
 | `server/gkill/api/req_res/` | [server/gkill/api/req_res/ABOUT_TEST.md](server/gkill/api/req_res/ABOUT_TEST.md) |
 | `server/gkill/dao/` | [server/gkill/dao/ABOUT_TEST.md](server/gkill/dao/ABOUT_TEST.md) |
 | `server/gkill/dao/reps/` | [server/gkill/dao/reps/ABOUT_TEST.md](server/gkill/dao/reps/ABOUT_TEST.md) |
 | `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) |
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) |
+| `server/gkill/usecase/` | [server/gkill/usecase/ABOUT_TEST.md](server/gkill/usecase/ABOUT_TEST.md) |
+| `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) |
 | `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) |

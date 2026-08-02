@@ -177,6 +177,18 @@ func main() {
 			src := expandSourcePatterns(patterns)
 			return renderConfigHTML(pluginDir, patterns, src), nil
 		},
+
+		PostConfig: func(_ context.Context, form map[string]string, cfg sdk.Config) (sdk.Config, error) {
+			if cfg == nil {
+				cfg = sdk.Config{}
+			}
+			if v, ok := form[configKeySourceDirs]; ok {
+				// 設定画面のテキストエリアは1行1指定。config.json には配列で書き戻す
+				// (1行の文字列でも parseSourcePatterns は読めるが、配列のほうが手で編集しやすい)。
+				cfg[configKeySourceDirs] = splitSourceDirsForm(v)
+			}
+			return cfg, nil
+		},
 	})
 }
 
@@ -325,4 +337,19 @@ func htmlEscape(s string) string {
 	s = strings.ReplaceAll(s, ">", "&gt;")
 	s = strings.ReplaceAll(s, `"`, "&#34;")
 	return s
+}
+
+// splitSourceDirsForm は設定画面のテキストエリア(1行1指定)を config.json 用の配列にする。
+// 空行は落とす。展開(~ や環境変数)はしない —— 書いたとおりを保存し、
+// 読み出し時に parseSourcePatterns が展開する。
+func splitSourceDirsForm(v string) []string {
+	dirs := make([]string, 0)
+	for line := range strings.SplitSeq(v, "\n") {
+		line = strings.TrimSpace(strings.TrimSuffix(line, "\r"))
+		if line == "" {
+			continue
+		}
+		dirs = append(dirs, line)
+	}
+	return dirs
 }

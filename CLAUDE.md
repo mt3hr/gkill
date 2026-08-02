@@ -19,7 +19,8 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 | `npm run install_app` | Full build: frontend → embed → `go install` (desktop app with go-astilectron window) |
 | `npm run go_install` | Go install only (skip frontend rebuild) |
 | `npm run go_mod` | Regenerate `go.mod` and `go.sum` from scratch |
-| `npm test` | Run all tests (docs verification + server + client + MCP + Android + Wear OS) |
+| `npm test` | Run all tests (build + docs verification + server + client + MCP + plugins + Android + Wear OS) |
+| `npm run test_plugins` | Go tests for each standalone plugin module under `src/plugins/` |
 | `npm run verify_docs` | Docs CI: checks doc counts against code, cross-links, referenced paths, Mermaid blocks, manual freshness. `--list` prints the measured metrics |
 | `npm run test_server` | Go tests (`cd src/server && go test ./...`) |
 | `npm run test_client_unit` | Vitest unit tests |
@@ -29,7 +30,7 @@ All commands are npm scripts defined in `package.json`. No CGO required (pure Go
 
 **Build pipeline** (`install_server` → `prepare_install`): `clean_dist` → clean embed dir → write `version.json` (commit hash + build time + version) → `vue-tsc` type-check → `vite build` → copy `dist/` to `src/server/gkill/api/embed/html/` → copy `src/locales/` to `src/server/gkill/api/embed/i18n/locales/` → `build_manuals` (`src/tools/build_manuals.mjs`: `resources/manual_src/` → `resources/manual/`) → copy `resources/manual/` to `src/server/gkill/api/embed/manual/` (3 copies: html + i18n + manual) → `go install`
 
-**Prerequisites:** Go 1.26.0+, Node.js 20.19+ (24.x recommended), `npm i`
+**Prerequisites:** Go 1.26.4+ (`src/server/go.mod` declares `go 1.26.4`), Node.js 20.19+ (24.x recommended — `package.json` has no `engines` field, so this is not enforced), `npm i`
 
 **Dev server backend target:** `npm run dev` runs `src/tools/dev.mjs`, a thin wrapper that strips `--api` / `--api-target` (Vite errors on unknown CLI options) and passes the value to Vite as `GKILL_API_PROXY_TARGET`; all other args pass through untouched. Accepts a full URL, a bare port (`--api=19999` → `http://127.0.0.1:19999`), or `host:port`. Precedence: `--api` > `GKILL_API_PROXY_TARGET` > `http://localhost:9999`. `vite.config.ts` proxies `/api`, `/files`, `/zip_cache` and `/resources/manual` to that target — SPA routes (`/rykv`, `/kftl`, `/mi`, …) are deliberately not proxied since vue-router owns them in dev.
 
@@ -59,7 +60,8 @@ src/
               #   gkill_plugin_claudecode/ — Claude Code chat log plugin (one Kyou per human
               #                              message + one per its whole response run,
               #                              source folder configurable, SQLite differential cache)
-              # All three plugins take `source_dirs` in config.json (folders/globs), auto-create
+              # The three shippable plugins (chatgpt / claudeai / claudecode — gkill_example is
+              # excluded) take `source_dirs` in config.json (folders/globs), auto-create
               # that config.json next to manifest.json on first start (existing files are never
               # overwritten, via sdk.EnsureConfig + Handler.DefaultConfig), and can print their
               # embedded manifest.json / default config.json via --gkill-print-manifest /
@@ -74,7 +76,7 @@ src/
 - **`gkill_server`** (`src/server/gkill/main/gkill_server/main.go`): Headless HTTP server (browser/PWA)
 - **`gkill`** (`src/server/gkill/main/gkill/main.go`): Desktop app wrapping server with go-astilectron
 
-Both use cobra for CLI with shared subcommands: `version`, `idf`, `dvnf`, `generate_thumb_cache`, `generate_video_cache`, `optimize`, `update_cache`, `clear_cache`. Default listen address: `:9999`, TLS disabled, initial user `admin` with no password.
+Both use cobra for CLI with shared subcommands: `version`, `dvnf`, `generate_thumb_cache`, `generate_video_cache`, `optimize`, `update_cache`, `clear_cache`. `idf` is registered by `gkill_server` only (`main/gkill/main.go` does not register `IDFCmd`). Default listen address: `:9999`, TLS disabled, initial user `admin` with no password.
 
 `clear_cache <thumb|video|zip|plugin|all> <all|user_id...>` deletes the on-disk derived caches (`thumb_cache` / `video_cache` / `zip_cache` / `plugin_cache`). The target is required (matching `generate_thumb_cache`/`optimize` etc. which require positional user args): pass the literal `all` to remove the whole cache dirs under `$HOME/gkill/caches/` globally (no user context needed), or one or more user_ids to load each user's repositories (`LoadIDFRepOnly`) and clear only that user's IDF-rep caches via `IDFKyouReps.Clear{Thumb,Video,Zip}Cache()`. `plugin` mode is a plain directory removal (`ClearPluginCache`) and skips the repository load entirely. Missing target or unknown mode prints usage.
 
@@ -103,7 +105,7 @@ Key packages:
 - `gkill/api/req_res/` — Request/response structs for every endpoint (182 files)
 - `gkill/api/kftl/` — KFTL custom text format parser (single package, no sub-packages). Supports both Japanese (。！？、ーー etc.) and ASCII (#!?,-- /mi /mood /expense /num /url /start /end /timeis /end? /endt /endt?) prefixes
 - `gkill/api/gkill_plugin/` — Plugin protocol types: `PluginManifest`, `PluginRequest`, `PluginResponse`, `PluginKyou` (stdio newline-delimited JSON)
-- `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{FindKyous, GetContentHTML, GetConfigHTML})` starts the stdio JSON message loop. Plugins are standalone binaries in `src/plugins/`
+- `gkill/plugin/sdk/` — Plugin author SDK. `sdk.Run(sdk.Handler{...})` starts the stdio JSON message loop. `Handler` has 6 fields: `FindKyous` (required), `GetKyou`, `GetContentHTML`, `GetConfigHTML`, `PostConfig`, `DefaultConfig`. Plugins are standalone binaries in `src/plugins/`
 - `gkill/usecase/` — HTTP-independent business logic (17 files). Extracted from handlers to enable reuse without HTTP context. Functions operate on DAO/repository types directly.
 - `gkill/dao/` — Data access layer with `GkillDAOManager` managing SQLite3 databases
 - `gkill/dao/reps/` — Repository interfaces and implementations for each data type. `plugin_repository_impl.go` manages plugin subprocess lifecycle (start, mutex-guarded stdio, auto-restart on crash)
@@ -124,8 +126,8 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 
 - `router/index.ts` — 13 routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, set_new_password, regist_first_account, shared_page, shared_mi)
 - `pages/views/` — 189 view components, `pages/dialogs/` — 103 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend graph components (`dnote-trend-graph-*` — client-side time-series aggregation via `classes/dnote/dnote-trend-aggregator.ts`, no server API)
-- `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,500 lines), client-side API wrapper
-- `classes/kftl/` — KFTL parser (44 statement types). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
+- `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,660 lines), client-side API wrapper
+- `classes/kftl/` — KFTL parser (41 statement types; the Go side has 39). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 
 **State management:** Props/Emit only. No Pinia/Vuex. `GkillAPI` singleton for backend communication.
@@ -134,7 +136,7 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 
 **Naming convention:** `{action}-{feature}-{entity}-{component}` (e.g., `add-dnote-item-view.vue`, `confirm-delete-ryuu-item-dialog.vue`). Dnote and Ryuu follow the same pattern.
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 855 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 856 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 
@@ -148,13 +150,13 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 
 **Plugin tools** (`gkill_get_plugin_list`, `gkill_get_plugin_content`) are shared by all 3 servers via `lib/plugin-tools.mjs` (read-only; `post_plugin_config` is not exposed). Plugin kyou bodies are not stored in gkill — `get_kyous` returns only metadata plus a `payload.kind="plugin"` carrying `rep_name`/`kyou_id`, which `gkill_get_plugin_content` turns into the actual content. It calls `/api/get_plugin_content_html` and by default converts the HTML to plain text via `lib/html-text.mjs` (`format`: `text` (default) / `html` / `both`, `max_text_length` default 20000) because plugin content HTML is mostly presentation CSS/JS.
 
-**Environment variables:** `GKILL_BASE_URL`, `GKILL_USER`, `GKILL_PASSWORD_SHA256`, `MCP_LOG` (default `info`), `GKILL_MCP_MAX_FILE_BYTES` (default 8MB — cap for `get_idf_file` base64), `GKILL_MCP_FILE_LINK_TTL_MS` (default 1h — HTTP-mode file URL token TTL), and for HTTP mode: `MCP_TRANSPORT`, `MCP_PORT`, `MCP_OAUTH_ISSUER`.
+**Environment variables:** `GKILL_BASE_URL`, `GKILL_USER`, `GKILL_PASSWORD_SHA256`, `MCP_LOG` (default `info`), `GKILL_MCP_MAX_FILE_BYTES` (default 8MB — cap for `get_idf_file` base64), `GKILL_MCP_FILE_LINK_TTL_MS` (default 1h — HTTP-mode file URL token TTL), and for HTTP mode: `MCP_TRANSPORT`, `MCP_PORT`, `MCP_OAUTH_ISSUER`. Also read: `GKILL_PASSWORD` (plaintext alternative to the SHA256), `GKILL_SESSION_ID`, `GKILL_INSECURE`, `GKILL_LOCALE`, `GKILL_FETCH_TIMEOUT_MS`, `GKILL_HOME`.
 
 **IDF file access for AI clients** (3 paths, preferred order): (1) `file_path` — `get_kyous` includes the absolute local path in IDF payloads for **stdio** clients (same machine); read it directly. (2) `file_url` / `file_url_full` — for **HTTP** clients, `get_kyous` includes a per-file, expiring, unguessable public URL served by the MCP server's own `GET /files/{token}` route (`FileLinkStore`, `lib/file-link-store.mjs`); fetch with no auth, any size (images: `file_url` is a thumbnail, `file_url_full` the original). (3) `gkill_get_idf_file` — base64 fallback, size-capped. Local paths never go to remote clients; the transport type (stdio vs HTTP) is the gate. gkill itself stays private — only the MCP server's public surface is used.
 
 ### Mobile — `src/android/`, `src/wear_os/`
 
-**Android**: APK wrapper (WebView) bundling the gkill_server binary as `jniLibs/arm64-v8a/libgkill_server.so` and exec'ing it from `nativeLibraryDir` — required because targetSdk 29+ forbids executing files under the app's data dir (W^X). Needs `packaging { jniLibs { useLegacyPackaging = true } }` so the `.so` is extracted as a real file. compileSdk/targetSdk 36, minSdk 26. **Wear OS**: Gradle multi-module project (phone_companion + watch_app), communicates via Wearable Data Layer. Must copy `gradlew`/`gradlew.bat`/`gradle-wrapper.jar` from `src/android/` before building.
+**Android**: APK wrapper (WebView) bundling the gkill_server binary as `jniLibs/arm64-v8a/libgkill_server.so` and exec'ing it from `nativeLibraryDir` — required because targetSdk 29+ forbids executing files under the app's data dir (W^X). Needs `packaging { jniLibs { useLegacyPackaging = true } }` so the `.so` is extracted as a real file. compileSdk 37 (androidx 1.19.x requires it), targetSdk 36, minSdk 26. **Wear OS**: Gradle multi-module project (phone_companion + watch_app), communicates via Wearable Data Layer. The Gradle wrapper is committed under `src/wear_os/`, so no copying is needed; `npm run setup_wear_os_gradle` re-syncs it from `src/android/` if it ever breaks.
 
 ## Lint & Code Quality
 
@@ -175,5 +177,6 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 ## Documentation
 
 - `resources/manual/` — HTML manuals (7 languages, 21 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
-- `documents/reverse/` — Reverse-engineered design documents (24 files). See `documents/reverse/README.md` for index. Key files: glossary.md (86 terms), api-endpoints.md (90 endpoints, 88 registered), usecase.md (82 use cases), sequence-diagrams.md (27 diagrams), scenario.md (cross-channel end-to-end usage scenarios with UML), testing-guide.md. `npm run verify_docs` (`src/tools/verify_docs.mjs`) machine-checks the counts, cross-links, referenced paths, Mermaid blocks, and manual freshness — it runs as part of `npm test`, so update the docs when a count changes.
-- `src/ABOUT_TEST.md` — Test specification index, links to 22 subdirectory `ABOUT_TEST.md` files
+- `documents/reverse/` — Reverse-engineered design documents (24 files). See `documents/reverse/README.md` for index. Key files: glossary.md (86 terms), api-endpoints.md (90 endpoints, 88 registered), usecase.md (83 use cases), sequence-diagrams.md (28 diagrams), scenario.md (cross-channel end-to-end usage scenarios with UML), testing-guide.md. `npm run verify_docs` (`src/tools/verify_docs.mjs`) machine-checks the counts, cross-links, referenced paths, Mermaid blocks, and manual freshness — it runs as part of `npm test`, so update the docs when a count changes.
+- `src/ABOUT_TEST.md` — Test specification index, links to 23 subdirectory `ABOUT_TEST.md` files
+- **What `verify_docs` covers** (extend it rather than hand-maintaining new numbers): file/test counts computed from the tree (`--list` prints them all), count assertions across `documents/reverse/*.md` + `CLAUDE.md` + `src/**/README.md` + `ABOUT_TEST.md`, markdown link resolution for that same set, `src/...` path references (warning), Mermaid block types, manual generation freshness / language page-set parity / a11y invariants / intra-manual links, a **terminology lint** that rejects internal code names (`IDF`, `WAN`, `Kyou`, `MiReKyou`, `Dnote`, …) in `resources/manual_src/` outside `<code>` spans, and a check that every `screen_name` the app passes to `HelpDialog` has a matching manual page. `--parity` (opt-in) reports per-page h2/h3/table drift against the Japanese original.

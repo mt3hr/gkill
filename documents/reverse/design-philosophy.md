@@ -70,7 +70,7 @@ gkill は「速攻の記録」を重視する:
 | ReKyou | REKYOU | リポスト | TARGET_ID |
 | MiReKyou | MIREKYOU | 既存記録のタスク化 | TARGET_ID, IS_CHECKED, BOARD_NAME, LIMIT_TIME, ESTIMATE_START_TIME, ESTIMATE_END_TIME（TITLE は持たない） |
 | IDFKyou | IDF | ファイル | TARGET_REP_NAME, TARGET_FILE |
-| GitCommitLog | （リポジトリごとに動的生成） | Gitコミット履歴 | COMMIT_HASH, ADDITION, DELETION 等（読み取り専用） |
+| GitCommitLog | （リポジトリごとに動的生成） | Gitコミット履歴 | COMMIT_MESSAGE, ADDITION, DELETION 等（読み取り専用） |
 | GPSLog | （GPXファイル） | GPS位置ログ | LATITUDE, LONGITUDE, ALTITUDE 等（読み取り専用） |
 | PluginKyou | （なし。プラグインが保持） | 外部プラグインが提供する記録 | プラグイン定義（`data_type` は `chatgpt_conversation` 等） |
 
@@ -251,7 +251,7 @@ Repository への保存
 ```
 Page（ルートページ、Vue Router で遷移）
   └── View（メインコンテンツ、インライン表示）
-       └── Dialog（モーダル操作、Vuetify の v-dialog）
+       └── Dialog（モーダル操作、Teleport + useFloatingDialog によるフローティングダイアログ）
 ```
 
 ### Composable パターン
