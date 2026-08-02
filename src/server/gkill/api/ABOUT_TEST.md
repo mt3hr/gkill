@@ -14,7 +14,22 @@ Go `testing` パッケージ
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `find_filter_test.go` | 検索フィルタのテスト |
+| `find_filter_test.go` | 検索フィルタのテスト（最新版への差し替え、リネーム済みタグの除外、並行取得のエラー回収） |
+
+#### `find_filter_test.go` の内容
+
+- **最新版への差し替え** (`TestReplaceLatestKyouInfos_ExcludeStaleKeepLatest`):
+  グローバル最新でない版を除外し、最新版のentryだけ残すこと。
+  `DisableLatestDataRepositoryCache` の両ブランチで確認する
+- **リネーム済みタグの除外** (`TestFindTags_ExcludeRenamedAwayVersion`):
+  TAGテーブルはappend-onlyなので旧名の版が残る。旧名で検索してもヒットしないこと
+- **並行取得のエラー回収** (`TestDrainFindErrors_*`):
+  `FindKyous` はタグ取得・非表示タグ・タグ検索・テキスト検索・TimeIsテキスト・
+  TimeIsタグの6経路をgoroutineで並行実行する。`drainFindErrors` が
+  goroutineの完了を待ってからエラーを回収すること、エラーが無ければ nil を返すこと。
+  以前は待ち合わせより前に吸い出していたため6経路のエラーが常に捨てられ、
+  検索が成功扱いで不完全な結果を返していた。待ち合わせを関数の内側に置いたので、
+  呼び出し順を誤っても再発しない
 
 ### サブパッケージテスト
 
