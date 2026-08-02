@@ -344,7 +344,7 @@ erDiagram
         text VALUE
     }
 
-    GKILL_NOTIFICATION {
+    NOTIFICATION_PUSH_TARGET {
         text ID
         text USER_ID
         text PUBLIC_KEY
@@ -361,7 +361,7 @@ erDiagram
     ACCOUNT ||--o{ APPLICATION_CONFIG : "USER_ID"
     ACCOUNT ||--o{ REPOSITORY : "USER_ID"
     ACCOUNT ||--o{ SHARE_KYOU_INFO : "USER_ID"
-    ACCOUNT ||--o{ GKILL_NOTIFICATION : "USER_ID"
+    ACCOUNT ||--o{ NOTIFICATION_PUSH_TARGET : "USER_ID"
     SHARE_KYOU_INFO ||--o{ SHARE_KYOU_INFO_OPTIONS : "SHARE_ID"
 ```
 
@@ -379,7 +379,7 @@ erDiagram
   | その他設定キー | デバイス名 or `ALL` | テーマ・表示日数・テンプレート等のアプリ設定 |
 - **REPOSITORY**: データ保存先定義。TYPE でデータ型、FILE で SQLite3 ファイルパスを指定
 - **SHARE_KYOU_INFO**: Kyou 共有リンク設定
-- **GKILL_NOTIFICATION**: Web Push 通知購読情報
+- **NOTIFICATION_PUSH_TARGET**: Web Push 通知購読情報。**実際のテーブル名は `NOTIFICATION`**（`dao/gkill_notification/gkill_notificate_target_dao_sqlite3_impl.go`）で、Kyou のメタ情報である `NOTIFICATION` テーブル（`dao/reps/notification_repository_sqlite3_impl.go`）と同名だが**別DBファイル**。本図では区別のため `NOTIFICATION_PUSH_TARGET` と表記している
 - **GKILL_META_INFO**: スキーマバージョン等のメタ情報
 
 ## 3. Git コミットログ（キャッシュテーブル）
@@ -409,7 +409,7 @@ erDiagram
 
 - テーブル名はリポジトリごとに動的生成
 - ローカル Git リポジトリからコミットログを読み取ってキャッシュ
-- 時刻は UNIX タイムスタンプ（他テーブルとは異なる形式）
+- 時刻は UNIX タイムスタンプ（`*_TIME_UNIX`）。これは GitCommitLog 固有ではなく**キャッシュ層全体の共通規約**で、すべての `*_repository_cached_sqlite3_impl.go` が同じ形式を使う
 - ADDITION / DELETION はコード変更行数
 
 ## 4. ApplicationConfig Go 構造体
@@ -467,3 +467,56 @@ API レスポンスでは `DataType` フィールドとしてコード側で付�
 | **Mi** | `CREATE_TIME`, `UPDATE_TIME`, `LIMIT_TIME`, `ESTIMATE_START_TIME`, `ESTIMATE_END_TIME` | 5つのカラムからそれぞれ `AS RELATED_TIME` でエイリアスし、UNION で結合。作成日時・チェック日時・期限・開始予定・終了予定の各観点で検索・表示される |
 | **TimeIs** | `START_TIME`, `END_TIME` | 2つのカラムからそれぞれ `AS RELATED_TIME` でエイリアスし、UNION で結合。開始時刻と終了時刻の両方でタイムライン上に表示される |
 | **Notification** | `UPDATE_TIME`（通常検索）, `NOTIFICATION_TIME`（日時範囲検索） | コンテキストに応じて使い分け。通常のfindでは `UPDATE_TIME`、通知日時の範囲指定では `NOTIFICATION_TIME` を使用 |
+| **MiReKyou** | `CREATE_TIME`, `UPDATE_TIME`, `LIMIT_TIME`, `ESTIMATE_START_TIME`, `ESTIMATE_END_TIME` | Mi と同じ5観点。`mi_re_kyou_sql.go` の射影ごとに `mirekyou_create` / `mirekyou_check` / `mirekyou_limit` / `mirekyou_start` / `mirekyou_end` の `DATA_TYPE` が付く |
+
+## 8. 派生テーブル（キャッシュ層・一時層）
+
+前節までは各データ型の**元テーブル**の定義。実際には同じデータに対して、用途別に別スキーマのテーブルが生成される。
+
+### キャッシュ版テーブル
+
+`*_repository_cached_sqlite3_impl.go` が生成する。元テーブルとの差分:
+
+- `RELATED_TIME` / `CREATE_TIME` / `UPDATE_TIME` の TEXT カラムを持たない
+- 代わりに `REP_NAME` と `RELATED_TIME_UNIX` / `CREATE_TIME_UNIX` / `UPDATE_TIME_UNIX`（INTEGER）を持つ
+
+UNIX 秒にすることで範囲検索とソートを高速化し、`REP_NAME` で複数リポジトリを1テーブルに集約する。
+
+### 一時（Temp）テーブル
+
+`*_repository_temp_sqlite3_impl.go` が生成する。元テーブルの全カラムに加えて:
+
+| カラム | 説明 |
+|---|---|
+| `USER_ID` | 所有ユーザ |
+| `DEVICE` | 記録した端末 |
+| `TX_ID` | トランザクションID。`commit_tx` / `discard_tx` の単位 |
+
+KFTL のプレビューなど、確定前のデータを保持するために使う。
+
+### LATEST_DATA_REPOSITORY_ADDRESS_{userID}
+
+定義: `dao/reps/cache/latest_data_repository_address_dao_sqlite3_impl.go`
+
+同一 ID のデータが複数リポジトリに存在するとき、どのリポジトリが最新版を持つかを記録する索引。
+
+| カラム | 説明 |
+|---|---|
+| `IS_DELETED` | 論理削除フラグ |
+| `TARGET_ID_IN_DATA` | データ内での対象ID |
+| `TARGET_ID` (PK) | 対象ID |
+| `LATEST_DATA_REPOSITORY_NAME` | 最新版を持つリポジトリ名 |
+| `DATA_UPDATE_TIME_UNIX` | データの更新時刻（Unix秒） |
+| `LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX` | この索引自体の更新時刻（Unix秒） |
+
+### {dbName}_REF_HASHES
+
+定義: `dao/reps/git_commit_log_repository_cached_sqlite3_impl.go`
+
+Git リポジトリの ref がどのコミットを指していたかを記録し、差分更新の判定に使う。
+
+| カラム | 説明 |
+|---|---|
+| `REP_NAME` (PK) | リポジトリ名 |
+| `REF_NAME` (PK) | ref 名 |
+| `REF_HASH` | コミットハッシュ |

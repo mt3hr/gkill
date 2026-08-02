@@ -39,12 +39,13 @@ stateDiagram-v2
     SaihatePage --> LoginPage: ログアウト
 
     [*] --> SharedPage: 共有リンクアクセス
-    [*] --> SharedMiPage: 共有タスクリンクアクセス
+    [*] --> OldSharedMiPage: 旧・共有タスクリンクアクセス
+    OldSharedMiPage --> SharedPage: router.replace（リダイレクトのみ）
 ```
 
 **メイン画面群（認証必要）:** KFTLPage, RykvPage, MiPage, KyouPage, MkflPage, PlaingPage, DashboardPage, SaihatePage
 
-**共有ページ（認証不要）:** SharedPage (`/shared_page`), SharedMiPage (`/shared_mi`)
+**共有ページ（認証不要）:** SharedPage (`/shared_page`), OldSharedMiPage (`/shared_mi`)
 
 ## 2. 各画面の役割と遷移条件
 
@@ -63,8 +64,8 @@ stateDiagram-v2
 | `/saihate` | SaihatePage | 要 | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | SetNewPasswordPage | 不要 | 新パスワード設定 |
 | `/regist_first_account` | RegistFirstAccountPage | 不要 | 初回アカウント登録 |
-| `/shared_page` | SharedPage | 不要 | 共有 Kyou 閲覧 |
-| `/shared_mi` | SharedMiPage | 不要 | 共有タスク閲覧 |
+| `/shared_page` | SharedPage | 不要 | 共有 Kyou / タスク閲覧（`view_type` で内部振り分け） |
+| `/shared_mi` | OldSharedMiPage | 不要 | 旧URL。`/shared_page?share_id=…` へリダイレクトするだけ |
 
 ### 2.2 画面グループ分類
 
@@ -75,7 +76,7 @@ stateDiagram-v2
 | **記録追加・入力系** | RykvPage（ライフログビュー）、KFTLPage、MkflPage | データの入力と追加。RykvはFABメニューから全データ型の追加が可能で最も汎用的。KFTLはテキスト構文入力、MkflはTimeIsとKFTL入力を同一画面で管理 |
 | **閲覧・検索系** | RykvPage（タイムライン表示）、KyouPage、DashboardPage | 記録されたデータの時系列閲覧・検索・フィルタリング。RykvはタイムラインとDnote集計ビューを統合。Dashboardは日次サマリー（Dnote・GPS・Mi一覧） |
 | **タスク管理系** | MiPage、PlaingPage | タスク（Mi）の管理。MiPageはカンバンボード形式でタスクを管理。PlaingPageは進行中のTimeIsセッションを一覧表示 |
-| **特殊・補助系** | SaihatePage、LoginPage、SetNewPasswordPage、RegistFirstAccountPage、SharedPage、SharedMiPage | SaihatePageはナビゲーション不要の記録追加専用画面（ホーム画面ウィジェット等からの直接記録に使用）。認証フロー（ログイン・初回登録・パスワードリセット）と共有ページがこのグループに含まれる |
+| **特殊・補助系** | SaihatePage、LoginPage、SetNewPasswordPage、RegistFirstAccountPage、SharedPage、OldSharedMiPage | SaihatePageはナビゲーション不要の記録追加専用画面（ホーム画面ウィジェット等からの直接記録に使用）。認証フロー（ログイン・初回登録・パスワードリセット）と共有ページがこのグループに含まれる |
 
 ### 2.3 各画面の詳細説明
 
@@ -115,9 +116,25 @@ gkillの中心的な閲覧・操作画面。左サイドバーで検索条件（
 
 他の画面へのナビゲーションバーを持たない記録追加専用画面。Android/iOSのホーム画面ウィジェットやロック画面からの直接起動を想定し、最低限のUIで素早くデータを追加するシナリオに対応する。記録後に確認する場合はRykvPageで行う。
 
-#### SharedPage / SharedMiPage（共有ページ）`/shared_page` / `/shared_mi`
+#### SharedPage（共有ページ）`/shared_page`
 
-ログイン不要で閲覧できる公開ページ。`/api/add_share_kyou_list_info` で発行した共有リンク経由でアクセスする。SharedPageはKyouリストの読み取り専用表示、SharedMiPageはMiタスクリストの読み取り専用表示。
+ログイン不要で閲覧できる公開ページ。`/api/add_share_kyou_list_info` で発行した共有リンク経由でアクセスする。
+
+`shared-page.vue` 自体は**ディスパッチャ**で、共有情報の `view_type` に応じて描画先を切り替える。
+
+| `view_type` | 描画されるコンポーネント | 内容 |
+|---|---|---|
+| `mi` | `shared-mi-page.vue` | Miタスクリストの読み取り専用表示 |
+| `rykv` | `shared-rykv-page.vue` | Kyouリストの読み取り専用表示 |
+
+#### OldSharedMiPage（旧・共有タスクURL）`/shared_mi`
+
+`old-shared-mi-page.vue` は**中身を描画しない**（テンプレートは空の `<div>`）。
+マウント時に `resetDialogHistory()` を呼んでから `/shared_page?share_id=…` へ
+`router.replace` するだけのリダイレクタ。過去に配布した共有リンクを生かすために残っている。
+
+> サーバ側（`serve.go`）は `/shared_rykv` にも SPA を配信するが、
+> `src/client/router/index.ts` に対応するルートが無いため、直接アクセスしても表示されない。
 
 ## 3. Rykv 画面のダイアログ遷移
 
@@ -140,12 +157,19 @@ stateDiagram-v2
     KyouCtx --> EditLantana: 編集選択(Lantana)
     KyouCtx --> EditIDFKyou: 編集選択(IDFKyou)
     KyouCtx --> EditReKyou: 編集選択(ReKyou)
+    KyouCtx --> EditMiReKyou: 編集選択(MiReKyou)
     KyouCtx --> BrowseZipContents: ZIP内容閲覧(IDFKyou, is_zip=true)
     KyouCtx --> DeleteKyou: 削除選択
     KyouCtx --> ConfirmReKyou: リポスト選択
+    KyouCtx --> AddMiReKyou: タスク化選択
     KyouCtx --> KyouHistory: 履歴選択
     KyouCtx --> AddTag: タグ追加選択
     KyouCtx --> AddText: テキスト追加選択
+    KyouCtx --> AddNotification: 通知追加選択
+    KyouCtx --> CopyContent: 内容コピー選択
+    KyouCtx --> CopyId: IDコピー選択
+    KyouCtx --> OpenFolder: フォルダを開く(session_is_local)
+    KyouCtx --> OpenFile: ファイルを開く(session_is_local)
 
     TagCtx --> EditTag: 編集選択
     TagCtx --> DeleteTag: 削除選択
@@ -154,17 +178,45 @@ stateDiagram-v2
     TextCtx --> EditText: 編集選択
     TextCtx --> DeleteText: 削除選択
     TextCtx --> TextHistory: 履歴選択
+
+    NotifCtx --> EditNotification: 編集選択
+    NotifCtx --> DeleteNotification: 削除選択
+    NotifCtx --> NotificationHistory: 履歴選択
+
+    PluginCtx --> AddTag: タグ追加選択
+    PluginCtx --> CopyContent: 内容コピー選択
 ```
 
-**コンテキストメニュー:** KyouCtx（Kyou用）、TagCtx（タグ用）、TextCtx（テキスト用）
+**コンテキストメニュー:** KyouCtx（Kyou用）、TagCtx（タグ用）、TextCtx（テキスト用）、NotifCtx（通知用）、PluginCtx（プラグインKyou用、`plugin-html-context-menu.vue`）
 
-**編集ダイアログ:** データ型ごとに EditKmemo, EditKC, EditURLog, EditMi, EditNlog, EditTimeIs, EditLantana, EditIDFKyou, EditReKyou
+**編集ダイアログ:** データ型ごとに EditKmemo, EditKC, EditURLog, EditMi, EditNlog, EditTimeIs, EditLantana, EditIDFKyou, EditReKyou, EditMiReKyou
 
 **ZIP閲覧ダイアログ:** BrowseZipContents（IDFKyouの `is_zip=true` の場合にコンテキストメニューに表示）
 
-**メタデータダイアログ:** AddTag, EditTag, DeleteTag, AddText, EditText, DeleteText
+**メタデータダイアログ:** AddTag, EditTag, DeleteTag, AddText, EditText, DeleteText, AddNotification, EditNotification, DeleteNotification
 
-**履歴ダイアログ:** KyouHistory, TagHistory, TextHistory
+**履歴ダイアログ:** KyouHistory, TagHistory, TextHistory, NotificationHistory
+
+**クリップボード操作:** CopyContent（内容コピー）, CopyId（IDコピー）はダイアログを開かず、その場でクリップボードに書き込む
+
+**タグ履歴クイック追加:** KyouCtx は直近使用したタグをサブメニューに列挙し、ダイアログを開かずに付与できる
+
+### Rykv のダイアログホスト
+
+上記のダイアログは各コンポーネントが個別に配置しているのではなく、
+`rykv-dialog-host.vue` / `rykv-dialog-host-item.vue` が一括でホストする。
+開けるダイアログ種別は `rykv-dialog-kind.ts` の `RykvDialogKind` に**28種**が定義されている。
+
+```
+'kyou' | 'edit_kmemo' | 'edit_kc' | 'edit_mi' | 'edit_nlog' | 'edit_lantana'
+| 'edit_timeis' | 'edit_urlog' | 'edit_idf_kyou' | 'edit_re_kyou'
+| 'add_mi_re_kyou' | 'edit_mi_re_kyou' | 'add_tag' | 'add_text' | 'add_notification'
+| 'confirm_delete_kyou' | 'confirm_re_kyou' | 'kyou_histories'
+| 'edit_tag' | 'confirm_delete_tag' | 'tag_histories'
+| 'edit_text' | 'confirm_delete_text' | 'text_histories'
+| 'edit_notification' | 'confirm_delete_notification' | 'notification_histories'
+| 'browse_zip_contents'
+```
 
 ### 集計ビュー（DnoteView）のダイアログ遷移
 
@@ -202,20 +254,32 @@ stateDiagram-v2
 stateDiagram-v2
     BoardView --> AddMiDialog: 「+」ボタン
     BoardView --> MiContextMenu: Mi長押し/右クリック
-    BoardView --> NewBoardDialog: 新規ボード作成
+    BoardView --> MiReKyouContextMenu: MiReKyou長押し/右クリック
+    BoardView --> NewBoardNameDialog: 新規ボード作成
+    BoardView --> MiFindQueryEditorDialog: クエリエディタ
+    BoardView --> SaveClipboardToFileDialog: Ctrl+V
 
     MiContextMenu --> EditMiDialog: 編集選択
     MiContextMenu --> AddTagDialog: タグ追加選択
     MiContextMenu --> AddTextDialog: テキスト追加選択
+    MiContextMenu --> AddMiReKyouDialog: タスク化選択
+
+    MiReKyouContextMenu --> EditMiReKyouDialog: 編集選択
 
     BoardView --> ShareTaskListDialog: 共有ボタン
     ShareTaskListDialog --> ShareTaskListLinkDialog: リンク表示
     ShareTaskListDialog --> DeleteShareTaskList: 削除選択
 ```
 
-**Mi操作ダイアログ:** AddMiDialog, EditMiDialog, NewBoardDialog
+**Mi操作ダイアログ:** AddMiDialog, EditMiDialog, NewBoardNameDialog（`new-board-name-dialog.vue`）, MiFindQueryEditorDialog
+
+**MiReKyou:** AddMiReKyouDialog, EditMiReKyouDialog, MiReKyouContextMenu
 
 **共有機能:** ShareTaskListDialog → ShareTaskListLinkDialog, DeleteShareTaskList
+
+**その他:** `mi-kyou-count-calendar.vue`（記録件数カレンダー）、
+`save-clipboard-to-file-dialog.vue`（Ctrl+V でクリップボード内容をファイル保存。
+rykv / mi / plaing / dashboard で有効。`classes/use-scoped-ctrl-v-for-clipboard.ts`）
 
 ## 5. 設定画面のダイアログ遷移
 
@@ -235,6 +299,11 @@ stateDiagram-v2
     AppConfig --> EditRepTypeElement: RepType編集
     AppConfig --> AddNewFolder: フォルダ追加
     AppConfig --> EditFolder: フォルダ編集
+    AppConfig --> EditDnote: Dnote設定編集
+    AppConfig --> EditRyuu: Ryuu設定編集
+    AppConfig --> EditDashboard: ダッシュボード設定編集
+    AppConfig --> NewBoardName: ボード名新規作成
+    AppConfig --> ServerConfig: サーバ設定へ
 ```
 
 **アプリケーション設定（AppConfig）:** TagStruct, RepStruct, KFTLTemplate, DeviceStruct, RepTypeStruct の各構造を編集
@@ -248,9 +317,10 @@ stateDiagram-v2
     ServerConfig --> AddRep: Rep追加
     ServerConfig --> DeleteRep: Rep削除確認
     ServerConfig --> AllocateRep: Rep割当管理
+    ServerConfig --> NewDeviceName: デバイス名新規作成
 ```
 
-**サーバ設定（ServerConfig）:** アカウント管理、パスワードリセット、TLS生成、Rep管理
+**サーバ設定（ServerConfig）:** アカウント管理、パスワードリセット、TLS生成、Rep管理、デバイス名作成（`new-device-name-dialog.vue`）
 
 ## 6. ファイルアップロードのダイアログ遷移
 
@@ -263,3 +333,24 @@ stateDiagram-v2
     UploadFileDialog --> DecideRelatedTime: 関連日時設定
     UploadFileDialog --> EditIDFKyou: ファイル情報編集
 ```
+
+## 7. その他の共通ダイアログ
+
+| ダイアログ | 起動元 | 説明 |
+|---|---|---|
+| `help-dialog.vue` | 各ページのツールバー | ヘルプ表示 |
+| `tutorial-dialog.vue` | 各ページのツールバー | チュートリアル表示 |
+| `save-clipboard-to-file-dialog.vue` | Ctrl+V（rykv / mi / plaing / dashboard） | クリップボードの内容をファイルとして保存 |
+| `plugin-config-dialog.vue` | （なし） | プラグイン設定。**どこからも import されていない孤児コンポーネント**で、現状は到達経路が無い |
+
+### KFTL の未知タグ確認
+
+KFTL 送信時とタグ追加時に、既存タグに無いタグが含まれていると確認を求める。
+この確認は `Teleport` によるインライン描画で、対応する `*-dialog.vue` ファイルは存在しない
+（`classes/use-kftl-view.ts`、`classes/use-add-tag-view.ts`）。
+
+### プログラムからダイアログを閉じる
+
+ダイアログの開閉はブラウザ履歴と連動している（[frontend-architecture.md](frontend-architecture.md) 参照）。
+プログラムから閉じるときは `show.value = false` を直接書かず、
+必ず `closeDialogViaHistory()` を使うこと。直接書くと履歴スタックとずれる。

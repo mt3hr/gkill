@@ -577,7 +577,7 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 
 | 変数名 | デフォルト | 説明 |
 |---|---|---|
-| `MCP_LOG` | `info` | アクセスログレベル（`debug`, `info`, `warn`, `error`） |
+| `MCP_LOG` | `info` | アクセスログレベル（`none`, `error`, `warn`, `info`, `debug`, `trace`） |
 
 ---
 

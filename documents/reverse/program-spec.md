@@ -165,9 +165,11 @@ graph LR
         TX[TextReps]
         NF[NotificationReps]
         RK[ReKyouReps]
+        MRK[MiReKyouReps]
         ID[IDFKyouReps]
         GP[GPSLogReps]
         GC[GitCommitLogReps]
+        PL[PluginReps]
     end
 
     subgraph "書き込み先（各1つ）"
@@ -182,6 +184,7 @@ graph LR
         WTX[WriteTextRep]
         WNF[WriteNotificationRep]
         WRK[WriteReKyouRep]
+        WMRK[WriteMiReKyouRep]
         WID[WriteIDFKyouRep]
         WGP[WriteGPSLogRep]
     end
@@ -189,16 +192,20 @@ graph LR
 
 各RepTypeに対して、読み取り用は複数のリポジトリを保持可能ですが、書き込み先（`Write*Rep`）は1つだけです。同じRepTypeで複数の`UseToWrite=true`があるとエラーになります。
 
+`PluginReps` だけは他と性質が異なります。`RepType` の switch 文では生成されず、
+`PluginManager.DiscoverPlugins()` が `$GKILL_HOME/plugins/{userID}/` を走査して登録し、
+`PluginReps` と `Reps` の両方に追加されます（`gkill_dao_manager.go:1081-1087`）。書き込み先はありません。
+
 ## 4. APIハンドラ構造
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 88ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 92ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
 
 #### 主な責務
 
 - HTTPサーバーの起動・停止（`serve.go`, `close.go`）
-- 全85エンドポイント（84 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ
+- 全88エンドポイント（87 POST + 1 GET）のハンドリング（`handle_*.go`）。GETは `urlog_bookmarklet_page` のみ。アドレス定義は90件で、`get_kftl_template` と `get_gkill_info` の2件は未登録
 - GkillDAOManagerの保持・提供
 - 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
@@ -208,11 +215,20 @@ graph LR
 
 ハンドラ登録時に3つのラッパー関数を使い分けて認証レベルを指定します。
 
-| ラッパー関数 | 認証レベル | AuthContextの内容 | 用途 |
-|---|---|---|---|
-| `wrapNoAuth` | なし | — | login, get_shared_kyous 等 |
-| `wrapAuth` | セッション認証 | Account | logout, reset_password 等 |
-| `wrapAuthRepos` | セッション＋リポジトリ | Account, Device, GkillRepositories | データCRUD系ハンドラ |
+| ラッパー関数 | 件数 | 認証レベル | AuthContextの内容 | 用途 |
+|---|---|---|---|---|
+| `wrapNoAuth` | 13 | ミドルウェアでの認証なし（`filterLocalOnly` は通る） | — | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet` 等 |
+| `wrapAuth` | 19 | セッション認証 | Account, UserID, Device | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
+| `wrapAuthRepos` | 56 | セッション＋リポジトリ | Account, UserID, Device, Repositories | データCRUD系ハンドラ |
+
+> **`logout` / `reset_password` / `set_new_password` は `wrapAuth` ではなく `wrapNoAuth`** です
+> （`serve.go:30-32`）。セッションの検証はハンドラ内で行います。
+>
+> また `wrapNoAuth` は「認証を一切しない」という意味ではありません。ルータ上は未認証ですが、
+> `upload_files` / `upload_gpslog_files` / `browse_zip_contents` /
+> `get_idf_kyou_by_relative_path` / `get_idf_file_path` / `get_kyous_mcp` の6本は
+> **ハンドラ内部の `getAccountFromSessionID` でセッションを検証**します。
+> `/files/` と `/zip_cache/` はボディではなく **cookie**（`gkill_session_id`）で認証します。
 
 #### AuthContext構造体
 
@@ -220,46 +236,58 @@ graph LR
 
 ```go
 type AuthContext struct {
-    Account          *reps.Account
-    Device           *reps.Device
-    GkillRepositories *reps.GkillRepositories
+    Account      *account.Account
+    UserID       string
+    Device       string
+    Repositories *reps.GkillRepositories // Auth-onlyルートではnil
 }
 ```
 
+`Device` は `*reps.Device` ではなく**端末名の文字列**です。
+
 #### ミドルウェアの処理フロー
 
-1. `authMiddleware`: リクエストからsession_idを取得 → LoginSessionDAOでセッション検証 → AccountDAO からアカウント取得 → `AuthContext.Account` に設定
-2. `authWithReposMiddleware`: 上記に加え → DeviceDAO からデバイス取得 → GkillDAOManager.GetRepositories() → `AuthContext.Device`, `AuthContext.GkillRepositories` に設定
+1. `authMiddleware`: リクエストからsession_idを取得 → LoginSessionDAOでセッション検証 → AccountDAO からアカウント取得 → `g.GetDevice()`（ServerConfig 参照）で端末名を取得 → `AuthContext.Account` / `UserID` / `Device` に設定
+2. `authWithReposMiddleware`: 上記に加え → GkillDAOManager.GetRepositories() → `AuthContext.Repositories` に設定
+
+DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice()` を使います。
+`Device` は auth-only ルートでも設定され、`wrapAuthRepos` との差は `Repositories` の有無だけです。
 
 ### usecaseレイヤー
 
-`gkill/usecase/`パッケージ（16ファイル）は、ハンドラから抽出されたHTTP非依存のビジネスロジックを提供します。
+`gkill/usecase/`パッケージ（17ファイル）は、ハンドラから抽出されたHTTP非依存のビジネスロジックを提供します。
 
 - DAO/リポジトリ型を直接操作する関数群
 - HTTPリクエスト/レスポンスに依存しない
 - ハンドラとMCPサーバーの両方から再利用可能
 
-### エンドポイント分類（84 POST）
+### エンドポイント分類（87 POST + 1 GET）
 
 | カテゴリ | エンドポイント数 | 例 |
 |---|---|---|
 | 認証 | 6 | login, logout, reset_password, set_new_password, add_user, update_account_status |
-| データ取得 | 20 | get_kyous, get_kyou, get_kmemo, get_timeis, get_mi, get_mi_board_list, get_all_tag_names, get_tags_by_id, get_tag_histories_by_tag_id 等 |
-| データ追加 | 11 | add_kmemo, add_timeis, add_mi, add_lantana, add_kc, add_nlog, add_urlog, add_tag, add_text, add_gkill_notification, add_rekyou |
-| データ更新 | 13 | update_kmemo, update_timeis, update_mi, update_lantana, update_kc, update_nlog, update_urlog, update_tag, update_text, update_gkill_notification, update_rekyou, update_idf_kyou, update_application_config |
+| データ取得 | 27 | get_kyous, get_kyou, get_kmemo, get_timeis, get_mi, get_mirekyou, get_git_commit_log, get_idf_kyou, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_tags_by_id, get_texts_by_id, get_tag_histories_by_tag_id, get_text_histories_by_text_id, get_gkill_notification_histories_by_notification_id, get_idf_kyou_by_relative_path, get_idf_file_path 等 |
+| データ追加 | 12 | add_kmemo, add_timeis, add_mi, add_lantana, add_kc, add_nlog, add_urlog, add_tag, add_text, add_gkill_notification, add_rekyou, add_mirekyou |
+| データ更新 | 14 | update_kmemo, update_timeis, update_mi, update_lantana, update_kc, update_nlog, update_urlog, update_tag, update_text, update_gkill_notification, update_rekyou, update_mirekyou, update_idf_kyou, update_application_config |
 | 共有 | 5 | get_share_kyou_list_infos, add_share_kyou_list_info, update_share_kyou_list_info, delete_share_kyou_list_infos, get_shared_kyous |
 | 通知 | 2 | get_gkill_notification_public_key, register_gkill_notification |
 | 設定 | 5 | get_server_configs, update_server_configs, get_repositories, update_user_reps, reload_repositories |
-| KFTL | 2 | submit_kftl_text, get_kftl_template |
+| KFTL | 2 | submit_kftl_text, get_kftl_template（**未登録**） |
 | トランザクション | 2 | commit_tx, discard_tx |
 | キャッシュ | 1 | update_cache |
 | ファイル | 4 | upload_files, upload_gpslog_files, get_gps_log, browse_zip_contents |
 | プラグイン | 4 | get_plugin_list, get_plugin_content_html, get_plugin_config_html, post_plugin_config |
-| その他 | 9 | get_application_config, generate_tls_file, get_gkill_info, open_directory, open_file, urlog_bookmarklet, get_updated_datas_by_time, get_kyous_mcp, get_gkill_notifications_by_id |
+| その他 | 9 | get_application_config, generate_tls_file, get_gkill_info（**未登録**）, open_directory, open_file, urlog_bookmarklet, get_updated_datas_by_time, get_kyous_mcp, get_gkill_notifications_by_id |
+
+> `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり、`HandleFunc` 登録も
+> ハンドラ実装も存在しません（実行時404）。`gkill-api.ts` には呼び出しメソッドが残っています。
 
 ### ルーティング定義
 
-`gkill/api/gkill_server_api/gkill_server_api_address.go`で全エンドポイントのルートが定義されます。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。各ルートは`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でラップされたハンドラに紐づけられます。
+`gkill/api/gkill_server_api/gkill_server_api_address.go`で全エンドポイントのルートが定義されます（90件、うち88件が登録済み）。大半は`POST /api/{endpoint}`形式ですが、`urlog_bookmarklet_page` のみ `GET` です。各ルートは`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でラップされたハンドラに紐づけられます。
+
+API 以外のルートは19件（`PathPrefix` 18 + `Path` 1）で、SPA 配信・`/files/`・`/zip_cache/`・
+`/resources/manual/` 等がここに含まれます。
 
 ### レスポンス構造
 
@@ -349,23 +377,33 @@ type kftlFactory struct {
 4. 型に応じたリクエスト（Add/Update）を生成
 5. リクエストを実行
 
-### ステートメント型（44種類）
+### ステートメント型（Go 39種類 / TypeScript 41種類）
 
 KFTLは以下のステートメント型をサポートしています。
 
-| カテゴリ | ステートメント型 | 説明 |
+サーバ側の具象型は `src/server/gkill/api/kftl/*.go` の `kftl*StatementLine` 構造体（39個）。
+1つのデータ型が複数行で構成されるため、行の役割ごとに型が分かれている。
+
+| カテゴリ | ステートメント型（Go） | 説明 |
 |---|---|---|
-| メモ | kmemo | テキストメモの追加 |
-| 打刻 | timeis_start, timeis_end | 打刻の開始/終了 |
-| タスク | mi | タスクの追加 |
-| 数値 | kc | 数値記録 |
-| 気分 | lantana | 気分値の記録 |
-| 支出 | nlog | 支出記録 |
-| ブックマーク | urlog | URL記録 |
-| タグ | tag | タグ付け |
-| テキスト | text | テキスト付与 |
-| 通知 | notification | 通知設定 |
-| 制御 | template, time_set | テンプレート展開、時刻設定 |
+| メモ | `kftlKmemoStatementLine` | テキストメモの追加 |
+| 数値 | `kftlStartKC` / `kftlKCTitle` / `kftlKCNumValue` | 開始 → タイトル → 数値 |
+| 気分 | `kftlStartLantana` / `kftlLantanaMood` | 開始 → 気分値 |
+| タスク | `kftlStartMi` / `kftlMiTitle` / `kftlMiBoardName` / `kftlMiLimitTime` / `kftlMiEstimateStartTime` / `kftlMiEstimateEndTime` | 開始 → タイトル → ボード名 → 期限 → 見積開始 → 見積終了 |
+| 支出 | `kftlStartNlog` / `kftlNlogShopName` / `kftlNlogTitle` / `kftlNlogAmount` | 開始 → 店名 → タイトル → 金額 |
+| ブックマーク | `kftlStartURLog` / `kftlURLogURL` / `kftlURLogTitle` | 開始 → URL → タイトル |
+| 打刻 | `kftlStartTimeIs` / `kftlTimeIsTitle` / `kftlTimeIsStartTime` / `kftlTimeIsEndTime` | 開始+終了を同時指定 |
+| 打刻（開始のみ） | `kftlStartTimeIsStart` / `kftlTimeIsStartTitle` | |
+| 打刻（終了） | `kftlStartTimeIsEnd` / `kftlTimeIsEndTitle` / `kftlStartTimeIsEndIfExist` | 存在する場合のみ終了する派生あり |
+| 打刻（タグで終了） | `kftlStartTimeIsEndByTag` / `kftlStartTimeIsEndByTagIfExist` / `kftlTimeIsEndByTagTag` | |
+| タグ | `kftlTagStatementLine` | タグ付け |
+| テキスト | `kftlStartText` / `kftlText` / `kftlEndText` | 開始 → 本文 → 終了 |
+| 関連時刻 | `kftlRelatedTimeStatementLine` | 関連時刻の指定 |
+| 区切り | `kftlSplit` / `kftlSplitAndNextSecond` | ステートメント区切り（`、` / `、、`） |
+| その他 | `kftlNoneStatementLine` | 該当なし |
+
+> クライアント側（`src/client/classes/kftl/kftl_*/`）は同じ構成で 41 クラス。
+> `notification` / `template` / `time_set` というステートメント型は**存在しません**。
 
 ### プレフィックスの二重対応
 
@@ -467,13 +505,15 @@ sequenceDiagram
 
 | 技術 | バージョン | 用途 |
 |---|---|---|
-| Vue 3 | ^3.5.31 | UIフレームワーク |
-| Vuetify 4 | ^4.0.4 | UIコンポーネントライブラリ |
-| Vue Router 5 | ^5.0.4 | ルーティング |
-| vue-i18n 11 | ^11.3.0 | 国際化（7言語） |
-| Vite 8 | ^8.0.16 | ビルドツール |
+| Vue 3 | ^3.5.40 | UIフレームワーク |
+| Vuetify 4 | ^4.1.5 | UIコンポーネントライブラリ |
+| Vue Router 5 | ^5.2.0 | ルーティング |
+| vue-i18n 11 | ^11.4.7 | 国際化（7言語） |
+| Vite 8 | ^8.1.5 | ビルドツール |
 | TypeScript 6 | ~6.0.0 | 型安全性 |
 | vite-plugin-pwa | ^1.2.0 | PWA対応 |
+
+バージョンは `package.json` を正とする。詳細な依存一覧は [frontend-architecture.md](frontend-architecture.md) を参照。
 
 ### ルート構成（13ルート）
 
@@ -483,11 +523,11 @@ sequenceDiagram
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts`（約3,500行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
+`src/client/classes/api/gkill-api.ts`（約3,660行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
 
 #### 主な責務
 
-- 全85エンドポイントへのHTTPリクエスト送信
+- 全88登録エンドポイントへのHTTPリクエスト送信
 - セッションIDの管理
 - リクエスト/レスポンスの型変換
 - エラーハンドリング
@@ -505,8 +545,8 @@ gkillはPiniaやVuexを使用せず、**Props/Emit**パターンのみで状態�
 | 種別 | 数 | 配置 |
 |---|---|---|
 | ページ | 15 | `pages/*.vue` |
-| ビュー | 185 | `pages/views/*.vue` |
-| ダイアログ | 101 | `pages/dialogs/*.vue` |
+| ビュー | 189 | `pages/views/*.vue` |
+| ダイアログ | 103 | `pages/dialogs/*.vue` |
 
 ### テーマ
 
@@ -531,13 +571,30 @@ Vuetifyで2つのテーマを定義しています。
 | コマンド | 説明 |
 |---|---|
 | `version` | バージョン情報表示（バージョン、ビルド日時、コミットハッシュ） |
-| `idf` | 指定ディレクトリのIDF（IDファイル）生成 |
-| `dvnf` | DVNFファイル操作（get/copy/move） |
+| `idf` | 指定ディレクトリのIDF（IDファイル）生成。`-i`/`--ignore` で除外ファイル名を指定。**`gkill_server` にのみ登録**されており、デスクトップアプリ `gkill` からは使えない |
+| `dvnf` | DVNFファイル操作（`get [dvnfPath]` / `copy src target` / `move src target`）。共通フラグ `--new`/`-n`、`--auto_create`、`--device`。詳細は [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) |
 | `generate_thumb_cache` | サムネイルキャッシュ生成 |
 | `generate_video_cache` | 動画キャッシュ生成 |
 | `optimize` | リポジトリ最適化 |
 | `update_cache` | キャッシュ更新（稼働中サーバーにHTTPリクエスト。認証情報の指定は不要でローカルDBの管理者アカウントを使う） |
 | `clear_cache` | ディスク上の派生キャッシュ削除（`<thumb\|video\|zip\|plugin\|all> <all\|user_id...>`。`all`で全体、user_id指定で該当ユーザー分のみ） |
+
+### パーシステントフラグ
+
+`gkill_server` / `gkill` の両方に定義されるフラグです（`main/gkill_server/main.go:27-36`、`main/gkill/main.go`）。
+
+| フラグ | 既定値 | 説明 |
+|---|---|---|
+| `--gkill_home_dir` | `$HOME/gkill` | データ/設定/ログのホームディレクトリ |
+| `--address` | （なし） | リッスンアドレスを上書き（例: `:19999`）。設定DBの `ADDRESS` は書き換えない実行時オーバーライド |
+| `--disable_tls` | `false` | TLS強制を無効化 |
+| `--cache_in_memory` | `true` | リポジトリデータをメモリにキャッシュ |
+| `--cache_reps_local` | `false` | リポジトリをローカルにキャッシュ |
+| `--goroutine_pool` | `runtime.NumCPU()` | ゴルーチンプールサイズ |
+| `--cache_clear_count_limit` | `3000` | キャッシュクリアまでのアイテム数上限 |
+| `--cache_update_duration` | `1m` | キャッシュ更新間隔 |
+| `--pre_load_users` | （なし） | 起動時にリポジトリを先読みするユーザ（複数指定可）。`PreLoadRepositories` が処理する |
+| `--log` | `none` | ログレベル: `none`, `error`, `warn`, `info`, `access`, `debug`, `trace`, `trace_sql` |
 
 ## 11. プラグインリポジトリシステム
 
@@ -550,15 +607,22 @@ Vuetifyで2つのテーマを定義しています。
 | Mutex の位置 | `pluginRepositoryImpl` struct に `sync.Mutex` を保持。`pluginProcess` struct には置かない |
 | ロック範囲 | `callCommand()` が `mu.Lock()` → `ensureStarted()` → `sendRequest()` → `mu.Unlock()` を直列化 |
 | プロセス起動 | `exec.CommandContext(context.Background(), ...)` — HTTP リクエストキャンセルによる強制終了を防ぐ |
-| クラッシュ復旧 | `sendRequest()` 失敗時に `started=false` → `ensureStarted()` → `sendRequest()` を1回リトライ |
+| 呼び出しタイムアウト | `callCommand()` は呼び出し側 ctx に期限が無ければ**既定 30 秒**を注入する。超過・キャンセル時は `Process.Kill()` でサブプロセスを停止し `started=false` にする |
+| クラッシュ復旧 | `sendRequest()` 失敗時に `started=false` → `ensureStarted()` → `sendRequest()` を1回リトライ。ただし **ctx のタイムアウト/キャンセルが原因のときはリトライしない** |
+
+プロセス起動自体は `context.Background()` なので HTTP リクエストのキャンセルでは死にませんが、
+個々の呼び出しはタイムアウトでプロセスごと落とされます。この2つは別の仕組みです。
 
 ### bufio.Scanner バッファ
 
-大きな HTML レスポンス（会話コンテンツ等）に対応するため 32MB バッファを設定:
+大きな HTML レスポンス（会話コンテンツ等）に対応するため、**親側は** 32MB バッファを設定:
 
 ```go
 scanner.Buffer(make([]byte, 32*1024*1024), 32*1024*1024)
 ```
+
+プラグイン SDK 側（`plugin/sdk/sdk.go:83-84`）は 1MB のままです。リクエスト JSON は
+そこまで大きくならないためで、拡張しているのは親側だけです。
 
 詳細は [plugin-system.md](plugin-system.md) を参照。
 

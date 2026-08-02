@@ -5,12 +5,32 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、88ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、92ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（176ファイル）
-- **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、16ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（182ファイル）
+- **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
 
 ## 共通仕様
+
+### 認証ラッパーの分類
+
+各エンドポイントは `serve.go` で3つのラッパー関数のいずれかに包まれて登録される。
+
+| ラッパー | 件数 | ミドルウェアが行うこと | 対象 |
+|---|---|---|---|
+| `wrapNoAuth` | 13 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `upload_files`, `upload_gpslog_files`, `browse_zip_contents`, `get_idf_kyou_by_relative_path`, `get_idf_file_path` |
+| `wrapAuth` | 19 | セッション検証 → Account / UserID / Device を `AuthContext` に設定 | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
+| `wrapAuthRepos` | 56 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得23 + 共有4 + リポジトリ/TX 4） |
+
+> **`wrapNoAuth` = 認証なし、ではない。** 上表の `wrapNoAuth` のうち
+> `upload_files` / `upload_gpslog_files` / `browse_zip_contents` /
+> `get_idf_kyou_by_relative_path` / `get_idf_file_path` / `get_kyous_mcp` の6本は、
+> **ハンドラ内部で `getAccountFromSessionID` を呼んでセッションを検証**する。
+> ミドルウェアを通さないのは、これらがマルチパート相当の大きなボディや
+> 独自のリクエスト形式を扱うため。
+>
+> `logout` / `reset_password` / `set_new_password` も `wrapNoAuth` に含まれる。
+> `update_cache` は `wrapAuth` + ハンドラ内 `IsAdmin` チェックの組み合わせ。
 
 ### リクエスト共通フィールド
 
@@ -112,7 +132,29 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 #### `/api/submit_kftl_text` — KFTLテキスト送信
 
-`/`系プレフィックス（`/mi` `/mood` `/num` `/expense` `/url` `/start` `/end` `/timeis` `/end?` `/endt` `/endt?`）は**行全体が完全一致**する必要があり、値は**次の行**に書く。`/mood 8` のようなインライン記法は無効。値付きの例: `/mood`＋改行＋`8`、`/num`＋改行＋`体重`＋改行＋`65.5`。例外として `#`(タグ) と `?`(関連時刻) のみ行内に内容を続けられる。出典: `src/server/gkill/api/kftl/kftl_factory.go`。
+プレフィックスは**日本語と ASCII の2系統**があり、どちらも常に受理される（`kftl_factory.go:8-45`）。
+
+| 用途 | 日本語 | ASCII |
+|---|---|---|
+| タグ | `。` | `#` |
+| テキスト開始/終了 | `ーー` | `--` |
+| 関連時刻 | `？` | `?` |
+| 区切り | `、` | `,` |
+| 区切り（+1秒） | `、、` | `,,` |
+| 数値（KC） | `ーか` | `/num` |
+| タスク（Mi） | `ーみ` | `/mi` |
+| 気分（Lantana） | `ーら` | `/mood` |
+| 支出（Nlog） | `ーん` | `/expense` |
+| ブックマーク（URLog） | `ーう` | `/url` |
+| 打刻開始 | `ーた` | `/start` |
+| 打刻終了 | `ーえ` | `/end` |
+| 打刻終了（存在時のみ） | `ーいえ` | `/end?` |
+| 打刻終了（タグ指定） | `ーたえ` | `/endt` |
+| 打刻終了（タグ指定・存在時のみ） | `ーいたえ` | `/endt?` |
+| 打刻（開始+終了） | `ーち` | `/timeis` |
+| 保存 | `！` | `!` |
+
+`/`系プレフィックスは**行全体が完全一致**する必要があり、値は**次の行**に書く。`/mood 8` のようなインライン記法は無効。値付きの例: `/mood`＋改行＋`8`、`/num`＋改行＋`体重`＋改行＋`65.5`。例外として `#`(タグ) と `?`(関連時刻) のみ行内に内容を続けられる。出典: `src/server/gkill/api/kftl/kftl_factory.go`。
 
 ```json
 // リクエスト例（\n は改行。/mood と /num の値は次行に置く）
@@ -199,7 +241,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 | `/api/add_user` | アカウント追加 |
 | `/api/update_account_status` | アカウント状態更新（有効/無効） |
 
-## Kyouデータ追加（11件）
+## Kyouデータ追加（12件）
 
 各データ型の新規レコードを作成する。Append-Only DAOのため、既存データを変更せず常にINSERTされる。
 
@@ -218,7 +260,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 | `/api/add_text` | Text | テキスト注釈追加（対象KyouのIDを指定） |
 | `/api/add_gkill_notification` | Notification | 通知追加（対象KyouのIDを指定） |
 
-## Kyouデータ更新（12件）
+## Kyouデータ更新（13件）
 
 Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERTする。最新レコードが有効データとなる。
 
@@ -238,7 +280,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_text` | Text | テキスト注釈更新 |
 | `/api/update_gkill_notification` | Notification | 通知更新 |
 
-## Kyouデータ取得（13件）
+## Kyouデータ取得（14件）
 
 | パス | 説明 |
 |---|---|
@@ -288,7 +330,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_user_reps` | リポジトリパス更新 |
 | `/api/reload_repositories` | リポジトリ再読み込み |
 
-## ファイル操作（6件）
+## ファイル操作（7件）
 
 | パス | 説明 |
 |---|---|
@@ -337,13 +379,13 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_gps_log` | GPSログ取得（日付範囲指定） |
 
-## MCP連携（1件 + MCPツール8つ）
+## MCP連携（1件 + MCPツール10個）
 
 | パス | 説明 |
 |---|---|
 | `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む） |
 
-MCPサーバは8つのReadツールを提供（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_idf_file`, `gkill_get_idf_file_path`）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_idf_file_path` は `/api/get_idf_file_path` を経由してファイルの絶対パスを返す（stdio接続のローカルクライアント用）。
+MCPサーバは10個のReadツールを提供する。内訳は固有の8つ（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_idf_file`, `gkill_get_idf_file_path`）と、3サーバ共通のプラグインツール2つ（`gkill_get_plugin_list`, `gkill_get_plugin_content`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_idf_file_path` は `/api/get_idf_file_path` を経由してファイルの絶対パスを返す（stdio接続のローカルクライアント用）。
 
 ## TLS・セキュリティ（1件）
 
@@ -404,21 +446,30 @@ MCPサーバは8つのReadツールを提供（`gkill_get_kyous`, `gkill_get_mi_
 
 ## 非APIルート
 
+`serve.go` に登録される API 以外のルートは19件（`PathPrefix` 18 + `Path` 1）。
+
 | パス | メソッド | 説明 |
 |---|---|---|
-| `/files/*` | GET | アップロードファイル配信 |
-| `/zip_cache/*` | GET | ZIP展開済みファイル配信。`/api/browse_zip_contents` で展開されたファイルをセッション認証付きで配信する。`$HOME/gkill/caches/zip_cache/` 配下のファイルを提供 |
+| `/files/*` | GET | アップロードファイル配信。**cookie**（`gkill_session_id`）で認証する |
+| `/zip_cache/*` | GET | ZIP展開済みファイル配信。`/api/browse_zip_contents` で展開されたファイルを配信する。`$HOME/gkill/caches/zip_cache/` 配下のファイルを提供。ルータ上は `wrapNoAuth` で、認証はハンドラ内の cookie で行う |
 | `/serviceWorker.js` | GET | PWA Service Worker 配信 |
 | `/resources/manual/*` | GET | HTMLマニュアル配信（7言語）。`filterLocalOnly` によるアクセス制御付き |
-| `/` | GET | Vue SPA（embed された index.html）。`/rykv` `/kftl` `/mi` `/kyou` `/dashboard` `/saihate` `/plaing` 等のページパスも同一SPAを配信 |
+| `/` | GET | Vue SPA（embed された index.html）。`router.Path("/")` として個別登録 |
+| `/rykv` `/kftl` `/mi` `/mkfl` `/kyou` `/dashboard` `/saihate` `/plaing` | GET | 同一SPAを配信（各パスが `PathPrefix` として個別登録される） |
+| `/shared_page` `/shared_mi` `/shared_rykv` | GET | 共有ページ用SPA。認証不要 |
+| `/set_new_password` `/regist_first_account` | GET | SPA。**この2つだけ `ifRedirectResetAdminAccountIsNotFound` を通らない**（`serve.go:262-276`）。管理者アカウント未設定時のリダイレクト先そのものなので、リダイレクト判定を通すとループするため |
+| （上記以外） | GET | catch-all の `PathPrefix("/")` が同一SPAを配信 |
+
+> `/shared_rykv` はサーバ側では配信されるが、`src/client/router/index.ts`（13ルート）に
+> 対応するルート定義が無い。
 
 ---
 
 ## 補足
 
-- **合計:** `/api/` エンドポイント 87件定義（うち85件はハンドラ登録済み、2件はアドレス定義のみ。メソッドはPOST中心、一部GET）+ 非APIルート 5件
+- **合計:** `/api/` エンドポイント 90件定義（うち88件はハンドラ登録済み、2件はアドレス定義のみ。メソッドはPOST中心、一部GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（176ファイル）
-- **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（16ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（182ファイル）
+- **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（17ファイル）
 - `get_kftl_template` と `get_gkill_info` はアドレス定義（`gkill_server_api_address.go`）が存在するが、`HandleFunc` 登録もハンドラ関数実装も存在しない。コードベース全体を調査した結果、これらは**未実装のエンドポイント**であることが確認された。リクエストは404となる

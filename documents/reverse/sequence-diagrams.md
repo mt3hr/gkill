@@ -425,7 +425,7 @@ sequenceDiagram
     Note over Client,MCP: 2. 動的クライアント登録（RFC 7591）
 
     Client->>MCP: POST /oauth/register<br>{client_name, redirect_uris}
-    MCP->>MCP: client_id生成・永続化<br>(mcp_oauth_state.json)
+    MCP->>MCP: client_id生成・永続化<br>(mcp_oauth_read_state.json)
     MCP-->>Client: {client_id, client_id_issued_at}
 
     Note over Client,MCP: 3. 認可コード取得（PKCE + RFC 8707）
@@ -458,13 +458,13 @@ sequenceDiagram
     Note over Client,MCP: 6. トークンリフレッシュ（ローテーション）
 
     Client->>MCP: POST /oauth/token<br>{grant_type=refresh_token,<br>refresh_token, client_id}
-    MCP->>MCP: 旧リフレッシュトークン削除<br>新アクセストークン + 新リフレッシュトークン発行<br>永続化(mcp_oauth_state.json)
+    MCP->>MCP: 旧リフレッシュトークン削除<br>新アクセストークン + 新リフレッシュトークン発行<br>永続化(mcp_oauth_read_state.json)
     MCP-->>Client: {access_token: "new",<br>refresh_token: "new", expires_in: 3600}
 ```
 
 ### 補足
 
-- **トークン永続化:** リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/` 配下に保存（Read: `mcp_oauth_state.json`、Write: `mcp_oauth_write_state.json`、ReadWrite: `mcp_oauth_readwrite_state.json`）。サーバ再起動後も再認証不要
+- **トークン永続化:** リフレッシュトークンとDCRクライアント登録は `$GKILL_HOME/configs/` 配下に保存（Read: `mcp_oauth_read_state.json`、Write: `mcp_oauth_write_state.json`、ReadWrite: `mcp_oauth_readwrite_state.json`）。サーバ再起動後も再認証不要
 - **アクセストークン:** インメモリのみ（サーバ再起動で失効、リフレッシュトークンで再発行可能）
 - **PKCE:** S256（SHA-256）と plain の両方をサポート。S256 推奨
 - **RFC 8707（Resource Indicators）:** 認可〜トークン交換で `resource` パラメータを引き回し、一致を検証
@@ -555,41 +555,49 @@ sequenceDiagram
 
 ## 19. プラグイン一覧取得（get_plugin_list）
 
+> **呼び出し元は MCP のみ。** gkill のフロントエンドにこのエンドポイントを叩く導線は無い
+> （`gkill-api.ts` に `get_plugin_list()` の定義はあるが呼び出し元が存在せず、
+> `plugin-config-dialog.vue` はどこからも import されていない孤児コンポーネント）。
+
 ```mermaid
 sequenceDiagram
-    actor User as ユーザ
-    participant UI as plugin-config-dialog.vue
+    actor Client as MCPクライアント（Claude等）
+    participant MCP as MCPサーバ<br>gkill_get_plugin_list
     participant API as GkillServerAPI
     participant PluginMgr as PluginManager
 
-    User->>UI: 設定画面を開く（プラグイン一覧表示）
-    UI->>API: POST /api/get_plugin_list<br>{session_id, locale_name}
-    API->>API: getAccountFromSessionID(session_id)
-    API->>PluginMgr: GetPlugins(user_id)
+    Client->>MCP: gkill_get_plugin_list
+    MCP->>API: POST /api/get_plugin_list<br>{session_id, locale_name}
+    API->>API: wrapAuth（session_id → account）
+    API->>PluginMgr: GetPluginManager(userID).GetPluginRepositories()
     loop 各プラグイン
         PluginMgr->>PluginMgr: manifest情報取得（name, version, description, data_type, rep_name）
         PluginMgr->>PluginMgr: is_alive 確認（プロセス生存判定）
     end
-    PluginMgr-->>API: []PluginInfo
-    API-->>UI: {plugins: [{name, version, description, data_type, rep_name, is_alive}, ...]}
-    UI-->>User: プラグイン一覧を表示
+    PluginMgr-->>API: []PluginRepository
+    API-->>MCP: {plugins: [{name, version, description, data_type, rep_name, is_alive}, ...]}
+    MCP-->>Client: プラグイン一覧
 ```
 
 ---
 
 ## 20. プラグイン設定 HTML 取得（get_plugin_config_html）
 
+> `plugin-config-dialog.vue` はこのエンドポイントを呼ぶ実装を持つが、
+> コンポーネント自体がどこからも import されていないため画面上に到達する経路が無い。
+> 下図は「実装されている呼び出し順序」であり、現行 UI で辿れるフローではない。
+
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
-    participant UI as plugin-config-dialog.vue
+    participant UI as plugin-config-dialog.vue<br>（未マウント）
     participant API as GkillServerAPI
     participant PluginRepo as pluginRepositoryImpl
     participant Plugin as プラグインバイナリ
 
     User->>UI: プラグイン設定ボタンを押す
     UI->>API: POST /api/get_plugin_config_html<br>{session_id, rep_name}
-    API->>API: getAccountFromSessionID(session_id)
+    API->>API: wrapAuth（session_id → account）
     API->>PluginRepo: rep_name でプラグインを検索
     PluginRepo->>PluginRepo: ensureStarted() — プロセス未起動なら起動
     PluginRepo->>PluginRepo: callCommand() — mu.Lock()
@@ -607,10 +615,16 @@ sequenceDiagram
 
 ## 21. プラグイン設定保存（post_plugin_config）
 
+> **クライアント側の実装は存在しない。** `plugin-config-dialog.vue` にフォーム送信処理は無く、
+> `gkill-api.ts` の `post_plugin_config()` にも呼び出し元が無い。MCP も
+> `post_plugin_config` を公開していない（プラグインツールは読み取り専用）。
+> つまりこのエンドポイントは**サーバ側とプラグイン SDK 側だけが実装済み**の状態。
+> 実際の設定変更は `config.json` を手で編集して行う。
+
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
-    participant UI as plugin-config-dialog.vue
+    participant UI as plugin-config-dialog.vue<br>（送信処理は未実装）
     participant API as GkillServerAPI
     participant PluginRepo as pluginRepositoryImpl
     participant Plugin as プラグインバイナリ
@@ -618,17 +632,21 @@ sequenceDiagram
     User->>UI: 設定フォーム送信
     Note right of UI: iframe内フォームの送信データを<br>form_data: Record<string,string> として収集
     UI->>API: POST /api/post_plugin_config<br>{session_id, rep_name, form_data}
-    API->>API: getAccountFromSessionID(session_id)
+    API->>API: wrapAuth（session_id → account）
     API->>PluginRepo: rep_name でプラグインを検索
     PluginRepo->>PluginRepo: callCommand() — mu.Lock()
     PluginRepo->>Plugin: {"command":"post_config","form_data":{...}} (stdin)
-    Plugin->>Plugin: PostConfig ハンドラ呼び出し<br>（設定を cache.db またはファイルに保存）
-    Plugin-->>PluginRepo: {"pong":false} (stdout)
+    Plugin->>Plugin: PostConfig ハンドラ呼び出し<br>SaveConfig() が config.json (0600) に書き込む
+    Plugin-->>PluginRepo: {"id":"uuid"} (stdout)
     PluginRepo->>PluginRepo: mu.Unlock()
     PluginRepo-->>API: OK
     API-->>UI: {messages, errors}
     UI-->>User: 設定保存完了
 ```
+
+`SaveConfig`（`plugin/sdk/config.go:57-70`）の書き込み先は
+`manifest.json` と同じフォルダの `config.json`。cache.db ではない。
+レスポンスは `pluginResponse{ID: req.ID}` で、`Pong` は `omitempty` のため出力されない。
 
 ---
 
@@ -652,7 +670,7 @@ sequenceDiagram
         API->>PluginRepo: GetContentHTML(ctx, kyouID)
         PluginRepo->>PluginRepo: callCommand() — mu.Lock()
         PluginRepo->>Plugin: {"command":"get_content_html","kyou_id":"..."} (stdin)
-        Plugin->>Plugin: globalCache.GetMsgByID(pluginDir, kyouID)
+        Plugin->>Plugin: globalCache.GetMsgByID(pluginDir, src, kyouID)<br>（Claude Code は GetMessage(pluginDir, src, messageID)）
         Plugin-->>PluginRepo: {"html":"<!DOCTYPE html>..."} (stdout)
         PluginRepo->>PluginRepo: mu.Unlock()
         PluginRepo-->>API: html string
