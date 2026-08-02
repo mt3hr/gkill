@@ -47,9 +47,13 @@ const BLOCK_TAGS = [
   "ul",
 ];
 
+const BLOCK_TAG_SET = new Set(BLOCK_TAGS);
+
 // BOUNDARY はタグ由来の改行位置を表す内部マーカー。入力に含まれていたものは先に消す。
 const BOUNDARY = String.fromCharCode(0);
-const BOUNDARY_REGEX = new RegExp(BOUNDARY, "g");
+
+// タグ開始の判定。sticky フラグで走査位置から直接マッチさせる。
+const TAG_START_REGEX = /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)/y;
 
 const NAMED_ENTITIES = new Map([
   ["nbsp", " "],
@@ -91,6 +95,99 @@ function safeFromCodePoint(codePoint) {
 }
 
 /**
+ * stripTags はHTMLからタグを取り除き、タグ由来の改行位置を BOUNDARY マーカーで
+ * 表したテキストを返す。コメント・script・style は中身ごと落とす。
+ *
+ * 正規表現replaceの繰り返しだと未閉鎖の <!-- や <script>、"</script foo>" 形式の
+ * 終了タグが取りこぼされて中身が本文に漏れるため、1パスの文字走査で処理する。
+ * タグ由来の改行に素の "\n" を使わないのは、</div><div> のような隣接だけで
+ * 空行ができて入れ子の深いHTMLが空行だらけになるため。マーカーの連続は
+ * 後段でまとめて1つの改行に落とす。
+ *
+ * @param {string} html 対象のHTML。
+ * @returns {string} タグを除去し BOUNDARY マーカーを挿入したテキスト。
+ */
+function stripTags(html) {
+  let out = "";
+  let i = 0;
+  const len = html.length;
+  while (i < len) {
+    const ch = html[i];
+    if (ch === BOUNDARY) {
+      // 入力に混ざっていた内部マーカーはタグ由来の改行と区別できないので捨てる
+      i++;
+      continue;
+    }
+    if (ch !== "<") {
+      out += ch;
+      i++;
+      continue;
+    }
+    if (html.startsWith("<!--", i)) {
+      const commentEnd = html.indexOf("-->", i + 4);
+      i = commentEnd === -1 ? len : commentEnd + 3;
+      continue;
+    }
+    // <!doctype ...> や <?xml ...?> はタグごと捨てる
+    if (html[i + 1] === "!" || html[i + 1] === "?") {
+      const declEnd = html.indexOf(">", i + 2);
+      i = declEnd === -1 ? len : declEnd + 1;
+      continue;
+    }
+    TAG_START_REGEX.lastIndex = i;
+    const tagMatch = TAG_START_REGEX.exec(html);
+    if (!tagMatch) {
+      // タグ開始に見えない "<" (例: "a < b") はリテラルとして残す
+      out += ch;
+      i++;
+      continue;
+    }
+    const isClosing = tagMatch[1] === "/";
+    const tagName = tagMatch[2].toLowerCase();
+    const tagEnd = html.indexOf(">", i + tagMatch[0].length);
+    // ">" の無い未閉鎖タグは末尾まで捨てる
+    i = tagEnd === -1 ? len : tagEnd + 1;
+    if (!isClosing && (tagName === "script" || tagName === "style")) {
+      i = skipRawTextContent(html, i, tagName);
+      continue;
+    }
+    if (tagName === "br" || BLOCK_TAG_SET.has(tagName)) {
+      out += BOUNDARY;
+    }
+  }
+  return out;
+}
+
+/**
+ * skipRawTextContent は <script>/<style> の中身を終了タグごと読み飛ばす。
+ *
+ * @param {string} html 対象のHTML。
+ * @param {number} from 開始タグの ">" の直後の位置。
+ * @param {string} tagName "script" または "style" (小文字)。
+ * @returns {number} 終了タグの ">" の直後の位置。終了タグが無ければ末尾。
+ */
+function skipRawTextContent(html, from, tagName) {
+  const lowerHtml = html.toLowerCase();
+  const closer = "</" + tagName;
+  let i = from;
+  while (i < html.length) {
+    const found = lowerHtml.indexOf(closer, i);
+    if (found === -1) {
+      return html.length;
+    }
+    const after = html[found + closer.length];
+    // "</scripter>" のような別タグ名は終了タグではないので読み進める
+    if (after !== undefined && after !== ">" && after !== "/" && !/\s/.test(after)) {
+      i = found + closer.length;
+      continue;
+    }
+    const closeEnd = html.indexOf(">", found + closer.length);
+    return closeEnd === -1 ? html.length : closeEnd + 1;
+  }
+  return html.length;
+}
+
+/**
  * htmlToText はHTMLをプレーンテキストに変換する。
  *
  * @param {string} html 変換対象のHTML。
@@ -102,21 +199,7 @@ export function htmlToText(html, { maxLength = null } = {}) {
     return { text: "", truncated: false };
   }
 
-  let work = html;
-  // コメント・スクリプト・スタイルは中身ごと落とす
-  work = work.replace(/<!--[\s\S]*?-->/g, "");
-  work = work.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "");
-  work = work.replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, "");
-  // タグ由来の改行は境界マーカーで表す。素の "\n" を入れてしまうと
-  // </div><div> のような隣接だけで空行ができ、入れ子の深いHTMLが空行だらけになる。
-  // マーカーの連続は後段でまとめて1つの改行に落とす。
-  work = work.replace(BOUNDARY_REGEX, "");
-  work = work.replace(/<br\s*\/?>/gi, BOUNDARY);
-  for (const tag of BLOCK_TAGS) {
-    work = work.replace(new RegExp(`</?${tag}\\b[^>]*>`, "gi"), BOUNDARY);
-  }
-  // 残ったタグ (span, strong, a など) は取り除くだけ
-  work = work.replace(/<[^>]*>/g, "");
+  const work = stripTags(html);
 
   // マーカーで区切り、区切りごとにエンティティを戻す。
   // デコードを分割より後にするのは、&#0; がマーカーと誤認されないようにするため。

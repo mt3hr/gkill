@@ -54,6 +54,41 @@ describe("htmlToText", () => {
     expect(htmlToText("<p>a<!-- hidden -->b</p>").text).toBe("ab");
   });
 
+  test("drops script contents even with attributes on the end tag", () => {
+    // "</script\t\n bar>" のような終了タグも終了として扱う (CodeQL js/bad-tag-filter)
+    const { text } = htmlToText("<p>a</p><script>var secret = 1;</script\t\n bar><p>b</p>");
+    expect(text).toBe("a\nb");
+    expect(text).not.toContain("secret");
+  });
+
+  test("does not end script at a longer tag name like </scripter>", () => {
+    const { text } = htmlToText("<script>var x = '</scripter>';</script><p>ok</p>");
+    expect(text).toBe("ok");
+  });
+
+  test("drops unclosed comment, script and style to the end of input", () => {
+    expect(htmlToText("<p>a</p><!-- never closed <p>hidden</p>").text).toBe("a");
+    expect(htmlToText("<p>a</p><script>var leak = 1;").text).toBe("a");
+    expect(htmlToText("<p>a</p><style>body { color: red; }").text).toBe("a");
+  });
+
+  test("drops an unclosed tag instead of leaving it as text", () => {
+    expect(htmlToText("<p>a</p><span class=x").text).toBe("a");
+  });
+
+  test("keeps a literal '<' that does not start a tag", () => {
+    expect(htmlToText("<p>a < b</p>").text).toBe("a < b");
+  });
+
+  test("removes uppercase and attribute-heavy tags", () => {
+    const { text } = htmlToText('<SCRIPT type="text/javascript">nope();</SCRIPT><P CLASS="x">a</P>');
+    expect(text).toBe("a");
+  });
+
+  test("drops doctype and processing instructions", () => {
+    expect(htmlToText('<!doctype html><?xml version="1.0"?><p>a</p>').text).toBe("a");
+  });
+
   test("turns block boundaries and br into newlines", () => {
     const { text } = htmlToText("<div>one</div><div>two<br>three</div>");
     expect(text).toBe("one\ntwo\nthree");
