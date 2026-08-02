@@ -65,10 +65,11 @@ td.k { color: var(--muted); }
 
 // renderConfigHTML は設定画面のHTMLを返す。
 //
-// gkillの設定ダイアログは設定HTMLを表示するだけで、保存(post_plugin_config)を呼ぶ導線が
-// まだ無い。プラグイン側から本体を変更するわけにもいかないので、ここでは編集フォームを出さず、
-// 現状の表示とconfig.jsonの編集手順の案内にとどめる。
-// (post_configコマンド自体はハンドラで実装済みなので、本体が対応すればそのまま動く)
+// 設定の保存は gkill 本体の設定ダイアログが postMessage で肩代わりする。
+// iframe は allow-same-origin なしで動くため自力では API を叩けない。
+//   iframe → 親 : { gkill_plugin_config: { source_dirs: "..." } }
+//   親 → iframe : { gkill_plugin_config_result: { ok, error } }
+// config.json を直接編集する経路も従来どおり残している。
 func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src expandedSource) string {
 	var sb strings.Builder
 	sb.WriteString(configHTMLHead)
@@ -135,8 +136,15 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 	sb.WriteString(`</ul>`)
 
 	sb.WriteString(`<h3>指定を変える</h3>`)
-	sb.WriteString(`<p>このプラグインのフォルダ(<code>manifest.json</code> と同じ場所)の ` +
-		`<code>config.json</code> を編集してください。` +
+	sb.WriteString(`<p>1行に1つ書いてください。保存すると次の検索から反映されます(gkillの再起動は不要)。</p>`)
+	sb.WriteString(`<textarea id="gkill_source_dirs" rows="4" spellcheck="false">` +
+		html.EscapeString(strings.Join(patterns, "\n")) + `</textarea>`)
+	sb.WriteString(`<div><button type="button" id="gkill_save">保存</button>` +
+		`<span id="gkill_save_result"></span></div>`)
+	sb.WriteString(configSaveScript)
+
+	sb.WriteString(`<p class="hint">このプラグインのフォルダ(<code>manifest.json</code> と同じ場所)の ` +
+		`<code>config.json</code> を直接編集してもかまいません。` +
 		`プラグインの起動時に無ければ自動で作られます。</p>`)
 	sb.WriteString(`<p>編集するファイル: <code>` +
 		html.EscapeString(filepath.Join(pluginDir, "config.json")) + `</code></p>`)
@@ -153,6 +161,27 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 	sb.WriteString(`</body></html>`)
 	return sb.String()
 }
+
+// configSaveScript は設定ダイアログ(親)へ保存を依頼するスクリプト。
+const configSaveScript = `<script>
+(function () {
+  var ta = document.getElementById('gkill_source_dirs');
+  var btn = document.getElementById('gkill_save');
+  var out = document.getElementById('gkill_save_result');
+  if (!ta || !btn || !out) { return; }
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    out.textContent = '保存中…';
+    parent.postMessage({ gkill_plugin_config: { source_dirs: ta.value } }, '*');
+  });
+  window.addEventListener('message', function (e) {
+    var r = e.data && e.data.gkill_plugin_config_result;
+    if (!r) { return; }
+    btn.disabled = false;
+    out.textContent = r.ok ? '保存しました' : ('保存に失敗しました: ' + (r.error || ''));
+  });
+})();
+</script>`
 
 // maxShownExpanded は展開結果として設定画面に並べる最大件数。
 const maxShownExpanded = 20

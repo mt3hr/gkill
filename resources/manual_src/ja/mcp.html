@@ -15,11 +15,12 @@
 
   <h2>連携の種類</h2>
   <table>
-    <tr><th>種類</th><th>説明</th></tr>
-    <tr><td>読み取り専用</td><td>AI が記録の閲覧・検索のみ行える。記録の追加・変更はできない</td></tr>
-    <tr><td>書き込み専用</td><td>AI が記録の追加・更新・削除のみ行える</td></tr>
-    <tr><td>読み書き両用</td><td>AI が記録の閲覧・追加・更新・削除をすべて行える</td></tr>
+    <tr><th>種類</th><th>できること</th><th>実行するファイル</th><th>ツール数</th><th>HTTP時のポート</th></tr>
+    <tr><td>読み取り専用</td><td>記録の閲覧・検索のみ。追加・変更はできない</td><td>gkill-read-server.mjs</td><td>10</td><td>8808</td></tr>
+    <tr><td>書き込み専用</td><td>記録の追加・更新・削除。あわせて記録保管場所名・タグ名・板名の取得もできる</td><td>gkill-write-server.mjs</td><td>25</td><td>8809</td></tr>
+    <tr><td>読み書き両用</td><td>閲覧・追加・更新・削除のすべて</td><td>gkill-readwrite-server.mjs</td><td>30</td><td>8810</td></tr>
   </table>
+  <p>どの種類でも、プラグインで取り込んだ記録を読むためのツールが2つ含まれます。</p>
 
   <h2>ファイルの受け渡し</h2>
   <p>ファイル記録（画像・動画・ドキュメント）をAIに見せる方法は、接続形態に応じて自動的に切り替わります。</p>
@@ -39,8 +40,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "npx",
-      "args": ["-y", "gkill-mcp-server"],
+      "command": "node",
+      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "あなたのユーザーID",
@@ -61,15 +62,21 @@ claude mcp add gkill \
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=ユーザーID \
   --env GKILL_PASSWORD_SHA256=ハッシュ値 \
-  -- npx -y gkill-mcp-server</code></pre>
+  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
   <div class="tip">
-    <strong>注意:</strong> <code>gkill-mcp-server</code> は現時点では npm に公開されていません。公開までは、gkillに同梱されているMCPサーバー（<code>-- node src/mcp/gkill-readwrite-server.mjs</code> など）を実行コマンドに指定してください。
+    <strong>ヒント:</strong> 上のパスは、gkillのソースを置いた場所に合わせて書き換えてください。種類を変えたいときは、ファイル名を <code>gkill-write-server.mjs</code> か <code>gkill-readwrite-server.mjs</code> に差し替えます。
   </div>
 
-  <h2>リモートアクセス（外出先から利用する場合）</h2>
-  <p>gkill サーバをインターネット経由でアクセスできる状態にした上で、<code>GKILL_BASE_URL</code> にそのアドレスを指定します。セキュリティのため TLS（HTTPS）を有効化することを推奨します。</p>
+  <h2>リモートから使う（HTTP接続）</h2>
+  <p>AIが同じPCにいない場合は、MCPサーバ自体をHTTPで待ち受けさせ、インターネット経由のAIから接続できます。この方式では接続時にOAuthによる認可が行われるため、gkill本体をインターネットに公開する必要はありません。</p>
+  <pre><code># 読み書き両用をHTTPで待ち受ける例
+MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+GKILL_BASE_URL=http://localhost:9999 \
+GKILL_USER=ユーザーID \
+GKILL_PASSWORD_SHA256=ハッシュ値 \
+node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
   <div class="tip">
-    <strong>ヒント:</strong> TLS の設定は<a href="server-config.html">サーバ設定</a>から行えます。
+    <strong>ヒント:</strong> gkillサーバ自体をインターネットに公開して使うこともできます。その場合は <code>GKILL_BASE_URL</code> に公開アドレスを指定し、<a href="server-config.html">サーバ設定</a>でTLS（HTTPS）を有効にしてください。
   </div>
 
   <h2>関連ドキュメント</h2>

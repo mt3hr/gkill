@@ -17,7 +17,7 @@ api/
 ├── find_kyou_context.go         # Kyou 検索コンテキスト
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── version.go                   # バージョン情報
-├── gkill_server_api/            # HTTP ハンドラ（104ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（108ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全85ルート登録
@@ -30,7 +30,7 @@ api/
 │   ├── web_push.go              # Web Push 通知
 │   ├── gkill_server_api_access_log.go # アクセスログ
 │   ├── gkill_server_api_rate_limit.go # レートリミット
-│   └── handle_*.go              # 各エンドポイントのハンドラ（86ファイル）
+│   └── handle_*.go              # 各エンドポイントのハンドラ（92ファイル。うちテスト3）
 ├── find/                        # 検索クエリ型定義
 ├── gpslogs/                     # GPS ログパーサ
 ├── kftl/                        # KFTL パーサ → kftl/README.md 参照
@@ -53,12 +53,12 @@ api/
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（104ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（108ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
-`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全85エンドポイントを登録する。
-各エンドポイントは `handle_*.go`（86ファイル、1ハンドラ1ファイル）として分割されている。
+`GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全88エンドポイントを登録する。
+各エンドポイントは `handle_*.go`（92ファイル。うち3つはテスト、実装は89ファイル。1ハンドラ1ファイル）として分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
 ### `find/`（5ファイル）— 検索クエリ型定義
@@ -92,15 +92,15 @@ api/
 | `message_codes.go` | メッセージコード定数（80定数） |
 | `message_test.go` | コード形式テスト |
 
-### `kftl/`（24ファイル）— KFTL パーサ
+### `kftl/`（22ファイル）— KFTL パーサ
 
 詳細は [kftl/README.md](kftl/README.md) を参照。
 
-### `req_res/`（176ファイル）— Request/Response 構造体
+### `req_res/`（182ファイル）— Request/Response 構造体
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
 
-## 全エンドポイント一覧（87エンドポイント定義・85登録）
+## 全エンドポイント一覧（90エンドポイント定義・88登録）
 
 全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。`gkill_server_api/serve.go` 内で gorilla/mux に登録。`GetKFTLTemplate` と `GetGkillInfo` の2件はアドレス定義のみで未登録。
 
@@ -114,7 +114,7 @@ api/
 | `SetNewPassword` | 新パスワード設定 |
 | `AddAccount` | アカウント追加 |
 
-### データ追加系（11エンドポイント）
+### データ追加系（12エンドポイント）
 
 | エンドポイント | データ型 |
 |---------------|---------|
@@ -129,8 +129,9 @@ api/
 | `AddMi` | Mi（タスク） |
 | `AddLantana` | Lantana（気分値） |
 | `AddRekyou` | ReKyou（リポスト） |
+| `AddMiReKyou` | MiReKyou（既存記録のタスク化。タイトルを持たず target_id で元の Kyou を指す） |
 
-### データ更新系（13エンドポイント）
+### データ更新系（14エンドポイント）
 
 | エンドポイント | データ型 |
 |---------------|---------|
@@ -146,9 +147,10 @@ api/
 | `UpdateIDFKyou` | IDFKyou（ファイル） |
 | `UpdateMi` | Mi |
 | `UpdateRekyou` | ReKyou |
+| `UpdateMiReKyou` | MiReKyou |
 | `UpdateAccountStatus` | アカウントステータス |
 
-### データ取得系（14エンドポイント）
+### データ取得系（15エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -162,6 +164,7 @@ api/
 | `GetMi` | Mi 取得 |
 | `GetLantana` | Lantana 取得 |
 | `GetRekyou` | ReKyou 取得 |
+| `GetMiReKyou` | MiReKyou 取得 |
 | `GetGitCommitLog` | Git コミットログ取得 |
 | `GetIDFKyou` | IDFKyou 取得 |
 | `GetGPSLog` | GPS ログ取得 |

@@ -54,8 +54,36 @@ pre { background: var(--code-bg); border: 1px solid var(--border); border-radius
 table { border-collapse: collapse; font-size: 0.85em; margin: 8px 0; }
 td { padding: 2px 12px 2px 0; }
 td.k { color: var(--muted); }
+textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.85em;
+  background: var(--field-bg); color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; padding: 6px; }
+button { background: var(--btn-bg); color: var(--btn-color); border: none; border-radius: 4px;
+  padding: 6px 16px; font-size: 0.85em; cursor: pointer; margin-top: 6px; }
+button:disabled { opacity: 0.6; cursor: default; }
+#gkill_save_result { font-size: 0.85em; margin-left: 8px; color: var(--muted); }
 </style>
 </head><body>`
+
+// configSaveScript は設定ダイアログ(親)へ保存を依頼するスクリプト。
+const configSaveScript = `<script>
+(function () {
+  var ta = document.getElementById('gkill_source_dirs');
+  var btn = document.getElementById('gkill_save');
+  var out = document.getElementById('gkill_save_result');
+  if (!ta || !btn || !out) { return; }
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    out.textContent = '保存中…';
+    parent.postMessage({ gkill_plugin_config: { source_dirs: ta.value } }, '*');
+  });
+  window.addEventListener('message', function (e) {
+    var r = e.data && e.data.gkill_plugin_config_result;
+    if (!r) { return; }
+    btn.disabled = false;
+    out.textContent = r.ok ? '保存しました' : ('保存に失敗しました: ' + (r.error || ''));
+  });
+})();
+</script>`
 
 // maxShownExpanded は展開結果として設定画面に並べる最大件数。
 const maxShownExpanded = 20
@@ -127,8 +155,15 @@ func renderConfigHTML(pluginDir string, patterns []string, src expandedSource) s
 	sb.WriteString(`</ul>`)
 
 	sb.WriteString(`<h3>データソースを変える</h3>`)
-	sb.WriteString(`<p>このプラグインのフォルダ(<code>manifest.json</code> と同じ場所)の ` +
-		`<code>config.json</code> を編集してください。` +
+	sb.WriteString(`<p>1行に1つ書いてください。保存すると次の検索から反映されます(gkillの再起動は不要)。</p>`)
+	sb.WriteString(`<textarea id="gkill_source_dirs" rows="4" spellcheck="false">` +
+		html.EscapeString(strings.Join(patterns, "\n")) + `</textarea>`)
+	sb.WriteString(`<div><button type="button" id="gkill_save">保存</button>` +
+		`<span id="gkill_save_result"></span></div>`)
+	sb.WriteString(configSaveScript)
+
+	sb.WriteString(`<p class="hint">このプラグインのフォルダ(<code>manifest.json</code> と同じ場所)の ` +
+		`<code>config.json</code> を直接編集してもかまいません。` +
 		`プラグインの起動時に無ければ自動で作られます。</p>`)
 	sb.WriteString(`<p>編集するファイル: <code>` +
 		html.EscapeString(filepath.Join(pluginDir, "config.json")) + `</code></p>`)

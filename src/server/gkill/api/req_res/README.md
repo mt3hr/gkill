@@ -26,7 +26,7 @@
 - `Errors []message.GkillError` — エラー情報
 - `Messages []message.GkillMessage` — メッセージ情報
 
-## 全ファイル一覧（176ファイル: 型定義175 + テスト `req_res_test.go` 1）
+## 全ファイル一覧（182ファイル: 型定義181 + テスト `req_res_test.go` 1）
 
 ### 認証系（10ファイル）
 
@@ -38,7 +38,7 @@
 | `set_new_password_request.go` / `set_new_password_response.go` | 新パスワード設定 |
 | `add_account_request.go` / `add_account_response.go` | アカウント追加 |
 
-### データ追加系（26ファイル）
+### データ追加系（28ファイル）
 
 | ファイル | データ型 |
 |---------|---------|
@@ -50,13 +50,14 @@
 | `add_nlog_request.go` / `add_nlog_response.go` | Nlog（支出記録） |
 | `add_notification_request.go` / `add_notification_response.go` | Notification |
 | `add_re_kyou_request.go` / `add_re_kyou_response.go` | ReKyou（リポスト） |
+| `add_mi_re_kyou_request.go` / `add_mi_re_kyou_response.go` | MiReKyou（既存記録のタスク化） |
 | `add_share_kyou_list_info_request.go` / `add_share_kyou_list_info_response.go` | 共有リスト情報 |
 | `add_tag_request.go` / `add_tag_response.go` | Tag |
 | `add_text_request.go` / `add_text_response.go` | Text |
 | `add_time_is_request.go` / `add_time_is_response.go` | TimeIs（タイムスタンプ） |
 | `add_ur_log_request.go` / `add_ur_log_response.go` | URLog（ブックマーク） |
 
-### データ更新系（29ファイル）
+### データ更新系（31ファイル）
 
 | ファイル | データ型 |
 |---------|---------|
@@ -68,6 +69,7 @@
 | `update_nlog_request.go` / `update_nlog_response.go` | Nlog |
 | `update_notification_request.go` / `update_notification_response.go` | Notification |
 | `update_re_kyou_request.go` / `update_re_kyou_response.go` | ReKyou |
+| `update_mi_re_kyou_request.go` / `update_mi_re_kyou_response.go` | MiReKyou |
 | `update_share_kyou_list_info_request.go` / `update_share_kyou_list_info_response.go` | 共有リスト情報 |
 | `update_tag_request.go` / `update_tag_response.go` | Tag |
 | `update_text_request.go` / `update_text_response.go` | Text |
@@ -76,7 +78,7 @@
 | `update_account_status_request.go` / `update_account_status_response.go` | アカウントステータス |
 | `update_share_kyou_list_infos_response.go` | 共有リスト情報（複数） |
 
-### データ取得系（58ファイル）
+### データ取得系（60ファイル）
 
 #### 個別データ取得
 
@@ -90,6 +92,7 @@
 | `get_mi_request.go` / `get_mi_response.go` | Mi |
 | `get_nlog_request.go` / `get_nlog_response.go` | Nlog |
 | `get_re_kyou_request.go` / `get_re_kyou_response.go` | ReKyou |
+| `get_mi_re_kyou_request.go` / `get_mi_re_kyou_response.go` | MiReKyou |
 | `get_timeis_request.go` / `get_timeis_response.go` | TimeIs |
 | `get_ur_log_request.go` / `get_ur_log_response.go` | URLog |
 | `get_idf_kyou_request.go` / `get_idf_kyou_response.go` | IDFKyou |

@@ -261,23 +261,23 @@ DeviceDAO というDAOは存在せず、両ミドルウェアとも `g.GetDevice
 - HTTPリクエスト/レスポンスに依存しない
 - ハンドラとMCPサーバーの両方から再利用可能
 
-### エンドポイント分類（87 POST + 1 GET）
+### エンドポイント分類（89 POST + 1 GET = 90。カテゴリは排他で、合計が定義数と一致する）
 
-| カテゴリ | エンドポイント数 | 例 |
+| カテゴリ | エンドポイント数 | 内訳 |
 |---|---|---|
 | 認証 | 6 | login, logout, reset_password, set_new_password, add_user, update_account_status |
-| データ取得 | 27 | get_kyous, get_kyou, get_kmemo, get_timeis, get_mi, get_mirekyou, get_git_commit_log, get_idf_kyou, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_tags_by_id, get_texts_by_id, get_tag_histories_by_tag_id, get_text_histories_by_text_id, get_gkill_notification_histories_by_notification_id, get_idf_kyou_by_relative_path, get_idf_file_path 等 |
-| データ追加 | 12 | add_kmemo, add_timeis, add_mi, add_lantana, add_kc, add_nlog, add_urlog, add_tag, add_text, add_gkill_notification, add_rekyou, add_mirekyou |
-| データ更新 | 14 | update_kmemo, update_timeis, update_mi, update_lantana, update_kc, update_nlog, update_urlog, update_tag, update_text, update_gkill_notification, update_rekyou, update_mirekyou, update_idf_kyou, update_application_config |
+| データ取得 | 24 | get_kyous, get_kyou, get_kmemo, get_kc, get_urlog, get_nlog, get_timeis, get_mi, get_lantana, get_rekyou, get_mirekyou, get_git_commit_log, get_idf_kyou, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_tags_by_id, get_tag_histories_by_tag_id, get_texts_by_id, get_text_histories_by_text_id, get_gkill_notifications_by_id, get_gkill_notification_histories_by_notification_id, get_idf_kyou_by_relative_path, get_idf_file_path |
+| データ追加 | 12 | add_kmemo, add_kc, add_urlog, add_nlog, add_timeis, add_mi, add_lantana, add_tag, add_text, add_gkill_notification, add_rekyou, add_mirekyou |
+| データ更新 | 13 | update_kmemo, update_kc, update_urlog, update_nlog, update_timeis, update_mi, update_lantana, update_tag, update_text, update_gkill_notification, update_rekyou, update_mirekyou, update_idf_kyou |
 | 共有 | 5 | get_share_kyou_list_infos, add_share_kyou_list_info, update_share_kyou_list_info, delete_share_kyou_list_infos, get_shared_kyous |
 | 通知 | 2 | get_gkill_notification_public_key, register_gkill_notification |
-| 設定 | 5 | get_server_configs, update_server_configs, get_repositories, update_user_reps, reload_repositories |
+| 設定 | 7 | get_application_config, update_application_config, get_server_configs, update_server_configs, get_repositories, update_user_reps, reload_repositories |
 | KFTL | 2 | submit_kftl_text, get_kftl_template（**未登録**） |
 | トランザクション | 2 | commit_tx, discard_tx |
 | キャッシュ | 1 | update_cache |
 | ファイル | 4 | upload_files, upload_gpslog_files, get_gps_log, browse_zip_contents |
 | プラグイン | 4 | get_plugin_list, get_plugin_content_html, get_plugin_config_html, post_plugin_config |
-| その他 | 9 | get_application_config, generate_tls_file, get_gkill_info（**未登録**）, open_directory, open_file, urlog_bookmarklet, get_updated_datas_by_time, get_kyous_mcp, get_gkill_notifications_by_id |
+| その他 | 8 | generate_tls_file, get_gkill_info（**未登録**）, open_directory, open_file, urlog_bookmarklet, urlog_bookmarklet_page（唯一の GET）, get_updated_datas_by_time, get_kyous_mcp |
 
 > `get_kftl_template` と `get_gkill_info` はアドレス定義だけがあり、`HandleFunc` 登録も
 > ハンドラ実装も存在しません（実行時404）。`gkill-api.ts` には呼び出しメソッドが残っています。

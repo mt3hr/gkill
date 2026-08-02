@@ -739,6 +739,74 @@ stateDiagram-v2
 
 ---
 
+## シナリオ13. 見返していた記録をそのままタスクにする（MiReKyou）
+
+**物語：** 振り返り中に「この店、今度もう一度行こう」と思った記録が出てくる。内容を書き写して新しいタスクを作るのは面倒なので、その記録を右クリックして「タスクにする」を選び、期限だけ決めて保存する。以後その記録はタスク画面の板にも並び、普通のタスクと同じようにチェックを付けられる。
+
+**裏で何が起きるか：** MiReKyou は **タイトルを持たない Mi** です。`target_id` で元の Kyou を指すだけで、表示内容は常に元の Kyou から引いてきます。`data_type` は `mirekyou_create` / `_check` / `_limit` / `_start` / `_end` の5射影に分かれるため、前方一致で判定するコードは **`mirekyou` を `mi` より先に**評価しなければなりません。元の Kyou を削除すると表示する内容が無くなる点も MiReKyou 特有です。
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant Menu as 各種 ContextMenu<br>(kmemo / idf_kyou / plugin-html …)
+    participant Dlg as add-mi-re-kyou-dialog
+    participant GkillAPI as GkillAPI (TS)
+    participant API as GkillServerAPI (Go)
+    participant UC as UsecaseContext
+    participant Rep as MiReKyouRepositories
+
+    User->>Menu: 記録を長押し / 右クリック
+    Menu-->>User: 「タスクにする」を表示
+    User->>Dlg: 板名・期限・開始予定・終了予定を入力
+    Dlg->>GkillAPI: add_mi_re_kyou(req)
+    GkillAPI->>API: POST /api/add_mirekyou
+    API->>API: AuthFromContext (wrapAuthRepos)
+    API->>UC: AddMiReKyou(userID, device, mirekyou)
+    UC->>Rep: AddMiReKyouInfo（Append-Only）
+    Rep-->>UC: OK
+    UC->>Rep: GetMiReKyou(id)（保存後の再取得）
+    Rep-->>API: MiReKyou
+    API-->>GkillAPI: {mi_re_kyou, messages}
+    GkillAPI-->>Dlg: 追加後の状態を反映
+    Note over Dlg,Rep: 以後 get_kyous / get_mi_board_list の結果に<br>MiReKyou が混ざり、表示時に target_id の Kyou を解決する
+```
+
+**関連：** ER 定義は [er-diagram.md](er-diagram.md) の MIREKYOU、`data_type` の前方一致の注意は [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md)、作成フローの詳細は [activity-diagrams.md](activity-diagrams.md) の「MiReKyou 作成フロー」。
+
+---
+
+## シナリオ14. 集計ビューで数字を眺め、推移をグラフにする（Dnote）
+
+**物語：** 月末に「今月いくら使ったか」「気分の平均はどうだったか」を確認したい。ユーザは rykv の集計ビューを開き、集計項目を並べる。さらに「体重の推移を折れ線で見たい」と思い、トレンドグラフを追加して粒度を「日」にする。
+
+**裏で何が起きるか：** **集計はすべてクライアント側で行われます。** 専用の集計 API はありません。`get_kyous` で取得済みの Kyou 配列に対して、`Predicate`（条件）→ `KeyGetter`（グルーピングキー）→ `AggregateTarget`（集計対象）の順にクラス群が適用されます。トレンドグラフも同じ配列を `DnoteTrendAggregator` が時系列にまとめ直すだけで、追加のリクエストは発生しません。定義そのものは `ApplicationConfig` の `dnote_json_data` に JSON で保存され、`update_application_config` で永続化されます。
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant View as dnote-view / dnote-trend-graph-view
+    participant Agg as Predicate → KeyGetter → AggregateTarget<br>DnoteTrendAggregator
+    participant GkillAPI as GkillAPI (TS)
+    participant API as GkillServerAPI (Go)
+
+    User->>View: 集計ビューを開く / トレンドグラフを追加
+    View->>Agg: 表示中の Kyou[] を渡す
+    Agg->>Agg: Predicate で対象を絞り込み
+    Agg->>Agg: KeyGetter でグループ化（日 / 週 / 月・タグ 等）
+    Agg->>Agg: AggregateTarget で合計・平均・件数を算出
+    Agg-->>View: DnoteItem[] / 時系列データ
+    View-->>User: 集計値・リスト・折れ線/棒グラフを描画
+    User->>View: 定義を保存
+    View->>GkillAPI: update_application_config(dnote_json_data)
+    GkillAPI->>API: POST /api/update_application_config
+    API-->>GkillAPI: {messages}
+    Note over View,API: サーバへ行くのは「定義の保存」だけ。<br>集計計算そのものはネットワークを使わない
+```
+
+**関連：** 集計クラス群の一覧は [class-diagrams.md](class-diagrams.md)、処理フローは [activity-diagrams.md](activity-diagrams.md) の「Dnote 集計処理フロー」、用語は [glossary.md](glossary.md) の「Dnote 集計システム用語」。
+
+---
+
 ## 関連資料
 
 本資料の各シナリオは、以下の資料の内容を横断的に合成したものです。個別の詳細は各資料を参照してください。

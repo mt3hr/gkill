@@ -15,11 +15,12 @@
 
   <h2>集成类型</h2>
   <table>
-    <tr><th>类型</th><th>说明</th></tr>
-    <tr><td>只读</td><td>AI 只能查看和搜索记录，不能添加或修改。</td></tr>
-    <tr><td>只写</td><td>AI 只能添加、更新和删除记录。</td></tr>
-    <tr><td>读写</td><td>AI 可以查看、添加、更新和删除记录。</td></tr>
+    <tr><th>类型</th><th>可以做什么</th><th>要执行的文件</th><th>工具数</th><th>HTTP 时的端口</th></tr>
+    <tr><td>只读</td><td>仅查看和搜索记录，不能添加或修改</td><td>gkill-read-server.mjs</td><td>10</td><td>8808</td></tr>
+    <tr><td>只写</td><td>添加、更新和删除记录。同时也可以获取存储库名称、标签名和板名</td><td>gkill-write-server.mjs</td><td>25</td><td>8809</td></tr>
+    <tr><td>读写</td><td>查看、添加、更新和删除记录</td><td>gkill-readwrite-server.mjs</td><td>30</td><td>8810</td></tr>
   </table>
+  <p>无论哪种类型，都包含 2 个用于读取插件导入记录的工具。</p>
 
   <h2>文件的传递</h2>
   <p>向AI展示文件记录（图片、视频、文档）的方式会根据连接形式自动切换。</p>
@@ -39,8 +40,8 @@
   <pre><code>{
   "mcpServers": {
     "gkill": {
-      "command": "npx",
-      "args": ["-y", "gkill-mcp-server"],
+      "command": "node",
+      "args": ["C:/path/to/gkill/src/mcp/gkill-read-server.mjs"],
       "env": {
         "GKILL_BASE_URL": "http://localhost:9999",
         "GKILL_USER": "您的用户ID",
@@ -59,15 +60,21 @@
   --env GKILL_BASE_URL=http://localhost:9999 \
   --env GKILL_USER=您的用户ID \
   --env GKILL_PASSWORD_SHA256=哈希值 \
-  -- npx -y gkill-mcp-server</code></pre>
+  -- node /path/to/gkill/src/mcp/gkill-read-server.mjs</code></pre>
   <div class="tip">
-    <strong>注意:</strong> gkill-mcp-server 目前尚未发布到 npm。在发布之前，请将仓库自带的 MCP 服务器指定为执行命令（例如 <code>-- node src/mcp/gkill-readwrite-server.mjs</code>）。
+    <strong>提示:</strong> 请将上面的路径改为您放置 gkill 源代码的位置。要更改类型时，把文件名换成 <code>gkill-write-server.mjs</code> 或 <code>gkill-readwrite-server.mjs</code>。
   </div>
 
-  <h2>远程访问</h2>
-  <p>使 gkill 服务器可通过互联网访问，并将 <code>GKILL_BASE_URL</code> 设置为其公共地址。出于安全考虑，强烈建议启用 TLS（HTTPS）。</p>
+  <h2>远程使用（HTTP 连接）</h2>
+  <p>如果 AI 不在同一台电脑上，可以让 MCP 服务器自身通过 HTTP 监听，供互联网上的 AI 连接。此方式在连接时会进行 OAuth 授权，因此无需把 gkill 本体公开到互联网上。</p>
+  <pre><code># 以 HTTP 方式监听读写服务器的示例
+MCP_TRANSPORT=http MCP_PORT=8810 MCP_OAUTH_ISSUER=https://example.com \
+GKILL_BASE_URL=http://localhost:9999 \
+GKILL_USER=您的用户ID \
+GKILL_PASSWORD_SHA256=哈希值 \
+node /path/to/gkill/src/mcp/gkill-readwrite-server.mjs</code></pre>
   <div class="tip">
-    <strong>提示：</strong> TLS 设置可从<a href="server-config.html">服务器设置</a>中配置。
+    <strong>提示：</strong> 也可以把 gkill 服务器本身公开到互联网上使用。此时请将 <code>GKILL_BASE_URL</code> 设为公开地址，并在<a href="server-config.html">服务器设置</a>中启用 TLS（HTTPS）。
   </div>
 
   <h2>相关页面</h2>

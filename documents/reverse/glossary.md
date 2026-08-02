@@ -36,7 +36,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 | **PluginKyou** | 外部プラグインバイナリが提供する Kyou。`DataType` はプラグイン定義による（例: `chatgpt_conversation`, `claude_conversation`, `claude_code_turn`）。コンテンツ表示は `GetContentHTML` が返す HTML を iframe (srcdoc) で描画する |
 | **PluginRepository** | プラグインバイナリをサブプロセスとして起動し stdio 改行区切り JSON で通信するリポジトリ実装（`src/server/gkill/dao/reps/plugin_repository_impl.go`）。`RepType` を持たず4層パターンにも属さない |
 | **PluginManager** | ユーザごとにプラグインディレクトリを走査し、`manifest.json` を持つものを `PluginRepository` として登録する（`src/server/gkill/dao/plugin_manager.go`） |
-| **PluginManifest** | プラグインのメタデータ（`protocol_version`, `name`, `version`, `description`, `data_type`, `rep_name`, `executable`, `min_gkill_version` の8フィールド）。`name` はディレクトリ名と一致させる。同梱プラグインはバイナリに `//go:embed` しており `--gkill-print-manifest` で出力できる |
+| **PluginManifest** | プラグインのメタデータ（`protocol_version`, `name`, `version`, `description`, `data_type`, `rep_name`, `executable`, `min_gkill_version` の8フィールド）。`name` はディレクトリ名と一致させる。同梱プラグイン3本（chatgpt / claudeai / claudecode）はバイナリに `//go:embed` しており `--gkill-print-manifest` で出力できる（`--gkill-print-config` で既定の `config.json` も出せる）。`gkill_example` は埋め込みもフラグも持たない |
 | **プラグインディレクトリ** | `$GKILL_HOME/plugins/{userID}/{pluginName}/` — manifest.json・実行ファイル・`config.json` を格納するディレクトリ |
 | **plugin_cache** | プラグインの SQLite3 キャッシュ置き場。`$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db`。プラグインディレクトリではなく gkill のキャッシュディレクトリ配下にあるため `clear_cache plugin` で削除できる |
 | **source_dirs** | プラグインの `config.json` で取り込み元フォルダを指定するキー。グロブ・`~`・環境変数を展開し、検索のたびに読み直される |
@@ -89,7 +89,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 ### プレフィックス一覧
 
 プレフィックスは**日本語と ASCII の2系統**があり、サーバ側パーサ（`kftl_factory.go:8-45`）と
-クライアント側パーサ（`kftl-prefixes.ts:6-22`）のどちらも両方を受理する。
+クライアント側パーサ（`kftl-prefixes.ts:6-24`）のどちらも両方を受理する。
 
 | 日本語 | ASCII | データ型 | 説明 |
 |---|---|---------|------|
@@ -113,7 +113,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | `！` | `!` | Save | 保存実行。パースを終了してリクエストを実行する |
 
 > クライアント側では日本語プレフィックスは**固定リテラルではなく i18n キー経由**で解決される
-> （`kftl-prefixes.ts:25-27` の `matches_exact(line, i18n_key, ascii_prefix)`）。
+> （`kftl-prefixes.ts:26-29` の `matches_exact(line, i18n_key, ascii_prefix)`）。
 > つまりロケールによって変わりうる。ASCII 側は固定。
 
 ### KFTL パーサの主要コンポーネント
@@ -208,7 +208,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **FindQuery** | 検索クエリ。キーワード・日時範囲・タグ・データ型・デバイス等の複合条件で Kyou を検索する |
 | **ZIPキャッシュ** | IDFKyouのZIPファイルを展開したキャッシュ。`$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に保存される。リポジトリ名とファイルのSHA1ハッシュをキーとし、同一ファイルの再展開を回避する |
 | **ZipEntry** | ZIP内のファイルエントリ情報。ファイル名・サイズ・パス等を含む。`/api/browse_zip_contents` のレスポンスとして返却される |
-| **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す |
+| **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す。Kyou 本体だけでなく**付随するタグ・テキストにも同じ規則が適用される**ため、タグ名を書き換えたあとに旧タグ名で検索してもヒットしない（`find_filter.go:513,624,656`、`find_kyou_context.go:39` の `isLatestData`） |
 | **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する |
 | **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、10ツール）・**Write専用**（`gkill-write-server.mjs`、25ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、30ツール）。いずれも共通のプラグインツール2つ（`lib/plugin-tools.mjs` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
 
@@ -260,7 +260,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（855キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（856キー/言語） |
 
 ### その他
 

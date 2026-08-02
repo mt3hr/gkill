@@ -18,13 +18,13 @@
   <p>Tap the <strong>page title</strong> displayed in the toolbar at the top of the screen (e.g., "Life Log View", "Task", etc.) to open a dropdown menu and navigate to each screen.</p>
   <table>
     <tr><th>Screen Name</th><th>Description</th></tr>
-    <tr><td>Home Hub</td><td>Dedicated screen for adding records without navigation (for direct launch from lock screen or home screen)</td></tr>
-    <tr><td>Memo Pad</td><td>Text input screen using memo pad syntax</td></tr>
-    <tr><td>Timestamp Memo Pad</td><td>Screen for memo input and active timestamp management</td></tr>
     <tr><td>Life Log View</td><td>Add records ("+" button), browse, search, and view records</td></tr>
-    <tr><td>Task</td><td>Kanban board task management</td></tr>
-    <tr><td>Running</td><td>Active timestamp session management</td></tr>
-    <tr><td>Record</td><td>Detailed view of an individual record</td></tr>
+    <tr><td>Tasks</td><td>Kanban board task management</td></tr>
+    <tr><td>Notepad</td><td>Text input screen using memo pad syntax</td></tr>
+    <tr><td>In Progress</td><td>Active timestamp session management</td></tr>
+    <tr><td>Time Entry Notepad</td><td>Screen for memo input and active timestamp management</td></tr>
+    <tr><td>Dashboard</td><td>See the selected day's aggregation, GPS map and tasks on one screen</td></tr>
+    <tr><td>Saihate</td><td>Dedicated screen for adding records without navigation (for direct launch from lock screen or home screen)</td></tr>
   </table>
 
   <h2>Toolbar Button Guide</h2>
@@ -349,19 +349,21 @@ Milk
   </div>
 
   <h2>12. Sharing Records</h2>
-  <p>In gkill, you can generate share links to share records with others.</p>
+  <p>In gkill, you can turn the search criteria you are currently using into a share link and show it to others. What gets shared is not a single record, but every record that matches those criteria.</p>
 
   <h3>How to Generate a Share Link</h3>
   <ol>
-    <li>Open the detail view or context menu for the record you want to share.</li>
-    <li>Select "Share."</li>
+    <li>Turn on "Show Share Footer" in the settings screen. It is off by default, so this is needed once at the start.</li>
+    <li>Open the sidebar on the life log view or the task screen. The share footer appears at the bottom of the sidebar.</li>
+    <li>Adjust the filter conditions in the sidebar until they match what you want to share.</li>
+    <li>Press the "Share" button at the left end of the share footer, then set the title, share view type and which data to include, and save.</li>
     <li>A share URL will be generated. Use the appropriate URL for your purpose:</li>
   </ol>
   <table>
     <tr><th>URL Type</th><th>Purpose</th></tr>
-    <tr><td>Local URL</td><td>Access from the same device (localhost)</td></tr>
-    <tr><td>LAN URL</td><td>Access from other devices on the same network</td></tr>
-    <tr><td>WAN URL</td><td>External access via the internet</td></tr>
+    <tr><td>Local</td><td>Access from the same device (localhost)</td></tr>
+    <tr><td>Local Network</td><td>Access from other devices on the same network</td></tr>
+    <tr><td>Global</td><td>External access via the internet</td></tr>
   </table>
 
   <h3>Shared Data Control</h3>
@@ -376,7 +378,7 @@ Milk
   </table>
 
   <div class="tip">
-    <strong>Tip:</strong> To use LAN or WAN URLs, you need to configure the server address in the server settings.
+    <strong>Tip:</strong> To use the Local Network or Global URLs, you need to configure the server address in the server settings. Links you have already created can be listed, edited and deleted from "Share Management" at the right end of the share footer.
   </div>
 
   <h3>For Recipients of Shared Links</h3>
@@ -406,7 +408,7 @@ Milk
     <strong>Tip:</strong> It is recommended to back up the home directory regularly. The <code>datas/</code> and <code>configs/</code> directories are particularly important.
   </div>
   <div class="tip">
-    <strong>Note:</strong> Repository locations can also be set outside the home directory. If you use files placed in external folders (IDF-watched folders, Git repositories, externally located databases, etc.), copying only the home directory will miss them. Be sure to include the location of every configured repository in your backup as well.
+    <strong>Note:</strong> Repository locations can also be set outside the home directory. If you use files placed in external folders (files placed in external folders, Git commit histories, databases located outside, etc.), copying only the home directory will miss them. Be sure to include the location of every configured repository in your backup as well.
   </div>
 
   <h2>Related Documents</h2>

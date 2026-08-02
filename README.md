@@ -28,9 +28,11 @@ It allows you to record and reflect on the events of your life.
 | 🔢数値           | 腹筋した回数や、体重など                                    |
 | 💰️支出           | お金の出入り                                                |
 | 🔗ブックマーク   | ウェブサイトメモ                                            |
-| ✅️タスク         | 軽量TODO                                                    |
+| ✅️タスク         | 軽量TODO（すでにある記録をそのままタスクにすることもできます）    |
 | 📁ファイル       | 画像や動画など、ファイル（ZIPファイルの中身をブラウズ可能。Markdownファイルはリッチ表示・Mermaid図描画対応） |
 | 📋️クリップボード | クリップボードの内容を貼り付けて保存                        |
+| 📍位置情報       | GPSログ（GPXファイル）を取り込んで地図に表示                 |
+| 🌀Gitコミット   | ローカルGitリポジトリのコミット履歴を自動収集                |
 
 | その他補佐機能 | 用途                                                                              |
 | -------------- | --------------------------------------------------------------------------------- |
@@ -40,6 +42,7 @@ It allows you to record and reflect on the events of your life.
 | 🌕️関連情報      | 関連情報（直近の記録。カスタマイズ可能）                                          |
 | ⏺️定型文        | 定型文メモをボタンに登録可能。よく吸う煙草を予め登録して、最短操作で記録！        |
 | 🤖AI            | 分析用データをダウンロードして添付、もしくはMCPサーバへの接続でAIに分析依頼可能！ |
+| 🔌プラグイン    | ChatGPT・Claude.ai・Claude Codeの会話履歴など、gkill以外に残った記録を取り込んで同じ一覧に並べられます |
 
 ### ろ  
 gkillは、打刻記録を用いて「状況」から検索することができます！  
@@ -50,31 +53,41 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 あなたが記録したいものをgkillに記録してください。  
 そして願わくば。記録沼にはまってください。  
 欲を言えば、もっともっといいライフログアプリケーションを作って世に放ってください。お待ちしております。  
-（gkillはスタンドアロンで動きます。外部と通信しないので安心してください（地図だけは通信するけど、あなたの記録は送信されないです））  
+（gkillはスタンドアロンで動きます。あなたの記録が勝手に外へ送られることはありません。
+外部と通信するのは、地図の表示・ブックマーク登録時のページ取得・自分で設定したときのMCP接続だけです）  
 
 ## ダウンロード・インストール
 [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
 
+以下のファイル名の `<バージョン>` は、リリースページに並んでいる最新の番号（例: `1.1.6`）に読み替えてください。  
+
 ### ⭐️gkill体験  
 Windows用の利用例サンプルデータがあります。  
-まず [gkill_sample_data_v1.1.6.zip](https://github.com/mt3hr/gkill/releases/latest) で軽く試して体験してほしいです。  
+まず「gkill_sample_data_&lt;バージョン&gt;.zip」で軽く試して体験してほしいです。  
 ダウンロード/展開後、LAUNCH_GKILL_SAMPLE_DATA.batを起動してください。  
 [説明書](documents/gkill_user_document.pdf)に利用イメージのドキュメントがあります。   
 
 ### 💻️Windowsユーザ向け  
-①Assetsから「windows_amd64_gkill_v1.1.6.zip」をダウンロード  
+①Assetsから「windows_amd64_gkill_&lt;バージョン&gt;.zip」をダウンロード  
 ②zipを解凍して「gkill.exe」を実行  
 ※初回起動には時間がかかります。コーヒーでも淹れてお待ち下さい。  
 
 ### 📱Androidユーザ向け  
-①Assetsから「gkill_v1.1.6.apk」をダウンロード  
+①Assetsから「gkill_&lt;バージョン&gt;.apk」をダウンロード  
 ②インストール  
 ③ホーム画面から起動  
 ※初回起動時に「すべてのファイルへのアクセス」の許可を求められます  
 
+### ⌚Wear OS（Pixel Watch等）ユーザ向け  
+腕時計からメモ帳構文で記録できます。スマホ側とウォッチ側の2つをインストールしてください。  
+①Assetsから「gkill_wear_companion_&lt;バージョン&gt;.apk」（スマホ側）と「gkill_wear_watch_&lt;バージョン&gt;.apk」（ウォッチ側）をダウンロード  
+②それぞれインストール  
+③スマホ側でgkillサーバのアドレスとアカウントを設定  
+
 ### 😎上級者・サーバ構築派向け  
-①あなたの環境の「gkill_server_v1.1.6.zip」をダウンロード  
-②適当な場所に展開して「gkill_server.exe」を実行  
+①あなたの環境の「&lt;プラットフォーム&gt;_gkill_server_&lt;バージョン&gt;.zip」をダウンロード  
+　（windows_amd64 / linux_amd64 / linux_arm64 / linux_arm / android_arm / android_arm64 を配布しています。macOS版はありません）  
+②適当な場所に展開して「gkill_server」を実行  
 ③その後「[http://localhost:9999](http://localhost:9999)」にアクセス  
 ④ブラウザからインストール（PWA）  
 （環境のzipがリリースされていなかったら[自分でビルド](./documents/reverse/dev-setup.md)してください。）  
@@ -89,7 +102,7 @@ Windows用の利用例サンプルデータがあります。
 
 ## 資料の在り処
 [利用説明書](documents/gkill_user_document.pdf)   
-[アプリ内ヘルプ（HTML）](resources/manual/ja/getting-started.html)  
+アプリ内ヘルプ（各画面右上の「？」ボタンから開けます。原稿は [resources/manual_src/](resources/manual_src/ja/getting-started.html)）  
 [開発者向け起点要件書・設計書](documents/gkill_develop_document.xlsx)  
 [開発者向けリバース資料（ソース対応済）](documents/reverse/README.md)  
 [開発者向け実装資料（ソース対応済）](src/README.md)  
@@ -100,6 +113,12 @@ Windows用の利用例サンプルデータがあります。
 | アプリ内チュートリアル            | 全ユーザー       | 段階的な学習ガイド        |
 | 利用説明書（PDF）                 | 全ユーザー       | 機能の説明                |
 | リバース資料                      | 開発者           | アーキテクチャ・設計・API |
+| 実装資料（src/README.md）         | 開発者           | ソースの歩き方・ビルド手順 |
+
+## ライセンス
+
+MIT License です。詳細は [LICENSE](LICENSE) を参照してください。  
+依存パッケージのライセンス一覧は [LICENSES_DEPENDENCE](LICENSES_DEPENDENCE) にあります。  
 
 ## その他・進捗状況
 

@@ -727,7 +727,7 @@ Teleport to body
 | `add-rep-dialog.vue` / `allocate-rep-dialog.vue` | リポジトリ追加・割当 |
 | `confirm-generate-tls-files-dialog.vue` | TLS証明書生成確認 |
 | `confirm-reset-password-dialog.vue` / `show-password-reset-link-dialog.vue` | パスワードリセット |
-| `plugin-config-dialog.vue` | プラグイン設定（**孤児コンポーネント。画面から到達する導線が無い**） |
+| `plugin-config-dialog.vue` | プラグイン設定（プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く） |
 
 構造編集系（タグ構造・リポジトリ構造・RepType構造・KFTLテンプレート構造・デバイス）は
 `add-new-*-struct-element-dialog.vue` / `edit-*-struct[-element]-dialog.vue` /
@@ -739,7 +739,7 @@ Teleport to body
 |---|---|---|
 | `plugin-html-view.vue` | ビュー | プラグインが返す HTML を iframe `srcdoc` で描画。`sandbox="allow-scripts allow-forms"`、`scrolling="no"`、高さは postMessage（`gkill_iframe_size`）で親が調整し、未確定時は 80px |
 | `plugin-html-context-menu.vue` | ビュー | プラグインKyou用コンテキストメニュー |
-| `plugin-config-dialog.vue` | ダイアログ | プラグイン設定フォーム（未マウント） |
+| `plugin-config-dialog.vue` | ダイアログ | プラグイン設定フォーム（`plugin-html-view.vue` が保持） |
 
 テーマは親から `gkill_theme` を postMessage して CSS 変数を切り替える。
 

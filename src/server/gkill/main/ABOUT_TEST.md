@@ -14,7 +14,7 @@ Go `testing` パッケージ
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `common/common_test.go` | 共有 CLI ロジック（サーバ初期化、共通処理） |
+| `common/common_test.go` | 共有 CLI ロジック（14テスト）。サブコマンド登録（idf / dvnf / version / generate_thumb_cache / generate_video_cache / optimize / update_cache）の確認と、`clear_cache` の挙動固定 — `all` で全キャッシュディレクトリを消す / 単一モードで他を残す / `plugin` モードは plugin_cache だけ消す / `ClearPluginCache` が対象ユーザ以外を消さない / 危険な user_id を弾く |
 | `common/gkill_options/option_test.go` | CLI フラグのデフォルト値（`--gkill_home_dir`, `--cache_in_memory`, `--goroutine_pool` 等） |
 | `common/gkill_log/gkill_log_test.go` | ログレベル別ルーティング（error, warn, info, debug, trace, trace_sql） |
 | `common/threads/threads_test.go` | ゴルーチンプールの生成・タスク実行・プールサイズ管理 |

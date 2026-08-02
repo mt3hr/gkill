@@ -10,7 +10,7 @@
 |---|---|
 | 実行モデル | 外部バイナリをサブプロセスとして起動し stdin/stdout で通信 |
 | 通信プロトコル | 改行区切り JSON（newline-delimited JSON） |
-| データ粒度 | 1 メッセージ = 1 Kyou（例: ChatGPT の 1 発言が 1 件） |
+| データ粒度 | プラグインが決める。ChatGPT / Claude.ai は 1 メッセージ = 1 Kyou、Claude Code は 1 ターン（自分の発言と、それに対する一連の応答）= 1 Kyou（`data_type` は `claude_code_turn`） |
 | コンテンツ表示 | `GetContentHTML` が返す HTML を iframe (srcdoc) で描画 |
 | ダークテーマ | postMessage 経由で親ページからテーマを通知、CSS変数で切り替え |
 
@@ -74,7 +74,8 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 
 ### manifest.json / config.json の自動生成
 
-同梱プラグインは manifest.json を `//go:embed` でバイナリに埋め込んでおり、次のフラグで標準出力に書き出せる。
+同梱プラグイン3本（chatgpt / claudeai / claudecode）は manifest.json を `//go:embed` でバイナリに埋め込んでおり、
+次のフラグで標準出力に書き出せる。サンプルの `gkill_example` は埋め込みもフラグも持たない。
 
 | フラグ | 出力 |
 |---|---|
@@ -118,7 +119,7 @@ cmd := exec.CommandContext(context.Background(),
 
 | 側 | 上限 | 実装 |
 |---|---|---|
-| 親（gkill 本体） | **32MB** | `dao/reps/plugin_repository_impl.go:94` |
+| 親（gkill 本体） | **32MB** | `dao/reps/plugin_repository_impl.go:95` |
 | 子（プラグイン SDK） | **1MB** | `plugin/sdk/sdk.go:83-84` |
 
 親側が 32MB なのは大きな HTML レスポンスで `bufio.Scanner: token too long` を防ぐため。
@@ -159,11 +160,23 @@ cmd := exec.CommandContext(context.Background(),
 `config.json` が無ければ既定値で生成する。**既存ファイルは決して上書きしない**。
 `DefaultConfig` が nil（`gkill_example` など）なら何も生成しない。
 
-**gkill のフロントエンドから設定を編集する導線は現時点で存在しない。**
-`plugin-config-dialog.vue` は実装されているが、どの `.vue` / `.ts` からも import されておらず
-（孤児コンポーネント）、画面上に到達する経路が無い。設定フォームの送信処理も未実装で、
-`gkill-api.ts` の `get_plugin_list()` / `post_plugin_config()` は定義だけあって呼び出し元が無い。
-実際の設定変更は生成された `config.json` を手で編集して行う。
+**設定はプラグイン Kyou のコンテキストメニュー「プラグイン設定」から編集できる。**
+`plugin-html-view.vue` が `plugin-config-dialog.vue` を持ち、メニューから `rep_name` を受けて開く。
+ダイアログは `get_plugin_config_html` で設定 HTML を取得して iframe に表示する。
+
+iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）なので、
+**iframe 自身は gkill の API を叩けない**。保存は親（ダイアログ）が postMessage で肩代わりする。
+
+| 向き | メッセージ |
+|---|---|
+| iframe → 親 | `{ gkill_plugin_config: { <キー>: <値>, ... } }` |
+| 親 → iframe | `{ gkill_plugin_config_result: { ok: boolean, error?: string } }` |
+| 親 → iframe | `{ gkill_theme: "dark" | "light" }`（テーマ通知） |
+
+親は受け取ったフォームを `post_plugin_config` に送り、成功したら設定 HTML を取り直して
+読み込み件数などの表示を更新する。生成された `config.json` を手で編集する経路も従来どおり使える。
+
+`gkill-api.ts` の `get_plugin_list()` は今も MCP 専用で、フロントエンドに呼び出し元が無い。
 
 `/api/get_plugin_list` と `/api/get_plugin_content_html` の唯一の実利用者は MCP サーバの
 `gkill_get_plugin_list` / `gkill_get_plugin_content` ツール（`src/mcp/lib/plugin-tools.mjs`）。
@@ -205,7 +218,7 @@ func (p *pluginRepositoryImpl) callCommand(_ context.Context, req gkill_plugin.P
 | Mutex の位置 | `pluginRepositoryImpl` struct | プロセス再起動後も同じ mutex を使い続けられる |
 | プロセス起動 | `context.Background()` を使用 | HTTP リクエストキャンセルでプロセスが終了するのを防ぐ |
 | 呼び出しタイムアウト | 期限が無ければ既定 30 秒を注入し、超過時は `Process.Kill()` | 応答しないプラグインが gkill 全体を止めるのを防ぐ |
-| クラッシュ復旧 | 失敗時に `started=false` → `ensureStarted()` → 再送信を1回リトライ。ただし **ctx のタイムアウト/キャンセル時はリトライしない**（`:187-190`） | プロセスが予期せず終了した場合の自動復旧。タイムアウトの再試行で待ち時間が倍増するのを避ける |
+| クラッシュ復旧 | 失敗時に `started=false` → `ensureStarted()` → 再送信を1回リトライ。ただし **ctx のタイムアウト/キャンセル時はリトライしない**（`:190-193`） | プロセスが予期せず終了した場合の自動復旧。タイムアウトの再試行で待ち時間が倍増するのを避ける |
 | Scanner バッファ | 親 32MB / SDK 1MB | 大きなHTMLレスポンスで `bufio.Scanner: token too long` を防ぐ（親側のみ拡張） |
 
 実装: `src/server/gkill/dao/reps/plugin_repository_impl.go`
@@ -301,8 +314,13 @@ gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.Init
 
 ### キャッシュ無効化
 
-会話単位の差分更新ではない。`cache_meta` に保存したソースの**署名**を現在のソース状態と突き合わせ
-（`needsRebuild`）、変化していれば `rebuild()` が**キャッシュ全体を作り直す**。
+プラグインによって2方式ある。
+
+- **ChatGPT / Claude.ai（全体再構築）** — `cache_meta` に保存したソースの**署名**を現在のソース状態と
+  突き合わせ（`needsRebuild`）、変化していれば `rebuild()` が**キャッシュ全体を作り直す**。
+- **Claude Code（セッション単位の差分更新）** — `refresh`（`cache.go:209`）が `file_cache` の
+  `MtimeUnix` / `Size` を突き合わせて（`:236-243`）変化のあったファイルだけを `dirtySessions` として拾い、
+  そのセッションだけ作り直す。変化が無ければ早期リターンする（`:255-257`）。
 
 ### 主要メソッド
 
@@ -326,7 +344,7 @@ gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.Init
 
 ---
 
-## 7. GetContentHTML — 単一メッセージ HTML 生成
+## 7. GetContentHTML — Kyou 1 件分の HTML 生成
 
 1 Kyou = 1 メッセージの粒度で、クリックした件のみを HTML として返す。
 
@@ -445,7 +463,7 @@ function on_window_message(e: MessageEvent): void {
 
 ## 10. PluginKyou コンテキストメニュー
 
-GitCommitLogContextMenu と同一の項目を提供する。
+GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の「プラグイン設定」を持つ。
 
 | メニュー項目 | 表示条件 |
 |---|---|
@@ -453,8 +471,11 @@ GitCommitLogContextMenu と同一の項目を提供する。
 | タグを追加 | 常時 |
 | テキストを追加 | 常時 |
 | リポスト | 常時 |
+| タスク化 | 常時 |
 | 通知を追加 | 常時 |
+| 内容コピー | 常時 |
 | IDをコピー | 常時 |
+| プラグイン設定 | 常時（`plugin-config-dialog.vue` を開く） |
 | フォルダを開く | `session_is_local` 時のみ |
 | ファイルを開く | `session_is_local` 時のみ |
 

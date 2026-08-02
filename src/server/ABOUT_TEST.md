@@ -2,7 +2,7 @@
 
 ## 概要
 
-Go バックエンドのテスト。584テスト関数、57テストファイル、30パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
+Go バックエンドのテスト。592テスト関数、57テストファイル、31パッケージで構成される。API ハンドラ統合テスト、DAO 層テスト、プラグインのサブプロセス管理テスト、プラグインSDKテスト、KFTL パーサテスト、CLI テストを網羅する。
 
 ## テストフレームワーク
 
@@ -19,7 +19,9 @@ src/server/gkill/
 │   ├── gpslogs/                  # GPS ログ解析
 │   ├── message/                  # メッセージフォーマット
 │   ├── kftl/                     # KFTL パーサ (3ファイル)
-│   └── req_res/                  # JSON 往復テスト
+│   └── req_res/                  # ワイヤ契約（JSONタグ名 / omitempty）
+├── plugin/                  # プラグイン作者向け SDK
+│   └── sdk/                      # Run() の stdio ループ + EnsureConfig (2ファイル / 18テスト)
 ├── dao/                     # データアクセス層
 │   ├── gkill_dao_manager_test.go # DAO マネージャ
 │   ├── account/                  # アカウント管理
@@ -30,7 +32,7 @@ src/server/gkill/
 │   ├── gkill_notification/       # 通知ターゲット
 │   ├── hide_files/               # ファイル非表示
 │   ├── sqlite3impl/              # SQLite3 ユーティリティ
-│   └── reps/                     # リポジトリ実装 (18ファイル)
+│   └── reps/                     # リポジトリ実装 (20ファイル)
 ├── dvnf/                    # DVNF ファイル管理 (2ファイル)
 └── main/                    # CLI エントリポイント (8ファイル)
     ├── common/                   # 共有ロジック・オプション・ログ・スレッド
@@ -44,17 +46,18 @@ src/server/gkill/
 
 | カテゴリ | テストファイル数 | 内容 |
 |---------|----------------|------|
-| API 統合 | 5 | 全11データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント |
+| API 統合 | 6 | 全データ型 CRUD、セッション管理、複合クエリ、特殊エンドポイント、SSRF・レート制限 |
 | KFTL パーサ | 3 | Factory、Statement、Request Map |
-| req_res | 1 | 18種の JSON 往復テスト（IDFPayloadMCPDTO含む） |
+| req_res | 1 | ワイヤ契約の検証5本（JSONタグ名・MCP DTO の omitempty・プラグインpayload）。旧「JSON往復テスト」は削除済み |
 | DAO 管理 | 1 | GkillDAOManager ライフサイクル |
 | アカウント | 3 | アカウント CRUD、セッション、アップロード履歴 |
 | 設定 | 3 | サーバ設定、アプリ設定、リポジトリ定義 |
 | 共有・通知 | 2 | 共有情報 CRUD、通知ターゲット |
 | ユーティリティ | 2 | SQLite3 ユーティリティ、ファイル非表示 |
-| リポジトリ | 16 | 12データ型の SQLite3 実装 + キャッシュ + 一時 |
+| リポジトリ | 20 | 13データ型の SQLite3 実装 + キャッシュ + 一時 + キャッシュ更新 |
 | DVNF | 2 | ファイル管理、CLI コマンド |
-| CLI/Main | 8 | 共有ロジック、オプション、ログ、スレッド、エントリポイント、バッチ |
+| CLI/Main | 8 | 共有ロジック（`clear_cache` の各モード・サブコマンド登録を含む）、オプション、ログ、スレッド、エントリポイント、バッチ |
+| プラグイン SDK | 2 | `Run()` の stdio ループ（14本）+ `EnsureConfig`（4本） |
 
 ## 実行方法
 
@@ -78,5 +81,6 @@ cd src/server && go test ./...
 | `gkill/dao/` | [gkill/dao/ABOUT_TEST.md](gkill/dao/ABOUT_TEST.md) |
 | `gkill/dao/reps/` | [gkill/dao/reps/ABOUT_TEST.md](gkill/dao/reps/ABOUT_TEST.md) |
 | `gkill/usecase/` | [gkill/usecase/ABOUT_TEST.md](gkill/usecase/ABOUT_TEST.md) |
+| `gkill/plugin/sdk/` | [gkill/plugin/sdk/ABOUT_TEST.md](gkill/plugin/sdk/ABOUT_TEST.md) |
 | `gkill/dvnf/` | [gkill/dvnf/ABOUT_TEST.md](gkill/dvnf/ABOUT_TEST.md) |
 | `gkill/main/` | [gkill/main/ABOUT_TEST.md](gkill/main/ABOUT_TEST.md) |

@@ -18,13 +18,13 @@
   <p>Tippen Sie auf den <strong>Seitentitel</strong> in der Symbolleiste am oberen Bildschirmrand (z.B. &bdquo;Lebenslog-Ansicht&ldquo;, &bdquo;Aufgaben&ldquo; usw.), um ein Dropdown-Men&uuml; zu &ouml;ffnen und zu den verschiedenen Bildschirmen zu navigieren.</p>
   <table>
     <tr><th>Bildschirmname</th><th>Beschreibung</th></tr>
-    <tr><td>Saihate</td><td>Spezieller Eingabebildschirm ohne Navigation (f&uuml;r den direkten Start vom Sperrbildschirm oder Startbildschirm)</td></tr>
-    <tr><td>Notizblock</td><td>Texteingabe mit Notizblock-Syntax</td></tr>
-    <tr><td>Zeitstempel-Notizblock</td><td>Gleichzeitige Verwaltung von Notizen und aktiven Zeitstempeln</td></tr>
     <tr><td>Lebenslog-Ansicht</td><td>Datens&auml;tze hinzuf&uuml;gen (Schaltfl&auml;che "+"), durchsuchen, suchen und anzeigen</td></tr>
     <tr><td>Aufgaben</td><td>Aufgabenverwaltung im Kanban-Board</td></tr>
+    <tr><td>Notizblock</td><td>Texteingabe mit Notizblock-Syntax</td></tr>
     <tr><td>Laufend</td><td>Verwaltung aktiver Zeitstempel-Sitzungen</td></tr>
-    <tr><td>Datensatz</td><td>Detailansicht eines einzelnen Datensatzes</td></tr>
+    <tr><td>Zeiteintrag-Notizblock</td><td>Gleichzeitige Verwaltung von Notizen und aktiven Zeitstempeln</td></tr>
+    <tr><td>Dashboard</td><td>Aggregation, GPS-Karte und Aufgaben des gew&auml;hlten Tages auf einem Bildschirm</td></tr>
+    <tr><td>Saihate</td><td>Spezieller Eingabebildschirm ohne Navigation (f&uuml;r den direkten Start vom Sperrbildschirm oder Startbildschirm)</td></tr>
   </table>
 
   <h2>Symbolleisten-Buttons</h2>
@@ -349,19 +349,21 @@ Milch
   </div>
 
   <h2>12. Aufzeichnungen teilen</h2>
-  <p>In gkill k&ouml;nnen Sie Freigabelinks erstellen, um Aufzeichnungen mit anderen Personen zu teilen.</p>
+  <p>In gkill k&ouml;nnen Sie die aktuell eingegrenzten Suchkriterien direkt in einen Freigabelink verwandeln und anderen Personen zeigen. Geteilt wird nicht eine einzelne Aufzeichnung, sondern alle Aufzeichnungen, die diesen Kriterien entsprechen.</p>
 
   <h3>Freigabelink erstellen</h3>
   <ol>
-    <li>&Ouml;ffnen Sie die Detailansicht oder das Kontextmen&uuml; der Aufzeichnung, die Sie teilen m&ouml;chten.</li>
-    <li>W&auml;hlen Sie &bdquo;Teilen&ldquo;.</li>
+    <li>Aktivieren Sie &bdquo;Freigabe-Fu&szlig;zeile anzeigen&ldquo; im Einstellungsbildschirm. Die Option ist standardm&auml;&szlig;ig aus, daher ist dies nur einmal zu Beginn n&ouml;tig.</li>
+    <li>&Ouml;ffnen Sie die Seitenleiste in der Lifelog-Ansicht oder im Aufgabenbildschirm. Am unteren Rand der Seitenleiste erscheint die Freigabe-Fu&szlig;zeile.</li>
+    <li>Passen Sie die Filterbedingungen in der Seitenleiste an, bis sie dem entsprechen, was Sie teilen m&ouml;chten.</li>
+    <li>Dr&uuml;cken Sie die Schaltfl&auml;che &bdquo;Teilen&ldquo; am linken Rand der Fu&szlig;zeile, legen Sie Titel, Freigabe-Ansichtstyp und die einzubeziehenden Daten fest und speichern Sie.</li>
     <li>Eine Freigabe-URL wird generiert. Verwenden Sie die passende URL je nach Bedarf:</li>
   </ol>
   <table>
     <tr><th>URL-Typ</th><th>Verwendung</th></tr>
-    <tr><td>Lokale URL</td><td>Zugriff vom selben Ger&auml;t (localhost)</td></tr>
-    <tr><td>LAN-URL</td><td>Zugriff von anderen Ger&auml;ten im selben Netzwerk</td></tr>
-    <tr><td>WAN-URL</td><td>Externer Zugriff &uuml;ber das Internet</td></tr>
+    <tr><td>Lokal</td><td>Zugriff vom selben Ger&auml;t (localhost)</td></tr>
+    <tr><td>Lokales Netzwerk</td><td>Zugriff von anderen Ger&auml;ten im selben Netzwerk</td></tr>
+    <tr><td>Global</td><td>Externer Zugriff &uuml;ber das Internet</td></tr>
   </table>
 
   <h3>Kontrolle der geteilten Daten</h3>
@@ -376,7 +378,7 @@ Milch
   </table>
 
   <div class="tip">
-    <strong>Tipp:</strong> Um LAN- oder WAN-URLs zu verwenden, m&uuml;ssen Sie die Server-IP-Adresse in den Servereinstellungen konfigurieren.
+    <strong>Tipp:</strong> Um die URLs f&uuml;r Lokales Netzwerk oder Global zu verwenden, m&uuml;ssen Sie die Serveradresse in den Servereinstellungen konfigurieren. Bereits erstellte Links k&ouml;nnen &uuml;ber &bdquo;Freigabeverwaltung&ldquo; am rechten Rand der Freigabe-Fu&szlig;zeile aufgelistet, bearbeitet und gel&ouml;scht werden.
   </div>
 
   <h3>Für Empfanger von Freigabelinks</h3>
@@ -406,7 +408,7 @@ Milch
     <strong>Tipp:</strong> Es wird empfohlen, das Home-Verzeichnis regelm&auml;&szlig;ig zu sichern. Besonders wichtig sind die Verzeichnisse <code>datas/</code> und <code>configs/</code>.
   </div>
   <div class="tip">
-    <strong>Hinweis:</strong> Der Speicherort von Repositorys kann auch au&szlig;erhalb des Home-Verzeichnisses festgelegt werden. Wenn Sie Dateien in externen Ordnern verwenden (von IDF &uuml;berwachte Ordner, Git-Repositorys, extern abgelegte Datenbanken usw.), werden diese beim alleinigen Kopieren des Home-Verzeichnisses &uuml;bersehen. Nehmen Sie auch den Speicherort aller konfigurierten Repositorys in Ihre Sicherung auf.
+    <strong>Hinweis:</strong> Der Speicherort von Repositorys kann auch au&szlig;erhalb des Home-Verzeichnisses festgelegt werden. Wenn Sie Dateien in externen Ordnern verwenden (Dateien in externen Ordnern, Git-Commit-Verl&auml;ufe, extern abgelegte Datenbanken usw.), werden diese beim alleinigen Kopieren des Home-Verzeichnisses &uuml;bersehen. Nehmen Sie auch den Speicherort aller konfigurierten Repositorys in Ihre Sicherung auf.
   </div>
 
   <h2>Verwandte Dokumente</h2>

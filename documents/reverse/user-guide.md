@@ -412,7 +412,9 @@ gkill独自のテキスト書式で記録を一括入力する画面です。
 
 ### 使い方
 
-1. プラグインの実行ファイルを `$HOME/gkill/plugins/{ユーザーID}/{プラグイン名}/` に配置する
+1. プラグインの実行ファイルと `manifest.json` を `$HOME/gkill/plugins/{ユーザーID}/{プラグイン名}/` に配置する
+   （`manifest.json` は必須。これが無いフォルダは読み込み対象から外れる。
+   同梱プラグインなら `プラグイン実行ファイル --gkill-print-manifest > manifest.json` で生成できる）
 2. gkill を起動する。初回起動時に同じフォルダへ `config.json` が自動生成される
 3. `config.json` の `source_dirs` に、取り込みたいデータが置いてあるフォルダを書く
 4. ライフログビュー画面で検索すると、他の記録と同じように表示される

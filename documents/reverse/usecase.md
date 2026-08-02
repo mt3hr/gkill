@@ -117,14 +117,14 @@ graph LR
 
 ## 2. 機能カテゴリ別ユースケース一覧
 
-> **件数について:** ユースケースは **82件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 87 行で、一部のユースケースは複数カテゴリに再掲されているため行数のほうが多くなる。件数を引用する際はユニーク ID 数（82）を使うこと。
+> **件数について:** ユースケースは **83件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 88 行で、一部のユースケースは複数カテゴリに再掲されているため行数のほうが多くなる。件数を引用する際はユニーク ID 数（83）を使うこと。
 >
 > 数え直すときは **4桁に限定**すること。`UC-[0-9]+` だと本文中の「UC-04xx」「UC-05xx」という
 > 記述（後述の欠番の説明）まで拾ってしまい、2件多く数えられる。
 >
 > ```bash
-> grep -oE 'UC-[0-9]{4}' documents/reverse/usecase.md | sort -u | wc -l   # 82
-> grep -cE '^\|\s*UC-[0-9]{4}' documents/reverse/usecase.md               # 87
+> grep -oE 'UC-[0-9]{4}' documents/reverse/usecase.md | sort -u | wc -l   # 83
+> grep -cE '^\|\s*UC-[0-9]{4}' documents/reverse/usecase.md               # 88
 > ```
 
 ### 2.1 認証
@@ -273,11 +273,12 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-1112 | MCP 経由で IDF ファイルの絶対パスを取得する | `GetIDFFilePath`（localhost からのリクエストのみ応答） |
 | UC-1113 | プラグイン一覧を取得する | `GetPluginList`（呼び出し元は MCP の `gkill_get_plugin_list` のみ） |
 | UC-1114 | プラグイン Kyou のコンテンツ HTML を取得する | `GetPluginContentHTML` |
-| UC-1115 | プラグイン設定画面の HTML を取得する | `GetPluginConfigHTML`（UI 導線は未実装） |
-| UC-1116 | プラグイン設定を保存する | `PostPluginConfig`（クライアント実装は無く、実際は `config.json` を手で編集する） |
+| UC-1115 | プラグイン設定画面の HTML を取得する | `GetPluginConfigHTML`（プラグイン Kyou のコンテキストメニュー「プラグイン設定」から開く） |
+| UC-1116 | プラグイン設定を保存する | `PostPluginConfig`（設定ダイアログの iframe から postMessage で親に依頼して保存。`config.json` を直接編集する経路も残っている） |
 | UC-1117 | Kyou の内容 / ID をクリップボードにコピーする | なし（クライアント完結。`classes/kyou-content-text.ts`） |
 | UC-1118 | ディスク上の派生キャッシュを削除する | なし（CLI `clear_cache <thumb\|video\|zip\|plugin\|all> <all\|user_id...>`） |
 | UC-1119 | 起動時に指定ユーザのリポジトリを先読みする | なし（CLI フラグ `--pre_load_users`） |
+| UC-1120 | 待ち受けアドレスを起動時だけ上書きする | なし（CLI フラグ `--address`。設定DBの `ADDRESS` は書き換えないため、設定画面の表示と実際の待ち受け先がずれる） |
 
 ## 3. ユースケース記述（astah モデルから抽出）
 
