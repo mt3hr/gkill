@@ -691,17 +691,61 @@ func TestCachedNotification_AddAndGet(t *testing.T) {
 		t.Fatalf("AddNotificationInfo failed: %v", err)
 	}
 
-	// The cached notification repository is primarily populated via
-	// UpdateCache from the base repo. Direct Add+Get does not round-trip
-	// through the cache's generated SQL correctly because
-	// GenerateFindSQLCommon applies additional filtering conditions.
-	// Instead, verify the rep name is accessible (proving the repo is functional).
-	repName, err := repo.GetRepName(ctx)
+	// 以前ここは「キャッシュ実装は直接のAdd+Getでは往復しない」と書いて
+	// GetRepName が空でないことだけを見ていたが、往復しなかったのは仕様ではなく
+	// GetNotification のバインドずれ（queryArgs に repName を積んでいて
+	// WHERE の ID に "notification" が入っていた）が原因だった。
+	// 他のキャッシュ実装（TestCachedReKyou_AddAndGet 等）と同じく往復を確認する。
+	got, err := repo.GetNotification(ctx, "cached-notif-001", nil)
 	if err != nil {
-		t.Fatalf("GetRepName failed: %v", err)
+		t.Fatalf("GetNotification failed: %v", err)
 	}
-	if repName == "" {
-		t.Error("GetRepName returned empty string")
+	if got == nil {
+		t.Fatal("GetNotification returned nil")
+	}
+	if got.TargetID != "target-001" {
+		t.Errorf("TargetID = %q, want %q", got.TargetID, "target-001")
+	}
+	if got.Content != "キャッシュ通知" {
+		t.Errorf("Content = %q, want %q", got.Content, "キャッシュ通知")
+	}
+}
+
+// 通知を更新すると、GetNotification は最新版を返し、
+// GetNotificationHistories は両方の版を返す。
+func TestCachedNotification_UpdateReturnsLatest(t *testing.T) {
+	repo := newCachedNotificationRepo(t)
+	ctx := context.Background()
+
+	n := makeNotification("cached-notif-002", "target-002", "更新前")
+	if err := repo.AddNotificationInfo(ctx, n); err != nil {
+		t.Fatalf("AddNotificationInfo failed: %v", err)
+	}
+
+	updated := n
+	updated.Content = "更新後"
+	updated.UpdateTime = n.UpdateTime.Add(time.Minute)
+	if err := repo.AddNotificationInfo(ctx, updated); err != nil {
+		t.Fatalf("AddNotificationInfo (update) failed: %v", err)
+	}
+
+	got, err := repo.GetNotification(ctx, "cached-notif-002", nil)
+	if err != nil {
+		t.Fatalf("GetNotification failed: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetNotification returned nil")
+	}
+	if got.Content != "更新後" {
+		t.Errorf("Content = %q, want %q（更新前の版が返っている）", got.Content, "更新後")
+	}
+
+	histories, err := repo.GetNotificationHistories(ctx, "cached-notif-002")
+	if err != nil {
+		t.Fatalf("GetNotificationHistories failed: %v", err)
+	}
+	if len(histories) != 2 {
+		t.Errorf("履歴の件数 = %d, want 2: %+v", len(histories), histories)
 	}
 }
 

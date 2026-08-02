@@ -40,7 +40,7 @@ export abstract class InfoBase {
     is_attached_timeis_loaded: boolean
 
     async load_all(): Promise<Array<GkillError>> {
-        return this.load_attached_datas()
+        return await this.load_attached_datas()
     }
 
     async load_attached_tags(force = false): Promise<Array<GkillError>> {

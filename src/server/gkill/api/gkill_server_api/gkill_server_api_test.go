@@ -12,6 +12,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -31,6 +33,18 @@ import (
 
 // apiTestMu serializes API tests that mutate gkill_options global state.
 var apiTestMu sync.Mutex
+
+// cacheInMemoryForTest は次に立てるテストサーバの --cache_in_memory を決める。
+// 既定は false。本番の既定は true で、その場合 Reps がキャッシュ実装に差し替わり
+// 書き込み経路も変わるため、そこでしか出ない不具合がある。
+// 本番既定を再現したいテストは setup より前に useCacheInMemory(t) を呼ぶこと。
+var cacheInMemoryForTest = false
+
+func useCacheInMemory(t *testing.T) {
+	t.Helper()
+	cacheInMemoryForTest = true
+	t.Cleanup(func() { cacheInMemoryForTest = false })
+}
 
 // setupTestGkillServerAPI creates a GkillServerAPI backed by temp SQLite databases.
 // It overrides gkill_options globals to point at the temp directory, then calls
@@ -70,7 +84,7 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 	gkill_options.DataDirectoryDefault = tmpDir + "/datas"
 	gkill_options.TLSCertFileDefault = tmpDir + "/tls/cert.cer"
 	gkill_options.TLSKeyFileDefault = tmpDir + "/tls/key.pem"
-	gkill_options.IsCacheInMemory = false
+	gkill_options.IsCacheInMemory = cacheInMemoryForTest
 
 	// Create required subdirectories
 	for _, dir := range []string{"configs", "datas", "caches", "logs", "lib/base_directory"} {
@@ -164,6 +178,7 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	router.HandleFunc(gkillAPI.APIAddress.UploadFilesAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUploadFiles)).Methods(gkillAPI.APIAddress.UploadFilesMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UploadGPSLogFilesAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleUploadGPSLogFiles)).Methods(gkillAPI.APIAddress.UploadGPSLogFilesMethod)
 	router.HandleFunc(gkillAPI.APIAddress.BrowseZipContentsAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleBrowseZipContents)).Methods(gkillAPI.APIAddress.BrowseZipContentsMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetSharedKyousAddress, gkillAPI.wrapNoAuth(gkillAPI.HandleGetSharedKyous)).Methods(gkillAPI.APIAddress.GetSharedKyousMethod)
 
 	// --- wrapAuth routes (authentication required, no repos) ---
 	router.HandleFunc(gkillAPI.APIAddress.GetApplicationConfigAddress, gkillAPI.wrapAuth(gkillAPI.HandleGetApplicationConfig)).Methods(gkillAPI.APIAddress.GetApplicationConfigMethod)
@@ -203,6 +218,9 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	router.HandleFunc(gkillAPI.APIAddress.GetNotificationsByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNotificationsByTargetID)).Methods(gkillAPI.APIAddress.GetNotificationsByTargetIDMethod)
 	router.HandleFunc(gkillAPI.APIAddress.AddRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddRekyou)).Methods(gkillAPI.APIAddress.AddRekyouMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRekyou)).Methods(gkillAPI.APIAddress.GetRekyouMethod)
+	router.HandleFunc(gkillAPI.APIAddress.AddMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddMiReKyou)).Methods(gkillAPI.APIAddress.AddMiReKyouMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMiReKyou)).Methods(gkillAPI.APIAddress.GetMiReKyouMethod)
+	router.HandleFunc(gkillAPI.APIAddress.UpdateMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateMiReKyou)).Methods(gkillAPI.APIAddress.UpdateMiReKyouMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateKmemo)).Methods(gkillAPI.APIAddress.UpdateKmemoMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateMiAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateMi)).Methods(gkillAPI.APIAddress.UpdateMiMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateTagAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateTag)).Methods(gkillAPI.APIAddress.UpdateTagMethod)
@@ -723,32 +741,133 @@ func loginAndGetSession(t *testing.T, tsURL string, gkillAPI *GkillServerAPI, us
 	return loginResp.SessionID
 }
 
-func TestHandleGetApplicationConfig_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
+// authRequiredEndpoint はセッションを要求するエンドポイント1つ分の情報。
+type authRequiredEndpoint struct {
+	name string
+	path string
+}
+
+// TestAuthMiddleware_RejectsInvalidSession は、セッションを要求する全エンドポイントが
+// 不正なセッションIDを拒否することをまとめて検証する。
+//
+// 以前はエンドポイントごとに Test*_InvalidSession / Test*_RequiresSession という
+// 個別テストを48本持っていたが、1本ごとにサーバとDAO一式をグローバルmutex下で
+// 起動していたためGoテスト全体の1/3の時間を占めていた。検証しているのは全て同じ
+// 認証経路なので、フィクスチャを1回だけ作ってサブテストで回す形に集約している。
+// エンドポイント単位の粒度は t.Run で保たれる。
+//
+// 個別テストは「errorsが空でない」までしか見ていなかったが、ここでは
+// AccountSessionNotFoundError であることまで確認する。リクエストのdecode失敗など
+// 別の理由でエラーになっているのを認証成功と取り違えないため。
+func TestAuthMiddleware_RejectsInvalidSession(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
 
-	// Send request with empty session ID — should return errors
-	body := map[string]string{
-		"session_id":  "",
-		"locale_name": "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/get_application_config", body)
-	defer resp.Body.Close()
+	addr := gkillAPI.APIAddress
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	// wrapAuth / wrapAuthRepos で登録され、ミドルウェアが認証するエンドポイント。
+	middlewareAuthed := []authRequiredEndpoint{
+		{"GetApplicationConfig", addr.GetApplicationConfigAddress},
+		{"GetServerConfigs", addr.GetServerConfigsAddress},
+		{"UpdateCache", addr.UpdateCacheAddress},
+		{"ReloadRepositories", addr.ReloadRepositoriesAddress},
+		{"GetUpdatedDatasByTime", addr.GetUpdatedDatasByTimeAddress},
+		{"GetPluginList", addr.GetPluginListAddress},
+		{"GetPluginContentHTML", addr.GetPluginContentHTMLAddress},
+		{"GetPluginConfigHTML", addr.GetPluginConfigHTMLAddress},
+		{"PostPluginConfig", addr.PostPluginConfigAddress},
+		{"UpdateApplicationConfig", addr.UpdateApplicationConfigAddress},
+		{"UpdateServerConfigs", addr.UpdateServerConfigsAddress},
+		{"UpdateUserReps", addr.UpdateUserRepsAddress},
+		{"AddKmemo", addr.AddKmemoAddress},
+		{"AddMi", addr.AddMiAddress},
+		{"AddTimeis", addr.AddTimeisAddress},
+		{"AddLantana", addr.AddLantanaAddress},
+		{"AddTag", addr.AddTagAddress},
+		{"AddNlog", addr.AddNlogAddress},
+		{"UpdateTag", addr.UpdateTagAddress},
+		{"UpdateText", addr.UpdateTextAddress},
+		{"UpdateNotification", addr.UpdateNotificationAddress},
+		{"UpdateKC", addr.UpdateKCAddress},
+		{"UpdateURLog", addr.UpdateURLogAddress},
+		{"UpdateNlog", addr.UpdateNlogAddress},
+		{"UpdateTimeis", addr.UpdateTimeisAddress},
+		{"UpdateLantana", addr.UpdateLantanaAddress},
+		{"UpdateRekyou", addr.UpdateRekyouAddress},
+		{"AddMiReKyou", addr.AddMiReKyouAddress},
+		{"GetMiReKyou", addr.GetMiReKyouAddress},
+		{"UpdateMiReKyou", addr.UpdateMiReKyouAddress},
+		{"GetKyou", addr.GetKyouAddress},
+		{"GetMiBoardList", addr.GetMiBoardListAddress},
+		{"GetAllTagNames", addr.GetAllTagNamesAddress},
+		{"GetAllRepNames", addr.GetAllRepNamesAddress},
+		{"GetTagHistoriesByTagID", addr.GetTagHistoriesByTagIDAddress},
+		{"GetTextHistoriesByTextID", addr.GetTextHistoriesByTextIDAddress},
+		{"GetNotificationHistoriesByNotificationID", addr.GetNotificationHistoriesByNotificationIDAddress},
+		{"GetRepositories", addr.GetRepositoriesAddress},
+		{"AddShareKyouListInfo", addr.AddShareKyouListInfoAddress},
+		{"UpdateShareKyouListInfo", addr.UpdateShareKyouListInfoAddress},
+		{"GetShareKyouListInfos", addr.GetShareKyouListInfosAddress},
+		{"DeleteShareKyouListInfos", addr.DeleteShareKyouListInfosAddress},
+		{"CommitTx", addr.CommitTXAddress},
+		{"DiscardTx", addr.DiscardTXAddress},
+		{"SubmitKFTLText", addr.SubmitKFTLTextAddress},
+		{"GetKyousMCP", addr.GetKyousMCPAddress},
+		{"GetGitCommitLog", addr.GetGitCommitLogAddress},
+		{"GetGPSLog", addr.GetGPSLogAddress},
 	}
 
-	// Parse the generic response to check for errors
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode failed: %v", err)
+	// wrapNoAuth で登録されているが、ハンドラ自身が getAccountFromSessionID で
+	// セッションを検証するエンドポイント。ミドルウェア任せではないので、
+	// 自前チェックが外れていないことをここで押さえる。
+	handlerAuthed := []authRequiredEndpoint{
+		{"UploadFiles", addr.UploadFilesAddress},
+		{"UploadGPSLogFiles", addr.UploadGPSLogFilesAddress},
+		{"BrowseZipContents", addr.BrowseZipContentsAddress},
 	}
 
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
+	groups := []struct {
+		label     string
+		endpoints []authRequiredEndpoint
+	}{
+		{"middleware", middlewareAuthed},
+		{"handler", handlerAuthed},
+	}
+
+	// 空文字は「session_idが無い」経路、それ以外は「セッションが見つからない」経路を通る。
+	// どちらも AccountSessionNotFoundError になる。
+	for _, sessionID := range []string{"", "invalid_session_id"} {
+		for _, group := range groups {
+			for _, ep := range group.endpoints {
+				t.Run(fmt.Sprintf("%s/%s/session=%q", group.label, ep.name, sessionID), func(t *testing.T) {
+					body := map[string]any{
+						"session_id":  sessionID,
+						"locale_name": "en",
+					}
+					resp := postJSON(t, tsURL+ep.path, body)
+					defer resp.Body.Close()
+
+					// gkillは認証エラーもHTTP 200 + errors配列で返す
+					if resp.StatusCode != http.StatusOK {
+						t.Fatalf("status = %d, want 200", resp.StatusCode)
+					}
+
+					var result struct {
+						Errors []*message.GkillError `json:"errors"`
+					}
+					if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+						t.Fatalf("decode response: %v", err)
+					}
+					if len(result.Errors) == 0 {
+						t.Fatalf("%s: 不正なセッションを受け入れてしまっている", ep.path)
+					}
+					if result.Errors[0].ErrorCode != message.AccountSessionNotFoundError {
+						t.Errorf("error code = %s, want %s (認証以外の理由で落ちている可能性がある: %s)",
+							result.Errors[0].ErrorCode, message.AccountSessionNotFoundError, result.Errors[0].ErrorMessage)
+					}
+				})
+			}
+		}
 	}
 }
 
@@ -1231,65 +1350,6 @@ func TestHandleAddTag_AndGetTagsByTargetID(t *testing.T) {
 }
 
 // --- Session validation tests ---
-
-func TestHandleAddKmemo_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	addReq := &req_res.AddKmemoRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Kmemo: reps.Kmemo{
-			ID:          GenerateNewID(),
-			Content:     "should fail",
-			RelatedTime: now,
-			DataType:    "kmemo",
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/add_kmemo", addReq)
-	defer resp.Body.Close()
-
-	var addResp req_res.AddKmemoResponse
-	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(addResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
-func TestHandleAddMi_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	addReq := &req_res.AddMiRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Mi: reps.Mi{
-			ID:         GenerateNewID(),
-			Title:      "should fail",
-			DataType:   "mi",
-			CreateTime: now,
-			UpdateTime: now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/add_mi", addReq)
-	defer resp.Body.Close()
-
-	var addResp req_res.AddMiResponse
-	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(addResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
 
 func TestHandleAddKmemo_DuplicateID(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
@@ -1831,6 +1891,168 @@ func TestHandleAddNotification_AndGetNotificationsByTargetID(t *testing.T) {
 	}
 }
 
+// addTestNotification はKmemoを1件作り、そこに通知を1件ぶら下げる。
+// 作った通知（サーバに送ったままの値）を返す。
+func addTestNotification(t *testing.T, tsURL, sessionID, content string) reps.Notification {
+	t.Helper()
+
+	now := time.Now().Truncate(time.Second)
+	kmemoID := addTestKmemo(t, tsURL, sessionID, "通知更新テスト用メモ")
+
+	notification := reps.Notification{
+		ID:               GenerateNewID(),
+		TargetID:         kmemoID,
+		Content:          content,
+		IsNotificated:    false,
+		NotificationTime: now.Add(24 * time.Hour),
+		CreateTime:       now,
+		CreateApp:        "test",
+		CreateUser:       "admin",
+		UpdateTime:       now,
+		UpdateApp:        "test",
+		UpdateUser:       "admin",
+	}
+	resp := postJSON(t, tsURL+"/api/add_gkill_notification", &req_res.AddNotificationRequest{
+		SessionID:    sessionID,
+		LocaleName:   "en",
+		Notification: notification,
+	})
+	defer resp.Body.Close()
+
+	var addResp req_res.AddNotificationResponse
+	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode add notification response: %v", err)
+	}
+	if len(addResp.Errors) > 0 {
+		t.Fatalf("add notification errors: %+v", addResp.Errors)
+	}
+	return notification
+}
+
+// getNotificationsByTargetID は対象IDにぶら下がる通知を取り直す。
+func getNotificationsByTargetID(t *testing.T, tsURL, sessionID, targetID string) []reps.Notification {
+	t.Helper()
+
+	resp := postJSON(t, tsURL+"/api/get_gkill_notifications_by_id", &req_res.GetNotificationsByTargetIDRequest{
+		SessionID:  sessionID,
+		TargetID:   targetID,
+		LocaleName: "en",
+	})
+	defer resp.Body.Close()
+
+	var getResp req_res.GetNotificationsByTargetIDResponse
+	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
+		t.Fatalf("decode get notifications response: %v", err)
+	}
+	if len(getResp.Errors) > 0 {
+		t.Fatalf("get notifications errors: %+v", getResp.Errors)
+	}
+	return getResp.Notifications
+}
+
+// updateNotification は通知更新リクエストを投げてレスポンスを返す。
+func updateNotification(t *testing.T, tsURL, sessionID string, notification reps.Notification) req_res.UpdateNotificationResponse {
+	t.Helper()
+
+	resp := postJSON(t, tsURL+"/api/update_gkill_notification", &req_res.UpdateNotificationRequest{
+		SessionID:    sessionID,
+		LocaleName:   "en",
+		Notification: notification,
+	})
+	defer resp.Body.Close()
+
+	var updateResp req_res.UpdateNotificationResponse
+	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
+		t.Fatalf("decode update notification response: %v", err)
+	}
+	return updateResp
+}
+
+// 通知の更新。GUIの「通知編集」がこの経路を通る。
+//
+// キャッシュ有無の両方で回す。本番の既定は --cache_in_memory=true で、
+// Reps がキャッシュ実装に差し替わると読み書きの経路が変わるため、
+// 片方だけ通ることがある。
+func TestHandleUpdateNotification_ChangesContent(t *testing.T) {
+	for _, cacheInMemory := range []bool{false, true} {
+		t.Run(fmt.Sprintf("cache_in_memory=%v", cacheInMemory), func(t *testing.T) {
+			if cacheInMemory {
+				useCacheInMemory(t)
+			}
+			tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+			defer cleanup()
+
+			passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+			sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+			notification := addTestNotification(t, tsURL, sessionID, "更新前の通知")
+
+			updated := notification
+			updated.Content = "更新後の通知"
+			updated.UpdateTime = notification.UpdateTime.Add(time.Second)
+
+			updateResp := updateNotification(t, tsURL, sessionID, updated)
+			if len(updateResp.Errors) > 0 {
+				for _, e := range updateResp.Errors {
+					t.Errorf("update notification error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+				}
+				t.FailNow()
+			}
+			if updateResp.UpdatedNotification == nil {
+				t.Fatal("updated_notification が返らない")
+			}
+			if updateResp.UpdatedNotification.Content != "更新後の通知" {
+				t.Errorf("updated_notification.content = %q, want %q", updateResp.UpdatedNotification.Content, "更新後の通知")
+			}
+
+			// 取り直しても更新後の内容だけが見えること（古い版が残らないこと）
+			notifications := getNotificationsByTargetID(t, tsURL, sessionID, notification.TargetID)
+			if len(notifications) != 1 {
+				t.Fatalf("通知の件数 = %d, want 1: %+v", len(notifications), notifications)
+			}
+			if notifications[0].Content != "更新後の通知" {
+				t.Errorf("取り直した通知の内容 = %q, want %q", notifications[0].Content, "更新後の通知")
+			}
+		})
+	}
+}
+
+// 通知の削除。GUIの「通知削除」は is_deleted を立てた更新として飛ぶ。
+func TestHandleUpdateNotification_MarksDeleted(t *testing.T) {
+	for _, cacheInMemory := range []bool{false, true} {
+		t.Run(fmt.Sprintf("cache_in_memory=%v", cacheInMemory), func(t *testing.T) {
+			if cacheInMemory {
+				useCacheInMemory(t)
+			}
+			tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+			defer cleanup()
+
+			passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+			sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+			notification := addTestNotification(t, tsURL, sessionID, "消される通知")
+
+			deleted := notification
+			deleted.IsDeleted = true
+			deleted.UpdateTime = notification.UpdateTime.Add(time.Second)
+
+			updateResp := updateNotification(t, tsURL, sessionID, deleted)
+			if len(updateResp.Errors) > 0 {
+				for _, e := range updateResp.Errors {
+					t.Errorf("update notification error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+				}
+				t.FailNow()
+			}
+
+			for _, n := range getNotificationsByTargetID(t, tsURL, sessionID, notification.TargetID) {
+				if n.ID == notification.ID && !n.IsDeleted {
+					t.Errorf("削除した通知が残っている: %+v", n)
+				}
+			}
+		})
+	}
+}
+
 func TestHandleAddReKyou_AndGetReKyou(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -1919,6 +2141,370 @@ func TestHandleAddReKyou_AndGetReKyou(t *testing.T) {
 	}
 	if getResp.ReKyouHistories[0].TargetID != kmemoID {
 		t.Errorf("TargetID = %q, want %q", getResp.ReKyouHistories[0].TargetID, kmemoID)
+	}
+}
+
+// --- MiReKyou（既存Kyouのタスク化）ハンドラテスト ---
+
+// addTestKmemo はMiReKyouのターゲットにするKmemoを1件作り、そのIDを返す。
+func addTestKmemo(t *testing.T, tsURL, sessionID, content string) string {
+	t.Helper()
+	now := time.Now().Truncate(time.Second)
+	kmemoID := GenerateNewID()
+
+	addReq := &req_res.AddKmemoRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		Kmemo: reps.Kmemo{
+			ID:         kmemoID,
+			Content:    content,
+			DataType:   "kmemo",
+			CreateTime: now,
+			CreateApp:  "test",
+			CreateUser: "admin",
+			UpdateTime: now,
+			UpdateApp:  "test",
+			UpdateUser: "admin",
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/add_kmemo", addReq)
+	defer resp.Body.Close()
+
+	var addResp req_res.AddKmemoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode add kmemo response: %v", err)
+	}
+	if len(addResp.Errors) > 0 {
+		t.Fatalf("add kmemo errors: %+v", addResp.Errors)
+	}
+	return kmemoID
+}
+
+// addTestMiReKyou は targetID を board にタスク化し、そのIDを返す。
+func addTestMiReKyou(t *testing.T, tsURL, sessionID, targetID, board string) string {
+	t.Helper()
+	now := time.Now().Truncate(time.Second)
+	mireKyouID := GenerateNewID()
+
+	addReq := &req_res.AddMiReKyouRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		MiReKyou: reps.MiReKyou{
+			ID:         mireKyouID,
+			TargetID:   targetID,
+			IsChecked:  false,
+			BoardName:  board,
+			CreateTime: now,
+			CreateApp:  "test",
+			CreateUser: "admin",
+			UpdateTime: now,
+			UpdateApp:  "test",
+			UpdateUser: "admin",
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/add_mirekyou", addReq)
+	defer resp.Body.Close()
+
+	var addResp req_res.AddMiReKyouResponse
+	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode add mirekyou response: %v", err)
+	}
+	if len(addResp.Errors) > 0 {
+		t.Fatalf("add mirekyou errors: %+v", addResp.Errors)
+	}
+	return mireKyouID
+}
+
+// findKyousForMiBoard はMi画面と同じ条件（for_mi + ボード名）でKyouを検索する。
+//
+// クエリを find.FindQuery 構造体ではなく生のmapで組んでいるのは意図的。
+// MiCheckState / MiSortType の MarshalJSON が json.Marshal([]byte(s)) になっており
+// Goから送るとbase64（"all" → "YWxs"）になってしまうため、構造体経由だと
+// filterMiForMi のチェック状態判定に一致せず常に0件になる。
+// 実際のクライアント（TypeScript）は素の文字列を送るので、ここでも同じ形にする。
+func findKyousForMiBoard(t *testing.T, tsURL, sessionID, board string) []reps.Kyou {
+	t.Helper()
+
+	body := map[string]any{
+		"session_id":  sessionID,
+		"locale_name": "en",
+		"query": map[string]any{
+			"for_mi":              true,
+			"use_mi_board_name":   true,
+			"mi_board_name":       board,
+			"mi_check_state":      "all",
+			"mi_sort_type":        "create_time",
+			"include_create_mi":   true,
+			"include_check_mi":    true,
+			"include_limit_mi":    true,
+			"include_start_mi":    true,
+			"include_end_mi":      true,
+			"only_latest_data":    true,
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/get_kyous", body)
+	defer resp.Body.Close()
+
+	var getResp req_res.GetKyousResponse
+	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
+		t.Fatalf("decode get kyous response: %v", err)
+	}
+	if len(getResp.Errors) > 0 {
+		t.Fatalf("get kyous errors: %+v", getResp.Errors)
+	}
+	return getResp.Kyous
+}
+
+func TestHandleAddMiReKyou_AndGetMiReKyou(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	targetID := addTestKmemo(t, tsURL, sessionID, "タスク化対象のメモ")
+	mireKyouID := addTestMiReKyou(t, tsURL, sessionID, targetID, "inbox")
+
+	getReq := &req_res.GetMiReKyouRequest{
+		SessionID:  sessionID,
+		ID:         mireKyouID,
+		LocaleName: "en",
+	}
+	resp := postJSON(t, tsURL+"/api/get_mirekyou", getReq)
+	defer resp.Body.Close()
+
+	var getResp req_res.GetMiReKyouResponse
+	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
+		t.Fatalf("decode get mirekyou response: %v", err)
+	}
+	if len(getResp.Errors) > 0 {
+		t.Fatalf("get mirekyou errors: %+v", getResp.Errors)
+	}
+	if len(getResp.MiReKyouHistories) == 0 {
+		t.Fatal("MiReKyouHistories is empty after add")
+	}
+	got := getResp.MiReKyouHistories[0]
+	if got.TargetID != targetID {
+		t.Errorf("TargetID = %q, want %q", got.TargetID, targetID)
+	}
+	if got.BoardName != "inbox" {
+		t.Errorf("BoardName = %q, want %q", got.BoardName, "inbox")
+	}
+	if got.IsChecked {
+		t.Error("IsChecked = true, want false")
+	}
+}
+
+func TestHandleUpdateMiReKyou(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	targetID := addTestKmemo(t, tsURL, sessionID, "チェック更新の対象メモ")
+	mireKyouID := addTestMiReKyou(t, tsURL, sessionID, targetID, "inbox")
+
+	// 追加と同じ秒だとUPDATE_TIMEが並んで最新版が一意に定まらないので、明示的に後の時刻を入れる
+	// （リポジトリは秒精度で保存する）
+	laterUpdateTime := time.Now().Truncate(time.Second).Add(5 * time.Second)
+	updateReq := &req_res.UpdateMiReKyouRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		MiReKyou: reps.MiReKyou{
+			ID:         mireKyouID,
+			TargetID:   targetID,
+			IsChecked:  true,
+			BoardName:  "done",
+			CreateTime: time.Now().Truncate(time.Second),
+			CreateApp:  "test",
+			CreateUser: "admin",
+			UpdateTime: laterUpdateTime,
+			UpdateApp:  "test",
+			UpdateUser: "admin",
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/update_mirekyou", updateReq)
+	defer resp.Body.Close()
+
+	var updateResp req_res.UpdateMiReKyouResponse
+	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
+		t.Fatalf("decode update mirekyou response: %v", err)
+	}
+	if len(updateResp.Errors) > 0 {
+		t.Fatalf("update mirekyou errors: %+v", updateResp.Errors)
+	}
+
+	// 最新版がチェック済みになっていること
+	getReq := &req_res.GetMiReKyouRequest{SessionID: sessionID, ID: mireKyouID, LocaleName: "en"}
+	resp2 := postJSON(t, tsURL+"/api/get_mirekyou", getReq)
+	defer resp2.Body.Close()
+
+	var getResp req_res.GetMiReKyouResponse
+	if err := json.NewDecoder(resp2.Body).Decode(&getResp); err != nil {
+		t.Fatalf("decode get mirekyou response: %v", err)
+	}
+	if len(getResp.MiReKyouHistories) == 0 {
+		t.Fatal("MiReKyouHistories is empty after update")
+	}
+	latest := getResp.MiReKyouHistories[0]
+	for _, h := range getResp.MiReKyouHistories {
+		if h.UpdateTime.After(latest.UpdateTime) {
+			latest = h
+		}
+	}
+	if !latest.IsChecked {
+		t.Error("latest IsChecked = false, want true")
+	}
+	if latest.BoardName != "done" {
+		t.Errorf("latest BoardName = %q, want %q", latest.BoardName, "done")
+	}
+}
+
+// TestHandleUpdateMiReKyou_Nonexistent_ReturnsError は、存在しないIDへの更新が
+// エラーになることを確認する。
+//
+// 他の10データ型（Tag/Text/Notification/KC/URLog/Nlog/Timeis/Lantana/Rekyou/Mi）は
+// 追記型リポジトリの性質上、存在しないIDへの更新も成功扱いになる。MiReKyouだけは
+// usecase.UpdateMiReKyou が明示的に存在チェックして NotFoundMiReKyouError を返す
+// 設計になっており、ここはその意図的な差分を固定するテスト。
+func TestHandleUpdateMiReKyou_Nonexistent_ReturnsError(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	now := time.Now().Truncate(time.Second)
+	updateReq := &req_res.UpdateMiReKyouRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		MiReKyou: reps.MiReKyou{
+			ID:         GenerateNewID(),
+			TargetID:   GenerateNewID(),
+			BoardName:  "inbox",
+			CreateTime: now,
+			CreateApp:  "test",
+			CreateUser: "admin",
+			UpdateTime: now,
+			UpdateApp:  "test",
+			UpdateUser: "admin",
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/update_mirekyou", updateReq)
+	defer resp.Body.Close()
+
+	var updateResp req_res.UpdateMiReKyouResponse
+	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
+		t.Fatalf("decode update mirekyou response: %v", err)
+	}
+	if len(updateResp.Errors) == 0 {
+		t.Fatal("存在しないMiReKyouの更新がエラーにならなかった")
+	}
+	if updateResp.Errors[0].ErrorCode != message.NotFoundMiReKyouError {
+		t.Errorf("error code = %s, want %s", updateResp.Errors[0].ErrorCode, message.NotFoundMiReKyouError)
+	}
+}
+
+// TestHandleGetKyous_MiReKyouResolvesTarget はMiReKyouの中核ロジックを確認する。
+//   - タスク化するとMi画面（for_mi）の検索結果に出ること
+//   - data_typeが mirekyou_ 接頭辞になること（クライアントが typed_mirekyou を引くのに使う）
+//   - ターゲットのKyouが論理削除されたら検索結果から落ちること
+func TestHandleGetKyous_MiReKyouResolvesTarget(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	board := "mirekyou_target_board"
+	content := "ターゲット解決テスト用メモ"
+	targetID := addTestKmemo(t, tsURL, sessionID, content)
+	mireKyouID := addTestMiReKyou(t, tsURL, sessionID, targetID, board)
+
+	kyous := findKyousForMiBoard(t, tsURL, sessionID, board)
+	var found *reps.Kyou
+	for i := range kyous {
+		if kyous[i].ID == mireKyouID {
+			found = &kyous[i]
+			break
+		}
+	}
+	if found == nil {
+		t.Fatalf("MiReKyou %s がMi画面の検索結果にない", mireKyouID)
+	}
+	// data_type の接頭辞判定は "mi" より先に "mirekyou" を見る規約になっている
+	if !strings.HasPrefix(found.DataType, "mirekyou") {
+		t.Errorf("DataType = %q, want mirekyou 接頭辞", found.DataType)
+	}
+
+	// ターゲットのKmemoを論理削除する
+	now := time.Now().Truncate(time.Second)
+	deleteReq := &req_res.UpdateKmemoRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		Kmemo: reps.Kmemo{
+			IsDeleted:  true,
+			ID:         targetID,
+			Content:    content,
+			DataType:   "kmemo",
+			CreateTime: now,
+			CreateApp:  "test",
+			CreateUser: "admin",
+			UpdateTime: now.Add(5 * time.Second),
+			UpdateApp:  "test",
+			UpdateUser: "admin",
+		},
+	}
+	respDel := postJSON(t, tsURL+"/api/update_kmemo", deleteReq)
+	defer respDel.Body.Close()
+
+	var delResp req_res.UpdateKmemoResponse
+	if err := json.NewDecoder(respDel.Body).Decode(&delResp); err != nil {
+		t.Fatalf("decode update kmemo response: %v", err)
+	}
+	if len(delResp.Errors) > 0 {
+		t.Fatalf("update kmemo errors: %+v", delResp.Errors)
+	}
+
+	after := findKyousForMiBoard(t, tsURL, sessionID, board)
+	for _, k := range after {
+		if k.ID == mireKyouID {
+			t.Error("ターゲットが削除されたMiReKyouがMi画面に残っている")
+		}
+	}
+}
+
+func TestHandleGetMiBoardList_IncludesMiReKyouOnlyBoard(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	// Miを1件も持たず、MiReKyouだけが乗っているボード
+	board := "mirekyou_only_board"
+	targetID := addTestKmemo(t, tsURL, sessionID, "MiReKyou専用ボードのメモ")
+	addTestMiReKyou(t, tsURL, sessionID, targetID, board)
+
+	getReq := &req_res.GetMiBoardRequest{SessionID: sessionID, LocaleName: "en"}
+	resp := postJSON(t, tsURL+"/api/get_mi_board_list", getReq)
+	defer resp.Body.Close()
+
+	var getResp req_res.GetMiBoardResponse
+	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
+		t.Fatalf("decode get mi board list response: %v", err)
+	}
+	if len(getResp.Errors) > 0 {
+		t.Fatalf("get mi board list errors: %+v", getResp.Errors)
+	}
+	if !slices.Contains(getResp.Boards, board) {
+		t.Errorf("board %q がボード一覧にない: %v", board, getResp.Boards)
 	}
 }
 
@@ -2127,127 +2713,6 @@ func TestHandleUpdateMi(t *testing.T) {
 }
 
 // --- Phase 1d: Session validation tests ---
-
-func TestHandleAddLantana_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	addReq := &req_res.AddLantanaRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Lantana: reps.Lantana{
-			ID:          GenerateNewID(),
-			Mood:        5,
-			RelatedTime: now,
-			DataType:    "lantana",
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/add_lantana", addReq)
-	defer resp.Body.Close()
-
-	var addResp req_res.AddLantanaResponse
-	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(addResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
-func TestHandleAddTimeis_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	addReq := &req_res.AddTimeIsRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		TimeIs: reps.TimeIs{
-			ID:         GenerateNewID(),
-			Title:      "should fail",
-			StartTime:  now,
-			DataType:   "timeis",
-			CreateTime: now,
-			UpdateTime: now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/add_timeis", addReq)
-	defer resp.Body.Close()
-
-	var addResp req_res.AddTimeIsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(addResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
-func TestHandleAddTag_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	addReq := &req_res.AddTagRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Tag: reps.Tag{
-			ID:          GenerateNewID(),
-			TargetID:    GenerateNewID(),
-			Tag:         "should fail",
-			RelatedTime: now,
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/add_tag", addReq)
-	defer resp.Body.Close()
-
-	var addResp req_res.AddTagResponse
-	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(addResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
-func TestHandleAddNlog_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	addReq := &req_res.AddNlogRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Nlog: reps.Nlog{
-			ID:          GenerateNewID(),
-			Title:       "should fail",
-			Amount:      json.Number("100"),
-			RelatedTime: now,
-			DataType:    "nlog",
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/add_nlog", addReq)
-	defer resp.Body.Close()
-
-	var addResp req_res.AddNlogResponse
-	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(addResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
 
 // --- Phase 1e: GetKyous query tests ---
 
@@ -2820,48 +3285,6 @@ func TestHandleDiscardTx_EmptyTransaction(t *testing.T) {
 	// so we only verify no errors were returned.
 }
 
-func TestHandleCommitTx_InvalidSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	commitReq := &req_res.CommitTxRequest{
-		SessionID:  "invalid_session_id",
-		TXID:       GenerateNewID(),
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/commit_tx", commitReq)
-	defer resp.Body.Close()
-
-	var commitResp req_res.CommitTxResponse
-	if err := json.NewDecoder(resp.Body).Decode(&commitResp); err != nil {
-		t.Fatalf("decode commit tx response: %v", err)
-	}
-	if len(commitResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
-func TestHandleDiscardTx_InvalidSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	discardReq := &req_res.DiscardTxRequest{
-		SessionID:  "invalid_session_id",
-		TXID:       GenerateNewID(),
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/discard_tx", discardReq)
-	defer resp.Body.Close()
-
-	var discardResp req_res.DiscardTxResponse
-	if err := json.NewDecoder(resp.Body).Decode(&discardResp); err != nil {
-		t.Fatalf("decode discard tx response: %v", err)
-	}
-	if len(discardResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 // Ensure that imports are used
 var _ = (*account.Account)(nil)
 var _ = (*server_config.ServerConfig)(nil)
@@ -2986,36 +3409,6 @@ func TestHandleUpdateTag(t *testing.T) {
 	}
 }
 
-func TestHandleUpdateTag_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateTagRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Tag: reps.Tag{
-			ID:          GenerateNewID(),
-			TargetID:    GenerateNewID(),
-			Tag:         "should fail",
-			RelatedTime: now,
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_tag", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateTagResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleUpdateText(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -3128,36 +3521,6 @@ func TestHandleUpdateText(t *testing.T) {
 	}
 	if !found {
 		t.Error("updated text not found in GetTextsByTargetID results")
-	}
-}
-
-func TestHandleUpdateText_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateTextRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Text: reps.Text{
-			ID:          GenerateNewID(),
-			TargetID:    GenerateNewID(),
-			Text:        "should fail",
-			RelatedTime: now,
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_text", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateTextResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -3279,36 +3642,6 @@ func TestHandleUpdateNotification(t *testing.T) {
 	}
 }
 
-func TestHandleUpdateNotification_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateNotificationRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Notification: reps.Notification{
-			ID:               GenerateNewID(),
-			TargetID:         GenerateNewID(),
-			Content:          "should fail",
-			NotificationTime: now.Add(24 * time.Hour),
-			CreateTime:       now,
-			UpdateTime:       now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_gkill_notification", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateNotificationResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleUpdateKC(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -3404,37 +3737,6 @@ func TestHandleUpdateKC(t *testing.T) {
 	}
 	if !found {
 		t.Error("updated KC not found in KCHistories")
-	}
-}
-
-func TestHandleUpdateKC_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateKCRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		KC: reps.KC{
-			ID:          GenerateNewID(),
-			Title:       "should fail",
-			NumValue:    json.Number("1"),
-			RelatedTime: now,
-			DataType:    "kc",
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_kc", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateKCResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -3538,37 +3840,6 @@ func TestHandleUpdateURLog(t *testing.T) {
 	}
 }
 
-func TestHandleUpdateURLog_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateURLogRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		URLog: reps.URLog{
-			ID:          GenerateNewID(),
-			URL:         "https://example.com",
-			Title:       "should fail",
-			RelatedTime: now,
-			DataType:    "urlog",
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_urlog", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateURLogResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleUpdateNlog(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -3666,37 +3937,6 @@ func TestHandleUpdateNlog(t *testing.T) {
 	}
 	if !found {
 		t.Error("updated Nlog not found in NlogHistories")
-	}
-}
-
-func TestHandleUpdateNlog_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateNlogRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Nlog: reps.Nlog{
-			ID:          GenerateNewID(),
-			Title:       "should fail",
-			Amount:      json.Number("1"),
-			RelatedTime: now,
-			DataType:    "nlog",
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_nlog", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateNlogResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -3799,36 +4039,6 @@ func TestHandleUpdateTimeis(t *testing.T) {
 	}
 }
 
-func TestHandleUpdateTimeis_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateTimeisRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		TimeIs: reps.TimeIs{
-			ID:         GenerateNewID(),
-			Title:      "should fail",
-			StartTime:  now,
-			DataType:   "timeis",
-			CreateTime: now,
-			UpdateTime: now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_timeis", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateTimeisResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleUpdateLantana(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -3922,36 +4132,6 @@ func TestHandleUpdateLantana(t *testing.T) {
 	}
 	if !found {
 		t.Error("updated Lantana (Mood=9) not found in LantanaHistories")
-	}
-}
-
-func TestHandleUpdateLantana_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateLantanaRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Lantana: reps.Lantana{
-			ID:          GenerateNewID(),
-			Mood:        5,
-			RelatedTime: now,
-			DataType:    "lantana",
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_lantana", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateLantanaResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -4075,36 +4255,6 @@ func TestHandleUpdateRekyou(t *testing.T) {
 	}
 }
 
-func TestHandleUpdateRekyou_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	now := time.Now().Truncate(time.Second)
-	updateReq := &req_res.UpdateReKyouRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		ReKyou: reps.ReKyou{
-			ID:          GenerateNewID(),
-			TargetID:    GenerateNewID(),
-			RelatedTime: now,
-			DataType:    "rekyou",
-			CreateTime:  now,
-			UpdateTime:  now,
-		},
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_rekyou", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateReKyouResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 // =============================================================================
 // Phase 2: Get/List/History handler tests
 // =============================================================================
@@ -4174,27 +4324,6 @@ func TestHandleGetKyou(t *testing.T) {
 	}
 }
 
-func TestHandleGetKyou_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getReq := &req_res.GetKyouRequest{
-		SessionID:  "invalid_session_id",
-		ID:         GenerateNewID(),
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/get_kyou", getReq)
-	defer resp.Body.Close()
-
-	var getResp req_res.GetKyouResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleGetMiBoardList(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -4253,26 +4382,6 @@ func TestHandleGetMiBoardList(t *testing.T) {
 	}
 	if !foundBoard {
 		t.Errorf("board 'test_board_unique' not found in GetMiBoardList results: %v", getBoardResp.Boards)
-	}
-}
-
-func TestHandleGetMiBoardList_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getBoardReq := &req_res.GetMiBoardRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/get_mi_board_list", getBoardReq)
-	defer resp.Body.Close()
-
-	var getBoardResp req_res.GetMiBoardResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getBoardResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getBoardResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -4365,26 +4474,6 @@ func TestHandleGetAllTagNames(t *testing.T) {
 	}
 }
 
-func TestHandleGetAllTagNames_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getReq := &req_res.GetAllTagNamesRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/get_all_tag_names", getReq)
-	defer resp.Body.Close()
-
-	var getResp req_res.GetAllTagNamesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleGetAllRepNames(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -4422,26 +4511,6 @@ func TestHandleGetAllRepNames(t *testing.T) {
 	}
 	if !foundReKyou {
 		t.Errorf("RepNames missing rekyou repository: %#v", getResp.RepNames)
-	}
-}
-
-func TestHandleGetAllRepNames_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getReq := &req_res.GetAllRepNamesRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/get_all_rep_names", getReq)
-	defer resp.Body.Close()
-
-	var getResp req_res.GetAllRepNamesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -4541,27 +4610,6 @@ func TestHandleGetTagHistoriesByTagID(t *testing.T) {
 	}
 }
 
-func TestHandleGetTagHistoriesByTagID_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getHistReq := &req_res.GetTagHistoryByTagIDRequest{
-		SessionID:  "invalid_session_id",
-		ID:         GenerateNewID(),
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/get_tag_histories_by_tag_id", getHistReq)
-	defer resp.Body.Close()
-
-	var getHistResp req_res.GetTagHistoryByTagIDResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getHistResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getHistResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleGetTextHistoriesByTextID(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -4655,27 +4703,6 @@ func TestHandleGetTextHistoriesByTextID(t *testing.T) {
 	}
 	if len(getHistResp.TextHistories) == 0 {
 		t.Fatal("TextHistories is empty after add+update")
-	}
-}
-
-func TestHandleGetTextHistoriesByTextID_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getHistReq := &req_res.GetTextHistoryByTextIDRequest{
-		SessionID:  "invalid_session_id",
-		ID:         GenerateNewID(),
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/get_text_histories_by_text_id", getHistReq)
-	defer resp.Body.Close()
-
-	var getHistResp req_res.GetTextHistoryByTextIDResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getHistResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getHistResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -4778,27 +4805,6 @@ func TestHandleGetNotificationHistoriesByNotificationID(t *testing.T) {
 	}
 }
 
-func TestHandleGetNotificationHistoriesByNotificationID_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getHistReq := &req_res.GetNotificationHistoryByNotificationIDRequest{
-		SessionID:  "invalid_session_id",
-		ID:         GenerateNewID(),
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/get_gkill_notification_histories_by_notification_id", getHistReq)
-	defer resp.Body.Close()
-
-	var getHistResp req_res.GetNotificationHistoryByNotificationIDResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getHistResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getHistResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleGetServerConfigs(t *testing.T) {
 	ts, gkillAPI, cleanup := setupTestRouter(t)
 	defer cleanup()
@@ -4825,26 +4831,6 @@ func TestHandleGetServerConfigs(t *testing.T) {
 	}
 	if len(getResp.ServerConfigs) == 0 {
 		t.Fatal("ServerConfigs is empty, expected at least one default config")
-	}
-}
-
-func TestHandleGetServerConfigs_InvalidSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	getReq := &req_res.GetServerConfigsRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/get_server_configs", getReq)
-	defer resp.Body.Close()
-
-	var getResp req_res.GetServerConfigsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -4889,26 +4875,6 @@ func TestHandleGetRepositories(t *testing.T) {
 		if !typesSeen[expectedType] {
 			t.Errorf("expected repository type %q not found", expectedType)
 		}
-	}
-}
-
-func TestHandleGetRepositories_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getReq := &req_res.GetRepositoriesRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/get_repositories", getReq)
-	defer resp.Body.Close()
-
-	var getResp req_res.GetRepositoriesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -4957,35 +4923,6 @@ func TestHandleAddShareKyouListInfo(t *testing.T) {
 	}
 	if len(addResp.Messages) == 0 {
 		t.Fatal("expected success message after add share kyou list info")
-	}
-}
-
-func TestHandleAddShareKyouListInfo_InvalidSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	addReq := &req_res.AddShareKyouListInfoRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		ShareKyouListInfo: &req_res.ShareKyouListInfo{
-			ShareID:       GenerateNewID(),
-			UserID:        "admin",
-			Device:        "test",
-			ShareTitle:    "should fail",
-			FindQueryJSON: share_kyou_info.JSONString(`{}`),
-			ViewType:      "kyou",
-		},
-	}
-
-	resp := postJSON(t, ts.URL+"/api/add_share_kyou_list_info", addReq)
-	defer resp.Body.Close()
-
-	var addResp req_res.AddShareKyouListInfoResponse
-	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(addResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -5047,26 +4984,6 @@ func TestHandleGetShareKyouListInfos(t *testing.T) {
 	}
 	if !found {
 		t.Error("added share info not found in GetShareKyouListInfos results")
-	}
-}
-
-func TestHandleGetShareKyouListInfos_InvalidSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	getReq := &req_res.GetShareKyouListInfosRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/get_share_kyou_list_infos", getReq)
-	defer resp.Body.Close()
-
-	var getResp req_res.GetShareKyouListInfosResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(getResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -5146,34 +5063,6 @@ func TestHandleDeleteShareKyouListInfos(t *testing.T) {
 		if info.ShareID == shareID {
 			t.Error("deleted share info still present in GetShareKyouListInfos results")
 		}
-	}
-}
-
-func TestHandleDeleteShareKyouListInfos_InvalidSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	deleteReq := &req_res.DeleteShareKyouListInfoRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		ShareKyouListInfo: &req_res.ShareKyouListInfo{
-			ShareID:       GenerateNewID(),
-			UserID:        "admin",
-			Device:        "test",
-			ShareTitle:    "should fail",
-			FindQueryJSON: share_kyou_info.JSONString(`{}`),
-			ViewType:      "kyou",
-		},
-	}
-	resp := postJSON(t, ts.URL+"/api/delete_share_kyou_list_infos", deleteReq)
-	defer resp.Body.Close()
-
-	var deleteResp req_res.DeleteShareKyouListInfosResponse
-	if err := json.NewDecoder(resp.Body).Decode(&deleteResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(deleteResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -5804,26 +5693,6 @@ func TestHandleUpdateApplicationConfig(t *testing.T) {
 	}
 }
 
-func TestHandleUpdateApplicationConfig_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithConfigRoutes(t)
-	defer cleanup()
-
-	updateReq := &req_res.UpdateApplicationConfigRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, tsURL+"/api/update_application_config", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateApplicationConfigResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleUpdateServerConfigs(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithConfigRoutes(t)
 	defer cleanup()
@@ -5881,27 +5750,6 @@ func TestHandleUpdateServerConfigs(t *testing.T) {
 	}
 	if len(updateResp.Messages) == 0 {
 		t.Fatal("expected success message after update server configs")
-	}
-}
-
-func TestHandleUpdateServerConfigs_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithConfigRoutes(t)
-	defer cleanup()
-
-	updateReq := &req_res.UpdateServerConfigsRequest{
-		SessionID:     "invalid_session_id",
-		ServerConfigs: []*server_config.ServerConfig{},
-		LocaleName:    "en",
-	}
-	resp := postJSON(t, tsURL+"/api/update_server_configs", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateServerConfigsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -5983,28 +5831,6 @@ func TestHandleUpdateUserReps(t *testing.T) {
 	}
 	if len(updateResp.Messages) == 0 {
 		t.Fatal("expected success message after update user reps")
-	}
-}
-
-func TestHandleUpdateUserReps_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithConfigRoutes(t)
-	defer cleanup()
-
-	updateReq := &req_res.UpdateUserRepsRequest{
-		SessionID:    "invalid_session_id",
-		TargetUserID: "admin",
-		UpdatedReps:  []*user_config.Repository{},
-		LocaleName:   "en",
-	}
-	resp := postJSON(t, tsURL+"/api/update_user_reps", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateUserRepsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -6107,34 +5933,6 @@ func TestHandleUpdateShareKyouListInfo(t *testing.T) {
 	}
 	if !found {
 		t.Error("updated share info not found in GetShareKyouListInfos results")
-	}
-}
-
-func TestHandleUpdateShareKyouListInfo_InvalidSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	updateReq := &req_res.UpdateShareKyouListInfoRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		ShareKyouListInfo: &req_res.ShareKyouListInfo{
-			ShareID:       GenerateNewID(),
-			UserID:        "admin",
-			Device:        "test",
-			ShareTitle:    "should fail",
-			FindQueryJSON: share_kyou_info.JSONString(`{}`),
-			ViewType:      "kyou",
-		},
-	}
-	resp := postJSON(t, ts.URL+"/api/update_share_kyou_list_info", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateShareKyouListInfoResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode response: %v", err)
-	}
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
 	}
 }
 
@@ -7297,28 +7095,6 @@ func TestHandleSubmitKFTLText_SimpleKmemo(t *testing.T) {
 	}
 }
 
-func TestHandleSubmitKFTLText_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	submitReq := &req_res.SubmitKFTLTextRequest{
-		SessionID:  "invalid_session_id",
-		KFTLText:   "テストテキスト",
-		LocaleName: "en",
-	}
-
-	resp := postJSON(t, tsURL+"/api/submit_kftl_text", submitReq)
-	defer resp.Body.Close()
-
-	var submitResp req_res.SubmitKFTLTextResponse
-	if err := json.NewDecoder(resp.Body).Decode(&submitResp); err != nil {
-		t.Fatalf("decode submit kftl text response: %v", err)
-	}
-	if len(submitResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleSubmitKFTLText_EmptyText(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -7494,28 +7270,6 @@ func TestHandleGetKyousMCP_BasicQuery(t *testing.T) {
 	}
 }
 
-func TestHandleGetKyousMCP_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	getReq := &req_res.GetKyousMCPRequest{
-		SessionID:  "invalid_session_id",
-		LocaleName: "en",
-		Limit:      10,
-	}
-
-	resp := postJSON(t, tsURL+"/api/get_kyous_mcp", getReq)
-	defer resp.Body.Close()
-
-	var getResp req_res.GetKyousMCPResponse
-	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
-		t.Fatalf("decode get kyous mcp response: %v", err)
-	}
-	if len(getResp.Errors) == 0 {
-		t.Fatal("expected error for invalid session, got none")
-	}
-}
-
 func TestHandleUpdateCache_Success(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -7548,34 +7302,6 @@ func TestHandleUpdateCache_Success(t *testing.T) {
 	}
 	if len(updateResp.Messages) == 0 {
 		t.Fatal("expected success message after update cache")
-	}
-}
-
-func TestHandleUpdateCache_InvalidSession(t *testing.T) {
-	tsURL, _, cleanup := setupTestRouterWithRepos(t)
-	defer cleanup()
-
-	// update_cache は有効な（管理者）セッションを要求するようになった。
-	// 不正な session_id は認証ミドルウェアで拒否されなければならない。
-	updateReq := &req_res.UpdateCacheRequest{
-		SessionID:  "invalid_session_id",
-		UserIDs:    []string{"admin"},
-		LocaleName: "en",
-	}
-
-	resp := postJSON(t, tsURL+"/api/update_cache", updateReq)
-	defer resp.Body.Close()
-
-	var updateResp req_res.UpdateCacheResponse
-	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
-		t.Fatalf("decode update cache response: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		t.Errorf("expected status 200, got %d", resp.StatusCode)
-	}
-	// 認証エラーが返ることを確認する
-	if len(updateResp.Errors) == 0 {
-		t.Fatal("expected an auth error for invalid session, got none")
 	}
 }
 
@@ -8583,150 +8309,15 @@ func TestHandleLogout_SessionInvalidatedAfterLogout(t *testing.T) {
 
 // --- Phase 2: BrowseZipContents handler tests ---
 
-func TestHandleBrowseZipContents_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.BrowseZipContentsRequest{
-		SessionID:  "",
-		TargetID:   "any-id",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/browse_zip_contents", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode browse zip response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
-
 // --- Phase 2: UploadFiles handler tests ---
-
-func TestHandleUploadFiles_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.UploadFilesRequest{
-		SessionID:  "",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/upload_files", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode upload files response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
 
 // --- Phase 2: UploadGPSLogFiles handler tests ---
 
-func TestHandleUploadGPSLogFiles_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.UploadGPSLogFilesRequest{
-		SessionID:     "",
-		TargetRepName: "rep",
-	}
-	resp := postJSON(t, ts.URL+"/api/upload_gpslog_files", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode upload gpslog response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
-
 // --- Phase 2: GetGitCommitLog handler tests ---
-
-func TestHandleGetGitCommitLog_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.GetGitCommitLogRequest{
-		SessionID:  "",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/get_git_commit_log", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode get git commit log response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
 
 // --- Phase 2: GetGPSLog handler tests ---
 
-func TestHandleGetGPSLog_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.GetGPSLogRequest{
-		SessionID:  "",
-		LocaleName: "en",
-		StartDate:  time.Now().Add(-24 * time.Hour),
-		EndDate:    time.Now(),
-	}
-	resp := postJSON(t, ts.URL+"/api/get_gps_log", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode get gps log response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
-
 // --- Phase 2: ReloadRepositories handler tests ---
-
-func TestHandleReloadRepositories_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.ReloadRepositoriesRequest{
-		SessionID:  "",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/reload_repositories", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode reload repositories response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
 
 func TestHandleReloadRepositories_Success(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
@@ -8787,52 +8378,7 @@ func TestHandleReloadRepositories_ClearFileCaches(t *testing.T) {
 
 // --- Phase 2: GetUpdatedDatasByTime handler tests ---
 
-func TestHandleGetUpdatedDatasByTime_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.GetUpdatedDatasByTimeRequest{
-		SessionID:       "",
-		LocaleName:      "en",
-		LastUpdatedTime: time.Now().Add(-time.Hour),
-	}
-	resp := postJSON(t, ts.URL+"/api/get_updated_datas_by_time", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode get updated datas response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
-
 // --- Phase 1-3: Plugin handler tests ---
-
-func TestHandleGetPluginList_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.GetPluginListRequest{
-		SessionID:  "",
-		LocaleName: "en",
-	}
-	resp := postJSON(t, ts.URL+"/api/get_plugin_list", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode get plugin list response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
 
 func TestHandleGetPluginList_EmptyList(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
@@ -8858,77 +8404,6 @@ func TestHandleGetPluginList_EmptyList(t *testing.T) {
 	// No plugins configured in test setup — list should be empty (nil or [])
 	if len(result.Plugins) != 0 {
 		t.Errorf("expected 0 plugins in test environment, got %d", len(result.Plugins))
-	}
-}
-
-func TestHandleGetPluginContentHTML_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.GetPluginContentHTMLRequest{
-		SessionID:  "",
-		LocaleName: "en",
-		RepName:    "my-plugin",
-		KyouID:     "some-id",
-	}
-	resp := postJSON(t, ts.URL+"/api/get_plugin_content_html", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode get plugin content html response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
-
-func TestHandleGetPluginConfigHTML_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.GetPluginConfigHTMLRequest{
-		SessionID:  "",
-		LocaleName: "en",
-		RepName:    "my-plugin",
-	}
-	resp := postJSON(t, ts.URL+"/api/get_plugin_config_html", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode get plugin config html response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
-	}
-}
-
-func TestHandlePostPluginConfig_RequiresSession(t *testing.T) {
-	ts, _, cleanup := setupTestRouter(t)
-	defer cleanup()
-
-	req := &req_res.PostPluginConfigRequest{
-		SessionID:  "",
-		LocaleName: "en",
-		RepName:    "my-plugin",
-		FormData:   map[string]string{"key": "value"},
-	}
-	resp := postJSON(t, ts.URL+"/api/post_plugin_config", req)
-	defer resp.Body.Close()
-
-	var result struct {
-		Errors []*message.GkillError `json:"errors"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode post plugin config response: %v", err)
-	}
-	if len(result.Errors) == 0 {
-		t.Error("expected error for empty session ID, got none")
 	}
 }
 

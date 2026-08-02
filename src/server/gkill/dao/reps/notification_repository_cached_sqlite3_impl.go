@@ -2,25 +2,26 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	sqllib "database/sql"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 type notificationRepositoryCachedSQLite3Impl struct {
-	dbName          string
-	notificationRep NotificationRepository
-	cachedDB        *sqllib.DB
-	m               *sync.RWMutex
+	dbName                  string
+	notificationRep         NotificationRepository
+	cachedDB                *sqllib.DB
+	m                       *sync.RWMutex
 	addNotificationInfoSQL  string
 	addNotificationInfoStmt *sqllib.Stmt
 }
@@ -324,11 +325,10 @@ FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
-	repName, err := n.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at notification: %w", err)
-		return nil, err
-	}
+	// キャッシュ側のSELECTは REP_NAME を列からそのまま読むので、
+	// プレースホルダは `? AS DATA_TYPE` の1つだけ。
+	// ここに repName を積むとバインドが1つずれて、
+	// DATA_TYPEにrepNameが、WHEREのIDにdataTypeが入り、必ず0件になる。
 	dataType := "notification"
 
 	ids := []string{id}
@@ -340,7 +340,6 @@ WHERE
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
-		repName,
 		dataType,
 	}
 
@@ -434,7 +433,11 @@ WHERE
 	if len(notifications) == 0 {
 		return nil, nil
 	}
-	return &notifications[0], nil
+	// ORDER BYを付けていないので、UpdateTimeが最新の行を明示的に選ぶ
+	latestNotification := slices.MaxFunc(notifications, func(a, b Notification) int {
+		return a.UpdateTime.Compare(b.UpdateTime)
+	})
+	return &latestNotification, nil
 }
 
 func (n *notificationRepositoryCachedSQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]Notification, error) {
@@ -885,11 +888,8 @@ FROM ` + sqlite3impl.QuoteIdent(n.dbName) + `
 WHERE 
 `
 
-	repName, err := n.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at notification: %w", err)
-		return nil, err
-	}
+	// プレースホルダは `? AS DATA_TYPE` の1つだけ。GetNotification と同じ理由で
+	// repName を積んではいけない（積むとバインドがずれて必ず0件になる）。
 	dataType := "notification"
 
 	ids := []string{id}
@@ -898,7 +898,6 @@ WHERE
 		IDs:    ids,
 	}
 	queryArgs := []any{
-		repName,
 		dataType,
 	}
 

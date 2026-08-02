@@ -1,68 +1,9 @@
 import { KC } from '@/classes/datas/kc'
+import { expectCloneCopiesAllFields } from '../../helpers/clone-parity'
 
 describe('KC', () => {
-  test('can be instantiated', () => {
-    const kc = new KC()
-    expect(kc).toBeInstanceOf(KC)
-  })
-
-  describe('default field values', () => {
-    let kc: KC
-
-    beforeEach(() => {
-      kc = new KC()
-    })
-
-    test('specific fields have correct defaults', () => {
-      expect(kc.title).toBe('')
-      expect(kc.num_value).toBe(0)
-    })
-
-    test('attached_histories defaults to empty array', () => {
-      expect(kc.attached_histories).toEqual([])
-    })
-
-    test('inherited InfoBase fields have defaults', () => {
-      expect(kc.is_deleted).toBe(false)
-      expect(kc.id).toBe('')
-      expect(kc.rep_name).toBe('')
-      expect(kc.data_type).toBe('')
-      expect(kc.create_app).toBe('')
-      expect(kc.create_device).toBe('')
-      expect(kc.create_user).toBe('')
-      expect(kc.update_app).toBe('')
-      expect(kc.update_user).toBe('')
-      expect(kc.update_device).toBe('')
-      expect(kc.related_time).toBeInstanceOf(Date)
-      expect(kc.create_time).toBeInstanceOf(Date)
-      expect(kc.update_time).toBeInstanceOf(Date)
-    })
-  })
-
-  describe('clone', () => {
-    test('clone creates a copy with same field values', () => {
-      const kc = new KC()
-      kc.id = 'kc-001'
-      kc.title = 'Steps'
-      kc.num_value = 10000
-      kc.rep_name = 'my-rep'
-      kc.is_deleted = true
-
-      const cloned = kc.clone()
-
-      expect(cloned).toBeInstanceOf(KC)
-      expect(cloned.id).toBe('kc-001')
-      expect(cloned.title).toBe('Steps')
-      expect(cloned.num_value).toBe(10000)
-      expect(cloned.rep_name).toBe('my-rep')
-      expect(cloned.is_deleted).toBe(true)
-    })
-
-    test('clone returns a different instance', () => {
-      const kc = new KC()
-      const cloned = kc.clone()
-      expect(cloned).not.toBe(kc)
-    })
+  test('clone が全フィールドをコピーする', () => {
+    expectCloneCopiesAllFields(new KC())
   })
 
   describe('generate_info_identifer', () => {

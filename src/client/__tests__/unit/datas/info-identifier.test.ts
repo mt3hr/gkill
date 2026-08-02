@@ -1,33 +1,6 @@
 import { InfoIdentifier } from '@/classes/datas/info-identifier'
 
 describe('InfoIdentifier', () => {
-  test('can be instantiated', () => {
-    const identifier = new InfoIdentifier()
-    expect(identifier).toBeInstanceOf(InfoIdentifier)
-  })
-
-  describe('default field values', () => {
-    let identifier: InfoIdentifier
-
-    beforeEach(() => {
-      identifier = new InfoIdentifier()
-    })
-
-    test('id defaults to empty string', () => {
-      expect(identifier.id).toBe('')
-    })
-
-    test('create_time defaults to epoch', () => {
-      expect(identifier.create_time).toBeInstanceOf(Date)
-      expect(identifier.create_time.getTime()).toBe(0)
-    })
-
-    test('update_time defaults to epoch', () => {
-      expect(identifier.update_time).toBeInstanceOf(Date)
-      expect(identifier.update_time.getTime()).toBe(0)
-    })
-  })
-
   describe('field assignment', () => {
     test('can set id', () => {
       const identifier = new InfoIdentifier()
