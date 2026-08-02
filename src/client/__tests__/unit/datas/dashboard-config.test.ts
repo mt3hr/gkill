@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'vitest'
+import { describe, test, expect } from 'vitest'
 import { DashboardConfig } from '@/classes/datas/config/dashboard-config'
 
 /** FindKyouQuery.parse_find_kyou_query が要求する全フィールドを持つ最小JSON */
@@ -66,27 +66,6 @@ function makeMinimalFindKyouQueryJson(overrides: Record<string, unknown> = {}): 
 }
 
 describe('DashboardConfig', () => {
-  test('can be instantiated', () => {
-    const config = new DashboardConfig()
-    expect(config).toBeInstanceOf(DashboardConfig)
-  })
-
-  describe('default field values', () => {
-    let config: DashboardConfig
-
-    beforeEach(() => {
-      config = new DashboardConfig()
-    })
-
-    test('dashboard_mi_find_kyou_query defaults to null', () => {
-      expect(config.dashboard_mi_find_kyou_query).toBeNull()
-    })
-
-    test('dashboard_dnote_find_kyou_query defaults to null', () => {
-      expect(config.dashboard_dnote_find_kyou_query).toBeNull()
-    })
-  })
-
   describe('parse()', () => {
     test('parse(null) returns default instance', () => {
       const config = DashboardConfig.parse(null)

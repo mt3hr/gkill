@@ -12,7 +12,7 @@ import { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct
 import { GkillAPI } from '@/classes/api/gkill-api'
 
 describe('generate_rep_type_map', () => {
-    test('全RepTypeのローカライズ表示名を返す (ja)', () => {
+  test('全RepTypeのローカライズ表示名を返す (ja)', () => {
         const map = generate_rep_type_map()
         expect(map.get('Files')).toBe('ファイル')
         expect(map.get('KC')).toBe('数値')
@@ -27,7 +27,7 @@ describe('generate_rep_type_map', () => {
 })
 
 describe('append_not_found_rep_types', () => {
-    test('未定義RepType追加時にnameをローカライズし、keyとrep_type_nameは生の値を保持する', async () => {
+  test('未定義RepType追加時にnameをローカライズし、keyとrep_type_nameは生の値を保持する', async () => {
         const api = {
             get_all_rep_names: vi.fn().mockResolvedValue({
                 errors: [],

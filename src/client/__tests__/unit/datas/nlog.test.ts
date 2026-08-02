@@ -1,71 +1,9 @@
 import { Nlog } from '@/classes/datas/nlog'
+import { expectCloneCopiesAllFields } from '../../helpers/clone-parity'
 
 describe('Nlog', () => {
-  test('can be instantiated', () => {
-    const nlog = new Nlog()
-    expect(nlog).toBeInstanceOf(Nlog)
-  })
-
-  describe('default field values', () => {
-    let nlog: Nlog
-
-    beforeEach(() => {
-      nlog = new Nlog()
-    })
-
-    test('specific fields have correct defaults', () => {
-      expect(nlog.shop).toBe('')
-      expect(nlog.title).toBe('')
-      expect(nlog.amount).toBe(0)
-    })
-
-    test('attached_histories defaults to empty array', () => {
-      expect(nlog.attached_histories).toEqual([])
-    })
-
-    test('inherited InfoBase fields have defaults', () => {
-      expect(nlog.is_deleted).toBe(false)
-      expect(nlog.id).toBe('')
-      expect(nlog.rep_name).toBe('')
-      expect(nlog.data_type).toBe('')
-      expect(nlog.create_app).toBe('')
-      expect(nlog.create_device).toBe('')
-      expect(nlog.create_user).toBe('')
-      expect(nlog.update_app).toBe('')
-      expect(nlog.update_user).toBe('')
-      expect(nlog.update_device).toBe('')
-      expect(nlog.related_time).toBeInstanceOf(Date)
-      expect(nlog.create_time).toBeInstanceOf(Date)
-      expect(nlog.update_time).toBeInstanceOf(Date)
-    })
-  })
-
-  describe('clone', () => {
-    test('clone creates a copy with same field values', () => {
-      const nlog = new Nlog()
-      nlog.id = 'nlog-001'
-      nlog.shop = 'Test Shop'
-      nlog.title = 'Groceries'
-      nlog.amount = 1500
-      nlog.rep_name = 'my-rep'
-      nlog.is_deleted = true
-
-      const cloned = nlog.clone()
-
-      expect(cloned).toBeInstanceOf(Nlog)
-      expect(cloned.id).toBe('nlog-001')
-      expect(cloned.shop).toBe('Test Shop')
-      expect(cloned.title).toBe('Groceries')
-      expect(cloned.amount).toBe(1500)
-      expect(cloned.rep_name).toBe('my-rep')
-      expect(cloned.is_deleted).toBe(true)
-    })
-
-    test('clone returns a different instance', () => {
-      const nlog = new Nlog()
-      const cloned = nlog.clone()
-      expect(cloned).not.toBe(nlog)
-    })
+  test('clone が全フィールドをコピーする', () => {
+    expectCloneCopiesAllFields(new Nlog())
   })
 
   describe('generate_info_identifer', () => {

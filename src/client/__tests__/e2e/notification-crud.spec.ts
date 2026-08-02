@@ -1,10 +1,24 @@
 import { test, expect } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import { checkGkillServer, checkGkillApiViaVite } from './check-server'
 import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, makeUniqueLabel,
-  findKyouByText,
+  clickContextMenuItem, clickDialogButton, confirmDelete,
+  expectPageToContainText, waitForKyouByText, waitForAttachedNotification, pickNotificationTime,
+  openKyouDetailPane,
+  MENU, SAVE_BUTTON,
 } from './crud-helpers'
+
+/**
+ * 記録に付ける通知の追加・編集・削除。
+ *
+ * 以前はこのファイルの5本中3本が
+ *   - 通知を追加も編集も削除もせず
+ *   - `expect(app).toBeVisible()` / `innerHTML.length > 100` を確認するだけ
+ * という状態で、テスト名と実際に見ているものが一致していなかった。
+ * ここでは追加 → 編集 → 削除を通しで確認する。
+ */
 
 let apiReachable = false
 test.beforeAll(async () => {
@@ -13,6 +27,20 @@ test.beforeAll(async () => {
   apiReachable = await checkGkillApiViaVite()
 })
 
+const DIALOG = '.gkill-floating-dialog, .v-dialog'
+
+/** 表示中のダイアログの最初のテキスト欄を value で埋める。 */
+async function fillDialogText(page: import('@playwright/test').Page, value: string): Promise<void> {
+  // ダイアログは重なって開くことがあるので、表示中の最前面を対象にする
+  const dialog = page.locator(DIALOG).filter({ visible: true }).last()
+  await expect(dialog, 'ダイアログが開かない').toBeVisible({ timeout: 15000 })
+
+  const field = dialog.locator('textarea, input[type="text"]').first()
+  await expect(field, 'ダイアログに入力欄が無い').toBeVisible({ timeout: 15000 })
+  await field.fill(value)
+  await expect(field).toHaveValue(value)
+}
+
 test.describe('Notification CRUD Flows', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(!apiReachable, 'gkill API not reachable via Vite dev server')
@@ -20,99 +48,85 @@ test.describe('Notification CRUD Flows', () => {
     await loginAsAdmin(page)
   })
 
-  test('add notification to record via context menu', async ({ page }) => {
-    // Create a record first
-    const label = makeUniqueLabel('notif_add_target')
+  /** 記録を作って通知を1件付ける。作った記録のラベルを返す。 */
+  async function createRecordWithNotification(page: Page, prefix: string, content: string): Promise<string> {
+    const label = makeUniqueLabel(prefix)
+
     await submitKftlText(page, label)
     await navigateToRykv(page)
 
-    // Find the record and right-click
-    const record = findKyouByText(page, label)
-    if (await record.count() > 0) {
-      await record.click({ button: 'right', force: true })
-      await page.waitForTimeout(1000)
+    const record = await waitForKyouByText(page, label)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.addNotification)
+    await fillDialogText(page, content)
+    await pickNotificationTime(page)
+    await clickDialogButton(page, SAVE_BUTTON)
 
-      // Look for notification add menu item (通知追加)
-      const notifMenuItem = page.locator('.v-list-item, [role="menuitem"], .v-list-item-title')
-        .filter({ hasText: /通知追加|通知.*追加|add.*notif/i }).first()
-      if (await notifMenuItem.count() > 0) {
-        await notifMenuItem.click()
-        await page.waitForTimeout(2000)
+    return label
+  }
 
-        // Fill notification content — dialog may be floating or v-dialog
-        const dialog = page.locator('.v-dialog, .v-card, .gkill-floating-dialog').first()
-        if (await dialog.isVisible().catch(() => false)) {
-          const contentInput = dialog.locator('textarea, input[type="text"], .v-text-field input').first()
-          if (await contentInput.count() > 0) {
-            await contentInput.fill('E2Eテスト通知内容')
-          }
+  test('記録に通知を追加すると詳細ペインに表示される', async ({ page }) => {
+    const notification = makeUniqueLabel('notifContent')
+    const label = await createRecordWithNotification(page, 'notif_add_target', notification)
 
-          const saveBtn = dialog.locator('button').filter({ hasText: /保存|save/i }).first()
-          if (await saveBtn.count() > 0) {
-            await saveBtn.click()
-            await page.waitForTimeout(2000)
-          }
-        }
-      }
-    }
-    // Verify page doesn't crash
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
-  })
-
-  test('edit notification via context menu', async ({ page }) => {
-    // Create a record with a notification (via add flow first)
-    const label = makeUniqueLabel('notif_edit_target')
-    await submitKftlText(page, label)
     await navigateToRykv(page)
-
-    // The notification might be visible as a sub-element of the kyou
-    // Try to find and right-click any notification element
-    const app = page.locator('#app')
-    const content = await app.textContent()
-
-    // Verify page renders without crash
-    expect(content!.length).toBeGreaterThan(0)
+    const pane = await openKyouDetailPane(page, await waitForKyouByText(page, label))
+    await waitForAttachedNotification(pane, notification)
   })
 
-  test('delete notification via context menu', async ({ page }) => {
-    const label = makeUniqueLabel('notif_delete_target')
-    await submitKftlText(page, label)
+  test('通知を編集すると内容が置き換わる', async ({ page }) => {
+    const original = makeUniqueLabel('notifOrig')
+    const edited = makeUniqueLabel('notifEdited')
+    const label = await createRecordWithNotification(page, 'notif_edit_target', original)
+
     await navigateToRykv(page)
+    let pane = await openKyouDetailPane(page, await waitForKyouByText(page, label))
 
-    // Verify page renders
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
-  })
+    const notificationElement = await waitForAttachedNotification(pane, original)
+    await notificationElement.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.editNotification)
+    await fillDialogText(page, edited)
+    await clickDialogButton(page, SAVE_BUTTON)
 
-  test('view notification displays correctly on rykv page', async ({ page }) => {
-    // Navigate to rykv and verify notifications are rendered distinctly
     await navigateToRykv(page)
-    const app = page.locator('#app')
-    const content = await app.innerHTML()
-    // Page should have substantial content
-    expect(content.length).toBeGreaterThan(100)
+    pane = await openKyouDetailPane(page, await waitForKyouByText(page, label))
+    await waitForAttachedNotification(pane, edited)
+    await expect(pane.locator('.notification_content').filter({ hasText: original }), '編集前の通知が残っている')
+      .toHaveCount(0, { timeout: 30000 })
   })
 
-  test('notification history dialog can be opened', async ({ page }) => {
+  test('通知を削除すると詳細ペインから消える', async ({ page }) => {
+    const notification = makeUniqueLabel('notifToDelete')
+    const label = await createRecordWithNotification(page, 'notif_delete_target', notification)
+
+    await navigateToRykv(page)
+    let pane = await openKyouDetailPane(page, await waitForKyouByText(page, label))
+
+    const notificationElement = await waitForAttachedNotification(pane, notification)
+    await notificationElement.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.deleteNotification)
+    await confirmDelete(page)
+
+    await navigateToRykv(page)
+    pane = await openKyouDetailPane(page, await waitForKyouByText(page, label))
+    await expect(pane.locator('.notification_content').filter({ hasText: notification }), '通知が消えていない')
+      .toHaveCount(0, { timeout: 30000 })
+    // 通知を消しても記録自体は残る
+    await expectPageToContainText(page, label)
+  })
+
+  test('記録の履歴ダイアログをコンテキストメニューから開ける', async ({ page }) => {
     const label = makeUniqueLabel('notif_hist_target')
     await submitKftlText(page, label)
     await navigateToRykv(page)
 
-    // Find the record and try to open history
-    const record = findKyouByText(page, label)
-    if (await record.count() > 0) {
-      await record.click({ button: 'right', force: true })
-      await page.waitForTimeout(1000)
+    const record = await waitForKyouByText(page, label)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.histories)
 
-      const historyMenuItem = page.locator('.v-list-item, [role="menuitem"]')
-        .filter({ hasText: /履歴|histor/i }).first()
-      if (await historyMenuItem.count() > 0) {
-        await historyMenuItem.click()
-        await page.waitForTimeout(2000)
-      }
-    }
-    const app = page.locator('#app')
-    await expect(app).toBeVisible()
+    const dialog = page.locator(DIALOG).first()
+    await expect(dialog, '履歴ダイアログが開かない').toBeVisible({ timeout: 15000 })
+    // 履歴には対象の記録が並ぶ
+    await expect(dialog).toContainText(label, { timeout: 15000 })
   })
 })
