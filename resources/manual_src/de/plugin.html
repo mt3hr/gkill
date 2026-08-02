@@ -1,0 +1,159 @@
+<!-- title: Plugins - Hilfe -->
+  <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Plugins</span></nav>
+  <h1>Plugins</h1>
+  <p>Mit einem installierten Plugin erscheinen auch Einträge, die in anderen Diensten als gkill liegen, in derselben Liste wie Ihre gkill-Einträge. So können Sie an einer Stelle nachvollziehen, was Sie an einem bestimmten Tag gemacht haben.</p>
+
+  <h2>Verfügbare Plugins</h2>
+  <p>Standardmäßig sind die folgenden drei enthalten.</p>
+  <table>
+    <tr>
+      <th>Plugin</th>
+      <th>Was importiert wird</th>
+    </tr>
+    <tr>
+      <td>ChatGPT</td>
+      <td>Aus ChatGPT exportierter Gesprächsverlauf</td>
+    </tr>
+    <tr>
+      <td>Claude.ai</td>
+      <td>Aus Claude.ai exportierter Gesprächsverlauf</td>
+    </tr>
+    <tr>
+      <td>ClaudeCode</td>
+      <td>Chat-Protokolle von Claude Code</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp:</strong> Diese Namen werden auch verwendet, wenn Sie in der Seitenleiste der Eintragsliste nach „Ablage" filtern. Wenn Sie nur Plugin-Einträge sehen möchten, filtern Sie nach diesen Namen.
+  </div>
+
+  <h2>So richten Sie ein Plugin ein</h2>
+  <p>Ein Plugin einzurichten bedeutet, Dateien abzulegen. Gehen Sie die Schritte der Reihe nach durch.</p>
+  <ol>
+    <li>Legen Sie die ausführbare Datei des Plugins in den Ordner <code>plugins</code> innerhalb des gkill-Basisordners. Der genaue Ort ist ein Ordner mit Ihrer Benutzer-ID und darin ein Ordner mit dem Plugin-Namen, beide unter <code>plugins</code> angelegt.</li>
+    <li>Starten Sie gkill. Wenn das Plugin zum ersten Mal geladen wird, entsteht im selben Ordner automatisch die Konfigurationsdatei <code>config.json</code>.</li>
+    <li>Öffnen Sie <code>config.json</code> in einem Texteditor und tragen Sie unter <code>source_dirs</code> den Ordner ein, in dem die zu importierenden Daten liegen.</li>
+    <li>Wenn Sie in der <a href="rykv.html">Lebensprotokoll-Ansicht</a> suchen, erscheinen sie wie jeder andere Eintrag in der Liste.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tipp:</strong> Wenn bereits eine <code>config.json</code> vorhanden ist, überschreibt gkill sie nie. Ihre Einstellungen gehen beim Bearbeiten nicht verloren.
+  </div>
+
+  <h3>So geben Sie den Quellordner an</h3>
+  <p>In <code>source_dirs</code> können Sie sowohl einen Ordner- als auch einen Dateipfad angeben. Es gelten folgende Regeln.</p>
+  <table>
+    <tr>
+      <th>Schreibweise</th>
+      <th>Bedeutung</th>
+    </tr>
+    <tr>
+      <td>Ein Pfad, der mit <code>~</code> beginnt</td>
+      <td>Bezeichnet einen Ort relativ zu Ihrem eigenen Basisordner</td>
+    </tr>
+    <tr>
+      <td><code>*</code> <code>**</code> <code>?</code> <code>[]</code></td>
+      <td>Behandelt einen Teil des Ordner- oder Dateinamens als „beliebig"</td>
+    </tr>
+    <tr>
+      <td>Wenn Sie einen Ordner angeben</td>
+      <td>Es wird bis in die Unterordner hinein nach den Zieldateien gesucht</td>
+    </tr>
+    <tr>
+      <td>Wenn Sie direkt eine Datei angeben</td>
+      <td>Der Inhalt dieser Datei wird unverändert eingelesen</td>
+    </tr>
+    <tr>
+      <td>Wenn Sie es leer lassen</td>
+      <td>ChatGPT und Claude.ai sehen im Plugin-Ordner nach, ClaudeCode am Standardspeicherort von Claude Code</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp:</strong> Einträge in <code>config.json</code>, die mit <code>_</code> (Unterstrich) beginnen, dienen nur der Erläuterung des Formats. Sie können sie löschen.
+  </div>
+  <div class="tip">
+    <strong>Tipp:</strong> Nach dem Bearbeiten von <code>config.json</code> müssen Sie gkill nicht neu starten. Die neuen Einstellungen gelten ab der nächsten Suche.
+  </div>
+
+  <h2>Was möglich ist und was nicht</h2>
+  <p>Von einem Plugin importierte Einträge sind <strong>schreibgeschützt</strong>. Damit die Quelldaten unversehrt bleiben, kann gkill sie nicht verändern.</p>
+  <table>
+    <tr>
+      <th>Aktion</th>
+      <th>Möglich?</th>
+    </tr>
+    <tr>
+      <td>Tag hinzufügen / Tag aus Verlauf hinzufügen</td>
+      <td>Ja</td>
+    </tr>
+    <tr>
+      <td>Text hinzufügen</td>
+      <td>Ja</td>
+    </tr>
+    <tr>
+      <td>Benachrichtigung hinzufügen</td>
+      <td>Ja</td>
+    </tr>
+    <tr>
+      <td>Repost</td>
+      <td>Ja</td>
+    </tr>
+    <tr>
+      <td>Als Aufgabe anlegen</td>
+      <td>Ja</td>
+    </tr>
+    <tr>
+      <td>Inhalt kopieren / ID kopieren</td>
+      <td>Ja</td>
+    </tr>
+    <tr>
+      <td>Bearbeiten</td>
+      <td>Nein (wird nicht im Menü angezeigt)</td>
+    </tr>
+    <tr>
+      <td>Löschen</td>
+      <td>Nein (wird nicht im Menü angezeigt)</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp:</strong> Wenn Sie die importierten Gespräche mit Tags versehen, finden Sie sie später über den Tag-Filter der <a href="rykv.html">Lebensprotokoll-Ansicht</a> wieder.
+  </div>
+
+  <h2>Wenn Sie alles neu importieren möchten</h2>
+  <p>Was ein Plugin importiert, wird gespeichert, damit die Anzeige schnell bleibt. Wenn Sie die Quelle stark verändert haben und alles neu einlesen möchten, beenden Sie gkill und führen Sie den folgenden Befehl aus.</p>
+  <pre>gkill_server clear_cache plugin BENUTZER-ID</pre>
+  <p>Beim nächsten Start von gkill werden die Daten bei einer Suche wieder aus der Quelle gelesen.</p>
+
+  <h2>Wenn nichts richtig angezeigt wird</h2>
+  <table>
+    <tr>
+      <th>Symptom</th>
+      <th>Was zu prüfen ist</th>
+    </tr>
+    <tr>
+      <td>Es erscheint kein einziger Eintrag</td>
+      <td>Prüfen Sie, ob die Quelldateien tatsächlich in dem Ordner liegen, den Sie in <code>source_dirs</code> eingetragen haben. Ein Tippfehler im Pfad ist die häufigste Ursache.</td>
+    </tr>
+    <tr>
+      <td>Die Konfigurationsdatei wird nicht erstellt</td>
+      <td>Prüfen Sie, ob die ausführbare Datei am richtigen Ort liegt. Die Ordnernamen sind Ihre Benutzer-ID und danach der Plugin-Name, in dieser Reihenfolge.</td>
+    </tr>
+    <tr>
+      <td>Der Inhalt bleibt der alte</td>
+      <td>Importieren Sie alles mit dem oben beschriebenen Verfahren neu.</td>
+    </tr>
+    <tr>
+      <td>„Abrufen des Plugin-Inhalts fehlgeschlagen" wird angezeigt</td>
+      <td>Möglicherweise startet die ausführbare Datei des Plugins nicht. Prüfen Sie, ob sie unbeschädigt ist und ob Sie die Berechtigung zum Ausführen haben.</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Hinweis:</strong> Derzeit gibt es keine Möglichkeit, Plugin-Einstellungen über den Bildschirm zu ändern. Bearbeiten Sie dafür <code>config.json</code> direkt.
+  </div>
+
+  <h2>Verwandte Dokumente</h2>
+  <ul>
+    <li><a href="getting-started.html">Erste Schritte</a></li>
+    <li><a href="rykv.html">Lebensprotokoll-Ansicht</a></li>
+    <li><a href="kyou.html">Datensatzansicht</a></li>
+    <li><a href="mcp.html">KI-Integration</a></li>
+  </ul>

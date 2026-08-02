@@ -37,23 +37,32 @@
   <ol>
     <li>Ouvrez Gestion des comptes &gt; Attribution du stockage de l'utilisateur souhaite.</li>
     <li>Appuyez sur le bouton "Ajouter".</li>
-    <li>Configurez les éléments suivants : nom d'affichage, type, chemin, utiliser comme destination d'ecriture, active.</li>
+    <li>Configurez les éléments suivants : nom d'affichage, type, chemin, utiliser comme destination d'ecriture, active. La liste déroulante des types affiche des noms alphanumériques comme <code>kmemo</code> ou <code>timeis</code> ; voir le tableau ci-dessous pour leur signification.</li>
     <li>Appuyez sur "Enregistrer".</li>
   </ol>
   <h3>Types de dépôt</h3>
+  <p>La liste déroulante des types affiche des noms alphanumériques. Voici ce que chacun stocke.</p>
   <table>
-    <tr><th>Type</th><th>Description</th></tr>
-    <tr><td>Notes textuelles</td><td>Stocke les notes textuelles</td></tr>
-    <tr><td>Horodatage</td><td>Stocke les enregistrements de suivi du temps</td></tr>
-    <tr><td>Tâches</td><td>Stocke les tâches</td></tr>
-    <tr><td>Depenses</td><td>Stocke les enregistrements de dépenses</td></tr>
-    <tr><td>Signets</td><td>Stocke les signets URL</td></tr>
-    <tr><td>Humeur</td><td>Stocke les enregistrements d'humeur</td></tr>
-    <tr><td>Enregistrement numérique</td><td>Stocke les données numériques</td></tr>
-    <tr><td>Gestion de fichiers</td><td>Stocke les fichiers téléversés</td></tr>
-    <tr><td>Journal GPS</td><td>Stocke les enregistrements de suivi GPS</td></tr>
-    <tr><td>Journal de commits Git</td><td>Stocke les historiques de commits Git</td></tr>
+    <tr><th>Ce qu'affiche la liste déroulante</th><th>Ce qui est stocké</th></tr>
+    <tr><td><code>kmemo</code></td><td>Notes</td></tr>
+    <tr><td><code>timeis</code></td><td>Horodatages (enregistrements de temps)</td></tr>
+    <tr><td><code>mi</code></td><td>Tâches</td></tr>
+    <tr><td><code>nlog</code></td><td>Dépenses</td></tr>
+    <tr><td><code>urlog</code></td><td>Favoris</td></tr>
+    <tr><td><code>lantana</code></td><td>Humeur</td></tr>
+    <tr><td><code>kc</code></td><td>Enregistrements numériques</td></tr>
+    <tr><td><code>directory</code></td><td>Fichiers téléversés (images, vidéos, documents, etc.)</td></tr>
+    <tr><td><code>gpslog</code></td><td>Journaux GPS au format GPX</td></tr>
+    <tr><td><code>git_commit_log</code></td><td>Historique des commits Git (lecture seule)</td></tr>
+    <tr><td><code>rekyou</code></td><td>Reposts (anciens enregistrements réaffichés)</td></tr>
+    <tr><td><code>mirekyou</code></td><td>Tâches de repost (enregistrements existants transformés en tâches)</td></tr>
+    <tr><td><code>tag</code></td><td>Tags apposés sur les enregistrements</td></tr>
+    <tr><td><code>text</code></td><td>Textes complémentaires ajoutés aux enregistrements</td></tr>
+    <tr><td><code>notification</code></td><td>Notifications (rappels) ajoutées aux enregistrements</td></tr>
   </table>
+  <div class="tip">
+    <strong>Astuce :</strong> <code>tag</code> / <code>text</code> / <code>notification</code> / <code>rekyou</code> / <code>mirekyou</code> stockent des informations rattachées aux enregistrements, et non les enregistrements eux-mêmes. Ils sont normalement créés lors de la configuration initiale ; vous n'avez donc pas à les ajouter ensuite.
+  </div>
   <div class="tip">
     <strong>Astuce :</strong> Vous pouvez ajouter plusieurs dépôts du meme type (par exemple, separes par appareil).
   </div>

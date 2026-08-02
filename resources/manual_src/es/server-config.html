@@ -37,23 +37,32 @@
   <ol>
     <li>Abra Gestión de cuentas &gt; Asignacion de almacenamiento del usuario deseado.</li>
     <li>Pulse el botón "Agregar".</li>
-    <li>Configure los siguientes elementos: nombre para mostrar, tipo, ruta, usar como destino de escritura, habilitado.</li>
+    <li>Configure los siguientes elementos: nombre para mostrar, tipo, ruta, usar como destino de escritura, habilitado. El desplegable de tipo muestra nombres alfanuméricos como <code>kmemo</code> o <code>timeis</code>; consulte la tabla siguiente para saber qué significa cada uno.</li>
     <li>Pulse "Guardar".</li>
   </ol>
   <h3>Tipos de repositorio</h3>
+  <p>El desplegable de tipo muestra nombres alfanuméricos. Esto es lo que almacena cada uno.</p>
   <table>
-    <tr><th>Tipo</th><th>Descripción</th></tr>
-    <tr><td>Notas de texto</td><td>Almacena notas de texto</td></tr>
-    <tr><td>Marca de tiempo</td><td>Almacena registros de seguimiento de tiempo</td></tr>
-    <tr><td>Tareas</td><td>Almacena tareas</td></tr>
-    <tr><td>Gastos</td><td>Almacena registros de gastos</td></tr>
-    <tr><td>Marcadores</td><td>Almacena marcadores de URL</td></tr>
-    <tr><td>Estado de ánimo</td><td>Almacena registros de estado de ánimo</td></tr>
-    <tr><td>Registro numérico</td><td>Almacena datos numéricos</td></tr>
-    <tr><td>Gestión de archivos</td><td>Almacena archivos subidos</td></tr>
-    <tr><td>Registro GPS</td><td>Almacena registros de seguimiento GPS</td></tr>
-    <tr><td>Registro de commits Git</td><td>Almacena historiales de commits de Git</td></tr>
+    <tr><th>Lo que muestra el desplegable</th><th>Lo que se almacena</th></tr>
+    <tr><td><code>kmemo</code></td><td>Notas</td></tr>
+    <tr><td><code>timeis</code></td><td>Marcas de tiempo (registros de tiempo)</td></tr>
+    <tr><td><code>mi</code></td><td>Tareas</td></tr>
+    <tr><td><code>nlog</code></td><td>Gastos</td></tr>
+    <tr><td><code>urlog</code></td><td>Marcadores</td></tr>
+    <tr><td><code>lantana</code></td><td>Ánimo</td></tr>
+    <tr><td><code>kc</code></td><td>Registros numéricos</td></tr>
+    <tr><td><code>directory</code></td><td>Archivos subidos (imágenes, vídeos, documentos...)</td></tr>
+    <tr><td><code>gpslog</code></td><td>Registros GPS en formato GPX</td></tr>
+    <tr><td><code>git_commit_log</code></td><td>Historial de commits de Git (solo lectura)</td></tr>
+    <tr><td><code>rekyou</code></td><td>Reposts (registros pasados mostrados de nuevo)</td></tr>
+    <tr><td><code>mirekyou</code></td><td>Tareas de repost (registros existentes convertidos en tareas)</td></tr>
+    <tr><td><code>tag</code></td><td>Etiquetas añadidas a los registros</td></tr>
+    <tr><td><code>text</code></td><td>Textos complementarios añadidos a los registros</td></tr>
+    <tr><td><code>notification</code></td><td>Notificaciones (recordatorios) añadidas a los registros</td></tr>
   </table>
+  <div class="tip">
+    <strong>Consejo:</strong> <code>tag</code> / <code>text</code> / <code>notification</code> / <code>rekyou</code> / <code>mirekyou</code> guardan información añadida a los registros, no los registros en sí. Normalmente se crean durante la configuración inicial, así que no hace falta añadirlos después.
+  </div>
   <div class="tip">
     <strong>Consejo:</strong> Puede agregar múltiples repositorios del mismo tipo (por ejemplo, separados por dispositivo).
   </div>

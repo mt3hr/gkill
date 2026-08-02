@@ -12,15 +12,15 @@
   </div>
 
   <h2>Terminology</h2>
-  <p>In gkill, data types are called "record types" (Memo, Time Stamp, Task, etc.) and the screens where you operate are called "screen names" (Notepad, Timestamp Notepad, Task, etc.). For example, "Memo" refers to the type of text memo data, while "Notepad" refers to the screen used to input that data. Items shown in the "+" button menu such as "Notepad" and "Time Stamp" are screen names for adding each type of record.</p>
+  <p>In gkill, data types are called "record types" (Memo, Time Stamp, Task, etc.) and the screens where you operate are called "screen names" (Memo Pad, Timestamp Memo Pad, Task, etc.). For example, "Memo" refers to the type of text memo data, while "Memo Pad" refers to the screen used to input that data. Items shown in the "+" button menu such as "Memo Pad" and "Time Stamp" are screen names for adding each type of record.</p>
 
   <h2>Switching Between Screens</h2>
   <p>Tap the <strong>page title</strong> displayed in the toolbar at the top of the screen (e.g., "Life Log View", "Task", etc.) to open a dropdown menu and navigate to each screen.</p>
   <table>
     <tr><th>Screen Name</th><th>Description</th></tr>
-    <tr><td>Saihate</td><td>Dedicated screen for adding records without navigation (for direct launch from lock screen or home screen)</td></tr>
-    <tr><td>Notepad</td><td>Text input screen using Notepad syntax</td></tr>
-    <tr><td>Timestamp Notepad</td><td>Screen for memo input and active timestamp management</td></tr>
+    <tr><td>Home Hub</td><td>Dedicated screen for adding records without navigation (for direct launch from lock screen or home screen)</td></tr>
+    <tr><td>Memo Pad</td><td>Text input screen using memo pad syntax</td></tr>
+    <tr><td>Timestamp Memo Pad</td><td>Screen for memo input and active timestamp management</td></tr>
     <tr><td>Life Log View</td><td>Add records ("+" button), browse, search, and view records</td></tr>
     <tr><td>Task</td><td>Kanban board task management</td></tr>
     <tr><td>Running</td><td>Active timestamp session management</td></tr>
@@ -44,9 +44,9 @@
   <table>
     <tr><th>Screen</th><th>Main Purpose</th><th>When to Use</th></tr>
     <tr><td>Life Log View</td><td>Add, browse, and search records</td><td>When you want to add, review, or search records (primary everyday screen)</td></tr>
-    <tr><td>Notepad</td><td>Batch text input</td><td>When you want to enter multiple records at once</td></tr>
-    <tr><td>Timestamp Notepad</td><td>Memo + timestamp management</td><td>When you want to record memos and time simultaneously</td></tr>
-    <tr><td>Saihate</td><td>Quick recording from lock screen</td><td>When you want to record instantly from the lock screen or widget</td></tr>
+    <tr><td>Memo Pad</td><td>Batch text input</td><td>When you want to enter multiple records at once</td></tr>
+    <tr><td>Timestamp Memo Pad</td><td>Memo + timestamp management</td><td>When you want to record memos and time simultaneously</td></tr>
+    <tr><td>Home Hub</td><td>Quick recording from lock screen</td><td>When you want to record instantly from the lock screen or widget</td></tr>
     <tr><td>Task</td><td>Kanban board task management</td><td>When you want to organize and manage things to do</td></tr>
     <tr><td>Running</td><td>Active timestamp management</td><td>When you want to check or end active timestamps</td></tr>
   </table>
@@ -102,15 +102,15 @@
     <li>Press the "Save" button to save the record.</li>
   </ol>
   <div class="tip">
-    <strong>Tip:</strong> Using the Notepad screen, you can enter multiple records at once as text. See "3. Entering Multiple Records at Once with Notepad" below for details.
+    <strong>Tip:</strong> Using the Memo Pad screen, you can enter multiple records at once as text. See "3. Entering Multiple Records at Once with Memo Pad" below for details.
   </div>
 
-  <h2>3. Entering Multiple Records at Once with Notepad</h2>
-  <p>On the Notepad screen, you can create multiple records at once simply by writing text.</p>
+  <h2>3. Entering Multiple Records at Once with Memo Pad</h2>
+  <p>On the Memo Pad screen, you can create multiple records at once simply by writing text.</p>
 
   <h3>Basic Usage</h3>
   <ol>
-    <li>Open the Notepad screen (select "Notepad" from the "+" button menu).</li>
+    <li>Open the Memo Pad screen (select "Memo Pad" from the "+" button menu).</li>
     <li>Enter the content you want to record in the text area.</li>
     <li>Press the "Save" button (you can also type <code>!</code> and submit).</li>
   </ol>
@@ -118,7 +118,7 @@
   <h3>Entering with Templates</h3>
   <p>Using templates, you can insert boilerplate text with a single tap.</p>
   <ol>
-    <li>On the Notepad screen, select a template from the template list.</li>
+    <li>On the Memo Pad screen, select a template from the template list.</li>
     <li>The template content will be inserted into the text area.</li>
     <li>Edit the content as needed, then save.</li>
   </ol>
@@ -166,6 +166,18 @@
     <strong>Tip:</strong> Creating multiple boards for categories like "Work," "Personal," and "Shopping" makes it easier to stay organized.
   </div>
 
+  <h3>Turning an existing record into a task</h3>
+  <p>A record you look at and think "I'll deal with this later" can become a task without writing a new one.</p>
+  <ol>
+    <li>In the Life Log View or elsewhere, long-press (mobile) or right-click (desktop) the record.</li>
+    <li>Choose "Make Task".</li>
+    <li>Set the board name, due date and the planned start and end, then save.</li>
+    <li>It appears on the board in the Tasks view and can be checked off like any other task.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> Tasks made this way have no title field, because the original record's content is shown as-is. Note that if you delete the original record, the task has nothing left to display.
+  </div>
+
   <h2>6. Changing Settings</h2>
   <p>You can customize the application behavior from the settings screen.</p>
 
@@ -190,8 +202,8 @@
   <hr class="section-divider">
   <h2 style="color: #1976D2;">Advanced</h2>
 
-  <h2>7. Mastering Notepad Syntax</h2>
-  <p>Using Notepad syntax, you can create various types of records all at once simply by adding a prefix at the beginning of each line.</p>
+  <h2>7. Mastering Memo Pad Syntax</h2>
+  <p>Using memo pad syntax, you can create various types of records all at once simply by adding a prefix at the beginning of each line.</p>
 
   <h3>Main Prefixes</h3>
   <table>
@@ -226,11 +238,11 @@ Milk
 !</pre>
   <p>In this example, four records are created at once: a memo, a task, an expense, and a mood entry.</p>
   <div class="tip">
-    <strong>Tip:</strong> For detailed syntax, see the <a href="kftl-syntax.html">Notepad Syntax Reference</a>.
+    <strong>Tip:</strong> For detailed syntax, see the <a href="kftl-syntax.html">Memo Pad Syntax Reference</a>.
   </div>
 
   <h2>8. Using Templates Effectively</h2>
-  <p>By saving frequently used Notepad syntax patterns as templates, you can save yourself the trouble of typing them every time.</p>
+  <p>By saving frequently used memo pad syntax patterns as templates, you can save yourself the trouble of typing them every time.</p>
 
   <h3>Managing Templates</h3>
   <ol>
@@ -245,7 +257,7 @@ Milk
 ,
 -ra
 </pre>
-  <p>Using this template, a diary framework is inserted with a single tap on the Notepad screen, and you only need to add the memo content and mood value to complete the record.</p>
+  <p>Using this template, a diary framework is inserted with a single tap on the Memo Pad screen, and you only need to add the memo content and mood value to complete the record.</p>
   <div class="tip">
     <strong>Tip:</strong> Using folders to organize templates by category makes them easier to find.
   </div>
@@ -257,24 +269,24 @@ Milk
       <th>Purpose</th>
     </tr>
     <tr>
-      <td>Stamp Notepad</td>
+      <td>Time Tracking + Memo</td>
       <td>Enter memos with timestamps. File uploads are also possible.</td>
     </tr>
     <tr>
-      <td>In Progress</td>
+      <td>Active Sessions</td>
       <td>List of currently active time tracking sessions. You can end sessions here.</td>
     </tr>
     <tr>
-      <td>Notepad</td>
+      <td>Memo Pad</td>
       <td>Start and end time tracking via text using notepad syntax. Can be combined with other records in bulk.</td>
     </tr>
   </table>
-  <p>Using the time stamp feature, you can accurately record work time and activity durations. "Stamp Notepad" is a dedicated screen for memo input combined with active session management, while "Notepad" lets you start/end time tracking via prefixes alongside other records in bulk.</p>
+  <p>Using the time stamp feature, you can accurately record work time and activity durations. "Time Tracking + Memo" is a dedicated screen for memo input combined with active session management, while "Memo Pad" lets you start/end time tracking via prefixes alongside other records in bulk.</p>
 
   <h3>Basic Time Stamp Operations</h3>
   <ol>
-    <li><strong>Start:</strong> Use the <code>-ta</code> prefix in Notepad, or add a time stamp from the "+" menu. Specify a title and start time.</li>
-    <li><strong>End:</strong> Use the <code>-e</code> prefix in Notepad, or enter the end time in the time stamp edit screen. The time stamp with the matching title will be ended.</li>
+    <li><strong>Start:</strong> Use the <code>-ta</code> prefix in Memo Pad, or add a time stamp from the "+" menu. Specify a title and start time.</li>
+    <li><strong>End:</strong> Use the <code>-e</code> prefix in Memo Pad, or enter the end time in the time stamp edit screen. The time stamp with the matching title will be ended.</li>
   </ol>
 
   <h3>Managing Active Time Stamps</h3>
@@ -284,15 +296,15 @@ Milk
     <li>Tap to set the end time.</li>
   </ul>
   <div class="tip">
-    <strong>Tip:</strong> Using the Notepad syntax <code>-ie</code>, no error will occur even if there is no matching time stamp. You can safely end without existence checking.
+    <strong>Tip:</strong> Using the memo pad syntax <code>-ie</code>, no error will occur even if there is no matching time stamp. You can safely end without existence checking.
   </div>
 
   <h2>10. Analyzing Data with the Aggregation View</h2>
-  <p>The Aggregation View within the LifeLog View screen lets you visualize recorded data with summary tables.</p>
+  <p>The Aggregation View within the Life Log View screen lets you visualize recorded data with summary tables.</p>
 
   <h3>How to Use the Aggregation View</h3>
   <ol>
-    <li>Click the aggregation icon in the LifeLog View toolbar to show the Aggregation View.</li>
+    <li>Click the aggregation icon in the Life Log View toolbar to show the Aggregation View.</li>
     <li>Select the aggregation type and period.</li>
     <li>Data will be displayed in summary tables.</li>
   </ol>
@@ -321,6 +333,19 @@ Milk
   </ol>
   <div class="tip">
     <strong>Tip:</strong> To obtain a Google Map API key, enable the Maps JavaScript API in the Google Cloud Console.
+  </div>
+
+
+  <h3>Importing records from external services with plugins</h3>
+  <p>With a plugin installed, records left in services other than gkill appear in the same list. Three are provided as standard: ChatGPT, Claude.ai and Claude Code.</p>
+  <ol>
+    <li>Put the plugin executable in the designated folder.</li>
+    <li>When you start gkill, a settings file is created automatically in that same folder.</li>
+    <li>Write the folder holding the data you want to import into the settings file.</li>
+    <li>Search in the Life Log View and they appear alongside your other records.</li>
+  </ol>
+  <div class="tip">
+    <strong>Tip:</strong> See <a href="plugin.html">Plugins</a> for the detailed procedure.
   </div>
 
   <h2>12. Sharing Records</h2>
@@ -387,9 +412,10 @@ Milk
   <h2>Related Documents</h2>
   <ul>
     <li><a href="getting-started.html">Getting Started (Initial Setup Guide)</a></li>
-    <li><a href="kftl-syntax.html">Notepad Syntax Reference</a></li>
+    <li><a href="kftl-syntax.html">Memo Pad Syntax Reference</a></li>
     <li><a href="kftl-template-struct.html">Template Structure</a></li>
     <li><a href="application-config.html">Settings Screen</a></li>
     <li><a href="mi.html">Task Screen</a></li>
     <li><a href="rykv.html">Life Log View Screen</a></li>
+    <li><a href="plugin.html">Plugins</a></li>
   </ul>

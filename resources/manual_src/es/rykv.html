@@ -109,6 +109,8 @@
     <li>Seleccione "Agregar etiqueta".</li>
     <li>Escriba el nombre de la etiqueta (se mostrarán etiquetas existentes como sugerencias).</li>
   </ol>
+  <p>Si quiere poner una etiqueta usada hace poco, utilice «Agregar etiqueta del historial» del menú contextual: basta con elegirla de la lista.</p>
+  <p>Si escribe el nombre de una etiqueta que nunca ha usado, antes de guardar se le pregunta «Es una etiqueta nueva. ¿Desea agregarla?». Es una confirmación para evitar que se acumulen etiquetas parecidas por errores de escritura.</p>
   <h3>Editar o eliminar una etiqueta</h3>
   <ol>
     <li>Mantenga pulsado o haga clic derecho en la etiqueta que desea modificar.</li>
@@ -132,14 +134,37 @@
 
   <h3>Formatos de archivo admitidos</h3>
   <p>Imágenes (JPEG/PNG/GIF/WEBP), vídeos (MP4, etc.), PDF, ZIP y otros.</p>
-  <p>El contenido de los archivos ZIP puede explorarse (clic derecho &gt; Abrir contenido ZIP). Los archivos Markdown (.md / .markdown) se muestran con formato enriquecido (encabezados, tablas) en las vistas de lista y detalle, y los bloques de código mermaid se representan como diagramas.</p>
+  <p>Los archivos Markdown (.md / .markdown) se muestran con formato enriquecido (encabezados, tablas) en las vistas de lista y detalle, y los bloques de código mermaid se representan como diagramas.</p>
 
   <h3>Límite de tamaño de carga</h3>
-  <p>Según la configuración del servidor (-1 para ilimitado).</p>
+  <p>El límite mensual de tamaño de carga lo establece el administrador en «Límite mensual de tamaño de carga» de la configuración del servidor. El valor inicial es <code>-1</code> (ilimitado).</p>
 
   <div class="tip">
     <strong>Consejo:</strong> Presione Ctrl+V para guardar el contenido del portapapeles directamente como archivo.
   </div>
+
+  <h2>Ver el contenido de un archivo ZIP</h2>
+  <p>Puede abrir el contenido de los archivos ZIP subidos directamente en pantalla, sin extraerlos al ordenador. Los archivos con extensión <code>.cbz</code> también se tratan como ZIP.</p>
+  <h3>Cómo abrirlo</h3>
+  <ol>
+    <li>Mantenga pulsado (móvil) o haga clic derecho (escritorio) sobre el registro del archivo ZIP.</li>
+    <li>Elija «Explorar contenido ZIP» en el menú contextual.</li>
+    <li>Se muestran en una lista las carpetas y archivos que hay dentro del ZIP.</li>
+  </ol>
+  <h3>Moverse por dentro</h3>
+  <ul>
+    <li>Al hacer clic en una carpeta, entra en ella. Para volver al nivel superior, use la ruta de navegación de la parte superior o «..».</li>
+    <li>Al hacer clic en una imagen se abre la vista previa y puede pasar a la imagen siguiente.</li>
+    <li>También puede descargar cada archivo por separado.</li>
+    <li>Los archivos demasiado grandes no pueden previsualizarse y se muestra un mensaje al respecto.</li>
+  </ul>
+  <div class="tip">
+    <strong>Consejo:</strong> «Explorar contenido ZIP» solo aparece en el menú cuando elige el registro de un archivo ZIP. No aparece en los demás registros.
+  </div>
+
+  <h2>Convertir un registro en tarea y copiar su contenido</h2>
+  <p>Los registros que quiera atender más adelante pueden convertirse en tarea sin reescribir su contenido. Elija «Convertir en tarea» en el menú contextual del registro, indique el nombre del tablero, la fecha límite y las fechas previstas de inicio y fin, y guarde. La tarea creada aparece también en la <a href="mi.html">Vista de tareas</a> y puede marcarse como completada.</p>
+  <p>Si elige «Copiar contenido» en el menú contextual, copiará el cuerpo del registro al portapapeles. Con «Copiar ID» copiará el ID del registro.</p>
 
   <h2>Uso del mapa GPS</h2>
   <h3>Subir un registro GPS</h3>
@@ -162,4 +187,5 @@
     <li><a href="ryuu.html">Información Relacionada</a></li>
     <li><a href="kftl-syntax.html">Referencia de sintaxis del bloc de notas</a></li>
     <li><a href="application-config.html">Configuración</a></li>
+    <li><a href="plugin.html">Complementos</a></li>
   </ul>

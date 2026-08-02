@@ -40,6 +40,30 @@
       <td>File</td>
       <td>Upload and record images or documents</td>
     </tr>
+    <tr>
+      <td>Repost</td>
+      <td>Push a past record back onto the timeline at the current time</td>
+    </tr>
+    <tr>
+      <td>Repost Task</td>
+      <td>Add a due date and a completion checkbox to an existing record and treat it as a task</td>
+    </tr>
+    <tr>
+      <td>Notification</td>
+      <td>Attach a reminder to a record for a date and time you choose</td>
+    </tr>
+    <tr>
+      <td>GPS Log</td>
+      <td>Import GPX files and show your route on a map</td>
+    </tr>
+    <tr>
+      <td>Git Commit Log</td>
+      <td>Read and show the commit history of a Git repository you specify</td>
+    </tr>
+    <tr>
+      <td>Plugin records</td>
+      <td>Import and show records left in services other than gkill</td>
+    </tr>
   </table>
 
   <h2>Initial Setup</h2>
@@ -85,9 +109,9 @@
       <td><a href="login.html">Login Screen Help</a></td>
     </tr>
     <tr>
-      <td>Saihate</td>
+      <td>Home Hub</td>
       <td>Lightweight screen specialized for adding records. Convenient for quickly jotting down notes or time entries</td>
-      <td><a href="saihate.html">Saihate Screen Help</a></td>
+      <td><a href="saihate.html">Home Hub Help</a></td>
     </tr>
     <tr>
       <td>Dashboard</td>
@@ -95,14 +119,14 @@
       <td><a href="dashboard.html">Dashboard Screen Help</a></td>
     </tr>
     <tr>
-      <td>Notepad</td>
+      <td>Memo Pad</td>
       <td>Add records in bulk via text input</td>
-      <td><a href="kftl.html">Notepad Screen Help</a></td>
+      <td><a href="kftl.html">Memo Pad Help</a></td>
     </tr>
     <tr>
-      <td>Stamp Notepad</td>
+      <td>Time Tracking + Memo</td>
       <td>A screen to manage memo input and running time stamps simultaneously</td>
-      <td><a href="mkfl.html">Stamp Notepad Screen Help</a></td>
+      <td><a href="mkfl.html">Time Tracking + Memo Help</a></td>
     </tr>
     <tr>
       <td>Tasks</td>
@@ -115,9 +139,9 @@
       <td><a href="rykv.html">Life Log View Screen Help</a></td>
     </tr>
     <tr>
-      <td>In Progress</td>
+      <td>Active Sessions</td>
       <td>Manage running time tracking sessions</td>
-      <td><a href="plaing.html">In Progress Screen Help</a></td>
+      <td><a href="plaing.html">Active Sessions Help</a></td>
     </tr>
     <tr>
       <td>Records</td>
@@ -130,9 +154,9 @@
       <td><a href="application-config.html">Settings Screen Help</a></td>
     </tr>
     <tr>
-      <td>Notepad Syntax Reference</td>
+      <td>Memo Pad Syntax Reference</td>
       <td>Symbol and format reference for notepad syntax</td>
-      <td><a href="kftl-syntax.html">Notepad Syntax Reference Help</a></td>
+      <td><a href="kftl-syntax.html">Memo Pad Syntax Reference Help</a></td>
     </tr>
     <tr>
       <td>Template Structure</td>
@@ -141,7 +165,7 @@
     </tr>
     <tr>
       <td colspan="3" style="font-size: 0.9em; color: #666;">
-        ※ <a href="dnote.html">Aggregation View</a> and <a href="ryuu.html">Related Info</a> are features within the LifeLog View screen. Toggle them from the toolbar.
+        ※ <a href="dnote.html">Aggregation View</a> and <a href="ryuu.html">Related Information</a> are features within the Life Log View screen. Toggle them from the toolbar.
       </td>
     </tr>
     <tr>
@@ -159,6 +183,11 @@
       <td>Connect AI assistants such as Claude to gkill</td>
       <td><a href="mcp.html">AI Integration Help</a></td>
     </tr>
+    <tr>
+      <td>Plugins</td>
+      <td>Import records left in services other than gkill and show them in the list</td>
+      <td><a href="plugin.html">Plugin Help</a></td>
+    </tr>
   </table>
 
   <h2>Your First Record in 60 Seconds</h2>
@@ -166,7 +195,7 @@
     <li>Log in.</li>
     <li>The Life Log View appears (by default, Life Log View opens immediately after login).</li>
     <li>Tap the "+" button at the bottom right of the screen.</li>
-    <li>Select "Notepad" from the menu.</li>
+    <li>Select "Memo Pad" from the menu.</li>
     <li>Enter what you want to record in the text area (e.g., <code>Had curry for lunch today</code>).</li>
     <li>Press the "Save" button — your record is created and immediately appears in the Life Log View timeline.</li>
   </ol>
@@ -174,10 +203,10 @@
     <strong>Tip:</strong> Adding records through the <strong>"+" button in the Life Log View</strong> is the standard approach. You can confirm your records right there in the same screen. See the <a href="tutorial.html">Tutorial</a> for details.
   </div>
   <div class="tip">
-    <strong>Tip:</strong> Tapping the "+" button opens a menu; long-pressing opens the Notepad directly.
+    <strong>Tip:</strong> Tapping the "+" button opens a menu; long-pressing opens the Memo Pad directly.
   </div>
   <div class="tip">
-    <strong>Tip:</strong> For lock-screen access or quick capture, use the "Saihate" screen. See <a href="saihate.html">Saihate Screen Help</a> for details.
+    <strong>Tip:</strong> For lock-screen access or quick capture, use the "Home Hub" screen. See <a href="saihate.html">Home Hub Help</a> for details.
   </div>
 
   <h2>Glossary</h2>
@@ -191,15 +220,15 @@
       <td>A general term for records in gkill. It encompasses all record types including memos, time stamps, tasks, and more</td>
     </tr>
     <tr>
-      <td>Notepad Syntax</td>
-      <td>A text input syntax used in the Notepad. By adding symbols at the beginning of each line, you can create different types of records at once</td>
+      <td>Memo Pad Syntax</td>
+      <td>A text input syntax used in the Memo Pad. By adding symbols at the beginning of each line, you can create different types of records at once</td>
     </tr>
     <tr>
       <td>Time Stamp</td>
       <td>A time tracking feature. Records the start and end times of work or activities</td>
     </tr>
     <tr>
-      <td>Saihate</td>
+      <td>Home Hub</td>
       <td>A screen for safely adding records even from the lock screen. Functions as a hub for adding various records</td>
     </tr>
     <tr>
@@ -211,7 +240,7 @@
       <td>A feature for displaying data aggregation and statistics</td>
     </tr>
     <tr>
-      <td>Related Info</td>
+      <td>Related Information</td>
       <td>A feature that automatically searches for and displays related information</td>
     </tr>
     <tr>
@@ -220,6 +249,22 @@
     </tr>
     <tr>
       <td>Profile</td>
-      <td>A collection of settings grouped by device</td>
+      <td>A set of settings for each device you use, so you can keep the same setup across devices</td>
+    </tr>
+    <tr>
+      <td>Tag</td>
+      <td>A label you attach to a record. A record can have several, and they act as markers when you search later</td>
+    </tr>
+    <tr>
+      <td>Repost Task</td>
+      <td>An existing record made usable as a task without rewriting it</td>
+    </tr>
+    <tr>
+      <td>Sharing</td>
+      <td>A feature that lets you show selected records via a link, even to people without a gkill account</td>
+    </tr>
+    <tr>
+      <td>Plugin</td>
+      <td>An add-on that imports records from services other than gkill and shows them in the list</td>
     </tr>
   </table>

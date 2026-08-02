@@ -1,0 +1,159 @@
+<!-- title: プラグイン - ヘルプ -->
+  <nav class="breadcrumb"><a href="getting-started.html">はじめに</a> &gt; <span>プラグイン</span></nav>
+  <h1>プラグイン</h1>
+  <p>プラグインを入れると、gkill以外のサービスに残っている記録も、gkillの記録と同じ一覧に並べて見られるようになります。「あの日、何をしていたか」を1か所で振り返れるようにするための機能です。</p>
+
+  <h2>使えるプラグイン</h2>
+  <p>標準で次の3つが用意されています。</p>
+  <table>
+    <tr>
+      <th>プラグイン</th>
+      <th>取り込む内容</th>
+    </tr>
+    <tr>
+      <td>ChatGPT</td>
+      <td>ChatGPTからエクスポートした会話履歴</td>
+    </tr>
+    <tr>
+      <td>Claude.ai</td>
+      <td>Claude.aiからエクスポートした会話履歴</td>
+    </tr>
+    <tr>
+      <td>ClaudeCode</td>
+      <td>Claude Codeのチャットログ</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>ヒント:</strong> ここに表示されている名前は、記録一覧のサイドバーで「記録保管場所」を絞り込むときにも使われます。プラグインの記録だけを見たいときは、この名前で絞り込んでください。
+  </div>
+
+  <h2>導入のしかた</h2>
+  <p>プラグインの導入はファイルを置く作業になります。順番に進めてください。</p>
+  <ol>
+    <li>プラグインの実行ファイルを、gkillのホームフォルダの中の <code>plugins</code> フォルダに置きます。置き場所は <code>plugins</code> の下に「ユーザーID」「プラグイン名」の順でフォルダを作った中です。</li>
+    <li>gkillを起動します。プラグインが初めて読み込まれたとき、同じフォルダに設定ファイル <code>config.json</code> が自動で作られます。</li>
+    <li><code>config.json</code> をテキストエディタで開き、<code>source_dirs</code> に、取り込みたいデータが置いてあるフォルダを書きます。</li>
+    <li><a href="rykv.html">ライフログビュー画面</a>で検索すると、ほかの記録と同じように一覧に表示されます。</li>
+  </ol>
+  <div class="tip">
+    <strong>ヒント:</strong> すでに <code>config.json</code> がある場合、gkillがそれを上書きすることはありません。設定を書き換えても消えないので安心してください。
+  </div>
+
+  <h3>取り込み元フォルダの書きかた</h3>
+  <p><code>source_dirs</code> には、フォルダのパスでもファイルのパスでも書けます。書きかたのきまりは次のとおりです。</p>
+  <table>
+    <tr>
+      <th>書きかた</th>
+      <th>意味</th>
+    </tr>
+    <tr>
+      <td><code>~</code> で始めるパス</td>
+      <td>自分のホームフォルダからの位置を表します</td>
+    </tr>
+    <tr>
+      <td><code>*</code> <code>**</code> <code>?</code> <code>[]</code></td>
+      <td>フォルダ名やファイル名の一部を「なんでもよい」ものとして扱います</td>
+    </tr>
+    <tr>
+      <td>フォルダを指定した場合</td>
+      <td>その中を下の階層まで探して、対象のファイルを見つけます</td>
+    </tr>
+    <tr>
+      <td>ファイルを直接指定した場合</td>
+      <td>そのファイルの中身をそのまま読み込みます</td>
+    </tr>
+    <tr>
+      <td>空のままにした場合</td>
+      <td>ChatGPT・Claude.aiはプラグインのフォルダを、ClaudeCodeはClaude Codeの標準の保存先を見ます</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>ヒント:</strong> <code>config.json</code> の中で <code>_</code> （アンダースコア）で始まっている項目は、書きかたの説明のために置いてあるだけのものです。消してしまってかまいません。
+  </div>
+  <div class="tip">
+    <strong>ヒント:</strong> <code>config.json</code> を書き換えたあと、gkillを再起動する必要はありません。次に検索したときから新しい設定で読み込まれます。
+  </div>
+
+  <h2>できること・できないこと</h2>
+  <p>プラグインが取り込んだ記録は<strong>読み取り専用</strong>です。取り込み元のデータを壊さないよう、gkill側から書き換えることはできません。</p>
+  <table>
+    <tr>
+      <th>操作</th>
+      <th>できるか</th>
+    </tr>
+    <tr>
+      <td>タグ追加 / タグ履歴から追加</td>
+      <td>できます</td>
+    </tr>
+    <tr>
+      <td>テキスト追加</td>
+      <td>できます</td>
+    </tr>
+    <tr>
+      <td>通知追加</td>
+      <td>できます</td>
+    </tr>
+    <tr>
+      <td>リポスト</td>
+      <td>できます</td>
+    </tr>
+    <tr>
+      <td>タスクにする</td>
+      <td>できます</td>
+    </tr>
+    <tr>
+      <td>内容コピー / IDコピー</td>
+      <td>できます</td>
+    </tr>
+    <tr>
+      <td>編集</td>
+      <td>できません（メニューに表示されません）</td>
+    </tr>
+    <tr>
+      <td>削除</td>
+      <td>できません（メニューに表示されません）</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>ヒント:</strong> 取り込んだ会話にタグを付けておくと、あとから<a href="rykv.html">ライフログビュー画面</a>のタグ絞り込みで探せるようになります。
+  </div>
+
+  <h2>取り込み直したいとき</h2>
+  <p>プラグインが取り込んだ内容は、表示を速くするために保存されています。取り込み元を大きく入れ替えたときなど、いったん全部読み直したい場合は、gkillを停止してから次のコマンドを実行してください。</p>
+  <pre>gkill_server clear_cache plugin ユーザーID</pre>
+  <p>次にgkillを起動して検索すると、取り込み元から読み直されます。</p>
+
+  <h2>うまく表示されないとき</h2>
+  <table>
+    <tr>
+      <th>症状</th>
+      <th>確認すること</th>
+    </tr>
+    <tr>
+      <td>記録が1件も出てこない</td>
+      <td><code>source_dirs</code> に書いたフォルダに、取り込み元のファイルが実際にあるか確認してください。パスの書き間違いがよくある原因です。</td>
+    </tr>
+    <tr>
+      <td>設定ファイルが作られない</td>
+      <td>実行ファイルの置き場所が正しいか確認してください。フォルダの名前は「ユーザーID」「プラグイン名」の順です。</td>
+    </tr>
+    <tr>
+      <td>古い内容のまま変わらない</td>
+      <td>上の「取り込み直したいとき」の手順で読み直してください。</td>
+    </tr>
+    <tr>
+      <td>「プラグインコンテンツの取得に失敗しました」と表示される</td>
+      <td>プラグインの実行ファイルが起動できていない可能性があります。実行ファイルが壊れていないか、実行する権限があるかを確認してください。</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>注意:</strong> プラグインの設定を画面から変更する方法は、現在のところありません。設定を変えるときは <code>config.json</code> を直接編集してください。
+  </div>
+
+  <h2>関連ドキュメント</h2>
+  <ul>
+    <li><a href="getting-started.html">はじめに</a></li>
+    <li><a href="rykv.html">ライフログビュー画面</a></li>
+    <li><a href="kyou.html">記録画面</a></li>
+    <li><a href="mcp.html">AI連携</a></li>
+  </ul>
