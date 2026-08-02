@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/usecase/` パッケージのテスト仕様。HTTP 非依存のビジネスロジック層（16ファイル）。
+`gkill/usecase/` パッケージのテスト仕様。HTTP 非依存のビジネスロジック層（17ファイル）。
 
 ## テスト状態
 
@@ -34,7 +34,8 @@ usecase の各関数はリポジトリ群（`*reps.GkillRepositories`）を引�
 `TestHandleAddMiReKyou_AndGetMiReKyou` / `TestHandleUpdateMiReKyou` /
 `TestHandleUpdateMiReKyou_Nonexistent_ReturnsError` /
 `TestHandleGetKyous_MiReKyouResolvesTarget` /
-`TestHandleGetMiBoardList_IncludesMiReKyouOnlyBoard` でカバーしている。
+`TestHandleGetMiBoardList_IncludesMiReKyouOnlyBoard` /
+`TestHandleGetKyous_WordFilter_ReKyouTargetingMiReKyou` でカバーしている。
 
 ## 実行方法
 

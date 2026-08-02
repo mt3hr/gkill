@@ -57,9 +57,9 @@ xxx-view-emits.ts     # Emits 定義
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（185 .vue）
+## views/ — 全 View コンポーネント一覧（189 .vue）
 
-### データ追加系（21コンポーネント）
+### データ追加系（22コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -73,6 +73,7 @@ xxx-view-emits.ts     # Emits 定義
 | `add-text-view.vue` | Text 追加 |
 | `add-notification-view.vue` | Notification 追加 |
 | `add-notification-for-add-mi-view.vue` | Mi 追加時の Notification |
+| `add-mi-re-kyou-view.vue` | MiReKyou 追加（既存記録のタスク化） |
 | `add-rep-view.vue` | リポジトリ追加 |
 | `add-ryuu-item-view.vue` | Ryuu アイテム追加 |
 | `add-dnote-item-view.vue` | DNote アイテム追加 |
@@ -85,7 +86,7 @@ xxx-view-emits.ts     # Emits 定義
 | `add-new-rep-type-struct-element-view.vue` | リポジトリ型要素追加 |
 | `add-new-tag-struct-element-view.vue` | タグ構造要素追加 |
 
-### データ編集系（30コンポーネント）
+### データ編集系（31コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -98,6 +99,7 @@ xxx-view-emits.ts     # Emits 定義
 | `edit-ur-log-view.vue` | URLog 編集 |
 | `edit-idf-kyou-view.vue` | IDFKyou 編集 |
 | `edit-re-kyou-view.vue` | ReKyou 編集 |
+| `edit-mi-re-kyou-view.vue` | MiReKyou 編集 |
 | `edit-tag-view.vue` | Tag 編集 |
 | `edit-text-view.vue` | Text 編集 |
 | `edit-notification-view.vue` | Notification 編集 |
@@ -113,7 +115,7 @@ xxx-view-emits.ts     # Emits 定義
 | `edit-rep-type-struct-view.vue` / `edit-rep-type-struct-element-view.vue` | リポジトリ型構造編集 |
 | `edit-tag-struct-view.vue` / `edit-tag-struct-element-view.vue` | タグ構造編集 |
 
-### データ表示系（24コンポーネント）
+### データ表示系（26コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -122,7 +124,7 @@ xxx-view-emits.ts     # Emits 定義
 | `lantana-view.vue` / `mi-view.vue` | Lantana / Mi 表示 |
 | `nlog-view.vue` / `ur-log-view.vue` | Nlog / URLog 表示 |
 | `time-is-view.vue` / `idf-kyou-view.vue` | TimeIs / IDFKyou 表示 |
-| `re-kyou-view.vue` / `git-commit-log-view.vue` | ReKyou / GitCommitLog 表示 |
+| `re-kyou-view.vue` / `mi-re-kyou-view.vue` / `git-commit-log-view.vue` | ReKyou / MiReKyou / GitCommitLog 表示 |
 | `tag-view.vue` / `text-view.vue` / `notification-view.vue` | Tag / Text / Notification 表示 |
 | `mi-kyou-view.vue` | Mi の Kyou 表示 |
 | `lantana-flower.vue` / `lantana-flowers-view.vue` | Lantana 花表示 |
@@ -131,7 +133,7 @@ xxx-view-emits.ts     # Emits 定義
 | `gps-log-map.vue` | GPS ログ地図表示 |
 | `kyou-count-calendar.vue` | Kyou カウントカレンダー |
 
-### 削除確認系（15コンポーネント）
+### 削除確認系（19コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -189,7 +191,7 @@ xxx-view-emits.ts     # Emits 定義
 | `lantana-context-menu.vue` / `mi-context-menu.vue` | Lantana / Mi |
 | `nlog-context-menu.vue` / `ur-log-context-menu.vue` | Nlog / URLog |
 | `time-is-context-menu.vue` / `idf-kyou-context-menu.vue` | TimeIs / IDFKyou |
-| `re-kyou-context-menu.vue` / `git-commit-log-context-menu.vue` | ReKyou / GitCommitLog |
+| `re-kyou-context-menu.vue` / `mi-re-kyou-context-menu.vue` / `git-commit-log-context-menu.vue` | ReKyou / MiReKyou / GitCommitLog |
 | `attached-tag-context-menu.vue` / `attached-text-context-menu.vue` | 添付タグ/テキスト |
 | `attached-notification-context-menu.vue` / `attached-timeis-plaing-context-menu.vue` | 添付通知/稼働TimeIs |
 | `device-struct-context-menu.vue` / `kftl-template-struct-context-menu.vue` | 構造コンテキストメニュー |
@@ -231,19 +233,19 @@ xxx-view-emits.ts     # Emits 定義
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（100 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（103 .vue）
 
-### データ追加ダイアログ（20コンポーネント）
+### データ追加ダイアログ（21コンポーネント）
 
-`add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-nlog-dialog.vue`, `add-timeis-dialog.vue`, `add-urlog-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-foloder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
+`add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-mi-re-kyou-dialog.vue`, `add-nlog-dialog.vue`, `add-timeis-dialog.vue`, `add-urlog-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-foloder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
 
-### データ編集ダイアログ（29コンポーネント）
+### データ編集ダイアログ（31コンポーネント）
 
-`edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-folder-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`
+`edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-folder-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`
 
-### 削除確認ダイアログ（15コンポーネント）
+### 削除確認ダイアログ（19コンポーネント）
 
-`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`
+`confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`（+ `select-move-target-folder-dialog.vue` は移動先フォルダ選択）
 
 ### その他ダイアログ
 

@@ -87,7 +87,9 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 ```
 1. defer r.Body.Close()
 2. JSONリクエストパース → 失敗時: エラーコード + return
-3. セッション検証（getAccountFromSessionID） → 失敗時: エラーコード + return
+3. セッション検証 → 失敗時: エラーコード + return
+   （`wrapAuth` / `wrapAuthRepos` のミドルウェアが済ませており、ハンドラは `AuthFromContext(r.Context())`
+    を読むだけ。ハンドラ内で `getAccountFromSessionID` を直接呼ぶのは `wrapNoAuth` 系だけ）
 4. 業務処理 → 失敗時: エラーコード + return
 5. defer json.NewEncoder(w).Encode(response) でレスポンス返却
 ```

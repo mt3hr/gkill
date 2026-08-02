@@ -245,7 +245,7 @@ sequenceDiagram
     Note over FindFilter: RepTypeフィルタにより<br/>対象リポジトリを絞り込み
     FindFilter->>Repositories: 各リポジトリから検索
     Repositories-->>FindFilter: []Kyou
-    FindFilter-->>Client: 結果（ページング済み）
+    FindFilter-->>Client: 結果（全件。ページングは無い）
 ```
 
 ### フィルタリングの仕組み
@@ -331,7 +331,7 @@ Kyouの長押し/右クリックで表示されるコンテキストメニュー
 | `gpslog` | 削除、タグ追加、テキスト追加、通知追加（編集なし） |
 | `git_commit_log` | タグ追加、テキスト追加、通知追加（編集なし） |
 | `rekyou` | 削除のみ（元のKyouをRykv上でフォロー表示） |
-| プラグイン（`claude_conversation` 等） | タグ追加、テキスト追加、通知追加、内容コピー、IDコピー（編集・削除なし。`plugin-html-context-menu.vue`） |
+| プラグイン（`claude_conversation` 等） | タグ追加、テキスト追加、リポスト、タスク化、通知追加、内容コピー、IDコピー、プラグイン設定（編集・削除なし。`plugin-html-context-menu.vue`） |
 
 > **`mirekyou` の data_type は前方一致に注意。** 実際の値は `mirekyou_create` / `mirekyou_check` /
 > `mirekyou_limit` / `mirekyou_start` / `mirekyou_end` の5種で、いずれも `mi` で始まる。

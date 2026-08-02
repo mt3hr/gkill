@@ -28,10 +28,11 @@ gkill_server_api/
 ├── handle_get_idf_file_path_test.go # IDFファイルパス解決ハンドラテスト
 ├── handle_get_idf_kyou_by_relative_path_test.go # 相対パス解決ハンドラテスト
 ├── utils_ssrf_test.go               # httpGetBase64Data の SSRF 対策テスト
-└── handle_*.go                      # 各エンドポイントのハンドラ（86ファイル）
+└── handle_*.go                      # 各エンドポイントのハンドラ（実装89ファイル + テスト3ファイル）
 ```
 
-**合計: 105ファイル**（基盤13 + ハンドラ86 + テスト5 + ABOUT_TEST.md 1）
+**合計: 110ファイル**（基盤13 + ハンドラ実装89 + テスト6 + README.md 1 + ABOUT_TEST.md 1）
+`.go` だけなら108ファイル。`handle_*.go` という名前のファイルは92あるが、うち3つはテスト。
 
 ## GkillServerAPI 構造体
 

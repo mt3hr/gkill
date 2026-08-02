@@ -284,7 +284,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 
 | パス | 説明 |
 |---|---|
-| `/api/get_kyous` | 複数レコード取得（フィルタリング・ページネーション対応） |
+| `/api/get_kyous` | 複数レコード取得（フィルタリング。ページングは無く、条件に合う全件を返す） |
 | `/api/get_kyou` | 単一レコード取得（ID指定） |
 | `/api/get_kmemo` | Kmemo取得 |
 | `/api/get_kc` | KC取得 |

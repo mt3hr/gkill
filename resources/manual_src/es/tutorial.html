@@ -18,13 +18,13 @@
   <p>Toque el <strong>titulo de la página</strong> mostrado en la barra de herramientas en la parte superior de la pantalla para abrir un menú desplegable y navegar a cada pantalla.</p>
   <table>
     <tr><th>Nombre de pantalla</th><th>Descripción</th></tr>
-    <tr><td>Saihate</td><td>Pantalla dedicada a agregar registros sin navegación (para inicio directo desde la pantalla de bloqueo o pantalla de inicio)</td></tr>
-    <tr><td>Bloc de notas</td><td>Pantalla de entrada de texto con sintaxis de Bloc de notas</td></tr>
-    <tr><td>Bloc de notas de marcas</td><td>Gestión simultanea de memos y marcas de tiempo activas</td></tr>
-    <tr><td>Vista de registro de vida</td><td>Agregar registros (botón "+"), explorar, buscar y ver registros</td></tr>
+    <tr><td>Vista del registro de vida</td><td>Agregar registros (botón "+"), explorar, buscar y ver registros</td></tr>
     <tr><td>Tareas</td><td>Gestión de tareas en tablero Kanban</td></tr>
+    <tr><td>Bloc de notas</td><td>Pantalla de entrada de texto con sintaxis de Bloc de notas</td></tr>
     <tr><td>En curso</td><td>Gestión de sesiones de marcas de tiempo activas</td></tr>
-    <tr><td>Registros</td><td>Vista detallada de un registro individual</td></tr>
+    <tr><td>Bloc de notas de tiempo</td><td>Gestión simultanea de memos y marcas de tiempo activas</td></tr>
+    <tr><td>Panel</td><td>Ver en una sola pantalla la agregación, el mapa GPS y las tareas del día seleccionado</td></tr>
+    <tr><td>Saihate</td><td>Pantalla dedicada a agregar registros sin navegación (para inicio directo desde la pantalla de bloqueo o pantalla de inicio)</td></tr>
   </table>
 
   <h2>Guia de botones de la barra de herramientas</h2>
@@ -349,19 +349,21 @@ leche
   </div>
 
   <h2>12. Compartir registros</h2>
-  <p>En gkill, puede generar enlaces de compartir para compartir registros con otros.</p>
+  <p>En gkill, puede convertir los criterios de búsqueda que está usando en un enlace de compartir y mostrarlo a otras personas. Lo que se comparte no es un único registro, sino todos los registros que cumplen esos criterios.</p>
 
   <h3>Como generar un enlace de compartir</h3>
   <ol>
-    <li>Abra la vista detallada o el menú contextual del registro que desea compartir.</li>
-    <li>Seleccione "Compartir".</li>
+    <li>Active «Mostrar pie de página de compartición» en la pantalla de configuración. Está desactivado de forma predeterminada, así que solo hace falta una vez al principio.</li>
+    <li>Abra la barra lateral en la vista de registro de vida o en la pantalla de tareas. El pie de página de compartición aparece al final de la barra lateral.</li>
+    <li>Ajuste las condiciones de filtrado en la barra lateral hasta que coincidan con lo que desea compartir.</li>
+    <li>Pulse el botón «Compartir» en el extremo izquierdo del pie de página, defina el título, el tipo de vista de compartición y qué datos incluir, y guarde.</li>
     <li>Se generara una URL de compartir. Use la URL apropiada según su proposito:</li>
   </ol>
   <table>
     <tr><th>Tipo de URL</th><th>Proposito</th></tr>
-    <tr><td>URL local</td><td>Acceso desde el mismo dispositivo (localhost)</td></tr>
-    <tr><td>URL LAN</td><td>Acceso desde otros dispositivos en la misma red</td></tr>
-    <tr><td>URL WAN</td><td>Acceso externo a traves de internet</td></tr>
+    <tr><td>Local</td><td>Acceso desde el mismo dispositivo (localhost)</td></tr>
+    <tr><td>Red local</td><td>Acceso desde otros dispositivos en la misma red</td></tr>
+    <tr><td>Global</td><td>Acceso externo a traves de internet</td></tr>
   </table>
 
   <h3>Control de datos compartidos</h3>
@@ -376,7 +378,7 @@ leche
   </table>
 
   <div class="tip">
-    <strong>Consejo:</strong> Para usar URLs LAN o WAN, necesita configurar la dirección IP del servidor en la configuración del servidor.
+    <strong>Consejo:</strong> Para usar las URLs de Red local o Global, necesita configurar la dirección del servidor en la configuración del servidor. Los enlaces ya creados se pueden listar, editar y eliminar desde «Gestión de compartición», en el extremo derecho del pie de página de compartición.
   </div>
 
   <h3>Para los destinatarios de enlaces compartidos</h3>
@@ -406,7 +408,7 @@ leche
     <strong>Consejo:</strong> Se recomienda hacer copias de seguridad del directorio de inicio periódicamente. Los directorios <code>datas/</code> y <code>configs/</code> son especialmente importantes.
   </div>
   <div class="tip">
-    <strong>Nota:</strong> La ubicación de los repositorios también puede configurarse fuera del directorio de inicio. Si utiliza archivos ubicados en carpetas externas (carpetas supervisadas por IDF, repositorios Git, bases de datos ubicadas externamente, etc.), copiar solo el directorio de inicio los omitirá. Asegúrese de incluir también en la copia de seguridad la ubicación de todos los repositorios configurados.
+    <strong>Nota:</strong> La ubicación de los repositorios también puede configurarse fuera del directorio de inicio. Si utiliza archivos ubicados en carpetas externas (archivos colocados en carpetas externas, historiales de commits de Git, bases de datos ubicadas fuera, etc.), copiar solo el directorio de inicio los omitirá. Asegúrese de incluir también en la copia de seguridad la ubicación de todos los repositorios configurados.
   </div>
 
   <h2>Documentos relacionados</h2>

@@ -6,11 +6,13 @@ gkill プラグインシステムのサーバー側実装。プラグインプ�
 
 ```
 plugin/
-└── sdk/           # プラグイン作者向け Go SDK（4ファイル）
-    ├── types.go   # 公開型定義（Query, Kyou, Config）
-    ├── handler.go # Handler struct（プラグイン作者が実装するインターフェース）
-    ├── sdk.go     # Run() — メインループ（stdin/stdout 改行区切りJSONループ）
-    └── config.go  # LoadConfig / SaveConfig（config.json 読み書き）
+└── sdk/                # プラグイン作者向け Go SDK（6ファイル。うちテスト2）
+    ├── types.go        # 公開型定義（Query, Kyou, Config）
+    ├── handler.go      # Handler struct（プラグイン作者が実装するインターフェース）
+    ├── sdk.go          # Run() — メインループ（stdin/stdout 改行区切りJSONループ）
+    ├── config.go       # LoadConfig / SaveConfig / EnsureConfig（config.json 読み書き）
+    ├── sdk_test.go     # Run() ループのテスト（TestRunLoop_* 14本）
+    └── config_test.go  # EnsureConfig のテスト（4本）
 ```
 
 ## プラグイン SDK の使い方
@@ -77,5 +79,5 @@ $GKILL_HOME/
 
 ## 関連資料
 
-- プラグイン実装例: [`src/plugins/`](../../../../plugins/README.md)
-- プラグインシステム設計: [`documents/reverse/plugin-system.md`](../../../../../documents/reverse/plugin-system.md)
+- プラグイン実装例: [`src/plugins/`](../../../plugins/README.md)
+- プラグインシステム設計: [`documents/reverse/plugin-system.md`](../../../../documents/reverse/plugin-system.md)
