@@ -40,7 +40,7 @@ func (c *FindKyouContext) isLatestData(id string, updateTime time.Time) bool {
 	if c.DisableLatestDataRepositoryCache {
 		return true
 	}
-	latestData, exist := c.Repositories.LatestDataRepositoryAddresses[id]
+	latestData, exist := c.Repositories.GetLatestDataRepositoryAddress(id)
 	if !exist {
 		return false
 	}

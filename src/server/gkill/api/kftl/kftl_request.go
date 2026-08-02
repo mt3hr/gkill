@@ -80,7 +80,7 @@ func (b *KFTLRequestBase) AddTextLine(textID, line string) {
 // Mirrors the pattern used in gkill_server_api.go L2070-2082.
 func updateLatestDataRepositoryAddress(ctx context.Context, repos *reps.GkillRepositories,
 	id string, targetIDInData *string, isDeleted bool, updateTime time.Time, repName string) {
-	repos.LatestDataRepositoryAddresses[id] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              isDeleted,
 		TargetID:                               id,
 		TargetIDInData:                         targetIDInData,
@@ -88,8 +88,9 @@ func updateLatestDataRepositoryAddress(ctx context.Context, repos *reps.GkillRep
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repos.SetLatestDataRepositoryAddress(id, latestDataRepositoryAddress)
 	_, _ = repos.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(
-		ctx, repos.LatestDataRepositoryAddresses[id])
+		ctx, latestDataRepositoryAddress)
 }
 
 // doBaseRequest adds tags and texts for the given targetID.

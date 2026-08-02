@@ -46,10 +46,12 @@ func TestReplaceLatestKyouInfos_ExcludeStaleKeepLatest(t *testing.T) {
 	}
 
 	newContext := func(disableCache bool, matchKyous map[string][]reps.Kyou) *FindKyouContext {
+		repositories := &reps.GkillRepositories{}
+		repositories.SetLatestDataRepositoryAddresses(latestDataAddresses)
 		return &FindKyouContext{
 			DisableLatestDataRepositoryCache: disableCache,
 			ParsedFindQuery:                  &find.FindQuery{},
-			Repositories:                     &reps.GkillRepositories{LatestDataRepositoryAddresses: latestDataAddresses},
+			Repositories:                     repositories,
 			MatchKyousCurrent:                matchKyous,
 		}
 	}
@@ -195,14 +197,15 @@ func TestFindTags_ExcludeRenamedAwayVersion(t *testing.T) {
 			{"お避け", 0}, // 編集前のタグ名ではヒットしない
 			{"お酒", 1},  // 最新のタグ名ではヒットする
 		} {
+			repositories := &reps.GkillRepositories{
+				TagReps: reps.TagRepositories{tagRep},
+			}
+			repositories.SetLatestDataRepositoryAddresses(latestDataAddresses)
 			findCtx := &FindKyouContext{
 				DisableLatestDataRepositoryCache: disableCache,
 				ParsedFindQuery:                  &find.FindQuery{UseTags: true, Tags: []string{c.tagName}},
-				Repositories: &reps.GkillRepositories{
-					TagReps:                       reps.TagRepositories{tagRep},
-					LatestDataRepositoryAddresses: latestDataAddresses,
-				},
-				MatchTags: map[string]reps.Tag{},
+				Repositories:                     repositories,
+				MatchTags:                        map[string]reps.Tag{},
 			}
 
 			f := &FindFilter{}
