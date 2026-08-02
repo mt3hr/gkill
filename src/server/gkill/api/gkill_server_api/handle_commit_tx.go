@@ -249,15 +249,16 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			}
 		}
-		repositories.LatestDataRepositoryAddresses[idfKyou.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              idfKyou.IsDeleted,
 			TargetID:                               idfKyou.ID,
 			DataUpdateTime:                         idfKyou.UpdateTime,
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(idfKyou.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -295,15 +296,16 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[kc.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kc.IsDeleted,
 			TargetID:                               kc.ID,
 			DataUpdateTime:                         kc.UpdateTime,
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(kc.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kc.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -342,15 +344,16 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[kmemo.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kmemo.IsDeleted,
 			TargetID:                               kmemo.ID,
 			DataUpdateTime:                         kmemo.UpdateTime,
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(kmemo.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kmemo.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -389,15 +392,16 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[lantana.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              lantana.IsDeleted,
 			TargetID:                               lantana.ID,
 			DataUpdateTime:                         lantana.UpdateTime,
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(lantana.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[lantana.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -436,15 +440,16 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[mi.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              mi.IsDeleted,
 			TargetID:                               mi.ID,
 			DataUpdateTime:                         mi.UpdateTime,
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(mi.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[mi.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -483,15 +488,16 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[nlog.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              nlog.IsDeleted,
 			TargetID:                               nlog.ID,
 			DataUpdateTime:                         nlog.UpdateTime,
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(nlog.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[nlog.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -530,7 +536,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[notification.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              notification.IsDeleted,
 			TargetID:                               notification.ID,
 			TargetIDInData:                         &notification.TargetID,
@@ -538,8 +544,9 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(notification.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[notification.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -578,7 +585,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[rekyou.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              rekyou.IsDeleted,
 			TargetID:                               rekyou.ID,
 			TargetIDInData:                         &rekyou.TargetID,
@@ -586,8 +593,9 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(rekyou.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[rekyou.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -636,7 +644,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[mirekyou.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              mirekyou.IsDeleted,
 			TargetID:                               mirekyou.ID,
 			TargetIDInData:                         &mirekyou.TargetID,
@@ -644,8 +652,9 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(mirekyou.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[mirekyou.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for mirekyou user id = %s device = %s id = %s: %w", userID, device, mirekyou.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -685,7 +694,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[tag.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              tag.IsDeleted,
 			TargetID:                               tag.ID,
 			TargetIDInData:                         &tag.TargetID,
@@ -693,8 +702,9 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(tag.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[tag.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -732,7 +742,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[text.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              text.IsDeleted,
 			TargetID:                               text.ID,
 			TargetIDInData:                         &text.TargetID,
@@ -740,8 +750,9 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(text.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[text.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -780,15 +791,16 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[timeis.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              timeis.IsDeleted,
 			TargetID:                               timeis.ID,
 			DataUpdateTime:                         timeis.UpdateTime,
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(timeis.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[timeis.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -827,15 +839,16 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[urlog.ID] = gkill_cache.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              urlog.IsDeleted,
 			TargetID:                               urlog.ID,
 			DataUpdateTime:                         urlog.UpdateTime,
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
+		repositories.SetLatestDataRepositoryAddress(urlog.ID, latestDataRepositoryAddress)
 
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

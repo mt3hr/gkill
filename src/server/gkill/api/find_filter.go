@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
-	"math"
 	"slices"
 	"sort"
 	"strings"
@@ -77,24 +76,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	}
 
-	if len(findKyouContext.Repositories.LatestDataRepositoryAddresses) == 0 {
-		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-		if err != nil {
-			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
-			return nil, nil, err
-		}
-		findKyouContext.Repositories.LatestDataRepositoryAddresses = latestDatas
-	} else {
-		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
-		if err != nil {
-			err = fmt.Errorf("error at get updated latest data repository addresses: %w", err)
-			return nil, nil, err
-		}
-		for _, latestData := range updatedLatestDatas {
-			findKyouContext.Repositories.LatestDataRepositoryAddresses[latestData.TargetID] = latestData
-		}
+	// 「件数を見て分岐 → 読み込み → 書き戻し」を1つのロックで囲む必要があるので、
+	// GkillRepositories側のメソッドにまとめてある
+	if err := findKyouContext.Repositories.RefreshLatestDataRepositoryAddresses(ctx); err != nil {
+		return nil, nil, err
 	}
-	findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
 	slog.Log(ctx, gkill_log.Trace, "finish update latest data repository address")
 
 	wg := &sync.WaitGroup{}
@@ -1571,7 +1557,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			slices.SortFunc(currentKyou, func(a, b reps.Kyou) int { return b.UpdateTime.Compare(a.UpdateTime) })
 			// 降順ソート済みなので currentKyou[0].UpdateTime がマッチした中の最新
 			newestUpdateTime := currentKyou[0].UpdateTime
-			latestData, hasLatestData := (findCtx.Repositories.LatestDataRepositoryAddresses)[id]
+			latestData, hasLatestData := findCtx.Repositories.GetLatestDataRepositoryAddress(id)
 
 			// マッチした中の最新がグローバル最新(LatestDataRepositoryAddress)でなければ、
 			// 最新版は別rep(非表示/未同期rep)にあり検索には古い版しか載っていない。
@@ -1602,7 +1588,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			continue
 		}
 
-		latestData, hasLatestData := (findCtx.Repositories.LatestDataRepositoryAddresses)[id]
+		latestData, hasLatestData := findCtx.Repositories.GetLatestDataRepositoryAddress(id)
 		if !hasLatestData {
 			continue
 		}

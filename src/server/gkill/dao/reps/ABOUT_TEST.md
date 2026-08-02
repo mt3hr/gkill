@@ -34,6 +34,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 |---------|-----------|
 | `cached_and_temp_test.go` | キャッシュ層 / 一時リポジトリ層の動作検証（MiReKyou のキャッシュ再構築・TX分離を含む）。各 `TestCached*_AddAndGet` は **Add した直後に Get で取り直せること**を確認する（後述） |
 | `re_kyou_granular_cache_test.go` | ReKyou のグラニュラーキャッシュ動作検証 |
+| `gkill_repositories_test.go` | 最新版アドレスキャッシュの排他制御（後述） |
 | `plugin_repository_impl_test.go` | プラグインのサブプロセス管理（後述） |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
 | `cache/latest_data_repository_address_dao_sqlite3_impl_test.go` | キャッシュアドレス DAO |
@@ -89,6 +90,26 @@ stdio の改行区切りJSONで会話する。ここが壊れると
   かつタイムアウトはリトライ対象外（起動は1回きり）であること
 - **直列化**: stdio は1本しかないので、並行リクエストが mutex で直列化され
   レスポンスが取り違わらないこと（偽プラグインが KyouID をそのまま返すので検出できる）
+
+### `gkill_repositories_test.go`（最新版アドレスキャッシュの排他制御）
+
+`GkillRepositories` はユーザ+デバイス単位で共有され、検索（`FindKyous`）と
+追加/更新（`usecase`, `handle_commit_tx`）の両方から同時に触られる。
+最新版アドレスの map を素のまま公開していたころは、
+「rykv の自動更新中に KFTL で投稿する」「タブを2枚開く」だけで
+`concurrent map read and map write` に当たり、recover できない fatal error で
+サーバプロセスごと落ちていた。
+
+**`go test -race` で検出させることを狙ったテスト**なので、
+通常実行で素通りしたことは正常性の証明にならない。
+
+- **1件ずつの並行読み書き**: `SetLatestDataRepositoryAddress` と
+  `GetLatestDataRepositoryAddress` が同時に走っても壊れず、書いた分がすべて読めること
+- **map全体の差し替えとの並行**: 検索開始時のキャッシュ再取得
+  （`SetLatestDataRepositoryAddresses`）は map のヘッダごと入れ替わるため、
+  読み手が旧 map を見ている最中の切り替えで特に壊れやすい
+- **nil map からの初期化**: 一度も検索を通していない状態で追加操作が来ても
+  panic しないこと（「初回検索前に KFTL で投稿する」経路で実際に踏む）
 
 ## 実行方法
 
