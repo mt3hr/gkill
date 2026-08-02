@@ -62,7 +62,10 @@ src/
               # that config.json next to manifest.json on first start (existing files are never
               # overwritten, via sdk.EnsureConfig + Handler.DefaultConfig), and can print their
               # embedded manifest.json / default config.json via --gkill-print-manifest /
-              # --gkill-print-config
+              # --gkill-print-config. Their SQLite caches live under gkill's own cache dir
+              # ($GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db — resolved in
+              # each plugin's cache_path.go from the inherited GKILL_HOME env var, falling back
+              # to the plugin folder), so `clear_cache plugin` can wipe them
 ```
 
 ### Two Deployment Modes
@@ -72,7 +75,7 @@ src/
 
 Both use cobra for CLI with shared subcommands: `version`, `idf`, `dvnf`, `generate_thumb_cache`, `generate_video_cache`, `optimize`, `update_cache`, `clear_cache`. Default listen address: `:9999`, TLS disabled, initial user `admin` with no password.
 
-`clear_cache <thumb|video|zip|all> <all|user_id...>` deletes the on-disk derived caches (`thumb_cache` / `video_cache` / `zip_cache`). The target is required (matching `generate_thumb_cache`/`optimize` etc. which require positional user args): pass the literal `all` to remove the whole cache dirs under `$HOME/gkill/caches/` globally (no user context needed), or one or more user_ids to load each user's repositories (`LoadIDFRepOnly`) and clear only that user's IDF-rep caches via `IDFKyouReps.Clear{Thumb,Video,Zip}Cache()`. Missing target or unknown mode prints usage.
+`clear_cache <thumb|video|zip|plugin|all> <all|user_id...>` deletes the on-disk derived caches (`thumb_cache` / `video_cache` / `zip_cache` / `plugin_cache`). The target is required (matching `generate_thumb_cache`/`optimize` etc. which require positional user args): pass the literal `all` to remove the whole cache dirs under `$HOME/gkill/caches/` globally (no user context needed), or one or more user_ids to load each user's repositories (`LoadIDFRepOnly`) and clear only that user's IDF-rep caches via `IDFKyouReps.Clear{Thumb,Video,Zip}Cache()`. `plugin` mode is a plain directory removal (`ClearPluginCache`) and skips the repository load entirely. Missing target or unknown mode prints usage.
 
 ### CLI Flags
 

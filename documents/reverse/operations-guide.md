@@ -20,6 +20,7 @@ $HOME/gkill/
 │   ├── zip_cache/{rep_name}/{sha1}/ # ZIP展開キャッシュ（リポジトリ＋ハッシュ単位）
 │   ├── local_rep_cache/            # ローカルリポジトリキャッシュDB
 │   ├── git_commit_log_cache/       # Gitコミットログキャッシュ DB
+│   ├── plugin_cache/{userID}/{pluginName}/ # プラグインのキャッシュDB（ユーザー＋プラグイン単位）
 │   ├── temp_cache/                 # 一時キャッシュDB（非メモリモード時のみ）
 │   └── latest_data_repository_address_cache/ # 最新データリポジトリアドレスキャッシュDB（非メモリモード時のみ）
 ├── logs/                            # ログファイル（JSON形式）
@@ -448,9 +449,9 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 #### キャッシュ削除
 
-ディスク上の派生キャッシュ（サムネイル・互換動画・ZIP展開）を削除する手段は2つある：
+ディスク上の派生キャッシュ（サムネイル・互換動画・ZIP展開・プラグイン）を削除する手段は2つある：
 
-- **CLI**: `gkill_server clear_cache <thumb|video|zip|all> <all|user_id...>` — 対象は必須指定（他サブコマンドと同様）。`all` を渡すとユーザーコンテキスト不要で `caches/thumb_cache` / `caches/video_cache` / `caches/zip_cache` ディレクトリを丸ごと削除する（全ユーザー対象。管理者メンテ向け）。user_id を1つ以上指定すると、各ユーザーのリポジトリを読み込み（`LoadIDFRepOnly`）、そのユーザーのIDFリポジトリ分のキャッシュのみ `IDFKyouReps.Clear{Thumb,Video,Zip}Cache()` で削除する。例: `clear_cache all mt3hr`（mt3hrの全種）、`clear_cache zip all`（全ユーザーのZIP）。
+- **CLI**: `gkill_server clear_cache <thumb|video|zip|plugin|all> <all|user_id...>` — 対象は必須指定（他サブコマンドと同様）。`all` を渡すとユーザーコンテキスト不要で `caches/thumb_cache` / `caches/video_cache` / `caches/zip_cache` / `caches/plugin_cache` ディレクトリを丸ごと削除する（全ユーザー対象。管理者メンテ向け）。user_id を1つ以上指定すると、各ユーザーのリポジトリを読み込み（`LoadIDFRepOnly`）、そのユーザーのIDFリポジトリ分のキャッシュのみ `IDFKyouReps.Clear{Thumb,Video,Zip}Cache()` で削除する。例: `clear_cache all mt3hr`（mt3hrの全種）、`clear_cache zip all`（全ユーザーのZIP）。`plugin` はディレクトリ（`caches/plugin_cache/{userID}`）を消すだけなのでリポジトリの読み込みを行わない。プラグインは次回起動時にキャッシュを作り直す。
 - **画面のリロード（再読込）ボタン長押し**: `POST /api/reload_repositories` に `clear_thumb_cache` / `clear_video_cache` / `clear_zip_cache` フラグを立てて送信し、**ログイン中ユーザーのリポジトリ分のみ** サムネ・動画・ZIPキャッシュを削除してからリポジトリを再構築する（クリックはこれらフラグを立てず、キャッシュ削除は行わない）。
 
 いずれも消したキャッシュは次回アクセス時に遅延再生成される。
@@ -479,7 +480,7 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 | `gkill_server generate_video_cache ユーザーID` | 動画キャッシュ生成 |
 | `gkill_server optimize ユーザーID` | データベース最適化（VACUUM） |
 | `gkill_server update_cache ユーザーID...` | HTTP API経由でキャッシュ更新（対象ユーザーIDの文字列配列。認証情報の指定は不要。ローカルDBの管理者アカウントで自動ログインする） |
-| `gkill_server clear_cache <thumb\|video\|zip\|all> <all\|user_id...>` | ディスク上の派生キャッシュを削除。対象は必須で、`all`で全体、user_id指定で該当ユーザーのリポジトリ分のみ |
+| `gkill_server clear_cache <thumb\|video\|zip\|plugin\|all> <all\|user_id...>` | ディスク上の派生キャッシュを削除。対象は必須で、`all`で全体、user_id指定で該当ユーザーのリポジトリ分のみ |
 
 ## 11. MCP HTTPサーバーのデプロイ
 

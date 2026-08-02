@@ -79,7 +79,7 @@ func TestClearCacheCmd_All_RemovesAllDirs(t *testing.T) {
 	tmpDir := t.TempDir()
 	gkill_options.CacheDir = tmpDir
 
-	cacheNames := []string{"thumb_cache", "video_cache", "zip_cache"}
+	cacheNames := []string{"thumb_cache", "video_cache", "zip_cache", "plugin_cache"}
 	for _, name := range cacheNames {
 		dir := filepath.Join(tmpDir, name)
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
@@ -108,7 +108,7 @@ func TestClearCacheCmd_SingleMode_LeavesOthers(t *testing.T) {
 	tmpDir := t.TempDir()
 	gkill_options.CacheDir = tmpDir
 
-	cacheNames := []string{"thumb_cache", "video_cache", "zip_cache"}
+	cacheNames := []string{"thumb_cache", "video_cache", "zip_cache", "plugin_cache"}
 	for _, name := range cacheNames {
 		if err := os.MkdirAll(filepath.Join(tmpDir, name), os.ModePerm); err != nil {
 			t.Fatalf("mkdir %s: %v", name, err)
@@ -120,9 +120,81 @@ func TestClearCacheCmd_SingleMode_LeavesOthers(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(tmpDir, "thumb_cache")); !os.IsNotExist(err) {
 		t.Errorf("expected thumb_cache removed, stat err = %v", err)
 	}
-	for _, name := range []string{"video_cache", "zip_cache"} {
+	for _, name := range []string{"video_cache", "zip_cache", "plugin_cache"} {
 		if _, err := os.Stat(filepath.Join(tmpDir, name)); err != nil {
 			t.Errorf("expected %s to remain, stat err = %v", name, err)
+		}
+	}
+}
+
+// clear_cache plugin all はプラグインキャッシュだけを消し、他は残す
+func TestClearCacheCmd_Plugin_RemovesOnlyPluginCache(t *testing.T) {
+	origCacheDir := gkill_options.CacheDir
+	t.Cleanup(func() { gkill_options.CacheDir = origCacheDir })
+
+	tmpDir := t.TempDir()
+	gkill_options.CacheDir = tmpDir
+
+	cacheNames := []string{"thumb_cache", "video_cache", "zip_cache", "plugin_cache"}
+	for _, name := range cacheNames {
+		if err := os.MkdirAll(filepath.Join(tmpDir, name), os.ModePerm); err != nil {
+			t.Fatalf("mkdir %s: %v", name, err)
+		}
+	}
+
+	ClearCacheCmd.Run(ClearCacheCmd, []string{"plugin", "all"})
+
+	if _, err := os.Stat(filepath.Join(tmpDir, "plugin_cache")); !os.IsNotExist(err) {
+		t.Errorf("expected plugin_cache removed, stat err = %v", err)
+	}
+	for _, name := range []string{"thumb_cache", "video_cache", "zip_cache"} {
+		if _, err := os.Stat(filepath.Join(tmpDir, name)); err != nil {
+			t.Errorf("expected %s to remain, stat err = %v", name, err)
+		}
+	}
+}
+
+// clear_cache plugin <user_id> は指定ユーザーのディレクトリだけを消す
+func TestClearPluginCache_RemovesOnlyTargetUser(t *testing.T) {
+	origCacheDir := gkill_options.CacheDir
+	t.Cleanup(func() { gkill_options.CacheDir = origCacheDir })
+
+	tmpDir := t.TempDir()
+	gkill_options.CacheDir = tmpDir
+
+	pluginCacheRootDir := filepath.Join(tmpDir, "plugin_cache")
+	targetUserDir := filepath.Join(pluginCacheRootDir, "user1", "gkill_plugin_claudecode")
+	otherUserDir := filepath.Join(pluginCacheRootDir, "user2", "gkill_plugin_claudecode")
+	for _, dir := range []string{targetUserDir, otherUserDir} {
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			t.Fatalf("mkdir %s: %v", dir, err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "cache.db"), []byte("x"), os.ModePerm); err != nil {
+			t.Fatalf("write cache.db in %s: %v", dir, err)
+		}
+	}
+
+	if err := ClearPluginCache("user1"); err != nil {
+		t.Fatalf("ClearPluginCache: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(pluginCacheRootDir, "user1")); !os.IsNotExist(err) {
+		t.Errorf("expected user1 plugin cache removed, stat err = %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(otherUserDir, "cache.db")); err != nil {
+		t.Errorf("expected user2 plugin cache to remain, stat err = %v", err)
+	}
+}
+
+// パス要素として使えないユーザーIDはエラーにする(キャッシュルート外を消させない)
+func TestClearPluginCache_RejectsUnsafeUserID(t *testing.T) {
+	origCacheDir := gkill_options.CacheDir
+	t.Cleanup(func() { gkill_options.CacheDir = origCacheDir })
+	gkill_options.CacheDir = t.TempDir()
+
+	for _, userID := range []string{"", ".", "..", "../other", `a\b`, "a/b"} {
+		if err := ClearPluginCache(userID); err == nil {
+			t.Errorf("ClearPluginCache(%q) = nil, want error", userID)
 		}
 	}
 }

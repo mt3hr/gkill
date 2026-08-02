@@ -24,8 +24,13 @@ go build -o gkill_plugin_claudecode.exe .
 $GKILL_HOME/plugins/{userID}/gkill_plugin_claudecode/
 ├── manifest.json             # このディレクトリの manifest.json をコピー
 ├── gkill_plugin_claudecode   # ビルドしたバイナリ（.exe は自動補完）
-├── config.json               # データソースのフォルダ指定（初回起動時に自動生成。次項参照）
-└── cache.db                  # 自動生成されるキャッシュ
+└── config.json               # データソースのフォルダ指定（初回起動時に自動生成。次項参照）
+```
+
+キャッシュは gkill のキャッシュディレクトリに作られる。
+
+```
+$GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_claudecode/cache.db
 ```
 
 `manifest.json` はバイナリに埋め込まれているので、配置先で吐かせることもできる。
@@ -127,6 +132,11 @@ Kyou になるのは次の2種類。
 - **キャッシュ** は `cache.db`（SQLite3）。ファイル単位で mtime とサイズを見て、
   変化のあったセッションだけ作り直す。146MB 規模のソース（629 件）で初回12秒、以降は1秒未満。
   スキーマを変えたときは `cache_meta` の `schema_version` を見て自動で作り直す
+- **キャッシュの置き場所** は gkill のキャッシュディレクトリ配下
+  `$GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_claudecode/cache.db`。
+  `gkill_server clear_cache plugin <all|user_id...>` で削除でき、次回起動時に作り直される。
+  以前のバージョンはプラグインフォルダ直下に `cache.db` を作っていた。移行はしないので、
+  残っている古い `cache.db` `cache.db-wal` `cache.db-shm` は手で消してよい
 - **長い行**への対応: トランスクリプトには100万文字を超える行が実在するため、
   `bufio.Scanner` ではなく `bufio.Reader.ReadString` で読む
 
@@ -146,6 +156,7 @@ Kyou になるのは次の2種類。
 | `main.go` | エントリポイント、SDK ハンドラ登録、検索フィルタ |
 | `loader.go` | 指定のパターン展開・フォルダ走査・JSONL パース・Kyou の切り出し・サブエージェント紐付け |
 | `cache.go` | SQLite3 キャッシュ（ファイル単位の差分更新） |
+| `cache_path.go` | キャッシュDBの置き場所の解決 |
 | `render.go` | 詳細 HTML 生成 |
 | `html.go` | 設定画面の HTML 生成 |
 | `types.go` | JSONL レコードと Kyou の型定義 |

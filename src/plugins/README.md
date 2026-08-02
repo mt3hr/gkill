@@ -18,26 +18,32 @@ plugins/
 │   ├── main.go
 │   ├── loader.go
 │   ├── cache.go
+│   ├── cache_path.go
 │   ├── types.go
 │   ├── html.go
+│   ├── cache_path_test.go
 │   ├── go.mod
 │   └── manifest.json
 ├── gkill_plugin_chatgpt/        # ChatGPT チャット履歴プラグイン
 │   ├── main.go
 │   ├── loader.go
 │   ├── cache.go
+│   ├── cache_path.go
 │   ├── types.go
 │   ├── html.go
+│   ├── cache_path_test.go
 │   ├── go.mod
 │   └── manifest.json
 └── gkill_plugin_claudecode/     # Claude Code チャットログプラグイン
     ├── main.go
     ├── loader.go
     ├── cache.go
+    ├── cache_path.go
     ├── types.go
     ├── render.go
     ├── html.go
     ├── loader_test.go
+    ├── cache_path_test.go
     ├── testdata/
     ├── go.mod
     └── manifest.json

@@ -90,6 +90,8 @@ func renderConfigHTML(pluginDir string, stats cacheStats, patterns []string, src
 	fmt.Fprintf(&sb, `<tr><td class="k">Kyou数</td><td>%d</td></tr>`, stats.MessageCount)
 	fmt.Fprintf(&sb, `<tr><td class="k">最終スキャン</td><td>%s</td></tr>`,
 		html.EscapeString(formatUnix(stats.LastScanUnix)))
+	fmt.Fprintf(&sb, `<tr><td class="k">キャッシュDB</td><td><code>%s</code></td></tr>`,
+		html.EscapeString(cacheDBPath(pluginDir)))
 	sb.WriteString(`</table>`)
 
 	if len(src.Missing) > 0 {
