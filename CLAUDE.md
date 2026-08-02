@@ -174,6 +174,6 @@ The codebase (variable names, comments, commit messages) is primarily in Japanes
 
 ## Documentation
 
-- `resources/manual/` — HTML manuals (7 languages, 20 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
+- `resources/manual/` — HTML manuals (7 languages, 21 pages per language), embedded via `//go:embed` and served at `/resources/manual/`
 - `documents/reverse/` — Reverse-engineered design documents (24 files). See `documents/reverse/README.md` for index. Key files: glossary.md (86 terms), api-endpoints.md (90 endpoints, 88 registered), usecase.md (82 use cases), sequence-diagrams.md (27 diagrams), scenario.md (cross-channel end-to-end usage scenarios with UML), testing-guide.md. `npm run verify_docs` (`src/tools/verify_docs.mjs`) machine-checks the counts, cross-links, referenced paths, Mermaid blocks, and manual freshness — it runs as part of `npm test`, so update the docs when a count changes.
 - `src/ABOUT_TEST.md` — Test specification index, links to 22 subdirectory `ABOUT_TEST.md` files

@@ -31,7 +31,7 @@
   <div class="tip">設定の変更を反映するには、サーバの再起動が必要です。</div>
 
   <h2>記録保管場所の管理</h2>
-  <p>記録保管場所（リポジトリ）は、gkillが記録データを保存するディレクトリや場所のことです。用途（テキストメモ用・ファイル用・GPSログ用など）や端末ごとに複数の記録保管場所を設定できます。</p>
+  <p>記録保管場所は、gkillが記録データを保存するフォルダやファイルのことです。用途（メモ用・ファイル用・GPSログ用など）や端末ごとに、複数の記録保管場所を設定できます。</p>
   <p>記録保管場所の設定は、アカウント管理画面の「保存先割当ボタン」から各ユーザに対して行います。</p>
 
   <h3>記録保管場所の追加</h3>
@@ -41,7 +41,7 @@
     <li>以下の項目を設定します：
       <ul>
         <li><strong>表示名</strong>: ライフログビューやフィルターに表示される名前</li>
-        <li><strong>種別</strong>: 保存するデータの種類（テキストメモ・打刻・タスク・ファイル管理・GPSログ・Gitコミットログ等）</li>
+        <li><strong>種別</strong>: 保存するデータの種類。ドロップダウンには <code>kmemo</code> や <code>timeis</code> のような英数字の名前が並びます。どれが何を指すかは次の「種別の選択」の表をご覧ください</li>
         <li><strong>パス</strong>: データを保存するディレクトリのパス（ファイル管理の場合はglob形式も使用可）</li>
         <li><strong>書き込み先として使用</strong>: 新しく記録を追加したときにこの記録保管場所に保存するかどうか</li>
         <li><strong>有効</strong>: この記録保管場所を検索・表示対象とするかどうか</li>
@@ -51,19 +51,28 @@
   </ol>
 
   <h3>種別の選択</h3>
+  <p>種別のドロップダウンには英数字の名前が並びます。それぞれが何を保存するのかは次のとおりです。</p>
   <table>
-    <tr><th>種別</th><th>用途</th></tr>
-    <tr><td>テキストメモ</td><td>テキストメモを保存します</td></tr>
-    <tr><td>打刻</td><td>時間計測（打刻）の記録を保存します</td></tr>
-    <tr><td>タスク</td><td>タスク管理の記録を保存します</td></tr>
-    <tr><td>支出</td><td>支出の記録を保存します</td></tr>
-    <tr><td>ブックマーク</td><td>URLブックマークを保存します</td></tr>
-    <tr><td>気分</td><td>気分値の記録を保存します</td></tr>
-    <tr><td>数値記録</td><td>数値データを保存します</td></tr>
-    <tr><td>ファイル管理</td><td>アップロードファイル（画像・動画等）を保存します</td></tr>
-    <tr><td>GPSログ</td><td>GPXファイル形式のGPSログを管理します</td></tr>
-    <tr><td>Gitコミットログ</td><td>Gitリポジトリのコミット履歴を読み取ります（読み取り専用）</td></tr>
+    <tr><th>ドロップダウンの表示</th><th>保存されるもの</th></tr>
+    <tr><td><code>kmemo</code></td><td>メモ</td></tr>
+    <tr><td><code>timeis</code></td><td>打刻（時間の記録）</td></tr>
+    <tr><td><code>mi</code></td><td>タスク</td></tr>
+    <tr><td><code>nlog</code></td><td>支出</td></tr>
+    <tr><td><code>urlog</code></td><td>ブックマーク</td></tr>
+    <tr><td><code>lantana</code></td><td>気分</td></tr>
+    <tr><td><code>kc</code></td><td>数値記録</td></tr>
+    <tr><td><code>directory</code></td><td>アップロードしたファイル（画像・動画・書類など）</td></tr>
+    <tr><td><code>gpslog</code></td><td>GPXファイル形式のGPSログ</td></tr>
+    <tr><td><code>git_commit_log</code></td><td>Gitのコミット履歴（読み取り専用）</td></tr>
+    <tr><td><code>rekyou</code></td><td>リポスト（過去の記録をもう一度流したもの）</td></tr>
+    <tr><td><code>mirekyou</code></td><td>リポストタスク（すでにある記録をタスクにしたもの）</td></tr>
+    <tr><td><code>tag</code></td><td>記録に付けたタグ</td></tr>
+    <tr><td><code>text</code></td><td>記録に付けた補足テキスト</td></tr>
+    <tr><td><code>notification</code></td><td>記録に付けた通知（リマインダー）</td></tr>
   </table>
+  <div class="tip">
+    <strong>ヒント:</strong> <code>tag</code> / <code>text</code> / <code>notification</code> / <code>rekyou</code> / <code>mirekyou</code> は、記録そのものではなく記録に付け足した情報の保存先です。ふつうは初回セットアップのときに自動で作られているので、あとから追加する必要はありません。
+  </div>
 
   <div class="tip">
     <strong>ヒント:</strong> 同じ種別の記録保管場所を複数追加できます。例えば、端末ごとにテキストメモ用の記録保管場所を分けることで、端末ごとのデータを整理できます。

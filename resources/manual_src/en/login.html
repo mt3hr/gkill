@@ -1,51 +1,58 @@
 <!-- title: Login Screen - Help -->
   <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Login</span></nav>
   <h1>Login Screen</h1>
-  <p>
-    The login screen is the entry point for gkill. You must authenticate with a valid user account before accessing any features.
-  </p>
+  <p>The authentication screen for signing in to gkill. Enter your user ID and password to access the application.</p>
 
   <h2>Screen Elements</h2>
   <table>
-    <tr><th>Element</th><th>Description</th></tr>
-    <tr><td>User ID</td><td>Enter your registered user ID. This is case-sensitive.</td></tr>
-    <tr><td>Password</td><td>Enter your password. The password is hashed (SHA-256) before being sent to the server.</td></tr>
-    <tr><td>Login Button</td><td>Submit your credentials to authenticate. On success, you will be redirected to your default page.</td></tr>
-    <tr><td>Version Display</td><td>Shows the current gkill version number and build information at the bottom of the screen.</td></tr>
+    <tr>
+      <th>Element</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>User ID field</td>
+      <td>Enter the user ID of your gkill account. It is case-sensitive.</td>
+    </tr>
+    <tr>
+      <td>Password field</td>
+      <td>Enter the password for the account.</td>
+    </tr>
+    <tr>
+      <td>Login button</td>
+      <td>Signs you in with the credentials you entered.</td>
+    </tr>
+    <tr>
+      <td>Version display</td>
+      <td>The current gkill version number is shown on the screen.</td>
+    </tr>
   </table>
 
-  <h2>Login Flow</h2>
+  <h2>Steps</h2>
   <ol>
-    <li>Enter your User ID in the first field.</li>
-    <li>Enter your Password in the second field.</li>
-    <li>Click the <strong>Login</strong> button or press Enter.</li>
-    <li>If authentication succeeds, you will be taken to your configured default page (typically Home Hub).</li>
-    <li>If authentication fails, an error message will be displayed.</li>
+    <li>Enter the user ID of your account in the user ID field.</li>
+    <li>Enter your password in the password field.</li>
+    <li>Click the "Login" button or press Enter to sign in.</li>
+    <li>On success you are taken to the default screen set in the settings.</li>
   </ol>
 
   <div class="tip">
-    <strong>First-time setup:</strong> On the very first run of gkill, an account registration screen will be displayed automatically. Follow the on-screen instructions to create your user account and set the administrator password.
-  </div>
-
-  <h2>Session Management</h2>
-  <p>
-    After a successful login, a session is created that lasts for <strong>30 days</strong> by default. You do not need to log in again until the session expires or you explicitly log out.
-  </p>
-
-  <div class="tip">
-    <strong>Tip:</strong> Your session remains valid for 30 days after login. No re-login is needed until it expires.
+    <strong>Tip:</strong> On the very first run, the account registration screen appears automatically. Follow the on-screen instructions to create your user account and set the administrator password.
   </div>
 
   <div class="tip">
-    <strong>Tip:</strong> If you are having trouble logging in, verify that the server is running and that you are connecting to the correct address and port (default: <code>:9999</code>).
+    <strong>Tip:</strong> A session lasts 30 days after login. You do not need to sign in again until it expires.
   </div>
 
   <div class="tip">
-    <strong>Troubleshooting:</strong> If you cannot log in, verify your user ID and password.
+    <strong>Tip:</strong> You can also log in with the Enter key, so you can submit right after typing your password.
+  </div>
+
+  <div class="tip">
+    <strong>Troubleshooting:</strong> If you cannot log in, check that your user ID and password are correct.
   </div>
 
   <h2>Related Documents</h2>
   <ul>
-    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="getting-started.html">Getting Started (initial setup guide)</a></li>
     <li><a href="tutorial.html">Tutorial (Basic + Advanced)</a></li>
   </ul>

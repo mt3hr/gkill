@@ -59,6 +59,14 @@
       <td>显示转发到其他日期/时间的记录。</td>
     </tr>
     <tr>
+      <td>转发任务</td>
+      <td>把已有的记录当作任务来使用的记录。原记录的内容会照原样显示，并附带期限和完成勾选。</td>
+    </tr>
+    <tr>
+      <td>插件的记录</td>
+      <td>插件从gkill以外的服务导入的记录。详情请参阅<a href="plugin.html">插件</a>。</td>
+    </tr>
+    <tr>
       <td>GPS日志</td>
       <td>显示GPS位置日志数据。</td>
     </tr>
@@ -81,23 +89,34 @@
   </ul>
 
   <h2>上下文菜单</h2>
-  <p>右键点击（或长按）记录，会显示上下文菜单，可以执行以下操作：</p>
+  <p>右键点击（或在移动端长按）记录会显示上下文菜单。显示的项目会因记录的种类而略有不同。</p>
   <ul>
-    <li>编辑</li>
-    <li>删除</li>
-    <li>分享</li>
-    <li>添加/编辑标签</li>
-    <li>添加/编辑文本</li>
-    <li>添加/编辑通知</li>
-    <li>历史记录</li>
-    <li>复制ID</li>
+    <li><strong>从标签历史中添加:</strong> 从最近使用过的标签中选择，立刻加上标签。</li>
+    <li><strong>添加标签 / 编辑标签:</strong> 添加或编辑标签。</li>
+    <li><strong>添加文本 / 编辑文本:</strong> 添加或编辑补充文本。</li>
+    <li><strong>转发:</strong> 把这条记录再次放到当前时刻的列表中。</li>
+    <li><strong>设为任务:</strong> 不改写内容，直接把这条记录当作任务来处理。</li>
+    <li><strong>添加通知 / 编辑通知:</strong> 添加或编辑提醒通知。</li>
+    <li><strong>编辑:</strong> 编辑记录的内容。</li>
+    <li><strong>历史:</strong> 查看标签、文本、通知的变更历史。</li>
+    <li><strong>复制内容:</strong> 把记录的正文复制到剪贴板。</li>
+    <li><strong>复制ID:</strong> 把记录的ID复制到剪贴板。</li>
+    <li><strong>浏览ZIP内容:</strong> 仅在ZIP文件的记录上显示，可在画面上打开其内容。</li>
+    <li><strong>打开文件夹 / 打开文件:</strong> 仅在同一台设备上打开gkill时显示，用操作系统的默认程序打开文件。</li>
+    <li><strong>共享:</strong> 生成共享链接。</li>
+    <li><strong>删除:</strong> 删除记录。</li>
   </ul>
 
   <div class="tip">
     <strong>提示：</strong>可以从记录详情界面直接添加或编辑标签。
   </div>
+
+  <div class="tip">
+    <strong>提示：</strong>插件导入的记录是只读的。不会显示「编辑」「删除」，但可以加标签、加文本，也可以「设为任务」。
+  </div>
   <h2>相关文档</h2>
   <ul>
     <li><a href="rykv.html">生活日志视图</a></li>
     <li><a href="mi.html">任务</a></li>
+    <li><a href="plugin.html">插件</a></li>
   </ul>

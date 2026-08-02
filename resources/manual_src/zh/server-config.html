@@ -41,7 +41,7 @@
     <li>配置以下项目：
       <ul>
         <li><strong>显示名称</strong>: 在生活日志视图和筛选器中显示的名称</li>
-        <li><strong>类型</strong>: 保存数据的种类（文本备忘录、打卡、任务、文件管理、GPS日志、Git提交日志等）</li>
+        <li><strong>类型</strong>：保存的数据种类。下拉列表中排列着 <code>kmemo</code>、<code>timeis</code> 这样的英数字名称。各自代表什么请参阅下面的表格</li>
         <li><strong>路径</strong>: 保存数据的目录路径（文件管理时也可使用glob格式）</li>
         <li><strong>用作写入目标</strong>: 新增记录时是否保存到此存储位置</li>
         <li><strong>启用</strong>: 是否将此存储位置作为搜索和显示对象</li>
@@ -51,19 +51,28 @@
   </ol>
 
   <h3>类型选择</h3>
+  <p>类型下拉列表中排列的是英数字的名称。它们分别保存什么内容如下所示。</p>
   <table>
-    <tr><th>类型</th><th>用途</th></tr>
-    <tr><td>文本备忘录</td><td>保存文本备忘录</td></tr>
-    <tr><td>打卡</td><td>保存时间追踪（打卡）记录</td></tr>
-    <tr><td>任务</td><td>保存任务管理记录</td></tr>
-    <tr><td>支出</td><td>保存支出记录</td></tr>
-    <tr><td>书签</td><td>保存URL书签</td></tr>
-    <tr><td>心情</td><td>保存心情值记录</td></tr>
-    <tr><td>数值记录</td><td>保存数值数据</td></tr>
-    <tr><td>文件管理</td><td>保存上传文件（图片、视频等）</td></tr>
-    <tr><td>GPS日志</td><td>管理GPX格式的GPS日志</td></tr>
-    <tr><td>Git提交日志</td><td>读取Git仓库的提交历史（只读）</td></tr>
+    <tr><th>下拉列表的显示</th><th>保存的内容</th></tr>
+    <tr><td><code>kmemo</code></td><td>备忘录</td></tr>
+    <tr><td><code>timeis</code></td><td>打卡（时间的记录）</td></tr>
+    <tr><td><code>mi</code></td><td>任务</td></tr>
+    <tr><td><code>nlog</code></td><td>支出</td></tr>
+    <tr><td><code>urlog</code></td><td>书签</td></tr>
+    <tr><td><code>lantana</code></td><td>心情</td></tr>
+    <tr><td><code>kc</code></td><td>数值记录</td></tr>
+    <tr><td><code>directory</code></td><td>上传的文件（图片、视频、文档等）</td></tr>
+    <tr><td><code>gpslog</code></td><td>GPX格式的GPS日志</td></tr>
+    <tr><td><code>git_commit_log</code></td><td>Git的提交历史（只读）</td></tr>
+    <tr><td><code>rekyou</code></td><td>转发（再次展示过去的记录）</td></tr>
+    <tr><td><code>mirekyou</code></td><td>转发任务（把已有的记录设为任务的东西）</td></tr>
+    <tr><td><code>tag</code></td><td>给记录附加的标签</td></tr>
+    <tr><td><code>text</code></td><td>给记录附加的补充文本</td></tr>
+    <tr><td><code>notification</code></td><td>给记录附加的通知（提醒）</td></tr>
   </table>
+  <div class="tip">
+    <strong>提示：</strong><code>tag</code> / <code>text</code> / <code>notification</code> / <code>rekyou</code> / <code>mirekyou</code> 保存的不是记录本身，而是附加在记录上的信息。通常在初次设置时就已自动创建，无需事后添加。
+  </div>
 
   <div class="tip">
     <strong>提示:</strong> 可以添加同类型的多个存储位置。例如，按设备分别设置文本备忘录用存储位置，可以整理各设备的数据。

@@ -41,7 +41,7 @@
     <li>Configure the following fields:
       <ul>
         <li><strong>Display Name</strong>: The name shown in the Life Log View and filter panels</li>
-        <li><strong>Type</strong>: The type of data to store (text memos, time logs, tasks, file management, GPS logs, Git commit logs, etc.)</li>
+        <li><strong>Type</strong>: The kind of data to store. The dropdown lists alphanumeric names such as <code>kmemo</code> or <code>timeis</code>. See the table below for what each one means</li>
         <li><strong>Path</strong>: The directory path where data is saved (glob patterns supported for file management type)</li>
         <li><strong>Use as Write Target</strong>: Whether new records of this type should be saved here</li>
         <li><strong>Enabled</strong>: Whether this storage is included in search and display</li>
@@ -51,19 +51,28 @@
   </ol>
 
   <h3>Storage Types</h3>
+  <p>The type dropdown lists alphanumeric names. Here is what each one stores.</p>
   <table>
-    <tr><th>Type</th><th>Purpose</th></tr>
-    <tr><td>Text Memo</td><td>Stores text memos</td></tr>
-    <tr><td>Time Log</td><td>Stores time tracking records</td></tr>
-    <tr><td>Task</td><td>Stores task management records</td></tr>
-    <tr><td>Expense</td><td>Stores expense records</td></tr>
-    <tr><td>Bookmark</td><td>Stores URL bookmarks</td></tr>
-    <tr><td>Mood</td><td>Stores mood value records</td></tr>
-    <tr><td>Numeric</td><td>Stores numeric data records</td></tr>
-    <tr><td>File Management</td><td>Stores uploaded files (images, videos, etc.)</td></tr>
-    <tr><td>GPS Log</td><td>Manages GPS logs in GPX file format</td></tr>
-    <tr><td>Git Commit Log</td><td>Reads commit history from a Git repository (read-only)</td></tr>
+    <tr><th>What the dropdown shows</th><th>What gets stored</th></tr>
+    <tr><td><code>kmemo</code></td><td>Memos</td></tr>
+    <tr><td><code>timeis</code></td><td>Timestamps (time records)</td></tr>
+    <tr><td><code>mi</code></td><td>Tasks</td></tr>
+    <tr><td><code>nlog</code></td><td>Expenses</td></tr>
+    <tr><td><code>urlog</code></td><td>Bookmarks</td></tr>
+    <tr><td><code>lantana</code></td><td>Moods</td></tr>
+    <tr><td><code>kc</code></td><td>Numeric records</td></tr>
+    <tr><td><code>directory</code></td><td>Uploaded files (images, videos, documents, ...)</td></tr>
+    <tr><td><code>gpslog</code></td><td>GPS logs in GPX format</td></tr>
+    <tr><td><code>git_commit_log</code></td><td>Git commit history (read-only)</td></tr>
+    <tr><td><code>rekyou</code></td><td>Reposts (past records shown again)</td></tr>
+    <tr><td><code>mirekyou</code></td><td>Repost tasks (existing records made into tasks)</td></tr>
+    <tr><td><code>tag</code></td><td>Tags attached to records</td></tr>
+    <tr><td><code>text</code></td><td>Supplementary texts attached to records</td></tr>
+    <tr><td><code>notification</code></td><td>Notifications (reminders) attached to records</td></tr>
   </table>
+  <div class="tip">
+    <strong>Tip:</strong> <code>tag</code> / <code>text</code> / <code>notification</code> / <code>rekyou</code> / <code>mirekyou</code> store information attached to records rather than the records themselves. They are normally created for you during initial setup, so you do not need to add them later.
+  </div>
 
   <div class="tip">
     <strong>Tip:</strong> Multiple storage locations of the same type can be added. For example, you can separate text memo storage by device to keep each device's data organized.

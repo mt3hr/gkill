@@ -166,6 +166,18 @@
     <strong>提示：</strong> 创建多个看板，按"工作""个人""购物"等类别分类管理，可以更方便地整理任务。
   </div>
 
+  <h3>把已有的记录设为任务</h3>
+  <p>想到「这个以后处理吧」的记录，不必特意重写任务，就能直接变成任务。</p>
+  <ol>
+    <li>在生活日志视图等界面，长按（移动端）或右键点击（桌面端）目标记录。</li>
+    <li>选择「设为任务」。</li>
+    <li>设置板名、期限、预定开始、预定结束后保存。</li>
+    <li>会排列在任务界面的看板上，可以像普通任务一样打勾。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong>用这种方式创建的任务没有标题栏。因为会照原样显示原记录的内容。删除原记录后就没有可显示的内容了，请注意。
+  </div>
+
   <h2>6. 更改设置</h2>
   <p>可以通过设置页面自定义应用程序的行为。</p>
 
@@ -323,6 +335,19 @@
     <strong>提示：</strong> Google Map API密钥需要在Google Cloud Console中启用Maps JavaScript API后获取。
   </div>
 
+
+  <h3>用插件导入外部服务的记录</h3>
+  <p>装上插件后，保存在gkill以外服务中的记录也能排列在同一个列表里查看。标准提供ChatGPT、Claude.ai、Claude Code三个。</p>
+  <ol>
+    <li>把插件的可执行文件放到指定的文件夹中。</li>
+    <li>启动gkill后，会在同一个文件夹里自动生成设置文件。</li>
+    <li>在设置文件中写入存放待导入数据的文件夹。</li>
+    <li>在生活日志视图中搜索，就会和其他记录并排显示。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong>详细步骤请参阅<a href="plugin.html">插件</a>。
+  </div>
+
   <h2>12. 共享记录</h2>
   <p>在gkill中，您可以生成共享链接与他人共享记录。</p>
 
@@ -392,4 +417,5 @@
     <li><a href="application-config.html">设置页面</a></li>
     <li><a href="mi.html">任务页面</a></li>
     <li><a href="rykv.html">生活日志视图页面</a></li>
+    <li><a href="plugin.html">插件</a></li>
   </ul>

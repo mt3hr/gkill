@@ -1,0 +1,159 @@
+<!-- title: 插件 - 帮助 -->
+  <nav class="breadcrumb"><a href="getting-started.html">入门指南</a> &gt; <span>插件</span></nav>
+  <h1>插件</h1>
+  <p>装上插件后，保存在gkill以外服务中的记录也能和gkill的记录并排显示在同一个列表里。这个功能是为了让您能在一个地方回顾「那一天做了什么」。</p>
+
+  <h2>可用的插件</h2>
+  <p>标准提供以下3个。</p>
+  <table>
+    <tr>
+      <th>插件</th>
+      <th>导入的内容</th>
+    </tr>
+    <tr>
+      <td>ChatGPT</td>
+      <td>从ChatGPT导出的对话历史</td>
+    </tr>
+    <tr>
+      <td>Claude.ai</td>
+      <td>从Claude.ai导出的对话历史</td>
+    </tr>
+    <tr>
+      <td>ClaudeCode</td>
+      <td>Claude Code的聊天日志</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>提示：</strong>这里显示的名称，在记录列表侧边栏按「存储位置」筛选时也会用到。只想看插件的记录时，请用这些名称来筛选。
+  </div>
+
+  <h2>安装方法</h2>
+  <p>安装插件是放置文件的操作。请按顺序进行。</p>
+  <ol>
+    <li>把插件的可执行文件放到gkill主文件夹中的 <code>plugins</code> 文件夹里。具体位置是在 <code>plugins</code> 下面依次建立「用户ID」「插件名」两层文件夹后的里面。</li>
+    <li>启动gkill。插件首次被加载时，会在同一个文件夹里自动生成设置文件 <code>config.json</code>。</li>
+    <li>用文本编辑器打开 <code>config.json</code>，在 <code>source_dirs</code> 中写入存放待导入数据的文件夹。</li>
+    <li>在<a href="rykv.html">生活日志视图</a>中搜索，就会和其他记录一样显示在列表中。</li>
+  </ol>
+  <div class="tip">
+    <strong>提示：</strong>如果已经有 <code>config.json</code>，gkill不会覆盖它。改写设置后也不会丢失，请放心。
+  </div>
+
+  <h3>导入来源文件夹的写法</h3>
+  <p><code>source_dirs</code> 中既可以写文件夹的路径，也可以写文件的路径。规则如下。</p>
+  <table>
+    <tr>
+      <th>写法</th>
+      <th>含义</th>
+    </tr>
+    <tr>
+      <td>以 <code>~</code> 开头的路径</td>
+      <td>表示相对于自己主文件夹的位置</td>
+    </tr>
+    <tr>
+      <td><code>*</code> <code>**</code> <code>?</code> <code>[]</code></td>
+      <td>把文件夹名或文件名的一部分当作「任意内容」处理</td>
+    </tr>
+    <tr>
+      <td>指定文件夹时</td>
+      <td>会向下逐层查找，找出目标文件</td>
+    </tr>
+    <tr>
+      <td>直接指定文件时</td>
+      <td>照原样读取该文件的内容</td>
+    </tr>
+    <tr>
+      <td>留空时</td>
+      <td>ChatGPT和Claude.ai会查看插件所在的文件夹，ClaudeCode会查看Claude Code的标准保存位置</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>提示：</strong><code>config.json</code> 中以 <code>_</code>（下划线）开头的项目，只是为了说明写法而放在那里的。删掉也没关系。
+  </div>
+  <div class="tip">
+    <strong>提示：</strong>改写 <code>config.json</code> 后不需要重启gkill。从下一次搜索开始就会用新设置读取。
+  </div>
+
+  <h2>能做的事和不能做的事</h2>
+  <p>插件导入的记录是<strong>只读</strong>的。为了不破坏导入来源的数据，无法从gkill这边改写。</p>
+  <table>
+    <tr>
+      <th>操作</th>
+      <th>能否进行</th>
+    </tr>
+    <tr>
+      <td>添加标签 / 从标签历史中添加</td>
+      <td>可以</td>
+    </tr>
+    <tr>
+      <td>添加文本</td>
+      <td>可以</td>
+    </tr>
+    <tr>
+      <td>添加通知</td>
+      <td>可以</td>
+    </tr>
+    <tr>
+      <td>转发</td>
+      <td>可以</td>
+    </tr>
+    <tr>
+      <td>设为任务</td>
+      <td>可以</td>
+    </tr>
+    <tr>
+      <td>复制内容 / 复制ID</td>
+      <td>可以</td>
+    </tr>
+    <tr>
+      <td>编辑</td>
+      <td>不可以（菜单中不显示）</td>
+    </tr>
+    <tr>
+      <td>删除</td>
+      <td>不可以（菜单中不显示）</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>提示：</strong>给导入的对话加上标签后，之后就能在<a href="rykv.html">生活日志视图</a>用标签筛选来查找了。
+  </div>
+
+  <h2>想重新导入时</h2>
+  <p>插件导入的内容会被保存下来以加快显示速度。大幅更换导入来源等情况下想全部重新读取时，请先停止gkill，然后执行下面的命令。</p>
+  <pre>gkill_server clear_cache plugin 用户ID</pre>
+  <p>下次启动gkill并搜索时，就会从导入来源重新读取。</p>
+
+  <h2>显示不正常时</h2>
+  <table>
+    <tr>
+      <th>症状</th>
+      <th>需要确认的事项</th>
+    </tr>
+    <tr>
+      <td>一条记录都不出现</td>
+      <td>请确认 <code>source_dirs</code> 中写的文件夹里是否确实有导入来源的文件。路径写错是常见原因。</td>
+    </tr>
+    <tr>
+      <td>不生成设置文件</td>
+      <td>请确认可执行文件的放置位置是否正确。文件夹的名称依次是「用户ID」「插件名」。</td>
+    </tr>
+    <tr>
+      <td>内容一直是旧的</td>
+      <td>请按上面「想重新导入时」的步骤重新读取。</td>
+    </tr>
+    <tr>
+      <td>显示「插件内容获取失败」</td>
+      <td>插件的可执行文件可能没能启动。请确认可执行文件是否损坏，以及是否有执行权限。</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>注意：</strong>目前没有从画面上更改插件设置的方法。更改设置时请直接编辑 <code>config.json</code>。
+  </div>
+
+  <h2>相关文档</h2>
+  <ul>
+    <li><a href="getting-started.html">入门指南</a></li>
+    <li><a href="rykv.html">生活日志视图</a></li>
+    <li><a href="kyou.html">记录界面</a></li>
+    <li><a href="mcp.html">AI 集成</a></li>
+  </ul>
