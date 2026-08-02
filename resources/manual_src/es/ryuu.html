@@ -58,10 +58,10 @@
     <tr>
       <td>Grupo de condiciones</td>
       <td>Editor de condiciones</td>
-      <td>Filtra los objetivos de coincidencia con condiciones AND/OR.</td>
+      <td>Filtra los objetivos de coincidencia con condiciones AND/OR. También hay condiciones que comparan con el registro seleccionado (véase el apartado siguiente).</td>
     </tr>
     <tr>
-      <td>Tipo de coincidencia de tiempo relacionado</td>
+      <td>Condición de extracción</td>
       <td>Desplegable</td>
       <td>Selecciona el método para determinar la relación temporal.</td>
     </tr>
@@ -71,13 +71,42 @@
       <td>Especifica el rango de tiempo en horas para buscar registros relacionados.</td>
     </tr>
     <tr>
-      <td>Consulta de búsqueda personalizada</td>
+      <td>Personalizar criterios de búsqueda</td>
       <td>Casilla de verificación＋botón</td>
       <td>Active esta opción para usar una consulta de búsqueda propia. El botón abre el editor de consultas de búsqueda.</td>
     </tr>
   </table>
 
-  <h2>Tipos de coincidencia de tiempo relacionado</h2>
+  <h3>Condiciones que comparan con el registro seleccionado</h3>
+  <p>En un grupo de condiciones también puede elegir condiciones que comparan con el registro que tiene seleccionado. Sirve para que aparezcan automáticamente «los registros con las mismas etiquetas» o «los registros del mismo tipo».</p>
+  <table>
+    <tr>
+      <th>Condición</th>
+      <th>Significado</th>
+    </tr>
+    <tr>
+      <td>El título es igual al del objetivo</td>
+      <td>Muestra solo los registros cuyo título es igual al del registro seleccionado.</td>
+    </tr>
+    <tr>
+      <td>Todas las etiquetas son iguales a las del objetivo</td>
+      <td>Muestra solo los registros cuyas etiquetas son todas iguales a las del registro seleccionado.</td>
+    </tr>
+    <tr>
+      <td>Alguna etiqueta es igual a las del objetivo</td>
+      <td>Muestra los registros que comparten al menos una etiqueta con el registro seleccionado.</td>
+    </tr>
+    <tr>
+      <td>El tipo de dato es igual al del objetivo</td>
+      <td>Muestra solo los registros del mismo tipo (nota, marca de tiempo, etc.) que el registro seleccionado.</td>
+    </tr>
+    <tr>
+      <td>El ID es igual al del objetivo</td>
+      <td>Muestra únicamente el propio registro seleccionado.</td>
+    </tr>
+  </table>
+
+  <h2>Condiciones de extracción</h2>
   <table>
     <tr>
       <th>Tipo</th>

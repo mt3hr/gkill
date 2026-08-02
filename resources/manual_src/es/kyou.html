@@ -63,6 +63,14 @@
       <td>Muestra registros republicados en otra fecha/hora.</td>
     </tr>
     <tr>
+      <td>Tarea de repost</td>
+      <td>Un registro existente que puede usarse como tarea. El contenido del registro original se muestra tal cual, con fecha límite y casilla de completado.</td>
+    </tr>
+    <tr>
+      <td>Registro de complemento</td>
+      <td>Un registro importado por un complemento desde un servicio distinto de gkill. Consulte <a href="plugin.html">Complementos</a> para más detalles.</td>
+    </tr>
+    <tr>
       <td>Registro GPS</td>
       <td>Muestra datos de registro de ubicación GPS.</td>
     </tr>
@@ -81,23 +89,34 @@
   </ul>
 
   <h2>Menú contextual</h2>
-  <p>Al hacer clic derecho (o mantener pulsado) en un registro, se muestra un menú contextual con las siguientes opciones:</p>
+  <p>Haga clic derecho (o mantenga pulsado en móvil) sobre un registro para abrir el menú contextual. Los elementos disponibles varían un poco según el tipo de registro.</p>
   <ul>
-    <li>Editar</li>
-    <li>Eliminar</li>
-    <li>Compartir</li>
-    <li>Agregar/Editar etiqueta</li>
-    <li>Agregar/Editar texto</li>
-    <li>Agregar/Editar notificación</li>
-    <li>Historial</li>
-    <li>Copiar ID</li>
+    <li><strong>Agregar etiqueta del historial:</strong> Elija entre las etiquetas usadas recientemente y añádala de inmediato.</li>
+    <li><strong>Agregar etiqueta / Editar etiqueta:</strong> Añade o edita etiquetas.</li>
+    <li><strong>Agregar texto / Editar texto:</strong> Añade o edita un texto complementario.</li>
+    <li><strong>Repost:</strong> Vuelve a mostrar este registro en la lista con la hora actual.</li>
+    <li><strong>Convertir en tarea:</strong> Convierte este registro en tarea sin reescribir su contenido.</li>
+    <li><strong>Agregar notificación / Editar notificación:</strong> Añade o edita un recordatorio.</li>
+    <li><strong>Editar:</strong> Edita el contenido del registro.</li>
+    <li><strong>Historial:</strong> Consulta el historial de cambios de etiquetas, textos y notificaciones.</li>
+    <li><strong>Copiar contenido:</strong> Copia el cuerpo del registro al portapapeles.</li>
+    <li><strong>Copiar ID:</strong> Copia el ID del registro al portapapeles.</li>
+    <li><strong>Explorar contenido ZIP:</strong> Solo aparece en registros de archivos ZIP; abre su contenido en pantalla.</li>
+    <li><strong>Abrir carpeta / Abrir archivo:</strong> Solo aparece cuando gkill se ejecuta en el mismo dispositivo; abre el archivo con la aplicación predeterminada del sistema.</li>
+    <li><strong>Compartir:</strong> Genera un enlace para compartir.</li>
+    <li><strong>Eliminar:</strong> Elimina el registro.</li>
   </ul>
 
   <div class="tip">
     <strong>Consejo:</strong> Puede agregar o editar etiquetas directamente desde la pantalla de detalles del registro.
   </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Los registros importados por un complemento son de solo lectura. No aparecen «Editar» ni «Eliminar», pero sí puede añadir etiquetas y textos o usar «Convertir en tarea».
+  </div>
   <h2>Documentos Relacionados</h2>
   <ul>
     <li><a href="rykv.html">Vista de Registro de Vida</a></li>
     <li><a href="mi.html">Tareas</a></li>
+    <li><a href="plugin.html">Complementos</a></li>
   </ul>
