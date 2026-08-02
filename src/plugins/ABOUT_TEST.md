@@ -2,8 +2,7 @@
 
 ## 概要
 
-`src/plugins/` 配下のプラグインのうち、gkill_plugin_claudeai, gkill_plugin_chatgpt,
-examples/gkill_example には独自のテストファイルは存在しない。
+`src/plugins/` 配下のプラグインのうち、examples/gkill_example には独自のテストファイルは存在しない。
 
 プラグイン機能のテストは以下でカバーされている：
 
@@ -12,6 +11,10 @@ examples/gkill_example には独自のテストファイルは存在しない。
 | `src/server/gkill/api/gkill_server_api/` | プラグインのロード・subprocess起動・stdio通信・クラッシュ後自動再起動の統合テスト |
 | `src/server/gkill/dao/reps/` | `plugin_repository_impl.go` のリポジトリ層テスト |
 | `src/plugins/gkill_plugin_claudecode/loader_test.go` | ターン分割・ファイル種別判定・サブエージェント紐付け・ツール要約・HTML生成のユニットテスト（`testdata/` の合成トランスクリプトを使用） |
+| `src/plugins/gkill_plugin_{claudecode,chatgpt,claudeai}/cache_path_test.go` | キャッシュDBの置き場所の解決。`GKILL_HOME` あり／なし（pluginDirから推定）／想定外の構成（プラグインフォルダにフォールバック）／pluginDirが空、の4パターン |
+
+`clear_cache plugin` でキャッシュを消せることは
+`src/server/gkill/main/common/common_test.go` でテストしている。
 
 ## 実行方法
 
@@ -20,6 +23,8 @@ examples/gkill_example には独自のテストファイルは存在しない。
 
 ```bash
 cd src/plugins/gkill_plugin_claudecode && go test ./...
+cd src/plugins/gkill_plugin_chatgpt    && go test ./...
+cd src/plugins/gkill_plugin_claudeai   && go test ./...
 ```
 
 ## プラグイン SDK

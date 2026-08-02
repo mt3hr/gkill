@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -14,7 +13,8 @@ import (
 )
 
 // pluginCache はトランスクリプトから組み立てた発言をSQLite3にキャッシュする。
-// {pluginDir}/cache.db に保存し、ファイル単位のmtime/サイズで差分更新する。
+// gkillのキャッシュディレクトリ配下(cacheDBPath参照)に保存し、
+// ファイル単位のmtime/サイズで差分更新する。
 // ソースは146MB規模になるため、毎回全部を読み直さないことが重要。
 type pluginCache struct {
 	mu sync.Mutex
@@ -49,7 +49,7 @@ func (c *pluginCache) openDB(pluginDir string) error {
 	if c.db != nil {
 		return nil
 	}
-	dbPath := filepath.Join(pluginDir, "cache.db")
+	dbPath := cacheDBPath(pluginDir)
 	db, err := sqlite3impl.GetSQLiteDBConnection(context.Background(), dbPath)
 	if err != nil {
 		return fmt.Errorf("error at open cache db %s: %w", dbPath, err)
