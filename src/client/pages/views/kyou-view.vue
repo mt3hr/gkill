@@ -182,6 +182,9 @@ const {
 } = useKyouView({ props, emits })
 </script>
 <style lang="css" scoped>
+/* コンテナ自身にも塗らないと、インライン要素であるタグ/TimeIsチップの
+   まわりや行間の余白から地の色(ダークテーマだと#212121)が透けて黒帯になる */
+.highlighted_kyou,
 .highlighted_kyou>* {
     background-color: rgb(var(--v-theme-highlight));
 }

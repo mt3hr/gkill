@@ -202,6 +202,9 @@ defineExpose({ scroll_to, scroll_to_kyou, scroll_to_time, set_loading, get_is_lo
     width: 200px;
 }
 
+/* コンテナ自身にも塗らないと、子要素が覆っていない余白(v-cardの角丸や
+   行が埋めきらない領域)から地の色が透ける。ダークテーマだと黒く見える */
+.focused_list,
 .focused_list>* {
     background-color: rgb(var(--v-theme-background-focused));
 }

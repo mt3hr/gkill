@@ -44,37 +44,44 @@ const {
 } = useAttachedTag({ props, emits })
 </script>
 <style lang="css" scoped>
-.tag {
-    border: solid rgb(var(--v-theme-background)) 2px;
+/* 枠はタグ同士の間隔を空けるためだけのもの。
+   テーマ背景色で塗るとハイライト(緑)やカード面の上で黒く浮くので透明にする */
+.tag,
+.highlighted_tag {
+    border: solid transparent 2px;
     border-left: 0px;
     color: blue;
     cursor: pointer;
     padding: 0 6px 0 2px;
     font-size: small;
     border-radius: 0 1em 1em 0;
-    background: lightgray;
     display: inline-flex;
+}
+
+.tag {
+    background: lightgray;
+}
+
+/* 選択時は塗りがハイライト色になり親(緑)と同化して形が見えなくなるので、
+   通常時の塗り色で輪郭を描く。左端はborder-left:0で枠が無いため、
+   レイアウトに影響しないfilterでシルエットそのものを縁取る(サイズ不変) */
+.highlighted_tag {
+    background: rgb(var(--v-theme-highlight));
+    filter: drop-shadow(1px 0 0 lightgray) drop-shadow(-1px 0 0 lightgray) drop-shadow(0 1px 0 lightgray) drop-shadow(0 -1px 0 lightgray);
+}
+
+/* タグ左端のパンチホール。穴に見せるため、常に背後の色と同じにする。
+   通常時の背後はテーマ背景色、選択時の背後はハイライト色(親が緑になる)。 */
+.tag::before,
+.highlighted_tag::before {
+    content: "・";
 }
 
 .tag::before {
-    content: "・";
     color: rgb(var(--v-theme-background));
-}
-
-.highlighted_tag {
-    border: solid rgb(var(--v-theme-background)) 2px;
-    border-left: 0px;
-    color: blue;
-    cursor: pointer;
-    padding: 0 6px 0 2px;
-    font-size: small;
-    border-radius: 0 1em 1em 0;
-    background: rgb(var(--v-theme-highlight));
-    display: inline-flex;
 }
 
 .highlighted_tag::before {
-    content: "・";
-    color: rgb(var(--v-theme-background));
+    color: rgb(var(--v-theme-highlight));
 }
 </style>
