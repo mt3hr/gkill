@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -99,39 +98,19 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	slog.Log(ctx, gkill_log.Trace, "finish update latest data repository address")
 
 	wg := &sync.WaitGroup{}
-	doneCh := make(chan struct{}, 6 /* chのかず */)
 	errch := make(chan error, 23 /* chのかず */)
 	gkillErrch := make(chan []*message.GkillError, 6 /* chのかず */)
 	defer close(errch)
 	defer close(gkillErrch)
 
 	catchErrFunc := func() ([]*message.GkillError, error) {
-		gkillErrors := []*message.GkillError{}
-		errs := []error{}
-	loop:
-		for {
-			select {
-			case <-doneCh:
-				err := <-errch
-				if err != nil {
-					errs = append(errs, err)
-				}
-				gkillErr := <-gkillErrch
-				if len(gkillErr) != 0 {
-					gkillErrors = append(gkillErrors, gkillErr...)
-				}
-			default:
-				break loop
-			}
-		}
-		return gkillErrors, errors.Join(errs...)
+		return drainFindErrors(wg, errch, gkillErrch)
 	}
 
 	// タグ取得
 	if findQuery.UseTags {
 		wg.Add(1)
 		go func() {
-			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
 			ge, e := f.getAllTags(ctx, findKyouContext)
 			if e != nil {
@@ -145,7 +124,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 		wg.Add(1)
 		go func() {
-			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
 			ge, e := f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
 			if e != nil {
@@ -159,7 +137,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 		wg.Add(1)
 		go func() {
-			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
 			ge, e := f.findTags(ctx, findKyouContext)
 			if e != nil {
@@ -176,7 +153,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	if findQuery.UseWords {
 		wg.Add(1)
 		go func() {
-			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
 			ge, e := f.findTexts(ctx, findKyouContext)
 			if e != nil {
@@ -192,7 +168,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	if findQuery.UseTimeIs {
 		wg.Add(1)
 		go func() {
-			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
 			ge, e := f.findTimeIsTexts(ctx, findKyouContext)
 			if e != nil {
@@ -206,7 +181,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 		wg.Add(1)
 		go func() {
-			defer func() { doneCh <- struct{}{} }()
 			defer wg.Done()
 			ge, e := f.findTimeIsTags(ctx, findKyouContext)
 			if e != nil {
@@ -219,12 +193,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		}()
 	}
 
-	// タグなどの取得待ち
+	// タグなどの取得待ち（drainFindErrorsの中で待ち合わせてから回収する）
 	gkillErr, err = catchErrFunc()
 	if err != nil {
 		return nil, gkillErr, err
 	}
-	wg.Wait()
 
 	// TimeIs取得
 	if findQuery.UseTimeIs {
