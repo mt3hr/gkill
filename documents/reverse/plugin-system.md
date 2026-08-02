@@ -21,19 +21,22 @@
 ```
 $GKILL_HOME/plugins/{userID}/{pluginName}/
   manifest.json        — プラグインメタデータ
+  config.json          — プラグイン設定（SDK が起動時に自動生成）
   {executable}         — プラグインバイナリ（Linux/macOS）
   {executable}.exe     — プラグインバイナリ（Windows）
-  cache.db             — プラグイン独自 SQLite キャッシュ（任意）
 ```
 
 例:
 ```
 $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
   manifest.json
+  config.json
   gkill_plugin_claudeai        （Linux）
   gkill_plugin_claudeai.exe    （Windows）
-  cache.db
 ```
+
+プラグインが作るキャッシュは、gkill の他の派生キャッシュと同じくキャッシュディレクトリ配下に置く
+（「6. SQLite3 キャッシュ」参照）。
 
 ---
 
@@ -162,15 +165,24 @@ func (p *pluginRepositoryImpl) callCommand(_ context.Context, req gkill_plugin.P
 
 ---
 
-## 6. SQLite3 キャッシュ（ChatGPT / Claude.ai プラグイン）
+## 6. SQLite3 キャッシュ（ChatGPT / Claude.ai / Claude Code プラグイン）
 
-ChatGPT・Claude.ai プラグインは JSON データファイルをパースしてメッセージを SQLite3 にキャッシュする。
+ChatGPT・Claude.ai・Claude Code プラグインはデータファイルをパースしてメッセージを SQLite3 にキャッシュする。
 
 ### キャッシュ位置
 
 ```
-{pluginDir}/cache.db
+$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db
 ```
+
+thumb_cache / video_cache / git_commit_log_cache と同じく `gkill_options.CacheDir` 配下に置く。
+gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.InitGkillOptions`）、プラグインの
+サブプロセスはその環境を引き継ぐため、プラグインは環境変数からキャッシュルートを解決できる。
+環境変数が無い場合は `--gkill-plugin-dir`（`$GKILL_HOME/plugins/{userID}/{pluginName}`）から遡って
+推定し、それも解けなければプラグインフォルダ直下にフォールバックする
+（実装: `src/plugins/*/cache_path.go` の `cacheDBPath`）。
+
+キャッシュは `clear_cache plugin <all|user_id...>` で削除できる（`clear_cache all` にも含まれる）。
 
 ### テーブル構成
 

@@ -94,6 +94,8 @@ func renderConfigHTML(pluginDir string, patterns []string, src expandedSource) s
 	sb.WriteString(`<table>`)
 	fmt.Fprintf(&sb, `<tr><td class="k">読み込んだファイル数</td><td>%d</td></tr>`, len(found))
 	fmt.Fprintf(&sb, `<tr><td class="k">会話数</td><td>%d</td></tr>`, len(convs))
+	fmt.Fprintf(&sb, `<tr><td class="k">キャッシュDB</td><td><code>%s</code></td></tr>`,
+		html.EscapeString(cacheDBPath(pluginDir)))
 	sb.WriteString(`</table>`)
 
 	if len(src.Missing) > 0 {

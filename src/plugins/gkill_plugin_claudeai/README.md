@@ -28,6 +28,16 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_claudeai/
                             # （config.json で別フォルダを指定するなら不要）
 ```
 
+キャッシュは gkill のキャッシュディレクトリに作られる。
+`gkill_server clear_cache plugin <all|user_id...>` で削除でき、次回起動時に作り直される。
+
+```
+$GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_claudeai/cache.db
+```
+
+以前のバージョンはプラグインフォルダ直下に `cache.db` を作っていた。移行はしないので、
+残っている古い `cache.db` `cache.db-wal` `cache.db-shm` は手で消してよい。
+
 ### 4. データソースのフォルダを指定する
 
 プラグインの初回起動時に、`manifest.json` と同じフォルダに `config.json` が
@@ -80,7 +90,8 @@ $GKILL_HOME/plugins/{userID}/gkill_plugin_claudeai/
 |---|---|
 | `main.go` | エントリポイント、SDK ハンドラ登録 |
 | `loader.go` | `conversations.json` の読み込み・パース |
-| `cache.go` | メモリキャッシュ（再起動まで保持） |
+| `cache.go` | SQLite3 キャッシュ（テーブル定義・差分判定） |
+| `cache_path.go` | キャッシュDBの置き場所の解決 |
 | `html.go` | 会話詳細の HTML 生成 |
 | `types.go` | Claude.ai エクスポート形式の型定義 |
 | `manifest.json` | プラグインメタ情報 |

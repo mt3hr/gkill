@@ -159,7 +159,7 @@ var (
 
 	ClearCacheCmd = &cobra.Command{
 		Use:   "clear_cache",
-		Short: `clear_cache <thumb|video|zip|all> <all|user_id...>`,
+		Short: `clear_cache <thumb|video|zip|plugin|all> <all|user_id...>`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// 第1引数: 対象キャッシュ種別, 第2引数以降: 対象ユーザー(または all)。
 			// 他のサブコマンド(generate_thumb_cache 等)と同様、対象は必須指定とする。
@@ -170,7 +170,7 @@ var (
 
 			mode := args[0]
 			switch mode {
-			case "thumb", "video", "zip", "all":
+			case "thumb", "video", "zip", "plugin", "all":
 				// ok
 			default:
 				cmd.Usage()
@@ -199,10 +199,27 @@ var (
 					clearCacheDir("video_cache")
 				case "zip":
 					clearCacheDir("zip_cache")
+				case "plugin":
+					clearCacheDir(pluginCacheDirName)
 				case "all":
 					clearCacheDir("thumb_cache")
 					clearCacheDir("video_cache")
 					clearCacheDir("zip_cache")
+					clearCacheDir(pluginCacheDirName)
+				}
+				return
+			}
+
+			// プラグインのキャッシュはディスク上のディレクトリを消すだけでよく、
+			// リポジトリを読み込む必要がない。重い初期化の前に済ませる
+			if mode == "plugin" {
+				for _, targetUserID := range targets {
+					if err := ClearPluginCache(targetUserID); err != nil {
+						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
+						fmt.Fprintf(os.Stderr, "%s\n", err)
+						continue
+					}
+					fmt.Printf("cleared cache: user id = %s mode = %s\n", targetUserID, mode)
 				}
 				return
 			}
@@ -637,9 +654,34 @@ func GenerateVideoCache(ctx context.Context, userID string) error {
 	return nil
 }
 
-// ClearCache は指定ユーザーのIDFリポジトリ分の派生キャッシュ(thumb/video/zip)を削除する。
-// mode は thumb|video|zip|all のいずれか。
+// pluginCacheDirName はプラグインが作るキャッシュの置き場所。
+// gkill_options.CacheDir 配下にユーザーごとのディレクトリを作る。
+// プラグイン側(src/plugins/*/cache_path.go)も同じ場所を見ている。
+const pluginCacheDirName = "plugin_cache"
+
+// ClearPluginCache は指定ユーザーのプラグインキャッシュディレクトリを削除する。
+// プラグインは次回起動時にキャッシュを作り直す。
+func ClearPluginCache(userID string) error {
+	if userID == "" || userID == "." || userID == ".." || strings.ContainsAny(userID, `/\`) {
+		return fmt.Errorf("invalid user id for plugin cache path: %q", userID)
+	}
+	// ".." 除去。直前の検証で弾いているため実行時には常にno-opだが、
+	// CodeQL の path-injection はこの形しか値サニタイザとして認識しない。
+	safeUserID := strings.ReplaceAll(userID, "..", "")
+	target := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), pluginCacheDirName, safeUserID)
+	if err := os.RemoveAll(target); err != nil {
+		return fmt.Errorf("error at clear plugin cache %s: %w", target, err)
+	}
+	return nil
+}
+
+// ClearCache は指定ユーザーの派生キャッシュ(thumb/video/zip/plugin)を削除する。
+// mode は thumb|video|zip|plugin|all のいずれか。
 func ClearCache(ctx context.Context, userID string, mode string) error {
+	if mode == "plugin" {
+		return ClearPluginCache(userID)
+	}
+
 	gkillServerAPI := GetGkillServerAPI()
 	device, err := gkillServerAPI.GetDevice()
 	if err != nil {
@@ -661,6 +703,7 @@ func ClearCache(ctx context.Context, userID string, mode string) error {
 			repositories.IDFKyouReps.ClearThumbCache(),
 			repositories.IDFKyouReps.ClearVideoCache(),
 			repositories.IDFKyouReps.ClearZipCache(),
+			ClearPluginCache(userID),
 		)
 	}
 	return nil
