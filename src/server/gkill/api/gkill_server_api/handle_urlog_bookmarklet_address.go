@@ -170,15 +170,16 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		// response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[urlog.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              urlog.IsDeleted,
 		TargetID:                               urlog.ID,
 		DataUpdateTime:                         urlog.UpdateTime,
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(urlog.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

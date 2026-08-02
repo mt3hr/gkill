@@ -177,7 +177,7 @@ func (uc *UsecaseContext) updateMiReKyouLatestDataRepositoryAddress(ctx context.
 		})
 		return gkillErrors
 	}
-	repositories.LatestDataRepositoryAddresses[mirekyou.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              mirekyou.IsDeleted,
 		TargetID:                               mirekyou.ID,
 		TargetIDInData:                         &mirekyou.TargetID,
@@ -185,8 +185,9 @@ func (uc *UsecaseContext) updateMiReKyouLatestDataRepositoryAddress(ctx context.
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(mirekyou.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[mirekyou.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for mirekyou user id = %s device = %s id = %s: %w", userID, device, mirekyou.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

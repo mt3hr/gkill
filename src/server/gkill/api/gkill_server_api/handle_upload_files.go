@@ -296,15 +296,16 @@ loop:
 				}
 
 				// defer g.WebPushUpdatedData(r.Context(), userID, device, idfKyou.ID)
-				repositories.LatestDataRepositoryAddresses[idfKyou.ID] = gkill_cache.LatestDataRepositoryAddress{
+				latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 					IsDeleted:                              idfKyou.IsDeleted,
 					TargetID:                               idfKyou.ID,
 					DataUpdateTime:                         idfKyou.UpdateTime,
 					LatestDataRepositoryName:               repName,
 					LatestDataRepositoryAddressUpdatedTime: time.Now(),
 				}
+				repositories.SetLatestDataRepositoryAddress(idfKyou.ID, latestDataRepositoryAddress)
 
-				_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
+				_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), latestDataRepositoryAddress)
 				if err != nil {
 					err = fmt.Errorf("error at update or add latest data repository address: %w", err)
 					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

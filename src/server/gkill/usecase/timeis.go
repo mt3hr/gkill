@@ -80,15 +80,16 @@ func (uc *UsecaseContext) AddTimeIs(ctx context.Context, repositories *reps.Gkil
 		})
 		return gkillErrors, nil
 	}
-	repositories.LatestDataRepositoryAddresses[timeis.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              timeis.IsDeleted,
 		TargetID:                               timeis.ID,
 		DataUpdateTime:                         timeis.UpdateTime,
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(timeis.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[timeis.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -153,15 +154,16 @@ func (uc *UsecaseContext) UpdateTimeIs(ctx context.Context, repositories *reps.G
 		})
 		return gkillErrors, nil
 	}
-	repositories.LatestDataRepositoryAddresses[timeis.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              timeis.IsDeleted,
 		TargetID:                               timeis.ID,
 		DataUpdateTime:                         timeis.UpdateTime,
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(timeis.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[timeis.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
