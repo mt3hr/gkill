@@ -1,90 +1,134 @@
 <!-- title: Task Board - Help -->
-  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Tasks</span></nav>
+  <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Task Board</span></nav>
   <h1>Task Board</h1>
-  <p>
-    The Tasks screen provides a Kanban-style task board for managing tasks. Tasks are organized into boards and displayed as cards that can be tracked, checked off, and completed.
-  </p>
+  <p>A screen for managing tasks as a Kanban board. Tasks are sorted into boards so you can see progress at a glance.</p>
 
   <h2>Toolbar</h2>
   <table>
-    <tr><th>Icon</th><th>Action</th></tr>
-    <tr><td><span class="icon">&#9776;</span> Sidebar Toggle</td><td>Show or hide the filter sidebar for narrowing down displayed tasks.</td></tr>
-    <tr><td><span class="icon">&#128196;</span> Detail View Toggle</td><td>Show or hide the detail panel that displays full information for the selected task.</td></tr>
-    <tr><td><span class="icon">&#128197;</span> Calendar Toggle</td><td>Show or hide the calendar view.</td></tr>
-    <tr><td><span class="icon">&#9881;</span> Settings</td><td>Open the application settings screen.</td></tr>
-    <tr><td>&#10068; Help</td><td>Display help for the current screen.</td></tr>
+    <tr>
+      <th>Button</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9776;</span> Sidebar</td>
+      <td>Shows or hides the sidebar used for searching and filtering.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128196;</span> Detail view</td>
+      <td>Shows or hides the detail panel for the selected record.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#128197;</span> Calendar</td>
+      <td>Shows or hides the calendar view.</td>
+    </tr>
+    <tr>
+      <td><span class="icon">&#9881;</span> Settings</td>
+      <td>Opens the application settings screen.</td>
+    </tr>
+    <tr>
+      <td>&#10068; Help</td>
+      <td>Displays help for the current screen.</td>
+    </tr>
   </table>
 
-  <h2>Board Columns</h2>
-  <p>Tasks are organized into named boards (columns). Each board represents a category or project. You can configure boards in the application settings.</p>
+  <h2>Main Features</h2>
+
+  <h3>Kanban board</h3>
+  <p>Tasks are shown sorted into boards (columns). Each board stands for a state or a category of task and helps you keep track of progress.</p>
+
+  <h3>Sidebar (filters)</h3>
+  <p>The sidebar lets you narrow down the tasks with the following conditions.</p>
   <ul>
-    <li>Tasks appear as cards within their assigned board column.</li>
-    <li>Each card shows the task title, status, limit date, and tags.</li>
-    <li>The default board can be set in the application settings.</li>
+    <li>Text search</li>
+    <li>Filter by tag</li>
+    <li>Date range</li>
+    <li>Board selection</li>
   </ul>
 
-  <h2>Task Status</h2>
+  <h3>Detail panel</h3>
+  <p>When you select a task, the detail panel shows the following information.</p>
+  <ul>
+    <li>Task title and content</li>
+    <li>The board it belongs to</li>
+    <li>Due date</li>
+    <li>Attached tags</li>
+    <li>Related records</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Tip:</strong> The board shown by default can be changed with "Default Task Board Name" in the settings screen.
+  </div>
+
+  <h3>Turning an existing record into a task</h3>
+  <p>A record you want to deal with later can become a task without rewriting its content. In the <a href="rykv.html">Life Log View</a> or elsewhere, long-press (mobile) or right-click (desktop) the record and choose "Make Task". Set the board name, due date and the planned start and end, then save: it appears on the board of this screen and can be checked off just like any other task.</p>
+  <p>Tasks made this way have no title field, because the original record's content is shown as-is.</p>
+  <div class="tip">
+    <strong>Note:</strong> If you delete the original record, the task made from it has nothing left to display.
+  </div>
+
+  <div class="tip">
+    <strong>Tip:</strong> Combining the sidebar filters lets you find the tasks you need quickly.
+  </div>
+
+  <h2>Floating Action Button (+)</h2>
+  <p>Tapping the "+" button at the bottom right of the screen opens the menu for adding records.</p>
   <table>
-    <tr><th>Status</th><th>Description</th></tr>
-    <tr><td>Open</td><td>The task is active and not yet started or in progress.</td></tr>
-    <tr><td>Checked</td><td>The task has been marked as in-progress or acknowledged.</td></tr>
-    <tr><td>Completed</td><td>The task is finished and done.</td></tr>
-  </table>
-
-  <h2>Sidebar Filters</h2>
-  <p>The sidebar provides filtering options to narrow down the tasks displayed:</p>
-  <ul>
-    <li><strong>Board filter:</strong> Select which boards to show.</li>
-    <li><strong>Tag filter:</strong> Filter tasks by their assigned tags.</li>
-    <li><strong>Status filter:</strong> Show only open, checked, or completed tasks.</li>
-    <li><strong>Date range:</strong> Filter tasks by their creation or limit date.</li>
-  </ul>
-
-  <h2>Detail Panel</h2>
-  <p>When enabled, the detail panel shows full information for the currently selected task, including:</p>
-  <ul>
-    <li>Task title and full description</li>
-    <li>Board assignment</li>
-    <li>Status and limit date</li>
-    <li>All associated tags</li>
-    <li>Related timestamps (Time Log sessions)</li>
-    <li>Edit and management controls</li>
-  </ul>
-
-  <div class="tip">
-    <strong>Tip:</strong> Set your most frequently used board as the "Default Task Board Name" in Settings so it opens automatically when you visit the Tasks screen.
-  </div>
-
-  <div class="tip">
-    <strong>Tip:</strong> Use tags to cross-reference tasks with other record types. For example, tag a task and related memos with the same tag to easily find all related items.
-  </div>
-
-  <h2>FAB "+" Quick-Add Menu</h2>
-  <p>The floating action button (FAB) with a "+" icon at the bottom-right opens a quick-add menu for creating new records:</p>
-  <table>
-    <tr><th>Record Type</th><th>Description</th></tr>
-    <tr><td>Memo</td><td>Create a new text memo. Opens the memo creation dialog.</td></tr>
-    <tr><td>Time + Memo</td><td>Start a new time tracking session and simultaneously attach a memo to it.</td></tr>
-    <tr><td>Numeric</td><td>Record a numeric counter value (e.g., counting events or items).</td></tr>
-    <tr><td>Bookmark</td><td>Save a URL with an optional title and notes.</td></tr>
-    <tr><td>Time Log</td><td>Start a new time tracking session.</td></tr>
-    <tr><td>Task</td><td>Create a new task and assign it to a board.</td></tr>
-    <tr><td>Expense</td><td>Log a financial expense with amount and description.</td></tr>
-    <tr><td>Mood</td><td>Record your current mood on a scale of 0 to 10.</td></tr>
-    <tr><td>Upload</td><td>Upload a file or image from your device.</td></tr>
-    <tr><td>Save Clipboard</td><td>Save clipboard content (screenshot, image, text, PDF, etc.) directly as a file record.</td></tr>
+    <tr>
+      <th>Menu item</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>Memo Pad</td>
+      <td>Enters a text memo in memo pad form.</td>
+    </tr>
+    <tr>
+      <td>Time Tracking + Memo</td>
+      <td>Opens the hybrid screen with memo entry and the list of timestamps.</td>
+    </tr>
+    <tr>
+      <td>Numeric Record</td>
+      <td>Records numeric data.</td>
+    </tr>
+    <tr>
+      <td>Bookmark</td>
+      <td>Saves a URL.</td>
+    </tr>
+    <tr>
+      <td>Time Log</td>
+      <td>Starts a new timestamp session.</td>
+    </tr>
+    <tr>
+      <td>Task</td>
+      <td>Adds a new task.</td>
+    </tr>
+    <tr>
+      <td>Expense</td>
+      <td>Records an amount.</td>
+    </tr>
+    <tr>
+      <td>Mood</td>
+      <td>Records a mood value (0-10).</td>
+    </tr>
+    <tr>
+      <td>Upload</td>
+      <td>Uploads and records a file.</td>
+    </tr>
+    <tr>
+      <td>Save Clipboard</td>
+      <td>Saves the clipboard contents (image, text, PDF and so on) directly as a file. Handy for quickly recording screenshots or copied images.</td>
+    </tr>
   </table>
 
   <div class="tip">
-    <strong>Tip:</strong> <strong>Long-press</strong> the "+" FAB button to directly open the Memo Pad for fast batch entry, skipping the quick-add menu entirely.
+    <strong>Long-press:</strong> Long-pressing the "+" button opens the Memo Pad directly. Handy when you want to take a note quickly.
   </div>
 
   <div class="tip">
-    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. This is convenient for quickly adding records.
+    <strong>Shortcut:</strong> Press Enter on this screen to open the Memo Pad dialog. Convenient when you want to add a record quickly.
   </div>
 
   <div class="tip">
-    <strong>Shortcut:</strong> Press Ctrl+V to save clipboard content directly as a file. Useful for quickly saving screenshots or copied images.
+    <strong>Shortcut:</strong> Press Ctrl+V to save the clipboard contents directly as a file. Useful for quickly recording screenshots or images.
   </div>
 
   <h2>Related Documents</h2>

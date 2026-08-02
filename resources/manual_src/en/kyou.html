@@ -24,6 +24,8 @@
     <tr><td>File</td><td>Uploaded files with thumbnails. Text files (.txt) display their content directly in the view. Markdown files (.md / .markdown) are rendered as rich text with headings, tables, code blocks, and images, and mermaid code blocks are rendered as diagrams. If a link in the content is a relative path pointing to a file in the same storage, double-clicking it opens that record's dialog.</td></tr>
     <tr><td>Numeric</td><td>Displays the title and numeric data.</td></tr>
     <tr><td>Repost</td><td>Displays records reposted to a different date/time.</td></tr>
+    <tr><td>Repost Task</td><td>An existing record made usable as a task. The original record's content is shown as-is, with a due date and a completion checkbox.</td></tr>
+    <tr><td>Plugin record</td><td>A record imported by a plugin from a service other than gkill. See <a href="plugin.html">Plugins</a> for details.</td></tr>
     <tr><td>GPS Log</td><td>Displays GPS location log data.</td></tr>
     <tr><td>Git Commit</td><td>Git commit logs pulled from monitored storages.</td></tr>
     <tr><td>Notification</td><td>A record that sends a reminder notification at a specified date and time.</td></tr>
@@ -40,24 +42,35 @@
   </ul>
 
   <h2>Context Menu</h2>
-  <p>Right-click (or long-press on mobile) on a record to access the context menu with the following operations:</p>
+  <p>Right-click (or long-press on mobile) on a record to access the context menu. The available items vary slightly depending on the record type.</p>
   <ul>
-    <li><strong>Edit:</strong> Open the record for editing.</li>
-    <li><strong>Delete:</strong> Remove the record (moves to trash).</li>
-    <li><strong>Share:</strong> Share the record via a shareable link.</li>
+    <li><strong>Add tag from history:</strong> Pick from recently used tags and attach one right away.</li>
     <li><strong>Add Tag / Edit Tag:</strong> Attach a new tag or edit existing tags on the record.</li>
-    <li><strong>Add Text / Edit Text:</strong> Attach a supplementary text note or edit existing text on the record.</li>
-    <li><strong>Add Notification / Edit Notification:</strong> Set a reminder notification for this record, or edit an existing notification.</li>
-    <li><strong>History:</strong> View the edit history of the record.</li>
+    <li><strong>Add Text / Edit Text:</strong> Attach a supplementary text note or edit existing text.</li>
+    <li><strong>Repost:</strong> Push this record back onto the timeline at the current time.</li>
+    <li><strong>Make Task:</strong> Turn this record into a task without rewriting its content.</li>
+    <li><strong>Add Notification / Edit Notification:</strong> Set a reminder notification for this record, or edit an existing one.</li>
+    <li><strong>Edit:</strong> Open the record for editing.</li>
+    <li><strong>History:</strong> View the change history of tags, texts and notifications.</li>
+    <li><strong>Copy content:</strong> Copy the body of the record to the clipboard.</li>
     <li><strong>Copy ID:</strong> Copy the record ID to the clipboard.</li>
+    <li><strong>Browse ZIP contents:</strong> Shown only for ZIP file records; opens the contents on screen.</li>
+    <li><strong>Open Folder / Open File:</strong> Shown only when gkill runs on the same device; opens the file with your OS default app.</li>
+    <li><strong>Share:</strong> Share the record via a shareable link.</li>
+    <li><strong>Delete:</strong> Remove the record.</li>
   </ul>
 
   <div class="tip">
     <strong>Tip:</strong> Tags are a powerful way to organize your records across types. You can filter by tags in the Life Log View and Tasks views to find related records quickly.
   </div>
 
+  <div class="tip">
+    <strong>Tip:</strong> Records imported by a plugin are read-only. "Edit" and "Delete" are not shown, but you can still add tags and texts or use "Make Task".
+  </div>
+
   <h2>Related Documents</h2>
   <ul>
     <li><a href="rykv.html">Life Log View</a></li>
     <li><a href="mi.html">Tasks</a></li>
+    <li><a href="plugin.html">Plugins</a></li>
   </ul>
