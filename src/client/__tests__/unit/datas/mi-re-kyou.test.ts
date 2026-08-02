@@ -3,7 +3,12 @@
 // factory to verify the data shape.
 
 import { describe, test, expect } from 'vitest'
-import { makeMiReKyou } from '../../helpers/factory'
+// 実クラスを触るテストのために、循環importを本番と同じ順で解いておく
+import '@/classes/api/gkill-api'
+import { MiReKyou } from '@/classes/datas/mi-re-kyou'
+import type { Kyou } from '@/classes/datas/kyou'
+import { makeKyou, makeMiReKyou } from '../../helpers/factory'
+import { expectCloneCopiesAllFields } from '../../helpers/clone-parity'
 
 describe('MiReKyou (factory-based)', () => {
   test('makeMiReKyou returns object with all required fields', () => {
@@ -72,5 +77,25 @@ describe('MiReKyou (factory-based)', () => {
     // Kyou.load_typed_datas がこの前提で分岐している
     expect(mirekyou.data_type.startsWith('mi')).toBe(true)
     expect(mirekyou.data_type.startsWith('mirekyou')).toBe(true)
+  })
+})
+
+describe('MiReKyou.clone', () => {
+  test('clone が全フィールドをコピーする', () => {
+    expectCloneCopiesAllFields(new MiReKyou(), { exclude: ['attached_histories'] })
+  })
+
+  test('clone は参照先を引き継がない', () => {
+    // clone した MiReKyou は UpdateMiReKyouRequest にそのまま入り JSON.stringify される。
+    // attached_kyou / attached_histories を写すと更新リクエストに参照先一式と全履歴が載る。
+    // 必要になったら load_attached_kyou / load_attached_histories で読み直す。
+    const mirekyou = new MiReKyou()
+    mirekyou.attached_kyou = makeKyou() as unknown as Kyou
+    mirekyou.attached_histories = [new MiReKyou()]
+
+    const cloned = mirekyou.clone()
+
+    expect(cloned.attached_kyou).toBeNull()
+    expect(cloned.attached_histories).toEqual([])
   })
 })

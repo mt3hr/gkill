@@ -1,13 +1,16 @@
-import { type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
+import { i18n } from '@/i18n'
 import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ReKyouViewProps } from '@/pages/views/re-kyou-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
+import { GkillError } from '@/classes/api/gkill-error'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { is_row_height } from '@/classes/kyou-row-height'
 import { Kyou } from '@/classes/datas/kyou'
 import type { Tag } from '@/classes/datas/tag'
 import type { Text } from '@/classes/datas/text'
 import type { Notification } from '@/classes/datas/notification'
-import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -20,19 +23,44 @@ export function useReKyouView(options: {
     // ── Template refs ──
     const context_menu = ref<ComponentRef | null>(null)
 
+    // 一覧の行として描かれているか。行では通知やリクエストが行数ぶん暴発するので抑える
+    const is_row = computed(() => is_row_height(props.height))
+
     // ── State refs ──
     const target_kyou: Ref<Kyou> = ref(new Kyou())
+    // 取得済みのtarget_id。仮想スクロールで行を使い回すときに同じ参照先を引き直さないために持つ
+    let loaded_target_id = ''
 
     // ── Watchers ──
     watch(() => props.kyou, () => get_target_kyou())
+    watch(() => props.rekyou, () => get_target_kyou())
 
     // ── Business logic ──
     async function get_target_kyou() {
+        // 仮想スクロールの行使い回しでpropsだけ差し替わることがある。参照先が同じなら引き直さない
+        if (loaded_target_id === props.rekyou.target_id) {
+            return
+        }
+        loaded_target_id = props.rekyou.target_id
+
         const req = new GetKyouRequest()
         req.id = props.rekyou.target_id
         const res = await props.gkill_api.get_kyou(req)
         if (res.errors && res.errors.length !== 0) {
-            emits('received_errors', res.errors)
+            // 一覧では行数ぶんスナックバーが出てしまうので、行では黙って諦める
+            if (!is_row.value) {
+                emits('received_errors', res.errors)
+            }
+            return
+        }
+        // 参照先が消えているとundefinedが入ってしまうので、空なら何もしない
+        if (!res.kyou_histories || res.kyou_histories.length < 1) {
+            if (!is_row.value) {
+                const error = new GkillError()
+                error.error_code = GkillErrorCodes.not_found_rekyou_target
+                error.error_message = i18n.global.t('NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE')
+                emits('received_errors', [error])
+            }
             return
         }
         target_kyou.value = res.kyou_histories[0]
@@ -76,6 +104,9 @@ export function useReKyouView(options: {
 
         // State
         target_kyou,
+
+        // Computed
+        is_row,
 
         // Business logic
         show_context_menu,

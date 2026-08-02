@@ -37,6 +37,7 @@ import { useTimeIsContextMenu } from '@/classes/use-time-is-context-menu'
 import { useLantanaContextMenu } from '@/classes/use-lantana-context-menu'
 import { useIDFKyouContextMenu } from '@/classes/use-idf-kyou-context-menu'
 import { useReKyouContextMenu } from '@/classes/use-re-kyou-context-menu'
+import { useMiReKyouContextMenu } from '@/classes/use-mi-re-kyou-context-menu'
 import { useGitCommitLogContextMenu } from '@/classes/use-git-commit-log-context-menu'
 
 // Mock clipboard
@@ -215,6 +216,7 @@ const entityMenus = [
   { name: 'useLantanaContextMenu', factory: useLantanaContextMenu },
   { name: 'useIDFKyouContextMenu', factory: useIDFKyouContextMenu },
   { name: 'useReKyouContextMenu', factory: useReKyouContextMenu },
+  { name: 'useMiReKyouContextMenu', factory: useMiReKyouContextMenu },
   { name: 'useGitCommitLogContextMenu', factory: useGitCommitLogContextMenu },
 ] as const
 
@@ -248,5 +250,32 @@ describe.each(entityMenus)('$name', ({ factory }) => {
     const emits = vi.fn()
     const menu = factory({ props, emits } as never)
     expect(typeof menu.add_tag_from_history).toBe('function')
+  })
+})
+
+// ========== ReKyou / MiReKyou ==========
+// 参照先を持つ2種別。実装を揃えているので同じ項目が出ることを固定する。
+
+const referenceMenus = [
+  { name: 'useReKyouContextMenu', factory: useReKyouContextMenu },
+  { name: 'useMiReKyouContextMenu', factory: useMiReKyouContextMenu },
+] as const
+
+describe.each(referenceMenus)('$name (参照先を持つ種別)', ({ factory }) => {
+  test('リポストできる', async () => {
+    // 他のKyou種別11個と揃える。MiReKyouだけ抜けていた
+    const props = createMockProps()
+    const emits = vi.fn()
+    const menu = factory({ props, emits } as never) as { show_confirm_rekyou_dialog: () => Promise<void> }
+    await menu.show_confirm_rekyou_dialog()
+    expect(emits).toHaveBeenCalledWith('requested_open_rykv_dialog', 'confirm_re_kyou', props.kyou)
+  })
+
+  test('内容をコピーできる', async () => {
+    // 参照先のattached_kyouは遅延解決されるので、本文が空でも例外にならないこと
+    const props = createMockProps()
+    const emits = vi.fn()
+    const menu = factory({ props, emits } as never) as { copy_content: () => Promise<void> }
+    await expect(menu.copy_content()).resolves.toBeUndefined()
   })
 })

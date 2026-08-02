@@ -5,11 +5,65 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetPluginContentHTMLRequest } from '@/classes/api/req_res/get-plugin-content-html-request'
+import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 import type { GkillAPI } from '@/classes/api/gkill-api'
 import type { Kyou } from '@/classes/datas/kyou'
+import type { ReKyou } from '@/classes/datas/re-kyou'
+import type { MiReKyou } from '@/classes/datas/mi-re-kyou'
 
-// ReKyouの参照先をたどる深さの上限。循環参照で無限ループしないようにする
+// ReKyou・MiReKyouの参照先をたどる深さの上限。循環参照で無限ループしないようにする
 const MAX_REKYOU_DEPTH = 8
+
+export interface KyouContentTextOptions {
+    /**
+     * プラグインのContent HTMLをサーバから取りに行くことを許すか。
+     * 一覧の行のように件数ぶん走る場所ではfalseにする。
+     * falseのときはリポジトリ名だけを返す。
+     */
+    allow_remote?: boolean
+
+    /**
+     * 参照先Kyou（ReKyou/MiReKyouのattached_kyou）を取りに行ってよい深さの上限。
+     * 一覧の行のように件数ぶん走る場所では1にして、直列リクエストが伸びないようにする。
+     * 既定はMAX_REKYOU_DEPTH。
+     */
+    max_lazy_depth?: number
+}
+
+/**
+ * ReKyou/MiReKyouの参照先Kyouを解決する。
+ *
+ * attached_kyouはload_typed_datasでは埋まらないので、無ければここで取りに行く。
+ * 取得できなかった場合はnullを返す。本文が無いだけなのでエラーにはしない。
+ */
+async function resolve_attached_kyou(
+    reference: ReKyou | MiReKyou,
+    gkill_api: GkillAPI,
+    depth: number,
+    options: KyouContentTextOptions,
+): Promise<Kyou | null> {
+    if (!reference.attached_kyou) {
+        const max_lazy_depth = options.max_lazy_depth ?? MAX_REKYOU_DEPTH
+        if (depth >= max_lazy_depth) {
+            return null
+        }
+        const req = new GetKyouRequest()
+        req.id = reference.target_id
+        const res = await gkill_api.get_kyou(req)
+        if (res.errors && res.errors.length !== 0) {
+            return null
+        }
+        if (!res.kyou_histories || res.kyou_histories.length < 1) {
+            return null
+        }
+        reference.attached_kyou = res.kyou_histories[0]
+    }
+
+    const attached_kyou = reference.attached_kyou
+    // テストのファクトリはメソッドを持たないプレーンオブジェクトなのでoptional callにする
+    await attached_kyou?.load_typed_datas?.()
+    return attached_kyou
+}
 
 /**
  * KyouのHTMLからプレーンテキストを取り出す。
@@ -44,7 +98,7 @@ function join_content_parts(parts: Array<string | number | null | undefined>): s
  * 日時やタグは含めず、種別ごとの本文にあたるフィールドのみを返す。
  * どの種別にも該当しない場合は空文字を返す。
  */
-export async function get_kyou_content_text(kyou: Kyou, gkill_api: GkillAPI, depth: number = 0): Promise<{ text: string, errors: Array<GkillError> }> {
+export async function get_kyou_content_text(kyou: Kyou, gkill_api: GkillAPI, depth: number = 0, options: KyouContentTextOptions = {}): Promise<{ text: string, errors: Array<GkillError> }> {
     const no_errors = new Array<GkillError>()
 
     if (kyou.typed_kmemo) {
@@ -74,14 +128,22 @@ export async function get_kyou_content_text(kyou: Kyou, gkill_api: GkillAPI, dep
     if (kyou.typed_git_commit_log) {
         return { text: normalize_text(kyou.typed_git_commit_log.commit_message), errors: no_errors }
     }
-    if (kyou.typed_rekyou) {
-        const attached_kyou = kyou.typed_rekyou.attached_kyou
-        if (!attached_kyou || depth >= MAX_REKYOU_DEPTH) {
+    // ReKyouもMiReKyouもタイトルを持たないので、参照先の本文を返す
+    const reference = kyou.typed_rekyou ?? kyou.typed_mirekyou
+    if (reference) {
+        if (depth >= MAX_REKYOU_DEPTH) {
             return { text: '', errors: no_errors }
         }
-        return get_kyou_content_text(attached_kyou, gkill_api, depth + 1)
+        const attached_kyou = await resolve_attached_kyou(reference, gkill_api, depth, options)
+        if (!attached_kyou) {
+            return { text: '', errors: no_errors }
+        }
+        return get_kyou_content_text(attached_kyou, gkill_api, depth + 1, options)
     }
     if (kyou.typed_plugin) {
+        if (options.allow_remote === false) {
+            return { text: kyou.typed_plugin.rep_name, errors: no_errors }
+        }
         const req = new GetPluginContentHTMLRequest()
         req.rep_name = kyou.typed_plugin.rep_name
         req.kyou_id = kyou.id

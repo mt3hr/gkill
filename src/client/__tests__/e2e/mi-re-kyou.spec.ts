@@ -63,4 +63,58 @@ test.describe('MiReKyou (既存Kyouのタスク化)', () => {
     await expectPageToContainText(page, board)
     await expectPageToContainText(page, label)
   })
+
+  /**
+   * Mi画面の行は高さ固定 (mi-view.vue の kyou_height = 56 + 35) で
+   * overflow:hidden なので、はみ出した分は切り落とされて見えなくなる。
+   * MiReKyouは参照先Kyouを丸ごと埋め込んでいたため日時が枠外に出ていた。
+   */
+  test('Mi画面の行に参照先の要約と日時が収まる', async ({ page }) => {
+    const label = makeUniqueLabel('mirekyou_row')
+
+    await submitKftlText(page, label)
+    await navigateToRykv(page)
+
+    const record = await waitForKyouByText(page, label)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.addMiReKyou)
+
+    const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
+    await expect(dialog, 'タスク化ダイアログが開かない').toBeVisible({ timeout: 15000 })
+
+    const board = makeUniqueLabel('mirekyou_row_board')
+    await createAndSelectMiBoard(page, dialog, board)
+
+    // 日時が行に出るかを見たいので開始日時を入れる。
+    // 日付ピッカーを操作せずに済むよう「現在日時」ボタンを使う（開始・終了・制限の順に並ぶ）。
+    await dialog.locator('button').filter({ hasText: /^\s*現在日時\s*$/ }).first().click()
+
+    await clickDialogButton(page, SAVE_BUTTON)
+
+    await navigateToMi(page)
+    await expectPageToContainText(page, label)
+
+    const row = page.locator('.kyou_in_list').filter({ hasText: label }).first()
+    await expect(row, 'Mi画面にタスク化した行が出ない').toBeVisible({ timeout: 30000 })
+
+    // はみ出していないこと。これが破綻の直接的な指標
+    const size = await row.evaluate((el) => ({
+      scroll: el.scrollHeight,
+      client: el.clientHeight,
+      // clientHeight は border-top:1px を含まないので、行高の確認には offsetHeight を使う
+      offset: (el as HTMLElement).offsetHeight,
+    }))
+    expect(size.offset, '行の高さが mi-view.vue の指定 (56 + 35) と違う').toBe(91)
+    expect(size.scroll, `行からはみ出している (scrollHeight=${size.scroll}, clientHeight=${size.client})`)
+      .toBeLessThanOrEqual(size.client + 1)
+
+    // 参照先の要約・板名・日時が行の中にあること
+    await expect(row).toContainText(label)
+    await expect(row).toContainText(board)
+    await expect(row, '日時が行に出ていない').toContainText('開始日時')
+
+    // 外側と内側のKyouViewで時刻が二重に出ていないこと
+    expect(await row.locator('.kyou_related_time').count(), '行に時刻が2つ以上出ている')
+      .toBeLessThanOrEqual(1)
+  })
 })

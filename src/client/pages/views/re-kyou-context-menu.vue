@@ -27,7 +27,7 @@
             <v-list-item @click="show_add_notification_dialog()">
                 <v-list-item-title>{{ i18n.global.t("ADD_NOTIFICATION_TITLE") }}</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="show_edit_idf_kyou_dialog()">
+            <v-list-item @click="show_edit_re_kyou_dialog()">
                 <v-list-item-title>{{ i18n.global.t("EDIT_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_kyou_histories_dialog()">
@@ -70,7 +70,7 @@ const {
     show,
     copy_content,
     copy_id,
-    show_edit_idf_kyou_dialog,
+    show_edit_re_kyou_dialog,
     show_add_tag_dialog,
     show_add_text_dialog,
     show_add_notification_dialog,
