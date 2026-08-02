@@ -2,11 +2,15 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
+	"github.com/mt3hr/gkill/src/server/gkill/api/message"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 )
@@ -87,6 +91,66 @@ func TestReplaceLatestKyouInfos_ExcludeStaleKeepLatest(t *testing.T) {
 				t.Errorf("disableCache=%v: 古い版が残っている: %#v", disableCache, kyou)
 			}
 		}
+	}
+}
+
+// drainFindErrors は FindKyous が並行実行するタグ/テキスト取得のエラーを回収する。
+// 以前は待ち合わせより前に吸い出していたため、起動直後の空チャネルを見て即座に抜け、
+// 6経路のエラーが常に捨てられて検索が「成功」を返していた。
+// goroutineの完了が遅れてもエラーを取りこぼさないことを固定する。
+func TestDrainFindErrors_CollectsLateGoroutineErrors(t *testing.T) {
+	wg := &sync.WaitGroup{}
+	errch := make(chan error, 23)
+	gkillErrch := make(chan []*message.GkillError, 6)
+
+	const goroutineCount = 3
+	for i := range goroutineCount {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			// 回収側が先に走る状況（＝不具合時に取りこぼしていた状況）を作る
+			time.Sleep(30 * time.Millisecond)
+			errch <- fmt.Errorf("取得失敗 %d", i)
+			gkillErrch <- []*message.GkillError{{ErrorCode: fmt.Sprintf("ERRTEST%d", i)}}
+		}()
+	}
+
+	gkillErrors, err := drainFindErrors(wg, errch, gkillErrch)
+
+	if err == nil {
+		t.Fatal("goroutineが積んだエラーが回収されていない")
+	}
+	for i := range goroutineCount {
+		if want := fmt.Sprintf("取得失敗 %d", i); !strings.Contains(err.Error(), want) {
+			t.Errorf("エラー %q が回収結果に含まれていない: %v", want, err)
+		}
+	}
+	if len(gkillErrors) != goroutineCount {
+		t.Errorf("GkillError = %d件, want %d件", len(gkillErrors), goroutineCount)
+	}
+}
+
+// エラーが1件も無いときは nil を返し、検索が成功として扱われること。
+func TestDrainFindErrors_NoErrorReturnsNil(t *testing.T) {
+	wg := &sync.WaitGroup{}
+	errch := make(chan error, 23)
+	gkillErrch := make(chan []*message.GkillError, 6)
+
+	for range 3 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errch <- nil
+			gkillErrch <- nil
+		}()
+	}
+
+	gkillErrors, err := drainFindErrors(wg, errch, gkillErrch)
+	if err != nil {
+		t.Errorf("エラーが無いのに err が返っている: %v", err)
+	}
+	if len(gkillErrors) != 0 {
+		t.Errorf("GkillError = %d件, want 0件", len(gkillErrors))
 	}
 }
 
