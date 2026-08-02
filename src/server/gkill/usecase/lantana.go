@@ -80,15 +80,16 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 		})
 		return gkillErrors, nil
 	}
-	repositories.LatestDataRepositoryAddresses[lantana.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              lantana.IsDeleted,
 		TargetID:                               lantana.ID,
 		DataUpdateTime:                         lantana.UpdateTime,
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(lantana.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[lantana.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -142,15 +143,16 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 		})
 		return gkillErrors, nil
 	}
-	repositories.LatestDataRepositoryAddresses[lantana.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              lantana.IsDeleted,
 		TargetID:                               lantana.ID,
 		DataUpdateTime:                         lantana.UpdateTime,
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(lantana.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[lantana.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

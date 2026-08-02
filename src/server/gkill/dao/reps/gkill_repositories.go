@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -105,12 +106,16 @@ type GkillRepositories struct {
 	LatestDataRepositoryAddressDAO gkill_cache.LatestDataRepositoryAddressDAO
 	TempReps                       *TempReps
 
-	LatestDataRepositoryAddresses                       map[string]gkill_cache.LatestDataRepositoryAddress
-	LastUpdatedLatestDataRepositoryAddressCacheFindTime time.Time
+	// latestDataRepositoryAddressesはユーザ+デバイス単位で共有されるGkillRepositoriesが持つ。
+	// 検索(FindKyous)と追加/更新(usecase, handle_commit_tx)の両方から触られるので、
+	// 素のmapのまま公開すると concurrent map read and map write でプロセスごと落ちる
+	// (この種のfatal errorはrecoverできない)。
+	// 直接触らず、syncStateのlatestDataAddressesMutexで保護したアクセサ経由で読み書きすること。
+	// 非公開にしているのは、新しいアクセス箇所が増えたときにコンパイルエラーで気づけるようにするため。
+	latestDataRepositoryAddresses                       map[string]gkill_cache.LatestDataRepositoryAddress
+	lastUpdatedLatestDataRepositoryAddressCacheFindTime time.Time
 
-	IsUpdateCacheNextTick bool
-	updateCacheTicker     *time.Ticker
-	isClosed              bool
+	updateCacheTicker *time.Ticker
 
 	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
 
@@ -132,8 +137,28 @@ type GkillRepositories struct {
 type gkillRepositoriesSync struct {
 	updateCacheMutex sync.RWMutex
 
+	// latestDataAddressesMutexはlatestDataRepositoryAddressesと
+	// lastUpdatedLatestDataRepositoryAddressCacheFindTimeを保護する。
+	latestDataAddressesMutex sync.RWMutex
+
+	// isClosedとisUpdateCacheNextTickはCloseや各ハンドラと
+	// キャッシュ更新tickerのgoroutineの間で共有されるためatomicで持つ。
+	isClosed              atomic.Bool
+	isUpdateCacheNextTick atomic.Bool
+
+	// closeChはCloseを検知してtickerのgoroutineを即座に終わらせるためのもの。
+	// 停止したtickerは二度と発火しないので、<-ticker.C だけで待っていると
+	// Close後にgoroutineが永久にブロックして残り続ける。
+	closeCh chan struct{}
+
 	updateReqGen atomic.Uint64
 	lastHandled  atomic.Uint64
+}
+
+func newGkillRepositoriesSync() *gkillRepositoriesSync {
+	return &gkillRepositoriesSync{
+		closeCh: make(chan struct{}),
+	}
 }
 
 // gkillRepositoriesSyncInitMutexはsyncStateの遅延初期化を保護する。
@@ -145,9 +170,68 @@ func (g *GkillRepositories) syncState() *gkillRepositoriesSync {
 	gkillRepositoriesSyncInitMutex.Lock()
 	defer gkillRepositoriesSyncInitMutex.Unlock()
 	if g.syncStateRef == nil {
-		g.syncStateRef = &gkillRepositoriesSync{}
+		g.syncStateRef = newGkillRepositoriesSync()
 	}
 	return g.syncStateRef
+}
+
+// GetLatestDataRepositoryAddress はIDに対応する最新版アドレスを返す。
+func (g *GkillRepositories) GetLatestDataRepositoryAddress(id string) (gkill_cache.LatestDataRepositoryAddress, bool) {
+	sync := g.syncState()
+	sync.latestDataAddressesMutex.RLock()
+	defer sync.latestDataAddressesMutex.RUnlock()
+
+	addr, exist := g.latestDataRepositoryAddresses[id]
+	return addr, exist
+}
+
+// SetLatestDataRepositoryAddress はIDに対応する最新版アドレスを1件書き込む。
+func (g *GkillRepositories) SetLatestDataRepositoryAddress(id string, addr gkill_cache.LatestDataRepositoryAddress) {
+	sync := g.syncState()
+	sync.latestDataAddressesMutex.Lock()
+	defer sync.latestDataAddressesMutex.Unlock()
+
+	if g.latestDataRepositoryAddresses == nil {
+		g.latestDataRepositoryAddresses = map[string]gkill_cache.LatestDataRepositoryAddress{}
+	}
+	g.latestDataRepositoryAddresses[id] = addr
+}
+
+// SetLatestDataRepositoryAddresses は最新版アドレスをまとめて差し替える。
+func (g *GkillRepositories) SetLatestDataRepositoryAddresses(addresses map[string]gkill_cache.LatestDataRepositoryAddress) {
+	sync := g.syncState()
+	sync.latestDataAddressesMutex.Lock()
+	defer sync.latestDataAddressesMutex.Unlock()
+
+	g.latestDataRepositoryAddresses = addresses
+}
+
+// RefreshLatestDataRepositoryAddresses は最新版アドレスのキャッシュを最新化する。
+// 未取得なら全件を読み込み、取得済みなら前回時刻以降の差分だけをマージする。
+// 「件数を見て分岐し、読み込んで、書き戻す」までを1つのロックで囲む必要があるため、
+// 呼び出し側にmapを渡さずこのメソッドの中で完結させている。
+func (g *GkillRepositories) RefreshLatestDataRepositoryAddresses(ctx context.Context) error {
+	sync := g.syncState()
+	sync.latestDataAddressesMutex.Lock()
+	defer sync.latestDataAddressesMutex.Unlock()
+
+	if len(g.latestDataRepositoryAddresses) == 0 {
+		latestDatas, err := g.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+		if err != nil {
+			return fmt.Errorf("error at get all latest data repository addresses: %w", err)
+		}
+		g.latestDataRepositoryAddresses = latestDatas
+	} else {
+		updatedLatestDatas, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, g.lastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
+		if err != nil {
+			return fmt.Errorf("error at get updated latest data repository addresses: %w", err)
+		}
+		for _, latestData := range updatedLatestDatas {
+			g.latestDataRepositoryAddresses[latestData.TargetID] = latestData
+		}
+	}
+	g.lastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
+	return nil
 }
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
@@ -237,7 +321,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 
 		TempReps: TempReps,
 
-		syncStateRef: &gkillRepositoriesSync{},
+		syncStateRef: newGkillRepositoriesSync(),
 
 		TempMemoryDB:       TempMemoryDB,
 		CacheMemoryDB:      CacheMemoryDB,
@@ -245,21 +329,31 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		CacheMemoryDBMutex: CacheMemoryDBMutex,
 
 		updateCacheTicker:                                   ticker,
-		LatestDataRepositoryAddresses:                       nil,
-		LastUpdatedLatestDataRepositoryAddressCacheFindTime: time.Unix(0, 0),
+		latestDataRepositoryAddresses:                       nil,
+		lastUpdatedLatestDataRepositoryAddressCacheFindTime: time.Unix(0, 0),
 	}
 
 	syncState := repositories.syncState()
 	go func() {
 		defer ticker.Stop()
-		for !repositories.isClosed {
-			<-ticker.C
+		for {
+			// Closeで停止したtickerは二度と発火しないため、
+			// <-ticker.C だけで待つとこのgoroutineが永久に残る。
+			// closeChも一緒に待って確実に抜ける。
+			select {
+			case <-syncState.closeCh:
+				return
+			case <-ticker.C:
+			}
+			if syncState.isClosed.Load() {
+				return
+			}
 			currentGen := syncState.updateReqGen.Load()
 			lastGen := syncState.lastHandled.Load()
 			if currentGen == lastGen {
 				continue
 			}
-			if repositories.IsUpdateCacheNextTick {
+			if syncState.isUpdateCacheNextTick.Load() {
 				tickCtx, tickCancel := context.WithTimeout(context.Background(), 1*time.Hour)
 				err := repositories.UpdateCache(tickCtx)
 				tickCancel()
@@ -267,7 +361,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 					slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 					continue
 				}
-				repositories.IsUpdateCacheNextTick = false
+				syncState.isUpdateCacheNextTick.Store(false)
 				syncState.lastHandled.Store(currentGen)
 			}
 		}
@@ -280,8 +374,14 @@ func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
 }
 
 func (g *GkillRepositories) Close(ctx context.Context) error {
-	g.isClosed = true
-	g.updateCacheTicker.Stop()
+	syncState := g.syncState()
+	// 二重Closeでcloseチャネルを2回閉じてpanicしないよう、CASで1回だけ通す
+	if syncState.isClosed.CompareAndSwap(false, true) {
+		close(syncState.closeCh)
+	}
+	if g.updateCacheTicker != nil {
+		g.updateCacheTicker.Stop()
+	}
 	if err := g.TagReps.Close(ctx); err != nil {
 		slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 		return err
@@ -546,18 +646,30 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			return fmt.Errorf("error at update latest data repository address cache data: %w", err)
 		}
 
-		if g.LatestDataRepositoryAddresses == nil {
-			g.LatestDataRepositoryAddresses = map[string]gkill_cache.LatestDataRepositoryAddress{}
-		}
-		for _, updatedLatestDataRepositoryAddress := range updatedLatestDataRepositoryAddresses {
-			g.LatestDataRepositoryAddresses[updatedLatestDataRepositoryAddress.TargetID] = updatedLatestDataRepositoryAddress
-		}
+		func() {
+			sync := g.syncState()
+			sync.latestDataAddressesMutex.Lock()
+			defer sync.latestDataAddressesMutex.Unlock()
+
+			if g.latestDataRepositoryAddresses == nil {
+				g.latestDataRepositoryAddresses = map[string]gkill_cache.LatestDataRepositoryAddress{}
+			}
+			for _, updatedLatestDataRepositoryAddress := range updatedLatestDataRepositoryAddresses {
+				g.latestDataRepositoryAddresses[updatedLatestDataRepositoryAddress.TargetID] = updatedLatestDataRepositoryAddress
+			}
+		}()
 
 		_, err = g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, updatedLatestDataRepositoryAddresses)
 		if err != nil {
 			return fmt.Errorf("error at update latest data repository address cache data: %w", err)
 		}
-		g.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
+
+		func() {
+			sync := g.syncState()
+			sync.latestDataAddressesMutex.Lock()
+			defer sync.latestDataAddressesMutex.Unlock()
+			g.lastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
+		}()
 		return nil
 	}
 
@@ -648,8 +760,9 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 }
 
 func (g *GkillRepositories) UpdateCacheNextTick() {
-	g.syncState().updateReqGen.Add(1)
-	g.IsUpdateCacheNextTick = true
+	syncState := g.syncState()
+	syncState.updateReqGen.Add(1)
+	syncState.isUpdateCacheNextTick.Store(true)
 }
 
 func (g *GkillRepositories) GetPath(ctx context.Context, id string) (string, error) {
