@@ -30,6 +30,19 @@ export function useKyouListView(options: {
     const footer_height = computed(() => props.show_footer ? 48 : 0)
     const footer_class = computed(() => props.is_focused_list ? 'focused_list' : '')
 
+    // ── Business logic ──
+    /**
+     * 行にrelated_timeを出すか。
+     * Mi板で開始・終了・制限のいずれかを含めているとき、作成射影の行では
+     * 各Viewが自前で日時を出すのでヘッダのrelated_timeは伏せる。
+     * MiReKyouはmirekyou_*、Miはmi_*で来るのでどちらも同じ射影として扱う。
+     */
+    function should_show_related_time(kyou: Kyou): boolean {
+        const is_create_projection = kyou.data_type === 'mi_create' || kyou.data_type === 'mirekyou_create'
+        return !(props.query.for_mi && is_create_projection
+            && (props.query.include_start_mi || props.query.include_end_mi || props.query.include_limit_mi))
+    }
+
     // ── Watchers ──
     watch(() => props.query, () => reload())
     watch(() => props.matched_kyous, () => reload())
@@ -222,6 +235,9 @@ export function useKyouListView(options: {
         kyou_height_px,
         footer_height,
         footer_class,
+
+        // Business logic
+        should_show_related_time,
 
         // Exposed methods
         scroll_to,

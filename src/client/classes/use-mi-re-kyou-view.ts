@@ -8,12 +8,21 @@ import { UpdateMiReKyouRequest } from '@/classes/api/req_res/update-mi-re-kyou-r
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { Kyou } from '@/classes/datas/kyou'
+import { get_kyou_content_text } from '@/classes/kyou-content-text'
+import { is_row_height } from '@/classes/kyou-row-height'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { Tag } from '@/classes/datas/tag'
 import type { Text } from '@/classes/datas/text'
 import type { Notification } from '@/classes/datas/notification'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
+
+/** 一覧の行で日時を1行だけ出すときの優先順。Miの並びに合わせる */
+const MI_RE_KYOU_TIME_PRIORITY = [
+    { key: 'estimate_start_time', label_key: 'MI_START_DATE_TIME_TITLE' },
+    { key: 'estimate_end_time', label_key: 'MI_END_DATE_TIME_TITLE' },
+    { key: 'limit_time', label_key: 'MI_LIMIT_DATE_TIME_TITLE' },
+] as const
 
 export function useMiReKyouView(options: {
     props: MiReKyouViewProps,
@@ -29,9 +38,28 @@ export function useMiReKyouView(options: {
     const is_mobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0
     const effective_draggable = computed(() => is_mobile ? false : (props.draggable ?? false))
 
+    // 一覧の行に収まる高さしか無いときは参照先の埋め込みをやめる
+    const is_compact = computed(() => is_row_height(props.height))
+
     // ── State refs ──
     const target_kyou: Ref<Kyou> = ref(new Kyou())
     const is_checked_mi: Ref<boolean> = ref(props.mirekyou.is_checked)
+    // 参照先の本文を1行にしたもの。取得できるまでは高さを確定させるために「取得中」を入れておく
+    const target_summary: Ref<string> = ref(i18n.global.t('LOADING_MESSAGE'))
+    // 取得済みのtarget_id。仮想スクロールで行を使い回すときに同じ参照先を引き直さないために持つ
+    let loaded_target_id = ''
+
+    // ── Computed ──
+    /** 一覧の行では日時を1行しか出せないので、先に来る1つだけを選ぶ */
+    const primary_time = computed(() => {
+        for (const candidate of MI_RE_KYOU_TIME_PRIORITY) {
+            const time = props.mirekyou[candidate.key]
+            if (time) {
+                return { label_key: candidate.label_key, time: time }
+            }
+        }
+        return null
+    })
 
     // ── Watchers ──
     watch(() => props.kyou, () => get_target_kyou())
@@ -42,21 +70,60 @@ export function useMiReKyouView(options: {
 
     // ── Business logic ──
     async function get_target_kyou() {
+        // 仮想スクロールの行使い回しでpropsだけ差し替わることがある。参照先が同じなら引き直さない
+        if (loaded_target_id === props.mirekyou.target_id) {
+            return
+        }
+        loaded_target_id = props.mirekyou.target_id
+        target_summary.value = i18n.global.t('LOADING_MESSAGE')
+
         const req = new GetKyouRequest()
         req.id = props.mirekyou.target_id
         const res = await props.gkill_api.get_kyou(req)
         if (res.errors && res.errors.length !== 0) {
-            emits('received_errors', res.errors)
+            fallback_summary()
+            // 一覧では行数ぶんスナックバーが出てしまうので、行では黙って諦める
+            if (!is_compact.value) {
+                emits('received_errors', res.errors)
+            }
             return
         }
         if (!res.kyou_histories || res.kyou_histories.length < 1) {
-            const error = new GkillError()
-            error.error_code = GkillErrorCodes.not_found_mi_rekyou_target
-            error.error_message = i18n.global.t('NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE')
-            emits('received_errors', [error])
+            fallback_summary()
+            if (!is_compact.value) {
+                const error = new GkillError()
+                error.error_code = GkillErrorCodes.not_found_mi_rekyou_target
+                error.error_message = i18n.global.t('NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE')
+                emits('received_errors', [error])
+            }
             return
         }
         target_kyou.value = res.kyou_histories[0]
+        await update_target_summary()
+    }
+
+    /** 参照先の種別データまで読んでから本文を1行に落とす */
+    async function update_target_summary() {
+        const errors = await target_kyou.value.load_typed_datas()
+        if (errors && errors.length !== 0) {
+            fallback_summary()
+            return
+        }
+        // 行から呼ぶときは、プラグインのContent HTMLを取りに行かせず、
+        // 参照先のさらに参照先も1段までしかたどらせない。件数ぶんリクエストが走るため
+        const { text } = await get_kyou_content_text(target_kyou.value, props.gkill_api, 0, {
+            allow_remote: !is_compact.value,
+            max_lazy_depth: is_compact.value ? 1 : undefined,
+        })
+        if (text.length === 0) {
+            fallback_summary()
+            return
+        }
+        target_summary.value = text
+    }
+
+    function fallback_summary() {
+        target_summary.value = i18n.global.t('MI_REKYOU_TITLE')
     }
 
     function show_context_menu(e: PointerEvent): void {
@@ -145,7 +212,12 @@ export function useMiReKyouView(options: {
         // State
         target_kyou,
         is_checked_mi,
+        target_summary,
         effective_draggable,
+
+        // Computed
+        is_compact,
+        primary_time,
 
         // Business logic
         show_context_menu,

@@ -967,7 +967,7 @@ func addTestRepositories(t *testing.T, gkillAPI *GkillServerAPI, tmpDir string) 
 		"kmemo": true, "kc": true, "lantana": true, "mi": true,
 		"nlog": true, "notification": true, "rekyou": true,
 		"mirekyou": true,
-		"tag": true, "text": true, "timeis": true, "urlog": true,
+		"tag":      true, "text": true, "timeis": true, "urlog": true,
 	}
 
 	repos := make([]*user_config.Repository, 0, len(types))
@@ -2231,17 +2231,17 @@ func findKyousForMiBoard(t *testing.T, tsURL, sessionID, board string) []reps.Ky
 		"session_id":  sessionID,
 		"locale_name": "en",
 		"query": map[string]any{
-			"for_mi":              true,
-			"use_mi_board_name":   true,
-			"mi_board_name":       board,
-			"mi_check_state":      "all",
-			"mi_sort_type":        "create_time",
-			"include_create_mi":   true,
-			"include_check_mi":    true,
-			"include_limit_mi":    true,
-			"include_start_mi":    true,
-			"include_end_mi":      true,
-			"only_latest_data":    true,
+			"for_mi":            true,
+			"use_mi_board_name": true,
+			"mi_board_name":     board,
+			"mi_check_state":    "all",
+			"mi_sort_type":      "create_time",
+			"include_create_mi": true,
+			"include_check_mi":  true,
+			"include_limit_mi":  true,
+			"include_start_mi":  true,
+			"include_end_mi":    true,
+			"only_latest_data":  true,
 		},
 	}
 	resp := postJSON(t, tsURL+"/api/get_kyous", body)
@@ -5778,7 +5778,7 @@ func TestHandleUpdateUserReps(t *testing.T) {
 		"kmemo": true, "kc": true, "lantana": true, "mi": true,
 		"nlog": true, "notification": true, "rekyou": true,
 		"mirekyou": true,
-		"tag": true, "text": true, "timeis": true, "urlog": true,
+		"tag":      true, "text": true, "timeis": true, "urlog": true,
 	}
 
 	updatedReps := make([]*user_config.Repository, 0, len(types))
@@ -6354,7 +6354,7 @@ func TestHandleGetKyous_WordsAndFilter(t *testing.T) {
 
 	// Add 3 kmemos: one with both words, one with neither
 	contents := []string{
-		"wand_alpha_test wand_beta_test content",  // has both
+		"wand_alpha_test wand_beta_test content",   // has both
 		"wand_alpha_test only content",             // has only alpha
 		"totally unrelated content no match words", // has neither
 	}
@@ -8146,7 +8146,7 @@ func TestHandleUpdateUserReps_DuplicateWriteDetected(t *testing.T) {
 		"kmemo": true, "kc": true, "lantana": true, "mi": true,
 		"nlog": true, "notification": true, "rekyou": true,
 		"mirekyou": true,
-		"tag": true, "text": true, "timeis": true, "urlog": true,
+		"tag":      true, "text": true, "timeis": true, "urlog": true,
 	}
 
 	updatedReps := make([]*user_config.Repository, 0)
@@ -8457,5 +8457,201 @@ func TestGetAccountFromSessionID_Expired(t *testing.T) {
 	}
 	if !foundExpired {
 		t.Errorf("expected ERR000373 (AccountSessionExpiredError), got errors: %+v", addResp.Errors)
+	}
+}
+
+// addTestKmemoAtTime はRelatedTime付きでKmemoを足します。
+// addTestKmemoはRelatedTimeを設定しないので、カレンダー条件付きの検索では拾えません。
+func addTestKmemoAtTime(t *testing.T, tsURL, sessionID, content string, relatedTime time.Time) string {
+	t.Helper()
+	kmemoID := GenerateNewID()
+	addReq := &req_res.AddKmemoRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		Kmemo: reps.Kmemo{
+			ID:          kmemoID,
+			Content:     content,
+			RelatedTime: relatedTime,
+			DataType:    "kmemo",
+			CreateTime:  relatedTime,
+			CreateApp:   "test",
+			CreateUser:  "admin",
+			UpdateTime:  relatedTime,
+			UpdateApp:   "test",
+			UpdateUser:  "admin",
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/add_kmemo", addReq)
+	defer resp.Body.Close()
+
+	var addResp req_res.AddKmemoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode add kmemo response: %v", err)
+	}
+	if len(addResp.Errors) > 0 {
+		t.Fatalf("add kmemo errors: %+v", addResp.Errors)
+	}
+	return kmemoID
+}
+
+// findKyouIDs は検索を実行してヒットしたIDの集合を返します。
+func findKyouIDs(t *testing.T, tsURL, sessionID string, query *find.FindQuery) map[string]bool {
+	t.Helper()
+	getReq := &req_res.GetKyousRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		Query:      query,
+	}
+	resp := postJSON(t, tsURL+"/api/get_kyous", getReq)
+	defer resp.Body.Close()
+
+	var getResp req_res.GetKyousResponse
+	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
+		t.Fatalf("decode get kyous response: %v", err)
+	}
+	if len(getResp.Errors) > 0 {
+		t.Fatalf("get kyous errors: %+v", getResp.Errors)
+	}
+
+	foundIDs := map[string]bool{}
+	for _, k := range getResp.Kyous {
+		foundIDs[k.ID] = true
+	}
+	return foundIDs
+}
+
+// ReKyouはMiReKyouをターゲットにできる。
+// ReKyouはタイトルを持たずワード検索をターゲットへ委譲するので、
+// 委譲先のリポジトリ群にMiReKyouが含まれていないとこのReKyouがワード検索から漏れる。
+func TestHandleGetKyous_WordFilter_ReKyouTargetingMiReKyou(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	now := time.Now().Truncate(time.Second)
+
+	// Kmemo → MiReKyou（タスク化）→ ReKyou（リポスト）と重ねる
+	kmemoID := addTestKmemoAtTime(t, tsURL, sessionID, "rekyou_over_mirekyou_word テスト", now)
+	mireKyouID := addTestMiReKyou(t, tsURL, sessionID, kmemoID, "inbox")
+
+	rekyouID := GenerateNewID()
+	addReKyouReq := &req_res.AddReKyouRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		ReKyou: reps.ReKyou{
+			ID:          rekyouID,
+			TargetID:    mireKyouID,
+			RelatedTime: now,
+			DataType:    "rekyou",
+			CreateTime:  now,
+			CreateApp:   "test",
+			CreateUser:  "admin",
+			UpdateTime:  now,
+			UpdateApp:   "test",
+			UpdateUser:  "admin",
+		},
+	}
+	respAdd := postJSON(t, tsURL+"/api/add_rekyou", addReKyouReq)
+	respAdd.Body.Close()
+
+	startDate := now.Add(-time.Hour)
+	endDate := now.Add(time.Hour)
+	foundIDs := findKyouIDs(t, tsURL, sessionID, &find.FindQuery{
+		UseWords:          true,
+		Words:             []string{"rekyou_over_mirekyou_word"},
+		UseCalendar:       true,
+		CalendarStartDate: &startDate,
+		CalendarEndDate:   &endDate,
+	})
+
+	// 検索そのものが機能していることをまず確かめる（空振りでpassしないように）
+	if !foundIDs[kmemoID] {
+		t.Fatalf("元のKmemo (ID=%s) すらワード検索に出ない。テストの前提が壊れている", kmemoID)
+	}
+	if !foundIDs[mireKyouID] {
+		t.Errorf("MiReKyou (ID=%s) 自体がワード検索に出ない", mireKyouID)
+	}
+	if !foundIDs[rekyouID] {
+		t.Errorf("MiReKyouをターゲットにしたReKyou (ID=%s) がワード検索に出ない", rekyouID)
+	}
+}
+
+// ターゲットが論理削除されたReKyouは検索結果に出さない。
+// LatestDataRepositoryAddressに行は残るのでIsDeletedを見る必要がある。
+func TestHandleGetKyous_ReKyouWithDeletedTarget(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	now := time.Now().Truncate(time.Second)
+	content := "rekyou_deleted_target_word テスト"
+	kmemoID := addTestKmemoAtTime(t, tsURL, sessionID, content, now)
+
+	rekyouID := GenerateNewID()
+	addReKyouReq := &req_res.AddReKyouRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		ReKyou: reps.ReKyou{
+			ID:          rekyouID,
+			TargetID:    kmemoID,
+			RelatedTime: now,
+			DataType:    "rekyou",
+			CreateTime:  now,
+			CreateApp:   "test",
+			CreateUser:  "admin",
+			UpdateTime:  now,
+			UpdateApp:   "test",
+			UpdateUser:  "admin",
+		},
+	}
+	respAdd := postJSON(t, tsURL+"/api/add_rekyou", addReKyouReq)
+	respAdd.Body.Close()
+
+	startDate := now.Add(-time.Hour)
+	endDate := now.Add(time.Hour)
+	query := func() *find.FindQuery {
+		return &find.FindQuery{
+			UseCalendar:       true,
+			CalendarStartDate: &startDate,
+			CalendarEndDate:   &endDate,
+		}
+	}
+
+	// 削除前は出ることを確かめる（空振りでpassしないように）
+	if !findKyouIDs(t, tsURL, sessionID, query())[rekyouID] {
+		t.Fatalf("削除前のReKyou (ID=%s) が検索に出ない。テストの前提が壊れている", rekyouID)
+	}
+
+	// ターゲットのKmemoを論理削除する
+	deleteReq := &req_res.UpdateKmemoRequest{
+		SessionID:        sessionID,
+		LocaleName:       "en",
+		WantResponseKyou: true,
+		Kmemo: reps.Kmemo{
+			IsDeleted:   true,
+			ID:          kmemoID,
+			Content:     content,
+			RelatedTime: now,
+			DataType:    "kmemo",
+			CreateTime:  now,
+			CreateApp:   "test",
+			CreateUser:  "admin",
+			UpdateTime:  now.Add(5 * time.Second),
+			UpdateApp:   "test",
+			UpdateUser:  "admin",
+		},
+	}
+	respDel := postJSON(t, tsURL+"/api/update_kmemo", deleteReq)
+	respDel.Body.Close()
+
+	if findKyouIDs(t, tsURL, sessionID, query())[rekyouID] {
+		t.Errorf("ターゲットが削除済みのReKyou (ID=%s) が検索結果に出ている", rekyouID)
 	}
 }

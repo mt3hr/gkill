@@ -456,7 +456,7 @@ func newMiReKyouTargetFilter(ctx context.Context, repsWithoutMiReKyou *GkillRepo
 	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
 	filter.useWordFilter = query.UseWords && (len(query.Words) > 0 || len(query.NotWords) > 0)
 	if filter.useWordFilter {
-		wordMatchKyousMap, err := repsWithoutMiReKyou.Reps.FindKyous(ctx, query)
+		wordMatchKyousMap, err := repsWithoutMiReKyou.Reps.FindKyousSequential(ctx, query)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous for word filter: %w", err)
 			return nil, err
