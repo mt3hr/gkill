@@ -1,10 +1,12 @@
 package gkill_server_api
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
 )
 
@@ -47,6 +49,25 @@ func addSharedKyouList(t *testing.T, tsURL, sessionID, device, findQueryJSON str
 		t.Fatalf("add share kyou list info errors: %+v", addResp.Errors)
 	}
 	return info
+}
+
+// addSecondAccount は共有の所有者検証テスト用に、adminとは別の一般アカウントを1つ作る。
+// prepareLoginReadyAccount は既存アカウントにパスワードを設定するだけなので、
+// その前段としてDAOへ直接登録する。
+func addSecondAccount(t *testing.T, gkillAPI *GkillServerAPI, userID string) {
+	t.Helper()
+
+	ok, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(context.Background(), &account.Account{
+		UserID:   userID,
+		IsAdmin:  false,
+		IsEnable: true,
+	})
+	if err != nil {
+		t.Fatalf("AddAccount(%s) failed: %v", userID, err)
+	}
+	if !ok {
+		t.Fatalf("AddAccount(%s) returned false", userID)
+	}
 }
 
 // getSharedKyous は共有エンドポイントを「セッションを一切送らずに」叩く。
@@ -179,5 +200,176 @@ func TestHandleGetSharedKyous_RevokedShareIsNotAccessible(t *testing.T) {
 	}
 	if len(after.Kyous) != 0 {
 		t.Errorf("共有取り消し後にKyouが %d 件返っている", len(after.Kyous))
+	}
+}
+
+// 以下3本は共有情報の「所有者」の扱いを固定する。
+// 共有の閲覧側 /api/get_shared_kyous は認証不要で、保存されたレコードの user_id を
+// そのまま使って対象ユーザーのリポジトリを開く。つまり誰の共有として保存されるかが
+// そのままアクセス範囲になるため、作成・更新・削除の3経路すべてで
+// 「セッションの持ち主以外の共有には触れない」ことを担保する必要がある。
+
+// TestHandleAddShareKyouListInfo_IgnoresRequestUserID は、リクエスト本文で
+// 他人のuser_idを指定しても、その人のライフログを共有できないことを確認する。
+func TestHandleAddShareKyouListInfo_IgnoresRequestUserID(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	adminSession := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	// adminのライフログを1件用意する
+	secretID := addTestKmemo(t, tsURL, adminSession, "himitsu の記録")
+
+	// 別の一般ユーザーでログインし、user_id に admin を詐称した共有を作る
+	addSecondAccount(t, gkillAPI, "attacker")
+	attackerSession := loginAndGetSession(t, tsURL, gkillAPI, "attacker", passwordHash)
+
+	shareID := GenerateNewID()
+	addReq := &req_res.AddShareKyouListInfoRequest{
+		SessionID:  attackerSession,
+		LocaleName: "en",
+		ShareKyouListInfo: &req_res.ShareKyouListInfo{
+			ShareID:          shareID,
+			UserID:           "admin", // ← 詐称。セッションはattacker
+			Device:           device,
+			ShareTitle:       "詐称共有",
+			FindQueryJSON:    share_kyou_info.JSONString(`{}`),
+			ViewType:         "kyou",
+			IsShareWithTags:  true,
+			IsShareWithTexts: true,
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/add_share_kyou_list_info", addReq)
+	defer resp.Body.Close()
+
+	var addResp req_res.AddShareKyouListInfoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode add share kyou list info response: %v", err)
+	}
+	if len(addResp.Errors) > 0 {
+		t.Fatalf("add share kyou list info errors: %+v", addResp.Errors)
+	}
+
+	// 保存された所有者がセッション側になっていること
+	stored, err := gkillAPI.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(context.Background(), shareID)
+	if err != nil {
+		t.Fatalf("GetKyouShareInfo failed: %v", err)
+	}
+	if stored == nil {
+		t.Fatal("共有情報が保存されていない")
+	}
+	if stored.UserID != "attacker" {
+		t.Errorf("保存された共有の UserID = %q, want %q（リクエスト本文のuser_idが採用されている）", stored.UserID, "attacker")
+	}
+
+	// 共有ページから他ユーザーのKyouが取得できないこと。
+	// attackerにリポジトリが無くエラーになる場合もあるので、漏洩の有無だけを見る。
+	getResp := getSharedKyous(t, tsURL, shareID)
+	for _, k := range getResp.Kyous {
+		if k.ID == secretID {
+			t.Fatal("他ユーザーのKyouが共有ページから取得できてしまっている")
+		}
+	}
+}
+
+// TestHandleUpdateShareKyouListInfo_OtherUsersShareIsRejected は、共有IDを知っているだけの
+// 別ユーザーが共有条件を書き換えられないことを確認する。
+func TestHandleUpdateShareKyouListInfo_OtherUsersShareIsRejected(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	adminSession := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	secretID := addTestKmemo(t, tsURL, adminSession, "himitsu の記録")
+	addTestKmemo(t, tsURL, adminSession, "kyoyusuruwadai の記録")
+
+	// admin が「kyoyusuruwadai を含むもの」だけを共有する
+	shareInfo := addSharedKyouList(t, tsURL, adminSession, device,
+		`{"use_words":true,"words":["kyoyusuruwadai"],"words_and":true}`)
+
+	// 別ユーザーが同じ共有IDに対して、全件が返る条件へ広げようとする
+	addSecondAccount(t, gkillAPI, "attacker")
+	attackerSession := loginAndGetSession(t, tsURL, gkillAPI, "attacker", passwordHash)
+
+	widened := *shareInfo
+	widened.FindQueryJSON = share_kyou_info.JSONString(`{}`)
+	updateReq := &req_res.UpdateShareKyouListInfoRequest{
+		SessionID:         attackerSession,
+		LocaleName:        "en",
+		ShareKyouListInfo: &widened,
+	}
+	resp := postJSON(t, tsURL+"/api/update_share_kyou_list_info", updateReq)
+	defer resp.Body.Close()
+
+	var updateResp req_res.UpdateShareKyouListInfoResponse
+	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
+		t.Fatalf("decode update share kyou list info response: %v", err)
+	}
+	if len(updateResp.Errors) == 0 {
+		t.Error("他ユーザーの共有を更新できてしまっている")
+	}
+
+	// 共有条件が広がっていないこと
+	getResp := getSharedKyous(t, tsURL, shareInfo.ShareID)
+	for _, k := range getResp.Kyous {
+		if k.ID == secretID {
+			t.Fatal("共有条件が第三者に書き換えられ、共有対象外のKyouが漏れている")
+		}
+	}
+}
+
+// TestHandleDeleteShareKyouListInfos_OtherUsersShareIsRejected は、共有IDを知っているだけの
+// 別ユーザーが共有を取り消せないことを確認する。
+func TestHandleDeleteShareKyouListInfos_OtherUsersShareIsRejected(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	adminSession := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	addTestKmemo(t, tsURL, adminSession, "kyoyusuruwadai の記録")
+	shareInfo := addSharedKyouList(t, tsURL, adminSession, device,
+		`{"use_words":true,"words":["kyoyusuruwadai"],"words_and":true}`)
+
+	addSecondAccount(t, gkillAPI, "attacker")
+	attackerSession := loginAndGetSession(t, tsURL, gkillAPI, "attacker", passwordHash)
+
+	deleteReq := &req_res.DeleteShareKyouListInfoRequest{
+		SessionID:         attackerSession,
+		LocaleName:        "en",
+		ShareKyouListInfo: shareInfo,
+	}
+	resp := postJSON(t, tsURL+"/api/delete_share_kyou_list_infos", deleteReq)
+	defer resp.Body.Close()
+
+	var deleteResp req_res.DeleteShareKyouListInfosResponse
+	if err := json.NewDecoder(resp.Body).Decode(&deleteResp); err != nil {
+		t.Fatalf("decode delete share kyou list infos response: %v", err)
+	}
+	if len(deleteResp.Errors) == 0 {
+		t.Error("他ユーザーの共有を取り消せてしまっている")
+	}
+
+	// 共有が残っていること（所有者本人からは引き続き見える）
+	after := getSharedKyous(t, tsURL, shareInfo.ShareID)
+	if len(after.Errors) > 0 {
+		t.Errorf("第三者の削除要求で共有が消えている: %+v", after.Errors)
 	}
 }
