@@ -81,7 +81,7 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 		})
 		return nil, gkillErrors, nil
 	}
-	repositories.LatestDataRepositoryAddresses[notification.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              notification.IsDeleted,
 		TargetID:                               notification.ID,
 		TargetIDInData:                         &notification.TargetID,
@@ -89,8 +89,9 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(notification.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[notification.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -167,7 +168,7 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		})
 		return nil, gkillErrors, nil
 	}
-	repositories.LatestDataRepositoryAddresses[notification.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              notification.IsDeleted,
 		TargetID:                               notification.ID,
 		TargetIDInData:                         &notification.TargetID,
@@ -175,8 +176,9 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(notification.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[notification.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

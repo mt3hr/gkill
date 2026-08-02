@@ -80,7 +80,7 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 		})
 		return gkillErrors, nil
 	}
-	repositories.LatestDataRepositoryAddresses[rekyou.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              rekyou.IsDeleted,
 		TargetID:                               rekyou.ID,
 		TargetIDInData:                         &rekyou.TargetID,
@@ -88,8 +88,9 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(rekyou.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[rekyou.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -154,7 +155,7 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 		})
 		return gkillErrors, nil
 	}
-	repositories.LatestDataRepositoryAddresses[rekyou.ID] = gkill_cache.LatestDataRepositoryAddress{
+	latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              rekyou.IsDeleted,
 		TargetID:                               rekyou.ID,
 		TargetIDInData:                         &rekyou.TargetID,
@@ -162,8 +163,9 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
+	repositories.SetLatestDataRepositoryAddress(rekyou.ID, latestDataRepositoryAddress)
 
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, repositories.LatestDataRepositoryAddresses[rekyou.ID])
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
