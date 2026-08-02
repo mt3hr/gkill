@@ -81,11 +81,14 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 		return
 	}
 
+	// 共有の所有者はリクエスト本文ではなくセッションから決める。
+	// ここでrequest側の値を信じると、他人のuser_idを指定した共有を作って
+	// 認証不要の /api/get_shared_kyous でその人のライフログを読み出せてしまう。
 	shareKyouInfo := &share_kyou_info.ShareKyouInfo{
 		ID:                   GenerateNewID(),
 		ShareID:              request.ShareKyouListInfo.ShareID,
-		UserID:               request.ShareKyouListInfo.UserID,
-		Device:               request.ShareKyouListInfo.Device,
+		UserID:               userID,
+		Device:               device,
 		ShareTitle:           request.ShareKyouListInfo.ShareTitle,
 		FindQueryJSON:        request.ShareKyouListInfo.FindQueryJSON,
 		ViewType:             request.ShareKyouListInfo.ViewType,

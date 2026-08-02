@@ -57,6 +57,31 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 	userID := auth.UserID
 	device := auth.Device
 
+	// 他人の共有を消せないよう所有者を確認する。DAOのDELETEはshare_idだけを条件にするので、
+	// ここで弾かないと共有IDを知っているだけの第三者が取り消せてしまう。
+	// 存在しない場合と所有者違いは区別せず、共有IDの存在有無が漏れないようにする。
+	existShareKyouListInfo, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(r.Context(), request.ShareKyouListInfo.ShareID)
+	if err != nil {
+		err = fmt.Errorf("error at get ShareKyouListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareKyouListInfo.ShareID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetShareKyouListInfoError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_DELETE_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if existShareKyouListInfo == nil || existShareKyouListInfo.UserID != userID {
+		err = fmt.Errorf("not exist ShareKyouListInfo id = %s", request.ShareKyouListInfo.ShareID)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillError := &message.GkillError{
+			ErrorCode:    message.NotExistShareKyouListInfoError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_DELETE_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	ok, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.DeleteKyouShareInfo(r.Context(), request.ShareKyouListInfo.ShareID)
 	if !ok || err != nil {
 		if err != nil {

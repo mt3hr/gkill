@@ -70,7 +70,10 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	if existShareKyouListInfo == nil {
+	// 他人の共有を書き換えられないよう、存在しない場合と所有者が違う場合を同じ扱いにする。
+	// 区別して返すと共有IDの存在有無を問い合わせられる（オラクルになる）ため、
+	// エラーコードもメッセージも意図的に同一にしている。
+	if existShareKyouListInfo == nil || existShareKyouListInfo.UserID != userID {
 		err = fmt.Errorf("not exist ShareKyouListInfo id = %s", request.ShareKyouListInfo.ShareID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
@@ -81,11 +84,12 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		return
 	}
 
+	// 所有者はセッション由来の値で固定する（add側と同じ理由）
 	shareKyouInfo := &share_kyou_info.ShareKyouInfo{
 		ID:                   GenerateNewID(),
 		ShareID:              request.ShareKyouListInfo.ShareID,
-		UserID:               request.ShareKyouListInfo.UserID,
-		Device:               request.ShareKyouListInfo.Device,
+		UserID:               userID,
+		Device:               device,
 		ShareTitle:           request.ShareKyouListInfo.ShareTitle,
 		FindQueryJSON:        request.ShareKyouListInfo.FindQueryJSON,
 		ViewType:             request.ShareKyouListInfo.ViewType,
