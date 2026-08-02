@@ -44,21 +44,46 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 
 プラグインディレクトリ直下に配置するメタデータファイル。
 
+実例（`src/plugins/gkill_plugin_claudeai/manifest.json`）:
+
 ```json
 {
-  "name": "Claude.ai",
+  "protocol_version": "1",
+  "name": "gkill_plugin_claudeai",
+  "version": "1.0.0",
+  "description": "Claude.ai のチャット履歴をgkillタイムラインに表示する。conversations.json をプラグインフォルダに置いて使用。",
+  "data_type": "claude_conversation",
   "rep_name": "Claude.ai",
   "executable": "gkill_plugin_claudeai",
-  "protocol_version": "1"
+  "min_gkill_version": "1.1.3"
 }
 ```
 
+定義は `src/server/gkill/api/gkill_plugin/plugin_manifest.go` の `PluginManifest` 構造体（8フィールド）。
+
 | フィールド | 説明 |
 |---|---|
-| `name` | プラグインの識別名 |
-| `rep_name` | gkill 上のリポジトリ名。`GetRepName()` が返す値 |
-| `executable` | 実行ファイル名（`.exe` を除いたベース名。OS に応じて `.exe` を自動付与） |
-| `protocol_version` | プロトコルバージョン（`--gkill-protocol-version` で渡される） |
+| `protocol_version` | プロトコルバージョン。現在は `"1"`（`--gkill-protocol-version` で渡される） |
+| `name` | プラグインの識別名。**ディレクトリ名と一致させること**（`rep_name` とは別物） |
+| `version` | プラグインのバージョン（例: `"1.0.0"`） |
+| `description` | プラグインの説明文 |
+| `data_type` | このプラグインが生成する Kyou の `data_type` 値。既存の `data_type`（kmemo, kc 等）と衝突しない一意な名前にする |
+| `rep_name` | タイムライン上でのリポジトリ表示名。`GetRepName()` が返す値 |
+| `executable` | 実行ファイル名（拡張子なし、OS に応じて `.exe` 等を自動付与） |
+| `min_gkill_version` | このプラグインが動作する最低 gkill バージョン |
+
+### manifest.json / config.json の自動生成
+
+同梱プラグインは manifest.json を `//go:embed` でバイナリに埋め込んでおり、次のフラグで標準出力に書き出せる。
+
+| フラグ | 出力 |
+|---|---|
+| `--gkill-print-manifest` | 埋め込み済みの `manifest.json` |
+| `--gkill-print-config` | 既定の `config.json` |
+
+また初回起動時に `sdk.EnsureConfig`（`plugin/sdk/config.go:37-54`）が
+`Handler.DefaultConfig` の内容で manifest.json の隣に `config.json` を作成する。
+**既存ファイルは決して上書きしない**（既に存在する場合・既定値が nil の場合・プラグインディレクトリが空文字の場合は何もしない）。
 
 ---
 
@@ -89,7 +114,21 @@ cmd := exec.CommandContext(context.Background(),
 親 ← stdout: {"id":"uuid","kyous":[...]}\n
 ```
 
-`bufio.Scanner` のバッファは **32MB** に設定してあり、大きな HTML レスポンスに対応する。
+`bufio.Scanner` のバッファサイズは**親子で異なる**。
+
+| 側 | 上限 | 実装 |
+|---|---|---|
+| 親（gkill 本体） | **32MB** | `dao/reps/plugin_repository_impl.go:94` |
+| 子（プラグイン SDK） | **1MB** | `plugin/sdk/sdk.go:83-84` |
+
+親側が 32MB なのは大きな HTML レスポンスで `bufio.Scanner: token too long` を防ぐため。
+リクエスト JSON は 1MB を超えないため SDK 側は既定のままになっている。
+
+### タイムアウト
+
+`callCommand`（`plugin_repository_impl.go:172-176`）は、呼び出し側の `context` に期限が無い場合
+**既定 30 秒**のデッドラインを注入する。タイムアウトまたはキャンセル時はサブプロセスを
+`Process.Kill()` で停止し（`:144-151`）、`started=false` に落とす。
 
 ### コマンド一覧
 
@@ -97,6 +136,7 @@ cmd := exec.CommandContext(context.Background(),
 |---|---|
 | `find_kyous` | 検索クエリに合致する Kyou 一覧を返す |
 | `get_kyou` | 指定 ID の Kyou 1 件を返す |
+| `get_rep_name` | gkill 上のリポジトリ表示名を返す（`sdk/sdk.go:106-108`） |
 | `get_content_html` | 指定 ID の Kyou のコンテンツ HTML を返す |
 | `get_config_html` | プラグイン設定画面の HTML を返す |
 | `post_config` | 設定フォームの送信データを受け取る |
@@ -119,8 +159,14 @@ cmd := exec.CommandContext(context.Background(),
 `config.json` が無ければ既定値で生成する。**既存ファイルは決して上書きしない**。
 `DefaultConfig` が nil（`gkill_example` など）なら何も生成しない。
 
-gkill 側の設定ダイアログ（`plugin-config-dialog.vue`）は表示のみで保存導線が無いため、
+**gkill のフロントエンドから設定を編集する導線は現時点で存在しない。**
+`plugin-config-dialog.vue` は実装されているが、どの `.vue` / `.ts` からも import されておらず
+（孤児コンポーネント）、画面上に到達する経路が無い。設定フォームの送信処理も未実装で、
+`gkill-api.ts` の `get_plugin_list()` / `post_plugin_config()` は定義だけあって呼び出し元が無い。
 実際の設定変更は生成された `config.json` を手で編集して行う。
+
+`/api/get_plugin_list` と `/api/get_plugin_content_html` の唯一の実利用者は MCP サーバの
+`gkill_get_plugin_list` / `gkill_get_plugin_content` ツール（`src/mcp/lib/plugin-tools.mjs`）。
 
 ---
 
@@ -158,8 +204,9 @@ func (p *pluginRepositoryImpl) callCommand(_ context.Context, req gkill_plugin.P
 |---|---|---|
 | Mutex の位置 | `pluginRepositoryImpl` struct | プロセス再起動後も同じ mutex を使い続けられる |
 | プロセス起動 | `context.Background()` を使用 | HTTP リクエストキャンセルでプロセスが終了するのを防ぐ |
-| クラッシュ復旧 | 失敗時に `started=false` → `ensureStarted()` → 再送信を1回リトライ | プロセスが予期せず終了した場合の自動復旧 |
-| Scanner バッファ | 32MB | 大きなHTMLレスポンスで `bufio.Scanner: token too long` を防ぐ |
+| 呼び出しタイムアウト | 期限が無ければ既定 30 秒を注入し、超過時は `Process.Kill()` | 応答しないプラグインが gkill 全体を止めるのを防ぐ |
+| クラッシュ復旧 | 失敗時に `started=false` → `ensureStarted()` → 再送信を1回リトライ。ただし **ctx のタイムアウト/キャンセル時はリトライしない**（`:187-190`） | プロセスが予期せず終了した場合の自動復旧。タイムアウトの再試行で待ち時間が倍増するのを避ける |
+| Scanner バッファ | 親 32MB / SDK 1MB | 大きなHTMLレスポンスで `bufio.Scanner: token too long` を防ぐ（親側のみ拡張） |
 
 実装: `src/server/gkill/dao/reps/plugin_repository_impl.go`
 
@@ -186,37 +233,96 @@ gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.Init
 
 ### テーブル構成
 
+**スキーマは ChatGPT / Claude.ai と Claude Code で別物**なので分けて示す。
+
+#### ChatGPT / Claude.ai（`gkill_plugin_{chatgpt,claudeai}/cache.go`）
+
+**cache_meta（キャッシュ管理テーブル）**
+
+| カラム | 型 | 説明 |
+|---|---|---|
+| `key` | TEXT PRIMARY KEY | メタ情報のキー（ソース署名の保存に使う） |
+| `value` | TEXT NOT NULL | 値 |
+
 **conv_cache（会話テーブル）**
 
 | カラム | 型 | 説明 |
 |---|---|---|
 | `conv_id` | TEXT PRIMARY KEY | 会話 ID |
-| `title` | TEXT | 会話タイトル |
-| `file_path` | TEXT | ソースファイルパス |
-| `mtime` | INTEGER | ソースファイルの最終更新時刻（Unix秒） |
+| `title` | TEXT NOT NULL | 会話タイトル |
+| `create_time_unix` | INTEGER NOT NULL | 作成時刻（Unix秒） |
 
 **msg_cache（メッセージテーブル）**
 
 | カラム | 型 | 説明 | ChatGPT | Claude.ai |
 |---|---|---|---|---|
 | `msg_id` | TEXT PRIMARY KEY | メッセージ ID | ○ | ○ |
-| `conv_id` | TEXT | 所属会話 ID | ○ | ○ |
-| `sender` | TEXT | 送信者（`user`/`assistant` or `human`/`assistant`） | ○ | ○ |
-| `text` | TEXT | メッセージテキスト | ○ | ○ |
-| `related_time_unix` | INTEGER | 関連時刻（Unix秒） | ○ | ○ |
-| `create_time_unix` | INTEGER | 作成時刻（Unix秒） | ○ | ○ |
+| `conv_id` | TEXT NOT NULL | 所属会話 ID | ○ | ○ |
+| `sender` | TEXT NOT NULL | 送信者（`user`/`assistant` or `human`/`assistant`） | ○ | ○ |
+| `text` | TEXT NOT NULL | メッセージテキスト | ○ | ○ |
+| `related_time_unix` | INTEGER NOT NULL | 関連時刻（Unix秒） | ○ | ○ |
+| `create_time_unix` | INTEGER NOT NULL | 作成時刻（Unix秒） | ○ | ○ |
 | `update_time_unix` | INTEGER | 更新時刻（Unix秒） | — | ○ |
+
+インデックス: `idx_msg_conv(conv_id)`, `idx_msg_time(related_time_unix)`
+
+#### Claude Code（`gkill_plugin_claudecode/cache.go`）
+
+`cache_meta` に加えて以下の2テーブルを持つ。`schema_version` によるマイグレーション付き。
+
+**file_cache（取り込み済みファイル）**
+
+| カラム | 型 | 説明 |
+|---|---|---|
+| `path` | TEXT PRIMARY KEY | ソースファイルパス |
+| `mtime_unix` | INTEGER NOT NULL | 最終更新時刻（Unix秒） |
+| `size` | INTEGER NOT NULL | ファイルサイズ |
+| `kind` | TEXT NOT NULL | ファイル種別 |
+| `session_id` | TEXT NOT NULL | 所属セッション ID |
+
+**message_cache（メッセージ）**
+
+| カラム | 型 | 説明 |
+|---|---|---|
+| `message_id` | TEXT PRIMARY KEY | メッセージ ID |
+| `role` | TEXT NOT NULL | `human` / `assistant` 等 |
+| `source_path` | TEXT NOT NULL | 取り込み元ファイル |
+| `session_id` | TEXT NOT NULL | セッション ID |
+| `session_title` | TEXT NOT NULL | セッションタイトル |
+| `project` | TEXT NOT NULL | プロジェクト名 |
+| `branch` | TEXT NOT NULL | git ブランチ名 |
+| `message_text` | TEXT NOT NULL | 表示用テキスト |
+| `search_text` | TEXT NOT NULL | 検索用テキスト |
+| `body_json` | TEXT NOT NULL | 元データの JSON |
+| `related_time_unix` | INTEGER NOT NULL | 関連時刻（Unix秒） |
+| `update_time_unix` | INTEGER NOT NULL | 更新時刻（Unix秒） |
+
+インデックス: `idx_msg_time(related_time_unix)`, `idx_msg_session(session_id)`, `idx_msg_src(source_path)`
 
 ### キャッシュ無効化
 
-ソースファイルの `mtime` が変化したとき、その会話に属するレコードを再構築する。
+会話単位の差分更新ではない。`cache_meta` に保存したソースの**署名**を現在のソース状態と突き合わせ
+（`needsRebuild`）、変化していれば `rebuild()` が**キャッシュ全体を作り直す**。
 
 ### 主要メソッド
 
-| メソッド | 説明 |
-|---|---|
-| `GetMessages(pluginDir)` | 全メッセージ一覧取得（`FindKyous` で使用） |
-| `GetMsgByID(pluginDir, msgID)` | `msg_cache LEFT JOIN conv_cache WHERE msg_id = ?` で1件取得 |
+| プラグイン | メソッド | 説明 |
+|---|---|---|
+| ChatGPT / Claude.ai | `GetMessages(pluginDir, src)` | 全メッセージ一覧取得（`FindKyous` で使用） |
+| ChatGPT / Claude.ai | `GetMsgByID(pluginDir, src, msgID)` | `msg_cache LEFT JOIN conv_cache WHERE msg_id = ?` で1件取得 |
+| ChatGPT / Claude.ai | `GetConvForMsg(...)` | メッセージが属する会話を取得 |
+| Claude Code | `GetMessages(pluginDir, src)` / `GetMessage(pluginDir, src, messageID)` / `GetStats(...)` | Claude Code は `GetMsgByID` ではなく `GetMessage` |
+
+いずれも第2引数に展開済みソース（`expandedSource`）を取る。
+
+### source_dirs 設定
+
+3プラグインとも `config.json` の `source_dirs` キーで取り込み元フォルダを指定する
+（Claude Code の既定は `["~/.claude/projects"]`）。
+
+- `*` `**` `?` `[]` のグロブ、`~`、環境変数を展開する
+- **検索のたびに読み直される**（起動時に一度読むだけではないので、gkill の再起動なしに反映される）
+- 既定の `config.json` には `_comment` と `_example_source_dirs` の説明キーも書き出される
 
 ---
 
@@ -226,10 +332,21 @@ gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.Init
 
 ### 処理フロー
 
+ChatGPT / Claude.ai:
+
 ```
 GetContentHTML(kyouID)
-  → globalCache.GetMsgByID(pluginDir, kyouID)  // 1件のみ取得
-  → renderSingleMsgHTML(convTitle, msg)          // 単一メッセージHTML生成
+  → globalCache.GetMsgByID(pluginDir, src, kyouID)  // 1件のみ取得
+  → renderSingleMsgHTML(convTitle, msg)             // 単一メッセージHTML生成
+```
+
+Claude Code:
+
+```
+GetContentHTML(kyouID)
+  → globalCache.GetMessage(pluginDir, src, messageID)
+  → renderMessageHTML(t)        // 見つかった場合
+  → renderNotFoundHTML()        // 見つからない場合
 ```
 
 ### HTML 構造
@@ -246,9 +363,16 @@ GetContentHTML(kyouID)
 |---|---|---|---|
 | `--bg` | `#ffffff` | `#212121` | 背景色 |
 | `--text` | `#333333` | `#e0e0e0` | テキスト色 |
-| `--msg-user-bg` | `#dbeafe` | `#1a3557` | ユーザメッセージ背景 |
+| `--msg-user-bg` | `#dbeafe` | `#1a3557` | ユーザメッセージ背景（**ChatGPT**。Claude.ai は `--msg-human-bg`） |
 | `--msg-assistant-bg` | `#f3f4f6` | `#2d2d2d` | アシスタントメッセージ背景 |
 | `--scrollbar-thumb` | `#2672ed` | `#2672ed` | スクロールバー（gkill primary色） |
+| `--scrollbar-track` | — | — | スクロールバーの溝 |
+| `--sender-color` | — | — | 送信者ラベルの文字色 |
+| `--ts-color` | — | — | タイムスタンプの文字色 |
+| `--title-color` | — | — | 会話タイトルの文字色 |
+
+> ユーザ側メッセージの背景変数名はプラグインで異なる（ChatGPT は `--msg-user-bg`、
+> Claude.ai は `--msg-human-bg`）。送信者ラベルの語彙（`user` / `human`）に合わせてある。
 
 ---
 
@@ -375,6 +499,10 @@ GitCommitLogContextMenu と同一の項目を提供する。
 | gkill_plugin_chatgpt | ChatGPT | `chatgpt_conversation` | `src/plugins/gkill_plugin_chatgpt/` |
 | gkill_plugin_claudeai | Claude.ai | `claude_conversation` | `src/plugins/gkill_plugin_claudeai/` |
 | gkill_plugin_claudecode | ClaudeCode | `claude_code_turn` | `src/plugins/gkill_plugin_claudecode/` |
+| gkill_example | （サンプル） | `example_kyou` | `src/plugins/examples/gkill_example/` |
+
+`gkill_example` は固定の Kyou を返すだけのサンプル実装で、`DefaultConfig` を持たない
+（＝ `config.json` を生成しない）。上3つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
 
 ### ビルド手順
 

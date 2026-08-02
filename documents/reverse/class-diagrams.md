@@ -140,10 +140,11 @@ classDiagram
         +string TargetID
         +bool IsChecked
         +string BoardName
-        +time.Time LimitTime
-        +time.Time EstimateStartTime
-        +time.Time EstimateEndTime
+        +*time.Time LimitTime
+        +*time.Time EstimateStartTime
+        +*time.Time EstimateEndTime
         %% タイトルは持たない。表示は対象Kyouを描画する
+        %% RelatedTime も持たない。射影ごとに mi_re_kyou_sql.go で導出する
         %% 共通メタフィールド省略
     }
 
@@ -175,7 +176,7 @@ classDiagram
 | `IsDeleted` | bool | 論理削除フラグ |
 | `ID` | string | UUID（主キーではない） |
 | `RepName` | string | 所属リポジトリ名 |
-| `RelatedTime` | time.Time | 関連日時（時系列表示用）。Mi/TimeIs/NotificationではDBカラムとして存在せず動的導出 |
+| `RelatedTime` | time.Time | 関連日時（時系列表示用）。Mi/TimeIs/Notification/MiReKyou ではDBカラムとして存在せず動的導出（MiReKyou は `mi_re_kyou_sql.go` の射影ごとに導出） |
 | `CreateTime` | time.Time | 作成日時 |
 | `CreateApp` | string | 作成アプリケーション名 |
 | `CreateDevice` | string | 作成デバイス名 |
@@ -290,10 +291,12 @@ classDiagram
 | IDFKyou | IDFKyouRepository | IDFKyouRepositorySqlite3Impl | IDFKyouRepositoryCachedSqlite3Impl | IDFKyouTempRepository |
 | GitCommitLog | GitCommitLogRepository | GitCommitLogRepositoryLocalDirImpl | GitCommitLogRepositoryCachedSqlite3Impl | — |
 | GPSLog | GPSLogRepository | GPSLogRepositoryGpxDirImpl | — | — |
+| Plugin | PluginRepository | PluginRepositoryImpl（外部プロセス） | — | — |
 
-> **注意:** GitCommitLog と GPSLog は他のデータ型と異なるパターンです。
+> **注意:** GitCommitLog / GPSLog / Plugin は他のデータ型と異なるパターンです。
 > - **GitCommitLog**: SQLite3ではなくローカルGitリポジトリから直接読み取る実装（`LocalDirImpl`）。キャッシュ層あり、Tempリポジトリなし（KFTL経由の追加がないため）。
 > - **GPSLog**: GPXファイルから直接読み取る実装（`GpxDirImpl`）。キャッシュ層・Tempリポジトリともになし（読み取り専用）。
+> - **Plugin**: 4層パターンを持ちません。外部プロセスと stdio の JSON でやりとりする `PluginRepositoryImpl`（`dao/reps/plugin_repository_impl.go`）のみで構成されます。`RepType` の switch 文（`gkill_dao_manager.go`）では生成されず、`PluginManager.DiscoverPlugins()` が `$GKILL_HOME/plugins/{userID}/` を走査して登録します。詳細は [plugin-system.md](plugin-system.md) を参照。
 
 ## 3. GkillRepositories 集約構造
 
@@ -319,6 +322,7 @@ classDiagram
         +MiReKyouRepositories MiReKyouReps
         +GitCommitLogRepositories GitCommitLogReps
         +GPSLogRepositories GPSLogReps
+        +Array~PluginRepository~ PluginReps
         +TagRepository WriteTagRep
         +TextRepository WriteTextRep
         +NotificationRepository WriteNotificationRep
@@ -362,7 +366,7 @@ classDiagram
         +HandleAddKmemo(w, r)
         +HandleUpdateKmemo(w, r)
         +HandleGetKyous(w, r)
-        %% 残り82エンドポイント省略（合計85登録）
+        %% 残り84エンドポイント省略（合計88登録）
     }
 
     GkillServerAPI --> GkillDAOManager : uses
@@ -371,7 +375,7 @@ classDiagram
     GkillRepositories *-- KmemoRepositories : Read用
     GkillRepositories *-- KmemoRepository : Write用 (WriteKmemoRep)
 
-    note for GkillRepositories "XxxReps: 読み取り用（複数リポジトリ集約）\nWriteXxxRep: 書き込み用（単一リポジトリ）"
+    note for GkillRepositories "XxxReps: 読み取り用（複数リポジトリ集約）\nWriteXxxRep: 書き込み用（単一リポジトリ）\nPluginReps: プラグイン（Reps にも含まれる）"
     note for TempReps "KFTL パース時のトランザクション用\nCommitTX で本リポジトリに反映"
 ```
 
@@ -531,8 +535,35 @@ classDiagram
         +GitCommitLog? typed_git_commit_log
         +ReKyou? typed_rekyou
         +MiReKyou? typed_mirekyou
+        +PluginKyouRef? typed_plugin
+        +boolean is_typed_data_loaded
         +load_attached_histories(query?) Promise
         +load_all(query?) Promise
+    }
+
+    class MetaInfoBase {
+        <<abstract>>
+        +boolean is_deleted
+        +string id
+        +string target_id
+        +Date related_time
+        +Date create_time
+        +string create_app
+        +string create_device
+        +string create_user
+        +Date update_time
+        +string update_app
+        +string update_device
+        +string update_user
+        +load_attached_histories() Promise
+        +load_attached_datas() Promise
+        +clear_attached_histories() Promise
+        +clear_attached_datas() Promise
+        +clone() MetaInfoBase
+    }
+
+    class PluginKyouRef {
+        +string rep_name
     }
 
     class Kmemo {
@@ -600,9 +631,11 @@ classDiagram
         +string target_id
         +boolean is_checked
         +string board_name
-        +Date limit_time
-        +Date estimate_start_time
-        +Date estimate_end_time
+        +Date? limit_time
+        +Date? estimate_start_time
+        +Date? estimate_end_time
+        +Kyou? attached_kyou
+        +Array~MiReKyou~ attached_histories
     }
 
     class IDFKyou {
@@ -619,7 +652,7 @@ classDiagram
         +add_kmemo(req) Promise~AddKmemoResponse~
         +update_kmemo(req) Promise~UpdateKmemoResponse~
         +get_kyous(req) Promise~GetKyousResponse~
-        %% 残り80+メソッド省略（合計84）
+        %% 残りメソッド省略（async メソッドは合計155）
     }
 
     InfoBase <|-- Kyou : extends
@@ -630,11 +663,15 @@ classDiagram
     InfoBase <|-- Nlog : extends
     InfoBase <|-- URLog : extends
     InfoBase <|-- TimeIs : extends
-    InfoBase <|-- Tag : extends
-    InfoBase <|-- Text : extends
     InfoBase <|-- ReKyou : extends
     InfoBase <|-- MiReKyou : extends
     InfoBase <|-- IDFKyou : extends
+    InfoBase <|-- GitCommitLog : extends
+
+    InfoBase <|-- MetaInfoBase : extends
+    MetaInfoBase <|-- Tag : extends
+    MetaInfoBase <|-- Text : extends
+    MetaInfoBase <|-- Notification : extends
 
     Kyou o-- Kmemo : typed_kmemo
     Kyou o-- KC : typed_kc
@@ -646,12 +683,15 @@ classDiagram
     Kyou o-- IDFKyou : typed_idf_kyou
     Kyou o-- ReKyou : typed_rekyou
     Kyou o-- MiReKyou : typed_mirekyou
+    Kyou o-- GitCommitLog : typed_git_commit_log
+    Kyou o-- PluginKyouRef : typed_plugin
 
     GkillAPI ..> Kyou : returns
     GkillAPI ..> Kmemo : returns
 
-    note for Kyou "typed_xxx フィールドで\n具体的なデータ型を保持\nload_all() で遅延ロード"
-    note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n~171KB"
+    note for Kyou "typed_xxx フィールドで\n具体的なデータ型を保持\nload_all() で遅延ロード\ntyped_plugin は既存型に該当しない\nプラグインKyouの場合にセットされる"
+    note for MetaInfoBase "Kyou に付随するメタ情報の基底。\ntarget_id で対象 Kyou を指す。\nTag / Text / Notification が継承する\n（InfoBase ではない点に注意）"
+    note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n約3,660行 / 約177KB"
 ```
 
 ### ZIP閲覧関連の構造体
@@ -679,7 +719,7 @@ classDiagram
 
 ## 6. Dnote 集計システム（TypeScript フロントエンド）
 
-> **スペルについて:** コードベースでは `Agregate`（正しくは `Aggregate`）が一貫して使用されています（`DnoteAgregateTarget`, `AgregateAverageKcNumValue` 等）。本資料ではコードの命名をそのまま記載しています。
+> **スペルについて:** コードベースでは `Agregate`（正しくは `Aggregate`）が一貫して使用されています（`DnoteAgregateTarget`, `AgregateAverageKCNumValue` 等）。本資料ではコードの命名をそのまま記載しています。
 
 ```mermaid
 classDiagram
@@ -705,7 +745,7 @@ classDiagram
         +string tag_name
         +is_match(loaded_kyou, target_kyou) Promise~boolean~
     }
-    class KmemoContentContainPredicate {
+    class KmemoContentContainsPredicate {
         +string keyword
         +is_match(loaded_kyou, target_kyou) Promise~boolean~
     }
@@ -713,9 +753,8 @@ classDiagram
         +number mood
         +is_match(loaded_kyou, target_kyou) Promise~boolean~
     }
-    class RelatedTimeBetweenPredicate {
-        +Date start
-        +Date end
+    class RelatedTimeAfterPredicate {
+        +Date time
         +is_match(loaded_kyou, target_kyou) Promise~boolean~
     }
 
@@ -723,9 +762,9 @@ classDiagram
     DnotePredicate <|.. OrPredicate : implements
     DnotePredicate <|.. NotPredicate : implements
     DnotePredicate <|.. TagEqualPredicate : implements
-    DnotePredicate <|.. KmemoContentContainPredicate : implements
+    DnotePredicate <|.. KmemoContentContainsPredicate : implements
     DnotePredicate <|.. LantanaMoodEqualPredicate : implements
-    DnotePredicate <|.. RelatedTimeBetweenPredicate : implements
+    DnotePredicate <|.. RelatedTimeAfterPredicate : implements
 
     class DnoteAgregateTarget {
         <<interface>>
@@ -734,7 +773,7 @@ classDiagram
         +to_json() any
     }
 
-    class AgregateAverageKcNumValue {
+    class AgregateAverageKCNumValue {
         +append_agregate_element_value(value, kyou, query) Promise~any~
         +result_to_string(value) Promise~string~
     }
@@ -747,7 +786,7 @@ classDiagram
         +result_to_string(value) Promise~string~
     }
 
-    DnoteAgregateTarget <|.. AgregateAverageKcNumValue : implements
+    DnoteAgregateTarget <|.. AgregateAverageKCNumValue : implements
     DnoteAgregateTarget <|.. AgregateSumNlogAmount : implements
     DnoteAgregateTarget <|.. AgregateCountKyou : implements
 
@@ -786,8 +825,8 @@ classDiagram
     DnoteAggregator --> DnoteKeyGetter : グルーピング
     DnoteAggregator --> DnoteAgregateTarget : 集計
 
-    note for DnotePredicate "AND/OR/NOT の論理演算で\n組み合わせ可能な述語パターン\n30+種類の具象クラス"
-    note for DnoteAgregateTarget "平均/合計/最大/最小/カウント\n22種類の集計対象"
+    note for DnotePredicate "AND/OR/NOT の論理演算で\n組み合わせ可能な述語パターン\n38種類の具象クラス"
+    note for DnoteAgregateTarget "平均/合計/最大/最小/カウント\n19種類の集計対象"
     note for DnoteKeyGetter "日付/曜日/週/月/タグ/データ型等\n9種類のグルーピングキー"
 ```
 
@@ -841,18 +880,24 @@ classDiagram
 
 ### Dnote 述語の全実装クラス
 
+`src/client/classes/dnote/dnote-predicate/`（33クラス）と
+`src/client/classes/dnote/dnote-predicate/target-kyou-predicate/`（5クラス）の計38クラス。
+
 | カテゴリ | 実装クラス |
 |---------|-----------|
 | 論理演算 | AndPredicate, OrPredicate, NotPredicate |
-| Kmemo | KmemoContentContainPredicate, KmemoContentNotContainPredicate |
-| KC | KcTitleContainPredicate, KcTitleNotContainPredicate |
-| Lantana | LantanaMoodContainPredicate, LantanaMoodEqualPredicate, LantanaMoodNotContainPredicate |
-| Mi | MiTitleContainPredicate, MiTitleNotContainPredicate |
-| Nlog | NlogAmountContainPredicate, NlogAmountNotContainPredicate, NlogShopNameContainPredicate, NlogShopNameNotContainPredicate, NlogTitleContainPredicate |
-| TimeIs | TimeisTitleContainPredicate, TimeisTitleNotContainPredicate |
-| Text | TextContentContainPredicate, TextContentNotContainPredicate |
-| GitCommitLog | GitCommitLogCodeAddContainPredicate, GitCommitLogCodeDeleteContainPredicate, GitCommitLogCodeDiffContainPredicate, (+ Not variants) |
-| 時刻 | RelatedTimeBetweenPredicate, RelatedTimeNotBetweenPredicate, RelatedTimeInTodayPredicate |
+| Kmemo | KmemoContentContainsPredicate, KmemoContentEqualPredicate |
+| KC | KCTitleContainsPredicate, KCTitleEqualPredicate |
+| Lantana | LantanaMoodEqualPredicate, LantanaMoodGreaterThanPredicate, LantanaMoodLessThanPredicate |
+| Mi | MiTitleContainsPredicate, MiTitleEqualPredicate |
+| Nlog | NlogAmountGreaterThanPredicate, NlogAmountLessThanPredicate, NlogShopContainsPredicate, NlogShopEqualPredicate, NlogTitleContainsPredicate, NlogTitleEqualPredicate |
+| TimeIs | TimeIsTitleContainsPredicate, TimeIsTitleEqualPredicate |
+| Text | TextContentContainsPredicate, TextContentEqualPredicate |
+| GitCommitLog | GitCommitLogCodeAdditionGreaterThanPredicate, GitCommitLogCodeAdditionLessThanPredicate, GitCommitLogCodeDeletionGreaterThanPredicate, GitCommitLogCodeDeletionLessThanPredicate, GitCommitLogCodeGreaterThanPredicate, GitCommitLogCodeLessThanPredicate |
+| 時刻 | RelatedTimeAfterPredicate, RelatedTimeBeforePredicate, RelatedTimeWeekPredicate |
 | タグ | TagEqualPredicate |
 | データ型 | DataTypePrefixPredicate |
-| 対象Kyou | EqualRepDataTypeTargetKyouPredicate, EqualTagsTargetKyouPredicate, EqualTitleTargetKyouPredicate |
+| 対象Kyou | EqualDataTypeTargetKyouPredicate, EqualIdTargetKyouPredicate, EqualTagsAndTargetKyouPredicate, EqualTagsOrTargetKyouPredicate, EqualTitleTargetKyouPredicate |
+
+> 「含む/含まない」の対ではなく、**Contains（部分一致）/ Equal（完全一致）** および
+> **GreaterThan / LessThan（数値比較）** の対で構成されている点に注意。否定は `NotPredicate` で表現する。

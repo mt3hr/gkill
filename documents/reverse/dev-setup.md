@@ -8,8 +8,8 @@ gkillの開発・ビルドに必要なソフトウェアは以下の通りです
 
 | ソフトウェア | バージョン | 用途 |
 |---|---|---|
-| Go | 1.26.0以上 | バックエンドビルド |
-| Node.js | 20.19以上（24.x推奨） | フロントエンドビルド、ビルドスクリプト実行 |
+| Go | 1.26.4以上 | バックエンドビルド（`src/server/go.mod` の `go` ディレクティブ） |
+| Node.js | 20.19以上（24.x推奨） | フロントエンドビルド、ビルドスクリプト実行。`package.json` に `engines` は無いため強制はされない |
 | npm | Node.js付属 | パッケージ管理、ビルドスクリプト実行 |
 | Git | — | ソースコード管理、バージョン情報取得 |
 
@@ -61,6 +61,7 @@ gkill_server version
 |---|---|
 | `npm run dev` | Vite開発サーバー起動（フロントエンドのみ、HMR対応）。`-- --api=<url>` で接続先gkill_serverを指定 |
 | `npm run build` | フロントエンドビルド（vue-tsc型チェック + vite build を並列実行） |
+| `npm run build-only` | 型チェックを行わず `vite build` のみ実行 |
 | `npm run lint` | ESLintによるコード検査・自動修正（.vue/.ts/.js対象） |
 | `npm run preview` | ビルド済みフロントエンドのプレビュー |
 | `npm run type-check` | TypeScript型チェックのみ実行 |
@@ -87,16 +88,33 @@ gkill_server version
 | `npm run clean_dist` | `dist/`をクリーン |
 | `npm run prepare_install` | 上記を順次実行（clean_dist → clean_app_embed → version生成 → build → copy html / i18n → build_manuals → copy manual） |
 
+### リリース
+
+| コマンド | 説明 |
+|---|---|
+| `npm run release` | 全プラットフォーム向けクロスコンパイル → zip 化 → サンプルデータ生成 → 成果物検証 |
+| `npm run build_x_compile` | 全ターゲットのクロスコンパイル |
+| `npm run build_go_parallel` | Go ビルドの並列実行 |
+| `npm run copy_android_release` | Android APK をリリースディレクトリへコピー |
+| `npm run prepare_gkill_sample_data` | サンプルデータ入り配布物の生成 |
+| `npm run clean_release_zip_src` | zip 化後の中間ディレクトリを削除 |
+| `npm run verify_release_artifacts` | リリース成果物の検証 |
+
 ### ドキュメント・マニュアルのツール
 
 ドキュメントとマニュアルの整合性を保つためのツール群（いずれも Node 標準のみ・依存なし）。
 
 | コマンド / スクリプト | 説明 |
 |---|---|
-| `npm run verify_docs` | ドキュメント検証（`src/tools/verify_docs.mjs`）。件数（handler/req_res/view/dialog/endpoint/i18nキー）をコードから突合、reverse資料の相互リンク・参照パス・Mermaid、マニュアルの生成鮮度・アクセシビリティ（`<main>`/`<caption>`/`th scope`）・言語構成一致・リンクを検査。CI（`.github/workflows/docs.yml`）で実行される |
+| `npm run verify_docs` | ドキュメント検証（`src/tools/verify_docs.mjs`）。件数（handler/req_res/view/dialog/endpoint/i18nキー）をコードから突合、reverse資料の相互リンク・参照パス・Mermaid、マニュアルの生成鮮度・アクセシビリティ（`<main>`/`<caption>`/`th scope`）・言語構成一致・リンクを検査。**`npm test` に組み込まれている**（`install_server` の直後） |
+| `node src/tools/verify_docs.mjs --list` | 実測メトリクスを表示して終了（件数を更新するときの参照元） |
 | `node src/tools/verify_docs.mjs --parity` | 構造パリティ・レポート（日本語=正本に対する各言語マニュアルの見出し/表構造のズレを表示） |
 | `npm run build_manuals` | `resources/manual_src/{lang}/{page}.html`（原稿フラグメント）＋ `_layout.html`（共有レイアウト）から 140 マニュアルを生成。`<main>`/表 `<caption>`/`th scope` を自動付与 |
+| `src/tools/manual_build.mjs` | マニュアル生成の実体。`build_manuals.mjs` と `verify_docs.mjs` の両方から import される |
+| `node src/tools/manual_a11y.mjs` | マニュアルのアクセシビリティ検査 |
 | `node src/tools/manual_ascii_fix.mjs` | fr/es マニュアルの ASCII 代替表記（アクセント欠落）を辞書ベースで是正（コード/pre/href は保護。要ネイティブレビューの初回パス） |
+| `npm run verify_release_artifacts` | リリース成果物（zip/apk）の検証。`npm run release` の最後に実行される |
+| `src/tools/license_getter.ps1` | 依存パッケージのライセンス情報収集（`LICENSES_DEPENDENCE` の生成） |
 
 **マニュアル編集の流儀:** マニュアルは手書きHTMLではなく `resources/manual_src/` の原稿（HTMLフラグメント）を編集し、`npm run build_manuals` で `resources/manual/` を再生成する。`resources/manual/` を直接編集しても `verify_docs` の生成鮮度チェックで検出される。共通の head/style/テーマスクリプトは `_layout.html` に集約されている。
 
@@ -132,12 +150,16 @@ gkill_server version
 | コマンド | 説明 |
 |---|---|
 | `npm run setup_gkill_develop_env` | Ubuntu/WSL用の開発環境一括セットアップ |
-| `npm run mcp:gkill-read` | Read MCPサーバー起動（stdioモード、ローカル用） |
-| `npm run mcp:gkill-read-http` | Read MCPサーバー起動（HTTPモード、OAuth 2.1認証付き） |
-| `npm run mcp:gkill-write` | Write MCPサーバー起動（stdioモード、ローカル用） |
-| `npm run mcp:gkill-write-http` | Write MCPサーバー起動（HTTPモード、OAuth 2.1認証付き） |
-| `npm run mcp:gkill-readwrite` | Read/Write統合MCPサーバー起動（stdioモード、ローカル用） |
-| `npm run mcp:gkill-readwrite-http` | Read/Write統合MCPサーバー起動（HTTPモード、OAuth 2.1認証付き） |
+| `npm run mcp:gkill-read` | Read MCPサーバー起動 |
+| `npm run mcp:gkill-read-http` | 同上（HTTPモード想定のエイリアス） |
+| `npm run mcp:gkill-write` | Write MCPサーバー起動 |
+| `npm run mcp:gkill-write-http` | 同上（HTTPモード想定のエイリアス） |
+| `npm run mcp:gkill-readwrite` | Read/Write統合MCPサーバー起動 |
+| `npm run mcp:gkill-readwrite-http` | 同上（HTTPモード想定のエイリアス） |
+
+> **`-http` 付きスクリプトは非 `-http` 版とコマンド内容が同一**で、`MCP_TRANSPORT=http` を
+> 設定しているわけではない。HTTPモードで動かすには、下記のように環境変数
+> `MCP_TRANSPORT=http` を自分で設定してから起動する必要がある。
 
 ### MCP HTTPモード開発用環境変数
 
@@ -165,8 +187,9 @@ graph TD
     C --> E["5. copy_dist_to_app_embed<br/>dist/をembed/html/にコピー"]
     D --> E
     E --> F["6. copy_i18n_to_app_embed<br/>locales/をembed/i18n/にコピー"]
-    F --> H["7. copy_manual_to_app_embed<br/>manual/をembed/manual/にコピー"]
-    H --> G["8. go install<br/>Goバイナリをビルド・インストール"]
+    F --> M["7. build_manuals<br/>manual_src/からmanual/を生成"]
+    M --> H["8. copy_manual_to_app_embed<br/>manual/をembed/manual/にコピー"]
+    H --> G["9. go install<br/>Goバイナリをビルド・インストール"]
 
     style Z fill:#fdd,stroke:#333
     style A fill:#fdd,stroke:#333
@@ -175,12 +198,13 @@ graph TD
     style D fill:#ddf,stroke:#333
     style E fill:#dfd,stroke:#333
     style F fill:#dfd,stroke:#333
+    style M fill:#dfd,stroke:#333
     style H fill:#dfd,stroke:#333
     style G fill:#fdf,stroke:#333
 ```
 
 **注記:**
-- ステップ3の`type-check`と`build-only`は`npm-run-all2`により並列実行されます
+- ステップ4の`type-check`と`build-only`は`npm-run-all2`により並列実行されます
 - `go install`でフロントエンドの成果物が`//go:embed`によりバイナリに埋め込まれます
 
 ### version.json の構造
@@ -214,7 +238,8 @@ SQLite3 ドライバは pure Go 実装（`modernc.org/sqlite`）のため、CGO 
 
 - `rsrc`ツールでアイコン（`public/favicon.ico`）をリソースとして埋め込み
 - デスクトップアプリ（gkill.exe）は`-ldflags "-s -w -H windowsgui"`でコンソールウィンドウを非表示に
-- ビルド後に`strip`コマンドでバイナリサイズを削減（失敗しても続行）
+
+バイナリサイズの削減は `strip` コマンドではなく、ビルド時の `-trimpath -ldflags "-s -w"` で行っている。
 
 ## 6. 開発サーバー起動
 
@@ -231,6 +256,8 @@ Viteの開発サーバーが起動し、HMR（Hot Module Replacement）が有効
 ```bash
 npm run dev -- --api=http://127.0.0.1:19999
 npm run dev -- --api=19999          # ポート番号だけなら 127.0.0.1 を補完
+npm run dev -- --api=example.com:9999   # host:port 形式も可
+npm run dev -- --api-target=19999   # --api のエイリアス
 npm run dev -- --api=19999 --port 5180  # --api以外の引数はそのままviteへ渡る
 ```
 
@@ -253,7 +280,10 @@ go run .
 | `--cache_in_memory` | `true` | インメモリキャッシュ有効化 |
 | `--cache_reps_local` | `false` | ローカルキャッシュ有効化 |
 | `--goroutine_pool` | `runtime.NumCPU()` | ゴルーチンプール数 |
-| `--log` | （なし） | ログレベル: none/error/warn/info/access/debug/trace/trace_sql |
+| `--cache_clear_count_limit` | `3000` | キャッシュクリアまでのアイテム数上限 |
+| `--cache_update_duration` | `1m` | キャッシュ更新間隔 |
+| `--pre_load_users` | （なし） | 起動時にリポジトリを先読みするユーザ（複数指定可） |
+| `--log` | `none` | ログレベル: none/error/warn/info/access/debug/trace/trace_sql |
 
 ### フロント＋バック同時開発
 

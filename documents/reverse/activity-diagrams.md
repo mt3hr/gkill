@@ -54,7 +54,10 @@ flowchart TD
 
     ApplyToMap --> LoopStart
 
-    LoopEnd --> ExecStart{次の未実行<br>リクエストがある?}
+    LoopEnd --> CollectTags[collect_unknown_tags<br>既存タグに無いタグを収集]
+    CollectTags --> UnknownTagCheck{未知のタグがある?<br>かつ未承認?}
+    UnknownTagCheck -->|Yes| ConfirmDialog([確認を表示して実行中断<br>承認されたら skip_unknown_tag_check=true で再実行])
+    UnknownTagCheck -->|No| ExecStart{次の未実行<br>リクエストがある?}
     ExecStart -->|Yes| ExecReq[リクエストの DoRequest 実行<br>Repository へ保存]
     ExecReq --> ExecCheck{エラー発生?}
     ExecCheck -->|Yes| Error([エラー返却])
@@ -62,11 +65,24 @@ flowchart TD
     ExecStart -->|No| Success([成功返却])
 ```
 
+> **未知タグの確認はクライアント側の分岐。** `classes/use-kftl-view.ts` の `do_submit()` が
+> リクエスト構築後・`DoRequest` 実行前に判定する。タイプミスによるタグの乱立を防ぐためのもので、
+> サーバ側 `/api/submit_kftl_text` には該当する処理は無い。
+
+### プレフィックスの2系統
+
+上図のプレフィックス分岐は日本語表記で示しているが、
+**ASCII 系のプレフィックスも同じ分岐に入る**（`kftl-prefixes.ts` / `kftl_factory.go`）。
+
+`。`=`#` / `ーー`=`--` / `？`=`?` / `、`=`,` / `、、`=`,,` / `ーか`=`/num` / `ーみ`=`/mi` /
+`ーら`=`/mood` / `ーん`=`/expense` / `ーう`=`/url` / `ーた`=`/start` / `ーえ`=`/end` /
+`ーいえ`=`/end?` / `ーたえ`=`/endt` / `ーいたえ`=`/endt?` / `ーち`=`/timeis` / `！`=`!`
+
 ## 2. Kyou 検索フィルタリングフロー
 
 ```mermaid
 flowchart TD
-    Start([FindKyous呼び出し]) --> GetRepos[全リポジトリ取得<br>KmemoReps, KCReps, LantanaReps,<br>MiReps, NlogReps, URLogReps,<br>TimeIsReps, IDFKyouReps,<br>ReKyouReps, GitCommitLogReps]
+    Start([FindKyous呼び出し]) --> GetRepos[全リポジトリ取得<br>KmemoReps, KCReps, LantanaReps,<br>MiReps, NlogReps, URLogReps,<br>TimeIsReps, IDFKyouReps,<br>ReKyouReps, MiReKyouReps,<br>GitCommitLogReps, GPSLogReps,<br>PluginReps]
 
     GetRepos --> FetchAll[各リポジトリから<br>Kyou候補を取得]
     FetchAll --> GetCache[LatestDataRepositoryAddress<br>キャッシュ取得]
@@ -202,7 +218,7 @@ flowchart TD
 flowchart TD
     Start([ZIP内容閲覧リクエスト]) --> Auth[セッション認証]
     Auth --> GetIDFKyou[IDFKyou取得<br>ファイルパス特定]
-    GetIDFKyou --> CalcHash[ZIPファイルのSHA1ハッシュ計算]
+    GetIDFKyou --> CalcHash["ZIPファイルパス文字列のSHA1ハッシュ計算<br>sha1.Sum([]byte(zipFilePath))"]
     CalcHash --> CacheCheck{"zip_cache/(rep_name)/(sha1)/<br>が存在する?"}
 
     CacheCheck -->|Yes| BuildEntries[ZipEntryリスト生成<br>キャッシュから]
@@ -226,6 +242,10 @@ flowchart TD
 
     BuildEntries --> ReturnEntries([ZipEntryリスト返却<br>MSG000080])
 ```
+
+> **キャッシュキーは ZIP の中身ではなくパス文字列のハッシュ。**
+> `sha1.Sum([]byte(zipFilePath))` なので、同じパスのまま ZIP を差し替えても
+> 既存のキャッシュディレクトリが再利用され、古い内容が表示される。
 
 ## 7. ログイン認証フロー
 
@@ -286,3 +306,89 @@ flowchart TD
     ResponseCheck -->|No| Return([成功レスポンス])
     FetchResult --> Return
 ```
+
+## 10. プラグインコンテンツ HTML の描画フロー
+
+```mermaid
+flowchart TD
+    Start([プラグインKyouを表示]) --> Req[POST /api/get_plugin_content_html<br>rep_name, kyou_id]
+    Req --> SW{Service Worker<br>キャッシュにある?}
+    SW -->|Yes| FromCache["/cache/api/plugin_content_html/{kyou_id} から返す"]
+    SW -->|No| Server[GkillServerAPI]
+
+    Server --> FindRep[rep_name で PluginRepository を検索]
+    FindRep --> Lock[callCommand: mu.Lock で直列化<br>期限が無ければ既定30秒を注入]
+    Lock --> Ensure[ensureStarted: 未起動なら subprocess 起動]
+    Ensure --> Send[stdin に get_content_html を書き込み]
+    Send --> Recv{応答あり?}
+
+    Recv -->|タイムアウト| Kill[Process.Kill / started=false]
+    Kill --> ErrOut([エラー返却])
+    Recv -->|クラッシュ| Retry[started=false → 1回だけ再起動して再送]
+    Retry --> Recv
+    Recv -->|Yes| Unlock[mu.Unlock]
+
+    Unlock --> Html[html を返却]
+    FromCache --> Render
+    Html --> Render[plugin-html-view.vue が iframe srcdoc に展開]
+
+    Render --> Theme["親 → iframe: postMessage (gkill_theme)"]
+    Render --> Size["iframe → 親: postMessage (gkill_iframe_size)<br>高さを親が反映。未確定時は 80px"]
+```
+
+iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）で動くため
+セッション Cookie にアクセスできない。テーマとサイズの受け渡しに postMessage を使うのはこのため。
+
+## 11. プラグイン設定の保存フロー
+
+```mermaid
+flowchart TD
+    Start([設定を変更したい]) --> Which{変更手段}
+
+    Which -->|現状の唯一の手段| EditFile[config.json を手で編集]
+    EditFile --> Reload([次回の検索時に読み直される])
+
+    Which -->|未実装| Api[POST /api/post_plugin_config]
+    Api --> Sdk[プラグイン SDK の PostConfig ハンドラ]
+    Sdk --> Save["SaveConfig が config.json (0600) に書き込み"]
+```
+
+サーバ側とプラグイン SDK 側は実装済みだが、**クライアントに送信導線が無い**。
+`plugin-config-dialog.vue` はどこからも import されておらず、
+`gkill-api.ts` の `post_plugin_config()` にも呼び出し元が無い。
+MCP のプラグインツールも読み取り専用で `post_plugin_config` を公開していない。
+
+## 12. クリップボードからファイル保存するフロー
+
+```mermaid
+flowchart TD
+    Start([rykv / mi / plaing / dashboard で Ctrl+V]) --> Read[クリップボードから内容を取得]
+    Read --> Dialog[save-clipboard-to-file-dialog を開く]
+    Dialog --> Name[ファイル名・保存先リポジトリを決める]
+    Name --> Upload[POST /api/upload_files を再利用]
+    Upload --> Done([IDFKyou として保存])
+```
+
+実装は `classes/use-save-clipboard-to-file-dialog.ts` と
+`classes/use-scoped-ctrl-v-for-clipboard.ts`。専用の API は追加していない。
+
+## 13. MiReKyou 作成フロー
+
+```mermaid
+flowchart TD
+    Start([Kyou のコンテキストメニュー]) --> Menu[タスク化を選択]
+    Menu --> Dialog[add-mi-re-kyou-dialog を開く]
+    Dialog --> Fields[ボード名・期限・見積開始・見積終了を入力<br>タイトル欄は無い]
+    Fields --> Api[POST /api/add_mirekyou<br>target_id = 対象 Kyou の ID]
+    Api --> Save[MiReKyouRepository へ保存]
+    Save --> Show[Mi 画面・Rykv に表示]
+
+    Show --> Load[load_attached_kyou で target_id の Kyou を解決]
+    Load --> Found{対象が見つかる?}
+    Found -->|Yes| Render([対象 Kyou を描画])
+    Found -->|No| NotFound([not_found_mi_rekyou_target<br>表示する内容が無い])
+```
+
+MiReKyou はタイトルを持たないため、対象 Kyou が削除されると表示できるものが無くなる。
+また `DATA_TYPE` は `mirekyou_create` / `_check` / `_limit` / `_start` / `_end` の5種に射影され、
+いずれも `mi` で始まるので前方一致判定では `mirekyou` を先に評価する必要がある。

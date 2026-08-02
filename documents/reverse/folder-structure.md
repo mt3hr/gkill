@@ -13,12 +13,25 @@ gkill/
 ├── dist/                   # フロントエンドビルド成果物（vite build出力先）
 ├── public/                 # 静的アセット（favicon.ico等）
 ├── release/                # リリースビルド成果物（クロスコンパイル時に生成）
-├── resources/              # リソースファイル（HTMLマニュアル resources/manual/（7言語×20ページ）、サンプルデータ等）
+├── resources/              # リソースファイル
+│   ├── manual/             # 生成済みHTMLマニュアル（7言語×20ページ、go:embed対象）
+│   ├── manual_src/         # マニュアルの原本（7言語 + _layout.html）。build_manuals.mjs の入力
+│   └── gkill_sample_data/  # サンプルデータ
+├── .github/                # GitHub Actions ワークフロー
 ├── node_modules/           # npm依存パッケージ（git管理外）
+├── playwright-report/      # Playwright実行結果（git管理外）
+├── test-results/           # テスト成果物（git管理外）
+├── index.html              # Vite のエントリHTML
 ├── package.json            # npm設定・ビルドスクリプト定義
 ├── tsconfig*.json          # TypeScript設定
 ├── vite.config.ts          # Viteビルド設定
+├── vitest.config.ts        # Vitest（クライアント）設定
+├── vitest.config.mcp.ts    # Vitest（MCP）設定
+├── playwright.config.ts    # Playwright E2E設定
+├── eslint.config.js        # ESLint flat config
 ├── env.d.ts                # 環境変数型定義
+├── LICENSE                 # MIT ライセンス
+├── LICENSES_DEPENDENCE     # 依存パッケージのライセンス一覧
 ├── CLAUDE.md               # Claude Code向けプロジェクトガイド
 └── README.md               # プロジェクト説明（日本語）
 ```
@@ -27,12 +40,13 @@ gkill/
 
 ```
 src/
+├── ABOUT_TEST.md # テスト仕様の目次（サブディレクトリの ABOUT_TEST.md へのリンク）
 ├── client/       # フロントエンド（Vue 3 + TypeScript）
 ├── server/       # バックエンド（Go）
 ├── android/      # Android APKラッパー
 ├── wear_os/      # Wear OSアプリ（phone_companion + watch_app）
 ├── mcp/          # MCPサーバー（AI連携用）
-├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_chatgpt, gkill_plugin_claudeai）
+├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode）
 ├── locales/      # i18nリソース（7言語対応）
 ├── tools/        # ユーティリティスクリプト
 └── README.md     # 実装資料への導線
@@ -65,13 +79,27 @@ src/client/
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/              # ビューコンポーネント（185ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（101ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（189ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（103ファイル、browse-zip-contents-dialog.vue 含む）
+├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
+├── assets/                 # 画像等の静的アセット
 ├── classes/
 │   ├── api/
-│   │   └── gkill-api.ts    # GkillAPI シングルトン（~3,500行、全API呼び出しを集約）
+│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,660行、全API呼び出しを集約）
+│   │   ├── find_query/     # 検索クエリビルダー
+│   │   └── req_res/        # リクエスト/レスポンス型（168ファイル）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）
-│   └── kftl/               # KFTLパーサー（44ステートメント型）
+│   ├── dnote/              # Dnote集計ユーティリティ（dnote-trend-aggregator.ts, dnote-predicate/ 等）
+│   ├── dto/                # データ転送オブジェクト
+│   ├── lantana/            # 気分値関連クラス
+│   ├── kftl/               # KFTLパーサー（41ステートメント型）
+│   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
+│   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
+│   └── use-*.ts            # Composition関数群（231ファイル）
+├── __tests__/              # テスト
+│   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
+│   ├── helpers/            # テストヘルパー
+│   └── unit/               # Vitest ユニットテスト（api / classes / composables / datas / dnote）
 └── plugins/
     └── vuetify.ts          # Vuetify設定（ライト/ダークテーマ）
 ```
@@ -98,14 +126,17 @@ src/server/
     │   ├── find_kyou_context.go    # 検索コンテキスト
     │   ├── find/                   # 検索クエリ構造体
     │   ├── message/                # メッセージ/エラー構造体
-    │   ├── req_res/                # リクエスト/レスポンス構造体（176ファイル）
-    │   ├── kftl/                   # KFTLパーサー（バックエンド側）
-    │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成）
+    │   ├── req_res/                # リクエスト/レスポンス構造体（182ファイル）
+    │   ├── kftl/                   # KFTLパーサー（バックエンド側、39ステートメント型）
+    │   │   ├── kftl_factory.go     # ファクトリ（ステートメント生成、日本語/ASCII両プレフィックス）
     │   │   └── *.go                # 各ステートメント型実装
-    │   └── gkill_server_api/       # HTTPハンドラ層（85+ファイル）
+    │   ├── gkill_plugin/           # プラグインプロトコル型
+    │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
+    │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
+    │   └── gkill_server_api/       # HTTPハンドラ層（108ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
-    │       ├── gkill_server_api_address.go  # ルーティング定義（85エンドポイント：84 POST + 1 GET）
+    │       ├── gkill_server_api_address.go  # ルーティング定義（90エンドポイント定義・88登録：87 POST + 1 GET）
     │       ├── auth.go             # セッション認証ヘルパー
     │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
     │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
@@ -113,15 +144,22 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、88ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、92ファイル）
+    ├── plugin/                     # プラグイン作者向けSDK
+    │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層
     │   ├── gkill_dao_manager.go    # DAOマネージャ（ConfigDAOs + GkillRepositories管理）
+    │   ├── plugin_manager.go       # プラグインディレクトリを走査してPluginRepositoryを登録
     │   ├── config_da_os.go          # ConfigDAOs構造体（8つの設定DAO）
     │   ├── reps/                   # リポジトリインターフェース・実装
     │   │   ├── *_repository.go             # インターフェース定義
     │   │   ├── *_repository_sqlite3_impl.go        # SQLite3実装
     │   │   ├── *_repository_cached_sqlite3_impl.go # キャッシュ付き実装
     │   │   ├── *_repository_temp_sqlite3_impl.go   # テンポラリ実装
+    │   │   ├── mi_re_kyou*.go              # MiReKyou（既存記録のタスク化、9ファイル）
+    │   │   ├── plugin_repository.go        # プラグインリポジトリ インターフェース
+    │   │   ├── plugin_repository_impl.go   # サブプロセス管理・stdio JSON通信
+    │   │   ├── cache/              # LatestDataRepositoryAddress 等のキャッシュDAO
     │   │   └── rep_cache_updater/  # キャッシュ更新ロジック
     │   ├── account/                # アカウントDAO
     │   ├── account_state/          # ログインセッション・アップロード履歴DAO
@@ -130,7 +168,7 @@ src/server/
     │   ├── share_kyou_info/        # 共有設定DAO
     │   ├── gkill_notification/     # 通知ターゲットDAO
     │   └── hide_files/             # ファイル隠蔽ユーティリティ
-    ├── usecase/                    # ビジネスロジック層（16ファイル）
+    ├── usecase/                    # ビジネスロジック層（17ファイル）
     │   └── *.go                    # HTTP非依存のユースケース関数群
     ├── dvnf/                       # DVNF（DeVice Name Folder Naming Framework）
     │   ├── dvnf.go                 # DVNFコア（タイムスタンプベース命名）
@@ -188,11 +226,13 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-├── gkill-read-server.mjs      # Read専用MCPサーバー（8ツール、port 8808）
-├── gkill-write-server.mjs     # Write専用MCPサーバー（23ツール、port 8809）
-├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（28ツール、port 8810）
+├── gkill-read-server.mjs      # Read専用MCPサーバー（10ツール = 固有8 + プラグイン2、port 8808）
+├── gkill-write-server.mjs     # Write専用MCPサーバー（25ツール = 固有23 + プラグイン2、port 8809）
+├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（30ツール = 固有28 + プラグイン2、port 8810）
 └── lib/
     ├── access-log.mjs         # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
+    ├── plugin-tools.mjs       # 3サーバ共通のプラグインツール（gkill_get_plugin_list / gkill_get_plugin_content）
+    ├── html-text.mjs          # プラグインコンテンツHTML→プレーンテキスト変換
     ├── file-link-store.mjs    # HTTPモード用ファイルリンクストア（期限付きトークンで /files/{token} 配信）
     ├── normalization.mjs      # Read入力正規化
     ├── write-normalization.mjs # Write入力正規化
@@ -217,9 +257,19 @@ src/plugins/
 │   └── gkill_example/         # サンプルプラグイン（固定のKyouレスポンスを返す）
 ├── gkill_plugin_chatgpt/      # ChatGPT会話履歴プラグイン
 ├── gkill_plugin_claudeai/     # Claude.ai会話履歴プラグイン
+├── gkill_plugin_claudecode/   # Claude Code チャットログプラグイン
 ├── ABOUT_TEST.md
 └── README.md
 ```
+
+各プラグインは独立した `go.mod` を持つ別モジュール。`manifest.json` をバイナリに `//go:embed` しており、
+`--gkill-print-manifest` / `--gkill-print-config` で内容を標準出力に書き出せる。
+`gkill_example` 以外の3つは `config.json` の `source_dirs` で取り込み元フォルダを指定し、
+SQLite3 キャッシュを `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置く
+（各プラグインの `cache_path.go`）。
+
+> `src/plugins/*` の Go テストは別モジュールのため、`npm test`（`cd src/server && go test ./...`）では
+> 実行されない。実行方法は `src/plugins/ABOUT_TEST.md` を参照。
 
 ### src/locales/ — i18nリソース
 
@@ -234,14 +284,26 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-836キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+855キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
 ```
 src/tools/
-└── license_getter.ps1    # ライセンス情報収集スクリプト
+├── dev.mjs                      # npm run dev のラッパー（--api / --api-target を GKILL_API_PROXY_TARGET に変換）
+├── verify_docs.mjs              # docs CI。件数・リンク・参照パス・Mermaid・マニュアルを検証（npm run verify_docs）
+├── build_manuals.mjs            # resources/manual_src/ → resources/manual/ を生成（npm run build_manuals）
+├── manual_build.mjs             # マニュアル生成の実体（verify_docs からも import される）
+├── manual_a11y.mjs              # マニュアルのアクセシビリティ検査
+├── manual_ascii_fix.mjs         # マニュアルのASCII正規化
+├── extract_manual_src.mjs       # 既存マニュアルから manual_src を抽出
+├── verify_release_artifacts.mjs # リリース成果物の検証（npm run verify_release_artifacts）
+├── license_getter.ps1           # ライセンス情報収集スクリプト
+└── README.md
 ```
+
+このうち `dev.mjs` / `verify_docs.mjs` / `build_manuals.mjs` / `verify_release_artifacts.mjs` は
+`package.json` の npm スクリプトから直接呼ばれる。
 
 ## documents/ — ドキュメント
 
@@ -249,9 +311,9 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（80項目）
+│   ├── glossary.md                   # 用語集（86項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（78件）
+│   ├── usecase.md                    # ユースケース一覧（82件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
 │   ├── sequence-diagrams.md          # シーケンス図（27本: 正常系22 + 異常系5）
@@ -260,7 +322,7 @@ documents/
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（87件）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（90件定義・88件登録）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド
 │   ├── dvnf-rep-type-spec.md         # DVNF/RepType仕様
@@ -268,11 +330,25 @@ documents/
 │   ├── folder-structure.md           # フォルダ構成説明（本資料）
 │   ├── dev-setup.md                  # 環境構築資料
 │   ├── testing-guide.md              # テストガイド（実行・構成・トラブルシューティング）
+│   ├── mcp-setup-guide.md            # MCPセットアップガイド
+│   ├── plugin-system.md              # プラグインシステム仕様
+│   ├── scenario.md                   # 利用シナリオ集（チャネル横断のend-to-endフロー）
 │   └── user-guide.md                 # ユーザ向け導入資料
+├── evidences/                        # 検証結果・エビデンス
+├── gkill_model/                      # astah モデルのエクスポート
+│   ├── 01_ユースケースモデル/
+│   ├── 02_画面遷移モデル/
+│   ├── 03_ERモデル/
+│   └── 04_クラスモデル/
 ├── resources/                        # 画像リソース等
+├── gkill_model.asta                  # astah モデル
+├── gkill_model_latest.asta           # astah モデル（最新）
 ├── gkill_user_document.pdf           # ユーザ利用説明書
+├── gkill_user_document.xlsx          # ユーザ利用説明書（原本）
 └── gkill_develop_document.xlsx       # 開発者向け起点要件書・設計書
 ```
+
+`documents/reverse/` は全24ファイル（README.md 含む）。
 
 ## ランタイムディレクトリ
 

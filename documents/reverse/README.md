@@ -35,7 +35,7 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 12. **[screen-transition.md](screen-transition.md)** — 画面遷移図。UIのページ・ダイアログ遷移を理解します。
 13. **[screen-specs.md](screen-specs.md)** — 画面仕様。各画面の項目定義・コンポーネント構成の詳細です。
 14. **[frontend-architecture.md](frontend-architecture.md)** — フロントエンド設計ガイド。Vue 3 + TypeScript実装の詳細です。
-15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全87エンドポイント（登録済み85）のリファレンスです。
+15. **[api-endpoints.md](api-endpoints.md)** — APIエンドポイント一覧。全90エンドポイント（登録済み88）のリファレンスです。
 16. **[error-handling-and-security.md](error-handling-and-security.md)** — エラーハンドリング・セキュリティ設計。エラーコード体系とセキュリティポリシーです。
 17. **[operations-guide.md](operations-guide.md)** — 運用ガイド。デプロイ、バックアップ、トラブルシューティング手順です。
 18. **[dev-setup.md](dev-setup.md)** — 環境構築資料。開発環境のセットアップ手順です。
@@ -50,10 +50,10 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 
 | ファイル | 内容 | 主な読者・用途 |
 |---|---|---|
-| [glossary.md](glossary.md) | ドメイン用語の定義（80項目） | 全員。用語確認時に随時参照 |
+| [glossary.md](glossary.md) | ドメイン用語の定義（86項目） | 全員。用語確認時に随時参照 |
 | [design-philosophy.md](design-philosophy.md) | アーキテクチャ決定と設計思想 | 設計判断の背景を知りたいとき |
 | [folder-structure.md](folder-structure.md) | プロジェクトのフォルダ構成 | 初回参照、ファイル探索時 |
-| [usecase.md](usecase.md) | ユースケース一覧（73件） | 機能仕様の把握、テスト設計 |
+| [usecase.md](usecase.md) | ユースケース一覧（82件） | 機能仕様の把握、テスト設計 |
 | [er-diagram.md](er-diagram.md) | エンティティ関連図（Mermaid） | DB設計・データモデルの理解 |
 | [class-diagrams.md](class-diagrams.md) | Go/TSクラス階層（Mermaid） | コード構造の理解、実装時の参照 |
 | [dvnf-rep-type-spec.md](dvnf-rep-type-spec.md) | DVNF命名規則・RepType仕様 | リポジトリ管理、データ型の理解 |
@@ -64,9 +64,9 @@ gkillは長期にわたって開発されてきたライフログアプリケー
 | [activity-diagrams.md](activity-diagrams.md) | 処理ロジックのフローチャート | 詳細な処理手順の確認 |
 | [state-machines.md](state-machines.md) | エンティティ状態遷移図 | 状態管理ロジックの理解 |
 | [screen-transition.md](screen-transition.md) | ページ・ダイアログ遷移図 | UI実装・改修時の参照 |
-| [screen-specs.md](screen-specs.md) | 画面仕様・項目定義（301コンポーネント） | UI実装・改修時の参照 |
+| [screen-specs.md](screen-specs.md) | 画面仕様・項目定義（307コンポーネント） | UI実装・改修時の参照 |
 | [frontend-architecture.md](frontend-architecture.md) | Vue 3フロントエンド設計ガイド | フロントエンド開発者向け |
-| [api-endpoints.md](api-endpoints.md) | 全APIエンドポイントのリファレンス（87件） | API利用・実装時の参照 |
+| [api-endpoints.md](api-endpoints.md) | 全APIエンドポイントのリファレンス（90件定義・88件登録） | API利用・実装時の参照 |
 | [error-handling-and-security.md](error-handling-and-security.md) | エラー処理方針・セキュリティ設計 | エラー処理実装、セキュリティレビュー |
 | [operations-guide.md](operations-guide.md) | デプロイ・バックアップ・保守手順 | 運用担当者、環境構築時 |
 | [dev-setup.md](dev-setup.md) | 開発環境構築手順（ビルド、クロスコンパイル） | 新規開発者のオンボーディング |
@@ -123,6 +123,10 @@ graph TD
     E --> R
     R --> F
 
+    R --> W[plugin-system.md<br/>プラグインシステム]
+    W --> F
+    W --> U
+
     M --> S[user-guide.md<br/>ユーザガイド]
     I --> S
 
@@ -136,6 +140,7 @@ graph TD
     style T fill:#dfd,stroke:#333,stroke-width:2px
     style U fill:#dfd,stroke:#333,stroke-width:2px
     style V fill:#dfd,stroke:#333,stroke-width:2px
+    style W fill:#dfd,stroke:#333,stroke-width:2px
     style S fill:#ffd,stroke:#333,stroke-width:2px
 ```
 
@@ -149,6 +154,7 @@ graph TD
 - **er-diagram.md** → **class-diagrams.md** → **dvnf-rep-type-spec.md** → **program-spec.md** → **sequence-diagrams.md** → **activity-diagrams.md** と、データ構造からコード構造、処理フローへと段階的に詳細化されます。
 - **screen-transition.md** → **screen-specs.md** → **frontend-architecture.md** は、画面遷移から画面仕様、フロントエンド実装の詳細へ進みます。
 - **api-endpoints.md** → **error-handling-and-security.md** は、APIの仕様からエラー処理方針へ進みます。
+- **program-spec.md** → **plugin-system.md** → **sequence-diagrams.md** / **mcp-setup-guide.md** は、本体の構造からプラグイン拡張の仕組み、その処理フローとMCPからの利用へ進みます。
 - **user-guide.md** は、operations-guide.mdとscreen-transition.mdの知識をユーザ向けにまとめたものです。
 
 ## Mermaid図の閲覧方法
