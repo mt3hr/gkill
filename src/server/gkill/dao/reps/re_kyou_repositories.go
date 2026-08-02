@@ -18,6 +18,56 @@ type ReKyouRepositories struct {
 	GkillRepositories  *GkillRepositories
 }
 
+// collectNonReKyouRepositories はReKyou自身を除いた検索対象リポジトリを集めます。
+//
+// ReKyouはタイトルを持たないためワード検索をターゲットKyouへ委譲します。
+// その委譲先からReKyou自身を外さないと無限再帰になるのでここで除きます。
+//
+// MiReKyouは含めます。ReKyouはMiReKyouをターゲットにできるので、
+// 含めないとそのReKyouがワード検索から漏れます。
+// 逆に GetRepositoriesWithoutMiReKyouRep へ ReKyouReps を足してはいけません
+// （ReKyou→MiReKyou→ReKyou→… で無限再帰します。非対称は意図的です）。
+//
+// 同じ集計が ReKyouRepositories / sqlite3Impl / cachedImpl の3実装に要るので、
+// 1箇所だけ足し忘れる事故を防ぐためここに集約しています。
+func (g *GkillRepositories) collectNonReKyouRepositories() Repositories {
+	if g == nil {
+		return nil
+	}
+	reps := Repositories{}
+	for _, rep := range g.KmemoReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.KCReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.URLogReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.NlogReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.TimeIsReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.MiReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.LantanaReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.IDFKyouReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.GitCommitLogReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.MiReKyouReps.MiReKyouRepositories {
+		reps = append(reps, rep)
+	}
+	return reps
+}
+
 func cloneRepositoriesWithoutReKyou(original *GkillRepositories, withoutRekyouReps Repositories) *GkillRepositories {
 	cloned := *original
 	cloned.Reps = append(Repositories(nil), withoutRekyouReps...)
@@ -50,17 +100,23 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 		return nil, err
 	}
 
-	latestDataRepositoryAddresses, err := repsWithoutRekyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
-		return nil, err
+	// リポジトリ群を辿れない場合はターゲット解決を行わずすべて通す（MiReKyouのallowAllと同じ扱い）
+	allowAllTargets := repsWithoutRekyou == nil
+
+	latestDataRepositoryAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{}
+	if !allowAllTargets {
+		latestDataRepositoryAddresses, err = repsWithoutRekyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
+			return nil, err
+		}
 	}
 
 	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
 	wordMatchTargetIDs := map[string]bool{}
 	useWordFilter := query.UseWords && (len(query.Words) > 0 || len(query.NotWords) > 0)
 	if useWordFilter {
-		wordMatchKyousMap, err := repsWithoutRekyou.Reps.FindKyous(ctx, query)
+		wordMatchKyousMap, err := repsWithoutRekyou.Reps.FindKyousSequential(ctx, query)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous for word filter: %w", err)
 			return nil, err
@@ -76,7 +132,10 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 		if rekyou.IsDeleted {
 			continue
 		}
-		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
+		// ターゲットが消えているReKyouは検索結果に出さない。
+		// 他2実装（sqlite3Impl / cachedImpl）と条件を揃えるためIsDeletedも見る
+		latestDataRepositoryAddress, existAddress := latestDataRepositoryAddresses[rekyou.TargetID]
+		if !allowAllTargets && (!existAddress || latestDataRepositoryAddress.IsDeleted) {
 			continue
 		}
 		// ワードフィルタが有効な場合、TargetIDがマッチしなければスキップ
@@ -393,17 +452,23 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 		return nil, err
 	}
 
-	latestDataRepositoryAddresses, err := repsWithoutRekyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
-		return nil, err
+	// リポジトリ群を辿れない場合はターゲット解決を行わずすべて通す（MiReKyouのallowAllと同じ扱い）
+	allowAllTargets := repsWithoutRekyou == nil
+
+	latestDataRepositoryAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{}
+	if !allowAllTargets {
+		latestDataRepositoryAddresses, err = repsWithoutRekyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
+			return nil, err
+		}
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
 		if rekyou.IsDeleted {
 			continue
 		}
-		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
+		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !allowAllTargets && !ok {
 			continue
 		}
 		matchReKyous = append(matchReKyous, rekyou)
@@ -728,36 +793,11 @@ loop:
 }
 
 func (r *ReKyouRepositories) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
-	withoutRekyouReps := Repositories{}
-	for _, rep := range r.GkillRepositories.KmemoReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
+	if r.GkillRepositories == nil {
+		// リポジトリ群を辿れない場合はターゲット解決を行わない。呼び出し側で判定する
+		return nil, nil
 	}
-	for _, rep := range r.GkillRepositories.KCReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
-	}
-	for _, rep := range r.GkillRepositories.URLogReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
-	}
-	for _, rep := range r.GkillRepositories.NlogReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
-	}
-	for _, rep := range r.GkillRepositories.TimeIsReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
-	}
-	for _, rep := range r.GkillRepositories.MiReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
-	}
-	for _, rep := range r.GkillRepositories.LantanaReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
-	}
-	for _, rep := range r.GkillRepositories.IDFKyouReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
-	}
-	for _, rep := range r.GkillRepositories.GitCommitLogReps {
-		withoutRekyouReps = append(withoutRekyouReps, rep)
-	}
-
-	return cloneRepositoriesWithoutReKyou(r.GkillRepositories, withoutRekyouReps), nil
+	return cloneRepositoriesWithoutReKyou(r.GkillRepositories, r.GkillRepositories.collectNonReKyouRepositories()), nil
 }
 
 func (r *ReKyouRepositories) UnWrapTyped() ([]ReKyouRepository, error) {

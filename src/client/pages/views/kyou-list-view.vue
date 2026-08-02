@@ -28,7 +28,7 @@
                                 :enable_context_menu="enable_context_menu" :show_rep_name="show_rep_name"
                                 :force_show_latest_kyou_info="force_show_latest_kyou_info" :show_update_time="false"
                                 :is_image_request_to_thumb_size="true"
-                                :show_related_time="!(query.for_mi && item.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
+                                :show_related_time="should_show_related_time(item)"
                                 :enable_dialog="enable_dialog" :height="kyou_height.valueOf()"
                                 :show_attached_tags="application_config.show_tags_in_list" :show_attached_texts="false"
                                 :show_attached_notifications="false" @focused_kyou="onFocusedKyou"
@@ -57,7 +57,7 @@
                                         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                                         :show_attached_timeis="false" :show_rep_name="true"
                                         :force_show_latest_kyou_info="force_show_latest_kyou_info" :show_update_time="false"
-                                        :show_related_time="!(query.for_mi && kyou.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
+                                        :show_related_time="should_show_related_time(kyou)"
                                         :show_attached_tags="false" :show_attached_texts="false"
                                         :show_attached_notifications="false" :is_image_request_to_thumb_size="true"
                                         @focused_kyou="onFocusedKyou" @clicked_kyou="onClickedKyou"
@@ -157,6 +157,9 @@ const {
     kyou_height_px,
     footer_height,
     footer_class,
+
+    // Business logic
+    should_show_related_time,
 
     // Exposed methods
     scroll_to,
