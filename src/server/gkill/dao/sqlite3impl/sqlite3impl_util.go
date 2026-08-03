@@ -287,7 +287,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			if *whereCounter != 0 {
 				sqlBuilder.WriteString(" AND ")
 			}
-			fmt.Fprintf(sqlBuilder, "datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
+			fmt.Fprintf(sqlBuilder, "unixepoch(%s) = unixepoch(?)", "UPDATE_TIME")
 			*queryArgs = append(*queryArgs, ((query.UpdateTime).Format(TimeLayout)))
 			*whereCounter++
 		}
@@ -305,7 +305,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 				if *whereCounter != 0 {
 					sqlBuilder.WriteString(" AND ")
 				}
-				fmt.Fprintf(sqlBuilder, "datetime(%s, 'localtime') >= datetime(?, 'localtime')", relatedTimeColumnName)
+				fmt.Fprintf(sqlBuilder, "unixepoch(%s) >= unixepoch(?)", relatedTimeColumnName)
 				*queryArgs = append(*queryArgs, calendarStartDate.Format(TimeLayout))
 				*whereCounter++
 			}
@@ -324,7 +324,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 				if *whereCounter != 0 {
 					sqlBuilder.WriteString(" AND ")
 				}
-				fmt.Fprintf(sqlBuilder, "datetime(%s, 'localtime') <= datetime(?, 'localtime')", relatedTimeColumnName)
+				fmt.Fprintf(sqlBuilder, "unixepoch(%s) <= unixepoch(?)", relatedTimeColumnName)
 				*queryArgs = append(*queryArgs, calendarEndDate.Format(TimeLayout))
 				*whereCounter++
 			}
@@ -453,11 +453,70 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	}
 
 	// ORDER BY
+	//
+	// 文字列の時刻列は unixepoch() で並べる。
+	// RELATED_TIME はオフセット付きRFC3339で、実データにも +00:00 と +09:00 が
+	// 混在しているため、文字列のまま並べると時系列にならない。
+	// またWHERE側と式を揃えることで unixepoch(列) の式インデックスが
+	// 並び替えにも使われ、一時ソートが不要になる。
 	if appendOrderBy {
-		fmt.Fprintf(sqlBuilder, " ORDER BY %s DESC ", relatedTimeColumnName)
+		if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
+			fmt.Fprintf(sqlBuilder, " ORDER BY %s DESC ", relatedTimeColumnName)
+		} else {
+			fmt.Fprintf(sqlBuilder, " ORDER BY unixepoch(%s) DESC ", relatedTimeColumnName)
+		}
 	}
 
 	return sqlBuilder.String(), nil
+}
+
+// EnsureUnixepochIndex は文字列の時刻列に対する式インデックスを作成します。
+//
+// 時刻列はRFC3339の文字列で入っており、実データでもオフセットが混在しています
+// (TAG.RELATED_TIME は +00:00 が6,194行 / +09:00 が853行)。
+// そのため範囲比較も並び替えも unixepoch() を通す必要がありますが、
+// 列に関数を適用すると通常のインデックスは一切使われません。
+// 式そのものにインデックスを張ることで SCAN が SEARCH になります。
+//
+// GenerateFindSQLCommon が生成する式と完全に一致していなければ使われません。
+// CAST を挟む・'auto' を足す・strftime('%s',...) で書くといった些細な違いでも
+// エラーにならず黙って全走査に戻るので、SQL側を変えるときは必ず
+// EXPLAIN QUERY PLAN に SEARCH が出ることを確認してください。
+//
+// なお 'localtime' 修飾子は非決定的とみなされ、式インデックスには使えません。
+func EnsureUnixepochIndex(ctx context.Context, db *sql.DB, tableName string, timeColumnNames ...string) error {
+	for _, timeColumnName := range timeColumnNames {
+		indexName := "INDEX_" + tableName + "_" + timeColumnName + "_UNIXEPOCH"
+		indexSQL := fmt.Sprintf(
+			"CREATE INDEX IF NOT EXISTS %s ON %s (unixepoch(%s) DESC);",
+			QuoteIdent(indexName), QuoteIdent(tableName), timeColumnName,
+		)
+		slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+		if _, err := db.ExecContext(ctx, indexSQL); err != nil {
+			return fmt.Errorf("error at create unixepoch index %s on %s: %w", indexName, tableName, err)
+		}
+	}
+	return nil
+}
+
+// EnsureUnixColumnIndex はキャッシュ側の _UNIX 整数列に索引を作成します。
+//
+// キャッシュ表の既存索引は (ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX) と
+// ID が先頭なので、時刻範囲の絞り込みにも ORDER BY にも使えません。
+// 時刻列を先頭にした索引を別途張ります。
+func EnsureUnixColumnIndex(ctx context.Context, db *sql.DB, tableName string, columnNames ...string) error {
+	for _, columnName := range columnNames {
+		indexName := "INDEX_" + tableName + "_" + columnName + "_ONLY"
+		indexSQL := fmt.Sprintf(
+			"CREATE INDEX IF NOT EXISTS %s ON %s (%s DESC);",
+			QuoteIdent(indexName), QuoteIdent(tableName), columnName,
+		)
+		slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+		if _, err := db.ExecContext(ctx, indexSQL); err != nil {
+			return fmt.Errorf("error at create unix column index %s on %s: %w", indexName, tableName, err)
+		}
+	}
+	return nil
 }
 
 func GenerateNewID() string {

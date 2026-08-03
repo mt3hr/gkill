@@ -117,6 +117,13 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 		return nil, err
 	}
 
+	// 時刻範囲検索と並び替えのための式インデックス。
+	// GenerateFindSQLCommon が unixepoch(列) で比較・整列するので、
+	// 式そのものに索引を張らないと全走査になる。
+	if err := sqlite3impl.EnsureUnixepochIndex(ctx, db, "NLOG", "RELATED_TIME"); err != nil {
+		return nil, err
+	}
+
 	if gkill_options.Optimize {
 		err = sqlite3impl.Optimize(db)
 		if err != nil {

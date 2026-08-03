@@ -92,6 +92,12 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	// 既存索引は先頭が ID なので時刻範囲にもORDER BYにも使えない。
+	// 時刻列を先頭にした索引を別途張る。
+	if err := sqlite3impl.EnsureUnixColumnIndex(ctx, cacheDB, dbName, "RELATED_TIME_UNIX"); err != nil {
+		return nil, err
+	}
+
 	indexTargetIDUnixSQL := `CREATE INDEX IF NOT EXISTS ` + sqlite3impl.QuoteIdent("INDEX_"+dbName+"_TARGET_ID") + ` ON ` + sqlite3impl.QuoteIdent(dbName) + `(TARGET_ID, UPDATE_TIME_UNIX DESC);`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", indexTargetIDUnixSQL))
 	indexTargetIDUnixStmt, err := cacheDB.PrepareContext(ctx, indexTargetIDUnixSQL)
