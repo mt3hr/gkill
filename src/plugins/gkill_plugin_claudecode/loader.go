@@ -638,13 +638,31 @@ func scanSessionMeta(records []logRecord) (title, project, branch string) {
 			title = rec.AITitle
 		}
 		if project == "" && rec.Cwd != "" {
-			project = filepath.Base(filepath.Clean(rec.Cwd))
+			project = lastPathElement(rec.Cwd)
 		}
 		if branch == "" && rec.GitBranch != "" {
 			branch = rec.GitBranch
 		}
 	}
 	return title, project, branch
+}
+
+// lastPathElement はパス文字列の末尾の要素を返す。
+//
+// filepath.Base を使ってはいけない。ログを書いた環境と読む環境でOSが違うことがあり、
+// 区切り文字の解釈がずれるため。実際 Linux 上では
+// filepath.Base(`C:\work\myproj`) が区切りを見つけられず文字列全体を返すので、
+// Windowsで記録したログをLinuxで読むとプロジェクト名がフルパスになっていた。
+// どちらの区切り文字も見て切り出す。
+func lastPathElement(p string) string {
+	trimmed := strings.TrimRight(p, `/\`)
+	if trimmed == "" {
+		return p
+	}
+	if i := strings.LastIndexAny(trimmed, `/\`); i >= 0 {
+		return trimmed[i+1:]
+	}
+	return trimmed
 }
 
 // scanAgentIDsFromResults は tool_result の toolUseResult.agentId を集める。
