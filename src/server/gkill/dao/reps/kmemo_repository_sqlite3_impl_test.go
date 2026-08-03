@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
 
@@ -184,5 +185,45 @@ func TestKmemoGetPath(t *testing.T) {
 	}
 	if path == "" {
 		t.Error("GetPath returned empty string")
+	}
+}
+
+// TestKmemoFindKyous_NotWordFilter は、除外ワードを指定した検索から
+// そのワードを含むレコードが確かに落ちることを確認する。
+//
+// 否定条件の生成が
+//   ( COL NOT LIKE ? OR ID NOT LIKE ? )
+// になっていたころは、IDがUUIDで検索語を含むことは実質ないため右辺が常に真になり、
+// 除外がまったく効いていなかった。ド・モルガンによりANDでなければならない。
+func TestKmemoFindKyous_NotWordFilter(t *testing.T) {
+	repo := newTempKmemoRepo(t)
+	ctx := context.Background()
+
+	for _, k := range []Kmemo{
+		makeKmemo("kmemo-food", "今日のランチはカレーだった"),
+		makeKmemo("kmemo-work", "会議の議事録"),
+	} {
+		if err := repo.AddKmemoInfo(ctx, k); err != nil {
+			t.Fatalf("AddKmemoInfo failed: %v", err)
+		}
+	}
+
+	query := &find.FindQuery{
+		UseWords:       true,
+		NotWords:       []string{"カレー"},
+		OnlyLatestData: true,
+	}
+	kmemos, err := repo.FindKmemo(ctx, query)
+	if err != nil {
+		t.Fatalf("FindKmemo with not-word filter failed: %v", err)
+	}
+
+	for _, k := range kmemos {
+		if k.ID == "kmemo-food" {
+			t.Error("除外ワードを含むレコードが検索結果に残っている")
+		}
+	}
+	if len(kmemos) != 1 || (len(kmemos) > 0 && kmemos[0].ID != "kmemo-work") {
+		t.Errorf("除外ワードを含まないレコードだけが残るべき: %+v", kmemos)
 	}
 }
