@@ -30,10 +30,14 @@ Go `testing` パッケージ
   ターゲットのKyouを論理削除するとMi画面の検索から落ちること
   (`TestHandleGetKyous_MiReKyouResolvesTarget`)、
   MiReKyouだけのボードもボード一覧に出ること
-  (`TestHandleGetMiBoardList_IncludesMiReKyouOnlyBoard`)。
-  MiReKyouの更新だけは他11型と違い、存在しないIDに対して
-  `NotFoundMiReKyouError` を返す設計になっている
-  (`TestHandleUpdateMiReKyou_Nonexistent_ReturnsError` でその差分を固定)
+  (`TestHandleGetMiBoardList_IncludesMiReKyouOnlyBoard`)
+- **存在しないIDへの更新**: 全13型とも `NotFound*Error` を返す
+  (`TestHandleUpdate*_Nonexistent_ReturnsError`)。
+  以前は Mi / MiReKyou 以外の11型で、ユースケース側の存在チェックが
+  書き込みの後ろに置かれていて到達できず、更新のつもりが新規レコードを
+  作って成功を返していた。当時は挙動をそのまま固定した
+  `TestHandleUpdate*_Nonexistent_Succeeds` 群があったが、
+  チェックを書き込みの前へ移したうえでエラー期待へ揃えている
 - **通知の更新・削除**: `TestHandleUpdateNotification_ChangesContent` /
   `TestHandleUpdateNotification_MarksDeleted` は `--cache_in_memory` の
   **true / false 両方**で回す（`useCacheInMemory(t)`）。

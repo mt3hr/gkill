@@ -102,13 +102,22 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, nlog reps.Nlog, txID *string) ([]*message.GkillError, error) {
 	var gkillErrors []*message.GkillError
 
-	_, err := repositories.NlogReps.GetNlog(ctx, nlog.ID, nil)
+	existNlog, err := repositories.NlogReps.GetNlog(ctx, nlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_UPDATED_GET_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+	if existNlog == nil {
+		err = fmt.Errorf("not exist nlog id = %s", nlog.ID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.NotFoundNlogError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 		})
 		return gkillErrors, nil
 	}
@@ -167,26 +176,6 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-	}
-
-	existNlog, err := repositories.NlogReps.GetNlog(ctx, nlog.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetNlogError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
-		})
-		return gkillErrors, nil
-	}
-	if existNlog == nil {
-		err = fmt.Errorf("not exist nlog id = %s", nlog.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.NotFoundNlogError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
-		})
-		return gkillErrors, nil
 	}
 
 	return nil, nil
