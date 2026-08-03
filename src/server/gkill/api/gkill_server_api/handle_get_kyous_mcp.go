@@ -206,7 +206,11 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 
 	urlogMap := map[string]reps.URLog{}
-	if urlogs, urlogErr := repositories.URLogReps.FindURLog(r.Context(), findQueryForBatch); urlogErr == nil {
+	// URLogのサムネイルはbase64画像で、実データでは227行で90MBある(1行最大10MB)。
+	// MCPの利用者はAIクライアントで画像本体を使えないため、DBから読む段階で外す。
+	findQueryForURLog := *findQueryForBatch
+	findQueryForURLog.ExcludeURLogThumbnailImage = true
+	if urlogs, urlogErr := repositories.URLogReps.FindURLog(r.Context(), &findQueryForURLog); urlogErr == nil {
 		for _, u := range urlogs {
 			urlogMap[u.ID] = u
 		}
