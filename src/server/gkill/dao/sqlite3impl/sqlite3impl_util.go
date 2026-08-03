@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"runtime"
 	"strings"
 	"time"
 
@@ -40,12 +41,42 @@ func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }
 
+// sqliteDataDSNParams は実データDBを開くときのPRAGMAです。
+//
+// journal_mode は DELETE のまま変えないこと。
+// WALにすると -wal / -shm のサイドカーができ、.db 単体をコピーしても
+// 未チェックポイントの内容が落ちる。gkillはrepを端末ごとの .db ファイルとして
+// 持ち回る作りで、バックアップも単純なファイルコピーで済ませたいので、
+// ここは意図的にWALを使わない。（キャッシュ側は別で、そちらはWALを使っている）
+//
+// synchronous も NORMAL のまま変えない。耐久性の意味が変わるため。
+//
+// cache_size / temp_store / mmap_size は未設定だったので足した。
+//   - cache_size: 既定は -2000 (2MB)。接続ごとの上限で、実体ファイル数ぶん
+//     積み上がりうるので控えめに 8MB にしてある
+//   - temp_store: 既定は FILE。ORDER BY の一時ソートがディスクに落ちるのを防ぐ
+//   - mmap_size: 大きいDBで効果が大きい。実測(90MBのURLog.dbを全走査)で
+//     156ms -> 5.6ms。小さいDBでは差が出ない。
+//     ページをOSキャッシュからSQLiteのバッファへ複写しなくて済むため。
+const sqliteDataDSNParams = "?_pragma=busy_timeout(6000)" +
+	"&_pragma=synchronous(NORMAL)" +
+	"&_pragma=journal_mode(DELETE)" +
+	"&_pragma=cache_size(-8000)" +
+	"&_pragma=temp_store(MEMORY)" +
+	"&_pragma=mmap_size(268435456)"
+
 func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", "file:"+filename+"?_pragma=busy_timeout(6000)&_pragma=synchronous(NORMAL)&_pragma=journal_mode(DELETE)")
+	db, err := sql.Open("sqlite", "file:"+filename+sqliteDataDSNParams)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	// 既定の MaxIdleConns は2しかなく、同時2本を超えた接続は使い終わると即閉じられる。
+	// そのたびにSQLiteのページキャッシュが捨てられるので、
+	// 同時に開ける本数と同じだけ保持させる。
+	db.SetMaxOpenConns(runtime.NumCPU())
+	db.SetMaxIdleConns(runtime.NumCPU())
+	db.SetConnMaxLifetime(0)
 	return db, err
 }
 
