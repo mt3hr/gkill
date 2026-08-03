@@ -61,6 +61,8 @@ go-astilectron を使用して Electron ライクなデスクトップウィン�
 | `generate_video_cache` | 動画キャッシュ生成 |
 | `optimize` | データベース最適化 |
 | `update_cache` | キャッシュ更新 |
+| `clear_cache` | ディスク上の派生キャッシュ削除 |
+| `reset_password` | パスワードを無効化してリセットURLを再発行（`common/password_admin.go`） |
 
 ## common/ 配下
 

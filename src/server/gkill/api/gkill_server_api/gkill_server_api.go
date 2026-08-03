@@ -34,12 +34,14 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 	}
 	if len(accounts) == 0 {
 		passwordResetToken := GenerateNewID()
+		passwordResetTokenExpiration := time.Now().Add(account.PasswordResetTokenTTL)
 		adminAccount := &account.Account{
-			UserID:             "admin",
-			PasswordSha256:     nil,
-			IsAdmin:            true,
-			IsEnable:           true,
-			PasswordResetToken: &passwordResetToken,
+			UserID:                       "admin",
+			PasswordHash:                 nil,
+			IsAdmin:                      true,
+			IsEnable:                     true,
+			PasswordResetToken:           &passwordResetToken,
+			PasswordResetTokenExpiration: &passwordResetTokenExpiration,
 		}
 		_, err := gkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(ctx, adminAccount)
 		if err != nil {
@@ -126,6 +128,8 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		UsecaseCtx:       usecase.NewUsecaseContext(gkillDAOManager, findFilter),
 		RebootServerCh:   make(chan struct{}),
 		loginRateLimiter: newLoginRateLimiter(),
+		// set_new_passwordは未認証で叩けるので、ログインとは別枠で試行回数を絞る
+		passwordResetRateLimiter: newLoginRateLimiter(),
 	}, nil
 }
 
@@ -145,6 +149,8 @@ type GkillServerAPI struct {
 	device string
 
 	loginRateLimiter *loginRateLimiter
+
+	passwordResetRateLimiter *loginRateLimiter
 
 	closeOnce sync.Once
 	closeErr  error

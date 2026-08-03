@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
@@ -56,7 +57,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 	// パスワードリセット操作をしたユーザを特定
 	requesterSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
 	if requesterSession == nil || err != nil {
-		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
+		err = fmt.Errorf("error at get login session: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionNotFoundError,
@@ -121,12 +122,14 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 	}
 
 	passwordResetToken := GenerateNewID()
+	passwordResetTokenExpiration := time.Now().Add(account.PasswordResetTokenTTL)
 	updateTargetAccount := &account.Account{
-		UserID:             targetAccount.UserID,
-		IsAdmin:            targetAccount.IsAdmin,
-		IsEnable:           targetAccount.IsEnable,
-		PasswordSha256:     nil,
-		PasswordResetToken: &passwordResetToken,
+		UserID:                       targetAccount.UserID,
+		IsAdmin:                      targetAccount.IsAdmin,
+		IsEnable:                     targetAccount.IsEnable,
+		PasswordHash:                 nil,
+		PasswordResetToken:           &passwordResetToken,
+		PasswordResetTokenExpiration: &passwordResetTokenExpiration,
 	}
 	ok, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.UpdateAccount(r.Context(), updateTargetAccount)
 	if !ok || err != nil {

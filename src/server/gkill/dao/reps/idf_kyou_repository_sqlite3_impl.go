@@ -2449,10 +2449,12 @@ func (i *idfKyouRepositorySQLite3Impl) ClearVideoCache() error {
 	return nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) ClearZipCache() error {
-	// zip_cacheはrepName(=filepath.Base(contentDir))でキーされる
+func (i *idfKyouRepositorySQLite3Impl) ClearZipCache(userID string) error {
+	// zip_cacheはユーザIDとrepName(=filepath.Base(contentDir))でキーされる。
+	// 配信側が他人のキャッシュを読めないようユーザごとにディレクトリを分けているので、
+	// 削除側も同じ構成をたどる必要がある (handle_browse_zip_contents.go を参照)
 	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
-	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "zip_cache", filepath.Base(dir)))
+	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "zip_cache", userID, filepath.Base(dir)))
 
 	os.RemoveAll(cacheDir)
 	return nil

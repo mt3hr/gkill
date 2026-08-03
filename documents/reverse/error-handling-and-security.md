@@ -118,7 +118,7 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 
 **ログフォーマット:** JSON形式、ソース位置追跡有効、静的フィールド `{"app": "gkill"}`
 
-**機密値のマスク:** TraceSQL ログ（`gkill_trace_sql.log`）に出力される SQL バインド値のうち、機密値（Google Map 等の APIキー、TLS 秘密鍵、パスワードハッシュ、パスワードリセットトークン）はマスクされて記録される（`account_dao_sqlite3_impl.go`・`server_config_dao_sqlite3_impl.go`・`sqlite3impl_util.go`）。
+**機密値のマスク:** TraceSQL ログ（`gkill_trace_sql.log`）に出力される SQL バインド値のうち、機密値（Google Map 等の APIキー、TLS 秘密鍵、パスワードハッシュ、パスワードリセットトークン、セッションID）はマスクされて記録される（`account_dao_sqlite3_impl.go`・`server_config_dao_sqlite3_impl.go`・`sqlite3impl_util.go`）。
 
 ---
 
@@ -146,8 +146,8 @@ sequenceDiagram
     alt リセット中
         S-->>C: ERR000004
     end
-    S->>S: パスワード照合<br/>(account.PasswordSha256 と比較)
-    alt 不一致
+    S->>S: パスワード照合<br/>(account.PasswordHash に対して Argon2id で検証)
+    alt 不一致 / パスワード未設定
         S-->>C: ERR000005 (AccountInvalidPasswordError)
     end
     S->>S: UUID生成 (セッションID)
@@ -159,13 +159,58 @@ sequenceDiagram
 
 | 項目 | 実装 |
 |---|---|
-| ハッシュアルゴリズム | SHA256（クライアント側で計算） |
-| ソルト | なし |
-| 保存形式 | SHA256 hex文字列（nullable） |
-| 初期状態 | `PasswordSha256 = nil` かつ `PasswordResetToken` 設定済み（→ パスワードリセット登録が必要。パスワードなしではログイン不可） |
-| 比較方式 | 文字列直接比較（`!=`） |
+| ワイヤ形式 | クライアントが `SHA256(パスワード)` を64桁小文字hexにして送る（`password_sha256` / `new_password_sha256`） |
+| サーバ側のハッシュ | Argon2id（`m=65536 KiB, t=3, p=4`、ソルト16バイト、鍵長32バイト） |
+| ソルト | アカウントごとに `crypto/rand` で生成 |
+| 保存形式 | PHC文字列 `$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>`（nullable） |
+| 保存先カラム | `ACCOUNT.PASSWORD_HASH` |
+| 初期状態 | `PasswordHash = nil` かつ `PasswordResetToken` 設定済み（→ パスワードリセット登録が必要。パスワードなしではログイン不可） |
+| 比較方式 | Argon2idで再計算し `crypto/subtle.ConstantTimeCompare` |
+| 未設定時の挙動 | 常に不一致として扱う（fail-closed） |
+| 新パスワードの検証 | 64桁小文字hexでなければ拒否 |
 
-> **セキュリティ上の注記:** SHA256（ソルトなし）はパスワードハッシュとしては脆弱であり、レインボーテーブル攻撃のリスクがあります。gkillはスタンドアロン利用を前提とした設計のため現状の実装となっていますが、リモート公開環境で運用する場合は、bcrypt/scrypt/Argon2等のソルト付きハッシュへの移行を検討すべきです。
+実装は `src/server/gkill/dao/account/password_hash.go`。パラメータはPHC文字列自身に埋め込むので、
+後からコストを変えても既存の保存値はそのまま照合できる。
+
+> **クライアント側SHA256の位置づけ:** サーバは受け取った64桁hexを「資格情報」として扱い、
+> その上にArgon2idをかける。前段のSHA256はArgon2idの強度を下げない（攻撃者はオフライン総当たりでも
+> 候補ごとに SHA256（安価）→ Argon2id（高価）を計算する必要があり、コストはArgon2idが支配する）。
+> 副次的に、Argon2idへの入力が64桁hex固定になるため長大入力によるDoSも塞がる。
+> またサーバが平文パスワードを一切見ないので、他サービスとのパスワード使い回しがgkillに露出しない。
+
+> **残る留意点:** ワイヤを流れる64桁hexは、それ自体がリプレイ可能な資格情報である。
+> 外部公開する場合はTLSが前提になる。MCPサーバ・Wear OSコンパニオン・gkill_autolog は
+> この値を長期資格情報として保存しているため、失効させたい場合はパスワードの再設定が必要になる。
+
+**パスワードリセットトークン:**
+
+| 項目 | 実装 |
+|---|---|
+| 生成 | UUIDv4（`crypto/rand` 由来、122ビット） |
+| 有効期限 | 発行から72時間（`account.PasswordResetTokenTTL`）。`ACCOUNT.PASSWORD_RESET_TOKEN_EXPIRATION` に保存 |
+| 比較方式 | `crypto/subtle.ConstantTimeCompare`（`Account.IsPasswordResetTokenValid`） |
+| 使用回数 | 1回（`/api/set_new_password` 成功時に期限ごとNULLにする） |
+| 発行経路 | 初回起動時のadmin自動作成、`/api/add_user`、`/api/reset_password`、CLIの `reset_password` |
+| 失効の副作用 | パスワード設定に成功すると、その利用者の `LOGIN_SESSION` を全削除する |
+
+管理者が全員ぶんのトークンを失った場合や期限が切れた場合は、サーバと同じマシンで
+`gkill_server reset_password <user_id...>` を実行するとトークンを再発行してURLを表示する。
+Argon2id化によりDBを読んでもログインはできないため、これが唯一の復帰経路になる。
+
+**スキーマ1.0.0からの移行:**
+
+1.0.0では `ACCOUNT.PASSWORD_SHA256` に無塩SHA-256をそのまま保持していた。つまり
+DBの値がそのままログインに使える状態で、`update_cache` サブコマンドが実際にそうしていた。
+1.1.0への移行（`account_dao_sqlite3_impl.go` の `migrateAccountSchemaFrom100`）は単一トランザクションで
+
+1. `PASSWORD_SHA256` を `PASSWORD_HASH` にリネーム
+2. `PASSWORD_RESET_TOKEN_EXPIRATION` を追加
+3. 全アカウントのパスワードを無効化し、リセットトークンを発行しなおす
+4. スキーマ版を更新
+
+を行い、発行したリセットURLを標準出力に印字する。既存ハッシュをArgon2idで包み直すのではなく
+全員に再設定してもらうのは、包み直しても「DBを読めた者がログインできる」状態が続くため。
+移行後のDBを1.0.0のバイナリで開くと `invalid db schema version` で起動を拒否する。
 
 ### 2.3 セッション管理
 
@@ -214,8 +259,29 @@ sequenceDiagram
 | `/api/login` | 不要 | なし |
 | `/api/get_shared_kyous` | 不要（共有リンク） | なし |
 | `/api/urlog_bookmarklet` | 独自セッション | なし |
+| `/api/logout` | ルーティング上は不要だがハンドラ内でセッションを解決し、解決できなければ何も削除しない | なし |
+| `/api/set_new_password` | 不要（リセットトークンで認可）。IP単位のレート制限あり | なし |
 | その他全エンドポイント | `session_id` 必須 | ServerConfig依存 |
 | `/api/open_directory`, `/api/open_file` | `session_id` 必須 | filterLocalOnly適用 |
+
+#### 派生キャッシュの配信
+
+| パス | 認証 | 利用者の分離 |
+|---|---|---|
+| `/files/` | Cookie `gkill_session_id`（共有ページは `gkill_shared_id`） | セッションの利用者のリポジトリを読み込み、URL中のrep名がその利用者のIDF repに無ければ404（`handle_file_serve.go`） |
+| `/zip_cache/` | Cookie `gkill_session_id` | 配信の起点をセッションから引いた利用者のディレクトリ（`caches/zip_cache/{userID}/`）に固定する。利用者IDはURLに現れないので他人のディレクトリを指名できない（`handle_browse_zip_contents.go`） |
+
+`/zip_cache/` でrep名の照合ではなくディレクトリの分離を使っているのは、rep名が利用者間で重複しうるため。
+rep名だけを照合すると、同名repを持つ利用者が他人のファイルのハッシュを含むURLを要求したときに通ってしまう。
+
+#### 初回セットアップ時のリセットトークン
+
+アカウントが `admin` 1件だけでパスワード未設定という初期状態のとき、`/` へのHTMLナビゲーションは
+`/regist_first_account?reset_token=<UUID>` へ307リダイレクトされる。このトークンはadminを丸ごと取れる秘密なので、
+**接続元がループバックで、かつ転送ヘッダ（`X-Forwarded-For` / `X-Real-Ip` / `Forwarded` / `X-Forwarded-Host`）が
+付いていない場合に限って**渡す（`utils.go` の `ifRedirectResetAdminAccountIsNotFound`）。
+それ以外は通常のログイン画面を返す。ループバック以外から初回セットアップする場合は、
+起動時に標準出力へ出るURL（`close.go` の `printInitialSetupURLs`）を使う。
 
 ### 2.5 TLS設定
 
@@ -227,6 +293,7 @@ sequenceDiagram
 | 秘密鍵パス | `$HOME/gkill/tls/key.pem` |
 | 自動生成 | `/api/generate_tls_file` で自己署名証明書生成可能 |
 | CLI無効化 | `--disable_tls` フラグ |
+| 非TLSで外部bind | 起動時に標準出力へ警告を出す（起動は妨げない）。`close.go` の `printInsecureBindWarning` |
 
 ### 2.6 Web Push通知 (VAPID)
 
@@ -283,7 +350,7 @@ JSON API 側がボディで `session_id` を運ぶ設計になっているため
 ### 2.9 初期セットアップのセキュリティ
 
 初回起動時：
-1. `admin` アカウントが自動作成される（`PasswordSha256 = nil`、かつ `PasswordResetToken` が設定される）
+1. `admin` アカウントが自動作成される（`PasswordHash = nil`、かつ `PasswordResetToken` が設定される）
 2. **`PasswordResetToken` が非nilのため、パスワードなしではログインできない**。ログイン処理はパスワード照合の前に `ERR000004`（`AccountPasswordResetTokenIsNotNilError`）で拒否する（`handle_login.go`）
 3. VAPID鍵ペアが自動生成される
 4. デフォルトデバイス `"gkill"` が作成される
