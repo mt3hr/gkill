@@ -39,8 +39,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Prepare embedded locales
-        run: npm run copy_i18n_to_app_embed
+      # api パッケージが必要とする埋め込み資産を用意する。
+      #   locales     : init() が読む。無いと panic する
+      #   version.json: GetVersion() が読む。/api/get_application_config が使う
+      # どちらも Vite のビルドを伴わないので、フロントエンド一式は不要。
+      - name: Prepare embedded assets
+        run: |
+          npm run copy_i18n_to_app_embed
+          npm run put_version_info_embed
 
       - name: go build
         working-directory: src/server
@@ -143,8 +149,14 @@ jobs:
 
       # 各プラグインは独立したGoモジュールで、go.mod が ../../server を replace している。
       # server 側がコンパイルできる必要があるので locales を用意する。
-      - name: Prepare embedded locales
-        run: npm run copy_i18n_to_app_embed
+      # api パッケージが必要とする埋め込み資産を用意する。
+      #   locales     : init() が読む。無いと panic する
+      #   version.json: GetVersion() が読む。/api/get_application_config が使う
+      # どちらも Vite のビルドを伴わないので、フロントエンド一式は不要。
+      - name: Prepare embedded assets
+        run: |
+          npm run copy_i18n_to_app_embed
+          npm run put_version_info_embed
 
       - name: Plugin tests
         run: npm run test_plugins
