@@ -136,7 +136,7 @@ dao/
 | `repository_dao.go` | `RepositoryDAO` インタフェース |
 | `repository_dao_sqlite3_impl.go` | SQLite3 実装 |
 
-### `reps/`（125ファイル。テストを含めると143）— メインリポジトリ
+### `reps/`（125ファイル。テストを含めると145）— メインリポジトリ
 
 全 Kyou データ型のリポジトリ。詳細は [reps/README.md](reps/README.md) を参照。
 

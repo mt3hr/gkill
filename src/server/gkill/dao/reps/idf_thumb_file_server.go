@@ -27,7 +27,6 @@ import (
 	_ "image/png"
 
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/rwcarlsen/goexif/exif"
 	xdraw "golang.org/x/image/draw"
 	_ "golang.org/x/image/webp" // webp decode
@@ -76,9 +75,9 @@ type ThumbGenerator interface {
 
 // NewThumbFileServer は dir 配下をサーブしつつ、?thumb=200x200 のときだけサムネを返す。
 // - それ以外は base.ServeHTTP に委譲（既存挙動維持）
-func NewThumbFileServer(dir string, base http.Handler) http.Handler {
+func NewThumbFileServer(userID string, dir string, base http.Handler) http.Handler {
 	dir = filepath.Clean(os.ExpandEnv(dir))
-	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "thumb_cache", filepath.Base(dir)))
+	cacheDir := derivedCacheDirForUser("thumb_cache", userID, dir)
 
 	return &thumbFileServer{
 		rootDir:  dir,

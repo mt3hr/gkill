@@ -845,7 +845,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
 						idfKyouRep, err = reps.NewIDFDirRepLocalCached(ctx, userID, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
 					} else {
-						idfKyouRep, err = reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
+						idfKyouRep, err = reps.NewIDFDirRep(ctx, userID, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
 					}
 					if err != nil {
 						return nil, err

@@ -64,13 +64,13 @@ func NewIDFDirRepLocalCached(ctx context.Context, userID string, dir, dbFilename
 		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
 	}
 
-	originalRep, err := NewIDFDirRep(ctx, dir, dbFilename, false, r, autoIDF, idfIgnore, repositoriesRef)
+	originalRep, err := NewIDFDirRep(ctx, userID, dir, dbFilename, false, r, autoIDF, idfIgnore, repositoriesRef)
 	if err != nil {
 		err = fmt.Errorf("error at new idf dir rep: %w", err)
 		return nil, err
 	}
 
-	localCachedRep, err := NewIDFDirRep(ctx, dir, localCacheDBFileName, fullConnect, r, false, idfIgnore, repositoriesRef)
+	localCachedRep, err := NewIDFDirRep(ctx, userID, dir, localCacheDBFileName, fullConnect, r, false, idfIgnore, repositoriesRef)
 	if err != nil {
 		err = fmt.Errorf("error at new idf dir rep: %w", err)
 		return nil, err
@@ -160,7 +160,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 	if err = os.Remove(i.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
 		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", i.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
 		i.lastUpdateCacheChanged = false
-		reopenedRep, reopenErr := NewIDFDirRep(ctx, i.contentDir, i.localCacheDBFileName, i.fullConnect, i.r, i.autoIDF, i.idfIgnore, i.repositoriesRef)
+		reopenedRep, reopenErr := NewIDFDirRep(ctx, i.userID, i.contentDir, i.localCacheDBFileName, i.fullConnect, i.r, i.autoIDF, i.idfIgnore, i.repositoriesRef)
 		if reopenErr != nil {
 			return fmt.Errorf("error at reopen local cached rep %s: %w", i.localCacheDBFileName, reopenErr)
 		}
@@ -215,7 +215,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
 	}
 
-	newLocalCachedRep, err := NewIDFDirRep(ctx, i.contentDir, localCacheDBFileName, i.fullConnect, i.r, i.autoIDF, i.idfIgnore, i.repositoriesRef)
+	newLocalCachedRep, err := NewIDFDirRep(ctx, i.userID, i.contentDir, localCacheDBFileName, i.fullConnect, i.r, i.autoIDF, i.idfIgnore, i.repositoriesRef)
 	if err != nil {
 		err = fmt.Errorf("error at new idf dir rep: %w", err)
 		return err
@@ -319,16 +319,16 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) GenerateThumbCache(ctx context
 	return i.originalRep.GenerateThumbCache(ctx)
 }
 
-func (i *idfKyouRepositorySQLite3ImplLocalCached) ClearThumbCache() error {
-	return i.originalRep.ClearThumbCache()
+func (i *idfKyouRepositorySQLite3ImplLocalCached) ClearThumbCache(userID string) error {
+	return i.originalRep.ClearThumbCache(userID)
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) GenerateVideoCache(ctx context.Context) error {
 	return i.originalRep.GenerateVideoCache(ctx)
 }
 
-func (i *idfKyouRepositorySQLite3ImplLocalCached) ClearVideoCache() error {
-	return i.originalRep.ClearVideoCache()
+func (i *idfKyouRepositorySQLite3ImplLocalCached) ClearVideoCache(userID string) error {
+	return i.originalRep.ClearVideoCache(userID)
 }
 
 func (i *idfKyouRepositorySQLite3ImplLocalCached) ClearZipCache(userID string) error {

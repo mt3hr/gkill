@@ -587,7 +587,7 @@ func (i *idfKyouRepositoryTempSQLite3Impl) GenerateThumbCache(ctx context.Contex
 	return nil
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) ClearThumbCache() error {
+func (i *idfKyouRepositoryTempSQLite3Impl) ClearThumbCache(userID string) error {
 	return nil
 }
 
@@ -595,7 +595,7 @@ func (i *idfKyouRepositoryTempSQLite3Impl) GenerateVideoCache(ctx context.Contex
 	return nil
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) ClearVideoCache() error {
+func (i *idfKyouRepositoryTempSQLite3Impl) ClearVideoCache(userID string) error {
 	return nil
 }
 

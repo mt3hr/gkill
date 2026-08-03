@@ -43,11 +43,11 @@ type IDFKyouRepository interface {
 
 	GenerateThumbCache(ctx context.Context) error
 
-	ClearThumbCache() error
+	ClearThumbCache(userID string) error
 
 	GenerateVideoCache(ctx context.Context) error
 
-	ClearVideoCache() error
+	ClearVideoCache(userID string) error
 
 	ClearZipCache(userID string) error
 
