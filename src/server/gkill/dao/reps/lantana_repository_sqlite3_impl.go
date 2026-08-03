@@ -21,6 +21,10 @@ import (
 const CURRENT_SCHEMA_VERSION_LANTANA_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type lantanaRepositorySQLite3Impl struct {
+	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
+	// temp repが構造体変換でこの型をコピーするため、必ずポインタで持つこと。
+	cacheChange *dbFileChangeDetector
+
 	filename    string
 	db          *sql.DB
 	m           *sync.RWMutex
@@ -125,6 +129,7 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	}
 
 	return &lantanaRepositorySQLite3Impl{
+		cacheChange: &dbFileChangeDetector{},
 		filename:    filename,
 		db:          db,
 		m:           &sync.RWMutex{},
@@ -619,11 +624,20 @@ func (l *lantanaRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (
 }
 
 func (l *lantanaRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	// 自身は実DBを直接見るのでキャッシュは持たないが、
+	// 上位のキャッシュrepが「作り直す必要があるか」を判断できるよう、
+	// ここでファイルの更新有無だけ観測しておく。
+	l.cacheChange.refresh(l.filename)
 	return nil
 }
 
 func (l *lantanaRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
-	return true
+	return l.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (l *lantanaRepositorySQLite3Impl) CommitCacheRebuild() {
+	l.cacheChange.commit()
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {

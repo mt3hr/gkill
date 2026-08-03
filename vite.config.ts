@@ -71,7 +71,10 @@ const precacheGlobIgnores = [
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
-  const minify = (process.env.MINIFY ?? 'false') === 'true'
+  // minifyは既定で有効。デバッグで読めるJSが欲しいときだけ MINIFY=false を指定する。
+  // 既定offだと install_server / install_app (= prepare_install -> build) が
+  // 未minifyの5MB近いJSをそのままGoバイナリに埋め込んでしまう。
+  const minify = (process.env.MINIFY ?? 'true') === 'true'
   // GKILL_API_PROXY_TARGET でproxy先を上書きできる
   // (`npm run dev -- --api=<url>` がこれを設定する。E2Eが空きポートで立てたサーバ向けにも使う)
   const api_target = process.env.GKILL_API_PROXY_TARGET ?? 'http://localhost:9999'

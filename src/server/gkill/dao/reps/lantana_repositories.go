@@ -288,6 +288,14 @@ errloop:
 	return nil
 }
 
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれ、
+// 配下の各repの「取り込み済み」基準を進めます。
+func (l LantanaRepositories) CommitCacheRebuild() {
+	for _, rep := range l {
+		commitCacheRebuildIfSupported(rep)
+	}
+}
+
 func (l LantanaRepositories) LastUpdateCacheChanged() bool {
 	for _, rep := range l {
 		if rep.LastUpdateCacheChanged() {

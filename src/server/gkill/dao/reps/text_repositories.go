@@ -316,6 +316,14 @@ errloop:
 	return nil
 }
 
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれ、
+// 配下の各repの「取り込み済み」基準を進めます。
+func (t TextRepositories) CommitCacheRebuild() {
+	for _, rep := range t {
+		commitCacheRebuildIfSupported(rep)
+	}
+}
+
 func (t TextRepositories) LastUpdateCacheChanged() bool {
 	for _, rep := range t {
 		if rep.LastUpdateCacheChanged() {

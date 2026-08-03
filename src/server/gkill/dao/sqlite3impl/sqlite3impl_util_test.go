@@ -1,6 +1,7 @@
 package sqlite3impl
 
 import (
+	"database/sql"
 	"strings"
 	"testing"
 	"time"
@@ -159,6 +160,34 @@ func TestGenerateFindSQLCommon_UseIDsEmpty(t *testing.T) {
 	if !strings.Contains(sql, "0 = 1") {
 		t.Errorf("expected '0 = 1' for empty IDs, got %q", sql)
 	}
+	// 「0 = 1」に続けて区切りなしで「0 = 0」を出すとSQL構文エラーになる。
+	// 空のrep（最新版アドレスが1件も無いrep）の検索で必ず踏むので固定しておく。
+	if strings.Contains(sql, "0 = 0") {
+		t.Errorf("'0 = 1' の後に '0 = 0' を続けてはいけない (構文エラーになる), got %q", sql)
+	}
+	if err := assertValidWhereClause(t, sql, queryArgs); err != nil {
+		t.Errorf("生成されたWHERE句がSQLiteで実行できない: %v (sql=%q)", err, sql)
+	}
+}
+
+// assertValidWhereClause は生成されたWHERE句が実際にSQLiteでパースできることを確認します。
+// 文字列一致だけだと今回のような構文エラーを取りこぼすため。
+func assertValidWhereClause(t *testing.T, whereSQL string, args []any) error {
+	t.Helper()
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = db.Close() }()
+	if _, err := db.Exec(`CREATE TABLE MY_TABLE (ID, TITLE, RELATED_TIME, UPDATE_TIME)`); err != nil {
+		return err
+	}
+	rows, err := db.Query(`SELECT ID FROM MY_TABLE AS T WHERE `+whereSQL, args...)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = rows.Close() }()
+	return rows.Err()
 }
 
 func TestGenerateFindSQLCommon_UseWords(t *testing.T) {

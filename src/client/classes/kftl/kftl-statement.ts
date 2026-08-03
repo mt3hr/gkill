@@ -103,7 +103,9 @@ export class KFTLStatement {
 
             const line = this.generate_kftl_line(context)
 
-            if (line.constructor.name == KFTLSplitAndNextSecondStatementLine.name) {
+            // クラス名ではなくコンストラクタの同一性で比較する。
+            // minify するとクラス名は短縮され、別クラスが同じ名前になりうるため。
+            if (line.constructor === KFTLSplitAndNextSecondStatementLine) {
                 prev_add_second++
             }
             prev_context = context
