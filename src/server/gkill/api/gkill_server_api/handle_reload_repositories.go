@@ -109,7 +109,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	}
 
 	if request.ClearZipCache {
-		err = repositories.IDFKyouReps.ClearZipCache()
+		err = repositories.IDFKyouReps.ClearZipCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear zip cache: %w", err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

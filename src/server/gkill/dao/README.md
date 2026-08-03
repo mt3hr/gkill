@@ -67,13 +67,14 @@ dao/
 
 ## サブディレクトリ一覧
 
-### `account/`（3ファイル）— ユーザアカウント
+### `account/`（4ファイル）— ユーザアカウント
 
 | ファイル | 説明 |
 |---------|------|
-| `account.go` | `Account` エンティティ（user_id, password_sha256 等） |
+| `account.go` | `Account` エンティティ（user_id, password_hash 等）。パスワード照合とリセットトークン検証のメソッドを持つ |
+| `password_hash.go` | Argon2id によるパスワードのハッシュ化・検証（PHC文字列）、資格情報とユーザIDの形式検証 |
 | `account_dao.go` | `AccountDAO` インタフェース |
-| `account_dao_sqlite3_impl.go` | SQLite3 実装 |
+| `account_dao_sqlite3_impl.go` | SQLite3 実装。スキーマ 1.0.0 → 1.1.0 の移行もここ |
 
 ### `account_state/`（6ファイル）— セッション・アップロード履歴
 

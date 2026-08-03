@@ -438,12 +438,20 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 	}
 
 	if len(accounts) == 1 {
-		if accounts[0].UserID != "admin" || accounts[0].PasswordSha256 != nil {
+		if accounts[0].UserID != "admin" || accounts[0].PasswordHash != nil || accounts[0].PasswordResetToken == nil {
 			return false
 		}
 
-		http.Redirect(w, r, fmt.Sprintf("/regist_first_account?reset_token=%s", *accounts[0].PasswordResetToken), http.StatusTemporaryRedirect)
-		// http.Redirect(w, r, fmt.Sprintf("/set_new_password?reset_token=%s&user_id=%s", *accounts[0].PasswordResetToken, accounts[0].UserID), http.StatusTemporaryRedirect)
+		// リセットトークンは admin を丸ごと取れてしまう秘密なので、
+		// 同一マシンから直接来たリクエストにしか載せない。
+		// 外から見えている状態だと `curl -sI http://host:9999/` だけで奪われてしまう。
+		// ループバック以外からの初回セットアップは、起動時に標準出力へ出しているURLを使う
+		// (PrintStartedMessage を参照)。
+		if !isTrustedLocalRequest(r) {
+			return false
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("/regist_first_account?reset_token=%s", url.QueryEscape(*accounts[0].PasswordResetToken)), http.StatusTemporaryRedirect)
 		return true
 	}
 	return false

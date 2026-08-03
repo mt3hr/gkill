@@ -138,7 +138,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -470,7 +470,7 @@ loop:
 				continue loop
 			}
 			if matchIDFKyou != nil {
-				if matchIDFKyouInRep.UpdateTime.Before(matchIDFKyou.UpdateTime) {
+				if matchIDFKyouInRep.UpdateTime.After(matchIDFKyou.UpdateTime) {
 					matchIDFKyou = matchIDFKyouInRep
 				}
 			} else {
@@ -535,7 +535,7 @@ loop:
 				continue loop
 			}
 			if matchIDFKyou != nil {
-				if matchIDFKyouInRep.UpdateTime.Before(matchIDFKyou.UpdateTime) {
+				if matchIDFKyouInRep.UpdateTime.After(matchIDFKyou.UpdateTime) {
 					matchIDFKyou = matchIDFKyouInRep
 				}
 			} else {
@@ -811,14 +811,14 @@ func (i IDFKyouRepositories) ClearVideoCache() error {
 	return err
 }
 
-func (i IDFKyouRepositories) ClearZipCache() error {
+func (i IDFKyouRepositories) ClearZipCache(userID string) error {
 	unwrapedReps, err := i.UnWrapTyped()
 	if err != nil {
 		err = fmt.Errorf("error at clear zip cache at idf kyou repositories: %w", err)
 		return err
 	}
 	for _, unwrapedRep := range unwrapedReps {
-		err := unwrapedRep.ClearZipCache()
+		err := unwrapedRep.ClearZipCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear zip cache at idf kyou repositories in rep: %w", err)
 			return err

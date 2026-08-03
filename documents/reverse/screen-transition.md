@@ -82,7 +82,7 @@ stateDiagram-v2
 
 #### LoginPage（ログイン画面）`/`
 
-ユーザーIDとパスワード（SHA256ハッシュ化）でログインする起点画面。パスワードリセットリンク経由でSetNewPasswordPageへ、初回起動時はRegistFirstAccountPageへ自動遷移する。ログイン成功後のリダイレクト先は最後にアクセスした画面（Vue Routerの履歴から復元）。
+ユーザーIDとパスワード（SHA256ハッシュ化して送信、サーバ側はArgon2idで照合）でログインする起点画面。パスワードリセットリンク経由でSetNewPasswordPageへ、初回起動時はRegistFirstAccountPageへ自動遷移する。ログイン成功後のリダイレクト先は最後にアクセスした画面（Vue Routerの履歴から復元）。
 
 #### KFTLPage（KFTL入力画面）`/kftl`
 

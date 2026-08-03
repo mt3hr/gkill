@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
@@ -53,6 +54,30 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// このエンドポイントは未認証で叩ける。リセットトークンを総当たりされないように
+	// ログインと同じくIP単位で試行回数を絞る
+	if !g.passwordResetRateLimiter.allow(extractIP(r.RemoteAddr)) {
+		gkillError := &message.GkillError{
+			ErrorCode:    message.LoginRateLimitError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "LOGIN_RATE_LIMITED_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// クライアントはパスワードのSHA-256を64桁hexにして送ってくる。
+	// その形式でないものは受け付けない (空文字や巨大な文字列がそのまま資格情報になるのを防ぐ)
+	if !account.IsValidCredentialFormat(request.NewPasswordSha256) {
+		err = fmt.Errorf("error at invalid new password format user id = %s", request.UserID)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidSetNewPasswordRequestDataError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	// 対象のアカウント情報を取得してパスワード設定
 	targetAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.UserID)
 	if err != nil {
@@ -74,9 +99,10 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// リセットトークンがあっているか確認
-	if targetAccount.PasswordResetToken == nil || request.ResetToken != *targetAccount.PasswordResetToken {
-		err = fmt.Errorf("error at reset token is not match user id = %s requested token = %s: %w", request.UserID, request.ResetToken, err)
+	// リセットトークンがあっているか確認する。
+	// トークン自体が秘密なので、照合はconstant-timeで行い、期限も見る
+	if !targetAccount.IsPasswordResetTokenValid(request.ResetToken, time.Now()) {
+		err = fmt.Errorf("error at reset token is not match or expired user id = %s", request.UserID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidPasswordResetTokenError,
@@ -86,12 +112,25 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	passwordHash, err := account.HashPassword(request.NewPasswordSha256)
+	if err != nil {
+		err = fmt.Errorf("error at hash new password user id = %s: %w", request.UserID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInfoUpdateError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	updateTargetAccount := &account.Account{
-		UserID:             targetAccount.UserID,
-		IsAdmin:            targetAccount.IsAdmin,
-		IsEnable:           targetAccount.IsEnable,
-		PasswordSha256:     &request.NewPasswordSha256,
-		PasswordResetToken: nil,
+		UserID:                       targetAccount.UserID,
+		IsAdmin:                      targetAccount.IsAdmin,
+		IsEnable:                     targetAccount.IsEnable,
+		PasswordHash:                 &passwordHash,
+		PasswordResetToken:           nil,
+		PasswordResetTokenExpiration: nil,
 	}
 	ok, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.UpdateAccount(r.Context(), updateTargetAccount)
 	if !ok || err != nil {
@@ -105,6 +144,14 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
+	}
+
+	// パスワードを設定しなおしたので、それまでのセッションは失効させる。
+	// 失敗してもパスワード自体は変わっているので、ログだけ残して続行する
+	_, err = g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.DeleteLoginSessionsByUserID(r.Context(), targetAccount.UserID)
+	if err != nil {
+		err = fmt.Errorf("error at delete login sessions user id = %s: %w", targetAccount.UserID, err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	response.Messages = append(response.Messages, &message.GkillMessage{

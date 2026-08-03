@@ -18,12 +18,15 @@ func newTempAccountDAO(t *testing.T) AccountDAO {
 }
 
 func makeTestAccount(userID string) *Account {
-	pw := "dummysha256hash"
+	pw, err := HashPassword("0000000000000000000000000000000000000000000000000000000000000000")
+	if err != nil {
+		panic(err)
+	}
 	return &Account{
-		UserID:         userID,
-		PasswordSha256: &pw,
-		IsAdmin:        false,
-		IsEnable:       true,
+		UserID:       userID,
+		PasswordHash: &pw,
+		IsAdmin:      false,
+		IsEnable:     true,
 	}
 }
 

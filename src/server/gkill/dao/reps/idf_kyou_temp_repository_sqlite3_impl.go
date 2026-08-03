@@ -599,7 +599,7 @@ func (i *idfKyouRepositoryTempSQLite3Impl) ClearVideoCache() error {
 	return nil
 }
 
-func (i *idfKyouRepositoryTempSQLite3Impl) ClearZipCache() error {
+func (i *idfKyouRepositoryTempSQLite3Impl) ClearZipCache(userID string) error {
 	return nil
 }
 

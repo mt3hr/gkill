@@ -52,16 +52,27 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if request.CloseDatabase {
-		account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
+	// セッションを解決できたときだけ削除する。
+	// この確認が無いと、未認証で任意のsession_idを投げるだけで他人のセッションを消せてしまう。
+	//
+	// ただし解決できなかった場合もレスポンスは成功のまま返す。
+	// ログアウトはべき等であってほしいし、session_idが有効だったかどうかを
+	// 応答から読み取れるようにもしたくない。
+	// (期限切れのセッションでログアウトを押した利用者が、エラーで手詰まりになるのも避けたい)
+	account, _, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
+	if account == nil || err != nil {
 		if err != nil {
-			if err != nil {
-				err = fmt.Errorf("error account from session id = %s: %w", request.SessionID, err)
-				slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+			err = fmt.Errorf("error account from session: %w", err)
+			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		}
+		response.Messages = append(response.Messages, &message.GkillMessage{
+			MessageCode: message.LogoutSuccessMessage,
+			Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_LOGOUT_MESSAGE"}),
+		})
+		return
+	}
+
+	if request.CloseDatabase {
 		device, err := g.GetDevice()
 		if err != nil {
 			err = fmt.Errorf("error at get device name: %w", err)
@@ -90,7 +101,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	ok, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.DeleteLoginSession(r.Context(), request.SessionID)
 	if !ok || err != nil {
 		if err != nil {
-			err = fmt.Errorf("error at delete login session id = %s: %w", request.SessionID, err)
+			err = fmt.Errorf("error at delete login session: %w", err)
 			slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		}
 		gkillError := &message.GkillError{

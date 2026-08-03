@@ -334,7 +334,11 @@ WHERE SESSION_ID = ?
 	queryArgs := []any{
 		sessionID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	// セッションIDは全認証エンドポイントのbearer相当なのでログに出さない
+	queryArgsForLog := []any{
+		"***",
+	}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -447,7 +451,19 @@ INSERT INTO LOGIN_SESSION (
 		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
 		loginSession.IsLocalAppUser,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	// セッションIDは全認証エンドポイントのbearer相当なのでログに出さない
+	queryArgsForLog := []any{
+		loginSession.ID,
+		loginSession.UserID,
+		loginSession.Device,
+		loginSession.ApplicationName,
+		"***",
+		loginSession.ClientIPAddress,
+		loginSession.LoginTime.Format(sqlite3impl.TimeLayout),
+		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
+		loginSession.IsLocalAppUser,
+	}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -497,7 +513,20 @@ WHERE ID = ?
 		loginSession.IsLocalAppUser,
 		loginSession.ID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	// セッションIDは全認証エンドポイントのbearer相当なのでログに出さない
+	queryArgsForLog := []any{
+		loginSession.ID,
+		loginSession.UserID,
+		loginSession.Device,
+		loginSession.ApplicationName,
+		"***",
+		loginSession.ClientIPAddress,
+		loginSession.LoginTime.Format(sqlite3impl.TimeLayout),
+		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
+		loginSession.IsLocalAppUser,
+		loginSession.ID,
+	}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -528,6 +557,42 @@ WHERE SESSION_ID = ?
 
 	queryArgs := []any{
 		sessionID,
+	}
+	// セッションIDは全認証エンドポイントのbearer相当なのでログに出さない
+	queryArgsForLog := []any{
+		"***",
+	}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgsForLog)))
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+	return true, nil
+}
+
+func (l *loginSessionDAOSQLite3Impl) DeleteLoginSessionsByUserID(ctx context.Context, userID string) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
+	sql := `
+DELETE FROM LOGIN_SESSION
+WHERE USER_ID = ?
+`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
+	stmt, err := l.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at delete login sessions by user id sql: %w", err)
+		return false, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	queryArgs := []any{
+		userID,
 	}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	_, err = stmt.ExecContext(ctx, queryArgs...)

@@ -132,7 +132,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（90定義・88登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 92ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（90定義・88登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 93ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -206,10 +206,13 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **オレオレTLS** | 自己署名 TLS 証明書の生成機能。サーバ設定画面から生成できる |
 | **ホットリロード** | データの自動再読み込み機能 |
 | **FindQuery** | 検索クエリ。キーワード・日時範囲・タグ・データ型・デバイス等の複合条件で Kyou を検索する |
-| **ZIPキャッシュ** | IDFKyouのZIPファイルを展開したキャッシュ。`$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に保存される。リポジトリ名とファイルのSHA1ハッシュをキーとし、同一ファイルの再展開を回避する |
+| **ZIPキャッシュ** | IDFKyouのZIPファイルを展開したキャッシュ。`$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に保存される。利用者ID・リポジトリ名・**ZIPファイルの絶対パス文字列**のSHA1をキーとし、同一ファイルの再展開を回避する。配信時は利用者のディレクトリを起点に固定するので、他人のキャッシュは読めない |
 | **ZipEntry** | ZIP内のファイルエントリ情報。ファイル名・サイズ・パス等を含む。`/api/browse_zip_contents` のレスポンスとして返却される |
 | **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す。Kyou 本体だけでなく**付随するタグ・テキストにも同じ規則が適用される**ため、タグ名を書き換えたあとに旧タグ名で検索してもヒットしない（`find_filter.go:513,624,656`、`find_kyou_context.go:39` の `isLatestData`） |
-| **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する |
+| **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する。期限以外に、**パスワードを設定しなおすとそのユーザの全セッションが失効する**（他端末のログインも落ちる） |
+| **Argon2id** | パスワードの保存に使うメモリハードな鍵導出関数。gkill は `m=65536 KiB, t=3, p=4`、ソルト16バイト、鍵長32バイトで用いる。総当たりに必要な計算資源を引き上げ、`account.db` が流出しても資格情報にならないようにするのが目的 |
+| **PHC文字列** | Argon2id の保存形式。`$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>` のようにアルゴリズム・パラメータ・ソルトを値自身に含む。パラメータが保存値側にあるので、後からコストを変えても既存の値をそのまま照合できる |
+| **パスワードリセットトークン** | パスワードを設定しなおすための単回使用の秘密（UUIDv4）。有効期限は72時間で `ACCOUNT.PASSWORD_RESET_TOKEN_EXPIRATION` に持つ。照合は constant-time。管理者の `/api/reset_password` か CLI の `reset_password` で発行する |
 | **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、10ツール）・**Write専用**（`gkill-write-server.mjs`、25ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、30ツール）。いずれも共通のプラグインツール2つ（`lib/plugin-tools.mjs` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
 
 ## 10. 主要ファイルパス相互参照
@@ -221,7 +224,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
 | APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全90エンドポイントのパス・メソッド定義（うち88登録） |
-| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 92ファイル、1ハンドラ1ファイル） |
+| APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 93ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
 | リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（182ファイル） |
 | エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000401 の定数定義（計400件。ERR000243は欠番） |
@@ -233,7 +236,9 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | SQLite3実装 | `src/server/gkill/dao/reps/*_repository_sqlite3_impl.go` | SQLite3直接アクセス層 |
 | キャッシュ実装 | `src/server/gkill/dao/reps/*_repository_cached_sqlite3_impl.go` | インメモリキャッシュ層 |
 | Temp実装 | `src/server/gkill/dao/reps/*_repository_temp_sqlite3_impl.go` | トランザクション用一時層 |
+| パスワードのハッシュ化・検証 | `src/server/gkill/dao/account/password_hash.go` | Argon2id、資格情報とユーザIDの形式検証 |
 | CLIコマンド・初期化 | `src/server/gkill/main/common/common.go` | Cobra サブコマンド・サーバー起動処理 |
+| パスワード管理CLI | `src/server/gkill/main/common/password_admin.go` | `reset_password` サブコマンド、ローカル管理者セッションの発行 |
 | CLIフラグ定義 | `src/server/gkill/main/common/gkill_options/option.go` | --gkill_home_dir 等のフラグとディレクトリ構成 |
 | gkill_server エントリ | `src/server/gkill/main/gkill_server/main.go` | サーバーモード main() |
 | gkill デスクトップ エントリ | `src/server/gkill/main/gkill/main.go` | デスクトップアプリ main() |

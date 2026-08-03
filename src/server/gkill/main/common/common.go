@@ -26,7 +26,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_server_api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
-	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/hide_files"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
@@ -335,110 +334,24 @@ var (
 				httpClient = &http.Client{}
 			}
 
-			// 認証: update_cacheは管理者セッションを要求するが、
-			// サブコマンドはサーバーと同一マシンで実行される前提なので、
-			// ローカルのaccount.dbから管理者アカウントとそのパスワードを引いて自動でログインする
-			accountDBFilename := filepath.Join(configDBRootDir, "account.db")
-			accountDAO, err := account.NewAccountDAOSQLite3Impl(ctx, accountDBFilename)
+			// 認証: update_cacheは管理者セッションを要求する。
+			// サブコマンドはサーバーと同一マシンで実行される前提なので、ローカルのDBを直接触って
+			// 短命の管理者セッションを発行し、それを使う。
+			// (以前は保存済みのパスワードハッシュを読んで /api/login に投げ直していたが、
+			//  そのやり方は「DBを読めた者がログインできる」ことに依存していた。
+			//  Argon2idで保存するようになったのでハッシュからのログインはできないし、
+			//  そもそもそこに依存しないほうがよい)
+			sessionID, cleanupSession, err := issueLocalAdminSession(ctx, configDBRootDir, currentServerConfig.Device)
 			if err != nil {
-				err = fmt.Errorf("error at create account dao: %w", err)
 				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
-			defer accountDAO.Close(ctx)
-
-			accounts, err := accountDAO.GetAllAccounts(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get all accounts: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
-			}
-			slices.SortFunc(accounts, func(a *account.Account, b *account.Account) int {
-				return strings.Compare(a.UserID, b.UserID)
-			})
-
-			var adminAccount *account.Account
-			for _, a := range accounts {
-				if a.IsAdmin && a.IsEnable && a.PasswordResetToken == nil {
-					adminAccount = a
-					break
-				}
-			}
-			if adminAccount == nil {
-				err = fmt.Errorf("error: no enabled admin account found in %s", accountDBFilename)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
-			}
-			adminPasswordSha256 := ""
-			if adminAccount.PasswordSha256 != nil {
-				adminPasswordSha256 = *adminAccount.PasswordSha256
-			}
-
-			loginAddress := fmt.Sprintf("%s://localhost%s/api/login", scheme, portSuffix)
-			loginJSONBody, err := json.Marshal(&req_res.LoginRequest{
-				UserID:         adminAccount.UserID,
-				PasswordSha256: adminPasswordSha256,
-			})
-			if err != nil {
-				err = fmt.Errorf("error at marshal login request: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
-			}
-			loginResp, err := httpClient.Post(loginAddress, "application/json", bytes.NewReader(loginJSONBody))
-			if err != nil {
-				err = fmt.Errorf("error at post login request to %s: %w", loginAddress, err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
-			}
-			loginResponse := &req_res.LoginResponse{}
-			err = json.NewDecoder(loginResp.Body).Decode(loginResponse)
-			loginResp.Body.Close()
-			if err != nil {
-				err = fmt.Errorf("error at decode login response: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
-			}
-			if len(loginResponse.Errors) != 0 {
-				for _, errMsg := range loginResponse.Errors {
-					fmt.Fprintf(os.Stderr, "%s: %s\n", errMsg.ErrorCode, errMsg.ErrorMessage)
-				}
-				return
-			}
-			if loginResponse.SessionID == "" {
-				fmt.Fprintf(os.Stderr, "error: login did not return a session id\n")
-				return
-			}
-
-			// セッションを残さないように後始末する
-			defer func() {
-				logoutAddress := fmt.Sprintf("%s://localhost%s/api/logout", scheme, portSuffix)
-				logoutJSONBody, err := json.Marshal(&req_res.LogoutRequest{
-					SessionID:     loginResponse.SessionID,
-					CloseDatabase: false,
-				})
-				if err != nil {
-					err = fmt.Errorf("error at marshal logout request: %w", err)
-					slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-					return
-				}
-				logoutResp, err := httpClient.Post(logoutAddress, "application/json", bytes.NewReader(logoutJSONBody))
-				if err != nil {
-					err = fmt.Errorf("error at post logout request to %s: %w", logoutAddress, err)
-					slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-					return
-				}
-				logoutResp.Body.Close()
-			}()
+			defer cleanupSession()
 
 			address := fmt.Sprintf("%s://localhost%s/api/update_cache", scheme, portSuffix)
 			requestBody := &req_res.UpdateCacheRequest{
-				SessionID: loginResponse.SessionID,
+				SessionID: sessionID,
 				UserIDs:   targetUserIDs,
 			}
 			jsonBody, err := json.Marshal(requestBody)
@@ -697,12 +610,12 @@ func ClearCache(ctx context.Context, userID string, mode string) error {
 	case "video":
 		return repositories.IDFKyouReps.ClearVideoCache()
 	case "zip":
-		return repositories.IDFKyouReps.ClearZipCache()
+		return repositories.IDFKyouReps.ClearZipCache(userID)
 	case "all":
 		return errors.Join(
 			repositories.IDFKyouReps.ClearThumbCache(),
 			repositories.IDFKyouReps.ClearVideoCache(),
-			repositories.IDFKyouReps.ClearZipCache(),
+			repositories.IDFKyouReps.ClearZipCache(userID),
 			ClearPluginCache(userID),
 		)
 	}

@@ -274,10 +274,11 @@ erDiagram
 erDiagram
     ACCOUNT {
         text USER_ID PK
-        text PASSWORD_SHA256
+        text PASSWORD_HASH
         text IS_ADMIN
         text IS_ENABLE
         text PASSWORD_RESET_TOKEN
+        text PASSWORD_RESET_TOKEN_EXPIRATION
     }
 
     LOGIN_SESSION {
@@ -367,8 +368,8 @@ erDiagram
 
 ### 説明
 
-- **ACCOUNT**: ユーザ認証。USER_ID が主キー
-- **LOGIN_SESSION**: セッション管理。30日有効期限
+- **ACCOUNT**: ユーザ認証。USER_ID が主キー。`PASSWORD_HASH` は Argon2id の PHC 文字列（`$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>`）で、nullable。NULL はパスワード未設定＝ログイン不可を意味する。`PASSWORD_RESET_TOKEN_EXPIRATION` はリセットトークンの期限（既定72時間）で、トークンが NULL のときは NULL
+- **LOGIN_SESSION**: セッション管理。30日有効期限。パスワードを設定しなおすと、そのユーザの行はすべて削除される
 - **FILE_UPLOAD_HISTORY**: ファイルアップロード履歴（月間容量制限のため）
 - **SERVER_CONFIG**: サーバ設定。DEVICE + KEY の複合主キー（Key-Value 形式）
 - **APPLICATION_CONFIG**: ユーザ別アプリ設定。USER_ID + DEVICE + KEY の複合主キー。主な KEY 値は以下の通り:
@@ -380,7 +381,7 @@ erDiagram
 - **REPOSITORY**: データ保存先定義。TYPE でデータ型、FILE で SQLite3 ファイルパスを指定
 - **SHARE_KYOU_INFO**: Kyou 共有リンク設定
 - **NOTIFICATION_PUSH_TARGET**: Web Push 通知購読情報。**実際のテーブル名は `NOTIFICATION`**（`dao/gkill_notification/gkill_notificate_target_dao_sqlite3_impl.go`）で、Kyou のメタ情報である `NOTIFICATION` テーブル（`dao/reps/notification_repository_sqlite3_impl.go`）と同名だが**別DBファイル**。本図では区別のため `NOTIFICATION_PUSH_TARGET` と表記している
-- **GKILL_META_INFO**: スキーマバージョン等のメタ情報
+- **GKILL_META_INFO**: スキーマバージョン等のメタ情報。DBファイルごとに存在し、キーは `SCHEMA_VERSION_<DAO名>`。**`account.db` だけが `SCHEMA_VERSION_ACCOUNT = 1.1.0`** で、他はいずれも `1.0.0`。1.1.0 で `PASSWORD_SHA256` を `PASSWORD_HASH` にリネームし `PASSWORD_RESET_TOKEN_EXPIRATION` を追加した。**1.1.0 の account.db を 1.0.0 のバイナリで開くと `invalid db schema version` で起動を拒否する**（ダウングレード不可）
 
 ## 3. Git コミットログ（キャッシュテーブル）
 

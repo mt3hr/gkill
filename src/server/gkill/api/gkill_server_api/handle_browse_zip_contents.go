@@ -145,10 +145,13 @@ func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// キャッシュディレクトリを決定
+	// キャッシュディレクトリを決定する。
+	// 利用者ごとに分けるのは配信側 (HandleZipCacheFileServe) の都合。
+	// 配信はセッションから引いたユーザのディレクトリを起点に固定するので、
+	// URLに他人のパスを書いても届かない。ここで同じ構成にしておく必要がある。
 	repName := idfKyou.RepName
 	hash := fmt.Sprintf("%x", sha1.Sum([]byte(zipFilePath)))
-	cacheRootDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, zipCacheSubDir, repName))
+	cacheRootDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, zipCacheSubDir, userID, repName))
 	cacheDir := filepath.Join(cacheRootDir, hash)
 
 	// singleflight的に一度だけ展開
@@ -376,8 +379,15 @@ func (g *GkillServerAPI) HandleZipCacheFileServe(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// zip_cacheディレクトリからファイルを配信（ディレクトリ一覧は拒否）
-	cacheRootDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, zipCacheSubDir))
+	// zip_cacheディレクトリからファイルを配信（ディレクトリ一覧は拒否）。
+	//
+	// 起点をセッションから引いたユーザのディレクトリに固定することで、他人のキャッシュを
+	// 読めないようにしている。URLは /zip_cache/<repName>/<hash>/... のままで、
+	// ユーザIDはURLに現れない。つまりクライアントは他人のディレクトリを指名できない。
+	// (rep名の照合で済ませないのは、rep名が利用者間で重複しうるため。
+	//  ハッシュはrepに紐づいていないので、rep名だけ合っていれば通ってしまう)
+	// http.Dir は path.Clean("/"+name) でルート化してからjoinするので ".." では抜けられない。
+	cacheRootDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, zipCacheSubDir, account.UserID))
 	http.StripPrefix("/zip_cache/", http.FileServer(noDirFS{http.Dir(cacheRootDir)})).ServeHTTP(w, r)
 }
 
