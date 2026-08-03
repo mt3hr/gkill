@@ -15,8 +15,8 @@ $HOME/gkill/
 │   └── gkill_notification_target.db # プッシュ通知ターゲット
 ├── datas/                           # ユーザーデータ（デフォルトデータディレクトリ）
 ├── caches/                          # キャッシュファイル
-│   ├── thumb_cache/{rep_name}/     # サムネイル画像キャッシュ（リポジトリ単位）
-│   ├── video_cache/{rep_name}/     # 互換動画キャッシュ（リポジトリ単位）
+│   ├── thumb_cache/{user_id}/{rep_name}/ # サムネイル画像キャッシュ（利用者＋リポジトリ単位）
+│   ├── video_cache/{user_id}/{rep_name}/ # 互換動画キャッシュ（利用者＋リポジトリ単位）
 │   ├── zip_cache/{user_id}/{rep_name}/{sha1}/ # ZIP展開キャッシュ（利用者＋リポジトリ＋ハッシュ単位）
 │   ├── local_rep_cache/            # ローカルリポジトリキャッシュDB
 │   ├── git_commit_log_cache/       # Gitコミットログキャッシュ DB
@@ -489,7 +489,7 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 ディスク上の派生キャッシュ（サムネイル・互換動画・ZIP展開・プラグイン）を削除する手段は2つある：
 
-- **CLI**: `gkill_server clear_cache <thumb|video|zip|plugin|all> <all|user_id...>` — 対象は必須指定（他サブコマンドと同様）。`all` を渡すとユーザーコンテキスト不要で `caches/thumb_cache` / `caches/video_cache` / `caches/zip_cache` / `caches/plugin_cache` ディレクトリを丸ごと削除する（全ユーザー対象。管理者メンテ向け）。user_id を1つ以上指定すると、各ユーザーのリポジトリを読み込み（`LoadIDFRepOnly`）、そのユーザーのIDFリポジトリ分のキャッシュのみ `IDFKyouReps.Clear{Thumb,Video,Zip}Cache()` で削除する。例: `clear_cache all mt3hr`（mt3hrの全種）、`clear_cache zip all`（全ユーザーのZIP）。`plugin` はディレクトリ（`caches/plugin_cache/{userID}`）を消すだけなのでリポジトリの読み込みを行わない。プラグインは次回起動時にキャッシュを作り直す。
+- **CLI**: `gkill_server clear_cache <thumb|video|zip|plugin|all> <all|user_id...>` — 対象は必須指定（他サブコマンドと同様）。`all` を渡すとユーザーコンテキスト不要で `caches/thumb_cache` / `caches/video_cache` / `caches/zip_cache` / `caches/plugin_cache` ディレクトリを丸ごと削除する（全ユーザー対象。管理者メンテ向け）。user_id を1つ以上指定すると、各ユーザーのリポジトリを読み込み（`LoadIDFRepOnly`）、そのユーザーのIDFリポジトリ分のキャッシュのみ `IDFKyouReps.Clear{Thumb,Video,Zip}Cache(userID)` で削除する（3種とも `caches/{種別}/{user_id}/{rep_name}` を消す）。例: `clear_cache all mt3hr`（mt3hrの全種）、`clear_cache zip all`（全ユーザーのZIP）。`plugin` はディレクトリ（`caches/plugin_cache/{userID}`）を消すだけなのでリポジトリの読み込みを行わない。プラグインは次回起動時にキャッシュを作り直す。
 - **画面のリロード（再読込）ボタン長押し**: `POST /api/reload_repositories` に `clear_thumb_cache` / `clear_video_cache` / `clear_zip_cache` フラグを立てて送信し、**ログイン中ユーザーのリポジトリ分のみ** サムネ・動画・ZIPキャッシュを削除してからリポジトリを再構築する（クリックはこれらフラグを立てず、キャッシュ削除は行わない）。
 
 いずれも消したキャッシュは次回アクセス時に遅延再生成される。

@@ -270,9 +270,17 @@ DBの値がそのままログインに使える状態で、`update_cache` サブ
 |---|---|---|
 | `/files/` | Cookie `gkill_session_id`（共有ページは `gkill_shared_id`） | セッションの利用者のリポジトリを読み込み、URL中のrep名がその利用者のIDF repに無ければ404（`handle_file_serve.go`） |
 | `/zip_cache/` | Cookie `gkill_session_id` | 配信の起点をセッションから引いた利用者のディレクトリ（`caches/zip_cache/{userID}/`）に固定する。利用者IDはURLに現れないので他人のディレクトリを指名できない（`handle_browse_zip_contents.go`） |
+| サムネイル / 互換動画 | `/files/` と同じ（**専用ルートは無い**） | `/files/{rep_name}/...?thumb=` 経由でのみ到達する。上記の rep 名照合に加えて、`idf_thumb_file_server.go` が**自分の contentDir に同じ相対パスの実ファイルが存在すること**を要求する。保存先も `caches/{thumb,video}_cache/{userID}/{rep_name}/` と利用者ごとに分けている |
 
-`/zip_cache/` でrep名の照合ではなくディレクトリの分離を使っているのは、rep名が利用者間で重複しうるため。
+**rep名は利用者間で一意ではない。** `REPOSITORY` に UNIQUE 制約は無く、rep名は
+`filepath.Base(contentDir)` で決まるため、別のディレクトリを指す同名 rep が複数の利用者に存在しうる。
+そのため `/zip_cache/` は rep名の照合ではなくディレクトリの分離で担保している。
 rep名だけを照合すると、同名repを持つ利用者が他人のファイルのハッシュを含むURLを要求したときに通ってしまう。
+
+サムネイル・互換動画も同じ理由で `caches/{thumb,video}_cache/{userID}/` と利用者ごとに分けている。
+キャッシュ名は `{sha1(相対パス)}_{ファイルサイズ}_{W}x{H}.jpg`（動画は `_compat_720p.mp4`）で、
+rep名だけで分けると「同名rep × 同一相対パス × 同一ファイルサイズ」で他人のキャッシュと衝突する。
+`Clear{Thumb,Video,Zip}Cache(userID)` の3種とも同じ構成をたどって削除する。
 
 #### 初回セットアップ時のリセットトークン
 
