@@ -3,6 +3,9 @@
 /dist
 /release/*
 /**/embed/**/*
+# embed配下は生成物だが、1件も無いと //go:embed がコンパイルエラーになるため
+# プレースホルダだけ追跡する (詳細は PLACEHOLDER.md)
+!/src/server/gkill/api/embed/PLACEHOLDER.md
 /**/assets/*
 # src/client/assets/ はビルド生成物ではなくソース(コンポーネントがimportする画像)なので追跡する
 !/src/client/assets/*
