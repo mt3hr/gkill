@@ -88,7 +88,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 
 	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
 	if session == nil || err != nil {
-		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
+		err = fmt.Errorf("error at get login session: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
@@ -100,7 +100,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 
 	sessions, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSessions(r.Context(), userID, device)
 	if err != nil {
-		err = fmt.Errorf("error at get login sessions session id = %s: %w", request.SessionID, err)
+		err = fmt.Errorf("error at get login sessions: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
