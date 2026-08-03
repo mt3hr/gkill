@@ -23,6 +23,10 @@ import (
 const CURRENT_SCHEMA_VERSION_KC_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type kcRepositorySQLite3Impl struct {
+	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
+	// temp repが構造体変換でこの型をコピーするため、必ずポインタで持つこと。
+	cacheChange *dbFileChangeDetector
+
 	filename    string
 	db          *sql.DB
 	m           *sync.RWMutex
@@ -128,6 +132,7 @@ CREATE TABLE IF NOT EXISTS "KC" (
 	}
 
 	return &kcRepositorySQLite3Impl{
+		cacheChange: &dbFileChangeDetector{},
 		filename:    filename,
 		db:          db,
 		m:           &sync.RWMutex{},
@@ -618,11 +623,20 @@ func (k *kcRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (strin
 }
 
 func (k *kcRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	// 自身は実DBを直接見るのでキャッシュは持たないが、
+	// 上位のキャッシュrepが「作り直す必要があるか」を判断できるよう、
+	// ここでファイルの更新有無だけ観測しておく。
+	k.cacheChange.refresh(k.filename)
 	return nil
 }
 
 func (k *kcRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
-	return true
+	return k.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (k *kcRepositorySQLite3Impl) CommitCacheRebuild() {
+	k.cacheChange.commit()
 }
 
 func (k *kcRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
