@@ -49,8 +49,16 @@ func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error
 	return db, err
 }
 
+// GenerateFindSQLCommon は全リポジトリ共通の検索WHERE句（と必要ならORDER BY）を組み立てます。
+//
+// SQLの組み立てには strings.Builder を使うこと。
+// ここは `ID IN (?, ?, ...)` を検索対象repの全ID数ぶん展開するため、
+// `sql += ...` のループだと連結のたびに全体をコピーしてO(n^2)になります。
+// 実測で1,122件=6.5ms / 7,047件=102ms / 10万件=27秒かかっていました。
 func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAlias string, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, ignoreCase bool, queryArgs *[]any) (string, error) {
-	sql := ""
+	sqlBuilder := &strings.Builder{}
+	// ID列挙とワード条件で膨らむぶんを概算で先に確保しておく
+	sqlBuilder.Grow(256 + len(query.IDs)*5 + len(findWordTargetColumns)*(len(query.Words)+len(query.NotWords))*96)
 
 	// CASE無視（大文字小文字無視）の場合はLOWERをいれる
 	lower := ""
@@ -68,27 +76,31 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	if useIDs {
 		if len(ids) != 0 {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += " ID IN ("
+			sqlBuilder.WriteString(" ID IN (")
 			for i, id := range ids {
-				sql += " ? "
+				sqlBuilder.WriteString(" ? ")
 				*queryArgs = append(*queryArgs, id)
 				if i != len(ids)-1 {
-					sql += ", "
+					sqlBuilder.WriteString(", ")
 				}
 				*whereCounter++
 			}
-			sql += ")"
+			sqlBuilder.WriteString(")")
 		} else {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += " 0 = 1 "
+			sqlBuilder.WriteString(" 0 = 1 ")
+			// ここでカウンタを進めないと、直後の「条件が1つも無ければ 0 = 0 」が
+			// 区切りなしで続いて " 0 = 1  0 = 0 " という構文エラーになる。
+			// 空のrep（最新版アドレスが1件も無いrep）を検索すると必ず踏む。
+			*whereCounter++
 		}
 	}
 	if *whereCounter == 0 {
-		sql += " 0 = 0 "
+		sqlBuilder.WriteString(" 0 = 0 ")
 	}
 	*whereCounter++
 
@@ -97,100 +109,100 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 		// ワード指定ありで検索対象列がない場合は全部false
 		if ignoreFindWord && len(findWordTargetColumns) == 0 {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += " 1 = 0 "
+			sqlBuilder.WriteString(" 1 = 0 ")
 			*whereCounter++
 		} else {
 			if len(query.Words) != 0 {
 				if query.WordsAnd {
 					if *whereCounter != 0 {
-						sql += " AND "
+						sqlBuilder.WriteString(" AND ")
 					}
 					for j, findWordTargetColumnName := range findWordTargetColumns {
 						if j == 0 {
-							sql += " ( "
+							sqlBuilder.WriteString(" ( ")
 						} else {
-							sql += " AND "
+							sqlBuilder.WriteString(" AND ")
 						}
 
 						for i, word := range query.Words {
 							if i == 0 {
-								sql += " ( "
+								sqlBuilder.WriteString(" ( ")
 							} else {
-								sql += " AND "
+								sqlBuilder.WriteString(" AND ")
 							}
 							if findWordUseLike {
-								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
+								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 
-								sql += " OR "
+								sqlBuilder.WriteString(" OR ")
 
-								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, "ID", lower)
+								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?)", lower, "ID", lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 							} else {
-								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
+								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 
-								sql += " OR "
+								sqlBuilder.WriteString(" OR ")
 
-								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, "ID", lower)
+								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 
 							}
 							if i == len(query.Words)-1 {
-								sql += " ) "
+								sqlBuilder.WriteString(" ) ")
 							}
 							*whereCounter++
 						}
 
 						if j == len(findWordTargetColumns)-1 {
-							sql += " ) "
+							sqlBuilder.WriteString(" ) ")
 						}
 					}
 				} else {
 					// ワードor検索である場合のSQL追記
 					if *whereCounter != 0 {
-						sql += " AND "
+						sqlBuilder.WriteString(" AND ")
 					}
 					for j, findWordTargetColumnName := range findWordTargetColumns {
 						if j == 0 {
-							sql += " ( "
+							sqlBuilder.WriteString(" ( ")
 						} else {
-							sql += " OR "
+							sqlBuilder.WriteString(" OR ")
 						}
 
 						for i, word := range query.Words {
 							if i == 0 {
-								sql += " ( "
+								sqlBuilder.WriteString(" ( ")
 							} else {
-								sql += " OR "
+								sqlBuilder.WriteString(" OR ")
 							}
 							if findWordUseLike {
-								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
+								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 
-								sql += " OR "
+								sqlBuilder.WriteString(" OR ")
 
-								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, "ID", lower)
+								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?)", lower, "ID", lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 							} else {
-								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
+								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, word)
 
-								sql += " OR "
+								sqlBuilder.WriteString(" OR ")
 
-								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, "ID", lower)
+								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 							}
 							if i == len(query.Words)-1 {
-								sql += " ) "
+								sqlBuilder.WriteString(" ) ")
 							}
 							*whereCounter++
 						}
 
 						if j == len(findWordTargetColumns)-1 {
-							sql += " ) "
+							sqlBuilder.WriteString(" ) ")
 						}
 					}
 				}
@@ -199,20 +211,20 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			if len(query.NotWords) != 0 {
 				// notワードを除外するSQLを追記
 				if *whereCounter != 0 {
-					sql += " AND "
+					sqlBuilder.WriteString(" AND ")
 				}
 				for j, findWordTargetColumnName := range findWordTargetColumns {
 					if j == 0 {
-						sql += " ( "
+						sqlBuilder.WriteString(" ( ")
 					} else {
-						sql += " AND "
+						sqlBuilder.WriteString(" AND ")
 					}
 
 					for i, notWord := range query.NotWords {
 						if i == 0 {
-							sql += " ( "
+							sqlBuilder.WriteString(" ( ")
 						} else {
-							sql += " AND "
+							sqlBuilder.WriteString(" AND ")
 						}
 						// 肯定側は「対象列かIDのどちらかに一致」なのでORでよいが、
 						// 否定側はド・モルガンによりANDでなければならない。
@@ -220,30 +232,30 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 						// ここがORだったころは、IDがUUIDで検索語を含むことは実質ないため
 						// 右辺が常に真になり、除外がまったく効いていなかった。
 						if findWordUseLike {
-							sql += fmt.Sprintf("%s(%s) NOT LIKE %s(?)", lower, findWordTargetColumnName, lower)
+							fmt.Fprintf(sqlBuilder, "%s(%s) NOT LIKE %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, "%"+notWord+"%")
 
-							sql += " AND "
+							sqlBuilder.WriteString(" AND ")
 
-							sql += fmt.Sprintf("%s(%s) NOT LIKE %s(?)", lower, "ID", lower)
+							fmt.Fprintf(sqlBuilder, "%s(%s) NOT LIKE %s(?)", lower, "ID", lower)
 							*queryArgs = append(*queryArgs, "%"+notWord+"%")
 						} else {
-							sql += fmt.Sprintf("%s(%s) <> %s(?)", lower, findWordTargetColumnName, lower)
+							fmt.Fprintf(sqlBuilder, "%s(%s) <> %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, notWord)
 
-							sql += " AND "
+							sqlBuilder.WriteString(" AND ")
 
-							sql += fmt.Sprintf("%s(%s) <> %s(?)", lower, "ID", lower)
+							fmt.Fprintf(sqlBuilder, "%s(%s) <> %s(?)", lower, "ID", lower)
 							*queryArgs = append(*queryArgs, notWord)
 						}
 						if i == len(query.NotWords)-1 {
-							sql += " ) "
+							sqlBuilder.WriteString(" ) ")
 						}
 						*whereCounter++
 					}
 
 					if j == len(findWordTargetColumns)-1 {
-						sql += " ) "
+						sqlBuilder.WriteString(" ) ")
 					}
 				}
 			}
@@ -266,16 +278,16 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	if query.UseUpdateTime {
 		if strings.HasSuffix(relatedTimeColumnName, "_UNIX") { // UNIXついてればキャッシュでしょ（適当）
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += fmt.Sprintf("%s = ?", "UPDATE_TIME_UNIX")
+			fmt.Fprintf(sqlBuilder, "%s = ?", "UPDATE_TIME_UNIX")
 			*queryArgs = append(*queryArgs, ((query.UpdateTime).Unix()))
 			*whereCounter++
 		} else {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += fmt.Sprintf("datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
+			fmt.Fprintf(sqlBuilder, "datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
 			*queryArgs = append(*queryArgs, ((query.UpdateTime).Format(TimeLayout)))
 			*whereCounter++
 		}
@@ -284,16 +296,16 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 		if calendarStartDate != nil {
 			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
 				if *whereCounter != 0 {
-					sql += " AND "
+					sqlBuilder.WriteString(" AND ")
 				}
-				sql += fmt.Sprintf("%s >= ?", relatedTimeColumnName)
+				fmt.Fprintf(sqlBuilder, "%s >= ?", relatedTimeColumnName)
 				*queryArgs = append(*queryArgs, calendarStartDate.Unix())
 				*whereCounter++
 			} else {
 				if *whereCounter != 0 {
-					sql += " AND "
+					sqlBuilder.WriteString(" AND ")
 				}
-				sql += fmt.Sprintf("datetime(%s, 'localtime') >= datetime(?, 'localtime')", relatedTimeColumnName)
+				fmt.Fprintf(sqlBuilder, "datetime(%s, 'localtime') >= datetime(?, 'localtime')", relatedTimeColumnName)
 				*queryArgs = append(*queryArgs, calendarStartDate.Format(TimeLayout))
 				*whereCounter++
 			}
@@ -303,16 +315,16 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 		if calendarEndDate != nil {
 			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
 				if *whereCounter != 0 {
-					sql += " AND "
+					sqlBuilder.WriteString(" AND ")
 				}
-				sql += fmt.Sprintf("%s <= ?", relatedTimeColumnName)
+				fmt.Fprintf(sqlBuilder, "%s <= ?", relatedTimeColumnName)
 				*queryArgs = append(*queryArgs, calendarEndDate.Unix())
 				*whereCounter++
 			} else {
 				if *whereCounter != 0 {
-					sql += " AND "
+					sqlBuilder.WriteString(" AND ")
 				}
-				sql += fmt.Sprintf("datetime(%s, 'localtime') <= datetime(?, 'localtime')", relatedTimeColumnName)
+				fmt.Fprintf(sqlBuilder, "datetime(%s, 'localtime') <= datetime(?, 'localtime')", relatedTimeColumnName)
 				*queryArgs = append(*queryArgs, calendarEndDate.Format(TimeLayout))
 				*whereCounter++
 			}
@@ -344,7 +356,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 		// start/end を両方指定している場合は「ひとかたまり」で付ける
 		if periodOfStartTimeSecond != nil && periodOfEndTimeSecond != nil {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
 
 			st := time.Unix(*periodOfStartTimeSecond, 0).In(time.Local)
@@ -352,35 +364,35 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			stSec := st.Hour()*3600 + st.Minute()*60 + st.Second()
 			etSec := et.Hour()*3600 + et.Minute()*60 + et.Second()
 
-			sql += " ( "
-			sql += timeExpr + " >= " + argExpr
+			sqlBuilder.WriteString(" ( ")
+			sqlBuilder.WriteString(timeExpr + " >= " + argExpr)
 			*queryArgs = append(*queryArgs, st.Format(TimeLayout))
 
 			if stSec > etSec {
 				// 夜跨ぎ
-				sql += " OR "
+				sqlBuilder.WriteString(" OR ")
 			} else {
 				// 通常
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
 
-			sql += timeExpr + " <= " + argExpr
+			sqlBuilder.WriteString(timeExpr + " <= " + argExpr)
 			*queryArgs = append(*queryArgs, et.Format(TimeLayout))
-			sql += " ) "
+			sqlBuilder.WriteString(" ) ")
 
 			*whereCounter++
 		} else if periodOfStartTimeSecond != nil {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += timeExpr + " >= " + argExpr
+			sqlBuilder.WriteString(timeExpr + " >= " + argExpr)
 			*queryArgs = append(*queryArgs, time.Unix(*periodOfStartTimeSecond, 0).In(time.Local).Format(TimeLayout))
 			*whereCounter++
 		} else if periodOfEndTimeSecond != nil {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += timeExpr + " <= " + argExpr
+			sqlBuilder.WriteString(timeExpr + " <= " + argExpr)
 			*queryArgs = append(*queryArgs, time.Unix(*periodOfEndTimeSecond, 0).In(time.Local).Format(TimeLayout))
 			*whereCounter++
 		}
@@ -388,9 +400,9 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 		// 曜日判定
 		if len(query.PeriodOfTimeWeekOfDays) == 0 {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += " 0 = 1 "
+			sqlBuilder.WriteString(" 0 = 1 ")
 			*whereCounter++
 		} else if len(query.PeriodOfTimeWeekOfDays) != 7 {
 			weekExpr := ""
@@ -401,16 +413,16 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			}
 
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += " " + weekExpr + " IN ( "
+			sqlBuilder.WriteString(" " + weekExpr + " IN ( ")
 			for i, w := range query.PeriodOfTimeWeekOfDays {
-				sql += fmt.Sprintf("'%d'", w)
+				fmt.Fprintf(sqlBuilder, "'%d'", w)
 				if i != len(query.PeriodOfTimeWeekOfDays)-1 {
-					sql += ", "
+					sqlBuilder.WriteString(", ")
 				}
 			}
-			sql += " ) "
+			sqlBuilder.WriteString(" ) ")
 			*whereCounter++
 		}
 	}
@@ -419,15 +431,15 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	if onlyLatestData {
 		if strings.HasSuffix(relatedTimeColumnName, "_UNIX") { // UNIXついてればキャッシュでしょ（適当）
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += fmt.Sprintf(" UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+			fmt.Fprintf(sqlBuilder, " UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
 			*whereCounter++
 		} else {
 			if *whereCounter != 0 {
-				sql += " AND "
+				sqlBuilder.WriteString(" AND ")
 			}
-			sql += fmt.Sprintf(" UPDATE_TIME = ( SELECT UPDATE_TIME FROM %s AS INNER_TABLE WHERE INNER_TABLE.ID = %s.ID ORDER BY datetime(INNER_TABLE.UPDATE_TIME) DESC LIMIT 1 )", tableName, tableNameAlias)
+			fmt.Fprintf(sqlBuilder, " UPDATE_TIME = ( SELECT UPDATE_TIME FROM %s AS INNER_TABLE WHERE INNER_TABLE.ID = %s.ID ORDER BY datetime(INNER_TABLE.UPDATE_TIME) DESC LIMIT 1 )", tableName, tableNameAlias)
 			*whereCounter++
 		}
 	}
@@ -437,15 +449,15 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	// FindFilterで判定する
 
 	if *whereCounter == 0 {
-		sql += " 0 = 0 "
+		sqlBuilder.WriteString(" 0 = 0 ")
 	}
 
 	// ORDER BY
 	if appendOrderBy {
-		sql += fmt.Sprintf(" ORDER BY %s DESC ", relatedTimeColumnName)
+		fmt.Fprintf(sqlBuilder, " ORDER BY %s DESC ", relatedTimeColumnName)
 	}
 
-	return sql, nil
+	return sqlBuilder.String(), nil
 }
 
 func GenerateNewID() string {

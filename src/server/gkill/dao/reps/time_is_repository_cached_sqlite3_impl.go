@@ -738,6 +738,9 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(t.dbName) + `(
 		return err
 	}
 	isCommitted = true
+	// ここまで来て初めて「取り込み済み」とみなす。
+	// 途中で失敗した場合は基準を進めないので、次回も再構築される。
+	commitCacheRebuildIfSupported(t.timeisRep)
 	return nil
 }
 

@@ -26,6 +26,10 @@ type kmemoRepositorySQLite3Impl struct {
 	db          *sql.DB
 	m           *sync.RWMutex
 	fullConnect bool
+
+	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
+	// temp repが構造体変換でこの型をコピーするため、必ずポインタで持つこと。
+	cacheChange *dbFileChangeDetector
 }
 
 func NewKmemoRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (KmemoRepository, error) {
@@ -130,6 +134,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 		db:          db,
 		m:           &sync.RWMutex{},
 		fullConnect: fullConnect,
+		cacheChange: &dbFileChangeDetector{},
 	}, nil
 }
 
@@ -616,11 +621,20 @@ func (k *kmemoRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (st
 }
 
 func (k *kmemoRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	// 自身は常に実DBを直接見るのでキャッシュは持たないが、
+	// 上位のキャッシュrepが「作り直す必要があるか」を判断できるよう、
+	// ここでファイルの更新有無だけ観測しておく。
+	k.cacheChange.refresh(k.filename)
 	return nil
 }
 
 func (k *kmemoRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
-	return true
+	return k.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (k *kmemoRepositorySQLite3Impl) CommitCacheRebuild() {
+	k.cacheChange.commit()
 }
 
 func (k *kmemoRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
