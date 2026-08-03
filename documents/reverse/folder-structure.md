@@ -144,7 +144,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、93ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、94ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層
