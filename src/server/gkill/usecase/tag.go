@@ -116,14 +116,23 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, tag reps.Tag, txID *string) (*reps.Tag, []*message.GkillError, error) {
 	var gkillErrors []*message.GkillError
 
-	// すでに存在する場合はエラー
-	_, err := repositories.GetTag(ctx, tag.ID, nil)
+	// 対象が存在しない場合はエラー
+	existTag, err := repositories.GetTag(ctx, tag.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
+		})
+		return nil, gkillErrors, nil
+	}
+	if existTag == nil {
+		err = fmt.Errorf("not exist tag id = %s", tag.ID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.NotFoundTagError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 		})
 		return nil, gkillErrors, nil
 	}
@@ -194,27 +203,6 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTagError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
-		})
-		return nil, gkillErrors, nil
-	}
-
-	// 対象が存在しない場合はエラー
-	existTag, err := repositories.GetTag(ctx, tag.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetTagError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
-		})
-		return nil, gkillErrors, nil
-	}
-	if existTag == nil {
-		err = fmt.Errorf("not exist tag id = %s", tag.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.NotFoundTagError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 		})
 		return nil, gkillErrors, nil
 	}

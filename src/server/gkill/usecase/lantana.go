@@ -102,6 +102,26 @@ func (uc *UsecaseContext) AddLantana(ctx context.Context, repositories *reps.Gki
 func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, lantana reps.Lantana, txID *string) ([]*message.GkillError, error) {
 	var gkillErrors []*message.GkillError
 
+	existLantana, err := repositories.LantanaReps.GetLantana(ctx, lantana.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.GetLantanaError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+	if existLantana == nil {
+		err = fmt.Errorf("not exist lantana id = %s", lantana.ID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.NotFoundLantanaError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+
 	if txID == nil {
 		err := repositories.WriteLantanaRep.AddLantanaInfo(ctx, lantana)
 		if err != nil {
@@ -156,26 +176,6 @@ func (uc *UsecaseContext) UpdateLantana(ctx context.Context, repositories *reps.
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-	}
-
-	existLantana, err := repositories.LantanaReps.GetLantana(ctx, lantana.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
-		})
-		return gkillErrors, nil
-	}
-	if existLantana == nil {
-		err = fmt.Errorf("not exist lantana id = %s", lantana.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.NotFoundLantanaError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
-		})
-		return gkillErrors, nil
 	}
 
 	return nil, nil
