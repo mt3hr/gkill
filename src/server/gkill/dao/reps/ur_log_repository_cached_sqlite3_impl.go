@@ -23,6 +23,62 @@ type urlogRepositoryCachedSQLite3Impl struct {
 	addURLogInfoSQL  string
 	addURLogInfoStmt *sqllib.Stmt
 	m                *sync.RWMutex
+
+	// サムネイルを取り直すときに使う「rep名 -> rep」の索引。
+	// 配下のrepは生成後に変わらないので一度だけ作る。
+	repsByNameOnce sync.Once
+	repsByName     map[string]URLogRepository
+}
+
+// ownerRepOf は、その版を持っているrepを REP_NAME から引きます。
+//
+// サムネイルはキャッシュ表に持っていないので実DBから読み直す必要があるが、
+// u.urlogRep は配下rep全部の集約なので、そこへ丸ごと投げると
+// 1件取るのにrep数ぶんのクエリが飛ぶ（実データでは17rep = 約13.8ms）。
+// キャッシュ表の REP_NAME には個々のrep名が入っているので、
+// それを使って持ち主のrepだけを引く。
+func (u *urlogRepositoryCachedSQLite3Impl) ownerRepOf(ctx context.Context, repName string) (URLogRepository, bool) {
+	u.repsByNameOnce.Do(func() {
+		reps, err := u.urlogRep.UnWrapTyped()
+		if err != nil {
+			slog.Log(ctx, gkill_log.Debug, "error at unwrap urlog reps", "error", fmt.Sprintf("%q", err))
+			return
+		}
+		byName := make(map[string]URLogRepository, len(reps))
+		for _, rep := range reps {
+			name, err := rep.GetRepName(ctx)
+			if err != nil {
+				continue
+			}
+			if _, exist := byName[name]; !exist {
+				byName[name] = rep
+			}
+		}
+		u.repsByName = byName
+	})
+	rep, exist := u.repsByName[repName]
+	return rep, exist
+}
+
+// fillThumbnailImages は、キャッシュに持っていないサムネイルを
+// その版を持つrepからだけ読み直して埋めます。
+//
+// 持ち主のrepが見つからない場合や、その版が実DBに無い場合
+// （キャッシュにしか無い行など）はサムネイルを空のままにする。
+// 表示側は空文字なら noimage にフォールバックするので壊れない。
+func (u *urlogRepositoryCachedSQLite3Impl) fillThumbnailImages(ctx context.Context, urlogs []URLog) {
+	for i := range urlogs {
+		rep, exist := u.ownerRepOf(ctx, urlogs[i].RepName)
+		if !exist {
+			continue
+		}
+		updateTime := urlogs[i].UpdateTime
+		got, err := rep.GetURLog(ctx, urlogs[i].ID, &updateTime)
+		if err != nil || got == nil {
+			continue
+		}
+		urlogs[i].ThumbnailImage = got.ThumbnailImage
+	}
 }
 
 func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository URLogRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (URLogRepository, error) {
@@ -31,6 +87,15 @@ func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository UR
 	}
 	var err error
 
+	// THUMBNAIL_IMAGE 列は意図的に持たせていない。
+	//
+	// このキャッシュ表は既定でインメモリDB(gkill_memory_db_<userID>)上に作られる。
+	// URLogのTHUMBNAIL_IMAGEはbase64で1行あたり平均406KB・最大10MBあり、
+	// 実データ227行の合計が90MBに達する。これを常時メモリに置きたくない。
+	// (FAVICON_IMAGEは合計0.10MB・平均0.5KBなので持たせている)
+	//
+	// サムネイルが要る GetURLog / GetURLogHistories は、
+	// REP_NAME からその版を持つrepを特定してそこだけ読み直す。
 	sql := `
 CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED NOT NULL,
@@ -39,7 +104,6 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
   TITLE NOT NULL,
   DESCRIPTION NOT NULL,
   FAVICON_IMAGE NOT NULL,
-  THUMBNAIL_IMAGE NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
@@ -98,6 +162,8 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	// THUMBNAIL_IMAGE はこのキャッシュ表に持たない（メモリに載せないため）。
+	// 詳細は CREATE TABLE 側のコメントを参照。
 	addURLogInfoSQL := `
 INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED,
@@ -106,7 +172,6 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   TITLE,
   DESCRIPTION,
   FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
@@ -118,7 +183,6 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
   ?,
   ?,
   ?,
@@ -543,9 +607,13 @@ func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		return nil
 	}
 
+	// サムネイルはキャッシュ表に入れないので、下層から読む段階で外す。
+	// これを付けないと、全件を []URLog に載せる時点で
+	// Goのヒープに90MBが乗ってしまう（実データ227行の合計）。
 	query := &find.FindQuery{
-		UpdateCache:    false,
-		OnlyLatestData: false,
+		UpdateCache:                false,
+		OnlyLatestData:             false,
+		ExcludeURLogThumbnailImage: true,
 	}
 
 	allURLogs, err := u.urlogRep.FindURLog(ctx, query)
@@ -591,6 +659,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		return err
 	}
 
+	// THUMBNAIL_IMAGE はキャッシュ表に持たない（メモリに載せないため）
 	sql = `
 INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
   IS_DELETED,
@@ -599,7 +668,6 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
   TITLE,
   DESCRIPTION,
   FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
@@ -611,7 +679,6 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
   ?,
   ?,
   ?,
@@ -658,7 +725,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(u.dbName) + ` (
 				urlog.Title,
 				urlog.Description,
 				urlog.FaviconImage,
-				urlog.ThumbnailImage,
+				// THUMBNAIL_IMAGE はキャッシュ表に持たない（メモリに載せないため）
 				urlog.CreateApp,
 				urlog.CreateDevice,
 				urlog.CreateUser,
@@ -739,6 +806,16 @@ func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query 
 		}
 
 	}
+
+	// サムネイルはキャッシュ表に持っていないので、要求されたら下層の実DBへ回す。
+	// ここを通るのは共有ページ(handle_get_shared_kyous)だけで頻度が低いため、
+	// 下層repの数だけクエリが飛ぶことを許容する。
+	// 一件ずつ引く GetURLog / GetURLogHistories は表示のたびに呼ばれるので、
+	// そちらは REP_NAME で持ち主のrepだけを引く方式にしてある。
+	if !query.ExcludeURLogThumbnailImage {
+		return u.urlogRep.FindURLog(ctx, query)
+	}
+
 	u.m.RLock()
 	defer u.m.RUnlock()
 
@@ -758,8 +835,7 @@ SELECT
   URL,
   TITLE,
   DESCRIPTION,
-  FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
+  ` + urlogImageColumnsSQL(query) + `,
   REP_NAME,
   ? AS DATA_TYPE
 FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
@@ -889,7 +965,7 @@ SELECT
   TITLE,
   DESCRIPTION,
   FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
+  '' AS THUMBNAIL_IMAGE,
   REP_NAME,
   ? AS DATA_TYPE
 FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
@@ -1001,6 +1077,8 @@ WHERE
 	if len(urlogs) == 0 {
 		return nil, nil
 	}
+	// サムネイルはキャッシュに持っていないので、その版を持つrepから読み直す
+	u.fillThumbnailImages(ctx, urlogs)
 	return &urlogs[0], nil
 }
 
@@ -1030,7 +1108,7 @@ SELECT
   TITLE,
   DESCRIPTION,
   FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
+  '' AS THUMBNAIL_IMAGE,
   REP_NAME,
   ? AS DATA_TYPE
 FROM ` + sqlite3impl.QuoteIdent(u.dbName) + `
@@ -1136,6 +1214,9 @@ WHERE
 		err = fmt.Errorf("error at iterate rows: %w", err)
 		return nil, err
 	}
+	// サムネイルはキャッシュに持っていないので、その版を持つrepから読み直す。
+	// フロントがURLogの画像を受け取るのはこの経路（/api/get_urlog）だけ。
+	u.fillThumbnailImages(ctx, urlogs)
 	return urlogs, nil
 }
 
@@ -1149,7 +1230,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) AddURLogInfo(ctx context.Context, url
 		urlog.Title,
 		urlog.Description,
 		urlog.FaviconImage,
-		urlog.ThumbnailImage,
+		// THUMBNAIL_IMAGE はキャッシュ表に持たない（メモリに載せないため）
 		urlog.CreateApp,
 		urlog.CreateDevice,
 		urlog.CreateUser,

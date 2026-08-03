@@ -723,8 +723,7 @@ SELECT
   URL,
   TITLE,
   DESCRIPTION,
-  FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
+  ` + urlogImageColumnsSQL(query) + `,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM URLOG

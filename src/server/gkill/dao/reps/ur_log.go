@@ -19,6 +19,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/axgle/mahonia"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/user_config"
@@ -459,4 +460,20 @@ func toUTF8(str []byte) (utf8str []byte, err error) {
 	s := string(str)
 	utf8b := decoder.ConvertString(s)
 	return []byte(utf8b), nil
+}
+
+// urlogImageColumnsSQL は FAVICON_IMAGE / THUMBNAIL_IMAGE の SELECT 句を返します。
+//
+// THUMBNAIL_IMAGE は base64 で埋め込まれており、実データでは1行あたり平均406KB・
+// 最大10MBで、227行の合計が90MBあります。
+// サムネイルを使わない呼び出しでは空文字を返す式に差し替えて、
+// DBから読む段階で外します。
+// 列の並びと数は変えないので、呼び出し側のScanはそのままで動きます。
+//
+// FAVICON_IMAGE は合計0.10MB・平均0.5KBしかないので常に取得します。
+func urlogImageColumnsSQL(query *find.FindQuery) string {
+	if query != nil && query.ExcludeURLogThumbnailImage {
+		return "FAVICON_IMAGE,\n  '' AS THUMBNAIL_IMAGE"
+	}
+	return "FAVICON_IMAGE,\n  THUMBNAIL_IMAGE"
 }
