@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
@@ -166,6 +165,40 @@ func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r
 	// 見つからなかった場合はKyouID空文字のまま正常応答
 }
 
+// toSlashAnyOS は区切り文字を / に揃える。
+//
+// filepath.ToSlash はコンパイル先OSの区切り文字しか変換しない。
+// Linux上では no-op なので `docs\a.md` がそのまま残り、
+// path.Dir が "." を返してしまう。
+// Markdownを書いた環境と読む環境でOSが違いうるため、両方の区切りを見る。
+func toSlashAnyOS(p string) string {
+	return strings.ReplaceAll(p, `\`, "/")
+}
+
+// isAbsAnyOS はPOSIX / Windows どちらの絶対パス表記かを判定する。
+//
+// filepath.IsAbs と filepath.VolumeName はコンパイル先OSの規則しか見ないので、
+// Linux上では `C:\windows\system32` が相対パス扱いになり拒否されなかった。
+// gkillはlinux_amd64/arm64やAndroidでも動くため、実行OSに依存しない判定にする。
+// toSlashAnyOS を通したあとに呼ぶ前提で、UNCパス(`\\server\share`)は
+// `//server/share` になるので先頭 / の判定で拾える。
+func isAbsAnyOS(p string) bool {
+	if p == "" {
+		return false
+	}
+	if strings.HasPrefix(p, "/") {
+		return true
+	}
+	// ドライブレター表記 (C: / C:/foo)
+	if len(p) >= 2 && p[1] == ':' {
+		c := p[0]
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
+			return true
+		}
+	}
+	return false
+}
+
 // resolveIDFRelativePath は、基準ファイル (rep内相対パス) のディレクトリを基準に
 // 相対パスを解決し、rep内相対パス (スラッシュ区切り) を返す。
 // rep外を指すパス・絶対パスはエラーを返す。
@@ -186,15 +219,15 @@ func resolveIDFRelativePath(currentTargetFile string, relativePath string) (stri
 		return "", fmt.Errorf("relative path is empty")
 	}
 
-	rel = filepath.ToSlash(rel)
+	rel = toSlashAnyOS(rel)
 
 	// 絶対パスは拒否
-	if path.IsAbs(rel) || filepath.IsAbs(rel) || filepath.VolumeName(rel) != "" {
+	if isAbsAnyOS(rel) {
 		return "", fmt.Errorf("absolute path is not allowed: %s", relativePath)
 	}
 
 	// 基準ファイルのディレクトリを基準に解決
-	dir := path.Dir(filepath.ToSlash(currentTargetFile))
+	dir := path.Dir(toSlashAnyOS(currentTargetFile))
 	resolved := path.Join(dir, rel)
 
 	// rep外へのパストラバーサルを拒否
