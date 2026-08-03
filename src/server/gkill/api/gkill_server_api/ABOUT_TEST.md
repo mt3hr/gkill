@@ -17,7 +17,7 @@ Go `testing` パッケージ
 | `gkill_server_api_rate_limit_test.go` | ログインレート制限テスト（IP別カウント、ウィンドウ期限、IP抽出） |
 | `handle_get_idf_file_path_test.go` | IDF ファイル絶対パス解決ハンドラ（localhost 限定応答、ERR000389、存在確認） |
 | `handle_get_idf_kyou_by_relative_path_test.go` | Markdown 相対リンクの IDFKyou 解決ハンドラ（同一 Rep 内解決、パストラバーサル防止） |
-| `handle_zip_cache_file_serve_test.go` | `/zip_cache/` の利用者分離（他人のキャッシュを読めないこと、ユーザーごとに分かれていない旧レイアウトを配信しないこと、`../` / `..%2F` で抜けられないこと、セッション無し・不正セッションの拒否） |
+| `handle_zip_cache_file_serve_test.go` | `/zip_cache/` の利用者分離（他人のキャッシュを読めないこと、ユーザーごとに分かれていない旧レイアウトを配信しないこと、`../` / `..%2F` で抜けられないこと、セッション無し・不正セッションの拒否）と、利用者ファイル配信のセキュリティヘッダ（後述） |
 | `handle_reset_password_test.go` | パスワードリセットのセッション検証（後述） |
 | `utils_ssrf_test.go` | `httpGetBase64Data` の SSRF 対策（スキーム制限、内部アドレス拒否、サイズ上限、タイムアウト） |
 
@@ -94,6 +94,26 @@ Kyou だけが返る」ことが唯一の防壁になる。ここが崩れると
 
 更新・削除は「存在しない」と「所有者が違う」を同じエラーコードで返す。
 区別すると共有IDの存在有無を問い合わせるオラクルになるため、意図的に揃えている。
+
+### 利用者ファイル配信のセキュリティヘッダ
+
+`/files/` と `/zip_cache/` は、取り込んだファイルやZIPの展開物を
+拡張子から決めた Content-Type で同一オリジンから配信する。
+展開時に拡張子の許可リストは無いので、受け取った `.cbz` にHTMLやSVGが
+入っていればブラウザはそれをHTMLとして解釈する。
+セッションクッキーはクライアント側のJSが `document.cookie` で書いており
+`HttpOnly` を付けられないため、同一オリジンでスクリプトが動くと読み出せてしまう。
+
+`withUserContentSecurityHeaders`（`utils.go`）がルート側で
+`X-Content-Type-Options: nosniff` と `Content-Security-Policy: sandbox` を付ける。
+`sandbox` に `allow-scripts` を付けていないので中のスクリプトは実行されない。
+`sandbox` はドキュメントとして読み込まれたときにだけ効くため、
+`<img>` や `<video>` のサブリソースとしての表示には影響しない。
+
+`TestZipCacheFileServeSetsSecurityHeaders` がこれを固定する。
+**ルート登録を `serve.go` と同じ形（ラッパー経由）にしないと素通りする**ので注意。
+また `index.html` という名前は `http.FileServer` がディレクトリへ
+リダイレクトしてしまうため、テストでは別名を使っている。
 
 ### `handle_reset_password_test.go`（パスワードリセットのセッション検証）
 
