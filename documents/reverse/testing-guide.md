@@ -12,7 +12,7 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 600 | 58 | Go `testing` |
+| Go バックエンド | 619 | 61 | Go `testing` |
 | フロントエンド ユニット | 808 | 64 | Vitest |
 | フロントエンド E2E | 195 | 34（+auth.setup.ts） | Playwright |
 | MCP サーバ | 668 | 20 | Vitest |
@@ -177,18 +177,19 @@ src/server/gkill/
 │   ├── message/message_test.go        ← メッセージフォーマット
 │   ├── kftl/                          ← KFTL パーサ（3ファイル）
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
-│   └── gkill_server_api/              ← ハンドラ層（6ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（7ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
 │       ├── handle_get_idf_kyou_by_relative_path_test.go ← 相対パス解決
 │       ├── handle_get_shared_kyous_test.go       ← 共有Kyou取得
+│       ├── handle_zip_cache_file_serve_test.go   ← ZIPキャッシュの利用者分離
 │       └── utils_ssrf_test.go                    ← SSRF対策
 ├── plugin/
 │   └── sdk/                           ← プラグインSDK（sdk_test.go, config_test.go）
 ├── dao/
 │   ├── gkill_dao_manager_test.go      ← DAO マネージャ
-│   ├── account/                       ← アカウント CRUD
+│   ├── account/                       ← アカウント CRUD、Argon2id、スキーマ移行（3ファイル）
 │   ├── account_state/                 ← セッション・アップロード履歴
 │   ├── server_config/                 ← サーバ設定
 │   ├── user_config/                   ← ユーザ設定・リポジトリ定義

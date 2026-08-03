@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
@@ -69,6 +70,19 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// ユーザIDはキャッシュディレクトリ名としてそのまま使われるので、
+	// パスとして解釈されうる文字が混ざらないことを確認する
+	if !account.IsValidUserID(request.AccountInfo.UserID) {
+		err = fmt.Errorf("error at invalid user id = %q", request.AccountInfo.UserID)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidAddAccountRequestDataError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	// 対象が存在する場合はエラー
 	existAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.AccountInfo.UserID)
 	if err != nil {
@@ -107,11 +121,13 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	}
 
 	passwordResetToken := GenerateNewID()
+	passwordResetTokenExpiration := time.Now().Add(account.PasswordResetTokenTTL)
 	account := &account.Account{
-		UserID:             request.AccountInfo.UserID,
-		IsAdmin:            request.AccountInfo.IsAdmin,
-		IsEnable:           request.AccountInfo.IsEnable,
-		PasswordResetToken: &passwordResetToken,
+		UserID:                       request.AccountInfo.UserID,
+		IsAdmin:                      request.AccountInfo.IsAdmin,
+		IsEnable:                     request.AccountInfo.IsEnable,
+		PasswordResetToken:           &passwordResetToken,
+		PasswordResetTokenExpiration: &passwordResetTokenExpiration,
 	}
 	_, err = g.GkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(r.Context(), account)
 	if err != nil {

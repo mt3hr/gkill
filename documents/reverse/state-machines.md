@@ -127,9 +127,12 @@ stateDiagram-v2
 
     未認証 --> アカウント無効: IsEnable=false<br>(ERR000238)
     未認証 --> パスワードリセット中: リセットトークン発行<br>(/set_new_password へ誘導)
-    パスワードリセット中 --> 未認証: 新パスワード設定完了
+    パスワードリセット中 --> 未認証: 新パスワード設定完了<br>(当該ユーザの全セッション削除)
+    パスワードリセット中 --> パスワードリセット中: トークン期限切れ<br>(72時間経過, ERR000247)<br>管理者 or CLI reset_password で再発行
 
-    認証済み --> 未認証: Logout<br>(session削除)
+    認証済み --> 未認証: 他端末でパスワード再設定<br>(全セッション失効)
+
+    認証済み --> 未認証: Logout<br>(セッションを解決できたら削除)
 
     認証済み --> 期限切れ: 30日経過<br>(EXPIRATION_TIME超過, ERR000373)
 
@@ -141,6 +144,8 @@ stateDiagram-v2
         gkill_server_api_rate_limit.go
         IP単位 / 15分 / 10回
         インメモリのスライディングウィンドウ
+        /api/set_new_password にも
+        同条件の別カウンタがある
     end note
 
     note right of 未認証

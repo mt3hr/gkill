@@ -1599,8 +1599,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) ClearVideoCache() error {
 	return i.idfRep.ClearVideoCache()
 }
 
-func (i *idfKyouRepositoryCachedSQLite3Impl) ClearZipCache() error {
-	return i.idfRep.ClearZipCache()
+func (i *idfKyouRepositoryCachedSQLite3Impl) ClearZipCache(userID string) error {
+	return i.idfRep.ClearZipCache(userID)
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrapTyped() ([]IDFKyouRepository, error) {

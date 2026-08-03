@@ -23,6 +23,7 @@ var sensitiveLogColumns = map[string]struct{}{
 	"GOOGLE_MAP_API_KEY":             {},
 	"GKILL_NOTIFICATION_PRIVATE_KEY": {},
 	"PASSWORD_SHA256":                {},
+	"PASSWORD_HASH":                  {},
 	"PASSWORD_RESET_TOKEN":           {},
 }
 
@@ -213,11 +214,16 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 						} else {
 							sql += " AND "
 						}
+						// 肯定側は「対象列かIDのどちらかに一致」なのでORでよいが、
+						// 否定側はド・モルガンによりANDでなければならない。
+						//   NOT(COL LIKE ? OR ID LIKE ?) = COL NOT LIKE ? AND ID NOT LIKE ?
+						// ここがORだったころは、IDがUUIDで検索語を含むことは実質ないため
+						// 右辺が常に真になり、除外がまったく効いていなかった。
 						if findWordUseLike {
 							sql += fmt.Sprintf("%s(%s) NOT LIKE %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, "%"+notWord+"%")
 
-							sql += " OR "
+							sql += " AND "
 
 							sql += fmt.Sprintf("%s(%s) NOT LIKE %s(?)", lower, "ID", lower)
 							*queryArgs = append(*queryArgs, "%"+notWord+"%")
@@ -225,7 +231,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 							sql += fmt.Sprintf("%s(%s) <> %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, notWord)
 
-							sql += " OR "
+							sql += " AND "
 
 							sql += fmt.Sprintf("%s(%s) <> %s(?)", lower, "ID", lower)
 							*queryArgs = append(*queryArgs, notWord)

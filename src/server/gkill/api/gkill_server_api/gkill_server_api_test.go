@@ -24,6 +24,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/share_kyou_info"
@@ -275,8 +276,13 @@ func prepareLoginReadyAccount(t *testing.T, gkillAPI *GkillServerAPI, userID str
 	}
 
 	// Clear password reset token and set password
+	passwordHash, err := account.HashPassword(passwordSha256)
+	if err != nil {
+		t.Fatalf("HashPassword failed: %v", err)
+	}
 	acc.PasswordResetToken = nil
-	acc.PasswordSha256 = &passwordSha256
+	acc.PasswordResetTokenExpiration = nil
+	acc.PasswordHash = &passwordHash
 	acc.IsEnable = true
 
 	ok, err := gkillAPI.GkillDAOManager.ConfigDAOs.AccountDAO.UpdateAccount(ctx, acc)
@@ -8276,6 +8282,75 @@ func TestHandleLogout_UnknownSessionSucceedsSilently(t *testing.T) {
 	// No error expected — logout silently succeeds for unknown session IDs
 	if len(logoutResp.Errors) > 0 {
 		t.Errorf("expected no errors for unknown session logout, got: %+v", logoutResp.Errors)
+	}
+}
+
+// TestHandleLogout_DeletesOnlyResolvableSessions は、/api/logout がDELETEを撃つのを
+// 「解決できたセッション」に限っていることを確認する。
+//
+// /api/logout は wrapNoAuth なので誰でも叩ける。以前はリクエストのsession_idを
+// 一切検証せずにDELETEしていた。session_idは122ビットのUUIDv4なので当てられはせず、
+// 実際に悪用できる穴ではなかったが、未認証で届く書き込み操作をなくしておく。
+// 応答は成功のまま返す (ログアウトはべき等であってほしいし、
+// session_idが有効だったかを応答から読み取れるようにもしたくない)。
+func TestHandleLogout_DeletesOnlyResolvableSessions(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	// 期限切れのセッション行を直接作る。解決できないので削除対象にならないはず
+	expiredSession := &account_state.LoginSession{
+		ID:              GenerateNewID(),
+		UserID:          "admin",
+		Device:          device,
+		ApplicationName: "gkill",
+		SessionID:       GenerateNewID(),
+		ClientIPAddress: "127.0.0.1",
+		LoginTime:       time.Now().Add(-48 * time.Hour),
+		ExpirationTime:  time.Now().Add(-24 * time.Hour),
+		IsLocalAppUser:  true,
+	}
+	if _, err := gkillAPI.GkillDAOManager.ConfigDAOs.LoginSessionDAO.AddLoginSession(ctx, expiredSession); err != nil {
+		t.Fatalf("AddLoginSession failed: %v", err)
+	}
+
+	resp := postJSON(t, tsURL+"/api/logout", &req_res.LogoutRequest{SessionID: expiredSession.SessionID, LocaleName: "en"})
+	var logoutResp req_res.LogoutResponse
+	if err := json.NewDecoder(resp.Body).Decode(&logoutResp); err != nil {
+		t.Fatalf("decode logout response: %v", err)
+	}
+	resp.Body.Close()
+
+	// 応答は成功のまま
+	if len(logoutResp.Errors) > 0 {
+		t.Errorf("expected no errors, got: %+v", logoutResp.Errors)
+	}
+	// DELETEは撃たれていないこと
+	stillThere, err := gkillAPI.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, expiredSession.SessionID)
+	if err != nil {
+		t.Fatalf("GetLoginSession failed: %v", err)
+	}
+	if stillThere == nil {
+		t.Error("解決できないセッションに対してDELETEが撃たれた")
+	}
+
+	// 有効なセッションのログアウトはこれまでどおり効くこと
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	validSession := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+	resp2 := postJSON(t, tsURL+"/api/logout", &req_res.LogoutRequest{SessionID: validSession, LocaleName: "en"})
+	resp2.Body.Close()
+
+	gone, err := gkillAPI.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, validSession)
+	if err != nil {
+		t.Fatalf("GetLoginSession failed: %v", err)
+	}
+	if gone != nil {
+		t.Error("有効なセッションのログアウトでセッションが消えていない")
 	}
 }
 

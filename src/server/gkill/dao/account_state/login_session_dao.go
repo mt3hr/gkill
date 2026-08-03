@@ -15,5 +15,9 @@ type LoginSessionDAO interface {
 
 	DeleteLoginSession(ctx context.Context, sessionID string) (bool, error)
 
+	// DeleteLoginSessionsByUserID は対象ユーザのログインセッションをすべて削除する。
+	// パスワードを設定しなおしたときに、それまでのセッションを失効させるために使う。
+	DeleteLoginSessionsByUserID(ctx context.Context, userID string) (bool, error)
+
 	Close(ctx context.Context) error
 }
