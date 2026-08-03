@@ -144,7 +144,7 @@ src/server/
     │       ├── utils.go            # ユーティリティ関数
     │       ├── web_push.go         # WebPush通知
     │       ├── gkill_server_api_access_log.go  # アクセスログミドルウェア
-    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、92ファイル）
+    │       └── handle_*.go         # 個別ハンドラ（1ファイル1ハンドラ、93ファイル）
     ├── plugin/                     # プラグイン作者向けSDK
     │   └── sdk/                    # sdk.Run / sdk.Handler / sdk.EnsureConfig
     ├── dao/                        # データアクセス層
@@ -176,8 +176,10 @@ src/server/
     └── main/                       # エントリーポイント
         ├── common/                 # 共通初期化・CLIコマンド
         │   ├── common.go           # 初期化フロー、サブコマンド定義
+        │   ├── password_admin.go   # reset_password サブコマンド、ローカル管理者セッションの発行
         │   ├── gkill_options/      # CLIフラグ・ディレクトリ構造定義
-        │   └── gkill_log/          # ログ設定
+        │   ├── gkill_log/          # ログ設定
+        │   └── threads/            # ゴルーチンプール（セマフォ）
         ├── gkill_server/
         │   └── main.go             # gkill_server エントリーポイント（ヘッドレスHTTP）
         └── gkill/

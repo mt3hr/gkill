@@ -224,7 +224,7 @@ flowchart TD
     Start([ZIP内容閲覧リクエスト]) --> Auth[セッション認証]
     Auth --> GetIDFKyou[IDFKyou取得<br>ファイルパス特定]
     GetIDFKyou --> CalcHash["ZIPファイルパス文字列のSHA1ハッシュ計算<br>sha1.Sum([]byte(zipFilePath))"]
-    CalcHash --> CacheCheck{"zip_cache/(rep_name)/(sha1)/<br>が存在する?"}
+    CalcHash --> CacheCheck{"zip_cache/(user_id)/(rep_name)/(sha1)/<br>が存在する?"}
 
     CacheCheck -->|Yes| BuildEntries[ZipEntryリスト生成<br>キャッシュから]
     CacheCheck -->|No| ExtractToTemp[一時ディレクトリに展開開始]
@@ -242,7 +242,7 @@ flowchart TD
     DecodeFilename --> WriteFile[ファイルを一時ディレクトリに書き込み]
     WriteFile --> LoopEntries
 
-    LoopEntries -->|No| AtomicRename["一時ディレクトリ→<br>zip_cache/(rep_name)/(sha1)/ にリネーム<br>（アトミック展開）"]
+    LoopEntries -->|No| AtomicRename["一時ディレクトリ→<br>zip_cache/(user_id)/(rep_name)/(sha1)/ にリネーム<br>（アトミック展開）"]
     AtomicRename --> BuildEntries
 
     BuildEntries --> ReturnEntries([ZipEntryリスト返却<br>MSG000080])
@@ -269,7 +269,7 @@ flowchart TD
     IsEnabled -->|Yes| ResetPending{パスワード<br>リセット中?}
 
     ResetPending -->|Yes| Error403b([リセット中エラー])
-    ResetPending -->|No| PasswordMatch{パスワード<br>SHA256一致?}
+    ResetPending -->|No| PasswordMatch{パスワード<br>Argon2id照合OK?}
 
     PasswordMatch -->|No| Error401b([認証エラー])
     PasswordMatch -->|Yes| CheckLocal{ローカルアクセス?<br>localhost/127.0.0.1/::1}

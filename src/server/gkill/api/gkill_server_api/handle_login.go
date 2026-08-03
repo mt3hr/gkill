@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
@@ -113,8 +112,20 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// パスワード不一致を弾く
-	if account.PasswordSha256 != nil && *account.PasswordSha256 != request.PasswordSha256 {
+	// パスワード不一致を弾く。
+	// パスワードが設定されていないアカウントも不一致として扱う (fail-closed)。
+	passwordMatched, err := account.VerifyPassword(request.PasswordSha256)
+	if err != nil {
+		err = fmt.Errorf("error at verify password user id = %s: %w", request.UserID, err)
+		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidPasswordError,
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if !passwordMatched {
 		err = fmt.Errorf("error at account invalid password = %s", request.UserID)
 		slog.Log(r.Context(), gkill_log.Warn, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
@@ -126,19 +137,8 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ログインセッション追加
-	isLocalAppUser := false
-	spl := strings.Split(r.RemoteAddr, ":")
-	remoteHost := strings.Join(spl[:len(spl)-1], ":")
-	switch remoteHost {
-	case "localhost":
-		fallthrough
-	case "127.0.0.1":
-		fallthrough
-	case "[::1]":
-		fallthrough
-	case "::1":
-		isLocalAppUser = true
-	}
+	remoteHost := extractIP(r.RemoteAddr)
+	isLocalAppUser := isLoopbackRemoteAddr(r.RemoteAddr)
 
 	device, err := g.GetDevice()
 	if err != nil {

@@ -17,7 +17,7 @@ sequenceDiagram
     API->>AccDAO: GetAccount(user_id)
     AccDAO-->>API: Account
     API->>API: アカウント有効性チェック<br>(IsEnable, パスワードリセット中でないか)
-    API->>API: パスワード SHA256 照合
+    API->>API: パスワード照合<br>(Argon2id, constant-time)
     API->>API: ローカルユーザ判定<br>(localhost/127.0.0.1/[::1])
     API->>SesDAO: AddLoginSession<br>(UUID, user_id, device, 30日期限)
     SesDAO-->>API: OK
@@ -37,18 +37,78 @@ sequenceDiagram
 
     User->>UI: ログアウト選択
     UI->>API: POST /api/logout<br>{session_id, close_database}
-    alt close_database = true
-        API->>API: getAccountFromSessionID(session_id)
-        API->>DAOMgr: CloseUserRepositories(user_id)
-        DAOMgr-->>API: OK
+    API->>API: getAccountFromSessionID(session_id)
+    alt セッションを解決できた
+        opt close_database = true
+            API->>DAOMgr: CloseUserRepositories(user_id)
+            DAOMgr-->>API: OK
+        end
+        API->>SesDAO: DeleteLoginSession(session_id)
+        SesDAO-->>API: OK
+    else 解決できなかった
+        Note over API: 何も削除しない<br>（未認証で他人のセッションを<br>消せないようにするため）
     end
-    API->>SesDAO: DeleteLoginSession(session_id)
-    SesDAO-->>API: OK
-    API-->>UI: {messages}
+    API-->>UI: {messages}（どちらの分岐でも成功を返す）
     UI-->>User: ログイン画面へ遷移
 ```
 
-## 3. Kyou データ追加（例: Kmemo）
+> **応答をどちらも成功にしている理由**: ログアウトはべき等であってほしいこと、
+> 与えた `session_id` が有効だったかどうかを応答から読み取れるようにしたくないこと、
+> 期限切れのセッションでログアウトを押した利用者がエラーで手詰まりにならないこと。
+> `/api/logout` は `wrapNoAuth` なので誰でも叩ける。`session_id` は122ビットの UUIDv4 で
+> 当てられるものではないが、未認証で届く書き込み操作をなくしておく。
+
+## 3. パスワード設定（リセットトークン使用）
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザ
+    participant UI as Vue フロントエンド
+    participant API as GkillServerAPI
+    participant AccDAO as AccountDAO
+    participant SesDAO as LoginSessionDAO
+
+    Note over UI: SHA256(パスワード) を<br>ブラウザ内で計算（64桁hex）
+    UI->>API: POST /api/set_new_password<br>{user_id, reset_token, new_password_sha256}
+
+    API->>API: レート制限（IP単位 / 15分10回）
+    alt 上限到達
+        API-->>UI: ERR000374
+    end
+
+    API->>API: new_password_sha256 が<br>64桁小文字hexか検証
+    alt 形式不正
+        API-->>UI: ERR000016
+    end
+
+    API->>AccDAO: GetAccount(user_id)
+    AccDAO-->>API: Account
+
+    API->>API: リセットトークン照合<br>（constant-time + 期限72h）
+    alt 不一致 or 期限切れ
+        API-->>UI: ERR000247
+    end
+
+    API->>API: HashPassword(new_password_sha256)<br>Argon2id m=65536,t=3,p=4
+    API->>AccDAO: UpdateAccount<br>（PasswordHash 設定、トークンと期限を NULL に）
+    AccDAO-->>API: OK
+
+    API->>SesDAO: DeleteLoginSessionsByUserID(user_id)
+    Note over SesDAO: そのユーザの全セッションを削除<br>他端末のログインも落ちる
+    SesDAO-->>API: OK
+
+    API-->>UI: {messages}
+    UI-->>User: ログイン画面へ
+```
+
+**ポイント:**
+
+- **クライアントは平文パスワードを送らない**。送るのは SHA256 の64桁hex で、サーバはそれを資格情報として Argon2id にかける。ワイヤ形式は旧方式から変えていないので、MCP・Wear OS・gkill_autolog が保存している値はそのまま使える
+- **トークンは単回使用**。設定に成功すると `PASSWORD_RESET_TOKEN` と `PASSWORD_RESET_TOKEN_EXPIRATION` を NULL にする
+- **全セッションを失効させる**ので、パスワードを変えていなくても設定しなおした時点で全端末がログアウトされる。セッションだけを保存していて再ログインの材料を持たないもの（HTTP/OAuth モードの MCP サーバ）は再認可が必要になる
+- このエンドポイントは `wrapNoAuth`。認可はリセットトークンだけが担うので、レート制限と constant-time 照合が効いている
+
+## 4. Kyou データ追加（例: Kmemo）
 
 全データ型（KC, Lantana, Mi, Nlog, URLog, TimeIs, ReKyou, MiReKyou）も同様のフロー。
 MiReKyou は `/api/add_mirekyou` / `/api/update_mirekyou` / `/api/get_mirekyou` を使い、
@@ -86,7 +146,7 @@ sequenceDiagram
     UI-->>User: 保存成功メッセージ
 ```
 
-## 4. Kyou データ更新（例: Kmemo）
+## 5. Kyou データ更新（例: Kmemo）
 
 ```mermaid
 sequenceDiagram
@@ -109,7 +169,7 @@ sequenceDiagram
     UI-->>User: 更新成功メッセージ
 ```
 
-## 5. Kyou データ削除（論理削除）
+## 6. Kyou データ削除（論理削除）
 
 ```mermaid
 sequenceDiagram
@@ -129,7 +189,7 @@ sequenceDiagram
     UI-->>User: 削除成功メッセージ
 ```
 
-## 6. Kyou 検索（GetKyous）
+## 7. Kyou 検索（GetKyous）
 
 ```mermaid
 sequenceDiagram
@@ -157,7 +217,7 @@ sequenceDiagram
     UI-->>User: 検索結果一覧表示
 ```
 
-## 7. KFTL テキスト送信・パース・保存
+## 8. KFTL テキスト送信・パース・保存
 
 ```mermaid
 sequenceDiagram
@@ -206,7 +266,7 @@ sequenceDiagram
 > （`use-kftl-view.ts:258,272`）が未確認のときだけ `collect_unknown_tags()` を呼び、
 > 打ち間違いで似たタグが増えるのを防ぐ。サーバ側は確認の有無を関知しない。
 
-## 8. ファイルアップロード
+## 9. ファイルアップロード
 
 ```mermaid
 sequenceDiagram
@@ -237,7 +297,7 @@ sequenceDiagram
     UI-->>User: アップロード完了
 ```
 
-## 9. Tag / Text / Notification の追加
+## 10. Tag / Text / Notification の追加
 
 ```mermaid
 sequenceDiagram
@@ -259,7 +319,7 @@ sequenceDiagram
     UI-->>User: タグ追加成功
 ```
 
-## 10. TimeIs 開始・終了
+## 11. TimeIs 開始・終了
 
 ```mermaid
 sequenceDiagram
@@ -286,7 +346,7 @@ sequenceDiagram
     UI-->>User: 終了完了
 ```
 
-## 11. アプリケーション設定取得・更新
+## 12. アプリケーション設定取得・更新
 
 ```mermaid
 sequenceDiagram
@@ -311,7 +371,7 @@ sequenceDiagram
     UI-->>User: 設定保存成功
 ```
 
-## 12. 共有（ShareKyouListInfo）
+## 13. 共有（ShareKyouListInfo）
 
 ```mermaid
 sequenceDiagram
@@ -336,7 +396,7 @@ sequenceDiagram
     API-->>Viewer: {kyous: [...]}
 ```
 
-## 13. Web Push 通知登録
+## 14. Web Push 通知登録
 
 ```mermaid
 sequenceDiagram
@@ -357,7 +417,7 @@ sequenceDiagram
     API-->>UI: {messages}
 ```
 
-## 14. Wear OS テンプレート取得・KFTL 送信
+## 15. Wear OS テンプレート取得・KFTL 送信
 
 ```mermaid
 sequenceDiagram
@@ -398,7 +458,7 @@ sequenceDiagram
     Watch-->>User: 送信結果表示
 ```
 
-## 15. MCP Kyou 取得
+## 16. MCP Kyou 取得
 
 ```mermaid
 sequenceDiagram
@@ -415,7 +475,7 @@ sequenceDiagram
     MCPServer-->>MCP: 検索結果
 ```
 
-## 16. MCP OAuth 2.1 認可フロー（HTTP モード）
+## 17. MCP OAuth 2.1 認可フロー（HTTP モード）
 
 ```mermaid
 sequenceDiagram
@@ -481,7 +541,7 @@ sequenceDiagram
 - **RFC 8707（Resource Indicators）:** 認可〜トークン交換で `resource` パラメータを引き回し、一致を検証
 - **既知の制限:** ChatGPT はOAuth認証・初回データ取得は成功するが、cursorベースのページング継続時にプラットフォーム側で問題が発生する（2026-03時点）
 
-## 17. ZIPファイル内容閲覧
+## 18. ZIPファイル内容閲覧
 
 ```mermaid
 sequenceDiagram
@@ -500,7 +560,7 @@ sequenceDiagram
     API->>IDFRep: GetIDFKyou(idf_kyou_id)
     IDFRep-->>API: IDFKyou（ファイルパス取得）
     API->>API: SHA1ハッシュ計算
-    API->>FS: キャッシュ確認<br>$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/
+    API->>FS: キャッシュ確認<br>$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/
 
     alt キャッシュ未存在
         API->>FS: 一時ディレクトリに展開
@@ -528,10 +588,11 @@ sequenceDiagram
 ### 補足
 
 - **MSG000080**: ZIP内容の閲覧成功時に返されるメッセージコード
-- **キャッシュ**: 展開済みZIPはリポジトリ名とSHA1ハッシュベースで `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に永続化される。同一ZIPファイルの再アクセス時は展開をスキップしてキャッシュから直接返却する
+- **キャッシュ**: 展開済みZIPは利用者ID・リポジトリ名・ZIPの絶対パスのSHA1をキーに `$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` へ永続化される。同一ZIPファイルの再アクセス時は展開をスキップしてキャッシュから直接返却する
+- **利用者の分離**: `/zip_cache/` の配信はセッションから引いた利用者のディレクトリを起点に固定される。URLには利用者IDが現れないため、他人のキャッシュを指名できない
 - **Service Worker**: `/zip_cache/.*` は Service Worker の denylist に追加されており、キャッシュされない
 
-## 18. トランザクション（CommitTX / DiscardTX）
+## 19. トランザクション（CommitTX / DiscardTX）
 
 ```mermaid
 sequenceDiagram
@@ -564,7 +625,7 @@ sequenceDiagram
 
 ---
 
-## 19. プラグイン一覧取得（get_plugin_list）
+## 20. プラグイン一覧取得（get_plugin_list）
 
 > **呼び出し元は MCP のみ。** gkill のフロントエンドにこのエンドポイントを叩く導線は無い
 > （`gkill-api.ts` に `get_plugin_list()` の定義はあるが呼び出し元が存在しない）。
@@ -592,7 +653,7 @@ sequenceDiagram
 
 ---
 
-## 20. プラグイン設定 HTML 取得（get_plugin_config_html）
+## 21. プラグイン設定 HTML 取得（get_plugin_config_html）
 
 > プラグイン Kyou を右クリック →「プラグイン設定」で `plugin-config-dialog.vue` が開き、
 > このエンドポイントを呼ぶ。保存後にも呼び直して表示を更新する。
@@ -623,7 +684,7 @@ sequenceDiagram
 
 ---
 
-## 21. プラグイン設定保存（post_plugin_config）
+## 22. プラグイン設定保存（post_plugin_config）
 
 > iframe には `allow-same-origin` を与えていないので、設定フォームは自力で API を叩けない。
 > iframe が `postMessage({ gkill_plugin_config: {...} })` で親に依頼し、親（ダイアログ）が
@@ -659,7 +720,7 @@ sequenceDiagram
 
 ---
 
-## 22. プラグインコンテンツ HTML 取得
+## 23. プラグインコンテンツ HTML 取得
 
 ```mermaid
 sequenceDiagram
@@ -759,7 +820,7 @@ sequenceDiagram
         API-->>UI: {errors: [{error_code: "ERR000004"}]}
         UI-->>User: パスワードリセット中エラー表示
     else パスワード不一致
-        API->>API: SHA256比較 → 不一致
+        API->>API: Argon2id照合 → 不一致
         API-->>UI: {errors: [{error_code: "ERR000005"}]}
         UI-->>User: パスワード不正エラー表示
     end
