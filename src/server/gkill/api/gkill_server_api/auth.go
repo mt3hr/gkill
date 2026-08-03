@@ -16,7 +16,7 @@ import (
 func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.Context, sessionID string, applicationName string, localeName string) (*account.Account, *message.GkillError, error) {
 	loginSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
 	if loginSession == nil || err != nil {
-		err = fmt.Errorf("error at get login session session id = %s: %w", sessionID, err)
+		err = fmt.Errorf("error at get login session: %w", err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionNotFoundError,
@@ -25,7 +25,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 		return nil, gkillError, err
 	}
 	if time.Now().After(loginSession.ExpirationTime) {
-		err = fmt.Errorf("session expired for session id = %s", sessionID)
+		err = fmt.Errorf("session expired")
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionExpiredError,
