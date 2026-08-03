@@ -19,6 +19,26 @@ import (
 func (uc *UsecaseContext) UpdateIDFKyou(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, idfKyou reps.IDFKyou, txID *string) ([]*message.GkillError, error) {
 	var gkillErrors []*message.GkillError
 
+	existIDFKyou, err := repositories.IDFKyouReps.GetIDFKyou(ctx, idfKyou.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.GetIDFKyouError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+	if existIDFKyou == nil {
+		err = fmt.Errorf("not exist idfKyou id = %s", idfKyou.ID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.NotFoundIDFKyouError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+
 	if txID == nil {
 		err := repositories.WriteIDFKyouRep.AddIDFKyouInfo(ctx, idfKyou)
 		if err != nil {
@@ -73,26 +93,6 @@ func (uc *UsecaseContext) UpdateIDFKyou(ctx context.Context, repositories *reps.
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-	}
-
-	existIDFKyou, err := repositories.IDFKyouReps.GetIDFKyou(ctx, idfKyou.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
-		})
-		return gkillErrors, nil
-	}
-	if existIDFKyou == nil {
-		err = fmt.Errorf("not exist idfKyou id = %s", idfKyou.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.NotFoundIDFKyouError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
-		})
-		return gkillErrors, nil
 	}
 
 	return nil, nil

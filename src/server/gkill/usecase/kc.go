@@ -102,13 +102,22 @@ func (uc *UsecaseContext) AddKC(ctx context.Context, repositories *reps.GkillRep
 func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, kc reps.KC, txID *string) ([]*message.GkillError, error) {
 	var gkillErrors []*message.GkillError
 
-	_, err := repositories.KCReps.GetKC(ctx, kc.ID, nil)
+	existKC, err := repositories.KCReps.GetKC(ctx, kc.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_UPDATED_GET_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+	if existKC == nil {
+		err = fmt.Errorf("not exist kc id = %s", kc.ID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.NotFoundKCError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 		})
 		return gkillErrors, nil
 	}
@@ -167,26 +176,6 @@ func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.Gkill
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-	}
-
-	existKC, err := repositories.KCReps.GetKC(ctx, kc.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetKCError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
-		})
-		return gkillErrors, nil
-	}
-	if existKC == nil {
-		err = fmt.Errorf("not exist kc id = %s", kc.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.NotFoundKCError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
-		})
-		return gkillErrors, nil
 	}
 
 	return nil, nil

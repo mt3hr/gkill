@@ -115,14 +115,23 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, text reps.Text, txID *string) (*reps.Text, []*message.GkillError, error) {
 	var gkillErrors []*message.GkillError
 
-	// すでに存在する場合はエラー
-	_, err := repositories.GetText(ctx, text.ID, nil)
+	// 対象が存在しない場合はエラー
+	existText, err := repositories.GetText(ctx, text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
+		})
+		return nil, gkillErrors, nil
+	}
+	if existText == nil {
+		err = fmt.Errorf("not exist text id = %s", text.ID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.NotFoundTextError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 		})
 		return nil, gkillErrors, nil
 	}
@@ -192,27 +201,6 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetTextError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
-		})
-		return nil, gkillErrors, nil
-	}
-
-	// 対象が存在しない場合はエラー
-	existText, err := repositories.GetText(ctx, text.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetTextError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
-		})
-		return nil, gkillErrors, nil
-	}
-	if existText == nil {
-		err = fmt.Errorf("not exist text id = %s", text.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.NotFoundTextError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 		})
 		return nil, gkillErrors, nil
 	}
