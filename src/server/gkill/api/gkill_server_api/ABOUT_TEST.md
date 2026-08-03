@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装89ファイル（+ テスト4ファイル））に対する統合テストを含む。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装89ファイル（+ テスト5ファイル））に対する統合テストを含む。
 
 ## テストフレームワーク
 
@@ -18,6 +18,7 @@ Go `testing` パッケージ
 | `handle_get_idf_file_path_test.go` | IDF ファイル絶対パス解決ハンドラ（localhost 限定応答、ERR000389、存在確認） |
 | `handle_get_idf_kyou_by_relative_path_test.go` | Markdown 相対リンクの IDFKyou 解決ハンドラ（同一 Rep 内解決、パストラバーサル防止） |
 | `handle_zip_cache_file_serve_test.go` | `/zip_cache/` の利用者分離（他人のキャッシュを読めないこと、ユーザーごとに分かれていない旧レイアウトを配信しないこと、`../` / `..%2F` で抜けられないこと、セッション無し・不正セッションの拒否） |
+| `handle_reset_password_test.go` | パスワードリセットのセッション検証（後述） |
 | `utils_ssrf_test.go` | `httpGetBase64Data` の SSRF 対策（スキーム制限、内部アドレス拒否、サイズ上限、タイムアウト） |
 
 ## テスト内容
@@ -89,6 +90,25 @@ Kyou だけが返る」ことが唯一の防壁になる。ここが崩れると
 
 更新・削除は「存在しない」と「所有者が違う」を同じエラーコードで返す。
 区別すると共有IDの存在有無を問い合わせるオラクルになるため、意図的に揃えている。
+
+### `handle_reset_password_test.go`（パスワードリセットのセッション検証）
+
+`/api/reset_password` は `wrapNoAuth` で登録されており、認証をハンドラ自身が行う。
+管理者権限があれば任意アカウントのリセットトークンを発行できるエンドポイントなので、
+セッション検証が緩いと失効済みセッションや別用途のセッションから全アカウントを奪える。
+
+以前は `LoginSessionDAO.GetLoginSession` を直接呼んでおり、
+「セッションIDがDBに存在するか」しか見ていなかった。他エンドポイントが
+`getAccountFromSessionID` で行っている検証をすべて素通りしていたので、
+同じ関数を通す形に統一したうえで以下を固定している。
+
+- **有効期限切れのセッション**: 期限を過ぎたセッションでリセットできないこと
+- **ブックマークレット用セッション**: `ApplicationName` が `urlog_bookmarklet` の
+  セッションでリセットできないこと。この値はブックマークレットのURLのクエリ文字列に
+  載るため、ブラウザ履歴やブックマーク同期から漏れうる
+- **無効化済み管理者**: セッションは生きたままアカウントだけ `IsEnable = false` に
+  したとき、リセットできないこと
+- **通常のセッションは成功する**: 上記3件が「そもそも常に失敗する」だけでないことを担保する
 
 ### `gkill_server_api_rate_limit_test.go`（レート制限テスト）
 
