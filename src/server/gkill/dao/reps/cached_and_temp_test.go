@@ -1624,3 +1624,50 @@ func TestTempMiReKyou_TXIDIsolation(t *testing.T) {
 		t.Errorf("別TXのMiReKyouが混ざっている: %+v", mirekyous)
 	}
 }
+
+// TestCachedNotification_UpdateCacheRebuildsFromUnderlyingRep は、下層に通知が
+// 1件でもある状態でキャッシュ更新が成功することを確認する。
+//
+// キャッシュ再構築のINSERTは列とプレースホルダが15個あるのに、
+// 引数配列に REP_NAME (12番目) だけが無く14個しか渡していなかった。
+// このためキャッシュ更新が "missing argument with index 15" で必ず失敗し、
+// GkillRepositories.UpdateCache はそこで return err するので、
+// 通知を1件でも持つユーザーはキャッシュ更新が丸ごと失敗していた
+// (fsnotify契機・クライアントからの更新要求の両方)。
+// 通知が0件のユーザーではループに入らないため潜在化していた。
+func TestCachedNotification_UpdateCacheRebuildsFromUnderlyingRep(t *testing.T) {
+	ctx := context.Background()
+	baseRepo := newTempNotificationRepo(t)
+	cacheDB := openMemoryDB(t)
+	m := &sync.RWMutex{}
+	repo, err := NewNotificationRepositoryCachedSQLite3Impl(ctx, baseRepo, cacheDB, m, "NOTIFICATION_CACHE_REBUILD")
+	if err != nil {
+		t.Fatalf("failed to create cached notification repo: %v", err)
+	}
+	t.Cleanup(func() { repo.Close(ctx) })
+
+	// 下層リポジトリへ直接書いてからキャッシュを更新する
+	notification := makeNotification("rebuild-notif-001", "target-rebuild", "キャッシュ再構築テスト")
+	if err := baseRepo.AddNotificationInfo(ctx, notification); err != nil {
+		t.Fatalf("AddNotificationInfo failed: %v", err)
+	}
+
+	if err := repo.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache failed: %v", err)
+	}
+
+	got, err := repo.GetNotification(ctx, "rebuild-notif-001", nil)
+	if err != nil {
+		t.Fatalf("GetNotification failed: %v", err)
+	}
+	if got == nil {
+		t.Fatal("キャッシュ更新後に下層の内容が反映されていない")
+	}
+	if got.Content != "キャッシュ再構築テスト" {
+		t.Errorf("Content = %q, want %q", got.Content, "キャッシュ再構築テスト")
+	}
+	// REP_NAME が欠けたまま通っていないこと
+	if got.RepName == "" {
+		t.Error("RepName がキャッシュに保存されていない")
+	}
+}

@@ -824,6 +824,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(n.dbName) + ` (
 				notification.UpdateApp,
 				notification.UpdateDevice,
 				notification.UpdateUser,
+				notification.RepName,
 				notification.NotificationTime.Unix(),
 				notification.CreateTime.Unix(),
 				notification.UpdateTime.Unix(),
