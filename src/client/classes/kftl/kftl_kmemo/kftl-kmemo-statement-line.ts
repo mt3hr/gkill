@@ -57,7 +57,9 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
     }
 
     private static is_kmemo_statement_line(statement_line: KFTLStatementLine): boolean {
-        return statement_line.constructor.name == KFTLKmemoStatementLine.name
+        // クラス名ではなくコンストラクタの同一性で比較する。
+        // minify するとクラス名は短縮され、別クラスが同じ名前になりうるため。
+        return statement_line.constructor === KFTLKmemoStatementLine
     }
 
 }

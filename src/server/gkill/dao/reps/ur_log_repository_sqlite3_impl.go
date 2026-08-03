@@ -22,6 +22,10 @@ import (
 const CURRENT_SCHEMA_VERSION_URLOG_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type urlogRepositorySQLite3Impl struct {
+	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
+	// temp repが構造体変換でこの型をコピーするため、必ずポインタで持つこと。
+	cacheChange *dbFileChangeDetector
+
 	filename    string
 	db          *sql.DB
 	m           *sync.RWMutex
@@ -131,6 +135,7 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	}
 
 	return &urlogRepositorySQLite3Impl{
+		cacheChange: &dbFileChangeDetector{},
 		filename:    filename,
 		db:          db,
 		m:           &sync.RWMutex{},
@@ -626,11 +631,20 @@ func (u *urlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (st
 }
 
 func (u *urlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	// 自身は実DBを直接見るのでキャッシュは持たないが、
+	// 上位のキャッシュrepが「作り直す必要があるか」を判断できるよう、
+	// ここでファイルの更新有無だけ観測しておく。
+	u.cacheChange.refresh(u.filename)
 	return nil
 }
 
 func (u *urlogRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
-	return true
+	return u.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (u *urlogRepositorySQLite3Impl) CommitCacheRebuild() {
+	u.cacheChange.commit()
 }
 
 func (u *urlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {

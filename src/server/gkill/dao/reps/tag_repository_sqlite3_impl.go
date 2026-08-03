@@ -23,6 +23,10 @@ import (
 const CURRENT_SCHEMA_VERSION_TAG_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type tagRepositorySQLite3Impl struct {
+	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
+	// temp repが構造体変換でこの型をコピーするため、必ずポインタで持つこと。
+	cacheChange *dbFileChangeDetector
+
 	filename    string
 	db          *sql.DB
 	m           *sync.RWMutex
@@ -178,6 +182,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	return &tagRepositorySQLite3Impl{
+		cacheChange: &dbFileChangeDetector{},
 		filename:    filename,
 		db:          db,
 		m:           &sync.RWMutex{},
@@ -845,6 +850,10 @@ WHERE
 }
 
 func (t *tagRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	// 自身は実DBを直接見るのでキャッシュは持たないが、
+	// 上位のキャッシュrepが「作り直す必要があるか」を判断できるよう、
+	// ここでファイルの更新有無だけ観測しておく。
+	t.cacheChange.refresh(t.filename)
 	return nil
 }
 
@@ -856,7 +865,12 @@ func (t *tagRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (stri
 }
 
 func (t *tagRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
-	return true
+	return t.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (t *tagRepositorySQLite3Impl) CommitCacheRebuild() {
+	t.cacheChange.commit()
 }
 
 func (t *tagRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {

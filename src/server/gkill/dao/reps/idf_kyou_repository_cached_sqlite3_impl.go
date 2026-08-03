@@ -233,16 +233,18 @@ WHERE
 
 	words := []string{}
 	notWords := []string{}
+	// query は全repで共有されているので、スライスの中身を直接書き換えると
+	// 並列に走っている他repの検索語まで小文字化して壊してしまう。必ず複製すること。
 	if query.Words != nil {
-		words = query.Words
-		for i := range words {
-			words[i] = strings.ToLower(words[i])
+		words = make([]string, len(query.Words))
+		for i, word := range query.Words {
+			words[i] = strings.ToLower(word)
 		}
 	}
 	if query.NotWords != nil {
-		notWords = query.NotWords
-		for i := range notWords {
-			notWords[i] = strings.ToLower(notWords[i])
+		notWords = make([]string, len(query.NotWords))
+		for i, notWord := range query.NotWords {
+			notWords[i] = strings.ToLower(notWord)
 		}
 	}
 
@@ -992,16 +994,18 @@ WHERE
 
 	words := []string{}
 	notWords := []string{}
+	// query は全repで共有されているので、スライスの中身を直接書き換えると
+	// 並列に走っている他repの検索語まで小文字化して壊してしまう。必ず複製すること。
 	if query.Words != nil {
-		words = query.Words
-		for i := range words {
-			words[i] = strings.ToLower(words[i])
+		words = make([]string, len(query.Words))
+		for i, word := range query.Words {
+			words[i] = strings.ToLower(word)
 		}
 	}
 	if query.NotWords != nil {
-		notWords = query.NotWords
-		for i := range notWords {
-			notWords[i] = strings.ToLower(notWords[i])
+		notWords = make([]string, len(query.NotWords))
+		for i, notWord := range query.NotWords {
+			notWords[i] = strings.ToLower(notWord)
 		}
 	}
 

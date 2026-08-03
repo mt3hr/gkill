@@ -288,6 +288,14 @@ errloop:
 	return nil
 }
 
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれ、
+// 配下の各repの「取り込み済み」基準を進めます。
+func (k KmemoRepositories) CommitCacheRebuild() {
+	for _, rep := range k {
+		commitCacheRebuildIfSupported(rep)
+	}
+}
+
 func (k KmemoRepositories) LastUpdateCacheChanged() bool {
 	for _, rep := range k {
 		if rep.LastUpdateCacheChanged() {
