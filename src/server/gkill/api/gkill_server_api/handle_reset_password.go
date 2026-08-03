@@ -54,35 +54,27 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// パスワードリセット操作をしたユーザを特定
-	requesterSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
-	if requesterSession == nil || err != nil {
-		err = fmt.Errorf("error at get login session: %w", err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AccountSessionNotFoundError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
+	// パスワードリセット操作をしたユーザを特定する。
+	//
+	// LoginSessionDAO.GetLoginSession を直接呼ぶと、セッションIDが一致するかしか見ない。
+	// getAccountFromSessionID を通すことで、他のエンドポイントと同じく
+	//   - セッションの有効期限切れ
+	//   - ApplicationName の不一致（urlog_bookmarklet 用セッションでの実行）
+	//   - アカウントが無効化済み (IsEnable == false)
+	// を弾ける。ブックマークレット用セッションはURLのクエリ文字列に載って
+	// ブラウザ履歴やブックマーク同期に残る値なので、それで任意アカウントの
+	// パスワードをリセットできる状態は塞いでおく必要がある。
+	requesterAccount, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
+	if requesterAccount == nil || err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at get account from session: %w", err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	requesterAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), requesterSession.UserID)
-	if err != nil {
-		err = fmt.Errorf("error at get account user id = %s: %w", requesterSession.UserID, err)
-		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	if requesterAccount == nil {
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
+		if gkillError == nil {
+			gkillError = &message.GkillError{
+				ErrorCode:    message.AccountSessionNotFoundError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
+			}
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -90,7 +82,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 
 	// 管理者権限がなければ弾く
 	if !requesterAccount.IsAdmin {
-		err = fmt.Errorf("account not has admin user id = %s: %w", requesterSession.UserID, err)
+		err = fmt.Errorf("account not has admin user id = %s", requesterAccount.UserID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
