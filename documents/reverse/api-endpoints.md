@@ -5,7 +5,7 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、92ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、93ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（182ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
@@ -234,11 +234,11 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 | パス | 説明 |
 |---|---|
-| `/api/login` | ログイン（user_id + password_sha256 → session_id） |
-| `/api/logout` | ログアウト（セッション無効化） |
-| `/api/reset_password` | パスワードリセット要求 |
-| `/api/set_new_password` | 新パスワード設定（リセットトークン使用） |
-| `/api/add_user` | アカウント追加 |
+| `/api/login` | ログイン（user_id + password_sha256 → session_id）。サーバは受け取った64桁hexを資格情報としてArgon2idで照合する。パスワード未設定のアカウントは常に不一致（fail-closed） |
+| `/api/logout` | ログアウト。**セッションを解決できたときだけ削除**する（未認証で任意の session_id を投げても他人のセッションは消えない）。解決できなくても応答は成功のまま返す（べき等性を保ち、session_id が有効だったかを応答から読み取れないようにするため） |
+| `/api/reset_password` | パスワードリセット要求（管理者のみ）。対象アカウントのパスワードを無効化し、有効期限72時間のリセットトークンを発行する |
+| `/api/set_new_password` | 新パスワード設定（リセットトークン使用）。①IP単位のレート制限（ログインとは**別カウンタ**で15分10回）②`new_password_sha256` は64桁小文字hexでなければ拒否 ③トークンは constant-time 照合し期限も検証 ④成功時に**当該ユーザーの全ログインセッションを削除**する |
+| `/api/add_user` | アカウント追加。`user_id` は `^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$` かつ `..` を含まないことを検証する（利用者IDがキャッシュディレクトリ名になるため）。応答の Account にパスワードは含まれない |
 | `/api/update_account_status` | アカウント状態更新（有効/無効） |
 
 ## Kyouデータ追加（12件）
@@ -324,7 +324,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_application_config` | アプリケーション設定取得（KFTLテンプレート含む） |
 | `/api/update_application_config` | アプリケーション設定更新 |
-| `/api/get_server_configs` | サーバー設定取得 |
+| `/api/get_server_configs` | サーバー設定取得（管理者のみ）。応答に含まれる Account から**パスワードハッシュは除かれる**（`Account.PasswordHash` が `json:"-"` のため型レベルで載らない）。`password_reset_token` は管理画面がリセットリンクの生成に使うので残る |
 | `/api/update_server_configs` | サーバー設定更新 |
 | `/api/get_repositories` | ユーザーのリポジトリ一覧取得 |
 | `/api/update_user_reps` | リポジトリパス更新 |
@@ -338,7 +338,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/upload_gpslog_files` | GPSログファイルアップロード |
 | `/api/open_directory` | ディレクトリを開く（OS コマンド実行） |
 | `/api/open_file` | ファイルを開く（OS コマンド実行） |
-| `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（ファイル名・サイズ・パス等）を返却する。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
+| `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（ファイル名・サイズ・パス等）を返却する。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
 | `/api/get_idf_kyou_by_relative_path` | IDFKyou相対パス解決。基準IDFKyou（`target_id`）のファイルからの相対パス（`relative_path`）を同一Rep内で解決し、対象ファイルのIDFKyou IDを返却する（Markdown内相対リンクのKyouDialog表示用）。見つからない場合は `kyou_id` 空文字。セッション認証必須。パストラバーサル防止対応 |
 | `/api/get_idf_file_path` | IDFファイル絶対パス解決。`rep_name` + `file_name` から実ファイルの絶対パス（`file_path`）を返却する。MCPクライアントがbase64転送を経ずにファイルを直接読むための導線。**リクエスト元がlocalhostのときのみ応答**し、それ以外は `file_path` 空 + `ERR000389`。DB登録済みファイルしか引けないためパストラバーサル不可。リポジトリに無い場合は `exists` false。セッション認証必須 |
 
@@ -399,7 +399,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の8つ（`
 |---|---|
 | `/api/urlog_bookmarklet` | URLogブックマークレット用エンドポイント。ブラウザのブックマークレットから現在のページのURL・タイトルをURLogとして直接追加する。ログイン時にブックマークレット専用セッション（`ApplicationName="urlog_bookmarklet"`）が自動作成され、通常のセッションとは分離される |
 | `/api/urlog_bookmarklet_page` | URLogブックマークレット導入ページ配信（GET）。ブックマークレット登録用のHTMLページを返す |
-| `/api/update_cache` | キャッシュ更新トリガー。**管理者セッション必須**（`wrapAuth` + `IsAdmin`）。`session_id` と `user_ids` を受け取り、指定ユーザーのインメモリキャッシュを再構築する。CLI `gkill_server update_cache ユーザーID...` は対象ユーザーIDの文字列配列を受け取り、**認証情報の指定は不要**（ローカルの `configs/account.db` から有効な管理者アカウントを自動選択して `/api/login` してから呼び出し、完了後に `/api/logout` する） |
+| `/api/update_cache` | キャッシュ更新トリガー。**管理者セッション必須**（`wrapAuth` + `IsAdmin`）。`session_id` と `user_ids` を受け取り、指定ユーザーのインメモリキャッシュを再構築する。CLI `gkill_server update_cache ユーザーID...` は対象ユーザーIDの文字列配列を受け取り、**認証情報の指定は不要**（ローカルの `configs/account.db` から有効な管理者アカウントを自動選択し、その名義で有効期限5分のログインセッションを `configs/account_state.db` へ直接発行して呼び出し、完了後に削除する。パスワードはArgon2idで保存されており DB から復元できないため `/api/login` は経由しない） |
 | `/api/get_gkill_info` | アプリケーション情報取得（※アドレス定義のみ、ハンドラ未実装。リクエストは404となる。将来の拡張用と推定） |
 
 ## プラグイン（4件）
@@ -451,7 +451,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の8つ（`
 | パス | メソッド | 説明 |
 |---|---|---|
 | `/files/*` | GET | アップロードファイル配信。**cookie**（`gkill_session_id`）で認証する |
-| `/zip_cache/*` | GET | ZIP展開済みファイル配信。`/api/browse_zip_contents` で展開されたファイルを配信する。`$HOME/gkill/caches/zip_cache/` 配下のファイルを提供。ルータ上は `wrapNoAuth` で、認証はハンドラ内の cookie で行う |
+| `/zip_cache/*` | GET | ZIP展開済みファイル配信。`/api/browse_zip_contents` で展開されたファイルを配信する。ルータ上は `wrapNoAuth` で、認証はハンドラ内の cookie で行う。**配信の起点はセッションから引いた利用者のディレクトリ `$HOME/gkill/caches/zip_cache/{user_id}/` に固定**され、利用者IDはURLに現れないため他人のディレクトリを指名できない。rep名は利用者間で重複しうるので、rep名の照合ではなくディレクトリの分離で担保している |
 | `/serviceWorker.js` | GET | PWA Service Worker 配信 |
 | `/resources/manual/*` | GET | HTMLマニュアル配信（7言語）。`filterLocalOnly` によるアクセス制御付き |
 | `/` | GET | Vue SPA（embed された index.html）。`router.Path("/")` として個別登録 |

@@ -42,6 +42,7 @@ func init() {
 	ServerCmd.AddCommand(common.OptimizeCmd)
 	ServerCmd.AddCommand(common.UpdateCacheCmd)
 	ServerCmd.AddCommand(common.ClearCacheCmd)
+	ServerCmd.AddCommand(common.ResetPasswordCmd)
 }
 
 var (

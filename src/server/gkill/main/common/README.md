@@ -11,6 +11,7 @@ gkill の CLI 共有初期化ロジック、ログシステム、グローバル
 common/
 ├── common.go              # cobra CLI コマンド定義・サーバ初期化
 ├── common_test.go         # common.go のテスト
+├── password_admin.go      # reset_password サブコマンド／ローカル管理者セッションの発行
 ├── gkill_log/             # ログシステム（7ファイル）
 │   ├── gkill_log.go       # ロガー初期化・レベルルーティング
 │   ├── level.go           # カスタム slog.Level 定義（8レベル）
@@ -27,7 +28,7 @@ common/
     └── threads_test.go    # スレッド管理のテスト
 ```
 
-**合計: 13ファイル**（実装9 + テスト4）
+**合計: 14ファイル**（実装10 + テスト4）
 
 ## サブパッケージ
 
@@ -93,6 +94,8 @@ cobra のルートコマンドに登録されるサブコマンド群を定義�
 - `generate_video_cache` — 動画キャッシュ生成
 - `optimize` — データベース最適化
 - `update_cache` — キャッシュ手動更新
+- `clear_cache` — ディスク上の派生キャッシュ削除
+- `reset_password` — パスワードを無効化してリセットURLを再発行（定義は `password_admin.go`）
 
 ## 関連ドキュメント
 

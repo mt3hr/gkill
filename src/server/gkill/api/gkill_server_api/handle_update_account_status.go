@@ -83,11 +83,12 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 	}
 
 	targetAccountUpdated := &account.Account{
-		UserID:             targetAccount.UserID,
-		PasswordSha256:     targetAccount.PasswordSha256,
-		IsAdmin:            targetAccount.IsAdmin,
-		IsEnable:           request.Enable,
-		PasswordResetToken: targetAccount.PasswordResetToken,
+		UserID:                       targetAccount.UserID,
+		PasswordHash:                 targetAccount.PasswordHash,
+		IsAdmin:                      targetAccount.IsAdmin,
+		IsEnable:                     request.Enable,
+		PasswordResetToken:           targetAccount.PasswordResetToken,
+		PasswordResetTokenExpiration: targetAccount.PasswordResetTokenExpiration,
 	}
 
 	ok, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.UpdateAccount(r.Context(), targetAccountUpdated)

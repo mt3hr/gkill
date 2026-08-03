@@ -200,7 +200,7 @@ graph LR
 
 ### GkillServerAPI
 
-`gkill/api/gkill_server_api/`パッケージ（handle_*.go 92ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
+`gkill/api/gkill_server_api/`パッケージ（handle_*.go 93ファイル、1ハンドラ1ファイル）がAPIの中心です。旧`gkill/api/gkill_server_api.go`（約14,000行）から分割・移動されました。
 
 #### 主な責務
 
@@ -476,7 +476,7 @@ sequenceDiagram
     participant Session as LoginSessionDAO
 
     Client->>API: POST /api/login<br/>{user_id, password_sha256}
-    API->>DAO: パスワードハッシュ照合
+    API->>DAO: パスワード照合（Argon2id）
     DAO-->>API: OK
     API->>Session: セッション作成（30日有効）
     Session-->>API: session_id
@@ -494,8 +494,10 @@ sequenceDiagram
 
 | 項目 | 値 |
 |---|---|
-| パスワードハッシュ | SHA256 |
+| パスワードハッシュ | Argon2id（クライアントが送るSHA256 hexに対して適用） |
 | セッション有効期限 | 30日 |
+| セッションのその他の失効契機 | パスワードを設定しなおすと、そのユーザの全セッションを削除する（`DeleteLoginSessionsByUserID`）。他端末のログインも落ちる |
+| リセットトークン有効期限 | 72時間（`account.PasswordResetTokenTTL`）。単回使用 |
 | 初期ユーザー | `admin`（パスワードなし） |
 | セッションストレージ | account_state.db（SQLite3） |
 
@@ -576,8 +578,9 @@ Vuetifyで2つのテーマを定義しています。
 | `generate_thumb_cache` | サムネイルキャッシュ生成 |
 | `generate_video_cache` | 動画キャッシュ生成 |
 | `optimize` | リポジトリ最適化 |
-| `update_cache` | キャッシュ更新（稼働中サーバーにHTTPリクエスト。認証情報の指定は不要でローカルDBの管理者アカウントを使う） |
+| `update_cache` | キャッシュ更新（稼働中サーバーにHTTPリクエスト。認証情報の指定は不要で、管理者名義の短命セッションをローカルDBへ自己発行して使う） |
 | `clear_cache` | ディスク上の派生キャッシュ削除（`<thumb\|video\|zip\|plugin\|all> <all\|user_id...>`。`all`で全体、user_id指定で該当ユーザー分のみ） |
+| `reset_password` | 指定アカウントのパスワードを無効化し、リセットトークンを再発行してURLを表示（`ユーザーID...`）。account.db を直接開く。管理者がパスワードを忘れたときの唯一の復帰経路 |
 
 ### パーシステントフラグ
 

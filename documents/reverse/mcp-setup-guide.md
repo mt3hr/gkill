@@ -511,6 +511,8 @@ Claude Code では `/mcp` コマンドでMCPサーバーの接続状態を確認
 | `MODULE_NOT_FOUND` エラー | npm依存パッケージ未インストール | `npm install` を実行 |
 | `ECONNREFUSED` エラー | gkill_server が起動していない | gkill_server を起動してから再試行 |
 | `ERR000002` / 認証エラー | ユーザー名またはパスワードが間違っている | `GKILL_USER` / `GKILL_PASSWORD_SHA256` を確認 |
+| `ERR000004`（パスワードリセット中） | gkill を新しいバージョンへ上げた直後で、全アカウントのパスワードが無効化されている | gkill 側でパスワードを設定しなおす（[operations-guide.md](operations-guide.md) の「スキーマ 1.1.0 への移行」を参照）。ワイヤ形式は変わっていないので、同じパスワードを設定すれば `GKILL_PASSWORD_SHA256` はそのまま使える |
+| HTTPモードで急にツールが失敗しはじめた | パスワード再設定でセッションが失効した。HTTP/OAuth モードの MCP サーバは**パスワードを保存していない**ため自力で再ログインできない | MCP クライアント側で当該サーバを一度切断し、再接続して認可しなおす。プロセス再起動では直らない（失効したセッションIDが状態ファイルから読み直されるため） |
 
 ### Claude Desktop でツールが表示されない
 

@@ -17,7 +17,7 @@ $HOME/gkill/
 ├── caches/                          # キャッシュファイル
 │   ├── thumb_cache/{rep_name}/     # サムネイル画像キャッシュ（リポジトリ単位）
 │   ├── video_cache/{rep_name}/     # 互換動画キャッシュ（リポジトリ単位）
-│   ├── zip_cache/{rep_name}/{sha1}/ # ZIP展開キャッシュ（リポジトリ＋ハッシュ単位）
+│   ├── zip_cache/{user_id}/{rep_name}/{sha1}/ # ZIP展開キャッシュ（利用者＋リポジトリ＋ハッシュ単位）
 │   ├── local_rep_cache/            # ローカルリポジトリキャッシュDB
 │   ├── git_commit_log_cache/       # Gitコミットログキャッシュ DB
 │   ├── plugin_cache/{userID}/{pluginName}/ # プラグインのキャッシュDB（ユーザー＋プラグイン単位）
@@ -54,7 +54,7 @@ $HOME/gkill/
 | DB名 | 内容 | 主なテーブル |
 |---|---|---|
 | `server_config.db` | サーバー設定 | アドレス、TLS設定、デバイス名、VAPID鍵、URLogタイムアウト、ファイル操作コマンド |
-| `account.db` | アカウント | ユーザーID、パスワードSHA256、パスワードリセットトークン |
+| `account.db` | アカウント | ユーザーID、パスワードハッシュ（Argon2id）、パスワードリセットトークンとその有効期限 |
 | `account_state.db` | セッション管理 | ログインセッション（SessionID, UserID, 有効期限等）、ファイルアップロード履歴 |
 | `user_config.db` | ユーザー設定 | アプリケーション設定、リポジトリ定義、KFTLテンプレート |
 | `share_kyou_info.db` | 共有設定 | 共有リスト設定 |
@@ -158,7 +158,7 @@ cd src/wear_os
 2. 自動的に以下が作成される:
    - `$HOME/gkill/` ディレクトリ構造
    - 全設定データベース（configs/配下）
-   - `admin` アカウント（`PasswordSha256 = nil` かつ `PasswordResetToken` が設定された状態）
+   - `admin` アカウント（`PasswordHash = nil` かつ `PasswordResetToken` が設定された状態）
    - VAPID鍵ペア（Web Push用）
    - デフォルトデバイス `"gkill"`
 3. ブラウザで `http://localhost:9999` にアクセス
@@ -168,11 +168,56 @@ cd src/wear_os
 初回起動時の `admin` アカウントには `PasswordResetToken` が設定されているため、**パスワードなしではログインできない**。`PasswordResetToken` が非nilのアカウントは、ログイン処理でパスワード照合より前に `ERR000004`（`AccountPasswordResetTokenIsNotNilError`）で拒否される（`handle_login.go`）。
 
 **正しい初期導線：**
-1. ブラウザで `http://localhost:9999` にアクセスすると初回アカウント登録画面（`/regist_first_account`）に誘導される
+1. **サーバーと同じマシンの**ブラウザで `http://localhost:9999` にアクセスすると初回アカウント登録画面（`/regist_first_account`）に誘導される
 2. ここで `admin` のパスワードを設定して初回登録を完了する
-3. 以降は SHA256(パスワード) で認証
+3. 以降は SHA256(パスワード) を送って認証する（サーバ側はその値をArgon2idで保存・照合する）
 
-### 4.3 リポジトリ設定
+**LAN の別マシンやスマートフォンからは自動誘導されない。** この 307 リダイレクトには
+`admin` を丸ごと取れてしまうリセットトークンが載るため、**接続元がループバックで、かつ
+転送ヘッダ（`X-Forwarded-For` / `X-Real-Ip` / `Forwarded` / `X-Forwarded-Host`）が付いていない
+場合にだけ**返す（`utils.go` の `ifRedirectResetAdminAccountIsNotFound`）。
+それ以外からアクセスすると通常のログイン画面が出る。
+
+その場合は、**サーバー起動時に標準出力へ出るセットアップURL**を使う。
+
+```
+----------------------------------------------------------------
+パスワードが未設定のアカウントがあります。
+下記のURLからパスワードを設定してください。
+期限が切れた場合は `gkill_server reset_password <user_id>` で再発行できます。
+  admin : http://localhost:9999/set_new_password?user_id=admin&reset_token=...
+----------------------------------------------------------------
+```
+
+`localhost` の部分を実際のホスト名やIPに読み替えてアクセスする。
+Windows サービスなどで標準出力が見えない場合は、
+`gkill_server reset_password admin` を実行すればURLを取り直せる。
+
+### 4.3 スキーマ 1.1.0 への移行（アップグレード時の必読事項）
+
+`account.db` のスキーマが `1.0.0` の状態で新しいバイナリを起動すると、**初回起動時に一度だけ移行が走る**。
+
+移行の内容は次のとおり（単一トランザクション）。
+
+1. `PASSWORD_SHA256` を `PASSWORD_HASH` にリネーム
+2. `PASSWORD_RESET_TOKEN_EXPIRATION` を追加
+3. **全アカウントのパスワードを無効化し、リセットトークンを発行しなおす**
+4. スキーマ版を `1.1.0` に更新
+
+旧方式では保存値（無塩SHA-256）がそのままログインに使えたため、Argon2id で包み直すだけでは
+「DBを読めた者がログインできる」状態が続いてしまう。そのため包み直しではなく全員に再設定してもらう。
+
+発行したリセットURLは起動時に標準出力へ出るので、**全アカウントぶんを控えてからパスワードを設定しなおす**。
+
+| 注意点 | 内容 |
+|---|---|
+| **ダウングレード不可** | `1.1.0` の `account.db` を旧バイナリで開くと `invalid db schema version` で**起動を拒否する**。戻す場合は移行前の `account.db` をバックアップから書き戻す |
+| **事前バックアップ必須** | 移行前に `$HOME/gkill/configs/account.db` をコピーしておく |
+| **設定ディレクトリを端末間で同期している場合** | 移行済みの `account.db` が旧バイナリの端末へ届くと、その端末が起動できなくなる。**同期を止めて全端末のバイナリを入れ替えてから**移行を走らせる |
+| **セッションが全部切れる** | パスワード設定のたびにそのユーザの全セッションが失効する。ブラウザ・Wear OS・MCP は再ログインが必要（Wear OS は保存済みパスワードで自動復帰する） |
+| **URLog ブックマークレット** | ブックマークレットにはセッションIDが埋め込まれているため、再ログイン後に設定画面から取り直す |
+
+### 4.4 リポジトリ設定
 
 ライフログデータの保存先ディレクトリを設定画面から登録:
 1. アプリケーション設定 → リポジトリ管理
@@ -325,7 +370,7 @@ JSON形式。各行に以下のフィールド:
 - キャッシュ上限調整: `--cache_clear_count_limit` でアイテム数を変更（デフォルト: 3000）
 - キャッシュ更新間隔: `--cache_update_duration` で変更（デフォルト: 1分）
 - API経由でキャッシュ更新: `POST /api/update_cache`
-- CLI: `gkill_server update_cache ユーザーID...` サブコマンド（他サブコマンドと同様に対象ユーザーIDの文字列配列を受け取る。**認証情報の指定は不要**。サーバーと同一マシンで実行する前提で、ローカルの `configs/account.db` から有効な管理者アカウントを自動選択してログインする）
+- CLI: `gkill_server update_cache ユーザーID...` サブコマンド（他サブコマンドと同様に対象ユーザーIDの文字列配列を受け取る。**認証情報の指定は不要**。サーバーと同一マシンで実行する前提で、ローカルの `configs/account.db` から有効な管理者アカウントを自動選択し、その名義で有効期限5分のログインセッションを `configs/account_state.db` へ直接発行して使う）
 
 ### 7.5 フロントエンドが表示されない
 
@@ -430,7 +475,7 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 `/api/browse_zip_contents`リクエスト時、以下の手順でアトミックにZIPを展開する：
 
-1. 一時ディレクトリ（`caches/zip_cache/{rep_name}/{sha1}_tmp_{uuid}/`）に展開
+1. 一時ディレクトリ（`caches/zip_cache/{user_id}/{rep_name}/{sha1}_tmp_{uuid}/`）に展開
 2. 展開完了後、`{sha1}_tmp_{uuid}` → `{sha1}` にアトミックリネーム
 3. リネーム済みディレクトリが存在する場合は展開をスキップ（べき等）
 
@@ -438,7 +483,7 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 #### キャッシュ更新API
 
-`POST /api/update_cache`（または`gkill_server update_cache ユーザーID...` CLIコマンド）を呼び出すと、指定ユーザーのインメモリキャッシュを即時再構築する。サーバー再起動なしにリポジトリ変更を反映する際に使用する。**このエンドポイントは管理者セッション（`session_id`）を必須とする**（`wrapAuth` + `IsAdmin` 判定）。CLIサブコマンドは対象ユーザーIDの文字列配列を受け取り、**認証情報の指定は不要**（サーバーと同一マシンで実行する前提で、ローカルの `configs/account.db` から有効な管理者アカウント＝`IsAdmin && IsEnable && パスワードリセット中でない を自動選択し、そのパスワードで `/api/login` → 実行 → `/api/logout` する）。
+`POST /api/update_cache`（または`gkill_server update_cache ユーザーID...` CLIコマンド）を呼び出すと、指定ユーザーのインメモリキャッシュを即時再構築する。サーバー再起動なしにリポジトリ変更を反映する際に使用する。**このエンドポイントは管理者セッション（`session_id`）を必須とする**（`wrapAuth` + `IsAdmin` 判定）。CLIサブコマンドは対象ユーザーIDの文字列配列を受け取り、**認証情報の指定は不要**（サーバーと同一マシンで実行する前提で、ローカルの `configs/account.db` から `IsAdmin && IsEnable` の管理者アカウントを自動選択し、その名義で有効期限5分のログインセッションを `configs/account_state.db` へ直接 INSERT して使い、終了時に削除する。`main/common/password_admin.go` の `issueLocalAdminSession`）。パスワードはArgon2idで保存されており DB から復元できないため、`/api/login` は経由しない。
 
 #### キャッシュ削除
 
@@ -472,8 +517,9 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 | `gkill_server generate_thumb_cache ユーザーID` | サムネイルキャッシュ生成 |
 | `gkill_server generate_video_cache ユーザーID` | 動画キャッシュ生成 |
 | `gkill_server optimize ユーザーID` | データベース最適化（VACUUM） |
-| `gkill_server update_cache ユーザーID...` | HTTP API経由でキャッシュ更新（対象ユーザーIDの文字列配列。認証情報の指定は不要。ローカルDBの管理者アカウントで自動ログインする） |
+| `gkill_server update_cache ユーザーID...` | HTTP API経由でキャッシュ更新（対象ユーザーIDの文字列配列。認証情報の指定は不要。管理者名義の短命セッションをローカルDBへ自己発行して使う） |
 | `gkill_server clear_cache <thumb\|video\|zip\|plugin\|all> <all\|user_id...>` | ディスク上の派生キャッシュを削除。対象は必須で、`all`で全体、user_id指定で該当ユーザーのリポジトリ分のみ |
+| `gkill_server reset_password ユーザーID...` | 指定アカウントのパスワードを無効化し、リセットトークンを再発行してURLを表示する。account.db を直接開くのでサーバー稼働中でも実行できる。パスワードはArgon2idで保存されておりDBから復元できないため、**管理者がパスワードを忘れたときやトークンが期限切れになったときの唯一の復帰経路**（`main/common/password_admin.go`） |
 
 ## 11. MCP HTTPサーバーのデプロイ
 

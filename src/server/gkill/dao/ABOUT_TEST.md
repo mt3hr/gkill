@@ -21,6 +21,8 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `account/account_dao_sqlite3_impl_test.go` | ユーザアカウント CRUD |
+| `account/password_hash_test.go` | Argon2id のラウンドトリップ、誤った資格情報の否認、ソルトが毎回変わること、改竄・不正な PHC 文字列の拒否、パスワード未設定アカウントが常に不一致になること（fail-closed）、資格情報とユーザIDの形式検証 |
+| `account/account_schema_migration_test.go` | スキーマ 1.0.0 → 1.1.0 の移行。**全アカウントのパスワードが無効化されリセットトークンが再発行されること**、カラムのリネームと追加、版の更新、再起動しても移行が二度走らないこと |
 | `account_state/login_session_dao_sqlite3_impl_test.go` | ログインセッション管理 |
 | `account_state/file_upload_history_dao_sqlite3_impl_test.go` | ファイルアップロード履歴 |
 

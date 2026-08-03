@@ -172,7 +172,7 @@ sequenceDiagram
     API->>AccDAO: GetAccount(user_id)
     AccDAO-->>API: Account
     API->>API: IsEnable / PasswordResetToken==nil 検査
-    API->>API: password_sha256 照合
+    API->>API: password_sha256 を Argon2id で照合
     API->>API: localhost 判定 (127.0.0.1/::1)
     API->>SesDAO: AddLoginSession<br>(SessionID=UUID, ApplicationName="gkill", 30日)
     API->>SesDAO: urlog_bookmarklet 用セッションも確保
@@ -460,7 +460,7 @@ flowchart TD
     Auth --> Find[findIDFKyouByID → GetIDFKyou]
     Find --> IsZip{IsZip == true<br/>かつ ContentPath あり?}
     IsZip -->|No| Err[エラー応答]
-    IsZip -->|Yes| Hash[cacheDir =<br/>zip_cache/rep/sha1 of path]
+    IsZip -->|Yes| Hash[cacheDir =<br/>zip_cache/user/rep/sha1 of path]
     Hash --> Exists{展開済みキャッシュ<br/>あり?}
     Exists -->|Yes| Build
     Exists -->|No| Lock[zipExtractGroup で排他<br/>singleflight]
