@@ -73,7 +73,9 @@ export class Kyou extends InfoBase {
         const awaitPromises = new Array<Promise<Array<GkillError>>>()
         try {
             awaitPromises.push(this.load_typed_datas(query))
-            awaitPromises.push(this.load_attached_histories(query))
+            // load_attached_histories はここでは呼ばない。
+            // 直後の load_attached_datas が同じものを読むので、
+            // 両方書くと 1件につき /api/get_kyou が2回飛ぶ。
             awaitPromises.push(this.load_attached_datas(forceAttached))
             return Promise.all(awaitPromises).then((errors_list) => {
                 const errors = new Array<GkillError>()
