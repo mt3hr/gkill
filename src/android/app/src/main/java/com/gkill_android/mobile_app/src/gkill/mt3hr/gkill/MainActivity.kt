@@ -37,7 +37,52 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val STORAGE_PERMISSION_REQUEST = 1001
-        private const val GKILL_HOME = "/sdcard/gkill"
+
+        /**
+         * 以前のデータ置き場。共有ストレージなので、全ファイルアクセス権を持つ他アプリ、
+         * USB/MTP接続、ファイラーアプリのいずれからも中身が読めてしまっていた。
+         */
+        private const val LEGACY_GKILL_HOME = "/sdcard/gkill"
+    }
+
+    /**
+     * gkillのデータ置き場。アプリ専用領域に置く。
+     *
+     * ここには全Kyouのデータベースに加えて、パスワードハッシュとリセットトークンを持つ
+     * アカウントDB、ログ、TLSの秘密鍵が入る。以前は /sdcard/gkill だったため、
+     * 端末内の他アプリから丸ごと読める状態だった。
+     * マニフェストの allowBackup=false は、データがアプリ専用領域にあって初めて意味を持つ。
+     *
+     * なお外部ストレージ権限は引き続き必要。写真などを指すファイルリポジトリは、
+     * 利用者が選んだ共有ストレージ上のディレクトリを参照するため。
+     */
+    private val gkillHome: File
+        get() = File(filesDir, "gkill")
+
+    /**
+     * 以前 /sdcard/gkill に置いていたデータをアプリ専用領域へ複製する。
+     *
+     * 複製元は消さない。移行が途中で失敗しても元データが残るようにするためで、
+     * 動作を確認できたら利用者自身に削除してもらう想定。
+     * 消すまでは古い方が共有ストレージに残り続けるので、ログで警告する。
+     */
+    private fun migrateLegacyHomeIfNeeded(target: File) {
+        val legacy = File(LEGACY_GKILL_HOME)
+        if (!legacy.isDirectory) return
+        // 移行済み(中身がある)なら触らない
+        if (target.isDirectory && (target.list()?.isNotEmpty() == true)) return
+
+        Log.i("gkill", "旧データ置き場から移行する: ${legacy.absolutePath} -> ${target.absolutePath}")
+        try {
+            legacy.copyRecursively(target, overwrite = false)
+            Log.w(
+                "gkill",
+                "移行が完了した。${legacy.absolutePath} は共有ストレージに残っているので、" +
+                    "動作を確認したら削除すること"
+            )
+        } catch (e: Exception) {
+            Log.e("gkill", "旧データ置き場からの移行に失敗した: ${e.message}", e)
+        }
     }
 
     /**
@@ -60,17 +105,19 @@ class MainActivity : AppCompatActivity() {
                 Log.i("gkill", "読み取り可能: ${gkillBinary.canRead()}")
 
                 val homeDir = filesDir.parentFile?.absolutePath ?: filesDir.absolutePath
+                val gkillHomeDir = gkillHome
                 Log.i("gkill", "HOME: $homeDir")
-                Log.i("gkill", "GKILL_HOME: $GKILL_HOME")
+                Log.i("gkill", "GKILL_HOME: ${gkillHomeDir.absolutePath}")
 
                 val nativeDir = applicationInfo.nativeLibraryDir
                 Log.i("gkill", "nativeLibraryDir: $nativeDir")
 
-                File(GKILL_HOME).mkdirs()
+                migrateLegacyHomeIfNeeded(gkillHomeDir)
+                gkillHomeDir.mkdirs()
 
                 val pb = ProcessBuilder(
                     gkillBinary.absolutePath,
-                    "--gkill_home_dir", GKILL_HOME,
+                    "--gkill_home_dir", gkillHomeDir.absolutePath,
                     "--disable_tls",
                     "--log", "debug"
                 )
