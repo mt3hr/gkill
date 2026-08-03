@@ -136,7 +136,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -473,7 +473,7 @@ loop:
 				continue loop
 			}
 			if matchURLog != nil {
-				if matchURLogInRep.UpdateTime.Before(matchURLog.UpdateTime) {
+				if matchURLogInRep.UpdateTime.After(matchURLog.UpdateTime) {
 					matchURLog = matchURLogInRep
 				}
 			} else {
