@@ -144,8 +144,9 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
 	}, nil
 }
 func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
-	r.m.RLock()
-	defer r.m.RUnlock()
+	// ここでr.mを取ってはいけない。DBへは自分でロックを取るヘルパー
+	// (GetReKyousAllLatest・LatestDataRepositoryAddressDAO・FindKyousSequential)越しにしか触れないため、
+	// 保持したまま呼ぶと同一goroutineの再帰RLockになり、UpdateCacheのLock待ちと交差した時点でデッドロックする
 	matchKyous := map[string][]Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -702,8 +703,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]ReKyou, error) {
-	r.m.RLock()
-	defer r.m.RUnlock()
+	// FindKyousと同じく、自分でロックを取るヘルパーしか呼ばないためr.mを取ってはいけない(再帰RLockデッドロック防止)
 	matchReKyous := []ReKyou{}
 
 	// 未削除ReKyouを抽出
