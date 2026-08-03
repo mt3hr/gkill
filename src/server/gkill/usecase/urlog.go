@@ -102,13 +102,22 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, urlog reps.URLog, txID *string) ([]*message.GkillError, error) {
 	var gkillErrors []*message.GkillError
 
-	_, err := repositories.URLogReps.GetURLog(ctx, urlog.ID, nil)
+	existURLog, err := repositories.URLogReps.GetURLog(ctx, urlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
+		})
+		return gkillErrors, nil
+	}
+	if existURLog == nil {
+		err = fmt.Errorf("not exist urlog id = %s", urlog.ID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.NotFoundURLogError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 		})
 		return gkillErrors, nil
 	}
@@ -167,26 +176,6 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository address for urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-	}
-
-	existURLog, err := repositories.URLogReps.GetURLog(ctx, urlog.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetURLogError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
-		})
-		return gkillErrors, nil
-	}
-	if existURLog == nil {
-		err = fmt.Errorf("not exist urlog id = %s", urlog.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.NotFoundURLogError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
-		})
-		return gkillErrors, nil
 	}
 
 	return nil, nil

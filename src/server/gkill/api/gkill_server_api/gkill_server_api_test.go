@@ -5127,10 +5127,11 @@ func TestHandleUpdateMi_NotFound(t *testing.T) {
 	}
 }
 
-// For types where update writes before checking existence (append-only),
-// updating a nonexistent entity succeeds. These tests verify that behavior.
+// 存在しないIDへの update は全13型とも NotFound エラーを返す。
+// 以前は11型で存在チェックが書き込みの後ろに置かれていて到達できず、
+// 更新のつもりが新規レコードを作って成功を返していた。
 
-func TestHandleUpdateTag_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateTag_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5159,7 +5160,7 @@ func TestHandleUpdateTag_Nonexistent_Succeeds(t *testing.T) {
 	resp := postJSON(t, tsURL+"/api/add_kmemo", addKmemoReq)
 	resp.Body.Close()
 
-	// Update a tag that was never added (append-only: should succeed)
+	// 一度も追加していないタグを更新する
 	updateReq := &req_res.UpdateTagRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
@@ -5184,18 +5185,18 @@ func TestHandleUpdateTag_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp2.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update tag response: %v", err)
 	}
-	// Append-only: update of nonexistent tag succeeds (writes then checks)
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundTagError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent tag")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundTagError, updateResp.Errors)
 	}
 }
 
-func TestHandleUpdateText_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateText_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5247,17 +5248,18 @@ func TestHandleUpdateText_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp2.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update text response: %v", err)
 	}
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundTextError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent text")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundTextError, updateResp.Errors)
 	}
 }
 
-func TestHandleUpdateNotification_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateNotification_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5308,17 +5310,18 @@ func TestHandleUpdateNotification_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp2.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update notification response (status=%d): %v", resp2.StatusCode, err)
 	}
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundNotificationError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent notification")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundNotificationError, updateResp.Errors)
 	}
 }
 
-func TestHandleUpdateKC_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateKC_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5353,17 +5356,18 @@ func TestHandleUpdateKC_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update kc response: %v", err)
 	}
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundKCError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent KC")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundKCError, updateResp.Errors)
 	}
 }
 
-func TestHandleUpdateURLog_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateURLog_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5398,17 +5402,18 @@ func TestHandleUpdateURLog_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update urlog response: %v", err)
 	}
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundURLogError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent URLog")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundURLogError, updateResp.Errors)
 	}
 }
 
-func TestHandleUpdateNlog_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateNlog_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5444,17 +5449,18 @@ func TestHandleUpdateNlog_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update nlog response: %v", err)
 	}
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundNlogError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent Nlog")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundNlogError, updateResp.Errors)
 	}
 }
 
-func TestHandleUpdateTimeis_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateTimeis_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5487,17 +5493,18 @@ func TestHandleUpdateTimeis_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update timeis response: %v", err)
 	}
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundTimeIsError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent Timeis")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundTimeIsError, updateResp.Errors)
 	}
 }
 
-func TestHandleUpdateLantana_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateLantana_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5531,17 +5538,18 @@ func TestHandleUpdateLantana_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update lantana response: %v", err)
 	}
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundLantanaError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent Lantana")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundLantanaError, updateResp.Errors)
 	}
 }
 
-func TestHandleUpdateRekyou_Nonexistent_Succeeds(t *testing.T) {
+func TestHandleUpdateRekyou_Nonexistent_ReturnsError(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
 
@@ -5595,13 +5603,14 @@ func TestHandleUpdateRekyou_Nonexistent_Succeeds(t *testing.T) {
 	if err := json.NewDecoder(resp2.Body).Decode(&updateResp); err != nil {
 		t.Fatalf("decode update rekyou response: %v", err)
 	}
-	if len(updateResp.Errors) > 0 {
-		for _, e := range updateResp.Errors {
-			t.Errorf("unexpected error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+	foundNotFound := false
+	for _, e := range updateResp.Errors {
+		if e.ErrorCode == message.NotFoundReKyouError {
+			foundNotFound = true
 		}
 	}
-	if len(updateResp.Messages) == 0 {
-		t.Error("expected success message for append-only update of nonexistent Rekyou")
+	if !foundNotFound {
+		t.Errorf("存在しないIDへの更新は %s を返すべき: %+v", message.NotFoundReKyouError, updateResp.Errors)
 	}
 }
 
