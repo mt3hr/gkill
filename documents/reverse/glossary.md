@@ -206,6 +206,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **オレオレTLS** | 自己署名 TLS 証明書の生成機能。サーバ設定画面から生成できる |
 | **ホットリロード** | データの自動再読み込み機能 |
 | **FindQuery** | 検索クエリ。キーワード・日時範囲・タグ・データ型・デバイス等の複合条件で Kyou を検索する |
+| **サムネイルキャッシュ / 互換動画キャッシュ** | IDFリポジトリ配下の画像・動画から作る派生ファイル。`$HOME/gkill/caches/{thumb,video}_cache/{user_id}/{rep_name}/` に `{sha1(相対パス)}_{ファイルサイズ}_{W}x{H}.jpg`（動画は `_compat_720p.mp4`）の名前で保存される。専用の配信ルートは無く、`/files/{rep_name}/...?thumb=` 経由でのみ生成・配信される。rep名は利用者間で一意でないため、利用者IDを1階層挟んで混ざらないようにしている |
 | **ZIPキャッシュ** | IDFKyouのZIPファイルを展開したキャッシュ。`$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に保存される。利用者ID・リポジトリ名・**ZIPファイルの絶対パス文字列**のSHA1をキーとし、同一ファイルの再展開を回避する。配信時は利用者のディレクトリを起点に固定するので、他人のキャッシュは読めない |
 | **ZipEntry** | ZIP内のファイルエントリ情報。ファイル名・サイズ・パス等を含む。`/api/browse_zip_contents` のレスポンスとして返却される |
 | **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す。Kyou 本体だけでなく**付随するタグ・テキストにも同じ規則が適用される**ため、タグ名を書き換えたあとに旧タグ名で検索してもヒットしない（`find_filter.go:513,624,656`、`find_kyou_context.go:39` の `isLatestData`） |

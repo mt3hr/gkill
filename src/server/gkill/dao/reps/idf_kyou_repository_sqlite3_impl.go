@@ -65,7 +65,7 @@ type fileinfo struct {
 // autoIDF: trueにするとGetAllKyous()が呼び出されるたびにidfする
 // idfIgnore: autoIDFが有効なとき、idfの対象にしないファイル名パターン
 // idfRecurse: autoIDFが有効なとき、サブディレクトリなどに対してもidfをする場合はtrueを指定する
-func NewIDFDirRep(ctx context.Context, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
+func NewIDFDirRep(ctx context.Context, userID string, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
 	filename := dbFilename
 
 	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
@@ -205,10 +205,10 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	fs := http.FileServer(noDirFS{http.Dir(dir)})
 	rep.fileServer = fs
 	// thumb server wraps the base file server
-	rep.thumbServer = NewThumbFileServer(dir, fs)
+	rep.thumbServer = NewThumbFileServer(userID, dir, fs)
 	rep.thumbGenerator = rep.thumbServer.(ThumbGenerator)
 	// video server wraps thumb server so that thumb requests keep working
-	rep.videoServer = NewVideoFileServer(dir, rep.thumbServer)
+	rep.videoServer = NewVideoFileServer(userID, dir, rep.thumbServer)
 	rep.videoGenerator = rep.videoServer.(VideoCacheGenerator)
 
 	return rep, nil
@@ -2433,30 +2433,22 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateVideoCache(ctx context.Context) e
 	return nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) ClearThumbCache() error {
-	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
-	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "thumb_cache", filepath.Base(dir)))
+// 派生キャッシュは3種とも利用者ID＋rep名(=filepath.Base(contentDir))でキーされる。
+// rep名は利用者間で一意でないため、削除側も生成側と同じ構成をたどる必要がある
+// (derivedCacheDirForUser を参照)。
 
-	os.RemoveAll(cacheDir)
+func (i *idfKyouRepositorySQLite3Impl) ClearThumbCache(userID string) error {
+	os.RemoveAll(derivedCacheDirForUser("thumb_cache", userID, i.contentDir))
 	return nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) ClearVideoCache() error {
-	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
-	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "video_cache", filepath.Base(dir)))
-
-	os.RemoveAll(cacheDir)
+func (i *idfKyouRepositorySQLite3Impl) ClearVideoCache(userID string) error {
+	os.RemoveAll(derivedCacheDirForUser("video_cache", userID, i.contentDir))
 	return nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) ClearZipCache(userID string) error {
-	// zip_cacheはユーザIDとrepName(=filepath.Base(contentDir))でキーされる。
-	// 配信側が他人のキャッシュを読めないようユーザごとにディレクトリを分けているので、
-	// 削除側も同じ構成をたどる必要がある (handle_browse_zip_contents.go を参照)
-	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
-	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "zip_cache", userID, filepath.Base(dir)))
-
-	os.RemoveAll(cacheDir)
+	os.RemoveAll(derivedCacheDirForUser("zip_cache", userID, i.contentDir))
 	return nil
 }
 

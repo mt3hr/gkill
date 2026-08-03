@@ -72,7 +72,7 @@ var (
 					}
 					hide_files.HideFolder(parentDir)
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
-					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), filename, idDBFilename, true, router, autoIDF, &idfIgnore, nil)
+					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), "", filename, idDBFilename, true, router, autoIDF, &idfIgnore, nil)
 					if err != nil {
 						err = fmt.Errorf("error at new idf dir rep: %w", err)
 						slog.Log(cmd.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -606,15 +606,15 @@ func ClearCache(ctx context.Context, userID string, mode string) error {
 	}
 	switch mode {
 	case "thumb":
-		return repositories.IDFKyouReps.ClearThumbCache()
+		return repositories.IDFKyouReps.ClearThumbCache(userID)
 	case "video":
-		return repositories.IDFKyouReps.ClearVideoCache()
+		return repositories.IDFKyouReps.ClearVideoCache(userID)
 	case "zip":
 		return repositories.IDFKyouReps.ClearZipCache(userID)
 	case "all":
 		return errors.Join(
-			repositories.IDFKyouReps.ClearThumbCache(),
-			repositories.IDFKyouReps.ClearVideoCache(),
+			repositories.IDFKyouReps.ClearThumbCache(userID),
+			repositories.IDFKyouReps.ClearVideoCache(userID),
 			repositories.IDFKyouReps.ClearZipCache(userID),
 			ClearPluginCache(userID),
 		)

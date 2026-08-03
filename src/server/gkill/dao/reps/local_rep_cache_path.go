@@ -21,6 +21,35 @@ func isSingleSafePathElement(element string) bool {
 	return filepath.Clean(element) == element
 }
 
+// noUserCacheDirName は利用者が特定できないときに使うディレクトリ名。
+// 実在する利用者IDと衝突しないよう、アカウント作成時の検証（先頭は英数字のみ）が
+// 通らない形にしてある。
+const noUserCacheDirName = "_nouser"
+
+// derivedCacheDirForUser は派生キャッシュ（thumb / video / zip）のディレクトリを
+// caches/{cacheName}/{userID}/{repName} の形で返す。
+//
+// rep名は filepath.Base(contentDir) で決まるが、これは利用者間で一意ではない。
+// 実際に「別のディレクトリを指す同名rep」が複数の利用者に存在するため、
+// rep名だけで分けるとキャッシュが混ざる。利用者IDを1階層挟んで分離する。
+//
+// HTTP配信を伴わない経路（idfサブコマンド等）は userID を持たないので、
+// 実在する利用者と衝突しない固定名へ寄せる。
+func derivedCacheDirForUser(cacheName string, userID string, contentDir string) string {
+	dirName := userID
+	if !isSingleSafePathElement(dirName) {
+		dirName = noUserCacheDirName
+	}
+	// ".." 除去。直前の検証で弾いているため実行時には常にno-opだが、
+	// CodeQL の path-injection はこの形しか値サニタイザとして認識しない。
+	dirName = strings.ReplaceAll(dirName, "..", "")
+
+	repName := filepath.Base(filepath.Clean(os.ExpandEnv(contentDir)))
+	repName = strings.ReplaceAll(repName, "..", "")
+
+	return os.ExpandEnv(filepath.Join(gkill_options.CacheDir, cacheName, dirName, repName))
+}
+
 // localRepCacheDBFileName は元DBファイルに対応するローカルキャッシュDBのパスを返す。
 //
 // 複数のユーザが同じファイルをリポジトリとして共有していることがある
