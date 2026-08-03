@@ -268,8 +268,14 @@ func TestGenerateFindSQLCommon_UseCalendar(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(sql, "datetime") {
-		t.Errorf("expected 'datetime' in sql for calendar search, got %q", sql)
+	// 時刻の比較は unixepoch() で行う。
+	// datetime(列,'localtime') は非決定的で式インデックスに使えず、
+	// 列に関数を適用しているため索引がまったく効かなかった。
+	if !strings.Contains(sql, "unixepoch(RELATED_TIME)") {
+		t.Errorf("expected 'unixepoch(RELATED_TIME)' in sql for calendar search, got %q", sql)
+	}
+	if strings.Contains(sql, "datetime(RELATED_TIME") {
+		t.Errorf("時刻列に datetime() を適用すると索引が効かない, got %q", sql)
 	}
 	if !strings.Contains(sql, ">=") {
 		t.Errorf("expected '>=' in sql for calendar start date, got %q", sql)
@@ -315,8 +321,34 @@ func TestGenerateFindSQLCommon_AppendOrderBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(sql, "ORDER BY RELATED_TIME DESC") {
-		t.Errorf("expected ORDER BY in sql, got %q", sql)
+	// 文字列の時刻列は unixepoch() で並べる。
+	// オフセットが混在していると文字列順が時系列にならないうえ、
+	// WHERE側と式を揃えないと式インデックスが並び替えに使われない。
+	if !strings.Contains(sql, "ORDER BY unixepoch(RELATED_TIME) DESC") {
+		t.Errorf("expected ORDER BY unixepoch(RELATED_TIME) DESC in sql, got %q", sql)
+	}
+}
+
+// キャッシュ側の _UNIX 列は既に整数なので、そのまま並べる。
+func TestGenerateFindSQLCommon_AppendOrderByUnixColumn(t *testing.T) {
+	query := &find.FindQuery{}
+	whereCounter := 0
+	queryArgs := []any{}
+
+	sql, err := GenerateFindSQLCommon(
+		query, "MY_TABLE", "T", &whereCounter,
+		false, "RELATED_TIME_UNIX",
+		[]string{"TITLE"}, true, false,
+		true, false, &queryArgs,
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(sql, "ORDER BY RELATED_TIME_UNIX DESC") {
+		t.Errorf("expected ORDER BY RELATED_TIME_UNIX DESC in sql, got %q", sql)
+	}
+	if strings.Contains(sql, "unixepoch(RELATED_TIME_UNIX)") {
+		t.Errorf("整数列に unixepoch() を適用してはいけない, got %q", sql)
 	}
 }
 
