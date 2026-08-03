@@ -472,8 +472,10 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// jsonからパースする
-			queryLatestValue := query
-			queryLatest := queryLatestValue
+			// 各repのgoroutineが同じ*FindQueryを書き換えると競合するので、構造体を値コピーする。
+			// (repositories.go の findKyous と同じやり方)
+			clonedQuery := *query
+			queryLatest := &clonedQuery
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする。
 			// ただしプラグインrepはLatestDataRepositoryAddressを使わないためスキップする。
@@ -886,8 +888,9 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 	for _, rep := range g.TagReps {
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
-			queryLatestValue := query
-			queryLatest := queryLatestValue
+			// 各repのgoroutineが同じ*FindQueryを書き換えると競合するので、構造体を値コピーする
+			clonedQuery := *query
+			queryLatest := &clonedQuery
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
 			if query.IDs == nil || len(query.IDs) == 0 {
@@ -1318,7 +1321,9 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
 			// jsonからパースする
-			queryLatest := query
+			// 各repのgoroutineが同じ*FindQueryを書き換えると競合するので、構造体を値コピーする
+			clonedQuery := *query
+			queryLatest := &clonedQuery
 			ids := []string{}
 			if query.IDs != nil {
 				ids = append([]string{}, query.IDs...)

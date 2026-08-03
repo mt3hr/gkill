@@ -24,6 +24,10 @@ import (
 const CURRENT_SCHEMA_VERSION_NLOG_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type nlogRepositorySQLite3Impl struct {
+	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
+	// temp repが構造体変換でこの型をコピーするため、必ずポインタで持つこと。
+	cacheChange *dbFileChangeDetector
+
 	filename    string
 	db          *sql.DB
 	m           *sync.RWMutex
@@ -130,6 +134,7 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 	}
 
 	return &nlogRepositorySQLite3Impl{
+		cacheChange: &dbFileChangeDetector{},
 		filename:    filename,
 		db:          db,
 		m:           &sync.RWMutex{},
@@ -622,11 +627,20 @@ func (n *nlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (str
 }
 
 func (n *nlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	// 自身は実DBを直接見るのでキャッシュは持たないが、
+	// 上位のキャッシュrepが「作り直す必要があるか」を判断できるよう、
+	// ここでファイルの更新有無だけ観測しておく。
+	n.cacheChange.refresh(n.filename)
 	return nil
 }
 
 func (n *nlogRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
-	return true
+	return n.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (n *nlogRepositorySQLite3Impl) CommitCacheRebuild() {
+	n.cacheChange.commit()
 }
 
 func (n *nlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {

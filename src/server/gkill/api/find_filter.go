@@ -408,20 +408,22 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	}
 
 	// Step3: UseRepsなし → typeMatchReps を全てMatchRepsへ追加して終了
+	//
+	// ここでUnWrap()してはいけない。
+	// typeMatchRepsの要素は repositories.MiReps などから採っており、
+	// --cache_in_memory（既定true）ではインメモリキャッシュのrepが入っている。
+	// UnWrap()するとその中の生のディスクrepに戻ってしまい、
+	// mi板・画像のみ・Plaing・rep種別指定の検索だけがキャッシュを丸ごとバイパスして
+	// 重複rep（同一ファイルの端末別登録）ぶんディスクを舐めることになる。
+	// rep名での絞り込みが要るのはStep4だけなので、ここは名前解決も不要。
 	if !findCtx.ParsedFindQuery.UseReps {
 		for _, matchRep := range typeMatchReps {
-			repImpls, err := matchRep.UnWrap()
+			repName, err := matchRep.GetRepName(ctx)
 			if err != nil {
 				return nil, err
 			}
-			for _, repImpl := range repImpls {
-				repName, err := repImpl.GetRepName(ctx)
-				if err != nil {
-					return nil, err
-				}
-				if _, exist := findCtx.MatchReps[repName]; !exist {
-					findCtx.MatchReps[repName] = repImpl
-				}
+			if _, exist := findCtx.MatchReps[repName]; !exist {
+				findCtx.MatchReps[repName] = matchRep
 			}
 		}
 		return nil, nil

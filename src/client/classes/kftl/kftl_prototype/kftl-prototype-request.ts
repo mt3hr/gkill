@@ -11,7 +11,9 @@ export class KFTLPrototypeRequest extends KFTLRequest {
     }
 
     static is_prototype_request(request: KFTLRequest): boolean {
-        return request.constructor.name == KFTLPrototypeRequest.name
+        // クラス名ではなくコンストラクタの同一性で比較する。
+        // minify するとクラス名は短縮され、別クラスが同じ名前になりうるため。
+        return request.constructor === KFTLPrototypeRequest
 
     }
 
