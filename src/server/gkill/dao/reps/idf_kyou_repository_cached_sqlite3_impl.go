@@ -1587,16 +1587,16 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GenerateThumbCache(ctx context.Cont
 	return i.idfRep.GenerateThumbCache(ctx)
 }
 
-func (i *idfKyouRepositoryCachedSQLite3Impl) ClearThumbCache() error {
-	return i.idfRep.ClearThumbCache()
+func (i *idfKyouRepositoryCachedSQLite3Impl) ClearThumbCache(userID string) error {
+	return i.idfRep.ClearThumbCache(userID)
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GenerateVideoCache(ctx context.Context) error {
 	return i.idfRep.GenerateVideoCache(ctx)
 }
 
-func (i *idfKyouRepositoryCachedSQLite3Impl) ClearVideoCache() error {
-	return i.idfRep.ClearVideoCache()
+func (i *idfKyouRepositoryCachedSQLite3Impl) ClearVideoCache(userID string) error {
+	return i.idfRep.ClearVideoCache(userID)
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) ClearZipCache(userID string) error {

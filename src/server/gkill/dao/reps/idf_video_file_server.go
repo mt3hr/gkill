@@ -18,7 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -39,9 +38,9 @@ var (
 // If the target is a video and the codec is not browser-friendly (e.g. HEVC),
 // it generates a cached MP4 (H.264 + AAC) capped at 720p and serves it.
 // Other requests are delegated to base.
-func NewVideoFileServer(dir string, base http.Handler) http.Handler {
+func NewVideoFileServer(userID string, dir string, base http.Handler) http.Handler {
 	dir = filepath.Clean(os.ExpandEnv(dir))
-	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "video_cache", filepath.Base(dir)))
+	cacheDir := derivedCacheDirForUser("video_cache", userID, dir)
 	return &IDFVideoFileServer{
 		rootDir:   dir,
 		cacheDir:  cacheDir,
