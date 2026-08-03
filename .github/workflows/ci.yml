@@ -1,0 +1,150 @@
+name: CI
+
+# ビルドとテストを回すワークフロー。
+# これまでCIはCodeQLだけで、push/PRでコンパイルもテストも実行していなかった。
+# ローカルの `npm test` は install_server から始まって30分近くかかるため、
+# ここでは E2E / Android / Wear OS を外した「速い層」だけを回す。
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  go:
+    name: Go (build / vet / test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: src/server/go.mod
+          cache-dependency-path: src/server/go.sum
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      # api パッケージの init() は embed/i18n/locales を読み、
+      # 見つからなければ panic する。localesのコピーはViteのビルドを伴わないので、
+      # フロントエンド一式をビルドしなくてもここだけ用意すればGoのテストが回る。
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare embedded locales
+        run: npm run copy_i18n_to_app_embed
+
+      - name: go build
+        working-directory: src/server
+        run: go build ./...
+
+      - name: go vet
+        working-directory: src/server
+        run: go vet ./...
+
+      - name: go test
+        working-directory: src/server
+        run: go test ./...
+
+      # 共有状態の競合はレースディテクタでしか出ないものがある。
+      # 全パッケージに掛けると時間がかかるので、共有インスタンスを扱う層に絞る。
+      - name: go test -race (dao)
+        working-directory: src/server
+        run: go test -race ./gkill/dao/...
+
+  frontend:
+    name: Frontend (type-check / lint / unit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      # npm run lint は --fix なのでCIでは使わない。差分を書き換えずに検査する。
+      - name: Lint
+        run: npx eslint
+
+      - name: Unit test
+        run: npm run test_client_unit
+
+      - name: MCP test
+        run: npm run test_mcp
+
+  docs:
+    name: Docs (verify_docs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # resources/manual/ は生成物で追跡していない。
+      # verify_docs はマニュアルの生成鮮度と言語間のページ集合一致を見るので、
+      # 先に manual_src から生成しておく必要がある。
+      - name: Build manuals
+        run: npm run build_manuals
+
+      - name: Verify docs
+        run: npm run verify_docs
+
+  plugins:
+    name: Plugins (go test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: src/server/go.mod
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 各プラグインは独立したGoモジュールで、go.mod が ../../server を replace している。
+      # server 側がコンパイルできる必要があるので locales を用意する。
+      - name: Prepare embedded locales
+        run: npm run copy_i18n_to_app_embed
+
+      - name: Plugin tests
+        run: npm run test_plugins
