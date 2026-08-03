@@ -1,8 +1,11 @@
 package account_state
 
 import (
+	"bytes"
 	"context"
+	"log/slog"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -134,5 +137,51 @@ func TestLoginSessionDelete(t *testing.T) {
 	}
 	if got != nil {
 		t.Error("expected nil after delete")
+	}
+}
+
+// TestLoginSessionDAO_DoesNotLogSessionID は、trace_sqlログにセッションIDが出ないことを確認する。
+//
+// セッションIDは全認証エンドポイントのbearer相当なので、ログを読めた人は
+// パスワードなしで、ログインイベントも残さずに、そのユーザーになりすませる。
+// Androidではログが /sdcard 配下に出るため、端末内の他アプリからも読めてしまう。
+//
+// アカウントDAO側は queryArgsForLog でパスワードハッシュとリセットトークンを
+// 伏せる対応が入っていたが、セッションDAOには入っていなかった。
+func TestLoginSessionDAO_DoesNotLogSessionID(t *testing.T) {
+	const secretSessionID = "SESSIONID-MUST-NOT-BE-LOGGED"
+
+	// trace_sqlまで拾えるよう十分低いレベルでデフォルトロガーを差し替える
+	logBuffer := &bytes.Buffer{}
+	originalLogger := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(logBuffer, &slog.HandlerOptions{Level: slog.Level(-128)})))
+	t.Cleanup(func() { slog.SetDefault(originalLogger) })
+
+	dao := newTempLoginSessionDAO(t)
+	ctx := context.Background()
+
+	// セッションIDが引数に乗る操作を一通り通す
+	session := makeTestLoginSession("ls-secret", "user1", "device1", secretSessionID)
+	if _, err := dao.AddLoginSession(ctx, session); err != nil {
+		t.Fatalf("AddLoginSession failed: %v", err)
+	}
+	if _, err := dao.GetLoginSession(ctx, secretSessionID); err != nil {
+		t.Fatalf("GetLoginSession failed: %v", err)
+	}
+	session.ApplicationName = "updated_app"
+	if _, err := dao.UpdateLoginSession(ctx, session); err != nil {
+		t.Fatalf("UpdateLoginSession failed: %v", err)
+	}
+	if _, err := dao.DeleteLoginSession(ctx, secretSessionID); err != nil {
+		t.Fatalf("DeleteLoginSession failed: %v", err)
+	}
+
+	if strings.Contains(logBuffer.String(), secretSessionID) {
+		t.Error("セッションIDがログに出力されている")
+	}
+
+	// ログ自体は出ていること（差し替えに失敗して素通りしただけ、を防ぐ）
+	if !strings.Contains(logBuffer.String(), "user1") {
+		t.Error("trace_sqlログが取得できていない。テストが実質何も検証していない")
 	}
 }
