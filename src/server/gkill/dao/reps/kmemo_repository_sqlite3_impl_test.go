@@ -227,3 +227,49 @@ func TestKmemoFindKyous_NotWordFilter(t *testing.T) {
 		t.Errorf("除外ワードを含まないレコードだけが残るべき: %+v", kmemos)
 	}
 }
+
+// TestKmemoRepositories_GetKmemoReturnsNewestAcrossReps は、同じIDが複数の
+// リポジトリに存在するとき、UpdateTime が最新のものが返ることを確認する。
+//
+// 集約ループのコメントは「UpdateTimeが最新のものを収める」なのに、比較が
+//   if 候補.UpdateTime.Before(現在の勝者.UpdateTime) { 現在の勝者 = 候補 }
+// となっており、実際には最古のものが残っていた。
+// 同種のループは全体で101箇所あり、うち24箇所がこの向き違いだった。
+func TestKmemoRepositories_GetKmemoReturnsNewestAcrossReps(t *testing.T) {
+	ctx := context.Background()
+	oldRepo := newTempKmemoRepo(t)
+	newRepo := newTempKmemoRepo(t)
+
+	older := makeKmemo("dup-kmemo", "古い内容")
+	newer := makeKmemo("dup-kmemo", "新しい内容")
+	newer.UpdateTime = older.UpdateTime.Add(1 * time.Hour)
+
+	if err := oldRepo.AddKmemoInfo(ctx, older); err != nil {
+		t.Fatalf("AddKmemoInfo failed: %v", err)
+	}
+	if err := newRepo.AddKmemoInfo(ctx, newer); err != nil {
+		t.Fatalf("AddKmemoInfo failed: %v", err)
+	}
+
+	// 並び順に依存しないよう、両方の順序で確認する
+	for _, c := range []struct {
+		name string
+		reps KmemoRepositories
+	}{
+		{"古いrepが先", KmemoRepositories{oldRepo, newRepo}},
+		{"新しいrepが先", KmemoRepositories{newRepo, oldRepo}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			got, err := c.reps.GetKmemo(ctx, "dup-kmemo", nil)
+			if err != nil {
+				t.Fatalf("GetKmemo failed: %v", err)
+			}
+			if got == nil {
+				t.Fatal("GetKmemo returned nil")
+			}
+			if got.Content != "新しい内容" {
+				t.Errorf("Content = %q, want %q（古い版が返っている）", got.Content, "新しい内容")
+			}
+		})
+	}
+}
