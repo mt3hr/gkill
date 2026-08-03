@@ -148,9 +148,35 @@ npx playwright test --debug
 > `playwright.config.ts` の `baseURL` は `process.env.GKILL_E2E_BASE_URL ?? 'http://localhost:9999'`、
 > Vite ゲートの接続先は `process.env.GKILL_E2E_VITE_URL ?? 'http://localhost:5173'` です。
 
+## CI
+
+`.github/workflows/` には2つのワークフローがある。
+
+| ワークフロー | 内容 |
+|---|---|
+| `ci.yml` | ビルドとテスト。`go`（build / vet / test / dao配下の `-race`）、`frontend`（type-check / eslint / Vitest / MCP）、`docs`（`build_manuals` → `verify_docs`）、`plugins`（各プラグインモジュールの `go test`）の4ジョブを並列に回す |
+| `codeql.yml` | CodeQL 解析（go / java-kotlin / javascript-typescript） |
+
+`ci.yml` は E2E・Android・Wear OS を含まない。ローカルの `npm test` は
+`install_server` から始まって30分近くかかるため、push ごとに回す層は
+速いものだけに絞っている。E2E は手元で `npm run test_client_e2e` を使う。
+
+**Go ジョブが `npm ci` と `copy_i18n_to_app_embed` を先に実行する理由**:
+`gkill/api` パッケージの `init()` は `embed/i18n/locales` を読み、
+見つからなければ panic する。locales のコピーは Vite のビルドを伴わないので、
+フロントエンド一式をビルドしなくてもここだけ用意すれば Go のテストが回る。
+
+**`docs` ジョブが `build_manuals` を先に実行する理由**:
+`resources/manual/` は生成物で追跡していない。`verify_docs` はマニュアルの
+生成鮮度と言語間のページ集合一致を見るため、先に `manual_src` から生成する必要がある。
+
+なお `src/server/gkill/api/embed/PLACEHOLDER.md` は、embed 配下が空だと
+`//go:embed` がコンパイルエラーになるために置いている追跡ファイル。
+これが無いとクリーンな clone で `go build ./...` すら通らない。
+
 ### ドキュメント検証（docs CI）
 
-自動テストとは別に、ドキュメントの整合性を検証する軽量ツール（Node 標準のみ）がある。CI（`.github/workflows/docs.yml`）で PR / push 時に実行される。
+自動テストとは別に、ドキュメントの整合性を検証する軽量ツール（Node 標準のみ）がある。`ci.yml` の `docs` ジョブで PR / push 時に実行される。
 
 ```bash
 npm run verify_docs                    # 件数・リンク・パス・Mermaid・マニュアルa11y/生成鮮度を検証
