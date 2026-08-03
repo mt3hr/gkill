@@ -22,8 +22,10 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.Use(g.recoverMiddleware)
 	router.Use(g.accessLogMiddleware)
 	// --- PathPrefix routes (wrapNoAuth) ---
-	router.PathPrefix("/files/").HandlerFunc(g.wrapNoAuth(g.HandleFileServe))
-	router.PathPrefix("/zip_cache/").HandlerFunc(g.wrapNoAuth(g.HandleZipCacheFileServe))
+	// 利用者のファイルをそのまま返す2経路には、下流(サムネイル・動画・ZIP展開物)まで
+	// まとめて効くようルート側でセキュリティヘッダを付ける。
+	router.PathPrefix("/files/").HandlerFunc(withUserContentSecurityHeaders(g.wrapNoAuth(g.HandleFileServe)))
+	router.PathPrefix("/zip_cache/").HandlerFunc(withUserContentSecurityHeaders(g.wrapNoAuth(g.HandleZipCacheFileServe)))
 
 	// --- wrapNoAuth routes (no auth needed) ---
 	router.HandleFunc(g.APIAddress.LoginAddress, g.wrapNoAuth(g.HandleLogin)).Methods(g.APIAddress.LoginMethod)
