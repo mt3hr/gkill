@@ -59,4 +59,17 @@ type FindQuery struct {
 	MiSortType                  MiSortType   `json:"mi_sort_type"`
 	OnlyLatestData              bool         `json:"only_latest_data"`
 	IncludeDeletedData          bool         `json:"include_deleted_data"`
+
+	// ExcludeURLogThumbnailImage は URLog の THUMBNAIL_IMAGE を取得しないことを指示します。
+	//
+	// THUMBNAIL_IMAGE は base64 で埋め込まれており、実データでは1行あたり平均数百KB・
+	// 大きいものは十MB級で、数百行の合計が数十MBに達します。
+	// サムネイルを使わない呼び出し（AIクライアント向けのMCP経路、
+	// キャッシュ再構築など）では、DBから読む段階で外すために使います。
+	//
+	// FAVICON_IMAGE は対象外です。こちらは合計でも1MBに満たず、1行あたり数百バイト程度しかなく、
+	// 外す意味がないため常に取得します。
+	//
+	// JSONには出しません（クライアントから指定させる項目ではないため）。
+	ExcludeURLogThumbnailImage bool `json:"-"`
 }
