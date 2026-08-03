@@ -754,14 +754,14 @@ func (i IDFKyouRepositories) GenerateThumbCache(ctx context.Context) error {
 	return nil
 }
 
-func (i IDFKyouRepositories) ClearThumbCache() error {
+func (i IDFKyouRepositories) ClearThumbCache(userID string) error {
 	unwrapedReps, err := i.UnWrapTyped()
 	if err != nil {
 		err = fmt.Errorf("error at clear thumb cache at idf kyou repositories: %w", err)
 		return err
 	}
 	for _, unwrapedRep := range unwrapedReps {
-		err := unwrapedRep.ClearThumbCache()
+		err := unwrapedRep.ClearThumbCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear thumb cache at idf kyou repositories in rep: %w", err)
 			return err
@@ -795,14 +795,14 @@ func (i IDFKyouRepositories) GenerateVideoCache(ctx context.Context) error {
 	return nil
 }
 
-func (i IDFKyouRepositories) ClearVideoCache() error {
+func (i IDFKyouRepositories) ClearVideoCache(userID string) error {
 	unwrapedReps, err := i.UnWrapTyped()
 	if err != nil {
 		err = fmt.Errorf("error at clear video cache at idf kyou repositories: %w", err)
 		return err
 	}
 	for _, unwrapedRep := range unwrapedReps {
-		err := unwrapedRep.ClearVideoCache()
+		err := unwrapedRep.ClearVideoCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear video cache at idf kyou repositories in rep: %w", err)
 			return err

@@ -152,7 +152,7 @@ func newTempIDFKyouRepo(t *testing.T) IDFKyouRepository {
 	dbFile := filepath.Join(dir, "idf.db")
 	r := gorilla_mux.NewRouter()
 	ignorePatterns := []string{}
-	repo, err := NewIDFDirRep(context.Background(), dir, dbFile, true, r, false, &ignorePatterns, nil)
+	repo, err := NewIDFDirRep(context.Background(), "", dir, dbFile, true, r, false, &ignorePatterns, nil)
 	if err != nil {
 		t.Fatalf("failed to create IDFKyou repo: %v", err)
 	}

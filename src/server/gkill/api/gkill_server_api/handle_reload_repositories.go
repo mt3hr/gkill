@@ -81,7 +81,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	}
 
 	if request.ClearThumbCache {
-		err = repositories.IDFKyouReps.ClearThumbCache()
+		err = repositories.IDFKyouReps.ClearThumbCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear thumb cache: %w", err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
@@ -95,7 +95,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 	}
 
 	if request.ClearVideoCache {
-		err = repositories.IDFKyouReps.ClearVideoCache()
+		err = repositories.IDFKyouReps.ClearVideoCache(userID)
 		if err != nil {
 			err = fmt.Errorf("error at clear video cache: %w", err)
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
