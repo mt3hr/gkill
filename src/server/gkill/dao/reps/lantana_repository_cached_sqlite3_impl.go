@@ -87,6 +87,12 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	// 既存索引は先頭が ID なので時刻範囲にもORDER BYにも使えない。
+	// 時刻列を先頭にした索引を別途張る。
+	if err := sqlite3impl.EnsureUnixColumnIndex(ctx, cacheDB, dbName, "RELATED_TIME_UNIX"); err != nil {
+		return nil, err
+	}
+
 	addLantanaInfoSQL := `
 INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED,
