@@ -427,17 +427,26 @@ export function useDnoteView(options: {
     // 呼び出し元はここ1箇所で「複製して関連データを読む」用途しかないため、
     // 元実装にあった get_latest_data / clone の分岐は落としてある
     async function load_kyous(ac: AbortController, kyous: Array<Kyou>): Promise<Array<Kyou>> {
+        // 1件ずつ待つと件数×RTTかかる(1,000件 × RTT20ms で約20秒)ので
+        // 一定数ずつ並列で読む。件数はサーバのgoroutineプールを
+        // 埋め尽くさない程度に抑える。
+        const LOAD_CONCURRENCY = 8
         const cloned_kyous = new Array<Kyou>()
-        for (let i = 0; i < kyous.length; i++) {
-            const kyou: Kyou = kyous[i].clone()
-            kyou.abort_controller = ac
-            const waitPromises = []
-            waitPromises.push(kyou.load_typed_datas())
-            waitPromises.push(kyou.load_attached_tags())
-            waitPromises.push(kyou.load_attached_texts())
-            await Promise.all(waitPromises)
-            cloned_kyous.push(kyou)
-            getted_kyous_count.value++
+        for (let start = 0; start < kyous.length; start += LOAD_CONCURRENCY) {
+            const chunk = kyous.slice(start, start + LOAD_CONCURRENCY)
+            const prepared = await Promise.all(chunk.map(async source => {
+                const kyou: Kyou = source.clone()
+                kyou.abort_controller = ac
+                await Promise.all([
+                    kyou.load_typed_datas(),
+                    kyou.load_attached_tags(),
+                    kyou.load_attached_texts(),
+                ])
+                // 進捗表示用。1件終わるごとに増やす
+                getted_kyous_count.value++
+                return kyou
+            }))
+            cloned_kyous.push(...prepared)
         }
         return cloned_kyous
     }
