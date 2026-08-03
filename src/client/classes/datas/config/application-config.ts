@@ -100,9 +100,15 @@ export class ApplicationConfig {
     }
     async append_not_found_infos(): Promise<Array<GkillError>> {
         const errors = new Array<GkillError>()
-        errors.push(...await this.append_not_found_reps())
-        errors.push(...await this.append_not_found_devices())
-        errors.push(...await this.append_not_found_rep_types())
+        // rep名は下の3つで共通なので、ここで1回だけ取って渡す
+        const rep_names_res = await resolve_rep_names()
+        if (rep_names_res.errors.length !== 0) {
+            return rep_names_res.errors
+        }
+        const rep_names = rep_names_res.rep_names
+        errors.push(...await this.append_not_found_reps(rep_names))
+        errors.push(...await this.append_not_found_devices(rep_names))
+        errors.push(...await this.append_not_found_rep_types(rep_names))
         errors.push(...await this.append_not_found_tags())
         errors.push(...await this.append_not_found_mi_boards())
         errors.push(...await this.append_no_devices())
@@ -115,10 +121,8 @@ export class ApplicationConfig {
         errors.push(...await this.append_not_found_infos())
         return errors
     }
-    async append_not_found_reps(): Promise<Array<GkillError>> {
-        const req = new GetAllRepNamesRequest()
-
-        const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
+    async append_not_found_reps(cached_rep_names?: Array<string>): Promise<Array<GkillError>> {
+        const res = await resolve_rep_names(cached_rep_names)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
@@ -310,10 +314,8 @@ export class ApplicationConfig {
         return new Array<GkillError>()
     }
 
-    async append_not_found_devices(): Promise<Array<GkillError>> {
-        const req = new GetAllRepNamesRequest()
-
-        const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
+    async append_not_found_devices(cached_rep_names?: Array<string>): Promise<Array<GkillError>> {
+        const res = await resolve_rep_names(cached_rep_names)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
@@ -361,10 +363,8 @@ export class ApplicationConfig {
         })
         return new Array<GkillError>()
     }
-    async append_not_found_rep_types(): Promise<Array<GkillError>> {
-        const req = new GetAllRepNamesRequest()
-
-        const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
+    async append_not_found_rep_types(cached_rep_names?: Array<string>): Promise<Array<GkillError>> {
+        const res = await resolve_rep_names(cached_rep_names)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
@@ -537,4 +537,24 @@ export class ApplicationConfig {
         }
         return splited[0]
     }
+}
+
+// rep名の一覧を返します。呼び出し元が既に持っていればそれをそのまま使います。
+//
+// append_not_found_reps / _devices / _rep_types はどれも同じ一覧が要るので、
+// 個別に取ると get_all_rep_names が3回飛ぶ。
+// append_not_found_infos がまとめて1回だけ取って各メソッドへ渡す。
+//
+// ApplicationConfig のメソッドにしないのは、この型と構造的に同じオブジェクト
+// リテラルを作っている箇所が複数あり、メソッドを増やすとそれらが
+// 型エラーになるため。
+async function resolve_rep_names(cached_rep_names?: Array<string>): Promise<{ rep_names: Array<string>, errors: Array<GkillError> }> {
+    if (cached_rep_names) {
+        return { rep_names: cached_rep_names, errors: [] }
+    }
+    const res = await GkillAPI.get_gkill_api().get_all_rep_names(new GetAllRepNamesRequest())
+    if (res.errors && res.errors.length !== 0) {
+        return { rep_names: [], errors: res.errors }
+    }
+    return { rep_names: res.rep_names, errors: [] }
 }

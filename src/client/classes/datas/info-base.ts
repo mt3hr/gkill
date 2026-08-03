@@ -109,7 +109,15 @@ export abstract class InfoBase {
         req.query.use_plaing = true
         req.query.plaing_time = this.related_time
 
-        const application_config = (await GkillAPI.get_gkill_api().get_application_config(new GetApplicationConfigRequest())).application_config
+        // アプリ設定はKyou 1件ごとに取り直すものではない。
+        // get_application_config() は毎回ネットワークに出たうえ、
+        // 内部の load_all() で get_all_rep_names / get_all_tag_names /
+        // get_mi_board_list を引くので、1件につき5〜6往復増えてしまう。
+        // 各ページが読み込み後に set_saved_application_config しているので、
+        // それがあればそれを使う（共有ページは null を返すので従来どおり取りに行く）。
+        const gkill_api = GkillAPI.get_gkill_api()
+        const application_config = gkill_api.get_saved_application_config()
+            ?? (await gkill_api.get_application_config(new GetApplicationConfigRequest())).application_config
         if (!application_config.for_share_kyou) {
             let rep_name_walk = (_rep: RepStructElementData): Array<string> => []
             rep_name_walk = (rep: RepStructElementData): Array<string> => {
@@ -149,9 +157,8 @@ export abstract class InfoBase {
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
-        for (let i = 0; i < res.kyous.length; i++) {
-            await res.kyous[i].load_typed_timeis()
-        }
+        // 1件ずつ await すると件数×RTTかかるので並列で読む
+        await Promise.all(res.kyous.map(kyou => kyou.load_typed_timeis()))
         this.attached_timeis_kyou = res.kyous
         this.is_attached_timeis_loaded = true
         return errors
