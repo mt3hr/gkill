@@ -61,7 +61,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 
 	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
 	if session == nil || err != nil {
-		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
+		err = fmt.Errorf("error at get login session: %w", err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.OpenFolderError,
@@ -72,7 +72,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 	}
 
 	if !session.IsLocalAppUser {
-		err = fmt.Errorf("error at get login session session id = %s", request.SessionID)
+		err = fmt.Errorf("error at get login session")
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.OpenFolderNotLocalAccountError,
