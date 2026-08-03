@@ -579,3 +579,26 @@ func globalIP(ctx context.Context) (net.IP, error) {
 	}
 	return ip, nil
 }
+
+// withUserContentSecurityHeaders は、利用者のファイルをそのまま返す経路
+// (/files/ と /zip_cache/) にセキュリティヘッダを付ける。
+//
+// これらの経路は取り込んだファイルやZIPの展開物を、拡張子から決めた
+// Content-Type で同一オリジンから配信する。展開物に拡張子の許可リストは無いので、
+// .html や .svg が含まれていればブラウザはそれをHTMLとして解釈する。
+// セッションクッキーはクライアント側のJSが document.cookie で書いており
+// HttpOnly を付けられないため、同一オリジンでスクリプトが動くと
+// そのまま読み出せてしまう。
+//
+//   - nosniff: 拡張子から決めた Content-Type をブラウザが推測で上書きしないようにする
+//   - CSP sandbox: allow-scripts を付けていないので、これらの経路から返った
+//     HTML/SVG の中のスクリプトは実行されない。
+//     sandbox はドキュメントとして読み込まれたときにだけ効くので、
+//     <img> や <video> のサブリソースとしての表示には影響しない。
+func withUserContentSecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Content-Security-Policy", "sandbox")
+		next(w, r)
+	}
+}

