@@ -115,14 +115,23 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, notification reps.Notification, txID *string) (*reps.Notification, []*message.GkillError, error) {
 	var gkillErrors []*message.GkillError
 
-	// すでに存在する場合はエラー
-	_, err := repositories.GetNotification(ctx, notification.ID, nil)
+	// 対象が存在しない場合はエラー
+	existNotification, err := repositories.GetNotification(ctx, notification.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
 		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
+		})
+		return nil, gkillErrors, nil
+	}
+	if existNotification == nil {
+		err = fmt.Errorf("not exist notification id = %s", notification.ID)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.NotFoundNotificationError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		})
 		return nil, gkillErrors, nil
 	}
@@ -191,27 +200,6 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 		gkillErrors = append(gkillErrors, &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
 			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
-		})
-		return nil, gkillErrors, nil
-	}
-
-	// 対象が存在しない場合はエラー
-	existNotification, err := repositories.GetNotification(ctx, notification.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
-		})
-		return nil, gkillErrors, nil
-	}
-	if existNotification == nil {
-		err = fmt.Errorf("not exist notification id = %s", notification.ID)
-		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		gkillErrors = append(gkillErrors, &message.GkillError{
-			ErrorCode:    message.NotFoundNotificationError,
-			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		})
 		return nil, gkillErrors, nil
 	}
