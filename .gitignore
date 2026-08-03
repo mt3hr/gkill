@@ -63,3 +63,8 @@ src/client/__tests__/e2e/.auth/
 
 # 生成されたManual
 resources/manual/*
+
+# Windowsのアイコン埋め込み用リソース。
+# rsrc が build_windows_amd64 / build_windows_amd64_app の中で生成し、
+# ビルド後に消す一時ファイル。中断すると残る
+*.syso
