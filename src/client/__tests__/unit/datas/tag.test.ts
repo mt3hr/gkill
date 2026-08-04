@@ -6,14 +6,14 @@ describe('Tag', () => {
     expectCloneCopiesAllFields(new Tag())
   })
 
-  describe('generate_info_identifer', () => {
+  describe('generate_info_identifier', () => {
     test('returns InfoIdentifier with matching id and times', () => {
       const tag = new Tag()
       tag.id = 'tag-789'
       tag.create_time = new Date('2024-05-10T08:00:00Z')
       tag.update_time = new Date('2024-05-11T08:00:00Z')
 
-      const identifier = tag.generate_info_identifer()
+      const identifier = tag.generate_info_identifier()
 
       expect(identifier.id).toBe('tag-789')
       expect(identifier.create_time).toEqual(new Date('2024-05-10T08:00:00Z'))

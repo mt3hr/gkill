@@ -19,7 +19,7 @@
         <v-card variant="flat" class="pa-2">
 
         <ConfirmDeleteTextView :application_config="application_config" :gkill_api="gkill_api"
-          :highlight_targets="[text.generate_info_identifer()]" :kyou="kyou"
+          :highlight_targets="[text.generate_info_identifier()]" :kyou="kyou"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :text="text"
           @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"
           @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"

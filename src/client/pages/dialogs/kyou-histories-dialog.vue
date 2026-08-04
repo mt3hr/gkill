@@ -30,7 +30,7 @@
             </v-row>
           </v-card-title>
           <KyouHistoriesView :application_config="application_config" :gkill_api="gkill_api" :kyou="kyou"
-            :highlight_targets="[kyou.generate_info_identifer()]"
+            :highlight_targets="[kyou.generate_info_identifier()]"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"
             @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"
@@ -54,7 +54,7 @@
             @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)" />
           <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
-              :is_image_request_to_thumb_size="false" :highlight_targets="[kyou.generate_info_identifer()]"
+              :is_image_request_to_thumb_size="false" :highlight_targets="[kyou.generate_info_identifier()]"
               :is_image_view="false" :kyou="kyou" :show_checkbox="false"
               :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
               :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_elapsed_time="false"

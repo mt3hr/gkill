@@ -572,7 +572,7 @@ classDiagram
         +load_attached_histories() Promise
         +load_attached_datas() Promise
         +clone() Kmemo
-        +generate_info_identifer() InfoIdentifier
+        +generate_info_identifier() InfoIdentifier
     }
 
     class KC {
