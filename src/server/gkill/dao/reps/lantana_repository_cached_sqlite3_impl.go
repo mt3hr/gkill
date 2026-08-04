@@ -185,7 +185,9 @@ WHERE
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
-	appendOrderBy := true
+	// 結果は map[string][]Kyou に収めるので、SQL側で並べても順序は捨てられる。
+	// 最終的な並び順は find_filter の Go 側ソートで決まる。
+	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
 
