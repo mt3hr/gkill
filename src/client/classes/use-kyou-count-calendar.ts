@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, ref, watch, nextTick, type Ref } from 'vue'
+import { computed, onUnmounted, ref, watch, nextTick, type Ref } from 'vue'
 import type { KyouCountCalendarProps } from '@/pages/views/kyou-count-calendar-props'
 import type { KyouCountCalendarEmits } from '@/pages/views/kyou-count-calendar-emits'
 import moment from 'moment'
@@ -13,6 +13,10 @@ export function useKyouCountCalendar(options: {
 
     // ── Template refs ──
     const kyou_counter_calendar = ref<ComponentRef | null>(null)
+
+    // 日付セルのクリックハンドラをまとめて外すためのもの。
+    // 張り直すたびに前回ぶんを abort する。
+    let calendar_listener_abort: AbortController | null = null
 
     // ── State refs ──
     const date = ref(new Date(Date.now()))
@@ -33,7 +37,10 @@ export function useKyouCountCalendar(options: {
         })
     })
 
-    watch(() => props.kyous, () => {
+    // 参照の入れ替えだけでなく件数の増減でも更新する。
+    // 削除は use-rykv-view.ts の removeKyouFromListById が splice で行うため、
+    // 参照だけ見ていると Kyou を消してもカレンダーの件数バッジが更新されなかった。
+    watch([() => props.kyous, () => props.kyous.length], () => {
         update_events()
     })
 
@@ -80,9 +87,27 @@ export function useKyouCountCalendar(options: {
         emits('requested_focus_time', moment(moment(date).format("yyyy-MM-DD") + " " + time.value).toDate())
     }
 
+    // カレンダーの日付セルにクリックハンドラを張り直す。
+    //
+    // 毎回新しい無名クロージャを渡すので addEventListener の重複排除が効かず、
+    // 張り直すたびにリスナーが積み上がっていた。Vuetify の .v-calendar-weekly__day は
+    // 6週×7日の固定グリッドで月移動してもDOMノードが再利用されるため確実に累積する。
+    // しかも date が変わるのは月移動だけでなく、日付クリックでも変わる
+    // (kyou-count-calendar.vue の @update:model-value) ので、
+    // クリックのたびに1本増えて requested_focus_time が多重発火していた。
+    //
+    // AbortController でまとめて外してから張り直す。
     function set_handler_on_calendar_date_texts(): void {
+        calendar_listener_abort?.abort()
+        calendar_listener_abort = new AbortController()
+        const signal = calendar_listener_abort.signal
+
+        // document 全体だと、同じページにある別のカレンダーにもハンドラが付いてしまう
+        // (rykv-view と shared-mi-view がどちらも KyouCountCalendar を使う)。
+        // 自分の配下だけに限定する。
+        const root: ParentNode = kyou_counter_calendar.value?.$el ?? document
         const calendar_date_text_selector = ".v-calendar-weekly__day"
-        document.querySelectorAll(calendar_date_text_selector).forEach((element) => {
+        root.querySelectorAll(calendar_date_text_selector).forEach((element) => {
             element.addEventListener('click', (() => {
                 if (!element.textContent || element.textContent.trim() === "") {
                     return
@@ -91,7 +116,7 @@ export function useKyouCountCalendar(options: {
                 const month = (date.value.getMonth() + 1).toString()
                 const day = (element as HTMLElement).innerText.toString().split("\n")[0].split(" ").slice(-1)[0].replaceAll(i18n.global.t("DAY_TITLE"), "")
                 clicked_date(moment(year + "-" + month + "-" + day).toDate())
-            }))
+            }), { signal })
         })
     }
 
@@ -100,6 +125,12 @@ export function useKyouCountCalendar(options: {
         added_date.setMonth(added_date.getMonth() + diff)
         return added_date
     }
+
+    // ── Lifecycle ──
+    onUnmounted(() => {
+        calendar_listener_abort?.abort()
+        calendar_listener_abort = null
+    })
 
     // ── Init calls ──
     update_events()

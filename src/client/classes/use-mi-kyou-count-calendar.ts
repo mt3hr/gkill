@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, ref, watch, nextTick, type Ref } from 'vue'
+import { computed, onUnmounted, ref, watch, nextTick, type Ref } from 'vue'
 import type { MiKyouCountCalendarProps } from '@/pages/views/mi-kyou-count-calendar-props'
 import type { MiKyouCountCalendarEmits } from '@/pages/views/mi-kyou-count-calendar-emits'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
@@ -16,6 +16,9 @@ export function useMiKyouCountCalendar(options: {
     // ── Template refs ──
     const kyou_counter_calendar = ref<ComponentRef | null>(null)
 
+    // 日付セルのクリックハンドラをまとめて外すためのもの（use-kyou-count-calendar.ts と同じ）
+    let calendar_listener_abort: AbortController | null = null
+
     // ── State refs ──
     const date = ref(new Date(Date.now()))
     const events: Ref<Array<Record<string, unknown>>> = ref(new Array<Record<string, unknown>>())
@@ -27,7 +30,9 @@ export function useMiKyouCountCalendar(options: {
         })
     })
 
-    watch(() => props.kyous, () => {
+    // 参照の入れ替えだけでなく件数の増減でも更新する
+    // （削除は splice で行われるため、参照だけ見ていると件数バッジが更新されない）
+    watch([() => props.kyous, () => props.kyous.length], () => {
         update_events()
     })
 
@@ -97,9 +102,16 @@ export function useMiKyouCountCalendar(options: {
         emits('requested_focus_time', moment(moment(clicked).format("yyyy-MM-DD") + " 00:00:00").toDate())
     }
 
+    // 張り直すたびに前回ぶんを外す。理由は use-kyou-count-calendar.ts のコメント参照。
     function set_handler_on_calendar_date_texts(): void {
+        calendar_listener_abort?.abort()
+        calendar_listener_abort = new AbortController()
+        const signal = calendar_listener_abort.signal
+
+        // document 全体だと同じページの別カレンダーにも付いてしまうので自分の配下に限定する
+        const root: ParentNode = kyou_counter_calendar.value?.$el ?? document
         const calendar_date_text_selector = ".v-calendar-weekly__day"
-        document.querySelectorAll(calendar_date_text_selector).forEach((element) => {
+        root.querySelectorAll(calendar_date_text_selector).forEach((element) => {
             element.addEventListener('click', (() => {
                 if (!element.textContent || element.textContent.trim() === "") {
                     return
@@ -108,7 +120,7 @@ export function useMiKyouCountCalendar(options: {
                 const month = (date.value.getMonth() + 1).toString()
                 const day = (element as HTMLElement).innerText.toString().split("\n")[0].split(" ").slice(-1)[0].replaceAll(i18n.global.t("DAY_TITLE"), "")
                 clicked_date(moment(year + "-" + month + "-" + day).toDate())
-            }))
+            }), { signal })
         })
     }
 
@@ -121,6 +133,12 @@ export function useMiKyouCountCalendar(options: {
     // ── Computed ──
     const calendar_year_month = computed(() => {
         return date.value.getFullYear().toString() + "/" + ("0" + (date.value.getMonth() + 1).toString()).slice(-2)
+    })
+
+    // ── Lifecycle ──
+    onUnmounted(() => {
+        calendar_listener_abort?.abort()
+        calendar_listener_abort = null
     })
 
     // ── Init calls ──
