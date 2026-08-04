@@ -122,7 +122,7 @@ test.describe('Mi (Task) Operations', () => {
     await response
 
     // 完了にすると既定の検索条件（未チェック）から外れて一覧から消える
-    // （use-mi-extruct-check-state-query.ts の既定は MiCheckState.uncheck）
+    // （use-mi-extract-check-state-query.ts の既定は MiCheckState.uncheck）
     await navigateToMi(page)
     await expect(page.locator('#app'), 'チェックしても未チェック一覧から消えない')
       .not.toContainText(label, { timeout: 30000 })

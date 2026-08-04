@@ -607,7 +607,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
 		}
 
-		updatedLatestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
+		updatedLatestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.ExtractUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
 		if err != nil {
 			return fmt.Errorf("error at update latest data repository address cache data: %w", err)
 		}

@@ -207,7 +207,7 @@ xxx-view-emits.ts     # Emits 定義
 | `keyword-query.vue` / `period-of-time-query.vue` | キーワード/期間 |
 | `tag-query.vue` / `rep-query.vue` | タグ/リポジトリ |
 | `time-is-query.vue` / `calendar-query.vue` / `map-query.vue` | TimeIs/カレンダー/地図 |
-| `mi-board-query.vue` / `mi-sort-type-query.vue` / `mi-extruct-check-state-query.vue` | Mi クエリ |
+| `mi-board-query.vue` / `mi-sort-type-query.vue` / `mi-extract-check-state-query.vue` | Mi クエリ |
 | `mi-query-editor-sidebar.vue` / `rykv-query-editor-side-bar.vue` | サイドバー |
 | `search-button.vue` / `clear-query-button.vue` | 検索/クリアボタン |
 

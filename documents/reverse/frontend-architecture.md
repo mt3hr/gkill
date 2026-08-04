@@ -462,7 +462,7 @@ Service Worker が `/share-target` POSTを処理：
 
 | フィルタ | 説明 |
 |---|---|
-| チェック状態（`mi-extruct-check-state-query`） | 完了/未完了/全件での絞り込み |
+| チェック状態（`mi-extract-check-state-query`） | 完了/未完了/全件での絞り込み |
 | ソート順（`mi-sort-type-query`） | 並び順の選択 |
 | キーワード | 全文検索 |
 | タグ | タグでの絞り込み |
