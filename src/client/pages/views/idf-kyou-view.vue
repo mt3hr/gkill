@@ -27,7 +27,7 @@
             {{ kyou.typed_idf_kyou.file_name }}
         </a>
         <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image"
-            :src="buildMediaUrl(kyou.typed_idf_kyou.file_url, false)" loading="lazy" decording="async"
+            :src="buildMediaUrl(kyou.typed_idf_kyou.file_url, false)" loading="lazy" decoding="async"
             fetchpriority="low" class="kyou_image" />
         <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video" :src="kyou.typed_idf_kyou.file_url"
             preload="none" :poster="buildMediaUrl(kyou.typed_idf_kyou.file_url, true)" class="kyou_video"

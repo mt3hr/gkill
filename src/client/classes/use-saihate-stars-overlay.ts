@@ -1,8 +1,16 @@
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 export function useSaihateStarsOverlay() {
     // ── Template refs ──
     const starField = ref<HTMLElement | null>(null)
+
+    // 流星ループの再スケジュール用タイマー。
+    // App.vue はテーマで v-if しているので、テーマを切り替えるたびに
+    // このcomposableはアンマウントされる。解除しないとループが永久に残り、
+    // ダークテーマに戻すたびにループが1本ずつ増えて流星の頻度が上がっていく。
+    // 雪側(use-snow-fall-overlay.ts)と同じ形にしてある。
+    let shootingStarTimerId: ReturnType<typeof setTimeout> | null = null
+    let stopped = false
 
     // ── Internal helpers ──
     function createStar(className: string, top: number, left: number, duration?: number) {
@@ -38,11 +46,14 @@ export function useSaihateStarsOverlay() {
     }
 
     function loopShootingStars() {
+        if (stopped) {
+            return
+        }
         const count = Math.floor(Math.random() * 3) + 1
         for (let i = 0; i < count; i++) {
             setTimeout(createShootingStar, Math.random() * 300)
         }
-        setTimeout(loopShootingStars, Math.random() * 1500 + 500)
+        shootingStarTimerId = setTimeout(loopShootingStars, Math.random() * 1500 + 500)
     }
 
     // ── Lifecycle ──
@@ -60,6 +71,14 @@ export function useSaihateStarsOverlay() {
         }
 
         loopShootingStars()
+    })
+
+    onUnmounted(() => {
+        stopped = true
+        if (shootingStarTimerId !== null) {
+            clearTimeout(shootingStarTimerId)
+            shootingStarTimerId = null
+        }
     })
 
     // ── Return ──

@@ -612,7 +612,10 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.TagReps = append(repositories.TagReps, tagRep)
-					repositories.TagRepsWatchTarget = append(repositories.TagReps, tagRep)
+					// 第1引数は TagRepsWatchTarget であること。
+					// TagReps を渡すと、直前の行で足した tagRep が重複するうえ、
+					// TagReps と backing array を共有して互いに干渉する。
+					repositories.TagRepsWatchTarget = append(repositories.TagRepsWatchTarget, tagRep)
 					if rep.UseToWrite {
 						newPath, _ := tagRep.GetPath(ctx, "")
 						if repositories.WriteTagRep != nil {
@@ -659,7 +662,8 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.TextReps = append(repositories.TextReps, textRep)
-					repositories.TextRepsWatchTarget = append(repositories.TextReps, textRep)
+					// 第1引数は TextRepsWatchTarget であること（TagReps側と同じ理由）
+					repositories.TextRepsWatchTarget = append(repositories.TextRepsWatchTarget, textRep)
 					if rep.UseToWrite {
 						newPath, _ := textRep.GetPath(ctx, "")
 						if repositories.WriteTextRep != nil {
