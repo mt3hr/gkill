@@ -1,3 +1,4 @@
+// Package kftl implements the KFTL text format parser (Go port of the TypeScript implementation in src/client/classes/kftl).
 package kftl
 
 import "strings"

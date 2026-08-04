@@ -1,3 +1,4 @@
+// Package account_state はログインセッションとファイルアップロード履歴のDAO。
 package account_state
 
 import "time"

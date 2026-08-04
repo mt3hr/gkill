@@ -1,4 +1,4 @@
-// gkill_fitbit_kc_convert_batch.go
+// gkill_fitbit_kc_convert_batch はFitbitデータをKC記録へ変換するバッチ。
 package main
 
 import (

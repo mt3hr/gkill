@@ -1,3 +1,4 @@
+// gkill_server はヘッドレスHTTPサーバ版のエントリポイント。
 package main
 
 import (

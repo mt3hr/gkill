@@ -1,3 +1,4 @@
+// Package hide_files はファイル隠蔽のOS別実装。
 package hide_files
 
 // HideFolder: Windowsではフォルダを「隠し」属性にする。

@@ -1,3 +1,4 @@
+// Package req_res は全エンドポイントのリクエスト/レスポンス構造体(クライアント側TypeScriptクラスとのJSONミラー)。
 package req_res
 
 type Account struct {

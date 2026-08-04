@@ -1,3 +1,4 @@
+// Package message はAPIレスポンス用のエラーコード・メッセージコード定数と構造体。
 package message
 
 const (

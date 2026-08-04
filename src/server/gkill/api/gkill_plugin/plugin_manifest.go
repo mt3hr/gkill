@@ -1,3 +1,4 @@
+// Package gkill_plugin はプラグインプロトコルの型定義(stdio改行区切りJSON)。
 package gkill_plugin
 
 // PluginManifest はプラグインのmanifest.jsonの内容を表す。
