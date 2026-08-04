@@ -34,38 +34,7 @@ func (g *GkillRepositories) collectNonReKyouRepositories() Repositories {
 	if g == nil {
 		return nil
 	}
-	reps := Repositories{}
-	for _, rep := range g.KmemoReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.KCReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.URLogReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.NlogReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.TimeIsReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.MiReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.LantanaReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.IDFKyouReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.GitCommitLogReps {
-		reps = append(reps, rep)
-	}
-	for _, rep := range g.MiReKyouReps.MiReKyouRepositories {
-		reps = append(reps, rep)
-	}
-	return reps
+	return append(g.collectTargetDataRepositories(), g.collectMiReKyouRepositories()...)
 }
 
 func cloneRepositoriesWithoutReKyou(original *GkillRepositories, withoutRekyouReps Repositories) *GkillRepositories {
@@ -103,28 +72,21 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 	// リポジトリ群を辿れない場合はターゲット解決を行わずすべて通す（MiReKyouのallowAllと同じ扱い）
 	allowAllTargets := repsWithoutRekyou == nil
 
-	latestDataRepositoryAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{}
 	if !allowAllTargets {
-		latestDataRepositoryAddresses, err = repsWithoutRekyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-		if err != nil {
+		if err := repsWithoutRekyou.EnsureLatestDataRepositoryAddresses(ctx); err != nil {
 			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 			return nil, err
 		}
 	}
 
 	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
+	// allowAllTargetsのときrepsWithoutRekyouはnilなので、先に見て弾く
 	wordMatchTargetIDs := map[string]bool{}
-	useWordFilter := query.UseWords && (len(query.Words) > 0 || len(query.NotWords) > 0)
+	useWordFilter := !allowAllTargets && isWordFilterEnabled(query)
 	if useWordFilter {
-		wordMatchKyousMap, err := repsWithoutRekyou.Reps.FindKyousSequential(ctx, query)
+		wordMatchTargetIDs, err = resolveReKyouWordMatchTargetIDs(ctx, repsWithoutRekyou.collectTargetDataRepositories(), repsWithoutRekyou.collectMiReKyouRepositories(), query)
 		if err != nil {
-			err = fmt.Errorf("error at find kyous for word filter: %w", err)
 			return nil, err
-		}
-		for _, kyous := range wordMatchKyousMap {
-			for _, kyou := range kyous {
-				wordMatchTargetIDs[kyou.ID] = true
-			}
 		}
 	}
 
@@ -134,9 +96,11 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 		}
 		// ターゲットが消えているReKyouは検索結果に出さない。
 		// 他2実装（sqlite3Impl / cachedImpl）と条件を揃えるためIsDeletedも見る
-		latestDataRepositoryAddress, existAddress := latestDataRepositoryAddresses[rekyou.TargetID]
-		if !allowAllTargets && (!existAddress || latestDataRepositoryAddress.IsDeleted) {
-			continue
+		if !allowAllTargets {
+			latestDataRepositoryAddress, existAddress := repsWithoutRekyou.GetLatestDataRepositoryAddress(rekyou.TargetID)
+			if !existAddress || latestDataRepositoryAddress.IsDeleted {
+				continue
+			}
 		}
 		// ワードフィルタが有効な場合、TargetIDがマッチしなければスキップ
 		if useWordFilter {
@@ -455,10 +419,8 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 	// リポジトリ群を辿れない場合はターゲット解決を行わずすべて通す（MiReKyouのallowAllと同じ扱い）
 	allowAllTargets := repsWithoutRekyou == nil
 
-	latestDataRepositoryAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{}
 	if !allowAllTargets {
-		latestDataRepositoryAddresses, err = repsWithoutRekyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-		if err != nil {
+		if err := repsWithoutRekyou.EnsureLatestDataRepositoryAddresses(ctx); err != nil {
 			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 			return nil, err
 		}
@@ -468,8 +430,10 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 		if rekyou.IsDeleted {
 			continue
 		}
-		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !allowAllTargets && !ok {
-			continue
+		if !allowAllTargets {
+			if _, ok := repsWithoutRekyou.GetLatestDataRepositoryAddress(rekyou.TargetID); !ok {
+				continue
+			}
 		}
 		matchReKyous = append(matchReKyous, rekyou)
 	}

@@ -27,6 +27,12 @@ type FindFilter struct {
 }
 
 func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string, gkillDAOManager *dao.GkillDAOManager, findQuery *find.FindQuery) ([]reps.Kyou, []*message.GkillError, error) {
+	// ReKyou/MiReKyouのターゲット解決を1検索の中で使い回すためのメモ。
+	// 委譲が入れ子になっていて、同じqueryでの解決が何度も走る。
+	// メモが無くても各repは今までどおり自前で解決するので、
+	// ここを通らない経路(単体テスト・repの直叩き)も動く。
+	ctx = reps.WithTargetResolutionMemo(ctx)
+
 	findKyouContext := &FindKyouContext{}
 
 	// QueryをContextに入れる
