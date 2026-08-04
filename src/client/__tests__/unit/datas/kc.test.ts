@@ -6,14 +6,14 @@ describe('KC', () => {
     expectCloneCopiesAllFields(new KC())
   })
 
-  describe('generate_info_identifer', () => {
+  describe('generate_info_identifier', () => {
     test('returns InfoIdentifier with matching id and times', () => {
       const kc = new KC()
       kc.id = 'kc-456'
       kc.create_time = new Date('2024-09-01T15:00:00Z')
       kc.update_time = new Date('2024-09-02T15:00:00Z')
 
-      const identifier = kc.generate_info_identifer()
+      const identifier = kc.generate_info_identifier()
 
       expect(identifier.id).toBe('kc-456')
       expect(identifier.create_time).toEqual(new Date('2024-09-01T15:00:00Z'))

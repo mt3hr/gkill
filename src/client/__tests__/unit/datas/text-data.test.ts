@@ -6,14 +6,14 @@ describe('Text', () => {
     expectCloneCopiesAllFields(new Text())
   })
 
-  describe('generate_info_identifer', () => {
+  describe('generate_info_identifier', () => {
     test('returns InfoIdentifier with matching id and times', () => {
       const text = new Text()
       text.id = 'text-789'
       text.create_time = new Date('2024-10-01T14:00:00Z')
       text.update_time = new Date('2024-10-02T14:00:00Z')
 
-      const identifier = text.generate_info_identifer()
+      const identifier = text.generate_info_identifier()
 
       expect(identifier.id).toBe('text-789')
       expect(identifier.create_time).toEqual(new Date('2024-10-01T14:00:00Z'))

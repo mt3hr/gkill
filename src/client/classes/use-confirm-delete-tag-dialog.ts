@@ -20,8 +20,8 @@ export function useConfirmDeleteTagDialog(options: {
     })
 
     const tag_highlight_targets = computed<Array<InfoIdentifier>>(() => {
-        const info_identifer = props.tag.generate_info_identifer()
-        return [info_identifer]
+        const info_identifier = props.tag.generate_info_identifier()
+        return [info_identifier]
     })
 
     async function show(): Promise<void> {
