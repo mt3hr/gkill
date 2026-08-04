@@ -10,6 +10,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	_ "modernc.org/sqlite"
 )
@@ -64,6 +65,12 @@ func NewMiReKyouTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m 
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MIREKYOU index to %s: %w", filename, err)
+		return nil, err
+	}
+
+	// 一時表への問い合わせは WHERE TX_ID = ? AND USER_ID = ? AND DEVICE = ? の形なので、
+	// ID先頭の既存索引では効かない。
+	if err := sqlite3impl.EnsureTxIDIndex(ctx, db, miReKyouTableName); err != nil {
 		return nil, err
 	}
 

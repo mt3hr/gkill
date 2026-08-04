@@ -96,6 +96,24 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	// 既存索引は先頭が ID なので時刻範囲にも ORDER BY にも使えない。
+	// MIは射影ごとに別の時刻列で絞るので、使う列すべてに張る。
+	// (他のcached repは EnsureUnixColumnIndex を呼んでいるのに MI だけ抜けていた)
+	if err := sqlite3impl.EnsureUnixColumnIndex(ctx, cacheDB, dbName,
+		"CREATE_TIME_UNIX", "LIMIT_TIME_UNIX", "ESTIMATE_START_TIME_UNIX", "ESTIMATE_END_TIME_UNIX"); err != nil {
+		return nil, err
+	}
+
+	// mi板の絞り込みで使う
+	boardNameIndexSQL := `CREATE INDEX IF NOT EXISTS ` +
+		sqlite3impl.QuoteIdent("INDEX_"+dbName+"_BOARD_NAME") +
+		` ON ` + sqlite3impl.QuoteIdent(dbName) + ` (BOARD_NAME);`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", boardNameIndexSQL))
+	if _, err := cacheDB.ExecContext(ctx, boardNameIndexSQL); err != nil {
+		err = fmt.Errorf("error at create mi board name index to %s: %w", dbName, err)
+		return nil, err
+	}
+
 	addMiInfoSQL := `
 INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
   IS_DELETED,
