@@ -101,6 +101,16 @@ loop:
 }
 
 func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	return g.getKyou(ctx, id, updateTime, true)
+}
+
+// GetKyouSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したまま呼ぶ場面（キャッシュ実装のビルド中フォールバック）で使ってください。
+func (g GitCommitLogRepositories) GetKyouSequential(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	return g.getKyou(ctx, id, updateTime, false)
+}
+
+func (g GitCommitLogRepositories) getKyou(ctx context.Context, id string, updateTime *time.Time, parallel bool) (*Kyou, error) {
 	var matchKyou *Kyou
 	existErr := false
 	var err error
@@ -110,17 +120,22 @@ func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string, update
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		getInRep := func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchKyouInRep
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -166,6 +181,16 @@ loop:
 }
 
 func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	return g.getKyouHistories(ctx, id, true)
+}
+
+// GetKyouHistoriesSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したまま呼ぶ場面（キャッシュ実装のビルド中フォールバック）で使ってください。
+func (g GitCommitLogRepositories) GetKyouHistoriesSequential(ctx context.Context, id string) ([]Kyou, error) {
+	return g.getKyouHistories(ctx, id, false)
+}
+
+func (g GitCommitLogRepositories) getKyouHistories(ctx context.Context, id string, parallel bool) ([]Kyou, error) {
 	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
@@ -175,17 +200,22 @@ func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id strin
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		getInRep := func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchKyousInRep
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -445,6 +475,16 @@ loop:
 
 // FindGitCommitLogByIDs 指定IDのGitCommitLogを全リポジトリから並列取得する
 func (g GitCommitLogRepositories) FindGitCommitLogByIDs(ctx context.Context, ids []string) ([]GitCommitLog, error) {
+	return g.findGitCommitLogByIDs(ctx, ids, true)
+}
+
+// FindGitCommitLogByIDsSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したまま呼ぶ場面（キャッシュ実装のビルド中フォールバック）で使ってください。
+func (g GitCommitLogRepositories) FindGitCommitLogByIDsSequential(ctx context.Context, ids []string) ([]GitCommitLog, error) {
+	return g.findGitCommitLogByIDs(ctx, ids, false)
+}
+
+func (g GitCommitLogRepositories) findGitCommitLogByIDs(ctx context.Context, ids []string, parallel bool) ([]GitCommitLog, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -458,17 +498,22 @@ func (g GitCommitLogRepositories) FindGitCommitLogByIDs(ctx context.Context, ids
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		findInRep := func() {
 			logs, err := rep.FindGitCommitLogByIDs(ctx, ids)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- logs
-		})
+		}
+		if !parallel {
+			findInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, findInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -624,6 +669,16 @@ func (g GitCommitLogRepositories) UnWrap() ([]Repository, error) {
 }
 
 func (g GitCommitLogRepositories) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	return g.getLatestDataRepositoryAddress(ctx, updateCache, true)
+}
+
+// GetLatestDataRepositoryAddressSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したまま呼ぶ場面（キャッシュ実装からの委譲）で使ってください。
+func (g GitCommitLogRepositories) GetLatestDataRepositoryAddressSequential(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	return g.getLatestDataRepositoryAddress(ctx, updateCache, false)
+}
+
+func (g GitCommitLogRepositories) getLatestDataRepositoryAddress(ctx context.Context, updateCache bool, parallel bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
 	allAddrs := []gkill_cache.LatestDataRepositoryAddress{}
 	existErr := false
 	var err error
@@ -633,17 +688,22 @@ func (g GitCommitLogRepositories) GetLatestDataRepositoryAddress(ctx context.Con
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		getInRep := func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- addrs
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}
