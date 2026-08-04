@@ -1,3 +1,4 @@
+// Package user_config はユーザ設定(アプリ設定・リポジトリ定義)のDAO。
 package user_config
 
 import (

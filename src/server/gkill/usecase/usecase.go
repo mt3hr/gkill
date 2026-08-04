@@ -1,3 +1,4 @@
+// Package usecase はHTTP非依存のビジネスロジック(ユースケース層)。ハンドラから再利用できるよう分離されている。
 package usecase
 
 import (

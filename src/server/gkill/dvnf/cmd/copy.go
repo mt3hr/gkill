@@ -1,3 +1,4 @@
+// Package cmd はDVNFのCLIコマンド実装。
 package dvnf_cmd
 
 import (

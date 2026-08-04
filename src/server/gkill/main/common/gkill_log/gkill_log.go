@@ -1,3 +1,4 @@
+// Package gkill_log はレベル別振り分けを行うslogハンドラとログ基盤。
 package gkill_log
 
 import (

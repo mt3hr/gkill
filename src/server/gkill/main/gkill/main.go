@@ -1,3 +1,4 @@
+// gkill はデスクトップアプリ版(go-astilectronウィンドウ)のエントリポイント。
 package main
 
 import (
