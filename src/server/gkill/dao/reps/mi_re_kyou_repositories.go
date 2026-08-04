@@ -718,34 +718,9 @@ func (m *MiReKyouRepositories) GetRepositoriesWithoutMiReKyouRep(ctx context.Con
 		return nil, nil
 	}
 
-	withoutMiReKyouReps := Repositories{}
-	for _, rep := range m.GkillRepositories.KmemoReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
-	for _, rep := range m.GkillRepositories.KCReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
-	for _, rep := range m.GkillRepositories.URLogReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
-	for _, rep := range m.GkillRepositories.NlogReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
-	for _, rep := range m.GkillRepositories.TimeIsReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
-	for _, rep := range m.GkillRepositories.MiReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
-	for _, rep := range m.GkillRepositories.LantanaReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
-	for _, rep := range m.GkillRepositories.IDFKyouReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
-	for _, rep := range m.GkillRepositories.GitCommitLogReps {
-		withoutMiReKyouReps = append(withoutMiReKyouReps, rep)
-	}
+	// ReKyouの委譲先(collectNonReKyouRepositories)と同じ集計を使う。
+	// あちらは「ここ + MiReKyou」で、その関係はワード委譲検索のメモが前提にしている。
+	withoutMiReKyouReps := m.GkillRepositories.collectTargetDataRepositories()
 
 	return cloneRepositoriesWithoutMiReKyou(m.GkillRepositories, withoutMiReKyouReps), nil
 }
