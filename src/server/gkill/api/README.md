@@ -20,7 +20,7 @@ api/
 ├── gkill_server_api/            # HTTP ハンドラ（111ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
-│   ├── serve.go                 # gorilla/mux ルーター設定・全85ルート登録
+│   ├── serve.go                 # gorilla/mux ルーター設定・全88ルート登録
 │   ├── close.go                 # サーバ終了処理
 │   ├── auth.go                  # 認証処理
 │   ├── auth_context.go          # 認証コンテキスト
@@ -30,7 +30,7 @@ api/
 │   ├── web_push.go              # Web Push 通知
 │   ├── gkill_server_api_access_log.go # アクセスログ
 │   ├── gkill_server_api_rate_limit.go # レートリミット
-│   └── handle_*.go              # 各エンドポイントのハンドラ（92ファイル。うちテスト3）
+│   └── handle_*.go              # 各エンドポイントのハンドラ（94ファイル。うちテスト5）
 ├── find/                        # 検索クエリ型定義
 ├── gpslogs/                     # GPS ログパーサ
 ├── kftl/                        # KFTL パーサ → kftl/README.md 参照
@@ -53,12 +53,12 @@ api/
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（108ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（111ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
 `GkillServerAPI` 構造体に全ハンドラメソッドを集約。gorilla/mux で全88エンドポイントを登録する。
-各エンドポイントは `handle_*.go`（92ファイル。うち3つはテスト、実装は89ファイル。1ハンドラ1ファイル）として分割されている。
+handle_*.go は94ファイル（実装89 + テスト5）で、1ハンドラ1ファイルとして分割されている。
 ビジネスロジックは `usecase/` 層に委譲し、ハンドラは HTTP リクエスト/レスポンスの変換に専念する。
 
 ### `find/`（5ファイル）— 検索クエリ型定義
@@ -67,7 +67,7 @@ api/
 
 | ファイル | 説明 |
 |---------|------|
-| `find_query.go` | `FindQuery` 構造体 — 検索条件（62フィールド: キーワード、日付範囲、タグ、データ型等） |
+| `find_query.go` | `FindQuery` 構造体 — 検索条件（55フィールド: キーワード、日付範囲、タグ、データ型等） |
 | `mi_check_state.go` | Mi（タスク）のチェック状態 enum |
 | `mi_sort_type.go` | Mi のソート順 enum |
 | `week_of_days.go` | 曜日フィルタ enum |
@@ -88,8 +88,8 @@ api/
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用 |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（388定数、ERR000001〜ERR000389・ERR000243欠番） |
-| `message_codes.go` | メッセージコード定数（80定数） |
+| `error_codes.go` | エラーコード定数（400定数、ERR000001〜ERR000401・ERR000243欠番） |
+| `message_codes.go` | メッセージコード定数（85定数） |
 | `message_test.go` | コード形式テスト |
 
 ### `kftl/`（22ファイル）— KFTL パーサ

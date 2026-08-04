@@ -55,6 +55,29 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `！` | Save | 保存実行 |
 | (上記以外) | Kmemo | テキストメモ（デフォルト） |
 
+日本語プレフィックスと並んで、非日本語ロケール向けの **ASCII プレフィックス**も受け付ける
+（`kftl_factory.go` の `splitter*Ascii` 定数。TypeScript 側は `classes/kftl/kftl-prefixes.ts` の定数と対応）:
+
+| ASCII | 対応する日本語 | データ型 |
+|---|---|---|
+| `#` | `。` | Tag |
+| `--` | `ーー` | Text |
+| `?` | `？` | RelatedTime |
+| `,` | `、` | Split |
+| `,,` | `、、` | SplitNextSecond |
+| `/num` | `ーか` | KC |
+| `/mi` | `ーみ` | Mi |
+| `/mood` | `ーら` | Lantana |
+| `/expense` | `ーん` | Nlog |
+| `/start` | `ーた` | TimeIs Start |
+| `/end` | `ーえ` | TimeIs End |
+| `/timeis` | `ーち` | TimeIs |
+| `/end?` | `ーいえ` | TimeIs End If Exist |
+| `/endt` | `ーたえ` | TimeIs End By Tag |
+| `/endt?` | `ーいたえ` | TimeIs End By Tag If Exist |
+| `/url` | `ーう` | URLog |
+| `!` | `！` | Save |
+
 ## ファイル一覧（22ファイル）
 
 ### コア構造

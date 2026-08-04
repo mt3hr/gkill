@@ -8,6 +8,14 @@ gkill プロジェクト用のユーティリティスクリプト。
 |---|---|
 | `dev.mjs` | `npm run dev` の実体。`--api=<url>` で接続先gkill_serverを指定してViteを起動する |
 | `license_getter.ps1` | 依存ライブラリのライセンス一覧を `LICENSES_DEPENDENCE` ファイルに出力する PowerShell スクリプト |
+| `verify_docs.mjs` | `npm run verify_docs` の実体。資料の件数・リンク・Mermaid・マニュアル鮮度等の機械検査 |
+| `build_manuals.mjs` | `resources/manual_src/` から `resources/manual/` を生成する |
+| `manual_build.mjs` | マニュアル生成の共通ロジック（`build_manuals.mjs` / `verify_docs.mjs` から利用） |
+| `manual_a11y.mjs` | マニュアルのアクセシビリティ検査ヘルパー |
+| `manual_ascii_fix.mjs` | マニュアル内の文字化け・ASCII 修正ユーティリティ |
+| `extract_manual_src.mjs` | 既存 `resources/manual/` から `manual_src/` を抽出する移行ツール |
+| `verify_release_artifacts.mjs` | `npm run release` 成果物の検証 |
+| `test_plugins.mjs` | `npm run test_plugins` の実体。`src/plugins/` 配下の各 Go モジュールのテストを実行 |
 
 ## dev.mjs
 
