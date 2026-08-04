@@ -102,7 +102,7 @@ func TestCalendarRangeHandlesMixedTimezoneOffsets(t *testing.T) {
 		relatedTime string
 	}{
 		{"utc-in-range", "2026-07-15T00:00:00+00:00"},
-		{"jst-in-range", "2026-07-15T09:00:00+09:00"}, // = 同じ瞬間
+		{"jst-in-range", "2026-07-15T09:00:00+09:00"},    // = 同じ瞬間
 		{"jst-just-before", "2026-07-01T08:59:59+09:00"}, // = 2026-06-30T23:59:59Z 範囲外
 		{"jst-just-after", "2026-07-01T09:00:01+09:00"},  // = 2026-07-01T00:00:01Z 範囲内
 		{"utc-out-of-range", "2026-09-01T00:00:00+00:00"},

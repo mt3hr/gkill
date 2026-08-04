@@ -83,6 +83,12 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		return nil, err
 	}
 
+	// 一時表への問い合わせは WHERE TX_ID = ? AND USER_ID = ? AND DEVICE = ? の形なので、
+	// ID先頭の既存索引では効かない。
+	if err := sqlite3impl.EnsureTxIDIndex(ctx, db, "IDF"); err != nil {
+		return nil, err
+	}
+
 	rep := &idfKyouRepositoryTempSQLite3Impl{
 		repositoriesRef: &GkillRepositories{},
 		// idDBFile:        dbFilename,
