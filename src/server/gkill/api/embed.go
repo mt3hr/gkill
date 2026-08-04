@@ -1,3 +1,4 @@
+// Package api はHTTP APIの共通基盤。埋め込みフロントエンドの配信、Kyou検索フィルタ、バージョン情報を提供する。
 package api
 
 import (

@@ -1,3 +1,4 @@
+// Package server_config はサーバ設定のDAO。
 package server_config
 
 import (

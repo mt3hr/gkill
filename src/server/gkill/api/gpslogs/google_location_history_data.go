@@ -1,3 +1,4 @@
+// Package gpslogs はGPSログ(GPX/Google Location History)のパーサ。
 package gpslogs
 
 import (

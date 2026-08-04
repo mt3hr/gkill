@@ -1,3 +1,4 @@
+// Package common はCLIサブコマンド定義とサーバ初期化の共通基盤。
 package common
 
 import (

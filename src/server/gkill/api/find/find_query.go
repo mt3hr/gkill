@@ -1,3 +1,4 @@
+// Package find は検索条件(FindQuery)と関連列挙型の型定義。
 package find
 
 import (

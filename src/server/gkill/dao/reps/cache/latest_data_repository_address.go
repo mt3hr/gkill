@@ -1,3 +1,4 @@
+// Package cache は最新データのリポジトリ所在(LatestDataRepositoryAddress)キャッシュ。
 package gkill_cache
 
 import (

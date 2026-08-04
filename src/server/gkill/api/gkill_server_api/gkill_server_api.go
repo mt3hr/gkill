@@ -1,3 +1,4 @@
+// Package gkill_server_api はHTTPハンドラ層。1エンドポイント1ファイルのHandleXxxメソッドをGkillServerAPIに集約する。
 package gkill_server_api
 
 import (
@@ -107,13 +108,13 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		return nil, err
 	}
 
-	applicationConfigs, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetAllApplicationConfigs(ctx)
+	applicationConfigs, err := gkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetAllApplicationConfigs(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all application configs: %w", err)
 		return nil, err
 	}
 	if len(applicationConfigs) == 0 {
-		_, err = gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddDefaultApplicationConfig(context.Background(), "admin", *device)
+		_, err = gkillDAOManager.ConfigDAOs.ApplicationConfigDAO.AddDefaultApplicationConfig(context.Background(), "admin", *device)
 		if err != nil {
 			err = fmt.Errorf("error at add application config admin: %w", err)
 			return nil, err

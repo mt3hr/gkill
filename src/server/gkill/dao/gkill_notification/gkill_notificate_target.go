@@ -1,3 +1,4 @@
+// Package gkill_notification は通知対象管理のDAO。
 package gkill_notification
 
 type GkillNotificateTarget struct {

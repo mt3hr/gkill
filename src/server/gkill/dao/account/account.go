@@ -1,3 +1,4 @@
+// Package account はユーザアカウント情報のDAO。
 package account
 
 import "time"

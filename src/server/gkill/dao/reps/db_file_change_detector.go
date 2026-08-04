@@ -1,3 +1,4 @@
+// Package reps は全Kyouデータ型のリポジトリ層。interface定義とsqlite3/cached/temp等の実装を持つ。
 package reps
 
 import (
