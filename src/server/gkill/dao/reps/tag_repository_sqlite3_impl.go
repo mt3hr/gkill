@@ -20,7 +20,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-const CURRENT_SCHEMA_VERSION_TAG_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_TAG_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type tagRepositorySQLite3Impl struct {
 	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
@@ -1469,7 +1469,7 @@ FROM TAG
 
 func checkAndResolveDataSchemaTagRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO TagRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_TAG"
-	currentSchemaVersion := CURRENT_SCHEMA_VERSION_TAG_REPOISITORY_SQLITE3IMPL_DAO
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_TAG_REPOSITORY_SQLITE3IMPL_DAO
 
 	// テーブルとインデックスがなければ作る
 	createTableSQL := `

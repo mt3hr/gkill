@@ -25,8 +25,8 @@ func TestConfigDAOsStructFields(t *testing.T) {
 	if c.ServerConfigDAO != nil {
 		t.Error("expected nil ServerConfigDAO")
 	}
-	if c.AppllicationConfigDAO != nil {
-		t.Error("expected nil AppllicationConfigDAO")
+	if c.ApplicationConfigDAO != nil {
+		t.Error("expected nil ApplicationConfigDAO")
 	}
 	if c.RepositoryDAO != nil {
 		t.Error("expected nil RepositoryDAO")

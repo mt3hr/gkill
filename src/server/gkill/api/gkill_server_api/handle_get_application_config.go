@@ -58,14 +58,14 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	userID := auth.UserID
 	device := auth.Device
 
-	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 	if err != nil || applicationConfig == nil {
 		err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
 		err = fmt.Errorf("try create application config user id = %s device = %s: %w", userID, device, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 
 		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
-		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
+		_, err = g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
 
 		if err != nil {
 			gkillError := &message.GkillError{
@@ -75,7 +75,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 		if err != nil || applicationConfig == nil {
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetApplicationConfigError,

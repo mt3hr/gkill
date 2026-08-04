@@ -11,7 +11,7 @@ async function prepare_kyou(abort_controller: AbortController, source: Kyou, get
         kyou.abort_controller = abort_controller
     }
     if (get_latest_data) {
-        await kyou.reload(false, false)
+        await kyou.reload(false)
     }
     if (clone || get_latest_data) {
         await Promise.all([

@@ -19,7 +19,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const CURRENT_SCHEMA_VERSION_NOTIFICATION_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_NOTIFICATION_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type notificationRepositorySQLite3Impl struct {
 	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
@@ -1193,7 +1193,7 @@ FROM NOTIFICATION
 
 func checkAndResolveDataSchemaNotificationRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO NotificationRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_NOTIFICATION"
-	currentSchemaVersion := CURRENT_SCHEMA_VERSION_NOTIFICATION_REPOISITORY_SQLITE3IMPL_DAO
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_NOTIFICATION_REPOSITORY_SQLITE3IMPL_DAO
 
 	// テーブルとインデックスがなければ作る
 	createTableSQL := `

@@ -124,7 +124,7 @@ export function usePlaingTimeisView(options: {
             if (kyou.id === kyou_in_list.id) {
                 const updated_kyou = kyou.clone()
                 await delete_gkill_kyou_cache(kyou.id)
-                await updated_kyou.reload(false, true)
+                await updated_kyou.reload(true)
                 updated_kyou.is_typed_data_loaded = false
                 await updated_kyou.load_all()
                 const new_list = [...match_kyous_list.value]
@@ -135,7 +135,7 @@ export function usePlaingTimeisView(options: {
         if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
             const updated_kyou = kyou.clone()
             await delete_gkill_kyou_cache(kyou.id)
-            await updated_kyou.reload(false, false)
+            await updated_kyou.reload(false)
             updated_kyou.is_typed_data_loaded = false
             await updated_kyou.load_all()
             focused_kyou.value = updated_kyou
@@ -144,7 +144,7 @@ export function usePlaingTimeisView(options: {
             if (opened_dialogs.value[i].kyou.id === kyou.id) {
                 const updated_kyou = kyou.clone()
                 await delete_gkill_kyou_cache(kyou.id)
-                await updated_kyou.reload(false, true)
+                await updated_kyou.reload(true)
                 updated_kyou.is_typed_data_loaded = false
                 await updated_kyou.load_all()
                 opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
