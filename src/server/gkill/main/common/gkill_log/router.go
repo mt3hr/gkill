@@ -66,7 +66,7 @@ func NewRouter(opts Options) *Router {
 	r.opts = opts
 	r.level.Set(opts.MinLevel)
 
-	// レベル別sinkを用意（初期は捨て先にしておく）
+	// レベル別sinkを用意（初期はstdout）
 	// 実際のパスは SetSplitFile で指定してもらう想定
 	r.byLevel[TraceSQL] = NewFileSink(os.Stdout)
 	r.byLevel[Trace] = NewFileSink(os.Stdout)

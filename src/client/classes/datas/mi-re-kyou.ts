@@ -66,6 +66,7 @@ export class MiReKyou extends InfoBase {
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
+        // MiReKyouの付随データはtarget_id先(集約側)が読むため、ここでは自前ロードせず履歴を消すだけでよい
         return this.clear_attached_histories()
     }
 

@@ -10,8 +10,7 @@ import { GkillAPI } from "./classes/api/gkill-api"
 
 registerSW()
 
-/* abortは握りつぶす */
-// src/utils/isAbortError.ts (例)
+// abort系エラーの判定。unhandledrejectionでabortを握りつぶすために使う
 export function isAbortError(err: unknown): boolean {
   if (!err) return false
   if (err instanceof Error && err.name === "AbortError") return true
