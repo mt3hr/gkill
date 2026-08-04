@@ -6,7 +6,7 @@
 
 既存の設計資料は「1 操作・1 観点」に分解されています。
 
-- [usecase.md](usecase.md) — ユースケースの**カタログ**（82件、1操作ずつ静的に列挙）
+- [usecase.md](usecase.md) — ユースケースの**カタログ**（84件、1操作ずつ静的に列挙）
 - [sequence-diagrams.md](sequence-diagrams.md) — **1操作単位**のシーケンス図（ログイン、データ登録、検索…）
 - [activity-diagrams.md](activity-diagrams.md) — 実装レベルの内部処理フローチャート
 - [screen-transition.md](screen-transition.md) — 画面遷移

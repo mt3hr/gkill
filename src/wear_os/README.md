@@ -13,16 +13,15 @@ wear_os/
 ├── build.gradle.kts           # ルート Gradle 設定
 ├── settings.gradle.kts        # マルチモジュール設定
 ├── gradle.properties          # Gradle プロパティ
-├── gradlew / gradlew.bat      # Gradle ラッパー（android/ からコピー）
+├── gradlew / gradlew.bat      # Gradle ラッパー（コミット済み）
 ├── gradle/
-│   └── wrapper/               # Gradle Wrapper JAR（android/ からコピー）
+│   └── wrapper/               # Gradle Wrapper JAR（コミット済み）
 ├── phone_companion/           # スマホ側コンパニオンモジュール
 │   ├── build.gradle.kts
 │   └── src/main/
 │       ├── AndroidManifest.xml
-│       ├── java/.../wear/companion/    # Kotlin ソース（4ファイル）
+│       ├── java/.../wear/companion/    # Kotlin ソース（5ファイル）
 │       └── res/
-│           ├── raw/wearable_app.apk    # ウォッチアプリ APK
 │           └── values/strings.xml
 └── watch_app/                 # ウォッチ側アプリモジュール
     ├── build.gradle.kts
@@ -35,7 +34,7 @@ wear_os/
 
 ## モジュール構成
 
-### `phone_companion/` — スマホ側コンパニオンサービス（4ファイル）
+### `phone_companion/` — スマホ側コンパニオンサービス（5ファイル）
 
 ウォッチからのリクエストを受け取り、gkill_server API を呼び出すサービス。
 
@@ -44,6 +43,7 @@ wear_os/
 | `GkillWearableListenerService.kt` | Wearable Data Layer のメッセージリスナー。ウォッチからのテンプレート要求・KFTL 送信を処理 |
 | `GkillApiClient.kt` | gkill_server の HTTP API を呼び出すクライアント（login, get_application_config, submit_kftl_text） |
 | `GkillCredentialStore.kt` | ユーザ認証情報（user_id, password）の安全な保存・読み取り |
+| `GkillSecretCipher.kt` | 認証情報の暗号化・復号ユーティリティ |
 | `MainActivity.kt` | コンパニオンアプリのメインアクティビティ（認証情報設定画面） |
 
 ### `watch_app/` — ウォッチ側アプリ（14ファイル）
@@ -126,11 +126,6 @@ Wearable Data Layer API を使用した通信:
 ## ビルド方法
 
 ```bash
-# gradlew を android/ からコピー（初回のみ）
-cp src/android/gradlew src/wear_os/
-cp src/android/gradlew.bat src/wear_os/
-cp -r src/android/gradle/wrapper src/wear_os/gradle/
-
 cd src/wear_os
 
 # ウォッチアプリビルド
@@ -141,7 +136,7 @@ cd src/wear_os
 ```
 
 **注意:**
-- `gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar` は `src/android/` からコピーが必要
+- Gradle ラッパー（`gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`）はコミット済みでコピー不要。壊れた場合は `npm run setup_wear_os_gradle` で `src/android/` から入れ直せる
 - 両モジュールの applicationId は `com.gkill_android.mobile_app.src.gkill.mt3hr.gkill`（android/ と統一）
 
 ## 開発ガイドライン

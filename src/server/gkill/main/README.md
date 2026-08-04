@@ -50,13 +50,14 @@ go-astilectron を使用して Electron ライクなデスクトップウィン�
 
 ## cobra CLI サブコマンド
 
-`common/common.go` で以下のサブコマンドがルートコマンドに登録される:
+サブコマンドの定義は `common/common.go` にあり、各バイナリの `main.go`（`gkill_server/main.go`, `gkill/main.go`）が
+`AddCommand()` でルートコマンドに登録する。`idf` は `gkill_server` のみが登録する（`gkill` には無い）:
 
 | サブコマンド | 説明 |
 |-------------|------|
 | `version` | バージョン情報表示 |
-| `idf` | IDF（ファイル）関連操作 |
-| `dvnf` | データバージョニング・ファイル管理 → `dvnf/README.md` 参照 |
+| `idf` | IDF（ファイル）関連操作（gkill_server のみ） |
+| `dvnf` | ファイル命名規則・バージョニング → `dvnf/README.md` 参照 |
 | `generate_thumb_cache` | サムネイルキャッシュ生成 |
 | `generate_video_cache` | 動画キャッシュ生成 |
 | `optimize` | データベース最適化 |
@@ -114,6 +115,6 @@ Fitbit のヘルスデータ（歩数等）を gkill の KC（数値記録）形
 
 ### 新しいサブコマンドの追加
 
-1. `common/common.go` の cobra ルートコマンドに `AddCommand()` でサブコマンドを登録
+1. `common/common.go` にサブコマンド（cobra.Command）を定義し、各バイナリの `main.go`（`gkill_server/main.go`・`gkill/main.go`）で `AddCommand()` する
 2. サブコマンドのロジックは別パッケージ（例: `dvnf/cmd/`）に分離
 3. 共通の初期化ロジック（DB 接続等）は `common.go` の既存関数を再利用

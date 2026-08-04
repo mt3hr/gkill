@@ -47,4 +47,4 @@ npm run test_wear_os
 cd src/wear_os && ./gradlew test
 ```
 
-> **注意**: `gradlew` / `gradlew.bat` / `gradle-wrapper.jar` は `src/android/` からコピーが必要。
+> **注意**: Gradle ラッパー（`gradlew` / `gradlew.bat` / `gradle-wrapper.jar`）はコミット済みでコピー不要。壊れた場合は `npm run setup_wear_os_gradle` で入れ直せる。

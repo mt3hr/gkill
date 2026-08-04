@@ -8,7 +8,7 @@ gkill の Go バックエンドサーバ。HTTP API、データアクセス層�
 ## モジュール情報
 
 - **Go モジュール**: `github.com/mt3hr/gkill/src/server`
-- **Go バージョン**: 1.26.0
+- **Go バージョン**: 1.26.4
 - **go.mod の場所**: `src/server/go.mod`（このディレクトリがモジュールルート）
 
 ## ディレクトリ構造
@@ -19,7 +19,7 @@ server/
 ├── go.sum                     # 依存関係チェックサム
 └── gkill/
     ├── api/                   # HTTP API 共通基盤 → api/README.md
-    │   ├── gkill_server_api/  # HTTP ハンドラ（86 handle_*.go + 認証・ルーティング）
+    │   ├── gkill_server_api/  # HTTP ハンドラ（94 handle_*.go + 認証・ルーティング）
     │   ├── embed/             # ビルド生成物（Vue SPA 埋め込み）
     │   ├── find/              # 検索クエリ型
     │   ├── gpslogs/           # GPS ログパーサ
