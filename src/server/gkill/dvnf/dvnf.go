@@ -1,3 +1,4 @@
+// Package dvnf はデバイス名フォルダ命名規則(DVNF)によるファイルのバージョン管理・コピー・移動。
 package dvnf
 
 import (

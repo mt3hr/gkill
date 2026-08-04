@@ -1,3 +1,4 @@
+// Package share_kyou_info はKyou共有情報のDAO。
 package share_kyou_info
 
 type ShareKyouInfo struct {
