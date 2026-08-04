@@ -319,7 +319,7 @@ export function useSaveClipboardToFileDialog(options: {
         show_saved_snackbar.value = true
 
         for (const kyou of res.uploaded_kyous ?? []) {
-            await kyou.reload(false, true)
+            await kyou.reload(true)
             emits('registered_kyou', kyou)
         }
         // Keep dialog open for continuous saving; restore focus to save button

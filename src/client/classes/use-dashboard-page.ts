@@ -337,7 +337,7 @@ export function useDashboardPage() {
         });
         (async (): Promise<void> => {
             const updated_kyou = kyou.clone()
-            await updated_kyou.reload(false, true, mi_kyou_query.value)
+            await updated_kyou.reload(true, mi_kyou_query.value)
             updated_kyou.is_typed_data_loaded = false
             await updated_kyou.load_all(mi_kyou_query.value, true)
             for (let i = 0; i < opened_dialogs.value.length; i++) {

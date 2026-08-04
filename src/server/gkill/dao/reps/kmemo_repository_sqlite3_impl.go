@@ -19,7 +19,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-const CURRENT_SCHEMA_VERSION_KMEMO_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_KMEMO_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type kmemoRepositorySQLite3Impl struct {
 	filename    string
@@ -1244,7 +1244,7 @@ func (k *kmemoRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 
 func checkAndResolveDataSchemaKmemoRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO KmemoRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_KMEMO"
-	currentSchemaVersion := CURRENT_SCHEMA_VERSION_KMEMO_REPOISITORY_SQLITE3IMPL_DAO
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_KMEMO_REPOSITORY_SQLITE3IMPL_DAO
 
 	// テーブルとインデックスがなければ作る
 	createTableSQL := `

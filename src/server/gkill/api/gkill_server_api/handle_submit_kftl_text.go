@@ -58,14 +58,14 @@ func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Req
 	device := auth.Device
 	repositories := auth.Repositories
 
-	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 	if err != nil || applicationConfig == nil {
 		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
-		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
+		_, err = g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.AddApplicationConfig(r.Context(), defaultApplicationConfig)
 		if err != nil {
 			slog.Log(r.Context(), gkill_log.Debug, "error at add default application config", "error", fmt.Sprintf("%q", err))
 		}
-		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 		if err != nil || applicationConfig == nil {
 			if err != nil {
 				err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)

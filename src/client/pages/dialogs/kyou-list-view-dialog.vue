@@ -142,7 +142,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
             const kyou_in_list = kyous_list[j]
             if (kyou.id === kyou_in_list.id) {
                 const updated_kyou = kyou.clone()
-                await updated_kyou.reload(false, true)
+                await updated_kyou.reload(true)
                 await updated_kyou.load_all()
                 kyous_list.splice(j, 1, updated_kyou)
             }

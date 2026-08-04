@@ -95,7 +95,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	gkillDAOManager.ConfigDAOs.AppllicationConfigDAO, err = user_config.NewApplicationConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
+	gkillDAOManager.ConfigDAOs.ApplicationConfigDAO, err = user_config.NewApplicationConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
 	if err != nil {
 		return nil, err
 	}
@@ -1265,7 +1265,7 @@ func (g *GkillDAOManager) Close() error {
 		if err != nil {
 			return err
 		}
-		err = g.ConfigDAOs.AppllicationConfigDAO.Close(ctx)
+		err = g.ConfigDAOs.ApplicationConfigDAO.Close(ctx)
 		if err != nil {
 			return err
 		}
@@ -1278,7 +1278,7 @@ func (g *GkillDAOManager) Close() error {
 		g.ConfigDAOs.FileUploadHistoryDAO = nil
 		g.ConfigDAOs.ShareKyouInfoDAO = nil
 		g.ConfigDAOs.ServerConfigDAO = nil
-		g.ConfigDAOs.AppllicationConfigDAO = nil
+		g.ConfigDAOs.ApplicationConfigDAO = nil
 		g.ConfigDAOs.RepositoryDAO = nil
 	}
 

@@ -300,7 +300,7 @@ export function useRykvView(options: {
                         const reload_query = build_mi_reload_query(querys.value[i], kyou_in_list.data_type)
                         const updated_kyou = kyou.clone()
                         await delete_gkill_kyou_cache(kyou.id)
-                        await updated_kyou.reload(false, true, reload_query)
+                        await updated_kyou.reload(true, reload_query)
                         updated_kyou.is_typed_data_loaded = false
                         await updated_kyou.load_all(reload_query, true)
                         const new_kyous_list = [...kyous_list]
@@ -320,7 +320,7 @@ export function useRykvView(options: {
                     }
                 }
                 const updated_kyou = kyou.clone()
-                await updated_kyou.reload(false, true, reload_query)
+                await updated_kyou.reload(true, reload_query)
                 await updated_kyou.load_all(reload_query, true)
                 focused_kyou.value = updated_kyou
             }
@@ -337,7 +337,7 @@ export function useRykvView(options: {
                     }
                     const updated_kyou = kyou.clone()
                     await delete_gkill_kyou_cache(kyou.id)
-                    await updated_kyou.reload(false, true, reload_query)
+                    await updated_kyou.reload(true, reload_query)
                     updated_kyou.is_typed_data_loaded = false
                     await updated_kyou.load_all(reload_query, true)
                     opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
@@ -789,7 +789,7 @@ export function useRykvView(options: {
                     }
                 }
                 const updated_kyou = kyou.clone()
-                await updated_kyou.reload(false, true, reload_query)
+                await updated_kyou.reload(true, reload_query)
                 updated_kyou.is_typed_data_loaded = false
                 await updated_kyou.load_all(reload_query, true)
                 for (let i = 0; i < opened_dialogs.value.length; i++) {

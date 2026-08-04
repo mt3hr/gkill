@@ -278,9 +278,9 @@ type GkillServerAPIAddress struct {
 
 	GetNotificationsByTargetIDMethod string
 
-	GetTextHistoriesByTagIDMethod string
+	GetTextHistoriesByTextIDMethod string
 
-	GetNotificationHistoriesByTagIDMethod string
+	GetNotificationHistoriesByNotificationIDMethod string
 
 	GetApplicationConfigMethod string
 
@@ -493,8 +493,8 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetTagHistoriesByTagIDMethod = "POST"
 	gkillAPIAddress.GetTextsByTargetIDMethod = "POST"
 	gkillAPIAddress.GetNotificationsByTargetIDMethod = "POST"
-	gkillAPIAddress.GetTextHistoriesByTagIDMethod = "POST"
-	gkillAPIAddress.GetNotificationHistoriesByTagIDMethod = "POST"
+	gkillAPIAddress.GetTextHistoriesByTextIDMethod = "POST"
+	gkillAPIAddress.GetNotificationHistoriesByNotificationIDMethod = "POST"
 	gkillAPIAddress.GetApplicationConfigMethod = "POST"
 	gkillAPIAddress.GetServerConfigsMethod = "POST"
 	gkillAPIAddress.UploadFilesMethod = "POST"

@@ -97,8 +97,8 @@ export function useRykvQueryEditorSideBar(options: {
     }
 
     function emits_current_query(): void {
-        const currentt_query = generate_query(query.value.query_id)
-        emits('updated_query', currentt_query)
+        const current_query = generate_query(query.value.query_id)
+        emits('updated_query', current_query)
     }
 
     function generate_query(query_id?: string): FindKyouQuery {

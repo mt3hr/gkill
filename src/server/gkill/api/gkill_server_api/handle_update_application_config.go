@@ -60,7 +60,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 	request.ApplicationConfig.Device = device
 
 	// ApplicationConfigを更新する
-	ok, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.UpdateApplicationConfig(r.Context(), &request.ApplicationConfig)
+	ok, err := g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.UpdateApplicationConfig(r.Context(), &request.ApplicationConfig)
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at update application config user user id = %s device = %s: %w", userID, device, err)

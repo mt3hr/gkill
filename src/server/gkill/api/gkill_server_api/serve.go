@@ -108,8 +108,8 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.HandleFunc(g.APIAddress.GetTagHistoriesByTagIDAddress, g.wrapAuthRepos(g.HandleGetTagHistoriesByTagID)).Methods(g.APIAddress.GetTagHistoriesByTagIDMethod)
 	router.HandleFunc(g.APIAddress.GetTextsByTargetIDAddress, g.wrapAuthRepos(g.HandleGetTextsByTargetID)).Methods(g.APIAddress.GetTextsByTargetIDMethod)
 	router.HandleFunc(g.APIAddress.GetNotificationsByTargetIDAddress, g.wrapAuthRepos(g.HandleGetNotificationsByTargetID)).Methods(g.APIAddress.GetNotificationsByTargetIDMethod)
-	router.HandleFunc(g.APIAddress.GetTextHistoriesByTextIDAddress, g.wrapAuthRepos(g.HandleGetTextHistoriesByTextID)).Methods(g.APIAddress.GetTextHistoriesByTagIDMethod)
-	router.HandleFunc(g.APIAddress.GetNotificationHistoriesByNotificationIDAddress, g.wrapAuthRepos(g.HandleGetNotificationHistoriesByNotificationID)).Methods(g.APIAddress.GetNotificationHistoriesByTagIDMethod)
+	router.HandleFunc(g.APIAddress.GetTextHistoriesByTextIDAddress, g.wrapAuthRepos(g.HandleGetTextHistoriesByTextID)).Methods(g.APIAddress.GetTextHistoriesByTextIDMethod)
+	router.HandleFunc(g.APIAddress.GetNotificationHistoriesByNotificationIDAddress, g.wrapAuthRepos(g.HandleGetNotificationHistoriesByNotificationID)).Methods(g.APIAddress.GetNotificationHistoriesByNotificationIDMethod)
 	router.HandleFunc(g.APIAddress.GetGPSLogAddress, g.wrapAuthRepos(g.HandleGetGPSLog)).Methods(g.APIAddress.GetGPSLogMethod)
 	// Share handlers
 	router.HandleFunc(g.APIAddress.AddShareKyouListInfoAddress, g.wrapAuthRepos(g.HandleAddShareKyouListInfo)).Methods(g.APIAddress.AddShareKyouListInfoMethod)
