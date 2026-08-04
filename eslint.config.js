@@ -29,6 +29,71 @@ export default [
     },
   },
   {
+    // CLAUDE.md「Naming convention (identifiers)」の機械化。
+    // 対象は src/client 本体のみ:
+    //  - .js/.mjs に当てるとルールがパーササービス要求でクラッシュするため files 必須
+    //  - __tests__ は camelCase 流儀なので対象外
+    //  - *.d.ts は外部API(CookieStore等)のミラーなので対象外
+    // 段階導入中: 違反消化が完了したら 'warn' を 'error' に上げる。
+    name: 'app/naming-convention',
+    files: ['src/client/**/*.{ts,mts,tsx,vue}'],
+    ignores: ['src/client/__tests__/**', '**/*.d.ts'],
+    rules: {
+      '@typescript-eslint/naming-convention': [
+        'warn',
+        // (1) import 名は外部モジュール由来なので対象外
+        { selector: 'import', format: null },
+        // (2) 型・クラス・interface・typeAlias・enum名・型パラメータ = PascalCase
+        { selector: 'typeLike', format: ['PascalCase'] },
+        // (3) enumメンバー = snake_case(GkillErrorCodes 等の実態)
+        { selector: 'enumMember', format: ['snake_case'] },
+        // (4) コンポーザブル useXxx / イベントコールバック onXxx = camelCase
+        //     ^use|on の直後が大文字のときだけ適用。use_reps 等の snake は既定則へ落ちる
+        {
+          selector: ['variable', 'function', 'parameter', 'classProperty', 'classMethod'],
+          filter: { regex: '^(use|on)[A-Z0-9]', match: true },
+          format: ['camelCase'],
+        },
+        // (5) CRUDリレーハンドラ束 xxxHandlers = camelCase
+        {
+          selector: ['variable', 'parameter', 'classProperty'],
+          filter: { regex: '[a-z0-9]Handlers$', match: true },
+          format: ['camelCase'],
+        },
+        // (6) オブジェクトリテラルキー・型プロパティは対象外
+        //     (mermaid/DOMPurify/GoogleMaps 等の外部APIキーと useFloatingDialog
+        //      オプションが大半のため)
+        {
+          selector: ['objectLiteralProperty', 'objectLiteralMethod', 'typeProperty', 'typeMethod'],
+          format: null,
+        },
+        // (7) 分割代入は元の名前を写すだけなので対象外
+        { selector: 'variable', modifiers: ['destructured'], format: null },
+        // (8) on_xxx(snake)は禁止 → onXxx(camelCase)へ寄せる
+        {
+          selector: ['variable', 'function', 'parameter', 'classProperty', 'classMethod'],
+          filter: { regex: '^on_', match: true },
+          format: null,
+          custom: { regex: '^on_', match: false },
+        },
+        // (9) モジュールトップレベル const は UPPER_CASE も許容(kftl-prefixes.ts 等)
+        {
+          selector: 'variable',
+          modifiers: ['const', 'global'],
+          format: ['snake_case', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+        },
+        // (10) 既定: snake_case(データクラスのプロパティ/メソッド・ローカル変数・通常関数)
+        {
+          selector: 'default',
+          format: ['snake_case'],
+          leadingUnderscore: 'allow',
+          trailingUnderscore: 'allow',
+        },
+      ],
+    },
+  },
+  {
     // E2Eテストで「静かに成功するテスト」が再発しないようにする。
     //
     // no-conditional-in-test:
