@@ -122,7 +122,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	}
 
 	// applicationConfigを取得
-	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.ApplicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

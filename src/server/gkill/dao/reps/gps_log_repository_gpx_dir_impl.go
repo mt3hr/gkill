@@ -76,8 +76,6 @@ func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTim
 		// ファイル名をリストアップ
 		dates := []string{}
 		TimeLayout := "20060102"
-		// startDate := startTime.Format(TimeLayout)
-		// endDate := endTime.Format(TimeLayout)
 
 		startDateMargin := startTime.Add(time.Hour * -24).Format(TimeLayout)
 		endDateMargin := endTime.Add(time.Hour * 24).Format(TimeLayout)

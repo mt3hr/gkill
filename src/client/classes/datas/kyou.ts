@@ -205,7 +205,6 @@ export class Kyou extends InfoBase {
 
     async load_typed_kmemo(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetKmemoRequest()
-        // req.rep_name = this.rep_name
         req.abort_controller = this.abort_controller
 
         req.id = this.id
@@ -249,7 +248,6 @@ export class Kyou extends InfoBase {
     async load_typed_kc(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetKCRequest()
         req.abort_controller = this.abort_controller
-        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_kc(req)
@@ -292,7 +290,6 @@ export class Kyou extends InfoBase {
     async load_typed_urlog(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetURLogRequest()
         req.abort_controller = this.abort_controller
-        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_urlog(req)
@@ -335,7 +332,6 @@ export class Kyou extends InfoBase {
     async load_typed_nlog(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetNlogRequest()
         req.abort_controller = this.abort_controller
-        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_nlog(req)
@@ -378,7 +374,6 @@ export class Kyou extends InfoBase {
     async load_typed_timeis(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetTimeisRequest()
         req.abort_controller = this.abort_controller
-        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_timeis(req)
@@ -421,7 +416,6 @@ export class Kyou extends InfoBase {
     async load_typed_mi(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetMiRequest()
         req.abort_controller = this.abort_controller
-        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_mi(req)
@@ -468,7 +462,6 @@ export class Kyou extends InfoBase {
     async load_typed_lantana(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetLantanaRequest()
         req.abort_controller = this.abort_controller
-        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_lantana(req)
@@ -511,7 +504,6 @@ export class Kyou extends InfoBase {
     async load_typed_idf_kyou(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetIDFKyouRequest()
         req.abort_controller = this.abort_controller
-        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_idf_kyou(req)
@@ -590,7 +582,6 @@ export class Kyou extends InfoBase {
     async load_typed_rekyou(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetReKyouRequest()
         req.abort_controller = this.abort_controller
-        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_rekyou(req)
@@ -694,12 +685,12 @@ export class Kyou extends InfoBase {
     // 最新のメタ情報を取得したうえで、typedデータ（typed_timeis等）も強制的に再取得する。
     // 表示時点でKyouを最新化しておき、終了操作などでの読み込み待ちをなくすために使う。
     async reload_with_typed_datas(query?: FindKyouQuery): Promise<Array<GkillError>> {
-        const errors = await this.reload(true, true, query)
+        const errors = await this.reload(true, query)
         this.is_typed_data_loaded = false
         return errors.concat(await this.load_typed_datas(query))
     }
 
-    async reload(content_only: boolean, is_updated_info: boolean, query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async reload(is_updated_info: boolean, query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetKyouRequest()
         req.abort_controller = this.abort_controller
         if (!is_updated_info) {
@@ -717,12 +708,6 @@ export class Kyou extends InfoBase {
         }
         this.is_deleted = latest_kyou.is_deleted
         this.id = latest_kyou.id
-        /*
-        if (!content_only) {
-            this.rep_name = latest_kyou.rep_name
-            this.related_time = latest_kyou.related_time
-        }
-        */
         this.update_time = latest_kyou.update_time
         this.data_type = latest_kyou.data_type
         this.create_time = latest_kyou.create_time

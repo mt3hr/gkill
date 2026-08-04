@@ -18,7 +18,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-const CURRENT_SCHEMA_VERSION_REKYOU_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_REKYOU_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type reKyouRepositorySQLite3Impl struct {
 	filename          string
@@ -1295,7 +1295,7 @@ FROM REKYOU
 
 func checkAndResolveDataSchemaReKyouRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO ReKyouRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_REKYOU"
-	currentSchemaVersion := CURRENT_SCHEMA_VERSION_REKYOU_REPOISITORY_SQLITE3IMPL_DAO
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_REKYOU_REPOSITORY_SQLITE3IMPL_DAO
 
 	// テーブルとインデックスがなければ作る
 	createTableSQL := `
