@@ -234,6 +234,77 @@ func (g *GkillRepositories) RefreshLatestDataRepositoryAddresses(ctx context.Con
 	return nil
 }
 
+// EnsureLatestDataRepositoryAddresses は最新版アドレスのキャッシュが空なら全件読み込む。
+//
+// 検索経路では find_filter が頭で RefreshLatestDataRepositoryAddresses を呼ぶので
+// ここは何もせずに返る。ReKyou/MiReKyouのターゲット解決は
+// 検索経路以外(TX中の一時rep・単体テストなど)からも呼ばれるため、
+// キャッシュが未取得のまま読まれて「ターゲットが全部消えている」ことにならないようにする。
+func (g *GkillRepositories) EnsureLatestDataRepositoryAddresses(ctx context.Context) error {
+	sync := g.syncState()
+	sync.latestDataAddressesMutex.RLock()
+	loaded := len(g.latestDataRepositoryAddresses) != 0
+	sync.latestDataAddressesMutex.RUnlock()
+	if loaded {
+		return nil
+	}
+	return g.RefreshLatestDataRepositoryAddresses(ctx)
+}
+
+// collectTargetDataRepositories はReKyou/MiReKyouのターゲットになりうる
+// 実データrepを集める。ReKyouもMiReKyouも含まない。
+//
+// collectNonReKyouRepositories と GetRepositoriesWithoutMiReKyouRep の
+// 共通部分。片方だけにrep種別を足す事故を防ぐため1箇所にまとめてある。
+// 「ReKyouの委譲先 == ここ + MiReKyou」という関係は
+// ワード委譲検索のメモ(target_resolution_memo.go)が前提にしている。
+func (g *GkillRepositories) collectTargetDataRepositories() Repositories {
+	if g == nil {
+		return nil
+	}
+	reps := Repositories{}
+	for _, rep := range g.KmemoReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.KCReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.URLogReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.NlogReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.TimeIsReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.MiReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.LantanaReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.IDFKyouReps {
+		reps = append(reps, rep)
+	}
+	for _, rep := range g.GitCommitLogReps {
+		reps = append(reps, rep)
+	}
+	return reps
+}
+
+// collectMiReKyouRepositories はMiReKyou repだけを集める。
+func (g *GkillRepositories) collectMiReKyouRepositories() Repositories {
+	if g == nil {
+		return nil
+	}
+	reps := Repositories{}
+	for _, rep := range g.MiReKyouReps.MiReKyouRepositories {
+		reps = append(reps, rep)
+	}
+	return reps
+}
+
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
 func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	ctx := context.Background()
