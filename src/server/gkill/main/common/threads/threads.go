@@ -1,3 +1,4 @@
+// Package threads はNumCPU有界セマフォによるゴルーチン数制限。
 package threads
 
 import (

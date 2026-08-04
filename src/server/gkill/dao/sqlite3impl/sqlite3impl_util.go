@@ -1,3 +1,4 @@
+// Package sqlite3impl はSQLite3接続とSQL組み立ての共通ユーティリティ。
 package sqlite3impl
 
 import (

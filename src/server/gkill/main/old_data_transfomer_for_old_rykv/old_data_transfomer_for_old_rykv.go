@@ -1,3 +1,4 @@
+// old_data_transfomer_for_old_rykv は旧rykvデータをgkill形式へ移行するレガシーツール。
 package main
 
 import (

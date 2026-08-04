@@ -1,3 +1,4 @@
+// Package gkill_options はCLIフラグとディレクトリ構成のグローバル設定。
 package gkill_options
 
 import (
