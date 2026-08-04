@@ -1971,10 +1971,12 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 
 	for idfTargetFileName := range idfTargetList {
 		lastMod := now
-		for _, existFileInfo := range existFileInfos {
-			if existFileInfo.Filename == idfTargetFileName {
-				lastMod = existFileInfo.Lastmod
-			}
+		// existFileInfos のキーは fileinfo.Filename と同じ値 (上の WalkDir で
+		// path をキーにも Filename にも入れている) なので、キーで直接引ける。
+		// idfTargetList は existFileInfos の部分集合であり、
+		// 全走査するとファイル数の二乗になる。初回IDFでは配下の全ファイルが対象になる。
+		if existFileInfo, ok := existFileInfos[idfTargetFileName]; ok {
+			lastMod = existFileInfo.Lastmod
 		}
 
 		trimedFileName := filepath.Clean(idfTargetFileName)
@@ -2027,13 +2029,167 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 		}
 	}
 
-	for _, idf := range idfKyous {
-		err := i.AddIDFKyouInfo(ctx, idf)
+	err = i.addIDFKyouInfos(ctx, idfKyous)
+	if err != nil {
+		err = fmt.Errorf("error at add idf kyou infos: %w", err)
+		return err
+	}
+	return nil
+}
+
+// idfBatchChunkSize は addIDFKyouInfos が1トランザクションにまとめる件数。
+// 初回IDFでは配下の全ファイルが対象になるので、全件を1トランザクションにすると
+// journal_mode=DELETE のジャーナルが肥大し、その間ずっと読み手を止めてしまう。
+const idfBatchChunkSize = 1000
+
+// addIDFKyouInfos は IDF() 専用の一括登録。
+//
+// AddIDFKyouInfo を1件ずつ呼ぶと、1件ごとに
+// 接続確立(PRAGMA)・PrepareContext・Lock/Unlock を払ううえ、
+// トランザクション無しの裸INSERTなので journal_mode=DELETE では
+// 1行ごとにジャーナル作成→fsync→削除が走る。
+// チャンクごとに1回だけまとめて払う。
+//
+// IDF() は登録済みを existing マップでスキップする冪等な作りなので、
+// チャンク単位でロールバックしても、次回の IDF() で埋め直される。
+func (i *idfKyouRepositorySQLite3Impl) addIDFKyouInfos(ctx context.Context, idfKyous []IDFKyou) error {
+	for chunk := range slices.Chunk(idfKyous, idfBatchChunkSize) {
+		err := i.addIDFKyouInfoChunk(ctx, chunk)
 		if err != nil {
-			err = fmt.Errorf("error at add idf kyou info %s: %w", idf.ID, err)
 			return err
 		}
 	}
+	return nil
+}
+
+// addIDFKyouInfoChunk は idfKyous を1トランザクションで書き込む。
+// 途中で失敗したらチャンクごと巻き戻すので、中途半端な行は残らない。
+func (i *idfKyouRepositorySQLite3Impl) addIDFKyouInfoChunk(ctx context.Context, idfKyous []IDFKyou) error {
+	if len(idfKyous) == 0 {
+		return nil
+	}
+
+	// ロックを取る前に済ませる。GetRepName はDBを触らない。
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		return err
+	}
+
+	i.m.Lock()
+	defer i.m.Unlock()
+
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			err := db.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		err = fmt.Errorf("error at begin: %w", err)
+		return err
+	}
+	isCommitted := false
+	defer func() {
+		if !isCommitted {
+			err := tx.Rollback()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback at add idf kyou infos", "error", fmt.Sprintf("%q", err))
+			}
+		}
+	}()
+
+	insertSQL := `
+INSERT INTO IDF (
+  IS_DELETED,
+  ID,
+  TARGET_REP_NAME,
+  TARGET_FILE,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL))
+	stmt, err := tx.PrepareContext(ctx, insertSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add idf sql: %w", err)
+		return err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	for _, idfKyou := range idfKyous {
+		// ファイルがこのid.dbと同じフォルダにある場合はTARGET_REP_NAMEを空にする。
+		// 空にすることでDVNFによるフォルダリネーム後も正しく解決できる。
+		targetRepNameForDB := idfKyou.RepName
+		if targetRepNameForDB == repName || targetRepNameForDB == "" {
+			targetRepNameForDB = ""
+		}
+
+		queryArgs := []any{
+			idfKyou.IsDeleted,
+			idfKyou.ID,
+			targetRepNameForDB,
+			idfKyou.TargetFile,
+			idfKyou.RelatedTime.Format(sqlite3impl.TimeLayout),
+			idfKyou.CreateTime.Format(sqlite3impl.TimeLayout),
+			idfKyou.CreateApp,
+			idfKyou.CreateDevice,
+			idfKyou.CreateUser,
+			idfKyou.UpdateTime.Format(sqlite3impl.TimeLayout),
+			idfKyou.UpdateApp,
+			idfKyou.UpdateDevice,
+			idfKyou.UpdateUser,
+		}
+
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+		if err != nil {
+			err = fmt.Errorf("error at insert in to idf %s: %w", idfKyou.ID, err)
+			return err
+		}
+	}
+
+	errCommit := tx.Commit()
+	if errCommit != nil {
+		err = fmt.Errorf("error at commit: %w", errCommit)
+		return err
+	}
+	isCommitted = true
 	return nil
 }
 
