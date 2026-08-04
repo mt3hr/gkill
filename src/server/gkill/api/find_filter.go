@@ -90,8 +90,9 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	slog.Log(ctx, gkill_log.Trace, "finish update latest data repository address")
 
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, 23 /* chのかず */)
-	gkillErrch := make(chan []*message.GkillError, 6 /* chのかず */)
+	// 容量は送信箇所数(現在6)以上であればよい(全送信がブロックしないためのバッファ)
+	errch := make(chan error, 23)
+	gkillErrch := make(chan []*message.GkillError, 6)
 	defer close(errch)
 	defer close(gkillErrch)
 
@@ -238,7 +239,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	if findQuery.UseTags {
 		gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
 		if err != nil {
-			err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
+			err = fmt.Errorf("error at get match hide tags when unchecked kyou: %w", err)
 			return nil, gkillErr, err
 		}
 		slog.Log(ctx, gkill_log.Trace, "finish getMatchHideTagsWhenUnckedKyou", "CurrentMatchKyous", findKyouContext.MatchKyousCurrent)
@@ -1020,8 +1021,6 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 					beforeMatchKyous[kyouID] = kyou
 				}
 			}
-			// tagNameMap[tagName] をそのまま引く。複製を作ると
-			// タグ数 × Kyou数 ぶんの map 挿入が余分に走る。
 			// tagNameMap[tagName] をそのまま引く。複製を作ると
 			// タグ数 × Kyou数 ぶんの map 挿入が余分に走る。
 			currentMatchKyous := tagNameMap[tagName]

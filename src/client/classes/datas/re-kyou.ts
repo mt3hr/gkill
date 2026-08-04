@@ -52,6 +52,7 @@ export class ReKyou extends InfoBase {
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
+        // ReKyouの付随データはリポスト先(集約側)が読むため、ここでは自前ロードせず履歴を消すだけでよい
         return this.clear_attached_histories()
     }
 

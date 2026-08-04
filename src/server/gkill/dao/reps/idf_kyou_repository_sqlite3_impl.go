@@ -57,14 +57,15 @@ type fileinfo struct {
 	Lastmod  time.Time
 }
 
-// NewIDFDirRep .
-// id.dbと関連づいたディレクトリによるrykv.Repの実装
-// dir: ディレクトリ
-// idBDFile: ディレクトリと関連付けられたid.DBファイル。（通常は dir/.kyou/id.db を指定する）
+// NewIDFDirRep はID管理DBと関連づいたディレクトリによるIDFKyouRepositoryの実装を返す。
+// userID: リポジトリ所有ユーザ。派生キャッシュ(サムネ/動画/ZIP)のユーザ別分離に使う
+// dir: 管理対象のディレクトリ
+// dbFilename: ディレクトリと関連付けられたID管理DBファイル（通常は dir/.gkill/gkill_id.db。gkill_dao_manager.goが組み立てる）
+// fullConnect: trueの場合DB接続を保持し続ける
 // r: ファイルサーバーをハンドルするrouter。 /files/filepath.Base(dir)/ でハンドルされる
-// autoIDF: trueにするとGetAllKyous()が呼び出されるたびにidfする
+// autoIDF: trueにするとUpdateCacheのたびにIDF()（未採番ファイルへのID割り当て）を実行する
 // idfIgnore: autoIDFが有効なとき、idfの対象にしないファイル名パターン
-// idfRecurse: autoIDFが有効なとき、サブディレクトリなどに対してもidfをする場合はtrueを指定する
+// repositoriesRef: 全リポジトリ集約への参照（関連データ解決に使う）
 func NewIDFDirRep(ctx context.Context, userID string, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
 	filename := dbFilename
 
@@ -2765,7 +2766,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		return false, nil, err
 	}
 
-	// スキーマのージョンを取得する
+	// スキーマのバージョンを取得する
 	selectSchemaVersionSQL := `
 SELECT 
   VALUE

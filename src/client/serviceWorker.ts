@@ -30,7 +30,7 @@ registerRoute(
   new CacheFirst({ cacheName: 'gkill-lazy-chunk-cache' }),
 )
 
-// SPA の app-shell (index.html) フォールバック。ただし / と /api/ は除外
+// SPA の app-shell (index.html) フォールバック。ただし / と /api/ /files/ /zip_cache/ /resources/manual/ は除外
 registerRoute(
   new NavigationRoute(createHandlerBoundToURL('index.html'), {
     denylist: [

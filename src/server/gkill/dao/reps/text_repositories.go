@@ -237,7 +237,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get text histories: %w", e)
+			err = fmt.Errorf("error at get texts by target id: %w", e)
 			existErr = true
 		default:
 			break errloop

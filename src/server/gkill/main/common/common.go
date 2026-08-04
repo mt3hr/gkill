@@ -561,7 +561,7 @@ func GenerateVideoCache(ctx context.Context, userID string) error {
 	}
 	err = repositories.IDFKyouReps.GenerateVideoCache(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at generate thumb cache: %w", err)
+		err = fmt.Errorf("error at generate video cache: %w", err)
 		return err
 	}
 	return nil
