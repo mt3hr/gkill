@@ -222,7 +222,7 @@ func TestWeekOfDays_Values(t *testing.T) {
 		{MonDay, 1},
 		{TuesDay, 2},
 		{WednesDay, 3},
-		{ThrusDay, 4},
+		{ThursDay, 4},
 		{FriDay, 5},
 		{SaturDay, 6},
 	}
@@ -235,7 +235,7 @@ func TestWeekOfDays_Values(t *testing.T) {
 }
 
 func TestWeekOfDays_AllDaysCovered(t *testing.T) {
-	days := []WeekOfDays{SunDay, MonDay, TuesDay, WednesDay, ThrusDay, FriDay, SaturDay}
+	days := []WeekOfDays{SunDay, MonDay, TuesDay, WednesDay, ThursDay, FriDay, SaturDay}
 
 	if len(days) != 7 {
 		t.Fatalf("Expected 7 days, got %d", len(days))
