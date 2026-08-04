@@ -85,24 +85,26 @@ CREATE TABLE IF NOT EXISTS ` + sqlite3impl.QuoteIdent(latestDataRepositoryAddres
 		return nil, err
 	}
 
-	indexSQL := "CREATE INDEX IF NOT EXISTS " + sqlite3impl.QuoteIdent("INDEX_"+latestDataRepositoryAddress.tableName) + " ON " + sqlite3impl.QuoteIdent(latestDataRepositoryAddress.tableName) + " (TARGET_ID);"
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
-	indexStmt, err := latestDataRepositoryAddress.db.PrepareContext(ctx, indexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create %s index statement: %w", latestDataRepositoryAddress.tableName, err)
+	// TARGET_ID には索引を張らない。
+	// この表は rowid表 で PRIMARY KEY(TARGET_ID) を持つため、
+	// SQLiteが sqlite_autoindex_..._1 を自動生成しており完全に重複する。
+	// 以前はここで (TARGET_ID) を張っており、書き込み時のB-tree更新を二重に払っていた。
+
+	// LATEST_DATA_REPOSITORY_NAME はrep単位の取得・削除で引く。
+	// GetLatestDataRepositoryAddressesByRepName は検索のたびにrep数ぶんループで呼ばれる。
+	repNameIndexSQL := "CREATE INDEX IF NOT EXISTS " +
+		sqlite3impl.QuoteIdent("INDEX_"+latestDataRepositoryAddress.tableName+"_REP_NAME") +
+		" ON " + sqlite3impl.QuoteIdent(latestDataRepositoryAddress.tableName) +
+		" (LATEST_DATA_REPOSITORY_NAME);"
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", repNameIndexSQL))
+	if _, err := latestDataRepositoryAddress.db.ExecContext(ctx, repNameIndexSQL); err != nil {
+		err = fmt.Errorf("error at create %s rep name index: %w", latestDataRepositoryAddress.tableName, err)
 		return nil, err
 	}
-	defer func() {
-		err := indexStmt.Close()
-		if err != nil {
-			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-		}
-	}()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
-	_, err = indexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create %s index: %w", latestDataRepositoryAddress.tableName, err)
+	// 差分同期(GetLatestDataRepositoryAddressByUpdateTimeAfter)が
+	// この列で絞る。LIMIT が実質無制限なので索引が無いと全表スキャンになる。
+	if err := sqlite3impl.EnsureUnixColumnIndex(ctx, latestDataRepositoryAddress.db, latestDataRepositoryAddress.tableName, "LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX"); err != nil {
 		return nil, err
 	}
 

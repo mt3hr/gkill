@@ -105,7 +105,21 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	// 時刻範囲検索と並び替えのための式インデックス。
 	// GenerateFindSQLCommon が unixepoch(列) で比較・整列するので、
 	// 式そのものに索引を張らないと全走査になる。
-	if err := sqlite3impl.EnsureUnixepochIndex(ctx, db, "MI", "CREATE_TIME"); err != nil {
+	//
+	// MIの検索は5射影のUNIONで、射影ごとに別の時刻列を
+	// relatedTimeColumnName として使う。CREATE_TIME だけ張っていたので
+	// 残り3本のUNIONが全走査になっていた。
+	if err := sqlite3impl.EnsureUnixepochIndex(ctx, db, "MI", "CREATE_TIME", "LIMIT_TIME", "ESTIMATE_START_TIME", "ESTIMATE_END_TIME"); err != nil {
+		return nil, err
+	}
+
+	// mi板の絞り込みで使う。
+	// IS_CHECKED は NOT NULL 列に対する IS NOT NULL としてしか使われず
+	// 常に真＝選択性ゼロなので、単独索引は張らない。
+	boardNameIndexSQL := `CREATE INDEX IF NOT EXISTS INDEX_MI_BOARD_NAME ON MI (BOARD_NAME);`
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", boardNameIndexSQL))
+	if _, err := db.ExecContext(ctx, boardNameIndexSQL); err != nil {
+		err = fmt.Errorf("error at create MI board name index to %s: %w", filename, err)
 		return nil, err
 	}
 
