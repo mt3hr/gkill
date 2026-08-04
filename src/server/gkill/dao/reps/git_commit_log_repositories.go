@@ -16,6 +16,20 @@ import (
 type GitCommitLogRepositories []GitCommitLogRepository
 
 func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	return g.findKyous(ctx, query, true)
+}
+
+// FindKyousSequential は各リポジトリを並列化せずに順に検索します。
+//
+// threads.Goのスロットを保持したままこの集約を呼ぶ場面
+// （キャッシュ実装がビルド中フォールバックとして呼ぶときなど）で使ってください。
+// threads.Goはプールのスロットを呼び出し元で同期取得するため、
+// スロットを保持したまま子のスロットを待つ入れ子を作るとプールが枯渇して止まります。
+func (g GitCommitLogRepositories) FindKyousSequential(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	return g.findKyous(ctx, query, false)
+}
+
+func (g GitCommitLogRepositories) findKyous(ctx context.Context, query *find.FindQuery, parallel bool) (map[string][]Kyou, error) {
 	matchKyous := map[string][]Kyou{}
 	existErr := false
 	var err error
@@ -25,17 +39,22 @@ func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.Fin
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		findInRep := func() {
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchKyousInRep
-		})
+		}
+		if !parallel {
+			findInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, findInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -338,6 +357,16 @@ errloop:
 }
 
 func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]GitCommitLog, error) {
+	return g.findGitCommitLog(ctx, query, true)
+}
+
+// FindGitCommitLogSequential は各リポジトリを並列化せずに順に検索します。
+// threads.Goのスロットを保持したまま呼ぶ場面（キャッシュ実装のビルド中フォールバック）で使ってください。
+func (g GitCommitLogRepositories) FindGitCommitLogSequential(ctx context.Context, query *find.FindQuery) ([]GitCommitLog, error) {
+	return g.findGitCommitLog(ctx, query, false)
+}
+
+func (g GitCommitLogRepositories) findGitCommitLog(ctx context.Context, query *find.FindQuery, parallel bool) ([]GitCommitLog, error) {
 	matchGitCommitLogs := map[string]GitCommitLog{}
 	existErr := false
 	var err error
@@ -347,17 +376,22 @@ func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *f
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		findInRep := func() {
 			matchGitCommitLogsInRep, err := rep.FindGitCommitLog(ctx, query)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchGitCommitLogsInRep
-		})
+		}
+		if !parallel {
+			findInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, findInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -486,6 +520,16 @@ loop:
 }
 
 func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
+	return g.getGitCommitLog(ctx, id, updateTime, true)
+}
+
+// GetGitCommitLogSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したまま呼ぶ場面（キャッシュ実装のビルド中フォールバック）で使ってください。
+func (g GitCommitLogRepositories) GetGitCommitLogSequential(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
+	return g.getGitCommitLog(ctx, id, updateTime, false)
+}
+
+func (g GitCommitLogRepositories) getGitCommitLog(ctx context.Context, id string, updateTime *time.Time, parallel bool) (*GitCommitLog, error) {
 	var matchGitCommitLog *GitCommitLog
 	existErr := false
 	var err error
@@ -495,17 +539,22 @@ func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range g {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		getInRep := func() {
 			matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchGitCommitLogInRep
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}

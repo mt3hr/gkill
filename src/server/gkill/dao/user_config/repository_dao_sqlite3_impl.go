@@ -905,15 +905,12 @@ GROUP BY TYPE, DEVICE
 					&count,
 				)
 				if err != nil {
-					slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-					// err = fmt.Errorf("error at get use to write repository count: %w", err)
-					err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるようにしてください。対象：「%s」「%s」「%d」", targetDevice, repType, count)
+					// Scan失敗は設定内容の問題ではないため、件数違反用メッセージに差し替えず元エラーを返す
+					err = fmt.Errorf("error at get use to write repository count: %w", err)
 					return err
 				}
 
 				if count != 1 {
-					// err = fmt.Errorf("error at check use to write repository count")
-					// err = fmt.Errorf("rep type %s use to write rep count is %d: %w", repType, count, err)
 					err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるようにしてください。対象：「%s」「%s」「%d」", targetDevice, repType, count)
 					return err
 				}
