@@ -1,4 +1,4 @@
-<!-- PredicateCard.vue -->
+<!-- edit-dnote-card.vue: Dnote述語カード編集 -->
 <template>
     <v-card variant="flat" class="predicate-card">
         <v-select v-model="model_value!.type" :items="predicate_types" :label="i18n.global.t('DNOTE_PREDICATE_TITLE')"
