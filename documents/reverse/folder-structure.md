@@ -315,12 +315,12 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（86項目）
+│   ├── glossary.md                   # 用語集（90項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（82件）
+│   ├── usecase.md                    # ユースケース一覧（84件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
-│   ├── sequence-diagrams.md          # シーケンス図（28本: 正常系23 + 異常系5）
+│   ├── sequence-diagrams.md          # シーケンス図（29本: 正常系24 + 異常系5）
 │   ├── activity-diagrams.md          # アクティビティ図
 │   ├── state-machines.md             # ステートマシン図
 │   ├── screen-transition.md          # 画面遷移図

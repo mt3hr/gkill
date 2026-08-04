@@ -2,7 +2,7 @@
 
 ## 概要
 
-Vue 3 フロントエンドのテスト。ユニットテスト（808テスト宣言、64ファイル）と E2E テスト（195テスト宣言、34 specファイル）の合計1,003テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
+Vue 3 フロントエンドのテスト。ユニットテスト（827テスト宣言、69ファイル）と E2E テスト（195テスト宣言、34 specファイル）の合計1022テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
 
 ## テストフレームワーク
 
@@ -13,13 +13,13 @@ Vue 3 フロントエンドのテスト。ユニットテスト（808テスト�
 
 ```
 src/client/__tests__/
-├── unit/                    # ユニットテスト (808テスト宣言, 64ファイル)
+├── unit/                    # ユニットテスト (827テスト宣言, 69ファイル)
 │   ├── api/                 #   GkillAPI クライアント
 │   ├── classes/             #   ユーティリティクラス (11ファイル, markdown-to-html / mermaid-render / use-dialog-history-stack / foldable-struct-move / kyou-content-text 含む)
-│   ├── datas/               #   データモデル (27ファイル, dashboard-config / mi-re-kyou / append-not-found-tags 含む)
-│   ├── dnote/               #   D-note モジュール (6ファイル, trend-aggregator.test.ts 含む)
+│   ├── datas/               #   データモデル (28ファイル, dashboard-config / mi-re-kyou / append-not-found-tags 含む)
+│   ├── dnote/               #   D-note モジュール (7ファイル, trend-aggregator.test.ts 含む)
 │   ├── kftl/                #   KFTL パーサ (5ファイル)
-│   ├── composables/         #   Vue Composable (10ファイル, idf-kyou-view / re-kyou-view / mi-re-kyou-view / save-clipboard-to-file-dialog 含む)
+│   ├── composables/         #   Vue Composable (13ファイル, idf-kyou-view / re-kyou-view / mi-re-kyou-view / save-clipboard-to-file-dialog 含む)
 │   ├── router.test.ts       #   ルーター (13ルート, dashboard 含む)
 │   ├── i18n-completeness.test.ts  #  i18n 完全性 (7ロケール)
 │   └── service-worker.test.ts     #  Service Worker
@@ -36,15 +36,15 @@ src/client/__tests__/
 
 ## テスト内容
 
-### ユニットテスト (808テスト宣言, 64ファイル)
+### ユニットテスト（827テスト宣言、69ファイル）
 
 | カテゴリ | テスト数（概算） | 内容 |
 |---------|----------------|------|
 | GkillAPI | 多数 | 全11データ型の CRUD、設定、共有、セッション管理 |
-| データモデル | 27ファイル | 各データ型の生成・代入・シリアライゼーション（DashboardConfig / MiReKyou 含む）+ タグ付与の横断検証 |
-| D-note | 6ファイル | 述語関数、キー取得、集計ターゲット、アグリゲータ、トレンドグラフ集計（trend-aggregator） |
+| データモデル | 28ファイル | 各データ型の生成・代入・シリアライゼーション（DashboardConfig / MiReKyou 含む）+ タグ付与の横断検証 |
+| D-note | 7ファイル | 述語関数、キー取得、集計ターゲット、アグリゲータ、トレンドグラフ集計（trend-aggregator） |
 | KFTL パーサ | 5ファイル | 構文解析、型判定、リクエスト生成 |
-| Composable | 10ファイル | 追加/編集ビュー、コンテキストメニュー、削除確認、クリップボード保存、ページ/クエリ Composable、IDFKyouビュー（Markdown表示）、ReKyou / MiReKyou ビュー |
+| Composable | 13ファイル | 追加/編集ビュー、コンテキストメニュー、削除確認、クリップボード保存、ページ/クエリ Composable、IDFKyouビュー（Markdown表示）、ReKyou / MiReKyou ビュー |
 | ルーター | 1ファイル | 13ルートの定義と遷移（dashboard 含む） |
 | i18n | 1ファイル | 7ロケールのキー完全性 |
 | Service Worker | 1ファイル | Workbox プリキャッシュ、POST キャッシュ、プッシュ通知、`/zip_cache/.*` denylist |

@@ -14,7 +14,6 @@ dao/
 ├── config_da_os.go              # OS 別設定パス定義
 ├── account/                     # ユーザアカウント
 ├── account_state/               # ログインセッション・ファイルアップロード履歴
-├── cache/                       # キャッシュ管理（空、reps/cache/ に実体あり）
 ├── gkill_notification/          # 通知対象管理
 ├── hide_files/                  # ファイル隠蔽（OS 別実装）
 ├── reps/                        # メインリポジトリ → reps/README.md 参照
@@ -136,7 +135,7 @@ dao/
 | `repository_dao.go` | `RepositoryDAO` インタフェース |
 | `repository_dao_sqlite3_impl.go` | SQLite3 実装 |
 
-### `reps/`（127ファイル。テストを含めると152）— メインリポジトリ
+### `reps/`（127ファイル。テストを含めると153）— メインリポジトリ
 
 全 Kyou データ型のリポジトリ。詳細は [reps/README.md](reps/README.md) を参照。
 

@@ -11,8 +11,8 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage` |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
-| `error_codes.go` | エラーコード定数（388 定数: `ERR000001` 〜 `ERR000389`、`ERR000243` は欠番） |
-| `message_codes.go` | メッセージコード定数（80 定数: `MSG000001` 〜 `MSG000080`） |
+| `error_codes.go` | エラーコード定数（400 定数: `ERR000001` 〜 `ERR000401`、`ERR000243` は欠番） |
+| `message_codes.go` | メッセージコード定数（85 定数: `MSG000001` 〜 `MSG000085`） |
 | `message_test.go` | コード形式・空文字チェックのテスト |
 
 ## レスポンス構造体
@@ -29,7 +29,7 @@ type GkillMessage struct {
 }
 ```
 
-## エラーコード体系（388 コード）
+## エラーコード体系（400 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -37,9 +37,9 @@ type GkillMessage struct {
 | `ERR000023` 〜 `ERR000095` | CRUD 操作（Add, Update, Get, NotFound — 全データ型） |
 | `ERR000098` 〜 `ERR000199` | 複合操作（共有リスト、MiSharedTasks、GPSLog 等） |
 | `ERR000203` 〜 `ERR000280` | 拡張機能（KFTL、通知、構造体、Danote） |
-| `ERR000300` 〜 `ERR000389` | 新機能（KC 数値記録、トランザクション、ZIP ブラウズ、レートリミット、プラグイン、IDF パス解決） |
+| `ERR000300` 〜 `ERR000401` | 新機能（KC 数値記録、トランザクション、ZIP ブラウズ、レートリミット、プラグイン、IDF パス解決） |
 
-## メッセージコード体系（80 コード）
+## メッセージコード体系（85 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -47,7 +47,7 @@ type GkillMessage struct {
 | `MSG000005` 〜 `MSG000024` | CRUD 成功（Add, Update 系） |
 | `MSG000025` 〜 `MSG000040` | Get 操作成功 |
 | `MSG000041` 〜 `MSG000074` | 設定・アップロード・KC・トランザクション |
-| `MSG000075` 〜 `MSG000080` | KFTL、MCP、キャッシュ、通知、ZIP ブラウズ |
+| `MSG000075` 〜 `MSG000085` | KFTL、MCP、キャッシュ、通知、ZIP ブラウズ |
 
 ## HTTP ステータスコードとの関係
 

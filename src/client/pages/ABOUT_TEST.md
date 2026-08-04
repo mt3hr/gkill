@@ -124,7 +124,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/dialog-history.spec.ts` | ダイアログ履歴不変条件（×/Escape/ブラウザバックで閉じてもバックスタックに使用済みエントリが残らない、複数ダイアログを開いたまま画面遷移可能） |
 | `src/client/__tests__/e2e/edit-readonly-loading.spec.ts` | Edit系ダイアログの Loading 中 readonly 化とロード完了後の編集可能復帰（API 遅延注入で検証） |
 
-### Composable ユニットテスト（10ファイル）
+### Composable ユニットテスト（13ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -138,6 +138,9 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/unit/composables/idf-kyou-view.test.ts` | IDFKyou ビュー Composable（Markdown リッチ表示、拡張子判定、相対リンクの対象記録解決） |
 | `src/client/__tests__/unit/composables/re-kyou-view.test.ts` | ReKyou ビュー Composable（元の記録の解決、リポスト自身のメニュー表示） |
 | `src/client/__tests__/unit/composables/mi-re-kyou-view.test.ts` | MiReKyou ビュー Composable（既存記録のタスク化。タイトルを持たず target_id 先の内容を表示する） |
+| `src/client/__tests__/unit/composables/gps-log-map.test.ts` | GPSログ地図ビュー Composable |
+| `src/client/__tests__/unit/composables/kyou-count-calendar.test.ts` | Kyou件数カレンダー Composable |
+| `src/client/__tests__/unit/composables/overlay-and-urlog-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
 
 ### ルーターテスト
 

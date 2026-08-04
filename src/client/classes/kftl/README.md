@@ -6,6 +6,12 @@ KFTL（gkill 独自テキストフォーマット）のクライアント側パ�
 フロントエンドの `/kftl` ページ（KFTL エディタ）で使用される。
 サーバ側の対応実装: `src/server/gkill/api/kftl/`
 
+日本語プレフィックス（`。` `ーー` `ーみ` 等、i18n キー経由）に加えて、非日本語ロケール向けの
+**ASCII プレフィックス**（`#` `--` `/mi` `/mood` `/expense` `/num` `/url` `/start` `/end` `/timeis`
+`/end?` `/endt` `/endt?` `,` `,,` `?` `!`）も受け付ける。ASCII 定数と判定・除去ヘルパーは
+`kftl-prefixes.ts` に集約されており、Go 側 `kftl_factory.go` の `splitter*Ascii` 定数と対応する
+（対応表はサーバ側 [README](../../../server/gkill/api/kftl/README.md) を参照）。
+
 ## ディレクトリ構造
 
 ```

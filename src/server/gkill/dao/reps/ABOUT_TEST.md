@@ -34,7 +34,15 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 |---------|-----------|
 | `cached_and_temp_test.go` | キャッシュ層 / 一時リポジトリ層の動作検証（MiReKyou のキャッシュ再構築・TX分離を含む）。各 `TestCached*_AddAndGet` は **Add した直後に Get で取り直せること**を確認する（後述） |
 | `re_kyou_granular_cache_test.go` | ReKyou のグラニュラーキャッシュ動作検証 |
+| `re_kyou_cached_deadlock_test.go` | 共有RWMutexの再帰RLockによる検索恒久ハングの回帰テスト |
+| `git_commit_log_cached_nested_pool_test.go` | gitキャッシュビルド中フォールバックのネスト並列プール枯渇と isCacheBuilding データ競合の回帰テスト |
 | `gkill_repositories_test.go` | 最新版アドレスキャッシュの排他制御（後述） |
+| `target_resolution_memo_test.go` | ReKyou/MiReKyou ワード委譲検索のターゲット解決メモ |
+| `db_file_change_detector_test.go` | DBファイル変更検出（キャッシュ無効化トリガ） |
+| `derived_cache_path_test.go` | 派生キャッシュ（サムネ/動画/ZIP）のユーザ別パス解決 |
+| `idf_kyou_repository_batch_test.go` | IDFKyou のバッチ処理 |
+| `ur_log_cache_thumbnail_test.go` | URLog サムネイルキャッシュ |
+| `shared_find_query_mutation_test.go` | 共有 FindQuery の変更検証 |
 | `plugin_repository_impl_test.go` | プラグインのサブプロセス管理（後述） |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
 | `cache/latest_data_repository_address_dao_sqlite3_impl_test.go` | キャッシュアドレス DAO |

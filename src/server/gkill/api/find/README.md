@@ -9,7 +9,7 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 
 | ファイル | 説明 |
 |---------|------|
-| `find_query.go` | `FindQuery` 構造体 — 62 フィールドの検索条件 |
+| `find_query.go` | `FindQuery` 構造体 — 55 フィールドの検索条件 |
 | `mi_check_state.go` | `MiCheckState` 列挙型 — Mi タスクのチェック状態フィルタ |
 | `mi_sort_type.go` | `MiSortType` 列挙型 — Mi タスクのソート順 |
 | `week_of_days.go` | `WeekOfDays` 列挙型 — 曜日フィルタ |
@@ -17,7 +17,7 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 
 ## FindQuery 構造体
 
-62 フィールドを持つ検索条件構造体。フィルタグループは `UseXxx: true` フラグで有効化する設計。
+55 フィールドを持つ検索条件構造体。フィルタグループは `UseXxx: true` フラグで有効化する設計。
 
 ### フィルタグループ
 
