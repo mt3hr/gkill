@@ -323,7 +323,8 @@ func (k KCRepositories) Close(ctx context.Context) error {
 	for _, rep := range reps {
 		rep := rep
 		err := threads.Go(ctx, wg, func() {
-			err = rep.Close(ctx)
+			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
+			err := rep.Close(ctx)
 			if err != nil {
 				errch <- err
 				return
