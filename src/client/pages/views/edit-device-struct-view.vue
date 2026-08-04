@@ -33,7 +33,7 @@
                 </v-col>
             </v-row>
         </v-card-action>
-        <AddNewFoloderDialog :application_config="application_config" :gkill_api="gkill_api"
+        <AddNewFolderDialog :application_config="application_config" :gkill_api="gkill_api"
             @requested_add_new_folder="add_folder_struct_element"
             v-on="errorMessageRelayHandlers"
             ref="add_new_folder_dialog" />
@@ -70,7 +70,7 @@ import type { EditDeviceStructViewProps } from './edit-device-struct-view-props'
 import AddNewDeviceStructElementDialog from '../dialogs/add-new-device-struct-element-dialog.vue'
 import EditDeviceStructElementDialog from '../dialogs/edit-device-struct-element-dialog.vue'
 import FoldableStruct from './foldable-struct.vue'
-import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
+import AddNewFolderDialog from '../dialogs/add-new-folder-dialog.vue'
 import DeviceStructContextMenu from './device-struct-context-menu.vue'
 import ConfirmDeleteDeviceStructDialog from '../dialogs/confirm-delete-device-struct-dialog.vue'
 import SelectMoveTargetFolderDialog from '../dialogs/select-move-target-folder-dialog.vue'
