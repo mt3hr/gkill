@@ -1569,7 +1569,7 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		return false, nil, err
 	}
 
-	// スキーマのージョンを取得する
+	// スキーマのバージョンを取得する
 	selectSchemaVersionSQL := `
 SELECT 
   VALUE

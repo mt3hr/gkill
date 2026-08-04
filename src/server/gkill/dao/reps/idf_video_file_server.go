@@ -35,9 +35,10 @@ var (
 )
 
 // NewVideoFileServer serves files under dir.
-// If the target is a video and the codec is not browser-friendly (e.g. HEVC),
-// it generates a cached MP4 (H.264 + AAC) capped at 720p and serves it.
-// Other requests are delegated to base.
+// If the target is a video, it generates a cached MP4 (H.264 + AAC) capped at
+// 720p and serves it. Codec probing is currently disabled
+// (needsCompatVideoByProbe always returns true), so ALL videos are transcoded.
+// Requires both ffmpeg and ffprobe on PATH; other requests are delegated to base.
 func NewVideoFileServer(userID string, dir string, base http.Handler) http.Handler {
 	dir = filepath.Clean(os.ExpandEnv(dir))
 	cacheDir := derivedCacheDirForUser("video_cache", userID, dir)
@@ -170,66 +171,11 @@ func (v *IDFVideoFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // needsCompatVideoByProbe returns true if we should transcode to a browser-friendly MP4.
-// Policy: only H.264 is considered "safe"; anything else -> compat.
-// func needsCompatVideoByProbe(ctx context.Context, inputPath string) (bool, error) {
+// コーデック判定は現在無効化しており常にtrueを返す（全動画を互換MP4に変換する）。
+// H.264のみ変換をスキップする旧probe実装はgit履歴を参照。
 func needsCompatVideoByProbe(_ context.Context, _ string) (bool, error) {
 	return true, nil
-	/*
-		probeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-		defer cancel()
-
-		codec, err := ffprobeVideoCodec(probeCtx, inputPath)
-		if err != nil {
-			return false, err
-		}
-		switch strings.ToLower(codec) {
-		case "h264", "avc1":
-			return false, nil
-		default:
-			return true, nil
-		}
-	*/
 }
-
-/*
-// ffprobeVideoCodec extracts the first video codec_name.
-func ffprobeVideoCodec(ctx context.Context, inputPath string) (string, error) {
-	// ffprobe -v error -print_format json -show_streams <input>
-	cmd := exec.CommandContext(ctx, "ffprobe",
-		"-v", "error",
-		"-print_format", "json",
-		"-show_streams",
-		inputPath,
-	)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &out
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("ffprobe failed: %w: %s", err, out.String())
-	}
-	// Minimal parse without new dependencies: look for \"codec_type\":\"video\" then \"codec_name\":\"...\".
-	// This is robust enough for ffprobe output and avoids pulling in a struct here.
-	// (thumb server already parses duration via json; here we keep it lean.)
-	s := out.String()
-	idx := strings.Index(s, "\"codec_type\":\"video\"")
-	if idx < 0 {
-		return "", fmt.Errorf("ffprobe: no video stream")
-	}
-	// find codec_name after that
-	seg := s[idx:]
-	cn := "\"codec_name\":\""
-	j := strings.Index(seg, cn)
-	if j < 0 {
-		return "", fmt.Errorf("ffprobe: codec_name missing")
-	}
-	seg2 := seg[j+len(cn):]
-	k := strings.Index(seg2, "\"")
-	if k < 0 {
-		return "", fmt.Errorf("ffprobe: codec_name parse failed")
-	}
-	return seg2[:k], nil
-}
-*/
 
 func (v *IDFVideoFileServer) compatPathFor(rel string, st os.FileInfo) (string, error) {
 	hh := sha1.Sum([]byte(rel))
@@ -407,31 +353,6 @@ func encoderWorks(ctx context.Context, encoder string) (bool, error) {
 	return ok, err
 }
 
-/*
-func insertAfter(args []string, needle []string, add []string) []string {
-	if len(needle) == 0 || len(add) == 0 {
-		return args
-	}
-	for i := 0; i+len(needle) <= len(args); i++ {
-		match := true
-		for j := 0; j < len(needle); j++ {
-			if args[i+j] != needle[j] {
-				match = false
-				break
-			}
-		}
-		if match {
-			out := make([]string, 0, len(args)+len(add))
-			out = append(out, args[:i+len(needle)]...)
-			out = append(out, add...)
-			out = append(out, args[i+len(needle):]...)
-			return out
-		}
-	}
-	return args
-}
-*/
-
 func extractArgValue(args []string, key string) string {
 	for i := range len(args) - 1 {
 		if args[i] == key {
@@ -501,17 +422,6 @@ func chooseCandidateEncoders(c ffmpegCaps) []string {
 		return out
 	}
 }
-
-/*
-func chooseVerifiedH264Encoder(ctx context.Context, c ffmpegCaps) string {
-	list := listVerifiedH264Encoders(ctx, c)
-	if len(list) > 0 {
-		return list[0]
-	}
-	// 最後の手段：エンコーダ名指定なし（ffmpegの既定に任せる）
-	return ""
-}
-*/
 
 // listHWDecodeChoicesForFile returns multiple working HW decode choices in priority order.
 // This is used for runtime fallback when a chosen HW decode works for "one frame" but fails
@@ -642,84 +552,6 @@ type hwDecodeChoice struct {
 	hw        string
 	extraArgs []string
 }
-
-/*
-// Choose a hardware decode method for this OS/file.
-// Important: this is ONLY about decode. Encode selection is handled separately.
-func chooseHWDecodeForFile(ctx context.Context, c ffmpegCaps, srcPath string) hwDecodeChoice {
-	switch runtime.GOOS {
-	case "windows":
-		// NVIDIA: prefer CUDA. If it doesn't work, fall back to "auto" (or no hw).
-		if c.HasHWAccelCUDA {
-			if ok, _ := hwaccelWorksForFile(ctx, "cuda", []string{"-hwaccel_output_format", "cuda"}, srcPath); ok {
-				return hwDecodeChoice{hw: "cuda", extraArgs: []string{"-hwaccel_output_format", "cuda"}}
-			}
-		}
-		if c.HasHWAccelD3D11VA {
-			if ok, _ := hwaccelWorksForFile(ctx, "d3d11va", nil, srcPath); ok {
-				return hwDecodeChoice{hw: "d3d11va"}
-			}
-		}
-		if c.HasHWAccelDXVA2 {
-			if ok, _ := hwaccelWorksForFile(ctx, "dxva2", nil, srcPath); ok {
-				return hwDecodeChoice{hw: "dxva2"}
-			}
-		}
-		if c.HasHWAccelQSV {
-			if ok, _ := hwaccelWorksForFile(ctx, "qsv", []string{"-hwaccel_output_format", "qsv"}, srcPath); ok {
-				return hwDecodeChoice{hw: "qsv", extraArgs: []string{"-hwaccel_output_format", "qsv"}}
-			}
-		}
-		if c.HasHWAccelAuto {
-			return hwDecodeChoice{hw: "auto"}
-		}
-		return hwDecodeChoice{}
-	case "android":
-		if c.HasHWAccelMediaCodec {
-			if ok, _ := hwaccelWorksForFile(ctx, "mediacodec", nil, srcPath); ok {
-				return hwDecodeChoice{hw: "mediacodec"}
-			}
-		}
-		if c.HasHWAccelAuto {
-			return hwDecodeChoice{hw: "auto"}
-		}
-		return hwDecodeChoice{}
-	case "darwin":
-		if c.HasHWAccelVideoToolbox {
-			if ok, _ := hwaccelWorksForFile(ctx, "videotoolbox", nil, srcPath); ok {
-				return hwDecodeChoice{hw: "videotoolbox"}
-			}
-		}
-		if c.HasHWAccelAuto {
-			return hwDecodeChoice{hw: "auto"}
-		}
-		return hwDecodeChoice{}
-	default: // linux, bsd, etc
-		if c.HasHWAccelCUDA {
-			if ok, _ := hwaccelWorksForFile(ctx, "cuda", []string{"-hwaccel_output_format", "cuda"}, srcPath); ok {
-				return hwDecodeChoice{hw: "cuda", extraArgs: []string{"-hwaccel_output_format", "cuda"}}
-			}
-		}
-		if c.HasHWAccelQSV {
-			if ok, _ := hwaccelWorksForFile(ctx, "qsv", []string{"-hwaccel_output_format", "qsv"}, srcPath); ok {
-				return hwDecodeChoice{hw: "qsv", extraArgs: []string{"-hwaccel_output_format", "qsv"}}
-			}
-		}
-		if c.HasHWAccelVAAPI {
-			if dev, okDev := detectVAAPIDevice(); okDev {
-				extra := []string{"-vaapi_device", dev}
-				if ok, _ := hwaccelWorksForFile(ctx, "vaapi", extra, srcPath); ok {
-					return hwDecodeChoice{hw: "vaapi", extraArgs: extra}
-				}
-			}
-		}
-		if c.HasHWAccelAuto {
-			return hwDecodeChoice{hw: "auto"}
-		}
-		return hwDecodeChoice{}
-	}
-}
-*/
 
 func isGPUEncoder(enc string) bool {
 	switch enc {

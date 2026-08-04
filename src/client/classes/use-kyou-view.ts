@@ -80,13 +80,11 @@ export function useKyouView(options: {
         if (props.force_show_latest_kyou_info) {
             await cloned_kyou.value.reload(true, props.force_show_latest_kyou_info);//最新を読み込むためにReload
         }
-        (() => load_attached_infos())(); //非同期で実行してほしい
+        load_attached_infos() // awaitしない(watcherをブロックせずバックグラウンドで読み込む)
     })
 
-    // ── Initialization (IIFE) ──
-    ;(async () => {
-        load_attached_infos()
-    })(); //非同期で実行してほしい
+    // ── Initialization ──
+    load_attached_infos() // awaitしない(セットアップをブロックせずバックグラウンドで読み込む)
 
     // ── Internal helpers ──
     async function load_attached_infos(): Promise<void> {
