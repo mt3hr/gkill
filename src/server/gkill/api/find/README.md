@@ -73,7 +73,7 @@ Kyou 検索に使用するクエリ構造体と列挙型を定義する。
 | `1` | `MonDay` |
 | `2` | `TuesDay` |
 | `3` | `WednesDay` |
-| `4` | `ThrusDay` |
+| `4` | `ThursDay` |
 | `5` | `FriDay` |
 | `6` | `SaturDay` |
 

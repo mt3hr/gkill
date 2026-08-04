@@ -129,7 +129,7 @@ export function usePeriodOfTimeQuery(options: {
                 return "TUESDAY_TITLE"
             case WeekOfDays.WednesDay:
                 return "WEDNESDAY_TITLE"
-            case WeekOfDays.ThrusDay:
+            case WeekOfDays.ThursDay:
                 return "THURSDAY_TITLE"
             case WeekOfDays.FriDay:
                 return "FRIDAY_TITLE"
