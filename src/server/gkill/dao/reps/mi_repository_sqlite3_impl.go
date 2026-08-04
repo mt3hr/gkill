@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	sqllib "database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"path/filepath"
@@ -17,6 +18,8 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
+
+const CURRENT_SCHEMA_VERSION_MI_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type miRepositorySQLite3Impl struct {
 	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
@@ -33,6 +36,15 @@ func NewMiRepositorySQLite3Impl(ctx context.Context, filename string, fullConnec
 	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
 		return nil, err
+	}
+	if isOld, oldVerDAO, err := checkAndResolveDataSchemaMiRepositorySQLite3Impl(ctx, db); err != nil {
+		return nil, err
+	} else if isOld {
+		if oldVerDAO != nil {
+			return oldVerDAO, nil
+		} else {
+			return nil, fmt.Errorf("error at load database schema %s", filename)
+		}
 	}
 	if gkill_options.Optimize {
 		err = sqlite3impl.DeleteAllIndex(db)
@@ -2702,4 +2714,132 @@ FROM MI
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
 	}
 	return latestDataRepositoryAddresses, nil
+}
+
+func checkAndResolveDataSchemaMiRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB) (isOld bool, oldVerDAO MiRepository, err error) {
+	schemaVersionKey := "SCHEMA_VERSION_MI"
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_MI_REPOSITORY_SQLITE3IMPL_DAO
+
+	// テーブルとインデックスがなければ作る
+	createTableSQL := `
+CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
+  KEY NOT NULL,
+  VALUE,
+  PRIMARY KEY(KEY)
+);`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	stmt, err := db.PrepareContext(ctx, createTableSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
+		return false, nil, err
+	}
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", createTableSQL))
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create gkill meta info table: %w", err)
+		return false, nil, err
+	}
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
+		return false, nil, err
+	}
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create gkill meta info index: %w", err)
+		return false, nil, err
+	}
+
+	// スキーマのバージョンを取得する
+	selectSchemaVersionSQL := `
+SELECT 
+  VALUE
+FROM GKILL_META_INFO
+WHERE KEY = ?
+`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL))
+	selectSchemaVersionStmt, err := db.PrepareContext(ctx, selectSchemaVersionSQL)
+	if err != nil {
+		err = fmt.Errorf("error at get schema version sql: %w", err)
+		return false, nil, err
+	}
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+	dbSchemaVersion := ""
+	queryArgs := []any{schemaVersionKey}
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
+	if err != nil {
+		// データがなかったら今のバージョンをいれる
+		if errors.Is(err, sqllib.ErrNoRows) {
+			insertCurrentVersionSQL := `
+INSERT INTO GKILL_META_INFO(KEY, VALUE)
+VALUES(?, ?)`
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL))
+			insertCurrentVersionStmt, err := db.PrepareContext(ctx, insertCurrentVersionSQL)
+			if err != nil {
+				err = fmt.Errorf("error at insert schema version sql: %w", err)
+				return false, nil, err
+			}
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
+			queryArgs := []any{schemaVersionKey, currentSchemaVersion}
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", insertCurrentVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert schema version: %w", err)
+				return false, nil, err
+			}
+
+			queryArgs = []any{schemaVersionKey}
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
+			err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
+			if err != nil {
+				err = fmt.Errorf("error at get schema version sql: %w", err)
+				return false, nil, err
+			}
+		} else {
+			err = fmt.Errorf("error at query :%w", err)
+			return false, nil, err
+		}
+	}
+
+	// ここから 過去バージョンのスキーマだった場合の対応
+	if currentSchemaVersion != dbSchemaVersion {
+		switch dbSchemaVersion {
+		case "1.0.0":
+			// 過去のDAOを作って返す or 最新のDAOに変換して返す
+		}
+		err = fmt.Errorf("invalid db schema version %s", dbSchemaVersion)
+		return true, nil, err
+	}
+	// ここまで 過去バージョンのスキーマだった場合の対応
+
+	return false, nil, nil
 }
