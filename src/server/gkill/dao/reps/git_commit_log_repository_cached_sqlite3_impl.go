@@ -307,6 +307,13 @@ WHERE
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	// キャッシュビルド中は下層リポジトリにフォールバック（逐次版を使う理由はFindKyousと同じ）
+	if g.isCacheBuilding.Load() {
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.GetKyouSequential(ctx, id, updateTime)
+		}
+		return g.gitRep.GetKyou(ctx, id, updateTime)
+	}
 	g.m.RLock()
 	defer g.m.RUnlock()
 	sql := `
@@ -423,12 +430,23 @@ WHERE
 		return nil, err
 	}
 	if len(kyous) == 0 {
-		return nil, nil
+		// SQLiteにデータがない場合（キャッシュ未構築など）は下層実装にフォールバック
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.GetKyouSequential(ctx, id, updateTime)
+		}
+		return g.gitRep.GetKyou(ctx, id, updateTime)
 	}
 	return &kyous[0], nil
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	// キャッシュビルド中は下層リポジトリにフォールバック（逐次版を使う理由はFindKyousと同じ）
+	if g.isCacheBuilding.Load() {
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.GetKyouHistoriesSequential(ctx, id)
+		}
+		return g.gitRep.GetKyouHistories(ctx, id)
+	}
 	g.m.RLock()
 	defer g.m.RUnlock()
 	sql := `
@@ -540,6 +558,13 @@ WHERE
 	if err := rows.Err(); err != nil {
 		err = fmt.Errorf("error at iterate rows: %w", err)
 		return nil, err
+	}
+	if len(kyous) == 0 {
+		// SQLiteにデータがない場合（キャッシュ未構築など）は下層実装にフォールバック
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.GetKyouHistoriesSequential(ctx, id)
+		}
+		return g.gitRep.GetKyouHistories(ctx, id)
 	}
 	return kyous, nil
 }
@@ -1088,6 +1113,14 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindGitCommitLogByIDs(ctx cont
 		return nil, nil
 	}
 
+	// キャッシュビルド中は下層リポジトリにフォールバック（逐次版を使う理由はFindKyousと同じ）
+	if g.isCacheBuilding.Load() {
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.FindGitCommitLogByIDsSequential(ctx, ids)
+		}
+		return g.gitRep.FindGitCommitLogByIDs(ctx, ids)
+	}
+
 	g.m.RLock()
 	defer g.m.RUnlock()
 
@@ -1298,7 +1331,10 @@ WHERE
 		return nil, err
 	}
 	if len(gitCommitLog) == 0 {
-		// SQLiteにデータがない場合（キャッシュ未構築など）はraw git実装にフォールバック
+		// SQLiteにデータがない場合（キャッシュ未構築など）は下層実装にフォールバック
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.GetGitCommitLogSequential(ctx, id, updateTime)
+		}
 		return g.gitRep.GetGitCommitLog(ctx, id, updateTime)
 	}
 	return &gitCommitLog[0], nil
@@ -1313,5 +1349,10 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error)
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
+	// 呼び出し元がthreads.Goスロットを保持しているため、集約への委譲は逐次版を使う
+	// （並列版だと入れ子スロット取得でプールが枯渇しうる）
+	if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+		return aggregated.GetLatestDataRepositoryAddressSequential(ctx, updateCache)
+	}
 	return g.gitRep.GetLatestDataRepositoryAddress(ctx, updateCache)
 }
