@@ -2,7 +2,7 @@
 
 import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
-import { GetNotificationHistoryByNotificationIDRequest } from '../api/req_res/get-notification-history-by-notification-id-request copy'
+import { GetNotificationHistoryByNotificationIDRequest } from '../api/req_res/get-notification-history-by-notification-id-request'
 import { InfoIdentifier } from './info-identifier'
 import { MetaInfoBase } from './meta-info-base'
 
