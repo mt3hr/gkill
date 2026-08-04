@@ -195,9 +195,13 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		// 最新版アドレスは共有キャッシュから1件ずつ引く
-		latestDataRepositoryAddress, existAddress := repsWithoutRekyou.GetLatestDataRepositoryAddress(rekyou.TargetID)
-		existInRep := allowAllTargets || (existAddress && !latestDataRepositoryAddress.IsDeleted)
+		// 最新版アドレスは共有キャッシュから1件ずつ引く。
+		// allowAllTargetsのとき repsWithoutRekyou はnilなので触ってはいけない
+		existInRep := allowAllTargets
+		if !allowAllTargets {
+			latestDataRepositoryAddress, existAddress := repsWithoutRekyou.GetLatestDataRepositoryAddress(rekyou.TargetID)
+			existInRep = existAddress && !latestDataRepositoryAddress.IsDeleted
+		}
 
 		matchID := false
 		if !query.UseIDs {
