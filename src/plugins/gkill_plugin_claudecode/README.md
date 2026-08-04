@@ -89,7 +89,7 @@ Kyou の ID が UUID なので重複は自然に統合される。
 
 現在の設定・パターンの展開結果・読み込み状況（対象ファイル数・Kyou数・最終スキャン時刻）は、
 gkill のプラグイン設定画面（`get_config_html`）で確認できる。何にもマッチしなかった指定もそこに出る。
-**設定画面は表示のみで保存はできない** — gkill 側に保存を呼ぶ導線が無いため。`config.json` を直接編集する。
+設定画面の保存ボタンは `postMessage` 経由で gkill 本体の設定ダイアログが肩代わりし、`post_plugin_config` として保存される（`config.json` の直接編集も可）。
 
 ファイル種別はパスではなく中身で判定する。そのため次のどちらの配置でも読める。
 
@@ -172,7 +172,7 @@ cd src/plugins/gkill_plugin_claudecode
 go test ./...
 ```
 
-`npm test` は `src/server` のみを対象にするため、このテストは手動で実行する。
+`npm test` は `npm run test_plugins`（`src/tools/test_plugins.mjs`）を含むため、このテストも自動実行される。単独で回す場合は上記コマンドを使う。
 
 ## 関連資料
 

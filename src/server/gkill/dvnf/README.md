@@ -1,8 +1,8 @@
-# dvnf - データバージョニング・ファイル管理
+# dvnf - ファイル命名規則・バージョニング
 
 ## 概要
 
-DVNF（Data Versioning and Notification Framework）は、ファイルのバージョン管理とコピー・移動を行うユーティリティ。
+DVNF（DeVice Name Folder Naming Framework）は、デバイス名フォルダの命名規則に基づいてファイルのバージョン管理とコピー・移動を行うユーティリティ。
 gkill の CLI サブコマンドとして提供され、`gkill dvnf` コマンドで呼び出される。
 
 ## ディレクトリ構造

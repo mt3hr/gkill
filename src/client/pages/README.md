@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 14 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（185 .vue）
-└── dialogs/                        # Dialog コンポーネント（100 .vue）
+├── views/                          # View コンポーネント（189 .vue）
+└── dialogs/                        # Dialog コンポーネント（103 .vue）
 ```
 
 ## 設計パターン

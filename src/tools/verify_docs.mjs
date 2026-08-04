@@ -217,6 +217,40 @@ function computeMiscMetrics() {
     glossaryTerms = (body.match(/^\| \*\*[^*|]+\*\*/gm) || []).length
   }
 
+  // usecase.md のユースケース数 = ユニークな UC-ID 数（延べ出現数ではない）
+  const ucIds = exists('documents/reverse/usecase.md')
+    ? new Set(readText('documents/reverse/usecase.md').match(/UC-\d{4}/g) || []).size
+    : 0
+
+  // sequence-diagrams.md のシーケンス図数 = mermaid ブロック数
+  const seqDiagrams = exists('documents/reverse/sequence-diagrams.md')
+    ? (readText('documents/reverse/sequence-diagrams.md').match(/```mermaid/g) || []).length
+    : 0
+
+  // エラー/メッセージコードのユニーク定数数
+  const codeCount = (rel, re) => (exists(rel) ? new Set(readText(rel).match(re) || []).size : 0)
+  const errCodes = codeCount('src/server/gkill/api/message/error_codes.go', /ERR000\d+/g)
+  const msgCodes = codeCount('src/server/gkill/api/message/message_codes.go', /MSG000\d+/g)
+
+  // FindQuery のフィールド数（json タグ付き。json:"-" の ExcludeURLogThumbnailImage も含む）
+  let findQueryFields = 0
+  if (exists('src/server/gkill/api/find/find_query.go')) {
+    const structBody = readText('src/server/gkill/api/find/find_query.go')
+      .match(/type FindQuery struct \{[\s\S]*?\n\}/)
+    findQueryFields = structBody ? (structBody[0].match(/json:"/g) || []).length : 0
+  }
+
+  // go.mod の Go バージョン
+  const goVersion = exists('src/server/go.mod')
+    ? (readText('src/server/go.mod').match(/^go (\d+\.\d+(?:\.\d+)?)/m) || [])[1] || ''
+    : ''
+
+  // dao/reps 直下のテストファイル数 / クライアント datas テストファイル数 / Wear OS Kotlin ファイル数
+  const repsTestFiles = listFiles('src/server/gkill/dao/reps', (f) => f.endsWith('_test.go')).length
+  const datasTestFiles = listFiles('src/client/__tests__/unit/datas', (f) => f.endsWith('.test.ts')).length
+  const wearCompanionKt = listFilesRec('src/wear_os/phone_companion/src/main', (f) => f.endsWith('.kt')).length
+  const wearWatchKt = listFilesRec('src/wear_os/watch_app/src/main', (f) => f.endsWith('.kt')).length
+
   return {
     mcpReadTools: toolNames('src/mcp/gkill-read-server.mjs'),
     mcpWriteTools: toolNames('src/mcp/gkill-write-server.mjs'),
@@ -225,6 +259,16 @@ function computeMiscMetrics() {
     kftlStatementTs: kftlTs.size,
     kftlStatementGo: kftlGo.size,
     glossaryTerms,
+    ucIds,
+    seqDiagrams,
+    errCodes,
+    msgCodes,
+    findQueryFields,
+    goVersion,
+    repsTestFiles,
+    datasTestFiles,
+    wearCompanionKt,
+    wearWatchKt,
   }
 }
 
@@ -339,6 +383,50 @@ function buildCountAssertions(m) {
   add('documents/reverse/folder-structure.md', `バックエンド側、${m.kftlStatementGo}ステートメント型`)
   add('CLAUDE.md', `glossary.md (${m.glossaryTerms} terms)`)
   add('documents/reverse/README.md', `ドメイン用語の定義（${m.glossaryTerms}項目）`)
+  add('documents/reverse/folder-structure.md', `用語集（${m.glossaryTerms}項目）`)
+
+  // ── ユースケース数（ユニークUC-ID） / シーケンス図数（mermaidブロック）
+  add('documents/reverse/usecase.md', `**${m.ucIds}件（ユニークな UC-ID 数）**`)
+  add('documents/reverse/README.md', `ユースケース一覧（${m.ucIds}件）`)
+  add('documents/reverse/scenario.md', `（${m.ucIds}件、1操作ずつ静的に列挙）`)
+  add('documents/reverse/folder-structure.md', `ユースケース一覧（${m.ucIds}件）`)
+  add('CLAUDE.md', `usecase.md (${m.ucIds} use cases)`)
+  add('documents/reverse/README.md', `シーケンス図（${m.seqDiagrams}本:`)
+  add('documents/reverse/folder-structure.md', `シーケンス図（${m.seqDiagrams}本:`)
+  add('CLAUDE.md', `sequence-diagrams.md (${m.seqDiagrams} diagrams)`)
+
+  // ── handle_*.go ファイル数（CLAUDE.md / サーバ系README）
+  const handlerTests = m.handlers - m.handlersImpl
+  add('CLAUDE.md', `HTTP API handlers (${m.handlers} files incl. tests, 1 handler per file)`)
+  add('src/server/README.md', `（${m.handlers} handle_*.go`)
+  add('src/server/gkill/api/README.md', `handle_*.go は${m.handlers}ファイル（実装${m.handlersImpl} + テスト${handlerTests}）`)
+  add('src/server/gkill/api/gkill_server_api/README.md', `実装${m.handlersImpl}ファイル + テスト${handlerTests}ファイル`)
+
+  // ── エラー/メッセージコード数 / FindQueryフィールド数 / Goバージョン
+  add('src/server/gkill/api/README.md', `エラーコード定数（${m.errCodes}定数`)
+  add('src/server/gkill/api/README.md', `メッセージコード定数（${m.msgCodes}定数`)
+  add('src/server/gkill/api/message/README.md', `（${m.errCodes} 定数:`)
+  add('src/server/gkill/api/message/README.md', `（${m.msgCodes} 定数:`)
+  add('src/server/gkill/api/message/README.md', `## エラーコード体系（${m.errCodes} コード）`)
+  add('src/server/gkill/api/find/README.md', `${m.findQueryFields} フィールドの検索条件`)
+  add('src/server/gkill/api/README.md', `（${m.findQueryFields}フィールド:`)
+  add('src/server/README.md', `**Go バージョン**: ${m.goVersion}`)
+  add('CLAUDE.md', `declares \`go ${m.goVersion}\``)
+
+  // ── テストファイル数（ディレクトリ単位） / Wear OS Kotlinファイル数
+  add('src/server/ABOUT_TEST.md', `リポジトリ実装 (${m.repsTestFiles}ファイル)`)
+  add('src/ABOUT_TEST.md', `${m.datasTestFiles}ファイル（データモデル + 横断検証）`)
+  add('src/client/ABOUT_TEST.md', `データモデル (${m.datasTestFiles}ファイル`)
+  add('src/client/classes/datas/ABOUT_TEST.md', `テストする（${m.datasTestFiles}ファイル）`)
+  add('src/client/ABOUT_TEST.md', `ユニットテスト（${m.unitTests}テスト宣言、${m.unitTestFiles}ファイル）`)
+  add('src/client/ABOUT_TEST.md', `合計${m.unitTests + m.e2eTests}テスト宣言`)
+  add('src/locales/ABOUT_TEST.md', `一致すること（${m.i18nKeys}キー）`)
+  add('src/client/README.md', `View コンポーネント（${m.views} .vue）`)
+  add('src/client/README.md', `Dialog コンポーネント（${m.dialogs} .vue）`)
+  add('src/client/pages/README.md', `View コンポーネント（${m.views} .vue）`)
+  add('src/client/pages/README.md', `Dialog コンポーネント（${m.dialogs} .vue）`)
+  add('src/wear_os/README.md', `Kotlin ソース（${m.wearCompanionKt}ファイル）`)
+  add('src/wear_os/README.md', `Kotlin ソース（${m.wearWatchKt}ファイル）`)
 
   return A
 }
