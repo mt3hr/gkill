@@ -146,7 +146,18 @@ type GkillServerAPI struct {
 
 	RebootServerCh chan (struct{})
 
-	device string
+	// このプロセスが動いているデバイス名。
+	//
+	// 取得元の GetAllServerConfigs は SERVER_CONFIG への相関サブクエリを18本使う重いSQLで、
+	// 認証付きAPI1本につき最低3回(filterLocalOnly で2回 + auth ミドルウェアで1回)、
+	// /files/ の画像配信では1枚ごとに走っていた。
+	//
+	// 設定を更新する handle_update_server_configs は自分でサーバを落として
+	// GkillServerAPI ごと作り直す(common.go の LaunchGkillServerAPI のループ)ので、
+	// この構造体に持たせたキャッシュは設定更新時に自然に捨てられる。無効化は要らない。
+	deviceOnce sync.Once
+	device     string
+	deviceErr  error
 
 	loginRateLimiter *loginRateLimiter
 
