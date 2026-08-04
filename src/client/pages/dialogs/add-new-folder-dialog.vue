@@ -18,7 +18,7 @@
       <div class="gkill-floating-dialog__body">
         <v-card variant="flat" class="pa-2">
 
-        <AddNewFoloderView :application_config="application_config" :gkill_api="gkill_api"
+        <AddNewFolderView :application_config="application_config" :gkill_api="gkill_api"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @requested_close_dialog="hide"
@@ -31,17 +31,17 @@
 </template>
 <script lang="ts" setup>
 import { type Ref, ref } from 'vue'
-import type { AddNewFoloderDialogEmits } from './add-new-foloder-dialog-emits'
-import type { AddNewFoloderDialogProps } from './add-new-foloder-dialog-props'
-import AddNewFoloderView from '../views/add-new-foloder-view.vue'
+import type { AddNewFolderDialogEmits } from './add-new-folder-dialog-emits'
+import type { AddNewFolderDialogProps } from './add-new-folder-dialog-props'
+import AddNewFolderView from '../views/add-new-folder-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
 
-const add_new_folder_view = ref<InstanceType<typeof AddNewFoloderView> | null>(null);
+const add_new_folder_view = ref<InstanceType<typeof AddNewFolderView> | null>(null);
 
-defineProps<AddNewFoloderDialogProps>()
-const emits = defineEmits<AddNewFoloderDialogEmits>()
+defineProps<AddNewFolderDialogProps>()
+const emits = defineEmits<AddNewFolderDialogEmits>()
 defineExpose({ show, hide })
 
 import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
@@ -49,6 +49,7 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
+// キーは旧ファイル名綴りのまま(localStorageのダイアログ位置・透過設定の互換維持)
 const ui = useFloatingDialog("add-new-foloder-dialog", {
   centerMode: "always",
   onEscape: () => hide(),

@@ -232,7 +232,7 @@ export function useRegistFirstAccountView(options: {
              
             case RegistStatus.reseted_account_password: {
                 const message = new GkillMessage()
-                message.message = i18n.global.t("REGISTERED_ACCOUNT_MESAGE")
+                message.message = i18n.global.t("REGISTERED_ACCOUNT_MESSAGE")
                 message.message_code = GkillMessageCodes.added_account
                 emits('received_messages', [message])
                 regist_state.value = RegistStatus.done

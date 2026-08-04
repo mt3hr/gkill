@@ -476,7 +476,7 @@
     "CLIENT_KC_IS_NULL_MESSAGE": "Les données du client sont invalides",
     "REQUEST_CERTIFICATE_REQUIRED_MESSAGE": "Veuillez installer le certificat du serveur",
     "MI_ALL_BOARD_NAME_TITLE": "Tout",
-    "REGISTERED_ACCOUNT_MESAGE": "Inscription terminée",
+    "REGISTERED_ACCOUNT_MESSAGE": "Inscription terminée",
     "COPIED_LAN_SHARE_KYOU_LINK_MESSAGE": "Copié",
     "COPIED_LAN_SHARE_KYOU_OVER_LINK_MESSAGE": "Copié",
     "ADD_MI_BOARD_TITLE": "Ajouter un nom de tableau",

@@ -3,12 +3,12 @@ import { ref, type Ref } from 'vue'
 import { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import type { AddNewFoloderViewProps } from '@/pages/views/add-new-foloder-view-props'
-import type { AddNewFoloderViewEmits } from '@/pages/views/add-new-foloder-view-emits'
+import type { AddNewFolderViewProps } from '@/pages/views/add-new-folder-view-props'
+import type { AddNewFolderViewEmits } from '@/pages/views/add-new-folder-view-emits'
 
-export function useAddNewFoloderView(options: {
-    props: AddNewFoloderViewProps,
-    emits: AddNewFoloderViewEmits,
+export function useAddNewFolderView(options: {
+    props: AddNewFolderViewProps,
+    emits: AddNewFolderViewEmits,
 }) {
     const { props, emits } = options
 

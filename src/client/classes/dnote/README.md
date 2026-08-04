@@ -134,7 +134,7 @@ dnote/
 
 | ファイル | グルーピング基準 |
 |---------|----------------|
-| `rerated-date-getter.ts` | 関連日付 |
+| `related-date-getter.ts` | 関連日付 |
 | `related-week-getter.ts` | 関連週 |
 | `related-week-day-getter.ts` | 関連曜日 |
 | `related-month-getter.ts` | 関連月 |
