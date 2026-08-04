@@ -6,14 +6,14 @@ describe('Kmemo', () => {
     expectCloneCopiesAllFields(new Kmemo())
   })
 
-  describe('generate_info_identifer', () => {
+  describe('generate_info_identifier', () => {
     test('returns InfoIdentifier with matching id and times', () => {
       const kmemo = new Kmemo()
       kmemo.id = 'memo-456'
       kmemo.create_time = new Date('2024-03-01T12:00:00Z')
       kmemo.update_time = new Date('2024-03-02T12:00:00Z')
 
-      const identifier = kmemo.generate_info_identifer()
+      const identifier = kmemo.generate_info_identifier()
 
       expect(identifier.id).toBe('memo-456')
       expect(identifier.create_time).toEqual(new Date('2024-03-01T12:00:00Z'))

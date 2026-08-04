@@ -94,12 +94,12 @@ export class ReKyou extends InfoBase {
         return rekyou
     }
 
-    generate_info_identifer(): InfoIdentifier {
-        const info_identifer = new InfoIdentifier()
-        info_identifer.id = this.id
-        info_identifer.create_time = this.create_time
-        info_identifer.update_time = this.update_time
-        return info_identifer
+    generate_info_identifier(): InfoIdentifier {
+        const info_identifier = new InfoIdentifier()
+        info_identifier.id = this.id
+        info_identifier.create_time = this.create_time
+        info_identifier.update_time = this.update_time
+        return info_identifier
     }
 
     constructor() {
