@@ -1,3 +1,4 @@
+// Package dao はSQLite3データベース群を管理するデータアクセス層。GkillDAOManagerが各DAOとリポジトリを束ねる。
 package dao
 
 import (
@@ -20,7 +21,7 @@ type ConfigDAOs struct {
 
 	ServerConfigDAO server_config.ServerConfigDAO
 
-	AppllicationConfigDAO user_config.ApplicationConfigDAO
+	ApplicationConfigDAO user_config.ApplicationConfigDAO
 
 	RepositoryDAO user_config.RepositoryDAO
 

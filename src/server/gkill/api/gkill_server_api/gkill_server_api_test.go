@@ -132,8 +132,8 @@ func setupTestGkillServerAPI(t *testing.T) (*GkillServerAPI, func()) {
 			if cfgDAOs.ServerConfigDAO != nil {
 				cfgDAOs.ServerConfigDAO.Close(ctx)
 			}
-			if cfgDAOs.AppllicationConfigDAO != nil {
-				cfgDAOs.AppllicationConfigDAO.Close(ctx)
+			if cfgDAOs.ApplicationConfigDAO != nil {
+				cfgDAOs.ApplicationConfigDAO.Close(ctx)
 			}
 			if cfgDAOs.RepositoryDAO != nil {
 				cfgDAOs.RepositoryDAO.Close(ctx)
@@ -238,8 +238,8 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	router.HandleFunc(gkillAPI.APIAddress.GetAllTagNamesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetAllTagNames)).Methods(gkillAPI.APIAddress.GetAllTagNamesMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetAllRepNamesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetAllRepNames)).Methods(gkillAPI.APIAddress.GetAllRepNamesMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetTagHistoriesByTagIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTagHistoriesByTagID)).Methods(gkillAPI.APIAddress.GetTagHistoriesByTagIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetTextHistoriesByTextIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTextHistoriesByTextID)).Methods(gkillAPI.APIAddress.GetTextHistoriesByTagIDMethod)
-	router.HandleFunc(gkillAPI.APIAddress.GetNotificationHistoriesByNotificationIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNotificationHistoriesByNotificationID)).Methods(gkillAPI.APIAddress.GetNotificationHistoriesByTagIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetTextHistoriesByTextIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetTextHistoriesByTextID)).Methods(gkillAPI.APIAddress.GetTextHistoriesByTextIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetNotificationHistoriesByNotificationIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetNotificationHistoriesByNotificationID)).Methods(gkillAPI.APIAddress.GetNotificationHistoriesByNotificationIDMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetRepositoriesAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRepositories)).Methods(gkillAPI.APIAddress.GetRepositoriesMethod)
 	router.HandleFunc(gkillAPI.APIAddress.AddShareKyouListInfoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddShareKyouListInfo)).Methods(gkillAPI.APIAddress.AddShareKyouListInfoMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateShareKyouListInfoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateShareKyouListInfo)).Methods(gkillAPI.APIAddress.UpdateShareKyouListInfoMethod)
@@ -704,8 +704,8 @@ func TestGkillDAOManager_ConfigDAOs_NotNil(t *testing.T) {
 	if cfgDAOs.ServerConfigDAO == nil {
 		t.Error("ServerConfigDAO is nil")
 	}
-	if cfgDAOs.AppllicationConfigDAO == nil {
-		t.Error("AppllicationConfigDAO is nil")
+	if cfgDAOs.ApplicationConfigDAO == nil {
+		t.Error("ApplicationConfigDAO is nil")
 	}
 	if cfgDAOs.RepositoryDAO == nil {
 		t.Error("RepositoryDAO is nil")

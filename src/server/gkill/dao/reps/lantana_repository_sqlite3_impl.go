@@ -18,7 +18,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-const CURRENT_SCHEMA_VERSION_LANTANA_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_LANTANA_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type lantanaRepositorySQLite3Impl struct {
 	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
@@ -1336,7 +1336,7 @@ FROM LANTANA
 
 func checkAndResolveDataSchemaLantanaRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO LantanaRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_LANTANA"
-	currentSchemaVersion := CURRENT_SCHEMA_VERSION_LANTANA_REPOISITORY_SQLITE3IMPL_DAO
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_LANTANA_REPOSITORY_SQLITE3IMPL_DAO
 
 	// テーブルとインデックスがなければ作る
 	createTableSQL := `

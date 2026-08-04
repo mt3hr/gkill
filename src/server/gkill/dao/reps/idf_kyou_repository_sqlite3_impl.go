@@ -27,7 +27,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const CURRENT_SCHEMA_VERSION_IDF_KYOU_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_IDF_KYOU_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type idfKyouRepositorySQLite3Impl struct {
 	repositoriesRef *GkillRepositories
@@ -2716,7 +2716,7 @@ FROM IDF
 
 func checkAndResolveDataSchemaIDFKyouRepoisitorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO IDFKyouRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_IDF_KYOU"
-	currentSchemaVersion := CURRENT_SCHEMA_VERSION_IDF_KYOU_REPOISITORY_SQLITE3IMPL_DAO
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_IDF_KYOU_REPOSITORY_SQLITE3IMPL_DAO
 
 	// テーブルとインデックスがなければ作る
 	createTableSQL := `

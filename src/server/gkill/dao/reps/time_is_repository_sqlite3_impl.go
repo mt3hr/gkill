@@ -20,7 +20,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-const CURRENT_SCHEMA_VERSION_TIMEIS_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_TIMEIS_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type timeIsRepositorySQLite3Impl struct {
 	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
@@ -1519,7 +1519,7 @@ FROM TIMEIS
 
 func checkAndResolveDataSchemaTimeIsRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB) (isOld bool, oldVerDAO TimeIsRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_TIMEIS"
-	currentSchemaVersion := CURRENT_SCHEMA_VERSION_TIMEIS_REPOISITORY_SQLITE3IMPL_DAO
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_TIMEIS_REPOSITORY_SQLITE3IMPL_DAO
 
 	// テーブルとインデックスがなければ作る
 	createTableSQL := `

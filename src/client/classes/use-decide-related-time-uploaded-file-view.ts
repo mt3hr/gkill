@@ -33,7 +33,7 @@ export function useDecideRelatedTimeUploadedFileView(options: {
             return
         }
         const updated_kyou = focused_kyou.value.clone()
-        await updated_kyou.reload(false, true)
+        await updated_kyou.reload(true)
         await updated_kyou.load_all()
         focused_kyou.value = updated_kyou
     }

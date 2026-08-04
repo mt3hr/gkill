@@ -277,7 +277,7 @@ export function useMiView(options: {
                     if (kyou.id === kyou_in_list.id) {
                         const updated_kyou = kyou.clone()
                         await delete_gkill_kyou_cache(kyou.id)
-                        await updated_kyou.reload(false, true, querys.value[i])
+                        await updated_kyou.reload(true, querys.value[i])
                         updated_kyou.is_typed_data_loaded = false
                         await updated_kyou.load_all(querys.value[i], true)
                         const new_kyous_list = [...kyous_list]
@@ -290,7 +290,7 @@ export function useMiView(options: {
         (async (): Promise<void> => {
             if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
                 const updated_kyou = kyou.clone()
-                await updated_kyou.reload(false, true)
+                await updated_kyou.reload(true)
                 await updated_kyou.load_all(undefined, true)
                 focused_kyou.value = updated_kyou
             }
@@ -307,7 +307,7 @@ export function useMiView(options: {
                     }
                     const updated_kyou = kyou.clone()
                     await delete_gkill_kyou_cache(kyou.id)
-                    await updated_kyou.reload(false, true, column_query)
+                    await updated_kyou.reload(true, column_query)
                     updated_kyou.is_typed_data_loaded = false
                     await updated_kyou.load_all(column_query, true)
                     opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
@@ -719,7 +719,7 @@ export function useMiView(options: {
                 }
             }
             const updated_kyou = kyou.clone()
-            await updated_kyou.reload(false, true, column_query)
+            await updated_kyou.reload(true, column_query)
             updated_kyou.is_typed_data_loaded = false
             await updated_kyou.load_all(column_query, true)
             for (let i = 0; i < opened_dialogs.value.length; i++) {
