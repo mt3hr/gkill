@@ -155,7 +155,7 @@ import type { RegisterGkillNotificationRequest } from "./req_res/register-gkill-
 import type { RegisterGkillNotificationResponse } from "./req_res/register-gkill-notification-response"
 import type { AddNotificationRequest } from "./req_res/add-notification-request"
 import type { AddNotificationResponse } from "./req_res/add-notification-response"
-import type { GetNotificationHistoryByNotificationIDRequest } from "./req_res/get-notification-history-by-notification-id-request copy"
+import type { GetNotificationHistoryByNotificationIDRequest } from "./req_res/get-notification-history-by-notification-id-request"
 import { GetNotificationHistoryByNotificationIDResponse } from "./req_res/get-notification-history-by-notification-id-response"
 import type { GetNotificationsByTargetIDRequest } from "./req_res/get-notifications-by-target-id-request"
 import { GetNotificationsByTargetIDResponse } from "./req_res/get-notifications-by-target-id-response"
