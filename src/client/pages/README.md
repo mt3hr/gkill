@@ -80,7 +80,7 @@ xxx-view-emits.ts     # Emits 定義
 | `add-dnote-list-view.vue` | DNote リスト追加 |
 | `add-dnote-trend-graph-view.vue` | DNote トレンドグラフ追加 |
 | `add-new-device-struct-element-view.vue` | デバイス構造要素追加 |
-| `add-new-foloder-view.vue` | フォルダ追加 |
+| `add-new-folder-view.vue` | フォルダ追加 |
 | `add-new-kftl_template-struct-element-view.vue` | KFTL テンプレート要素追加 |
 | `add-new-rep-struct-element-view.vue` | リポジトリ構造要素追加 |
 | `add-new-rep-type-struct-element-view.vue` | リポジトリ型要素追加 |
@@ -237,7 +237,7 @@ xxx-view-emits.ts     # Emits 定義
 
 ### データ追加ダイアログ（21コンポーネント）
 
-`add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-mi-re-kyou-dialog.vue`, `add-nlog-dialog.vue`, `add-timeis-dialog.vue`, `add-urlog-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-foloder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
+`add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-mi-re-kyou-dialog.vue`, `add-nlog-dialog.vue`, `add-timeis-dialog.vue`, `add-urlog-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-folder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
 
 ### データ編集ダイアログ（31コンポーネント）
 

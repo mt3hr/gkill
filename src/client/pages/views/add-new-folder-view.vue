@@ -19,18 +19,18 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import type { AddNewFoloderViewEmits } from './add-new-foloder-view-emits'
-import type { AddNewFoloderViewProps } from './add-new-foloder-view-props'
-import { useAddNewFoloderView } from '@/classes/use-add-new-foloder-view'
+import type { AddNewFolderViewEmits } from './add-new-folder-view-emits'
+import type { AddNewFolderViewProps } from './add-new-folder-view-props'
+import { useAddNewFolderView } from '@/classes/use-add-new-folder-view'
 
-const props = defineProps<AddNewFoloderViewProps>()
-const emits = defineEmits<AddNewFoloderViewEmits>()
+const props = defineProps<AddNewFolderViewProps>()
+const emits = defineEmits<AddNewFolderViewEmits>()
 
 const {
     folder_name,
     emits_folder,
     reset_folder_name,
-} = useAddNewFoloderView({ props, emits })
+} = useAddNewFolderView({ props, emits })
 
 defineExpose({ reset_folder_name })
 </script>

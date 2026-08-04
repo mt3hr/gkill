@@ -33,7 +33,7 @@
                 </v-col>
             </v-row>
         </v-card-action>
-        <AddNewFoloderDialog :application_config="application_config" :gkill_api="gkill_api"
+        <AddNewFolderDialog :application_config="application_config" :gkill_api="gkill_api"
             @requested_add_new_folder="add_folder_struct_element"
             v-on="errorMessageRelayHandlers"
             ref="add_new_folder_dialog" />
@@ -69,7 +69,7 @@ import type { EditTagStructViewProps } from './edit-tag-struct-view-props'
 import AddNewTagStructElementDialog from '../dialogs/add-new-tag-struct-element-dialog.vue'
 import EditTagStructElementDialog from '../dialogs/edit-tag-struct-element-dialog.vue'
 import FoldableStruct from './foldable-struct.vue'
-import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
+import AddNewFolderDialog from '../dialogs/add-new-folder-dialog.vue'
 import TagStructContextMenu from './tag-struct-context-menu.vue'
 import ConfirmDeleteTagStructDialog from '../dialogs/confirm-delete-tag-struct-dialog.vue'
 import SelectMoveTargetFolderDialog from '../dialogs/select-move-target-folder-dialog.vue'

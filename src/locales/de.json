@@ -476,7 +476,7 @@
     "CLIENT_KC_IS_NULL_MESSAGE": "Clientdaten sind ungültig",
     "REQUEST_CERTIFICATE_REQUIRED_MESSAGE": "Bitte installieren Sie das Serverzertifikat",
     "MI_ALL_BOARD_NAME_TITLE": "Alle",
-    "REGISTERED_ACCOUNT_MESAGE": "Registrierung abgeschlossen",
+    "REGISTERED_ACCOUNT_MESSAGE": "Registrierung abgeschlossen",
     "COPIED_LAN_SHARE_KYOU_LINK_MESSAGE": "Kopiert",
     "COPIED_LAN_SHARE_KYOU_OVER_LINK_MESSAGE": "Kopiert",
     "ADD_MI_BOARD_TITLE": "Boardname hinzufügen",
