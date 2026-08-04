@@ -457,7 +457,26 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 	return false
 }
 
+// GetDevice はこのプロセスが動いているデバイス名を返します。
+//
+// 結果は1回だけ求めてキャッシュします。取得元の GetAllServerConfigs は
+// SERVER_CONFIG への相関サブクエリを18本使う重いSQLで、毎回
+// 約250行のSQL文字列を組み立てて PrepareContext している。
+// これが認証付きAPI1本につき最低3回、/files/ の画像配信では1枚ごとに走っていた。
+//
+// 設定更新時は handle_update_server_configs がサーバを落として
+// GkillServerAPI ごと作り直すので、キャッシュの明示的な無効化は要らない。
+//
+// 以前は結果を g.device に代入していたが、直後に読むだけで他から参照されておらず、
+// かつ全HTTPハンドラのgoroutineから排他無しで書かれていた(データ競合)。
 func (g *GkillServerAPI) GetDevice() (string, error) {
+	g.deviceOnce.Do(func() {
+		g.device, g.deviceErr = g.findEnabledDevice()
+	})
+	return g.device, g.deviceErr
+}
+
+func (g *GkillServerAPI) findEnabledDevice() (string, error) {
 	ctx := context.Background()
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
 	if err != nil {
@@ -480,8 +499,7 @@ func (g *GkillServerAPI) GetDevice() (string, error) {
 		err = fmt.Errorf("invalid status. enable device count is not 1")
 		return "", err
 	}
-	g.device = *device
-	return g.device, nil
+	return *device, nil
 }
 
 func privateIPv4s() ([]net.IP, error) {
