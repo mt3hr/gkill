@@ -78,19 +78,30 @@ export function useGpsLogMap(options: {
 
     // datetimeが更新されたとき、sliderの値を更新し、マーカーの位置を更新する。
     function update_time_slider_max_value(): void {
-        let seconds = 0
-        for (let date_str = start_date_str.value; !end_date_str.value || date_str !== end_date_str.value; date_str = moment(date_str).add(1, 'days').format("YYYY-MM-DD")) {
-            seconds += 86400
+        // 以前はここで開始日から1日ずつ進めて終了日と文字列一致するまで回していたが、
+        // 「行き過ぎたら止まる」ガードが無いため次の3つで無限ループになりタブが固まった。
+        //   - 終了日が開始日より前 … 終了日に到達しない
+        //   - 日付がパース不能 … format() が "Invalid date" を返し永久に一致しない
+        //   - 継続条件の !end_date_str.value … 成立したら永久に回る（意図と真逆）
+        // 日数差から直接求める。意味は従来どおり (日数差 + 1) * 86400 - 1。
+        const start = moment(start_date_str.value, "YYYY-MM-DD", true)
+        const end = moment(end_date_str.value, "YYYY-MM-DD", true)
+        if (!start.isValid() || !end.isValid() || end.isBefore(start)) {
+            // 期間が取れないときは1日ぶんにしておく
+            time_slider_max.value = 86400 - 1
+            return
         }
-        seconds += 86400
-        seconds--
-        time_slider_max.value = seconds
+        time_slider_max.value = (end.diff(start, 'days') + 1) * 86400 - 1
     }
 
     async function update_gps_log_lines(): Promise<void> {
         const req = new GetGPSLogRequest()
-        req.start_date = moment(start_date_str.value.replace("-", "/") + " 00:00:00").toDate()
-        req.end_date = moment(end_date_str.value.replace("-", "/") + " 23:59:59").toDate()
+        // 以前は replace("-", "/") していたが、String.replace は文字列パターンだと
+        // 1個目しか置換しないため "2026/08-03" という混在フォーマットになり、
+        // momentがネイティブDateパーサへフォールバックしてブラウザ依存になっていた。
+        // 書式を明示して日付文字列から直接組み立てる。
+        req.start_date = moment(start_date_str.value, "YYYY-MM-DD").startOf('day').toDate()
+        req.end_date = moment(end_date_str.value, "YYYY-MM-DD").endOf('day').toDate()
         const res = await props.gkill_api.get_gps_log(req)
         // エラーチェック
         if (res.errors && res.errors.length !== 0) {
@@ -124,7 +135,7 @@ export function useGpsLogMap(options: {
     // timeに最も関連している地点にマーカーを立てる
     function update_marker_by_time() {
         marker_options.value = null
-        const datetime = moment(start_date_str.value.replace("-", "/") + " 00:00:00").add(slider_model.value, 'seconds').toDate().getTime()
+        const datetime = moment(start_date_str.value, "YYYY-MM-DD").startOf('day').add(slider_model.value, 'seconds').toDate().getTime()
 
         let target_gps_log: GPSLog | null = null
         for (let i = 0; i < gps_logs.value.length; i++) {
