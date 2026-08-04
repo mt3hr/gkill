@@ -28,8 +28,8 @@ export function useTextHistoriesDialog(options: {
 
     // ── Computed ──
     const text_highlight_targets = computed<Array<InfoIdentifier>>(() => {
-        const info_identifer = props.text.generate_info_identifer()
-        return [info_identifer]
+        const info_identifier = props.text.generate_info_identifier()
+        return [info_identifier]
     })
 
     // ── CRUD relay handlers ──

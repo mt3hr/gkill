@@ -6,14 +6,14 @@ describe('Lantana', () => {
     expectCloneCopiesAllFields(new Lantana())
   })
 
-  describe('generate_info_identifer', () => {
+  describe('generate_info_identifier', () => {
     test('returns InfoIdentifier with matching id and times', () => {
       const lantana = new Lantana()
       lantana.id = 'lantana-456'
       lantana.create_time = new Date('2024-08-01T06:00:00Z')
       lantana.update_time = new Date('2024-08-02T06:00:00Z')
 
-      const identifier = lantana.generate_info_identifer()
+      const identifier = lantana.generate_info_identifier()
 
       expect(identifier.id).toBe('lantana-456')
       expect(identifier.create_time).toEqual(new Date('2024-08-01T06:00:00Z'))

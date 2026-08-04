@@ -6,14 +6,14 @@ describe('URLog', () => {
     expectCloneCopiesAllFields(new URLog())
   })
 
-  describe('generate_info_identifer', () => {
+  describe('generate_info_identifier', () => {
     test('returns InfoIdentifier with matching id and times', () => {
       const urlog = new URLog()
       urlog.id = 'urlog-456'
       urlog.create_time = new Date('2024-04-01T10:00:00Z')
       urlog.update_time = new Date('2024-04-02T10:00:00Z')
 
-      const identifier = urlog.generate_info_identifer()
+      const identifier = urlog.generate_info_identifier()
 
       expect(identifier.id).toBe('urlog-456')
       expect(identifier.create_time).toEqual(new Date('2024-04-01T10:00:00Z'))

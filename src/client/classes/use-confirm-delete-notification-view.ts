@@ -21,8 +21,8 @@ export function useConfirmDeleteNotificationView(options: {
     const show_kyou: Ref<boolean> = ref(true)
 
     const notification_highlight_targets = computed<Array<InfoIdentifier>>(() => {
-        const info_identifer = props.notification.generate_info_identifer()
-        return [info_identifer]
+        const info_identifier = props.notification.generate_info_identifier()
+        return [info_identifier]
     })
 
     // ── CRUD relay handlers ──

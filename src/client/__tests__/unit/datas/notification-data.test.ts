@@ -6,14 +6,14 @@ describe('Notification', () => {
     expectCloneCopiesAllFields(new Notification())
   })
 
-  describe('generate_info_identifer', () => {
+  describe('generate_info_identifier', () => {
     test('returns InfoIdentifier with matching id and times', () => {
       const notification = new Notification()
       notification.id = 'notif-789'
       notification.create_time = new Date('2024-07-01T08:00:00Z')
       notification.update_time = new Date('2024-07-02T08:00:00Z')
 
-      const identifier = notification.generate_info_identifer()
+      const identifier = notification.generate_info_identifier()
 
       expect(identifier.id).toBe('notif-789')
       expect(identifier.create_time).toEqual(new Date('2024-07-01T08:00:00Z'))

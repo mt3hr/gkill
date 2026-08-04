@@ -107,8 +107,8 @@ const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 
 const notification_highlight_targets = computed<Array<InfoIdentifier>>(() => {
-  const info_identifer = props.notification.generate_info_identifer()
-  return [info_identifer]
+  const info_identifier = props.notification.generate_info_identifier()
+  return [info_identifier]
 })
 
 import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
