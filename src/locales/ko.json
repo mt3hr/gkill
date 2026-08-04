@@ -476,7 +476,7 @@
     "CLIENT_KC_IS_NULL_MESSAGE": "클라이언트 데이터가 잘못되었습니다",
     "REQUEST_CERTIFICATE_REQUIRED_MESSAGE": "서버 인증서를 설치해 주세요",
     "MI_ALL_BOARD_NAME_TITLE": "전체",
-    "REGISTERED_ACCOUNT_MESAGE": "등록이 완료되었습니다",
+    "REGISTERED_ACCOUNT_MESSAGE": "등록이 완료되었습니다",
     "COPIED_LAN_SHARE_KYOU_LINK_MESSAGE": "복사했습니다",
     "COPIED_LAN_SHARE_KYOU_OVER_LINK_MESSAGE": "복사했습니다",
     "ADD_MI_BOARD_TITLE": "보드 이름 추가",
