@@ -160,8 +160,7 @@ export function useFindQueryEditorView(options: {
 
     // ── Template event handlers ──
     function emits_current_query(): void {
-        // const currentt_query = generate_query(query.value.query_id)
-        // emits('updated_query', currentt_query)
+        // クエリ変更はSave時のみ反映
     }
 
     function emits_cleard_keyword_query(): void {

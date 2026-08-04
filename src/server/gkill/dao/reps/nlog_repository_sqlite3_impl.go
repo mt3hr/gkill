@@ -21,7 +21,7 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-const CURRENT_SCHEMA_VERSION_NLOG_REPOISITORY_SQLITE3IMPL_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_NLOG_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
 
 type nlogRepositorySQLite3Impl struct {
 	// キャッシュrepのフルリビルドを、実DBファイルが変わったときだけに絞るための判定用。
@@ -1369,7 +1369,7 @@ FROM NLOG
 
 func checkAndResolveDataSchemaNlogRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (isOld bool, oldVerDAO NlogRepository, err error) {
 	schemaVersionKey := "SCHEMA_VERSION_NLOG"
-	currentSchemaVersion := CURRENT_SCHEMA_VERSION_NLOG_REPOISITORY_SQLITE3IMPL_DAO
+	currentSchemaVersion := CURRENT_SCHEMA_VERSION_NLOG_REPOSITORY_SQLITE3IMPL_DAO
 
 	// テーブルとインデックスがなければ作る
 	createTableSQL := `
