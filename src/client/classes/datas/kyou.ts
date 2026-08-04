@@ -77,7 +77,7 @@ export class Kyou extends InfoBase {
             // 直後の load_attached_datas が同じものを読むので、
             // 両方書くと 1件につき /api/get_kyou が2回飛ぶ。
             awaitPromises.push(this.load_attached_datas(forceAttached))
-            return Promise.all(awaitPromises).then((errors_list) => {
+            return await Promise.all(awaitPromises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {
                     errors.push(...e)
@@ -177,7 +177,7 @@ export class Kyou extends InfoBase {
             awaitPromises.push(this.load_attached_notifications(force))
             awaitPromises.push(this.load_attached_timeis(force))
             awaitPromises.push(this.load_attached_histories())
-            return Promise.all(awaitPromises).then((errors_list) => {
+            return await Promise.all(awaitPromises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {
                     errors.push(...e)

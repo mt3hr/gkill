@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
@@ -23,7 +24,7 @@ type gitCommitLogRepositoryCachedSQLite3Impl struct {
 	m               *sync.RWMutex
 	ownDB           bool // trueの場合、永続ファイルDBを自前で管理する
 	backgroundUpdate bool // trueの場合、初回フルリビルドをバックグラウンドで実行する
-	isCacheBuilding  bool // trueの場合、バックグラウンドキャッシュビルド中
+	isCacheBuilding  atomic.Bool // trueの場合、バックグラウンドキャッシュビルド中（検索goroutineと並行に読み書きされる）
 	lastUpdateCacheChanged bool
 }
 
@@ -179,8 +180,13 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context,
 			return nil, err
 		}
 	}
-	// キャッシュビルド中は下層リポジトリにフォールバック
-	if g.isCacheBuilding {
+	// キャッシュビルド中は下層リポジトリにフォールバック。
+	// このメソッドはthreads.Goのスロットを保持したまま呼ばれるため、
+	// 集約リポジトリへ逃がすときは並列化しない逐次版を使う（ネストするとプールが枯渇して止まる）
+	if g.isCacheBuilding.Load() {
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.FindKyousSequential(ctx, query)
+		}
 		return g.gitRep.FindKyous(ctx, query)
 	}
 	g.m.RLock()
@@ -611,7 +617,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 	if g.backgroundUpdate && len(cachedIDs) == 0 && len(newIDs) > 0 {
 		slog.Log(ctx, gkill_log.Info, "git commit log cache build starting in background", "numCommits", len(newIDs))
 		currentRefHashes := g.getCurrentRefHashes(ctx)
-		g.isCacheBuilding = true
+		g.isCacheBuilding.Store(true)
 		go func() {
 			bgCtx := context.Background()
 			err := g.doIncrementalUpdate(bgCtx, newIDs, deletedIDs, currentRefHashes)
@@ -620,7 +626,7 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 			} else {
 				slog.Log(bgCtx, gkill_log.Info, "git commit log cache build completed", "numCommits", len(newIDs))
 			}
-			g.isCacheBuilding = false
+			g.isCacheBuilding.Store(false)
 		}()
 		g.lastUpdateCacheChanged = true
 		return nil
@@ -949,8 +955,11 @@ func (g *gitCommitLogRepositoryCachedSQLite3Impl) FindGitCommitLog(ctx context.C
 		}
 
 	}
-	// キャッシュビルド中は下層リポジトリにフォールバック
-	if g.isCacheBuilding {
+	// キャッシュビルド中は下層リポジトリにフォールバック（逐次版を使う理由はFindKyousと同じ）
+	if g.isCacheBuilding.Load() {
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.FindGitCommitLogSequential(ctx, query)
+		}
 		return g.gitRep.FindGitCommitLog(ctx, query)
 	}
 	g.m.RLock()
@@ -1159,8 +1168,11 @@ WHERE ID IN (` + strings.Join(placeholders, ",") + `)`
 }
 
 func (g *gitCommitLogRepositoryCachedSQLite3Impl) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
-	// キャッシュビルド中は下層リポジトリにフォールバック
-	if g.isCacheBuilding {
+	// キャッシュビルド中は下層リポジトリにフォールバック（逐次版を使う理由はFindKyousと同じ）
+	if g.isCacheBuilding.Load() {
+		if aggregated, ok := g.gitRep.(GitCommitLogRepositories); ok {
+			return aggregated.GetGitCommitLogSequential(ctx, id, updateTime)
+		}
 		return g.gitRep.GetGitCommitLog(ctx, id, updateTime)
 	}
 	g.m.RLock()

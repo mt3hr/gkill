@@ -62,12 +62,17 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	var logs object.CommitIter
 	if query.UseIDs && len(query.IDs) == 1 {
 		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((query.IDs)[0])})
+		if err != nil {
+			// IDがこのリポジトリに無いだけでもLogはエラーを返すため、
+			// 全走査で切り分ける（該当なしならIDフィルタで自然に0件になる）
+			logs, err = g.gitrep.Log(&git.LogOptions{All: true})
+		}
 	} else {
 		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
 	}
 	if err != nil {
-		return nil, nil
-		// return err
+		// 全走査も失敗する場合はgitリポジトリ自体の障害
+		return nil, fmt.Errorf("error at git log %s: %w", repName, err)
 	}
 	defer func() { logs.Close() }()
 
@@ -85,7 +90,7 @@ loop:
 		}
 		select {
 		case <-ctx.Done():
-			return nil, nil
+			return nil, ctx.Err()
 		default:
 			// 判定
 			match := true
@@ -236,8 +241,13 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 	var matchKyou *Kyou
 	logs, err := g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash(id)})
 	if err != nil {
-		return nil, nil
-		// return err
+		// IDがこのリポジトリに無いだけでもLogはエラーを返すため、
+		// 全走査で切り分ける（該当なしならIDフィルタで自然にnilになる）
+		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
+	}
+	if err != nil {
+		// 全走査も失敗する場合はgitリポジトリ自体の障害
+		return nil, fmt.Errorf("error at git log %s: %w", repName, err)
 	}
 	defer func() { logs.Close() }()
 loop:
@@ -247,14 +257,10 @@ loop:
 		}
 		select {
 		case <-ctx.Done():
-			return nil, nil
+			return nil, ctx.Err()
 		default:
 			// 判定
-			match := true
-			if id == commit.Hash.String() {
-				match = true
-			}
-			if !match {
+			if id != commit.Hash.String() {
 				continue
 			}
 
@@ -369,12 +375,18 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	var logs object.CommitIter
 	if query.UseIDs && len(query.IDs) == 1 {
 		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((query.IDs)[0])})
+		if err != nil {
+			// IDがこのリポジトリに無いだけでもLogはエラーを返すため、
+			// 全走査で切り分ける（該当なしならIDフィルタで自然に0件になる）
+			logs, err = g.gitrep.Log(&git.LogOptions{All: true})
+		}
 	} else {
 		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
 	}
 	if err != nil {
-		return nil, nil
-		// return err
+		// 全走査も失敗する場合はgitリポジトリ自体の障害
+		repName, _ := g.GetRepName(ctx)
+		return nil, fmt.Errorf("error at git log %s: %w", repName, err)
 	}
 	defer func() { logs.Close() }()
 loop:
@@ -384,7 +396,7 @@ loop:
 		}
 		select {
 		case <-ctx.Done():
-			return nil, nil
+			return nil, ctx.Err()
 		default:
 			// 判定
 			match := true
@@ -482,7 +494,9 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLogByIDs(ctx context.Cont
 	var matchedCommits []*object.Commit
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	if err != nil {
-		return nil, nil
+		// 全走査が失敗する場合はgitリポジトリ自体の障害
+		repName, _ := g.GetRepName(ctx)
+		return nil, fmt.Errorf("error at git log %s: %w", repName, err)
 	}
 	defer logs.Close()
 
@@ -599,7 +613,8 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 		// Log(From: hash) が失敗した場合（Android環境など）は Log(All: true) でフォールバック
 		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
 		if err != nil {
-			return nil, nil
+			// 全走査も失敗する場合はgitリポジトリ自体の障害
+			return nil, fmt.Errorf("error at git log %s: %w", repName, err)
 		}
 	}
 	defer func() { logs.Close() }()
@@ -611,7 +626,7 @@ loop:
 		}
 		select {
 		case <-ctx.Done():
-			return nil, nil
+			return nil, ctx.Err()
 		default:
 			// 判定
 			match := false
@@ -675,7 +690,8 @@ func (g *gitCommitLogRepositoryLocalImpl) GetLatestDataRepositoryAddress(ctx con
 
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	if err != nil {
-		return latestDataRepositoryAddresses, nil
+		// 全走査が失敗する場合はgitリポジトリ自体の障害
+		return nil, fmt.Errorf("error at git log %s: %w", repName, err)
 	}
 	defer logs.Close()
 
