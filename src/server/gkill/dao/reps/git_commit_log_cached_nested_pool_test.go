@@ -128,6 +128,18 @@ func TestGitCommitLogCachedBuildingFallbackDoesNotExhaustPool(t *testing.T) {
 			if _, err := impl.GetGitCommitLog(ctx, "not_exist_id", nil); err != nil {
 				t.Errorf("GetGitCommitLog() error: %v", err)
 			}
+			if _, err := impl.GetKyou(ctx, "not_exist_id", nil); err != nil {
+				t.Errorf("GetKyou() error: %v", err)
+			}
+			if _, err := impl.GetKyouHistories(ctx, "not_exist_id"); err != nil {
+				t.Errorf("GetKyouHistories() error: %v", err)
+			}
+			if _, err := impl.FindGitCommitLogByIDs(ctx, []string{"not_exist_id"}); err != nil {
+				t.Errorf("FindGitCommitLogByIDs() error: %v", err)
+			}
+			if _, err := impl.GetLatestDataRepositoryAddress(ctx, false); err != nil {
+				t.Errorf("GetLatestDataRepositoryAddress() error: %v", err)
+			}
 		})
 		if err != nil {
 			t.Errorf("threads.Go() error: %v", err)
@@ -139,6 +151,74 @@ func TestGitCommitLogCachedBuildingFallbackDoesNotExhaustPool(t *testing.T) {
 	case <-done:
 	case <-time.After(30 * time.Second):
 		t.Fatal("deadlock: キャッシュビルド中フォールバックがスレッドプール枯渇でハングした")
+	}
+}
+
+// stubGitCommitLogRepWithData はビルド中フォールバックの正当性テスト用。
+// GetKyou等が実データを返す
+type stubGitCommitLogRepWithData struct {
+	stubGitCommitLogRep
+}
+
+func (s *stubGitCommitLogRepWithData) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	return &Kyou{ID: id, DataType: "git_commit_log", RepName: "stub_git_rep_with_data"}, nil
+}
+
+func (s *stubGitCommitLogRepWithData) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	return []Kyou{{ID: id, DataType: "git_commit_log", RepName: "stub_git_rep_with_data"}}, nil
+}
+
+func (s *stubGitCommitLogRepWithData) FindGitCommitLogByIDs(ctx context.Context, ids []string) ([]GitCommitLog, error) {
+	logs := []GitCommitLog{}
+	for _, id := range ids {
+		logs = append(logs, GitCommitLog{ID: id, RepName: "stub_git_rep_with_data"})
+	}
+	return logs, nil
+}
+
+// バックグラウンドキャッシュビルド中でも GetKyou / GetKyouHistories が
+// 「データなし」ではなく下層リポジトリのデータを返すことの回帰テスト。
+// かつてはキャッシュ表(空)をそのまま読んで nil / 空配列を黙って返していた
+func TestGitCommitLogCachedBuildingFallbackReturnsUnderlyingData(t *testing.T) {
+	ctx := context.Background()
+
+	db, err := sqllib.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("open db: %v", err)
+	}
+	t.Cleanup(func() { db.Close() })
+
+	aggregated := GitCommitLogRepositories{&stubGitCommitLogRepWithData{}}
+	cachedRep, err := NewGitRepCachedSQLite3Impl(ctx, aggregated, db, nil, "GIT_COMMIT_LOG_FALLBACK_DATA_TEST")
+	if err != nil {
+		t.Fatalf("NewGitRepCachedSQLite3Impl() error: %v", err)
+	}
+	impl := cachedRep.(*gitCommitLogRepositoryCachedSQLite3Impl)
+	impl.isCacheBuilding.Store(true)
+	t.Cleanup(func() { impl.isCacheBuilding.Store(false) })
+
+	kyou, err := impl.GetKyou(ctx, "commit_hash_1", nil)
+	if err != nil {
+		t.Fatalf("GetKyou() error: %v", err)
+	}
+	if kyou == nil || kyou.ID != "commit_hash_1" {
+		t.Errorf("GetKyou() = %v, want underlying data (ビルド中に「存在しない」扱いになっている)", kyou)
+	}
+
+	histories, err := impl.GetKyouHistories(ctx, "commit_hash_1")
+	if err != nil {
+		t.Fatalf("GetKyouHistories() error: %v", err)
+	}
+	if len(histories) != 1 {
+		t.Errorf("GetKyouHistories() len = %d, want 1 (ビルド中に空扱いになっている)", len(histories))
+	}
+
+	logs, err := impl.FindGitCommitLogByIDs(ctx, []string{"commit_hash_1"})
+	if err != nil {
+		t.Fatalf("FindGitCommitLogByIDs() error: %v", err)
+	}
+	if len(logs) != 1 {
+		t.Errorf("FindGitCommitLogByIDs() len = %d, want 1", len(logs))
 	}
 }
 
