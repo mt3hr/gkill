@@ -2,7 +2,7 @@
 
 ## 概要
 
-DVNF (Data Versioning and Naming Framework) パッケージのテスト。ファイルのバージョン管理と命名規則に基づくファイル管理機能を検証する。
+DVNF（DeVice Name Folder Naming Framework）パッケージのテスト。ファイルのバージョン管理と命名規則に基づくファイル管理機能を検証する。
 
 ## テストフレームワーク
 

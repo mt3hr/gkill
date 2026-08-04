@@ -377,7 +377,7 @@ function summarizeToolError(name, error, detail) {
 }
 
 // ---------------------------------------------------------------------------
-// Tool definitions (7 read + 11 write + 9 update = 27 tools)
+// Tool definitions (8 read + 11 write + 9 update = 28 tools; +2 plugin tools via PLUGIN_TOOLS)
 // ---------------------------------------------------------------------------
 
 const TOOLS = [
