@@ -17,19 +17,19 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import type { miExtructCheckStateQueryEmits } from './mi-extruct-check-state-query-emits'
-import type { miExtructCheckStateQueryProps } from './mi-extruct-check-state-query-props'
-import { useMiExtructCheckStateQuery } from '@/classes/use-mi-extruct-check-state-query'
+import type { miExtractCheckStateQueryEmits } from './mi-extract-check-state-query-emits'
+import type { miExtractCheckStateQueryProps } from './mi-extract-check-state-query-props'
+import { useMiExtractCheckStateQuery } from '@/classes/use-mi-extract-check-state-query'
 
-const props = defineProps<miExtructCheckStateQueryProps>()
-const emits = defineEmits<miExtructCheckStateQueryEmits>()
+const props = defineProps<miExtractCheckStateQueryProps>()
+const emits = defineEmits<miExtractCheckStateQueryEmits>()
 
 const {
     use_mi_check_state,
     check_state,
     check_states,
-    get_update_extruct_check_state,
-} = useMiExtructCheckStateQuery({ props, emits })
+    get_update_extract_check_state,
+} = useMiExtractCheckStateQuery({ props, emits })
 
-defineExpose({ get_update_extruct_check_state })
+defineExpose({ get_update_extract_check_state })
 </script>

@@ -1,12 +1,12 @@
 import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import { MiCheckState } from '@/classes/api/find_query/mi-check-state'
-import type { miExtructCheckStateQueryEmits } from '@/pages/views/mi-extruct-check-state-query-emits'
-import type { miExtructCheckStateQueryProps } from '@/pages/views/mi-extruct-check-state-query-props'
+import type { miExtractCheckStateQueryEmits } from '@/pages/views/mi-extract-check-state-query-emits'
+import type { miExtractCheckStateQueryProps } from '@/pages/views/mi-extract-check-state-query-props'
 
-export function useMiExtructCheckStateQuery(options: {
-    props: miExtructCheckStateQueryProps,
-    emits: miExtructCheckStateQueryEmits,
+export function useMiExtractCheckStateQuery(options: {
+    props: miExtractCheckStateQueryProps,
+    emits: miExtractCheckStateQueryEmits,
 }) {
     const { props, emits } = options
 
@@ -44,7 +44,7 @@ export function useMiExtructCheckStateQuery(options: {
 
     watch(() => check_state.value, () => {
         if (!skip_emits_for_prop_change.value) {
-            emits('request_update_extruct_check_state', check_state.value)
+            emits('request_update_extract_check_state', check_state.value)
         }
     })
 
@@ -64,7 +64,7 @@ export function useMiExtructCheckStateQuery(options: {
         }
     }
 
-    function get_update_extruct_check_state(): MiCheckState {
+    function get_update_extract_check_state(): MiCheckState {
         return check_state.value
     }
 
@@ -78,6 +78,6 @@ export function useMiExtructCheckStateQuery(options: {
 
         // Methods
         load_check_state,
-        get_update_extruct_check_state,
+        get_update_extract_check_state,
     }
 }

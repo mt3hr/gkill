@@ -81,7 +81,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 |---|---|---|
 | ボード選択 | 入力 | タスクボードの切替（mi-board-query） |
 | ソート順 | 入力 | 並び順の選択（mi-sort-type-query） |
-| 完了状態フィルタ | 入力 | チェック状態での絞り込み（mi-extruct-check-state-query） |
+| 完了状態フィルタ | 入力 | チェック状態での絞り込み（mi-extract-check-state-query） |
 | タスクリスト | 表示 | タスク一覧（mi-kyou-view） |
 | タスク追加ボタン | 操作 | 新規タスク作成ダイアログ表示 |
 | クエリエディタサイドバー | 操作 | 高度な検索条件設定 |
@@ -576,7 +576,7 @@ gkillの検索機能は複数のクエリコンポーネントを組み合わせ
 | `map-query.vue` | 地図・GPS位置フィルタ |
 | `mi-board-query.vue` | タスクボードフィルタ |
 | `mi-sort-type-query.vue` | ソート順選択 |
-| `mi-extruct-check-state-query.vue` | タスク完了状態フィルタ |
+| `mi-extract-check-state-query.vue` | タスク完了状態フィルタ |
 | `find-query-editor-view.vue` | 高度な検索条件ビルダー（汎用Kyou向け） |
 | `mi-find-query-editor-view.vue` | MI専用検索条件エディタ（チェック状態フィルタ・ソート順・キーワード・タグ・TimeIs・地図・時間帯フィルタ対応） |
 | `rykv-query-editor-side-bar.vue` | RYKV画面用検索サイドバー |

@@ -703,7 +703,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 	return true, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) ExtructUpdatedLatestDataRepositoryAddressDatas(ctx context.Context, latestDataRepositoryAddresses []LatestDataRepositoryAddress) ([]LatestDataRepositoryAddress, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) ExtractUpdatedLatestDataRepositoryAddressDatas(ctx context.Context, latestDataRepositoryAddresses []LatestDataRepositoryAddress) ([]LatestDataRepositoryAddress, error) {
 	existlatestDataRepositoryAddresses, err := l.GetAllLatestDataRepositoryAddresses(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
@@ -730,7 +730,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) ExtructUpdatedLatestDataReposit
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddressesData(ctx context.Context, latestDataRepositoryAddresses []LatestDataRepositoryAddress) error {
-	notExistsLatestDataRepositoryAddresses, err := l.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
+	notExistsLatestDataRepositoryAddresses, err := l.ExtractUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repository addresses: %w", err)
 		return err

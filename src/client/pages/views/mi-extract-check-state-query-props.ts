@@ -2,4 +2,4 @@
 
 import type { miSidebarProps } from "./mi-sidebar-props"
 
-export type miExtructCheckStateQueryProps = miSidebarProps
+export type miExtractCheckStateQueryProps = miSidebarProps
