@@ -266,3 +266,28 @@ func TestReKyouRepositoriesFindKyousWithoutRepositoriesDoesNotPanic(t *testing.T
 		t.Fatalf("FindKyous failed: %v", err)
 	}
 }
+
+// リポジトリ群を辿れないReKyou repが、ReKyouを1件でも持っていても落ちないこと。
+// この経路(allowAllTargets)ではターゲット解決をせず全部通すので、
+// 解決に使う repsWithoutRekyou には触ってはいけない。
+// TX中の一時repや単体テストがこの形になる。
+func TestReKyouRepositoryFindKyousWithoutRepositoriesDoesNotPanic(t *testing.T) {
+	ctx := context.Background()
+	repo := newTempReKyouRepo(t, nil)
+	if err := repo.AddReKyouInfo(ctx, makeReKyou("rekyou-allow-all", "target-allow-all")); err != nil {
+		t.Fatalf("AddReKyouInfo failed: %v", err)
+	}
+
+	for name, query := range map[string]*find.FindQuery{
+		"ワード指定あり": wordQuery(),
+		"ワード指定なし": {},
+	} {
+		matchKyous, err := repo.FindKyous(ctx, query)
+		if err != nil {
+			t.Fatalf("%s: FindKyous failed: %v", name, err)
+		}
+		if len(matchKyous) != 1 {
+			t.Errorf("%s: ヒット件数 = %d, want 1 (ターゲット解決できないときは全部通す)", name, len(matchKyous))
+		}
+	}
+}
