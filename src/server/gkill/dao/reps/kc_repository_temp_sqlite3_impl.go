@@ -82,6 +82,12 @@ CREATE TABLE IF NOT EXISTS "KC" (
 		return nil, err
 	}
 
+	// 一時表への問い合わせは WHERE TX_ID = ? AND USER_ID = ? AND DEVICE = ? の形なので、
+	// ID先頭の既存索引では効かない。
+	if err := sqlite3impl.EnsureTxIDIndex(ctx, db, "KC"); err != nil {
+		return nil, err
+	}
+
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	_, err = stmt.ExecContext(ctx)
 

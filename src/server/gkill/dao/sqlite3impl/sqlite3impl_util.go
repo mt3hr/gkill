@@ -550,6 +550,29 @@ func EnsureUnixColumnIndex(ctx context.Context, db *sql.DB, tableName string, co
 	return nil
 }
 
+// EnsureTxIDIndex はトランザクション用一時表に (TX_ID, USER_ID, DEVICE) の索引を作成します。
+//
+// 一時表への問い合わせは13種すべてが
+// `WHERE TX_ID = ? AND USER_ID = ? AND DEVICE = ?` の形をしているのに、
+// 既存の索引はどれも ID か TARGET_ID が先頭で TX_ID を含んでいませんでした。
+// commit_tx は1コミットにつき13repへ Get...ByTXID と DeleteByTXID を呼ぶので、
+// 1コミットあたり最低26回の全表スキャンになります。
+//
+// 一時表は利用者単位の共有DBで、複数デバイス・複数トランザクションの行が同居するため、
+// 行数に比例して劣化します。
+func EnsureTxIDIndex(ctx context.Context, db *sql.DB, tableName string) error {
+	indexName := "INDEX_" + tableName + "_TX_ID"
+	indexSQL := fmt.Sprintf(
+		"CREATE INDEX IF NOT EXISTS %s ON %s (TX_ID, USER_ID, DEVICE);",
+		QuoteIdent(indexName), QuoteIdent(tableName),
+	)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
+	if _, err := db.ExecContext(ctx, indexSQL); err != nil {
+		return fmt.Errorf("error at create tx id index %s on %s: %w", indexName, tableName, err)
+	}
+	return nil
+}
+
 func GenerateNewID() string {
 	return uuid.New().String()
 }
