@@ -407,11 +407,14 @@ type miReKyouTargetFilter struct {
 	// allowAll はターゲット解決を行わずすべて通すかどうかです。
 	// TX中の一時リポジトリのようにリポジトリ横断の解決ができない場面で使います。
 	allowAll bool
-	// existTargetIDs は未削除で実在するターゲットIDです。
-	existTargetIDs map[string]bool
+	// reps は未削除で実在するターゲットIDを引くためのリポジトリ群です。
+	// 全件をmapに写し取らないのは、入れ子になった委譲のたびに
+	// アドレス表を全表スキャンすることになるためです。
+	reps *GkillRepositories
 	// useWordFilter はワード検索を行うかどうかです。
 	useWordFilter bool
 	// wordMatchTargetIDs はワード検索にヒットしたターゲットIDです。
+	// メモと共有しているので書き換えてはいけません。
 	wordMatchTargetIDs map[string]bool
 }
 
@@ -420,7 +423,8 @@ func (f *miReKyouTargetFilter) isMatch(targetID string) bool {
 	if f.allowAll {
 		return true
 	}
-	if !f.existTargetIDs[targetID] {
+	latestDataRepositoryAddress, exist := f.reps.GetLatestDataRepositoryAddress(targetID)
+	if !exist || latestDataRepositoryAddress.IsDeleted {
 		return false
 	}
 	if f.useWordFilter && !f.wordMatchTargetIDs[targetID] {
@@ -437,35 +441,26 @@ func newMiReKyouTargetFilter(ctx context.Context, repsWithoutMiReKyou *GkillRepo
 		return &miReKyouTargetFilter{allowAll: true}, nil
 	}
 
-	latestDataRepositoryAddresses, err := repsWithoutMiReKyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-	if err != nil {
+	if err := repsWithoutMiReKyou.EnsureLatestDataRepositoryAddresses(ctx); err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 		return nil, err
 	}
 
 	filter := &miReKyouTargetFilter{
-		existTargetIDs:     map[string]bool{},
+		reps:               repsWithoutMiReKyou,
 		wordMatchTargetIDs: map[string]bool{},
-	}
-	for targetID, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-		if !latestDataRepositoryAddress.IsDeleted {
-			filter.existTargetIDs[targetID] = true
-		}
 	}
 
 	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
-	filter.useWordFilter = query.UseWords && (len(query.Words) > 0 || len(query.NotWords) > 0)
+	filter.useWordFilter = isWordFilterEnabled(query)
 	if filter.useWordFilter {
-		wordMatchKyousMap, err := repsWithoutMiReKyou.Reps.FindKyousSequential(ctx, query)
+		// repsWithoutMiReKyou.Reps は cloneRepositoriesWithoutMiReKyou が
+		// collectTargetDataRepositories() の結果を入れたものなので、同じ集合
+		wordMatchTargetIDs, err := resolveMiReKyouWordMatchTargetIDs(ctx, repsWithoutMiReKyou.collectTargetDataRepositories(), query)
 		if err != nil {
-			err = fmt.Errorf("error at find kyous for word filter: %w", err)
 			return nil, err
 		}
-		for _, kyous := range wordMatchKyousMap {
-			for _, kyou := range kyous {
-				filter.wordMatchTargetIDs[kyou.ID] = true
-			}
-		}
+		filter.wordMatchTargetIDs = wordMatchTargetIDs
 	}
 	return filter, nil
 }
