@@ -12,7 +12,7 @@ import type KeywordQuery from '@/pages/views/keyword-query.vue'
 import type TimeIsQuery from '@/pages/views/time-is-query.vue'
 import type TagQuery from '@/pages/views/tag-query.vue'
 import type MapQuery from '@/pages/views/map-query.vue'
-import type miExtructCheckStateQuery from '@/pages/views/mi-extruct-check-state-query.vue'
+import type miExtractCheckStateQuery from '@/pages/views/mi-extract-check-state-query.vue'
 import type miSortTypeQuery from '@/pages/views/mi-sort-type-query.vue'
 import type PeriodOfTimeQuery from '@/pages/views/period-of-time-query.vue'
 
@@ -27,7 +27,7 @@ export function useMiFindQueryEditorView(options: {
     const timeis_query = ref<InstanceType<typeof TimeIsQuery> | null>(null)
     const tag_query = ref<InstanceType<typeof TagQuery> | null>(null)
     const map_query = ref<InstanceType<typeof MapQuery> | null>(null)
-    const check_state_query = ref<InstanceType<typeof miExtructCheckStateQuery> | null>(null)
+    const check_state_query = ref<InstanceType<typeof miExtractCheckStateQuery> | null>(null)
     const sort_type_query = ref<InstanceType<typeof miSortTypeQuery> | null>(null)
     const period_of_time_query = ref<InstanceType<typeof PeriodOfTimeQuery> | null>(null)
 
@@ -128,7 +128,7 @@ export function useMiFindQueryEditorView(options: {
         }
 
         if (check_state_query.value) {
-            find_query.mi_check_state = check_state_query.value.get_update_extruct_check_state()
+            find_query.mi_check_state = check_state_query.value.get_update_extract_check_state()
         }
 
         if (sort_type_query.value) {

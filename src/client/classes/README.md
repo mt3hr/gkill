@@ -155,7 +155,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-time-is-query.ts` | TimeIs クエリ |
 | `use-calendar-query.ts` / `use-map-query.ts` | カレンダー/地図クエリ |
 | `use-mi-board-query.ts` / `use-mi-sort-type-query.ts` | Mi ボード/ソートクエリ |
-| `use-mi-extruct-check-state-query.ts` | Mi チェック状態抽出 |
+| `use-mi-extract-check-state-query.ts` | Mi チェック状態抽出 |
 
 ### プラグイン系 Composable
 
