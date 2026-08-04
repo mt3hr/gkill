@@ -237,7 +237,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get tag histories: %w", e)
+			err = fmt.Errorf("error at get tags by tag name: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -311,7 +311,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get tag histories: %w", e)
+			err = fmt.Errorf("error at get tags by target id: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -673,7 +673,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get tag histories: %w", e)
+			err = fmt.Errorf("error at get all tags: %w", e)
 			existErr = true
 		default:
 			break errloop

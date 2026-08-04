@@ -238,7 +238,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get notification histories: %w", e)
+			err = fmt.Errorf("error at get notifications by target id: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -314,7 +314,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get notification histories: %w", e)
+			err = fmt.Errorf("error at get notifications between notification time: %w", e)
 			existErr = true
 		default:
 			break errloop
