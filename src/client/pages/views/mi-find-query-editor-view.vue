@@ -13,9 +13,9 @@
                 :inited="inited_keyword_query_for_query_sidebar" @inited="onInitedKeyword"
                 ref="keyword_query" />
             <div> <v-divider /> </div>
-            <miExtructCheckStateQuery :application_config="application_config" :gkill_api="gkill_api"
+            <miExtractCheckStateQuery :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="query" @request_clear_check_state="emits_cleard_check_state()"
-                @request_update_extruct_check_state="emits_current_query()"
+                @request_update_extract_check_state="emits_current_query()"
                 @inited="onInitedCheckState" ref="check_state_query" />
             <div> <v-divider /> </div>
             <miSortTypeQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
@@ -73,7 +73,7 @@ import MapQuery from './map-query.vue'
 import TagQuery from './tag-query.vue'
 import TimeIsQuery from './time-is-query.vue'
 import PeriodOfTimeQuery from './period-of-time-query.vue'
-import miExtructCheckStateQuery from './mi-extruct-check-state-query.vue'
+import miExtractCheckStateQuery from './mi-extract-check-state-query.vue'
 import miSortTypeQuery from './mi-sort-type-query.vue'
 import type { MiFindQueryEditorViewEmits } from './mi-find-query-editor-view-emits'
 import type { MiFindQueryEditorViewProps } from './mi-find-query-editor-view-props'
