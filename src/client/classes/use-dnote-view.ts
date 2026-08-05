@@ -7,7 +7,7 @@ import DnoteListQuery from '@/pages/views/dnote-list-query'
 import DnoteTrendGraphQuery from '@/pages/views/dnote-trend-graph-query'
 import type { DnoteEmits } from '@/pages/views/dnote-emits'
 import type { DnoteViewProps } from '@/pages/views/dnote-view-props'
-import regist_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_key_getter_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
+import register_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_key_getter_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
 import moment from 'moment'
 import { saveAs } from '@/classes/save-as'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -171,7 +171,7 @@ export function useDnoteView(options: {
     }
 
     function parse_single_definition_json(def_json: Record<string, unknown>): DnoteDefinition {
-        regist_dictionary()
+        register_dictionary()
         const name = (def_json.name as string) || i18n.global.t('DNOTE_DEFINITION_DEFAULT_NAME')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const items: Array<Array<DnoteItem>> = ((def_json && def_json.dnote_item_table_view_data ? def_json.dnote_item_table_view_data : []) as Array<Array<any>> || []).map((col: Array<any>) =>
@@ -278,7 +278,7 @@ export function useDnoteView(options: {
     }
 
     function from_json(json: unknown): void {
-        regist_dictionary()
+        register_dictionary()
         let definitions_json: Array<Record<string, unknown>>
         if (Array.isArray(json)) {
             definitions_json = json as Array<Record<string, unknown>>

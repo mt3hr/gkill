@@ -79,7 +79,7 @@ Service Worker の登録。PWA オフライン対応。
 | `/dashboard` | dashboard | `dashboard-page.vue` | ダッシュボード（日次サマリー・集計・GPS・タスク） |
 | `/saihate` | saihate | `saihate-page.vue` | Saihate（特殊ビュー） |
 | `/set_new_password` | set_new_password | `set-new-password-page.vue` | 新パスワード設定 |
-| `/regist_first_account` | regist_first_account | `regist-first-account-page.vue` | 初回アカウント登録 |
+| `/regist_first_account` | regist_first_account | `register-first-account-page.vue` | 初回アカウント登録 |
 | `/shared_page` | shared_page | `shared-page.vue` | Kyou 共有ページ |
 | `/shared_mi` | shared_mi | `old-shared-mi-page.vue` | 共有 Mi ページ |
 

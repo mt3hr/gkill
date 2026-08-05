@@ -457,7 +457,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の8つ（`
 | `/` | GET | Vue SPA（embed された index.html）。`router.Path("/")` として個別登録 |
 | `/rykv` `/kftl` `/mi` `/mkfl` `/kyou` `/dashboard` `/saihate` `/plaing` | GET | 同一SPAを配信（各パスが `PathPrefix` として個別登録される） |
 | `/shared_page` `/shared_mi` `/shared_rykv` | GET | 共有ページ用SPA。認証不要 |
-| `/set_new_password` `/regist_first_account` | GET | SPA。**この2つだけ `ifRedirectResetAdminAccountIsNotFound` を通らない**（`serve.go:262-276`）。管理者アカウント未設定時のリダイレクト先そのものなので、リダイレクト判定を通すとループするため |
+| `/set_new_password` `/register_first_account`（+旧 `/regist_first_account`） | GET | SPA。**この2つだけ `ifRedirectResetAdminAccountIsNotFound` を通らない**（`serve.go:262-276`）。管理者アカウント未設定時のリダイレクト先そのものなので、リダイレクト判定を通すとループするため |
 | （上記以外） | GET | catch-all の `PathPrefix("/")` が同一SPAを配信 |
 
 > `/shared_rykv` はサーバ側では配信されるが、`src/client/router/index.ts`（13ルート）に

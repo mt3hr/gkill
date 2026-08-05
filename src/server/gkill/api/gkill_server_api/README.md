@@ -121,7 +121,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 ## フロントエンドルーティング
 
 `serve.go` 内で Vue SPA のクライアントサイドルーティングに対応。
-`/rykv`、`/kftl`、`/mi`、`/kyou`、`/saihate`、`/plaing`、`/mkfl`、`/shared_*`、`/set_new_password`、`/regist_first_account`、`/` の各パスに対して、
+`/rykv`、`/kftl`、`/mi`、`/kyou`、`/saihate`、`/plaing`、`/mkfl`、`/shared_*`、`/set_new_password`、`/register_first_account`（旧 `/regist_first_account` も残置）、`/` の各パスに対して、
 埋め込み SPA の `index.html` を返す PathPrefix ルートを登録。
 
 ## ユーティリティ（`utils.go`）

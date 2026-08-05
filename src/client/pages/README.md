@@ -49,7 +49,7 @@ xxx-view-emits.ts     # Emits 定義
 | `saihate-page.vue` | `/saihate` | Saihate（特殊ビュー）ページ |
 | `dashboard-page.vue` | `/dashboard` | ダッシュボード（日次サマリー）ページ |
 | `set-new-password-page.vue` | `/set_new_password` | 新パスワード設定ページ |
-| `regist-first-account-page.vue` | `/regist_first_account` | 初回アカウント登録 |
+| `register-first-account-page.vue` | `/regist_first_account` | 初回アカウント登録 |
 | `shared-page.vue` | `/shared_page` | 共有ページ |
 | `old-shared-mi-page.vue` | `/shared_mi` | 旧共有 Mi ページ |
 | `shared-mi-page.vue` | — | 共有 Mi ページ（新） |
@@ -168,7 +168,7 @@ xxx-view-emits.ts     # Emits 定義
 | `allocate-rep-view.vue` | リポジトリ割り当て |
 | `login-view.vue` / `create-account-view.vue` / `manage-account-view.vue` | 認証・アカウント管理 |
 | `set-new-password-view.vue` / `show-password-reset-link-view.vue` | パスワード管理 |
-| `regist-first-account-view.vue` | 初回アカウント登録 |
+| `register-first-account-view.vue` | 初回アカウント登録 |
 
 ### DNote 系
 

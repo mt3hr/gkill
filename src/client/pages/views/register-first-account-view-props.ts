@@ -2,7 +2,7 @@
 
 import type { GkillPropsBase } from "./gkill-props-base"
 
-export interface RegistFirstAccountViewProps extends GkillPropsBase {
+export interface RegisterFirstAccountViewProps extends GkillPropsBase {
     app_content_height: number
 
     app_content_width: number

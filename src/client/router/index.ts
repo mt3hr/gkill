@@ -11,7 +11,7 @@ import shared_page from '../pages/shared-page.vue'
 import old_shared_mi_page from '../pages/old-shared-mi-page.vue'
 import plaing_timeis_page from '@/pages/plaing-time-is-page.vue'
 import mkfl_page from '@/pages/mkfl-page.vue'
-import regist_first_account_page from '@/pages/regist-first-account-page.vue'
+import register_first_account_page from '@/pages/register-first-account-page.vue'
 import dashboard_page from '@/pages/dashboard-page.vue'
 
 const router = createRouter({
@@ -68,9 +68,15 @@ const router = createRouter({
       component: set_new_password_page,
     },
     {
+      path: '/register_first_account',
+      name: 'register_first_account',
+      component: register_first_account_page
+    },
+    {
+      // 旧パス。ブックマークや古い資料からの流入を新パスへ寄せる。
+      // reset_token クエリを落とすと初回セットアップが通らないので引き継ぐこと。
       path: '/regist_first_account',
-      name: 'regist_first_account',
-      component: regist_first_account_page
+      redirect: (to) => ({ path: '/register_first_account', query: to.query }),
     },
     {
       path: '/shared_page',

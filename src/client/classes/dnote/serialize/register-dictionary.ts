@@ -73,7 +73,7 @@ import EqualTagsOrTargetKyouPredicate from "../dnote-predicate/target-kyou-predi
 import EqualDataTypeTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-rep-data-type-target-kyou-predicate"
 import EqualIdTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-id-target-kyou-predicate"
 
-export default function regist_dictionary(): void {
+export default function register_dictionary(): void {
     PredicateDictionary.set("AndPredicate", AndPredicate)
     PredicateDictionary.set("DataTypePrefixPredicate", DataTypePrefixPredicate)
     PredicateDictionary.set("GitCommitLogCodeAdditionGreaterThanPredicate", GitCommitLogCodeAdditionGreaterThanPredicate)
@@ -146,7 +146,7 @@ export default function regist_dictionary(): void {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function build_dnote_aggregate_target_from_json(json: any): DnoteAgregateTarget {
-    regist_dictionary()
+    register_dictionary()
     const ctor = AgregateTargetDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown aggregate type: ${json.type}`)
     return ctor.from_json(json) as DnoteAgregateTarget
@@ -154,7 +154,7 @@ export function build_dnote_aggregate_target_from_json(json: any): DnoteAgregate
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function build_dnote_key_getter_from_json(json: any): DnoteKeyGetter {
-    regist_dictionary()
+    register_dictionary()
     const ctor = DnoteKeyGetterDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown getter type: ${json.type}`)
     return ctor.from_json(json) as DnoteKeyGetter
@@ -162,7 +162,7 @@ export function build_dnote_key_getter_from_json(json: any): DnoteKeyGetter {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function build_dnote_predicate_from_json(json: any): DnotePredicate {
-    regist_dictionary()
+    register_dictionary()
     if ('logic' in json && Array.isArray(json.predicates)) {
         const children = json.predicates.map(build_dnote_predicate_from_json)
         if (json.logic === 'AND') return new AndPredicate(children)
@@ -178,7 +178,7 @@ export function build_dnote_predicate_from_json(json: any): DnotePredicate {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function build_dnote_kyou_filter_from_json(json: any): DnoteKyouFilter {
-    regist_dictionary()
+    register_dictionary()
     const ctor = DnoteKyouFilterDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown getter type: ${json.type}`)
     return ctor.from_json(json) as DnoteKyouFilter

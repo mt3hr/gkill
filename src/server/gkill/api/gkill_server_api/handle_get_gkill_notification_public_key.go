@@ -34,7 +34,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiTaskNotificationPublicKeyResponseDataError,
-				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGISTER_MI_TASK_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -47,7 +47,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiTaskNotificationPublicKeyRequestDataError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGISTER_MI_TASK_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -64,7 +64,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
+			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGISTER_MI_TASK_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

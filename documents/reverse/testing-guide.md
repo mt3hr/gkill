@@ -127,7 +127,7 @@ npx playwright test --debug
 5. `GKILL_E2E_BASE_URL` / `GKILL_E2E_VITE_URL` を渡して `npx playwright test` を実行
 6. テスト完了後に Vite と gkill_server を停止
 
-これにより毎回クリーンな状態でテストが実行されます。初回テスト実行時、`helpers.ts` の `loginAsAdmin()` がサーバから reset_token を取得し、`/regist_first_account` ページで自動的にアカウント登録とパスワード設定を行います（初期 admin は `PasswordResetToken` が設定されているため、この登録なしにはログインできません）。
+これにより毎回クリーンな状態でテストが実行されます。初回テスト実行時、`helpers.ts` の `loginAsAdmin()` がサーバから reset_token を取得し、`/register_first_account` ページで自動的にアカウント登録とパスワード設定を行います（初期 admin は `PasswordResetToken` が設定されているため、この登録なしにはログインできません）。
 
 > **ポートは固定ではありません。** 開発機で本番 `gkill_server` が :9999 を占有していても衝突しないよう、E2E が使うポートは毎回 OS から空きポートを採番します。プロセス停止も `gkill_test` を含むものに限定しているため、常駐している本番サーバを巻き込みません。
 
@@ -307,7 +307,7 @@ src/client/__tests__/
 | `dashboard.spec.ts` | `/dashboard` | ダッシュボード表示（ナビゲーション、描画、JSエラーなし確認） |
 | `share-page.spec.ts` | `/shared_page` | 共有ページ |
 | `shared-mi.spec.ts` | `/shared_mi` | 共有タスク |
-| `regist-first-account.spec.ts` | `/regist_first_account` | 初回アカウント登録 |
+| `register-first-account.spec.ts` | `/regist_first_account` | 初回アカウント登録 |
 | `set-new-password.spec.ts` | `/set_new_password` | パスワード再設定 |
 
 #### CRUD 操作フロー系（8 spec files）

@@ -1,9 +1,9 @@
 /**
  * D-note Serialization Dictionary and round-trip tests.
  */
-import regist_dictionary, {
+import register_dictionary, {
   build_dnote_predicate_from_json,
-} from '@/classes/dnote/serialize/regist-dictionary'
+} from '@/classes/dnote/serialize/register-dictionary'
 import PredicateDictionary from '@/classes/dnote/serialize/dnote-predicate-dictionary'
 import AgregateTargetDictionary from '@/classes/dnote/serialize/dnote-aggregate-target-dictionary'
 import DnoteKeyGetterDictionary from '@/classes/dnote/serialize/dnote-key-getter-dictionary'
@@ -11,7 +11,7 @@ import DnoteKyouFilterDictionary from '@/classes/dnote/serialize/dnote-kyou-filt
 
 // Ensure dictionaries are populated
 beforeAll(() => {
-  regist_dictionary()
+  register_dictionary()
 })
 
 describe('dnote-predicate-dictionary', () => {

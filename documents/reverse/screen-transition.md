@@ -17,7 +17,7 @@ stateDiagram-v2
     LoginPage --> DashboardPage: ログイン成功 → /dashboard
     LoginPage --> SaihatePage: ログイン成功 → /saihate
     LoginPage --> SetNewPasswordPage: パスワードリセットリンク → /set_new_password
-    LoginPage --> RegistFirstAccountPage: 初回起動 → /regist_first_account
+    LoginPage --> RegisterFirstAccountPage: 初回起動 → /regist_first_account
 
     KFTLPage --> RykvPage: ナビゲーション
     RykvPage --> KFTLPage: ナビゲーション
@@ -63,7 +63,7 @@ stateDiagram-v2
 | `/dashboard` | DashboardPage | 要 | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/saihate` | SaihatePage | 要 | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | SetNewPasswordPage | 不要 | 新パスワード設定 |
-| `/regist_first_account` | RegistFirstAccountPage | 不要 | 初回アカウント登録 |
+| `/regist_first_account` | RegisterFirstAccountPage | 不要 | 初回アカウント登録 |
 | `/shared_page` | SharedPage | 不要 | 共有 Kyou / タスク閲覧（`view_type` で内部振り分け） |
 | `/shared_mi` | OldSharedMiPage | 不要 | 旧URL。`/shared_page?share_id=…` へリダイレクトするだけ |
 
@@ -76,13 +76,13 @@ stateDiagram-v2
 | **記録追加・入力系** | RykvPage（ライフログビュー）、KFTLPage、MkflPage | データの入力と追加。RykvはFABメニューから全データ型の追加が可能で最も汎用的。KFTLはテキスト構文入力、MkflはTimeIsとKFTL入力を同一画面で管理 |
 | **閲覧・検索系** | RykvPage（タイムライン表示）、KyouPage、DashboardPage | 記録されたデータの時系列閲覧・検索・フィルタリング。RykvはタイムラインとDnote集計ビューを統合。Dashboardは日次サマリー（Dnote・GPS・Mi一覧） |
 | **タスク管理系** | MiPage、PlaingPage | タスク（Mi）の管理。MiPageはカンバンボード形式でタスクを管理。PlaingPageは進行中のTimeIsセッションを一覧表示 |
-| **特殊・補助系** | SaihatePage、LoginPage、SetNewPasswordPage、RegistFirstAccountPage、SharedPage、OldSharedMiPage | SaihatePageはナビゲーション不要の記録追加専用画面（ホーム画面ウィジェット等からの直接記録に使用）。認証フロー（ログイン・初回登録・パスワードリセット）と共有ページがこのグループに含まれる |
+| **特殊・補助系** | SaihatePage、LoginPage、SetNewPasswordPage、RegisterFirstAccountPage、SharedPage、OldSharedMiPage | SaihatePageはナビゲーション不要の記録追加専用画面（ホーム画面ウィジェット等からの直接記録に使用）。認証フロー（ログイン・初回登録・パスワードリセット）と共有ページがこのグループに含まれる |
 
 ### 2.3 各画面の詳細説明
 
 #### LoginPage（ログイン画面）`/`
 
-ユーザーIDとパスワード（SHA256ハッシュ化して送信、サーバ側はArgon2idで照合）でログインする起点画面。パスワードリセットリンク経由でSetNewPasswordPageへ、初回起動時はRegistFirstAccountPageへ自動遷移する。ログイン成功後のリダイレクト先は最後にアクセスした画面（Vue Routerの履歴から復元）。
+ユーザーIDとパスワード（SHA256ハッシュ化して送信、サーバ側はArgon2idで照合）でログインする起点画面。パスワードリセットリンク経由でSetNewPasswordPageへ、初回起動時はRegisterFirstAccountPageへ自動遷移する。ログイン成功後のリダイレクト先は最後にアクセスした画面（Vue Routerの履歴から復元）。
 
 #### KFTLPage（KFTL入力画面）`/kftl`
 

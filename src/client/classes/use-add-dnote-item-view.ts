@@ -6,7 +6,7 @@ import type DnoteSelectItem from '@/classes/dnote/dnote-select-item'
 import DnoteItem from '@/classes/dnote/dnote-item'
 import type AddDnoteItemViewEmits from '@/pages/views/add-dnote-item-view-emits'
 import type AddDnoteItemViewProps from '@/pages/views/add-dnote-item-view-props'
-import { build_dnote_aggregate_target_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
+import { build_dnote_aggregate_target_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
 
 export function useAddDnoteItemView(options: {
     props: AddDnoteItemViewProps,

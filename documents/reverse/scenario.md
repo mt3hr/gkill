@@ -164,7 +164,7 @@ sequenceDiagram
     Serve->>Serve: ListenAndServe(TLS) :9999
 
     Note over User,SesDAO: ── 初回アカウント登録 & ログイン ──
-    User->>UI: /regist_first_account でパスワード設定
+    User->>UI: /register_first_account でパスワード設定
     UI->>API: POST /api/set_new_password 等（reset token）
     User->>UI: ユーザID・パスワード入力
     UI->>API: POST /api/login<br>{user_id, password_sha256, locale_name}

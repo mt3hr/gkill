@@ -1,7 +1,7 @@
 import { ref, type Ref } from 'vue'
 import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { Kyou } from '@/classes/datas/kyou'
-import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
+import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
 import AndPredicate from '@/classes/dnote/dnote-predicate/and-predicate'
 import RelatedTimeBeforePredicate from '@/classes/dnote/dnote-predicate/related-time-before-predicate'
 import RelatedTimeAfterPredicate from '@/classes/dnote/dnote-predicate/related-time-after-predicate'

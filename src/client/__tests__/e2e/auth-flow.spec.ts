@@ -75,7 +75,7 @@ test.describe('Auth Flow Tests', () => {
 
         // Should still be on login page (login should fail)
         const url = page.url()
-        const stillOnLogin = url.endsWith('/') || url.includes('/login') || url.includes('/set_new_password') || url.includes('/regist_first_account')
+        const stillOnLogin = url.endsWith('/') || url.includes('/login') || url.includes('/set_new_password') || url.includes('/register_first_account')
         expect(stillOnLogin).toBe(true)
       }
     }

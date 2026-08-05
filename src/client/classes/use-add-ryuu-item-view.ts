@@ -7,7 +7,7 @@ import type AddRyuuItemViewProps from '@/pages/views/add-ryuu-item-view-props'
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
 import { RelatedTimeMatchType } from '@/classes/dnote/related-time-match-type'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
+import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
 
 export function useAddRyuuItemView(options: {
     props: AddRyuuItemViewProps,
