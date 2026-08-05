@@ -691,7 +691,7 @@ classDiagram
 
     note for Kyou "typed_xxx フィールドで\n具体的なデータ型を保持\nload_all() で遅延ロード\ntyped_plugin は既存型に該当しない\nプラグインKyouの場合にセットされる"
     note for MetaInfoBase "Kyou に付随するメタ情報の基底。\ntarget_id で対象 Kyou を指す。\nTag / Text / Notification が継承する\n（InfoBase ではない点に注意）"
-    note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n約3,660行 / 約177KB"
+    note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n約3,330行"
 ```
 
 ### ZIP閲覧関連の構造体
