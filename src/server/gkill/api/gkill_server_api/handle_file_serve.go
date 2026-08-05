@@ -10,6 +10,18 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
+// HandleFileServe は、IDFリポジトリが管理するファイル実体を配信します。
+//
+// GET /files/{repName}/{rep内相対パス}（PathPrefixルート・wrapNoAuth）
+// req_res は使わず、ファイル本体をそのまま返します。
+//
+// リクエストボディを読まないので、認証はクッキーで行います。
+// gkill_session_id があればそのセッションの利用者、無ければ gkill_shared_id を
+// 共有IDとみなして共有設定の作成者を利用者とします
+// （共有ページから画像などを表示するための経路）。どちらも解決できなければ403です。
+// パスの /files/ に続くセグメントをrep名として扱い、名前が一致するIDFリポジトリへ
+// StripPrefixして委譲するので、?thumb= の解釈やサムネイル・互換動画の生成は委譲先が行います。
+// 一致するrepが無ければ404です。
 func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request) {
 
 	sessionID := ""

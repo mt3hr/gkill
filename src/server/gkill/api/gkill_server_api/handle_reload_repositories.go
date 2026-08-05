@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleReloadRepositories はログイン中の利用者のリポジトリを閉じて読み込み直します。
+//
+// POST /api/reload_repositories（wrapAuth）
+// req_res.ReloadRepositoriesRequest / req_res.ReloadRepositoriesResponse
+//
+// 最新版の所在情報を全削除してからリポジトリを開き直すので、設定DBの変更がここで反映されます。
+// ClearThumbCache / ClearVideoCache / ClearZipCache が真なら、
+// あわせてその利用者のサムネイル・互換動画・ZIP展開のキャッシュも消します。
 func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

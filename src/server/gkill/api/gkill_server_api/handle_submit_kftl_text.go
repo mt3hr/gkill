@@ -16,6 +16,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleSubmitKFTLText はKFTL形式のテキストを解釈し、生成されたKyouを記録します。
+//
+// POST /api/submit_kftl_text（wrapAuthRepos）
+// req_res.SubmitKFTLTextRequest / req_res.SubmitKFTLTextResponse
+//
+// 解釈にはテンプレート等を含むApplicationConfigが要ります。未登録の利用者・端末に対しては
+// 既定値を登録してから読み直すので、初回リクエストでもエラーにはしません。
+// 記録は書き込み用repへ直接行います。リクエストにTXIDはなく、
+// commit_tx/discard_txの未確定状態は経由しません。
+// 生成されるKyouのCreateApp/UpdateAppは "gkill_kftl" 固定です。
 func (g *GkillServerAPI) HandleSubmitKFTLText(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.SubmitKFTLTextRequest{}

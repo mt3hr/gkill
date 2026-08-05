@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateUserReps は対象利用者のリポジトリ一覧を、送られてきた内容で置き換えます。
+//
+// POST /api/update_user_reps（wrapAuth）
+// req_res.UpdateUserRepsRequest / req_res.UpdateUserRepsResponse
+//
+// 管理者でなければ弾きます。
+// 差分更新ではなく対象利用者のリポジトリを全削除してからUpdatedRepsを書き込むので、
+// 送り漏らしたリポジトリは設定から消えます。
+// 書き換えるのは設定DBの登録内容だけで、読み込み済みのリポジトリには反映されません
+// （反映には /api/reload_repositories が要ります）。
 func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

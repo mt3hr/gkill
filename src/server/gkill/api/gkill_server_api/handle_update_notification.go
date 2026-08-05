@@ -14,6 +14,15 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateNotification はKyouに紐づく通知を更新します。
+//
+// POST /api/update_gkill_notification（wrapAuthRepos）
+// req_res.UpdateNotificationRequest / req_res.UpdateNotificationResponse
+//
+// 更新は追記です（同一IDに新しいUPDATE_TIME版を足す）。TXIDが非nilならtempリポジトリに積むだけで、
+// commit_txするまで実リポジトリには反映されません。対象IDが存在しない場合はerrorsに載せて返します。
+// 書き込み後にNotificatorのUpdateNotificationTargetsを呼んで送信予定を組み直すため、
+// そこで失敗すると通知の更新自体は済んでいるのにerrorsだけが返ります。
 func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

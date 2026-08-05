@@ -20,6 +20,18 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleURLogBookmarkletAddress は、ブックマークレットから送られたページ情報を
+// URLogとして保存します。
+//
+// POST /api/urlog_bookmarklet（wrapNoAuth）
+// req_res.URLogBookmarkletRequest（対になるレスポンス型は無く、HTTPステータスだけを返します）
+//
+// 任意のサイト上から叩かれるのでCORSを全オリジンに開けています。
+// 認証はSessionIDですが、ApplicationName が "urlog_bookmarklet" のセッションでなければ
+// 通りません (401)。このセッションはログイン時に自動作成されます。
+// ImageURL / FaviconURL はサーバ側が取得してbase64で埋め込みます。
+// 取得に失敗しても警告ログを残すだけで、保存は続行します。
+// 保存後はWeb Pushで通知しますが、通知処理の失敗はHTTPステータスに反映されません。
 func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")

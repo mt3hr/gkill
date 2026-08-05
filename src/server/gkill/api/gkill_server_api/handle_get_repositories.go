@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetRepositories はログイン利用者の当該端末に設定されたリポジトリ定義一覧を返します。
+//
+// POST /api/get_repositories（wrapAuthRepos）
+// req_res.GetRepositoriesRequest / req_res.GetRepositoriesResponse
+//
+// 返すのは設定DB上の定義（user_config.Repository）であって、リポジトリ内のデータではありません。
+// 各要素のFileはサーバ上のパスなので、応答前に空文字へ潰してから返します。
+// (userID, device) の組で引くため、同じ利用者でも端末が違えば結果は変わります。
 func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

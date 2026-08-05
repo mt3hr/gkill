@@ -26,6 +26,21 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUploadFiles は、base64で送られたファイル群をIDFリポジトリのディレクトリへ保存し、
+// IDFKyouとして登録します。
+//
+// POST /api/upload_files（wrapNoAuth）
+// req_res.UploadFilesRequest / req_res.UploadFilesResponse
+//
+// wrapNoAuth登録ですが、ハンドラ内でSessionIDからアカウントを解決するので未認証では使えません。
+// 保存先はTargetRepNameに名前が一致するIDFリポジトリです。
+// CacheIDFKyouReps有効時はIDFKyouRepsが単一のキャッシュrepに統合されて個別名で引けないため、
+// WriteIDFKyouRepの名前も照合します。それでも見つからなければエラーです。
+// 保存名の衝突時の扱いはConflictBehaviorに従います。
+// ファイルの書き出しは並列で、1件でも失敗したらエラーだけを返してIDFKyouの登録は行いません
+// （このとき書き出し済みのファイルはディスクに残ります）。
+// 処理中はSetSkipIDFでIDFの走査を止めます。
+// 成功時は登録したKyouをRelatedTimeの降順で返します。
 func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

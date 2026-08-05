@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetAllTagNames は、利用者の全レポジトリに存在するタグ名の一覧を返します。
+//
+// POST /api/get_all_tag_names（wrapAuthRepos）
+// req_res.GetAllTagNamesRequest / req_res.GetAllTagNamesResponse
+//
+// rep跨ぎでタグIDごとの最新版を決めてから名前を集めるので、
+// 別repに改名後の版があるタグの旧名は混ざりません。削除済みタグは含めません。
+// 同名タグは1つにまとめられ、順序は保証しません。
 func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

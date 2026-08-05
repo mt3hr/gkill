@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateCache は指定された利用者のリポジトリキャッシュを更新します。
+//
+// POST /api/update_cache（wrapAuth）
+// req_res.UpdateCacheRequest / req_res.UpdateCacheResponse
+//
+// 自分以外の利用者のキャッシュも更新できる特権操作なので、管理者アカウントのセッションを要求します。
+// UserIDsを先頭から順に処理し、途中で失敗するとそこで打ち切るため、
+// それより前の利用者だけ更新された状態で終わります。
 func (g *GkillServerAPI) HandleUpdateCache(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateCacheRequest{}

@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddMi はタスク（Mi）を1件追加します。
+//
+// POST /api/add_mi（wrapAuthRepos）
+// req_res.AddMiRequest / req_res.AddMiResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのMiが既にある場合は追加せず、AlreadyExistMiErrorをerrorsに積んで返す。
+// WantResponseKyouがtrueのときだけ、登録後にリポジトリから読み直してAddedMiとAddedKyouを返す
+// （TXID指定時は一時リポジトリにしか無いためどちらもnilになる）。
 func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

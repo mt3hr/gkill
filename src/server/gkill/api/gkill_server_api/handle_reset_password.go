@@ -16,6 +16,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleResetPassword は、対象アカウントのパスワードを消してリセットトークンを発行します。
+//
+// POST /api/reset_password（wrapNoAuth）
+// req_res.ResetPasswordRequest / req_res.ResetPasswordResponse
+//
+// 実行者はSessionIDから解決し、IsAdmin でなければ弾きます。
+// 対象アカウント (TargetUserID) はPasswordHashがnilになり、
+// リセットトークンと期限 (account.PasswordResetTokenTTL) が設定された状態になるので、
+// HandleSetNewPassword で新しいパスワードを設定するまでログインできなくなります。
+// PasswordResetPathWithoutHost には発行したトークンそのものが入ります。
 func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddText はKyouに紐づくテキスト（本文への注釈）を1件追加します。
+//
+// POST /api/add_text（wrapAuthRepos）
+// req_res.AddTextRequest / req_res.AddTextResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのテキストが既にある場合は追加せず、AlreadyExistTextErrorをerrorsに積んで返す。
+// 成功時はリポジトリから読み直したテキストをAddedTextに入れる（TXID指定時は
+// 一時リポジトリにしか無いためnilになる）。
 func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

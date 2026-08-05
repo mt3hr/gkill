@@ -14,6 +14,17 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddRekyou は既存Kyouの再投稿（ReKyou。TargetIDだけを持つ参照）を1件追加します。
+//
+// POST /api/add_rekyou（wrapAuthRepos）
+// req_res.AddReKyouRequest / req_res.AddReKyouResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのReKyouが既にある場合は追加せず、AlreadyExistReKyouErrorをerrorsに積んで返す。
+// TargetIDの実在は検証しないので、存在しないKyouを指すReKyouも登録できる。
+// WantResponseKyouがtrueのときだけ、登録後にリポジトリから読み直してAddedReKyouとAddedKyouを返す
+// （TXID指定時は一時リポジトリにしか無いためどちらもnilになる）。
 func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

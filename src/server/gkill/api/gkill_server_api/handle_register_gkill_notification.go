@@ -16,6 +16,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleRegisterGkillNotification はブラウザのプッシュ購読情報を、
+// ログイン中の利用者宛ての通知先として登録します。
+//
+// POST /api/register_gkill_notification（wrapAuth）
+// req_res.RegisterGkillNotificationRequest / req_res.RegisterGkillNotificationResponse
+//
+// 呼ばれるたびに新しいIDで追加するだけなので、同じ購読を重ねて登録しても弾かれません。
 func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

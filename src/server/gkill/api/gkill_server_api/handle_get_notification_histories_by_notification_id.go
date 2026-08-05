@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetNotificationHistoriesByNotificationID は指定IDの通知の履歴を新しい順に返します。
+//
+// POST /api/get_gkill_notification_histories_by_notification_id（wrapAuthRepos）
+// req_res.GetNotificationHistoryByNotificationIDRequest / req_res.GetNotificationHistoryByNotificationIDResponse
+//
+// UpdateTimeが非nilならその版だけを1件の配列で返し、nilならID一致の全版を返します。
+// タグ・テキストの同種APIと違い、リクエストにRepNameがないのでrepでの絞り込みはできません。
+// 削除済み（IsDeleted）の版も履歴として含まれます。
 func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

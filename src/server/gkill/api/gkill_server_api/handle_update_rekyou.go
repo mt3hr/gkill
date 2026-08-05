@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateRekyou は既存Kyouのリポスト（ReKyou）を更新します。
+// 書き換わるのはリポスト自体で、リポスト先のKyouには触れません。
+//
+// POST /api/update_rekyou（wrapAuthRepos）
+// req_res.UpdateReKyouRequest / req_res.UpdateReKyouResponse（ハンドラ名と違いreq_res側はReKyou表記）
+//
+// 更新は追記です（同一IDに新しいUPDATE_TIME版を足す）。TXIDが非nilならtempリポジトリに積むだけで、
+// commit_txするまで実リポジトリには反映されません。対象IDが存在しない場合はerrorsに載せて返します。
+// WantResponseKyouがtrueのときだけReKyouとKyouを読み直して返します
+// （読み直し先は実リポジトリなので、TXID指定時はtempに積んだ内容が載りません）。
 func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

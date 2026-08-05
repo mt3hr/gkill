@@ -16,6 +16,17 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleSetNewPassword は、リセットトークンを検証して新しいパスワードを設定します。
+//
+// POST /api/set_new_password（wrapNoAuth）
+// req_res.SetNewPasswordRequest / req_res.SetNewPasswordResponse
+//
+// セッション不要で叩けるエンドポイントなので、送信元IP単位のレート制限で
+// リセットトークンの総当たりを抑えます。
+// NewPasswordSha256 は64桁hexでなければ受け付けません。
+// トークンの照合はconstant-timeで行い、期限切れも弾きます。
+// 設定に成功したらそのユーザの既存ログインセッションを全て失効させますが、
+// 失効に失敗してもパスワード自体は変わっているので、ログだけ残して成功として返します。
 func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

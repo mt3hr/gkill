@@ -16,6 +16,18 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleLogin は、user_idとパスワードのSHA-256を検証してログインセッションを発行します。
+//
+// POST /api/login（wrapNoAuth）
+// req_res.LoginRequest / req_res.LoginResponse
+//
+// 送信元IP単位のレート制限があり、超過した場合は資格情報を検証せずに弾きます。
+// 無効化済みのアカウントと、パスワードリセット中 (PasswordResetToken が非nil) の
+// アカウントもログインできません。パスワード未設定のアカウントは不一致として扱います。
+// 成功時はSessionIDを返すほか、そのユーザにURLogブックマークレット用
+// (ApplicationName = "urlog_bookmarklet") のセッションが無ければ併せて作成します。
+// 既にあって期限切れの場合はsession_idを変えずに有効期限だけ延ばすので、
+// 発行済みのブックマークレットを貼り替えずに済みます。
 func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

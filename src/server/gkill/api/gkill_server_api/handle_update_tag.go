@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateTag はKyouに付けられたタグを更新します。
+//
+// POST /api/update_tag（wrapAuthRepos）
+// req_res.UpdateTagRequest / req_res.UpdateTagResponse
+//
+// 更新は追記です（同一IDに新しいUPDATE_TIME版を足す）。TXIDが非nilならtempリポジトリに積むだけで、
+// commit_txするまで実リポジトリには反映されません。対象IDが存在しない場合はerrorsに載せて返します。
+// UpdatedTagは実リポジトリを読み直した値なので、TXID指定時はtempに積んだ内容が載りません。
 func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

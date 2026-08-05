@@ -15,6 +15,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetGkillNotificationPublicKey はこの端末の通知用公開鍵（VAPID）を返します。
+//
+// POST /api/get_gkill_notification_public_key（wrapAuth）
+// req_res.GetGkillNotificationPublicKeyRequest / req_res.GetGkillNotificationPublicKeyResponse
+//
+// 鍵はサーバ設定に端末ごとに保存されています。
+// この端末のサーバ設定が見つからない場合はエラーを返します。
 func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

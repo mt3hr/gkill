@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddNlog は出費記録（Nlog。店名・品目・金額）を1件追加します。
+//
+// POST /api/add_nlog（wrapAuthRepos）
+// req_res.AddNlogRequest / req_res.AddNlogResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのNlogが既にある場合は追加せず、AlreadyExistNlogErrorをerrorsに積んで返す。
+// WantResponseKyouがtrueのときだけ、登録後にリポジトリから読み直してAddedNlogとAddedKyouを返す
+// （TXID指定時は一時リポジトリにしか無いためどちらもnilになる）。
 func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

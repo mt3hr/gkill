@@ -14,6 +14,18 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddTimeis は時間計測（TimeIs）を1件追加します。
+//
+// POST /api/add_timeis（wrapAuthRepos）
+// req_res.AddTimeIsRequest / req_res.AddTimeIsResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのTimeIsが既にある場合は追加せず、AlreadyExistTimeIsErrorをerrorsに積んで返す。
+// 計測終了はこのAPIではなく、終了時刻を入れた同じIDの新しい版を/api/update_timeisで積む
+// （リポジトリが追記専用のため、終了もINSERTになる）。
+// WantResponseKyouがtrueのときだけ、登録後にリポジトリから読み直してAddedTimeisとAddedKyouを返す
+// （TXID指定時は一時リポジトリにしか無いためどちらもnilになる）。
 func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

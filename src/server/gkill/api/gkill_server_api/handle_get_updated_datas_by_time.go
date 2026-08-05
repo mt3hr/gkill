@@ -15,6 +15,17 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetUpdatedDatasByTime は指定時刻より後に更新されたデータのIDを返します。
+//
+// POST /api/get_updated_datas_by_time（wrapAuth）
+// req_res.GetUpdatedDatasByTimeRequest / req_res.GetUpdatedDatasByTimeResponse
+//
+// 取得件数は --cache_clear_count_limit + 1 で頭打ちにします。
+// 1件多く返すのは、上限を超えたことをクライアントが判定して
+// 個別削除ではなくキャッシュ全消しに切り替えられるようにするためです。
+// 参照先を持つデータでは、そのデータ自身のIDと参照先のIDの両方を返すので、
+// UpdatedIDsの件数は取得したデータの件数と一致しません。
+// ブラウザのキャッシュ掃除から叩かれるため、CORSを許可しています。
 func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")

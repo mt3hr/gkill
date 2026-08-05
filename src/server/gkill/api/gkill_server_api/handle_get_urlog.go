@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetURLog は指定IDのURLogの履歴を新しい順に返します。
+//
+// POST /api/get_urlog（wrapAuthRepos）
+// req_res.GetURLogRequest / req_res.GetURLogResponse
+//
+// RepNameが非nilならそのrepの版だけに絞ります。
+// リクエストにUpdateTimeフィールドはありますが参照しないので、版の指定はできません。
+// 該当IDがなくてもエラーにはならず、URLogHistoriesが空のまま成功メッセージを返します。
 func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

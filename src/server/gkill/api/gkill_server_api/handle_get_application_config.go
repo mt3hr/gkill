@@ -16,6 +16,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetApplicationConfig はログイン中の利用者・端末のアプリケーション設定を返します。
+//
+// POST /api/get_application_config（wrapAuth）
+// req_res.GetApplicationConfigRequest / req_res.GetApplicationConfigResponse
+//
+// 設定がまだ無い利用者・端末の組み合わせでは、既定の設定を作成してから返します。
+// 応答にはDBに保存された設定だけでなく、実行時にしか決まらない値
+// （管理者かどうか、ローカルアプリのセッションかどうか、バージョン情報、
+// グローバルIP・プライベートIP、ホスト名、ブックマークレット用セッションID）も詰めて返します。
+// IPとホスト名の取得に失敗してもエラーにはせず、その項目を空のまま返します。
 func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

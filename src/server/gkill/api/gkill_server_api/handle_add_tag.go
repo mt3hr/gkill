@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddTag はKyouに紐づくタグを1件追加します。
+//
+// POST /api/add_tag（wrapAuthRepos）
+// req_res.AddTagRequest / req_res.AddTagResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのタグが既にある場合は追加せず、AlreadyExistTagErrorをerrorsに積んで返す。
+// 成功時はリポジトリから読み直したタグをAddedTagに入れる（TXID指定時は
+// 一時リポジトリにしか無いためnilになる）。
 func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

@@ -28,6 +28,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGenerateTLSFile は自己署名のTLS証明書と秘密鍵を生成し、
+// この端末のサーバ設定が指すパスに書き出します。
+//
+// POST /api/generate_tls_file（wrapAuth）
+// req_res.GenerateTLSFileRequest / req_res.GenerateTLSFileResponse
+//
+// 管理者でなければ弾きます。
+// 生成条件はリクエストではなくハンドラ内で固定していて、
+// ホスト名localhost・RSA 2048bit・有効期間365日・CAフラグ付きになります。
+// 同じパスにファイルが既にある場合は先に削除するので、以前の証明書は失われます。
 func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

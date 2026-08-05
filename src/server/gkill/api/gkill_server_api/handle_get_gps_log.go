@@ -15,6 +15,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetGPSLog は、指定期間に含まれるGPSログを返します。
+//
+// POST /api/get_gps_log（wrapAuthRepos）
+// req_res.GetGPSLogRequest / req_res.GetGPSLogResponse
+//
+// StartDate/EndDateはポインタではないので、省略されたときはゼロ値の時刻で絞り込まれます。
+// 全GPSログrepを横断した結果を重複排除せずに連結し、RelatedTimeの新しい順に並べて返します。
 func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

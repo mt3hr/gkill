@@ -15,6 +15,15 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateShareKyouListInfo は共有ページの設定を更新します。
+//
+// POST /api/update_share_kyou_list_info（wrapAuthRepos）
+// req_res.UpdateShareKyouListInfoRequest / req_res.UpdateShareKyouListInfoResponse
+//
+// 更新前に共有の所有者を確認します。共有が存在しない場合と所有者が別人の場合は、共有IDの存在有無を
+// 問い合わせられないよう、同じエラーコード・同じメッセージで返します。
+// 保存するUserID/Deviceはリクエストの値ではなくセッション由来の値で固定し、レコードのIDは毎回振り直します
+// （更新対象を決めるのはShareID）。
 func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

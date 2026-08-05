@@ -35,6 +35,17 @@ var (
 	zipExtractGroup sync.Map // key: cacheDir, value: *sync.Mutex
 )
 
+// HandleBrowseZipContents は、ZIPのIDFファイルをキャッシュディレクトリへ展開して、
+// 中身のエントリ一覧を返します。
+//
+// POST /api/browse_zip_contents（wrapNoAuth）
+// req_res.BrowseZipContentsRequest / req_res.BrowseZipContentsResponse
+//
+// wrapNoAuth登録ですが、ハンドラ内でSessionIDからアカウントを解決するので未認証では使えません。
+// TargetIDのIDFKyouがZIP (IsZip) でなければエラーになります。
+// 展開先は caches/zip_cache/{userID}/{repName}/{sha1(ZIPの絶対パス)} で、
+// 同一ディレクトリへの同時展開はmutexで1回に抑えられ、既に存在すれば再展開しません。
+// 返すエントリのFileURLは HandleZipCacheFileServe が配信する /zip_cache/... のパスです。
 func (g *GkillServerAPI) HandleBrowseZipContents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.BrowseZipContentsRequest{}
@@ -359,6 +370,17 @@ func buildZipEntries(cacheDir string, repName string, hash string) ([]*req_res.Z
 	return entries, nil
 }
 
+// HandleZipCacheFileServe は、HandleBrowseZipContents が展開したZIPキャッシュの
+// ファイルを配信します。
+//
+// GET /zip_cache/{repName}/{hash}/{ZIP内相対パス}（PathPrefixルート・wrapNoAuth）
+// req_res は使わず、ファイル本体をそのまま返します。
+//
+// リクエストボディを読まないので、認証はクッキー gkill_session_id で行います
+// （共有ID経由では読めません）。解決できなければ403です。
+// 配信の起点はセッションから引いた利用者のキャッシュディレクトリに固定されるため、
+// URLに他人のrep名やハッシュを書いても他人のキャッシュには届きません。
+// ディレクトリそのものを要求された場合は404になります。
 func (g *GkillServerAPI) HandleZipCacheFileServe(w http.ResponseWriter, r *http.Request) {
 	// クッキーを見て認証する
 	sessionIDCookie, err := r.Cookie("gkill_session_id")

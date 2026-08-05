@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetServerConfigs は全端末分のサーバ設定を返します。
+//
+// POST /api/get_server_configs（wrapAuth）
+// req_res.GetServerConfigsRequest / req_res.GetServerConfigsResponse
+//
+// 管理者でなければ弾きます。
+// 各サーバ設定には全アカウントと全リポジトリを詰めて返すので、
+// 同じ一覧がサーバ設定の件数だけ繰り返されます。
 func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

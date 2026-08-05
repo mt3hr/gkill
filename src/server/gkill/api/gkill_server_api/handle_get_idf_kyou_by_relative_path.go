@@ -20,6 +20,12 @@ import (
 // HandleGetIDFKyouByRelativePath は、基準となるIDFKyou (TargetID) と
 // そのファイル内に記載された相対パス (RelativePath) から、
 // 同一Rep内の対象ファイルのIDFKyou IDを解決して返す。
+//
+// POST /api/get_idf_kyou_by_relative_path（wrapNoAuth）
+// req_res.GetIDFKyouByRelativePathRequest / req_res.GetIDFKyouByRelativePathResponse
+//
+// wrapNoAuth登録だが、ハンドラ内でSessionIDからアカウントを解決するので未認証では使えない。
+// 相対パスはrep外を指すものと絶対パスを拒否する。
 // 見つからない場合はKyouIDを空文字で返す（エラーにはしない）。
 func (g *GkillServerAPI) HandleGetIDFKyouByRelativePath(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

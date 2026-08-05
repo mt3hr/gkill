@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateText はKyouに付けられたテキストを更新します。
+//
+// POST /api/update_text（wrapAuthRepos）
+// req_res.UpdateTextRequest / req_res.UpdateTextResponse
+//
+// 更新は追記です（同一IDに新しいUPDATE_TIME版を足す）。TXIDが非nilならtempリポジトリに積むだけで、
+// commit_txするまで実リポジトリには反映されません。対象IDが存在しない場合はerrorsに載せて返します。
+// UpdatedTextは実リポジトリを読み直した値なので、TXID指定時はtempに積んだ内容が載りません。
 func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

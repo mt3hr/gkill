@@ -14,6 +14,20 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddURLog はブックマーク（URLog）を1件追加します。
+//
+// POST /api/add_urlog（wrapAuthRepos）
+// req_res.AddURLogRequest / req_res.AddURLogResponse
+//
+// 登録前にFillURLogFieldを呼び、サーバ側からURL先を実際に取得して空のTitle・
+// Description・Favicon・Thumbnailを埋める。ブックマークレットやWeb Share TargetからはURLしか
+// 送られてこないため。取得に失敗してもログに残すだけで、埋まらないまま登録を続ける。
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのURLogが既にある場合は追加せず、AlreadyExistURLogErrorをerrorsに積んで返す。
+// WantResponseKyouがtrueのときだけ、登録後にリポジトリから読み直してAddedURLogとAddedKyouを返す
+// （TXID指定時は一時リポジトリにしか無いためどちらもnilになる）。
 func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

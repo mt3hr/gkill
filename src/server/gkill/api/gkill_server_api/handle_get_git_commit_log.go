@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetGitCommitLog は、指定IDのGitCommitLogを取得します。
+//
+// POST /api/get_git_commit_log（wrapAuthRepos）
+// req_res.GetGitCommitLogRequest / req_res.GetGitCommitLogResponse
+//
+// レスポンスのフィールド名に反して履歴は返さず、最新版1件だけを詰めて返します
+// （request.UpdateTime は参照しません）。他のGet系と違い、対象が見つからない場合は
+// 空配列ではなくエラーを返します。
 func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

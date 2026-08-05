@@ -14,6 +14,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetAllRepNames は、利用者が参照できるレポジトリ名の一覧を返します。
+//
+// POST /api/get_all_rep_names（wrapAuthRepos）
+// req_res.GetAllRepNamesRequest / req_res.GetAllRepNamesResponse
+//
+// 集約repをリーフ具象repまで平坦化して名前を集めるので、同名repは1つにまとめられます。
+// 結果は名前の昇順です。
 func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

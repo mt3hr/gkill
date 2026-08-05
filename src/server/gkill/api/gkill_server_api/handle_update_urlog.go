@@ -16,6 +16,18 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateURLog はブックマークのKyouを更新します。
+//
+// POST /api/update_urlog（wrapAuthRepos）
+// req_res.UpdateURLogRequest / req_res.UpdateURLogResponse
+//
+// ReGetURLogContentがtrueなら、保存前にサーバがURL先を取得し直して、タイトル・説明・サムネイル・faviconの
+// うち空の項目だけを埋めます（すでに値がある項目は上書きしません）。取得に失敗してもログに残すだけで、
+// 更新はそのまま続行します。
+// 更新は追記です（同一IDに新しいUPDATE_TIME版を足す）。TXIDが非nilならtempリポジトリに積むだけで、
+// commit_txするまで実リポジトリには反映されません。対象IDが存在しない場合はerrorsに載せて返します。
+// WantResponseKyouがtrueのときだけURLogとKyouを読み直して返します
+// （読み直し先は実リポジトリなので、TXID指定時はtempに積んだ内容が載りません）。
 func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

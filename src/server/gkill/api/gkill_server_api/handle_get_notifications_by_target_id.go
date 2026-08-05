@@ -14,6 +14,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetNotificationsByTargetID は対象Kyouに設定されている通知を新しい順に返します。
+//
+// POST /api/get_gkill_notifications_by_id（wrapAuthRepos）
+// req_res.GetNotificationsByTargetIDRequest / req_res.GetNotificationsByTargetIDResponse
+//
+// 全repを横断し、通知IDごとに最新版だけを残したうえで削除済み（IsDeleted）を除きます。
+// 通知済みかどうかでは絞らないので、IsNotificatedがtrueの通知も含まれます。
 func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
