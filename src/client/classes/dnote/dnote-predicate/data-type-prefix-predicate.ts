@@ -6,8 +6,7 @@ export default class DataTypePrefixPredicate implements DnotePredicate {
     constructor(data_type_prefix: string) {
         this.data_type_prefix = data_type_prefix
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const data_type_prefix = json.value as string
         return new DataTypePrefixPredicate(data_type_prefix)
     }

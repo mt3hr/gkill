@@ -6,8 +6,7 @@ export default class TimeIsTitleEqualPredicate implements DnotePredicate {
     constructor(timeis_title_equal_target: string) {
         this.timeis_title_equal_target = timeis_title_equal_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const timeis_title_equal_target = json.value as string
         return new TimeIsTitleEqualPredicate(timeis_title_equal_target)
     }

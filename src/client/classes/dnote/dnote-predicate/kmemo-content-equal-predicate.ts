@@ -6,8 +6,7 @@ export default class KmemoContentEqualPredicate implements DnotePredicate {
     constructor(kmemo_content_equal_target: string) {
         this.kmemo_content_equal_target = kmemo_content_equal_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const kmemo_content_equal_target = json.value as string
         return new KmemoContentEqualPredicate(kmemo_content_equal_target)
     }

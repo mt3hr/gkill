@@ -6,8 +6,7 @@ export default class LantanaMoodEqualPredicate implements DnotePredicate {
     constructor(lantana_mood_equal_target: number) {
         this.lantana_mood_equal_target = lantana_mood_equal_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const lantana_mood_equal_target = json.value as number
         return new LantanaMoodEqualPredicate(lantana_mood_equal_target)
     }

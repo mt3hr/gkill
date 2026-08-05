@@ -6,8 +6,7 @@ export default class TextContentContainsPredicate implements DnotePredicate {
     constructor(text_content_contains_target: string) {
         this.text_content_contains_target = text_content_contains_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const text_content_contains_target = json.value as string
         return new TextContentContainsPredicate(text_content_contains_target)
     }

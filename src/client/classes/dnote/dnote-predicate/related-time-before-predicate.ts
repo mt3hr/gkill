@@ -6,9 +6,8 @@ export default class RelatedTimeBeforePredicate implements DnotePredicate {
     constructor(related_time: Date) {
         this.related_time = related_time
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
-        const related_time = new Date(json.value) as Date
+    static from_json(json: Record<string, unknown>): DnotePredicate {
+        const related_time = new Date(json.value as string | number | Date)
         return new RelatedTimeBeforePredicate(related_time)
     }
     async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
