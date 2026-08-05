@@ -12,7 +12,7 @@
     </v-row>
     <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="312" :model-value="dates"
         :multible="true" :color="'primary'" :multiple="'range'" :year="calendar_year" :month="calendar_month"
-        @wheel.prevent.stop="(e: WheelEvent) => on_wheel(e)" @update:model-value="clicked_date" ref="calendar" />
+        @wheel.prevent.stop="(e: WheelEvent) => onWheel(e)" @update:model-value="clicked_date" ref="calendar" />
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
@@ -34,7 +34,7 @@ const {
     calendar_month,
     dates,
     clicked_date,
-    on_wheel,
+    onWheel,
     clicked_clear_calendar_button,
     clicked_use_calendar_checkbox,
     get_use_calendar,

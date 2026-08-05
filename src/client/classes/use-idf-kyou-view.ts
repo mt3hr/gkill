@@ -135,7 +135,7 @@ export function useIDFKyouView(options: {
         return target.closest(`a[${MD_LINK_DATA_ATTRIBUTE}]`)
     }
 
-    function on_markdown_content_click(e: MouseEvent): void {
+    function onMarkdownContentClick(e: MouseEvent): void {
         const anchor = find_md_link_anchor(e)
         if (!anchor) return
         // 修飾キー付きクリックはブラウザ既定の動作 (新規タブで開く等) に任せる
@@ -144,7 +144,7 @@ export function useIDFKyouView(options: {
         e.preventDefault()
     }
 
-    async function on_markdown_content_dblclick(e: MouseEvent): Promise<void> {
+    async function onMarkdownContentDblclick(e: MouseEvent): Promise<void> {
         const anchor = find_md_link_anchor(e)
         if (!anchor) return
         e.preventDefault()
@@ -244,8 +244,8 @@ export function useIDFKyouView(options: {
         // Business logic
         show_context_menu,
         open_link,
-        on_markdown_content_click,
-        on_markdown_content_dblclick,
+        onMarkdownContentClick,
+        onMarkdownContentDblclick,
         buildMediaUrl,
 
         // Event relay objects

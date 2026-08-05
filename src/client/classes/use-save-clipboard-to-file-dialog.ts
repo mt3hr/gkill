@@ -85,7 +85,7 @@ export function useSaveClipboardToFileDialog(options: {
         dialog_el.value = el
     }
 
-    function on_mousedown(e: MouseEvent): void {
+    function onMousedown(e: MouseEvent): void {
         const target = e.target as Element | null
         if (!target) return
         const clicked_dialog = target.closest('.gkill-floating-dialog')
@@ -215,7 +215,7 @@ export function useSaveClipboardToFileDialog(options: {
     }
 
     // ── Paste event ──
-    async function on_paste(e: ClipboardEvent): Promise<void> {
+    async function onPaste(e: ClipboardEvent): Promise<void> {
         if (!is_show_dialog.value) return
         // 最後にクリックされたダイアログがこのダイアログでない場合はスキップ
         if (!is_last_clicked_dialog.value) return
@@ -371,7 +371,7 @@ export function useSaveClipboardToFileDialog(options: {
     }
 
     // ── Enter key → save (dialog-scoped) ──
-    function on_keydown(e: KeyboardEvent): void {
+    function onKeydown(e: KeyboardEvent): void {
         if (!is_show_dialog.value) return
         if (e.key !== 'Enter') return
         if (e.isComposing || e.repeat) return
@@ -391,15 +391,15 @@ export function useSaveClipboardToFileDialog(options: {
 
     // ── Lifecycle ──
     onMounted(() => {
-        document.addEventListener('paste', on_paste)
-        window.addEventListener('keydown', on_keydown, { capture: true })
-        document.addEventListener('mousedown', on_mousedown, { capture: true })
+        document.addEventListener('paste', onPaste)
+        window.addEventListener('keydown', onKeydown, { capture: true })
+        document.addEventListener('mousedown', onMousedown, { capture: true })
     })
 
     onBeforeUnmount(() => {
-        document.removeEventListener('paste', on_paste)
-        window.removeEventListener('keydown', on_keydown, { capture: true } as EventListenerOptions)
-        document.removeEventListener('mousedown', on_mousedown, { capture: true } as EventListenerOptions)
+        document.removeEventListener('paste', onPaste)
+        window.removeEventListener('keydown', onKeydown, { capture: true } as EventListenerOptions)
+        document.removeEventListener('mousedown', onMousedown, { capture: true } as EventListenerOptions)
         if (preview_url.value) URL.revokeObjectURL(preview_url.value)
     })
 

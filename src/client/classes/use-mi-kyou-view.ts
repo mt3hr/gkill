@@ -151,7 +151,7 @@ export function useMiKyouView(options: {
         return `${fontWeight} ${fontSize} ${fontFamily}`
     }
 
-    function on_drag_start(e: DragEvent) {
+    function onDragStart(e: DragEvent) {
         e.dataTransfer!.setData("gkill_mi", JSON.stringify(props.kyou.typed_mi))
     }
 
@@ -191,7 +191,7 @@ export function useMiKyouView(options: {
         // Business logic
         show_context_menu,
         clicked_mi_check,
-        on_drag_start,
+        onDragStart,
 
         // Event relay objects
         crudRelayHandlers,

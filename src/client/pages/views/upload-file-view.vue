@@ -24,16 +24,16 @@
                             class="drop_zone"
                             :class="{ 'drop_zone_active': is_dragging_over_file }"
                             @click="trigger_file_input"
-                            @dragenter.stop="on_dragenter_file"
-                            @dragleave.stop="on_dragleave_file"
-                            @dragover.prevent.stop="on_dragover_file"
-                            @drop.prevent.stop="on_drop_file"
+                            @dragenter.stop="onDragenterFile"
+                            @dragleave.stop="onDragleaveFile"
+                            @dragover.prevent.stop="onDragoverFile"
+                            @drop.prevent.stop="onDropFile"
                         >
                             <v-icon size="48">mdi-cloud-upload-outline</v-icon>
                             <div>{{ i18n.global.t('DROP_FILE_ZONE_LABEL') }}</div>
                         </div>
                         <input type="file" multiple ref="file_input" style="display:none"
-                            @change="on_file_input_change" />
+                            @change="onFileInputChange" />
                     </v-card>
                 </v-window-item>
                 <v-window-item key="gps_log_file" :eager="true">
@@ -51,16 +51,16 @@
                             class="drop_zone"
                             :class="{ 'drop_zone_active': is_dragging_over_gps_file }"
                             @click="trigger_gps_file_input"
-                            @dragenter.stop="on_dragenter_gps_file"
-                            @dragleave.stop="on_dragleave_gps_file"
-                            @dragover.prevent.stop="on_dragover_gps_file"
-                            @drop.prevent.stop="on_drop_gps_file"
+                            @dragenter.stop="onDragenterGpsFile"
+                            @dragleave.stop="onDragleaveGpsFile"
+                            @dragover.prevent.stop="onDragoverGpsFile"
+                            @drop.prevent.stop="onDropGpsFile"
                         >
                             <v-icon size="48">mdi-cloud-upload-outline</v-icon>
                             <div>{{ i18n.global.t('DROP_GPS_FILE_ZONE_LABEL') }}</div>
                         </div>
                         <input type="file" multiple accept=".gpx" ref="gps_file_input" style="display:none"
-                            @change="on_gps_file_input_change" />
+                            @change="onGpsFileInputChange" />
                     </v-card>
                 </v-window-item>
             </v-window>
@@ -103,20 +103,20 @@ const {
     is_dragging_over_gps_file,
 
     // Drag handlers
-    on_dragenter_file,
-    on_dragleave_file,
-    on_dragover_file,
-    on_drop_file,
-    on_dragenter_gps_file,
-    on_dragleave_gps_file,
-    on_dragover_gps_file,
-    on_drop_gps_file,
+    onDragenterFile,
+    onDragleaveFile,
+    onDragoverFile,
+    onDropFile,
+    onDragenterGpsFile,
+    onDragleaveGpsFile,
+    onDragoverGpsFile,
+    onDropGpsFile,
 
     // Click handlers
     trigger_file_input,
-    on_file_input_change,
+    onFileInputChange,
     trigger_gps_file_input,
-    on_gps_file_input_change,
+    onGpsFileInputChange,
 
     // Event relay objects
     crudRelayHandlers,

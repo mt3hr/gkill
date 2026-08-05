@@ -175,7 +175,7 @@ export function useMiReKyouView(options: {
         return
     }
 
-    function on_drag_start(e: DragEvent) {
+    function onDragStart(e: DragEvent) {
         e.dataTransfer!.setData("gkill_mi_re_kyou", JSON.stringify(props.mirekyou))
     }
 
@@ -223,7 +223,7 @@ export function useMiReKyouView(options: {
         show_context_menu,
         get_target_kyou,
         clicked_mi_check,
-        on_drag_start,
+        onDragStart,
 
         // Event relay objects
         crudRelayHandlers,
