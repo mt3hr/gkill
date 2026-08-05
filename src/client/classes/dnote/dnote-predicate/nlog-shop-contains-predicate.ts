@@ -6,8 +6,7 @@ export default class NlogShopContainsPredicate implements DnotePredicate {
     constructor(nlog_shop_contains_target: string) {
         this.nlog_shop_contains_target = nlog_shop_contains_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const nlog_shop_contains_target = json.value as string
         return new NlogShopContainsPredicate(nlog_shop_contains_target)
     }

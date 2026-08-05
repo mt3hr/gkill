@@ -6,8 +6,7 @@ export default class KCTitleEqualPredicate implements DnotePredicate {
     constructor(kc_title_equal_target: string) {
         this.kc_title_equal_target = kc_title_equal_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const kc_title_equal_target = json.value as string
         return new KCTitleEqualPredicate(kc_title_equal_target)
     }

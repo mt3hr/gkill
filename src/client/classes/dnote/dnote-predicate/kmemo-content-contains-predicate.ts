@@ -6,8 +6,7 @@ export default class KmemoContentContainsPredicate implements DnotePredicate {
     constructor(kmemo_content_contains_target: string) {
         this.kmemo_content_contains_target = kmemo_content_contains_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const kmemo_content_contains_target = json.value as string
         return new KmemoContentContainsPredicate(kmemo_content_contains_target)
     }
