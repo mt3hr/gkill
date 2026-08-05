@@ -13,11 +13,11 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 |--------------|---------|----------------|---------------|
 | Go バックエンド (`server/`) | 665 | 76 | Go `testing` |
 | フロントエンド ユニット (`client/`) | 839 | 70 | Vitest |
-| フロントエンド E2E (`client/`) | 195 | 34 | Playwright |
+| フロントエンド E2E (`client/`) | 196 | 34 | Playwright |
 | MCP サーバ (`mcp/`) | 668 | 20 | Vitest |
 | Android (`android/`) | 12 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 118 | 9 | JUnit 4 + MockK |
-| **合計** | **2,401** | **188** | |
+| **合計** | **2,402** | **188** | |
 
 `src/plugins/` の Go テスト 28件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -66,7 +66,7 @@ npm run verify_docs -- --list
 
 | ディレクトリ | テスト仕様 | 概要 |
 |-------------|-----------|------|
-| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit 839 + E2E 195） |
+| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit 839 + E2E 196） |
 | `client/classes/` | [client/classes/ABOUT_TEST.md](client/classes/ABOUT_TEST.md) | ユーティリティクラス |
 | `client/classes/api/` | [client/classes/api/ABOUT_TEST.md](client/classes/api/ABOUT_TEST.md) | GkillAPI クライアント |
 | `client/classes/datas/` | [client/classes/datas/ABOUT_TEST.md](client/classes/datas/ABOUT_TEST.md) | 28ファイル（データモデル + 横断検証） |
