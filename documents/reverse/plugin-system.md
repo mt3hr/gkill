@@ -133,10 +133,20 @@ cmd := exec.CommandContext(context.Background(),
 | 契機 | 意味 | 挙動 |
 |---|---|---|
 | 呼び出し元のキャンセル | HTTPクライアントの切断・サーバ終了。誰も結果を必要としていない | 待つのをやめて即 return。**プロセスには触らない** |
+| 順番待ちの打ち切り | 実行スロットが空かない（既定10秒 `maxPluginQueueWait`）。混んでいるだけ | `ErrPluginBusy` を返す。**プロセスには触らない** |
 | gkill自身のデッドライン | 既定30秒（`IsAlive` は5秒）。応答が返らない＝詰まっている | プロセスを**回収**（`Process.Kill()` して `started=false`） |
 
+順序が要点で、**まず順番待ちをして、スロットを取ってから期限を張る**。
+期限をスロット取得より前に張ると、行列に並んでいるだけで期限を食い潰し、
+正常に応答しているプラグインを期限切れとして殺してしまう
+（2026-08-06以前はこうなっていて、一覧の行数ぶんの本文取得が同時に来ると
+プロセスの回収と再起動が延々と繰り返され、待ち行列がまったく消化されなくなった）。
+呼び出し元が Deadline を持つ場合は、その絶対時刻ではなく**残り時間の長さ**を
+実行予算として引き継ぐ。こうすると `IsAlive` の「5秒だけ待つ」という意図を保ったまま、
+行列で予算を食い潰すことがなくなる。
+
 `callCommand` は呼び出し元の `context` からキャンセルを切り離し（`context.WithoutCancel`）、
-Deadline だけを引き継いだ `timeoutCtx` を作る。Deadline が無い場合は既定30秒を注入する。
+実行予算ぶんの `timeoutCtx` をスロット取得後に作る。Deadline が無い場合は既定30秒。
 判定はタイミングではなくエラーの種類で行う（`context.DeadlineExceeded` なら回収、
 `context.Canceled` なら放置）。呼び出し元が Deadline 付きだと両者がほぼ同時に Done になり、
 `select` がどちらを選ぶか決まらないため。
@@ -213,7 +223,8 @@ MCP の本文インライン埋め込み（`inlinePluginContents`）の両方が
 
 ```go
 type pluginRepositoryImpl struct {
-    mu        sync.Mutex  // すべての操作を直列化するミューテックス
+    // 容量1のチャネル。ミューテックスと違い「待つのをやめられる」
+    callSlot  chan struct{}
     userID    string
     pluginDir string
     manifest  gkill_plugin.PluginManifest
@@ -221,10 +232,11 @@ type pluginRepositoryImpl struct {
 }
 
 func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
-    // 呼び出し元のキャンセルは切り離し、Deadlineだけ引き継ぐ
-    p.mu.Lock()
-    defer p.mu.Unlock()
-    // ensureStarted → sendRequest（クラッシュ時のみ1回リトライ）
+    // 1. 行列に並ぶ（待ちきれなければ ErrPluginBusy。プロセスには手を出さない）
+    release, err := p.acquireCallSlot(ctx, queueWait)
+    defer release()
+    // 2. スロットを取ってから期限を張る
+    // 3. ensureStarted → sendRequest（クラッシュ時のみ1回リトライ）
 }
 ```
 
@@ -598,7 +610,7 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 
 ### 並列度と安全弁
 
-**同一プラグインへ並列に投げてはいけない。** `callCommand` は30秒のデッドラインを `p.mu.Lock()` の**前**に張るため、同時発行すると後続はロック待ちで期限を食い潰す。期限切れ時は `sendRequest` が `Process.Kill()` を呼んでプラグインプロセスを回収するので、MCPの読み取りが原因でユーザーのプラグインが落ちる。したがってインライン取得は **rep内は必ず直列・rep間は並列（既定4）** にしてある。
+**同一プラグインへ並列に投げてはいけない。** プラグインの stdio は1本しかなく呼び出しは直列化されるので、同時発行しても速くならず順番待ちが伸びるだけで、待ちきれなかったぶんは `ErrPluginBusy` になる。したがってインライン取得は **rep内は必ず直列・rep間は並列（既定4）** にしてある。（2026-08-06以前は期限を排他ロックの**前**に張っていたため、ロック待ちで期限を食い潰して `Process.Kill()` が走り、MCPの読み取りが原因でユーザーのプラグインが落ちていた。）
 
 実行中のリクエストを abort しても、いまはプロセスには影響しない（呼び出し元のキャンセルではプロセスを回収しない）。それでも MCP 側は abort せず「新しいリクエストを始めない」だけでデッドラインを実現している。MCPサーバは古い gkill にも接続しうるためである。
 

@@ -878,6 +878,10 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(i.dbName) + ` (
 		return err
 	}
 	isCommitted = true
+
+	// 取り込みに成功したので下層の基準を進める。
+	// これを呼ばないと次回も「変更あり」のままで、フルリビルドが走り続ける。
+	commitCacheRebuildIfSupported(i.idfRep)
 	return nil
 }
 
