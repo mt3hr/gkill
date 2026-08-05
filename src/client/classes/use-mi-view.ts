@@ -3,8 +3,8 @@ import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
-import type { miViewEmits } from '@/pages/views/mi-view-emits'
-import type { miViewProps } from '@/pages/views/mi-view-props'
+import type { MiViewEmits } from '@/pages/views/mi-view-emits'
+import type { MiViewProps } from '@/pages/views/mi-view-props'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import moment from 'moment'
@@ -62,8 +62,8 @@ function parse_dropped_task<T extends object>(json: unknown, instance: T, allowe
 }
 
 export function useMiView(options: {
-    props: miViewProps,
-    emits: miViewEmits,
+    props: MiViewProps,
+    emits: MiViewEmits,
 }) {
     const { props, emits } = options
 

@@ -4,7 +4,7 @@ import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query"
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
 
-export interface miQueryEditorSidebarEmits {
+export interface MiQueryEditorSidebarEmits {
     (e: 'request_open_focus_board', board_name: string): void
     (e: 'updated_query_clear', query: FindKyouQuery): void
     (e: 'updated_query', query: FindKyouQuery): void

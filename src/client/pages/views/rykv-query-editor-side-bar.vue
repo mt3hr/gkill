@@ -74,14 +74,14 @@ import ShareKyouFooter from './share-kyou-footer.vue'
 import TagQuery from './tag-query.vue'
 import TimeIsQuery from './time-is-query.vue'
 import PeriodOfTimeQuery from './period-of-time-query.vue'
-import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
-import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
+import type { RykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
+import type { RykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useRykvQueryEditorSideBar } from '@/classes/use-rykv-query-editor-side-bar'
 
-const props = defineProps<rykvQueryEditorSidebarProps>()
-const emits = defineEmits<rykvQueryEditorSidebarEmits>()
+const props = defineProps<RykvQueryEditorSidebarProps>()
+const emits = defineEmits<RykvQueryEditorSidebarEmits>()
 
 const {
     // Template refs

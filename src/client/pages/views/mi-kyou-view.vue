@@ -47,12 +47,12 @@
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
 import MiContextMenu from './mi-context-menu.vue'
-import type { miKyouViewProps } from './mi-kyou-view-props'
+import type { MiKyouViewProps } from './mi-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { format_time } from '@/classes/format-date-time'
 import { useMiKyouView } from '@/classes/use-mi-kyou-view'
 
-const props = defineProps<miKyouViewProps>()
+const props = defineProps<MiKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const {

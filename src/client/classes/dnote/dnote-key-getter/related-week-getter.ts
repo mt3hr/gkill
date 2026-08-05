@@ -8,7 +8,7 @@ export default class RelatedWeekGetter implements DnoteKeyGetter {
     }
 
     get_keys(loaded_kyou: Kyou): Array<string> {
-        return [this.getISOWeek(loaded_kyou.related_time).toString()]
+        return [this.get_iso_week(loaded_kyou.related_time).toString()]
     }
 
     to_json() {
@@ -17,7 +17,7 @@ export default class RelatedWeekGetter implements DnoteKeyGetter {
         }
     }
 
-    getISOWeek(date: Date): number {
+    get_iso_week(date: Date): number {
         const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
         const day = tempDate.getUTCDay() || 7
         tempDate.setUTCDate(tempDate.getUTCDate() + 4 - day)
