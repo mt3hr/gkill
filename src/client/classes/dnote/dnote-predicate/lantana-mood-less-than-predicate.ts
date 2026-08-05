@@ -6,8 +6,7 @@ export default class LantanaMoodLessThanPredicate implements DnotePredicate {
     constructor(lantana_mood_less_than_target: number) {
         this.lantana_mood_less_than_target = lantana_mood_less_than_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const lantana_mood_less_than_target = json.value as number
         return new LantanaMoodLessThanPredicate(lantana_mood_less_than_target)
     }

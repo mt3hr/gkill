@@ -6,8 +6,7 @@ export default class GitCommitLogCodeDeletionGreaterThanPredicate implements Dno
     constructor(git_commit_log_code_count: number) {
         this.git_commit_log_code_count = git_commit_log_code_count
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const git_commit_log_code_count = json.value as number
         return new GitCommitLogCodeDeletionGreaterThanPredicate(git_commit_log_code_count)
     }
