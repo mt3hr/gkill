@@ -14,6 +14,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetShareKyouListInfos はログイン利用者が作成した共有設定の一覧を返します。
+//
+// POST /api/get_share_kyou_list_infos（wrapAuthRepos）
+// req_res.GetShareKyouListInfosRequest / req_res.GetShareKyouListInfosResponse
+//
+// (userID, device) の組で引くため、別端末で作った共有設定は返りません。
+// 共有されるKyouそのものではなく、ShareIDや検索条件JSONなどの定義だけを返します。
 func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

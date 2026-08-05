@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetNlog は指定IDのNlogの履歴を新しい順に返します。
+//
+// POST /api/get_nlog（wrapAuthRepos）
+// req_res.GetNlogRequest / req_res.GetNlogResponse
+//
+// RepNameが非nilならそのrepの版だけに絞ります。
+// リクエストにUpdateTimeフィールドはありますが参照しないので、版の指定はできません。
+// 該当IDがなくてもエラーにはならず、NlogHistoriesが空のまま成功メッセージを返します。
 func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

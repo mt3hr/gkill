@@ -14,6 +14,17 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleDeleteShareKyouListInfos は共有ページの設定を削除して共有を取り消します。
+// 名前は複数形ですが、1回で消せるのはShareKyouListInfo.ShareIDの1件だけです。
+//
+// POST /api/delete_share_kyou_list_infos（wrapAuthRepos）
+// req_res.DeleteShareKyouListInfoRequest / req_res.DeleteShareKyouListInfosResponse
+// （リクエスト型だけ単数形）
+//
+// DAOのDELETEはshare_idだけを条件にするため、共有IDを知っているだけの第三者に取り消されないよう、
+// 削除前にここで所有者を確認します。共有が存在しない場合と所有者が別人の場合は、共有IDの存在有無を
+// 問い合わせられないよう同じエラーで返します。
+// 削除は追記ではなく行そのものの削除なので、Kyouの更新と違って履歴は残りません。
 func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

@@ -15,6 +15,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateAccountStatus は対象アカウントの有効・無効を切り替えます。
+//
+// POST /api/update_account_status（wrapAuth）
+// req_res.UpdateAccountStatusRequest / req_res.UpdateAccountStatusResponse
+//
+// 管理者でなければ弾きます。
+// 書き換えるのはIsEnableだけで、パスワードハッシュ・管理者フラグ・
+// パスワードリセットトークンは既存の値をそのまま引き継ぎます。
 func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

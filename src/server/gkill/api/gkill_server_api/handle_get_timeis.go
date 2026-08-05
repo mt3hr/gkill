@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetTimeis は指定IDのTimeIsの履歴を新しい順に返します。
+//
+// POST /api/get_timeis（wrapAuthRepos）
+// req_res.GetTimeisRequest / req_res.GetTimeisResponse
+//
+// RepNameが非nilならそのrepの版だけに絞ります。
+// リクエストにUpdateTimeフィールドはありますが参照しないので、版の指定はできません。
+// 計測の終了も同一IDの新しい版として積まれるので、ここには開始のみの版と
+// 終了済みの版が並んで入ります。
+// 該当IDがなくてもエラーにはならず、TimeisHistoriesが空のまま成功メッセージを返します。
 func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

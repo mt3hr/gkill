@@ -12,6 +12,14 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
+// HandleGetPluginContentHTML はプラグインが持つデータの表示用HTMLを取得します。
+//
+// POST /api/get_plugin_content_html（wrapAuth）
+// req_res.GetPluginContentHTMLRequest / req_res.GetPluginContentHTMLResponse
+//
+// プラグインのデータ本体はgkill側に保存されていないので、
+// RepNameでプラグインを引き当ててKyouIDを渡し、HTMLをプラグインのプロセスに作らせます。
+// RepNameに一致するプラグインが無い場合はエラーを返します。
 func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetPluginContentHTMLRequest{}

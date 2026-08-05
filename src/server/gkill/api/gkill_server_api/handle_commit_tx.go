@@ -17,6 +17,18 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleCommitTx は指定TXIDの未確定データをtemp repから読み出し、書き込み用repへ確定させます。
+//
+// POST /api/commit_tx（wrapAuthRepos）
+// req_res.CommitTxRequest / req_res.CommitTxResponse
+//
+// temp repは (txID, userID, device) でスコープされるので、他人・他端末の未確定データは拾いません。
+// 確定はKyou種別ごとにWriteXxxRepへAddXxxInfoする追記で、あわせてLatestDataRepositoryAddressを
+// 更新します。
+// 名前に反してDBトランザクションではありません。途中の種別で失敗するとその時点で打ち切るので、
+// すでに書き終えた種別は残ります（部分確定になりえます）。
+// temp repの行はここでは消しません。破棄は /api/discard_tx が担当します。
+// MiReKyouの未確定データがあるのにWriteMiReKyouRepが未設定の場合はエラーで返します。
 func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.CommitTxRequest{}

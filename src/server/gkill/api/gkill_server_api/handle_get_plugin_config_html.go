@@ -12,6 +12,13 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
+// HandleGetPluginConfigHTML はプラグインの設定画面HTMLを取得します。
+//
+// POST /api/get_plugin_config_html（wrapAuth）
+// req_res.GetPluginConfigHTMLRequest / req_res.GetPluginConfigHTMLResponse
+//
+// 設定画面の中身はプラグインが自分で組み立てます。gkill側は内容を解釈せずそのまま返します。
+// RepNameに一致するプラグインが無い場合はエラーを返します。
 func (g *GkillServerAPI) HandleGetPluginConfigHTML(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetPluginConfigHTMLRequest{}
