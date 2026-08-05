@@ -614,11 +614,15 @@ Vuetifyで2つのテーマを定義しています。
 | Mutex の位置 | `pluginRepositoryImpl` struct に `sync.Mutex` を保持。`pluginProcess` struct には置かない |
 | ロック範囲 | `callCommand()` が `mu.Lock()` → `ensureStarted()` → `sendRequest()` → `mu.Unlock()` を直列化 |
 | プロセス起動 | `exec.CommandContext(context.Background(), ...)` — HTTP リクエストキャンセルによる強制終了を防ぐ |
-| 呼び出しタイムアウト | `callCommand()` は呼び出し側 ctx に期限が無ければ**既定 30 秒**を注入する。超過・キャンセル時は `Process.Kill()` でサブプロセスを停止し `started=false` にする |
-| クラッシュ復旧 | `sendRequest()` 失敗時に `started=false` → `ensureStarted()` → `sendRequest()` を1回リトライ。ただし **ctx のタイムアウト/キャンセルが原因のときはリトライしない** |
+| 呼び出しタイムアウト | `callCommand()` は呼び出し側 ctx からキャンセルを切り離し（`context.WithoutCancel`）、Deadline だけを引き継ぐ。期限が無ければ**既定 30 秒**を注入する。超過時は `Process.Kill()` でサブプロセスを回収し `started=false` にする |
+| 呼び出し元のキャンセル | HTTP クライアントの切断などでは待つのをやめるだけで、**プロセスには触らない**。遅れて届く応答は `resp.ID` の不一致で読み捨てる |
+| stdout の読み取り | プロセスごとに常駐リーダー goroutine 1本。`bufio.Scanner` を触るのはリーダーだけ |
+| クラッシュ復旧 | `sendRequest()` 失敗時に回収 → `ensureStarted()` → `sendRequest()` を1回リトライ。ただし **打ち切りが原因のときはリトライしない** |
 
-プロセス起動自体は `context.Background()` なので HTTP リクエストのキャンセルでは死にませんが、
-個々の呼び出しはタイムアウトでプロセスごと落とされます。この2つは別の仕組みです。
+プロセス起動自体は `context.Background()` なので HTTP リクエストのキャンセルでは死にません。
+個々の呼び出しも、呼び出し元のキャンセルではプロセスに手を出しません。
+プロセスごと落とされるのは gkill 自身のデッドライン（既定30秒 / `IsAlive` の5秒）を
+超えたときだけです。
 
 ### bufio.Scanner バッファ
 
