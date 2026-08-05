@@ -334,7 +334,7 @@ Page（ルートページ、Vue Router で遷移）
 
 - **Android**: gkill_server バイナリを APK に同梱、WebView で表示
 - **Wear OS**: Pixel Watch から KFTL テンプレートベースの記録（Wearable Data Layer 経由）
-- **MCP Server**: AI エージェントからのアクセス。Read（10ツール、読み取りのみ）に加え、
-  Write（25ツール）と ReadWrite（30ツール）があり、追加・更新・削除も行える
+- **MCP Server**: AI エージェントからのアクセス。Read（9ツール、読み取りのみ）に加え、
+  Write（24ツール）と ReadWrite（29ツール）があり、追加・更新・削除も行える
 - **プラグイン**: 外部データ源を独立バイナリとして後付けする拡張機構（stdio の改行区切り JSON）。
   gkill 本体を変更せずにデータ型を増やせる。詳細は [plugin-system.md](plugin-system.md)

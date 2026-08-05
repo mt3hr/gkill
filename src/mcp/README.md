@@ -6,11 +6,11 @@ gkill のAPIをMCPサーバとして公開できます。3種類のサーバー�
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| **Read専用** | `gkill-read-server.mjs` | 10 (8 read + 2 plugin) | 8808 | 読み取りのみ |
-| **Write専用** | `gkill-write-server.mjs` | 25 (20 write + 3 read convenience + 2 plugin) | 8809 | 書き込み中心 |
-| **Read/Write統合** | `gkill-readwrite-server.mjs` | 30 (8 read + 20 write + 2 plugin) | 8810 | 全機能 |
+| **Read専用** | `gkill-read-server.mjs` | 9 (8 read + 1 plugin) | 8808 | 読み取りのみ |
+| **Write専用** | `gkill-write-server.mjs` | 24 (20 write + 3 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| **Read/Write統合** | `gkill-readwrite-server.mjs` | 29 (8 read + 20 write + 1 plugin) | 8810 | 全機能 |
 
-プラグインツール2つ（`gkill_get_plugin_list` / `gkill_get_plugin_content`）は3サーバ共通で提供します（いずれも読み取り専用）。
+プラグインツール `gkill_get_plugin_list` は3サーバ共通で提供します（読み取り専用）。プラグインKyouの本文は `gkill_get_kyous` の `include_plugin_content` でレスポンスに埋め込みます。
 
 2つのトランスポートモードに対応：
 - **stdio** (デフォルト): Claude Desktop等のローカルMCPクライアント向け
@@ -209,29 +209,47 @@ AIはこのURLを **Bearer無しでGET** すればバイトを取得できる（
 
 Write専用サーバにはRead便利ツール3つ（`gkill_get_all_rep_names`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`）も含まれます。
 
-#### プラグインツール（2つ — Read/Write/ReadWrite すべてのサーバで使用可能）
+#### プラグインツール（1つ — Read/Write/ReadWrite すべてのサーバで使用可能）
 | ツール名 | 説明 |
 |---|---|
 | `gkill_get_plugin_list` | インストール済みプラグイン一覧を取得（name/version/description/data_type/rep_name/is_alive） |
-| `gkill_get_plugin_content` | プラグインKyou 1件の本文を取得。既定はHTMLをプレーンテキストに変換して返す |
 
 ##### プラグイン内容取得の導線
 
-プラグインKyou（Claude Code / Claude.ai / ChatGPT の会話ログ等）の**本文はgkillのDBに保存されていない**。プラグインプロセスが持っていて、コンテンツHTMLとして取り出すしかない。そのため `gkill_get_kyous` はプラグインKyouについてメタデータ（related_time、tags等）しか返せず、本文を読むには `gkill_get_plugin_content` を使う。
+プラグインKyou（Claude Code / Claude.ai / ChatGPT の会話ログ等）の**本文はgkillのDBに保存されていない**。プラグインプロセスが持っていて、コンテンツHTMLとして取り出すしかない。
 
-導線は次の3ステップ:
+かつては1件ずつ取る `gkill_get_plugin_content` ツールを用意していたが、N件読むのにツール呼び出しがN+1回必要になり、そのたびにLLMのターンを消費して非効率だったため廃止した。いまは `gkill_get_kyous` に **`include_plugin_content: true`** を渡すと、検索結果のプラグインペイロードに本文が直接入る。
+
+導線は次の2ステップ:
 
 1. `gkill_get_plugin_list` でプラグインの `data_type` / `rep_name` を把握する。
-2. `gkill_get_kyous` で検索する（`query.reps` + `use_reps:true` でそのプラグインに絞れる）。プラグインKyouの `payload` は `kind: "plugin"` で、`data_type` / `rep_name` / `kyou_id` / `plugin_name` を持つ。
-3. その `rep_name` と `kyou_id` を `gkill_get_plugin_content` に渡す。
+2. `gkill_get_kyous` に `include_plugin_content: true` を付けて検索する（`query.reps` + `use_reps:true` でそのプラグインに絞れる）。プラグインKyouの `payload` は `kind: "plugin"` で、`data_type` / `rep_name` / `kyou_id` / `plugin_name` に加えて本文フィールドを持つ。
 
-`format` は `text`（既定）/ `html` / `both`:
+各プラグインペイロードに付くフィールド:
 
-- `text` — プラグインのコンテンツHTMLを `lib/html-text.mjs` でプレーンテキストに変換して返す。プラグインのHTMLは表示用のCSS/JSでバイト数の大半が埋まっているため、既定でテキストにしている（`<script>` / `<style>` / コメントは中身ごと破棄、`<details>`/`<summary>` の中身は残す）。`max_text_length`（既定20000文字）を超えたら切り詰め、`text_truncated: true` を返す。
+| フィールド | 説明 |
+|---|---|
+| `content_status` | `ok` / `truncated` / `skipped` / `error`。**`ok` のときだけ本文が完全** |
+| `content_text` | 変換後のテキスト（`plugin_content_format` が `text` / `both` のとき） |
+| `content_html` | 生HTML（`plugin_content_format` が `html` / `both` のとき） |
+| `content_skipped_reason` | `max_kyous` / `budget` / `deadline` / `rep_error`（`content_status` が `skipped` のとき） |
+| `content_error` | 失敗理由（200文字で切る。`content_status` が `error` のとき） |
+
+トップレベルには集計 `plugin_content: { requested, inlined, truncated, skipped, errors, total_text_length }` が付く。
+
+`plugin_content_format` は `text`（既定）/ `html` / `both`:
+
+- `text` — プラグインのコンテンツHTMLを `lib/html-text.mjs` でプレーンテキストに変換する。プラグインのHTMLは表示用のCSS/JSでバイト数の大半が埋まっているため、既定でテキストにしている（`<script>` / `<style>` / コメントは中身ごと破棄、`<details>`/`<summary>` の中身は残す）。`plugin_content_max_text_length`（既定4000文字、最大200000）を超えたら切り詰め、`content_status: "truncated"` にする。
 - `html` — 生HTMLをそのまま返す（表示やマークアップ自体が必要なとき）。
 - `both` — 両方返す。
 
+長い記録1件の全文が欲しいときは、`query.use_ids` + `query.ids` でその1件に絞ったうえで `plugin_content_max_text_length` を上げる。
+
+**上限と安全弁**: 1回のリクエストで本文を埋めるのは20件・合計200000文字まで、全体30秒で打ち切る。取得は `rep_name` ごとにグループ化し、**同一プラグインへは必ず1件ずつ直列**、プラグイン間は並列（既定4）で叩く。gkill側は1プラグイン1プロセス1ミューテックスで直列化されるうえ、30秒のデッドラインがミューテックス待ちを含むため、同時に投げると期限切れでプラグインプロセスがkillされるからである。同じ理由で実行中のリクエストはabortしない（abortもプロセスkillになる）。あるプラグインで1件失敗したら、そのプラグインの残りは投げずに `rep_error` として諦める。
+
 内部で叩くgkill APIは `/api/get_plugin_list` と `/api/get_plugin_content_html`。プラグイン設定の書き換え（`/api/post_plugin_config`）はMCPに公開していない。
+
+> Write専用サーバには `gkill_get_kyous` が無いため、プラグイン本文を読む導線も無い。本文が要るときは ReadWrite サーバを使う。
 
 ### AI用運用ガイド（MCP）
 AIが安定して呼び出せるよう、以下のルールを推奨します。
@@ -254,7 +272,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 3. `gkill_get_kyous` でKyou一覧を取得（タグ・テキスト・型データはレスポンスにインライン）
 4. 件数が多い場合は `cursor` / `next_cursor` でページングして追加取得
 5. 地図系は `gkill_get_gps_log` を使う
-6. プラグイン由来のKyou（`payload.kind === "plugin"`）の本文は `gkill_get_plugin_content` で取得する。どのプラグインが入っているかは `gkill_get_plugin_list` で分かる
+6. プラグイン由来のKyou（`payload.kind === "plugin"`）の本文が要るときは `gkill_get_kyous` に `include_plugin_content: true` を付ける。どのプラグインが入っているかは `gkill_get_plugin_list` で分かる
 
 #### 3) `gkill_get_kyous` のパラメータ
 | パラメータ | 型 | 説明 |
@@ -265,6 +283,10 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `cursor` | string | 前回レスポンスの `next_cursor` を指定してページング。ISO-8601推奨 |
 | `max_size_mb` | number | レスポンスの最大サイズMB（default: 0.25） |
 | `is_include_timeis` | boolean | 各Kyouに付随する TimeIs を含めるか（default: false） |
+| `include_id` | boolean | 各Kyouに `id`（UUID）を含めるか（default: false） |
+| `include_plugin_content` | boolean | プラグインKyouの本文をレスポンスに埋め込むか（default: false） |
+| `plugin_content_max_text_length` | integer | 埋め込む本文の1件あたり上限文字数（default: 4000, max: 200000） |
+| `plugin_content_format` | string | 埋め込む形式。`text`（既定）/ `html` / `both` |
 
 レスポンスフィールド:
 - `kyous[]`: Kyou DTOの配列（各要素に `data_type`, `related_time`, `tags[]`, `texts[]`, `notifications[]`, `payload` を含む）
@@ -272,6 +294,7 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 - `returned_count`: 今回返却した件数
 - `has_more`: 続きがある場合 true
 - `next_cursor`: 次ページ取得用カーソル（ISO-8601）
+- `plugin_content`: 本文埋め込みの集計（`include_plugin_content: true` のときのみ）
 
 #### 4) ペイロード（payload）フィールド
 `payload.kind` でデータ型を識別できます：
@@ -287,9 +310,9 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 | `idf` | file_name, is_image, is_video, is_audio, rep_name, mime_type |
 | `git_commit_log` | commit_message, addition, deletion |
 | `mi` | title, is_checked, board_name, limit_time, estimate_start_time, estimate_end_time |
-| `plugin` | data_type, rep_name, kyou_id, plugin_name, description |
+| `plugin` | data_type, rep_name, kyou_id, plugin_name, description（+ `include_plugin_content: true` のとき content_status / content_text / content_html / content_skipped_reason / content_error） |
 
-`kind: "plugin"` は上記の組み込み型に該当しないプラグイン由来のKyou。本文はgkillに入っていないので、`rep_name` と `kyou_id` を `gkill_get_plugin_content` に渡して取得する。
+`kind: "plugin"` は上記の組み込み型に該当しないプラグイン由来のKyou。本文はgkillに入っていないので、`include_plugin_content: true` を渡して同じレスポンスに埋め込ませる。
 
 #### 5) 日時フォーマット
 - 日時は ISO-8601 を推奨

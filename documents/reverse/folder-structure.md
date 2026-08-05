@@ -229,12 +229,12 @@ AI連携用のMCP（Model Context Protocol）サーバーです。
 
 ```
 src/mcp/
-├── gkill-read-server.mjs      # Read専用MCPサーバー（10ツール = 固有8 + プラグイン2、port 8808）
-├── gkill-write-server.mjs     # Write専用MCPサーバー（25ツール = 固有23 + プラグイン2、port 8809）
-├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（30ツール = 固有28 + プラグイン2、port 8810）
+├── gkill-read-server.mjs      # Read専用MCPサーバー（9ツール = 固有8 + プラグイン1、port 8808）
+├── gkill-write-server.mjs     # Write専用MCPサーバー（24ツール = 固有23 + プラグイン1、port 8809）
+├── gkill-readwrite-server.mjs # Read/Write統合MCPサーバー（29ツール = 固有28 + プラグイン1、port 8810）
 └── lib/
     ├── access-log.mjs         # MCPアクセスログモジュール（MCP_LOG環境変数で制御）
-    ├── plugin-tools.mjs       # 3サーバ共通のプラグインツール（gkill_get_plugin_list / gkill_get_plugin_content）
+    ├── plugin-tools.mjs       # 3サーバ共通のプラグインツール（gkill_get_plugin_list）とプラグイン本文のインライン埋め込み
     ├── html-text.mjs          # プラグインコンテンツHTML→プレーンテキスト変換
     ├── file-link-store.mjs    # HTTPモード用ファイルリンクストア（期限付きトークンで /files/{token} 配信）
     ├── normalization.mjs      # Read入力正規化

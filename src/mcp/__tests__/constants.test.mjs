@@ -12,6 +12,16 @@ import {
   KYOUS_QUERY_DATETIME_FIELDS,
   MI_CHECK_STATES,
   MI_SORT_TYPES,
+  PLUGIN_CONTENT_FORMATS,
+  DEFAULT_PLUGIN_CONTENT_FORMAT,
+  DEFAULT_INCLUDE_PLUGIN_CONTENT,
+  DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+  MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+  MAX_INLINE_PLUGIN_CONTENT_KYOUS,
+  INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH,
+  INLINE_PLUGIN_CONTENT_REP_CONCURRENCY,
+  INLINE_PLUGIN_CONTENT_DEADLINE_MS,
+  MAX_INLINE_PLUGIN_CONTENT_HTML_LENGTH,
 } from "../lib/constants.mjs";
 
 // ---------------------------------------------------------------------------
@@ -119,6 +129,49 @@ describe("KYOUS_TOP_LEVEL_FIELDS", () => {
     expect(KYOUS_TOP_LEVEL_FIELDS.has("cursor")).toBe(true);
     expect(KYOUS_TOP_LEVEL_FIELDS.has("max_size_mb")).toBe(true);
     expect(KYOUS_TOP_LEVEL_FIELDS.has("is_include_timeis")).toBe(true);
+  });
+
+  test("contains the inline plugin content fields", () => {
+    expect(KYOUS_TOP_LEVEL_FIELDS.has("include_plugin_content")).toBe(true);
+    expect(KYOUS_TOP_LEVEL_FIELDS.has("plugin_content_max_text_length")).toBe(true);
+    expect(KYOUS_TOP_LEVEL_FIELDS.has("plugin_content_format")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// インライン本文取得の定数
+// ---------------------------------------------------------------------------
+describe("inline plugin content constants", () => {
+  test("defaults to opt-in", () => {
+    expect(DEFAULT_INCLUDE_PLUGIN_CONTENT).toBe(false);
+  });
+
+  test("keeps the format enum and its default", () => {
+    expect(Array.from(PLUGIN_CONTENT_FORMATS)).toEqual(["text", "html", "both"]);
+    expect(PLUGIN_CONTENT_FORMATS.has(DEFAULT_PLUGIN_CONTENT_FORMAT)).toBe(true);
+    expect(DEFAULT_PLUGIN_CONTENT_FORMAT).toBe("text");
+  });
+
+  test("orders the per-entry default below the per-entry maximum", () => {
+    expect(DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH).toBeGreaterThan(0);
+    expect(DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH).toBeLessThanOrEqual(
+      MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+    );
+  });
+
+  test("lets a single entry at the maximum length fit the total budget", () => {
+    expect(INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH).toBeGreaterThanOrEqual(
+      MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+    );
+  });
+
+  test("uses sane counts, concurrency and deadline", () => {
+    expect(MAX_INLINE_PLUGIN_CONTENT_KYOUS).toBeGreaterThanOrEqual(1);
+    expect(INLINE_PLUGIN_CONTENT_REP_CONCURRENCY).toBeGreaterThanOrEqual(1);
+    expect(INLINE_PLUGIN_CONTENT_DEADLINE_MS).toBeGreaterThan(0);
+    expect(MAX_INLINE_PLUGIN_CONTENT_HTML_LENGTH).toBeGreaterThan(
+      MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+    );
   });
 });
 

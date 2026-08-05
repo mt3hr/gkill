@@ -755,34 +755,48 @@ sequenceDiagram
     UI->>UI: iframe_content_height 更新 → iframe 高さ自動調整
 ```
 
-### 23. MCP からのプラグイン本文取得（gkill_get_plugin_content）
+### 23. MCP からのプラグイン本文取得（include_plugin_content）
 
 プラグインKyouの本文は gkill 本体に保存されていない。`get_kyous` が返すのはメタデータと
 `payload.kind="plugin"`（`rep_name` / `kyou_id`）だけなので、AI に本文を届けるには画面と同じく
-`get_plugin_content_html` を経由する。表示用の CSS/JS がバイト数の大半を占めるため、
-MCP 側は既定で HTML をプレーンテキストへ変換して返す。
+`get_plugin_content_html` を経由する。かつては1件ずつ取る専用ツールがあったが、N件読むのに
+ツール呼び出しが N+1 回必要で LLM のターンを浪費していたため、いまは `gkill_get_kyous` の
+`include_plugin_content` で同じレスポンスへ埋め込む。表示用の CSS/JS がバイト数の大半を占めるため、
+MCP 側は既定で HTML をプレーンテキストへ変換する。
+
+同一プラグインへは必ず1件ずつ直列に投げる。gkill 側の `callCommand` は30秒のデッドラインを
+`p.mu.Lock()` の前に張るので、同時発行するとロック待ちで期限を食い潰し、
+期限切れ時の `Process.Kill()` でプラグインプロセスが落ちるためである。
 
 ```mermaid
 sequenceDiagram
     actor Client as MCPクライアント（Claude等）
-    participant MCP as MCPサーバ<br>gkill_get_plugin_content
+    participant MCP as MCPサーバ<br>gkill_get_kyous
+    participant IN as inlinePluginContents
     participant HT as lib/html-text.mjs
     participant API as GkillServerAPI
     participant PluginRepo as pluginRepositoryImpl
 
-    Client->>MCP: gkill_get_plugin_content<br>{rep_name, kyou_id, format?, max_text_length?}
-    MCP->>API: POST /api/get_plugin_content_html
-    API->>PluginRepo: GetContentHTML(ctx, kyouID)
-    PluginRepo-->>API: html string
-    API-->>MCP: {html, messages, errors}
-    alt format = "text"（既定）
-        MCP->>HT: htmlToText(html)
-        HT->>HT: script / style / コメントを中身ごと除去 → テキスト抽出
-        HT-->>MCP: text（既定 20000 文字で打ち切り）
-        MCP-->>Client: テキスト本文
-    else format = "html" / "both"
-        MCP-->>Client: HTML（"both" はテキストも同梱）
+    Client->>MCP: gkill_get_kyous<br>{query, include_plugin_content:true, plugin_content_format?}
+    MCP->>API: POST /api/get_kyous_mcp
+    API-->>MCP: {kyous[], total_count, ...}
+    MCP->>IN: inlinePluginContents(call, kyous)
+    IN->>IN: kind="plugin" のペイロードを集め<br>rep_name でグループ化（rep内は直列 / rep間は並列4）
+    loop 同一repのKyouを1件ずつ（最大20件・全体30秒）
+        IN->>API: POST /api/get_plugin_content_html<br>{rep_name, kyou_id}
+        API->>PluginRepo: GetContentHTML(ctx, kyouID)
+        PluginRepo-->>API: html string
+        API-->>IN: {html, messages, errors}
+        alt 成功
+            IN->>HT: htmlToText(html)
+            HT-->>IN: text（既定 4000 文字で打ち切り）
+            IN->>IN: payload.content_text / content_status="ok"|"truncated"
+        else 失敗
+            IN->>IN: payload.content_status="error"<br>そのrepの残りは投げず "rep_error" で skip
+        end
     end
+    IN-->>MCP: {requested, inlined, truncated, skipped, errors}
+    MCP-->>Client: kyous[]（本文入り） + plugin_content 集計
 ```
 
 ---
