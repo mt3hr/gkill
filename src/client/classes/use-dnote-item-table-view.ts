@@ -74,13 +74,13 @@ export function useDnoteItemTableView(options: {
         targetList.splice(insertPos, 0, moved)
     }
 
-    function on_cell_dragover(e: DragEvent): void {
+    function onCellDragover(e: DragEvent): void {
         if (!props.editable) return
         e.preventDefault()
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
     }
 
-    function on_cell_drop(e: DragEvent, targetListIndex: number): void {
+    function onCellDrop(e: DragEvent, targetListIndex: number): void {
         if (!props.editable) return
 
         const srcId = e.dataTransfer?.getData("gkill_dnote_item_id")
@@ -106,8 +106,8 @@ export function useDnoteItemTableView(options: {
 
         // Methods used in template
         handle_move_dnote_item,
-        on_cell_dragover,
-        on_cell_drop,
+        onCellDragover,
+        onCellDrop,
 
         // Exposed methods
         load_aggregated_value,

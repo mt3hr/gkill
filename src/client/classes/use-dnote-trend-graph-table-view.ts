@@ -69,13 +69,13 @@ export function useDnoteTrendGraphTableView(options: {
         model_value.value.splice(insertIndex, 0, moved)
     }
 
-    function on_table_dragover(e: DragEvent): void {
+    function onTableDragover(e: DragEvent): void {
         if (!props.editable) return
         e.preventDefault()
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
     }
 
-    function on_table_drop(e: DragEvent): void {
+    function onTableDrop(e: DragEvent): void {
         if (!props.editable) return
         const srcId = e.dataTransfer?.getData("gkill_dnote_trend_graph_id")
         if (!srcId) return
@@ -105,8 +105,8 @@ export function useDnoteTrendGraphTableView(options: {
         handle_move_dnote_trend_graph,
         delete_dnote_trend_graph,
         update_dnote_trend_graph,
-        on_table_dragover,
-        on_table_drop,
+        onTableDragover,
+        onTableDrop,
 
         // Exposed methods
         load_trend_graph,

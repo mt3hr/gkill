@@ -171,20 +171,20 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
     it('シングルクリックは遷移を無効化する (誤って新規タブが開かないように)', () => {
         const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
         const props = createPropsWithAPI({})
-        const { on_markdown_content_click } = useIDFKyouView({ props, emits: noop_emits })
+        const { onMarkdownContentClick } = useIDFKyouView({ props, emits: noop_emits })
 
         const e = createMouseEvent(anchor)
-        on_markdown_content_click(e)
+        onMarkdownContentClick(e)
         expect(e.preventDefault).toHaveBeenCalled()
     })
 
     it('修飾キー付きシングルクリックはブラウザ既定の動作に任せる', () => {
         const anchor = createMdLinkAnchor('index.md', '/files/rep1/index.md')
         const props = createPropsWithAPI({})
-        const { on_markdown_content_click } = useIDFKyouView({ props, emits: noop_emits })
+        const { onMarkdownContentClick } = useIDFKyouView({ props, emits: noop_emits })
 
         const e = createMouseEvent(anchor, { ctrlKey: true })
-        on_markdown_content_click(e)
+        onMarkdownContentClick(e)
         expect(e.preventDefault).not.toHaveBeenCalled()
     })
 
@@ -192,10 +192,10 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         const plain = document.createElement('span')
         document.body.appendChild(plain)
         const props = createPropsWithAPI({})
-        const { on_markdown_content_click } = useIDFKyouView({ props, emits: noop_emits })
+        const { onMarkdownContentClick } = useIDFKyouView({ props, emits: noop_emits })
 
         const e = createMouseEvent(plain)
-        on_markdown_content_click(e)
+        onMarkdownContentClick(e)
         expect(e.preventDefault).not.toHaveBeenCalled()
     })
 
@@ -208,10 +208,10 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         }
         const emits = vi.fn() as unknown as KyouViewEmits
         const props = createPropsWithAPI(api)
-        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits })
+        const { onMarkdownContentDblclick } = useIDFKyouView({ props, emits })
 
         const e = createMouseEvent(anchor)
-        await on_markdown_content_dblclick(e)
+        await onMarkdownContentDblclick(e)
 
         expect(e.preventDefault).toHaveBeenCalled()
         expect(e.stopPropagation).toHaveBeenCalled()
@@ -228,9 +228,9 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         }
         vi.stubGlobal('open', vi.fn())
         const props = createPropsWithAPI(api)
-        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits: noop_emits })
+        const { onMarkdownContentDblclick } = useIDFKyouView({ props, emits: noop_emits })
 
-        await on_markdown_content_dblclick(createMouseEvent(anchor))
+        await onMarkdownContentDblclick(createMouseEvent(anchor))
 
         expect(api.get_idf_kyou_by_relative_path).toHaveBeenCalledWith(
             expect.objectContaining({ relative_path: 'index.md' }),
@@ -246,9 +246,9 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         vi.stubGlobal('open', open_mock)
         const emits = vi.fn() as unknown as KyouViewEmits
         const props = createPropsWithAPI(api)
-        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits })
+        const { onMarkdownContentDblclick } = useIDFKyouView({ props, emits })
 
-        await on_markdown_content_dblclick(createMouseEvent(anchor))
+        await onMarkdownContentDblclick(createMouseEvent(anchor))
 
         expect(open_mock).toHaveBeenCalledWith('/files/rep1/missing.md', '_blank')
         expect(emits).not.toHaveBeenCalled()
@@ -262,9 +262,9 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         const open_mock = vi.fn()
         vi.stubGlobal('open', open_mock)
         const props = createPropsWithAPI(api)
-        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits: noop_emits })
+        const { onMarkdownContentDblclick } = useIDFKyouView({ props, emits: noop_emits })
 
-        await on_markdown_content_dblclick(createMouseEvent(anchor))
+        await onMarkdownContentDblclick(createMouseEvent(anchor))
 
         expect(open_mock).toHaveBeenCalledWith('/files/rep1/index.md', '_blank')
     })
@@ -277,9 +277,9 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         const open_mock = vi.fn()
         vi.stubGlobal('open', open_mock)
         const props = createPropsWithAPI(api, false)
-        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits: noop_emits })
+        const { onMarkdownContentDblclick } = useIDFKyouView({ props, emits: noop_emits })
 
-        await on_markdown_content_dblclick(createMouseEvent(anchor))
+        await onMarkdownContentDblclick(createMouseEvent(anchor))
 
         expect(api.get_idf_kyou_by_relative_path).not.toHaveBeenCalled()
         expect(open_mock).toHaveBeenCalledWith('/files/rep1/index.md', '_blank')
@@ -296,9 +296,9 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         vi.stubGlobal('open', open_mock)
         const emits = vi.fn() as unknown as KyouViewEmits
         const props = createPropsWithAPI(api, true, false)
-        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits })
+        const { onMarkdownContentDblclick } = useIDFKyouView({ props, emits })
 
-        await on_markdown_content_dblclick(createMouseEvent(anchor))
+        await onMarkdownContentDblclick(createMouseEvent(anchor))
 
         expect(emits).toHaveBeenCalledWith('requested_open_rykv_dialog', 'kyou', target_kyou)
         expect(open_mock).not.toHaveBeenCalled()
@@ -315,9 +315,9 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
         vi.stubGlobal('open', open_mock)
         const emits = vi.fn() as unknown as KyouViewEmits
         const props = createPropsWithAPI(api, false, true)
-        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits })
+        const { onMarkdownContentDblclick } = useIDFKyouView({ props, emits })
 
-        await on_markdown_content_dblclick(createMouseEvent(anchor))
+        await onMarkdownContentDblclick(createMouseEvent(anchor))
 
         expect(emits).toHaveBeenCalledWith('requested_open_rykv_dialog', 'kyou', target_kyou)
         expect(open_mock).not.toHaveBeenCalled()
@@ -330,10 +330,10 @@ describe('useIDFKyouView Markdown相対リンク → KyouDialog', () => {
             get_idf_kyou_by_relative_path: vi.fn(),
         }
         const props = createPropsWithAPI(api)
-        const { on_markdown_content_dblclick } = useIDFKyouView({ props, emits: noop_emits })
+        const { onMarkdownContentDblclick } = useIDFKyouView({ props, emits: noop_emits })
 
         const e = createMouseEvent(plain)
-        await on_markdown_content_dblclick(e)
+        await onMarkdownContentDblclick(e)
 
         expect(e.preventDefault).not.toHaveBeenCalled()
         expect(e.stopPropagation).not.toHaveBeenCalled()

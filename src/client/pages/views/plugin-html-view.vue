@@ -36,7 +36,7 @@
                 overflow: 'hidden',
                 'overflow-anchor': 'none',
             }"
-            @load="on_iframe_load"
+            @load="onIframeLoad"
         />
         <PluginHtmlContextMenu
             :application_config="application_config"
@@ -156,13 +156,13 @@ function try_inject_html(): void {
     iframe_ref.value.contentWindow.postMessage({ gkill_plugin_html: html.value }, '*')
 }
 
-function on_iframe_load(): void {
+function onIframeLoad(): void {
     try_inject_html()
     send_theme_to_iframe()
 }
 
 // iframeからのpostMessageを受信してコンテンツサイズを反映
-function on_window_message(e: MessageEvent): void {
+function onWindowMessage(e: MessageEvent): void {
     // 自分のiframe以外からのメッセージは無視
     if (!iframe_ref.value || e.source !== iframe_ref.value.contentWindow) return
     if (e.data && e.data.gkill_iframe_size) {
@@ -239,11 +239,11 @@ watch(() => props.kyou.id, async () => {
 
 // messageリスナー登録のみ。HTMLロードはwatchのimmediate:trueに委ねる。
 onMounted(() => {
-    window.addEventListener('message', on_window_message)
+    window.addEventListener('message', onWindowMessage)
 })
 
 onUnmounted(() => {
-    window.removeEventListener('message', on_window_message)
+    window.removeEventListener('message', onWindowMessage)
 })
 
 defineExpose({ show_context_menu })

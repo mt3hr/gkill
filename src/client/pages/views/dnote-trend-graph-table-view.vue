@@ -1,5 +1,5 @@
 <template>
-  <div class="dnote_trend_graph_table_root" @dragover="on_table_dragover" @drop="on_table_drop">
+  <div class="dnote_trend_graph_table_root" @dragover="onTableDragover" @drop="onTableDrop">
     <div class="dnote_trend_graph_table_row">
       <DnoteTrendGraphView v-for="(q, index) in model_value" :key="q.id" v-model="model_value[index]"
         :editable="editable" :application_config="application_config" :gkill_api="gkill_api"
@@ -36,8 +36,8 @@ const {
     handle_move_dnote_trend_graph,
     delete_dnote_trend_graph,
     update_dnote_trend_graph,
-    on_table_dragover,
-    on_table_drop,
+    onTableDragover,
+    onTableDrop,
 
     // Exposed methods
     load_trend_graph,

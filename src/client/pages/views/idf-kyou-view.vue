@@ -9,7 +9,7 @@
             <!-- eslint-disable-next-line vue/no-v-html markdown_to_safe_html でDOMPurifyサニタイズ済み -->
             <div v-if="markdown_html" ref="markdown_content"
                 :class="['idf_markdown_content', is_image_request_to_thumb_size ? 'idf_markdown_content--list' : '']"
-                @click="on_markdown_content_click" @dblclick="on_markdown_content_dblclick"
+                @click="onMarkdownContentClick" @dblclick="onMarkdownContentDblclick"
                 v-html="markdown_html"></div>
         </div>
         <!-- テキストファイル: 内容をインライン表示 -->
@@ -76,8 +76,8 @@ const {
     text_loading,
     show_context_menu,
     open_link,
-    on_markdown_content_click,
-    on_markdown_content_dblclick,
+    onMarkdownContentClick,
+    onMarkdownContentDblclick,
     buildMediaUrl,
     crudRelayHandlers,
 } = useIDFKyouView({ props, emits })
