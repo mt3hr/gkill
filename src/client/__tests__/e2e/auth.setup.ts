@@ -15,7 +15,7 @@ const gkillPort = Number(gkillUrl.port || 9999)
 
 /**
  * Get the password reset token from gkill_server's redirect response.
- * On first run, gkill_server redirects / to /regist_first_account?reset_token=<token>.
+ * On first run, gkill_server redirects / to /register_first_account?reset_token=<token>.
  * Returns empty string if no redirect (password already set).
  */
 function getResetToken(): Promise<string> {
@@ -43,7 +43,7 @@ setup('register and login', async ({ page }) => {
   // 1. Perform initial registration if needed
   const token = await getResetToken()
   if (token) {
-    await page.goto(`/regist_first_account?reset_token=${token}`, { waitUntil: 'domcontentloaded' })
+    await page.goto(`/register_first_account?reset_token=${token}`, { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
 
     // 固定sleepではなく入力欄が描画されるまで待つ (5つ目まで揃ってから count を読む)
@@ -64,7 +64,7 @@ setup('register and login', async ({ page }) => {
     const registerBtn = page.locator('button').filter({ hasText: /登録|regist/i }).first()
     await expect(registerBtn).toBeVisible()
     await registerBtn.click()
-    // 登録完了で router.replace("/") される (use-regist-first-account-view.ts)
+    // 登録完了で router.replace("/") される (use-register-first-account-view.ts)
     await page.waitForURL((url) => url.pathname === '/', { timeout: 60000 })
   }
 

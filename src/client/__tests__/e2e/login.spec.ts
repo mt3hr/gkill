@@ -15,7 +15,7 @@ test.describe('Login page', () => {
   test('can load login page', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('#app', { timeout: 15000 })
-    await expect(page).toHaveURL(/\/($|\?|regist_first_account)/, { timeout: 15000 })
+    await expect(page).toHaveURL(/\/($|\?|register_first_account)/, { timeout: 15000 })
   })
 
   test('login page has input fields', async ({ page }) => {

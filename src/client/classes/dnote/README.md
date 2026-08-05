@@ -274,7 +274,7 @@ DNote 設定の JSON シリアライズ/デシリアライズ用辞書。
 | `dnote-key-getter-dictionary.ts` | キー取得の型辞書 |
 | `dnote-kyou-filter-dictionary.ts` | フィルタの型辞書 |
 | `dnote-predicate-dictionary.ts` | 述語の型辞書 |
-| `regist-dictionary.ts` | 辞書登録ユーティリティ |
+| `register-dictionary.ts` | 辞書登録ユーティリティ |
 
 ## トレンドグラフ（`dnote-trend/` + `dnote-trend-aggregator.ts`）
 

@@ -90,7 +90,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/kyou-list.spec.ts` | `/kyou` — レコード一覧 |
 | `src/client/__tests__/e2e/share-page.spec.ts` | `/shared_page` — 不正な共有IDでエラーが表示され、読み込み中のまま止まらないこと（返る内容の網羅はGo側 handle_get_shared_kyous_test.go） |
 | `src/client/__tests__/e2e/shared-mi.spec.ts` | `/shared_mi` — 共有タスク |
-| `src/client/__tests__/e2e/regist-first-account.spec.ts` | `/regist_first_account` — 初回アカウント登録 |
+| `src/client/__tests__/e2e/register-first-account.spec.ts` | `/regist_first_account` — 初回アカウント登録 |
 | `src/client/__tests__/e2e/set-new-password.spec.ts` | `/set_new_password` — パスワード再設定 |
 
 #### CRUD 操作フロー系（9ファイル）
@@ -150,7 +150,7 @@ const record = await waitForKyouByText(page, label)
 
 ## E2E テストヘルパー
 
-- `src/client/__tests__/e2e/helpers.ts` — 初回登録（reset_token取得→regist_first_account）+ テストユーザログイン
+- `src/client/__tests__/e2e/helpers.ts` — 初回登録（reset_token取得→register_first_account）+ テストユーザログイン
 - `src/client/__tests__/e2e/crud-helpers.ts` — KFTL送信、ページナビゲーション、コンテキストメニュー、FABクリック、フローティングダイアログ自動閉じ。固定sleepは持たず、`waitForKyouByText`（対象が見つかるまで待つ）/ `clickContextMenuItem`（項目が表示されるまで待つ）/ `clickDialogButton`（書き込みAPIの応答を待ち、errors が空かも見る）のようにweb-firstな待機で組んである
 - `src/client/__tests__/e2e/check-server.ts` — サーバヘルスチェック
 - `src/client/__tests__/e2e/run-e2e.mjs` — テストランナー（gkill_server自動起動・停止）

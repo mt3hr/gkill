@@ -13,10 +13,10 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useTheme } from 'vuetify'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
-import type { RegistFirstAccountViewProps } from '@/pages/views/regist-first-account-view-props'
-import type { RegistFirstAccountViewEmits } from '@/pages/views/regist-first-account-view-emits'
+import type { RegisterFirstAccountViewProps } from '@/pages/views/register-first-account-view-props'
+import type { RegisterFirstAccountViewEmits } from '@/pages/views/register-first-account-view-emits'
 
-enum RegistStatus {
+enum RegisterStatus {
     none = 0,
     reseted_admin_password = 1,
     added_account = 2,
@@ -24,9 +24,9 @@ enum RegistStatus {
     done = 4,
 }
 
-export function useRegistFirstAccountView(options: {
-    props: RegistFirstAccountViewProps,
-    emits: RegistFirstAccountViewEmits,
+export function useRegisterFirstAccountView(options: {
+    props: RegisterFirstAccountViewProps,
+    emits: RegisterFirstAccountViewEmits,
 }) {
     const { props, emits } = options
 
@@ -40,7 +40,7 @@ export function useRegistFirstAccountView(options: {
     const password_retype: Ref<string> = ref("")
     const admin_password: Ref<string> = ref("")
     const admin_password_retype: Ref<string> = ref("")
-    const regist_state = ref(RegistStatus.none)
+    const register_state = ref(RegisterStatus.none)
     const is_submiting = ref(false)
 
     // ── Computed ──
@@ -78,7 +78,7 @@ export function useRegistFirstAccountView(options: {
     // ── Business logic ──
     const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
-    async function try_regist_account(): Promise<boolean> {
+    async function try_register_account(): Promise<boolean> {
         is_submiting.value = true
         // 未入力チェック
         if (user_id.value === "") {
@@ -140,8 +140,8 @@ export function useRegistFirstAccountView(options: {
         // 6.アカウントのパスワードをリセットする
         // 7.Adminのログインセッションを破棄する
         // 8.登録完了メッセージを出してログイン画面に遷移する
-        switch (regist_state.value) {
-            case RegistStatus.none: {
+        switch (register_state.value) {
+            case RegisterStatus.none: {
                 // 1.Adminのパスワードリセットトークンを受け取る（クエリパラメータ）
                 // 2.Adminのパスワードリセットを実施する
                 const set_new_password_admin_req = new SetNewPasswordRequest()
@@ -155,10 +155,10 @@ export function useRegistFirstAccountView(options: {
                     is_submiting.value = false
                     return false
                 }
-                regist_state.value = RegistStatus.reseted_admin_password
+                register_state.value = RegisterStatus.reseted_admin_password
             }
              
-            case RegistStatus.reseted_admin_password: {
+            case RegisterStatus.reseted_admin_password: {
                 // 3.Adminのログインセッションを取得する（Adminのパスワード情報は画面が持ってる）
                 // 4.アカウント追加を行う
                 const login_admin_account_req = new LoginRequest()
@@ -186,10 +186,10 @@ export function useRegistFirstAccountView(options: {
                     is_submiting.value = false
                     return false
                 }
-                regist_state.value = RegistStatus.added_account
+                register_state.value = RegisterStatus.added_account
             }
              
-            case RegistStatus.added_account: {
+            case RegisterStatus.added_account: {
                 // 5.アカウントのパスワードリセットトークンを取得する（管理者権限使用）
                 // 6.アカウントのパスワードをリセットする
                 const login_admin_account_req = new LoginRequest()
@@ -227,15 +227,15 @@ export function useRegistFirstAccountView(options: {
                     is_submiting.value = false
                     return false
                 }
-                regist_state.value = RegistStatus.reseted_account_password
+                register_state.value = RegisterStatus.reseted_account_password
             }
              
-            case RegistStatus.reseted_account_password: {
+            case RegisterStatus.reseted_account_password: {
                 const message = new GkillMessage()
                 message.message = i18n.global.t("REGISTERED_ACCOUNT_MESSAGE")
                 message.message_code = GkillMessageCodes.added_account
                 emits('received_messages', [message])
-                regist_state.value = RegistStatus.done
+                register_state.value = RegisterStatus.done
             }
              
             default:
@@ -255,7 +255,7 @@ export function useRegistFirstAccountView(options: {
         password_retype,
         admin_password,
         admin_password_retype,
-        regist_state,
+        register_state,
         is_submiting,
 
         // Computed
@@ -263,9 +263,9 @@ export function useRegistFirstAccountView(options: {
         app_content_width_px,
 
         // Constants
-        RegistStatus,
+        RegisterStatus,
 
         // Business logic
-        try_regist_account,
+        try_register_account,
     }
 }

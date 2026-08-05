@@ -17,43 +17,43 @@
                 <v-col cols="12">
                     <v-text-field id="username" :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id"
                         name="new-username" autocomplete="new-username"
-                        :readonly="RegistStatus.added_account <= regist_state" />
+                        :readonly="RegisterStatus.added_account <= register_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
                     <v-text-field id="password" :label="i18n.global.t('PASSWORD_TITLE')" :type="'password'"
                         v-model="password" name="new-password" autocomplete="new-password"
-                        :readonly="RegistStatus.reseted_account_password <= regist_state" />
+                        :readonly="RegisterStatus.reseted_account_password <= register_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
                     <v-text-field :label="i18n.global.t('PASSWORD_RETYPE_TITLE')" :type="'password'"
                         name="retype-password" autocomplete="retype-password" v-model="password_retype"
-                        :readonly="RegistStatus.reseted_account_password <= regist_state" />
+                        :readonly="RegisterStatus.reseted_account_password <= register_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
                     <v-text-field :label="i18n.global.t('ADMIN_PASSWORD_TITLE')" :type="'password'"
-                        v-model="admin_password" :readonly="RegistStatus.reseted_admin_password <= regist_state" />
+                        v-model="admin_password" :readonly="RegisterStatus.reseted_admin_password <= register_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
                     <v-text-field :label="i18n.global.t('ADMIN_PASSWORD_RETYPE_TITLE')" :type="'password'"
                         v-model="admin_password_retype"
-                        :readonly="RegistStatus.reseted_admin_password <= regist_state" />
+                        :readonly="RegisterStatus.reseted_admin_password <= register_state" />
                 </v-col>
             </v-row>
 
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto">
-                    <v-btn dark class="login_button" color="primary" @click="try_regist_account()"
+                    <v-btn dark class="login_button" color="primary" @click="try_register_account()"
                         :disable="is_submiting">
-                        {{ i18n.global.t("REGIST_ACCOUNT_TITLE") }}
+                        {{ i18n.global.t("REGISTER_ACCOUNT_TITLE") }}
                     </v-btn>
                 </v-col>
             </v-row>
@@ -63,12 +63,12 @@
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
 
-import type { RegistFirstAccountViewProps } from './regist-first-account-view-props'
-import type { RegistFirstAccountViewEmits } from './regist-first-account-view-emits'
-import { useRegistFirstAccountView } from '@/classes/use-regist-first-account-view'
+import type { RegisterFirstAccountViewProps } from './register-first-account-view-props'
+import type { RegisterFirstAccountViewEmits } from './register-first-account-view-emits'
+import { useRegisterFirstAccountView } from '@/classes/use-register-first-account-view'
 
-const props = defineProps<RegistFirstAccountViewProps>()
-const emits = defineEmits<RegistFirstAccountViewEmits>()
+const props = defineProps<RegisterFirstAccountViewProps>()
+const emits = defineEmits<RegisterFirstAccountViewEmits>()
 
 const {
     // State
@@ -78,7 +78,7 @@ const {
     password_retype,
     admin_password,
     admin_password_retype,
-    regist_state,
+    register_state,
     is_submiting,
 
     // Computed
@@ -86,11 +86,11 @@ const {
     app_content_width_px,
 
     // Constants
-    RegistStatus,
+    RegisterStatus,
 
     // Business logic
-    try_regist_account,
-} = useRegistFirstAccountView({ props, emits })
+    try_register_account,
+} = useRegisterFirstAccountView({ props, emits })
 </script>
 
 <style lang="css" scoped>
