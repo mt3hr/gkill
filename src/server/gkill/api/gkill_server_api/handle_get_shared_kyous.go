@@ -16,6 +16,20 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetSharedKyous は、共有IDに紐づく共有設定の検索条件を実行して、
+// 共有ページに表示するKyouと付随データをまとめて返します。
+//
+// POST /api/get_shared_kyous（wrapNoAuth）
+// req_res.GetSharedKyousRequest / req_res.GetSharedKyousResponse
+//
+// 認証はSessionIDではなくSharedIDで行います。共有設定に記録された
+// user_id/deviceのリポジトリを、保存された検索条件 (FindQueryJSON) ごと再現して引くので、
+// 共有IDを知っていれば誰でも同じ結果を取得できます。
+// Kyou一覧は最新版のみ (OnlyLatestData = true) を引き、型別データ・付随データは
+// そのIDに対して版を絞らずに引きます。
+// 共有設定のViewTypeが "mi" のときはMi以外の型別データを引きません。
+// IsShareWithLocations / IsShareWithTags / IsShareWithTexts / IsShareWithTimeIss が
+// 偽の項目は、それぞれ空のまま返します。
 func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

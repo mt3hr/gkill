@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetKC は、指定IDのKC（数値記録）の更新履歴を返します。
+//
+// POST /api/get_kc（wrapAuthRepos）
+// req_res.GetKCRequest / req_res.GetKCResponse
+//
+// RepNameを指定するとそのrepだけを、nilなら全KC repを横断して集めます。
+// 履歴はID+UpdateTimeで重複排除し、UpdateTimeの新しい順に並べて返します。
+// 対象が存在しない場合は空配列で、エラーにはしません。
 func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

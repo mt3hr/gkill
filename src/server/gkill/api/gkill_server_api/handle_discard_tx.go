@@ -14,6 +14,15 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleDiscardTX は指定TXIDの未確定データを全temp repから破棄します。
+//
+// POST /api/discard_tx（wrapAuthRepos）
+// req_res.DiscardTxRequest / req_res.DiscardTxResponse
+//
+// 削除対象は (txID, userID, device) に一致する行だけなので、他人・他端末の未確定データは消しません。
+// 途中のtemp repで失敗するとその時点で打ち切るので、残りの種別の未確定データは残ります。
+// 成功してもMessagesには何も積まないため、呼び出し側はErrorsが空かどうかで判断します。
+// commit後の後始末にも使います（HandleCommitTxはtemp repの行を消しません）。
 func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

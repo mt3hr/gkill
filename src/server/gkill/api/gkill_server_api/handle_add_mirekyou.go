@@ -14,6 +14,18 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddMiReKyou は既存Kyouをタスク化したもの（MiReKyou。TargetID＋Miの予定項目）を1件追加します。
+//
+// POST /api/add_mirekyou（wrapAuthRepos）
+// req_res.AddMiReKyouRequest / req_res.AddMiReKyouResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのMiReKyouが既にある場合は追加せず、AlreadyExistMiReKyouErrorをerrorsに積んで返す。
+// MiReKyouは後から追加されたrep種別なので、既存の設定DBには書き込み用repが無いことがある。
+// その場合（TXIDがnilかつWriteMiReKyouRepがnil）はAddMiReKyouErrorを返す。
+// WantResponseKyouがtrueのときだけ、登録後にリポジトリから読み直してAddedMiReKyouとAddedKyouを返す
+// （TXID指定時は一時リポジトリにしか無いためどちらもnilになる）。
 func (g *GkillServerAPI) HandleAddMiReKyou(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateIDFKyou はファイルのKyouを更新します。書き換わるのはDB上のレコードだけで、
+// ファイル実体には触れません。
+//
+// POST /api/update_idf_kyou（wrapAuthRepos）
+// req_res.UpdateIDFKyouRequest / req_res.UpdateIDFKyouResponse
+//
+// 更新は追記です（同一IDに新しいUPDATE_TIME版を足す）。TXIDが非nilならtempリポジトリに積むだけで、
+// commit_txするまで実リポジトリには反映されません。対象IDが存在しない場合はerrorsに載せて返します。
+// WantResponseKyouがtrueのときだけIDFKyouとKyouを読み直して返します
+// （読み直し先は実リポジトリなので、TXID指定時はtempに積んだ内容が載りません）。
 func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

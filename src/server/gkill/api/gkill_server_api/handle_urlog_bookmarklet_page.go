@@ -5,6 +5,14 @@ import (
 	"net/http"
 )
 
+// HandleURLogBookmarkletPage は、ブックマークレットの中継用HTMLページを返します。
+//
+// GET /api/urlog_bookmarklet_page（wrapNoAuth）
+// req_res は使わず、埋め込み定数 urlogBookmarkletPageHTML をそのまま返します。
+//
+// ブックマークレットはこのページをクエリ文字列付きで開くだけで、
+// ページ内のスクリプトがそのクエリを /api/urlog_bookmarklet へPOSTします。
+// 保存に成功すると1.5秒後に自分のウィンドウを閉じます。
 func (g *GkillServerAPI) HandleURLogBookmarkletPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, urlogBookmarkletPageHTML)

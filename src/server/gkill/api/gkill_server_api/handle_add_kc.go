@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddKC は数値記録（KC。タイトル＋数値）を1件追加します。
+//
+// POST /api/add_kc（wrapAuthRepos）
+// req_res.AddKCRequest / req_res.AddKCResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのKCが既にある場合は追加せず、AlreadyExistKCErrorをerrorsに積んで返す。
+// WantResponseKyouがtrueのときだけ、登録後にリポジトリから読み直してAddedKCとAddedKyouを返す
+// （TXID指定時は一時リポジトリにしか無いためどちらもnilになる）。
 func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

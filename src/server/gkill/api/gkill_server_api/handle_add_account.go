@@ -17,6 +17,17 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddAccount は新しいアカウントを作成します。
+//
+// POST /api/add_user（wrapAuth）
+// req_res.AddAccountRequest / req_res.AddAccountResponse
+//
+// 管理者でなければ弾きます。
+// パスワードは設定せず、パスワード設定用のリセットトークンだけを発行したアカウントを作るので、
+// 利用者は /set_new_password で自分でパスワードを決めることになります。
+// ユーザIDはキャッシュディレクトリ名にそのまま使われるため、
+// account.IsValidUserID を満たさない文字列は拒否します。
+// DoInitializeが真なら、利用者データディレクトリと既定のリポジトリファイル一式も作成します。
 func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddAccountRequest{}

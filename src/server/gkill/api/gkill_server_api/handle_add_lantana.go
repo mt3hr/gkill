@@ -14,6 +14,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddLantana は気分値（Lantana。0〜10のMood）を1件追加します。
+//
+// POST /api/add_lantana（wrapAuthRepos）
+// req_res.AddLantanaRequest / req_res.AddLantanaResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む（commit_txするまで検索には出ない）。
+// 同じIDのLantanaが既にある場合は追加せず、AlreadyExistLantanaErrorをerrorsに積んで返す。
+// WantResponseKyouがtrueのときだけ、登録後にリポジトリから読み直してAddedLantanaとAddedKyouを返す
+// （TXID指定時は一時リポジトリにしか無いためどちらもnilになる）。
 func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

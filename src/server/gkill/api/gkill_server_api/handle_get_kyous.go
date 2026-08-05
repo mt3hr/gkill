@@ -14,6 +14,15 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetKyous は、検索条件に一致するKyou一覧を返します。
+//
+// POST /api/get_kyous（wrapAuthRepos）
+// req_res.GetKyousRequest / req_res.GetKyousResponse
+//
+// query.OnlyLatestDataはユースケース側で常にtrueへ上書きされるので、
+// リクエストでfalseを指定しても最新版だけが返ります。
+// 検索対象repは認証ミドルウェアが用意したRepositoriesではなく、
+// UserIDとDeviceからFindFilterが取り直します。
 func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

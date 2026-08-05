@@ -23,6 +23,20 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUploadGPSLogFiles は、base64で送られたGPSログファイルを取り込み、
+// 日付ごとに1つのGPXファイルへまとめてGPSLogリポジトリのディレクトリへ書き出します。
+//
+// POST /api/upload_gpslog_files（wrapNoAuth）
+// req_res.UploadGPSLogFilesRequest / req_res.UploadGPSLogFilesResponse
+//
+// wrapNoAuth登録ですが、ハンドラ内でSessionIDからアカウントを解決するので未認証では使えません。
+// 保存先はTargetRepNameに名前が一致するGPSLogリポジトリで、見つからなければエラーです。
+// 入力ファイルの解析と、日付ごとのGPX書き出しはそれぞれ並列に行い、
+// どちらの段階でも失敗があればエラーだけを返します
+// （このとき書き出し済みのファイルはディスクに残ります）。
+// ConflictBehaviorがMergeのときは、その日の既存GPSLogも読み出して混ぜてから書き直します。
+// 保存名の衝突時の扱いもConflictBehaviorに従います。
+// レスポンスに書き出したGPSLogは含めず、成功メッセージだけを返します。
 func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
