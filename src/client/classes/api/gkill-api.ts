@@ -1,5 +1,4 @@
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { ApplicationConfig } from "../datas/config/application-config"
 import { FOLDABLE_STRUCT_ROOT_KEY } from "@/pages/views/foldable-struct-model"
@@ -155,6 +154,7 @@ import type { RegisterGkillNotificationRequest } from "./req_res/register-gkill-
 import type { RegisterGkillNotificationResponse } from "./req_res/register-gkill-notification-response"
 import type { AddNotificationRequest } from "./req_res/add-notification-request"
 import type { AddNotificationResponse } from "./req_res/add-notification-response"
+import { hydrate } from "./hydrate"
 import type { GetNotificationHistoryByNotificationIDRequest } from "./req_res/get-notification-history-by-notification-id-request"
 import { GetNotificationHistoryByNotificationIDResponse } from "./req_res/get-notification-history-by-notification-id-response"
 import type { GetNotificationsByTargetIDRequest } from "./req_res/get-notifications-by-target-id-request"
@@ -1069,9 +1069,7 @@ export class GkillAPI {
                         response.kyous = new Array<Kyou>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 json = null
 
                 const waitPromises = Array<Promise<void>>()
@@ -1081,14 +1079,7 @@ export class GkillAPI {
                         waitPromises.push((async (): Promise<void> => {
                                 for (let j = i; j < response.kyous.length && j < i + worker_task_limit; j++) {
                                         let kyou: Kyou | null = new Kyou()
-                                        for (const key in response.kyous[j]) {
-                                                (kyou as any)[key] = (response.kyous[j] as any)[key]
-
-                                                // 時刻はDate型に変換
-                                                if (key.endsWith("time") && (kyou as any)[key]) {
-                                                        (kyou as any)[key] = new Date((kyou as any)[key])
-                                                }
-                                        }
+                                        hydrate(kyou, response.kyous[j])
                                         response.kyous[j] = kyou
                                         kyou = null
                                 }
@@ -1111,23 +1102,14 @@ export class GkillAPI {
 
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetKyouResponse = new GetKyouResponse()
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 if (!response.kyou_histories) {
                         response.kyou_histories = new Array<Kyou>()
                 }
                 // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.kyou_histories.length; i++) {
                         const kyou = new Kyou()
-                        for (const key in response.kyou_histories[i]) {
-                                (kyou as any)[key] = (response.kyou_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (kyou as any)[key]) {
-                                        (kyou as any)[key] = new Date((kyou as any)[key])
-                                }
-                        }
+                        hydrate(kyou, response.kyou_histories[i])
                         response.kyou_histories[i] = kyou
                 }
                 this.check_auth(response)
@@ -1151,20 +1133,11 @@ export class GkillAPI {
                         response.kmemo_histories = new Array<Kmemo>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.kmemo_histories.length; i++) {
                         const kmemo = new Kmemo()
-                        for (const key in response.kmemo_histories[i]) {
-                                (kmemo as any)[key] = (response.kmemo_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (kmemo as any)[key]) {
-                                        (kmemo as any)[key] = new Date((kmemo as any)[key])
-                                }
-                        }
+                        hydrate(kmemo, response.kmemo_histories[i])
                         response.kmemo_histories[i] = kmemo
                 }
 
@@ -1189,20 +1162,11 @@ export class GkillAPI {
                         response.kc_histories = new Array<KC>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.kc_histories.length; i++) {
                         const kc = new KC()
-                        for (const key in response.kc_histories[i]) {
-                                (kc as any)[key] = (response.kc_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (kc as any)[key]) {
-                                        (kc as any)[key] = new Date((kc as any)[key])
-                                }
-                        }
+                        hydrate(kc, response.kc_histories[i])
                         response.kc_histories[i] = kc
                 }
 
@@ -1227,20 +1191,11 @@ export class GkillAPI {
                         response.urlog_histories = new Array<URLog>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.urlog_histories.length; i++) {
                         const urlog = new URLog()
-                        for (const key in response.urlog_histories[i]) {
-                                (urlog as any)[key] = (response.urlog_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (urlog as any)[key]) {
-                                        (urlog as any)[key] = new Date((urlog as any)[key])
-                                }
-                        }
+                        hydrate(urlog, response.urlog_histories[i])
                         response.urlog_histories[i] = urlog
                 }
 
@@ -1265,20 +1220,11 @@ export class GkillAPI {
                         response.nlog_histories = new Array<Nlog>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.nlog_histories.length; i++) {
                         const nlog = new Nlog()
-                        for (const key in response.nlog_histories[i]) {
-                                (nlog as any)[key] = (response.nlog_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (nlog as any)[key]) {
-                                        (nlog as any)[key] = new Date((nlog as any)[key])
-                                }
-                        }
+                        hydrate(nlog, response.nlog_histories[i])
                         response.nlog_histories[i] = nlog
                 }
 
@@ -1303,20 +1249,11 @@ export class GkillAPI {
                         response.timeis_histories = new Array<TimeIs>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.timeis_histories.length; i++) {
                         const timeis = new TimeIs()
-                        for (const key in response.timeis_histories[i]) {
-                                (timeis as any)[key] = (response.timeis_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (timeis as any)[key]) {
-                                        (timeis as any)[key] = new Date((timeis as any)[key])
-                                }
-                        }
+                        hydrate(timeis, response.timeis_histories[i])
                         response.timeis_histories[i] = timeis
                 }
 
@@ -1341,20 +1278,11 @@ export class GkillAPI {
                         response.mi_histories = new Array<Mi>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.mi_histories.length; i++) {
                         const mis = new Mi()
-                        for (const key in response.mi_histories[i]) {
-                                (mis as any)[key] = (response.mi_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (mis as any)[key]) {
-                                        (mis as any)[key] = new Date((mis as any)[key])
-                                }
-                        }
+                        hydrate(mis, response.mi_histories[i])
                         response.mi_histories[i] = mis
                 }
 
@@ -1379,20 +1307,11 @@ export class GkillAPI {
                         response.lantana_histories = new Array<Lantana>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.lantana_histories.length; i++) {
                         const lantanas = new Lantana()
-                        for (const key in response.lantana_histories[i]) {
-                                (lantanas as any)[key] = (response.lantana_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (lantanas as any)[key]) {
-                                        (lantanas as any)[key] = new Date((lantanas as any)[key])
-                                }
-                        }
+                        hydrate(lantanas, response.lantana_histories[i])
                         response.lantana_histories[i] = lantanas
                 }
 
@@ -1417,20 +1336,11 @@ export class GkillAPI {
                         response.rekyou_histories = new Array<ReKyou>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.rekyou_histories.length; i++) {
                         const rekyou = new ReKyou()
-                        for (const key in response.rekyou_histories[i]) {
-                                (rekyou as any)[key] = (response.rekyou_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (rekyou as any)[key]) {
-                                        (rekyou as any)[key] = new Date((rekyou as any)[key])
-                                }
-                        }
+                        hydrate(rekyou, response.rekyou_histories[i])
                         response.rekyou_histories[i] = rekyou
                 }
 
@@ -1455,20 +1365,11 @@ export class GkillAPI {
                         response.mirekyou_histories = new Array<MiReKyou>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.mirekyou_histories.length; i++) {
                         const mirekyou = new MiReKyou()
-                        for (const key in response.mirekyou_histories[i]) {
-                                (mirekyou as any)[key] = (response.mirekyou_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (mirekyou as any)[key]) {
-                                        (mirekyou as any)[key] = new Date((mirekyou as any)[key])
-                                }
-                        }
+                        hydrate(mirekyou, response.mirekyou_histories[i])
                         response.mirekyou_histories[i] = mirekyou
                 }
 
@@ -1493,20 +1394,11 @@ export class GkillAPI {
                         response.git_commit_log_histories = new Array<GitCommitLog>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.git_commit_log_histories.length; i++) {
                         const git_commit_log = new GitCommitLog()
-                        for (const key in response.git_commit_log_histories[i]) {
-                                (git_commit_log as any)[key] = (response.git_commit_log_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (git_commit_log as any)[key]) {
-                                        (git_commit_log as any)[key] = new Date((git_commit_log as any)[key])
-                                }
-                        }
+                        hydrate(git_commit_log, response.git_commit_log_histories[i])
                         response.git_commit_log_histories[i] = git_commit_log
                 }
 
@@ -1531,20 +1423,11 @@ export class GkillAPI {
                         response.idf_kyou_histories = new Array<IDFKyou>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.idf_kyou_histories.length; i++) {
                         const idf_kyou = new IDFKyou()
-                        for (const key in response.idf_kyou_histories[i]) {
-                                (idf_kyou as any)[key] = (response.idf_kyou_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (idf_kyou as any)[key]) {
-                                        (idf_kyou as any)[key] = new Date((idf_kyou as any)[key])
-                                }
-                        }
+                        hydrate(idf_kyou, response.idf_kyou_histories[i])
                         response.idf_kyou_histories[i] = idf_kyou
                 }
 
@@ -1613,20 +1496,11 @@ export class GkillAPI {
                         response.tags = new Array<Tag>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したTagリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.tags.length; i++) {
                         const tag = new Tag()
-                        for (const key in response.tags[i]) {
-                                (tag as any)[key] = (response.tags[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (tag as any)[key]) {
-                                        (tag as any)[key] = new Date((tag as any)[key])
-                                }
-                        }
+                        hydrate(tag, response.tags[i])
                         response.tags[i] = tag
                 }
                 this.check_auth(response)
@@ -1649,20 +1523,11 @@ export class GkillAPI {
                         response.tag_histories = new Array<Tag>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したTagリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.tag_histories.length; i++) {
                         const tag = new Tag()
-                        for (const key in response.tag_histories[i]) {
-                                (tag as any)[key] = (response.tag_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (tag as any)[key]) {
-                                        (tag as any)[key] = new Date((tag as any)[key])
-                                }
-                        }
+                        hydrate(tag, response.tag_histories[i])
                         response.tag_histories[i] = tag
                 }
                 this.check_auth(response)
@@ -1686,20 +1551,11 @@ export class GkillAPI {
                         response.texts = new Array<Text>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したTextリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.texts.length; i++) {
                         const text = new Text()
-                        for (const key in response.texts[i]) {
-                                (text as any)[key] = (response.texts[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (text as any)[key]) {
-                                        (text as any)[key] = new Date((text as any)[key])
-                                }
-                        }
+                        hydrate(text, response.texts[i])
                         response.texts[i] = text
                 }
                 this.check_auth(response)
@@ -1723,20 +1579,11 @@ export class GkillAPI {
                         response.notifications = new Array<Notification>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したNotificationリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.notifications.length; i++) {
                         const notification = new Notification()
-                        for (const key in response.notifications[i]) {
-                                (notification as any)[key] = (response.notifications[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (notification as any)[key]) {
-                                        (notification as any)[key] = new Date((notification as any)[key])
-                                }
-                        }
+                        hydrate(notification, response.notifications[i])
                         response.notifications[i] = notification
                 }
                 this.check_auth(response)
@@ -1760,20 +1607,11 @@ export class GkillAPI {
                         response.text_histories = new Array<Text>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したTextリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.text_histories.length; i++) {
                         const text = new Text()
-                        for (const key in response.text_histories[i]) {
-                                (text as any)[key] = (response.text_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (text as any)[key]) {
-                                        (text as any)[key] = new Date((text as any)[key])
-                                }
-                        }
+                        hydrate(text, response.text_histories[i])
                         response.text_histories[i] = text
                 }
                 this.check_auth(response)
@@ -1797,20 +1635,11 @@ export class GkillAPI {
                         response.notification_histories = new Array<Notification>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したNotificationリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.notification_histories.length; i++) {
                         const notification = new Notification()
-                        for (const key in response.notification_histories[i]) {
-                                (notification as any)[key] = (response.notification_histories[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (notification as any)[key]) {
-                                        (notification as any)[key] = new Date((notification as any)[key])
-                                }
-                        }
+                        hydrate(notification, response.notification_histories[i])
                         response.notification_histories[i] = notification
                 }
                 this.check_auth(response)
@@ -1937,21 +1766,12 @@ export class GkillAPI {
                 const response: UploadFilesResponse = json
                 this.check_auth(response)
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
                 if (!response.uploaded_kyous) response.uploaded_kyous = []
                 for (let i = 0; i < response.uploaded_kyous.length; i++) {
                         const kyou = new Kyou()
-                        for (const key in response.uploaded_kyous[i]) {
-                                (kyou as any)[key] = (response.uploaded_kyous[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (kyou as any)[key]) {
-                                        (kyou as any)[key] = new Date((kyou as any)[key])
-                                }
-                        }
+                        hydrate(kyou, response.uploaded_kyous[i])
                         response.uploaded_kyous[i] = kyou
                 }
 
@@ -2084,20 +1904,11 @@ export class GkillAPI {
                         response.gps_logs = new Array<GPSLog>()
                 }
 
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
                 for (let i = 0; i < response.gps_logs.length; i++) {
                         const gpslog = new GPSLog()
-                        for (const key in response.gps_logs[i]) {
-                                (gpslog as any)[key] = (response.gps_logs[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (gpslog as any)[key]) {
-                                        (gpslog as any)[key] = new Date((gpslog as any)[key])
-                                }
-                        }
+                        hydrate(gpslog, response.gps_logs[i])
                         response.gps_logs[i] = gpslog
                 }
                 this.check_auth(response)
@@ -2116,14 +1927,10 @@ export class GkillAPI {
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetShareKyouListInfosResponse = new GetShareKyouListInfosResponse()
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 for (let i = 0; i < response.share_kyou_list_infos.length; i++) {
                         const share_kyou_list_info = new ShareKyousInfo()
-                        for (const key in json.share_kyou_list_infos[i]) {
-                                (share_kyou_list_info as any)[key] = json.share_kyou_list_infos[i][key]
-                        }
+                        hydrate(share_kyou_list_info, json.share_kyou_list_infos[i], { date_suffixes: [] })
                         response.share_kyou_list_infos[i] = share_kyou_list_info
                 }
                 this.check_auth(response)
@@ -2143,13 +1950,9 @@ export class GkillAPI {
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: AddShareKyouListInfoResponse = new AddShareKyouListInfoResponse()
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 const share_kyou_list_info = new ShareKyousInfo()
-                for (const key in json.share_kyou_list_info) {
-                        (share_kyou_list_info as any)[key] = json.share_kyou_list_info[key]
-                }
+                hydrate(share_kyou_list_info, json.share_kyou_list_info, { date_suffixes: [] })
                 response.share_kyou_list_info = share_kyou_list_info
                 this.check_auth(response)
                 return response
@@ -2167,13 +1970,9 @@ export class GkillAPI {
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: UpdateShareKyouListInfoResponse = new UpdateShareKyouListInfoResponse()
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 const share_kyou_list_info = new ShareKyousInfo()
-                for (const key in json.share_kyou_list_info) {
-                        (share_kyou_list_info as any)[key] = json.share_kyou_list_info[key]
-                }
+                hydrate(share_kyou_list_info, json.share_kyou_list_info, { date_suffixes: [] })
                 response.share_kyou_list_info = share_kyou_list_info
                 this.check_auth(response)
                 return response
@@ -2191,9 +1990,7 @@ export class GkillAPI {
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: DeleteShareKyouListInfosResponse = new DeleteShareKyouListInfosResponse()
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 this.check_auth(response)
                 return response
         }
@@ -2209,20 +2006,11 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetSharedKyousResponse = new GetSharedKyousResponse()
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
+                hydrate(response, json, { date_suffixes: [] })
                 if (json.kyous) {
                         for (let i = 0; i < json.kyous.length; i++) {
                                 const kyou = new Kyou()
-                                for (const key in json.kyous[i]) {
-                                        (kyou as any)[key] = (json.kyous[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (kyou as any)[key]) {
-                                                (kyou as any)[key] = new Date((kyou as any)[key])
-                                        }
-                                }
+                                hydrate(kyou, json.kyous[i])
                                 response.kyous[i] = kyou
                         }
                 } else {
@@ -2231,14 +2019,7 @@ export class GkillAPI {
                 if (json.kmemos) {
                         for (let i = 0; i < json.kmemos.length; i++) {
                                 const kmemo = new Kmemo()
-                                for (const key in json.kmemos[i]) {
-                                        (kmemo as any)[key] = (json.kmemos[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (kmemo as any)[key]) {
-                                                (kmemo as any)[key] = new Date((kmemo as any)[key])
-                                        }
-                                }
+                                hydrate(kmemo, json.kmemos[i])
                                 response.kmemos[i] = kmemo
                         }
                 } else {
@@ -2247,14 +2028,7 @@ export class GkillAPI {
                 if (json.kcs) {
                         for (let i = 0; i < json.kcs.length; i++) {
                                 const kc = new KC()
-                                for (const key in json.kcs[i]) {
-                                        (kc as any)[key] = (json.kcs[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (kc as any)[key]) {
-                                                (kc as any)[key] = new Date((kc as any)[key])
-                                        }
-                                }
+                                hydrate(kc, json.kcs[i])
                                 response.kcs[i] = kc
                         }
                 } else {
@@ -2263,14 +2037,7 @@ export class GkillAPI {
                 if (json.timeiss) {
                         for (let i = 0; i < json.timeiss.length; i++) {
                                 const timeis = new TimeIs()
-                                for (const key in json.timeiss[i]) {
-                                        (timeis as any)[key] = (json.timeiss[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (timeis as any)[key]) {
-                                                (timeis as any)[key] = new Date((timeis as any)[key])
-                                        }
-                                }
+                                hydrate(timeis, json.timeiss[i])
                                 response.timeiss[i] = timeis
                         }
                 } else {
@@ -2279,14 +2046,7 @@ export class GkillAPI {
                 if (json.mis) {
                         for (let i = 0; i < json.mis.length; i++) {
                                 const mi = new Mi()
-                                for (const key in json.mis[i]) {
-                                        (mi as any)[key] = (json.mis[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (mi as any)[key]) {
-                                                (mi as any)[key] = new Date((mi as any)[key])
-                                        }
-                                }
+                                hydrate(mi, json.mis[i])
                                 response.mis[i] = mi
                         }
                 } else {
@@ -2295,14 +2055,7 @@ export class GkillAPI {
                 if (json.nlogs) {
                         for (let i = 0; i < json.nlogs.length; i++) {
                                 const nlog = new Nlog()
-                                for (const key in json.nlogs[i]) {
-                                        (nlog as any)[key] = (json.nlogs[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (nlog as any)[key]) {
-                                                (nlog as any)[key] = new Date((nlog as any)[key])
-                                        }
-                                }
+                                hydrate(nlog, json.nlogs[i])
                                 response.nlogs[i] = nlog
                         }
                 } else {
@@ -2311,14 +2064,7 @@ export class GkillAPI {
                 if (json.lantanas) {
                         for (let i = 0; i < json.lantanas.length; i++) {
                                 const lantana = new Lantana()
-                                for (const key in json.lantanas[i]) {
-                                        (lantana as any)[key] = (json.lantanas[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (lantana as any)[key]) {
-                                                (lantana as any)[key] = new Date((lantana as any)[key])
-                                        }
-                                }
+                                hydrate(lantana, json.lantanas[i])
                                 response.lantanas[i] = lantana
                         }
                 } else {
@@ -2327,14 +2073,7 @@ export class GkillAPI {
                 if (json.urlogs) {
                         for (let i = 0; i < json.urlogs.length; i++) {
                                 const urlog = new URLog()
-                                for (const key in json.urlogs[i]) {
-                                        (urlog as any)[key] = (json.urlogs[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (urlog as any)[key]) {
-                                                (urlog as any)[key] = new Date((urlog as any)[key])
-                                        }
-                                }
+                                hydrate(urlog, json.urlogs[i])
                                 response.urlogs[i] = urlog
                         }
                 } else {
@@ -2343,14 +2082,7 @@ export class GkillAPI {
                 if (json.idf_kyous) {
                         for (let i = 0; i < json.idf_kyous.length; i++) {
                                 const idf_kyou = new IDFKyou()
-                                for (const key in json.idf_kyous[i]) {
-                                        (idf_kyou as any)[key] = (json.idf_kyous[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (idf_kyou as any)[key]) {
-                                                (idf_kyou as any)[key] = new Date((idf_kyou as any)[key])
-                                        }
-                                }
+                                hydrate(idf_kyou, json.idf_kyous[i])
                                 response.idf_kyous[i] = idf_kyou
                         }
                 } else {
@@ -2359,14 +2091,7 @@ export class GkillAPI {
                 if (json.rekyous) {
                         for (let i = 0; i < json.rekyous.length; i++) {
                                 const rekyou = new ReKyou()
-                                for (const key in json.rekyous[i]) {
-                                        (rekyou as any)[key] = (json.rekyous[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (rekyou as any)[key]) {
-                                                (rekyou as any)[key] = new Date((rekyou as any)[key])
-                                        }
-                                }
+                                hydrate(rekyou, json.rekyous[i])
                                 response.rekyous[i] = rekyou
                         }
                 } else {
@@ -2375,14 +2100,7 @@ export class GkillAPI {
                 if (json.git_commit_logs) {
                         for (let i = 0; i < json.git_commit_logs.length; i++) {
                                 const git_commit_log = new GitCommitLog()
-                                for (const key in json.git_commit_logs[i]) {
-                                        (git_commit_log as any)[key] = (json.git_commit_logs[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (git_commit_log as any)[key]) {
-                                                (git_commit_log as any)[key] = new Date((git_commit_log as any)[key])
-                                        }
-                                }
+                                hydrate(git_commit_log, json.git_commit_logs[i])
                                 response.git_commit_logs[i] = git_commit_log
                         }
                 } else {
@@ -2391,14 +2109,7 @@ export class GkillAPI {
                 if (json.gps_logs) {
                         for (let i = 0; i < json.gps_logs.length; i++) {
                                 const gps_log = new GPSLog()
-                                for (const key in json.gps_logs[i]) {
-                                        (gps_log as any)[key] = (json.gps_logs[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (gps_log as any)[key]) {
-                                                (gps_log as any)[key] = new Date((gps_log as any)[key])
-                                        }
-                                }
+                                hydrate(gps_log, json.gps_logs[i])
                                 response.gps_logs[i] = gps_log
                         }
                 } else {
@@ -2407,14 +2118,7 @@ export class GkillAPI {
                 if (json.attached_tags) {
                         for (let i = 0; i < json.attached_tags.length; i++) {
                                 const tag = new Tag()
-                                for (const key in json.attached_tags[i]) {
-                                        (tag as any)[key] = (json.attached_tags[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (tag as any)[key]) {
-                                                (tag as any)[key] = new Date((tag as any)[key])
-                                        }
-                                }
+                                hydrate(tag, json.attached_tags[i])
                                 response.attached_tags[i] = tag
                         }
                 } else {
@@ -2423,14 +2127,7 @@ export class GkillAPI {
                 if (json.attached_texts) {
                         for (let i = 0; i < json.attached_texts.length; i++) {
                                 const text = new Text()
-                                for (const key in json.attached_texts[i]) {
-                                        (text as any)[key] = (json.attached_texts[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (text as any)[key]) {
-                                                (text as any)[key] = new Date((text as any)[key])
-                                        }
-                                }
+                                hydrate(text, json.attached_texts[i])
                                 response.attached_texts[i] = text
                         }
                 } else {
@@ -2439,14 +2136,7 @@ export class GkillAPI {
                 if (json.attached_timeiss) {
                         for (let i = 0; i < json.attached_timeiss.length; i++) {
                                 const timeis = new TimeIs()
-                                for (const key in json.attached_timeiss[i]) {
-                                        (timeis as any)[key] = (json.attached_timeiss[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (timeis as any)[key]) {
-                                                (timeis as any)[key] = new Date((timeis as any)[key])
-                                        }
-                                }
+                                hydrate(timeis, json.attached_timeiss[i])
                                 response.attached_timeiss[i] = timeis
                         }
                 } else {
@@ -2455,14 +2145,7 @@ export class GkillAPI {
                 if (json.attached_timeis_kyous) {
                         for (let i = 0; i < json.attached_timeis_kyous.length; i++) {
                                 const timeis_kyou = new Kyou()
-                                for (const key in json.attached_timeis_kyous[i]) {
-                                        (timeis_kyou as any)[key] = (json.attached_timeis_kyous[i] as any)[key]
-
-                                        // 時刻はDate型に変換
-                                        if (key.endsWith("time") && (timeis_kyou as any)[key]) {
-                                                (timeis_kyou as any)[key] = new Date((timeis_kyou as any)[key])
-                                        }
-                                }
+                                hydrate(timeis_kyou, json.attached_timeis_kyous[i])
                                 response.attached_timeis_kyous[i] = timeis_kyou
                         }
                 } else {
@@ -2837,12 +2520,7 @@ export class GkillAPI {
                 const querys = Array<FindKyouQuery>()
                 for (let i = 0; i < querys_json.length; i++) {
                         const query = new FindKyouQuery()
-                        for (const key in querys_json[i]) {
-                                (query as any)[key] = querys_json[i][key]
-                                if ((key.endsWith("time") || key.endsWith("date")) && (query as any)[key]) {
-                                        (query as any)[key] = new Date((query as any)[key])
-                                }
-                        }
+                        hydrate(query, querys_json[i], { date_suffixes: ['time', 'date'] })
                         querys.push(query)
                 }
                 return querys
@@ -2865,12 +2543,7 @@ export class GkillAPI {
                 const querys = Array<FindKyouQuery>()
                 for (let i = 0; i < querys_json.length; i++) {
                         const query = new FindKyouQuery()
-                        for (const key in querys_json[i]) {
-                                (query as any)[key] = querys_json[i][key]
-                                if ((key.endsWith("time") || key.endsWith("date")) && (query as any)[key]) {
-                                        (query as any)[key] = new Date((query as any)[key])
-                                }
-                        }
+                        hydrate(query, querys_json[i], { date_suffixes: ['time', 'date'] })
                         querys.push(query)
                 }
                 return querys
