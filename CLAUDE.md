@@ -136,6 +136,8 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 
 **Naming convention (files):** `{action}-{feature}-{entity}-{component}` (e.g., `add-dnote-item-view.vue`, `confirm-delete-ryuu-item-dialog.vue`), kebab-case. Dnote and Ryuu follow the same pattern.
 
+**Frozen spellings:** `plaing` / `Plaing` は "playing" の誤綴りではなく**製品綴りとして凍結**（ルート `/plaing`、`FindQuery` の `use_plaing` / `plaing_time`、MCP ツールスキーマ、Wear OS データレイヤーパス、マニュアルのページ名、`default_page` の保存値に浸透しているため）。綴り修正の提案はしないこと。詳細は `documents/reverse/glossary.md` の「凍結された綴り」節。
+
 **Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 
 **i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 856 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
