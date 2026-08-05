@@ -285,7 +285,7 @@ rep名だけで分けると「同名rep × 同一相対パス × 同一ファイ
 #### 初回セットアップ時のリセットトークン
 
 アカウントが `admin` 1件だけでパスワード未設定という初期状態のとき、`/` へのHTMLナビゲーションは
-`/regist_first_account?reset_token=<UUID>` へ307リダイレクトされる。このトークンはadminを丸ごと取れる秘密なので、
+`/register_first_account?reset_token=<UUID>` へ307リダイレクトされる。このトークンはadminを丸ごと取れる秘密なので、
 **接続元がループバックで、かつ転送ヘッダ（`X-Forwarded-For` / `X-Real-Ip` / `Forwarded` / `X-Forwarded-Host`）が
 付いていない場合に限って**渡す（`utils.go` の `ifRedirectResetAdminAccountIsNotFound`）。
 それ以外は通常のログイン画面を返す。ループバック以外から初回セットアップする場合は、
@@ -363,7 +363,7 @@ JSON API 側がボディで `session_id` を運ぶ設計になっているため
 3. VAPID鍵ペアが自動生成される
 4. デフォルトデバイス `"gkill"` が作成される
 
-→ 初回アクセス時は初回アカウント登録画面（`/regist_first_account`）で `admin` のパスワードを設定して登録を完了する必要がある。
+→ 初回アクセス時は初回アカウント登録画面（`/register_first_account`）で `admin` のパスワードを設定して登録を完了する必要がある。
 
 ### 2.10 外部URL取得のSSRF対策
 

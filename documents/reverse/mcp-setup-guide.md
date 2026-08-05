@@ -50,7 +50,7 @@ npm install
 npm run install_server
 ```
 
-4. gkill_server を少なくとも1回起動し、**初回アカウント登録（`/regist_first_account`）まで完了していること**。初回起動で `admin` ユーザーは作成されますが、`PasswordResetToken` が設定された状態のため、パスワードを設定するまで MCP サーバーからの認証は失敗します
+4. gkill_server を少なくとも1回起動し、**初回アカウント登録（`/register_first_account`）まで完了していること**。初回起動で `admin` ユーザーは作成されますが、`PasswordResetToken` が設定された状態のため、パスワードを設定するまで MCP サーバーからの認証は失敗します
 
 ---
 
@@ -102,7 +102,7 @@ $hash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
 python3 -c "import hashlib; print(hashlib.sha256('あなたのパスワード'.encode()).hexdigest())"
 ```
 
-> **補足**: 初回起動直後の `admin` ユーザーは `PasswordResetToken` が設定されており、パスワード未設定のままではログインできません（MCPサーバーからの認証も失敗します）。先に gkill のブラウザ画面で初回アカウント登録（`/regist_first_account`）を行い、`admin` のパスワードを設定してから、そのパスワードのSHA256ハッシュを `GKILL_PASSWORD_SHA256` に指定してください。
+> **補足**: 初回起動直後の `admin` ユーザーは `PasswordResetToken` が設定されており、パスワード未設定のままではログインできません（MCPサーバーからの認証も失敗します）。先に gkill のブラウザ画面で初回アカウント登録（`/register_first_account`）を行い、`admin` のパスワードを設定してから、そのパスワードのSHA256ハッシュを `GKILL_PASSWORD_SHA256` に指定してください。
 
 ---
 

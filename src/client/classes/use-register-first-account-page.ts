@@ -5,7 +5,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import package_json from '../../../package.json'
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 
-export function useRegistFirstAccountPage() {
+export function useRegisterFirstAccountPage() {
     // ── State refs ──
     const actual_height: Ref<number> = ref(0)
     const element_height: Ref<number> = ref(0)

@@ -97,7 +97,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-saihate-page.ts` | Saihate ページ |
 | `use-shared-page.ts` / `use-shared-mi-page.ts` | 共有ページ |
 | `use-set-new-password-page.ts` / `use-set-new-password-view.ts` | パスワード設定 |
-| `use-regist-first-account-page.ts` / `use-regist-first-account-view.ts` | 初回アカウント登録 |
+| `use-register-first-account-page.ts` / `use-register-first-account-view.ts` | 初回アカウント登録 |
 
 ### DNote 系 Composable
 
