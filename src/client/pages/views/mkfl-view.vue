@@ -20,7 +20,7 @@
                 plaing_timeis_view?.set_last_added_request_time(new Date(Math.max(last_added_request_time.getTime(), Date.now())))
                 reload_plaing_timeis_view()
             }" ref="kftl_view" />
-        <PlaingTimeisView :application_config="application_config" :gkill_api="gkill_api"
+        <PlaingTimeIsView :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="(app_content_height.valueOf() / 2) + 4" :app_content_width="app_content_width"
             @deleted_kyou="(deleted_kyou: Kyou) => { reload_plaing_timeis_view(); emits('deleted_kyou', deleted_kyou) }"
             @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"
@@ -42,7 +42,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import kftlView from './kftl-view.vue'
-import PlaingTimeisView from './plaing-timeis-view.vue'
+import PlaingTimeIsView from './plaing-time-is-view.vue'
 import type { MKFLProps } from './mkfl-view-props';
 import type { MKFLViewEmits } from './mkfl-view-emits';
 import type { GkillError } from '@/classes/api/gkill-error';
@@ -51,7 +51,7 @@ import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
 import { useMkflView } from '@/classes/use-mkfl-view'
 
-const plaing_timeis_view = ref<InstanceType<typeof PlaingTimeisView> | null>(null);
+const plaing_timeis_view = ref<InstanceType<typeof PlaingTimeIsView> | null>(null);
 
 defineProps<MKFLProps>()
 const emits = defineEmits<MKFLViewEmits>()

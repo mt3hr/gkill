@@ -82,7 +82,7 @@ import type { EditURLogViewProps } from './edit-ur-log-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
-import { useAddUrlogView } from '@/classes/use-add-urlog-view'
+import { useAddUrlogView } from '@/classes/use-add-ur-log-view'
 
 const props = defineProps<EditURLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()

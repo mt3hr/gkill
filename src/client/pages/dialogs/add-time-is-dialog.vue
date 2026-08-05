@@ -18,7 +18,7 @@
       <div class="gkill-floating-dialog__body">
         <v-card variant="flat" class="pa-2">
 
-        <AddUrlogView :application_config="application_config" :gkill_api="gkill_api"
+        <AddTimeIsView :application_config="application_config" :gkill_api="gkill_api"
           :highlight_targets="highlight_targets" :kyou="kyou"
           :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
           @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"
@@ -50,7 +50,7 @@
 import { type Ref, ref } from 'vue'
 import type { EditLantanaDialogProps } from './edit-lantana-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
-import AddUrlogView from '../views/add-urlog-view.vue';
+import AddTimeIsView from '../views/add-time-is-view.vue';
 import type { Kyou } from '@/classes/datas/kyou';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
@@ -67,7 +67,7 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-const ui = useFloatingDialog("add-urlog-dialog", {
+const ui = useFloatingDialog("add-time-is-dialog", {
   centerMode: "always",
   onEscape: () => hide(),
 })

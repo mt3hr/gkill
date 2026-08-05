@@ -140,7 +140,7 @@
                 :enable_dialog="enable_dialog"
                 v-on="crudRelayHandlers"
                 ref="add_kc_dialog" />
-            <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
@@ -252,8 +252,8 @@ import mkflDialog from '../dialogs/mkfl-dialog.vue'
 import type { MiViewEmits } from './mi-view-emits'
 import type { MiViewProps } from './mi-view-props'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
-import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
-import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
+import AddTimeIsDialog from '../dialogs/add-time-is-dialog.vue'
+import AddUrlogDialog from '../dialogs/add-ur-log-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import SaveClipboardToFileDialog from '../dialogs/save-clipboard-to-file-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'

@@ -31,8 +31,8 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-add-lantana-view.ts` / `use-add-lantana-dialog.ts` | Lantana 追加 |
 | `use-add-mi-view.ts` / `use-add-mi-dialog.ts` | Mi 追加 |
 | `use-add-nlog-view.ts` / `use-add-nlog-dialog.ts` | Nlog 追加 |
-| `use-add-timeis-view.ts` / `use-add-timeis-dialog.ts` | TimeIs 追加 |
-| `use-add-urlog-view.ts` / `use-add-urlog-dialog.ts` | URLog 追加 |
+| `use-add-time-is-view.ts` / `use-add-time-is-dialog.ts` | TimeIs 追加 |
+| `use-add-ur-log-view.ts` / `use-add-ur-log-dialog.ts` | URLog 追加 |
 | `use-add-tag-view.ts` / `use-add-tag-dialog.ts` | Tag 追加 |
 | `use-add-text-view.ts` / `use-add-text-dialog.ts` | Text 追加 |
 | `use-add-notification-view.ts` / `use-add-notification-dialog.ts` | Notification 追加 |
@@ -93,7 +93,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-kyou-page.ts` | Kyou ページ |
 | `use-rykv-page.ts` / `use-rykv-view.ts` | Rykv ページ |
 | `use-mkfl-page.ts` / `use-mkfl-view.ts` | Mkfl ページ |
-| `use-plaing-timeis-page.ts` / `use-plaing-timeis-view.ts` | 稼働中 TimeIs |
+| `use-plaing-time-is-page.ts` / `use-plaing-time-is-view.ts` | 稼働中 TimeIs |
 | `use-saihate-page.ts` | Saihate ページ |
 | `use-shared-page.ts` / `use-shared-mi-page.ts` | 共有ページ |
 | `use-set-new-password-page.ts` / `use-set-new-password-view.ts` | パスワード設定 |

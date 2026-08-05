@@ -1,8 +1,8 @@
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
-import type { PlaingTimeIsViewProps } from '@/pages/views/plaing-timeis-view-props'
-import type { PlaingTimeIsViewEmits } from '@/pages/views/plaing-timeis-emits'
+import type { PlaingTimeIsViewProps } from '@/pages/views/plaing-time-is-view-props'
+import type { PlaingTimeIsViewEmits } from '@/pages/views/plaing-time-is-view-emits'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import generate_get_plaing_timeis_kyous_query from '@/classes/api/generate-get-plaing-timeis-kyous-query'
 import moment from 'moment'
@@ -15,7 +15,7 @@ import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clip
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { ComponentRef } from '@/classes/component-ref'
 
-export function usePlaingTimeisView(options: {
+export function usePlaingTimeIsView(options: {
     props: PlaingTimeIsViewProps,
     emits: PlaingTimeIsViewEmits,
 }) {

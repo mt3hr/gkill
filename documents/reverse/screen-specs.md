@@ -26,7 +26,7 @@
 | `/rykv` | rykv-page | 履歴閲覧 | Kyou一覧・検索 |
 | `/kyou` | kyou-page | 記録詳細 | 個別記録の詳細表示 |
 | `/mkfl` | mkfl-page | 打刻メモ帳 | KFTL入力 + 稼働中TimeIs表示の複合ビュー |
-| `/plaing` | plaing-timeis-page | 打刻一覧 | アクティブな打刻セッション |
+| `/plaing` | plaing-time-is-page | 打刻一覧 | アクティブな打刻セッション |
 | `/dashboard` | dashboard-page | ダッシュボード | 日次サマリー画面（Dnote・GPS・MI一覧を1画面に集約） |
 | `/saihate` | saihate-page | さいはて | 記録特化画面（FABから各種記録を素早く追加、他画面への遷移なし） |
 | `/set_new_password` | set-new-password-page | パスワード変更 | パスワードリセット |
@@ -128,7 +128,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 
 ### 2.6 打刻メモ帳画面（`/mkfl`）
 
-**コンポーネント:** `mkfl-page.vue` → `mkfl-view.vue` → `kftl-view.vue` + `plaing-timeis-view.vue`
+**コンポーネント:** `mkfl-page.vue` → `mkfl-view.vue` → `kftl-view.vue` + `plaing-time-is-view.vue`
 
 打刻（TimeIs）とメモ（KFTL入力）を組み合わせた複合入力画面です。画面を上下に分割し、上半分でKFTLテキスト入力、下半分で稼働中のTimeIsを表示します。
 
@@ -141,7 +141,7 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 
 ### 2.7 打刻一覧画面（`/plaing`）
 
-**コンポーネント:** `plaing-timeis-page.vue` → `plaing-timeis-view.vue`
+**コンポーネント:** `plaing-time-is-page.vue` → `plaing-time-is-view.vue`
 
 アクティブな打刻（TimeIs）セッションの一覧と操作を行う画面です。
 
@@ -381,7 +381,7 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 
 ### 3.3 timeis（打刻）画面仕様
 
-**追加:** `add-timeis-view.vue` / `add-timeis-dialog.vue`
+**追加:** `add-time-is-view.vue` / `add-time-is-dialog.vue`
 
 | 項目 | 種別 | 説明 |
 |---|---|---|
@@ -397,7 +397,7 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 | 終了日時 | 表示 | 終了時刻（未終了は空） |
 | 経過時間 | 表示 | 開始から終了（または現在）までの経過 |
 
-**アクティブ打刻:** `plaing-timeis-view.vue` / `attached-time-is-plaing.vue`
+**アクティブ打刻:** `plaing-time-is-view.vue` / `attached-time-is-plaing.vue`
 
 | 項目 | 種別 | 説明 |
 |---|---|---|
@@ -441,7 +441,7 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 
 ### 3.6 urlog（ブックマーク）画面仕様
 
-**追加:** `add-urlog-view.vue` / `add-urlog-dialog.vue`
+**追加:** `add-ur-log-view.vue` / `add-ur-log-dialog.vue`
 
 | 項目 | 種別 | 説明 |
 |---|---|---|
@@ -661,10 +661,10 @@ Teleport to body
 | ダイアログ | 対象データ型 |
 |---|---|
 | `add-mi-dialog.vue` | タスク |
-| `add-timeis-dialog.vue` | 打刻 |
+| `add-time-is-dialog.vue` | 打刻 |
 | `add-lantana-dialog.vue` | 気分 |
 | `add-nlog-dialog.vue` | 支出 |
-| `add-urlog-dialog.vue` | ブックマーク |
+| `add-ur-log-dialog.vue` | ブックマーク |
 | `add-kc-dialog.vue` | 数値 |
 | `add-tag-dialog.vue` | タグ |
 | `add-text-dialog.vue` | テキスト |
@@ -871,7 +871,7 @@ CRUDリレーイベント:
 | `attached-tag-context-menu.vue` | 付帯タグ |
 | `attached-text-context-menu.vue` | 付帯テキスト |
 | `attached-notification-context-menu.vue` | 付帯通知 |
-| `attached-timeis-plaing-context-menu.vue` | アクティブ打刻 |
+| `attached-time-is-plaing-context-menu.vue` | アクティブ打刻 |
 | `device-struct-context-menu.vue` | デバイス構造（設定画面） |
 | `dnote-item-list-context-menu.vue` | Dnote項目リスト |
 | `dnote-list-query-context-menu.vue` | Dnoteクエリ |

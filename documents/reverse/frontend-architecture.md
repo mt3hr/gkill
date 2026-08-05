@@ -64,7 +64,7 @@ src/client/
 │   ├── rykv-page.vue
 │   ├── saihate-page.vue
 │   ├── mkfl-page.vue
-│   ├── plaing-timeis-page.vue
+│   ├── plaing-time-is-page.vue
 │   ├── dashboard-page.vue
 │   ├── set-new-password-page.vue
 │   ├── regist-first-account-page.vue
@@ -176,7 +176,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 | `/rykv` | `rykv` | rykv-page.vue | ライフログビュー（Ryuu「関連情報」はこの画面内の機能） |
 | `/kyou` | `kyou` | kyou-page.vue | 記録詳細 |
 | `/mkfl` | `mkfl` | mkfl-page.vue | 打刻メモ帳（KFTL入力+TimeIs表示） |
-| `/plaing` | `plaing` | plaing-timeis-page.vue | アクティブ打刻一覧 |
+| `/plaing` | `plaing` | plaing-time-is-page.vue | アクティブ打刻一覧 |
 | `/dashboard` | `dashboard` | dashboard-page.vue | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/saihate` | `saihate` | saihate-page.vue | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | `set_new_password` | set-new-password-page.vue | パスワード設定 |
@@ -519,7 +519,7 @@ Service Worker が `/share-target` POSTを処理：
 
 ### フォームバリデーション
 
-各追加ビュー（add-nlog, add-mi, add-urlog, add-timeis, add-kc, add-tag, add-text, add-notification 等）の必須フィールドに `:rules` バリデーションを追加。Vuetify の `v-text-field` / `v-textarea` の `:rules` prop で空チェックを実装。
+各追加ビュー（add-nlog, add-mi, add-ur-log, add-time-is, add-kc, add-tag, add-text, add-notification 等）の必須フィールドに `:rules` バリデーションを追加。Vuetify の `v-text-field` / `v-textarea` の `:rules` prop で空チェックを実装。
 
 ### レスポンシブデザイン
 
@@ -536,7 +536,7 @@ Service Worker が `/share-target` POSTを処理：
 | `useScopedEnterForKFTL` | `use-scoped-enter-for-kftl.ts` | 対象 View にフォーカスがある状態で Enter キーを押すとメモ帳ダイアログを開く |
 | `useScopedCtrlVForClipboard` | `use-scoped-ctrl-v-for-clipboard.ts` | 対象 View 内が最後にクリックされた状態で Ctrl+V を押すとクリップボード保存ダイアログを開く |
 
-これらは `onMounted` / `onBeforeUnmount` でドキュメントレベルのイベントリスナーを管理し、`rykv-view.vue`・`mi-view.vue`・`plaing-timeis-view.vue` の各 composable から呼び出される。
+これらは `onMounted` / `onBeforeUnmount` でドキュメントレベルのイベントリスナーを管理し、`rykv-view.vue`・`mi-view.vue`・`plaing-time-is-view.vue` の各 composable から呼び出される。
 
 ### クリップボード保存ダイアログ（`save-clipboard-to-file-dialog.vue`）
 
@@ -556,4 +556,4 @@ Service Worker が `/share-target` POSTを処理：
 
 ### 未保存データ警告
 
-KFTL テキストエリアに内容がある状態でページ離脱しようとすると `beforeunload` イベントで警告を表示。加えて、各ページ composable（use-rykv-page, use-mi-page, use-mkfl-page, use-plaing-timeis-page, use-kyou-page, use-saihate-page）にも `beforeunload` ガードを追加し、ダイアログ表示中やロード中のページ離脱を防止。
+KFTL テキストエリアに内容がある状態でページ離脱しようとすると `beforeunload` イベントで警告を表示。加えて、各ページ composable（use-rykv-page, use-mi-page, use-mkfl-page, use-plaing-time-is-page, use-kyou-page, use-saihate-page）にも `beforeunload` ガードを追加し、ダイアログ表示中やロード中のページ離脱を防止。

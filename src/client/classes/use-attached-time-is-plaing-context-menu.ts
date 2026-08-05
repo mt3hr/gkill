@@ -2,14 +2,14 @@
 
 import { computed, type Ref, ref, watch } from 'vue'
 import { i18n } from '@/i18n'
-import type { AttachedTimeisPlaingContextMenuProps } from '@/pages/views/attached-timeis-plaing-context-menu-props'
+import type { AttachedTimeIsPlaingContextMenuProps } from '@/pages/views/attached-time-is-plaing-context-menu-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { copy_kyou_content } from '@/classes/kyou-content-text'
 
-export function useAttachedTimeisPlaingContextMenu(options: { props: AttachedTimeisPlaingContextMenuProps, emits: KyouViewEmits }) {
+export function useAttachedTimeIsPlaingContextMenu(options: { props: AttachedTimeIsPlaingContextMenuProps, emits: KyouViewEmits }) {
     const { props, emits } = options
 
     const cloned_timeis_kyou: Ref<Kyou> = ref(props.timeis_kyou.clone())

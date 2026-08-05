@@ -135,7 +135,7 @@ import type { EditTimeIsViewProps } from './edit-time-is-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
-import { useAddTimeisView } from '@/classes/use-add-timeis-view'
+import { useAddTimeIsView } from '@/classes/use-add-time-is-view'
 
 const props = defineProps<EditTimeIsViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -162,5 +162,5 @@ const {
     reset_end_date_time,
     now_to_start_date_time,
     now_to_end_date_time,
-} = useAddTimeisView({ props, emits })
+} = useAddTimeIsView({ props, emits })
 </script>
