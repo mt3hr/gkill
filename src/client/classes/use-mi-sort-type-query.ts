@@ -3,10 +3,10 @@
 import { nextTick, type Ref, ref, watch } from 'vue'
 import { i18n } from '@/i18n'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
-import type { miSortTypeQueryProps } from '@/pages/views/mi-sort-type-query-props'
-import type { miSortTypeQueryEmits } from '@/pages/views/mi-sort-type-query-emits'
+import type { MiSortTypeQueryProps } from '@/pages/views/mi-sort-type-query-props'
+import type { MiSortTypeQueryEmits } from '@/pages/views/mi-sort-type-query-emits'
 
-export function useMiSortTypeQuery(options: { props: miSortTypeQueryProps, emits: miSortTypeQueryEmits }) {
+export function useMiSortTypeQuery(options: { props: MiSortTypeQueryProps, emits: MiSortTypeQueryEmits }) {
     const { props, emits } = options
 
     const query = ref(props.find_kyou_query.clone())

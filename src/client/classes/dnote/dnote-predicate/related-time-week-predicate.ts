@@ -12,7 +12,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
         return new RelatedTimeWeekPredicate(week)
     }
     async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
-        const week = this.getISOWeek(loaded_kyou.related_time)
+        const week = this.get_iso_week(loaded_kyou.related_time)
         if (week === this.week) {
             return true
         }
@@ -24,7 +24,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
             value: this.week,
         }
     }
-    getISOWeek(date: Date): number {
+    get_iso_week(date: Date): number {
         const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
         const day = tempDate.getUTCDay() || 7
         tempDate.setUTCDate(tempDate.getUTCDate() + 4 - day)
