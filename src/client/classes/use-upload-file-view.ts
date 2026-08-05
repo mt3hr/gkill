@@ -150,20 +150,20 @@ export function useUploadFileView(options: {
         })
     }
 
-    function on_dragenter_file(e: DragEvent): void {
+    function onDragenterFile(e: DragEvent): void {
         e.preventDefault()
         e.stopPropagation()
         if (!e.dataTransfer?.types.includes('Files')) return
         is_dragging_over_file.value = true
     }
 
-    function on_dragleave_file(e: DragEvent): void {
+    function onDragleaveFile(e: DragEvent): void {
         e.preventDefault()
         e.stopPropagation()
         is_dragging_over_file.value = false
     }
 
-    function on_dragover_file(e: DragEvent): void {
+    function onDragoverFile(e: DragEvent): void {
         e.preventDefault()
         e.stopPropagation()
         if (e.dataTransfer) {
@@ -171,7 +171,7 @@ export function useUploadFileView(options: {
         }
     }
 
-    async function on_drop_file(e: DragEvent): Promise<void> {
+    async function onDropFile(e: DragEvent): Promise<void> {
         e.preventDefault()
         e.stopPropagation()
         is_dragging_over_file.value = false
@@ -182,20 +182,20 @@ export function useUploadFileView(options: {
         await upload_files()
     }
 
-    function on_dragenter_gps_file(e: DragEvent): void {
+    function onDragenterGpsFile(e: DragEvent): void {
         e.preventDefault()
         e.stopPropagation()
         if (!e.dataTransfer?.types.includes('Files')) return
         is_dragging_over_gps_file.value = true
     }
 
-    function on_dragleave_gps_file(e: DragEvent): void {
+    function onDragleaveGpsFile(e: DragEvent): void {
         e.preventDefault()
         e.stopPropagation()
         is_dragging_over_gps_file.value = false
     }
 
-    function on_dragover_gps_file(e: DragEvent): void {
+    function onDragoverGpsFile(e: DragEvent): void {
         e.preventDefault()
         e.stopPropagation()
         if (e.dataTransfer) {
@@ -203,7 +203,7 @@ export function useUploadFileView(options: {
         }
     }
 
-    async function on_drop_gps_file(e: DragEvent): Promise<void> {
+    async function onDropGpsFile(e: DragEvent): Promise<void> {
         e.preventDefault()
         e.stopPropagation()
         is_dragging_over_gps_file.value = false
@@ -220,7 +220,7 @@ export function useUploadFileView(options: {
         file_input.value?.click()
     }
 
-    async function on_file_input_change(event: Event): Promise<void> {
+    async function onFileInputChange(event: Event): Promise<void> {
         const input = event.target as HTMLInputElement
         if (!input.files?.length) return
         files.value = Array.from(input.files)
@@ -232,7 +232,7 @@ export function useUploadFileView(options: {
         gps_file_input.value?.click()
     }
 
-    async function on_gps_file_input_change(event: Event): Promise<void> {
+    async function onGpsFileInputChange(event: Event): Promise<void> {
         const input = event.target as HTMLInputElement
         if (!input.files?.length) return
         gps_log_files.value = Array.from(input.files)
@@ -297,20 +297,20 @@ export function useUploadFileView(options: {
         is_dragging_over_gps_file,
 
         // Drag handlers
-        on_dragenter_file,
-        on_dragleave_file,
-        on_dragover_file,
-        on_drop_file,
-        on_dragenter_gps_file,
-        on_dragleave_gps_file,
-        on_dragover_gps_file,
-        on_drop_gps_file,
+        onDragenterFile,
+        onDragleaveFile,
+        onDragoverFile,
+        onDropFile,
+        onDragenterGpsFile,
+        onDragleaveGpsFile,
+        onDragoverGpsFile,
+        onDropGpsFile,
 
         // Click handlers
         trigger_file_input,
-        on_file_input_change,
+        onFileInputChange,
         trigger_gps_file_input,
-        on_gps_file_input_change,
+        onGpsFileInputChange,
 
         // Event relay objects
         crudRelayHandlers,

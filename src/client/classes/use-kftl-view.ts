@@ -119,11 +119,11 @@ export function useKftlView(options: {
 
     restore_content_from_localstorage()
 
-    function on_resize() {
+    function onResize() {
         resize()
         update_line_labels()
     }
-    window.addEventListener("resize", on_resize)
+    window.addEventListener("resize", onResize)
     watch(() => [props.app_content_width, props.app_content_height], () => {
         resize()
         update_line_labels()
@@ -131,17 +131,17 @@ export function useKftlView(options: {
 
     // ── beforeunload guard ──
     // テキストエリアに未保存の内容がある場合、ページ離脱時に警告を表示する
-    function on_beforeunload(e: BeforeUnloadEvent) {
+    function onBeforeunload(e: BeforeUnloadEvent) {
         if (text_area_content.value.trim() !== "") {
             e.preventDefault()
         }
     }
-    window.addEventListener("beforeunload", on_beforeunload)
+    window.addEventListener("beforeunload", onBeforeunload)
 
     onMounted(() => resize())
     onUnmounted(() => {
-        window.removeEventListener("resize", on_resize)
-        window.removeEventListener("beforeunload", on_beforeunload)
+        window.removeEventListener("resize", onResize)
+        window.removeEventListener("beforeunload", onBeforeunload)
     })
 
     // ── Internal helpers ──

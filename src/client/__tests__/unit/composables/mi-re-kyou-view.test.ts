@@ -230,10 +230,10 @@ describe('useMiReKyouView その他', () => {
 
     test('ドラッグのペイロードは gkill_mi_re_kyou キーで渡す (板間ドロップが依存)', () => {
         const props = createProps()
-        const { on_drag_start } = useMiReKyouView({ props, emits: noop_emits })
+        const { onDragStart } = useMiReKyouView({ props, emits: noop_emits })
 
         const setData = vi.fn()
-        on_drag_start({ dataTransfer: { setData } } as unknown as DragEvent)
+        onDragStart({ dataTransfer: { setData } } as unknown as DragEvent)
 
         expect(setData).toHaveBeenCalledWith('gkill_mi_re_kyou', expect.any(String))
         expect(JSON.parse(setData.mock.calls[0][1]).target_id).toBe('test-target-id')

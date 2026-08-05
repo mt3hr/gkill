@@ -15,7 +15,7 @@
 
         <v-calendar :width="350" :model-value="date"
             @update:model-value="(updated_date: string) => { date = new Date(updated_date) }"
-            ref="kyou_counter_calendar" :events="events" @wheel.prevent.stop="on_wheel">
+            ref="kyou_counter_calendar" :events="events" @wheel.prevent.stop="onWheel">
             <template v-slot:event="{ event }">
                 <div class="kyou_count">
                     {{ event["title"] }}
@@ -46,7 +46,7 @@ const {
 
     // Business logic
     add_months,
-    on_wheel,
+    onWheel,
 } = useMiKyouCountCalendar({ props, emits })
 </script>
 

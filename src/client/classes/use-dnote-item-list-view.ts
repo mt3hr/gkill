@@ -56,13 +56,13 @@ export function useDnoteItemListView(options: {
         })
     }
 
-    function on_list_dragover(e: DragEvent): void {
+    function onListDragover(e: DragEvent): void {
         if (!props.editable) return
         e.preventDefault()
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
     }
 
-    function on_list_drop(e: DragEvent): void {
+    function onListDrop(e: DragEvent): void {
         if (!props.editable) return
 
         const srcId = e.dataTransfer?.getData("gkill_dnote_item_id")
@@ -88,7 +88,7 @@ export function useDnoteItemListView(options: {
         delete_dnote_item,
         update_dnote_item,
         reset,
-        on_list_dragover,
-        on_list_drop,
+        onListDragover,
+        onListDrop,
     }
 }
