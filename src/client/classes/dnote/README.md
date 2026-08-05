@@ -276,6 +276,22 @@ DNote 設定の JSON シリアライズ/デシリアライズ用辞書。
 | `dnote-predicate-dictionary.ts` | 述語の型辞書 |
 | `register-dictionary.ts` | 辞書登録ユーティリティ |
 
+### 旧綴り `Agregate*` の後方互換
+
+集計対象の型判別文字列（`{ "type": "AggregateCountKyou" }` など19種）は
+**ユーザの集計定義として永続化される**（`user_config` の `APPLICATION_CONFIG` /
+`KEY='DNOTE_JSON_DATA'` に JSON で入り、`/api/get_application_config` と
+`/api/update_application_config` で往復する）。
+
+かつては `Agregate*` という綴りだったため、`register-dictionary.ts` には
+**旧綴り19キーのエイリアスが恒久で登録してある**。読み込みは新旧どちらも受け付け、
+書き出し（`to_json()`）は新綴りのみなので、ユーザが定義を編集保存すれば自然に移行する。
+ただし編集されない定義は旧綴りのまま残り続けるため、**このエイリアスは消さないこと**。
+（`TextContentContainsPredicate` → `KmemoContentContainsPredicate` も同じ方式のエイリアス）
+
+回帰テストは `src/client/__tests__/unit/dnote/serialization.test.ts` の
+「aggregate target backward compatibility」ブロック。
+
 ## トレンドグラフ（`dnote-trend/` + `dnote-trend-aggregator.ts`）
 
 集計項目・集計リストに続く第3の DNote エンティティ。既存 DNote と同じく**親から渡された kyous**を対象に、

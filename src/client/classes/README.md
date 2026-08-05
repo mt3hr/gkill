@@ -216,6 +216,16 @@ Lantana（気分値）表示用のユーティリティ。
 - View 用: `use-xxx-view.ts`、Dialog 用: `use-xxx-dialog.ts`
 - コンポーネントの `.vue` ファイルはテンプレートとスタイルのみ、ロジックは Composable に委譲
 
+### 識別子の命名規約（eslint で機械検査）
+
+- データクラスのプロパティ/メソッド・ローカル変数・通常関数: snake_case（Go 側 JSON タグとの写像）
+- コンポーザブル: `useXxx` / イベントコールバック: `onXxx` / CRUD リレーハンドラ束: `xxxHandlers`（camelCase）
+- 型・インタフェース: PascalCase（Props/Emits 型も `MiViewProps` のように PascalCase）
+- enum メンバー: snake_case
+
+`eslint.config.js` の `app/naming-convention` ブロックが **error** で検査する。
+対象は `src/client` 本体のみ（`__tests__` / `*.d.ts` は別流儀として対象外）。
+
 ### 命名規則
 
 - Composable: `use-` プレフィックス + kebab-case
