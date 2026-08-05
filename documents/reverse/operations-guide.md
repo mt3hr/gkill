@@ -168,7 +168,7 @@ cd src/wear_os
 初回起動時の `admin` アカウントには `PasswordResetToken` が設定されているため、**パスワードなしではログインできない**。`PasswordResetToken` が非nilのアカウントは、ログイン処理でパスワード照合より前に `ERR000004`（`AccountPasswordResetTokenIsNotNilError`）で拒否される（`handle_login.go`）。
 
 **正しい初期導線：**
-1. **サーバーと同じマシンの**ブラウザで `http://localhost:9999` にアクセスすると初回アカウント登録画面（`/regist_first_account`）に誘導される
+1. **サーバーと同じマシンの**ブラウザで `http://localhost:9999` にアクセスすると初回アカウント登録画面（`/register_first_account`）に誘導される
 2. ここで `admin` のパスワードを設定して初回登録を完了する
 3. 以降は SHA256(パスワード) を送って認証する（サーバ側はその値をArgon2idで保存・照合する）
 

@@ -451,7 +451,7 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 			return false
 		}
 
-		http.Redirect(w, r, fmt.Sprintf("/regist_first_account?reset_token=%s", url.QueryEscape(*accounts[0].PasswordResetToken)), http.StatusTemporaryRedirect)
+		http.Redirect(w, r, fmt.Sprintf("/register_first_account?reset_token=%s", url.QueryEscape(*accounts[0].PasswordResetToken)), http.StatusTemporaryRedirect)
 		return true
 	}
 	return false

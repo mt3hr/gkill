@@ -74,7 +74,7 @@ src/client/
 │   ├── dashboard-page.vue
 │   ├── saihate-page.vue
 │   ├── set-new-password-page.vue
-│   ├── regist-first-account-page.vue
+│   ├── register-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue

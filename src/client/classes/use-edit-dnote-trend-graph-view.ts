@@ -11,7 +11,7 @@ import DnoteTrendGraphQuery from '@/pages/views/dnote-trend-graph-query'
 import type { DnoteTrendChartType, DnoteTrendGranularity } from '@/classes/dnote/dnote-trend/dnote-trend-types'
 import type EditDnoteTrendGraphViewEmits from '@/pages/views/edit-dnote-trend-graph-view-emits'
 import type EditDnoteTrendGraphViewProps from '@/pages/views/edit-dnote-trend-graph-view-props'
-import { build_dnote_aggregate_target_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
+import { build_dnote_aggregate_target_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
 
 export function useEditDnoteTrendGraphView(options: {
     props: EditDnoteTrendGraphViewProps
