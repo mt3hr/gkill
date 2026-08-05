@@ -1,11 +1,11 @@
 import { i18n } from '@/i18n'
 import { computed, nextTick, type Ref, ref } from 'vue'
-import type { miBoardQueryEmits } from '@/pages/views/mi-board-query-emits'
-import type { miBoardQueryProps } from '@/pages/views/mi-board-query-props'
+import type { MiBoardQueryEmits } from '@/pages/views/mi-board-query-emits'
+import type { MiBoardQueryProps } from '@/pages/views/mi-board-query-props'
 
 export function useMiBoardQuery(options: {
-    props: miBoardQueryProps,
-    emits: miBoardQueryEmits,
+    props: MiBoardQueryProps,
+    emits: MiBoardQueryEmits,
 }) {
     const { props, emits } = options
 

@@ -249,8 +249,8 @@ import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
 import mkflDialog from '../dialogs/mkfl-dialog.vue'
-import type { miViewEmits } from './mi-view-emits'
-import type { miViewProps } from './mi-view-props'
+import type { MiViewEmits } from './mi-view-emits'
+import type { MiViewProps } from './mi-view-props'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
@@ -264,8 +264,8 @@ import { useMiView } from '@/classes/use-mi-view'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
-const props = defineProps<miViewProps>()
-const emits = defineEmits<miViewEmits>()
+const props = defineProps<MiViewProps>()
+const emits = defineEmits<MiViewEmits>()
 
 const {
     // Template refs

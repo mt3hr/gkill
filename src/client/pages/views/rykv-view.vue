@@ -289,8 +289,8 @@ import KyouView from './kyou-view.vue'
 import RykvQueryEditorSideBar from './rykv-query-editor-side-bar.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
 import mkflDialog from '../dialogs/mkfl-dialog.vue'
-import type { rykvViewEmits } from './rykv-view-emits'
-import type { rykvViewProps } from './rykv-view-props'
+import type { RykvViewEmits } from './rykv-view-emits'
+import type { RykvViewProps } from './rykv-view-props'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
@@ -305,8 +305,8 @@ import { useRykvView } from '@/classes/use-rykv-view'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
-const props = defineProps<rykvViewProps>()
-const emits = defineEmits<rykvViewEmits>()
+const props = defineProps<RykvViewProps>()
+const emits = defineEmits<RykvViewEmits>()
 
 const {
     // Template refs

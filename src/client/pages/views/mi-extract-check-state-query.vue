@@ -17,12 +17,12 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import type { miExtractCheckStateQueryEmits } from './mi-extract-check-state-query-emits'
-import type { miExtractCheckStateQueryProps } from './mi-extract-check-state-query-props'
+import type { MiExtractCheckStateQueryEmits } from './mi-extract-check-state-query-emits'
+import type { MiExtractCheckStateQueryProps } from './mi-extract-check-state-query-props'
 import { useMiExtractCheckStateQuery } from '@/classes/use-mi-extract-check-state-query'
 
-const props = defineProps<miExtractCheckStateQueryProps>()
-const emits = defineEmits<miExtractCheckStateQueryEmits>()
+const props = defineProps<MiExtractCheckStateQueryProps>()
+const emits = defineEmits<MiExtractCheckStateQueryEmits>()
 
 const {
     use_mi_check_state,

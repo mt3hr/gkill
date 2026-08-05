@@ -88,12 +88,12 @@ import miSortTypeQuery from './mi-sort-type-query.vue'
 import PeriodOfTimeQuery from './period-of-time-query.vue'
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
-import type { miQueryEditorSidebarEmits } from './mi-query-editor-sidebar-emits'
-import type { miQueryEditorSidebarProps } from './mi-query-editor-sidebar-props'
+import type { MiQueryEditorSidebarEmits } from './mi-query-editor-sidebar-emits'
+import type { MiQueryEditorSidebarProps } from './mi-query-editor-sidebar-props'
 import { useMiQueryEditorSidebar } from '@/classes/use-mi-query-editor-sidebar'
 
-const props = defineProps<miQueryEditorSidebarProps>()
-const emits = defineEmits<miQueryEditorSidebarEmits>()
+const props = defineProps<MiQueryEditorSidebarProps>()
+const emits = defineEmits<MiQueryEditorSidebarEmits>()
 
 const {
     // Template refs
