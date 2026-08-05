@@ -7,8 +7,8 @@ import { deepEquals } from '@/classes/deep-equals'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import moment from 'moment'
 import { CheckState } from '@/pages/views/check-state'
-import type { miQueryEditorSidebarEmits } from '@/pages/views/mi-query-editor-sidebar-emits'
-import type { miQueryEditorSidebarProps } from '@/pages/views/mi-query-editor-sidebar-props'
+import type { MiQueryEditorSidebarEmits } from '@/pages/views/mi-query-editor-sidebar-emits'
+import type { MiQueryEditorSidebarProps } from '@/pages/views/mi-query-editor-sidebar-props'
 import type SidebarHeader from '@/pages/views/sidebar-header.vue'
 import type KeywordQuery from '@/pages/views/keyword-query.vue'
 import type TimeIsQuery from '@/pages/views/time-is-query.vue'
@@ -21,8 +21,8 @@ import type MiBoardQuery from '@/pages/views/mi-board-query.vue'
 import type PeriodOfTimeQuery from '@/pages/views/period-of-time-query.vue'
 
 export function useMiQueryEditorSidebar(options: {
-    props: miQueryEditorSidebarProps,
-    emits: miQueryEditorSidebarEmits,
+    props: MiQueryEditorSidebarProps,
+    emits: MiQueryEditorSidebarEmits,
 }) {
     const { props, emits } = options
 

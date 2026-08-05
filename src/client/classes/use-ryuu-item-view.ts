@@ -111,17 +111,17 @@ export function useRyuuItemView(options: {
         find_kyou_query.apply_rep_summary_to_detaul(props.application_config)
 
         switch (related_time_match_type) {
-            case RelatedTimeMatchType.NEAR_RELATED_TIME: {
+            case RelatedTimeMatchType.near_related_time: {
                 find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
                 find_kyou_query.calendar_end_date = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
                 break
             }
-            case RelatedTimeMatchType.NEAR_RELATED_TIME_BEFORE: {
+            case RelatedTimeMatchType.near_related_time_before: {
                 find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
                 find_kyou_query.calendar_end_date = props.target_kyou && props.target_kyou?.related_time ? props.target_kyou.related_time : null
                 break
             }
-            case RelatedTimeMatchType.NEAR_RELATED_TIME_AFTER: {
+            case RelatedTimeMatchType.near_related_time_after: {
                 find_kyou_query.calendar_start_date = props.target_kyou && props.target_kyou?.related_time ? props.target_kyou.related_time : null
                 find_kyou_query.calendar_end_date = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
                 break
@@ -207,15 +207,15 @@ export function useRyuuItemView(options: {
         const get_latest_data = !use_matched_kyous
         let kyous = new Array<Kyou>()
         switch (related_time_match_type) {
-            case RelatedTimeMatchType.NEAR_RELATED_TIME: {
+            case RelatedTimeMatchType.near_related_time: {
                 kyous = await load_kyous(props.abort_controller, trimed_kyous, get_latest_data, clone)
                 break
             }
-            case RelatedTimeMatchType.NEAR_RELATED_TIME_BEFORE: {
+            case RelatedTimeMatchType.near_related_time_before: {
                 kyous = await load_kyous(props.abort_controller, trimed_kyous, get_latest_data, clone, predicate_for_before, props.target_kyou, 1)
                 break
             }
-            case RelatedTimeMatchType.NEAR_RELATED_TIME_AFTER: {
+            case RelatedTimeMatchType.near_related_time_after: {
                 kyous = await load_kyous(props.abort_controller, trimed_kyous, get_latest_data, clone, predicate_for_after, props.target_kyou, 1)
                 break
             }
@@ -233,7 +233,7 @@ export function useRyuuItemView(options: {
         ))
 
         switch (related_time_match_type) {
-            case RelatedTimeMatchType.NEAR_RELATED_TIME: {
+            case RelatedTimeMatchType.near_related_time: {
                 let match_kyou_before: Kyou | null = null
                 if (match_kyous_before.length !== 0) {
                     match_kyou_before = match_kyous_before[0]
@@ -257,7 +257,7 @@ export function useRyuuItemView(options: {
                 }
                 break
             }
-            case RelatedTimeMatchType.NEAR_RELATED_TIME_BEFORE: {
+            case RelatedTimeMatchType.near_related_time_before: {
                 let match_kyou_before: Kyou | null = null
                 if (match_kyous_before.length !== 0) {
                     match_kyou_before = match_kyous_before[0]
@@ -266,7 +266,7 @@ export function useRyuuItemView(options: {
                 match_kyou.value = match_kyou_before
                 break
             }
-            case RelatedTimeMatchType.NEAR_RELATED_TIME_AFTER: {
+            case RelatedTimeMatchType.near_related_time_after: {
                 let match_kyou_after: Kyou | null = null
                 if (match_kyous_after.length !== 0) {
                     match_kyou_after = match_kyous_after[0]

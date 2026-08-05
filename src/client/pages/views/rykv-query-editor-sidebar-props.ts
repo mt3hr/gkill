@@ -3,7 +3,7 @@
 import type { GkillPropsBase } from "./gkill-props-base"
 import type { SidebarProps } from "./sidebar-props"
 
-export interface rykvQueryEditorSidebarProps extends GkillPropsBase, SidebarProps {
+export interface RykvQueryEditorSidebarProps extends GkillPropsBase, SidebarProps {
     app_title_bar_height: number
     app_content_height: number
     app_content_width: number

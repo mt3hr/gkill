@@ -17,12 +17,12 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import type { miSortTypeQueryEmits } from './mi-sort-type-query-emits'
-import type { miSortTypeQueryProps } from './mi-sort-type-query-props'
+import type { MiSortTypeQueryEmits } from './mi-sort-type-query-emits'
+import type { MiSortTypeQueryProps } from './mi-sort-type-query-props'
 import { useMiSortTypeQuery } from '@/classes/use-mi-sort-type-query'
 
-const props = defineProps<miSortTypeQueryProps>()
-const emits = defineEmits<miSortTypeQueryEmits>()
+const props = defineProps<MiSortTypeQueryProps>()
+const emits = defineEmits<MiSortTypeQueryEmits>()
 
 const {
     use_sort_type,

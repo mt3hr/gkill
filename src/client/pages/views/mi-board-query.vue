@@ -15,8 +15,8 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import type { miBoardQueryEmits } from './mi-board-query-emits'
-import type { miBoardQueryProps } from './mi-board-query-props'
+import type { MiBoardQueryEmits } from './mi-board-query-emits'
+import type { MiBoardQueryProps } from './mi-board-query-props'
 import { ref } from 'vue'
 import FoldableStruct from './foldable-struct.vue'
 import { CheckState } from './check-state'
@@ -26,8 +26,8 @@ import { useMiBoardQuery } from '@/classes/use-mi-board-query'
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 
-const props = defineProps<miBoardQueryProps>()
-const emits = defineEmits<miBoardQueryEmits>()
+const props = defineProps<MiBoardQueryProps>()
+const emits = defineEmits<MiBoardQueryEmits>()
 
 const {
     mi_board_struct,

@@ -121,19 +121,19 @@ export function usePeriodOfTimeQuery(options: {
 
     function to_week_of_days_label(num: WeekOfDays): string {
         switch (num) {
-            case WeekOfDays.SunDay:
+            case WeekOfDays.sunday:
                 return "SUNDAY_TITLE"
-            case WeekOfDays.MonDay:
+            case WeekOfDays.monday:
                 return "MONDAY_TITLE"
-            case WeekOfDays.TuesDay:
+            case WeekOfDays.tuesday:
                 return "TUESDAY_TITLE"
-            case WeekOfDays.WednesDay:
+            case WeekOfDays.wednesday:
                 return "WEDNESDAY_TITLE"
-            case WeekOfDays.ThursDay:
+            case WeekOfDays.thursday:
                 return "THURSDAY_TITLE"
-            case WeekOfDays.FriDay:
+            case WeekOfDays.friday:
                 return "FRIDAY_TITLE"
-            case WeekOfDays.SaturDay:
+            case WeekOfDays.saturday:
                 return "SATURDAY_TITLE"
         }
         return ""

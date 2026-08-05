@@ -4,8 +4,8 @@ import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
-import type { rykvViewEmits } from '@/pages/views/rykv-view-emits'
-import type { rykvViewProps } from '@/pages/views/rykv-view-props'
+import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
+import type { RykvViewProps } from '@/pages/views/rykv-view-props'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import moment from 'moment'
@@ -21,8 +21,8 @@ import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/page
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function useRykvView(options: {
-    props: rykvViewProps,
-    emits: rykvViewEmits,
+    props: RykvViewProps,
+    emits: RykvViewEmits,
 }) {
     const { props, emits } = options
 

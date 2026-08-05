@@ -2,7 +2,7 @@ import { i18n } from '@/i18n'
 import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import type { Kyou } from '@/classes/datas/kyou'
-import type { miKyouViewProps } from '@/pages/views/mi-kyou-view-props'
+import type { MiKyouViewProps } from '@/pages/views/mi-kyou-view-props'
 import { GkillError } from '@/classes/api/gkill-error'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
@@ -15,7 +15,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function useMiKyouView(options: {
-    props: miKyouViewProps,
+    props: MiKyouViewProps,
     emits: KyouViewEmits,
 }) {
     const { props, emits } = options

@@ -1,12 +1,12 @@
 import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import { MiCheckState } from '@/classes/api/find_query/mi-check-state'
-import type { miExtractCheckStateQueryEmits } from '@/pages/views/mi-extract-check-state-query-emits'
-import type { miExtractCheckStateQueryProps } from '@/pages/views/mi-extract-check-state-query-props'
+import type { MiExtractCheckStateQueryEmits } from '@/pages/views/mi-extract-check-state-query-emits'
+import type { MiExtractCheckStateQueryProps } from '@/pages/views/mi-extract-check-state-query-props'
 
 export function useMiExtractCheckStateQuery(options: {
-    props: miExtractCheckStateQueryProps,
-    emits: miExtractCheckStateQueryEmits,
+    props: MiExtractCheckStateQueryProps,
+    emits: MiExtractCheckStateQueryEmits,
 }) {
     const { props, emits } = options
 

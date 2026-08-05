@@ -9,7 +9,7 @@ export default class RelatedKyouQuery {
     prefix: string = ""
     suffix: string = ""
     predicate: DnotePredicate = new AndPredicate([])
-    related_time_match_type: RelatedTimeMatchType = RelatedTimeMatchType.NEAR_RELATED_TIME
+    related_time_match_type: RelatedTimeMatchType = RelatedTimeMatchType.near_related_time
     find_kyou_query: FindKyouQuery | null = null
     find_duration_hour: number = 1
 }
