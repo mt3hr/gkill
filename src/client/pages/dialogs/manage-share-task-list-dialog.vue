@@ -64,7 +64,7 @@ defineExpose({ show, hide })
 const share_kyou_list: Ref<ShareKyousInfo> = ref(new ShareKyousInfo())
 const share_kyou_link: Ref<ShareKyousInfo> = ref(new ShareKyousInfo())
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -80,7 +80,7 @@ async function show(): Promise<void> {
 }
 async function hide(): Promise<void> {
     share_kyou_list_infos.value.splice(0)
-    closeDialogViaHistory(is_show_dialog)
+    close_dialog_via_history(is_show_dialog)
 }
 async function show_confirm_delete_share_kyou_list_dialog(share_kyou_list_info: ShareKyousInfo): Promise<void> {
     share_kyou_list.value = share_kyou_list_info

@@ -25,13 +25,13 @@ export function useDnoteItemTableView(options: {
         kyou_is_loaded: boolean
     ) {
         if (!dnote_item_list_views.value) return
-        const waitPromises: Array<Promise<Array<GkillError>>> = []
+        const wait_promises: Array<Promise<Array<GkillError>>> = []
         for (let i = 0; i < dnote_item_list_views.value.length; i++) {
             const v = dnote_item_list_views.value[i]
             if (!v) continue
-            waitPromises.push(v.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded))
+            wait_promises.push(v.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded))
         }
-        await Promise.all(waitPromises)
+        await Promise.all(wait_promises)
     }
 
     async function reset(): Promise<void> {
@@ -44,34 +44,34 @@ export function useDnoteItemTableView(options: {
     }
 
     function handle_move_dnote_item(
-        srcId: string,
-        srcListIndex: number,
-        targetId: string | null,
-        targetListIndex: number,
-        dropType: "up" | "down"
+        src_id: string,
+        src_list_index: number,
+        target_id: string | null,
+        target_list_index: number,
+        drop_type: "up" | "down"
     ): void {
         if (!props.editable) return
 
-        const srcList = model_value.value[srcListIndex]
-        const targetList = model_value.value[targetListIndex]
-        if (!srcList || !targetList) return
+        const src_list = model_value.value[src_list_index]
+        const target_list = model_value.value[target_list_index]
+        if (!src_list || !target_list) return
 
-        const srcPos = srcList.findIndex((x) => x.id === srcId)
-        if (srcPos < 0) return
-        const [moved] = srcList.splice(srcPos, 1)
+        const src_pos = src_list.findIndex((x) => x.id === src_id)
+        if (src_pos < 0) return
+        const [moved] = src_list.splice(src_pos, 1)
 
-        let insertPos = 0
-        if (targetId) {
-            const targetPos = targetList.findIndex((x) => x.id === targetId)
-            insertPos = targetPos < 0 ? (dropType === "up" ? 0 : targetList.length) : (dropType === "up" ? targetPos : targetPos + 1)
+        let insert_pos = 0
+        if (target_id) {
+            const target_pos = target_list.findIndex((x) => x.id === target_id)
+            insert_pos = target_pos < 0 ? (drop_type === "up" ? 0 : target_list.length) : (drop_type === "up" ? target_pos : target_pos + 1)
         } else {
-            insertPos = dropType === "up" ? 0 : targetList.length
+            insert_pos = drop_type === "up" ? 0 : target_list.length
         }
 
-        if (srcListIndex === targetListIndex && srcPos < insertPos) insertPos -= 1
-        if (insertPos < 0) insertPos = 0
-        if (insertPos > targetList.length) insertPos = targetList.length
-        targetList.splice(insertPos, 0, moved)
+        if (src_list_index === target_list_index && src_pos < insert_pos) insert_pos -= 1
+        if (insert_pos < 0) insert_pos = 0
+        if (insert_pos > target_list.length) insert_pos = target_list.length
+        target_list.splice(insert_pos, 0, moved)
     }
 
     function onCellDragover(e: DragEvent): void {
@@ -80,21 +80,21 @@ export function useDnoteItemTableView(options: {
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
     }
 
-    function onCellDrop(e: DragEvent, targetListIndex: number): void {
+    function onCellDrop(e: DragEvent, target_list_index: number): void {
         if (!props.editable) return
 
-        const srcId = e.dataTransfer?.getData("gkill_dnote_item_id")
-        const srcListIndexStr = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
-        if (!srcId || srcListIndexStr === undefined || srcListIndexStr === null || srcListIndexStr === "") return
+        const src_id = e.dataTransfer?.getData("gkill_dnote_item_id")
+        const src_list_index_str = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
+        if (!src_id || src_list_index_str === undefined || src_list_index_str === null || src_list_index_str === "") return
 
-        const srcListIndex = Number(srcListIndexStr)
+        const src_list_index = Number(src_list_index_str)
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
         const rect = el.getBoundingClientRect()
         const y = e.clientY - rect.top
-        const dropType: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
+        const drop_type: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
 
-        handle_move_dnote_item(srcId, srcListIndex, null, targetListIndex, dropType)
+        handle_move_dnote_item(src_id, src_list_index, null, target_list_index, drop_type)
         e.preventDefault()
         e.stopPropagation()
     }

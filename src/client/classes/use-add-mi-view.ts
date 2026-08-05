@@ -150,14 +150,14 @@ export function useAddMiView(options: {
             is_requested_submit.value = true
             // Notification チェック
             // おかしかったらnullが戻ってくるので中断する
-            const notificationResults = new Array<Notification>()
+            const notification_results = new Array<Notification>()
             if (add_notification_views.value) {
                 for (let i = 0; i < add_notification_views.value.length; i++) {
                     const notification = await add_notification_views.value[i].get_notification()
                     if (!notification) {
                         return
                     }
-                    notificationResults.push(notification)
+                    notification_results.push(notification)
                 }
             }
 
@@ -287,18 +287,18 @@ export function useAddMiView(options: {
             }
 
             // Notification 追加
-            for (let i = 0; i < notificationResults.length; i++) {
+            for (let i = 0; i < notification_results.length; i++) {
                 // 追加リクエストを飛ばす
-                await delete_gkill_kyou_cache(notificationResults[i].id)
-                const notifReq = new AddNotificationRequest()
-                notifReq.notification = notificationResults[i]
-                const notifRes = await props.gkill_api.add_notification(notifReq)
-                if (notifRes.errors && notifRes.errors.length !== 0) {
-                    emits('received_errors', notifRes.errors)
+                await delete_gkill_kyou_cache(notification_results[i].id)
+                const notif_req = new AddNotificationRequest()
+                notif_req.notification = notification_results[i]
+                const notif_res = await props.gkill_api.add_notification(notif_req)
+                if (notif_res.errors && notif_res.errors.length !== 0) {
+                    emits('received_errors', notif_res.errors)
                     return
                 }
-                if (notifRes.messages && notifRes.messages.length !== 0) {
-                    emits('received_messages', notifRes.messages)
+                if (notif_res.messages && notif_res.messages.length !== 0) {
+                    emits('received_messages', notif_res.messages)
                 }
             }
             emits("registered_kyou", res.added_kyou!)

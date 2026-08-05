@@ -130,7 +130,7 @@ gkillの中心的な閲覧・操作画面。左サイドバーで検索条件（
 #### OldSharedMiPage（旧・共有タスクURL）`/shared_mi`
 
 `old-shared-mi-page.vue` は**中身を描画しない**（テンプレートは空の `<div>`）。
-マウント時に `resetDialogHistory()` を呼んでから `/shared_page?share_id=…` へ
+マウント時に `reset_dialog_history()` を呼んでから `/shared_page?share_id=…` へ
 `router.replace` するだけのリダイレクタ。過去に配布した共有リンクを生かすために残っている。
 
 > サーバ側（`serve.go`）は `/shared_rykv` にも SPA を配信するが、
@@ -353,4 +353,4 @@ KFTL 送信時とタグ追加時に、既存タグに無いタグが含まれて
 
 ダイアログの開閉はブラウザ履歴と連動している（[frontend-architecture.md](frontend-architecture.md) 参照）。
 プログラムから閉じるときは `show.value = false` を直接書かず、
-必ず `closeDialogViaHistory()` を使うこと。直接書くと履歴スタックとずれる。
+必ず `close_dialog_via_history()` を使うこと。直接書くと履歴スタックとずれる。

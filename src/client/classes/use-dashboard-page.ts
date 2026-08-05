@@ -12,7 +12,7 @@ import { DashboardConfig } from '@/classes/datas/config/dashboard-config'
 import { Kyou } from '@/classes/datas/kyou'
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { LogoutRequest } from '@/classes/api/req_res/logout-request'
 import type { ComponentRef } from '@/classes/component-ref'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
@@ -74,12 +74,12 @@ export function useDashboardPage() {
     const target_date_end = computed<Date>(() => moment(selected_date.value).endOf('day').toDate())
 
     const date_label = computed<string>(() => {
-        const weekdayKeys = [
+        const weekday_keys = [
             'SUNDAY_TITLE', 'MONDAY_TITLE', 'TUESDAY_TITLE', 'WEDNESDAY_TITLE',
             'THURSDAY_TITLE', 'FRIDAY_TITLE', 'SATURDAY_TITLE',
         ]
-        const dayOfWeek = i18n.global.t(weekdayKeys[moment(selected_date.value).day()])
-        return `${moment(selected_date.value).format('YYYY/M/D')}(${dayOfWeek})`
+        const day_of_week = i18n.global.t(weekday_keys[moment(selected_date.value).day()])
+        return `${moment(selected_date.value).format('YYYY/M/D')}(${day_of_week})`
     })
 
     const date_picker_model = computed<Date>({
@@ -154,7 +154,7 @@ export function useDashboardPage() {
 
     // ── Lifecycle ──
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
 
     const onResize = () => {
@@ -359,13 +359,13 @@ export function useDashboardPage() {
     }
 
     // ── Navigation ──
-    async function navigateToPage(page_name: string): Promise<void> {
-        await resetDialogHistory()
+    async function navigate_to_page(page_name: string): Promise<void> {
+        await reset_dialog_history()
         router.replace('/' + page_name + '?loaded=true')
     }
 
     // ── Floating button ──
-    function floatingActionButtonStyle() {
+    function floating_action_button_style() {
         return {
             'bottom': '60px',
             'right': '10px',
@@ -444,7 +444,7 @@ export function useDashboardPage() {
         }
         await sleep(1500)
         await gkill_api.value.clear_browser_datas()
-        await resetDialogHistory()
+        await reset_dialog_history()
         router.replace("/")
     }
 
@@ -502,7 +502,7 @@ export function useDashboardPage() {
         write_errors,
         write_messages,
         close_message,
-        navigateToPage,
+        navigate_to_page,
         abort_all_fetches,
         clear_dashboard_datas,
         fetch_mi_kyous,
@@ -511,7 +511,7 @@ export function useDashboardPage() {
         go_prev_day,
         go_next_day,
         go_today,
-        floatingActionButtonStyle,
+        floating_action_button_style,
         show_confirm_logout_dialog,
         show_kftl_dialog,
         show_add_kc_dialog,

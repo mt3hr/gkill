@@ -3,7 +3,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { useRoute } from 'vue-router'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { SharedMiPageProps } from '@/pages/shared-mi-page-props'
 
 export function useSharedMiPage(options: {
@@ -101,7 +101,7 @@ export function useSharedMiPage(options: {
     }
     window.addEventListener('resize', onResize)
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)

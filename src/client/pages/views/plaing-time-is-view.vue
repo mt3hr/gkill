@@ -6,7 +6,7 @@
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="false"
             :show_checkbox="true" :show_footer="true" :show_content_only="true" :show_rep_name="true"
             :force_show_latest_kyou_info="true" :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykvDialogHandler }"
+            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykv_dialog_handler }"
             @requested_search="search(false)" ref="kyou_list_views" />
         <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -43,8 +43,8 @@
         <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @closed="(id: string) => close_rykv_dialog(id)"
-            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykvDialogHandler }" />
-        <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
+            v-on="{ ...crudRelayHandlers, ...reloadListRequestHandlers, ...rykv_dialog_handler }" />
+        <v-avatar :style="floating_action_button_style()" color="primary" class="position-fixed">
             <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
                     <v-btn color="white" v-long-press="() => show_kftl_dialog()" icon="mdi-plus" variant="text"
@@ -152,13 +152,13 @@ const {
     show_lantana_dialog,
     show_upload_file_dialog,
     show_save_clipboard_to_file_dialog,
-    floatingActionButtonStyle,
+    floating_action_button_style,
 
     // Event relay objects
     crudRelayHandlers,
     reloadListRequestHandlers,
     dialogReloadRequestHandlers,
-    rykvDialogHandler,
+    rykv_dialog_handler,
 } = usePlaingTimeIsView({ props, emits })
 
 defineExpose({ reload_list, set_last_added_request_time })

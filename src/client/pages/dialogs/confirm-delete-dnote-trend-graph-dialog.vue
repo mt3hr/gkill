@@ -44,7 +44,7 @@ defineExpose({ show, hide })
 
 const dnote_trend_graph_query: Ref<DnoteTrendGraphQuery> = ref(new DnoteTrendGraphQuery())
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -60,7 +60,7 @@ async function show(_dnote_trend_graph_query: DnoteTrendGraphQuery): Promise<voi
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
   dnote_trend_graph_query.value = new DnoteTrendGraphQuery()
 }
 </script>

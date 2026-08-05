@@ -10,7 +10,7 @@ import { useTheme } from 'vuetify'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useRoute } from 'vue-router'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { LogoutRequest } from '@/classes/api/req_res/logout-request'
 import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-repositories-request'
 import { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
@@ -55,7 +55,7 @@ export function useSaihatePage() {
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 
     // ── beforeunload guard ──
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
+    function handle_before_unload(e: BeforeUnloadEvent) {
         if (is_loading.value) {
             e.preventDefault()
         }
@@ -63,17 +63,17 @@ export function useSaihatePage() {
 
     // ── Lifecycle ──
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
 
     const onResize = () => {
         resize_content()
     }
     window.addEventListener('resize', onResize)
-    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('beforeunload', handle_before_unload)
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)
-        window.removeEventListener('beforeunload', handleBeforeUnload)
+        window.removeEventListener('beforeunload', handle_before_unload)
     })
 
     // ── Watchers ──
@@ -92,14 +92,14 @@ export function useSaihatePage() {
     async function show_dialog(): Promise<void> {
         const dialog = new URL(location.href).searchParams.get('dialog')
         const is_saved = new URL(location.href).searchParams.get('is_saved')
-        if (is_saved && parseBoolLoose(is_saved)) {
+        if (is_saved && parse_bool_loose(is_saved)) {
             const message = new GkillMessage()
             message.message = i18n.global.t("SAVED_MESSAGE")
             message.message_code = GkillMessageCodes.saved_shared_data
             write_messages([message])
 
             await sleep(2500)
-            await resetDialogHistory()
+            await reset_dialog_history()
             await router.replace('/saihate')
             window.close()
         }
@@ -236,7 +236,7 @@ export function useSaihatePage() {
         }
     }
 
-    function floatingActionButtonStyle() {
+    function floating_action_button_style() {
         return {
             'bottom': '60px',
             'right': '10px',
@@ -286,7 +286,7 @@ export function useSaihatePage() {
         confirm_logout_dialog.value?.show(close_database)
     }
 
-    function parseBoolLoose(value: unknown): boolean {
+    function parse_bool_loose(value: unknown): boolean {
         if (typeof value === "boolean") return value
         if (typeof value === "number") return value !== 0
         if (typeof value === "string") {
@@ -347,7 +347,7 @@ export function useSaihatePage() {
         }
         await sleep(1500)
         await gkill_api.value.clear_browser_datas()
-        await resetDialogHistory()
+        await reset_dialog_history()
         router.replace("/")
     }
 
@@ -391,7 +391,7 @@ export function useSaihatePage() {
         write_errors,
         write_messages,
         close_message,
-        floatingActionButtonStyle,
+        floating_action_button_style,
 
         // Dialog show methods
         show_kftl_dialog,

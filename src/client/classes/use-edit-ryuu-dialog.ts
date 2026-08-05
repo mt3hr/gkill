@@ -4,7 +4,7 @@ import { nextTick, ref, type Ref } from 'vue'
 import type { EditRyuuDialogProps } from '@/pages/dialogs/edit-ryuu-dialog-props'
 import type { EditRyuuDialogEmits } from '@/pages/dialogs/edit-ryuu-dialog-emits'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 import type Dnote from '@/pages/views/dnote-view.vue'
 
@@ -26,7 +26,7 @@ export function useEditRyuuDialog(options: {
         nextTick(() => dnote_view.value?.reload([], new FindKyouQuery()))
     }
     async function hide(): Promise<void> {
-        closeDialogViaHistory(is_show_dialog)
+        close_dialog_via_history(is_show_dialog)
     }
 
     return {

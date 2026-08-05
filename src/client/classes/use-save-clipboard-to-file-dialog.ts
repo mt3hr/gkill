@@ -8,7 +8,7 @@ import { UploadFilesRequest } from '@/classes/api/req_res/upload-files-request'
 import { FileUploadConflictBehavior } from '@/classes/api/req_res/file-upload-conflict-behavior'
 import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import type { Repository } from '@/classes/datas/config/repository'
-import { closeDialogViaHistory } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history } from '@/classes/use-dialog-history-stack'
 
 const MIME_TO_EXT: Record<string, string> = {
     'image/png': 'png',
@@ -154,30 +154,30 @@ export function useSaveClipboardToFileDialog(options: {
         return null
     }
 
-    function generate_filename(mimeType: string, originalName?: string): string {
-        if (originalName) return sanitize_filename(originalName)  // OSで使えない文字を除去
+    function generate_filename(mime_type: string, original_name?: string): string {
+        if (original_name) return sanitize_filename(original_name)  // OSで使えない文字を除去
         const now = new Date()
         const pad = (n: number) => n.toString().padStart(2, '0')
         const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
-        const ext = MIME_TO_EXT[mimeType] ?? 'bin'
+        const ext = MIME_TO_EXT[mime_type] ?? 'bin'
         return `clipboard_${ts}.${ext}`
     }
 
-    async function set_clipboard_data(blob: Blob, mimeType: string, originalName?: string): Promise<void> {
+    async function set_clipboard_data(blob: Blob, mime_type: string, original_name?: string): Promise<void> {
         if (preview_url.value) {
             URL.revokeObjectURL(preview_url.value)
             preview_url.value = ''
         }
         text_preview.value = ''
         clipboard_blob.value = blob
-        selected_mime_type.value = mimeType
-        filename.value = generate_filename(mimeType, originalName)
+        selected_mime_type.value = mime_type
+        filename.value = generate_filename(mime_type, original_name)
         show_already_saved_confirm.value = false
         error_message_key.value = ''
 
-        if (mimeType.startsWith('image/')) {
+        if (mime_type.startsWith('image/')) {
             preview_url.value = URL.createObjectURL(blob)
-        } else if (mimeType.startsWith('text/')) {
+        } else if (mime_type.startsWith('text/')) {
             const text = await blob.text()
             text_preview.value = text.split('\n').slice(0, 5).join('\n')
         }
@@ -229,8 +229,8 @@ export function useSaveClipboardToFileDialog(options: {
         if (dt.files && dt.files.length > 0) {
             const file = dt.files[0]
             const ext = get_ext_from_filename(file.name)
-            const mimeType = file.type || mime_from_ext(ext)
-            await set_clipboard_data(file, mimeType, file.name)
+            const mime_type = file.type || mime_from_ext(ext)
+            await set_clipboard_data(file, mime_type, file.name)
             await save_or_confirm()
             return
         }
@@ -269,8 +269,8 @@ export function useSaveClipboardToFileDialog(options: {
     // ── Hash ──
     async function compute_blob_hash(blob: Blob): Promise<string> {
         const buffer = await blob.arrayBuffer()
-        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
-        return Array.from(new Uint8Array(hashBuffer))
+        const hash_buffer = await crypto.subtle.digest('SHA-256', buffer)
+        return Array.from(new Uint8Array(hash_buffer))
             .map(b => b.toString(16).padStart(2, '0'))
             .join('')
     }
@@ -362,7 +362,7 @@ export function useSaveClipboardToFileDialog(options: {
     }
 
     function hide(): void {
-        closeDialogViaHistory(is_show_dialog)
+        close_dialog_via_history(is_show_dialog)
         is_last_clicked_dialog.value = false
         if (preview_url.value) {
             URL.revokeObjectURL(preview_url.value)
@@ -378,12 +378,12 @@ export function useSaveClipboardToFileDialog(options: {
         // テキスト入力中は発火しない
         const target = e.target as Element | null
         const active = document.activeElement
-        const isInput = (el: Element | null) => {
+        const is_input = (el: Element | null) => {
             if (!el) return false
             const tag = (el as HTMLElement).tagName?.toLowerCase()
             return (el as HTMLElement).isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select'
         }
-        if (isInput(target) || isInput(active)) return
+        if (is_input(target) || is_input(active)) return
         e.preventDefault()
         e.stopPropagation()
         save_or_confirm()

@@ -11,7 +11,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type { Notification } from '@/classes/datas/notification'
 import type { Text } from '@/classes/datas/text'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { AddTagViewProps } from '@/pages/views/add-tag-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 
@@ -65,12 +65,12 @@ export function useAddTagView(options: {
     }
 
     function cancel_save(): void {
-        closeDialogViaHistory(show_confirm_unknown_tag_dialog)
+        close_dialog_via_history(show_confirm_unknown_tag_dialog)
         unknown_tags.value = []
     }
 
     async function confirm_save(): Promise<void> {
-        closeDialogViaHistory(show_confirm_unknown_tag_dialog)
+        close_dialog_via_history(show_confirm_unknown_tag_dialog)
         unknown_tags.value = []
         await execute_save()
     }

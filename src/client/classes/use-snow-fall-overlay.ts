@@ -3,10 +3,10 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 
 export function useSnowFallOverlay() {
-    const snowField = ref<HTMLElement | null>(null)
-    let timerId: ReturnType<typeof setTimeout> | null = null
+    const snow_field = ref<HTMLElement | null>(null)
+    let timer_id: ReturnType<typeof setTimeout> | null = null
 
-    function createSnowflake() {
+    function create_snowflake() {
         const flake = document.createElement('div')
         flake.className = 'snowflake'
 
@@ -19,27 +19,27 @@ export function useSnowFallOverlay() {
         flake.style.left = `${left}px`
         flake.style.animationDuration = `${duration}s`
 
-        snowField.value?.appendChild(flake)
+        snow_field.value?.appendChild(flake)
 
         setTimeout(() => flake.remove(), duration * 1000)
     }
 
-    function loopSnowfall() {
-        createSnowflake()
-        timerId = setTimeout(loopSnowfall, 100)
+    function loop_snowfall() {
+        create_snowflake()
+        timer_id = setTimeout(loop_snowfall, 100)
     }
 
     onMounted(() => {
-        loopSnowfall()
+        loop_snowfall()
     })
 
     onUnmounted(() => {
-        if (timerId !== null) {
-            clearTimeout(timerId)
+        if (timer_id !== null) {
+            clearTimeout(timer_id)
         }
     })
 
     return {
-        snowField,
+        snow_field,
     }
 }

@@ -5,7 +5,7 @@ import type FindQueryEditorDialogProps from '@/pages/dialogs/find-query-editor-d
 import type FindQueryEditorDialogEmits from '@/pages/dialogs/find-query-editor-dialog-emits'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useFindQueryEditorDialog(options: {
@@ -43,7 +43,7 @@ export function useFindQueryEditorDialog(options: {
         })
     }
     async function hide(): Promise<void> {
-        closeDialogViaHistory(is_show_dialog)
+        close_dialog_via_history(is_show_dialog)
     }
 
     return {

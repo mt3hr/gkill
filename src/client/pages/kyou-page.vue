@@ -11,7 +11,7 @@
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in page_list">
                                 <v-list-item-title
-                                    @click="navigateToPage(page.page_name)">
+                                    @click="navigate_to_page(page.page_name)">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -109,7 +109,7 @@ const {
     page_list,
 
     // Template event handlers
-    navigateToPage,
+    navigate_to_page,
     write_errors,
     write_messages,
     close_message,

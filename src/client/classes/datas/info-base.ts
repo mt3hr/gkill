@@ -165,12 +165,12 @@ export abstract class InfoBase {
     }
 
     async load_attached_datas(force = false): Promise<Array<GkillError>> {
-        const awaitPromises = new Array<Promise<Array<GkillError>>>()
-        awaitPromises.push(this.load_attached_tags(force))
-        awaitPromises.push(this.load_attached_texts(force))
-        awaitPromises.push(this.load_attached_notifications(force))
-        awaitPromises.push(this.load_attached_timeis(force))
-        return Promise.all(awaitPromises).then((errors_list) => {
+        const await_promises = new Array<Promise<Array<GkillError>>>()
+        await_promises.push(this.load_attached_tags(force))
+        await_promises.push(this.load_attached_texts(force))
+        await_promises.push(this.load_attached_notifications(force))
+        await_promises.push(this.load_attached_timeis(force))
+        return Promise.all(await_promises).then((errors_list) => {
             const errors = new Array<GkillError>()
             errors_list.forEach(e => {
                 errors.push(...e)

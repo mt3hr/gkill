@@ -8,7 +8,7 @@ import type { MiViewProps } from '@/pages/views/mi-view-props'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import moment from 'moment'
-import { deepEquals } from '@/classes/deep-equals'
+import { deep_equals } from '@/classes/deep-equals'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -19,7 +19,7 @@ import { MiReKyou } from '@/classes/datas/mi-re-kyou'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { UpdateMiReKyouRequest } from '@/classes/api/req_res/update-mi-re-kyou-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -158,52 +158,52 @@ export function useMiView(options: {
         focused_kyous_list.value = match_kyous_list.value[column_index]
     }
 
-    function removeKyouFromListById(list: Array<Kyou>, deletedId: string): void {
+    function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
         for (let i = list.length - 1; i >= 0; i--) {
-            if (list[i].id === deletedId) {
+            if (list[i].id === deleted_id) {
                 list.splice(i, 1)
             }
         }
     }
 
-    function removeKyouFromMultiColumnLists(lists: Array<Array<Kyou>>, deletedId: string): void {
+    function remove_kyou_from_multi_column_lists(lists: Array<Array<Kyou>>, deleted_id: string): void {
         for (let i = 0; i < lists.length; i++) {
-            removeKyouFromListById(lists[i], deletedId)
+            remove_kyou_from_list_by_id(lists[i], deleted_id)
         }
     }
 
-    function isTargetMiKyou(kyou: Kyou, miId: string): boolean {
-        return kyou.typed_mi?.id === miId || kyou.typed_mirekyou?.id === miId || kyou.id === miId
+    function is_target_mi_kyou(kyou: Kyou, mi_id: string): boolean {
+        return kyou.typed_mi?.id === mi_id || kyou.typed_mirekyou?.id === mi_id || kyou.id === mi_id
     }
 
-    function findKyouInstancesByMiId(miId: string): Array<{ columnIndex: number, rowIndex: number, kyou: Kyou }> {
-        const instances: Array<{ columnIndex: number, rowIndex: number, kyou: Kyou }> = []
-        for (let columnIndex = 0; columnIndex < match_kyous_list.value.length; columnIndex++) {
-            const column = match_kyous_list.value[columnIndex]
-            for (let rowIndex = 0; rowIndex < column.length; rowIndex++) {
-                const kyou = column[rowIndex]
-                if (isTargetMiKyou(kyou, miId)) {
-                    instances.push({ columnIndex, rowIndex, kyou })
+    function find_kyou_instances_by_mi_id(mi_id: string): Array<{ column_index: number, row_index: number, kyou: Kyou }> {
+        const instances: Array<{ column_index: number, row_index: number, kyou: Kyou }> = []
+        for (let column_index = 0; column_index < match_kyous_list.value.length; column_index++) {
+            const column = match_kyous_list.value[column_index]
+            for (let row_index = 0; row_index < column.length; row_index++) {
+                const kyou = column[row_index]
+                if (is_target_mi_kyou(kyou, mi_id)) {
+                    instances.push({ column_index, row_index, kyou })
                 }
             }
         }
         return instances
     }
 
-    function removeKyouFromColumnById(columnIndex: number, kyouId: string): void {
-        const column = match_kyous_list.value[columnIndex]
+    function remove_kyou_from_column_by_id(column_index: number, kyou_id: string): void {
+        const column = match_kyous_list.value[column_index]
         if (!column) {
             return
         }
         for (let i = column.length - 1; i >= 0; i--) {
-            if (column[i].id === kyouId) {
+            if (column[i].id === kyou_id) {
                 column.splice(i, 1)
             }
         }
     }
 
-    function insertKyouIntoColumnIfAbsent(columnIndex: number, kyou: Kyou): void {
-        const column = match_kyous_list.value[columnIndex]
+    function insert_kyou_into_column_if_absent(column_index: number, kyou: Kyou): void {
+        const column = match_kyous_list.value[column_index]
         if (!column) {
             return
         }
@@ -215,43 +215,43 @@ export function useMiView(options: {
         column.push(kyou)
     }
 
-    function patchKyouMiBoardName(kyou: Kyou, updatedMi: Mi | MiReKyou): void {
+    function patch_kyou_mi_board_name(kyou: Kyou, updated_mi: Mi | MiReKyou): void {
         // MiReKyouのKyouにはtyped_mirekyouが載っているのでそちらを更新する
-        const target = (updatedMi instanceof MiReKyou || kyou.typed_mirekyou)
+        const target = (updated_mi instanceof MiReKyou || kyou.typed_mirekyou)
             ? (kyou.typed_mirekyou ??= new MiReKyou())
             : (kyou.typed_mi ??= new Mi())
-        target.id = updatedMi.id
-        target.board_name = updatedMi.board_name
-        target.update_app = updatedMi.update_app
-        target.update_device = updatedMi.update_device
-        target.update_user = updatedMi.update_user
-        target.update_time = updatedMi.update_time
+        target.id = updated_mi.id
+        target.board_name = updated_mi.board_name
+        target.update_app = updated_mi.update_app
+        target.update_device = updated_mi.update_device
+        target.update_user = updated_mi.update_user
+        target.update_time = updated_mi.update_time
     }
 
-    function applyBoardMoveLocally(miId: string, beforeBoard: string, afterBoard: string, updatedMi: Mi | MiReKyou): void {
-        const instances = findKyouInstancesByMiId(miId)
+    function apply_board_move_locally(mi_id: string, before_board: string, after_board: string, updated_mi: Mi | MiReKyou): void {
+        const instances = find_kyou_instances_by_mi_id(mi_id)
         if (instances.length === 0) {
             return
         }
 
         // 既存インスタンスにボード更新を反映
         for (let i = 0; i < instances.length; i++) {
-            patchKyouMiBoardName(instances[i].kyou, updatedMi)
+            patch_kyou_mi_board_name(instances[i].kyou, updated_mi)
         }
-        const targetKyou = instances[0].kyou
+        const target_kyou = instances[0].kyou
 
         for (let i = 0; i < querys.value.length; i++) {
             const query = querys.value[i]
-            if (query.use_mi_board_name && query.mi_board_name === beforeBoard) {
-                removeKyouFromColumnById(i, targetKyou.id)
+            if (query.use_mi_board_name && query.mi_board_name === before_board) {
+                remove_kyou_from_column_by_id(i, target_kyou.id)
             }
-            if (query.use_mi_board_name && query.mi_board_name === afterBoard) {
-                insertKyouIntoColumnIfAbsent(i, targetKyou)
+            if (query.use_mi_board_name && query.mi_board_name === after_board) {
+                insert_kyou_into_column_if_absent(i, target_kyou)
             }
         }
 
-        if (focused_kyou.value && isTargetMiKyou(focused_kyou.value, miId)) {
-            patchKyouMiBoardName(focused_kyou.value, updatedMi)
+        if (focused_kyou.value && is_target_mi_kyou(focused_kyou.value, mi_id)) {
+            patch_kyou_mi_board_name(focused_kyou.value, updated_mi)
         }
         if (is_show_kyou_count_calendar.value) {
             update_focused_kyous_list(focused_column_index.value)
@@ -259,13 +259,13 @@ export function useMiView(options: {
     }
 
     // ── Business logic ──
-    function onDeletedKyou(deletedKyou: Kyou): void {
-        removeKyouFromMultiColumnLists(match_kyous_list.value, deletedKyou.id)
-        removeKyouFromListById(focused_kyous_list.value, deletedKyou.id)
-        if (focused_kyou.value?.id === deletedKyou.id) {
+    function onDeletedKyou(deleted_kyou: Kyou): void {
+        remove_kyou_from_multi_column_lists(match_kyous_list.value, deleted_kyou.id)
+        remove_kyou_from_list_by_id(focused_kyous_list.value, deleted_kyou.id)
+        if (focused_kyou.value?.id === deleted_kyou.id) {
             focused_kyou.value = null
         }
-        emits('deleted_kyou', deletedKyou)
+        emits('deleted_kyou', deleted_kyou)
     }
 
     async function reload_kyou(kyou: Kyou): Promise<void> {
@@ -329,7 +329,7 @@ export function useMiView(options: {
             return
         }
         return nextTick(async () => {
-            const waitPromises = new Array<Promise<void>>()
+            const wait_promises = new Array<Promise<void>>()
             try {
                 // スクロール位置の復元
                 match_kyous_list_top_list.value = props.gkill_api.get_saved_mi_scroll_indexs()
@@ -347,7 +347,7 @@ export function useMiView(options: {
                     for (let i = 0; i < saved_querys.length; i++) {
                         await nextTick(() => {
                             skip_search_this_tick.value = true
-                            waitPromises.push(search(i, saved_querys[i], true).then(async () => {
+                            wait_promises.push(search(i, saved_querys[i], true).then(async () => {
                                 return nextTick(() => {
                                     kyou_list_views.value[i].scroll_to(match_kyous_list_top_list.value[i])
                                     kyou_list_views.value[i].set_loading(false)
@@ -363,7 +363,7 @@ export function useMiView(options: {
                     }
                 }
             } finally {
-                Promise.all(waitPromises).then(async () => {
+                Promise.all(wait_promises).then(async () => {
                     focused_column_index.value = 0
                     inited.value = true
                     drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 760)
@@ -382,7 +382,7 @@ export function useMiView(options: {
         // 検索する。Tickでまとめる
         try {
             if (!force_search) {
-                if (deepEquals(querys_backup.value[column_index], query)) {
+                if (deep_equals(querys_backup.value[column_index], query)) {
                     return
                 }
             }
@@ -413,7 +413,7 @@ export function useMiView(options: {
                 }
             })
 
-            const waitPromises = new Array<Promise<unknown>>()
+            const wait_promises = new Array<Promise<unknown>>()
 
             const req = new GetKyousRequest()
             my_abort_controller = req.abort_controller
@@ -421,16 +421,16 @@ export function useMiView(options: {
             req.query = query.clone()
             req.query.parse_words_and_not_words()
             if (update_cache) {
-                waitPromises.push(delete_gkill_kyou_cache(null))
+                wait_promises.push(delete_gkill_kyou_cache(null))
                 req.query.update_cache = true
             } else {
-                waitPromises.push(props.gkill_api.delete_updated_gkill_caches())
+                wait_promises.push(props.gkill_api.delete_updated_gkill_caches())
             }
 
             let res = new GetKyousResponse()
-            waitPromises.push(props.gkill_api.get_kyous(req).then(response => res = response))
+            wait_promises.push(props.gkill_api.get_kyous(req).then(response => res = response))
 
-            await Promise.all(waitPromises)
+            await Promise.all(wait_promises)
 
             if (res.errors && res.errors.length !== 0) {
                 emits('received_errors', res.errors)
@@ -688,7 +688,7 @@ export function useMiView(options: {
             updated_kyou = res.updated_kyou
         }
 
-        applyBoardMoveLocally(task.id, before_board_name, after_board_name, updated_task)
+        apply_board_move_locally(task.id, before_board_name, after_board_name, updated_task)
 
         if (updated_kyou) {
             emits('updated_kyou', updated_kyou)
@@ -742,12 +742,12 @@ export function useMiView(options: {
 
     // ── Template event handlers (extracted from inline) ──
 
-    function toggleDrawer(): void {
+    function toggle_drawer(): void {
         if (inited.value) { drawer.value = !drawer.value }
     }
 
-    async function navigateToPage(page_name: string): Promise<void> {
-        await resetDialogHistory()
+    async function navigate_to_page(page_name: string): Promise<void> {
+        await reset_dialog_history()
         router.replace('/' + page_name + '?loaded=true')
     }
 
@@ -874,7 +874,7 @@ export function useMiView(options: {
         save_clipboard_to_file_dialog.value?.show()
     }
 
-    function floatingActionButtonStyle() {
+    function floating_action_button_style() {
         return {
             'bottom': '60px',
             'right': '10px',
@@ -907,7 +907,7 @@ export function useMiView(options: {
         'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => update_check_kyous(kyous, checked),
     }
 
-    const rykvDialogHandler = {
+    const rykv_dialog_handler = {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
@@ -956,8 +956,8 @@ export function useMiView(options: {
         page_list,
 
         // Template event handlers
-        toggleDrawer,
-        navigateToPage,
+        toggle_drawer,
+        navigate_to_page,
         onSidebarRequestedSearch,
         onSidebarUpdatedQuery,
         onSidebarInited,
@@ -989,11 +989,11 @@ export function useMiView(options: {
         show_lantana_dialog,
         show_upload_file_dialog,
         show_save_clipboard_to_file_dialog,
-        floatingActionButtonStyle,
+        floating_action_button_style,
 
         // Event relay objects
         crudRelayHandlers,
         allColumnsRequestHandlers,
-        rykvDialogHandler,
+        rykv_dialog_handler,
     }
 }

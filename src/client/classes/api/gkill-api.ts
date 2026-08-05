@@ -1072,11 +1072,11 @@ export class GkillAPI {
                 hydrate(response, json, { date_suffixes: [] })
                 json = null
 
-                const waitPromises = Array<Promise<void>>()
+                const wait_promises = Array<Promise<void>>()
                 // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
                 const worker_task_limit = 5000
                 for (let i = 0; i < response.kyous.length; i += worker_task_limit) {
-                        waitPromises.push((async (): Promise<void> => {
+                        wait_promises.push((async (): Promise<void> => {
                                 for (let j = i; j < response.kyous.length && j < i + worker_task_limit; j++) {
                                         let kyou: Kyou | null = new Kyou()
                                         hydrate(kyou, response.kyous[j])
@@ -1085,7 +1085,7 @@ export class GkillAPI {
                                 }
                         })())
                 }
-                await Promise.all(waitPromises)
+                await Promise.all(wait_promises)
                 return response
         }
 

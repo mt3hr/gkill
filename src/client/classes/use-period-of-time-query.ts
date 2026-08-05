@@ -40,27 +40,27 @@ export function usePeriodOfTimeQuery(options: {
 
     watch(
         () => props.find_kyou_query.period_of_time_start_time_second,
-        (newSec, oldSec) => {
-            if (newSec === oldSec) return
+        (new_sec, old_sec) => {
+            if (new_sec === old_sec) return
 
             skip_emits_this_tick.value = true
             nextTick(() => (skip_emits_this_tick.value = false))
 
             period_of_time_start_time_string.value =
-                newSec == null ? "" : moment.unix(newSec).format("HH:mm")
+                new_sec == null ? "" : moment.unix(new_sec).format("HH:mm")
         }
     )
 
     watch(
         () => props.find_kyou_query.period_of_time_end_time_second,
-        (newSec, oldSec) => {
-            if (newSec === oldSec) return
+        (new_sec, old_sec) => {
+            if (new_sec === old_sec) return
 
             skip_emits_this_tick.value = true
             nextTick(() => (skip_emits_this_tick.value = false))
 
             period_of_time_end_time_string.value =
-                newSec == null ? "" : moment.unix(newSec).format("HH:mm")
+                new_sec == null ? "" : moment.unix(new_sec).format("HH:mm")
         }
     )
 

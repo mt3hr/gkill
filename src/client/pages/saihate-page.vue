@@ -28,7 +28,7 @@
                     <v-progress-circular indeterminate color="primary" />
                 </v-overlay>
             </div>
-            <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
+            <v-avatar :style="floating_action_button_style()" color="primary" class="position-fixed">
                 <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" v-long-press="() => show_kftl_dialog()" icon="mdi-plus" variant="text"
@@ -189,7 +189,7 @@ const {
     write_errors,
     write_messages,
     close_message,
-    floatingActionButtonStyle,
+    floating_action_button_style,
 
     // Dialog show methods
     show_kftl_dialog,

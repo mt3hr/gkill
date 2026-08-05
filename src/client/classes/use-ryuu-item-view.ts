@@ -68,19 +68,19 @@ export function useRyuuItemView(options: {
     function drop(e: DragEvent): void {
         if (!props.editable) return
 
-        const srcId = e.dataTransfer?.getData('gkill_ryuu_query_id')
-        const targetId = model_value.value?.id ?? ''
-        if (!srcId || !targetId) return
-        if (srcId === targetId) return
+        const src_id = e.dataTransfer?.getData('gkill_ryuu_query_id')
+        const target_id = model_value.value?.id ?? ''
+        if (!src_id || !target_id) return
+        if (src_id === target_id) return
 
         // currentTarget基準で上/下を判定（子要素に落ちても安定）
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
         const rect = el.getBoundingClientRect()
         const y = e.clientY - rect.top
-        const dropType: DropTypeRyuu = (y <= rect.height * 0.5) ? 'up' : 'down'
+        const drop_type: DropTypeRyuu = (y <= rect.height * 0.5) ? 'up' : 'down'
 
-        emits('requested_move_related_kyou_query', srcId, targetId, dropType)
+        emits('requested_move_related_kyou_query', src_id, target_id, drop_type)
 
         e.preventDefault()
         e.stopPropagation()

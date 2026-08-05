@@ -7,7 +7,7 @@ import router from '@/router'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useTheme } from 'vuetify'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 
 export function useLoginView(options: {
     props: LoginViewProps,
@@ -29,21 +29,21 @@ export function useLoginView(options: {
     // ── Business logic ──
     async function compute_password_sha256(): Promise<string> {
         const encoder = new TextEncoder();
-        const msgUint8 = encoder.encode(password.value);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const msg_uint8 = encoder.encode(password.value);
+        const hash_buffer = await crypto.subtle.digest('SHA-256', msg_uint8);
 
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
+        const hash_array = Array.from(new Uint8Array(hash_buffer));
+        const hash_hex = hash_array
             .map((b) => b.toString(16).padStart(2, '0'))
             .join('');
-        return hashHex;
+        return hash_hex;
     }
 
     async function check_logined(): Promise<void> {
         const session_id = props.gkill_api.get_session_id()
         const default_page = props.gkill_api.get_default_page_from_cookie()
         if (session_id && session_id !== "" && default_page && default_page !== "") {
-            await resetDialogHistory()
+            await reset_dialog_history()
             router.replace("/" + default_page)
         }
     }

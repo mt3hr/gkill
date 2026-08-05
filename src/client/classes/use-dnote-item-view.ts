@@ -93,23 +93,23 @@ export function useDnoteItemView(options: {
     function drop(e: DragEvent): void {
         if (!props.editable) return
 
-        const srcId = e.dataTransfer?.getData("gkill_dnote_item_id")
-        const srcListIndexStr = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
-        const targetId = model_value.value?.id ?? ""
-        if (!srcId || srcListIndexStr === undefined || srcListIndexStr === null || srcListIndexStr === "") return
-        if (!targetId) return
+        const src_id = e.dataTransfer?.getData("gkill_dnote_item_id")
+        const src_list_index_str = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
+        const target_id = model_value.value?.id ?? ""
+        if (!src_id || src_list_index_str === undefined || src_list_index_str === null || src_list_index_str === "") return
+        if (!target_id) return
 
-        const srcListIndex = Number(srcListIndexStr)
-        const targetListIndex = props.dnd_list_index
-        if (srcId === targetId && srcListIndex === targetListIndex) return
+        const src_list_index = Number(src_list_index_str)
+        const target_list_index = props.dnd_list_index
+        if (src_id === target_id && src_list_index === target_list_index) return
 
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
         const rect = el.getBoundingClientRect()
         const y = e.clientY - rect.top
-        const dropType: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
+        const drop_type: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
 
-        emits("requested_move_dnote_item", srcId, srcListIndex, targetId, targetListIndex, dropType)
+        emits("requested_move_dnote_item", src_id, src_list_index, target_id, target_list_index, drop_type)
         e.preventDefault()
         e.stopPropagation()
     }

@@ -23,8 +23,8 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
     if (id) {
         for (let i = 0; i < data_types.length; i++) {
             const data_type = data_types[i]
-            const cacheKey = `/cache/api/${data_type}/${id}`
-            wait_promises.push(cache.delete(new Request(cacheKey)))
+            const cache_key = `/cache/api/${data_type}/${id}`
+            wait_promises.push(cache.delete(new Request(cache_key)))
         }
     } else {
         caches.delete('gkill-post-kyou-cache')
@@ -45,8 +45,8 @@ export async function delete_gkill_config_cache(target_data_types: Array<string>
     const wait_promises = new Array<Promise<boolean>>()
     for (let i = 0; i < data_types.length; i++) {
         const data_type = data_types[i]
-        const cacheKey = `/cache/api/${data_type}`
-        wait_promises.push(cache.delete(new Request(cacheKey)))
+        const cache_key = `/cache/api/${data_type}`
+        wait_promises.push(cache.delete(new Request(cache_key)))
     }
     await Promise.all(wait_promises)
 }

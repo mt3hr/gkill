@@ -27,7 +27,7 @@
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-1 ma-0">
-              <v-btn color="primary" @click="openDnoteQueryEditor">
+              <v-btn color="primary" @click="open_dnote_query_editor">
                 {{ i18n.global.t('DASHBOARD_DNOTE_FIND_KYOU_QUERY_TITLE') }}
               </v-btn>
             </v-col>
@@ -38,7 +38,7 @@
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-1 ma-0">
-              <v-btn color="primary" @click="openMiQueryEditor">
+              <v-btn color="primary" @click="open_mi_query_editor">
                 {{ i18n.global.t('DASHBOARD_DEFAULT_FIND_KYOU_QUERY_TITLE') }}
               </v-btn>
             </v-col>
@@ -55,13 +55,13 @@
         </v-card>
         <FindQueryEditorDialog v-model="current_dnote_query" :application_config="props.application_config"
           :gkill_api="props.gkill_api"
-          @requested_apply="(query) => { current_dnote_query = query; emitCurrentConfig() }"
+          @requested_apply="(query) => { current_dnote_query = query; emit_current_config() }"
           @received_errors="(errors) => emits('received_errors', errors)"
           @received_messages="(messages) => emits('received_messages', messages)"
           ref="dnote_query_editor_dialog" />
         <MiFindQueryEditorDialog v-model="current_mi_query" :application_config="props.application_config"
           :gkill_api="props.gkill_api"
-          @requested_apply="(query) => { current_mi_query = query; emitCurrentConfig() }"
+          @requested_apply="(query) => { current_mi_query = query; emit_current_config() }"
           @received_errors="(errors) => emits('received_errors', errors)"
           @received_messages="(messages) => emits('received_messages', messages)"
           ref="mi_query_editor_dialog" />
@@ -89,15 +89,15 @@ const emits = defineEmits<EditDashboardDialogEmits>()
 
 const { is_show_dialog, ui, current_dnote_query, current_mi_query, show, hide } = useEditDashboardDialog({ props, emits })
 
-function openDnoteQueryEditor(): void {
+function open_dnote_query_editor(): void {
     dnote_query_editor_dialog.value?.show(current_dnote_query.value)
 }
 
-function openMiQueryEditor(): void {
+function open_mi_query_editor(): void {
     mi_query_editor_dialog.value?.show(current_mi_query.value)
 }
 
-function emitCurrentConfig(): void {
+function emit_current_config(): void {
     const config = new DashboardConfig()
     config.dashboard_dnote_find_kyou_query = current_dnote_query.value
     config.dashboard_mi_find_kyou_query = current_mi_query.value
@@ -105,7 +105,7 @@ function emitCurrentConfig(): void {
 }
 
 function onSave(): void {
-    emitCurrentConfig()
+    emit_current_config()
     hide()
 }
 

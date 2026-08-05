@@ -44,7 +44,7 @@ import type { SelectMoveTargetFolderDialogEmits } from './select-move-target-fol
 import type { SelectMoveTargetFolderDialogProps } from './select-move-target-folder-dialog-props'
 import type { FoldableStructModel } from '../views/foldable-struct-model'
 import { list_move_target_folders, type MoveTargetFolderCandidate } from '@/classes/foldable-struct-move'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 import { i18n } from '@/i18n'
 
@@ -68,7 +68,7 @@ async function show(root_struct_obj: FoldableStructModel, struct_id: string): Pr
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
 }
 function select_folder(target_folder_id: string | null): void {
   emits('requested_move_struct_obj_to_folder', moving_struct_id.value, target_folder_id)

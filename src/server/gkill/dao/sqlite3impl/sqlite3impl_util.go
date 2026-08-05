@@ -539,9 +539,11 @@ func EnsureUnixepochIndex(ctx context.Context, db *sql.DB, tableName string, tim
 func EnsureUnixColumnIndex(ctx context.Context, db *sql.DB, tableName string, columnNames ...string) error {
 	for _, columnName := range columnNames {
 		indexName := "INDEX_" + tableName + "_" + columnName + "_ONLY"
+		// 列名も識別子としてエスケープする。現在の呼び出し元はすべてリテラルを渡すが、
+		// 素通しのままだと将来変数を渡されたときに気づけない。
 		indexSQL := fmt.Sprintf(
 			"CREATE INDEX IF NOT EXISTS %s ON %s (%s DESC);",
-			QuoteIdent(indexName), QuoteIdent(tableName), columnName,
+			QuoteIdent(indexName), QuoteIdent(tableName), QuoteIdent(columnName),
 		)
 		slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", fmt.Sprintf("%q", indexSQL))
 		if _, err := db.ExecContext(ctx, indexSQL); err != nil {

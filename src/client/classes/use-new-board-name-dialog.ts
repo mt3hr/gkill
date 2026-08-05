@@ -3,7 +3,7 @@
 import { ref, type Ref } from 'vue'
 import type { NewBoardNameDialogProps } from '@/pages/dialogs/new-board-name-dialog-props'
 import type { NewBoardNameDialogEmits } from '@/pages/dialogs/new-board-name-dialog-emits'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useNewBoardNameDialog(options: {
@@ -25,7 +25,7 @@ export function useNewBoardNameDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        closeDialogViaHistory(is_show_dialog)
+        close_dialog_via_history(is_show_dialog)
     }
     function emits_board_name(): void {
         emits('setted_new_board_name', board_name.value)

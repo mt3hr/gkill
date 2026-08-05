@@ -1,4 +1,4 @@
-export function saveAs(data: Blob | File | string, filename: string): void {
+export function save_as(data: Blob | File | string, filename: string): void {
     // 1) 引数を Blob に整形
     const blob =
         data instanceof Blob

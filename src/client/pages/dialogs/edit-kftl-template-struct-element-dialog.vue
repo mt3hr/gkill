@@ -41,7 +41,7 @@ import EditKFTLTemplateStructElementView from '../views/edit-kftl-template-struc
 import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
@@ -66,7 +66,7 @@ async function show(kftl_template_struct_obj: KFTLTemplateStructElementData): Pr
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
 }
 </script>
 

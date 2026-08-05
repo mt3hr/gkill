@@ -73,8 +73,8 @@ const view_height = computed(() => {
 })
 
 let body_ro: ResizeObserver | null = null
-watch(dialog_body_ref, (el, oldEl) => {
-  if (body_ro && oldEl) { try { body_ro.unobserve(oldEl) } catch { /* noop */ } }
+watch(dialog_body_ref, (el, old_el) => {
+  if (body_ro && old_el) { try { body_ro.unobserve(old_el) } catch { /* noop */ } }
   if (el) {
     if (!body_ro) {
       body_ro = new ResizeObserver((entries) => {
@@ -89,7 +89,7 @@ watch(dialog_body_ref, (el, oldEl) => {
 }, { flush: 'post' })
 onBeforeUnmount(() => { body_ro?.disconnect(); body_ro = null })
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -109,6 +109,6 @@ async function show(): Promise<void> {
   nextTick(() => kftl_view.value?.focus_kftl_text_area())
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
 }
 </script>

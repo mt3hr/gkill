@@ -26,16 +26,16 @@ export function useURLogView(options: {
     // サムネイルは1件あたり平均406KB・最大10MBあるため無視できない。
     const favicon_src = computed(() => {
         const image = props.kyou.typed_urlog?.favicon_image
-        return image ? base64ToDataURI(image) : noimage
+        return image ? base64_to_data_uri(image) : noimage
     })
 
     const thumbnail_src = computed(() => {
         const image = props.kyou.typed_urlog?.thumbnail_image
-        return image ? base64ToDataURI(image) : noimage
+        return image ? base64_to_data_uri(image) : noimage
     })
 
     // ── Business logic ──
-    function base64ToDataURI(base64: string): string {
+    function base64_to_data_uri(base64: string): string {
         if (base64.startsWith('/9j/')) return 'data:image/jpeg;base64,' + base64
         if (base64.startsWith('iVBOR')) return 'data:image/png;base64,' + base64
         if (base64.startsWith('R0lG')) return 'data:image/gif;base64,' + base64

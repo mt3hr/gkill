@@ -3,7 +3,7 @@
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_SIDEBAR')">
                 <template v-slot:activator="{ props }">
-                    <v-app-bar-nav-icon v-bind="props" v-if="!is_shared_rykv_view" @click.stop="toggleDrawer"
+                    <v-app-bar-nav-icon v-bind="props" v-if="!is_shared_rykv_view" @click.stop="toggle_drawer"
                         :disabled="!inited" />
                 </template>
             </v-tooltip>
@@ -18,7 +18,7 @@
                     <v-menu v-if="!is_shared_rykv_view" activator="parent">
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in page_list">
-                                <v-list-item-title @click="navigateToPage(page.page_name)">
+                                <v-list-item-title @click="navigate_to_page(page.page_name)">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -36,7 +36,7 @@
             <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_DNOTE')">
                 <template v-slot:activator="{ props }">
                     <v-btn v-bind="props" v-if="!is_shared_rykv_view" icon
-                        @click="toggleDnote">
+                        @click="toggle_dnote">
                         <v-icon>mdi-file-chart-outline</v-icon>
                     </v-btn>
                 </template>
@@ -139,14 +139,14 @@
                                     class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
                                     :show_attached_tags="true" :show_attached_texts="true"
                                     :show_attached_notifications="true"
-                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }" />
                             </div>
                             <div class="ryuu_view dummy">
                                 <RyuuView v-if="focused_kyou && default_query" :application_config="application_config"
                                     :gkill_api="gkill_api" :target_kyou="focused_kyou" :editable="false"
                                     :find_kyou_query_default="default_query"
                                     :matched_kyous="match_kyous_list[focused_column_index] ?? null"
-                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }" />
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykv_dialog_handler }" />
                             </div>
                         </td>
                         <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
@@ -155,7 +155,7 @@
                                 :app_content_width="app_content_width" :application_config="application_config"
                                 :gkill_api="gkill_api" :query="focused_query" :checked_kyous="focused_column_checked_kyous"
                                 :editable="false" :fill_height="true"
-                                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }"
+                                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykv_dialog_handler }"
                                 ref="dnote_view" />
                         </td>
                         <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
@@ -218,7 +218,7 @@
                 ref="mkfl_dialog" />
             <UploadFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
-                v-on="{ ...crudRelayHandlers, ...rykvDialogHandler }"
+                v-on="{ ...crudRelayHandlers, ...rykv_dialog_handler }"
                 ref="upload_file_dialog" />
             <SaveClipboardToFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
@@ -227,8 +227,8 @@
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @closed="(id: string) => close_rykv_dialog(id)"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykvDialogHandler }" />
-            <v-avatar v-if="!is_shared_rykv_view" :style="floatingActionButtonStyle()" color="primary"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykv_dialog_handler }" />
+            <v-avatar v-if="!is_shared_rykv_view" :style="floating_action_button_style()" color="primary"
                 class="position-fixed">
                 <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
@@ -357,9 +357,9 @@ const {
     page_list,
 
     // Template event handlers
-    toggleDrawer,
-    navigateToPage,
-    toggleDnote,
+    toggle_drawer,
+    navigate_to_page,
+    toggle_dnote,
     onSidebarRequestedSearch,
     onSidebarUpdatedQuery,
     onSidebarInited,
@@ -389,13 +389,13 @@ const {
     show_lantana_dialog,
     show_upload_file_dialog,
     show_save_clipboard_to_file_dialog,
-    floatingActionButtonStyle,
+    floating_action_button_style,
 
     // Event relay objects
     crudRelayHandlers,
     allColumnsRequestHandlers,
     subViewFocusHandlers,
-    rykvDialogHandler,
+    rykv_dialog_handler,
 } = useRykvView({ props, emits })
 
 import { computed } from 'vue'

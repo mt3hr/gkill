@@ -13,26 +13,26 @@ type LongPressElement = HTMLElement & {
     __gkillLongPressCleanup__?: () => void
 }
 
-export const vLongPress: Directive = {
+export const v_long_press: Directive = {
     mounted(el, binding) {
         const target = el as LongPressElement
         const value = binding.value as LongPressBindingValue
-        const isObjectValue = typeof value === 'object' && value !== null
-        const handler = typeof value === 'function' ? value : isObjectValue ? value.handler : undefined
-        const pressMs = isObjectValue && typeof value.pressMs === 'number' ? value.pressMs : 600
-        const suppressClick = isObjectValue && typeof value.suppressClick === 'boolean' ? value.suppressClick : true
+        const is_object_value = typeof value === 'object' && value !== null
+        const handler = typeof value === 'function' ? value : is_object_value ? value.handler : undefined
+        const press_ms = is_object_value && typeof value.pressMs === 'number' ? value.pressMs : 600
+        const suppress_click = is_object_value && typeof value.suppressClick === 'boolean' ? value.suppressClick : true
 
         let timer: number | undefined
-        let longPressTriggered = false
+        let long_press_triggered = false
 
         const down = (e: PointerEvent) => {
             if (e.button !== 0 || timer) return
-            longPressTriggered = false
+            long_press_triggered = false
             timer = window.setTimeout(() => {
                 handler?.(e) // 長押し確定時にユーザー関数を呼ぶ
-                longPressTriggered = true
+                long_press_triggered = true
                 timer = undefined
-            }, pressMs)
+            }, press_ms)
         }
 
         const up = () => {
@@ -43,10 +43,10 @@ export const vLongPress: Directive = {
         }
 
         const click = (e: Event) => {
-            if (!suppressClick || !longPressTriggered) return
+            if (!suppress_click || !long_press_triggered) return
             e.preventDefault()
             e.stopImmediatePropagation()
-            longPressTriggered = false
+            long_press_triggered = false
         }
 
         target.addEventListener('pointerdown', down)
@@ -60,7 +60,7 @@ export const vLongPress: Directive = {
                 clearTimeout(timer)
                 timer = undefined
             }
-            longPressTriggered = false
+            long_press_triggered = false
             target.removeEventListener('pointerdown', down)
             target.removeEventListener('pointerup', up)
             target.removeEventListener('pointerleave', up)

@@ -2,7 +2,7 @@ import { onMounted, onUnmounted, ref, type Ref } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillAPI } from '@/classes/api/gkill-api'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { SharedRYKVPageProps } from '@/pages/shared-rykv-page-props'
 
 export function useSharedRykvPage(options: {
@@ -99,7 +99,7 @@ export function useSharedRykvPage(options: {
     }
     window.addEventListener('resize', onResize)
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)

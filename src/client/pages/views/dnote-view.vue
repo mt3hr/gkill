@@ -76,22 +76,22 @@
                 <div class="dnote-scroll-wrap">
                     <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api"
                         :editable="editable" v-model="dnote_definitions[i].items"
-                        v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
-                        @finish_a_aggregate_task="incrementFinishedAggregateTask"
+                        v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandlers }"
+                        @finish_a_aggregate_task="increment_finished_aggregate_task"
                         :ref="(el) => set_item_table_ref(i, el)" />
                     <DnoteTrendGraphTableView :application_config="application_config" :gkill_api="gkill_api"
                         :editable="editable" v-if="dnote_definitions[i].trends" v-model="dnote_definitions[i].trends"
-                        v-on="errorsMessagesRelayHandlers" @finish_a_aggregate_task="incrementFinishedAggregateTask"
+                        v-on="errorsMessagesRelayHandlers" @finish_a_aggregate_task="increment_finished_aggregate_task"
                         :ref="(el) => set_trend_table_ref(i, el)" />
                     <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api"
                         :editable="editable" v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
-                        v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandler }"
-                        @finish_a_aggregate_task="incrementFinishedAggregateTask"
+                        v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandlers }"
+                        @finish_a_aggregate_task="increment_finished_aggregate_task"
                         :ref="(el) => set_list_table_ref(i, el)" />
                 </div>
             </v-window-item>
         </v-window>
-        <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-dnote">
+        <v-avatar v-if="editable" :style="floating_action_button_style()" color="primary" class="position-fixed-dnote">
             <v-menu transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
                     <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
@@ -189,18 +189,18 @@ const {
     // Template event handlers
     add_definition,
     delete_current_definition,
-    floatingActionButtonStyle,
+    floating_action_button_style,
     apply,
     download_kyous_json,
     onRequestedAddDnoteListQuery,
     onRequestedAddDnoteItem,
     onRequestedAddDnoteTrendGraph,
-    incrementFinishedAggregateTask,
+    increment_finished_aggregate_task,
 
     // Event relay objects
     crudRelayHandlers,
     focusClickRelayHandlers,
-    rykvDialogHandler,
+    rykvDialogHandlers,
     errorsMessagesRelayHandlers,
 } = useDnoteView({ props, emits })
 

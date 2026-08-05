@@ -36,7 +36,7 @@ import type { EditRepStructElementDialogProps } from './edit-rep-struct-element-
 import EditRepStructElementView from '../views/edit-rep-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
@@ -59,7 +59,7 @@ async function show(rep_struct_obj: RepStructElementData): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
 }
 </script>
 

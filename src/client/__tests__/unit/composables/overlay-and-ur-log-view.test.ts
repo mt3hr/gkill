@@ -25,8 +25,8 @@ describe('useSaihateStarsOverlay', () => {
     it('アンマウント後は流星ループのタイマーが残らない', async () => {
         const Host = defineComponent({
             setup() {
-                const { starField } = useSaihateStarsOverlay()
-                return () => h('div', { ref: starField })
+                const { star_field } = useSaihateStarsOverlay()
+                return () => h('div', { ref: star_field })
             },
         })
 

@@ -1,13 +1,13 @@
 <template>
     <div class="snow-container">
-        <div ref="snowField" class="snow-field"></div>
+        <div ref="snow_field" class="snow-field"></div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { useSnowFallOverlay } from '@/classes/use-snow-fall-overlay'
 
-const { snowField } = useSnowFallOverlay()
+const { snow_field } = useSnowFallOverlay()
 </script>
 
 <style>

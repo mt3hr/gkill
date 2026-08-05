@@ -252,13 +252,13 @@ export function useUploadFileView(options: {
         }
     }
 
-    function removeUploadedKyou(deletedKyou: Kyou): void {
+    function remove_uploaded_kyou(deleted_kyou: Kyou): void {
         for (let i = uploaded_kyous.value.length - 1; i >= 0; i--) {
-            if (uploaded_kyous.value[i].id === deletedKyou.id) {
+            if (uploaded_kyous.value[i].id === deleted_kyou.id) {
                 uploaded_kyous.value.splice(i, 1)
             }
         }
-        emits('deleted_kyou', deletedKyou)
+        emits('deleted_kyou', deleted_kyou)
     }
 
     // ── CRUD relay handlers ──
@@ -266,7 +266,7 @@ export function useUploadFileView(options: {
         'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
         'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
         'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
-        'deleted_kyou': (kyou: Kyou) => removeUploadedKyou(kyou),
+        'deleted_kyou': (kyou: Kyou) => remove_uploaded_kyou(kyou),
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
@@ -290,7 +290,7 @@ export function useUploadFileView(options: {
         // Business logic / template handlers
         load_target_rep_names,
         reload_kyou,
-        removeUploadedKyou,
+        remove_uploaded_kyou,
 
         // Drag state
         is_dragging_over_file,

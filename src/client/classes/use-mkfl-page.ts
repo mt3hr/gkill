@@ -13,7 +13,7 @@ import { useRoute } from 'vue-router'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function useMkflPage() {
@@ -50,7 +50,7 @@ export function useMkflPage() {
     ])
 
     // ── beforeunload guard ──
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
+    function handle_before_unload(e: BeforeUnloadEvent) {
         if (is_show_application_config_dialog.value) {
             e.preventDefault()
         }
@@ -58,17 +58,17 @@ export function useMkflPage() {
 
     // ── Lifecycle ──
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
 
     const onResize = () => {
         resize_content()
     }
     window.addEventListener('resize', onResize)
-    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('beforeunload', handle_before_unload)
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)
-        window.removeEventListener('beforeunload', handleBeforeUnload)
+        window.removeEventListener('beforeunload', handle_before_unload)
     })
 
     // ── Watchers ──
@@ -183,16 +183,16 @@ export function useMkflPage() {
         application_config_dialog.value?.show()
     }
 
-    function tagStructHas(tag_struct: TagStructElementData, tagName: string): boolean {
-        if (tag_struct.tag_name === tagName) return true
+    function tag_struct_has(tag_struct: TagStructElementData, tag_name: string): boolean {
+        if (tag_struct.tag_name === tag_name) return true
         for (const c of (tag_struct.children ?? [])) {
-            if (tagStructHas(c, tagName)) return true
+            if (tag_struct_has(c, tag_name)) return true
         }
         return false
     }
 
     // 連打/連続登録で二重に通信しないため
-    let tagStructRefreshPromise: Promise<void> | null = null
+    let tag_struct_refresh_promise: Promise<void> | null = null
 
     async function check_tag_update(tag: Tag) {
         const name = tag.tag
@@ -202,15 +202,15 @@ export function useMkflPage() {
         req.force_reget = true
         await gkill_api.value.get_all_tag_names(req)
 
-        if (tagStructHas(application_config.value.tag_struct, name)) return
+        if (tag_struct_has(application_config.value.tag_struct, name)) return
 
         // すでに更新中ならそれに乗る
-        if (tagStructRefreshPromise) {
-            await tagStructRefreshPromise
+        if (tag_struct_refresh_promise) {
+            await tag_struct_refresh_promise
             return
         }
 
-        tagStructRefreshPromise = (async () => {
+        tag_struct_refresh_promise = (async () => {
             const errors = await application_config.value.append_not_found_tags()
             if (errors && errors.length) {
                 write_errors(errors)
@@ -223,15 +223,15 @@ export function useMkflPage() {
         })()
 
         try {
-            await tagStructRefreshPromise
+            await tag_struct_refresh_promise
         } finally {
-            tagStructRefreshPromise = null
+            tag_struct_refresh_promise = null
         }
     }
 
     // ── Template event handlers (extracted from inline) ──
-    async function navigateToPage(page_name: string): Promise<void> {
-        await resetDialogHistory()
+    async function navigate_to_page(page_name: string): Promise<void> {
+        await reset_dialog_history()
         router.replace('/' + page_name + '?loaded=true')
     }
 
@@ -304,22 +304,22 @@ export function useMkflPage() {
     }
 
     // プッシュ通知登録用
-    async function subscribe(vapidPublicKey: string) {
-        if (!vapidPublicKey || vapidPublicKey === "") {
+    async function subscribe(vapid_public_key: string) {
+        if (!vapid_public_key || vapid_public_key === "") {
             return
         }
         await navigator.serviceWorker.ready
             .then(function (registration) {
                 return registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                    applicationServerKey: url_base64_to_uint8_array(vapid_public_key),
                 });
             })
             .then(async function (subscription) {
                 const req = new RegisterGkillNotificationRequest()
 
                 req.subscription = subscription
-                req.public_key = vapidPublicKey
+                req.public_key = vapid_public_key
                 const res = await GkillAPI.get_gkill_api().register_gkill_notification(req)
                 if (res.errors && res.errors.length !== 0) {
                     write_errors(res.errors)
@@ -333,12 +333,12 @@ export function useMkflPage() {
     }
 
     // プッシュ通知登録用
-    function urlBase64ToUint8Array(base64String: string) {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    function url_base64_to_uint8_array(base64_string: string) {
+        const padding = '='.repeat((4 - (base64_string.length % 4)) % 4);
         /* eslint no-useless-escape: 0 */
-        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+        const base64 = (base64_string + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const raw_data = window.atob(base64);
+        return Uint8Array.from([...raw_data].map(char => char.charCodeAt(0)));
     }
 
     // プッシュ通知登録用
@@ -396,7 +396,7 @@ export function useMkflPage() {
         show_application_config_dialog,
 
         // Template event handlers
-        navigateToPage,
+        navigate_to_page,
         onMkflViewReceivedErrors,
         onMkflViewReceivedMessages,
         onMkflViewDeletedKyou,
