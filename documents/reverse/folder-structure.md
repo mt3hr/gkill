@@ -86,6 +86,7 @@ src/client/
 ├── classes/
 │   ├── api/
 │   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,330行、全API呼び出しを集約）
+│   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
 │   │   └── req_res/        # リクエスト/レスポンス型（168ファイル）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）

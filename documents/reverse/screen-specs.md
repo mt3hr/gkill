@@ -30,7 +30,7 @@
 | `/dashboard` | dashboard-page | ダッシュボード | 日次サマリー画面（Dnote・GPS・MI一覧を1画面に集約） |
 | `/saihate` | saihate-page | さいはて | 記録特化画面（FABから各種記録を素早く追加、他画面への遷移なし） |
 | `/set_new_password` | set-new-password-page | パスワード変更 | パスワードリセット |
-| `/regist_first_account` | register-first-account-page | 初回登録 | 初回アカウント作成 |
+| `/register_first_account` | register-first-account-page | 初回登録 | 初回アカウント作成（旧 `/regist_first_account` はリダイレクト） |
 | `/shared_page` | shared-page | 共有ページ | 共有コンテンツの表示 |
 | `/shared_mi` | old-shared-mi-page | 共有タスク | 旧形式の共有タスク（shared_pageへリダイレクト） |
 
