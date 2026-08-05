@@ -50,7 +50,7 @@ export function useAddDnoteItemView(options: {
         new_dnote_item.prefix = prefix.value
         new_dnote_item.suffix = suffix.value
         new_dnote_item.title = title.value
-        new_dnote_item.agregate_target = build_dnote_aggregate_target_from_json({ type: aggregate_target.value })
+        new_dnote_item.aggregate_target = build_dnote_aggregate_target_from_json({ type: aggregate_target.value })
         new_dnote_item.predicate = build_dnote_predicate_from_json(predicate_struct_to_json(root_predicate.value))
 
         emits('requested_add_dnote_item', new_dnote_item)

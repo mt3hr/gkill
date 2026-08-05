@@ -182,7 +182,7 @@ export function useDnoteView(options: {
                 item.prefix = itemJson.prefix
                 item.suffix = itemJson.suffix
                 item.title = itemJson.title
-                item.agregate_target = build_dnote_aggregate_target_from_json(itemJson.aggregate_target)
+                item.aggregate_target = build_dnote_aggregate_target_from_json(itemJson.aggregate_target)
                 item.predicate = build_dnote_predicate_from_json(itemJson.predicate)
                 return item
             })
@@ -228,7 +228,7 @@ export function useDnoteView(options: {
                     prefix: dnote_item.prefix,
                     suffix: dnote_item.suffix,
                     title: dnote_item.title,
-                    aggregate_target: dnote_item.agregate_target.to_json(),
+                    aggregate_target: dnote_item.aggregate_target.to_json(),
                     predicate: dnote_item.predicate.predicate_struct_to_json(),
                 }
                 list.push(record)

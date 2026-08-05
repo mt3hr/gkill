@@ -51,7 +51,7 @@ export function useDnoteTrendGraphView(options: {
     // 件数・合計系は0起点、平均系はオートスケール
     const is_zero_based = computed(() => {
         const type = model_value.value?.aggregate_target.to_json().type
-        return typeof type === 'string' && (type.startsWith('AgregateCount') || type.startsWith('AgregateSum'))
+        return typeof type === 'string' && (type.startsWith('AggregateCount') || type.startsWith('AggregateSum'))
     })
 
     // 0起点でも、出費のように値が負になりうる系列では0を下限にすると
