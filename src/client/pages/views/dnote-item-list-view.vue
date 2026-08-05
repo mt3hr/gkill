@@ -1,5 +1,5 @@
 <template>
-    <div class="dnote_item_list_root" @dragover="on_list_dragover" @drop="on_list_drop">
+    <div class="dnote_item_list_root" @dragover="onListDragover" @drop="onListDrop">
         <DnoteItemView v-for="(dnote_item, index) in model_value" :key="dnote_item.id" v-model="model_value[index]"
             :editable="editable" :dnd_list_index="dnd_list_index" :application_config="application_config"
             :gkill_api="gkill_api"
@@ -53,8 +53,8 @@ const {
     delete_dnote_item,
     update_dnote_item,
     reset,
-    on_list_dragover,
-    on_list_drop,
+    onListDragover,
+    onListDrop,
 } = useDnoteItemListView({ props, emits, model_value })
 
 defineExpose({ load_aggregated_value, reset })

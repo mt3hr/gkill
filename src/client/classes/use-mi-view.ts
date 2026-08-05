@@ -615,7 +615,7 @@ export function useMiView(options: {
         }
     }
 
-    async function on_drop_board_task(e: DragEvent, find_kyou_query: FindKyouQuery) {
+    async function onDropBoardTask(e: DragEvent, find_kyou_query: FindKyouQuery) {
         // MiとMiReKyouのどちらがドロップされたか判定する
         const mi_json = e.dataTransfer!.getData("gkill_mi")
         const mirekyou_json = e.dataTransfer!.getData("gkill_mi_re_kyou")
@@ -695,7 +695,7 @@ export function useMiView(options: {
         }
     }
 
-    function on_dragover_board_task(e: DragEvent, _find_kyou_query: FindKyouQuery) {
+    function onDragoverBoardTask(e: DragEvent, _find_kyou_query: FindKyouQuery) {
         e!.dataTransfer!.dropEffect = "move"
         e!.preventDefault()
         e!.stopPropagation()
@@ -968,8 +968,8 @@ export function useMiView(options: {
         onColumnRequestedSearch,
         onColumnRequestedChangeImageOnlyView,
         onRequestedFocusTime,
-        on_drop_board_task,
-        on_dragover_board_task,
+        onDropBoardTask,
+        onDragoverBoardTask,
         close_list_view,
         open_or_focus_board,
         open_rykv_dialog,

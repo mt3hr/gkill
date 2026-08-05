@@ -90,7 +90,7 @@ export function useMiKyouCountCalendar(options: {
         })
     }
 
-    function on_wheel(e: WheelEvent) {
+    function onWheel(e: WheelEvent) {
         if (0 < e.deltaY) {
             date.value = add_months(date.value, 1)
         } else {
@@ -161,6 +161,6 @@ export function useMiKyouCountCalendar(options: {
 
         // Business logic
         add_months,
-        on_wheel,
+        onWheel,
     }
 }

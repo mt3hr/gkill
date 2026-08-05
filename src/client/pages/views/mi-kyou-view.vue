@@ -1,6 +1,6 @@
 <template>
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height" :draggable="effective_draggable"
-        @dragstart="(e: DragEvent) => on_drag_start(e)">
+        @dragstart="(e: DragEvent) => onDragStart(e)">
         <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0" :style="mi_title_style">
                 <table class="pa-0 ma-0">
@@ -63,7 +63,7 @@ const {
     effective_draggable,
     show_context_menu,
     clicked_mi_check,
-    on_drag_start,
+    onDragStart,
     crudRelayHandlers,
 } = useMiKyouView({ props, emits })
 

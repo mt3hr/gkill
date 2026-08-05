@@ -11,7 +11,7 @@
                 </div>
                 <!-- プラグインの設定フォームHTMLをiframeで表示。
                      allow-same-originを付けないことでセッションcookieを隔離。
-                     保存はフォーム送信ではなくpostMessageで親に依頼する（下の on_window_message）。 -->
+                     保存はフォーム送信ではなくpostMessageで親に依頼する（下の onWindowMessage）。 -->
                 <iframe
                     v-else-if="html"
                     ref="iframe_ref"
@@ -91,7 +91,7 @@ function send_theme_to_iframe(): void {
 // 自力で gkill の API を叩けない。保存だけは親（ここ）が肩代わりする。
 //   iframe → 親 : { gkill_plugin_config: { <key>: <value>, ... } }
 //   親 → iframe : { gkill_plugin_config_result: { ok: boolean, error?: string } }
-async function on_window_message(e: MessageEvent): Promise<void> {
+async function onWindowMessage(e: MessageEvent): Promise<void> {
     if (!iframe_ref.value || e.source !== iframe_ref.value.contentWindow) return
     const form = e.data?.gkill_plugin_config
     if (!form || typeof form !== 'object') return
@@ -123,10 +123,10 @@ async function on_window_message(e: MessageEvent): Promise<void> {
 }
 
 onMounted(() => {
-    window.addEventListener('message', on_window_message)
+    window.addEventListener('message', onWindowMessage)
 })
 onUnmounted(() => {
-    window.removeEventListener('message', on_window_message)
+    window.removeEventListener('message', onWindowMessage)
 })
 </script>
 

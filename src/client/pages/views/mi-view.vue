@@ -77,8 +77,8 @@
                         <td valign="top" v-for="query, index in querys" :key="query.query_id"
                             :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                             <v-card dropzone="true" @dragenter.prevent.stop="() => { }"
-                                @drop.prevent.stop="(e: DragEvent) => on_drop_board_task(e, query)"
-                                @dragover.prevent.stop="(e: DragEvent) => on_dragover_board_task(e, query)">
+                                @drop.prevent.stop="(e: DragEvent) => onDropBoardTask(e, query)"
+                                @dragover.prevent.stop="(e: DragEvent) => onDragoverBoardTask(e, query)">
                                 <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                                 <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
                                 }}</v-card-title>
@@ -318,8 +318,8 @@ const {
     onColumnRequestedSearch,
     onColumnRequestedChangeImageOnlyView,
     onRequestedFocusTime,
-    on_drop_board_task,
-    on_dragover_board_task,
+    onDropBoardTask,
+    onDragoverBoardTask,
     close_list_view,
     open_or_focus_board,
     open_rykv_dialog,
