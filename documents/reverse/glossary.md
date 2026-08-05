@@ -59,7 +59,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 | **Mi** | タスク | `/mi` | タスク管理画面。ボード形式で Mi を表示し、チェック状態のフィルタ・ソート・共有機能を提供 | — |
 | **Kyou** | 記録 | `/kyou` | 記録一覧表示画面 | — |
 | **Mkfl** | 打刻メモ帳 | `/mkfl` | 打刻（TimeIs）とメモ（Kmemo）を組み合わせた複合入力ビュー | Master Key Fairy Lifelogger。記録導線を「あける」鍵開けの妖精 |
-| **Plaing** | 実行中 | `/plaing` | 稼働中の TimeIs（`EndTime` が null）を一覧表示する画面。状況キーワードやタグで絞り込み可能 | Playing と Plain のミックス造語 |
+| **Plaing** | 実行中 | `/plaing` | 稼働中の TimeIs（`EndTime` が null）を一覧表示する画面。状況キーワードやタグで絞り込み可能。**`plaing` は "playing" の誤綴りではなく製品綴りとして凍結**（下記参照） | Playing と Plain のミックス造語 |
 | **Dashboard** | ダッシュボード | `/dashboard` | 特定日の記録を俯瞰する日次サマリー画面。DnoteView・GPSLogMap・KyouListView（MI一覧）を1画面に集約し、日付ナビゲーションで過去日のデータも確認できる | — |
 | **Saihate** | さいはて | `/saihate` | 記録だけに特化した画面。他画面への遷移ができない。「さいはてでも記録ができる」がコンセプト | 「最果て」。主にスマホのロック画面からアクセスする用途 |
 
@@ -215,6 +215,15 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **PHC文字列** | Argon2id の保存形式。`$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>` のようにアルゴリズム・パラメータ・ソルトを値自身に含む。パラメータが保存値側にあるので、後からコストを変えても既存の値をそのまま照合できる |
 | **パスワードリセットトークン** | パスワードを設定しなおすための単回使用の秘密（UUIDv4）。有効期限は72時間で `ACCOUNT.PASSWORD_RESET_TOKEN_EXPIRATION` に持つ。照合は constant-time。管理者の `/api/reset_password` か CLI の `reset_password` で発行する |
 | **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、10ツール）・**Write専用**（`gkill-write-server.mjs`、25ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、30ツール）。いずれも共通のプラグインツール2つ（`lib/plugin-tools.mjs` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
+
+### 凍結された綴り
+
+以下は一見タイポに見えるが**製品綴りとして凍結**しており、修正しない。
+綴り修正の提案が繰り返されるのを防ぐためここに記録する。
+
+| 綴り | 一般的な綴り | 凍結理由 |
+|---|---|---|
+| `plaing` / `Plaing` | playing | SPAルート `/plaing`・`FindQuery` の JSONキー（`use_plaing` / `plaing_time`）・MCP ツール入力スキーマ・Wear OS のデータレイヤーパス・7言語マニュアルのページ名・`default_page` の保存値と、互換面が5系統に及ぶ。造語としての由来もある（上表参照） |
 
 ## 10. 主要ファイルパス相互参照
 
