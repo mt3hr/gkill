@@ -146,6 +146,12 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 5. `serve.go` の `resetRouter()` 内で `router.HandleFunc()` を登録
 6. 適切なミドルウェアラッパー（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`）を選択
 
+### doc コメントの方針
+
+`HandleXxx` は **90/90 で doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
+書式は「1行説明 / 空行 / パス・HTTPメソッド・認証区分 / req_res 型」。
+ハンドラを追加したら doc コメントも必ず書くこと（書かないと `npm test` が落ちる）。
+
 ### 命名規則
 
 - ハンドラファイル: `handle_xxx.go`（snake_case）

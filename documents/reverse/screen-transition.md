@@ -17,7 +17,7 @@ stateDiagram-v2
     LoginPage --> DashboardPage: ログイン成功 → /dashboard
     LoginPage --> SaihatePage: ログイン成功 → /saihate
     LoginPage --> SetNewPasswordPage: パスワードリセットリンク → /set_new_password
-    LoginPage --> RegisterFirstAccountPage: 初回起動 → /regist_first_account
+    LoginPage --> RegisterFirstAccountPage: 初回起動 → /register_first_account
 
     KFTLPage --> RykvPage: ナビゲーション
     RykvPage --> KFTLPage: ナビゲーション
@@ -63,7 +63,7 @@ stateDiagram-v2
 | `/dashboard` | DashboardPage | 要 | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/saihate` | SaihatePage | 要 | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | SetNewPasswordPage | 不要 | 新パスワード設定 |
-| `/regist_first_account` | RegisterFirstAccountPage | 不要 | 初回アカウント登録 |
+| `/register_first_account` | RegisterFirstAccountPage | 不要 | 初回アカウント登録（旧 `/regist_first_account` はリダイレクト） |
 | `/shared_page` | SharedPage | 不要 | 共有 Kyou / タスク閲覧（`view_type` で内部振り分け） |
 | `/shared_mi` | OldSharedMiPage | 不要 | 旧URL。`/shared_page?share_id=…` へリダイレクトするだけ |
 
