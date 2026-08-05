@@ -114,6 +114,11 @@ func TestGitCommitLogCachedBuildingFallbackDoesNotExhaustPool(t *testing.T) {
 	releases[len(releases)-1]()
 	releases = releases[:len(releases)-1]
 
+	// threads.Goには枯渇時のinlineフォールバックが入っているので、
+	// 「返ってくること」だけでは入れ子の復活を検知できない。
+	// 内側でスロットを取ろうとしていないことをフォールバック回数で確認する。
+	inlineFallbackBefore := threads.InlineFallbackCount()
+
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -151,6 +156,12 @@ func TestGitCommitLogCachedBuildingFallbackDoesNotExhaustPool(t *testing.T) {
 	case <-done:
 	case <-time.After(30 * time.Second):
 		t.Fatal("deadlock: キャッシュビルド中フォールバックがスレッドプール枯渇でハングした")
+	}
+
+	if got := threads.InlineFallbackCount(); got != inlineFallbackBefore {
+		t.Fatalf("inline fallback count changed (%d -> %d): "+
+			"キャッシュ実装が集約の並列メソッドを呼んで内側のスロットを要求している",
+			inlineFallbackBefore, got)
 	}
 }
 
