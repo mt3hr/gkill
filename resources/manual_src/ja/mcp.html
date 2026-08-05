@@ -16,11 +16,11 @@
   <h2>連携の種類</h2>
   <table>
     <tr><th>種類</th><th>できること</th><th>実行するファイル</th><th>ツール数</th><th>HTTP時のポート</th></tr>
-    <tr><td>読み取り専用</td><td>記録の閲覧・検索のみ。追加・変更はできない</td><td>gkill-read-server.mjs</td><td>10</td><td>8808</td></tr>
-    <tr><td>書き込み専用</td><td>記録の追加・更新・削除。あわせて記録保管場所名・タグ名・板名の取得もできる</td><td>gkill-write-server.mjs</td><td>25</td><td>8809</td></tr>
-    <tr><td>読み書き両用</td><td>閲覧・追加・更新・削除のすべて</td><td>gkill-readwrite-server.mjs</td><td>30</td><td>8810</td></tr>
+    <tr><td>読み取り専用</td><td>記録の閲覧・検索のみ。追加・変更はできない</td><td>gkill-read-server.mjs</td><td>9</td><td>8808</td></tr>
+    <tr><td>書き込み専用</td><td>記録の追加・更新・削除。あわせて記録保管場所名・タグ名・板名の取得もできる</td><td>gkill-write-server.mjs</td><td>24</td><td>8809</td></tr>
+    <tr><td>読み書き両用</td><td>閲覧・追加・更新・削除のすべて</td><td>gkill-readwrite-server.mjs</td><td>29</td><td>8810</td></tr>
   </table>
-  <p>どの種類でも、プラグインで取り込んだ記録を読むためのツールが2つ含まれます。</p>
+  <p>どの種類でも、プラグインの一覧を取得するツールが1つ含まれます。プラグインで取り込んだ記録の本文は、検索結果にそのまま含めて受け取れます。</p>
 
   <h2>ファイルの受け渡し</h2>
   <p>ファイル記録（画像・動画・ドキュメント）をAIに見せる方法は、接続形態に応じて自動的に切り替わります。</p>

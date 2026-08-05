@@ -379,13 +379,13 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 |---|---|
 | `/api/get_gps_log` | GPSログ取得（日付範囲指定） |
 
-## MCP連携（1件 + MCPツール10個）
+## MCP連携（1件 + MCPツール9個）
 
 | パス | 説明 |
 |---|---|
 | `/api/get_kyous_mcp` | MCP経由でのKyouデータ取得（IDFペイロードに`rep_name`/`is_image`等含む） |
 
-MCPサーバは10個のReadツールを提供する。内訳は固有の8つ（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_idf_file`, `gkill_get_idf_file_path`）と、3サーバ共通のプラグインツール2つ（`gkill_get_plugin_list`, `gkill_get_plugin_content`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_idf_file_path` は `/api/get_idf_file_path` を経由してファイルの絶対パスを返す（stdio接続のローカルクライアント用）。
+MCPサーバは9個のReadツールを提供する。内訳は固有の8つ（`gkill_get_kyous`, `gkill_get_mi_board_list`, `gkill_get_all_tag_names`, `gkill_get_all_rep_names`, `gkill_get_gps_log`, `gkill_get_application_config`, `gkill_get_idf_file`, `gkill_get_idf_file_path`）と、3サーバ共通のプラグインツール1つ（`gkill_get_plugin_list`。`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` 配列に展開している）。`gkill_get_idf_file` はバックエンドの `/files/{repName}/{filePath}` エンドポイントをプロキシしてIDFファイルの実データを返す。`gkill_get_idf_file_path` は `/api/get_idf_file_path` を経由してファイルの絶対パスを返す（stdio接続のローカルクライアント用）。
 
 ## TLS・セキュリティ（1件）
 
@@ -431,7 +431,7 @@ MCPサーバは10個のReadツールを提供する。内訳は固有の8つ（`
 | レスポンス型 | `GetPluginContentHTMLResponse` |
 | レスポンスフィールド | `html` — iframe srcdoc に直接セット |
 | PWAキャッシュキー | `/cache/api/plugin_content_html/{kyou_id}` |
-| 備考 | キャッシュ識別子に `kyou_id` を使用（他エンドポイントの `id` / `target_id` とは命名が異なる）。MCPの `gkill_get_plugin_content` もこのエンドポイントを叩き、既定でHTMLをプレーンテキストに変換してAIに返す |
+| 備考 | キャッシュ識別子に `kyou_id` を使用（他エンドポイントの `id` / `target_id` とは命名が異なる）。MCPも `gkill_get_kyous` に `include_plugin_content:true` が渡されたときにこのエンドポイントを叩き、既定でHTMLをプレーンテキストに変換して各プラグインペイロードの `content_text` に埋め込む |
 
 ### post_plugin_config 詳細
 

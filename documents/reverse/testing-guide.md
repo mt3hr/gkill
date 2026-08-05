@@ -15,7 +15,7 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | Go バックエンド | 665 | 76 | Go `testing` |
 | フロントエンド ユニット | 839 | 70 | Vitest |
 | フロントエンド E2E | 196 | 34（+auth.setup.ts） | Playwright |
-| MCP サーバ | 668 | 20 | Vitest |
+| MCP サーバ | 703 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 118 | 9 | JUnit 4 + MockK |
 | **合計** | **2,402** | **188** | |
@@ -391,7 +391,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 | `validation.test.mjs` | Read入力パラメータ検証（必須/型/範囲） |
 | `normalization.test.mjs` | 日付・文字列・デフォルト値の正規化 |
 | `constants.test.mjs` | ツール名、エラーコード、デフォルト設定値 |
-| `tool-handlers.test.mjs` | Read 8ツール + プラグイン2ツールのハンドラ実行ロジック |
+| `tool-handlers.test.mjs` | Read 7ツール分のハンドラ実行ロジック（ハンドコピーのツール名一覧・エンドポイント対応表・summarize） |
 | `file-link.test.mjs` | FileLinkStore（HTTPモード用の期限付きファイルリンクトークンの発行・解決・失効、`GET /files/{token}` 配信） |
 | `client.test.mjs` | GkillReadClient（fetch モック、認証、レスポンスパース） |
 | `server.test.mjs` | McpServer ライフサイクル、トランスポート管理、gkill_get_idf_file ツール |
@@ -404,7 +404,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
-| `plugin-tools.test.mjs` | `gkill_get_plugin_list` / `gkill_get_plugin_content` の定義、引数正規化、エンドポイント振り分け、format別レスポンス、summarize |
+| `plugin-tools.test.mjs` | `gkill_get_plugin_list` の定義とエンドポイント振り分け、`inlinePluginContents`（rep内直列・rep間並列、format別レスポンス、truncated、重複取得の集約、rep単位の失敗打ち切り、max_kyous/budget/deadline のskip、統計の整合）、summarize |
 | `html-text.test.mjs` | プラグインコンテンツHTMLのプレーンテキスト変換、HTMLエンティティのデコード |
 
 **Write専用サーバ:**
@@ -413,16 +413,16 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 |-------------|-----------|
 | `write-normalization.test.mjs` | Write入力の正規化（11 normalizer関数、mood範囲、data_type列挙値） |
 | `write-client.test.mjs` | GkillWriteClient（環境変数、login、callWrite、認証リトライ） |
-| `write-server.test.mjs` | McpWriteServer（25ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
-| `write-tool-handlers.test.mjs` | Write 固有23ツール定義（update系9ツール含む。プラグイン2ツールを足して公開は25）・summarize関数 |
+| `write-server.test.mjs` | McpWriteServer（24ツールディスパッチ、プラグインツール振り分け、エンティティデフォルト値、レスポンス構造） |
+| `write-tool-handlers.test.mjs` | Write 固有23ツール定義（update系9ツール含む。プラグイン1ツールを足して公開は24）・summarize関数 |
 
 **Read/Write統合サーバ:**
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `readwrite-client.test.mjs` | GkillClient（callApi統合メソッド、fetchFile、認証リトライ） |
-| `readwrite-server.test.mjs` | McpServer統合（全30ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
-| `readwrite-tool-handlers.test.mjs` | 統合の固有28ツール定義（プラグイン2ツールを足して公開は30）・summarize関数 |
+| `readwrite-server.test.mjs` | McpServer統合（全29ツールディスパッチ、プラグインツール振り分け、IDF画像ブロック） |
+| `readwrite-tool-handlers.test.mjs` | 統合の固有28ツール定義（プラグイン1ツールを足して公開は29）・summarize関数 |
 
 ### 3.5 Android / Wear OS
 
