@@ -6,8 +6,7 @@ export default class NlogAmountLessThanPredicate implements DnotePredicate {
     constructor(nlog_amount: number) {
         this.nlog_amount = nlog_amount
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const nlog_amount = json.value as number
         return new NlogAmountLessThanPredicate(nlog_amount)
     }

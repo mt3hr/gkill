@@ -6,8 +6,7 @@ export default class EqualTitleTargetKyouPredicate implements DnotePredicate {
     constructor(title: string) {
         this.title = title
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const title = json.value as string
         return new EqualTitleTargetKyouPredicate(title)
     }

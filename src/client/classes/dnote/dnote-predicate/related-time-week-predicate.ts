@@ -6,8 +6,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
     constructor(week: number) {
         this.week = week
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const week = json.value as number
         return new RelatedTimeWeekPredicate(week)
     }

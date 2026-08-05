@@ -7,12 +7,11 @@ export default class NotPredicate implements DnotePredicate {
     constructor(predicates: Array<DnotePredicate>) {
         this.predicates = predicates
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         let children = new Array<DnotePredicate>()
         if (json.predicates) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            children = json.predicates.map((j: any) => PredicateDictonary.get(j.type)!.from_json(j));
+            children = (json.predicates as Array<Record<string, unknown>>)
+                .map(j => PredicateDictonary.get(j.type as string)!.from_json(j) as DnotePredicate);
         }
         return new NotPredicate(children);
     }

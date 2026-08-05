@@ -6,8 +6,7 @@ export default class TextContentEqualPredicate implements DnotePredicate {
     constructor(text_content_equal_target: string) {
         this.text_content_equal_target = text_content_equal_target
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static from_json(json: any): DnotePredicate {
+    static from_json(json: Record<string, unknown>): DnotePredicate {
         const text_content_equal_target = json.value as string
         return new TextContentEqualPredicate(text_content_equal_target)
     }
