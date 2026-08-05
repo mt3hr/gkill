@@ -19,7 +19,7 @@
                                 { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
                                 <v-list-item-title
-                                    @click="async () => { await resetDialogHistory(); router.replace('/' + page.page_name + '?loaded=true') }">
+                                    @click="async () => { await reset_dialog_history(); router.replace('/' + page.page_name + '?loaded=true') }">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -85,7 +85,7 @@ import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
 import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import kftlView from './views/kftl-view.vue'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { useKftlPage } from '@/classes/use-kftl-page'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)

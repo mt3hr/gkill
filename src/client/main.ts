@@ -5,13 +5,13 @@ import vuetify from "./plugins/vuetify"
 import '@mdi/font/css/materialdesignicons.css'
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from "./i18n"
-import { vLongPress } from "./classes/long-press"
+import { v_long_press } from "./classes/long-press"
 import { GkillAPI } from "./classes/api/gkill-api"
 
 registerSW()
 
 // abort系エラーの判定。unhandledrejectionでabortを握りつぶすために使う
-export function isAbortError(err: unknown): boolean {
+export function is_abort_error(err: unknown): boolean {
   if (!err) return false
   if (err instanceof Error && err.name === "AbortError") return true
 
@@ -24,7 +24,7 @@ export function isAbortError(err: unknown): boolean {
 }
 
 window.addEventListener("unhandledrejection", (event) => {
-    if (isAbortError(event.reason)) {
+    if (is_abort_error(event.reason)) {
         event.preventDefault()
     }
 })
@@ -34,7 +34,7 @@ window.addEventListener("unhandledrejection", (event) => {
 await GkillAPI.get_gkill_api().apply_locale()
 
 const app = createApp(App)
-app.directive('long-press', vLongPress)
+app.directive('long-press', v_long_press)
 app.use(i18n)
 app.use(router)
 app.use(vuetify)

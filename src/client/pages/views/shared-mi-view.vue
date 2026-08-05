@@ -60,7 +60,7 @@
                                                     :enable_dialog="false" :show_update_time="false" :show_related_time="true"
                                                     class="kyou_detail_view" :show_attached_tags="true"
                                                     :show_attached_texts="true" :show_attached_notifications="true"
-                                                    v-on="{ ...crudRelayHandlers, ...rykvDialogHandler }" />
+                                                    v-on="{ ...crudRelayHandlers, ...rykv_dialog_handler }" />
                                             </div>
                                         </td>
                                     </tr>
@@ -77,7 +77,7 @@
                 @clicked_kyou="(kyou: Kyou) => { focused_kyou = kyou as Kyou }"
                 @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)"
                 @requested_reload_list="() => { }"
-                v-on="{ ...crudRelayHandlers, ...rykvDialogHandler }"
+                v-on="{ ...crudRelayHandlers, ...rykv_dialog_handler }"
                 @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)" />
         </v-main>
     </div>
@@ -123,7 +123,7 @@ const {
 
     // Event relay objects
     crudRelayHandlers,
-    rykvDialogHandler,
+    rykv_dialog_handler,
 } = useSharedMiView({ props, emits })
 </script>
 <style lang="css" scoped>

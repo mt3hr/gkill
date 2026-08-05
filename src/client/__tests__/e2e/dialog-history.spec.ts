@@ -45,7 +45,7 @@ async function openHistoryFor(page: Page, text: string): Promise<boolean> {
 /**
  * Helper: 最上位のフローティングダイアログを×ボタンで閉じる。
  */
-async function closeTopDialogWithX(page: Page): Promise<boolean> {
+async function close_top_dialogWithX(page: Page): Promise<boolean> {
   const dialogs = page.locator('.gkill-floating-dialog')
   const n = await dialogs.count()
   if (n === 0) return false
@@ -74,7 +74,7 @@ test.describe('Dialog History Invariants', () => {
     expect(opened).toBe(true)
     await expect(page.locator('.gkill-floating-dialog').last()).toBeVisible()
 
-    const closed = await closeTopDialogWithX(page)
+    const closed = await close_top_dialogWithX(page)
     expect(closed).toBe(true)
     await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 5000 })
     // ダイアログクローズでページ遷移していないこと
@@ -120,7 +120,7 @@ test.describe('Dialog History Invariants', () => {
     // 2回目: ×ボタンで閉じる (②)
     opened = await openHistoryFor(page, label)
     expect(opened).toBe(true)
-    const closed = await closeTopDialogWithX(page)
+    const closed = await close_top_dialogWithX(page)
     expect(closed).toBe(true)
     await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 5000 })
     expect(page.url()).toContain('/rykv')
@@ -138,7 +138,7 @@ test.describe('Dialog History Invariants', () => {
   })
 
   // 複数ダイアログを開いたまま APP_BAR プルダウンで別ページへ遷移できること
-  // (resetDialogHistory の popstate 会計バグ回帰テスト: go(-N) は popstate 1回)
+  // (reset_dialog_history の popstate 会計バグ回帰テスト: go(-N) は popstate 1回)
   test('app bar pulldown navigates away while multiple dialogs are open', async ({ page }) => {
     const label1 = makeUniqueLabel('dlg_nav_1')
     const label2 = makeUniqueLabel('dlg_nav_2')

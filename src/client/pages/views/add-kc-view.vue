@@ -107,7 +107,7 @@ const {
     save,
 
     // Template event handlers
-    onUpdateRelatedDateMenu: _onUpdateRelatedDateMenu,
-    onUpdateRelatedTimeMenu: _onUpdateRelatedTimeMenu,
+    onUpdateRelatedDateMenu: _on_update_related_date_menu,
+    onUpdateRelatedTimeMenu: _on_update_related_time_menu,
 } = useAddKcView({ props, emits })
 </script>

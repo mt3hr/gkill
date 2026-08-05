@@ -89,22 +89,22 @@ export function useKyouView(options: {
     // ── Internal helpers ──
     async function load_attached_infos(): Promise<void> {
         try {
-            const awaitPromises = new Array<Promise<Array<GkillError>>>()
+            const await_promises = new Array<Promise<Array<GkillError>>>()
             try {
-                awaitPromises.push(cloned_kyou.value.load_typed_datas())
+                await_promises.push(cloned_kyou.value.load_typed_datas())
                 if (props.show_attached_tags) {
-                    awaitPromises.push(cloned_kyou.value.load_attached_tags())
+                    await_promises.push(cloned_kyou.value.load_attached_tags())
                 }
                 if (props.show_attached_texts) {
-                    awaitPromises.push(cloned_kyou.value.load_attached_texts())
+                    await_promises.push(cloned_kyou.value.load_attached_texts())
                 }
                 if (props.show_attached_notifications) {
-                    awaitPromises.push(cloned_kyou.value.load_attached_notifications())
+                    await_promises.push(cloned_kyou.value.load_attached_notifications())
                 }
                 if (props.show_attached_timeis) {
-                    awaitPromises.push(cloned_kyou.value.load_attached_timeis())
+                    await_promises.push(cloned_kyou.value.load_attached_timeis())
                 }
-                await Promise.all(awaitPromises)
+                await Promise.all(await_promises)
             } catch (err: unknown) {
                 // abortは握りつぶす
                 if (!(err instanceof Error && (err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request")))) {

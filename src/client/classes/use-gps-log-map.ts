@@ -158,27 +158,27 @@ export function useGpsLogMap(options: {
         if (gps_logs.value.length === 0) {
             return
         }
-        let minLat = 90
-        let maxLat = -90
-        let minLng = 180
-        let maxLng = -180
+        let min_lat = 90
+        let max_lat = -90
+        let min_lng = 180
+        let max_lng = -180
         gps_logs.value.forEach(gps_log => {
-            if (maxLat < gps_log.latitude.valueOf()) maxLat = gps_log.latitude.valueOf()
-            if (minLat > gps_log.latitude.valueOf()) minLat = gps_log.latitude.valueOf()
-            if (maxLng < gps_log.longitude.valueOf()) maxLng = gps_log.longitude.valueOf()
-            if (minLng > gps_log.longitude.valueOf()) minLng = gps_log.longitude.valueOf()
+            if (max_lat < gps_log.latitude.valueOf()) max_lat = gps_log.latitude.valueOf()
+            if (min_lat > gps_log.latitude.valueOf()) min_lat = gps_log.latitude.valueOf()
+            if (max_lng < gps_log.longitude.valueOf()) max_lng = gps_log.longitude.valueOf()
+            if (min_lng > gps_log.longitude.valueOf()) min_lng = gps_log.longitude.valueOf()
         })
 
         const bounds = {
-            north: maxLat,
-            south: minLat,
-            east: maxLng,
-            west: minLng,
+            north: max_lat,
+            south: min_lat,
+            east: max_lng,
+            west: min_lng,
         }
 
         gmap.value?.map?.fitBounds(bounds)
         const msec = 100
-        center.value = { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2, timestamp: moment().unix() }
+        center.value = { lat: (min_lat + max_lat) / 2, lng: (min_lng + max_lng) / 2, timestamp: moment().unix() }
         await new Promise(resolve => setTimeout(resolve, msec))
         gmap.value?.map?.fitBounds(bounds)
     }

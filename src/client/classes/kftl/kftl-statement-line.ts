@@ -61,10 +61,10 @@ export abstract class KFTLStatementLine {
     }
 
     private static get_canvas_font(element = document.body): string {
-        const fontWeight = KFTLStatementLine.get_css_style(element, 'font-weight') || 'normal'
-        const fontSize = KFTLStatementLine.get_css_style(element, 'font-size') || '16px'
-        const fontFamily = KFTLStatementLine.get_css_style(element, 'font-family') || 'Times New Roman'
-        return `${fontWeight} ${fontSize} ${fontFamily}`
+        const font_weight = KFTLStatementLine.get_css_style(element, 'font-weight') || 'normal'
+        const font_size = KFTLStatementLine.get_css_style(element, 'font-size') || '16px'
+        const font_family = KFTLStatementLine.get_css_style(element, 'font-family') || 'Times New Roman'
+        return `${font_weight} ${font_size} ${font_family}`
     }
 }
 

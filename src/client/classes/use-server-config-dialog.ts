@@ -5,7 +5,7 @@ import type { ServerConfigDialogProps } from '@/pages/dialogs/server-config-dial
 import type { ServerConfigDialogEmits } from '@/pages/dialogs/server-config-dialog-emits'
 import { ServerConfig } from '@/classes/datas/config/server-config'
 import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-configs-request'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useServerConfigDialog(options: {
@@ -27,7 +27,7 @@ export function useServerConfigDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        closeDialogViaHistory(is_show_dialog)
+        close_dialog_via_history(is_show_dialog)
     }
     async function load_server_configs(): Promise<void> {
         server_configs.value.splice(0)

@@ -99,22 +99,22 @@ export function usePlaingTimeIsView(options: {
     })
 
     // ── Internal helpers ──
-    function removeKyouFromListById(list: Array<Kyou>, deletedId: string): void {
+    function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
         for (let i = list.length - 1; i >= 0; i--) {
-            if (list[i].id === deletedId) {
+            if (list[i].id === deleted_id) {
                 list.splice(i, 1)
             }
         }
     }
 
     // ── Business logic ──
-    function onDeletedKyou(deletedKyou: Kyou): void {
-        removeKyouFromListById(match_kyous_list.value, deletedKyou.id)
-        removeKyouFromListById(focused_kyous_list.value, deletedKyou.id)
-        if (focused_kyou.value?.id === deletedKyou.id) {
+    function onDeletedKyou(deleted_kyou: Kyou): void {
+        remove_kyou_from_list_by_id(match_kyous_list.value, deleted_kyou.id)
+        remove_kyou_from_list_by_id(focused_kyous_list.value, deleted_kyou.id)
+        if (focused_kyou.value?.id === deleted_kyou.id) {
             focused_kyou.value = null
         }
-        emits('deleted_kyou', deletedKyou)
+        emits('deleted_kyou', deleted_kyou)
     }
 
     async function reload_kyou(kyou: Kyou): Promise<void> {
@@ -308,7 +308,7 @@ export function usePlaingTimeIsView(options: {
         save_clipboard_to_file_dialog.value?.show()
     }
 
-    function floatingActionButtonStyle() {
+    function floating_action_button_style() {
         return {
             'bottom': '60px',
             'right': '10px',
@@ -346,7 +346,7 @@ export function usePlaingTimeIsView(options: {
         'requested_reload_list': () => reload_list(false),
     }
 
-    const rykvDialogHandler = {
+    const rykv_dialog_handler = {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
@@ -398,12 +398,12 @@ export function usePlaingTimeIsView(options: {
         show_lantana_dialog,
         show_upload_file_dialog,
         show_save_clipboard_to_file_dialog,
-        floatingActionButtonStyle,
+        floating_action_button_style,
 
         // Event relay objects
         crudRelayHandlers,
         reloadListRequestHandlers,
         dialogReloadRequestHandlers,
-        rykvDialogHandler,
+        rykv_dialog_handler,
     }
 }

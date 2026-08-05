@@ -9,7 +9,7 @@
                     <v-menu activator="parent">
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in page_list">
-                                <v-list-item-title @click="navigateToPage(page.page_name)">
+                                <v-list-item-title @click="navigate_to_page(page.page_name)">
                                     {{ page.app_name }}
                                 </v-list-item-title>
                             </v-list-item>
@@ -91,7 +91,7 @@
                     </v-row>
                 </v-container>
             </div>
-            <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
+            <v-avatar :style="floating_action_button_style()" color="primary" class="position-fixed">
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-plus" variant="text" v-long-press="() => show_kftl_dialog()"
@@ -290,7 +290,7 @@ const {
     write_errors,
     write_messages,
     close_message,
-    navigateToPage,
+    navigate_to_page,
     abort_all_fetches,
     clear_dashboard_datas,
     load_application_config,
@@ -299,7 +299,7 @@ const {
     go_prev_day,
     go_next_day,
     go_today: _go_today,
-    floatingActionButtonStyle,
+    floating_action_button_style,
     show_confirm_logout_dialog: _show_confirm_logout_dialog,
     show_kftl_dialog,
     show_add_kc_dialog,

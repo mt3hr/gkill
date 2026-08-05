@@ -27,10 +27,10 @@
             {{ kyou.typed_idf_kyou.file_name }}
         </a>
         <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image"
-            :src="buildMediaUrl(kyou.typed_idf_kyou.file_url, false)" loading="lazy" decoding="async"
+            :src="build_media_url(kyou.typed_idf_kyou.file_url, false)" loading="lazy" decoding="async"
             fetchpriority="low" class="kyou_image" />
         <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video" :src="kyou.typed_idf_kyou.file_url"
-            preload="none" :poster="buildMediaUrl(kyou.typed_idf_kyou.file_url, true)" class="kyou_video"
+            preload="none" :poster="build_media_url(kyou.typed_idf_kyou.file_url, true)" class="kyou_video"
             controls></video>
         <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio" :src="kyou.typed_idf_kyou.file_url"
             class="kyou_audio" controls></audio>
@@ -78,7 +78,7 @@ const {
     open_link,
     onMarkdownContentClick,
     onMarkdownContentDblclick,
-    buildMediaUrl,
+    build_media_url,
     crudRelayHandlers,
 } = useIDFKyouView({ props, emits })
 

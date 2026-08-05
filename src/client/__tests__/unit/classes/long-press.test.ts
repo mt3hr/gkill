@@ -1,9 +1,9 @@
 /**
- * vLongPress directive tests.
+ * v_long_press directive tests.
  * Tests the Vue 3 directive lifecycle and event behavior.
  */
 import { vi } from 'vitest'
-import { vLongPress } from '@/classes/long-press'
+import { v_long_press } from '@/classes/long-press'
 
 // jsdom doesn't have PointerEvent; polyfill it
 if (typeof globalThis.PointerEvent === 'undefined') {
@@ -21,11 +21,11 @@ function createEl(): HTMLElement {
 }
 
 function mountDirective(el: HTMLElement, value: () => void) {
-  vLongPress.mounted!(el, { value } as never, null as never, null as never)
+  v_long_press.mounted!(el, { value } as never, null as never, null as never)
 }
 
 function unmountDirective(el: HTMLElement) {
-  vLongPress.unmounted!(el, {} as never, null as never, null as never)
+  v_long_press.unmounted!(el, {} as never, null as never, null as never)
 }
 
 function firePointerDown(el: HTMLElement, button = 0) {
@@ -36,7 +36,7 @@ function firePointerUp(el: HTMLElement) {
   el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }))
 }
 
-describe('vLongPress directive', () => {
+describe('v_long_press directive', () => {
   beforeEach(() => {
     vi.useFakeTimers()
   })

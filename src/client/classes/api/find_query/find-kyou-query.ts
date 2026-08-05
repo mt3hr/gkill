@@ -262,28 +262,28 @@ export class FindKyouQuery {
     parse_words_and_not_words() {
         const words = new Array<string>()
         const not_words = new Array<string>()
-        let nextIsNotWord = false
+        let next_is_not_word = false
         const words_list = this.keywords.split(" ")
         for (let i = 0; i < words_list.length; i++) {
             const words_list_ = words_list[i].split("　")
             for (let j = 0; j < words_list_.length; j++) {
                 let word = words_list_[j]
                 if (word.startsWith("-")) {
-                    nextIsNotWord = true
+                    next_is_not_word = true
                     word = word.replace("-", "")
                 }
                 if (word === "") {
                     continue
                 } else if (word === "-") {
-                    nextIsNotWord = true
+                    next_is_not_word = true
                     continue
                 } else {
-                    if (nextIsNotWord) {
+                    if (next_is_not_word) {
                         not_words.push(word)
                     } else {
                         words.push(word)
                     }
-                    nextIsNotWord = false
+                    next_is_not_word = false
                 }
             }
         }
@@ -292,28 +292,28 @@ export class FindKyouQuery {
 
         const timeis_words = new Array<string>()
         const timeis_not_words = new Array<string>()
-        nextIsNotWord = false
+        next_is_not_word = false
         const timeis_words_list = this.timeis_keywords.split(" ")
         for (let i = 0; i < timeis_words_list.length; i++) {
             const timeis_words_list_ = timeis_words_list[i].split("　")
             for (let j = 0; j < timeis_words_list_.length; j++) {
                 let word = timeis_words_list_[j]
                 if (word.startsWith("-")) {
-                    nextIsNotWord = true
+                    next_is_not_word = true
                     word = word.replace("-", "")
                 }
                 if (word === "") {
                     continue
                 } else if (word === "-") {
-                    nextIsNotWord = true
+                    next_is_not_word = true
                     continue
                 } else {
-                    if (nextIsNotWord) {
+                    if (next_is_not_word) {
                         timeis_not_words.push(word)
                     } else {
                         timeis_words.push(word)
                     }
-                    nextIsNotWord = false
+                    next_is_not_word = false
                 }
             }
         }
