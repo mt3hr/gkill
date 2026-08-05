@@ -173,6 +173,8 @@ ESLint 10 flat config (`eslint.config.js`). Zero violations policy (levels per r
 | `@typescript-eslint/no-explicit-any` | error | `any` 使用禁止。`unknown` or 具体的型を使うこと |
 | `@typescript-eslint/no-empty-object-type` | error | 空の `{}` 型禁止。`type X = ParentType` を使うこと |
 | `@typescript-eslint/no-unused-vars` | warn | `_` プレフィックスで無視 (`argsIgnorePattern: '^_'`) |
+| `@typescript-eslint/naming-convention` | error | 識別子の命名規約（上記 Naming convention 節）。対象は `src/client` 本体のみ |
+| `playwright/no-conditional-in-test` / `no-wait-for-timeout` | error（未移行E2Eのみ warn） | 「静かに成功するテスト」の防止。未移行ファイルは `e2e/playwright-not-migrated` に列挙 |
 
 Go: `slices.SortFunc` (not `sort.Slice`), `for range n` (not `for i := 0; i < n; i++`), `any` (not `interface{}`), `errors.Join` for multi-error collection.
 
