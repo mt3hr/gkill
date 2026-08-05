@@ -6,7 +6,7 @@ import type { KyouDialogEmits } from '@/pages/views/kyou-dialog-emits'
 import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
-export function useAddTimeisDialog(options: {
+export function useAddTimeIsDialog(options: {
     props: EditLantanaDialogProps
     emits: KyouDialogEmits
 }) {
@@ -14,7 +14,7 @@ export function useAddTimeisDialog(options: {
 
     const is_show_dialog: Ref<boolean> = ref(false)
     useDialogHistoryStack(is_show_dialog)
-    const ui = useFloatingDialog("add-timeis-dialog", {
+    const ui = useFloatingDialog("add-time-is-dialog", {
         centerMode: "always",
     })
 

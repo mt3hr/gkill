@@ -36,7 +36,7 @@
                     <v-progress-circular indeterminate color="primary" />
                 </v-overlay>
             </div>
-            <PlaingTimeisView :application_config="application_config" :gkill_api="gkill_api"
+            <PlaingTimeIsView :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height.valueOf()" :app_content_width="app_content_width"
                 @received_errors="onPlaingViewReceivedErrors"
                 @received_messages="onPlaingViewReceivedMessages"
@@ -85,8 +85,8 @@ import { i18n } from '@/i18n'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
 import TutorialDialog from './dialogs/tutorial-dialog.vue'
-import PlaingTimeisView from './views/plaing-timeis-view.vue'
-import { usePlaingTimeisPage } from '@/classes/use-plaing-timeis-page'
+import PlaingTimeIsView from './views/plaing-time-is-view.vue'
+import { usePlaingTimeIsPage } from '@/classes/use-plaing-time-is-page'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 const tutorial_dialog = ref<InstanceType<typeof TutorialDialog> | null>(null)
@@ -133,7 +133,7 @@ const {
     onApplicationConfigReceivedErrors,
     onApplicationConfigReceivedMessages,
     onAlertClickClose,
-} = usePlaingTimeisPage()
+} = usePlaingTimeIsPage()
 
 watch(application_config, (config) => {
     if (config.is_loaded && config.show_tutorial_on_startup) {

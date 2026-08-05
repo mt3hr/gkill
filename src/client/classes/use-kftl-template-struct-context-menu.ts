@@ -1,6 +1,6 @@
 import { computed, ref, type Ref } from 'vue'
-import type { KFTLTemplateStructContextMenuProps } from '@/pages/views/kftl_template-struct-context-menu-props'
-import type { KFTLTemplateStructContextMenuEmits } from '@/pages/views/kftl_template-struct-context-menu-emits'
+import type { KFTLTemplateStructContextMenuProps } from '@/pages/views/kftl-template-struct-context-menu-props'
+import type { KFTLTemplateStructContextMenuEmits } from '@/pages/views/kftl-template-struct-context-menu-emits'
 
 export function useKFTLTemplateStructContextMenu(options: {
     props: KFTLTemplateStructContextMenuProps,
