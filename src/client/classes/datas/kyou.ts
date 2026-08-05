@@ -1,6 +1,6 @@
 'use strict'
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { hydrate } from '../api/hydrate'
 import { InfoBase } from './info-base'
 import { GkillError } from '../api/gkill-error'
 import { GitCommitLog } from './git-commit-log'
@@ -223,14 +223,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.kmemo_histories.length; i++) {
             const kmemo = new Kmemo()
-            for (const key in res.kmemo_histories[i]) {
-                (kmemo as any)[key] = (res.kmemo_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (kmemo as any)[key]) {
-                    (kmemo as any)[key] = new Date((kmemo as any)[key])
-                }
-            }
+            hydrate(kmemo, res.kmemo_histories[i])
             res.kmemo_histories[i] = kmemo
         }
 
@@ -265,14 +258,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.kc_histories.length; i++) {
             const kc = new KC()
-            for (const key in res.kc_histories[i]) {
-                (kc as any)[key] = (res.kc_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (kc as any)[key]) {
-                    (kc as any)[key] = new Date((kc as any)[key])
-                }
-            }
+            hydrate(kc, res.kc_histories[i])
             res.kc_histories[i] = kc
         }
 
@@ -307,14 +293,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.urlog_histories.length; i++) {
             const urlog = new URLog()
-            for (const key in res.urlog_histories[i]) {
-                (urlog as any)[key] = (res.urlog_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (urlog as any)[key]) {
-                    (urlog as any)[key] = new Date((urlog as any)[key])
-                }
-            }
+            hydrate(urlog, res.urlog_histories[i])
             res.urlog_histories[i] = urlog
         }
 
@@ -349,14 +328,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.nlog_histories.length; i++) {
             const nlog = new Nlog()
-            for (const key in res.nlog_histories[i]) {
-                (nlog as any)[key] = (res.nlog_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (nlog as any)[key]) {
-                    (nlog as any)[key] = new Date((nlog as any)[key])
-                }
-            }
+            hydrate(nlog, res.nlog_histories[i])
             res.nlog_histories[i] = nlog
         }
 
@@ -391,14 +363,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.timeis_histories.length; i++) {
             const timeis = new TimeIs()
-            for (const key in res.timeis_histories[i]) {
-                (timeis as any)[key] = (res.timeis_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (timeis as any)[key]) {
-                    (timeis as any)[key] = new Date((timeis as any)[key])
-                }
-            }
+            hydrate(timeis, res.timeis_histories[i])
             res.timeis_histories[i] = timeis
         }
 
@@ -433,14 +398,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.mi_histories.length; i++) {
             const mi = new Mi()
-            for (const key in res.mi_histories[i]) {
-                (mi as any)[key] = (res.mi_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (mi as any)[key]) {
-                    (mi as any)[key] = new Date((mi as any)[key])
-                }
-            }
+            hydrate(mi, res.mi_histories[i])
             res.mi_histories[i] = mi
         }
 
@@ -479,14 +437,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.lantana_histories.length; i++) {
             const lantana = new Lantana()
-            for (const key in res.lantana_histories[i]) {
-                (lantana as any)[key] = (res.lantana_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (lantana as any)[key]) {
-                    (lantana as any)[key] = new Date((lantana as any)[key])
-                }
-            }
+            hydrate(lantana, res.lantana_histories[i])
             res.lantana_histories[i] = lantana
         }
 
@@ -521,14 +472,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.idf_kyou_histories.length; i++) {
             const idf_kyou = new IDFKyou()
-            for (const key in res.idf_kyou_histories[i]) {
-                (idf_kyou as any)[key] = (res.idf_kyou_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (idf_kyou as any)[key]) {
-                    (idf_kyou as any)[key] = new Date((idf_kyou as any)[key])
-                }
-            }
+            hydrate(idf_kyou, res.idf_kyou_histories[i])
             res.idf_kyou_histories[i] = idf_kyou
         }
 
@@ -563,14 +507,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.git_commit_log_histories.length; i++) {
             const git_commit_log = new GitCommitLog()
-            for (const key in res.git_commit_log_histories[i]) {
-                (git_commit_log as any)[key] = (res.git_commit_log_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (git_commit_log as any)[key]) {
-                    (git_commit_log as any)[key] = new Date((git_commit_log as any)[key])
-                }
-            }
+            hydrate(git_commit_log, res.git_commit_log_histories[i])
             res.git_commit_log_histories[i] = git_commit_log
         }
 
@@ -599,14 +536,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.rekyou_histories.length; i++) {
             const rekyou = new ReKyou()
-            for (const key in res.rekyou_histories[i]) {
-                (rekyou as any)[key] = (res.rekyou_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (rekyou as any)[key]) {
-                    (rekyou as any)[key] = new Date((rekyou as any)[key])
-                }
-            }
+            hydrate(rekyou, res.rekyou_histories[i])
             res.rekyou_histories[i] = rekyou
         }
 
@@ -641,14 +571,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.mirekyou_histories.length; i++) {
             const mirekyou = new MiReKyou()
-            for (const key in res.mirekyou_histories[i]) {
-                (mirekyou as any)[key] = (res.mirekyou_histories[i] as any)[key]
-
-                // 時刻はDate型に変換
-                if (key.endsWith("time") && (mirekyou as any)[key]) {
-                    (mirekyou as any)[key] = new Date((mirekyou as any)[key])
-                }
-            }
+            hydrate(mirekyou, res.mirekyou_histories[i])
             res.mirekyou_histories[i] = mirekyou
         }
 
