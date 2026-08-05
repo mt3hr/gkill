@@ -19,13 +19,13 @@ vi.mock('@/classes/dnote/kyou-loader', () => ({
 }))
 
 import { DnoteTrendAggregator } from '@/classes/dnote/dnote-trend-aggregator'
-import agregated_value_to_number from '@/classes/dnote/dnote-trend/agregated-value-to-number'
-import AverageInfo from '@/classes/dnote/dnote-agregate-target/average-info'
+import aggregated_value_to_number from '@/classes/dnote/dnote-trend/aggregated-value-to-number'
+import AverageInfo from '@/classes/dnote/dnote-aggregate-target/average-info'
 import KmemoContentContainsPredicate from '@/classes/dnote/dnote-predicate/kmemo-content-contains-predicate'
 import DataTypePrefixPredicate from '@/classes/dnote/dnote-predicate/data-type-prefix-predicate'
-import AgregateCountKyou from '@/classes/dnote/dnote-agregate-target/agregate-count-kyou'
-import AgregateSumNlogAmount from '@/classes/dnote/dnote-agregate-target/agregate-sum-nlog-amount'
-import AgregateSumTimeIsTime from '@/classes/dnote/dnote-agregate-target/agregate-sum-timeis-time'
+import AggregateCountKyou from '@/classes/dnote/dnote-aggregate-target/aggregate-count-kyou'
+import AggregateSumNlogAmount from '@/classes/dnote/dnote-aggregate-target/aggregate-sum-nlog-amount'
+import AggregateSumTimeIsTime from '@/classes/dnote/dnote-aggregate-target/aggregate-sum-timeis-time'
 
 const controller = new AbortController()
 const emptyQuery = {} as never
@@ -49,7 +49,7 @@ function makeTestKyou(factory: (...args: never[]) => Record<string, unknown>, re
 describe('DnoteTrendAggregator', () => {
   test('day granularity: zero-filled ascending buckets with correct counts', async () => {
     const predicate = new KmemoContentContainsPredicate('メモ')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     const kyous = [
@@ -73,7 +73,7 @@ describe('DnoteTrendAggregator', () => {
 
   test('week granularity: buckets straddling an ISO year boundary stay distinct and ordered', async () => {
     const predicate = new KmemoContentContainsPredicate('メモ')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'week')
 
     const kyous = [
@@ -93,7 +93,7 @@ describe('DnoteTrendAggregator', () => {
 
   test('month granularity: 12 buckets summing nlog amounts per month', async () => {
     const predicate = new DataTypePrefixPredicate('nlog')
-    const target = new AgregateSumNlogAmount()
+    const target = new AggregateSumNlogAmount()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'month')
 
     const kyous = [
@@ -114,7 +114,7 @@ describe('DnoteTrendAggregator', () => {
 
   test('predicate filtering excludes non-matching kyous from all buckets', async () => {
     const predicate = new KmemoContentContainsPredicate('対象')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     const kyous = [
@@ -132,7 +132,7 @@ describe('DnoteTrendAggregator', () => {
 
   test('kyous outside the calendar window are ignored', async () => {
     const predicate = new KmemoContentContainsPredicate('メモ')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     const kyous = [
@@ -149,7 +149,7 @@ describe('DnoteTrendAggregator', () => {
 
   test('no calendar range: window is derived from min/max related_time of kyous', async () => {
     const predicate = new KmemoContentContainsPredicate('メモ')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     const kyous = [
@@ -166,7 +166,7 @@ describe('DnoteTrendAggregator', () => {
 
   test('no calendar range and no kyous: single bucket for now', async () => {
     const predicate = new KmemoContentContainsPredicate('メモ')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     const points = await aggregator.aggregate_trend(controller, [], emptyQuery, true)
@@ -177,7 +177,7 @@ describe('DnoteTrendAggregator', () => {
 
   test('bucket count cap keeps the newest side', async () => {
     const predicate = new KmemoContentContainsPredicate('メモ')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     const kyous = [
@@ -225,7 +225,7 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
 
   test('2日またぎTimeIsは0:00で区切って両日に計上される', async () => {
     const predicate = new DataTypePrefixPredicate('timeis')
-    const target = new AgregateSumTimeIsTime()
+    const target = new AggregateSumTimeIsTime()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     // 7/17 22:00 〜 7/18 03:00
@@ -243,7 +243,7 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
 
   test('3日またぎTimeIsは中日が丸24時間になる', async () => {
     const predicate = new DataTypePrefixPredicate('timeis')
-    const target = new AgregateSumTimeIsTime()
+    const target = new AggregateSumTimeIsTime()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     // 7/16 23:00 〜 7/18 01:00
@@ -258,7 +258,7 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
 
   test('検索範囲より前に開始したTimeIsも範囲内の分が計上される', async () => {
     const predicate = new DataTypePrefixPredicate('timeis')
-    const target = new AgregateSumTimeIsTime()
+    const target = new AggregateSumTimeIsTime()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     // 7/16 22:00 〜 7/17 03:00（検索範囲は7/17から）
@@ -274,7 +274,7 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
 
   test('件数集計でもまたいだ各日に1件ずつ計上される', async () => {
     const predicate = new DataTypePrefixPredicate('timeis')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     const kyous = [
@@ -292,7 +292,7 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
 
   test('0:00ちょうどに終了したTimeIsは翌日に計上されない', async () => {
     const predicate = new DataTypePrefixPredicate('timeis')
-    const target = new AgregateSumTimeIsTime()
+    const target = new AggregateSumTimeIsTime()
     const aggregator = new DnoteTrendAggregator(predicate, target, 'day')
 
     // 7/17 20:00 〜 7/18 00:00ちょうど
@@ -308,26 +308,26 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
   })
 })
 
-describe('agregated_value_to_number', () => {
+describe('aggregated_value_to_number', () => {
   test('null and undefined map to 0', () => {
-    expect(agregated_value_to_number(null)).toBe(0)
-    expect(agregated_value_to_number(undefined)).toBe(0)
+    expect(aggregated_value_to_number(null)).toBe(0)
+    expect(aggregated_value_to_number(undefined)).toBe(0)
   })
 
   test('numbers pass through', () => {
-    expect(agregated_value_to_number(42)).toBe(42)
-    expect(agregated_value_to_number(-3.5)).toBe(-3.5)
+    expect(aggregated_value_to_number(42)).toBe(42)
+    expect(aggregated_value_to_number(-3.5)).toBe(-3.5)
   })
 
   test('AverageInfo divides total_value by total_count', () => {
     const info = new AverageInfo()
     info.total_count = 4
     info.total_value = 10
-    expect(agregated_value_to_number(info)).toBe(2.5)
+    expect(aggregated_value_to_number(info)).toBe(2.5)
   })
 
   test('AverageInfo with zero count maps to 0', () => {
     const info = new AverageInfo()
-    expect(agregated_value_to_number(info)).toBe(0)
+    expect(aggregated_value_to_number(info)).toBe(0)
   })
 })

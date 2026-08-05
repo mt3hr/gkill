@@ -20,8 +20,8 @@ import { DnoteAgregator } from '@/classes/dnote/dnote-aggregator'
 import { DnoteListAggregator } from '@/classes/dnote/dnote-list-aggregator'
 import KmemoContentContainsPredicate from '@/classes/dnote/dnote-predicate/kmemo-content-contains-predicate'
 import DataTypePrefixPredicate from '@/classes/dnote/dnote-predicate/data-type-prefix-predicate'
-import AgregateCountKyou from '@/classes/dnote/dnote-agregate-target/agregate-count-kyou'
-import AgregateSumNlogAmount from '@/classes/dnote/dnote-agregate-target/agregate-sum-nlog-amount'
+import AggregateCountKyou from '@/classes/dnote/dnote-aggregate-target/aggregate-count-kyou'
+import AggregateSumNlogAmount from '@/classes/dnote/dnote-aggregate-target/aggregate-sum-nlog-amount'
 import TagGetter from '@/classes/dnote/dnote-key-getter/tag-getter'
 import DataTypeGetter from '@/classes/dnote/dnote-key-getter/data-type-getter'
 
@@ -39,7 +39,7 @@ function makeTestKyou(factory: (...args: never[]) => Record<string, unknown>, ..
 describe('DnoteAgregator', () => {
   test('filters by predicate and aggregates matching kyous', async () => {
     const predicate = new KmemoContentContainsPredicate('テスト')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteAgregator(predicate, target)
 
     const kyous = [
@@ -48,14 +48,14 @@ describe('DnoteAgregator', () => {
       makeTestKyou(makeKyouWithKmemo, 'テストメモ2'),
     ]
 
-    const result = await aggregator.agregate(controller, kyous, emptyQuery, true)
+    const result = await aggregator.aggregate(controller, kyous, emptyQuery, true)
     expect(result.result_string).toBe('2')
     expect(result.match_kyous.length).toBe(2)
   })
 
   test('returns empty match_kyous when nothing matches', async () => {
     const predicate = new KmemoContentContainsPredicate('存在しない')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteAgregator(predicate, target)
 
     const kyous = [
@@ -63,20 +63,20 @@ describe('DnoteAgregator', () => {
       makeTestKyou(makeKyouWithKmemo, 'メモB'),
     ]
 
-    const result = await aggregator.agregate(controller, kyous, emptyQuery, true)
+    const result = await aggregator.aggregate(controller, kyous, emptyQuery, true)
     expect(result.result_string).toBe('0')
     expect(result.match_kyous.length).toBe(0)
   })
 
   test('match_kyous are clones (not reference-equal)', async () => {
     const predicate = new KmemoContentContainsPredicate('テスト')
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteAgregator(predicate, target)
 
     const original = makeTestKyou(makeKyouWithKmemo, 'テスト')
     const kyous = [original]
 
-    const result = await aggregator.agregate(controller, kyous, emptyQuery, true)
+    const result = await aggregator.aggregate(controller, kyous, emptyQuery, true)
     expect(result.match_kyous[0]).not.toBe(original)
   })
 })
@@ -85,7 +85,7 @@ describe('DnoteListAggregator', () => {
   test('groups by key and aggregates per group', async () => {
     const predicate = new DataTypePrefixPredicate('nlog')
     const keyGetter = new DataTypeGetter()
-    const target = new AgregateSumNlogAmount()
+    const target = new AggregateSumNlogAmount()
     const aggregator = new DnoteListAggregator(predicate, keyGetter, target)
 
     const kyous = [
@@ -102,7 +102,7 @@ describe('DnoteListAggregator', () => {
   test('returns empty array when no matches', async () => {
     const predicate = new DataTypePrefixPredicate('nonexistent')
     const keyGetter = new DataTypeGetter()
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteListAggregator(predicate, keyGetter, target)
 
     const kyous = [makeTestKyou(makeKyouWithKmemo, 'test')]
@@ -113,7 +113,7 @@ describe('DnoteListAggregator', () => {
   test('handles multiple keys per kyou (e.g. multiple tags)', async () => {
     const predicate = new DataTypePrefixPredicate('kmemo')
     const keyGetter = new TagGetter()
-    const target = new AgregateCountKyou()
+    const target = new AggregateCountKyou()
     const aggregator = new DnoteListAggregator(predicate, keyGetter, target)
 
     const kyou = makeTestKyou(makeKyouWithKmemo, 'test', {
@@ -133,7 +133,7 @@ describe('DnoteListAggregator', () => {
   test('converts aggregate values to string in final output', async () => {
     const predicate = new DataTypePrefixPredicate('nlog')
     const keyGetter = new DataTypeGetter()
-    const target = new AgregateSumNlogAmount()
+    const target = new AggregateSumNlogAmount()
     const aggregator = new DnoteListAggregator(predicate, keyGetter, target)
 
     const kyous = [makeTestKyou(makeKyouWithNlog, '店', '品', 500)]
