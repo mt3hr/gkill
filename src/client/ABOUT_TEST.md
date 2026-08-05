@@ -2,7 +2,7 @@
 
 ## 概要
 
-Vue 3 フロントエンドのテスト。ユニットテスト（839テスト宣言、70ファイル）と E2E テスト（195テスト宣言、34 specファイル）の合計1034テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
+Vue 3 フロントエンドのテスト。ユニットテスト（839テスト宣言、70ファイル）と E2E テスト（196テスト宣言、34 specファイル）の合計1035テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
 
 ## テストフレームワーク
 
@@ -23,7 +23,7 @@ src/client/__tests__/
 │   ├── router.test.ts       #   ルーター (13ルート, dashboard 含む)
 │   ├── i18n-completeness.test.ts  #  i18n 完全性 (7ロケール)
 │   └── service-worker.test.ts     #  Service Worker
-├── e2e/                     # E2E テスト (195テスト宣言, 34 specファイル + auth.setup.ts / global-setup.ts / global-teardown.ts / free-port.mjs)
+├── e2e/                     # E2E テスト (196テスト宣言, 34 specファイル + auth.setup.ts / global-setup.ts / global-teardown.ts / free-port.mjs)
 │   ├── helpers.ts           #   初回登録 + ログイン
 │   ├── crud-helpers.ts      #   KFTL送信、ナビゲーション、コンテキストメニュー、FAB
 │   ├── check-server.ts      #   サーバヘルスチェック
@@ -50,7 +50,7 @@ src/client/__tests__/
 | Service Worker | 1ファイル | Workbox プリキャッシュ、POST キャッシュ、プッシュ通知、`/zip_cache/.*` denylist |
 | ユーティリティ | 11ファイル | deep-equals, format-date-time, looks-like-url, long-press, save-as, delete-gkill-cache, markdown-to-html, mermaid-render, use-dialog-history-stack, foldable-struct-move, kyou-content-text |
 
-### E2E テスト (195テスト宣言, 34 specファイル)
+### E2E テスト (196テスト宣言, 34 specファイル)
 
 全13ルートを Playwright で検証。CRUD操作フロー（KFTL記録→追加→編集→削除→閲覧）、認証フロー（ログイン/ログアウト/初回登録）、KFTL TimeIs終了全バリエーション、履歴・リポスト表示、Mi操作（板間移動/完了状態/共有）、サーバ設定/ユーザ設定の機能テスト、ZIPファイルブラウズダイアログ（コンテキストメニューからの起動、ZIP内コンテンツ表示）、修正済みバグの回帰テスト、ダッシュボード画面（日付ナビゲーション、FAB、設定ボタン）をカバー。
 
