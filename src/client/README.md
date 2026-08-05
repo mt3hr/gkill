@@ -75,7 +75,7 @@ Service Worker の登録。PWA オフライン対応。
 | `/rykv` | rykv | `rykv-page.vue` | Rykv（レビュー）— Kyou の閲覧・検索・編集 |
 | `/kyou` | kyou | `kyou-page.vue` | Kyou 記録一覧 |
 | `/mkfl` | mkfl | `mkfl-page.vue` | Mkfl（ファイル管理） |
-| `/plaing` | plaing | `plaing-timeis-page.vue` | 稼働中 TimeIs 一覧 |
+| `/plaing` | plaing | `plaing-time-is-page.vue` | 稼働中 TimeIs 一覧 |
 | `/dashboard` | dashboard | `dashboard-page.vue` | ダッシュボード（日次サマリー・集計・GPS・タスク） |
 | `/saihate` | saihate | `saihate-page.vue` | Saihate（特殊ビュー） |
 | `/set_new_password` | set_new_password | `set-new-password-page.vue` | 新パスワード設定 |

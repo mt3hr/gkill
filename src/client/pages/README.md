@@ -45,7 +45,7 @@ xxx-view-emits.ts     # Emits 定義
 | `rykv-page.vue` | `/rykv` | Rykv（レビュー）ページ |
 | `kyou-page.vue` | `/kyou` | Kyou（記録）一覧ページ |
 | `mkfl-page.vue` | `/mkfl` | Mkfl（ファイル管理）ページ |
-| `plaing-timeis-page.vue` | `/plaing` | 稼働中 TimeIs ページ |
+| `plaing-time-is-page.vue` | `/plaing` | 稼働中 TimeIs ページ |
 | `saihate-page.vue` | `/saihate` | Saihate（特殊ビュー）ページ |
 | `dashboard-page.vue` | `/dashboard` | ダッシュボード（日次サマリー）ページ |
 | `set-new-password-page.vue` | `/set_new_password` | 新パスワード設定ページ |
@@ -67,8 +67,8 @@ xxx-view-emits.ts     # Emits 定義
 | `add-lantana-view.vue` | Lantana 追加 |
 | `add-mi-view.vue` | Mi 追加 |
 | `add-nlog-view.vue` | Nlog 追加 |
-| `add-timeis-view.vue` | TimeIs 追加 |
-| `add-urlog-view.vue` | URLog 追加 |
+| `add-time-is-view.vue` | TimeIs 追加 |
+| `add-ur-log-view.vue` | URLog 追加 |
 | `add-tag-view.vue` | Tag 追加 |
 | `add-text-view.vue` | Text 追加 |
 | `add-notification-view.vue` | Notification 追加 |
@@ -81,7 +81,7 @@ xxx-view-emits.ts     # Emits 定義
 | `add-dnote-trend-graph-view.vue` | DNote トレンドグラフ追加 |
 | `add-new-device-struct-element-view.vue` | デバイス構造要素追加 |
 | `add-new-folder-view.vue` | フォルダ追加 |
-| `add-new-kftl_template-struct-element-view.vue` | KFTL テンプレート要素追加 |
+| `add-new-kftl-template-struct-element-view.vue` | KFTL テンプレート要素追加 |
 | `add-new-rep-struct-element-view.vue` | リポジトリ構造要素追加 |
 | `add-new-rep-type-struct-element-view.vue` | リポジトリ型要素追加 |
 | `add-new-tag-struct-element-view.vue` | タグ構造要素追加 |
@@ -193,7 +193,7 @@ xxx-view-emits.ts     # Emits 定義
 | `time-is-context-menu.vue` / `idf-kyou-context-menu.vue` | TimeIs / IDFKyou |
 | `re-kyou-context-menu.vue` / `mi-re-kyou-context-menu.vue` / `git-commit-log-context-menu.vue` | ReKyou / MiReKyou / GitCommitLog |
 | `attached-tag-context-menu.vue` / `attached-text-context-menu.vue` | 添付タグ/テキスト |
-| `attached-notification-context-menu.vue` / `attached-timeis-plaing-context-menu.vue` | 添付通知/稼働TimeIs |
+| `attached-notification-context-menu.vue` / `attached-time-is-plaing-context-menu.vue` | 添付通知/稼働TimeIs |
 | `device-struct-context-menu.vue` / `kftl-template-struct-context-menu.vue` | 構造コンテキストメニュー |
 | `rep-struct-context-menu.vue` / `rep-type-struct-context-menu.vue` | リポジトリ構造 |
 | `tag-struct-context-menu.vue` / `ryuu-item-context-menu.vue` | タグ構造/Ryuu |
@@ -218,7 +218,7 @@ xxx-view-emits.ts     # Emits 定義
 | `kftl-view.vue` / `kftl-line-label.vue` / `kftl-template-view.vue` | KFTL エディタ |
 | `mkfl-view.vue` | Mkfl ビュー |
 | `mi-kyou-count-calendar.vue` | Mi 件数カレンダー（検索条件に合致する日毎の件数表示） |
-| `plaing-timeis-view.vue` / `end-time-is-plaing-view.vue` | 稼働中 TimeIs |
+| `plaing-time-is-view.vue` / `end-time-is-plaing-view.vue` | 稼働中 TimeIs |
 | `attached-tag.vue` / `attached-text.vue` / `attached-notification.vue` | 添付情報 |
 | `attached-time-is-plaing.vue` | 添付稼働 TimeIs |
 | `upload-file-view.vue` / `decide-related-time-uploaded-file-view.vue` | ファイルアップロード |
@@ -237,7 +237,7 @@ xxx-view-emits.ts     # Emits 定義
 
 ### データ追加ダイアログ（21コンポーネント）
 
-`add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-mi-re-kyou-dialog.vue`, `add-nlog-dialog.vue`, `add-timeis-dialog.vue`, `add-urlog-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-folder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
+`add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-mi-re-kyou-dialog.vue`, `add-nlog-dialog.vue`, `add-time-is-dialog.vue`, `add-ur-log-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-folder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
 
 ### データ編集ダイアログ（31コンポーネント）
 

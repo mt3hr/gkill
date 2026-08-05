@@ -70,7 +70,7 @@ src/client/
 │   ├── rykv-page.vue
 │   ├── kyou-page.vue
 │   ├── mkfl-page.vue
-│   ├── plaing-timeis-page.vue
+│   ├── plaing-time-is-page.vue
 │   ├── dashboard-page.vue
 │   ├── saihate-page.vue
 │   ├── set-new-password-page.vue

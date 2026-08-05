@@ -140,7 +140,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/unit/composables/mi-re-kyou-view.test.ts` | MiReKyou ビュー Composable（既存記録のタスク化。タイトルを持たず target_id 先の内容を表示する） |
 | `src/client/__tests__/unit/composables/gps-log-map.test.ts` | GPSログ地図ビュー Composable |
 | `src/client/__tests__/unit/composables/kyou-count-calendar.test.ts` | Kyou件数カレンダー Composable |
-| `src/client/__tests__/unit/composables/overlay-and-urlog-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
+| `src/client/__tests__/unit/composables/overlay-and-ur-log-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
 
 ### ルーターテスト
 

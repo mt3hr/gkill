@@ -11,7 +11,7 @@
         <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             v-on="crudRelayHandlers" ref="add_kc_dialog" />
-        <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+        <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="add_timeis_dialog" />
         <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -96,14 +96,14 @@ import KyouListView from './kyou-list-view.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
 import mkflDialog from '../dialogs/mkfl-dialog.vue'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
-import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
-import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
+import AddTimeIsDialog from '../dialogs/add-time-is-dialog.vue'
+import AddUrlogDialog from '../dialogs/add-ur-log-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import SaveClipboardToFileDialog from '../dialogs/save-clipboard-to-file-dialog.vue'
-import type { PlaingTimeIsViewProps } from './plaing-timeis-view-props'
-import type { PlaingTimeIsViewEmits } from './plaing-timeis-emits'
+import type { PlaingTimeIsViewProps } from './plaing-time-is-view-props'
+import type { PlaingTimeIsViewEmits } from './plaing-time-is-view-emits'
 import RykvDialogHost from './rykv-dialog-host.vue'
-import { usePlaingTimeisView } from '@/classes/use-plaing-timeis-view'
+import { usePlaingTimeIsView } from '@/classes/use-plaing-time-is-view'
 
 const props = defineProps<PlaingTimeIsViewProps>()
 const emits = defineEmits<PlaingTimeIsViewEmits>()
@@ -159,7 +159,7 @@ const {
     reloadListRequestHandlers,
     dialogReloadRequestHandlers,
     rykvDialogHandler,
-} = usePlaingTimeisView({ props, emits })
+} = usePlaingTimeIsView({ props, emits })
 
 defineExpose({ reload_list, set_last_added_request_time })
 </script>

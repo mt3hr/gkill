@@ -21,8 +21,8 @@
 </template>
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-import type { KFTLTemplateStructContextMenuEmits } from './kftl_template-struct-context-menu-emits';
-import type { KFTLTemplateStructContextMenuProps } from './kftl_template-struct-context-menu-props';
+import type { KFTLTemplateStructContextMenuEmits } from './kftl-template-struct-context-menu-emits';
+import type { KFTLTemplateStructContextMenuProps } from './kftl-template-struct-context-menu-props';
 import { useKFTLTemplateStructContextMenu } from '@/classes/use-kftl-template-struct-context-menu';
 
 const props = defineProps<KFTLTemplateStructContextMenuProps>()
