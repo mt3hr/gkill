@@ -14,6 +14,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateApplicationConfig はログイン中の利用者・端末のアプリケーション設定を更新します。
+//
+// POST /api/update_application_config（wrapAuth）
+// req_res.UpdateApplicationConfigRequest / req_res.UpdateApplicationConfigResponse
+//
+// 更新対象のUserIDとDeviceはリクエストの値を無視してセッションのものに差し替えるので、
+// 他の利用者や他の端末の設定を書き換えることはできません。
 func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

@@ -14,6 +14,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetMiBoardList は、Miのボード名一覧を返します。
+//
+// POST /api/get_mi_board_list（wrapAuthRepos）
+// req_res.GetMiBoardRequest / req_res.GetMiBoardResponse
+//
+// MiとMiReKyouの双方からボード名を集めて重複を除きます
+// （MiReKyouしか存在しない板も一覧に出すため）。
 func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

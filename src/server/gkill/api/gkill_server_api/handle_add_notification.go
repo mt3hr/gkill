@@ -14,6 +14,18 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddNotification はKyouに紐づく通知予約を1件追加します。
+//
+// POST /api/add_gkill_notification（wrapAuthRepos）
+// req_res.AddNotificationRequest / req_res.AddNotificationResponse
+//
+// TXIDがnilなら書き込み用リポジトリへ確定登録し、非nilならそのトランザクションの
+// 一時リポジトリへ積む。
+// 同じIDの通知が既にある場合は追加せず、AlreadyExistNotificationErrorをerrorsに積んで返す。
+//
+// 追加後にGkillNotificator.UpdateNotificationTargetsを呼んで通知対象を張り直す。
+// 通知対象は1時間おきの定期更新でしか更新されないので、これをしないと直近の通知が発火しない。
+// 張り直しに失敗した場合は、通知自体の追加は済んでいてもerrorsを返す（部分成功）。
 func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

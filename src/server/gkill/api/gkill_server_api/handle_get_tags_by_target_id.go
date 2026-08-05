@@ -14,6 +14,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetTagsByTargetID は対象Kyouに付いているタグを新しい順に返します。
+//
+// POST /api/get_tags_by_id（wrapAuthRepos）
+// req_res.GetTagsByTargetIDRequest / req_res.GetTagsByTargetIDResponse
+//
+// 全repを横断し、タグIDごとに最新版だけを残したうえで削除済み（IsDeleted）を除きます。
+// 履歴ではないので、同じタグIDが複数回現れることはありません。
 func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

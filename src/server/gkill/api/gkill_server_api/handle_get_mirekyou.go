@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetMiReKyou は、指定IDのMiReKyou（既存Kyouをタスク化したもの）の更新履歴を返します。
+//
+// POST /api/get_mirekyou（wrapAuthRepos）
+// req_res.GetMiReKyouRequest / req_res.GetMiReKyouResponse
+//
+// RepNameを指定するとそのrepだけを、nilなら全MiReKyou repを横断して集めます。
+// 履歴はID+UpdateTimeで重複排除し、UpdateTimeの新しい順に並べて返します。
+// 対象が存在しない場合は空配列で、エラーにはしません。
 func (g *GkillServerAPI) HandleGetMiReKyou(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

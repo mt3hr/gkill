@@ -12,6 +12,13 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
+// HandleGetPluginList はログイン中の利用者が使えるプラグインの一覧を返します。
+//
+// POST /api/get_plugin_list（wrapAuth）
+// req_res.GetPluginListRequest / req_res.GetPluginListResponse
+//
+// 各要素はプラグインのmanifestの内容に、プロセスが生きているか（IsAlive）を添えたものです。
+// プラグインが1つも無い場合はPluginsをnilのまま正常応答します。
 func (g *GkillServerAPI) HandleGetPluginList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetPluginListRequest{}

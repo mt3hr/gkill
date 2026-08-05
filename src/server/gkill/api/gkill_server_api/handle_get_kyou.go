@@ -14,6 +14,15 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetKyou は、指定IDのKyouを取得します。
+//
+// POST /api/get_kyou（wrapAuthRepos）
+// req_res.GetKyouRequest / req_res.GetKyouResponse
+//
+// UpdateTimeを指定するとその版1件だけを、指定しなければID一致の全履歴を
+// KyouHistoriesに入れて返します。RepNameは履歴取得時のrep絞り込みにだけ効き、
+// UpdateTime指定時は最新データを持つrepだけを見るので参照されません。
+// 対象が見つからない場合は空配列で、エラーにはしません。
 func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

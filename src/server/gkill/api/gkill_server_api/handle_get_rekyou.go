@@ -14,6 +14,15 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetRekyou は指定IDのReKyouの履歴を新しい順に返します。
+//
+// POST /api/get_rekyou（wrapAuthRepos）
+// req_res.GetReKyouRequest / req_res.GetReKyouResponse
+//
+// RepNameが非nilならそのrepの版だけに絞ります。
+// リクエストにUpdateTimeフィールドはありますが参照しないので、版の指定はできません。
+// 返すのはReKyou自体（TargetIDを持つ参照レコード）の履歴で、参照先Kyouの中身は含みません。
+// 該当IDがなくてもエラーにはならず、ReKyouHistoriesが空のまま成功メッセージを返します。
 func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

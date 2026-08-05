@@ -21,6 +21,23 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetKyousMCP は、MCPサーバ向けにKyouを検索し、型ごとのペイロードと
+// 付随データ (タグ・テキスト・通知) を1件にまとめたDTOをページングして返します。
+//
+// POST /api/get_kyous_mcp（wrapNoAuth）
+// req_res.GetKyousMCPRequest / req_res.GetKyousMCPResponse
+//
+// wrapNoAuth登録ですが、ハンドラ内でSessionIDからアカウントを解決するので未認証では使えません。
+// Limitは1〜1000にクランプ (未指定は50)、MaxSizeMBの未指定は1.0、
+// Queryはnilなら空のクエリに差し替え、いずれの場合も OnlyLatestData = true に上書きします。
+// 並び順はRelatedTimeの降順で、Cursor (RFC3339) を渡すとその時刻より前の最初の件から再開します。
+// DTOを1件ずつJSONにした累積サイズがMaxSizeMBを超えた時点で打ち切るため、
+// ReturnedCountがLimitに満たないことがあります。
+// URLogのサムネイル画像はAIクライアントで扱えないうえ巨大なので、DBから読む段階で外します。
+// IDFペイロードのFilePathはローカルリクエストのときだけ入ります。
+// 既知のdata_typeに当てはまらないKyouはプラグイン由来とみなし、rep_nameでプラグインを
+// 引き当てて、本文の代わりにrep_name/kyou_idを載せたペイロードを返します
+// （本文はgkill側に保存されておらず、別途コンテンツHTML取得が要るため）。
 func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetKyousMCPRequest{}

@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetKmemo は、指定IDのKmemo（テキストメモ）の更新履歴を返します。
+//
+// POST /api/get_kmemo（wrapAuthRepos）
+// req_res.GetKmemoRequest / req_res.GetKmemoResponse
+//
+// RepNameを指定するとそのrepだけを、nilなら全Kmemo repを横断して集めます。
+// 履歴はID+UpdateTimeで重複排除し、UpdateTimeの新しい順に並べて返します。
+// 対象が存在しない場合は空配列で、エラーにはしません。
 func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
