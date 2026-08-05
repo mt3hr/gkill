@@ -164,6 +164,19 @@ type GkillServerAPI struct {
 
 	passwordResetRateLimiter *loginRateLimiter
 
+	// pluginContentHTMLCacheOnce はプラグイン本文HTMLキャッシュの遅延初期化用。
+	// GkillServerAPI はリテラルからも組み立てられるのでコンストラクタに頼らない。
+	pluginContentHTMLCacheOnce sync.Once
+	pluginContentHTMLCacheRef  *pluginContentHTMLCache
+
 	closeOnce sync.Once
 	closeErr  error
+}
+
+// pluginContentHTMLCacheOf はプラグイン本文HTMLキャッシュを返す。
+func (g *GkillServerAPI) pluginContentHTMLCacheOf() *pluginContentHTMLCache {
+	g.pluginContentHTMLCacheOnce.Do(func() {
+		g.pluginContentHTMLCacheRef = newPluginContentHTMLCache()
+	})
+	return g.pluginContentHTMLCacheRef
 }

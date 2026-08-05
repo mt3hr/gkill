@@ -130,6 +130,10 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		}
 	}
 
+	// リポジトリを組み直すとプラグインプロセスも起動し直されるので、
+	// 古い本文HTMLを持ち越さないようキャッシュを捨てる
+	g.pluginContentHTMLCacheOf().InvalidateUser(userID)
+
 	_, err = g.GkillDAOManager.CloseUserRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)

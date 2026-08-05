@@ -1123,10 +1123,16 @@ func (g *GkillDAOManager) getOrCreatePluginManager(userID string) *PluginManager
 }
 
 // GetPluginManager はユーザID別のPluginManagerを返す。APIハンドラからプラグイン操作時に使用する。
-// DiscoverPlugins を呼び出してからPluginManagerを返す。
+// まだ走査していなければ走査してから返す。
+//
+// かつてはリクエストのたびに DiscoverPlugins を呼んでいたが、
+// プラグインKyouの本文取得は一覧の行数ぶん飛んでくるため、
+// ディレクトリ列挙と manifest.json の読み込みがその回数ぶん繰り返されていた。
+// リポジトリ構築時(GetRepositories)には引き続き再走査するので、
+// プラグインを置き直したあとも再ログインやリロードで拾える。
 func (g *GkillDAOManager) GetPluginManager(userID string) *PluginManager {
 	pm := g.getOrCreatePluginManager(userID)
-	if discoverErr := pm.DiscoverPlugins(context.Background()); discoverErr != nil {
+	if discoverErr := pm.EnsureDiscovered(context.Background()); discoverErr != nil {
 		slog.Warn(fmt.Sprintf("plugin discovery error for user %q: %q", userID, discoverErr))
 	}
 	return pm
