@@ -1,14 +1,14 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAgregateTarget from "../dnote-agregate-target";
+import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import { format_duration } from "@/classes/format-date-time";
 
-export default class AgregateSumTimeIsTime implements DnoteAgregateTarget {
-    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
-        return new AgregateSumTimeIsTime()
+export default class AggregateSumTimeIsTime implements DnoteAggregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAggregateTarget {
+        return new AggregateSumTimeIsTime()
     }
-    async append_agregate_element_value(agregated_value_unix_time_milli_second: unknown, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<unknown> {
-        const typed_agregated_value_unix_time_milli_second = agregated_value_unix_time_milli_second === null ? 0 : agregated_value_unix_time_milli_second as number
+    async append_aggregate_element_value(aggregated_value_unix_time_milli_second: unknown, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<unknown> {
+        const typed_aggregated_value_unix_time_milli_second = aggregated_value_unix_time_milli_second === null ? 0 : aggregated_value_unix_time_milli_second as number
 
         let duration_milli_second = 0
         if (kyou.typed_timeis) {
@@ -28,7 +28,7 @@ export default class AgregateSumTimeIsTime implements DnoteAgregateTarget {
                 duration_milli_second = 0
             }
         }
-        return typed_agregated_value_unix_time_milli_second + duration_milli_second
+        return typed_aggregated_value_unix_time_milli_second + duration_milli_second
     }
     async result_to_string(duration_milli_second: unknown): Promise<string> {
         if (duration_milli_second === 0) {
@@ -39,7 +39,7 @@ export default class AgregateSumTimeIsTime implements DnoteAgregateTarget {
     }
     to_json(): Record<string, unknown> {
         return {
-            type: "AgregateSumTimeIsTime",
+            type: "AggregateSumTimeIsTime",
         }
     }
 }

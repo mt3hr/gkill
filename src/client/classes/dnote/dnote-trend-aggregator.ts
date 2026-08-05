@@ -1,12 +1,12 @@
 import moment from 'moment'
 import type { FindKyouQuery } from "../api/find_query/find-kyou-query";
 import type { Kyou } from "../datas/kyou";
-import type DnoteAgregateTarget from "./dnote-agregate-target";
+import type DnoteAggregateTarget from "./dnote-aggregate-target";
 import type DnotePredicate from "./dnote-predicate";
 import load_kyous from "./kyou-loader";
 import type DnoteTrendPoint from "./dnote-trend/dnote-trend-point";
 import type { DnoteTrendGranularity } from "./dnote-trend/dnote-trend-types";
-import agregated_value_to_number from "./dnote-trend/agregated-value-to-number";
+import aggregated_value_to_number from "./dnote-trend/aggregated-value-to-number";
 
 // バケット数の上限（広すぎる検索範囲による暴走防止。超過時は新しい側を優先）
 const max_bucket_count = 400
@@ -36,10 +36,10 @@ function bucket_label(bucket_start: moment.Moment, granularity: DnoteTrendGranul
 
 export class DnoteTrendAggregator {
     private dnote_predicate: DnotePredicate
-    private dnote_aggregate_target: DnoteAgregateTarget
+    private dnote_aggregate_target: DnoteAggregateTarget
     private granularity: DnoteTrendGranularity
 
-    constructor(dnote_predicate: DnotePredicate, dnote_aggregate_target: DnoteAgregateTarget, granularity: DnoteTrendGranularity) {
+    constructor(dnote_predicate: DnotePredicate, dnote_aggregate_target: DnoteAggregateTarget, granularity: DnoteTrendGranularity) {
         this.dnote_predicate = dnote_predicate
         this.dnote_aggregate_target = dnote_aggregate_target
         this.granularity = granularity
@@ -87,7 +87,7 @@ export class DnoteTrendAggregator {
         }
 
         const points = new Array<DnoteTrendPoint>()
-        const buckets = new Map<string, { point: DnoteTrendPoint, agregated_value: unknown, bucket_query: FindKyouQuery, bucket_start_ms: number, bucket_end_exclusive_ms: number }>()
+        const buckets = new Map<string, { point: DnoteTrendPoint, aggregated_value: unknown, bucket_query: FindKyouQuery, bucket_start_ms: number, bucket_end_exclusive_ms: number }>()
         const first_bucket_start_ms = cursor.valueOf()
         let last_bucket_start_ms = first_bucket_start_ms
         while (cursor.isSameOrBefore(end) && points.length < max_bucket_count) {
@@ -108,7 +108,7 @@ export class DnoteTrendAggregator {
                 bucket_query.calendar_end_date = bucket_end_exclusive.toDate()
             }
             points.push(point)
-            buckets.set(point.bucket_key, { point, agregated_value: null, bucket_query, bucket_start_ms: bucket_start.valueOf(), bucket_end_exclusive_ms: bucket_end_exclusive.valueOf() })
+            buckets.set(point.bucket_key, { point, aggregated_value: null, bucket_query, bucket_start_ms: bucket_start.valueOf(), bucket_end_exclusive_ms: bucket_end_exclusive.valueOf() })
             last_bucket_start_ms = bucket_start.valueOf()
             cursor = cursor.clone().add(1, step)
         }
@@ -121,7 +121,7 @@ export class DnoteTrendAggregator {
             }
             if (kyou.typed_timeis) {
                 // TimeIsは日付をまたぐことがあるため、期間が重なる全バケットへ振り分ける
-                // （バケット内への切り詰めは各AgregateTargetがbucket_queryのcalendar範囲で行う）
+                // （バケット内への切り詰めは各AggregateTargetがbucket_queryのcalendar範囲で行う）
                 const span_start = kyou.typed_timeis.start_time.getTime()
                 const raw_end = kyou.typed_timeis.end_time ? kyou.typed_timeis.end_time.getTime() : Date.now()
                 const span_end = Math.max(raw_end, span_start + 1)
@@ -129,7 +129,7 @@ export class DnoteTrendAggregator {
                 while (span_cursor.valueOf() < span_end && span_cursor.valueOf() <= last_bucket_start_ms) {
                     const bucket = buckets.get(span_cursor.format('YYYY-MM-DD'))
                     if (bucket && span_start < bucket.bucket_end_exclusive_ms && span_end > bucket.bucket_start_ms) {
-                        bucket.agregated_value = await this.dnote_aggregate_target.append_agregate_element_value(bucket.agregated_value, kyou, bucket.bucket_query)
+                        bucket.aggregated_value = await this.dnote_aggregate_target.append_aggregate_element_value(bucket.aggregated_value, kyou, bucket.bucket_query)
                         bucket.point.match_kyous.push(kyou.clone())
                     }
                     span_cursor = span_cursor.clone().add(1, step)
@@ -141,16 +141,16 @@ export class DnoteTrendAggregator {
             if (!bucket) {
                 continue
             }
-            bucket.agregated_value = await this.dnote_aggregate_target.append_agregate_element_value(bucket.agregated_value, kyou, bucket.bucket_query)
+            bucket.aggregated_value = await this.dnote_aggregate_target.append_aggregate_element_value(bucket.aggregated_value, kyou, bucket.bucket_query)
             bucket.point.match_kyous.push(kyou.clone())
         }
 
         for (const bucket of buckets.values()) {
-            if (bucket.agregated_value === null) {
+            if (bucket.aggregated_value === null) {
                 continue
             }
-            bucket.point.value = agregated_value_to_number(bucket.agregated_value)
-            bucket.point.value_string = await this.dnote_aggregate_target.result_to_string(bucket.agregated_value)
+            bucket.point.value = aggregated_value_to_number(bucket.aggregated_value)
+            bucket.point.value_string = await this.dnote_aggregate_target.result_to_string(bucket.aggregated_value)
         }
         return points
     }

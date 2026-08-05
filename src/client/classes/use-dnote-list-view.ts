@@ -5,7 +5,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type { Tag } from '@/classes/datas/tag'
 import type { Text } from '@/classes/datas/text'
 import type { Notification } from '@/classes/datas/notification'
-import type AgregatedItem from '@/classes/dnote/aggregate-grouping-list-result-record'
+import type AggregatedItem from '@/classes/dnote/aggregate-grouping-list-result-record'
 import { DnoteListAggregator } from '@/classes/dnote/dnote-list-aggregator'
 import type DnoteListViewProps from '@/pages/views/dnote-list-view-props'
 import type DnoteListQuery from '@/pages/views/dnote-list-query'
@@ -28,7 +28,7 @@ export function useDnoteListView(options: {
     const edit_dnote_list_query = ref<ComponentRef | null>(null)
 
     // ── State refs ──
-    const aggregated_items: Ref<Array<AgregatedItem>> = ref(new Array<AgregatedItem>())
+    const aggregated_items: Ref<Array<AggregatedItem>> = ref(new Array<AggregatedItem>())
 
     // ── Business logic ──
     async function load_aggregate_grouping_list(

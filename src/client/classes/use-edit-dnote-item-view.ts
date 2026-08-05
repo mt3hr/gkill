@@ -38,7 +38,7 @@ export function useEditDnoteItemView(options: {
         prefix.value = model_value.value!.prefix
         suffix.value = model_value.value!.suffix
         root_predicate.value = predicate_struct_from_json(model_value.value!.predicate.predicate_struct_to_json()) as PredicateGroupType
-        aggregate_target.value = aggregate_targets.value.find((aggregate_target) => aggregate_target.value === model_value.value!.agregate_target.to_json().type)!.value
+        aggregate_target.value = aggregate_targets.value.find((aggregate_target) => aggregate_target.value === model_value.value!.aggregate_target.to_json().type)!.value
     }
 
     async function reset(): Promise<void> {
@@ -51,7 +51,7 @@ export function useEditDnoteItemView(options: {
         new_dnote_item.prefix = prefix.value
         new_dnote_item.suffix = suffix.value
         new_dnote_item.title = title.value
-        new_dnote_item.agregate_target = build_dnote_aggregate_target_from_json({ type: aggregate_target.value })
+        new_dnote_item.aggregate_target = build_dnote_aggregate_target_from_json({ type: aggregate_target.value })
         new_dnote_item.predicate = build_dnote_predicate_from_json(predicate_struct_to_json(root_predicate.value))
 
         emits('requested_update_dnote_item', new_dnote_item)

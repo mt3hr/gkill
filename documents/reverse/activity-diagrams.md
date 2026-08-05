@@ -212,7 +212,7 @@ flowchart TD
     LoadKyous --> ApplyPredicate[Predicateフィルタ適用<br>条件グループ]
     ApplyPredicate --> Bucketize[集計粒度でバケット振り分け<br>日 / 週 / 月]
     Bucketize --> AggregatePerBucket[バケットごとに<br>AggregateTargetで集計<br>件数/合計/平均等]
-    AggregatePerBucket --> ToNumber[集計値を数値化<br>agregated_value_to_number]
+    AggregatePerBucket --> ToNumber[集計値を数値化<br>aggregated_value_to_number]
     ToNumber --> Points([DnoteTrendPoint配列を返却])
     Points --> Render[dnote-trend-graph-view.vue が<br>スパークライン描画<br>折れ線 / 棒]
 ```

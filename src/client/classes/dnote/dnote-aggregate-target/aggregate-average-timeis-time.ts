@@ -1,14 +1,14 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAgregateTarget from "../dnote-agregate-target";
+import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import AverageInfo from "./average-info";
 import { format_duration } from "@/classes/format-date-time";
 
-export default class AgregateAverageTimeisTime implements DnoteAgregateTarget {
-    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
-        return new AgregateAverageTimeisTime()
+export default class AggregateAverageTimeIsTime implements DnoteAggregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAggregateTarget {
+        return new AggregateAverageTimeIsTime()
     }
-    async append_agregate_element_value(average_value_timeis: unknown, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<unknown> {
+    async append_aggregate_element_value(average_value_timeis: unknown, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<unknown> {
         const cloned_typed_average_info_timeis = average_value_timeis === null ? new AverageInfo() : (average_value_timeis as AverageInfo).clone()
         cloned_typed_average_info_timeis.total_value = cloned_typed_average_info_timeis.total_value === null ? 0 : cloned_typed_average_info_timeis.total_value as number
 
@@ -45,7 +45,7 @@ export default class AgregateAverageTimeisTime implements DnoteAgregateTarget {
     }
     to_json(): Record<string, unknown> {
         return {
-            type: "AgregateAverageTimeisTime",
+            type: "AggregateAverageTimeIsTime",
         }
     }
 }
