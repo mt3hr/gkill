@@ -5,7 +5,7 @@ import ja from '../locales/ja.json'
 export const SUPPORTED_LOCALES = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'de'] as const
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number]
 
-export function isSupportedLocale(locale: string): locale is SupportedLocale {
+export function is_supported_locale(locale: string): locale is SupportedLocale {
     return (SUPPORTED_LOCALES as readonly string[]).includes(locale)
 }
 

@@ -10,7 +10,7 @@ import { useTheme } from 'vuetify'
 import delete_gkill_kyou_cache, { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { ApplicationConfigViewProps } from '@/pages/views/application-config-view-props'
 import type { ApplicationConfigViewEmits } from '@/pages/views/application-config-view-emits'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -269,7 +269,7 @@ javascript: (function () {
 
         await props.gkill_api.clear_browser_datas()
 
-        await resetDialogHistory()
+        await reset_dialog_history()
         router.replace("/")
     }
 

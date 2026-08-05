@@ -1,6 +1,6 @@
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { deepEquals } from '@/classes/deep-equals'
+import { deep_equals } from '@/classes/deep-equals'
 import moment from 'moment'
 import { CheckState } from '@/pages/views/check-state'
 import type { FindQueryEditorViewProps } from '@/pages/views/find-query-editor-view-props'
@@ -73,7 +73,7 @@ export function useFindQueryEditorView(options: {
     })
 
     watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
-        if (deepEquals(new_value, old_value)) {
+        if (deep_equals(new_value, old_value)) {
             return
         }
         query.value = new_value

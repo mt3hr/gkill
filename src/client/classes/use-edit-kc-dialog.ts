@@ -3,7 +3,7 @@
 import { ref, type Ref } from 'vue'
 import type { EditKCDialogProps } from '@/pages/dialogs/edit-kc-dialog-props'
 import type { KyouDialogEmits } from '@/pages/views/kyou-dialog-emits'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useEditKCDialog(options: {
@@ -22,7 +22,7 @@ export function useEditKCDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        closeDialogViaHistory(is_show_dialog)
+        close_dialog_via_history(is_show_dialog)
     }
 
     return {

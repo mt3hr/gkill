@@ -10,7 +10,7 @@
                     <v-menu activator="parent">
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in page_list">
-                                <v-list-item-title @click="navigateToPage(page.page_name)">
+                                <v-list-item-title @click="navigate_to_page(page.page_name)">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -115,7 +115,7 @@ const {
     show_application_config_dialog,
 
     // Template event handlers
-    navigateToPage,
+    navigate_to_page,
     onPlaingViewReceivedErrors,
     onPlaingViewReceivedMessages,
     onPlaingViewDeletedKyou,

@@ -9,7 +9,7 @@ import type { Notification } from '@/classes/datas/notification'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
-import { detectAndDecodeText } from '@/classes/decode-text'
+import { detect_and_decode_text } from '@/classes/decode-text'
 import { is_markdown_file_name, markdown_to_safe_html, truncate_markdown, MD_LINK_DATA_ATTRIBUTE } from '@/classes/markdown-to-html'
 import { render_mermaid_diagrams } from '@/classes/mermaid-render'
 import { GetIDFKyouByRelativePathRequest } from '@/classes/api/req_res/get-idf-kyou-by-relative-path-request'
@@ -79,7 +79,7 @@ export function useIDFKyouView(options: {
             if (!res.ok) return
             const bytes = new Uint8Array(await res.arrayBuffer())
             // 文字コードを判定してデコードする (Shift_JIS等の文字化け対策)
-            const raw = detectAndDecodeText(bytes)
+            const raw = detect_and_decode_text(bytes)
 
             if (render_as_markdown) {
                 const max_length = props.is_image_request_to_thumb_size ? MAX_MARKDOWN_LENGTH_IN_LIST : MAX_TEXT_LENGTH
@@ -196,14 +196,14 @@ export function useIDFKyouView(options: {
         }
     }
 
-    function buildMediaUrl(fileUrl: string, isVideoThumb: boolean): string {
-        if (isVideoThumb) {
-            return fileUrl + "?is_video=true&thumb=400x400"
+    function build_media_url(file_url: string, is_video_thumb: boolean): string {
+        if (is_video_thumb) {
+            return file_url + "?is_video=true&thumb=400x400"
         }
         if (props.is_image_request_to_thumb_size) {
-            return fileUrl + "?thumb=400x400"
+            return file_url + "?thumb=400x400"
         }
-        return fileUrl
+        return file_url
     }
 
     // ── Event relay objects ──
@@ -246,7 +246,7 @@ export function useIDFKyouView(options: {
         open_link,
         onMarkdownContentClick,
         onMarkdownContentDblclick,
-        buildMediaUrl,
+        build_media_url,
 
         // Event relay objects
         crudRelayHandlers,

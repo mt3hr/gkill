@@ -8,7 +8,7 @@ import { GetSharedKyousRequest } from '@/classes/api/req_res/get-shared-kyous-re
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { useRoute } from 'vue-router'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 
 export function useSharedPage() {
     const route = useRoute()
@@ -149,7 +149,7 @@ export function useSharedPage() {
 
     // ── Lifecycle ──
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
 
     // ── Init ──

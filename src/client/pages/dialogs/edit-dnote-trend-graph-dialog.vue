@@ -43,7 +43,7 @@ import type { GkillMessage } from '../../classes/api/gkill-message';
 import type EditDnoteTrendGraphDialogEmits from './edit-dnote-trend-graph-dialog-emits';
 import type EditDnoteTrendGraphDialogProps from './edit-dnote-trend-graph-dialog-props';
 import type DnoteTrendGraphQuery from '../views/dnote-trend-graph-query';
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -64,6 +64,6 @@ async function show(): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
 }
 </script>

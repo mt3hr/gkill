@@ -41,8 +41,8 @@ export function useRyuuView(options: {
         get: () => {
             if (ryuu_definitions.value.length === 0) return [] as Array<RelatedKyouQuery>
             const idx = current_definition_index.value
-            const safeIdx = (idx >= 0 && idx < ryuu_definitions.value.length) ? idx : 0
-            return ryuu_definitions.value[safeIdx].queries
+            const safe_idx = (idx >= 0 && idx < ryuu_definitions.value.length) ? idx : 0
+            return ryuu_definitions.value[safe_idx].queries
         },
         set: (val: Array<RelatedKyouQuery>) => {
             if (ryuu_definitions.value.length === 0) return
@@ -54,8 +54,8 @@ export function useRyuuView(options: {
     })
 
     // ── Watchers ──
-    watch(current_definition_index, (newIdx, oldIdx) => {
-        if (newIdx === oldIdx) return
+    watch(current_definition_index, (new_idx, old_idx) => {
+        if (new_idx === old_idx) return
         if (!props.editable) {
             abort_controler.value.abort()
             abort_controler.value = new AbortController()
@@ -197,7 +197,7 @@ export function useRyuuView(options: {
         nextTick(() => emits('requested_close_dialog'))
     }
 
-    function floatingActionButtonStyle() {
+    function floating_action_button_style() {
         return {
             bottom: '60px',
             right: '10px',
@@ -222,11 +222,11 @@ export function useRyuuView(options: {
     /**
      * FoldableStruct式：上/下挿入で並び替え
      */
-    function handle_move_related_kyou_query(srcId: string, targetId: string, dropType: 'up' | 'down'): void {
+    function handle_move_related_kyou_query(src_id: string, target_id: string, drop_type: 'up' | 'down'): void {
         if (!props.editable) return
 
-        const from = related_kyou_queries.value.findIndex(v => v.id === srcId)
-        const target = related_kyou_queries.value.findIndex(v => v.id === targetId)
+        const from = related_kyou_queries.value.findIndex(v => v.id === src_id)
+        const target = related_kyou_queries.value.findIndex(v => v.id === target_id)
         if (from < 0 || target < 0) return
         if (from === target) return
 
@@ -236,8 +236,8 @@ export function useRyuuView(options: {
         let t = target
         if (from < target) t = target - 1
 
-        const insertIndex = (dropType === 'up') ? t : (t + 1)
-        related_kyou_queries.value.splice(insertIndex, 0, item)
+        const insert_index = (drop_type === 'up') ? t : (t + 1)
+        related_kyou_queries.value.splice(insert_index, 0, item)
 
         nextTick(() => load_related_kyou())
     }
@@ -378,7 +378,7 @@ export function useRyuuView(options: {
         'clicked_kyou': (kyou: Kyou) => onClickedKyou(kyou),
     }
 
-    const rykvDialogHandler = {
+    const rykvDialogHandlers = {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => onRequestedOpenRykvDialog(kind, kyou, payload),
     }
 
@@ -398,7 +398,7 @@ export function useRyuuView(options: {
         add_definition,
         delete_current_definition,
         apply,
-        floatingActionButtonStyle,
+        floating_action_button_style,
 
         // Template event handlers
         onRequestedMoveRelatedKyouQuery,
@@ -432,6 +432,6 @@ export function useRyuuView(options: {
         ryuuListItemCrudRelayHandlers,
         ryuuListItemRequestHandlers,
         ryuuListItemFocusHandlers,
-        rykvDialogHandler,
+        rykvDialogHandlers,
     }
 }

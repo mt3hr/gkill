@@ -26,13 +26,13 @@ export function useDnoteItemListView(options: {
         kyou_is_loaded: boolean
     ) {
         if (!dnote_item_views.value) return
-        const waitPromises: Array<Promise<void>> = []
+        const wait_promises: Array<Promise<void>> = []
         for (let i = 0; i < dnote_item_views.value.length; i++) {
             const v = dnote_item_views.value[i]
             if (!v) continue
-            waitPromises.push(v.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded))
+            wait_promises.push(v.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded))
         }
-        return Promise.all(waitPromises)
+        return Promise.all(wait_promises)
     }
 
     function delete_dnote_item(dnote_item_id: string): void {
@@ -65,18 +65,18 @@ export function useDnoteItemListView(options: {
     function onListDrop(e: DragEvent): void {
         if (!props.editable) return
 
-        const srcId = e.dataTransfer?.getData("gkill_dnote_item_id")
-        const srcListIndexStr = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
-        if (!srcId || srcListIndexStr === undefined || srcListIndexStr === null || srcListIndexStr === "") return
+        const src_id = e.dataTransfer?.getData("gkill_dnote_item_id")
+        const src_list_index_str = e.dataTransfer?.getData("gkill_dnote_item_src_list_index")
+        if (!src_id || src_list_index_str === undefined || src_list_index_str === null || src_list_index_str === "") return
 
-        const srcListIndex = Number(srcListIndexStr)
+        const src_list_index = Number(src_list_index_str)
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
         const rect = el.getBoundingClientRect()
         const y = e.clientY - rect.top
-        const dropType: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
+        const drop_type: "up" | "down" = y <= rect.height * 0.5 ? "up" : "down"
 
-        emits("requested_move_dnote_item", srcId, srcListIndex, null, dnd_list_index, dropType)
+        emits("requested_move_dnote_item", src_id, src_list_index, null, dnd_list_index, drop_type)
         e.preventDefault()
         e.stopPropagation()
     }

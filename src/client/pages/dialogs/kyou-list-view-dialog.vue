@@ -81,7 +81,7 @@ const emits = defineEmits<KyouListViewEmits>()
 
 defineExpose({ show, hide })
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -104,16 +104,16 @@ const observed_height = ref(0)
 const view_width = computed(() => observed_width.value > 0 ? Math.max(200, observed_width.value - 8) : 400)
 const view_height = computed(() => observed_height.value > 0 ? observed_height.value : props.list_height.valueOf())
 
-function resolveElement(target: ComponentPublicInstance | HTMLElement | null): HTMLElement | null {
+function resolve_element(target: ComponentPublicInstance | HTMLElement | null): HTMLElement | null {
     if (!target) return null
     return target instanceof HTMLElement ? target : (target.$el as HTMLElement | null)
 }
 
 let card_ro: ResizeObserver | null = null
-watch(list_card_ref, (el, oldEl) => {
-    const old_element = resolveElement(oldEl ?? null)
+watch(list_card_ref, (el, old_el) => {
+    const old_element = resolve_element(old_el ?? null)
     if (card_ro && old_element) { try { card_ro.unobserve(old_element) } catch { /* noop */ } }
-    const element = resolveElement(el)
+    const element = resolve_element(el)
     if (element) {
         if (!card_ro) {
             card_ro = new ResizeObserver((entries) => {
@@ -132,7 +132,7 @@ async function show(): Promise<void> {
     is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-    closeDialogViaHistory(is_show_dialog)
+    close_dialog_via_history(is_show_dialog)
 }
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
@@ -150,16 +150,16 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
     })();
 }
 
-function onDeletedKyou(deletedKyou: Kyou): void {
+function onDeletedKyou(deleted_kyou: Kyou): void {
     if (!model_value.value) {
         return
     }
     for (let i = model_value.value.length - 1; i >= 0; i--) {
-        if (model_value.value[i].id === deletedKyou.id) {
+        if (model_value.value[i].id === deleted_kyou.id) {
             model_value.value.splice(i, 1)
         }
     }
-    emits('deleted_kyou', deletedKyou)
+    emits('deleted_kyou', deleted_kyou)
 }
 </script>
 

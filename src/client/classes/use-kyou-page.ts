@@ -13,7 +13,7 @@ import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function useKyouPage() {
@@ -62,7 +62,7 @@ export function useKyouPage() {
     })
 
     // ── beforeunload guard ──
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
+    function handle_before_unload(e: BeforeUnloadEvent) {
         if (is_loading.value) {
             e.preventDefault()
         }
@@ -70,17 +70,17 @@ export function useKyouPage() {
 
     // ── Lifecycle ──
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
 
     const onResize = () => {
         resize_content()
     }
     window.addEventListener('resize', onResize)
-    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('beforeunload', handle_before_unload)
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)
-        window.removeEventListener('beforeunload', handleBeforeUnload)
+        window.removeEventListener('beforeunload', handle_before_unload)
     })
 
     // ── Internal helpers ──
@@ -209,22 +209,22 @@ export function useKyouPage() {
     }
 
     // プッシュ通知登録用
-    async function subscribe(vapidPublicKey: string) {
-        if (!vapidPublicKey || vapidPublicKey === "") {
+    async function subscribe(vapid_public_key: string) {
+        if (!vapid_public_key || vapid_public_key === "") {
             return
         }
         await navigator.serviceWorker.ready
             .then(function (registration) {
                 return registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                    applicationServerKey: url_base64_to_uint8_array(vapid_public_key),
                 });
             })
             .then(async function (subscription) {
                 const req = new RegisterGkillNotificationRequest()
 
                 req.subscription = subscription
-                req.public_key = vapidPublicKey
+                req.public_key = vapid_public_key
                 const res = await GkillAPI.get_gkill_api().register_gkill_notification(req)
                 if (res.errors && res.errors.length !== 0) {
                     write_errors(res.errors)
@@ -238,12 +238,12 @@ export function useKyouPage() {
     }
 
     // プッシュ通知登録用
-    function urlBase64ToUint8Array(base64String: string) {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    function url_base64_to_uint8_array(base64_string: string) {
+        const padding = '='.repeat((4 - (base64_string.length % 4)) % 4);
         /* eslint no-useless-escape: 0 */
-        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+        const base64 = (base64_string + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const raw_data = window.atob(base64);
+        return Uint8Array.from([...raw_data].map(char => char.charCodeAt(0)));
     }
 
     // プッシュ通知登録用
@@ -276,8 +276,8 @@ export function useKyouPage() {
     }
 
     // ── Template event handlers ──
-    async function navigateToPage(page_name: string): Promise<void> {
-        await resetDialogHistory()
+    async function navigate_to_page(page_name: string): Promise<void> {
+        await reset_dialog_history()
         router.replace('/' + page_name + '?loaded=true')
     }
 
@@ -314,7 +314,7 @@ export function useKyouPage() {
         page_list,
 
         // Template event handlers
-        navigateToPage,
+        navigate_to_page,
         write_errors,
         write_messages,
         close_message,

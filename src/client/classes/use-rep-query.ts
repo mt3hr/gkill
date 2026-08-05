@@ -4,7 +4,7 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import { CheckState } from '@/pages/views/check-state'
 import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
-import { deepEquals } from '@/classes/deep-equals'
+import { deep_equals } from '@/classes/deep-equals'
 import type { RepQueryEmits } from '@/pages/views/rep-query-emits'
 import type { RepQueryProps } from '@/pages/views/rep-query-props'
 import type FoldableStruct from '@/pages/views/foldable-struct.vue'
@@ -171,7 +171,7 @@ export function useRepQuery(options: {
             f(cloned_application_config.value.rep_struct)
         }
         const reps = foldable_struct_reps.value?.get_selected_items()
-        if (reps && !deepEquals(reps, cloned_query.value?.reps)) {
+        if (reps && !deep_equals(reps, cloned_query.value?.reps)) {
             if (!skip_emits_this_tick.value && !disable_emits) {
                 emits('request_update_checked_reps', reps, true)
             }
@@ -222,14 +222,14 @@ export function useRepQuery(options: {
         }
 
         const devices = foldable_struct_devices.value?.get_selected_items()
-        if (devices && !deepEquals(devices, cloned_query.value?.devices_in_sidebar)) {
+        if (devices && !deep_equals(devices, cloned_query.value?.devices_in_sidebar)) {
             if (!skip_emits_this_tick.value && !disable_emits) {
                 emits('request_update_checked_devices', devices, true)
             }
         }
         if (!loading.value) {
             const reps = calc_reps_by_types_and_devices()
-            if (reps && !deepEquals(reps, cloned_query.value?.reps)) {
+            if (reps && !deep_equals(reps, cloned_query.value?.reps)) {
                 update_check_reps(reps, CheckState.checked, true, disable_emits)
             }
         }
@@ -279,14 +279,14 @@ export function useRepQuery(options: {
         }
 
         const rep_types = foldable_struct_rep_types.value?.get_selected_items()
-        if (rep_types && !deepEquals(rep_types, cloned_query.value?.rep_types_in_sidebar)) {
+        if (rep_types && !deep_equals(rep_types, cloned_query.value?.rep_types_in_sidebar)) {
             if (!skip_emits_this_tick.value && !disable_emits) {
                 emits('request_update_checked_rep_types', rep_types, true)
             }
         }
         if (!loading.value) {
             const reps = calc_reps_by_types_and_devices()
-            if (reps && !deepEquals(reps, cloned_query.value?.reps)) {
+            if (reps && !deep_equals(reps, cloned_query.value?.reps)) {
                 update_check_reps(reps, CheckState.checked, true, disable_emits)
             }
         }

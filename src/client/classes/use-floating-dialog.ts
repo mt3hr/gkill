@@ -39,7 +39,7 @@ function clamp(v: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, v))
 }
 
-function getPointerXY(e: MouseEvent | TouchEvent): Point {
+function get_pointer_xy(e: MouseEvent | TouchEvent): Point {
   if ("touches" in e) {
     const t = e.touches[0] ?? e.changedTouches[0]
     return { x: t?.clientX ?? 0, y: t?.clientY ?? 0 }
@@ -47,7 +47,7 @@ function getPointerXY(e: MouseEvent | TouchEvent): Point {
   return { x: e.clientX, y: e.clientY }
 }
 
-function isInteractiveTarget(target: EventTarget | null): boolean {
+function is_interactive_target(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null
   if (!el) return false
 
@@ -76,21 +76,21 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 }
 
 // localStorage が使えない環境でも落ちないようにする
-function safeGet(key: string): string | null {
+function safe_get(key: string): string | null {
   try {
     return localStorage.getItem(key)
   } catch {
     return null
   }
 }
-function safeSet(key: string, val: string): void {
+function safe_set(key: string, val: string): void {
   try {
     localStorage.setItem(key, val)
   } catch {
     // noop
   }
 }
-function safeRemove(key: string): void {
+function safe_remove(key: string): void {
   try {
     localStorage.removeItem(key)
   } catch {
@@ -98,33 +98,33 @@ function safeRemove(key: string): void {
   }
 }
 
-function loadBool(key: string, defaultValue: boolean): boolean {
-  const raw = safeGet(key)
-  if (raw === null) return defaultValue
+function load_bool(key: string, default_value: boolean): boolean {
+  const raw = safe_get(key)
+  if (raw === null) return default_value
   return raw === "1"
 }
-function saveBool(key: string, v: boolean): void {
-  safeSet(key, v ? "1" : "0")
+function save_bool(key: string, v: boolean): void {
+  safe_set(key, v ? "1" : "0")
 }
 
-function loadPoint(key: string, defaultValue: Point): Point {
+function load_point(key: string, default_value: Point): Point {
   try {
-    const raw = safeGet(key)
-    if (!raw) return defaultValue
+    const raw = safe_get(key)
+    if (!raw) return default_value
     const p = JSON.parse(raw) as Point
-    if (typeof p?.x !== "number" || typeof p?.y !== "number") return defaultValue
+    if (typeof p?.x !== "number" || typeof p?.y !== "number") return default_value
     return p
   } catch {
-    return defaultValue
+    return default_value
   }
 }
-function savePoint(key: string, p: Point): void {
-  safeSet(key, JSON.stringify(p))
+function save_point(key: string, p: Point): void {
+  safe_set(key, JSON.stringify(p))
 }
 
-function loadSize(key: string): Size | null {
+function load_size(key: string): Size | null {
   try {
-    const raw = safeGet(key)
+    const raw = safe_get(key)
     if (!raw) return null
     const s = JSON.parse(raw) as Size
     if (typeof s?.w !== "number" || typeof s?.h !== "number") return null
@@ -133,12 +133,12 @@ function loadSize(key: string): Size | null {
     return null
   }
 }
-function saveSize(key: string, s: Size): void {
-  safeSet(key, JSON.stringify(s))
+function save_size(key: string, s: Size): void {
+  safe_set(key, JSON.stringify(s))
 }
 
 export function useFloatingDialog(
-  storageKey: string,
+  storage_key: string,
   opts?: {
     defaultTransparent?: boolean
     margin?: number
@@ -163,136 +163,136 @@ export function useFloatingDialog(
 ): UseFloatingDialogResult {
   const margin = opts?.margin ?? 8
   // Teleport to body 前提なので、Vuetify の overlay より前面に出る値にする
-  const zIndex = opts?.zIndex ?? 1100
-  const centerMode = opts?.centerMode ?? "first"
-  const dontPersistWhenAlwaysCenter = opts?.dontPersistWhenAlwaysCenter ?? false
+  const z_index = opts?.zIndex ?? 1100
+  const center_mode = opts?.centerMode ?? "first"
+  const dont_persist_when_always_center = opts?.dontPersistWhenAlwaysCenter ?? false
   const resizable = opts?.resizable ?? true
-  const minW = opts?.minSize?.w ?? 200
-  const minH = opts?.minSize?.h ?? 150
-  const persistHeight = opts?.persistHeight ?? true
+  const min_w = opts?.minSize?.w ?? 200
+  const min_h = opts?.minSize?.h ?? 150
+  const persist_height = opts?.persistHeight ?? true
 
-  const posKey = `${storageKey}:pos`
-  const transparentKey = `${storageKey}:transparent`
-  const sizeKey = `${storageKey}:size`
+  const pos_key = `${storage_key}:pos`
+  const transparent_key = `${storage_key}:transparent`
+  const size_key = `${storage_key}:size`
 
-  const containerRef = ref<HTMLElement | null>(null)
+  const container_ref = ref<HTMLElement | null>(null)
 
-  const isTransparent = ref<boolean>(
-    loadBool(transparentKey, opts?.defaultTransparent ?? false),
+  const is_transparent = ref<boolean>(
+    load_bool(transparent_key, opts?.defaultTransparent ?? false),
   )
 
   // 保存があるかどうか（初回中央の判定に使う）
-  const hasSavedPos = safeGet(posKey) != null
+  const has_saved_pos = safe_get(pos_key) != null
 
   // 位置
   const pos = ref<Point>(
-    loadPoint(posKey, opts?.defaultPos ?? { x: 16, y: 72 }),
+    load_point(pos_key, opts?.defaultPos ?? { x: 16, y: 72 }),
   )
 
   // ユーザ設定サイズ（null = 未リサイズ、CSS既定サイズを使用）
-  const savedSize = resizable ? loadSize(sizeKey) : null
-  const userSize = ref<Size | null>(
-    savedSize && !persistHeight ? { w: savedSize.w, h: 0 } : savedSize,
+  const saved_size = resizable ? load_size(size_key) : null
+  const user_size = ref<Size | null>(
+    saved_size && !persist_height ? { w: saved_size.w, h: 0 } : saved_size,
   )
 
   // --- Accessibility ---
-  const dialogId = `floating-dialog-${storageKey.replace(/[^a-zA-Z0-9_-]/g, "-")}`
-  const labelId = `${dialogId}__label`
-  let escapeHandler: ((e: KeyboardEvent) => void) | null = null
+  const dialog_id = `floating-dialog-${storage_key.replace(/[^a-zA-Z0-9_-]/g, "-")}`
+  const label_id = `${dialog_id}__label`
+  let escape_handler: ((e: KeyboardEvent) => void) | null = null
 
-  function applyAriaAttributes(el: HTMLElement): void {
+  function apply_aria_attributes(el: HTMLElement): void {
     el.setAttribute("role", "dialog")
     el.setAttribute("aria-modal", "true")
 
     // Find a heading or title/header element for aria-labelledby
-    const labelEl =
+    const label_el =
       el.querySelector("h1, h2, h3, h4, h5, h6") ??
       el.querySelector(".gkill-floating-dialog__title")
-    if (labelEl && labelEl.textContent?.trim()) {
-      if (!labelEl.id) labelEl.id = labelId
-      el.setAttribute("aria-labelledby", labelEl.id)
+    if (label_el && label_el.textContent?.trim()) {
+      if (!label_el.id) label_el.id = label_id
+      el.setAttribute("aria-labelledby", label_el.id)
     } else {
-      el.setAttribute("aria-label", storageKey.replace(/-/g, " "))
+      el.setAttribute("aria-label", storage_key.replace(/-/g, " "))
     }
   }
 
-  function attachEscapeHandler(el: HTMLElement): void {
-    detachEscapeHandler()
-    escapeHandler = (e: KeyboardEvent) => {
+  function attach_escape_handler(el: HTMLElement): void {
+    detach_escape_handler()
+    escape_handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation()
         opts?.onEscape?.()
       }
     }
-    el.addEventListener("keydown", escapeHandler)
+    el.addEventListener("keydown", escape_handler)
   }
 
-  function detachEscapeHandler(): void {
-    if (escapeHandler && containerRef.value) {
-      containerRef.value.removeEventListener("keydown", escapeHandler)
+  function detach_escape_handler(): void {
+    if (escape_handler && container_ref.value) {
+      container_ref.value.removeEventListener("keydown", escape_handler)
     }
-    escapeHandler = null
+    escape_handler = null
   }
 
 
   // --- End Accessibility ---
 
   // 内容の変化でサイズが変わるので observer で追従
-  const lastRect = ref<{ w: number; h: number }>({ w: 0, h: 0 })
+  const last_rect = ref<{ w: number; h: number }>({ w: 0, h: 0 })
   let ro: ResizeObserver | null = null
-  let observedEl: HTMLElement | null = null
+  let observed_el: HTMLElement | null = null
 
-  function readRect(): { w: number; h: number } {
-    const el = containerRef.value
-    if (!el) return lastRect.value
+  function read_rect(): { w: number; h: number } {
+    const el = container_ref.value
+    if (!el) return last_rect.value
     const rect = el.getBoundingClientRect()
     const w = rect.width
     const h = rect.height
-    if (w > 0 && h > 0) lastRect.value = { w, h }
-    return lastRect.value
+    if (w > 0 && h > 0) last_rect.value = { w, h }
+    return last_rect.value
   }
 
-  function clampToViewport(): void {
-    const { w, h } = readRect()
+  function clamp_to_viewport(): void {
+    const { w, h } = read_rect()
     if (w <= 0 || h <= 0) return
 
-    const maxX = window.innerWidth - w - margin
-    const maxY = window.innerHeight - h - margin
+    const max_x = window.innerWidth - w - margin
+    const max_y = window.innerHeight - h - margin
 
     pos.value = {
-      x: clamp(pos.value.x, margin, Math.max(margin, maxX)),
-      y: clamp(pos.value.y, margin, Math.max(margin, maxY)),
+      x: clamp(pos.value.x, margin, Math.max(margin, max_x)),
+      y: clamp(pos.value.y, margin, Math.max(margin, max_y)),
     }
   }
 
-  function persistPos(): void {
-    if (centerMode === "always" && dontPersistWhenAlwaysCenter) return
-    savePoint(posKey, pos.value)
+  function persist_pos(): void {
+    if (center_mode === "always" && dont_persist_when_always_center) return
+    save_point(pos_key, pos.value)
   }
 
   // is-user-resized クラスの管理
-  function updateResizedClass(): void {
-    const el = containerRef.value
+  function update_resized_class(): void {
+    const el = container_ref.value
     if (!el) return
-    if (userSize.value) {
+    if (user_size.value) {
       el.classList.add("is-user-resized")
     } else {
       el.classList.remove("is-user-resized")
     }
   }
 
-  const fixedStyle = computed<Record<string, string>>(() => {
+  const fixed_style = computed<Record<string, string>>(() => {
     const s: Record<string, string> = {
       position: "fixed",
       left: `${Math.round(pos.value.x)}px`,
       top: `${Math.round(pos.value.y)}px`,
-      zIndex: String(zIndex),
+      zIndex: String(z_index),
       willChange: "left, top",
     }
-    if (userSize.value) {
-      s.width = `${Math.round(userSize.value.w)}px`
-      if (userSize.value.h > 0) {
-        s.height = `${Math.round(userSize.value.h)}px`
+    if (user_size.value) {
+      s.width = `${Math.round(user_size.value.w)}px`
+      if (user_size.value.h > 0) {
+        s.height = `${Math.round(user_size.value.h)}px`
       }
     }
     return s
@@ -300,25 +300,25 @@ export function useFloatingDialog(
 
   // drag state
   let dragging = false
-  let startPointer: Point = { x: 0, y: 0 }
-  let startPos: Point = { x: 0, y: 0 }
+  let start_pointer: Point = { x: 0, y: 0 }
+  let start_pos: Point = { x: 0, y: 0 }
 
   // resize state
   let resizing = false
-  let resizeStartPointer: Point = { x: 0, y: 0 }
-  let resizeStartSize: Size = { w: 0, h: 0 }
+  let resize_start_pointer: Point = { x: 0, y: 0 }
+  let resize_start_size: Size = { w: 0, h: 0 }
 
   function onMove(e: MouseEvent | TouchEvent): void {
     if (resizing) {
       if ("touches" in e) e.preventDefault()
-      const p = getPointerXY(e)
-      const maxW = window.innerWidth * 0.95
-      const maxH = window.innerHeight * 0.95
-      userSize.value = {
-        w: clamp(resizeStartSize.w + (p.x - resizeStartPointer.x), minW, maxW),
-        h: clamp(resizeStartSize.h + (p.y - resizeStartPointer.y), minH, maxH),
+      const p = get_pointer_xy(e)
+      const max_w = window.innerWidth * 0.95
+      const max_h = window.innerHeight * 0.95
+      user_size.value = {
+        w: clamp(resize_start_size.w + (p.x - resize_start_pointer.x), min_w, max_w),
+        h: clamp(resize_start_size.h + (p.y - resize_start_pointer.y), min_h, max_h),
       }
-      updateResizedClass()
+      update_resized_class()
       return
     }
 
@@ -327,36 +327,36 @@ export function useFloatingDialog(
     // touch でのページスクロールを抑制
     if ("touches" in e) e.preventDefault()
 
-    const p = getPointerXY(e)
-    const dx = p.x - startPointer.x
-    const dy = p.y - startPointer.y
+    const p = get_pointer_xy(e)
+    const dx = p.x - start_pointer.x
+    const dy = p.y - start_pointer.y
 
-    pos.value = { x: startPos.x + dx, y: startPos.y + dy }
-    clampToViewport()
+    pos.value = { x: start_pos.x + dx, y: start_pos.y + dy }
+    clamp_to_viewport()
   }
 
   function onUp(): void {
     if (resizing) {
       resizing = false
-      if (userSize.value) saveSize(sizeKey, userSize.value)
+      if (user_size.value) save_size(size_key, user_size.value)
       return
     }
     if (!dragging) return
     dragging = false
-    persistPos()
+    persist_pos()
   }
 
   function onHeaderPointerDown(e: MouseEvent | TouchEvent): void {
     // ✅ ヘッダー内の操作要素タップではドラッグ開始しない
-    if (isInteractiveTarget(e.target)) return
+    if (is_interactive_target(e.target)) return
 
     // 掴んだ瞬間に rect 更新・clamp（画面外スタート防止）
-    readRect()
-    clampToViewport()
+    read_rect()
+    clamp_to_viewport()
 
     dragging = true
-    startPointer = getPointerXY(e)
-    startPos = { ...pos.value }
+    start_pointer = get_pointer_xy(e)
+    start_pos = { ...pos.value }
 
     // touchstart を抑制しないと「タップ→スクロール」判定が混ざって変な挙動になりがち
     if ("touches" in e) e.preventDefault()
@@ -366,110 +366,110 @@ export function useFloatingDialog(
     e.preventDefault()
     e.stopPropagation()
 
-    const rect = containerRef.value?.getBoundingClientRect()
+    const rect = container_ref.value?.getBoundingClientRect()
     if (!rect) return
 
     resizing = true
-    resizeStartPointer = getPointerXY(e)
-    resizeStartSize = { w: rect.width, h: rect.height }
+    resize_start_pointer = get_pointer_xy(e)
+    resize_start_size = { w: rect.width, h: rect.height }
   }
 
-  function resetToCenter(): void {
+  function reset_to_center(): void {
     // サイズが取れない瞬間があるので、まず概算→次フレームで確定
-    const r0 = readRect()
-    const estimateW = r0.w > 0 ? r0.w : Math.min(720, window.innerWidth * 0.85)
-    const estimateH = r0.h > 0 ? r0.h : window.innerHeight * 0.6
+    const r0 = read_rect()
+    const estimate_w = r0.w > 0 ? r0.w : Math.min(720, window.innerWidth * 0.85)
+    const estimate_h = r0.h > 0 ? r0.h : window.innerHeight * 0.6
 
     pos.value = {
-      x: Math.round((window.innerWidth - estimateW) / 2),
-      y: Math.round((window.innerHeight - estimateH) / 2),
+      x: Math.round((window.innerWidth - estimate_w) / 2),
+      y: Math.round((window.innerHeight - estimate_h) / 2),
     }
-    clampToViewport()
-    persistPos()
+    clamp_to_viewport()
+    persist_pos()
 
     requestAnimationFrame(() => {
-      const r1 = readRect()
+      const r1 = read_rect()
       if (r1.w > 0 && r1.h > 0) {
         pos.value = {
           x: Math.round((window.innerWidth - r1.w) / 2),
           y: Math.round((window.innerHeight - r1.h) / 2),
         }
-        clampToViewport()
-        persistPos()
+        clamp_to_viewport()
+        persist_pos()
       }
     })
   }
 
-  function resetSize(): void {
-    userSize.value = null
-    safeRemove(sizeKey)
-    updateResizedClass()
+  function reset_size(): void {
+    user_size.value = null
+    safe_remove(size_key)
+    update_resized_class()
   }
 
   // 初回中央寄せの実行フラグ
-  let didAutoCenter = false
+  let did_auto_center = false
 
-  function autoCenterIfNeeded(): void {
-    if (centerMode === "never") return
-    if (centerMode === "always") {
-      resetToCenter()
+  function auto_center_if_needed(): void {
+    if (center_mode === "never") return
+    if (center_mode === "always") {
+      reset_to_center()
       return
     }
 
-    // centerMode === "first"
-    if (didAutoCenter) return
-    if (!hasSavedPos) {
-      resetToCenter()
-      didAutoCenter = true
+    // center_mode === "first"
+    if (did_auto_center) return
+    if (!has_saved_pos) {
+      reset_to_center()
+      did_auto_center = true
     }
   }
 
-  function attachObserver(el: HTMLElement): void {
+  function attach_observer(el: HTMLElement): void {
     if (!ro) return
-    if (observedEl) {
+    if (observed_el) {
       try {
-        ro.unobserve(observedEl)
+        ro.unobserve(observed_el)
       } catch {
         // noop
       }
     }
-    observedEl = el
+    observed_el = el
     ro.observe(el)
   }
 
-  function detachObserver(): void {
-    if (!ro || !observedEl) return
+  function detach_observer(): void {
+    if (!ro || !observed_el) return
     try {
-      ro.unobserve(observedEl)
+      ro.unobserve(observed_el)
     } catch {
       // noop
     }
-    observedEl = null
+    observed_el = null
   }
 
   function onResize(): void {
-    clampToViewport()
-    persistPos()
+    clamp_to_viewport()
+    persist_pos()
   }
 
   // リサイズハンドル要素の管理
-  let resizeHandle: HTMLElement | null = null
+  let resize_handle: HTMLElement | null = null
 
-  function createResizeHandle(parent: HTMLElement): void {
-    if (!resizable || resizeHandle) return
-    resizeHandle = document.createElement("div")
-    resizeHandle.className = "gkill-floating-dialog__resize-handle"
-    resizeHandle.addEventListener("mousedown", onResizePointerDown as EventListener)
-    resizeHandle.addEventListener("touchstart", onResizePointerDown as EventListener, { passive: false })
-    parent.appendChild(resizeHandle)
+  function create_resize_handle(parent: HTMLElement): void {
+    if (!resizable || resize_handle) return
+    resize_handle = document.createElement("div")
+    resize_handle.className = "gkill-floating-dialog__resize-handle"
+    resize_handle.addEventListener("mousedown", onResizePointerDown as EventListener)
+    resize_handle.addEventListener("touchstart", onResizePointerDown as EventListener, { passive: false })
+    parent.appendChild(resize_handle)
   }
 
-  function removeResizeHandle(): void {
-    if (!resizeHandle) return
-    resizeHandle.removeEventListener("mousedown", onResizePointerDown as EventListener)
-    resizeHandle.removeEventListener("touchstart", onResizePointerDown as EventListener)
-    resizeHandle.remove()
-    resizeHandle = null
+  function remove_resize_handle(): void {
+    if (!resize_handle) return
+    resize_handle.removeEventListener("mousedown", onResizePointerDown as EventListener)
+    resize_handle.removeEventListener("touchstart", onResizePointerDown as EventListener)
+    resize_handle.remove()
+    resize_handle = null
   }
 
   onMounted(() => {
@@ -477,9 +477,9 @@ export function useFloatingDialog(
       // リサイズ中はユーザ操作を優先し、clamp を抑制
       if (resizing) return
       // 内容サイズ変化 → 画面外に出ないように補正
-      readRect()
-      clampToViewport()
-      persistPos()
+      read_rect()
+      clamp_to_viewport()
+      persist_pos()
     })
 
     window.addEventListener("resize", onResize, { passive: true })
@@ -490,9 +490,9 @@ export function useFloatingDialog(
   })
 
   onBeforeUnmount(() => {
-    detachEscapeHandler()
-    removeResizeHandle()
-    detachObserver()
+    detach_escape_handler()
+    remove_resize_handle()
+    detach_observer()
     if (ro) ro.disconnect()
     ro = null
 
@@ -505,50 +505,50 @@ export function useFloatingDialog(
 
   // ✅ Teleport の v-if で DOM が生えた瞬間に observer attach & 中央寄せ & リサイズハンドル注入
   watch(
-    containerRef,
+    container_ref,
     (el) => {
       if (!el) {
-        detachEscapeHandler()
-        removeResizeHandle()
-        detachObserver()
+        detach_escape_handler()
+        remove_resize_handle()
+        detach_observer()
         return
       }
 
-      if (ro) attachObserver(el)
+      if (ro) attach_observer(el)
 
       // リサイズハンドルを注入
-      createResizeHandle(el)
+      create_resize_handle(el)
 
       // is-user-resized クラスを反映
-      updateResizedClass()
+      update_resized_class()
 
       // Accessibility: ARIA attributes, escape handler, focus trap, focus management
-      applyAriaAttributes(el)
-      attachEscapeHandler(el)
+      apply_aria_attributes(el)
+      attach_escape_handler(el)
 
       // 出現直後は rect が 0 のことがあるので次フレームで処理
       requestAnimationFrame(() => {
-        readRect()
+        read_rect()
 
         // 中央寄せが必要なら実行、不要なら画面内に収めるだけ
-        autoCenterIfNeeded()
-        clampToViewport()
-        persistPos()
+        auto_center_if_needed()
+        clamp_to_viewport()
+        persist_pos()
       })
 
     },
     { flush: "post" },
   )
 
-  watch(isTransparent, (v) => saveBool(transparentKey, v), { immediate: true })
+  watch(is_transparent, (v) => save_bool(transparent_key, v), { immediate: true })
 
   return {
-    containerRef,
-    fixedStyle,
+    containerRef: container_ref,
+    fixedStyle: fixed_style,
     onHeaderPointerDown,
-    isTransparent,
-    resetToCenter,
-    resetSize,
-    userSize: userSize as Readonly<Ref<Size | null>>,
+    isTransparent: is_transparent,
+    resetToCenter: reset_to_center,
+    resetSize: reset_size,
+    userSize: user_size as Readonly<Ref<Size | null>>,
   }
 }

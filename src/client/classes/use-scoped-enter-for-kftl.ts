@@ -1,6 +1,6 @@
 import { onMounted, onBeforeUnmount, type Ref } from 'vue';
 
-function isTextInput(el: Element | null): boolean {
+function is_text_input(el: Element | null): boolean {
     if (!el) return false;
     const he = el as HTMLElement;
     const tag = he.tagName?.toLowerCase();
@@ -10,17 +10,17 @@ function isTextInput(el: Element | null): boolean {
     return false;
 }
 
-function isInsideDialog(el: Element | null): boolean {
+function is_inside_dialog(el: Element | null): boolean {
     if (!el) return false;
     return !!el.closest('.gkill-floating-dialog, [role="dialog"][aria-modal="true"]');
 }
 
-function isButtonLike(el: Element | null): boolean {
+function is_button_like(el: Element | null): boolean {
     if (!el) return false;
     return !!el.closest('button, [type="button"], [type="submit"], [role="button"], .v-btn');
 }
 
-function isAnyBlockingModalOpen(): boolean {
+function is_any_blocking_modal_open(): boolean {
     // ツールチップ/メニュー類は無視して、実モーダルっぽいものだけブロック
     const overlays = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]:not(.kyou_dialog)'));
     return overlays.some((ov) => {
@@ -31,9 +31,9 @@ function isAnyBlockingModalOpen(): boolean {
 }
 
 export function useScopedEnterForKFTL(
-    rootRef: Ref<HTMLElement | null>,
-    openKFTL: () => void,
-    enabledRef?: Ref<boolean>,
+    root_ref: Ref<HTMLElement | null>,
+    open_kftl: () => void,
+    enabled_ref?: Ref<boolean>,
     opts: { debug?: boolean } = {}
 ) {
     const { debug = false } = opts;
@@ -41,28 +41,28 @@ export function useScopedEnterForKFTL(
 
     onMounted(() => {
         listener = (e: KeyboardEvent) => {
-            if (enabledRef && !enabledRef.value) { if (debug) console.debug('[KFTL] disabled'); return; }
+            if (enabled_ref && !enabled_ref.value) { if (debug) console.debug('[KFTL] disabled'); return; }
             if (e.key !== 'Enter') return;
             if (e.isComposing) { if (debug) console.debug('[KFTL] composing'); return; }
             if (e.repeat) { if (debug) console.debug('[KFTL] repeat'); return; }
             if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) { if (debug) console.debug('[KFTL] with modifier'); return; }
 
             const target = e.target as Element | null;
-            if (isTextInput(target) || isTextInput(document.activeElement)) {
+            if (is_text_input(target) || is_text_input(document.activeElement)) {
                 if (debug) console.debug('[KFTL] text input focused');
                 return;
             }
             if (
-                (isInsideDialog(target) && isButtonLike(target)) ||
-                (isInsideDialog(document.activeElement) && isButtonLike(document.activeElement))
+                (is_inside_dialog(target) && is_button_like(target)) ||
+                (is_inside_dialog(document.activeElement) && is_button_like(document.activeElement))
             ) {
                 if (debug) console.debug('[KFTL] dialog button focused');
                 return;
             }
 
-            if (isAnyBlockingModalOpen()) { if (debug) console.debug('[KFTL] modal open'); return; }
+            if (is_any_blocking_modal_open()) { if (debug) console.debug('[KFTL] modal open'); return; }
 
-            openKFTL();
+            open_kftl();
             e.preventDefault();
             e.stopPropagation();
         };

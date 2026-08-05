@@ -38,7 +38,7 @@ export function useKyouCountCalendar(options: {
     })
 
     // 参照の入れ替えだけでなく件数の増減でも更新する。
-    // 削除は use-rykv-view.ts の removeKyouFromListById が splice で行うため、
+    // 削除は use-rykv-view.ts の remove_kyou_from_list_by_id が splice で行うため、
     // 参照だけ見ていると Kyou を消してもカレンダーの件数バッジが更新されなかった。
     watch([() => props.kyous, () => props.kyous.length], () => {
         update_events()
