@@ -150,11 +150,13 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 
 | Server | Tools | stdio | HTTP | Port |
 |---|---|---|---|---|
-| Read | 10 (get_kyous, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_gps_log, get_application_config, get_idf_file, get_idf_file_path + plugin 2) | `npm run mcp:gkill-read` | `npm run mcp:gkill-read-http` | 8808 |
-| Write | 25 (9 add + 1 submit_kftl + 1 delete + 9 update + 3 read convenience + plugin 2) | `npm run mcp:gkill-write` | `npm run mcp:gkill-write-http` | 8809 |
-| ReadWrite | 30 (read 8 + write 20 + plugin 2) | `npm run mcp:gkill-readwrite` | `npm run mcp:gkill-readwrite-http` | 8810 |
+| Read | 9 (get_kyous, get_mi_board_list, get_all_tag_names, get_all_rep_names, get_gps_log, get_application_config, get_idf_file, get_idf_file_path + plugin 1) | `npm run mcp:gkill-read` | `npm run mcp:gkill-read-http` | 8808 |
+| Write | 24 (9 add + 1 submit_kftl + 1 delete + 9 update + 3 read convenience + plugin 1) | `npm run mcp:gkill-write` | `npm run mcp:gkill-write-http` | 8809 |
+| ReadWrite | 29 (read 8 + write 20 + plugin 1) | `npm run mcp:gkill-readwrite` | `npm run mcp:gkill-readwrite-http` | 8810 |
 
-**Plugin tools** (`gkill_get_plugin_list`, `gkill_get_plugin_content`) are shared by all 3 servers via `lib/plugin-tools.mjs` (read-only; `post_plugin_config` is not exposed). Plugin kyou bodies are not stored in gkill — `get_kyous` returns only metadata plus a `payload.kind="plugin"` carrying `rep_name`/`kyou_id`, which `gkill_get_plugin_content` turns into the actual content. It calls `/api/get_plugin_content_html` and by default converts the HTML to plain text via `lib/html-text.mjs` (`format`: `text` (default) / `html` / `both`, `max_text_length` default 20000) because plugin content HTML is mostly presentation CSS/JS.
+**Plugin tools** — 3サーバ共通は `lib/plugin-tools.mjs` の `gkill_get_plugin_list` 1つだけ（読み取り専用。`post_plugin_config` は公開しない）。プラグインKyouの本文は gkill に保存されておらず、`get_kyous` が返すのはメタデータと `rep_name`/`kyou_id` を持つ `payload.kind="plugin"` だけ。本文は **`gkill_get_kyous` に `include_plugin_content:true` を渡して同じレスポンスに埋め込ませる**（1件ずつ取る `gkill_get_plugin_content` ツールは廃止。AIの往復が N+1 回になり非効率だったため）。インライン化は `plugin-tools.mjs` の `inlinePluginContents` が担当し、`/api/get_plugin_content_html` を rep ごとに直列・rep 間は並列（既定4）で叩き、`lib/html-text.mjs` でHTML→テキスト変換して `payload.content_text` に入れる。各ペイロードには `content_status`（`ok`/`truncated`/`skipped`/`error`）が付き、`ok` 以外なら本文は不完全。上限は1件4000文字（`plugin_content_max_text_length` で最大200000まで）・合計200000文字・20件・30秒。`plugin_content_format` で `text`（既定）/`html`/`both` を選べる。
+
+> **同一プラグインへ並列に投げてはいけない。** Go 側の `callCommand` は30秒デッドラインを `p.mu.Lock()` の**前**に張るため、同時発行するとロック待ちで期限を食い潰し、期限切れ時の `Process.Kill()` でプラグインプロセスが落ちる。同じ理由でインライン取得は実行中のリクエストを abort しない（`handle_get_plugin_content_html.go` が `r.Context()` をそのままプラグインへ渡すので、abort もプロセス kill になる）。デッドラインは「新しいリクエストを始めない」だけで実現している。Write専用サーバには `gkill_get_kyous` が無いため、プラグイン本文を読むには ReadWrite サーバを使う。
 
 **Environment variables:** `GKILL_BASE_URL`, `GKILL_USER`, `GKILL_PASSWORD_SHA256`, `MCP_LOG` (default `info`), `GKILL_MCP_MAX_FILE_BYTES` (default 8MB — cap for `get_idf_file` base64), `GKILL_MCP_FILE_LINK_TTL_MS` (default 1h — HTTP-mode file URL token TTL), and for HTTP mode: `MCP_TRANSPORT`, `MCP_PORT`, `MCP_OAUTH_ISSUER`. Also read: `GKILL_PASSWORD` (plaintext alternative to the SHA256), `GKILL_SESSION_ID`, `GKILL_INSECURE`, `GKILL_LOCALE`, `GKILL_FETCH_TIMEOUT_MS`, `GKILL_HOME`.
 

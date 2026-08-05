@@ -17,6 +17,11 @@ import {
   DEFAULT_KYOUS_MAX_SIZE_MB,
   DEFAULT_KYOUS_INCLUDE_TIMEIS,
   MAX_IDF_FILE_BYTES,
+  MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+  DEFAULT_PLUGIN_CONTENT_FORMAT,
+  DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+  MAX_INLINE_PLUGIN_CONTENT_KYOUS,
+  INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH,
 } from "./lib/constants.mjs";
 import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs } from "./lib/normalization.mjs";
 import {
@@ -24,6 +29,8 @@ import {
   handlePluginToolCall,
   isPluginToolName,
   summarizePluginToolPayload,
+  inlinePluginContents,
+  summarizeInlinePluginContent,
 } from "./lib/plugin-tools.mjs";
 import { OAuthServer } from "./lib/oauth-server.mjs";
 import { McpAccessLog, parseMcpLogLevel } from "./lib/access-log.mjs";
@@ -53,7 +60,7 @@ const FIND_QUERY_SCHEMA = {
     "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings. " +
     "General rule: each filter group requires its use_X flag set to true to activate (e.g., use_calendar:true activates calendar_start/end_date; use_words:true activates words). Without the flag, the related fields are ignored. " +
     "Recommended filtering strategy: fetch ApplicationConfig and all tag names first, then build a visible-tag allowlist — a tag is visible when is_force_hide=false AND check_when_inited=true in ApplicationConfig tag_struct. Pass visible tags via tags/timeis_tags with use_tags/use_timeis_tags=true. For repositories, prefer checked leaf rep_types from ApplicationConfig and treat unchecked leaf rep_type leaves as inferred hidden sources. " +
-    "Payload varies by data_type: kmemo body is in texts[], lantana has mood (0-10), nlog has title/shop/amount, timeis has title/start_time/end_time, mi has title/is_checked/board_name/limit_time, urlog has title/url, kc has title/num_value, idf has file_name/is_image/is_video/is_audio/rep_name/mime_type. To view/read an idf file, prefer in this order: (1) file_path in the payload — read it directly from the local filesystem (local clients only); (2) file_url in the payload — fetch that URL to get the bytes, no auth needed, works for any size (images: file_url is a downscaled thumbnail, file_url_full is the original); (3) gkill_get_idf_file tool with rep_name and file_name — base64 fallback, capped in size. git_commit_log has commit_message. Plugin-provided entries (any data_type that is not one of the built-ins above) have payload.kind='plugin' carrying data_type/rep_name/kyou_id/plugin_name; their body is not stored in gkill, so pass rep_name and kyou_id to gkill_get_plugin_content to read it.",
+    "Payload varies by data_type: kmemo body is in texts[], lantana has mood (0-10), nlog has title/shop/amount, timeis has title/start_time/end_time, mi has title/is_checked/board_name/limit_time, urlog has title/url, kc has title/num_value, idf has file_name/is_image/is_video/is_audio/rep_name/mime_type. To view/read an idf file, prefer in this order: (1) file_path in the payload — read it directly from the local filesystem (local clients only); (2) file_url in the payload — fetch that URL to get the bytes, no auth needed, works for any size (images: file_url is a downscaled thumbnail, file_url_full is the original); (3) gkill_get_idf_file tool with rep_name and file_name — base64 fallback, capped in size. git_commit_log has commit_message. Plugin-provided entries (any data_type that is not one of the built-ins above) have payload.kind='plugin' carrying data_type/rep_name/kyou_id/plugin_name; their body is not stored in gkill, so set include_plugin_content:true on this same call to get it inline as payload.content_text.",
   properties: {
     update_cache: { type: "boolean", description: "Force cache refresh before query." },
     is_deleted: { type: "boolean", description: "Include soft-deleted entries." },
@@ -171,10 +178,11 @@ function summarizeToolPayload(name, payload) {
       const returnedCount = payload.returned_count ?? 0;
       const totalCount = payload.total_count ?? returnedCount;
       const remaining = totalCount - returnedCount;
+      const pluginSuffix = summarizeInlinePluginContent(payload.plugin_content);
       if (payload.has_more && payload.next_cursor) {
-        return `Returned ${returnedCount} of ${totalCount} kyou entries (${remaining} remaining). Next page: cursor="${payload.next_cursor}".`;
+        return `Returned ${returnedCount} of ${totalCount} kyou entries (${remaining} remaining). Next page: cursor="${payload.next_cursor}".${pluginSuffix}`;
       }
-      return `Returned ${returnedCount} of ${totalCount} kyou entries (all results returned).`;
+      return `Returned ${returnedCount} of ${totalCount} kyou entries (all results returned).${pluginSuffix}`;
     }
     case "gkill_get_mi_board_list":
       return `Fetched ${Array.isArray(payload.boards) ? payload.boards.length : 0} Mi boards.`;
@@ -275,7 +283,7 @@ const TOOLS = [
       "Each result contains data_type, related_time, tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
-      "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), mi (task). Plugins add their own data_type values (e.g. claude_conversation) — list them with gkill_get_plugin_list and read their bodies with gkill_get_plugin_content. " +
+      "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), mi (task). Plugins add their own data_type values (e.g. claude_conversation) — list them with gkill_get_plugin_list, and set include_plugin_content:true to read their bodies in this same response. " +
       "Most used query fields: use_calendar + calendar_start/end_date, use_words + words, use_tags + tags, for_mi. Advanced: use_map, use_plaing, use_period_of_time, use_update_time. " +
       "Common query patterns: " +
       "Date range: {use_calendar:true, calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}. " +
@@ -286,7 +294,7 @@ const TOOLS = [
       "If a query fails, first retry with fewer query fields, a smaller limit, and is_include_timeis=false; then add rep_types or TimeIs expansion back step by step. " +
       "The server always applies only_latest_data=true. " +
       "Results are returned in reverse chronological order (newest first, by related_time). " +
-      "Response fields: kyous[], total_count, returned_count, has_more, next_cursor.",
+      "Response fields: kyous[], total_count, returned_count, has_more, next_cursor, plugin_content (inline-content counts; present only when include_plugin_content is true).",
     inputSchema: {
       type: "object",
       properties: {
@@ -323,6 +331,39 @@ const TOOLS = [
             "gkill_add_tag (tagging by target_id), or gkill_add_text (annotating by target_id). " +
             "When true, each result includes an 'id' field at the top level of the kyou object.",
           default: false,
+        },
+        include_plugin_content: {
+          type: "boolean",
+          description:
+            "Inline the body of plugin kyous (payload.kind='plugin') into this response, so you do not need a " +
+            "separate follow-up call per entry. Default: false. " +
+            "When true, each plugin payload gains content_status ('ok' | 'truncated' | 'skipped' | 'error'), plus " +
+            "content_text (and content_html when plugin_content_format includes html) when the body was fetched, " +
+            "content_skipped_reason ('max_kyous' | 'budget' | 'deadline' | 'rep_error') when it was skipped, and " +
+            "content_error when the fetch failed. Only content_status='ok' means the body is complete. " +
+            `At most ${MAX_INLINE_PLUGIN_CONTENT_KYOUS} plugin kyous per call are inlined, and ${INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH} characters in total. ` +
+            "To read one long body in full, narrow the query to that single entry (query.use_ids + query.ids) and " +
+            "raise plugin_content_max_text_length. " +
+            "Enable this only when you actually intend to read plugin bodies: it costs one extra request per plugin kyou.",
+          default: false,
+        },
+        plugin_content_max_text_length: {
+          type: "integer",
+          description:
+            "Max characters of inlined text per plugin kyou. Only used when include_plugin_content is true. " +
+            `Default: ${DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH}, max: ${MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH}. ` +
+            "Longer bodies are cut and content_status becomes 'truncated'. Raising this reduces how many entries fit " +
+            "the shared total-text budget, so raise it only when fetching a small number of long records.",
+          default: DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+        },
+        plugin_content_format: {
+          type: "string",
+          description:
+            "Format of the inlined plugin body. Only used when include_plugin_content is true. " +
+            "'text' (default) converts the plugin's HTML to plain text into content_text, 'html' puts the raw HTML " +
+            "into content_html, 'both' fills both. Prefer 'text': plugin content HTML is mostly presentation CSS/JS.",
+          enum: ["text", "html", "both"],
+          default: DEFAULT_PLUGIN_CONTENT_FORMAT,
         },
       },
       additionalProperties: false,
@@ -765,13 +806,25 @@ class McpServer {
           true,
           sid,
         );
-        return {
+        const payload = {
           kyous: Array.isArray(response.kyous) ? response.kyous : [],
           total_count: response.total_count ?? 0,
           returned_count: response.returned_count ?? 0,
           has_more: Boolean(response.has_more),
           ...(response.next_cursor ? { next_cursor: response.next_cursor } : {}),
         };
+        if (normalized.include_plugin_content) {
+          payload.plugin_content = await inlinePluginContents(
+            (pathname, body) => this.client.callRead(pathname, body, true, sid),
+            payload.kyous,
+            {
+              maxTextLength: normalized.plugin_content_max_text_length,
+              format: normalized.plugin_content_format,
+              localeName: normalized.locale_name,
+            },
+          );
+        }
+        return payload;
       }
       case "gkill_get_mi_board_list": {
         const normalized = normalizeLocaleOnlyArgs(args);

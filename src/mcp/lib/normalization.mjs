@@ -30,8 +30,9 @@ import {
   MI_SORT_TYPES,
   PLUGIN_CONTENT_FORMATS,
   DEFAULT_PLUGIN_CONTENT_FORMAT,
-  DEFAULT_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
   MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+  DEFAULT_INCLUDE_PLUGIN_CONTENT,
+  DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
 } from "./constants.mjs";
 
 export function pad2(value) {
@@ -200,6 +201,9 @@ export function normalizeKyouArgs(args) {
     limit: DEFAULT_KYOUS_LIMIT,
     max_size_mb: DEFAULT_KYOUS_MAX_SIZE_MB,
     is_include_timeis: DEFAULT_KYOUS_INCLUDE_TIMEIS,
+    include_plugin_content: DEFAULT_INCLUDE_PLUGIN_CONTENT,
+    plugin_content_max_text_length: DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+    plugin_content_format: DEFAULT_PLUGIN_CONTENT_FORMAT,
   };
 
   if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
@@ -219,6 +223,36 @@ export function normalizeKyouArgs(args) {
   }
   if (Object.prototype.hasOwnProperty.call(source, "include_id") && source.include_id !== undefined) {
     normalized.include_id = assertBoolean(source.include_id, "include_id");
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(source, "include_plugin_content") &&
+    source.include_plugin_content !== undefined
+  ) {
+    normalized.include_plugin_content = assertBoolean(source.include_plugin_content, "include_plugin_content");
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(source, "plugin_content_max_text_length") &&
+    source.plugin_content_max_text_length !== undefined
+  ) {
+    normalized.plugin_content_max_text_length = assertInteger(
+      source.plugin_content_max_text_length,
+      "plugin_content_max_text_length",
+      { min: 1, max: MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH },
+    );
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(source, "plugin_content_format") &&
+    source.plugin_content_format !== undefined
+  ) {
+    const format = assertTrimmedString(source.plugin_content_format, "plugin_content_format").toLowerCase();
+    if (!PLUGIN_CONTENT_FORMATS.has(format)) {
+      throw invalidArgument(
+        "plugin_content_format",
+        `must be one of: ${Array.from(PLUGIN_CONTENT_FORMATS).join(", ")}`,
+        source.plugin_content_format,
+      );
+    }
+    normalized.plugin_content_format = format;
   }
 
   return normalized;
@@ -243,34 +277,6 @@ export function normalizeGpsArgs(args) {
       ? { locale_name: assertTrimmedString(source.locale_name, "locale_name") }
       : {}),
   };
-}
-
-export function normalizePluginContentArgs(args) {
-  const source = args == null ? {} : assertObject(args, "arguments");
-  assertKnownKeys(source, new Set(["rep_name", "kyou_id", "format", "max_text_length", "locale_name"]), "arguments");
-  const normalized = {
-    rep_name: assertTrimmedString(source.rep_name, "rep_name"),
-    kyou_id: assertTrimmedString(source.kyou_id, "kyou_id"),
-    format: DEFAULT_PLUGIN_CONTENT_FORMAT,
-    max_text_length: DEFAULT_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
-  };
-  if (Object.prototype.hasOwnProperty.call(source, "format") && source.format !== undefined) {
-    const format = assertTrimmedString(source.format, "format").toLowerCase();
-    if (!PLUGIN_CONTENT_FORMATS.has(format)) {
-      throw invalidArgument("format", `must be one of: ${Array.from(PLUGIN_CONTENT_FORMATS).join(", ")}`, source.format);
-    }
-    normalized.format = format;
-  }
-  if (Object.prototype.hasOwnProperty.call(source, "max_text_length") && source.max_text_length !== undefined) {
-    normalized.max_text_length = assertInteger(source.max_text_length, "max_text_length", {
-      min: 1,
-      max: MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
-    });
-  }
-  if (Object.prototype.hasOwnProperty.call(source, "locale_name") && source.locale_name !== undefined) {
-    normalized.locale_name = assertTrimmedString(source.locale_name, "locale_name");
-  }
-  return normalized;
 }
 
 export function normalizeIdfFileArgs(args) {

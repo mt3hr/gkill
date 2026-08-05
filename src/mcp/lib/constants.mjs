@@ -14,7 +14,18 @@ export const MAX_IDF_FILE_BYTES = Math.max(
 export const RFC3339_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 export const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-export const KYOUS_TOP_LEVEL_FIELDS = new Set(["query", "locale_name", "limit", "cursor", "max_size_mb", "is_include_timeis", "include_id"]);
+export const KYOUS_TOP_LEVEL_FIELDS = new Set([
+  "query",
+  "locale_name",
+  "limit",
+  "cursor",
+  "max_size_mb",
+  "is_include_timeis",
+  "include_id",
+  "include_plugin_content",
+  "plugin_content_max_text_length",
+  "plugin_content_format",
+]);
 
 export const KYOUS_QUERY_BOOLEAN_FIELDS = new Set([
   "update_cache",
@@ -91,14 +102,34 @@ export const KYOUS_QUERY_ALL_FIELDS = new Set([
   "mi_sort_type",
 ]);
 
-// gkill_get_plugin_content の format 引数。既定は text。
+// gkill_get_kyous の plugin_content_format 引数。既定は text。
 // プラグインのコンテンツHTMLは表示用のCSS/JSでほとんどが埋まっているため、
 // 生HTMLを既定で返すとトークンを浪費するだけになる。
 export const PLUGIN_CONTENT_FORMATS = new Set(["text", "html", "both"]);
 export const DEFAULT_PLUGIN_CONTENT_FORMAT = "text";
-// テキスト変換後の既定の上限文字数。長い会話ログ1件でも収まるように取っている。
-export const DEFAULT_PLUGIN_CONTENT_MAX_TEXT_LENGTH = 20000;
+
+// ここから下は gkill_get_kyous の include_plugin_content 用。
+// プラグインKyouの本文はgkillに保存されておらず、1件ずつプラグインプロセスに
+// 問い合わせるしかない。レスポンスに直接埋めるので、単発取得より1件あたりの
+// 上限を小さく取り、さらに合計・件数・時間にも上限を設ける。
+export const DEFAULT_INCLUDE_PLUGIN_CONTENT = false;
+// 1件あたりのテキスト上限。既定値は「20件並べても常識的なサイズに収まる」値。
+export const DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH = 4000;
+// 1件だけを対象にして全文を取りたいケースがあるので、上限は大きめに許す。
 export const MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH = 200000;
+// 1回のget_kyousで本文を埋めるKyouの最大件数。
+export const MAX_INLINE_PLUGIN_CONTENT_KYOUS = 20;
+// 埋め込むテキストの合計上限。1件を最大長で取っても収まる値にしてある。
+// buildToolResultがペイロードを2回直列化するため、実際の転送量はこの約2倍になる。
+export const INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH = 200000;
+// 並列に叩くプラグイン (rep_name) の数。同一プラグイン内は必ず直列にする。
+export const INLINE_PLUGIN_CONTENT_REP_CONCURRENCY = 4;
+// 本文取得全体の打ち切り時間。これを過ぎたら新しいリクエストを「始めない」だけで、
+// 実行中のリクエストはabortしない (abortするとGo側でプラグインプロセスがkillされる)。
+export const INLINE_PLUGIN_CONTENT_DEADLINE_MS = 30000;
+// htmlToTextに渡す前にHTMLを切り詰める上限。stripTagsが1文字ずつ走査するため、
+// 巨大なHTMLをそのまま流すと変換だけで時間を食う。
+export const MAX_INLINE_PLUGIN_CONTENT_HTML_LENGTH = 400000;
 
 export const MI_CHECK_STATES = new Set(["all", "checked", "uncheck"]);
 export const MI_SORT_TYPES = new Set(["create_time", "estimate_start_time", "estimate_end_time", "limit_time"]);
