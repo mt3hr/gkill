@@ -16,6 +16,24 @@ import (
 
 type Repositories []Repository
 
+// goForRep はrepの種類に応じてスレッドプールを使うかを決めます。
+//
+// プラグインはサブプロセスの応答待ちでCPUを使わず、かつ1プラグイン1並列に
+// プラグイン側のミューテックスで直列化されています。
+// ここでプールのスロットを占有させると、検索1本がプラグインのロック待ちで
+// 最大30秒スロットを握り続け、他の全リクエストがプール枯渇で止まります。
+// 実際にrykvがプラグインKyouの本文を大量に要求したときにこれが起きました。
+func goForRep(ctx context.Context, wg *sync.WaitGroup, rep Repository, fn func()) error {
+	if _, isPlugin := rep.(PluginRepository); isPlugin {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		wg.Go(fn)
+		return nil
+	}
+	return threads.Go(ctx, wg, fn)
+}
+
 func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
 	return r.findKyous(ctx, query, true)
 }
@@ -68,7 +86,7 @@ func (r Repositories) findKyous(ctx context.Context, query *find.FindQuery, para
 			findInRep()
 			continue
 		}
-		err := threads.Go(ctx, wg, findInRep)
+		err := goForRep(ctx, wg, rep, findInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -132,7 +150,7 @@ func (r Repositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range reps {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		err := goForRep(ctx, wg, rep, func() {
 			// クロージャの外の err に書くと全goroutineが同じ変数を書き潰す (go test -race で落ちる)
 			err := rep.Close(ctx)
 			if err != nil {
@@ -177,7 +195,7 @@ func (r Repositories) GetKyou(ctx context.Context, id string, updateTime *time.T
 	// 並列処理
 	for _, rep := range r {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		err := goForRep(ctx, wg, rep, func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
@@ -236,18 +254,36 @@ func (r Repositories) UpdateCache(ctx context.Context) error {
 	errch := make(chan error, len(r))
 	defer close(errch)
 
+	// rep単位の所要時間。どのリポジトリが支配的かを実データで特定するために測る。
+	// 遅かったものだけをログに出す。
+	statCh := make(chan repUpdateCacheStat, len(r))
+	defer close(statCh)
+
 	// UpdateCache並列処理（threads.Goは内部でネストするためセマフォデッドロック回避のため素のgoroutineを使用）
 	for _, rep := range r {
 		rep := rep
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
+			start := time.Now()
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
 			}
-		}()
+			repName, _ := rep.GetRepName(ctx)
+			statCh <- repUpdateCacheStat{repName: repName, elapsed: time.Since(start)}
+		})
 	}
 	wg.Wait()
+
+	stats := make([]repUpdateCacheStat, 0, len(r))
+statloop:
+	for {
+		select {
+		case stat := <-statCh:
+			stats = append(stats, stat)
+		default:
+			break statloop
+		}
+	}
+	logSlowRepUpdateCaches(ctx, stats)
 
 	// エラー集約
 errloop:
@@ -309,7 +345,7 @@ func (r Repositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, 
 	// 並列処理
 	for _, rep := range r {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		err := goForRep(ctx, wg, rep, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
 				errch <- err
@@ -384,22 +420,24 @@ func (r Repositories) GetKyouHistoriesByRepName(ctx context.Context, id string, 
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理。
+	// repNameの絞り込みはdispatchの前に済ませる。goroutineの中でやると
+	// 一致しないrepのぶんまでスレッドプールのスロットを取ってしまい、
+	// rep数が多い利用者では1リクエストでrep数ぶんのセマフォ往復が発生する。
 	for _, rep := range repImpls {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
-				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
-					return
-				}
-				if repNameInRep != *repName {
-					return
-				}
+		if repName != nil {
+			repNameInRep, err := rep.GetRepName(ctx)
+			if err != nil {
+				errch <- fmt.Errorf("error at get rep name: %w", err)
+				continue
 			}
+			if repNameInRep != *repName {
+				continue
+			}
+		}
 
+		err := goForRep(ctx, wg, rep, func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
 				errch <- err
@@ -485,7 +523,7 @@ func (r Repositories) GetLatestDataRepositoryAddress(ctx context.Context, update
 	// 並列処理
 	for _, rep := range r {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		err := goForRep(ctx, wg, rep, func() {
 			addrs, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 			if err != nil {
 				errch <- err

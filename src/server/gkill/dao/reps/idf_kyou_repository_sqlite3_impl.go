@@ -43,6 +43,11 @@ type idfKyouRepositorySQLite3Impl struct {
 	m           *sync.RWMutex
 	fullConnect bool
 
+	// cacheChange は gkill_id.db が前回のキャッシュ再構築から変わったかを見ます。
+	// IDFは全rep種別の中で最も行数が多く（実データで50万行超）、
+	// これが無いと update_cache のたびに全件のフルリビルドが走ります。
+	cacheChange *dbFileChangeDetector
+
 	fileServer     http.Handler
 	thumbServer    http.Handler
 	thumbGenerator ThumbGenerator
@@ -208,6 +213,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		db:              db,
 		m:               &sync.RWMutex{},
 		fullConnect:     fullConnect,
+		cacheChange:     &dbFileChangeDetector{},
 	}
 
 	fs := http.FileServer(noDirFS{http.Dir(dir)})
@@ -1052,11 +1058,19 @@ func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 			return err
 		}
 	}
+	// IDFのあとに観測する。autoIDFで新しいファイルを取り込んだ場合も
+	// その結果を含めて「変わったかどうか」を判定できる。
+	i.cacheChange.refresh(i.idDBFile)
 	return nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) LastUpdateCacheChanged() bool {
-	return true
+	return i.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (i *idfKyouRepositorySQLite3Impl) CommitCacheRebuild() {
+	i.cacheChange.commit()
 }
 
 func (i *idfKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {

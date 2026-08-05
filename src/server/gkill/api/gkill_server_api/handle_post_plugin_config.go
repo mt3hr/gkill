@@ -72,4 +72,7 @@ func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.R
 		})
 		return
 	}
+
+	// 設定が変わると本文の作られ方も変わりうるので、キャッシュ済みのHTMLを捨てる
+	g.pluginContentHTMLCacheOf().InvalidateUser(userID)
 }

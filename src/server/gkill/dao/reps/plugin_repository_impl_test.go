@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -630,5 +631,55 @@ func TestPluginRepository_SerializesConcurrentCalls(t *testing.T) {
 	}
 	if got := countPluginStarts(t, fp.startLog); got != 1 {
 		t.Errorf("起動回数 = %d, want 1（並行呼び出しでプロセスが増えている）", got)
+	}
+}
+
+// TestPluginRepository_QueueTimeoutDoesNotReapProcess は、実行スロットの
+// 順番待ちで待ちきれなかった呼び出しがプラグインプロセスを殺さないことを確認する。
+//
+// かつては期限をスロット取得より前に張っていたため、行列に並んでいるだけで
+// 期限を食い潰し、正常に応答しているプラグインを期限切れとして回収していた。
+// 一覧の行数ぶんの本文取得が同時に来ると、この回収と再起動が延々と繰り返され、
+// 待ち行列がまったく消化されなくなる。
+func TestPluginRepository_QueueTimeoutDoesNotReapProcess(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorGate)
+
+	// 1本目にスロットを掴ませたまま応答を止める
+	firstDone := make(chan error, 1)
+	go func() {
+		_, err := fp.rep.GetKyou(context.Background(), "first", nil)
+		firstDone <- err
+	}()
+	waitPluginReceived(t, fp.statePath, 1)
+
+	// 2本目は行列で待ちきれずビジーになる。
+	// 期限を短くすると順番待ちの上限もそこまでに縮まる。
+	busyCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+	_, err := fp.rep.GetKyou(busyCtx, "second", nil)
+	if err == nil {
+		t.Fatal("行列で待たされた呼び出しが成功してしまった")
+	}
+	if !errors.Is(err, ErrPluginBusy) {
+		t.Fatalf("err = %v, want ErrPluginBusy", err)
+	}
+
+	// 混んでいただけなのでプロセスは回収されていない
+	if got := countPluginStarts(t, fp.startLog); got != 1 {
+		t.Fatalf("起動回数 = %d, want 1（順番待ちの打ち切りでプロセスを殺している）", got)
+	}
+
+	// 1本目を解放すれば普通に完了する
+	releasePlugin(t, fp.statePath)
+	select {
+	case err := <-firstDone:
+		if err != nil {
+			t.Fatalf("1本目の呼び出しが失敗した: %v", err)
+		}
+	case <-time.After(30 * time.Second):
+		t.Fatal("1本目の呼び出しが返ってこない")
+	}
+	if got := countPluginStarts(t, fp.startLog); got != 1 {
+		t.Fatalf("起動回数 = %d, want 1", got)
 	}
 }

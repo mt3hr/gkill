@@ -639,6 +639,11 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 		return nil
 	}
 
+	// フェーズ別の所要時間を測る。実データでしか再現しない性能問題を
+	// 本番のログだけで切り分けられるようにするため。
+	timer := newUpdateCachePhaseTimer()
+	defer timer.logUpdateCacheDone(ctx)
+
 	// Phase 1: UpdateCacheは逐次実行する。並列にするとcachedDBのmutexでデッドロックが発生するため、意図的に逐次処理にしている。
 	updateCacheTargets := []interface {
 		UpdateCache(ctx context.Context) error
@@ -653,6 +658,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			return err
 		}
 	}
+	timer.mark("phase1")
 
 	// Phase 2: GetLatestDataRepositoryAddressで最新データアドレスを収集
 	allLatestDataRepositoryAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{}
@@ -686,6 +692,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	if err := persistLatestDataRepositoryAddresses(latestDataRepositoryAddresses, now); err != nil {
 		return err
 	}
+	timer.mark("phase2")
 
 	if gkill_options.CacheReKyouReps != nil && *gkill_options.CacheReKyouReps && len(g.ReKyouReps.ReKyouRepositories) > 0 {
 		if err := g.ReKyouReps.UpdateCache(ctx); err != nil {
@@ -700,6 +707,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			return err
 		}
 	}
+	timer.mark("rekyou")
 
 	// MiReKyouもReKyouと同じくターゲット解決のため他repのアドレス確定後に更新する
 	if gkill_options.CacheMiReKyouReps != nil && *gkill_options.CacheMiReKyouReps && len(g.MiReKyouReps.MiReKyouRepositories) > 0 {
@@ -715,6 +723,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			return err
 		}
 	}
+	timer.mark("mirekyou")
 
 	if _, err := g.CacheMemoryDB.Exec(`ANALYZE;`); err != nil {
 		return fmt.Errorf("ANALYZE: %w", err)
@@ -722,6 +731,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	if _, err := g.CacheMemoryDB.Exec(`PRAGMA optimize;`); err != nil {
 		return fmt.Errorf("PRAGMA optimize: %w", err)
 	}
+	timer.mark("analyze")
 	return nil
 }
 

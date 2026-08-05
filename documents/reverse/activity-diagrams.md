@@ -327,7 +327,7 @@ flowchart TD
     Ensure --> Send[stdin に get_content_html を書き込み]
     Send --> Recv{応答あり?}
 
-    Recv -->|デッドライン超過| Kill[Process.Kill / started=false<br>呼び出し元のキャンセルでは回収しない]
+    Recv -->|デッドライン超過| Kill[Process.Kill / started=false<br>呼び出し元のキャンセル・順番待ちの打ち切りでは回収しない]
     Kill --> ErrOut([エラー返却])
     Recv -->|クラッシュ| Retry[started=false → 1回だけ再起動して再送]
     Retry --> Recv

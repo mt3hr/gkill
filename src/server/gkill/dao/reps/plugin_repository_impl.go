@@ -33,7 +33,7 @@ type pluginProcess struct {
 	started bool
 
 	// respCh はリーダーからの受け口。
-	// 呼び出しは p.mu で1件ずつに直列化されるので、打ち切られた呼び出しの
+	// 呼び出しは実行スロットで1件ずつに直列化されるので、打ち切られた呼び出しの
 	// 積み残しは高々1件。バッファ1で足りる。
 	respCh chan scanResult
 	// retired はこのプロセスをもう使わないことを示す。閉じるとリーダーが抜ける。
@@ -46,12 +46,33 @@ type pluginProcess struct {
 	readerDone chan struct{}
 }
 
+const (
+	// pluginCallTimeout はプラグインに応答を待つ既定の期限。
+	// この期限を超えたら「プラグインが詰まっている」とみなしてプロセスを回収する。
+	pluginCallTimeout = 30 * time.Second
+
+	// maxPluginQueueWait は実行スロットが空くのを待つ上限。
+	// ここで待ちきれなかったのは「混んでいる」だけなので、
+	// プロセスには手を出さずにビジーとして返す。
+	maxPluginQueueWait = 10 * time.Second
+)
+
+// ErrPluginBusy はプラグインの実行スロットが空かずに待ちきれなかったことを表す。
+// プラグインが壊れているわけではないので、プロセスは回収しない。
+var ErrPluginBusy = errors.New("plugin is busy")
+
 // pluginRepositoryImpl は PluginRepository インターフェースの実装。
 // プラグインバイナリをサブプロセスとして起動し、stdio 改行区切りJSONで通信する。
 type pluginRepositoryImpl struct {
-	mu        sync.Mutex // すべての操作を直列化するミューテックス
-	userID    string     // gkillユーザID
-	pluginDir string     // $GKILL_HOME/plugins/{userID}/{pluginName}/
+	// callSlot は容量1のチャネルで、プラグインへの操作を1件ずつに直列化する。
+	// ミューテックスではなくチャネルなのは「待つのをやめられる」ようにするため。
+	// 待ちを打ち切れないと、行列に並んでいる間に期限を食い潰し、
+	// 応答しているだけのプラグインを期限切れとして殺してしまう。
+	callSlot     chan struct{}
+	callSlotOnce sync.Once
+
+	userID    string // gkillユーザID
+	pluginDir string // $GKILL_HOME/plugins/{userID}/{pluginName}/
 	manifest  gkill_plugin.PluginManifest
 
 	proc *pluginProcess // nil = 未起動
@@ -64,14 +85,50 @@ var _ PluginRepository = (*pluginRepositoryImpl)(nil)
 // プロセスは初回クエリ時に遅延起動する。
 func NewPluginRepository(userID string, pluginDir string, manifest gkill_plugin.PluginManifest) PluginRepository {
 	return &pluginRepositoryImpl{
+		callSlot:  make(chan struct{}, 1),
 		userID:    userID,
 		pluginDir: pluginDir,
 		manifest:  manifest,
 	}
 }
 
+// slot は実行スロットのチャネルを返す。
+// ゼロ値の pluginRepositoryImpl から使われても動くように遅延初期化する。
+func (p *pluginRepositoryImpl) slot() chan struct{} {
+	p.callSlotOnce.Do(func() {
+		if p.callSlot == nil {
+			p.callSlot = make(chan struct{}, 1)
+		}
+	})
+	return p.callSlot
+}
+
+// acquireCallSlot は実行スロットを取得する。
+// wait を超えても空かなければ ErrPluginBusy を返す。
+// ctx のキャンセルでも待つのをやめる（呼び出し元が結果を要らなくなっただけなので
+// プロセスには手を出さない。行列が短くなるぶんむしろ望ましい）。
+func (p *pluginRepositoryImpl) acquireCallSlot(ctx context.Context, wait time.Duration) (release func(), err error) {
+	slot := p.slot()
+	select {
+	case slot <- struct{}{}:
+		return func() { <-slot }, nil
+	default:
+	}
+
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
+	select {
+	case slot <- struct{}{}:
+		return func() { <-slot }, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-timer.C:
+		return nil, fmt.Errorf("plugin %s: %w", p.manifest.Name, ErrPluginBusy)
+	}
+}
+
 // ensureStarted はプラグインプロセスが起動していることを保証する。
-// 呼び出し側で p.mu をロック済みであること。
+// 呼び出し側で実行スロットを取得済みであること。
 // プロセスの寿命はリクエストコンテキストに依存させないよう context.Background() を使う。
 func (p *pluginRepositoryImpl) ensureStarted() error {
 	if p.proc != nil && p.proc.started {
@@ -168,7 +225,7 @@ func (p *pluginRepositoryImpl) deliver(proc *pluginProcess, result scanResult) b
 }
 
 // retire はプロセスを使用終了にする。リーダーを解放し、プロセスを強制終了する。
-// 複数回呼んでも安全。呼び出し側で p.mu をロック済みであること。
+// 複数回呼んでも安全。呼び出し側で実行スロットを取得済みであること。
 func (p *pluginRepositoryImpl) retire(proc *pluginProcess) {
 	proc.retireOnce.Do(func() { close(proc.retired) })
 	proc.started = false
@@ -184,7 +241,7 @@ type scanResult struct {
 }
 
 // sendRequest は改行区切りJSONでリクエストを送り、自分宛てのレスポンスを受け取る。
-// 呼び出し前に p.mu がロック済みであること。
+// 呼び出し前に実行スロットを取得済みであること。
 //
 // 打ち切りの契機を2つに分けているのが要点。
 //   - callerCtx: HTTPクライアントの切断やサーバ終了。待つのをやめるだけで、
@@ -253,32 +310,44 @@ func (p *pluginRepositoryImpl) sendRequest(callerCtx context.Context, timeoutCtx
 	}
 }
 
-// callCommand は p.mu でロックし、ensureStarted・sendRequest・クラッシュ時リトライをまとめて実行する。
-// p.mu で全操作を直列化することで並列リクエストによる競合を防ぐ。
+// callCommand は実行スロットを取り、ensureStarted・sendRequest・クラッシュ時リトライをまとめて実行する。
+// スロットで全操作を直列化することで並列リクエストによる競合を防ぐ。
 //
 // contextは2つに分ける。呼び出し元の ctx はそのまま「呼び出し元が結果を待つのをやめたか」
 // を表し、timeoutCtx は「gkill自身がプラグインを見限る期限」を表す。
 // 呼び出し元のキャンセル（HTTPクライアントの切断）を後者に混ぜると、
 // 画面を操作しただけでプラグインプロセスが回収されてしまう。
+//
+// 順序が要点。
+//  1. まず行列に並ぶ。混んでいるだけならビジーとして返し、プロセスには手を出さない。
+//  2. スロットを取ってから、初めてプラグイン自身の期限を張る。
+//
+// 期限をスロット取得より前に張ると、行列で待っているだけで期限を食い潰し、
+// 正常に応答しているプラグインを期限切れとして殺してしまう。
+// 一覧の行数ぶんの本文取得が同時に来たときに実際にこれが起きた。
 func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
-	// 呼び出し元のキャンセルは引き継がず、Deadlineだけ受け継ぐ。
-	// Deadline未設定の場合はデフォルト30秒を付加する。
-	var timeoutCtx context.Context
-	var cancel context.CancelFunc
+	// 呼び出し元が期限を設定していれば、その「残り時間」を実行予算として引き継ぐ。
+	// 期限そのものを引き継ぐと、行列で待っている間に予算を食い潰してしまう。
+	executionBudget := pluginCallTimeout
+	queueWait := maxPluginQueueWait
 	if deadline, hasDeadline := ctx.Deadline(); hasDeadline {
-		timeoutCtx, cancel = context.WithDeadline(context.WithoutCancel(ctx), deadline)
-	} else {
-		timeoutCtx, cancel = context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+		executionBudget = time.Until(deadline)
+		if executionBudget <= 0 {
+			return nil, fmt.Errorf("plugin %s request timed out: %w", p.manifest.Name, context.DeadlineExceeded)
+		}
+		// 期限が短い呼び出し（IsAliveの5秒など）は行列でも長く待たない
+		queueWait = min(queueWait, executionBudget)
 	}
+
+	release, err := p.acquireCallSlot(ctx, queueWait)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+
+	// 呼び出し元のキャンセルは引き継がず、期限だけをここから張り直す
+	timeoutCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), executionBudget)
 	defer cancel()
-
-	// 期限切れのctxで来たときに、プロセスを起動した直後に回収するのを防ぐ
-	if err := timeoutCtx.Err(); err != nil {
-		return nil, fmt.Errorf("plugin %s request timed out: %w", p.manifest.Name, err)
-	}
-
-	p.mu.Lock()
-	defer p.mu.Unlock()
 
 	if err := p.ensureStarted(); err != nil {
 		return nil, err
@@ -376,9 +445,14 @@ func (p *pluginRepositoryImpl) GetLatestDataRepositoryAddress(_ context.Context,
 	return []gkill_cache.LatestDataRepositoryAddress{}, nil
 }
 
-func (p *pluginRepositoryImpl) Close(_ context.Context) error {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+func (p *pluginRepositoryImpl) Close(ctx context.Context) error {
+	// シャットダウン時なので実行中の呼び出しが終わるまで待つ。
+	// 期限切れの呼び出しはプロセスを回収してスロットを手放すので、待ち続けることはない。
+	release, err := p.acquireCallSlot(ctx, pluginCallTimeout)
+	if err != nil {
+		return fmt.Errorf("error at acquire plugin call slot for close %s: %w", p.manifest.Name, err)
+	}
+	defer release()
 
 	if p.proc == nil || !p.proc.started {
 		return nil

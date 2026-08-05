@@ -3,11 +3,13 @@ package dao
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/gkill_plugin"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
@@ -17,10 +19,18 @@ import (
 // PluginManager はユーザごとのプラグインの発見・ライフサイクルを管理する。
 // $GKILL_HOME/plugins/{userID}/ 以下のサブディレクトリを走査し、
 // manifest.json を持つものを PluginRepository として管理する。
+//
+// 複数のHTTPハンドラから並行に触られるので、pluginsへのアクセスはmuで保護する。
 type PluginManager struct {
 	userID     string
 	pluginsDir string // $GKILL_HOME/plugins/{userID}/
-	plugins    []reps.PluginRepository
+
+	mu      sync.RWMutex
+	plugins []reps.PluginRepository
+	// discovered は一度でも走査を済ませたかを表す。
+	// 走査はディレクトリ列挙とmanifest.jsonの読み込みを伴うので、
+	// リクエストのたびに繰り返さないためのフラグ。
+	discovered bool
 }
 
 // isSingleSafePathElement は値を単一のパス要素として使ってよいか検証する。
@@ -64,6 +74,39 @@ func newPluginManager(userID string) *PluginManager {
 // すでに登録済みのプラグインはスキップする（重複防止）。
 // 発見失敗は警告ログに記録し、gkill本体の起動を止めない。
 func (pm *PluginManager) DiscoverPlugins(ctx context.Context) error {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+	return pm.discoverPluginsLocked(ctx)
+}
+
+// EnsureDiscovered はまだ走査していなければ走査する。
+//
+// プラグインを参照するだけのハンドラから呼ぶことを想定している。
+// DiscoverPlugins をリクエストのたびに呼ぶと、ディレクトリ列挙と
+// manifest.json の読み込みが件数ぶん繰り返されるため分けてある。
+func (pm *PluginManager) EnsureDiscovered(ctx context.Context) error {
+	pm.mu.RLock()
+	discovered := pm.discovered
+	pm.mu.RUnlock()
+	if discovered {
+		return nil
+	}
+
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+	if pm.discovered {
+		return nil
+	}
+	return pm.discoverPluginsLocked(ctx)
+}
+
+// discoverPluginsLocked は pm.mu をロック済みの状態で走査を行う。
+func (pm *PluginManager) discoverPluginsLocked(ctx context.Context) error {
+	// 走査を試みた時点で以降のEnsureDiscoveredは走らせない。
+	// プラグインが1つも無い構成で毎回ディレクトリを舐めないようにするため、
+	// 失敗して途中で返る場合も含めてここで立てる。
+	pm.discovered = true
+
 	// pluginsDirが空 = userIDが不正でプラグイン無効
 	if pm.pluginsDir == "" {
 		return nil
@@ -102,7 +145,9 @@ func (pm *PluginManager) DiscoverPlugins(ctx context.Context) error {
 			}
 		}
 		if alreadyLoaded {
-			slog.Info(fmt.Sprintf("plugin already loaded, skipping: %q", manifest.Name))
+			// 再走査のたびに出るので Debug にしている。
+			// Info にすると再走査1回につきプラグイン数ぶんの行が積み上がる。
+			slog.Debug(fmt.Sprintf("plugin already loaded, skipping: %q", manifest.Name))
 			continue
 		}
 
@@ -151,6 +196,9 @@ func (pm *PluginManager) loadManifest(pluginDir string) (*gkill_plugin.PluginMan
 
 // GetRepositories は発見済みのプラグインリポジトリ一覧を Repository スライスとして返す。
 func (pm *PluginManager) GetRepositories() []reps.Repository {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
 	result := make([]reps.Repository, 0, len(pm.plugins))
 	for _, p := range pm.plugins {
 		result = append(result, p)
@@ -159,12 +207,19 @@ func (pm *PluginManager) GetRepositories() []reps.Repository {
 }
 
 // GetPluginRepositories は発見済みのプラグインリポジトリ一覧をPluginRepository スライスとして返す。
+// 内部スライスをそのまま返すと再走査のappendと競合するのでコピーを返す。
 func (pm *PluginManager) GetPluginRepositories() []reps.PluginRepository {
-	return pm.plugins
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
+	return append([]reps.PluginRepository(nil), pm.plugins...)
 }
 
 // GetPluginByName は名前でプラグインを検索する。見つからなければ nil を返す。
 func (pm *PluginManager) GetPluginByName(name string) reps.PluginRepository {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
 	for _, p := range pm.plugins {
 		if p.GetManifest().Name == name {
 			return p
@@ -175,6 +230,9 @@ func (pm *PluginManager) GetPluginByName(name string) reps.PluginRepository {
 
 // GetPluginByRepName はリポジトリ表示名でプラグインを検索する。見つからなければ nil を返す。
 func (pm *PluginManager) GetPluginByRepName(repName string) reps.PluginRepository {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
 	for _, p := range pm.plugins {
 		if p.GetManifest().RepName == repName {
 			return p
@@ -185,14 +243,13 @@ func (pm *PluginManager) GetPluginByRepName(repName string) reps.PluginRepositor
 
 // CloseAll は全プラグインプロセスを終了する。gkillサーバのシャットダウン時に呼ぶ。
 func (pm *PluginManager) CloseAll(ctx context.Context) error {
+	plugins := pm.GetPluginRepositories()
+
 	var errs []error
-	for _, p := range pm.plugins {
+	for _, p := range plugins {
 		if err := p.Close(ctx); err != nil {
 			errs = append(errs, fmt.Errorf("error closing plugin %s: %w", p.GetManifest().Name, err))
 		}
 	}
-	if len(errs) > 0 {
-		return fmt.Errorf("errors closing plugins: %v", errs)
-	}
-	return nil
+	return errors.Join(errs...)
 }
