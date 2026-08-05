@@ -14,6 +14,15 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateNlog は購入・支出記録のKyouを更新します。
+//
+// POST /api/update_nlog（wrapAuthRepos）
+// req_res.UpdateNlogRequest / req_res.UpdateNlogResponse
+//
+// 更新は追記です（同一IDに新しいUPDATE_TIME版を足す）。TXIDが非nilならtempリポジトリに積むだけで、
+// commit_txするまで実リポジトリには反映されません。対象IDが存在しない場合はerrorsに載せて返します。
+// WantResponseKyouがtrueのときだけNlogとKyouを読み直して返します
+// （読み直し先は実リポジトリなので、TXID指定時はtempに積んだ内容が載りません）。
 func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateNlogRequest{}

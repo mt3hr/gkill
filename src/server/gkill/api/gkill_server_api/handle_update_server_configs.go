@@ -16,6 +16,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleUpdateServerConfigs は全端末分のサーバ設定を、送られてきた内容で置き換えます。
+//
+// POST /api/update_server_configs（wrapAuth）
+// req_res.UpdateServerConfigsRequest / req_res.UpdateServerConfigsResponse
+//
+// 管理者でなければ弾きます。
+// この端末でTLSを有効にする設定のときは、証明書ファイルと鍵ファイルが実在しなければエラーにします。
+// 通知用のVAPID鍵が空の設定には、この時点で鍵を生成して埋めます。
+// 応答を書き終えたあと、成功・失敗にかかわらず必ずHTTPサーバをシャットダウンします。
+// 待ち受けは common.LaunchGkillServerAPI のループが張り直すので、新しい設定で起動し直されます。
 func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		go g.ShutdownHTTPServer()

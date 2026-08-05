@@ -14,6 +14,15 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleLogout は、SessionIDのログインセッションを削除します。
+//
+// POST /api/logout（wrapNoAuth）
+// req_res.LogoutRequest / req_res.LogoutResponse
+//
+// SessionIDからアカウントを解決できたときだけ削除します
+// （未認証で任意のsession_idを投げて他人のセッションを消せないようにするため）。
+// 解決できなかった場合もエラーにはせず、成功として返します。
+// CloseDatabase が真なら、セッション削除の前にそのユーザのリポジトリを閉じます。
 func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

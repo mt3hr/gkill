@@ -14,6 +14,13 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetTextsByTargetID は対象Kyouに付いているテキストを新しい順に返します。
+//
+// POST /api/get_texts_by_id（wrapAuthRepos）
+// req_res.GetTextsByTargetIDRequest / req_res.GetTextsByTargetIDResponse
+//
+// 全repを横断し、テキストIDごとに最新版だけを残したうえで削除済み（IsDeleted）を除きます。
+// 履歴ではないので、同じテキストIDが複数回現れることはありません。
 func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

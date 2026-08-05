@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetTextHistoriesByTextID は指定IDのテキストの履歴を新しい順に返します。
+//
+// POST /api/get_text_histories_by_text_id（wrapAuthRepos）
+// req_res.GetTextHistoryByTextIDRequest / req_res.GetTextHistoryByTextIDResponse
+//
+// UpdateTimeが非nilならその版だけを1件の配列で返し、nilならID一致の全版を返します。
+// RepNameでのrep絞り込みが効くのは全版取得の側だけで、UpdateTime指定時は無視されます。
+// 削除済み（IsDeleted）の版も履歴として含まれます。
 func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

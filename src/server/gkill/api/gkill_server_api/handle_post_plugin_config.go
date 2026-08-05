@@ -12,6 +12,14 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 )
 
+// HandlePostPluginConfig は設定画面から送られたフォーム値をプラグインに渡し、保存させます。
+//
+// POST /api/post_plugin_config（wrapAuth）
+// req_res.PostPluginConfigRequest / req_res.PostPluginConfigResponse
+//
+// 保存処理の実体はプラグイン側にあり、gkillはFormDataを解釈せずそのまま中継します。
+// RepNameに一致するプラグインが無い場合はエラーを返します。
+// 成功時はメッセージを何も詰めず、errorsが空の応答を返すだけです。
 func (g *GkillServerAPI) HandlePostPluginConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.PostPluginConfigRequest{}

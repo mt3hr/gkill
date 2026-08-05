@@ -245,6 +245,30 @@ function computeMiscMetrics() {
     ? (readText('src/server/go.mod').match(/^go (\d+\.\d+(?:\.\d+)?)/m) || [])[1] || ''
     : ''
 
+  // docコメント網羅率。
+  //   reps: *_repository.go のインターフェースメソッド宣言（タブ + 大文字始まり + 「(」）
+  //   handlers: func (g *GkillServerAPI) HandleXxx
+  // どちらも「直前行が // で始まるか」で判定する。
+  const docCoverage = (files, declRe) => {
+    let total = 0
+    let documented = 0
+    for (const file of files) {
+      const lines = readText(file).split(/\r?\n/)
+      for (let i = 0; i < lines.length; i++) {
+        if (!declRe.test(lines[i])) continue
+        total++
+        if (i > 0 && /^\s*\/\//.test(lines[i - 1])) documented++
+      }
+    }
+    return { total, documented }
+  }
+  const repsIfaceFiles = listFiles('src/server/gkill/dao/reps', (f) => f.endsWith('_repository.go'))
+    .map((f) => path.join('src/server/gkill/dao/reps', f))
+  const repsIfaceDocs = docCoverage(repsIfaceFiles, /^\t[A-Z]\w*\(/)
+  const handlerFiles = listFiles('src/server/gkill/api/gkill_server_api', (f) => f.endsWith('.go'))
+    .map((f) => path.join('src/server/gkill/api/gkill_server_api', f))
+  const handlerDocs = docCoverage(handlerFiles, /^func \(g \*GkillServerAPI\) Handle/)
+
   // dao/reps 直下のテストファイル数 / クライアント datas テストファイル数 / Wear OS Kotlin ファイル数
   const repsTestFiles = listFiles('src/server/gkill/dao/reps', (f) => f.endsWith('_test.go')).length
   const datasTestFiles = listFiles('src/client/__tests__/unit/datas', (f) => f.endsWith('.test.ts')).length
@@ -265,6 +289,10 @@ function computeMiscMetrics() {
     msgCodes,
     findQueryFields,
     goVersion,
+    repsIfaceMethods: repsIfaceDocs.total,
+    repsIfaceDocumented: repsIfaceDocs.documented,
+    handlerMethods: handlerDocs.total,
+    handlerDocumented: handlerDocs.documented,
     repsTestFiles,
     datasTestFiles,
     wearCompanionKt,
@@ -384,6 +412,12 @@ function buildCountAssertions(m) {
   add('CLAUDE.md', `glossary.md (${m.glossaryTerms} terms)`)
   add('documents/reverse/README.md', `ドメイン用語の定義（${m.glossaryTerms}項目）`)
   add('documents/reverse/folder-structure.md', `用語集（${m.glossaryTerms}項目）`)
+
+  // ── docコメント網羅率。
+  //    reps のインターフェース契約と HandleXxx は 100% 維持する方針なので、
+  //    ここが落ちたら「docを書かずにメソッド/ハンドラを足した」ことを意味する。
+  add('CLAUDE.md', `${m.repsIfaceDocumented}/${m.repsIfaceMethods} documented`)
+  add('CLAUDE.md', `${m.handlerDocumented}/${m.handlerMethods} handlers documented`)
 
   // ── ユースケース数（ユニークUC-ID） / シーケンス図数（mermaidブロック）
   add('documents/reverse/usecase.md', `**${m.ucIds}件（ユニークな UC-ID 数）**`)

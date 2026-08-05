@@ -15,6 +15,19 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleAddShareKyouListInfo は検索条件を共有リンクとして公開する設定を1件追加します。
+//
+// POST /api/add_share_kyou_list_info（wrapAuthRepos）
+// req_res.AddShareKyouListInfoRequest / req_res.AddShareKyouListInfoResponse
+//
+// 保存先はリポジトリではなく設定DB（ShareKyouInfoDAO）なので、wrapAuthReposで得た
+// repositoriesはここでは使わない。
+// 共有の所有者UserID/Deviceはセッションから決め、リクエスト本文の値は使わない。
+// リクエスト側を信じると他人のuser_idを指定した共有を作れてしまい、認証不要の
+// /api/get_shared_kyousでその人のライフログを読み出せてしまうため。
+// IDはサーバ側で採番する。ShareIDが既に使われている場合は上書きせず、
+// AlreadyExistShareKyouListInfoErrorをerrorsに積んで返す。
+// 成功時は設定DBから読み直したものをShareKyouListInfoに入れる。
 func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

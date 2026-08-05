@@ -14,6 +14,14 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleGetIDFKyou は、指定IDのIDFKyou（ファイル）の更新履歴を返します。
+//
+// POST /api/get_idf_kyou（wrapAuthRepos）
+// req_res.GetIDFKyouRequest / req_res.GetIDFKyouResponse
+//
+// RepNameを指定するとそのrepだけを、nilなら全IDFKyou repを横断して集めます。
+// 履歴はID+UpdateTimeで重複排除し、UpdateTimeの新しい順に並べて返します。
+// 対象が存在しない場合は空配列で、エラーにはしません。
 func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")

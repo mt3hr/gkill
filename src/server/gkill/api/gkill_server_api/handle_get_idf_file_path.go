@@ -17,6 +17,10 @@ import (
 // HandleGetIDFFilePath は、RepNameとFileName (rep内相対パス) から
 // IDFファイルの絶対パスを解決して返す。
 //
+// POST /api/get_idf_file_path（wrapNoAuth）
+// req_res.GetIDFFilePathRequest / req_res.GetIDFFilePathResponse
+//
+// wrapNoAuth登録だが、ハンドラ内でSessionIDからアカウントを解決するので未認証では使えない。
 // 絶対パスは同一マシン上のクライアントにしか意味がなく、
 // かつ外部に漏らしたくない情報なので、リクエスト元がlocalhostのときだけ返す。
 // 対象ファイルが見つからない場合はFilePathを空文字・Existsをfalseで返す（エラーにはしない）。

@@ -18,6 +18,16 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+// HandleOpenFile は対象データの実体ファイルを、サーバ側のコマンドで開きます。
+//
+// POST /api/open_file（wrapAuth）
+// req_res.OpenFileRequest / req_res.OpenFileResponse
+//
+// サーバが動いているマシン上でコマンドを起動する操作なので、
+// デスクトップアプリとして発行されたセッション（IsLocalAppUser）でなければ弾きます。
+// 起動するのはサーバ設定のOpenFileCommandで、$filenameと$dirnameを展開して
+// 空白区切りでコマンドと引数に分けます。
+// プロセスの起動に成功した時点で成功を返し、終了は待ちません。
 func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
