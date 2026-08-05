@@ -104,6 +104,7 @@ cmd := exec.CommandContext(context.Background(),
 ```
 
 `context.Background()` を使用するため、HTTP リクエストがキャンセルされてもプロセスは終了しない。
+個々の呼び出しの打ち切りについても同様で、詳細は下記「タイムアウトと打ち切り」を参照。
 
 ### 通信フォーマット
 
@@ -125,11 +126,27 @@ cmd := exec.CommandContext(context.Background(),
 親側が 32MB なのは大きな HTML レスポンスで `bufio.Scanner: token too long` を防ぐため。
 リクエスト JSON は 1MB を超えないため SDK 側は既定のままになっている。
 
-### タイムアウト
+### タイムアウトと打ち切り
 
-`callCommand`（`plugin_repository_impl.go:172-176`）は、呼び出し側の `context` に期限が無い場合
-**既定 30 秒**のデッドラインを注入する。タイムアウトまたはキャンセル時はサブプロセスを
-`Process.Kill()` で停止し（`:144-151`）、`started=false` に落とす。
+打ち切りの契機は2つあり、**プロセスに手を出すかどうかが異なる**。
+
+| 契機 | 意味 | 挙動 |
+|---|---|---|
+| 呼び出し元のキャンセル | HTTPクライアントの切断・サーバ終了。誰も結果を必要としていない | 待つのをやめて即 return。**プロセスには触らない** |
+| gkill自身のデッドライン | 既定30秒（`IsAlive` は5秒）。応答が返らない＝詰まっている | プロセスを**回収**（`Process.Kill()` して `started=false`） |
+
+`callCommand` は呼び出し元の `context` からキャンセルを切り離し（`context.WithoutCancel`）、
+Deadline だけを引き継いだ `timeoutCtx` を作る。Deadline が無い場合は既定30秒を注入する。
+判定はタイミングではなくエラーの種類で行う（`context.DeadlineExceeded` なら回収、
+`context.Canceled` なら放置）。呼び出し元が Deadline 付きだと両者がほぼ同時に Done になり、
+`select` がどちらを選ぶか決まらないため。
+
+この切り分けが無いと、フロントが `AbortController` で前のリクエストを打ち切るたび
+（ダッシュボードの再取得など）にユーザーのプラグインプロセスが落ちる。
+
+打ち切った呼び出しの応答は遅れて届くので、`sendRequest` はレスポンスIDを
+`req.ID` と突き合わせ、一致しないものを読み捨てる。ID が空のものは SDK の
+パースエラー応答なので自分宛てとして扱う。
 
 ### コマンド一覧
 
@@ -203,14 +220,20 @@ type pluginRepositoryImpl struct {
     proc      *pluginProcess
 }
 
-func (p *pluginRepositoryImpl) callCommand(_ context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
+func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
+    // 呼び出し元のキャンセルは切り離し、Deadlineだけ引き継ぐ
     p.mu.Lock()
     defer p.mu.Unlock()
-    // ensureStarted → sendRequest（エラー時は1回リトライ）
+    // ensureStarted → sendRequest（クラッシュ時のみ1回リトライ）
 }
 ```
 
 `pluginProcess` 構造体（プロセスハンドル側）には mutex を置かない。
+
+stdout の読み取りは**プロセスごとに常駐する1本の goroutine**（リーダー）が担当し、
+`bufio.Scanner` に触れるのはリーダーだけにしている（`bufio.Scanner` は並行安全ではない）。
+リクエスト側はバッファ1の `respCh` 経由で応答を受け取る。誰も読んでいなくても
+リーダーが残らないよう、送信は `retired` チャネルとの `select` で行う。
 
 ### 設計判断まとめ
 
@@ -218,8 +241,11 @@ func (p *pluginRepositoryImpl) callCommand(_ context.Context, req gkill_plugin.P
 |---|---|---|
 | Mutex の位置 | `pluginRepositoryImpl` struct | プロセス再起動後も同じ mutex を使い続けられる |
 | プロセス起動 | `context.Background()` を使用 | HTTP リクエストキャンセルでプロセスが終了するのを防ぐ |
-| 呼び出しタイムアウト | 期限が無ければ既定 30 秒を注入し、超過時は `Process.Kill()` | 応答しないプラグインが gkill 全体を止めるのを防ぐ |
-| クラッシュ復旧 | 失敗時に `started=false` → `ensureStarted()` → 再送信を1回リトライ。ただし **ctx のタイムアウト/キャンセル時はリトライしない**（`:190-193`） | プロセスが予期せず終了した場合の自動復旧。タイムアウトの再試行で待ち時間が倍増するのを避ける |
+| 呼び出し元のキャンセル | 待つのをやめるだけで、プロセスには触らない | フロントは全リクエストに `AbortController` を張っている。切断でプロセスを落とすと、画面を操作しただけでプラグインが死ぬ |
+| 呼び出しタイムアウト | 期限が無ければ既定 30 秒を注入し、超過時は `Process.Kill()` | 応答しないプラグインが gkill 全体を止めるのを防ぐ。回収しないと以降の呼び出しも詰まったままになる |
+| レスポンスの突き合わせ | `resp.ID` と `req.ID` を照合し、不一致なら読み捨てる | 打ち切った呼び出しの応答が遅れて届いても、別の記録の中身を返さないようにする |
+| stdout の読み取り | プロセスごとに常駐リーダー1本 | `bufio.Scanner` を複数 goroutine で共有しない。打ち切りのたびに goroutine が増えない |
+| クラッシュ復旧 | 失敗時に回収 → `ensureStarted()` → 再送信を1回リトライ。ただし**打ち切り時はリトライしない** | プロセスが予期せず終了した場合の自動復旧。打ち切りの再試行で待ち時間が倍増するのを避ける |
 | Scanner バッファ | 親 32MB / SDK 1MB | 大きなHTMLレスポンスで `bufio.Scanner: token too long` を防ぐ（親側のみ拡張） |
 
 実装: `src/server/gkill/dao/reps/plugin_repository_impl.go`
@@ -572,9 +598,9 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 
 ### 並列度と安全弁
 
-**同一プラグインへ並列に投げてはいけない。** `callCommand` は30秒のデッドラインを `p.mu.Lock()` の**前**に張るため、同時発行すると後続はロック待ちで期限を食い潰す。期限切れ時は `sendRequest` が `Process.Kill()` を呼ぶので、MCPの読み取りが原因でユーザーのプラグインプロセスが落ちる。したがってインライン取得は **rep内は必ず直列・rep間は並列（既定4）** にしてある。
+**同一プラグインへ並列に投げてはいけない。** `callCommand` は30秒のデッドラインを `p.mu.Lock()` の**前**に張るため、同時発行すると後続はロック待ちで期限を食い潰す。期限切れ時は `sendRequest` が `Process.Kill()` を呼んでプラグインプロセスを回収するので、MCPの読み取りが原因でユーザーのプラグインが落ちる。したがってインライン取得は **rep内は必ず直列・rep間は並列（既定4）** にしてある。
 
-同じ理由で、実行中のリクエストを abort してはいけない。`HandleGetPluginContentHTML` は `r.Context()` をそのまま `GetContentHTML` に渡すので、HTTPリクエストのキャンセルもプロセスkillになる。全体30秒のデッドラインは「新しいリクエストを始めない」ことだけで実現している。
+実行中のリクエストを abort しても、いまはプロセスには影響しない（呼び出し元のキャンセルではプロセスを回収しない）。それでも MCP 側は abort せず「新しいリクエストを始めない」だけでデッドラインを実現している。MCPサーバは古い gkill にも接続しうるためである。
 
 そのほかの上限: 1回あたり20件・1件4000文字（`plugin_content_max_text_length` で最大200000）・合計200000文字。あるrepで1件失敗したらそのrepの残りは投げず `content_skipped_reason: "rep_error"` にする（タイムアウトでプロセスが死んでいる可能性が高く、投げ続けてもコールドスタートで待たされるだけのため）。個別の失敗は `content_status` に落ち、`gkill_get_kyous` 全体は失敗しない。
 
