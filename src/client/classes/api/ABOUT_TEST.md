@@ -14,6 +14,7 @@ Vitest
 |---------|------|
 | `src/client/__tests__/unit/api/gkill-api.test.ts` | GkillAPI の全メソッドテスト、Go とのエンドポイント整合 |
 | `src/client/__tests__/unit/api/find-kyou-query.test.ts` | `FindKyouQuery`（rykv / mi の検索条件） |
+| `src/client/__tests__/unit/api/hydrate.test.ts` | `hydrate()` / `hydrate_all()` — 生JSONからクラスインスタンスへの詰め替え（`gkill-api.ts` / `datas/kyou.ts` のファイル全体 eslint-disable を解消したヘルパー） |
 
 ## テスト内容
 

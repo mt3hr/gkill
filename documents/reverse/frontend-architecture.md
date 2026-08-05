@@ -34,7 +34,7 @@ src/client/
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,660行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,330行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
 │   │   └── req_res/                # リクエスト/レスポンス型 (168ファイル、サーバー側は182ファイル)
@@ -99,8 +99,8 @@ Page（ルートページ）
 ### 命名規則
 
 - Page: `{機能名}-page.vue`（例: `kftl-page.vue`, `mi-page.vue`）
-- View: データ型 + 操作で命名（例: `add-kmemo-view.vue`, `kyou-list-view.vue`）
-- Dialog: 操作内容で命名（例: `confirm-delete-dialog.vue`）
+- View: データ型 + 操作で命名（例: `add-dnote-item-view.vue`, `kyou-list-view.vue`）
+- Dialog: 操作内容で命名（例: `confirm-delete-ryuu-item-dialog.vue`）
 
 ### プラグインビューコンポーネント
 
@@ -180,7 +180,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 | `/dashboard` | `dashboard` | dashboard-page.vue | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/saihate` | `saihate` | saihate-page.vue | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | `set_new_password` | set-new-password-page.vue | パスワード設定 |
-| `/regist_first_account` | `regist_first_account` | register-first-account-page.vue | 初回アカウント登録 |
+| `/register_first_account` | `register_first_account` | register-first-account-page.vue | 初回アカウント登録（旧 `/regist_first_account` からリダイレクト） |
 | `/shared_page` | `shared_page` | shared-page.vue | 共有ページ |
 | `/shared_mi` | `shared_mi` | old-shared-mi-page.vue | 共有タスク |
 
@@ -210,9 +210,12 @@ export type ComponentRef = Record<string, any>
 `@typescript-eslint/no-explicit-any` を error にしているため、`any` をこの1ファイルに封じ込めるための型。
 テンプレート ref 経由で子の公開メソッドを呼ぶ箇所（約50のコンポーザブル）で使われる。
 
+JSON からクラスインスタンスへの詰め替えは `classes/api/hydrate.ts` の `hydrate()` / `hydrate_all()` に集約されており、
+`gkill-api.ts` と `datas/kyou.ts` はこれを使うことでファイル全体の `eslint-disable` を解消している。
+
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約3,660行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,330行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
 - 全88登録エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは86件）
@@ -368,6 +371,7 @@ Service Worker が `/share-target` POSTを処理：
 - `@typescript-eslint/no-unused-vars`: warn（`_` プレフィックスは無視）
 - `@typescript-eslint/no-explicit-any`: error
 - `@typescript-eslint/no-empty-object-type`: error
+- `@typescript-eslint/naming-convention`: error（対象は `src/client` 本体のみ。`__tests__` / `*.d.ts` は別流儀として対象外）
 - 実行: `npm run lint`
 
 ## 10. プラグイン HTML ビュー

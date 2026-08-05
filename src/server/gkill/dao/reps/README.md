@@ -38,6 +38,30 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 全リポジトリの集約アクセスポイントとして機能する。
 ユースケース層（`usecase/`）からはこの構造体を経由して各リポジトリにアクセスする。
 
+### 集約の並列版と逐次版
+
+集約型（`Repositories` / `XxxRepositories`）は各リポジトリを `threads.Go` で**並列**に呼ぶ。
+`threads.Go` は `runtime.NumCPU()` 個の有界セマフォを**呼び出し元goroutine上で同期取得**するため、
+スロットを保持したまま内側でもスロットを取ろうとすると枯渇して恒久ハングする。
+
+そのため「リポジトリ実装の中から集約を呼ぶ」経路には**逐次版**を用意してある。
+
+| 集約 | 逐次版 | 使う場面 |
+|---|---|---|
+| `Repositories` | `FindKyousSequential` | ReKyou / MiReKyou がワード検索をターゲットへ委譲するとき |
+| `GitCommitLogRepositories` | `FindKyousSequential` / `FindGitCommitLogSequential` / `GetGitCommitLogSequential` / `GetKyouSequential` / `GetKyouHistoriesSequential` / `FindGitCommitLogByIDsSequential` / `GetLatestDataRepositoryAddressSequential` | キャッシュのバックグラウンド初回ビルド中に下層へフォールバックするとき |
+
+逐次版はインターフェースには載せず具象型のみに持たせ、呼ぶ側は型アサーションで分岐する。
+新しく「rep の中から全rep横断」を足すときも同じ形にすること。
+回帰テストは `re_kyou_cached_deadlock_test.go` と `git_commit_log_cached_nested_pool_test.go`。
+
+### doc コメントの方針
+
+`*_repository.go` のインターフェースメソッド（454件）と `gkill_server_api` の `HandleXxx`（90件）は
+**doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
+共通契約の完全文は基底 `repository.go` に1回だけ書き、型別ファイルは
+「契約は `Repository.Xxx` を参照。」の1行参照＋型固有の差分のみにする。
+
 ## データ型別ファイル一覧
 
 ### 基底エンティティ

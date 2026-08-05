@@ -82,10 +82,10 @@ api/
 - `add-nlog-request.ts` / `add-nlog-response.ts`
 - `add-notification-request.ts` / `add-notification-response.ts`
 - `add-re-kyou-request.ts` / `add-re-kyou-response.ts`
-- `add-share-kyou-list-info-request.ts` / `add-share-kyou-list-info-response.ts`
+- `add-share-kyou-list-infos-request.ts` / `add-share-kyou-list-info-response.ts`
 - `add-tag-request.ts` / `add-tag-response.ts`
 - `add-text-request.ts` / `add-text-response.ts`
-- `add-time-is-request.ts` / `add-time-is-response.ts`
+- `add-timeis-request.ts` / `add-timeis-response.ts`
 - `add-ur-log-request.ts` / `add-ur-log-response.ts`
 
 #### データ更新系（update-*）
@@ -100,14 +100,13 @@ api/
 - `update-re-kyou-request.ts` / `update-re-kyou-response.ts`
 - `update-tag-request.ts` / `update-tag-response.ts`
 - `update-text-request.ts` / `update-text-response.ts`
-- `update-time-is-request.ts` / `update-time-is-response.ts`
+- `update-timeis-request.ts` / `update-timeis-response.ts`
 - `update-ur-log-request.ts` / `update-ur-log-response.ts`
 - `update-account-status-request.ts` / `update-account-status-response.ts`
 - `update-application-config-request.ts` / `update-application-config-response.ts`
-- `update-server-config-request.ts` / `update-server-config-response.ts`
+- `update-server-configs-request.ts` / `update-server-configs-response.ts`
 - `update-share-kyou-list-info-request.ts` / `update-share-kyou-list-info-response.ts`
 - `update-user-reps-request.ts` / `update-user-reps-response.ts`
-- `update-cache-request.ts` / `update-cache-response.ts`
 
 #### データ取得系（get-*）
 
@@ -119,7 +118,7 @@ api/
 - `get-mi-request.ts` / `get-mi-response.ts`
 - `get-nlog-request.ts` / `get-nlog-response.ts`
 - `get-re-kyou-request.ts` / `get-re-kyou-response.ts`
-- `get-time-is-request.ts` / `get-time-is-response.ts`
+- `get-timeis-request.ts` / `get-timeis-response.ts`
 - `get-ur-log-request.ts` / `get-ur-log-response.ts`
 - `get-idf-kyou-request.ts` / `get-idf-kyou-response.ts`
 - `get-git-commit-log-request.ts` / `get-git-commit-log-response.ts`
@@ -140,22 +139,21 @@ api/
 - `get-share-kyou-list-infos-request.ts` / `get-share-kyou-list-infos-response.ts`
 - `get-gkill-notification-public-key-request.ts` / `get-gkill-notification-public-key-response.ts`
 - `get-updated-datas-by-time-request.ts` / `get-updated-datas-by-time-response.ts`
-- `get-kyous-mcp-request.ts` / `get-kyous-mcp-response.ts`
 
 #### その他操作系
 
 - `commit-tx-request.ts` / `commit-tx-response.ts`
 - `discard-tx-request.ts` / `discard-tx-response.ts`
-- `delete-share-kyou-list-info-request.ts` / `delete-share-kyou-list-infos-response.ts`
+- `delete-share-kyou-list-infos-request.ts` / `delete-share-kyou-list-infos-response.ts`
 - `generate-tls-file-request.ts` / `generate-tls-file-response.ts`
 - `open-directory-request.ts` / `open-directory-response.ts`
 - `open-file-request.ts` / `open-file-response.ts`
 - `register-gkill-notification-request.ts` / `register-gkill-notification-response.ts`
 - `reload-repositories-request.ts` / `reload-repositories-response.ts`
-- `submit-kftl-text-request.ts` / `submit-kftl-text-response.ts`
 - `upload-files-request.ts` / `upload-files-response.ts`
 - `upload-gps-log-files-request.ts` / `upload-gps-log-files-response.ts`
-- `urlog-bookmarklet-request.ts`
+
+> `update_cache` / `get_kyous_mcp` / `submit_kftl_text` / `urlog_bookmarklet` は専用の req_res 型を持たない（サーバ側の構造体を直接JSONで扱うか、汎用型で送る）。
 
 ## 開発ガイドライン
 
