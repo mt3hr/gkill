@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -21,11 +22,28 @@ import (
 )
 
 // pluginProcess はプラグインプロセスとのstdio通信状態を管理する。
+//
+// stdoutの読み取りはプロセスごとに常駐する1本のgoroutine（リーダー）が担当する。
+// bufio.Scanner は並行安全ではないので、scanner に触れてよいのはリーダーだけ。
+// リクエスト側は respCh 経由で応答を受け取り、レスポンスIDで自分宛てかを判定する。
 type pluginProcess struct {
 	cmd     *exec.Cmd
 	stdin   io.WriteCloser
 	scanner *bufio.Scanner
 	started bool
+
+	// respCh はリーダーからの受け口。
+	// 呼び出しは p.mu で1件ずつに直列化されるので、打ち切られた呼び出しの
+	// 積み残しは高々1件。バッファ1で足りる。
+	respCh chan scanResult
+	// retired はこのプロセスをもう使わないことを示す。閉じるとリーダーが抜ける。
+	retired chan struct{}
+	// retireOnce は retired の二重closeを防ぐ。
+	retireOnce sync.Once
+	// readerDone はリーダーが抜けきったことを示す。
+	// stdoutを読んでいる最中に cmd.Wait() を呼ぶのは os/exec が禁じているので、
+	// Close はこれを待ってから Wait する。
+	readerDone chan struct{}
 }
 
 // pluginRepositoryImpl は PluginRepository インターフェースの実装。
@@ -58,6 +76,11 @@ func NewPluginRepository(userID string, pluginDir string, manifest gkill_plugin.
 func (p *pluginRepositoryImpl) ensureStarted() error {
 	if p.proc != nil && p.proc.started {
 		return nil
+	}
+	// 差し替える前に古いプロセスを片付ける。
+	// リーダーが応答の送信でブロックしたまま残らないようにする。
+	if p.proc != nil {
+		p.retire(p.proc)
 	}
 
 	execName := p.manifest.Executable
@@ -93,15 +116,65 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 	// 大きな会話HTMLレスポンスに対応するためバッファを32MBに拡大
 	scanner.Buffer(make([]byte, 32*1024*1024), 32*1024*1024)
 
-	p.proc = &pluginProcess{
-		cmd:     cmd,
-		stdin:   stdin,
-		scanner: scanner,
-		started: true,
+	proc := &pluginProcess{
+		cmd:        cmd,
+		stdin:      stdin,
+		scanner:    scanner,
+		started:    true,
+		respCh:     make(chan scanResult, 1),
+		retired:    make(chan struct{}),
+		readerDone: make(chan struct{}),
 	}
+	p.proc = proc
+	go p.readLoop(proc)
 
 	slog.Info(fmt.Sprintf("plugin started: %q (user=%q)", p.manifest.Name, p.userID))
 	return nil
+}
+
+// readLoop はプロセスごとに1本だけ走る常駐リーダー。
+// scanner を触るのはこのgoroutineだけで、リクエスト側は respCh 経由で受け取る。
+// retired が閉じられたら、誰も読んでいなくても抜ける。
+func (p *pluginRepositoryImpl) readLoop(proc *pluginProcess) {
+	defer close(proc.readerDone)
+	for {
+		if !proc.scanner.Scan() {
+			var result scanResult
+			if scanErr := proc.scanner.Err(); scanErr != nil {
+				result = scanResult{err: fmt.Errorf("error at read from plugin stdout %s: %w", p.manifest.Name, scanErr)}
+			} else {
+				result = scanResult{err: fmt.Errorf("plugin %s closed stdout unexpectedly", p.manifest.Name)}
+			}
+			p.deliver(proc, result)
+			return
+		}
+		b := make([]byte, len(proc.scanner.Bytes()))
+		copy(b, proc.scanner.Bytes())
+		if !p.deliver(proc, scanResult{data: b}) {
+			return
+		}
+	}
+}
+
+// deliver は応答をリクエスト側へ渡す。渡せたら true。
+// 誰も読んでいなくても retired で必ず抜けられるようにして、リーダーを残さない。
+func (p *pluginRepositoryImpl) deliver(proc *pluginProcess, result scanResult) bool {
+	select {
+	case proc.respCh <- result:
+		return true
+	case <-proc.retired:
+		return false
+	}
+}
+
+// retire はプロセスを使用終了にする。リーダーを解放し、プロセスを強制終了する。
+// 複数回呼んでも安全。呼び出し側で p.mu をロック済みであること。
+func (p *pluginRepositoryImpl) retire(proc *pluginProcess) {
+	proc.retireOnce.Do(func() { close(proc.retired) })
+	proc.started = false
+	if proc.cmd.Process != nil {
+		_ = proc.cmd.Process.Kill()
+	}
 }
 
 // scanResult は scanner.Scan() の結果を goroutine 間で受け渡すための型。
@@ -110,71 +183,98 @@ type scanResult struct {
 	err  error
 }
 
-// sendRequest は改行区切りJSONでリクエストを送り、レスポンスを受け取る。
+// sendRequest は改行区切りJSONでリクエストを送り、自分宛てのレスポンスを受け取る。
 // 呼び出し前に p.mu がロック済みであること。
-// ctx がキャンセルされた場合はプロセスを強制終了してエラーを返す。
-func (p *pluginRepositoryImpl) sendRequest(ctx context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
+//
+// 打ち切りの契機を2つに分けているのが要点。
+//   - callerCtx: HTTPクライアントの切断やサーバ終了。待つのをやめるだけで、
+//     プラグインプロセスには手を出さない。遅れて届く応答は次の呼び出しが
+//     レスポンスIDの不一致で読み捨てる。
+//   - timeoutCtx: gkill自身が定めた期限（既定30秒 / IsAliveの5秒）。
+//     応答が返らない＝プラグインが詰まっているということなので、
+//     プロセスを回収する。回収しないと以降の呼び出しも全部詰まったままになる。
+func (p *pluginRepositoryImpl) sendRequest(callerCtx context.Context, timeoutCtx context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
+	// リーダーと共有するのはこのローカル変数だけにする。
+	// p.proc を直接参照すると ensureStarted の差し替えと競合する。
+	proc := p.proc
+
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("error at marshal plugin request: %w", err)
 	}
 
-	if _, err := fmt.Fprintf(p.proc.stdin, "%s\n", reqBytes); err != nil {
-		p.proc.started = false
+	if _, err := fmt.Fprintf(proc.stdin, "%s\n", reqBytes); err != nil {
+		proc.started = false
 		return nil, fmt.Errorf("error at write to plugin stdin %s: %w", p.manifest.Name, err)
 	}
 
-	// bufio.Scanner.Scan() はブロッキングなのでgoroutineで実行し、
-	// contextキャンセル（タイムアウト含む）に対応する
-	ch := make(chan scanResult, 1)
-	go func() {
-		if p.proc.scanner.Scan() {
-			b := make([]byte, len(p.proc.scanner.Bytes()))
-			copy(b, p.proc.scanner.Bytes())
-			ch <- scanResult{data: b}
-		} else {
-			if scanErr := p.proc.scanner.Err(); scanErr != nil {
-				ch <- scanResult{err: fmt.Errorf("error at read from plugin stdout %s: %w", p.manifest.Name, scanErr)}
-			} else {
-				ch <- scanResult{err: fmt.Errorf("plugin %s closed stdout unexpectedly", p.manifest.Name)}
+	for {
+		select {
+		case <-timeoutCtx.Done():
+			p.retire(proc)
+			return nil, fmt.Errorf("plugin %s request timed out: %w", p.manifest.Name, timeoutCtx.Err())
+		case <-callerCtx.Done():
+			// 呼び出し元にDeadlineが設定されていた場合、timeoutCtx はその同じ期限を
+			// 引き継いでいるので、両方がほぼ同時にDoneになりselectがどちらを選ぶか決まらない。
+			// タイミングではなくエラーの種類で判定する。
+			//   DeadlineExceeded … 「これ以上待たない」という判断（IsAliveの5秒など）
+			//                       なのでプラグインを回収する
+			//   Canceled        … 呼び出し元が結果を要らなくなっただけ。プロセスには触らない
+			if errors.Is(callerCtx.Err(), context.DeadlineExceeded) {
+				p.retire(proc)
+				return nil, fmt.Errorf("plugin %s request timed out: %w", p.manifest.Name, callerCtx.Err())
 			}
+			return nil, fmt.Errorf("plugin %s request canceled: %w", p.manifest.Name, callerCtx.Err())
+		case result, ok := <-proc.respCh:
+			if !ok {
+				proc.started = false
+				return nil, fmt.Errorf("plugin %s closed stdout unexpectedly", p.manifest.Name)
+			}
+			if result.err != nil {
+				proc.started = false
+				return nil, result.err
+			}
+			var resp gkill_plugin.PluginResponse
+			if err := json.Unmarshal(result.data, &resp); err != nil {
+				return nil, fmt.Errorf("error at unmarshal plugin response %s: %w", p.manifest.Name, err)
+			}
+			// 打ち切った呼び出しの応答。読み捨てて自分の応答を待つ。
+			// IDが空のものはSDKのパースエラー応答（writeError(encoder, "", ...)）なので
+			// 自分宛てとして扱う。捨ててしまうと不正入力のたびに期限まで待つことになる。
+			if resp.ID != "" && resp.ID != req.ID {
+				slog.Debug(fmt.Sprintf("plugin %q discarded stale response %q", p.manifest.Name, resp.ID))
+				continue
+			}
+			if len(resp.Errors) > 0 {
+				return &resp, fmt.Errorf("plugin %s returned errors: %v", p.manifest.Name, resp.Errors)
+			}
+			return &resp, nil
 		}
-	}()
-
-	select {
-	case <-ctx.Done():
-		p.proc.started = false
-		// goroutineのScan()ブロックを解除するためプロセスを強制終了する。
-		// 次のcallCommand呼び出しでensureStarted()が新プロセスを起動する。
-		if p.proc.cmd.Process != nil {
-			_ = p.proc.cmd.Process.Kill()
-		}
-		return nil, fmt.Errorf("plugin %s request timed out: %w", p.manifest.Name, ctx.Err())
-	case result := <-ch:
-		if result.err != nil {
-			p.proc.started = false
-			return nil, result.err
-		}
-		var resp gkill_plugin.PluginResponse
-		if err := json.Unmarshal(result.data, &resp); err != nil {
-			return nil, fmt.Errorf("error at unmarshal plugin response %s: %w", p.manifest.Name, err)
-		}
-		if len(resp.Errors) > 0 {
-			return &resp, fmt.Errorf("plugin %s returned errors: %v", p.manifest.Name, resp.Errors)
-		}
-		return &resp, nil
 	}
 }
 
 // callCommand は p.mu でロックし、ensureStarted・sendRequest・クラッシュ時リトライをまとめて実行する。
 // p.mu で全操作を直列化することで並列リクエストによる競合を防ぐ。
-// ctx にDeadlineが設定されていない場合はデフォルト30秒のタイムアウトを付加する。
+//
+// contextは2つに分ける。呼び出し元の ctx はそのまま「呼び出し元が結果を待つのをやめたか」
+// を表し、timeoutCtx は「gkill自身がプラグインを見限る期限」を表す。
+// 呼び出し元のキャンセル（HTTPクライアントの切断）を後者に混ぜると、
+// 画面を操作しただけでプラグインプロセスが回収されてしまう。
 func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin.PluginRequest) (*gkill_plugin.PluginResponse, error) {
-	// タイムアウト未設定の場合はデフォルト30秒を付加する
-	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
-		defer cancel()
+	// 呼び出し元のキャンセルは引き継がず、Deadlineだけ受け継ぐ。
+	// Deadline未設定の場合はデフォルト30秒を付加する。
+	var timeoutCtx context.Context
+	var cancel context.CancelFunc
+	if deadline, hasDeadline := ctx.Deadline(); hasDeadline {
+		timeoutCtx, cancel = context.WithDeadline(context.WithoutCancel(ctx), deadline)
+	} else {
+		timeoutCtx, cancel = context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	}
+	defer cancel()
+
+	// 期限切れのctxで来たときに、プロセスを起動した直後に回収するのを防ぐ
+	if err := timeoutCtx.Err(); err != nil {
+		return nil, fmt.Errorf("plugin %s request timed out: %w", p.manifest.Name, err)
 	}
 
 	p.mu.Lock()
@@ -184,19 +284,19 @@ func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin
 		return nil, err
 	}
 
-	resp, err := p.sendRequest(ctx, req)
+	resp, err := p.sendRequest(ctx, timeoutCtx, req)
 	if err != nil {
-		// タイムアウト・キャンセルはリトライしない（リトライしても同じ結果になるため）
-		if ctx.Err() != nil {
+		// 打ち切り（呼び出し元のキャンセル・期限切れ）はリトライしない
+		if ctx.Err() != nil || timeoutCtx.Err() != nil {
 			return nil, err
 		}
 		// プロセスクラッシュ時のみ1回リトライ（自動再起動）
 		slog.Warn(fmt.Sprintf("plugin %q error, retrying: %q", p.manifest.Name, err))
-		p.proc.started = false
+		p.retire(p.proc)
 		if startErr := p.ensureStarted(); startErr != nil {
 			return nil, fmt.Errorf("plugin restart failed %s: %w (original: %v)", p.manifest.Name, startErr, err)
 		}
-		resp, err = p.sendRequest(ctx, req)
+		resp, err = p.sendRequest(ctx, timeoutCtx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -284,23 +384,42 @@ func (p *pluginRepositoryImpl) Close(_ context.Context) error {
 		return nil
 	}
 
+	proc := p.proc
+
 	req := gkill_plugin.PluginRequest{
 		ID:      uuid.New().String(),
 		Command: "close",
 	}
 	reqBytes, _ := json.Marshal(req)
-	fmt.Fprintf(p.proc.stdin, "%s\n", reqBytes) //nolint:errcheck
+	fmt.Fprintf(proc.stdin, "%s\n", reqBytes) //nolint:errcheck
 
-	done := make(chan error, 1)
-	go func() { done <- p.proc.cmd.Wait() }()
-	select {
-	case <-done:
-	case <-time.After(5 * time.Second):
-		slog.Warn(fmt.Sprintf("plugin %q did not exit in time, killing", p.manifest.Name))
-		p.proc.cmd.Process.Kill() //nolint:errcheck
+	// stdoutを読んでいる最中に cmd.Wait() を呼ぶのは os/exec が禁じている
+	// （Waitがパイプを閉じてしまうため）。プロセス終了→リーダーがEOFで抜ける、
+	// の順を待ってから Wait する。
+	//
+	// 待つ間は respCh を読み捨てる。closeコマンドの応答と、その後のEOF通知を
+	// 誰も受け取らないと、リーダーが respCh への送信でブロックしたまま
+	// readerDone が閉じられない。
+	timeout := time.After(5 * time.Second)
+	for waiting := true; waiting; {
+		select {
+		case <-proc.readerDone:
+			waiting = false
+		case <-proc.respCh:
+			// closeの応答やEOF通知。もう誰も使わないので捨てる。
+		case <-timeout:
+			slog.Warn(fmt.Sprintf("plugin %q did not exit in time, killing", p.manifest.Name))
+			p.retire(proc)
+			<-proc.readerDone
+			waiting = false
+		}
+	}
+	if err := proc.cmd.Wait(); err != nil {
+		slog.Debug(fmt.Sprintf("plugin %q exited with error: %q", p.manifest.Name, err))
 	}
 
-	p.proc.started = false
+	// 以後このプロセスは使わない。リーダーが残らないよう必ず解放する。
+	p.retire(proc)
 	slog.Info(fmt.Sprintf("plugin closed: %q", p.manifest.Name))
 	return nil
 }
