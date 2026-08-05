@@ -77,7 +77,7 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 | `/shared_page` | 共有リンクから Kyou / タスクを閲覧する画面（認証不要）。`view_type` に応じて内部で振り分ける |
 | `/shared_mi` | 旧・共有タスク閲覧URL。実体は `/shared_page?share_id=…` へのリダイレクタ |
 | `/set_new_password` | パスワードリセットリンクから新パスワードを設定する画面 |
-| `/regist_first_account` | 初回起動時のアカウント登録画面 |
+| `/register_first_account` | 初回起動時のアカウント登録画面（旧パス `/regist_first_account` は vue-router がリダイレクト） |
 
 > `/shared_rykv` はサーバ側（`serve.go`）では SPA が配信されるが、
 > `src/client/router/index.ts` に対応するルート定義が無い。

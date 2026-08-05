@@ -67,7 +67,7 @@ src/client/
 │   ├── plaing-time-is-page.vue
 │   ├── dashboard-page.vue
 │   ├── set-new-password-page.vue
-│   ├── regist-first-account-page.vue
+│   ├── register-first-account-page.vue
 │   ├── shared-page.vue
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
@@ -180,7 +180,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 | `/dashboard` | `dashboard` | dashboard-page.vue | 日次サマリー（Dnote・GPS・MI一覧） |
 | `/saihate` | `saihate` | saihate-page.vue | 記録特化画面（他画面への遷移なし） |
 | `/set_new_password` | `set_new_password` | set-new-password-page.vue | パスワード設定 |
-| `/regist_first_account` | `regist_first_account` | regist-first-account-page.vue | 初回アカウント登録 |
+| `/regist_first_account` | `regist_first_account` | register-first-account-page.vue | 初回アカウント登録 |
 | `/shared_page` | `shared_page` | shared-page.vue | 共有ページ |
 | `/shared_mi` | `shared_mi` | old-shared-mi-page.vue | 共有タスク |
 

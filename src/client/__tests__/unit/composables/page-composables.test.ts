@@ -70,7 +70,7 @@ async function tryImport(name: string, path: string, exportName: string) {
 
 await tryImport('useLoginPage', '@/classes/use-login-page', 'useLoginPage')
 await tryImport('useSetNewPasswordPage', '@/classes/use-set-new-password-page', 'useSetNewPasswordPage')
-await tryImport('useRegistFirstAccountPage', '@/classes/use-regist-first-account-page', 'useRegistFirstAccountPage')
+await tryImport('useRegisterFirstAccountPage', '@/classes/use-register-first-account-page', 'useRegisterFirstAccountPage')
 await tryImport('useDashboardPage', '@/classes/use-dashboard-page', 'useDashboardPage')
 
 describe('Page Composables', () => {

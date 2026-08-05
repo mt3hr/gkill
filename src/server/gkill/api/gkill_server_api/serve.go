@@ -269,6 +269,17 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 
+	// 初回アカウント登録画面。ifRedirectResetAdminAccountIsNotFound を通さないこと
+	// （通すとこの画面自身へのリダイレクトが無限ループする）。
+	// /regist_first_account は旧パス。ブックマークや古い資料からの流入のために残してあり、
+	// SPA 側（vue-router）が /register_first_account へリダイレクトする。
+	router.PathPrefix("/register_first_account").Handler(http.StripPrefix("/register_first_account",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
 	router.PathPrefix("/regist_first_account").Handler(http.StripPrefix("/regist_first_account",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ok := g.filterLocalOnly(w, r); !ok {
