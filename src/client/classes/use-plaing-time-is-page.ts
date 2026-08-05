@@ -16,7 +16,7 @@ import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-r
 import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
 import type { ComponentRef } from '@/classes/component-ref'
 
-export function usePlaingTimeisPage() {
+export function usePlaingTimeIsPage() {
     const theme = useTheme()
 
     // ── Template refs ──

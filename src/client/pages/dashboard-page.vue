@@ -133,7 +133,7 @@
                 @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
                 @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
                 ref="add_kc_dialog" />
-            <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
                 @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
                 @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
@@ -224,9 +224,9 @@ import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import HelpDialog from './dialogs/help-dialog.vue'
 import TutorialDialog from './dialogs/tutorial-dialog.vue'
 import AddKCDialog from './dialogs/add-kc-dialog.vue'
-import AddTimeisDialog from './dialogs/add-timeis-dialog.vue'
+import AddTimeIsDialog from './dialogs/add-time-is-dialog.vue'
 import AddLantanaDialog from './dialogs/add-lantana-dialog.vue'
-import AddUrlogDialog from './dialogs/add-urlog-dialog.vue'
+import AddUrlogDialog from './dialogs/add-ur-log-dialog.vue'
 import AddMiDialog from './dialogs/add-mi-dialog.vue'
 import AddNlogDialog from './dialogs/add-nlog-dialog.vue'
 import kftlDialog from './dialogs/kftl-dialog.vue'

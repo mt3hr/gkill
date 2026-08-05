@@ -36,7 +36,7 @@
 import { type Ref, ref } from 'vue'
 import type { AddNewKFTLTemplateStructElementDialogEmits } from './add-new-kftl-template-struct-element-dialog-emits'
 import type { AddNewKFTLTemplateStructElementDialogProps } from './add-new-kftl-template-struct-element-dialog-props'
-import AddNewKFTLTemplateStructElementView from '../views/add-new-kftl_template-struct-element-view.vue'
+import AddNewKFTLTemplateStructElementView from '../views/add-new-kftl-template-struct-element-view.vue'
 import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'

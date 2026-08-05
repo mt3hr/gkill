@@ -30,9 +30,9 @@ import { createMockGkillAPI } from '../../helpers/mock-api'
 import { useAddMiView } from '@/classes/use-add-mi-view'
 import { useAddTagView } from '@/classes/use-add-tag-view'
 import { useAddNlogView } from '@/classes/use-add-nlog-view'
-import { useAddUrlogView } from '@/classes/use-add-urlog-view'
+import { useAddUrlogView } from '@/classes/use-add-ur-log-view'
 import { useAddLantanaView } from '@/classes/use-add-lantana-view'
-import { useAddTimeisView } from '@/classes/use-add-timeis-view'
+import { useAddTimeIsView } from '@/classes/use-add-time-is-view'
 import { useAddKcView } from '@/classes/use-add-kc-view'
 
 function createBaseProps() {
@@ -276,9 +276,9 @@ describe('useAddLantanaView', () => {
   })
 })
 
-// ========== useAddTimeisView ==========
+// ========== useAddTimeIsView ==========
 
-describe('useAddTimeisView', () => {
+describe('useAddTimeIsView', () => {
   let props: Record<string, unknown>
   let emits: ReturnType<typeof vi.fn>
 
@@ -289,12 +289,12 @@ describe('useAddTimeisView', () => {
   })
 
   test('initializes with empty title', () => {
-    const view = useAddTimeisView({ props, emits })
+    const view = useAddTimeIsView({ props, emits })
     expect(view.timeis_title.value).toBe('')
   })
 
   test('save() emits received_errors when title is blank', async () => {
-    const view = useAddTimeisView({ props, emits })
+    const view = useAddTimeIsView({ props, emits })
     view.timeis_title.value = ''
     await view.save()
     const errorCalls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
@@ -302,7 +302,7 @@ describe('useAddTimeisView', () => {
   })
 
   test('returns expected interface', () => {
-    const view = useAddTimeisView({ props, emits })
+    const view = useAddTimeIsView({ props, emits })
     expect(typeof view.save).toBe('function')
     expect(typeof view.reset).toBe('function')
   })

@@ -31,7 +31,7 @@
 import type { AttachedTimeIsPlaingProps } from './attached-time-is-plaing-props'
 import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 import type { KyouViewEmits } from './kyou-view-emits'
-import AttachedTimeIsPlaingContextMenu from './attached-timeis-plaing-context-menu.vue'
+import AttachedTimeIsPlaingContextMenu from './attached-time-is-plaing-context-menu.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'

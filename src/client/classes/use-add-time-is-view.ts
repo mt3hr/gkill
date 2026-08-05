@@ -9,7 +9,7 @@ import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { EditTimeIsViewProps } from '@/pages/views/edit-time-is-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 
-export function useAddTimeisView(options: {
+export function useAddTimeIsView(options: {
     props: EditTimeIsViewProps,
     emits: KyouViewEmits,
 }) {

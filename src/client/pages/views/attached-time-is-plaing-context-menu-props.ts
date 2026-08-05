@@ -4,7 +4,7 @@ import type { GkillPropsBase } from "./gkill-props-base"
 import type { Kyou } from "@/classes/datas/kyou"
 import type { InfoIdentifier } from "@/classes/datas/info-identifier"
 
-export interface AttachedTimeisPlaingContextMenuProps extends GkillPropsBase {
+export interface AttachedTimeIsPlaingContextMenuProps extends GkillPropsBase {
     timeis_kyou: Kyou
     target_kyou: Kyou
     highlight_targets: Array<InfoIdentifier>
