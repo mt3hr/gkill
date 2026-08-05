@@ -16,8 +16,8 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import type { ConfirmDeleteKFTLTemplateStructViewProps } from './confirm-delete-kftl_template-struct-view-props.ts';
-import type { ConfirmDeleteKFTLTemplateStructViewEmits } from './confirm-delete-kftl_template-struct-view-emits.ts';
+import type { ConfirmDeleteKFTLTemplateStructViewProps } from './confirm-delete-kftl-template-struct-view-props.ts';
+import type { ConfirmDeleteKFTLTemplateStructViewEmits } from './confirm-delete-kftl-template-struct-view-emits.ts';
 
 defineProps<ConfirmDeleteKFTLTemplateStructViewProps>()
 const emits = defineEmits<ConfirmDeleteKFTLTemplateStructViewEmits>()
