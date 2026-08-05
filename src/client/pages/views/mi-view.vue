@@ -3,7 +3,7 @@
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-tooltip :text="i18n.global.t('TOOLTIP_TOGGLE_SIDEBAR')">
                 <template v-slot:activator="{ props }">
-                    <v-app-bar-nav-icon v-bind="props" @click.stop="toggleDrawer" :disabled="!inited" />
+                    <v-app-bar-nav-icon v-bind="props" @click.stop="toggle_drawer" :disabled="!inited" />
                 </template>
             </v-tooltip>
             <v-toolbar-title>
@@ -14,7 +14,7 @@
                     <v-menu activator="parent">
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in page_list">
-                                <v-list-item-title @click="navigateToPage(page.page_name)">
+                                <v-list-item-title @click="navigate_to_page(page.page_name)">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
@@ -124,7 +124,7 @@
                                     :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                     :show_attached_tags="false" :show_attached_texts="false"
                                     :show_attached_notifications="false"
-                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
+                                    v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }" />
                             </div>
                         </td>
                         <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
@@ -190,8 +190,8 @@
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @closed="(id: string) => close_rykv_dialog(id)"
-                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykvDialogHandler }" />
-            <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }" />
+            <v-avatar :style="floating_action_button_style()" color="primary" class="position-fixed">
                 <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" v-long-press="() => show_kftl_dialog()" icon="mdi-plus" variant="text"
@@ -306,8 +306,8 @@ const {
     page_list,
 
     // Template event handlers
-    toggleDrawer,
-    navigateToPage,
+    toggle_drawer,
+    navigate_to_page,
     onSidebarRequestedSearch,
     onSidebarUpdatedQuery,
     onSidebarInited,
@@ -339,12 +339,12 @@ const {
     show_lantana_dialog,
     show_upload_file_dialog,
     show_save_clipboard_to_file_dialog,
-    floatingActionButtonStyle,
+    floating_action_button_style,
 
     // Event relay objects
     crudRelayHandlers,
     allColumnsRequestHandlers,
-    rykvDialogHandler,
+    rykv_dialog_handler,
 } = useMiView({ props, emits })
 </script>
 <style lang="css" scoped>

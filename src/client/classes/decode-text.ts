@@ -2,7 +2,7 @@
 
 // バイト列から文字コードを推定してデコードする。
 // BOM検出 → UTF-8厳密 → Shift_JIS → EUC-JP → 置換文字付きUTF-8フォールバック。
-export function detectAndDecodeText(bytes: Uint8Array): string {
+export function detect_and_decode_text(bytes: Uint8Array): string {
     // BOM検出: UTF-8 / UTF-16LE / UTF-16BE
     if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
         return new TextDecoder('utf-8').decode(bytes.slice(3))

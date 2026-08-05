@@ -45,7 +45,7 @@ const props = defineProps<{
 
 const show = defineModel<boolean>('show', { default: false })
 // iframe 内でプラグイン製フォームがナビゲーションし joint history entry を
-// 作り得るため、closeDialogViaHistory は使わずプログラム的クローズのままにする
+// 作り得るため、close_dialog_via_history は使わずプログラム的クローズのままにする
 // (unmount で iframe の履歴ごと消えてから巻き戻される)。登録だけ行い、
 // ブラウザバック/Escape で閉じられるようにする。
 useDialogHistoryStack(show)
@@ -75,8 +75,8 @@ async function load_config_html(): Promise<void> {
     html.value = res.html
 }
 
-watch(show, async (newVal) => {
-    if (!newVal) return
+watch(show, async (new_val) => {
+    if (!new_val) return
     await load_config_html()
 })
 

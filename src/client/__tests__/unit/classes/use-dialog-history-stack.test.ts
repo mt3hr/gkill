@@ -208,7 +208,7 @@ describe('use-dialog-history-stack concepts', () => {
   })
 
   test('close target priority: requested (middle) dialog closes, depth stays consistent', () => {
-    // closeDialogViaHistory で「最上位でない」ダイアログの×を押した場合、
+    // close_dialog_via_history で「最上位でない」ダイアログの×を押した場合、
     // popstate ではターゲット指定のダイアログを閉じ、上のダイアログは維持する。
     // 履歴エントリは depth 値しか持たないため、除去後も depth == stack.length が保たれる
     const dA = ref(true)
@@ -243,10 +243,10 @@ describe('use-dialog-history-stack concepts', () => {
   test('reset accounting: one popstate per traversal, not per entry', () => {
     // history.go(-N) は N エントリ戻っても popstate は1回しか発火しない。
     // pendingNav (握りつぶし予約) はトラバーサル単位で数えること。
-    // エントリ数で数えると N>=2 で詰まり、resetDialogHistory が resolve しない
-    // (→ navigateToPage の await が完了せず画面遷移しなくなる)
+    // エントリ数で数えると N>=2 で詰まり、reset_dialog_history が resolve しない
+    // (→ navigate_to_page の await が完了せず画面遷移しなくなる)
     const depth = 3
-    const inFlight = 1 // 飛行中の closeDialogViaHistory 由来 go(-1) — 各1回発火する
+    const inFlight = 1 // 飛行中の close_dialog_via_history 由来 go(-1) — 各1回発火する
     const goDelta = Math.max(0, depth - inFlight)
     const pendingNav = inFlight + (goDelta > 0 ? 1 : 0)
 

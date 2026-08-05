@@ -15,7 +15,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function useMiPage() {
@@ -38,8 +38,8 @@ export function useMiPage() {
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 
     // ── 連打/連続登録で二重に通信しないため ──
-    let tagStructRefreshPromise: Promise<void> | null = null
-    let mi_board_StructRefreshPromise: Promise<void> | null = null
+    let tag_struct_refresh_promise: Promise<void> | null = null
+    let mi_board_struct_refresh_promise: Promise<void> | null = null
 
     // ── Helpers ──
     const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
@@ -148,10 +148,10 @@ export function useMiPage() {
         application_config_dialog.value?.show()
     }
 
-    function tagStructHas(tag_struct: TagStructElementData, tagName: string): boolean {
-        if (tag_struct.tag_name === tagName) return true
+    function tag_struct_has(tag_struct: TagStructElementData, tag_name: string): boolean {
+        if (tag_struct.tag_name === tag_name) return true
         for (const c of (tag_struct.children ?? [])) {
-            if (tagStructHas(c, tagName)) return true
+            if (tag_struct_has(c, tag_name)) return true
         }
         return false
     }
@@ -164,15 +164,15 @@ export function useMiPage() {
         req.force_reget = true
         await gkill_api.value.get_all_tag_names(req)
 
-        if (tagStructHas(application_config.value.tag_struct, name)) return
+        if (tag_struct_has(application_config.value.tag_struct, name)) return
 
         // すでに更新中ならそれに乗る
-        if (tagStructRefreshPromise) {
-            await tagStructRefreshPromise
+        if (tag_struct_refresh_promise) {
+            await tag_struct_refresh_promise
             return
         }
 
-        tagStructRefreshPromise = (async () => {
+        tag_struct_refresh_promise = (async () => {
             const errors = await application_config.value.append_not_found_tags()
             if (errors && errors.length) {
                 write_errors(errors)
@@ -185,9 +185,9 @@ export function useMiPage() {
         })()
 
         try {
-            await tagStructRefreshPromise
+            await tag_struct_refresh_promise
         } finally {
-            tagStructRefreshPromise = null
+            tag_struct_refresh_promise = null
         }
     }
 
@@ -222,12 +222,12 @@ export function useMiPage() {
         if (mi_board_struct_has(application_config.value.mi_board_struct, name)) return
 
         // すでに更新中ならそれに乗る
-        if (mi_board_StructRefreshPromise) {
-            await mi_board_StructRefreshPromise
+        if (mi_board_struct_refresh_promise) {
+            await mi_board_struct_refresh_promise
             return
         }
 
-        mi_board_StructRefreshPromise = (async () => {
+        mi_board_struct_refresh_promise = (async () => {
             const errors = await application_config.value.append_not_found_mi_boards()
             if (errors && errors.length) {
                 write_errors(errors)
@@ -240,24 +240,24 @@ export function useMiPage() {
         })()
 
         try {
-            await mi_board_StructRefreshPromise
+            await mi_board_struct_refresh_promise
         } finally {
-            mi_board_StructRefreshPromise = null
+            mi_board_struct_refresh_promise = null
         }
     }
 
     // プッシュ通知登録用
-    function urlBase64ToUint8Array(base64String: string): Uint8Array {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    function url_base64_to_uint8_array(base64_string: string): Uint8Array {
+        const padding = '='.repeat((4 - (base64_string.length % 4)) % 4);
         /* eslint no-useless-escape: 0 */
-        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+        const base64 = (base64_string + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const raw_data = window.atob(base64);
+        return Uint8Array.from([...raw_data].map(char => char.charCodeAt(0)));
     }
 
     // プッシュ通知登録用
-    async function subscribe(vapidPublicKey: string): Promise<void> {
-        if (!vapidPublicKey || vapidPublicKey === "") {
+    async function subscribe(vapid_public_key: string): Promise<void> {
+        if (!vapid_public_key || vapid_public_key === "") {
             return
         }
         await navigator.serviceWorker.ready
@@ -265,14 +265,14 @@ export function useMiPage() {
                 return registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as any,
+                    applicationServerKey: url_base64_to_uint8_array(vapid_public_key) as any,
                 });
             })
             .then(async function (subscription) {
                 const req = new RegisterGkillNotificationRequest()
 
                 req.subscription = subscription
-                req.public_key = vapidPublicKey
+                req.public_key = vapid_public_key
                 const res = await GkillAPI.get_gkill_api().register_gkill_notification(req)
                 if (res.errors && res.errors.length !== 0) {
                     write_errors(res.errors)
@@ -400,7 +400,7 @@ export function useMiPage() {
     }
 
     // ── beforeunload guard ──
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
+    function handle_before_unload(e: BeforeUnloadEvent) {
         if (is_show_application_config_dialog.value) {
             e.preventDefault()
         }
@@ -411,13 +411,13 @@ export function useMiPage() {
         resize_content()
     }
     window.addEventListener('resize', onResize)
-    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('beforeunload', handle_before_unload)
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
     onUnmounted(() => {
         window.removeEventListener('resize', onResize)
-        window.removeEventListener('beforeunload', handleBeforeUnload)
+        window.removeEventListener('beforeunload', handle_before_unload)
     })
 
     // ── Init ──

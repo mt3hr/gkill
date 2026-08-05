@@ -8,7 +8,7 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useTheme } from 'vuetify'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { SetNewPasswordViewProps } from '@/pages/views/set-new-password-view-props'
 import type { SetNewPasswordViewEmits } from '@/pages/views/set-new-password-view-emits'
 
@@ -34,15 +34,15 @@ export function useSetNewPasswordView(options: {
      
     const password_sha256 = computed(async () => {
         const encoder = new TextEncoder();
-        const msgUint8 = encoder.encode(password.value);
+        const msg_uint8 = encoder.encode(password.value);
          
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hash_buffer = await crypto.subtle.digest('SHA-256', msg_uint8);
 
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
+        const hash_array = Array.from(new Uint8Array(hash_buffer));
+        const hash_hex = hash_array
             .map((b) => b.toString(16).padStart(2, '0'))
             .join('');
-        return hashHex;
+        return hash_hex;
     })
 
     // ── Init ──
@@ -103,7 +103,7 @@ export function useSetNewPasswordView(options: {
         }
 
         await sleep(2500)
-        await resetDialogHistory()
+        await reset_dialog_history()
         router.replace("/")
 
         return true

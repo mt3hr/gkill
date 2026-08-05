@@ -36,7 +36,7 @@ import type { EditDeviceStructElementDialogProps } from './edit-device-struct-el
 import EditDeviceStructElementView from '../views/edit-device-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error.js'
 import type { GkillMessage } from '@/classes/api/gkill-message.js'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data.js'
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
@@ -59,7 +59,7 @@ async function show(device_struct_obj: DeviceStructElementData): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
 }
 </script>
 

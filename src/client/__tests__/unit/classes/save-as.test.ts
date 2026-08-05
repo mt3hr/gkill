@@ -11,7 +11,7 @@ if (typeof URL.revokeObjectURL === 'undefined') {
   (URL as unknown as Record<string, unknown>).revokeObjectURL = () => {}
 }
 
-import { saveAs } from '@/classes/save-as'
+import { save_as } from '@/classes/save-as'
 
 describe('saveAs', () => {
   let mockClick: ReturnType<typeof vi.fn>
@@ -37,26 +37,26 @@ describe('saveAs', () => {
   })
 
   test('creates and clicks a download anchor element', () => {
-    saveAs(new Blob(['test']), 'test.txt')
+    save_as(new Blob(['test']), 'test.txt')
     expect(document.createElement).toHaveBeenCalledWith('a')
     expect(mockClick).toHaveBeenCalled()
     expect(mockAnchor.download).toBe('test.txt')
   })
 
   test('converts string to Blob with octet-stream type', () => {
-    saveAs('hello world', 'file.txt')
+    save_as('hello world', 'file.txt')
     const createObjCall = (URL.createObjectURL as ReturnType<typeof vi.fn>).mock.calls[0][0]
     expect(createObjCall).toBeInstanceOf(Blob)
   })
 
   test('passes through Blob directly', () => {
     const blob = new Blob(['data'], { type: 'text/plain' })
-    saveAs(blob, 'data.txt')
+    save_as(blob, 'data.txt')
     expect(URL.createObjectURL).toHaveBeenCalledWith(blob)
   })
 
   test('revokes object URL after click', () => {
-    saveAs('test', 'file.txt')
+    save_as('test', 'file.txt')
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:test-url')
     expect(document.body.removeChild).toHaveBeenCalled()
   })

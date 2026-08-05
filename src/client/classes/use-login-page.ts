@@ -5,7 +5,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import package_json from '../../../package.json'
 import router from '@/router'
 import { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 
 export function useLoginPage() {
     // ── State refs ──
@@ -38,7 +38,7 @@ export function useLoginPage() {
         await sleep(1500)
 
         // ログインに成功したらデフォルト画面に遷移
-        await resetDialogHistory()
+        await reset_dialog_history()
         const default_page = GkillAPI.get_instance().get_default_page_from_cookie()
         router.replace('/' + default_page)
     }
@@ -128,7 +128,7 @@ export function useLoginPage() {
     window.addEventListener('resize', onResize)
 
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
 
     onMounted(async () => {

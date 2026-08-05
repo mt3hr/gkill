@@ -1,11 +1,11 @@
 /// <reference lib="webworker" />
 import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
-import { isUrl } from './classes/looks-like-url';
+import { is_url } from './classes/looks-like-url';
 import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { CacheFirst } from 'workbox-strategies'
-import { shouldCacheResponse, parseBoolLoose } from './classes/service-worker-utils';
+import { should_cache_response, parse_bool_loose } from './classes/service-worker-utils';
 
 declare let clients: Clients;
 declare let self: ServiceWorkerGlobalScope
@@ -94,25 +94,25 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     event.respondWith(
       (async () => {
         try {
-          const reqClone1 = request.clone()
-          const reqClone2 = request.clone()
+          const req_clone1 = request.clone()
+          const req_clone2 = request.clone()
 
-          const body = await reqClone1.json()
-          const force_reget = parseBoolLoose(body.force_reget)
+          const body = await req_clone1.json()
+          const force_reget = parse_bool_loose(body.force_reget)
           const id = body.target_id ? body.target_id : body.id
 
           const data_type = new URL(request.url).pathname.replace('/api/get_', '')
-          const cacheKey = `/cache/api/${data_type}/${id}`
+          const cache_key = `/cache/api/${data_type}/${id}`
 
           const kyou_cache = await caches.open('gkill-post-kyou-cache')
           if (!force_reget) {
-            const cached = await kyou_cache.match(cacheKey)
+            const cached = await kyou_cache.match(cache_key)
             if (cached) return cached
           }
 
-          const response = await fetch(reqClone2)
-          if (await shouldCacheResponse(response, true)) {
-            kyou_cache.put(cacheKey, response.clone())
+          const response = await fetch(req_clone2)
+          if (await should_cache_response(response, true)) {
+            kyou_cache.put(cache_key, response.clone())
           }
           return response
 
@@ -132,24 +132,24 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     event.respondWith(
       (async () => {
         try {
-          const reqClone1 = request.clone()
-          const reqClone2 = request.clone()
+          const req_clone1 = request.clone()
+          const req_clone2 = request.clone()
 
-          const body = await reqClone1.json()
-          const force_reget = parseBoolLoose(body.force_reget)
+          const body = await req_clone1.json()
+          const force_reget = parse_bool_loose(body.force_reget)
           const id = body.kyou_id
 
-          const cacheKey = `/cache/api/plugin_content_html/${id}`
+          const cache_key = `/cache/api/plugin_content_html/${id}`
 
           const kyou_cache = await caches.open('gkill-post-kyou-cache')
           if (!force_reget) {
-            const cached = await kyou_cache.match(cacheKey)
+            const cached = await kyou_cache.match(cache_key)
             if (cached) return cached
           }
 
-          const response = await fetch(reqClone2)
-          if (await shouldCacheResponse(response, true)) {
-            kyou_cache.put(cacheKey, response.clone())
+          const response = await fetch(req_clone2)
+          if (await should_cache_response(response, true)) {
+            kyou_cache.put(cache_key, response.clone())
           }
           return response
 
@@ -173,24 +173,24 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     event.respondWith(
       (async () => {
         try {
-          const reqClone0 = request.clone()
-          const reqClone1 = request.clone()
+          const req_clone0 = request.clone()
+          const req_clone1 = request.clone()
 
-          const body = await reqClone0.json()
-          const force_reget = parseBoolLoose(body.force_reget)
+          const body = await req_clone0.json()
+          const force_reget = parse_bool_loose(body.force_reget)
 
           const data_type = new URL(request.url).pathname.replace('/api/get_', '')
-          const cacheKey = `/cache/api/${data_type}`
+          const cache_key = `/cache/api/${data_type}`
 
           const config_cache = await caches.open('gkill-post-config-cache')
           if (!force_reget) {
-            const cached = await config_cache.match(cacheKey)
+            const cached = await config_cache.match(cache_key)
             if (cached) return cached
           }
 
-          const response = await fetch(reqClone1)
-          if (await shouldCacheResponse(response, false)) {
-            config_cache.put(cacheKey, response.clone())
+          const response = await fetch(req_clone1)
+          if (await should_cache_response(response, false)) {
+            config_cache.put(cache_key, response.clone())
           }
           return response
         } catch (err: unknown) {
@@ -301,19 +301,19 @@ self.addEventListener('fetch', event => {
           })
         }
 
-        if (isUrl(shared_url)) {
+        if (is_url(shared_url)) {
           await add_urlog(shared_url, shared_title ?? "")
           is_saved = true
-        } else if (isUrl(shared_title)) {
+        } else if (is_url(shared_title)) {
           await add_urlog(shared_title, "")
           is_saved = true
         } else if (shared_text) {
           const shared_text_lines = String(shared_text).split("http")
           const shared_text_lines_last_line = "http" + shared_text_lines[shared_text.length >= 2 ? shared_text_lines.length - 1 : 0]
-          if (isUrl(shared_text)) {
+          if (is_url(shared_text)) {
             await add_urlog(shared_text, shared_title ?? "")
             is_saved = true
-          } else if (isUrl(shared_text_lines_last_line)) { // AndroidのGoogleアプリだと末尾にURLが入っていることがある
+          } else if (is_url(shared_text_lines_last_line)) { // AndroidのGoogleアプリだと末尾にURLが入っていることがある
             await add_urlog(shared_text_lines_last_line, "")
             is_saved = true
           } else {

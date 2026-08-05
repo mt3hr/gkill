@@ -29,7 +29,7 @@
                         :editable="editable"
                         @requested_move_related_kyou_query="(group_id: string, query_id: string, direction: 'up' | 'down') => onRequestedMoveRelatedKyouQuery(group_id, query_id, direction)"
                         @requested_delete_related_kyou_list_query="(id: string) => onRequestedDeleteRelatedKyouListQuery(id)"
-                        v-on="{ ...ryuuListItemCrudRelayHandlers, ...ryuuListItemRequestHandlers, ...ryuuListItemFocusHandlers, ...rykvDialogHandler }"
+                        v-on="{ ...ryuuListItemCrudRelayHandlers, ...ryuuListItemRequestHandlers, ...ryuuListItemFocusHandlers, ...rykvDialogHandlers }"
                         ref="related_kyou_list_item_views" />
                 </v-window-item>
             </v-window>
@@ -40,7 +40,7 @@
                 @received_messages="(messages: GkillMessage[]) => onReceivedMessages(messages)"
                 ref="add_ryuu_item_dialog" />
 
-            <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed-ryuu">
+            <v-avatar v-if="editable" :style="floating_action_button_style()" color="primary" class="position-fixed-ryuu">
                 <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" @click="onAddButtonClick" />
@@ -94,7 +94,7 @@ const {
     // Business logic
     add_definition,
     delete_current_definition,
-    floatingActionButtonStyle,
+    floating_action_button_style,
 
     // Template event handlers
     onRequestedMoveRelatedKyouQuery,
@@ -110,7 +110,7 @@ const {
     ryuuListItemCrudRelayHandlers,
     ryuuListItemRequestHandlers,
     ryuuListItemFocusHandlers,
-    rykvDialogHandler,
+    rykvDialogHandlers,
 } = useRyuuView({ props, emits, model_value })
 </script>
 

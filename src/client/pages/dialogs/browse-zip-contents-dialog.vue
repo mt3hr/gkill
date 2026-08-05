@@ -27,33 +27,33 @@
             <v-progress-circular indeterminate color="primary" />
           </v-overlay>
 
-          <div v-if="enlarged_image_index >= 0" class="zip-image-overlay" @click="closeEnlarged()">
+          <div v-if="enlarged_image_index >= 0" class="zip-image-overlay" @click="close_enlarged()">
             <v-btn v-if="enlarged_image_index > 0" icon class="zip-nav-btn zip-nav-prev"
-              @click.stop="showPrevImage()" variant="flat" color="primary">
+              @click.stop="show_prev_image()" variant="flat" color="primary">
               <v-icon>mdi-chevron-left</v-icon>
             </v-btn>
             <img :src="current_image_entries[enlarged_image_index].file_url" class="zip-enlarged-image" @click.stop />
             <v-btn v-if="enlarged_image_index < current_image_entries.length - 1" icon class="zip-nav-btn zip-nav-next"
-              @click.stop="showNextImage()" variant="flat" color="primary">
+              @click.stop="show_next_image()" variant="flat" color="primary">
               <v-icon>mdi-chevron-right</v-icon>
             </v-btn>
             <div class="zip-overlay-top-bar">
               <span class="zip-image-counter">{{ enlarged_image_index + 1 }} / {{ current_image_entries.length }}</span>
-              <a :href="current_image_entries[enlarged_image_index].file_url" :download="fileName(current_image_entries[enlarged_image_index].path)" class="zip-text-download-link">
+              <a :href="current_image_entries[enlarged_image_index].file_url" :download="file_name(current_image_entries[enlarged_image_index].path)" class="zip-text-download-link">
                 <v-btn icon variant="flat" color="primary">
                   <v-icon>mdi-download</v-icon>
                 </v-btn>
               </a>
-              <v-btn icon class="zip-close-btn" @click.stop="closeEnlarged()" variant="flat" color="primary">
+              <v-btn icon class="zip-close-btn" @click.stop="close_enlarged()" variant="flat" color="primary">
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </div>
           </div>
 
           <!-- テキストビューワーオーバーレイ -->
-          <div v-if="text_viewer_entry !== null" class="zip-text-overlay" @click.self="closeTextViewer()">
+          <div v-if="text_viewer_entry !== null" class="zip-text-overlay" @click.self="close_text_viewer()">
             <v-btn v-if="text_viewer_index > 0" icon class="zip-nav-btn zip-nav-prev"
-              @click.stop="showPrevText()" variant="flat" color="primary">
+              @click.stop="show_prev_text()" variant="flat" color="primary">
               <v-icon>mdi-chevron-left</v-icon>
             </v-btn>
             <div class="zip-text-viewer" @click.stop>
@@ -61,17 +61,17 @@
               <pre v-else class="zip-text-content">{{ text_viewer_content }}</pre>
             </div>
             <v-btn v-if="text_viewer_index < current_text_entries.length - 1" icon class="zip-nav-btn zip-nav-next"
-              @click.stop="showNextText()" variant="flat" color="primary">
+              @click.stop="show_next_text()" variant="flat" color="primary">
               <v-icon>mdi-chevron-right</v-icon>
             </v-btn>
             <div class="zip-overlay-top-bar">
-              <span class="zip-image-counter">{{ fileName(text_viewer_entry.path) }}<template v-if="current_text_entries.length > 1"> ({{ text_viewer_index + 1 }} / {{ current_text_entries.length }})</template></span>
-              <a :href="text_viewer_entry.file_url" :download="fileName(text_viewer_entry.path)" class="zip-text-download-link">
+              <span class="zip-image-counter">{{ file_name(text_viewer_entry.path) }}<template v-if="current_text_entries.length > 1"> ({{ text_viewer_index + 1 }} / {{ current_text_entries.length }})</template></span>
+              <a :href="text_viewer_entry.file_url" :download="file_name(text_viewer_entry.path)" class="zip-text-download-link">
                 <v-btn icon variant="flat" color="primary">
                   <v-icon>mdi-download</v-icon>
                 </v-btn>
               </a>
-              <v-btn icon @click.stop="closeTextViewer()" variant="flat" color="primary">
+              <v-btn icon @click.stop="close_text_viewer()" variant="flat" color="primary">
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </div>
@@ -80,7 +80,7 @@
           <!-- パンくずナビゲーション -->
           <div class="zip-breadcrumbs pa-2">
             <span class="zip-breadcrumb-item" :class="{ 'zip-breadcrumb-current': current_dir === '' }"
-              @click="navigateTo('')">
+              @click="navigate_to('')">
               <v-icon size="small">mdi-folder-zip</v-icon>
               <span class="ml-1">{{ i18n.global.t("BROWSE_ZIP_CONTENTS_TITLE") }}</span>
             </span>
@@ -88,7 +88,7 @@
               <v-icon size="x-small" class="mx-1">mdi-chevron-right</v-icon>
               <span class="zip-breadcrumb-item"
                 :class="{ 'zip-breadcrumb-current': idx === breadcrumbs.length - 1 }"
-                @click="navigateTo(crumb.path)">
+                @click="navigate_to(crumb.path)">
                 {{ crumb.name }}
               </span>
             </template>
@@ -97,14 +97,14 @@
           <div class="zip-entries-list">
             <!-- 親ディレクトリへ戻る -->
             <div v-if="current_dir !== ''" class="zip-entry-item zip-entry-dir zip-entry-clickable"
-              @click="navigateUp()">
+              @click="navigate_up()">
               <v-icon size="small" class="mr-1">mdi-arrow-up</v-icon>
               <span class="text-caption">..</span>
             </div>
 
             <!-- サブディレクトリ -->
             <div v-for="dir in current_subdirs" :key="'d:' + dir.path" class="zip-entry-item zip-entry-dir zip-entry-clickable"
-              @click="navigateTo(dir.path)">
+              @click="navigate_to(dir.path)">
               <v-icon size="small" class="mr-1">mdi-folder</v-icon>
               <span class="text-caption">{{ dir.name }}/</span>
             </div>
@@ -112,21 +112,21 @@
             <!-- ファイル -->
             <div v-for="entry in current_files" :key="'f:' + entry.path" class="zip-entry-item">
               <template v-if="entry.is_image">
-                <div class="zip-image-wrap" @click="openEnlargedByEntry(entry)">
+                <div class="zip-image-wrap" @click="open_enlarged_by_entry(entry)">
                   <img :src="entry.file_url" loading="lazy" decoding="async" fetchpriority="low"
                     class="zip-thumb-image" />
                 </div>
-                <span class="text-caption zip-entry-path">{{ fileName(entry.path) }}</span>
+                <span class="text-caption zip-entry-path">{{ file_name(entry.path) }}</span>
               </template>
               <template v-else-if="entry.is_text">
                 <v-icon size="small" class="mr-1">mdi-file-document-outline</v-icon>
-                <a :href="entry.file_url" class="text-caption" @click.prevent="openTextViewer(entry)">{{ fileName(entry.path) }}</a>
-                <span class="text-caption text-grey ml-1">({{ formatSize(entry.size) }})</span>
+                <a :href="entry.file_url" class="text-caption" @click.prevent="open_text_viewer(entry)">{{ file_name(entry.path) }}</a>
+                <span class="text-caption text-grey ml-1">({{ format_size(entry.size) }})</span>
               </template>
               <template v-else>
                 <v-icon size="small" class="mr-1">mdi-file-download-outline</v-icon>
-                <a :href="entry.file_url" :download="fileName(entry.path)" class="text-caption">{{ fileName(entry.path) }}</a>
-                <span class="text-caption text-grey ml-1">({{ formatSize(entry.size) }})</span>
+                <a :href="entry.file_url" :download="file_name(entry.path)" class="text-caption">{{ file_name(entry.path) }}</a>
+                <span class="text-caption text-grey ml-1">({{ format_size(entry.size) }})</span>
               </template>
             </div>
 
@@ -148,11 +148,11 @@ import { type Ref, ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import type { ZipEntry } from '@/classes/api/req_res/browse-zip-contents-response'
 import { BrowseZipContentsRequest } from '@/classes/api/req_res/browse-zip-contents-request'
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { GkillError } from '@/classes/api/gkill-error'
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-import { detectAndDecodeText } from '@/classes/decode-text'
+import { detect_and_decode_text } from '@/classes/decode-text'
 
 type BrowseZipContentsDialogProps = KyouViewPropsBase
 
@@ -178,7 +178,7 @@ const is_text_viewer: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_enlarged)
 useDialogHistoryStack(is_text_viewer)
 watch(is_enlarged, (v) => { if (!v) enlarged_image_index.value = -1 })
-watch(is_text_viewer, (v) => { if (!v) closeTextViewer() })
+watch(is_text_viewer, (v) => { if (!v) close_text_viewer() })
 
 // テキストビューワー
 const text_viewer_entry: Ref<ZipEntry | null> = ref(null)
@@ -211,20 +211,20 @@ interface SubdirItem {
 
 const current_subdirs = computed((): SubdirItem[] => {
   const prefix = current_dir.value === '' ? '' : current_dir.value + '/'
-  const dirSet = new Set<string>()
+  const dir_set = new Set<string>()
   for (const entry of all_entries.value) {
     if (!entry.path.startsWith(prefix)) continue
     const rest = entry.path.slice(prefix.length)
     if (rest === '') continue
-    const slashIdx = rest.indexOf('/')
-    if (slashIdx >= 0) {
-      dirSet.add(rest.slice(0, slashIdx))
+    const slash_idx = rest.indexOf('/')
+    if (slash_idx >= 0) {
+      dir_set.add(rest.slice(0, slash_idx))
     } else if (entry.is_dir) {
-      dirSet.add(rest)
+      dir_set.add(rest)
     }
   }
   const dirs: SubdirItem[] = []
-  for (const name of Array.from(dirSet).sort()) {
+  for (const name of Array.from(dir_set).sort()) {
     dirs.push({ name, path: prefix + name })
   }
   return dirs
@@ -247,20 +247,20 @@ const text_viewer_index = computed((): number => {
   return current_text_entries.value.findIndex(e => e.path === text_viewer_entry.value!.path)
 })
 
-function navigateTo(dir: string): void {
+function navigate_to(dir: string): void {
   current_dir.value = dir
   enlarged_image_index.value = -1
-  closeTextViewer()
+  close_text_viewer()
 }
 
-function navigateUp(): void {
-  const lastSlash = current_dir.value.lastIndexOf('/')
-  current_dir.value = lastSlash >= 0 ? current_dir.value.slice(0, lastSlash) : ''
+function navigate_up(): void {
+  const last_slash = current_dir.value.lastIndexOf('/')
+  current_dir.value = last_slash >= 0 ? current_dir.value.slice(0, last_slash) : ''
   enlarged_image_index.value = -1
-  closeTextViewer()
+  close_text_viewer()
 }
 
-function fileName(path: string): string {
+function file_name(path: string): string {
   const idx = path.lastIndexOf('/')
   return idx >= 0 ? path.slice(idx + 1) : path
 }
@@ -268,16 +268,16 @@ function fileName(path: string): string {
 async function show(): Promise<void> {
   is_show_dialog.value = true
   current_dir.value = ''
-  closeTextViewer()
-  await loadEntries()
+  close_text_viewer()
+  await load_entries()
 }
 async function hide(): Promise<void> {
-  closeEnlarged()
-  closeTextViewer()
-  closeDialogViaHistory(is_show_dialog)
+  close_enlarged()
+  close_text_viewer()
+  close_dialog_via_history(is_show_dialog)
 }
 
-async function loadEntries(): Promise<void> {
+async function load_entries(): Promise<void> {
   is_loading.value = true
   try {
     const req = new BrowseZipContentsRequest()
@@ -296,13 +296,13 @@ async function loadEntries(): Promise<void> {
   }
 }
 
-function formatSize(bytes: number): string {
+function format_size(bytes: number): string {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
-function openEnlargedByEntry(entry: ZipEntry): void {
+function open_enlarged_by_entry(entry: ZipEntry): void {
   const idx = current_image_entries.value.findIndex(e => e.path === entry.path)
   if (idx >= 0) {
     enlarged_image_index.value = idx
@@ -310,41 +310,41 @@ function openEnlargedByEntry(entry: ZipEntry): void {
   }
 }
 
-function closeEnlarged(): void {
+function close_enlarged(): void {
   enlarged_image_index.value = -1
-  closeDialogViaHistory(is_enlarged)
+  close_dialog_via_history(is_enlarged)
 }
 
-function showPrevImage(): void {
+function show_prev_image(): void {
   if (enlarged_image_index.value > 0) {
     enlarged_image_index.value--
   }
 }
 
-function showNextImage(): void {
+function show_next_image(): void {
   if (enlarged_image_index.value < current_image_entries.value.length - 1) {
     enlarged_image_index.value++
   }
 }
 
-function showPrevText(): void {
+function show_prev_text(): void {
   const idx = text_viewer_index.value
-  if (idx > 0) openTextViewer(current_text_entries.value[idx - 1])
+  if (idx > 0) open_text_viewer(current_text_entries.value[idx - 1])
 }
 
-function showNextText(): void {
+function show_next_text(): void {
   const idx = text_viewer_index.value
-  if (idx < current_text_entries.value.length - 1) openTextViewer(current_text_entries.value[idx + 1])
+  if (idx < current_text_entries.value.length - 1) open_text_viewer(current_text_entries.value[idx + 1])
 }
 
-function emitTextError(message: string): void {
+function emit_text_error(message: string): void {
   const err = new GkillError()
   err.error_message = message
   emits('received_errors', [err])
-  closeTextViewer()
+  close_text_viewer()
 }
 
-async function openTextViewer(entry: ZipEntry): Promise<void> {
+async function open_text_viewer(entry: ZipEntry): Promise<void> {
   text_viewer_entry.value = entry
   is_text_viewer.value = true
   text_viewer_content.value = ''
@@ -352,29 +352,29 @@ async function openTextViewer(entry: ZipEntry): Promise<void> {
   try {
     const res = await fetch(entry.file_url, { credentials: 'include' })
     if (!res.ok) {
-      emitTextError(`HTTP ${res.status}`)
+      emit_text_error(`HTTP ${res.status}`)
       return
     }
-    const contentLength = res.headers.get('content-length')
-    if (contentLength && parseInt(contentLength) > TEXT_VIEWER_MAX_BYTES) {
-      emitTextError(i18n.global.t('ZIP_TEXT_TOO_LARGE_MESSAGE'))
+    const content_length = res.headers.get('content-length')
+    if (content_length && parseInt(content_length) > TEXT_VIEWER_MAX_BYTES) {
+      emit_text_error(i18n.global.t('ZIP_TEXT_TOO_LARGE_MESSAGE'))
       return
     }
     const reader = res.body?.getReader()
     if (!reader) {
-      emitTextError(i18n.global.t('ZIP_TEXT_LOAD_FAILED_MESSAGE'))
+      emit_text_error(i18n.global.t('ZIP_TEXT_LOAD_FAILED_MESSAGE'))
       return
     }
     const chunks: Uint8Array[] = []
-    let totalBytes = 0
+    let total_bytes = 0
     let truncated = false
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
       if (value) {
-        totalBytes += value.byteLength
-        if (totalBytes > TEXT_VIEWER_MAX_BYTES) {
-          const remaining = TEXT_VIEWER_MAX_BYTES - (totalBytes - value.byteLength)
+        total_bytes += value.byteLength
+        if (total_bytes > TEXT_VIEWER_MAX_BYTES) {
+          const remaining = TEXT_VIEWER_MAX_BYTES - (total_bytes - value.byteLength)
           chunks.push(value.slice(0, remaining))
           truncated = true
           await reader.cancel()
@@ -383,50 +383,50 @@ async function openTextViewer(entry: ZipEntry): Promise<void> {
         chunks.push(value)
       }
     }
-    const allBytes = new Uint8Array(chunks.reduce((acc, c) => acc + c.byteLength, 0))
+    const all_bytes = new Uint8Array(chunks.reduce((acc, c) => acc + c.byteLength, 0))
     let offset = 0
     for (const chunk of chunks) {
-      allBytes.set(chunk, offset)
+      all_bytes.set(chunk, offset)
       offset += chunk.byteLength
     }
-    const decoded = detectAndDecodeText(allBytes)
+    const decoded = detect_and_decode_text(all_bytes)
     text_viewer_content.value = decoded + (truncated ? '\n\n' + i18n.global.t('ZIP_TEXT_TRUNCATED_MESSAGE') : '')
   } catch (e) {
-    emitTextError(String(e))
+    emit_text_error(String(e))
   } finally {
     text_viewer_loading.value = false
   }
 }
 
-function closeTextViewer(): void {
+function close_text_viewer(): void {
   text_viewer_entry.value = null
   text_viewer_content.value = ''
-  closeDialogViaHistory(is_text_viewer)
+  close_dialog_via_history(is_text_viewer)
 }
 
 function onKeydown(e: KeyboardEvent): void {
   if (text_viewer_entry.value !== null) {
     if (e.key === 'Escape') {
-      closeTextViewer()
+      close_text_viewer()
       e.stopPropagation()
     } else if (e.key === 'ArrowLeft') {
-      showPrevText()
+      show_prev_text()
       e.preventDefault()
     } else if (e.key === 'ArrowRight') {
-      showNextText()
+      show_next_text()
       e.preventDefault()
     }
     return
   }
   if (enlarged_image_index.value < 0) return
   if (e.key === 'Escape') {
-    closeEnlarged()
+    close_enlarged()
     e.stopPropagation()
   } else if (e.key === 'ArrowLeft') {
-    showPrevImage()
+    show_prev_image()
     e.preventDefault()
   } else if (e.key === 'ArrowRight') {
-    showNextImage()
+    show_next_image()
     e.preventDefault()
   }
 }

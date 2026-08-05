@@ -86,19 +86,19 @@ export function useDnoteListView(options: {
     function drop(e: DragEvent): void {
         if (!props.editable) return
 
-        const srcId = e.dataTransfer?.getData('gkill_dnote_list_id')
-        const targetId = model_value.value?.id ?? ''
-        if (!srcId || !targetId) return
-        if (srcId === targetId) return
+        const src_id = e.dataTransfer?.getData('gkill_dnote_list_id')
+        const target_id = model_value.value?.id ?? ''
+        if (!src_id || !target_id) return
+        if (src_id === target_id) return
 
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
 
         const rect = el.getBoundingClientRect()
         const x = e.clientX - rect.left
-        const dropType: DropType = (x <= rect.width * 0.5) ? 'left' : 'right'
+        const drop_type: DropType = (x <= rect.width * 0.5) ? 'left' : 'right'
 
-        emits('requested_move_dnote_list_query', srcId, targetId, dropType)
+        emits('requested_move_dnote_list_query', src_id, target_id, drop_type)
 
         e.preventDefault()
         e.stopPropagation()

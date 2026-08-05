@@ -69,15 +69,15 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_all(query?: FindKyouQuery, forceAttached = false): Promise<Array<GkillError>> {
-        const awaitPromises = new Array<Promise<Array<GkillError>>>()
+    async load_all(query?: FindKyouQuery, force_attached = false): Promise<Array<GkillError>> {
+        const await_promises = new Array<Promise<Array<GkillError>>>()
         try {
-            awaitPromises.push(this.load_typed_datas(query))
+            await_promises.push(this.load_typed_datas(query))
             // load_attached_histories はここでは呼ばない。
             // 直後の load_attached_datas が同じものを読むので、
             // 両方書くと 1件につき /api/get_kyou が2回飛ぶ。
-            awaitPromises.push(this.load_attached_datas(forceAttached))
-            return await Promise.all(awaitPromises).then((errors_list) => {
+            await_promises.push(this.load_attached_datas(force_attached))
+            return await Promise.all(await_promises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {
                     errors.push(...e)
@@ -170,14 +170,14 @@ export class Kyou extends InfoBase {
     }
 
     async load_attached_datas(force = false): Promise<Array<GkillError>> {
-        const awaitPromises = new Array<Promise<Array<GkillError>>>()
+        const await_promises = new Array<Promise<Array<GkillError>>>()
         try {
-            awaitPromises.push(this.load_attached_tags(force))
-            awaitPromises.push(this.load_attached_texts(force))
-            awaitPromises.push(this.load_attached_notifications(force))
-            awaitPromises.push(this.load_attached_timeis(force))
-            awaitPromises.push(this.load_attached_histories())
-            return await Promise.all(awaitPromises).then((errors_list) => {
+            await_promises.push(this.load_attached_tags(force))
+            await_promises.push(this.load_attached_texts(force))
+            await_promises.push(this.load_attached_notifications(force))
+            await_promises.push(this.load_attached_timeis(force))
+            await_promises.push(this.load_attached_histories())
+            return await Promise.all(await_promises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {
                     errors.push(...e)

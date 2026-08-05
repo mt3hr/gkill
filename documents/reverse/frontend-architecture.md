@@ -504,9 +504,9 @@ Service Worker が `/share-target` POSTを処理：
 | 関数 | 用途 |
 |---|---|
 | `useDialogHistoryStack(show)` | ダイアログの `show` ref を履歴スタックに登録する |
-| `closeDialogViaHistory()` | **プログラムからダイアログを閉じるときの唯一の正しい手段**。約44のコンポーザブルが使う。`show.value = false` を直接書くと履歴とずれる |
-| `closeTopDialog()` | 最上位のダイアログだけを閉じる |
-| `resetDialogHistory()` | 履歴スタックを初期化する。ページリダイレクト時に使う（例: `old-shared-mi-page.vue`） |
+| `close_dialog_via_history()` | **プログラムからダイアログを閉じるときの唯一の正しい手段**。約44のコンポーザブルが使う。`show.value = false` を直接書くと履歴とずれる |
+| `close_top_dialog()` | 最上位のダイアログだけを閉じる |
+| `reset_dialog_history()` | 履歴スタックを初期化する。ページリダイレクト時に使う（例: `old-shared-mi-page.vue`） |
 
 ### 日付・数値のロケール対応
 

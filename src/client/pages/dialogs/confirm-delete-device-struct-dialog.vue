@@ -36,7 +36,7 @@ import type { ConfirmDeleteDeviceStructDialogEmits } from './confirm-delete-devi
 import type { ConfirmDeleteDeviceStructDialogProps } from './confirm-delete-device-struct-dialog-props.ts';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data';
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
@@ -60,7 +60,7 @@ async function show(device_struct_obj: DeviceStructElementData): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
   device_struct.value = new DeviceStructElementData()
 }
 </script>

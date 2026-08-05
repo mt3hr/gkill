@@ -111,7 +111,7 @@ const notification_highlight_targets = computed<Array<InfoIdentifier>>(() => {
   return [info_identifier]
 })
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
@@ -127,7 +127,7 @@ async function show(): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
 }
 </script>
 

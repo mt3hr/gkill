@@ -41,8 +41,8 @@ const theme = useTheme()
 
 const help_url = computed(() => {
   const locale = i18n.global.locale || 'ja'
-  const isDark = theme.global.name.value === 'gkill_dark_theme'
-  return `/resources/manual/${locale}/${props.screen_name}.html${isDark ? '?theme=dark' : ''}`
+  const is_dark = theme.global.name.value === 'gkill_dark_theme'
+  return `/resources/manual/${locale}/${props.screen_name}.html${is_dark ? '?theme=dark' : ''}`
 })
 
 async function show(): Promise<void> {

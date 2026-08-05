@@ -63,8 +63,8 @@ const {
 
 function open_help(): void {
     const locale = i18n.global.locale || 'ja'
-    const isDark = theme.global.name.value === 'gkill_dark_theme'
-    const url = `/resources/manual/${locale}/shared-page.html${isDark ? '?theme=dark' : ''}`
+    const is_dark = theme.global.name.value === 'gkill_dark_theme'
+    const url = `/resources/manual/${locale}/shared-page.html${is_dark ? '?theme=dark' : ''}`
     window.open(url, '_blank')
 }
 </script>

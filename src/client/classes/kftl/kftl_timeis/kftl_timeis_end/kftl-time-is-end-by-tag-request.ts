@@ -57,13 +57,13 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
             return errors
         }
 
-        const awaitPromises = Array<Promise<unknown>>()
+        const await_promises = Array<Promise<unknown>>()
         for (let i = 0; i < get_plaing_timeis_res.kyous.length; i++) {
             const timeis = get_plaing_timeis_res.kyous[i]
-            awaitPromises.push(timeis.load_typed_timeis())
-            awaitPromises.push(timeis.load_attached_tags())
+            await_promises.push(timeis.load_typed_timeis())
+            await_promises.push(timeis.load_attached_tags())
         }
-        await Promise.all(awaitPromises)
+        await Promise.all(await_promises)
 
         for (let i = 0; i < get_plaing_timeis_res.kyous.length; i++) {
             const timeis_kyou = get_plaing_timeis_res.kyous[i]

@@ -3,7 +3,7 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import package_json from '../../../package.json'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 
 export function useRegisterFirstAccountPage() {
     // ── State refs ──
@@ -112,7 +112,7 @@ export function useRegisterFirstAccountPage() {
     window.addEventListener('resize', onResize)
 
     onMounted(async () => {
-        await resetDialogHistory()
+        await reset_dialog_history()
     })
 
     onUnmounted(() => {

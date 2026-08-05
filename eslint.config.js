@@ -34,13 +34,12 @@ export default [
     //  - .js/.mjs に当てるとルールがパーササービス要求でクラッシュするため files 必須
     //  - __tests__ は camelCase 流儀なので対象外
     //  - *.d.ts は外部API(CookieStore等)のミラーなので対象外
-    // 段階導入中: 違反消化が完了したら 'warn' を 'error' に上げる。
     name: 'app/naming-convention',
     files: ['src/client/**/*.{ts,mts,tsx,vue}'],
     ignores: ['src/client/__tests__/**', '**/*.d.ts'],
     rules: {
       '@typescript-eslint/naming-convention': [
-        'warn',
+        'error',
         // (1) import 名は外部モジュール由来なので対象外
         { selector: 'import', format: null },
         // (2) 型・クラス・interface・typeAlias・enum名・型パラメータ = PascalCase
@@ -141,7 +140,7 @@ export default [
       'src/client/__tests__/e2e/misc-operations.spec.ts',
       'src/client/__tests__/e2e/mkfl.spec.ts',
       'src/client/__tests__/e2e/plaing.spec.ts',
-      'src/client/__tests__/e2e/regist-first-account.spec.ts',
+      'src/client/__tests__/e2e/register-first-account.spec.ts',
       'src/client/__tests__/e2e/regression-fixes.spec.ts',
       'src/client/__tests__/e2e/rykv.spec.ts',
       'src/client/__tests__/e2e/search-and-summary.spec.ts',

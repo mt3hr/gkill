@@ -3,7 +3,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import type { MKFLDialogProps } from '@/pages/dialogs/mkfl-dialog-props'
 import type { MKFLDialogEmits } from '@/pages/dialogs/mkfl-dialog-emits'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 
 export function useMKFLDialog(options: {
@@ -44,8 +44,8 @@ export function useMKFLDialog(options: {
     })
 
     let body_ro: ResizeObserver | null = null
-    watch(dialog_body_ref, (el, oldEl) => {
-        if (body_ro && oldEl) { try { body_ro.unobserve(oldEl) } catch { /* noop */ } }
+    watch(dialog_body_ref, (el, old_el) => {
+        if (body_ro && old_el) { try { body_ro.unobserve(old_el) } catch { /* noop */ } }
         if (el) {
             if (!body_ro) {
                 body_ro = new ResizeObserver((entries) => {
@@ -69,7 +69,7 @@ export function useMKFLDialog(options: {
         is_show_dialog.value = true
     }
     async function hide(): Promise<void> {
-        closeDialogViaHistory(is_show_dialog)
+        close_dialog_via_history(is_show_dialog)
     }
 
     return {
