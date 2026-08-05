@@ -381,7 +381,7 @@ erDiagram
 - **REPOSITORY**: データ保存先定義。TYPE でデータ型、FILE で SQLite3 ファイルパスを指定
 - **SHARE_KYOU_INFO**: Kyou 共有リンク設定
 - **NOTIFICATION_PUSH_TARGET**: Web Push 通知購読情報。**実際のテーブル名は `NOTIFICATION`**（`dao/gkill_notification/gkill_notificate_target_dao_sqlite3_impl.go`）で、Kyou のメタ情報である `NOTIFICATION` テーブル（`dao/reps/notification_repository_sqlite3_impl.go`）と同名だが**別DBファイル**。本図では区別のため `NOTIFICATION_PUSH_TARGET` と表記している
-- **GKILL_META_INFO**: スキーマバージョン等のメタ情報。DBファイルごとに存在し、キーは `SCHEMA_VERSION_<DAO名>`。**`account.db` だけが `SCHEMA_VERSION_ACCOUNT = 1.1.0`** で、他はいずれも `1.0.0`。1.1.0 で `PASSWORD_SHA256` を `PASSWORD_HASH` にリネームし `PASSWORD_RESET_TOKEN_EXPIRATION` を追加した。**1.1.0 の account.db を 1.0.0 のバイナリで開くと `invalid db schema version` で起動を拒否する**（ダウングレード不可）
+- **GKILL_META_INFO**: スキーマバージョン等のメタ情報。DBファイルごとに存在し、キーは `SCHEMA_VERSION_<DAO名>`。**`account.db` だけが `SCHEMA_VERSION_ACCOUNT = 1.1.0`** で、他はいずれも `1.0.0`。1.1.0 で `PASSWORD_SHA256` を `PASSWORD_HASH` にリネームし `PASSWORD_RESET_TOKEN_EXPIRATION` を追加した。**1.1.0 の account.db を 1.0.0 のバイナリで開くと `invalid db schema version` で起動を拒否する**（ダウングレード不可）。なお Mi / MiReKyou の SQLite3 実装だけこの機構が欠けていたが、2026-08 に他11種と同型の `checkAndResolveDataSchema*`（`SCHEMA_VERSION_MI` / `SCHEMA_VERSION_MIREKYOU` = `1.0.0`）を追加済み
 
 ## 3. Git コミットログ（キャッシュテーブル）
 

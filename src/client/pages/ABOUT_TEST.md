@@ -90,7 +90,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/kyou-list.spec.ts` | `/kyou` — レコード一覧 |
 | `src/client/__tests__/e2e/share-page.spec.ts` | `/shared_page` — 不正な共有IDでエラーが表示され、読み込み中のまま止まらないこと（返る内容の網羅はGo側 handle_get_shared_kyous_test.go） |
 | `src/client/__tests__/e2e/shared-mi.spec.ts` | `/shared_mi` — 共有タスク |
-| `src/client/__tests__/e2e/register-first-account.spec.ts` | `/regist_first_account` — 初回アカウント登録 |
+| `src/client/__tests__/e2e/register-first-account.spec.ts` | `/register_first_account` — 初回アカウント登録 |
 | `src/client/__tests__/e2e/set-new-password.spec.ts` | `/set_new_password` — パスワード再設定 |
 
 #### CRUD 操作フロー系（9ファイル）

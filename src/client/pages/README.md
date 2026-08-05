@@ -49,7 +49,7 @@ xxx-view-emits.ts     # Emits 定義
 | `saihate-page.vue` | `/saihate` | Saihate（特殊ビュー）ページ |
 | `dashboard-page.vue` | `/dashboard` | ダッシュボード（日次サマリー）ページ |
 | `set-new-password-page.vue` | `/set_new_password` | 新パスワード設定ページ |
-| `register-first-account-page.vue` | `/regist_first_account` | 初回アカウント登録 |
+| `register-first-account-page.vue` | `/register_first_account` | 初回アカウント登録（旧 `/regist_first_account` からリダイレクト） |
 | `shared-page.vue` | `/shared_page` | 共有ページ |
 | `old-shared-mi-page.vue` | `/shared_mi` | 旧共有 Mi ページ |
 | `shared-mi-page.vue` | — | 共有 Mi ページ（新） |

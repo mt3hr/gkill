@@ -244,9 +244,10 @@ src/server/gkill/
 ```
 src/client/__tests__/
 ├── unit/
-│   ├── api/                           ← API クライアント（2ファイル）
+│   ├── api/                           ← API クライアント（3ファイル）
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
-│   │   └── find-kyou-query.test.ts   ← 検索クエリビルダー
+│   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
+│   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
 │   ├── classes/                       ← ユーティリティ（11ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
@@ -259,10 +260,10 @@ src/client/__tests__/
 │   │   ├── foldable-struct-move.test.ts
 │   │   ├── kyou-content-text.test.ts  ← 内容コピー / IDコピー
 │   │   └── use-dialog-history-stack.test.ts
-│   ├── datas/                         ← データモデル（27ファイル）
-│   ├── dnote/                         ← D-note モジュール（6ファイル、trend-aggregator.test.ts 含む）
+│   ├── datas/                         ← データモデル（28ファイル）
+│   ├── dnote/                         ← D-note モジュール（7ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
-│   ├── composables/                   ← Vue Composable（10ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（13ファイル。add-views / edit-views /
 │   │                                     confirm-delete / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / save-clipboard-to-file-dialog）
@@ -307,7 +308,7 @@ src/client/__tests__/
 | `dashboard.spec.ts` | `/dashboard` | ダッシュボード表示（ナビゲーション、描画、JSエラーなし確認） |
 | `share-page.spec.ts` | `/shared_page` | 共有ページ |
 | `shared-mi.spec.ts` | `/shared_mi` | 共有タスク |
-| `register-first-account.spec.ts` | `/regist_first_account` | 初回アカウント登録 |
+| `register-first-account.spec.ts` | `/register_first_account` | 初回アカウント登録 |
 | `set-new-password.spec.ts` | `/set_new_password` | パスワード再設定 |
 
 #### CRUD 操作フロー系（8 spec files）
@@ -373,7 +374,7 @@ src/client/__tests__/
 | `run-e2e.mjs` | E2E テストランナー（gkill_server 自動起動・停止、`$HOME/gkill_test` クリーン） |
 | `free-port.mjs` | `getFreePort()` / `getFreePorts()` — OS から空きポートを採番する。ポートを固定しないための要 |
 | `auth.setup.ts` | Playwright の `setup` プロジェクト。ログイン済み `storageState` を作って以降のテストで再利用する |
-| `helpers.ts` | `loginAsAdmin()` — 初回起動時の自動登録（reset_token取得→regist_first_account）+ テストユーザでのログイン |
+| `helpers.ts` | `loginAsAdmin()` — 初回起動時の自動登録（reset_token取得→register_first_account）+ テストユーザでのログイン |
 | `check-server.ts` | `checkGkillServer()`, `checkGkillApiViaVite()` — サーバヘルスチェック |
 | `crud-helpers.ts` | KFTL 送信（`#kftl_text_area` + 保存ボタン有効化待機）、ページナビゲーション（フローティングダイアログ自動閉じ）、コンテキストメニュー操作（`force: true`）、FAB クリック（`.position-fixed button`） |
 | `global-setup.ts` | Playwright グローバルセットアップ（no-op — サーバ管理は `run-e2e.mjs` が担当） |
