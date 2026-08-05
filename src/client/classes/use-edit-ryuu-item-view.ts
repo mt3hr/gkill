@@ -27,15 +27,15 @@ export function useEditRyuuItemView(options: {
     const title = ref("")
     const prefix = ref("")
     const suffix = ref("")
-    const related_time_match_type = ref(RelatedTimeMatchType.NEAR_RELATED_TIME)
+    const related_time_match_type = ref(RelatedTimeMatchType.near_related_time)
     const find_kyou_query: Ref<FindKyouQuery | null> = ref(null)
     const find_duration_hour = ref(1)
     const is_use_custom_find_kyou_query = ref(false)
 
     const related_time_match_types = ref([
-        { label: i18n.global.t('RYUU_RELATED_NEAR'), value: RelatedTimeMatchType.NEAR_RELATED_TIME },
-        { label: i18n.global.t('RYUU_RELATED_NEAR_BEFORE'), value: RelatedTimeMatchType.NEAR_RELATED_TIME_BEFORE },
-        { label: i18n.global.t('RYUU_RELATED_NEAR_AFTER'), value: RelatedTimeMatchType.NEAR_RELATED_TIME_AFTER },
+        { label: i18n.global.t('RYUU_RELATED_NEAR'), value: RelatedTimeMatchType.near_related_time },
+        { label: i18n.global.t('RYUU_RELATED_NEAR_BEFORE'), value: RelatedTimeMatchType.near_related_time_before },
+        { label: i18n.global.t('RYUU_RELATED_NEAR_AFTER'), value: RelatedTimeMatchType.near_related_time_after },
     ])
 
     const root_predicate = ref<PredicateGroupType>({

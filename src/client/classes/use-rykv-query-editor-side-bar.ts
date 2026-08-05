@@ -3,8 +3,8 @@ import { deepEquals } from '@/classes/deep-equals'
 import { computed, nextTick, onMounted, type Ref, ref, watch } from 'vue'
 import { CheckState } from '@/pages/views/check-state'
 import moment from 'moment'
-import type { rykvQueryEditorSidebarEmits } from '@/pages/views/rykv-query-editor-sidebar-emits'
-import type { rykvQueryEditorSidebarProps } from '@/pages/views/rykv-query-editor-sidebar-props'
+import type { RykvQueryEditorSidebarEmits } from '@/pages/views/rykv-query-editor-sidebar-emits'
+import type { RykvQueryEditorSidebarProps } from '@/pages/views/rykv-query-editor-sidebar-props'
 import type SidebarHeader from '@/pages/views/sidebar-header.vue'
 import type KeywordQuery from '@/pages/views/keyword-query.vue'
 import type TimeIsQuery from '@/pages/views/time-is-query.vue'
@@ -15,8 +15,8 @@ import type MapQuery from '@/pages/views/map-query.vue'
 import type PeriodOfTimeQuery from '@/pages/views/period-of-time-query.vue'
 
 export function useRykvQueryEditorSideBar(options: {
-    props: rykvQueryEditorSidebarProps,
-    emits: rykvQueryEditorSidebarEmits,
+    props: RykvQueryEditorSidebarProps,
+    emits: RykvQueryEditorSidebarEmits,
 }) {
     const { props, emits } = options
 

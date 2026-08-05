@@ -1,7 +1,7 @@
 'use strict'
 
-import type { miSidebarProps } from "./mi-sidebar-props"
+import type { MiSidebarProps } from "./mi-sidebar-props"
 
-export interface miBoardQueryProps extends miSidebarProps {
+export interface MiBoardQueryProps extends MiSidebarProps {
     inited: boolean
 }
