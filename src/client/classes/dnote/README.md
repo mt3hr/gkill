@@ -11,7 +11,7 @@ KeyGetter でグルーピングし、AggregateTarget で集計値を算出する
 ```
 dnote/
 ├── (ルートファイル 18個)         # コア型定義 + トレンドグラフ集計（dnote-trend-aggregator.ts）
-├── dnote-agregate-target/      # 集計対象（21ファイル）
+├── dnote-aggregate-target/      # 集計対象（21ファイル）
 ├── dnote-filter/               # フィルタ（2ファイル）
 ├── dnote-key-getter/           # グルーピングキー（9ファイル）
 ├── dnote-predicate/            # 検索条件述語（33ファイル）
@@ -58,7 +58,7 @@ dnote/
 | ファイル | 役割 |
 |---------|------|
 | `dnote-aggregator.ts` | DNote 集計メインロジック |
-| `dnote-agregate-target.ts` | 集計対象の基底インタフェース |
+| `dnote-aggregate-target.ts` | 集計対象の基底インタフェース |
 | `dnote-item.ts` | DNote アイテム（集計結果の1行） |
 | `dnote-key-getter.ts` | キー取得の基底インタフェース |
 | `dnote-kyou-filter.ts` | Kyou フィルタの基底インタフェース |
@@ -75,7 +75,7 @@ dnote/
 | `related-time-match-type.ts` | 関連時刻マッチ型 |
 | `aggregate-grouping-list-result-record.ts` | グルーピング集計結果レコード |
 
-## `dnote-agregate-target/`（21ファイル）— 集計対象
+## `dnote-aggregate-target/`（21ファイル）— 集計対象
 
 グループごとの集計値を算出するクラス群。
 
@@ -83,35 +83,35 @@ dnote/
 
 | ファイル | 集計対象 |
 |---------|---------|
-| `agregate-average-kc-num-value.ts` | KC 数値の平均 |
-| `agregate-average-lantana-mood.ts` | Lantana 気分値の平均 |
-| `agregate-average-nlog-amount.ts` | Nlog 金額の平均 |
-| `agregate-average-timeis-time.ts` | TimeIs 経過時間の平均 |
-| `agregate-average-timeis-start-time.ts` | TimeIs 開始時刻の平均 |
-| `agregate-average-timeis-end-time.ts` | TimeIs 終了時刻の平均 |
-| `agregate-average-git-commit-log-code-addition-count.ts` | Git コミット追加行数の平均 |
-| `agregate-average-git-commit-log-code-deletion-count.ts` | Git コミット削除行数の平均 |
-| `agregate-average-git-commit-log-code-count.ts` | Git コミット差分行数の平均 |
+| `aggregate-average-kc-num-value.ts` | KC 数値の平均 |
+| `aggregate-average-lantana-mood.ts` | Lantana 気分値の平均 |
+| `aggregate-average-nlog-amount.ts` | Nlog 金額の平均 |
+| `aggregate-average-timeis-time.ts` | TimeIs 経過時間の平均 |
+| `aggregate-average-timeis-start-time.ts` | TimeIs 開始時刻の平均 |
+| `aggregate-average-timeis-end-time.ts` | TimeIs 終了時刻の平均 |
+| `aggregate-average-git-commit-log-code-addition-count.ts` | Git コミット追加行数の平均 |
+| `aggregate-average-git-commit-log-code-deletion-count.ts` | Git コミット削除行数の平均 |
+| `aggregate-average-git-commit-log-code-count.ts` | Git コミット差分行数の平均 |
 
 ### 合計（Sum）
 
 | ファイル | 集計対象 |
 |---------|---------|
-| `agregate-sum-kc-num-value.ts` | KC 数値の合計 |
-| `agregate-sum-lantana-mood.ts` | Lantana 気分値の合計 |
-| `agregate-sum-nlog-amount.ts` | Nlog 金額の合計 |
-| `agregate-sum-timeis-time.ts` | TimeIs 経過時間の合計 |
-| `agregate-sum-git-commit-log-code-addition-count.ts` | Git コミット追加行数の合計 |
-| `agregate-sum-git-commit-log-code-deletion-count.ts` | Git コミット削除行数の合計 |
-| `agregate-sum-git-commit-log-code-count.ts` | Git コミット差分行数の合計 |
+| `aggregate-sum-kc-num-value.ts` | KC 数値の合計 |
+| `aggregate-sum-lantana-mood.ts` | Lantana 気分値の合計 |
+| `aggregate-sum-nlog-amount.ts` | Nlog 金額の合計 |
+| `aggregate-sum-timeis-time.ts` | TimeIs 経過時間の合計 |
+| `aggregate-sum-git-commit-log-code-addition-count.ts` | Git コミット追加行数の合計 |
+| `aggregate-sum-git-commit-log-code-deletion-count.ts` | Git コミット削除行数の合計 |
+| `aggregate-sum-git-commit-log-code-count.ts` | Git コミット差分行数の合計 |
 
 ### 最大/最小/カウント
 
 | ファイル | 集計対象 |
 |---------|---------|
-| `agregate-max-kc-num-value.ts` | KC 数値の最大 |
-| `agregate-min-kc-num-value.ts` | KC 数値の最小 |
-| `agregate-count-kyou.ts` | Kyou の件数カウント |
+| `aggregate-max-kc-num-value.ts` | KC 数値の最大 |
+| `aggregate-min-kc-num-value.ts` | KC 数値の最小 |
+| `aggregate-count-kyou.ts` | Kyou の件数カウント |
 
 ### ユーティリティ
 
@@ -288,7 +288,7 @@ Predicate と AggregateTarget を流用して `related_time` を日/週/月単�
 | `dnote-trend-aggregator.ts` | 時系列バケット集計ロジック（ゼロ埋め・昇順保証。400バケット上限、超過時は新しい側優先） |
 | `dnote-trend/dnote-trend-types.ts` | 粒度（day/week/month）とグラフ種別（line/bar）の型 |
 | `dnote-trend/dnote-trend-point.ts` | バケット1点分の集計結果 |
-| `dnote-trend/agregated-value-to-number.ts` | 累積値（number / AverageInfo）の数値化 |
+| `dnote-trend/aggregated-value-to-number.ts` | 累積値（number / AverageInfo）の数値化 |
 
 定義は `dnote_json_data` の各定義オブジェクト内 `dnote_trend_graph_view_data` に保存される（キー欠落時は空扱い＝後方互換）。
 
@@ -299,8 +299,8 @@ Predicate と AggregateTarget を流用して `related_time` を日/週/月単�
 
 ### 新しい集計対象を追加する場合
 
-1. `dnote-agregate-target/` に `agregate-xxx-yyy.ts` を作成
-2. `dnote-agregate-target.ts` の基底インタフェースを実装
+1. `dnote-aggregate-target/` に `aggregate-xxx-yyy.ts` を作成
+2. `dnote-aggregate-target.ts` の基底インタフェースを実装
 3. `pulldown-menu/aggregate-target-menu-items.ts` に選択肢を追加
 4. `serialize/dnote-aggregate-target-dictionary.ts` に型を登録
 

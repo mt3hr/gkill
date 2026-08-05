@@ -1,9 +1,9 @@
-import AverageInfo from "../dnote-agregate-target/average-info"
-import TimeOfDayAverageInfo, { average_milli_second_of_day } from "../dnote-agregate-target/time-of-day-average-info"
+import AverageInfo from "../dnote-aggregate-target/average-info"
+import TimeOfDayAverageInfo, { average_milli_second_of_day } from "../dnote-aggregate-target/time-of-day-average-info"
 
 // 集計対象の累積値（number / AverageInfo / TimeOfDayAverageInfo）を
 // グラフ描画用の数値に変換する
-export default function agregated_value_to_number(value: unknown): number {
+export default function aggregated_value_to_number(value: unknown): number {
     if (value === null || value === undefined) {
         return 0
     }

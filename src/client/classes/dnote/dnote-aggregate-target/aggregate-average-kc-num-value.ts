@@ -1,13 +1,13 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAgregateTarget from "../dnote-agregate-target";
+import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import AverageInfo from "./average-info";
 
-export default class AgregateAverageKCNumValue implements DnoteAgregateTarget {
-    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
-        return new AgregateAverageKCNumValue()
+export default class AggregateAverageKCNumValue implements DnoteAggregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAggregateTarget {
+        return new AggregateAverageKCNumValue()
     }
-    async append_agregate_element_value(typed_average_info_kc_num_value: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
+    async append_aggregate_element_value(typed_average_info_kc_num_value: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
         const cloned_typed_average_info_kc_num_value = typed_average_info_kc_num_value === null ? new AverageInfo() : (typed_average_info_kc_num_value as AverageInfo).clone()
         cloned_typed_average_info_kc_num_value.total_value = cloned_typed_average_info_kc_num_value.total_value === null ? 0 : cloned_typed_average_info_kc_num_value.total_value as number
 
@@ -27,7 +27,7 @@ export default class AgregateAverageKCNumValue implements DnoteAgregateTarget {
     }
     to_json(): Record<string, unknown> {
         return {
-            type: "AgregateAverageKCNumValue",
+            type: "AggregateAverageKCNumValue",
         }
     }
 }
