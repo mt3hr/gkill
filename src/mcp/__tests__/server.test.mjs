@@ -22,6 +22,20 @@ function createMockClient(overrides = {}) {
   };
 }
 
+// get_kyous が返すプラグインKyou 1件分。
+function pluginKyouResult() {
+  return {
+    data_type: "claude_code_message",
+    related_time: "2026-08-05T10:00:00+09:00",
+    payload: {
+      kind: "plugin",
+      data_type: "claude_code_message",
+      rep_name: "Claude Code",
+      kyou_id: "kyou-1",
+    },
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Constructor
 // ---------------------------------------------------------------------------
@@ -153,16 +167,43 @@ describe("handleToolCall", () => {
     expect(result.plugins).toHaveLength(1);
   });
 
-  test("dispatches gkill_get_plugin_content to /api/get_plugin_content_html and converts to text", async () => {
+  test("passes currentSessionId to plugin tools too", async () => {
+    mockClient.callRead.mockResolvedValue({ plugins: [], errors: [] });
+    server.currentSessionId = "oauth-session-xyz";
+
+    await server.handleToolCall("gkill_get_plugin_list", {});
+
+    expect(mockClient.callRead).toHaveBeenCalledWith(
+      "/api/get_plugin_list",
+      expect.any(Object),
+      true,
+      "oauth-session-xyz",
+    );
+  });
+
+  test("gkill_get_kyous leaves plugin bodies alone by default", async () => {
     mockClient.callRead.mockResolvedValue({
-      html: "<html><head><style>p{color:red}</style></head><body><p>会話の本文</p></body></html>",
+      kyous: [pluginKyouResult()],
+      total_count: 1,
+      returned_count: 1,
       errors: [],
     });
 
-    const result = await server.handleToolCall("gkill_get_plugin_content", {
-      rep_name: "Claude Code",
-      kyou_id: "kyou-1",
-    });
+    const result = await server.handleToolCall("gkill_get_kyous", {});
+
+    expect(mockClient.callRead).toHaveBeenCalledTimes(1);
+    expect(result.plugin_content).toBeUndefined();
+    expect(result.kyous[0].payload.content_status).toBeUndefined();
+  });
+
+  test("gkill_get_kyous inlines plugin bodies when include_plugin_content is true", async () => {
+    mockClient.callRead.mockImplementation((pathname) =>
+      pathname === "/api/get_kyous_mcp"
+        ? Promise.resolve({ kyous: [pluginKyouResult()], total_count: 1, returned_count: 1, errors: [] })
+        : Promise.resolve({ html: "<html><head><style>p{color:red}</style></head><body><p>会話の本文</p></body></html>", errors: [] }),
+    );
+
+    const result = await server.handleToolCall("gkill_get_kyous", { include_plugin_content: true });
 
     expect(mockClient.callRead).toHaveBeenCalledWith(
       "/api/get_plugin_content_html",
@@ -170,22 +211,42 @@ describe("handleToolCall", () => {
       true,
       null,
     );
-    expect(result.text).toBe("会話の本文");
-    expect(result.html).toBeUndefined();
+    expect(result.kyous[0].payload.content_text).toBe("会話の本文");
+    expect(result.kyous[0].payload.content_status).toBe("ok");
+    expect(result.plugin_content.inlined).toBe(1);
   });
 
-  test("passes currentSessionId to plugin tools too", async () => {
-    mockClient.callRead.mockResolvedValue({ html: "<p>x</p>", errors: [] });
-    server.currentSessionId = "oauth-session-xyz";
-
-    await server.handleToolCall("gkill_get_plugin_content", { rep_name: "r", kyou_id: "k" });
-
-    expect(mockClient.callRead).toHaveBeenCalledWith(
-      "/api/get_plugin_content_html",
-      expect.any(Object),
-      true,
-      "oauth-session-xyz",
+  test("gkill_get_kyous does not forward the inline args to the gkill endpoint", async () => {
+    mockClient.callRead.mockImplementation((pathname) =>
+      pathname === "/api/get_kyous_mcp"
+        ? Promise.resolve({ kyous: [pluginKyouResult()], total_count: 1, returned_count: 1, errors: [] })
+        : Promise.resolve({ html: "<p>x</p>", errors: [] }),
     );
+
+    await server.handleToolCall("gkill_get_kyous", {
+      include_plugin_content: true,
+      plugin_content_max_text_length: 100,
+      plugin_content_format: "text",
+    });
+
+    const body = mockClient.callRead.mock.calls[0][1];
+    expect(body).not.toHaveProperty("include_plugin_content");
+    expect(body).not.toHaveProperty("plugin_content_max_text_length");
+    expect(body).not.toHaveProperty("plugin_content_format");
+  });
+
+  test("gkill_get_kyous still returns results when a plugin body fetch fails", async () => {
+    mockClient.callRead.mockImplementation((pathname) =>
+      pathname === "/api/get_kyous_mcp"
+        ? Promise.resolve({ kyous: [pluginKyouResult()], total_count: 1, returned_count: 1, errors: [] })
+        : Promise.reject(new Error("plugin is down")),
+    );
+
+    const result = await server.handleToolCall("gkill_get_kyous", { include_plugin_content: true });
+
+    expect(result.kyous).toHaveLength(1);
+    expect(result.kyous[0].payload.content_status).toBe("error");
+    expect(result.plugin_content.errors).toBe(1);
   });
 
   test("throws for unknown tool name", async () => {
@@ -274,14 +335,14 @@ describe("handleMessage", () => {
     expect(response.jsonrpc).toBe("2.0");
     expect(response.id).toBe(2);
     expect(Array.isArray(response.result.tools)).toBe(true);
-    expect(response.result.tools.length).toBe(10);
+    expect(response.result.tools.length).toBe(9);
 
     const toolNames = response.result.tools.map((t) => t.name);
     expect(toolNames).toContain("gkill_get_kyous");
     expect(toolNames).toContain("gkill_get_all_tag_names");
     expect(toolNames).toContain("gkill_get_idf_file");
     expect(toolNames).toContain("gkill_get_plugin_list");
-    expect(toolNames).toContain("gkill_get_plugin_content");
+    expect(toolNames).not.toContain("gkill_get_plugin_content");
   });
 
   test("responds to tools/call with tool result", async () => {

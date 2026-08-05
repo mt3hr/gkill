@@ -214,7 +214,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **Argon2id** | パスワードの保存に使うメモリハードな鍵導出関数。gkill は `m=65536 KiB, t=3, p=4`、ソルト16バイト、鍵長32バイトで用いる。総当たりに必要な計算資源を引き上げ、`account.db` が流出しても資格情報にならないようにするのが目的 |
 | **PHC文字列** | Argon2id の保存形式。`$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>` のようにアルゴリズム・パラメータ・ソルトを値自身に含む。パラメータが保存値側にあるので、後からコストを変えても既存の値をそのまま照合できる |
 | **パスワードリセットトークン** | パスワードを設定しなおすための単回使用の秘密（UUIDv4）。有効期限は72時間で `ACCOUNT.PASSWORD_RESET_TOKEN_EXPIRATION` に持つ。照合は constant-time。管理者の `/api/reset_password` か CLI の `reset_password` で発行する |
-| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、10ツール）・**Write専用**（`gkill-write-server.mjs`、25ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、30ツール）。いずれも共通のプラグインツール2つ（`lib/plugin-tools.mjs` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
+| **MCP サーバ** | AI 統合用 MCP サーバ。3バリアントが存在する。**Read専用**（`gkill-read-server.mjs`、9ツール）・**Write専用**（`gkill-write-server.mjs`、24ツール）・**ReadWrite統合**（`gkill-readwrite-server.mjs`、29ツール）。いずれも共通のプラグインツール1つ（`lib/plugin-tools.mjs` の `PLUGIN_TOOLS`）を含む。各バリアントは stdio（ローカル）/ HTTP（OAuth 2.1付きリモート）の2モードをサポート |
 
 ### 凍結された綴り
 
@@ -281,10 +281,10 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| MCP サーバー（Read） | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（10ツール = 固有8 + プラグイン2、stdio/HTTP） |
-| MCP サーバー（Write） | `src/mcp/gkill-write-server.mjs` | 書き込み専用MCPサーバー（25ツール = 固有23 + プラグイン2、stdio/HTTP） |
-| MCP サーバー（ReadWrite） | `src/mcp/gkill-readwrite-server.mjs` | 読み書き統合MCPサーバー（30ツール = 固有28 + プラグイン2、stdio/HTTP） |
-| MCP プラグインツール | `src/mcp/lib/plugin-tools.mjs` | 3サーバ共通の `gkill_get_plugin_list` / `gkill_get_plugin_content`（読み取りのみ。`post_plugin_config` は公開しない） |
+| MCP サーバー（Read） | `src/mcp/gkill-read-server.mjs` | 読み取り専用MCPサーバー（9ツール = 固有8 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（Write） | `src/mcp/gkill-write-server.mjs` | 書き込み専用MCPサーバー（24ツール = 固有23 + プラグイン1、stdio/HTTP） |
+| MCP サーバー（ReadWrite） | `src/mcp/gkill-readwrite-server.mjs` | 読み書き統合MCPサーバー（29ツール = 固有28 + プラグイン1、stdio/HTTP） |
+| MCP プラグインツール | `src/mcp/lib/plugin-tools.mjs` | 3サーバ共通の `gkill_get_plugin_list` と、`gkill_get_kyous` へプラグイン本文を埋める `inlinePluginContents`（読み取りのみ。`post_plugin_config` は公開しない） |
 | MCP アクセスログ | `src/mcp/lib/access-log.mjs` | MCPサーバのアクセスログモジュール。`MCP_LOG` 環境変数で制御 |
 | Android APK | `src/android/` | WebView ラッパー + gkill_server バイナリ同梱 |
 | Wear OS | `src/wear_os/` | phone_companion + watch_app（Gradle マルチモジュール） |

@@ -60,7 +60,6 @@ const EXPECTED_TOOL_NAMES = [
   "gkill_get_gps_log",
   "gkill_get_application_config",
   "gkill_get_plugin_list",
-  "gkill_get_plugin_content",
 ];
 
 // Known API endpoint mappings for each tool
@@ -72,15 +71,14 @@ const TOOL_ENDPOINT_MAP = {
   gkill_get_gps_log: "/api/get_gps_log",
   gkill_get_application_config: "/api/get_application_config",
   gkill_get_plugin_list: "/api/get_plugin_list",
-  gkill_get_plugin_content: "/api/get_plugin_content_html",
 };
 
 // ---------------------------------------------------------------------------
 // Tool definition presence
 // ---------------------------------------------------------------------------
 describe("Tool definitions", () => {
-  test("all 8 expected tool names are defined", () => {
-    expect(EXPECTED_TOOL_NAMES).toHaveLength(8);
+  test("all 7 expected tool names are defined", () => {
+    expect(EXPECTED_TOOL_NAMES).toHaveLength(7);
   });
 
   test("each tool maps to a known API endpoint", () => {
@@ -96,10 +94,6 @@ describe("Tool definitions", () => {
 
   test("gkill_get_kyous endpoint is /api/get_kyous_mcp", () => {
     expect(TOOL_ENDPOINT_MAP["gkill_get_kyous"]).toBe("/api/get_kyous_mcp");
-  });
-
-  test("plugin content endpoint is /api/get_plugin_content_html", () => {
-    expect(TOOL_ENDPOINT_MAP["gkill_get_plugin_content"]).toBe("/api/get_plugin_content_html");
   });
 });
 

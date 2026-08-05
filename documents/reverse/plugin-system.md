@@ -178,8 +178,9 @@ iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）
 
 `gkill-api.ts` の `get_plugin_list()` は今も MCP 専用で、フロントエンドに呼び出し元が無い。
 
-`/api/get_plugin_list` と `/api/get_plugin_content_html` の唯一の実利用者は MCP サーバの
-`gkill_get_plugin_list` / `gkill_get_plugin_content` ツール（`src/mcp/lib/plugin-tools.mjs`）。
+`/api/get_plugin_list` の唯一の実利用者は MCP サーバの `gkill_get_plugin_list` ツール
+（`src/mcp/lib/plugin-tools.mjs`）。`/api/get_plugin_content_html` は画面（`plugin-html-view.vue`）と
+MCP の本文インライン埋め込み（`inlinePluginContents`）の両方が使う。
 
 ---
 
@@ -551,34 +552,45 @@ AIクライアント（MCP）からもプラグインの記録を読める。プ
 | ツール名 | gkill API | 説明 |
 |---|---|---|
 | `gkill_get_plugin_list` | `/api/get_plugin_list` | プラグイン一覧（name / version / description / data_type / rep_name / is_alive） |
-| `gkill_get_plugin_content` | `/api/get_plugin_content_html` | プラグインKyou 1件の本文 |
 
-いずれも読み取り専用。設定書き換え（`/api/post_plugin_config`）はMCPに公開していない。
+読み取り専用。設定書き換え（`/api/post_plugin_config`）はMCPに公開していない。
+
+本文取得は独立したツールではなく、`gkill_get_kyous` の引数 `include_plugin_content` で行う。かつては1件ずつ取る `gkill_get_plugin_content` ツールがあったが、N件読むのにツール呼び出しがN+1回必要で、そのたびにLLMのターンを消費していたため廃止した。
 
 ### 取得導線
 
 ```
 gkill_get_plugin_list        … どのプラグインが入っているか（data_type / rep_name）を知る
   ↓
-gkill_get_kyous              … payload.kind = "plugin" のKyouが返る
-                               （data_type / rep_name / kyou_id / plugin_name / description）
-  ↓
-gkill_get_plugin_content     … rep_name + kyou_id を渡して本文を取得
+gkill_get_kyous              … include_plugin_content:true を付けて検索する。
+   (include_plugin_content)     payload.kind = "plugin" のKyouに本文が入って返る
+                               （data_type / rep_name / kyou_id / plugin_name / description
+                                 + content_status / content_text）
 ```
+
+インライン化は MCP 層（`src/mcp/lib/plugin-tools.mjs` の `inlinePluginContents`）が担当する。`/api/get_kyous_mcp` のレスポンスから `kind:"plugin"` のペイロードを集め、`rep_name` ごとにグループ化して `/api/get_plugin_content_html` を叩き、HTML→テキスト変換した結果をペイロードに書き戻す。gkill側には一括取得エンドポイントもプラグインプロトコルの一括コマンドも無く、追加していない。
+
+### 並列度と安全弁
+
+**同一プラグインへ並列に投げてはいけない。** `callCommand` は30秒のデッドラインを `p.mu.Lock()` の**前**に張るため、同時発行すると後続はロック待ちで期限を食い潰す。期限切れ時は `sendRequest` が `Process.Kill()` を呼ぶので、MCPの読み取りが原因でユーザーのプラグインプロセスが落ちる。したがってインライン取得は **rep内は必ず直列・rep間は並列（既定4）** にしてある。
+
+同じ理由で、実行中のリクエストを abort してはいけない。`HandleGetPluginContentHTML` は `r.Context()` をそのまま `GetContentHTML` に渡すので、HTTPリクエストのキャンセルもプロセスkillになる。全体30秒のデッドラインは「新しいリクエストを始めない」ことだけで実現している。
+
+そのほかの上限: 1回あたり20件・1件4000文字（`plugin_content_max_text_length` で最大200000）・合計200000文字。あるrepで1件失敗したらそのrepの残りは投げず `content_skipped_reason: "rep_error"` にする（タイムアウトでプロセスが死んでいる可能性が高く、投げ続けてもコールドスタートで待たされるだけのため）。個別の失敗は `content_status` に落ち、`gkill_get_kyous` 全体は失敗しない。
 
 `handle_get_kyous_mcp.go` のペイロード構築は既存 data_type の switch で分岐しており、そのどれにも当たらないKyouは `repositories.PluginReps` から `rep_name` で manifest を引き当てて `PluginPayloadMCPDTO`（`kind: "plugin"`）にする。`kyou_id` をペイロードに載せているのは、`include_id` 指定なしでもコンテンツ取得ができるようにするため（idfペイロードが `rep_name` / `file_name` を常に載せているのと同じ考え方）。
 
 ### HTML → テキスト変換
 
-`gkill_get_plugin_content` の `format` は既定 `text`。プラグインのコンテンツHTMLは `<style>` と `<script>` を含む完結したHTML文書で、バイト数の大半が表示用のボイラープレートになるため、そのまま返すとAIのトークンを浪費するだけになる。MCPサーバ側（`src/mcp/lib/html-text.mjs`）で正規表現ベースの軽量変換をかける:
+`plugin_content_format` は既定 `text`。プラグインのコンテンツHTMLは `<style>` と `<script>` を含む完結したHTML文書で、バイト数の大半が表示用のボイラープレートになるため、そのまま返すとAIのトークンを浪費するだけになる。MCPサーバ側（`src/mcp/lib/html-text.mjs`）で正規表現ベースの軽量変換をかける:
 
 - `<script>` / `<style>` / コメントは中身ごと破棄
 - `<br>` とブロック要素の境界を改行に変換（タグ隣接だけで空行ができないよう、内部マーカー経由で連続をまとめる）
 - `<details>` / `<summary>`（ツール実行・thinkingの折りたたみ）の中身は残す
 - HTMLエンティティをデコード（`&amp;` は最後に処理し、エスケープ済みマークアップが復活しないようにする）
-- `max_text_length`（既定20000文字）を超えたら切り詰め、`text_truncated: true` を返す
+- `plugin_content_max_text_length`（既定4000文字）を超えたら切り詰め、`content_status: "truncated"` にする
 
-`format: "html"` で生HTML、`format: "both"` で両方返す。
+`plugin_content_format: "html"` で生HTMLを `content_html` に、`"both"` で両方返す。長い記録1件の全文が欲しいときは `query.use_ids` + `query.ids` でその1件に絞り、`plugin_content_max_text_length` を上げる。
 
 ---
 
@@ -588,5 +600,5 @@ gkill_get_plugin_content     … rep_name + kyou_id を渡して本文を取得
 - [api-endpoints.md](api-endpoints.md) — `get_plugin_content_html` エンドポイント
 - [frontend-architecture.md](frontend-architecture.md) — `plugin-html-view.vue` コンポーネント・PWAキャッシュ
 - [sequence-diagrams.md](sequence-diagrams.md) — プラグインコンテンツHTML取得シーケンス
-- [`src/mcp/README.md`](../../src/mcp/README.md) — MCPのプラグインツール（`gkill_get_plugin_list` / `gkill_get_plugin_content`）
+- [`src/mcp/README.md`](../../src/mcp/README.md) — MCPのプラグインツール（`gkill_get_plugin_list`）と本文のインライン埋め込み
 - [glossary.md](glossary.md) — PluginKyou, PluginRepository 用語定義

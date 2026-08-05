@@ -320,28 +320,16 @@ describe("handleToolCall — plugin tools", () => {
     expect(result.plugins).toHaveLength(1);
   });
 
-  test("dispatches gkill_get_plugin_content to /api/get_plugin_content_html and converts to text", async () => {
-    const mockClient = createMockClient({
-      callWrite: vi.fn().mockResolvedValue({
-        html: "<html><head><style>p{color:red}</style></head><body><p>会話の本文</p></body></html>",
-        errors: [],
-      }),
-    });
+  // Writeサーバには gkill_get_kyous が無いため、プラグイン本文を読む導線も無い。
+  // 本文が要るときは ReadWrite サーバを使う。
+  test("does not expose the removed single-kyou content tool", async () => {
+    const mockClient = createMockClient();
     const server = new McpWriteServer(mockClient);
 
-    const result = await server.handleToolCall("gkill_get_plugin_content", {
-      rep_name: "Claude Code",
-      kyou_id: "kyou-1",
-    });
-
-    expect(mockClient.callWrite).toHaveBeenCalledWith(
-      "/api/get_plugin_content_html",
-      { rep_name: "Claude Code", kyou_id: "kyou-1" },
-      true,
-      null,
-    );
-    expect(result.text).toBe("会話の本文");
-    expect(result.html).toBeUndefined();
+    await expect(
+      server.handleToolCall("gkill_get_plugin_content", { rep_name: "r", kyou_id: "k" }),
+    ).rejects.toThrow(/Unknown tool/);
+    expect(mockClient.callWrite).not.toHaveBeenCalled();
   });
 });
 
@@ -414,13 +402,13 @@ describe("JSON-RPC protocol", () => {
     expect(response.result).toEqual({});
   });
 
-  test("tools/list returns 25 tools", async () => {
+  test("tools/list returns 24 tools", async () => {
     const response = await server.handleMessage({
       jsonrpc: "2.0",
       id: 3,
       method: "tools/list",
     });
-    expect(response.result.tools).toHaveLength(25);
+    expect(response.result.tools).toHaveLength(24);
   });
 
   test("tools/list includes all expected tool names", async () => {
@@ -457,7 +445,7 @@ describe("JSON-RPC protocol", () => {
     expect(names).toContain("gkill_get_all_tag_names");
     // Plugin tools
     expect(names).toContain("gkill_get_plugin_list");
-    expect(names).toContain("gkill_get_plugin_content");
+    expect(names).not.toContain("gkill_get_plugin_content");
   });
 
   test("unknown method returns error", async () => {
