@@ -10,6 +10,12 @@ import {
   normalizeGpsArgs,
   normalizeIdfFileArgs,
 } from "../lib/normalization.mjs";
+import {
+  DEFAULT_INCLUDE_PLUGIN_CONTENT,
+  DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+  DEFAULT_PLUGIN_CONTENT_FORMAT,
+  MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
+} from "../lib/constants.mjs";
 
 // ---------------------------------------------------------------------------
 // pad2
@@ -438,6 +444,44 @@ describe("normalizeKyouArgs", () => {
 
   test("throws for unknown top-level key", () => {
     expect(() => normalizeKyouArgs({ unknown_field: true })).toThrow(GkillApiError);
+  });
+
+  test("defaults the inline plugin content args", () => {
+    const normalized = normalizeKyouArgs({});
+    expect(normalized.include_plugin_content).toBe(DEFAULT_INCLUDE_PLUGIN_CONTENT);
+    expect(normalized.plugin_content_max_text_length).toBe(DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH);
+    expect(normalized.plugin_content_format).toBe(DEFAULT_PLUGIN_CONTENT_FORMAT);
+  });
+
+  test("accepts include_plugin_content", () => {
+    expect(normalizeKyouArgs({ include_plugin_content: true }).include_plugin_content).toBe(true);
+  });
+
+  test("throws for a non-boolean include_plugin_content", () => {
+    expect(() => normalizeKyouArgs({ include_plugin_content: "yes" })).toThrow(GkillApiError);
+  });
+
+  test("accepts an in-range plugin_content_max_text_length", () => {
+    expect(normalizeKyouArgs({ plugin_content_max_text_length: 100 }).plugin_content_max_text_length).toBe(100);
+    expect(
+      normalizeKyouArgs({ plugin_content_max_text_length: MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH })
+        .plugin_content_max_text_length,
+    ).toBe(MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH);
+  });
+
+  test("throws for an out-of-range plugin_content_max_text_length", () => {
+    expect(() => normalizeKyouArgs({ plugin_content_max_text_length: 0 })).toThrow(GkillApiError);
+    expect(() =>
+      normalizeKyouArgs({ plugin_content_max_text_length: MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH + 1 }),
+    ).toThrow(GkillApiError);
+  });
+
+  test("lower-cases plugin_content_format", () => {
+    expect(normalizeKyouArgs({ plugin_content_format: "HTML" }).plugin_content_format).toBe("html");
+  });
+
+  test("throws for an unknown plugin_content_format", () => {
+    expect(() => normalizeKyouArgs({ plugin_content_format: "markdown" })).toThrow(/plugin_content_format/);
   });
 
   test("throws for non-object args", () => {

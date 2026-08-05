@@ -14,10 +14,10 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | Go バックエンド (`server/`) | 665 | 76 | Go `testing` |
 | フロントエンド ユニット (`client/`) | 839 | 70 | Vitest |
 | フロントエンド E2E (`client/`) | 196 | 34 | Playwright |
-| MCP サーバ (`mcp/`) | 668 | 20 | Vitest |
+| MCP サーバ (`mcp/`) | 703 | 20 | Vitest |
 | Android (`android/`) | 12 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 118 | 9 | JUnit 4 + MockK |
-| **合計** | **2,402** | **188** | |
+| **合計** | **2,533** | **211** | |
 
 `src/plugins/` の Go テスト 28件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -84,7 +84,7 @@ npm run verify_docs -- --list
 | `server/gkill/usecase/` | [server/gkill/usecase/ABOUT_TEST.md](server/gkill/usecase/ABOUT_TEST.md) | ビジネスロジック層（ハンドラ経由で33〜50%到達） |
 | `server/gkill/dvnf/` | [server/gkill/dvnf/ABOUT_TEST.md](server/gkill/dvnf/ABOUT_TEST.md) | DVNF ファイル管理 |
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) | CLI エントリポイント |
-| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（668テスト） |
+| `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（703テスト） |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
 | `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（118テスト） |
 | `server/gkill/plugin/sdk/` | [server/gkill/plugin/sdk/ABOUT_TEST.md](server/gkill/plugin/sdk/ABOUT_TEST.md) | プラグイン SDK（stdio ループ + EnsureConfig、18テスト） |

@@ -527,13 +527,14 @@ gkill MCP サーバーは3種類提供されている。いずれもOAuth 2.1認
 
 | サーバー | ファイル | ツール数 | デフォルトポート | 用途 |
 |---|---|---|---|---|
-| Read専用 | `gkill-read-server.mjs` | 10 (8 read + 2 plugin) | 8808 | 読み取りのみ |
-| Write専用 | `gkill-write-server.mjs` | 25 (20 write + 3 read convenience + 2 plugin) | 8809 | 書き込み中心 |
-| Read/Write統合 | `gkill-readwrite-server.mjs` | 30 (8 read + 20 write + 2 plugin) | 8810 | 全機能 |
+| Read専用 | `gkill-read-server.mjs` | 9 (8 read + 1 plugin) | 8808 | 読み取りのみ |
+| Write専用 | `gkill-write-server.mjs` | 24 (20 write + 3 read convenience + 1 plugin) | 8809 | 書き込み中心 |
+| Read/Write統合 | `gkill-readwrite-server.mjs` | 29 (8 read + 20 write + 1 plugin) | 8810 | 全機能 |
 
-プラグインツール2つ（`gkill_get_plugin_list` / `gkill_get_plugin_content`）は
-`src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を各サーバの `TOOLS` に展開したもので、
-3サーバ共通・読み取り専用（`post_plugin_config` は公開しない）。
+プラグインツール `gkill_get_plugin_list` は `src/mcp/lib/plugin-tools.mjs` の `PLUGIN_TOOLS` を
+各サーバの `TOOLS` に展開したもので、3サーバ共通・読み取り専用（`post_plugin_config` は公開しない）。
+プラグインKyouの本文は `gkill_get_kyous` に `include_plugin_content:true` を渡すと
+レスポンスへ直接埋め込まれる（Write専用サーバには `gkill_get_kyous` が無いため本文は読めない）。
 
 ### 11.1 起動
 

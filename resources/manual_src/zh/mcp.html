@@ -16,11 +16,11 @@
   <h2>集成类型</h2>
   <table>
     <tr><th>类型</th><th>可以做什么</th><th>要执行的文件</th><th>工具数</th><th>HTTP 时的端口</th></tr>
-    <tr><td>只读</td><td>仅查看和搜索记录，不能添加或修改</td><td>gkill-read-server.mjs</td><td>10</td><td>8808</td></tr>
-    <tr><td>只写</td><td>添加、更新和删除记录。同时也可以获取存储库名称、标签名和板名</td><td>gkill-write-server.mjs</td><td>25</td><td>8809</td></tr>
-    <tr><td>读写</td><td>查看、添加、更新和删除记录</td><td>gkill-readwrite-server.mjs</td><td>30</td><td>8810</td></tr>
+    <tr><td>只读</td><td>仅查看和搜索记录，不能添加或修改</td><td>gkill-read-server.mjs</td><td>9</td><td>8808</td></tr>
+    <tr><td>只写</td><td>添加、更新和删除记录。同时也可以获取存储库名称、标签名和板名</td><td>gkill-write-server.mjs</td><td>24</td><td>8809</td></tr>
+    <tr><td>读写</td><td>查看、添加、更新和删除记录</td><td>gkill-readwrite-server.mjs</td><td>29</td><td>8810</td></tr>
   </table>
-  <p>无论哪种类型，都包含 2 个用于读取插件导入记录的工具。</p>
+  <p>无论哪种类型，都包含 1 个用于获取插件列表的工具。插件导入的记录正文可以直接包含在搜索结果中接收。</p>
 
   <h2>文件的传递</h2>
   <p>向AI展示文件记录（图片、视频、文档）的方式会根据连接形式自动切换。</p>
