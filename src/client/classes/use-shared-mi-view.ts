@@ -82,20 +82,20 @@ export function useSharedMiView(options: {
         }
     }
 
-    function removeKyouFromListById(list: Array<Kyou>, deletedId: string): void {
+    function remove_kyou_from_list_by_id(list: Array<Kyou>, deleted_id: string): void {
         for (let i = list.length - 1; i >= 0; i--) {
-            if (list[i].id === deletedId) {
+            if (list[i].id === deleted_id) {
                 list.splice(i, 1)
             }
         }
     }
 
-    function onDeletedKyou(deletedKyou: Kyou): void {
-        removeKyouFromListById(match_kyous.value, deletedKyou.id)
-        if (focused_kyou.value?.id === deletedKyou.id) {
+    function onDeletedKyou(deleted_kyou: Kyou): void {
+        remove_kyou_from_list_by_id(match_kyous.value, deleted_kyou.id)
+        if (focused_kyou.value?.id === deleted_kyou.id) {
             focused_kyou.value = null
         }
-        emits('deleted_kyou', deletedKyou)
+        emits('deleted_kyou', deleted_kyou)
     }
 
     function open_rykv_dialog(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void {
@@ -152,7 +152,7 @@ export function useSharedMiView(options: {
         'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
-    const rykvDialogHandler = {
+    const rykv_dialog_handler = {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
     }
 
@@ -186,6 +186,6 @@ export function useSharedMiView(options: {
 
         // Event relay objects
         crudRelayHandlers,
-        rykvDialogHandler,
+        rykv_dialog_handler,
     }
 }

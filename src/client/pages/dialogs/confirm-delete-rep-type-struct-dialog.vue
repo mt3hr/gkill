@@ -36,7 +36,7 @@ import type { ConfirmDeleteRepTypeStructDialogEmits } from './confirm-delete-rep
 import type { ConfirmDeleteRepTypeStructDialogProps } from './confirm-delete-rep-type-struct-dialog-props';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data';
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
@@ -60,7 +60,7 @@ async function show(rep_type_struct_obj: RepTypeStructElementData): Promise<void
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
   rep_type_struct.value = new RepTypeStructElementData()
 }
 </script>

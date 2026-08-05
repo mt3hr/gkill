@@ -12,7 +12,7 @@ import { DiscardTXRequest } from '@/classes/api/req_res/discard-tx-request'
 import { CommitTXRequest } from '@/classes/api/req_res/commit-tx-request'
 import { tag_exists_in_tag_struct } from '@/classes/tag-struct'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { KFTLProps } from '@/pages/views/kftl-props'
 import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
 import type { KFTLRequest } from '@/classes/kftl/kftl-request'
@@ -245,12 +245,12 @@ export function useKftlView(options: {
     }
 
     function cancel_submit(): void {
-        closeDialogViaHistory(show_confirm_unknown_tag_dialog)
+        close_dialog_via_history(show_confirm_unknown_tag_dialog)
         unknown_tags.value = []
     }
 
     async function confirm_submit(): Promise<void> {
-        closeDialogViaHistory(show_confirm_unknown_tag_dialog)
+        close_dialog_via_history(show_confirm_unknown_tag_dialog)
         unknown_tags.value = []
         await do_submit(true)
     }

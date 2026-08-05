@@ -1,7 +1,7 @@
 <template>
   <div class="camera-wrap">
     <!-- <div class="moon"></div> -->
-    <div ref="starField" class="star-field"></div>
+    <div ref="star_field" class="star-field"></div>
   </div>
 </template>
 
@@ -9,7 +9,7 @@
 import { useSaihateStarsOverlay } from '@/classes/use-saihate-stars-overlay'
 
 const {
-    starField,
+    star_field,
 } = useSaihateStarsOverlay()
 </script>
 

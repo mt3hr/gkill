@@ -44,7 +44,7 @@ defineExpose({ show, hide })
 
 const dnote_list_query: Ref<DnoteListQuery> = ref(new DnoteListQuery())
 
-import { closeDialogViaHistory, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -60,7 +60,7 @@ async function show(_dnote_item: DnoteListQuery): Promise<void> {
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-  closeDialogViaHistory(is_show_dialog)
+  close_dialog_via_history(is_show_dialog)
   dnote_list_query.value = new DnoteListQuery()
 }
 </script>

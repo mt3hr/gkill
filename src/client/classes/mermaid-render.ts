@@ -37,7 +37,7 @@ export async function render_mermaid_diagrams(container: HTMLElement): Promise<v
         return
     }
 
-    const [mermaid, { default: DOMPurify }] = await Promise.all([
+    const [mermaid, { default: dom_purify }] = await Promise.all([
         setup_mermaid(),
         import('dompurify'),
     ])
@@ -64,7 +64,7 @@ export async function render_mermaid_diagrams(container: HTMLElement): Promise<v
             // mermaidのラベルはforeignObject内のHTMLを使うため html プロファイルも許可する。
             // foreignObjectはSVGプロファイルに含まれないので、mermaid自身のサニタイズ設定と揃えて明示的に許可する。
             // (許可しないとノードのラベルがまるごと消え、ラベルのない図になる)
-            wrapper.innerHTML = DOMPurify.sanitize(svg, {
+            wrapper.innerHTML = dom_purify.sanitize(svg, {
                 USE_PROFILES: { svg: true, svgFilters: true, html: true },
                 ADD_TAGS: ['foreignobject'],
                 ADD_ATTR: ['dominant-baseline'],

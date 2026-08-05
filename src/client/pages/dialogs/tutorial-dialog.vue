@@ -47,8 +47,8 @@ const dont_show_again: Ref<boolean> = ref(false)
 
 const tutorial_url = computed(() => {
   const locale = i18n.global.locale || 'ja'
-  const isDark = theme.global.name.value === 'gkill_dark_theme'
-  return `/resources/manual/${locale}/tutorial.html${isDark ? '?theme=dark' : ''}`
+  const is_dark = theme.global.name.value === 'gkill_dark_theme'
+  return `/resources/manual/${locale}/tutorial.html${is_dark ? '?theme=dark' : ''}`
 })
 
 async function show(): Promise<void> {

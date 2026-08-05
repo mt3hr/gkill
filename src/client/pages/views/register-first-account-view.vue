@@ -17,34 +17,34 @@
                 <v-col cols="12">
                     <v-text-field id="username" :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id"
                         name="new-username" autocomplete="new-username"
-                        :readonly="RegisterStatus.added_account <= register_state" />
+                        :readonly="REGISTER_STATUS.added_account <= register_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
                     <v-text-field id="password" :label="i18n.global.t('PASSWORD_TITLE')" :type="'password'"
                         v-model="password" name="new-password" autocomplete="new-password"
-                        :readonly="RegisterStatus.reseted_account_password <= register_state" />
+                        :readonly="REGISTER_STATUS.reseted_account_password <= register_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
                     <v-text-field :label="i18n.global.t('PASSWORD_RETYPE_TITLE')" :type="'password'"
                         name="retype-password" autocomplete="retype-password" v-model="password_retype"
-                        :readonly="RegisterStatus.reseted_account_password <= register_state" />
+                        :readonly="REGISTER_STATUS.reseted_account_password <= register_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
                     <v-text-field :label="i18n.global.t('ADMIN_PASSWORD_TITLE')" :type="'password'"
-                        v-model="admin_password" :readonly="RegisterStatus.reseted_admin_password <= register_state" />
+                        v-model="admin_password" :readonly="REGISTER_STATUS.reseted_admin_password <= register_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
                     <v-text-field :label="i18n.global.t('ADMIN_PASSWORD_RETYPE_TITLE')" :type="'password'"
                         v-model="admin_password_retype"
-                        :readonly="RegisterStatus.reseted_admin_password <= register_state" />
+                        :readonly="REGISTER_STATUS.reseted_admin_password <= register_state" />
                 </v-col>
             </v-row>
 
@@ -86,7 +86,7 @@ const {
     app_content_width_px,
 
     // Constants
-    RegisterStatus,
+    RegisterStatus: REGISTER_STATUS,
 
     // Business logic
     try_register_account,

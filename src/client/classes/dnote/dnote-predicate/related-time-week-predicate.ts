@@ -24,11 +24,11 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
         }
     }
     get_iso_week(date: Date): number {
-        const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-        const day = tempDate.getUTCDay() || 7
-        tempDate.setUTCDate(tempDate.getUTCDate() + 4 - day)
-        const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1))
-        const weekNo = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
-        return weekNo
+        const temp_date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+        const day = temp_date.getUTCDay() || 7
+        temp_date.setUTCDate(temp_date.getUTCDate() + 4 - day)
+        const year_start = new Date(Date.UTC(temp_date.getUTCFullYear(), 0, 1))
+        const week_no = Math.ceil(((temp_date.getTime() - year_start.getTime()) / 86400000 + 1) / 7)
+        return week_no
     }
 }

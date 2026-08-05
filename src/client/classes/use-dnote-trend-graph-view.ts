@@ -146,10 +146,10 @@ export function useDnoteTrendGraphView(options: {
     function drop(e: DragEvent): void {
         if (!props.editable) return
 
-        const srcId = e.dataTransfer?.getData('gkill_dnote_trend_graph_id')
-        const targetId = model_value.value?.id ?? ''
-        if (!srcId || !targetId) return
-        if (srcId === targetId) return
+        const src_id = e.dataTransfer?.getData('gkill_dnote_trend_graph_id')
+        const target_id = model_value.value?.id ?? ''
+        if (!src_id || !target_id) return
+        if (src_id === target_id) return
 
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
@@ -157,9 +157,9 @@ export function useDnoteTrendGraphView(options: {
         // 縦積みのため上下で前後を判定する（'left'=前、'right'=後）
         const rect = el.getBoundingClientRect()
         const y = e.clientY - rect.top
-        const dropType: DropType = (y <= rect.height * 0.5) ? 'left' : 'right'
+        const drop_type: DropType = (y <= rect.height * 0.5) ? 'left' : 'right'
 
-        emits('requested_move_dnote_trend_graph', srcId, targetId, dropType)
+        emits('requested_move_dnote_trend_graph', src_id, target_id, drop_type)
 
         e.preventDefault()
         e.stopPropagation()
@@ -170,11 +170,11 @@ export function useDnoteTrendGraphView(options: {
     // さらに表示中のVTooltipはoutside-click(2回目以降のタップ)で内部状態だけが閉じ、
     // propのtooltipVisibleがtrueのまま食い違うと以降再表示されない。
     // そのためmouseleave→mousemoveの順で疑似イベントを送り、閉→開のサイクルを強制して毎回確実に表示する
-    function dispatch_tooltip_cycle(root: HTMLElement | null, clientX: number, clientY: number): void {
+    function dispatch_tooltip_cycle(root: HTMLElement | null, client_x: number, client_y: number): void {
         const svg = root?.querySelector('svg')
         if (!svg) return
         svg.dispatchEvent(new MouseEvent('mouseleave'))
-        svg.dispatchEvent(new MouseEvent('mousemove', { clientX, clientY }))
+        svg.dispatchEvent(new MouseEvent('mousemove', { clientX: client_x, clientY: client_y }))
     }
 
     const touch_start_point = { x: 0, y: 0, valid: false }

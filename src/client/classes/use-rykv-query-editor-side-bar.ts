@@ -1,5 +1,5 @@
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { deepEquals } from '@/classes/deep-equals'
+import { deep_equals } from '@/classes/deep-equals'
 import { computed, nextTick, onMounted, type Ref, ref, watch } from 'vue'
 import { CheckState } from '@/pages/views/check-state'
 import moment from 'moment'
@@ -74,7 +74,7 @@ export function useRykvQueryEditorSideBar(options: {
 
     // ── Watchers ──
     watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
-        if (deepEquals(new_value, old_value)) {
+        if (deep_equals(new_value, old_value)) {
             return
         }
         query.value = new_value

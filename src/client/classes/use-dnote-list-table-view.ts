@@ -54,20 +54,20 @@ export function useDnoteListTableView(options: {
         model_value.value.splice(idx, 1, q)
     }
 
-    function handle_move_dnote_list_query(srcId: string, targetId: string, dropType: "left" | "right"): void {
+    function handle_move_dnote_list_query(src_id: string, target_id: string, drop_type: "left" | "right"): void {
         if (!props.editable) return
-        const srcIndex = model_value.value.findIndex((x) => x.id === srcId)
-        if (srcIndex < 0) return
-        const [moved] = model_value.value.splice(srcIndex, 1)
+        const src_index = model_value.value.findIndex((x) => x.id === src_id)
+        if (src_index < 0) return
+        const [moved] = model_value.value.splice(src_index, 1)
 
-        const targetIndex = model_value.value.findIndex((x) => x.id === targetId)
-        if (targetIndex < 0) { model_value.value.push(moved); return }
+        const target_index = model_value.value.findIndex((x) => x.id === target_id)
+        if (target_index < 0) { model_value.value.push(moved); return }
 
-        let insertIndex = dropType === "left" ? targetIndex : targetIndex + 1
-        if (srcIndex < insertIndex) insertIndex -= 1
-        if (insertIndex < 0) insertIndex = 0
-        if (insertIndex > model_value.value.length) insertIndex = model_value.value.length
-        model_value.value.splice(insertIndex, 0, moved)
+        let insert_index = drop_type === "left" ? target_index : target_index + 1
+        if (src_index < insert_index) insert_index -= 1
+        if (insert_index < 0) insert_index = 0
+        if (insert_index > model_value.value.length) insert_index = model_value.value.length
+        model_value.value.splice(insert_index, 0, moved)
     }
 
     function onTableDragover(e: DragEvent): void {
@@ -78,19 +78,19 @@ export function useDnoteListTableView(options: {
 
     function onTableDrop(e: DragEvent): void {
         if (!props.editable) return
-        const srcId = e.dataTransfer?.getData("gkill_dnote_list_id")
-        if (!srcId) return
+        const src_id = e.dataTransfer?.getData("gkill_dnote_list_id")
+        if (!src_id) return
 
-        const srcIndex = model_value.value.findIndex((x) => x.id === srcId)
-        if (srcIndex < 0) return
-        const [moved] = model_value.value.splice(srcIndex, 1)
+        const src_index = model_value.value.findIndex((x) => x.id === src_id)
+        if (src_index < 0) return
+        const [moved] = model_value.value.splice(src_index, 1)
 
         const el = e.currentTarget as HTMLElement | null
         if (!el) return
         const rect = el.getBoundingClientRect()
         const x = e.clientX - rect.left
-        const insertIndex = x <= rect.width * 0.5 ? 0 : model_value.value.length
-        model_value.value.splice(insertIndex, 0, moved)
+        const insert_index = x <= rect.width * 0.5 ? 0 : model_value.value.length
+        model_value.value.splice(insert_index, 0, moved)
 
         e.preventDefault()
         e.stopPropagation()

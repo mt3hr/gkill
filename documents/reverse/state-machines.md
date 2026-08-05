@@ -413,13 +413,13 @@ stateDiagram-v2
     開 --> 開: 子ダイアログを開く<br>depth+1 で push
 
     開 --> 閉: ブラウザバック<br>(depth比較で back と判定)
-    開 --> 閉: closeDialogViaHistory()<br>(履歴を巻き戻してから閉じる)
-    開 --> 閉: closeTopDialog()<br>(最上位のみ)
+    開 --> 閉: close_dialog_via_history()<br>(履歴を巻き戻してから閉じる)
+    開 --> 閉: close_top_dialog()<br>(最上位のみ)
 
     開 --> 開: ブラウザフォワード<br>(閉じない)
 
-    閉 --> 閉: resetDialogHistory()<br>(ページリダイレクト時にスタックを初期化)
+    閉 --> 閉: reset_dialog_history()<br>(ページリダイレクト時にスタックを初期化)
 ```
 
 **重要:** プログラムから閉じるときに `show.value = false` を直接書くと履歴とずれる。
-必ず `closeDialogViaHistory()` を使うこと。約44のコンポーザブルがこの規約に従っている。
+必ず `close_dialog_via_history()` を使うこと。約44のコンポーザブルがこの規約に従っている。

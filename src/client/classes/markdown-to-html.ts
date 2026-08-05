@@ -89,7 +89,7 @@ function is_relative_markdown_file_link(href: string, base: URL): boolean {
 // MarkdownをHTMLに変換し、サニタイズしたうえで相対URLを解決して返す。
 // marked と dompurify は動的importする (初期バンドルに含めないため)。
 export async function markdown_to_safe_html(markdown: string, base_url: string): Promise<string> {
-    const [{ Marked }, { default: DOMPurify }] = await Promise.all([
+    const [{ Marked }, { default: dom_purify }] = await Promise.all([
         import('marked'),
         import('dompurify'),
     ])
@@ -97,7 +97,7 @@ export async function markdown_to_safe_html(markdown: string, base_url: string):
     // グローバルなmarkedシングルトンはuse()で状態が汚れるためインスタンスを使う
     const marked = new Marked({ gfm: true, breaks: false })
     const dirty_html = await marked.parse(markdown)
-    const clean_html = DOMPurify.sanitize(dirty_html)
+    const clean_html = dom_purify.sanitize(dirty_html)
 
     // サニタイズ済みHTMLをinertなtemplateに載せてURLを解決する。
     // detachedなdivだと innerHTML 代入時点で画像の読み込みが走り、

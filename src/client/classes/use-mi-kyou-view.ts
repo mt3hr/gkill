@@ -145,10 +145,10 @@ export function useMiKyouView(options: {
     }
 
     function get_canvas_font(element = document.body): string {
-        const fontWeight = get_css_style(element, 'font-weight') || 'normal'
-        const fontSize = get_css_style(element, 'font-size') || '16px'
-        const fontFamily = get_css_style(element, 'font-family') || 'Times New Roman'
-        return `${fontWeight} ${fontSize} ${fontFamily}`
+        const font_weight = get_css_style(element, 'font-weight') || 'normal'
+        const font_size = get_css_style(element, 'font-size') || '16px'
+        const font_family = get_css_style(element, 'font-family') || 'Times New Roman'
+        return `${font_weight} ${font_size} ${font_family}`
     }
 
     function onDragStart(e: DragEvent) {

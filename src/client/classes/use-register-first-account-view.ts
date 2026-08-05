@@ -12,7 +12,7 @@ import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-config
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useTheme } from 'vuetify'
-import { resetDialogHistory } from '@/classes/use-dialog-history-stack'
+import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { RegisterFirstAccountViewProps } from '@/pages/views/register-first-account-view-props'
 import type { RegisterFirstAccountViewEmits } from '@/pages/views/register-first-account-view-emits'
 
@@ -50,29 +50,29 @@ export function useRegisterFirstAccountView(options: {
      
     const password_sha256 = computed(async () => {
         const encoder = new TextEncoder();
-        const msgUint8 = encoder.encode(password.value);
+        const msg_uint8 = encoder.encode(password.value);
          
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hash_buffer = await crypto.subtle.digest('SHA-256', msg_uint8);
 
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
+        const hash_array = Array.from(new Uint8Array(hash_buffer));
+        const hash_hex = hash_array
             .map((b) => b.toString(16).padStart(2, '0'))
             .join('');
-        return hashHex;
+        return hash_hex;
     })
 
      
     const admin_password_sha256 = computed(async () => {
         const encoder = new TextEncoder();
-        const msgUint8 = encoder.encode(admin_password.value);
+        const msg_uint8 = encoder.encode(admin_password.value);
          
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hash_buffer = await crypto.subtle.digest('SHA-256', msg_uint8);
 
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
+        const hash_array = Array.from(new Uint8Array(hash_buffer));
+        const hash_hex = hash_array
             .map((b) => b.toString(16).padStart(2, '0'))
             .join('');
-        return hashHex;
+        return hash_hex;
     })
 
     // ── Business logic ──
@@ -240,7 +240,7 @@ export function useRegisterFirstAccountView(options: {
              
             default:
                 await sleep(2500)
-                await resetDialogHistory()
+                await reset_dialog_history()
                 router.replace("/")
                 return true
         }

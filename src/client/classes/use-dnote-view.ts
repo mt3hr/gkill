@@ -9,7 +9,7 @@ import type { DnoteEmits } from '@/pages/views/dnote-emits'
 import type { DnoteViewProps } from '@/pages/views/dnote-view-props'
 import register_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_key_getter_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
 import moment from 'moment'
-import { saveAs } from '@/classes/save-as'
+import { save_as } from '@/classes/save-as'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { Tag } from '@/classes/datas/tag'
 import type { Text } from '@/classes/datas/text'
@@ -17,8 +17,8 @@ import type { Notification } from '@/classes/datas/notification'
 import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { toExportKyouDto } from '@/classes/dto/export_dto'
-import { pruneEmpty } from '@/classes/dto/export_prune'
+import { to_export_kyou_dto } from '@/classes/dto/export_dto'
+import { prune_empty } from '@/classes/dto/export_prune'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export interface DnoteDefinition {
@@ -83,8 +83,8 @@ export function useDnoteView(options: {
         get: () => {
             if (dnote_definitions.value.length === 0) return [[]] as Array<Array<DnoteItem>>
             const idx = current_definition_index.value
-            const safeIdx = (idx >= 0 && idx < dnote_definitions.value.length) ? idx : 0
-            return dnote_definitions.value[safeIdx].items
+            const safe_idx = (idx >= 0 && idx < dnote_definitions.value.length) ? idx : 0
+            return dnote_definitions.value[safe_idx].items
         },
         set: (val: Array<Array<DnoteItem>>) => {
             if (dnote_definitions.value.length === 0) return
@@ -99,8 +99,8 @@ export function useDnoteView(options: {
         get: () => {
             if (dnote_definitions.value.length === 0) return [] as Array<DnoteListQuery>
             const idx = current_definition_index.value
-            const safeIdx = (idx >= 0 && idx < dnote_definitions.value.length) ? idx : 0
-            return dnote_definitions.value[safeIdx].lists
+            const safe_idx = (idx >= 0 && idx < dnote_definitions.value.length) ? idx : 0
+            return dnote_definitions.value[safe_idx].lists
         },
         set: (val: Array<DnoteListQuery>) => {
             if (dnote_definitions.value.length === 0) return
@@ -115,8 +115,8 @@ export function useDnoteView(options: {
         get: () => {
             if (dnote_definitions.value.length === 0) return [] as Array<DnoteTrendGraphQuery>
             const idx = current_definition_index.value
-            const safeIdx = (idx >= 0 && idx < dnote_definitions.value.length) ? idx : 0
-            return dnote_definitions.value[safeIdx].trends
+            const safe_idx = (idx >= 0 && idx < dnote_definitions.value.length) ? idx : 0
+            return dnote_definitions.value[safe_idx].trends
         },
         set: (val: Array<DnoteTrendGraphQuery>) => {
             if (dnote_definitions.value.length === 0) return
@@ -136,8 +136,8 @@ export function useDnoteView(options: {
         load_from_application_config()
     })
 
-    watch(current_definition_index, async (newIdx, oldIdx) => {
-        if (newIdx === oldIdx) return
+    watch(current_definition_index, async (new_idx, old_idx) => {
+        if (new_idx === old_idx) return
         if (!props.editable && loaded_kyous.value && loaded_kyous.value.length > 0) {
             await re_aggregate_current_definition()
         }
@@ -176,38 +176,38 @@ export function useDnoteView(options: {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const items: Array<Array<DnoteItem>> = ((def_json && def_json.dnote_item_table_view_data ? def_json.dnote_item_table_view_data : []) as Array<Array<any>> || []).map((col: Array<any>) =>
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            col.map((itemJson: any) => {
+            col.map((item_json: any) => {
                 const item = new DnoteItem()
-                item.id = itemJson.id
-                item.prefix = itemJson.prefix
-                item.suffix = itemJson.suffix
-                item.title = itemJson.title
-                item.aggregate_target = build_dnote_aggregate_target_from_json(itemJson.aggregate_target)
-                item.predicate = build_dnote_predicate_from_json(itemJson.predicate)
+                item.id = item_json.id
+                item.prefix = item_json.prefix
+                item.suffix = item_json.suffix
+                item.title = item_json.title
+                item.aggregate_target = build_dnote_aggregate_target_from_json(item_json.aggregate_target)
+                item.predicate = build_dnote_predicate_from_json(item_json.predicate)
                 return item
             })
         )
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const lists: Array<DnoteListQuery> = ((def_json && def_json.dnote_list_item_table_view_data ? def_json.dnote_list_item_table_view_data : []) as Array<any> || []).map((queryJson: any) => {
+        const lists: Array<DnoteListQuery> = ((def_json && def_json.dnote_list_item_table_view_data ? def_json.dnote_list_item_table_view_data : []) as Array<any> || []).map((query_json: any) => {
             const query = new DnoteListQuery()
-            query.id = queryJson.id
-            query.prefix = queryJson.prefix
-            query.suffix = queryJson.suffix
-            query.title = queryJson.title
-            query.aggregate_target = build_dnote_aggregate_target_from_json(queryJson.aggregate_target)
-            query.predicate = build_dnote_predicate_from_json(queryJson.predicate)
-            query.key_getter = build_dnote_key_getter_from_json(queryJson.key_getter)
+            query.id = query_json.id
+            query.prefix = query_json.prefix
+            query.suffix = query_json.suffix
+            query.title = query_json.title
+            query.aggregate_target = build_dnote_aggregate_target_from_json(query_json.aggregate_target)
+            query.predicate = build_dnote_predicate_from_json(query_json.predicate)
+            query.key_getter = build_dnote_key_getter_from_json(query_json.key_getter)
             return query
         })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const trends: Array<DnoteTrendGraphQuery> = ((def_json && def_json.dnote_trend_graph_view_data ? def_json.dnote_trend_graph_view_data : []) as Array<any> || []).map((queryJson: any) => {
+        const trends: Array<DnoteTrendGraphQuery> = ((def_json && def_json.dnote_trend_graph_view_data ? def_json.dnote_trend_graph_view_data : []) as Array<any> || []).map((query_json: any) => {
             const query = new DnoteTrendGraphQuery()
-            query.id = queryJson.id
-            query.title = queryJson.title
-            query.aggregate_target = build_dnote_aggregate_target_from_json(queryJson.aggregate_target)
-            query.predicate = build_dnote_predicate_from_json(queryJson.predicate)
-            query.granularity = (queryJson.granularity === 'week' || queryJson.granularity === 'month') ? queryJson.granularity : 'day'
-            query.chart_type = queryJson.chart_type === 'bar' ? 'bar' : 'line'
+            query.id = query_json.id
+            query.title = query_json.title
+            query.aggregate_target = build_dnote_aggregate_target_from_json(query_json.aggregate_target)
+            query.predicate = build_dnote_predicate_from_json(query_json.predicate)
+            query.granularity = (query_json.granularity === 'week' || query_json.granularity === 'month') ? query_json.granularity : 'day'
+            query.chart_type = query_json.chart_type === 'bar' ? 'bar' : 'line'
             return query
         })
         if (items.length === 0) {
@@ -321,11 +321,11 @@ export function useDnoteView(options: {
         await trend_view_refs.get(current_definition_index.value)?.reset()
 
         const kyou_is_loaded = true
-        const waitPromises = new Array<Promise<unknown>>()
-        waitPromises.push(load_aggregated_value(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
-        waitPromises.push(load_aggregate_grouping_list(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
-        waitPromises.push(load_trend_graphs(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
-        await Promise.all(waitPromises)
+        const wait_promises = new Array<Promise<unknown>>()
+        wait_promises.push(load_aggregated_value(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
+        wait_promises.push(load_aggregate_grouping_list(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
+        wait_promises.push(load_trend_graphs(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
+        await Promise.all(wait_promises)
         is_loading.value = false
     }
 
@@ -366,11 +366,11 @@ export function useDnoteView(options: {
 
         const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous)
         const kyou_is_loaded = true
-        const waitPromises = new Array<Promise<unknown>>()
-        waitPromises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
-        waitPromises.push(load_aggregate_grouping_list(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
-        waitPromises.push(load_trend_graphs(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
-        await Promise.all(waitPromises)
+        const wait_promises = new Array<Promise<unknown>>()
+        wait_promises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
+        wait_promises.push(load_aggregate_grouping_list(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
+        wait_promises.push(load_trend_graphs(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
+        await Promise.all(wait_promises)
         is_loading.value = false
         loaded_kyous.value = cloned_kyou
     }
@@ -407,7 +407,7 @@ export function useDnoteView(options: {
         }
     }
 
-    function floatingActionButtonStyle() {
+    function floating_action_button_style() {
         return {
             'bottom': '60px',
             'right': '10px',
@@ -430,10 +430,10 @@ export function useDnoteView(options: {
         // 1件ずつ待つと件数×RTTかかる(1,000件 × RTT20ms で約20秒)ので
         // 一定数ずつ並列で読む。件数はサーバのgoroutineプールを
         // 埋め尽くさない程度に抑える。
-        const LOAD_CONCURRENCY = 8
+        const load_concurrency = 8
         const cloned_kyous = new Array<Kyou>()
-        for (let start = 0; start < kyous.length; start += LOAD_CONCURRENCY) {
-            const chunk = kyous.slice(start, start + LOAD_CONCURRENCY)
+        for (let start = 0; start < kyous.length; start += load_concurrency) {
+            const chunk = kyous.slice(start, start + load_concurrency)
             const prepared = await Promise.all(chunk.map(async source => {
                 const kyou: Kyou = source.clone()
                 kyou.abort_controller = ac
@@ -464,16 +464,16 @@ export function useDnoteView(options: {
         const filename = `gkill_export_data_${format_date_string(start_date)}_${format_date_string(end_date)}_exported_${format_date_time_string(now)}.json`
 
         if ("showSaveFilePicker" in window) {
-            await streamSaveJsonArray(kyous, filename)
+            await stream_save_json_array(kyous, filename)
             return
         }
 
-        const jsonStr = JSON.stringify(kyous)
-        const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" })
-        saveAs(blob, filename)
+        const json_str = JSON.stringify(kyous)
+        const blob = new Blob([json_str], { type: "application/json;charset=utf-8" })
+        save_as(blob, filename)
     }
 
-    async function streamSaveJsonArray(items: Kyou[], filename: string): Promise<void> {
+    async function stream_save_json_array(items: Kyou[], filename: string): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handle = await (window as any).showSaveFilePicker({
             suggestedName: filename,
@@ -490,8 +490,8 @@ export function useDnoteView(options: {
         try {
             await writable.write("[\n")
             for (let i = 0; i < items.length; i++) {
-                const dto = toExportKyouDto(items[i]);
-                const pruned = pruneEmpty(dto);
+                const dto = to_export_kyou_dto(items[i]);
+                const pruned = prune_empty(dto);
                 if (pruned === undefined) continue;
 
                 const seen = new WeakSet<object>()
@@ -538,7 +538,7 @@ export function useDnoteView(options: {
         load_trend_graphs(abort_controller.value, [], new FindKyouQuery(), true)
     }
 
-    function incrementFinishedAggregateTask(): void {
+    function increment_finished_aggregate_task(): void {
         finished_aggregate_task.value++
     }
 
@@ -563,7 +563,7 @@ export function useDnoteView(options: {
         'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
     }
 
-    const rykvDialogHandler = {
+    const rykvDialogHandlers = {
         'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
@@ -614,18 +614,18 @@ export function useDnoteView(options: {
         // Template event handlers
         add_definition,
         delete_current_definition,
-        floatingActionButtonStyle,
+        floating_action_button_style,
         apply,
         download_kyous_json,
         onRequestedAddDnoteListQuery,
         onRequestedAddDnoteItem,
         onRequestedAddDnoteTrendGraph,
-        incrementFinishedAggregateTask,
+        increment_finished_aggregate_task,
 
         // Event relay objects
         crudRelayHandlers,
         focusClickRelayHandlers,
-        rykvDialogHandler,
+        rykvDialogHandlers,
         errorsMessagesRelayHandlers,
     }
 }

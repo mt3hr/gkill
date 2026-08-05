@@ -1,13 +1,13 @@
-import { pruneEmpty } from "./export_prune"
+import { prune_empty } from "./export_prune"
 import type { Kyou } from "@/classes/datas/kyou"
 
-export function toExportKyouDto(kyou: Kyou) {
+export function to_export_kyou_dto(kyou: Kyou) {
     const meta = {
         // id: kyou.id,
         data_type: kyou.data_type,
-        related_time: toIso(kyou.related_time),
-        // create_time: toIso(kyou.create_time),
-        // update_time: toIso(kyou.update_time),
+        related_time: to_iso(kyou.related_time),
+        // create_time: to_iso(kyou.create_time),
+        // update_time: to_iso(kyou.update_time),
         // image_source: kyou.image_source,
     }
 
@@ -20,7 +20,7 @@ export function toExportKyouDto(kyou: Kyou) {
     const notifications =
         kyou.attached_notifications?.map((n: { content: string; notification_time: Date; is_notificated: boolean }) => ({
             content: n.content,
-            notification_time: toIso(n.notification_time),
+            notification_time: to_iso(n.notification_time),
             is_notificated: n.is_notificated,
         }))
 
@@ -34,8 +34,8 @@ export function toExportKyouDto(kyou: Kyou) {
         kyou.typed_timeis ? {
             kind: "timeis",
             title: kyou.typed_timeis.title,
-            start_time: toIso(kyou.typed_timeis.start_time),
-            end_time: toIso(kyou.typed_timeis.end_time),
+            start_time: to_iso(kyou.typed_timeis.start_time),
+            end_time: to_iso(kyou.typed_timeis.end_time),
         } :
             kyou.typed_kmemo ? {
                 kind: "kmemo",
@@ -62,9 +62,9 @@ export function toExportKyouDto(kyou: Kyou) {
                                 title: kyou.typed_mi.title,
                                 is_checked: kyou.typed_mi.is_checked,
                                 board_name: kyou.typed_mi.board_name,
-                                limit_time: toIso(kyou.typed_mi.limit_time),
-                                estimate_start_time: toIso(kyou.typed_mi.estimate_start_time),
-                                estimate_end_time: toIso(kyou.typed_mi.estimate_end_time),
+                                limit_time: to_iso(kyou.typed_mi.limit_time),
+                                estimate_start_time: to_iso(kyou.typed_mi.estimate_start_time),
+                                estimate_end_time: to_iso(kyou.typed_mi.estimate_end_time),
                             } :
                                 kyou.typed_lantana ? {
                                     kind: "lantana",
@@ -87,7 +87,7 @@ export function toExportKyouDto(kyou: Kyou) {
                                             // } :
                                             undefined
 
-    return pruneEmpty({
+    return prune_empty({
         meta,
         tags,
         texts,
@@ -97,7 +97,7 @@ export function toExportKyouDto(kyou: Kyou) {
     })
 }
 
-function toIso(v: Date | string | null | undefined): string | undefined {
+function to_iso(v: Date | string | null | undefined): string | undefined {
     if (!v) return undefined
     if (v instanceof Date) return v.toISOString()
     return String(v)
