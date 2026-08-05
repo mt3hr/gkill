@@ -4,7 +4,7 @@
             <tbody>
                 <tr>
                     <td v-for="(list, listIndex) in model_value" :key="listIndex" class="dnote_item_table_td"
-                        @dragover="on_cell_dragover" @drop="(e) => on_cell_drop(e, listIndex)">
+                        @dragover="onCellDragover" @drop="(e) => onCellDrop(e, listIndex)">
                         <DnoteItemListView v-model="model_value[listIndex]" :dnd_list_index="listIndex" :editable="editable"
                             :application_config="application_config" :gkill_api="gkill_api"
                             @requested_move_dnote_item="(list_id: string, list_index: number, item_id: string, item_index: number, direction: 'up' | 'down') => handle_move_dnote_item(list_id, list_index, item_id, item_index, direction)"
@@ -55,8 +55,8 @@ const {
 
     // Methods used in template
     handle_move_dnote_item,
-    on_cell_dragover,
-    on_cell_drop,
+    onCellDragover,
+    onCellDrop,
 
     // Exposed methods
     load_aggregated_value,

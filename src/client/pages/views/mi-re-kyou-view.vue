@@ -7,7 +7,7 @@
     -->
     <v-card class="mirekyou_card" elevation="0" @contextmenu.prevent.stop="show_context_menu" :width="width"
         :height="is_compact ? undefined : height" :draggable="effective_draggable"
-        @dragstart="(e: DragEvent) => on_drag_start(e)">
+        @dragstart="(e: DragEvent) => onDragStart(e)">
         <div class="mirekyou_head">
             <!-- 既定のdensityだと56pxあり、板名と日時と合わせると行に収まらない -->
             <v-checkbox v-model="is_checked_mi" hide-details density="compact" @click="clicked_mi_check()" />
@@ -81,7 +81,7 @@ const {
     primary_time,
     show_context_menu,
     clicked_mi_check,
-    on_drag_start,
+    onDragStart,
     crudRelayHandlers,
 } = useMiReKyouView({ props, emits })
 

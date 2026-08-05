@@ -70,13 +70,13 @@ export function useDnoteListTableView(options: {
         model_value.value.splice(insertIndex, 0, moved)
     }
 
-    function on_table_dragover(e: DragEvent): void {
+    function onTableDragover(e: DragEvent): void {
         if (!props.editable) return
         e.preventDefault()
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
     }
 
-    function on_table_drop(e: DragEvent): void {
+    function onTableDrop(e: DragEvent): void {
         if (!props.editable) return
         const srcId = e.dataTransfer?.getData("gkill_dnote_list_id")
         if (!srcId) return
@@ -105,8 +105,8 @@ export function useDnoteListTableView(options: {
         handle_move_dnote_list_query,
         delete_dnote_list_query,
         update_dnote_list_query,
-        on_table_dragover,
-        on_table_drop,
+        onTableDragover,
+        onTableDrop,
 
         // Exposed methods
         load_aggregate_grouping_list,

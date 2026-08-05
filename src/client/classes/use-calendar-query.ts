@@ -78,7 +78,7 @@ export function useCalendarQuery(options: {
         emits('request_update_dates', moment(first).toDate(), moment(last).add(1, 'day').add(-1, 'millisecond').toDate())
     }
 
-    function on_wheel(e: WheelEvent) {
+    function onWheel(e: WheelEvent) {
         if (0 < e.deltaY) {
             document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(3) > span.v-btn__content > i").forEach((el) => { (el as HTMLElement).click() })
         } else {
@@ -118,7 +118,7 @@ export function useCalendarQuery(options: {
         calendar_month,
         dates,
         clicked_date,
-        on_wheel,
+        onWheel,
         clicked_clear_calendar_button,
         clicked_use_calendar_checkbox,
         get_use_calendar,
