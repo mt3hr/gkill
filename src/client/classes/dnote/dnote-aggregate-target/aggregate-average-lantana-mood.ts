@@ -1,13 +1,13 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAgregateTarget from "../dnote-agregate-target";
+import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import AverageInfo from "./average-info";
 
-export default class AgregateAverageLantanaMood implements DnoteAgregateTarget {
-    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
-        return new AgregateAverageLantanaMood()
+export default class AggregateAverageLantanaMood implements DnoteAggregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAggregateTarget {
+        return new AggregateAverageLantanaMood()
     }
-    async append_agregate_element_value(typed_average_info_lantana_mood: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
+    async append_aggregate_element_value(typed_average_info_lantana_mood: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
         const cloned_typed_average_info_lantana_mood = typed_average_info_lantana_mood === null ? new AverageInfo() : (typed_average_info_lantana_mood as AverageInfo).clone()
         cloned_typed_average_info_lantana_mood.total_value = cloned_typed_average_info_lantana_mood.total_value === null ? 0 : cloned_typed_average_info_lantana_mood.total_value as number
 
@@ -27,7 +27,7 @@ export default class AgregateAverageLantanaMood implements DnoteAgregateTarget {
     }
     to_json(): Record<string, unknown> {
         return {
-            type: "AgregateAverageLantanaMood",
+            type: "AggregateAverageLantanaMood",
         }
     }
 }

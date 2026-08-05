@@ -32,7 +32,7 @@ export function useDnoteItemView(options: {
     const list_height = computed(() => (window.screen.height * 7) / 10)
 
     // ── Computed ──
-    const aggregate_target_type = computed(() => (model_value.value?.agregate_target?.to_json().type as string)?.toString() ?? "")
+    const aggregate_target_type = computed(() => (model_value.value?.aggregate_target?.to_json().type as string)?.toString() ?? "")
     const is_lantana_type = computed(() => aggregate_target_type.value.includes("Lantana"))
 
     const is_plus_number_value = computed(() => {
@@ -58,8 +58,8 @@ export function useDnoteItemView(options: {
         kyou_is_loaded: boolean
     ): Promise<void> {
         related_kyous.value.splice(0)
-        const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.agregate_target)
-        const aggregate_result = await dnote_aggregator.agregate(abort_controller, kyous, query, kyou_is_loaded)
+        const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.aggregate_target)
+        const aggregate_result = await dnote_aggregator.aggregate(abort_controller, kyous, query, kyou_is_loaded)
         value.value = aggregate_result.result_string.replace("<br>", "")
         related_kyous.value.splice(0, Infinity, ...aggregate_result.match_kyous)
         emits("finish_a_aggregate_task")

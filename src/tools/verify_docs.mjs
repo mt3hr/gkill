@@ -140,7 +140,7 @@ function computeDirMetrics() {
     classesDatasRoot: countIn('src/client/classes/datas', '.ts'),
     kftlTsRoot: countIn('src/client/classes/kftl', '.ts'),
     dnoteRoot: countIn(DN, '.ts'),
-    dnoteAggregateTarget: countIn(`${DN}/dnote-agregate-target`, '.ts'),
+    dnoteAggregateTarget: countIn(`${DN}/dnote-aggregate-target`, '.ts'),
     dnotePredicate: countIn(`${DN}/dnote-predicate`, '.ts'),
     dnoteTargetKyouPredicate: countIn(`${DN}/dnote-predicate/target-kyou-predicate`, '.ts'),
     dnoteKeyGetter: countIn(`${DN}/dnote-key-getter`, '.ts'),
@@ -335,7 +335,7 @@ function buildCountAssertions(m) {
   add('src/client/classes/api/README.md', `### \`req_res/\`（${m.classesApiReqRes}ファイル）`)
   add('src/client/classes/datas/README.md', `## ルートファイル（${m.classesDatasRoot}ファイル）`)
   add('src/client/classes/kftl/README.md', `## ルートファイル（${m.kftlTsRoot}ファイル）`)
-  add('src/client/classes/dnote/README.md', `\`dnote-agregate-target/\`（${m.dnoteAggregateTarget}ファイル）`)
+  add('src/client/classes/dnote/README.md', `\`dnote-aggregate-target/\`（${m.dnoteAggregateTarget}ファイル）`)
   add('src/client/classes/dnote/README.md', `\`dnote-predicate/\`（${m.dnotePredicate}ファイル）`)
   add('src/client/pages/README.md', `View コンポーネント一覧（${m.views} .vue）`)
   add('src/client/pages/README.md', `Dialog コンポーネント一覧（${m.dialogs} .vue）`)

@@ -1,14 +1,14 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAgregateTarget from "../dnote-agregate-target";
+import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import TimeOfDayAverageInfo, { milli_second_of_day } from "./time-of-day-average-info";
 import { format_time_of_day } from "@/classes/format-date-time";
 
-export default class AgregateAverageTimeIsStartTime implements DnoteAgregateTarget {
-    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
-        return new AgregateAverageTimeIsStartTime()
+export default class AggregateAverageTimeIsStartTime implements DnoteAggregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAggregateTarget {
+        return new AggregateAverageTimeIsStartTime()
     }
-    async append_agregate_element_value(average_value_timeis: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
+    async append_aggregate_element_value(average_value_timeis: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
         const cloned_typed_average_info_timeis = average_value_timeis === null ? new TimeOfDayAverageInfo() : (average_value_timeis as TimeOfDayAverageInfo).clone()
 
         if (kyou.typed_timeis) {
@@ -25,7 +25,7 @@ export default class AgregateAverageTimeIsStartTime implements DnoteAgregateTarg
     }
     to_json(): Record<string, unknown> {
         return {
-            type: "AgregateAverageTimeIsStartTime",
+            type: "AggregateAverageTimeIsStartTime",
         }
     }
 }

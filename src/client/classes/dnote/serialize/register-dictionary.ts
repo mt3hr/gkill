@@ -1,23 +1,23 @@
-import type DnoteAgregateTarget from "../dnote-agregate-target"
-import AgregateAverageGitCommitLogAdditionCodeCount from "../dnote-agregate-target/agregate-average-git-commit-log-code-addition-count"
-import AgregateAverageGitCommitLogCodeCount from "../dnote-agregate-target/agregate-average-git-commit-log-code-count"
-import AgregateAverageGitCommitLogDeletionCodeCount from "../dnote-agregate-target/agregate-average-git-commit-log-code-deletion-count"
-import AgregateAverageLantanaMood from "../dnote-agregate-target/agregate-average-lantana-mood"
-import AgregateAverageNlogAmount from "../dnote-agregate-target/agregate-average-nlog-amount"
-import AgregateAverageTimeIsEndTime from "../dnote-agregate-target/agregate-average-timeis-end-time"
-import AgregateAverageTimeIsStartTime from "../dnote-agregate-target/agregate-average-timeis-start-time"
-import AgregateAverageTimeisTime from "../dnote-agregate-target/agregate-average-timeis-time"
-import AgregateCountKyou from "../dnote-agregate-target/agregate-count-kyou"
-import AgregateSumGitCommitLogAdditionCodeCount from "../dnote-agregate-target/agregate-sum-git-commit-log-code-addition-count"
-import AgregateSumGitCommitLogCodeCount from "../dnote-agregate-target/agregate-sum-git-commit-log-code-count"
-import AgregateSumGitCommitLogDeletionCodeCount from "../dnote-agregate-target/agregate-sum-git-commit-log-code-deletion-count"
-import AgregateSumLantanaMood from "../dnote-agregate-target/agregate-sum-lantana-mood"
-import AgregateSumNlogAmount from "../dnote-agregate-target/agregate-sum-nlog-amount"
-import AgregateSumTimeIsTime from "../dnote-agregate-target/agregate-sum-timeis-time"
-import AgregateSumKCNumValue from "../dnote-agregate-target/agregate-sum-kc-num-value"
-import AgregateAverageKCNumValue from "../dnote-agregate-target/agregate-average-kc-num-value"
-import AgregateMaxKCNumValue from "../dnote-agregate-target/agregate-max-kc-num-value"
-import AgregateMinKCNumValue from "../dnote-agregate-target/agregate-min-kc-num-value"
+import type DnoteAggregateTarget from "../dnote-aggregate-target"
+import AggregateAverageGitCommitLogAdditionCodeCount from "../dnote-aggregate-target/aggregate-average-git-commit-log-code-addition-count"
+import AggregateAverageGitCommitLogCodeCount from "../dnote-aggregate-target/aggregate-average-git-commit-log-code-count"
+import AggregateAverageGitCommitLogDeletionCodeCount from "../dnote-aggregate-target/aggregate-average-git-commit-log-code-deletion-count"
+import AggregateAverageLantanaMood from "../dnote-aggregate-target/aggregate-average-lantana-mood"
+import AggregateAverageNlogAmount from "../dnote-aggregate-target/aggregate-average-nlog-amount"
+import AggregateAverageTimeIsEndTime from "../dnote-aggregate-target/aggregate-average-timeis-end-time"
+import AggregateAverageTimeIsStartTime from "../dnote-aggregate-target/aggregate-average-timeis-start-time"
+import AggregateAverageTimeIsTime from "../dnote-aggregate-target/aggregate-average-timeis-time"
+import AggregateCountKyou from "../dnote-aggregate-target/aggregate-count-kyou"
+import AggregateSumGitCommitLogAdditionCodeCount from "../dnote-aggregate-target/aggregate-sum-git-commit-log-code-addition-count"
+import AggregateSumGitCommitLogCodeCount from "../dnote-aggregate-target/aggregate-sum-git-commit-log-code-count"
+import AggregateSumGitCommitLogDeletionCodeCount from "../dnote-aggregate-target/aggregate-sum-git-commit-log-code-deletion-count"
+import AggregateSumLantanaMood from "../dnote-aggregate-target/aggregate-sum-lantana-mood"
+import AggregateSumNlogAmount from "../dnote-aggregate-target/aggregate-sum-nlog-amount"
+import AggregateSumTimeIsTime from "../dnote-aggregate-target/aggregate-sum-timeis-time"
+import AggregateSumKCNumValue from "../dnote-aggregate-target/aggregate-sum-kc-num-value"
+import AggregateAverageKCNumValue from "../dnote-aggregate-target/aggregate-average-kc-num-value"
+import AggregateMaxKCNumValue from "../dnote-aggregate-target/aggregate-max-kc-num-value"
+import AggregateMinKCNumValue from "../dnote-aggregate-target/aggregate-min-kc-num-value"
 import type DnoteKeyGetter from "../dnote-key-getter"
 import DataTypeGetter from "../dnote-key-getter/data-type-getter"
 import LantanaMoodGetter from "../dnote-key-getter/lantana-mood-getter"
@@ -56,7 +56,7 @@ import RelatedTimeWeekPredicate from "../dnote-predicate/related-time-week-predi
 import TagEqualPredicate from "../dnote-predicate/tag-equal-predicate"
 import TimeIsTitleContainsPredicate from "../dnote-predicate/timeis-title-contains-predicate"
 import TimeIsTitleEqualPredicate from "../dnote-predicate/timeis-title-equal-predicate"
-import AgregateTargetDictionary from "./dnote-aggregate-target-dictionary"
+import AggregateTargetDictionary from "./dnote-aggregate-target-dictionary"
 import DnoteKeyGetterDictionary from "./dnote-key-getter-dictionary"
 import PredicateDictionary from "./dnote-predicate-dictionary"
 import RelatedTimeAfterPredicate from "../dnote-predicate/related-time-after-predicate"
@@ -121,35 +121,60 @@ export default function register_dictionary(): void {
     DnoteKeyGetterDictionary.set("RelatedDateGetter", RelatedDateGetter)
     DnoteKeyGetterDictionary.set("TagGetter", TagGetter)
     DnoteKeyGetterDictionary.set("TitleGetter", TitleGetter)
-    AgregateTargetDictionary.set("AgregateAverageGitCommitLogAdditionCodeCount", AgregateAverageGitCommitLogAdditionCodeCount)
-    AgregateTargetDictionary.set("AgregateAverageGitCommitLogCodeCount", AgregateAverageGitCommitLogCodeCount)
-    AgregateTargetDictionary.set("AgregateAverageGitCommitLogDeletionCodeCount", AgregateAverageGitCommitLogDeletionCodeCount)
-    AgregateTargetDictionary.set("AgregateAverageLantanaMood", AgregateAverageLantanaMood)
-    AgregateTargetDictionary.set("AgregateAverageNlogAmount", AgregateAverageNlogAmount)
-    AgregateTargetDictionary.set("AgregateAverageTimeIsEndTime", AgregateAverageTimeIsEndTime)
-    AgregateTargetDictionary.set("AgregateAverageTimeIsStartTime", AgregateAverageTimeIsStartTime)
-    AgregateTargetDictionary.set("AgregateAverageTimeIsTime", AgregateAverageTimeisTime)
-    AgregateTargetDictionary.set("AgregateCountKyou", AgregateCountKyou)
-    AgregateTargetDictionary.set("AgregateSumGitCommitLogAdditionCodeCount", AgregateSumGitCommitLogAdditionCodeCount)
-    AgregateTargetDictionary.set("AgregateSumGitCommitLogCodeCount", AgregateSumGitCommitLogCodeCount)
-    AgregateTargetDictionary.set("AgregateSumGitCommitLogDeletionCodeCount", AgregateSumGitCommitLogDeletionCodeCount)
-    AgregateTargetDictionary.set("AgregateSumLantanaMood", AgregateSumLantanaMood)
-    AgregateTargetDictionary.set("AgregateSumNlogAmount", AgregateSumNlogAmount)
-    AgregateTargetDictionary.set("AgregateSumTimeIsTime", AgregateSumTimeIsTime)
-    AgregateTargetDictionary.set("AgregateAverageKCNumValue", AgregateAverageKCNumValue)
-    AgregateTargetDictionary.set("AgregateMaxKCNumValue", AgregateMaxKCNumValue)
-    AgregateTargetDictionary.set("AgregateMinKCNumValue", AgregateMinKCNumValue)
-    AgregateTargetDictionary.set("AgregateSumKCNumValue", AgregateSumKCNumValue)
+    AggregateTargetDictionary.set("AggregateAverageGitCommitLogAdditionCodeCount", AggregateAverageGitCommitLogAdditionCodeCount)
+    AggregateTargetDictionary.set("AggregateAverageGitCommitLogCodeCount", AggregateAverageGitCommitLogCodeCount)
+    AggregateTargetDictionary.set("AggregateAverageGitCommitLogDeletionCodeCount", AggregateAverageGitCommitLogDeletionCodeCount)
+    AggregateTargetDictionary.set("AggregateAverageLantanaMood", AggregateAverageLantanaMood)
+    AggregateTargetDictionary.set("AggregateAverageNlogAmount", AggregateAverageNlogAmount)
+    AggregateTargetDictionary.set("AggregateAverageTimeIsEndTime", AggregateAverageTimeIsEndTime)
+    AggregateTargetDictionary.set("AggregateAverageTimeIsStartTime", AggregateAverageTimeIsStartTime)
+    AggregateTargetDictionary.set("AggregateAverageTimeIsTime", AggregateAverageTimeIsTime)
+    AggregateTargetDictionary.set("AggregateCountKyou", AggregateCountKyou)
+    AggregateTargetDictionary.set("AggregateSumGitCommitLogAdditionCodeCount", AggregateSumGitCommitLogAdditionCodeCount)
+    AggregateTargetDictionary.set("AggregateSumGitCommitLogCodeCount", AggregateSumGitCommitLogCodeCount)
+    AggregateTargetDictionary.set("AggregateSumGitCommitLogDeletionCodeCount", AggregateSumGitCommitLogDeletionCodeCount)
+    AggregateTargetDictionary.set("AggregateSumLantanaMood", AggregateSumLantanaMood)
+    AggregateTargetDictionary.set("AggregateSumNlogAmount", AggregateSumNlogAmount)
+    AggregateTargetDictionary.set("AggregateSumTimeIsTime", AggregateSumTimeIsTime)
+    AggregateTargetDictionary.set("AggregateAverageKCNumValue", AggregateAverageKCNumValue)
+    AggregateTargetDictionary.set("AggregateMaxKCNumValue", AggregateMaxKCNumValue)
+    AggregateTargetDictionary.set("AggregateMinKCNumValue", AggregateMinKCNumValue)
+    AggregateTargetDictionary.set("AggregateSumKCNumValue", AggregateSumKCNumValue)
+
+    // 旧綴り "Agregate*" の後方互換エイリアス。
+    // 保存済みの集計定義(user_config の APPLICATION_CONFIG / DNOTE_JSON_DATA)には
+    // 旧綴りの type 文字列が入っているため、読み込みは新旧どちらも受け付ける。
+    // 書き出し(to_json)は新綴りのみなので、ユーザが編集保存すれば自然に移行する。
+    // 旧データを読めなくなるので、このブロックは消さないこと。
+    AggregateTargetDictionary.set("AgregateAverageGitCommitLogAdditionCodeCount", AggregateAverageGitCommitLogAdditionCodeCount)
+    AggregateTargetDictionary.set("AgregateAverageGitCommitLogCodeCount", AggregateAverageGitCommitLogCodeCount)
+    AggregateTargetDictionary.set("AgregateAverageGitCommitLogDeletionCodeCount", AggregateAverageGitCommitLogDeletionCodeCount)
+    AggregateTargetDictionary.set("AgregateAverageLantanaMood", AggregateAverageLantanaMood)
+    AggregateTargetDictionary.set("AgregateAverageNlogAmount", AggregateAverageNlogAmount)
+    AggregateTargetDictionary.set("AgregateAverageTimeIsEndTime", AggregateAverageTimeIsEndTime)
+    AggregateTargetDictionary.set("AgregateAverageTimeIsStartTime", AggregateAverageTimeIsStartTime)
+    AggregateTargetDictionary.set("AgregateAverageTimeIsTime", AggregateAverageTimeIsTime)
+    AggregateTargetDictionary.set("AgregateCountKyou", AggregateCountKyou)
+    AggregateTargetDictionary.set("AgregateSumGitCommitLogAdditionCodeCount", AggregateSumGitCommitLogAdditionCodeCount)
+    AggregateTargetDictionary.set("AgregateSumGitCommitLogCodeCount", AggregateSumGitCommitLogCodeCount)
+    AggregateTargetDictionary.set("AgregateSumGitCommitLogDeletionCodeCount", AggregateSumGitCommitLogDeletionCodeCount)
+    AggregateTargetDictionary.set("AgregateSumLantanaMood", AggregateSumLantanaMood)
+    AggregateTargetDictionary.set("AgregateSumNlogAmount", AggregateSumNlogAmount)
+    AggregateTargetDictionary.set("AgregateSumTimeIsTime", AggregateSumTimeIsTime)
+    AggregateTargetDictionary.set("AgregateAverageKCNumValue", AggregateAverageKCNumValue)
+    AggregateTargetDictionary.set("AgregateMaxKCNumValue", AggregateMaxKCNumValue)
+    AggregateTargetDictionary.set("AgregateMinKCNumValue", AggregateMinKCNumValue)
+    AggregateTargetDictionary.set("AgregateSumKCNumValue", AggregateSumKCNumValue)
     DnoteKyouFilterDictionary.set("FilterTopKyous", FilterTopKyous)
     DnoteKyouFilterDictionary.set("FilterBottomKyous", FilterBottomKyous)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function build_dnote_aggregate_target_from_json(json: any): DnoteAgregateTarget {
+export function build_dnote_aggregate_target_from_json(json: any): DnoteAggregateTarget {
     register_dictionary()
-    const ctor = AgregateTargetDictionary.get(json.type)
+    const ctor = AggregateTargetDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown aggregate type: ${json.type}`)
-    return ctor.from_json(json) as DnoteAgregateTarget
+    return ctor.from_json(json) as DnoteAggregateTarget
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -719,7 +719,7 @@ classDiagram
 
 ## 6. Dnote 集計システム（TypeScript フロントエンド）
 
-> **スペルについて:** コードベースでは `Agregate`（正しくは `Aggregate`）が一貫して使用されています（`DnoteAgregateTarget`, `AgregateAverageKCNumValue` 等）。本資料ではコードの命名をそのまま記載しています。
+> **スペルについて:** コードベースでは `Aggregate`（正しくは `Aggregate`）が一貫して使用されています（`DnoteAggregateTarget`, `AggregateAverageKCNumValue` 等）。本資料ではコードの命名をそのまま記載しています。
 
 ```mermaid
 classDiagram
@@ -766,29 +766,29 @@ classDiagram
     DnotePredicate <|.. LantanaMoodEqualPredicate : implements
     DnotePredicate <|.. RelatedTimeAfterPredicate : implements
 
-    class DnoteAgregateTarget {
+    class DnoteAggregateTarget {
         <<interface>>
-        +append_agregate_element_value(value, kyou, query) Promise~any~
+        +append_aggregate_element_value(value, kyou, query) Promise~any~
         +result_to_string(value) Promise~string~
         +to_json() any
     }
 
-    class AgregateAverageKCNumValue {
-        +append_agregate_element_value(value, kyou, query) Promise~any~
+    class AggregateAverageKCNumValue {
+        +append_aggregate_element_value(value, kyou, query) Promise~any~
         +result_to_string(value) Promise~string~
     }
-    class AgregateSumNlogAmount {
-        +append_agregate_element_value(value, kyou, query) Promise~any~
+    class AggregateSumNlogAmount {
+        +append_aggregate_element_value(value, kyou, query) Promise~any~
         +result_to_string(value) Promise~string~
     }
-    class AgregateCountKyou {
-        +append_agregate_element_value(value, kyou, query) Promise~any~
+    class AggregateCountKyou {
+        +append_aggregate_element_value(value, kyou, query) Promise~any~
         +result_to_string(value) Promise~string~
     }
 
-    DnoteAgregateTarget <|.. AgregateAverageKCNumValue : implements
-    DnoteAgregateTarget <|.. AgregateSumNlogAmount : implements
-    DnoteAgregateTarget <|.. AgregateCountKyou : implements
+    DnoteAggregateTarget <|.. AggregateAverageKCNumValue : implements
+    DnoteAggregateTarget <|.. AggregateSumNlogAmount : implements
+    DnoteAggregateTarget <|.. AggregateCountKyou : implements
 
     class DnoteKeyGetter {
         <<interface>>
@@ -817,16 +817,16 @@ classDiagram
     class DnoteAggregator {
         +DnotePredicate predicate
         +DnoteKeyGetter key_getter
-        +DnoteAgregateTarget agregate_target
+        +DnoteAggregateTarget aggregate_target
         +aggregate(kyous) Map~string, any~
     }
 
     DnoteAggregator --> DnotePredicate : フィルタリング
     DnoteAggregator --> DnoteKeyGetter : グルーピング
-    DnoteAggregator --> DnoteAgregateTarget : 集計
+    DnoteAggregator --> DnoteAggregateTarget : 集計
 
     note for DnotePredicate "AND/OR/NOT の論理演算で\n組み合わせ可能な述語パターン\n38種類の具象クラス"
-    note for DnoteAgregateTarget "平均/合計/最大/最小/カウント\n19種類の集計対象"
+    note for DnoteAggregateTarget "平均/合計/最大/最小/カウント\n19種類の集計対象"
     note for DnoteKeyGetter "日付/曜日/週/月/タグ/データ型等\n9種類のグルーピングキー"
 ```
 
@@ -836,19 +836,19 @@ classDiagram
 DnoteAggregator
   1. DnotePredicate.is_match() でフィルタリング
   2. DnoteKeyGetter.get_keys() でグルーピング
-  3. DnoteAgregateTarget.append_agregate_element_value() で集計
-  4. DnoteAgregateTarget.result_to_string() で結果文字列化
+  3. DnoteAggregateTarget.append_aggregate_element_value() で集計
+  4. DnoteAggregateTarget.result_to_string() で結果文字列化
 ```
 
 ### Dnote トレンドグラフ集計（DnoteTrendAggregator）
 
-集計項目・集計リストに並ぶ第3の集計要素「トレンドグラフ」の集計クラス（`src/client/classes/dnote/dnote-trend-aggregator.ts`）。Kyou を集計粒度（日/週/月）ごとのバケットに振り分け、バケット単位で `DnoteAgregateTarget` を適用して時系列点列を生成する。`dnote-trend-graph-view.vue` がスパークライン（折れ線/棒）として描画する。サーバー API は使用しない。
+集計項目・集計リストに並ぶ第3の集計要素「トレンドグラフ」の集計クラス（`src/client/classes/dnote/dnote-trend-aggregator.ts`）。Kyou を集計粒度（日/週/月）ごとのバケットに振り分け、バケット単位で `DnoteAggregateTarget` を適用して時系列点列を生成する。`dnote-trend-graph-view.vue` がスパークライン（折れ線/棒）として描画する。サーバー API は使用しない。
 
 ```mermaid
 classDiagram
     class DnoteTrendAggregator {
         -DnotePredicate dnote_predicate
-        -DnoteAgregateTarget dnote_aggregate_target
+        -DnoteAggregateTarget dnote_aggregate_target
         -DnoteTrendGranularity granularity
         +aggregate_trend(abort_controller, kyous, find_kyou_query, kyou_is_loaded) Promise~Array~DnoteTrendPoint~~
     }
@@ -873,7 +873,7 @@ classDiagram
     }
 
     DnoteTrendAggregator --> DnotePredicate : フィルタリング
-    DnoteTrendAggregator --> DnoteAgregateTarget : バケット単位で集計
+    DnoteTrendAggregator --> DnoteAggregateTarget : バケット単位で集計
     DnoteTrendAggregator --> DnoteTrendPoint : 生成
     DnoteTrendAggregator ..> DnoteTrendGranularity : 粒度指定
 ```

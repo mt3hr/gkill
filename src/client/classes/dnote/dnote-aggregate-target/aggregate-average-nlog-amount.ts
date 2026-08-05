@@ -1,13 +1,13 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAgregateTarget from "../dnote-agregate-target";
+import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import AverageInfo from "./average-info";
 
-export default class AgregateAverageNlogAmount implements DnoteAgregateTarget {
-    static from_json(_json: Record<string, unknown>): DnoteAgregateTarget {
-        return new AgregateAverageNlogAmount()
+export default class AggregateAverageNlogAmount implements DnoteAggregateTarget {
+    static from_json(_json: Record<string, unknown>): DnoteAggregateTarget {
+        return new AggregateAverageNlogAmount()
     }
-    async append_agregate_element_value(typed_average_info_nlog_amount: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
+    async append_aggregate_element_value(typed_average_info_nlog_amount: unknown, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<unknown> {
         const cloned_typed_average_info_nlog_amount = typed_average_info_nlog_amount === null ? new AverageInfo() : (typed_average_info_nlog_amount as AverageInfo).clone()
         cloned_typed_average_info_nlog_amount.total_value = cloned_typed_average_info_nlog_amount.total_value === null ? 0 : cloned_typed_average_info_nlog_amount.total_value as number
 
@@ -27,7 +27,7 @@ export default class AgregateAverageNlogAmount implements DnoteAgregateTarget {
     }
     to_json(): Record<string, unknown> {
         return {
-            type: "AgregateAverageNlogAmount",
+            type: "AggregateAverageNlogAmount",
         }
     }
 }

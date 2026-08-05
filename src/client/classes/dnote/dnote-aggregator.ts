@@ -1,19 +1,19 @@
 import type { FindKyouQuery } from "../api/find_query/find-kyou-query";
 import type { Kyou } from "../datas/kyou";
-import type DnoteAgregateTarget from "./dnote-agregate-target";
+import type DnoteAggregateTarget from "./dnote-aggregate-target";
 import type DnotePredicate from "./dnote-predicate";
 import load_kyous from "./kyou-loader";
 
 export class DnoteAgregator {
     private dnote_predicate: DnotePredicate
-    private dnote_agregate_target: DnoteAgregateTarget
+    private dnote_aggregate_target: DnoteAggregateTarget
 
-    constructor(dnote_predicate: DnotePredicate, agregate_target: DnoteAgregateTarget) {
+    constructor(dnote_predicate: DnotePredicate, aggregate_target: DnoteAggregateTarget) {
         this.dnote_predicate = dnote_predicate
-        this.dnote_agregate_target = agregate_target
+        this.dnote_aggregate_target = aggregate_target
     }
 
-    public async agregate(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<{ result_string: string, match_kyous: Array<Kyou> }> {
+    public async aggregate(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<{ result_string: string, match_kyous: Array<Kyou> }> {
         // 渡されたデータの全項目を取得
         const get_latest_data = false
         const cloned_kyous = await load_kyous(abort_controller, kyous, get_latest_data, !kyou_is_loaded)
@@ -27,10 +27,10 @@ export class DnoteAgregator {
         }
 
         // 抽出されたKyouを集計
-        let agregated_value: unknown = null
+        let aggregated_value: unknown = null
         for (let i = 0; i < match_kyous.length; i++) {
             const kyou = match_kyous[i]
-            agregated_value = await this.dnote_agregate_target.append_agregate_element_value(agregated_value, kyou, find_kyou_query)
+            aggregated_value = await this.dnote_aggregate_target.append_aggregate_element_value(aggregated_value, kyou, find_kyou_query)
         }
 
         const cloned_match_kyous = new Array<Kyou>()
@@ -40,7 +40,7 @@ export class DnoteAgregator {
         }
 
         // 集計結果を返却
-        const result_string = await this.dnote_agregate_target.result_to_string(agregated_value)
+        const result_string = await this.dnote_aggregate_target.result_to_string(aggregated_value)
         return { result_string: result_string, match_kyous: cloned_match_kyous }
     }
 }
