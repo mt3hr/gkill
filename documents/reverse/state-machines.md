@@ -375,7 +375,7 @@ stateDiagram-v2
 
     未起動 --> 起動中: ensureStarted()<br>(exec.CommandContext(context.Background()))
 
-    起動中 --> 起動中: callCommand()<br>mu.Lock() で直列化
+    起動中 --> 起動中: callCommand()<br>callSlot（容量1）で直列化
 
     起動中 --> 未起動: stdin/stdout 失敗<br>(started=false)
     起動中 --> 未起動: 既定30秒のデッドライン超過<br>→ Process.Kill()（回収）
@@ -405,6 +405,13 @@ stateDiagram-v2
 デッドライン（既定30秒 / `IsAlive` の5秒）を超えたときだけ。
 フロントは全リクエストに `AbortController` を張っているので、ここを混同すると
 画面を操作するだけでプラグインが落ちる。
+
+**順番待ちの打ち切りでも状態が遷移しない:** 実行スロットが空くのを待ちきれなかった
+（既定10秒 `maxPluginQueueWait`）呼び出しは `ErrPluginBusy` を返すだけで、
+プロセスは「起動中」のまま。混んでいることとプラグインが壊れていることは別である。
+期限をスロット取得より前に張ると両者を区別できなくなり、
+一覧の行数ぶんの本文取得が同時に来ただけで回収と再起動が繰り返される
+（2026-08-06以前はこうなっていた）。
 
 ## 9. ダイアログ履歴スタック
 

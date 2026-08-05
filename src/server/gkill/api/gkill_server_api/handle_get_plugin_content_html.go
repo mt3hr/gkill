@@ -63,7 +63,11 @@ func (g *GkillServerAPI) HandleGetPluginContentHTML(w http.ResponseWriter, r *ht
 		return
 	}
 
-	html, err := pluginRepo.GetContentHTML(r.Context(), request.KyouID)
+	// 本文はプラグインプロセスへ問い合わせないと取れず、その問い合わせは
+	// プラグインごとに直列化される。一覧の行数ぶんの要求が同時に来ると
+	// 待ち行列ができるので、サーバ側でキャッシュして受け止める。
+	cacheKey := pluginContentHTMLCacheKey(userID, request.RepName, request.KyouID)
+	html, err := g.pluginContentHTMLCacheOf().GetOrFetch(r.Context(), cacheKey, fetchPluginContentHTML(pluginRepo, request.KyouID))
 	if err != nil {
 		err = fmt.Errorf("error at get plugin content html %s %s: %w", request.RepName, request.KyouID, err)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))

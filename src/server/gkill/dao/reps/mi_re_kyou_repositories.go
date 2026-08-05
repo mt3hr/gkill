@@ -109,6 +109,17 @@ loop:
 }
 
 func (m *MiReKyouRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	return m.getKyou(ctx, id, updateTime, true)
+}
+
+// GetKyouSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したままこの集約を呼ぶ場面
+// （キャッシュ実装が下層へ委譲するとき）で使ってください。
+func (m *MiReKyouRepositories) GetKyouSequential(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	return m.getKyou(ctx, id, updateTime, false)
+}
+
+func (m *MiReKyouRepositories) getKyou(ctx context.Context, id string, updateTime *time.Time, parallel bool) (*Kyou, error) {
 	var matchKyou *Kyou
 	existErr := false
 	var err error
@@ -118,17 +129,22 @@ func (m *MiReKyouRepositories) GetKyou(ctx context.Context, id string, updateTim
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		getInRep := func() {
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchKyouInRep
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -174,6 +190,16 @@ loop:
 }
 
 func (m *MiReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]Kyou, error) {
+	return m.getKyouHistories(ctx, id, true)
+}
+
+// GetKyouHistoriesSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したままこの集約を呼ぶ場面で使ってください。
+func (m *MiReKyouRepositories) GetKyouHistoriesSequential(ctx context.Context, id string) ([]Kyou, error) {
+	return m.getKyouHistories(ctx, id, false)
+}
+
+func (m *MiReKyouRepositories) getKyouHistories(ctx context.Context, id string, parallel bool) ([]Kyou, error) {
 	kyouHistories := map[string]Kyou{}
 	existErr := false
 	var err error
@@ -183,17 +209,22 @@ func (m *MiReKyouRepositories) GetKyouHistories(ctx context.Context, id string) 
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		getInRep := func() {
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchKyousInRep
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -250,7 +281,20 @@ loop:
 }
 
 func (m *MiReKyouRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// 並列処理
+	return m.getPath(ctx, id)
+}
+
+// GetPathSequential は各リポジトリを並列化せずに順に探します。
+//
+// 実装は現状GetPathと同じ（もともと逐次）ですが、
+// 「キャッシュ実装が下層集約へ委譲するときは必ず逐次版を呼ぶ」という規則を
+// 一様にしておくために用意しています。将来GetPathが並列化されても、
+// 呼び出し側を直し忘れて無言で入れ子が復活することがなくなります。
+func (m *MiReKyouRepositories) GetPathSequential(ctx context.Context, id string) (string, error) {
+	return m.getPath(ctx, id)
+}
+
+func (m *MiReKyouRepositories) getPath(ctx context.Context, id string) (string, error) {
 	matchPaths := []string{}
 
 	ids := []string{id}
@@ -276,19 +320,35 @@ func (m *MiReKyouRepositories) GetPath(ctx context.Context, id string) (string, 
 }
 
 func (m *MiReKyouRepositories) UpdateCache(ctx context.Context) error {
+	return m.updateCache(ctx, true)
+}
+
+// UpdateCacheSequential は各リポジトリを並列化せずに順に更新します。
+// threads.Goのスロットを保持したままこの集約を呼ぶ場面で使ってください。
+func (m *MiReKyouRepositories) UpdateCacheSequential(ctx context.Context) error {
+	return m.updateCache(ctx, false)
+}
+
+func (m *MiReKyouRepositories) updateCache(ctx context.Context, parallel bool) error {
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
 	errch := make(chan error, len(m.MiReKyouRepositories))
 	defer close(errch)
 
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
 		rep := rep
-		if e := threads.Go(ctx, wg, func() {
+		updateInRep := func() {
 			if e := rep.UpdateCache(ctx); e != nil {
 				errch <- e
 			}
-		}); e != nil {
+		}
+		if !parallel {
+			updateInRep()
+			continue
+		}
+		if e := threads.Go(ctx, wg, updateInRep); e != nil {
 			errch <- e
 		}
 	}
@@ -440,6 +500,16 @@ loop:
 }
 
 func (m *MiReKyouRepositories) GetMiReKyou(ctx context.Context, id string, updateTime *time.Time) (*MiReKyou, error) {
+	return m.getMiReKyou(ctx, id, updateTime, true)
+}
+
+// GetMiReKyouSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したままこの集約を呼ぶ場面で使ってください。
+func (m *MiReKyouRepositories) GetMiReKyouSequential(ctx context.Context, id string, updateTime *time.Time) (*MiReKyou, error) {
+	return m.getMiReKyou(ctx, id, updateTime, false)
+}
+
+func (m *MiReKyouRepositories) getMiReKyou(ctx context.Context, id string, updateTime *time.Time, parallel bool) (*MiReKyou, error) {
 	var matchMiReKyou *MiReKyou
 	existErr := false
 	var err error
@@ -449,17 +519,22 @@ func (m *MiReKyouRepositories) GetMiReKyou(ctx context.Context, id string, updat
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		getInRep := func() {
 			matchMiReKyouInRep, err := rep.GetMiReKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchMiReKyouInRep
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -505,10 +580,20 @@ loop:
 }
 
 func (m *MiReKyouRepositories) GetMiReKyouHistories(ctx context.Context, id string) ([]MiReKyou, error) {
-	return m.GetMiReKyouHistoriesByRepName(ctx, id, nil)
+	return m.getMiReKyouHistoriesByRepName(ctx, id, nil, true)
+}
+
+// GetMiReKyouHistoriesSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したままこの集約を呼ぶ場面で使ってください。
+func (m *MiReKyouRepositories) GetMiReKyouHistoriesSequential(ctx context.Context, id string) ([]MiReKyou, error) {
+	return m.getMiReKyouHistoriesByRepName(ctx, id, nil, false)
 }
 
 func (m *MiReKyouRepositories) GetMiReKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]MiReKyou, error) {
+	return m.getMiReKyouHistoriesByRepName(ctx, id, repName, true)
+}
+
+func (m *MiReKyouRepositories) getMiReKyouHistoriesByRepName(ctx context.Context, id string, repName *string, parallel bool) ([]MiReKyou, error) {
 	repImpls, err := m.UnWrapTyped()
 	if err != nil {
 		return nil, err
@@ -522,29 +607,35 @@ func (m *MiReKyouRepositories) GetMiReKyouHistoriesByRepName(ctx context.Context
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）。
+	// repNameの絞り込みはdispatchの前に済ませる。goroutineの中でやると
+	// 一致しないrepのぶんまでスレッドプールのスロットを取ってしまう。
 	for _, rep := range repImpls {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
-				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
-					return
-				}
-				if repNameInRep != *repName {
-					return
-				}
+		if repName != nil {
+			repNameInRep, err := rep.GetRepName(ctx)
+			if err != nil {
+				errch <- fmt.Errorf("error at get rep name: %w", err)
+				continue
 			}
+			if repNameInRep != *repName {
+				continue
+			}
+		}
 
+		getInRep := func() {
 			matchMiReKyousInRep, err := rep.GetMiReKyouHistories(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchMiReKyousInRep
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}
@@ -606,6 +697,16 @@ func (m *MiReKyouRepositories) AddMiReKyouInfo(ctx context.Context, mirekyou MiR
 }
 
 func (m *MiReKyouRepositories) GetMiReKyousAllLatest(ctx context.Context) ([]MiReKyou, error) {
+	return m.getMiReKyousAllLatest(ctx, true)
+}
+
+// GetMiReKyousAllLatestSequential は各リポジトリを並列化せずに順に取得します。
+// threads.Goのスロットを保持したままこの集約を呼ぶ場面で使ってください。
+func (m *MiReKyouRepositories) GetMiReKyousAllLatestSequential(ctx context.Context) ([]MiReKyou, error) {
+	return m.getMiReKyousAllLatest(ctx, false)
+}
+
+func (m *MiReKyouRepositories) getMiReKyousAllLatest(ctx context.Context, parallel bool) ([]MiReKyou, error) {
 	matchMiReKyous := map[string]MiReKyou{}
 	existErr := false
 	var err error
@@ -615,17 +716,22 @@ func (m *MiReKyouRepositories) GetMiReKyousAllLatest(ctx context.Context) ([]MiR
 	defer close(ch)
 	defer close(errch)
 
-	// 並列処理
+	// 並列処理（入れ子から呼ばれたときは逐次）
 	for _, rep := range m.MiReKyouRepositories {
 		rep := rep
-		err := threads.Go(ctx, wg, func() {
+		getInRep := func() {
 			matchMiReKyousInRep, err := rep.GetMiReKyousAllLatest(ctx)
 			if err != nil {
 				errch <- err
 				return
 			}
 			ch <- matchMiReKyousInRep
-		})
+		}
+		if !parallel {
+			getInRep()
+			continue
+		}
+		err := threads.Go(ctx, wg, getInRep)
 		if err != nil {
 			errch <- err
 		}
