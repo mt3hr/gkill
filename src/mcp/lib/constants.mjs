@@ -125,7 +125,8 @@ export const INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH = 200000;
 // 並列に叩くプラグイン (rep_name) の数。同一プラグイン内は必ず直列にする。
 export const INLINE_PLUGIN_CONTENT_REP_CONCURRENCY = 4;
 // 本文取得全体の打ち切り時間。これを過ぎたら新しいリクエストを「始めない」だけで、
-// 実行中のリクエストはabortしない (abortするとGo側でプラグインプロセスがkillされる)。
+// 実行中のリクエストはabortしない。現在のgkillはabortされてもプラグインプロセスを
+// 回収しないが、MCPサーバは古いgkillにも接続しうる (古い実装ではabortがプロセスkillになる)。
 export const INLINE_PLUGIN_CONTENT_DEADLINE_MS = 30000;
 // htmlToTextに渡す前にHTMLを切り詰める上限。stripTagsが1文字ずつ走査するため、
 // 巨大なHTMLをそのまま流すと変換だけで時間を食う。

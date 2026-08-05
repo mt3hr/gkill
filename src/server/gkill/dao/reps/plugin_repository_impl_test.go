@@ -34,6 +34,12 @@ const (
 	behaviorNormal    = "normal"
 	behaviorCrashOnce = "crash_once"
 	behaviorHang      = "hang"
+	// behaviorGate はリクエストを受け取った事実を記録してから、
+	// テストが解放ファイルを作るまで応答を止める。
+	// 「一定時間sleepしてから応答する」だと、テスト側のキャンセルより先に
+	// 応答が届いてしまう可能性があり、壊れたコードでもテストが通る
+	// （偽グリーンになる）。ファイルなら順序を確実に作れる。
+	behaviorGate = "gate"
 )
 
 func TestMain(m *testing.M) {
@@ -92,6 +98,20 @@ func runFakePlugin() {
 			// select{} や <-chan だと Go のデッドロック検出でプロセスが落ちてしまい
 			// 「クラッシュ→自動再起動」の経路に入ってしまうので、Sleepで待つ。
 			time.Sleep(time.Hour)
+		}
+		// close はテストの後片付け（t.Cleanup の Close）で使うので止めない。
+		if behavior == behaviorGate && req.Command != "close" {
+			statePath := os.Getenv(envPluginStateFile)
+			if f, err := os.OpenFile(statePath+".received", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600); err == nil {
+				fmt.Fprintln(f, req.ID)
+				_ = f.Close()
+			}
+			for {
+				if _, err := os.Stat(statePath + ".release"); err == nil {
+					break
+				}
+				time.Sleep(5 * time.Millisecond)
+			}
 		}
 
 		resp := gkill_plugin.PluginResponse{ID: req.ID}
@@ -191,6 +211,35 @@ func newFakePluginRepository(t *testing.T, behavior string) fakePlugin {
 	rep := NewPluginRepository("testuser", pluginDir, manifest)
 	t.Cleanup(func() { _ = rep.Close(context.Background()) })
 	return fakePlugin{rep: rep, startLog: startLog, statePath: statePath}
+}
+
+// waitPluginReceived は behaviorGate の偽プラグインが want 件のリクエストを
+// 受け取るまで待つ。「リクエストは届いたがまだ応答していない」状態を確実に作るために使う。
+func waitPluginReceived(t *testing.T, statePath string, want int) {
+	t.Helper()
+	receivedLog := statePath + ".received"
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		b, err := os.ReadFile(receivedLog)
+		if err == nil && strings.Count(string(b), "\n") >= want {
+			return
+		}
+		if err != nil && !os.IsNotExist(err) {
+			t.Fatalf("read received log: %v", err)
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("プラグインが %d 件目のリクエストを受け取らなかった", want)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+}
+
+// releasePlugin は behaviorGate で止めている応答を解放する。
+func releasePlugin(t *testing.T, statePath string) {
+	t.Helper()
+	if err := os.WriteFile(statePath+".release", []byte("go"), 0o600); err != nil {
+		t.Fatalf("解放ファイルの作成に失敗した: %v", err)
+	}
 }
 
 // countPluginStarts は偽プラグインが何回起動したかを返す。
@@ -395,11 +444,14 @@ func TestPluginRepository_RestartsAfterCrash(t *testing.T) {
 	}
 }
 
-// TestPluginRepository_ContextCancelAbortsRequest は、応答しないプラグインに対して
-// contextのキャンセルでリクエストが打ち切られることを確認する。
+// TestPluginRepository_DeadlineAbortsRequest は、応答しないプラグインに対して
+// Deadlineでリクエストが打ち切られることを確認する。
 // ここが効かないと固まったプラグイン1つで画面全体の読み込みが終わらなくなる。
-// あわせて、タイムアウトはリトライ対象外（起動は1回きり）であることも見る。
-func TestPluginRepository_ContextCancelAbortsRequest(t *testing.T) {
+// あわせて、打ち切りはリトライ対象外（起動は1回きり）であることも見る。
+//
+// 「呼び出し元のキャンセル」ではなく「Deadline」であることが重要。
+// 前者ではプラグインプロセスに手を出さない (TestPluginRepository_ClientCancelDoesNotKillPlugin)。
+func TestPluginRepository_DeadlineAbortsRequest(t *testing.T) {
 	fp := newFakePluginRepository(t, behaviorHang)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
@@ -417,11 +469,127 @@ func TestPluginRepository_ContextCancelAbortsRequest(t *testing.T) {
 			t.Fatal("応答しないプラグインなのにエラーにならなかった")
 		}
 	case <-time.After(10 * time.Second):
-		t.Fatal("contextのタイムアウトでリクエストが打ち切られなかった")
+		t.Fatal("Deadlineでリクエストが打ち切られなかった")
 	}
 
 	if n := countPluginStarts(t, fp.startLog); n != 1 {
 		t.Errorf("起動回数 = %d, want 1", n)
+	}
+}
+
+// TestPluginRepository_ClientCancelDoesNotKillPlugin は、HTTPクライアントの切断
+// （＝リクエストcontextのキャンセル）でプラグインプロセスが道連れにされないことを確認する。
+//
+// フロントは全リクエストにAbortControllerを張っていて、ダッシュボードは再取得のたびに
+// 前のget_kyousをabortする（use-dashboard-page.ts）。その切断がプラグインまで伝わって
+// プロセスをKillしていると、画面の絞り込みを変えるだけでユーザのプラグインが落ちる。
+//
+// 起動回数だけを見てもKillは検出できない（Killしても即座に再起動はしないため）。
+// キャンセル後にもう一度呼び出し、同じプロセスで応答が返ることで生存を確認する。
+func TestPluginRepository_ClientCancelDoesNotKillPlugin(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorGate)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := fp.rep.GetKyou(ctx, "canceled-call", nil)
+		done <- err
+	}()
+
+	// リクエストがプラグインに届き、まだ応答していない状態を確実に作ってから切断する
+	waitPluginReceived(t, fp.statePath, 1)
+	cancel()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("キャンセルしたのにエラーにならなかった")
+		}
+	case <-time.After(30 * time.Second):
+		t.Fatal("キャンセルしても呼び出しが返ってこなかった")
+	}
+
+	// 止めていた応答を解放する。壊れたコードではこの時点で既にプロセスが殺されている。
+	releasePlugin(t, fp.statePath)
+
+	kyou, err := fp.rep.GetKyou(context.Background(), "after-cancel", nil)
+	if err != nil {
+		t.Fatalf("キャンセル後のGetKyouに失敗した: %v", err)
+	}
+	if kyou == nil || kyou.ID != "after-cancel" {
+		t.Fatalf("キャンセル後のレスポンスが不正: %+v", kyou)
+	}
+	if n := countPluginStarts(t, fp.startLog); n != 1 {
+		t.Errorf("起動回数 = %d, want 1（呼び出し元のキャンセルでプラグインプロセスが殺されている）", n)
+	}
+}
+
+// TestPluginRepository_StaleResponseIsDiscarded は、打ち切った呼び出しの応答が
+// 後続の呼び出しに混入しないことを確認する。
+//
+// 呼び出し元のキャンセルでプロセスを殺さなくなったぶん、打ち切った要求の応答が
+// 遅れて届くようになった。レスポンスIDの突き合わせで読み捨てられなければ、
+// 「別の記録の中身が返ってくる」という最悪の壊れ方をする。
+func TestPluginRepository_StaleResponseIsDiscarded(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorGate)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := fp.rep.GetKyou(ctx, "stale-response", nil)
+		done <- err
+	}()
+
+	waitPluginReceived(t, fp.statePath, 1)
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		t.Fatal("キャンセルしても呼び出しが返ってこなかった")
+	}
+
+	// ここで打ち切った要求の応答がプラグインから流れてくる
+	releasePlugin(t, fp.statePath)
+
+	kyou, err := fp.rep.GetKyou(context.Background(), "fresh-response", nil)
+	if err != nil {
+		t.Fatalf("後続のGetKyouに失敗した: %v", err)
+	}
+	if kyou == nil {
+		t.Fatal("後続のGetKyouがnilを返した")
+	}
+	if kyou.ID != "fresh-response" {
+		t.Errorf("KyouID = %q, want %q（打ち切った呼び出しの応答が混入している）", kyou.ID, "fresh-response")
+	}
+}
+
+// TestPluginRepository_DeadlineReapsPlugin は、応答しないプラグインがDeadlineで
+// 回収され、次の呼び出しで起動し直されることを確認する。
+// 回収しないと詰まったプラグインが復帰できず、以降の呼び出しが全部Deadline待ちになる。
+func TestPluginRepository_DeadlineReapsPlugin(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorGate)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	if _, err := fp.rep.GetKyou(ctx, "wedged", nil); err == nil {
+		t.Fatal("応答しないプラグインなのにエラーにならなかった")
+	}
+	if n := countPluginStarts(t, fp.startLog); n != 1 {
+		t.Fatalf("Deadline直後の起動回数 = %d, want 1", n)
+	}
+
+	// 回収済みなので、次の呼び出しは新しいプロセスで動く
+	releasePlugin(t, fp.statePath)
+	if _, err := fp.rep.GetKyou(context.Background(), "after-reap", nil); err != nil {
+		t.Fatalf("回収後のGetKyouに失敗した: %v", err)
+	}
+	if n := countPluginStarts(t, fp.startLog); n != 2 {
+		t.Errorf("起動回数 = %d, want 2（Deadlineで回収されていない）", n)
 	}
 }
 
