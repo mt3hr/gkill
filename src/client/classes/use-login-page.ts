@@ -2,7 +2,9 @@ import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import package_json from '../../../package.json'
+// デフォルトインポートにするとpackage.json全体(依存一覧とoverrides込み)が
+// バンドルに載ってしまうので、versionだけを名前付きで取る
+import { version as package_version } from '../../../package.json'
 import router from '@/router'
 import { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
@@ -17,7 +19,7 @@ export function useLoginPage() {
     const gkill_api = computed(() => GkillAPI.get_instance())
     const app_content_height: Ref<number> = ref(0)
     const app_content_width: Ref<number> = ref(0)
-    const gkill_version: Ref<string> = ref(package_json.version)
+    const gkill_version: Ref<string> = ref(package_version)
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 
