@@ -312,3 +312,72 @@ func TestMiReKyouToMi(t *testing.T) {
 		t.Errorf("LimitTime = %v, want %v", mi.LimitTime, limitTime)
 	}
 }
+
+func TestMiReKyouGetMiReKyousByTargetID(t *testing.T) {
+	ctx := context.Background()
+	rep1 := newTempMiReKyouRepo(t)
+	rep2 := newTempMiReKyouRepo(t)
+	mirekyouReps := MiReKyouRepositories{MiReKyouRepositories: []MiReKyouRepository{rep1, rep2}}
+
+	if err := rep1.AddMiReKyouInfo(ctx, makeMiReKyou("mrk-1", "tgt-A")); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+	if err := rep2.AddMiReKyouInfo(ctx, makeMiReKyou("mrk-2", "tgt-A")); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+	if err := rep2.AddMiReKyouInfo(ctx, makeMiReKyou("mrk-3", "tgt-B")); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	matchMiReKyous, err := mirekyouReps.GetMiReKyousByTargetID(ctx, "tgt-A")
+	if err != nil {
+		t.Fatalf("GetMiReKyousByTargetID failed: %v", err)
+	}
+	if len(matchMiReKyous) != 2 {
+		t.Fatalf("expected 2 mirekyous for tgt-A, got %d", len(matchMiReKyous))
+	}
+
+	noMatch, err := mirekyouReps.GetMiReKyousByTargetID(ctx, "tgt-unknown")
+	if err != nil {
+		t.Fatalf("GetMiReKyousByTargetID failed: %v", err)
+	}
+	if noMatch == nil {
+		t.Fatal("GetMiReKyousByTargetID returned nil, want empty slice")
+	}
+	if len(noMatch) != 0 {
+		t.Errorf("expected 0 mirekyous for unknown target, got %d", len(noMatch))
+	}
+}
+
+func TestMiReKyouGetMiReKyousByTargetIDExcludesDeleted(t *testing.T) {
+	ctx := context.Background()
+	rep1 := newTempMiReKyouRepo(t)
+	rep2 := newTempMiReKyouRepo(t)
+	mirekyouReps := MiReKyouRepositories{MiReKyouRepositories: []MiReKyouRepository{rep1, rep2}}
+
+	if err := rep1.AddMiReKyouInfo(ctx, makeMiReKyou("mrk-1", "tgt-A")); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+	if err := rep2.AddMiReKyouInfo(ctx, makeMiReKyou("mrk-2", "tgt-A")); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	// mrk-2を論理削除する（追記型なので新しいUpdateTimeで積む）
+	deletedMiReKyou := makeMiReKyou("mrk-2", "tgt-A")
+	deletedMiReKyou.IsDeleted = true
+	deletedMiReKyou.UpdateTime = deletedMiReKyou.UpdateTime.Add(time.Hour)
+	if err := rep2.AddMiReKyouInfo(ctx, deletedMiReKyou); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	matchMiReKyous, err := mirekyouReps.GetMiReKyousByTargetID(ctx, "tgt-A")
+	if err != nil {
+		t.Fatalf("GetMiReKyousByTargetID failed: %v", err)
+	}
+	if len(matchMiReKyous) != 1 {
+		t.Fatalf("expected 1 mirekyou after deleting mrk-2, got %d", len(matchMiReKyous))
+	}
+	if matchMiReKyous[0].ID != "mrk-1" {
+		t.Errorf("ID = %q, want %q", matchMiReKyous[0].ID, "mrk-1")
+	}
+}

@@ -849,6 +849,8 @@
     "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "Fichier introuvable",
     "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog introuvable",
     "NOT_FOUND_REKYOU_ERROR_MESSAGE": "Repost introuvable",
+    "FAILED_CASCADE_DELETE_KYOU_MESSAGE": "Échec de la suppression des informations liées",
+    "CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE": "Les références de repost sont trop imbriquées ; la suppression s'est arrêtée en cours de route",
     "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "Cible de repost introuvable",
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "Tâche de repost introuvable",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "Cible de la tâche de repost introuvable",

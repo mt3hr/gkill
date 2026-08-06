@@ -1,17 +1,7 @@
 import { type Ref, ref, watch } from 'vue'
 import type { Kyou } from '@/classes/datas/kyou'
-import { GkillError } from '@/classes/api/gkill-error'
-import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request'
-import { UpdateKCRequest } from '@/classes/api/req_res/update-kc-request'
-import { UpdateURLogRequest } from '@/classes/api/req_res/update-ur-log-request'
-import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request'
-import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
-import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
-import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-request'
-import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request'
-import { UpdateMiReKyouRequest } from '@/classes/api/req_res/update-mi-re-kyou-request'
-import { UpdateIDFKyouRequest } from '@/classes/api/req_res/update-idf-kyou-request'
-import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import type { GkillError } from '@/classes/api/gkill-error'
+import { build_deleted_kyou_stub, cascade_delete_kyou } from '@/classes/cascade-delete-kyou'
 import type { ConfirmDeleteKyouViewProps } from '@/pages/views/confirm-delete-kyou-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type { GkillMessage } from '@/classes/api/gkill-message'
@@ -55,212 +45,30 @@ export function useConfirmDeleteKyouView(options: {
 
     // ── Delete logic ──
     async function delete_kyou(): Promise<void> {
-        let errors = new Array<GkillError>()
-        await cloned_kyou.value.load_typed_datas()
-        if (cloned_kyou.value.data_type.startsWith("kmemo")) {
-            const e = await delete_kmemo()
-            errors = errors.concat(e)
+        // Kyou自身だけでなく、付随するTag/Text/Notificationと、
+        // それを参照しているReKyou/MiReKyouも連鎖して消す
+        const result = await cascade_delete_kyou({
+            kyou: cloned_kyou.value,
+            gkill_api: props.gkill_api,
+            application_config: props.application_config,
+        })
+
+        if (result.errors.length !== 0) {
+            emits('received_errors', result.errors)
         }
-        if (cloned_kyou.value.data_type.startsWith("kc")) {
-            const e = await delete_kc()
-            errors = errors.concat(e)
+
+        // 消したid分だけ画面から取り除く。全列再検索(requested_reload_list)には頼らない。
+        // 受け手はidしか見ないので、Kyou自身以外はidだけのstubで足りる
+        for (let i = 0; i < result.deleted_ids.length; i++) {
+            const deleted_id = result.deleted_ids[i]
+            if (deleted_id === cloned_kyou.value.id) {
+                emits('deleted_kyou', cloned_kyou.value)
+                continue
+            }
+            emits('deleted_kyou', build_deleted_kyou_stub(deleted_id))
         }
-        if (cloned_kyou.value.data_type.startsWith("urlog")) {
-            const e = await delete_urlog()
-            errors = errors.concat(e)
-        }
-        if (cloned_kyou.value.data_type.startsWith("nlog")) {
-            const e = await delete_nlog()
-            errors = errors.concat(e)
-        }
-        if (cloned_kyou.value.data_type.startsWith("timeis")) {
-            const e = await delete_timeis()
-            errors = errors.concat(e)
-        }
-        // mirekyou_* は "mi" で始まるためMiより先に判定し、Mi側からは除外する
-        if (cloned_kyou.value.data_type.startsWith("mirekyou")) {
-            const e = await delete_mi_re_kyou()
-            errors = errors.concat(e)
-        }
-        if (cloned_kyou.value.data_type.startsWith("mi") && !cloned_kyou.value.data_type.startsWith("mirekyou")) {
-            const e = await delete_mi()
-            errors = errors.concat(e)
-        }
-        if (cloned_kyou.value.data_type.startsWith("lantana")) {
-            const e = await delete_lantana()
-            errors = errors.concat(e)
-        }
-        if (cloned_kyou.value.data_type.startsWith("idf")) {
-            const e = await delete_idf_kyou()
-            errors = errors.concat(e)
-        }
-        if (cloned_kyou.value.data_type.startsWith("git")) {
-            const e = await delete_git_commit_log()
-            errors = errors.concat(e)
-        }
-        if (cloned_kyou.value.data_type.startsWith("rekyou")) {
-            const e = await delete_rekyou()
-            errors = errors.concat(e)
-        }
-        if (errors && errors.length != 0) {
-            emits('received_errors', errors)
-        }
-        emits('requested_reload_list')
+
         emits('requested_close_dialog')
-    }
-
-    async function delete_kmemo(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateKmemoRequest()
-        req.kmemo = cloned_kyou.value.typed_kmemo!.clone()
-        req.kmemo.is_deleted = true
-
-        req.kmemo.update_app = "gkill"
-        req.kmemo.update_device = props.application_config.device
-        req.kmemo.update_time = new Date(Date.now())
-        req.kmemo.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_kmemo(req)
-        return res.errors
-    }
-
-    async function delete_kc(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateKCRequest()
-        req.kc = cloned_kyou.value.typed_kc!.clone()
-        req.kc.is_deleted = true
-
-        req.kc.update_app = "gkill"
-        req.kc.update_device = props.application_config.device
-        req.kc.update_time = new Date(Date.now())
-        req.kc.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_kc(req)
-        return res.errors
-    }
-
-    async function delete_urlog(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateURLogRequest()
-        req.urlog = cloned_kyou.value.typed_urlog!.clone()
-        req.urlog.is_deleted = true
-
-        req.urlog.update_app = "gkill"
-        req.urlog.update_device = props.application_config.device
-        req.urlog.update_time = new Date(Date.now())
-        req.urlog.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_urlog(req)
-        return res.errors
-    }
-
-    async function delete_nlog(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateNlogRequest()
-        req.nlog = cloned_kyou.value.typed_nlog!.clone()
-        req.nlog.is_deleted = true
-
-        req.nlog.update_app = "gkill"
-        req.nlog.update_device = props.application_config.device
-        req.nlog.update_time = new Date(Date.now())
-        req.nlog.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_nlog(req)
-        return res.errors
-    }
-
-    async function delete_timeis(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateTimeisRequest()
-        req.timeis = cloned_kyou.value.typed_timeis!.clone()
-        req.timeis.is_deleted = true
-
-        req.timeis.update_app = "gkill"
-        req.timeis.update_device = props.application_config.device
-        req.timeis.update_time = new Date(Date.now())
-        req.timeis.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_timeis(req)
-        return res.errors
-    }
-
-    async function delete_mi(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateMiRequest()
-        req.mi = cloned_kyou.value.typed_mi!.clone()
-        req.mi.is_deleted = true
-
-        req.mi.update_app = "gkill"
-        req.mi.update_device = props.application_config.device
-        req.mi.update_time = new Date(Date.now())
-        req.mi.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_mi(req)
-        return res.errors
-    }
-
-    async function delete_lantana(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateLantanaRequest()
-        req.lantana = cloned_kyou.value.typed_lantana!.clone()
-        req.lantana.is_deleted = true
-
-        req.lantana.update_app = "gkill"
-        req.lantana.update_device = props.application_config.device
-        req.lantana.update_time = new Date(Date.now())
-        req.lantana.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_lantana(req)
-        return res.errors
-    }
-
-    async function delete_idf_kyou(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateIDFKyouRequest()
-        req.idf_kyou = cloned_kyou.value.typed_idf_kyou!.clone()
-        req.idf_kyou.is_deleted = true
-
-        req.idf_kyou.update_app = "gkill"
-        req.idf_kyou.update_device = props.application_config.device
-        req.idf_kyou.update_time = new Date(Date.now())
-        req.idf_kyou.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_idf_kyou(req)
-        return res.errors
-    }
-
-    async function delete_git_commit_log(): Promise<Array<GkillError>> {
-        throw new Error("not implements")
-    }
-
-    async function delete_mi_re_kyou(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateMiReKyouRequest()
-        req.mirekyou = cloned_kyou.value.typed_mirekyou!.clone()
-        req.mirekyou.is_deleted = true
-
-        req.mirekyou.update_app = "gkill"
-        req.mirekyou.update_device = props.application_config.device
-        req.mirekyou.update_time = new Date(Date.now())
-        req.mirekyou.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_mirekyou(req)
-        return res.errors
-    }
-
-    async function delete_rekyou(): Promise<Array<GkillError>> {
-        await delete_gkill_kyou_cache(cloned_kyou.value.id)
-        const req = new UpdateReKyouRequest()
-        req.rekyou = cloned_kyou.value.typed_rekyou!.clone()
-        req.rekyou.is_deleted = true
-
-        req.rekyou.update_app = "gkill"
-        req.rekyou.update_device = props.application_config.device
-        req.rekyou.update_time = new Date(Date.now())
-        req.rekyou.update_user = props.application_config.user_id
-
-        const res = await props.gkill_api.update_rekyou(req)
-        return res.errors
     }
 
     // ── Return ──

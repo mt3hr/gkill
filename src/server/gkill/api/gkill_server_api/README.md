@@ -32,10 +32,10 @@ gkill_server_api/
 ├── handle_zip_cache_file_serve_test.go # ZIPキャッシュ配信ハンドラテスト
 ├── get_device_cache_test.go         # デバイスキャッシュ取得テスト
 ├── utils_ssrf_test.go               # httpGetBase64Data の SSRF 対策テスト
-└── handle_*.go                      # 各エンドポイントのハンドラ（実装89ファイル + テスト5ファイル）
+└── handle_*.go                      # 各エンドポイントのハンドラ（実装91ファイル + テスト5ファイル）
 ```
 
-**合計: 113ファイル**（基盤13 + ハンドラ実装89 + テスト9 + README.md 1 + ABOUT_TEST.md 1）
+**合計: 113ファイル**（基盤13 + ハンドラ実装91 + テスト9 + README.md 1 + ABOUT_TEST.md 1）
 `.go` だけなら111ファイル。`handle_*.go` という名前のファイルは94あるが、うち5つはテスト。
 
 ## GkillServerAPI 構造体
