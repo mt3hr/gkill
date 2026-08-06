@@ -30,10 +30,8 @@ main/
 │   └── main.go                # デスクトップアプリエントリポイント
 ├── gkill_server/
 │   └── main.go                # HTTP サーバエントリポイント
-├── gkill_fitbit_kc_convert_batch/
-│   └── gkill_fitbit_kc_convert_batch.go  # Fitbit データ変換バッチ
-└── old_data_transfomer_for_old_rykv/
-    └── old_data_transfomer_for_old_rykv.go  # 旧 rykv データ移行
+└── gkill_fitbit_kc_convert_batch/
+    └── gkill_fitbit_kc_convert_batch.go  # Fitbit データ変換バッチ
 ```
 
 ## デプロイモード
@@ -105,11 +103,6 @@ cobra/viper 連携のグローバル変数群（70+ パラメータ）。GkillHo
 ### `gkill_fitbit_kc_convert_batch/`
 
 Fitbit のヘルスデータ（歩数等）を gkill の KC（数値記録）形式に変換するバッチ処理。
-
-### `old_data_transfomer_for_old_rykv/`
-
-旧バージョンの rykv（gkill の前身アプリ）のデータを gkill 形式に移行するツール。
-レガシー用途のため、新規開発での使用は想定されていない。
 
 ## 開発ガイドライン
 

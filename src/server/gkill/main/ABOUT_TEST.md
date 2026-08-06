@@ -31,7 +31,6 @@ Go `testing` パッケージ
 | ファイル | テスト内容 |
 |---------|-----------|
 | `gkill_fitbit_kc_convert_batch/gkill_fitbit_kc_convert_batch_test.go` | Fitbit データ → KC 変換バッチ処理 |
-| `old_data_transfomer_for_old_rykv/old_data_transfomer_test.go` | 旧 RYKV データの移行・変換 |
 
 ## テスト内容
 
@@ -39,7 +38,7 @@ Go `testing` パッケージ
 - **ログ**: レベル別（none/error/warn/info/debug/trace/trace_sql）のファイルルーティング
 - **ゴルーチンプール**: プール生成、並行タスク実行、`runtime.NumCPU()` 準拠のプールサイズ
 - **エントリポイント**: cobra コマンド登録、サブコマンド（version, idf, dvnf 等）の存在確認
-- **バッチ**: Fitbit JSON → KC レコード変換、旧形式データのマイグレーション
+- **バッチ**: Fitbit JSON → KC レコード変換
 
 ## 実行方法
 
