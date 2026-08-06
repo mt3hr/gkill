@@ -141,12 +141,17 @@ func parsePHC(stored string) (memory uint32, time uint32, parallelism uint8, sal
 		return 0, 0, 0, nil, nil, fmt.Errorf("error at parse password hash params: out of range m=%d,t=%d,p=%d", memory, time, parallelism)
 	}
 
-	salt, err = base64.RawStdEncoding.DecodeString(parts[4])
+	// Strict() で復号する。base64は末尾文字に余剰ビット(データを表さない下位ビット)を
+	// 持ちうるが、非Strictだとそこが書き換えられていても黙って捨ててしまい、
+	// 改竄された保存値が元と同じバイト列に復号されてしまう。
+	// HashPassword の EncodeToString は常に余剰ビット0の正規形を出すので、
+	// 正規に作られた保存値がこれで弾かれることはない。
+	salt, err = base64.RawStdEncoding.Strict().DecodeString(parts[4])
 	if err != nil {
 		return 0, 0, 0, nil, nil, fmt.Errorf("error at decode password hash salt: %w", err)
 	}
 
-	hash, err = base64.RawStdEncoding.DecodeString(parts[5])
+	hash, err = base64.RawStdEncoding.Strict().DecodeString(parts[5])
 	if err != nil {
 		return 0, 0, 0, nil, nil, fmt.Errorf("error at decode password hash: %w", err)
 	}
