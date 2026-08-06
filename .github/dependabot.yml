@@ -22,14 +22,24 @@ updates:
           - minor
           - patch
 
-  # Goは本体のみ。src/plugins配下の4モジュールは依存が
-  # go-zglob + 本体(replaceでローカル参照)だけで、ここと重複するPRが4本立つうえ
-  # replace付きmoduleはDependabotが扱いあぐねるので対象にしない。
+  # Goは本体とプラグインを「1つのPRにまとめて」上げる。
+  #
+  # src/plugins配下の4モジュールは replace で ../../server を参照しているので、
+  # src/server の依存が動くとプラグイン側のgo.modに載っている indirect が古くなり、
+  # go mod tidy を打つまで `go: updates to go.mod needed` でビルドが落ちる。
+  # 本体だけを対象にすると、立つPRが必ず「Plugins (go test)」ジョブを落とす。
+  # directories(複数形) + groups で全モジュールを同じPRに入れて足並みを揃える。
   - package-ecosystem: gomod
-    directory: /src/server
+    directories:
+      - /src/server
+      - /src/plugins/*
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
+    groups:
+      gomod-all:
+        patterns:
+          - "*"
 
   # ワークフローで使うActions。現状すでに全部最新メジャーなのでmonthlyで十分。
   - package-ecosystem: github-actions
