@@ -86,7 +86,7 @@ type UsecaseContext struct {
 | `git_commit_log.go` | GitCommitLog の取得 | 1 |
 | `rep_names.go` | 全タグ名一覧・全リポジトリ名一覧の取得 | 2 |
 
-**合計: 49 関数**（コンストラクタ 1 + Add 系 12 + Update 系 13 + Get 系 22 + 非公開ヘルパ 1）
+**合計: 51 関数**（コンストラクタ 1 + Add 系 12 + Update 系 13 + Get 系 22 + 非公開ヘルパ 1）
 
 ## エクスポート関数一覧
 

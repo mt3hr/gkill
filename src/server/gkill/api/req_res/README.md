@@ -26,7 +26,7 @@
 - `Errors []message.GkillError` — エラー情報
 - `Messages []message.GkillMessage` — メッセージ情報
 
-## 全ファイル一覧（182ファイル: 型定義181 + テスト `req_res_test.go` 1）
+## 全ファイル一覧（186ファイル: 型定義185 + テスト `req_res_test.go` 1）
 
 ### 認証系（10ファイル）
 

@@ -37,7 +37,7 @@ src/client/
 │   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,330行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (168ファイル、サーバー側は182ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (168ファイル、サーバー側は186ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (41 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)

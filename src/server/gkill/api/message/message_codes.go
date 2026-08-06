@@ -86,4 +86,6 @@ const (
 	AddMiReKyouSuccessMessage               = "MSG000081"
 	UpdateMiReKyouSuccessMessage            = "MSG000082"
 	GetMiReKyouSuccessMessage               = "MSG000083"
+	GetReKyousByTargetIDSuccessMessage      = "MSG000086"
+	GetMiReKyousByTargetIDSuccessMessage    = "MSG000087"
 )

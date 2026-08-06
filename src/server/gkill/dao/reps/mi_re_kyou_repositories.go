@@ -786,6 +786,39 @@ loop:
 	return matchMiReKyousList, nil
 }
 
+// GetMiReKyousByTargetID は target_id のKyouをタスク化している未削除MiReKyouをUpdateTimeの新しい順に返します。
+//
+// IDごとの最新版だけが対象です。
+// 参照先Kyouが削除済みかどうかは見ません。mi_re_kyou_sql.go の miReKyouTargetFilter が持つ
+// 参照先削除フィルタは意図的に適用していません。
+// 逆引きの目的は「参照している側」の列挙であり、参照先の生死は呼び出し元の関心事だからです。
+// GetMiReKyousAllLatest を土台にしているのは、そのフィルタを持ち込まずに済むためでもあります。
+//
+// 内部で並列集約するため threads.Go のスロットを保持したまま呼ばないでください。
+func (m *MiReKyouRepositories) GetMiReKyousByTargetID(ctx context.Context, target_id string) ([]MiReKyou, error) {
+	allLatestMiReKyous, err := m.GetMiReKyousAllLatest(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get mirekyous by target id target id = %s: %w", target_id, err)
+		return nil, err
+	}
+
+	matchMiReKyous := []MiReKyou{}
+	for _, mirekyou := range allLatestMiReKyous {
+		if mirekyou.TargetID != target_id {
+			continue
+		}
+		if mirekyou.IsDeleted {
+			continue
+		}
+		matchMiReKyous = append(matchMiReKyous, mirekyou)
+	}
+
+	slices.SortFunc(matchMiReKyous, func(a, b MiReKyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
+	})
+	return matchMiReKyous, nil
+}
+
 func (m *MiReKyouRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
 	boardNames := map[string]any{}
 
