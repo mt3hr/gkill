@@ -3,6 +3,11 @@
 // that the rest of the codebase relies on.
 
 import { describe, test, expect } from 'vitest'
+// 実クラスを触るテストのために、本番同様 gkill-api を先に評価させる。
+// GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、
+// これを先に済ませないと class extends が undefined になる。
+import '@/classes/api/gkill-api'
+import { Kyou } from '@/classes/datas/kyou'
 import { makeKyou } from '../../helpers/factory'
 
 describe('Kyou (factory-based)', () => {
@@ -53,5 +58,57 @@ describe('Kyou (factory-based)', () => {
     const b = makeKyou()
     a.id = 'modified'
     expect(b.id).toBe('test-kyou-id')
+  })
+})
+
+describe('Kyou.load_typed_datas 未取得のプレースホルダ', () => {
+  // ReKyou/MiReKyouは参照先を取りに行っている間、空のKyouを入れ子のKyouViewに渡す。
+  // これを既知プレフィックスに当たらないKyouとしてプラグイン扱いすると、
+  // rep_nameが空のままContent HTMLを取りに行き
+  // 「プラグインが見つかりません」がサーバから返って表示されてしまう
+  test('idが空ならプラグインKyouとして扱わない', async () => {
+    const kyou = new Kyou()
+
+    await kyou.load_typed_datas()
+
+    expect(kyou.typed_plugin).toBeNull()
+  })
+
+  test('idが空なら読み込み済みにしない (中身が入ったら読み直させる)', async () => {
+    const kyou = new Kyou()
+
+    await kyou.load_typed_datas()
+
+    expect(kyou.is_typed_data_loaded).toBe(false)
+  })
+
+  test('idがあって未知のdata_typeなら従来どおりプラグイン扱いする', async () => {
+    // プラグインのdata_typeはプラグイン側の申告をそのまま使うので空にもなりうる。
+    // だからこそ判定はdata_typeではなくidで行う
+    const kyou = new Kyou()
+    kyou.id = 'plugin-kyou-id'
+    kyou.rep_name = 'my_plugin_rep'
+    kyou.data_type = ''
+
+    await kyou.load_typed_datas()
+
+    expect(kyou.typed_plugin).toEqual({ rep_name: 'my_plugin_rep' })
+    expect(kyou.is_typed_data_loaded).toBe(true)
+  })
+})
+
+describe('Kyou.clear_typed_datas', () => {
+  test('typed_pluginも消して読み込み済みフラグも戻す', async () => {
+    // フラグを戻さないと次のload_typed_datas()が冒頭で早期returnし、
+    // 種別データが二度と入らないKyouになる
+    const kyou = new Kyou()
+    kyou.id = 'plugin-kyou-id'
+    kyou.rep_name = 'my_plugin_rep'
+    await kyou.load_typed_datas()
+
+    await kyou.clear_typed_datas()
+
+    expect(kyou.typed_plugin).toBeNull()
+    expect(kyou.is_typed_data_loaded).toBe(false)
   })
 })
