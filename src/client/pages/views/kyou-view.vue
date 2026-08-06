@@ -197,4 +197,11 @@ const {
     font-size: small;
     color: silver;
 }
+
+/* 日時が出るまでの間も1行ぶんの高さを確保しておく。
+   後から生えると参照先(ReKyou/MiReKyou)の中身が押し下げられて跳ねる */
+.kyou_related_time,
+.kyou_update_time {
+    min-height: 1.5em;
+}
 </style>

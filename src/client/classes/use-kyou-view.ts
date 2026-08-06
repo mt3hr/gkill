@@ -52,8 +52,12 @@ export function useKyouView(options: {
     })
 
     // ── Computed ──
-    const related_time = computed(() => format_time(props.kyou.related_time))
-    const update_time = computed(() => format_time(props.kyou.update_time))
+    // 中身が入る前のKyou（ReKyou/MiReKyouの参照先を取りに行っている間など）は
+    // idが空のまま。日時だけは new Date(0) が入っているので、そのまま出すと
+    // 1970/01/01 が一瞬見えてしまう。取得できるまでは日時自体を出さない
+    const is_kyou_loaded = computed(() => props.kyou.id !== "")
+    const related_time = computed(() => is_kyou_loaded.value ? format_time(props.kyou.related_time) : "")
+    const update_time = computed(() => is_kyou_loaded.value ? format_time(props.kyou.update_time) : "")
     const rep_name = computed(() => props.kyou.rep_name)
 
     const kyou_class = computed(() => {
