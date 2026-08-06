@@ -40,7 +40,11 @@
             </template>
         </div>
         <div v-if="!is_compact" class="mirekyou_target">
-            <KyouView :application_config="application_config" :gkill_api="gkill_api"
+            <!-- 参照先が消えているときの終端表示。出さないと読み込み中表示のまま止まってしまう -->
+            <div v-if="is_target_not_found" class="mirekyou_not_found">
+                {{ i18n.global.t('NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE') }}
+            </div>
+            <KyouView v-else :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="false" :is_image_view="false"
                 :kyou="target_kyou" :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
@@ -76,6 +80,7 @@ const {
     target_kyou,
     is_checked_mi,
     target_summary,
+    is_target_not_found,
     effective_draggable,
     is_compact,
     primary_time,
@@ -134,5 +139,12 @@ defineExpose({ show_context_menu })
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
+}
+
+/* 参照先なしの表示はPluginKyou(.plugin-error)と同じ体裁にする */
+.mirekyou_not_found {
+    padding: 8px;
+    font-size: 0.85em;
+    color: gray;
 }
 </style>

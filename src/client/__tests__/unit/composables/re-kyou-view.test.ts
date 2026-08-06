@@ -124,3 +124,45 @@ describe('useReKyouView 参照先が見つからないときのエラー', () =>
         expect(emits).not.toHaveBeenCalledWith('received_errors', expect.anything())
     })
 })
+
+describe('useReKyouView 参照先なしの終端状態', () => {
+    // 終端状態が無いと、参照先が消えているReKyouでKyouViewが読み込み中表示のまま止まる
+    test('参照先が空なら is_target_not_found が立つ', async () => {
+        const props = createProps({ target_kyou: null })
+        const { is_target_not_found } = useReKyouView({ props, emits: noop_emits })
+
+        await flush()
+
+        expect(is_target_not_found.value).toBe(true)
+    })
+
+    test('APIがエラーを返したときも is_target_not_found が立つ', async () => {
+        const props = createProps({ errors: [{ error_message: 'ng' }] })
+        const { is_target_not_found } = useReKyouView({ props, emits: noop_emits })
+
+        await flush()
+
+        expect(is_target_not_found.value).toBe(true)
+    })
+
+    test('取得できたら is_target_not_found は立たない', async () => {
+        const props = createProps()
+        const { is_target_not_found } = useReKyouView({ props, emits: noop_emits })
+
+        await flush()
+
+        expect(is_target_not_found.value).toBe(false)
+    })
+
+    test('target_idが空ならリクエストせず即 is_target_not_found が立つ', async () => {
+        // loaded_target_idの初期値が'' なので、使い回しガードに引っかかって
+        // リクエストが飛ばず、以前はプレースホルダのまま止まっていた
+        const props = createProps({ rekyou: { target_id: '' } })
+        const { is_target_not_found } = useReKyouView({ props, emits: noop_emits })
+
+        await flush()
+
+        expect(props.gkill_api.get_kyou).not.toHaveBeenCalled()
+        expect(is_target_not_found.value).toBe(true)
+    })
+})
