@@ -36,6 +36,9 @@ export function createMockGkillAPI() {
     get_mi: vi.fn().mockResolvedValue({ mi: null, messages: [], errors: [] }),
     get_tags_by_target_id: vi.fn().mockResolvedValue({ tags: [], messages: [], errors: [] }),
     get_texts_by_target_id: vi.fn().mockResolvedValue({ texts: [], messages: [], errors: [] }),
+    get_notifications_by_target_id: vi.fn().mockResolvedValue({ notifications: [], messages: [], errors: [] }),
+    get_rekyous_by_target_id: vi.fn().mockResolvedValue({ rekyous: [], messages: [], errors: [] }),
+    get_mirekyous_by_target_id: vi.fn().mockResolvedValue({ mirekyous: [], messages: [], errors: [] }),
     get_mi_board_list: vi.fn().mockResolvedValue({ mi_board_names: [], messages: [], errors: [] }),
     get_all_tag_names: vi.fn().mockResolvedValue({ tag_names: [], messages: [], errors: [] }),
     get_all_rep_names: vi.fn().mockResolvedValue({ rep_names: [], messages: [], errors: [] }),
@@ -62,6 +65,10 @@ export function createMockGkillAPI() {
     update_lantana: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
     update_nlog: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
     update_urlog: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    update_kc: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    update_idf_kyou: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    update_rekyou: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
+    update_mirekyou: vi.fn().mockResolvedValue({ messages: [], errors: [] }),
 
     // Delete operations
     delete_kmemo: vi.fn().mockResolvedValue({ messages: [], errors: [] }),

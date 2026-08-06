@@ -849,6 +849,8 @@
     "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "파일을 찾을 수 없습니다",
     "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog를 찾을 수 없습니다",
     "NOT_FOUND_REKYOU_ERROR_MESSAGE": "리포스트를 찾을 수 없습니다",
+    "FAILED_CASCADE_DELETE_KYOU_MESSAGE": "관련 정보 삭제에 실패했습니다",
+    "CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE": "리포스트 참조가 너무 깊어 도중까지만 삭제했습니다",
     "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "리포스트 대상을 찾을 수 없습니다",
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "리포스트 작업을 찾을 수 없습니다",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "리포스트 작업 대상을 찾을 수 없습니다",

@@ -849,6 +849,8 @@
     "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "Archivo no encontrado",
     "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog no encontrado",
     "NOT_FOUND_REKYOU_ERROR_MESSAGE": "Repost no encontrado",
+    "FAILED_CASCADE_DELETE_KYOU_MESSAGE": "No se pudo eliminar la información relacionada",
+    "CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE": "Las referencias de repost son demasiado profundas; la eliminación se detuvo a mitad",
     "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "Objetivo de repost no encontrado",
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "Tarea de repost no encontrada",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "Objetivo de la tarea de repost no encontrado",

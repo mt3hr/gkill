@@ -159,6 +159,10 @@ import type { GetNotificationHistoryByNotificationIDRequest } from "./req_res/ge
 import { GetNotificationHistoryByNotificationIDResponse } from "./req_res/get-notification-history-by-notification-id-response"
 import type { GetNotificationsByTargetIDRequest } from "./req_res/get-notifications-by-target-id-request"
 import { GetNotificationsByTargetIDResponse } from "./req_res/get-notifications-by-target-id-response"
+import type { GetReKyousByTargetIDRequest } from "./req_res/get-re-kyous-by-target-id-request"
+import { GetReKyousByTargetIDResponse } from "./req_res/get-re-kyous-by-target-id-response"
+import type { GetMiReKyousByTargetIDRequest } from "./req_res/get-mi-re-kyous-by-target-id-request"
+import { GetMiReKyousByTargetIDResponse } from "./req_res/get-mi-re-kyous-by-target-id-response"
 import type { UpdateNotificationRequest } from "./req_res/update-notification-request"
 import type { UpdateNotificationResponse } from "./req_res/update-notification-response"
 import type { OpenFileRequest } from "./req_res/open-file-request"
@@ -264,6 +268,8 @@ export class GkillAPI {
         get_tag_histories_by_tag_id_address: string
         get_texts_by_target_id_address: string
         get_notifications_by_target_id_address: string
+        get_rekyous_by_target_id_address: string
+        get_mirekyous_by_target_id_address: string
         get_text_histories_by_text_id_address: string
         get_notification_histories_by_notification_id_address: string
         get_application_config_address: string
@@ -346,7 +352,8 @@ export class GkillAPI {
         get_idf_kyou_method: string
         get_rekyou_method: string
         get_mirekyou_method: string
-        get_rekyous_method: string
+        get_rekyous_by_target_id_method: string
+        get_mirekyous_by_target_id_method: string
         get_git_commit_logs_method: string
         get_mi_board_list_method: string
         get_all_tag_names_method: string
@@ -450,6 +457,8 @@ export class GkillAPI {
                 this.get_tag_histories_by_tag_id_address = "/api/get_tag_histories_by_tag_id"
                 this.get_texts_by_target_id_address = "/api/get_texts_by_id"
                 this.get_notifications_by_target_id_address = "/api/get_gkill_notifications_by_id"
+                this.get_rekyous_by_target_id_address = "/api/get_rekyous_by_target_id"
+                this.get_mirekyous_by_target_id_address = "/api/get_mirekyous_by_target_id"
                 this.get_text_histories_by_text_id_address = "/api/get_text_histories_by_text_id"
                 this.get_notification_histories_by_notification_id_address = "/api/get_gkill_notification_histories_by_notification_id"
                 this.get_application_config_address = "/api/get_application_config"
@@ -530,7 +539,8 @@ export class GkillAPI {
                 this.get_idf_kyou_method = "POST"
                 this.get_rekyou_method = "POST"
                 this.get_mirekyou_method = "POST"
-                this.get_rekyous_method = "POST"
+                this.get_rekyous_by_target_id_method = "POST"
+                this.get_mirekyous_by_target_id_method = "POST"
                 this.get_git_commit_logs_method = "POST"
                 this.get_mi_board_list_method = "POST"
                 this.get_all_tag_names_method = "POST"
@@ -1585,6 +1595,60 @@ export class GkillAPI {
                         const notification = new Notification()
                         hydrate(notification, response.notifications[i])
                         response.notifications[i] = notification
+                }
+                this.check_auth(response)
+                return response
+        }
+
+        async get_rekyous_by_target_id(req: GetReKyousByTargetIDRequest): Promise<GetReKyousByTargetIDResponse> {
+                const res = await this.gkill_fetch(this.get_rekyous_by_target_id_address, {
+                        'method': this.get_rekyous_by_target_id_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: GetReKyousByTargetIDResponse = json
+                if (!response.rekyous) {
+                        response.rekyous = new Array<ReKyou>()
+                }
+
+                hydrate(response, json, { date_suffixes: [] })
+                // 取得したReKyouリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.rekyous.length; i++) {
+                        const rekyou = new ReKyou()
+                        hydrate(rekyou, response.rekyous[i])
+                        response.rekyous[i] = rekyou
+                }
+                this.check_auth(response)
+                return response
+        }
+
+        async get_mirekyous_by_target_id(req: GetMiReKyousByTargetIDRequest): Promise<GetMiReKyousByTargetIDResponse> {
+                const res = await this.gkill_fetch(this.get_mirekyous_by_target_id_address, {
+                        'method': this.get_mirekyous_by_target_id_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: GetMiReKyousByTargetIDResponse = json
+                if (!response.mirekyous) {
+                        response.mirekyous = new Array<MiReKyou>()
+                }
+
+                hydrate(response, json, { date_suffixes: [] })
+                // 取得したMiReKyouリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.mirekyous.length; i++) {
+                        const mirekyou = new MiReKyou()
+                        hydrate(mirekyou, response.mirekyous[i])
+                        response.mirekyous[i] = mirekyou
                 }
                 this.check_auth(response)
                 return response
@@ -3179,6 +3243,28 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_notifications_by_target_id(_req: GetNotificationsByTargetIDRequest): Promise<GetNotificationsByTargetIDResponse> {
                 return new GetNotificationsByTargetIDResponse()
+        }
+
+        async get_rekyous_by_target_id(req: GetReKyousByTargetIDRequest): Promise<GetReKyousByTargetIDResponse> {
+                const res = new GetReKyousByTargetIDResponse()
+                for (let i = 0; i < this.rekyous.length; i++) {
+                        const rekyou = this.rekyous[i]
+                        if (req.target_id == rekyou.target_id) {
+                                res.rekyous.push(rekyou)
+                        }
+                }
+                return res
+        }
+
+        async get_mirekyous_by_target_id(req: GetMiReKyousByTargetIDRequest): Promise<GetMiReKyousByTargetIDResponse> {
+                const res = new GetMiReKyousByTargetIDResponse()
+                for (let i = 0; i < this.mirekyous.length; i++) {
+                        const mirekyou = this.mirekyous[i]
+                        if (req.target_id == mirekyou.target_id) {
+                                res.mirekyous.push(mirekyou)
+                        }
+                }
+                return res
         }
 
         async get_notification_history_by_notification_id(_req: GetNotificationHistoryByNotificationIDRequest): Promise<GetNotificationHistoryByNotificationIDResponse> {

@@ -849,6 +849,8 @@
     "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "File not found",
     "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog not found",
     "NOT_FOUND_REKYOU_ERROR_MESSAGE": "Repost not found",
+    "FAILED_CASCADE_DELETE_KYOU_MESSAGE": "Failed to delete related records",
+    "CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE": "Repost references are nested too deeply; deletion stopped partway",
     "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "Repost target not found",
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "Repost task not found",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "Repost task target not found",

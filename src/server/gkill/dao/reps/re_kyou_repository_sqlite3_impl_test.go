@@ -64,3 +64,74 @@ func TestReKyouGetHistories(t *testing.T) {
 		t.Errorf("expected 2 history entries, got %d", len(histories))
 	}
 }
+
+func TestReKyouGetReKyousByTargetID(t *testing.T) {
+	ctx := context.Background()
+	rep1 := newTempReKyouRepo(t, nil)
+	rep2 := newTempReKyouRepo(t, nil)
+	rekyouReps := ReKyouRepositories{ReKyouRepositories: []ReKyouRepository{rep1, rep2}}
+
+	// tgt-Aを参照するもの2件と、tgt-Bを参照するもの1件
+	if err := rep1.AddReKyouInfo(ctx, makeReKyou("rk-1", "tgt-A")); err != nil {
+		t.Fatalf("AddReKyouInfo failed: %v", err)
+	}
+	if err := rep2.AddReKyouInfo(ctx, makeReKyou("rk-2", "tgt-A")); err != nil {
+		t.Fatalf("AddReKyouInfo failed: %v", err)
+	}
+	if err := rep2.AddReKyouInfo(ctx, makeReKyou("rk-3", "tgt-B")); err != nil {
+		t.Fatalf("AddReKyouInfo failed: %v", err)
+	}
+
+	matchReKyous, err := rekyouReps.GetReKyousByTargetID(ctx, "tgt-A")
+	if err != nil {
+		t.Fatalf("GetReKyousByTargetID failed: %v", err)
+	}
+	if len(matchReKyous) != 2 {
+		t.Fatalf("expected 2 rekyous for tgt-A, got %d", len(matchReKyous))
+	}
+
+	// 存在しないtarget_idでは空スライス（nilではない）
+	noMatch, err := rekyouReps.GetReKyousByTargetID(ctx, "tgt-unknown")
+	if err != nil {
+		t.Fatalf("GetReKyousByTargetID failed: %v", err)
+	}
+	if noMatch == nil {
+		t.Fatal("GetReKyousByTargetID returned nil, want empty slice")
+	}
+	if len(noMatch) != 0 {
+		t.Errorf("expected 0 rekyous for unknown target, got %d", len(noMatch))
+	}
+}
+
+func TestReKyouGetReKyousByTargetIDExcludesDeleted(t *testing.T) {
+	ctx := context.Background()
+	rep1 := newTempReKyouRepo(t, nil)
+	rep2 := newTempReKyouRepo(t, nil)
+	rekyouReps := ReKyouRepositories{ReKyouRepositories: []ReKyouRepository{rep1, rep2}}
+
+	if err := rep1.AddReKyouInfo(ctx, makeReKyou("rk-1", "tgt-A")); err != nil {
+		t.Fatalf("AddReKyouInfo failed: %v", err)
+	}
+	if err := rep2.AddReKyouInfo(ctx, makeReKyou("rk-2", "tgt-A")); err != nil {
+		t.Fatalf("AddReKyouInfo failed: %v", err)
+	}
+
+	// rk-2を論理削除する（追記型なので新しいUpdateTimeで積む）
+	deletedReKyou := makeReKyou("rk-2", "tgt-A")
+	deletedReKyou.IsDeleted = true
+	deletedReKyou.UpdateTime = deletedReKyou.UpdateTime.Add(time.Hour)
+	if err := rep2.AddReKyouInfo(ctx, deletedReKyou); err != nil {
+		t.Fatalf("AddReKyouInfo failed: %v", err)
+	}
+
+	matchReKyous, err := rekyouReps.GetReKyousByTargetID(ctx, "tgt-A")
+	if err != nil {
+		t.Fatalf("GetReKyousByTargetID failed: %v", err)
+	}
+	if len(matchReKyous) != 1 {
+		t.Fatalf("expected 1 rekyou after deleting rk-2, got %d", len(matchReKyous))
+	}
+	if matchReKyous[0].ID != "rk-1" {
+		t.Errorf("ID = %q, want %q", matchReKyous[0].ID, "rk-1")
+	}
+}
