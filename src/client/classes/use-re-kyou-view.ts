@@ -28,6 +28,9 @@ export function useReKyouView(options: {
 
     // ── State refs ──
     const target_kyou: Ref<Kyou> = ref(new Kyou())
+    // 参照先が見つからなかったか。終端状態として持たないと、
+    // 中身の入らないKyouViewが読み込み中表示のまま止まってしまう
+    const is_target_not_found: Ref<boolean> = ref(false)
     // 取得済みのtarget_id。仮想スクロールで行を使い回すときに同じ参照先を引き直さないために持つ
     let loaded_target_id = ''
 
@@ -37,24 +40,39 @@ export function useReKyouView(options: {
 
     // ── Business logic ──
     async function get_target_kyou() {
+        // target_idが空だと下の使い回しガード(初期値'')に引っかかってリクエストすら飛ばず、
+        // 中身の入らないKyouViewが読み込み中表示のまま止まる。見つからなかった扱いにして終端させる
+        if (props.rekyou.target_id === '') {
+            is_target_not_found.value = true
+            return
+        }
         // 仮想スクロールの行使い回しでpropsだけ差し替わることがある。参照先が同じなら引き直さない
         if (loaded_target_id === props.rekyou.target_id) {
             return
         }
         loaded_target_id = props.rekyou.target_id
+        is_target_not_found.value = false
 
+        const requested_target_id = props.rekyou.target_id
         const req = new GetKyouRequest()
-        req.id = props.rekyou.target_id
+        req.id = requested_target_id
         const res = await props.gkill_api.get_kyou(req)
+        // 応答が返るまでに行が別の参照先へ使い回されていたら捨てる。
+        // loaded_target_idは連続する同一idしか抑制しないので、A→B→Aで応答が入れ替わりうる
+        if (loaded_target_id !== requested_target_id) {
+            return
+        }
         if (res.errors && res.errors.length !== 0) {
+            is_target_not_found.value = true
             // 一覧では行数ぶんスナックバーが出てしまうので、行では黙って諦める
             if (!is_row.value) {
                 emits('received_errors', res.errors)
             }
             return
         }
-        // 参照先が消えているとundefinedが入ってしまうので、空なら何もしない
+        // 参照先が消えているとundefinedが入ってしまうので、空なら見つからなかった扱いにする
         if (!res.kyou_histories || res.kyou_histories.length < 1) {
+            is_target_not_found.value = true
             if (!is_row.value) {
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.not_found_rekyou_target
@@ -63,6 +81,7 @@ export function useReKyouView(options: {
             }
             return
         }
+        is_target_not_found.value = false
         target_kyou.value = res.kyou_histories[0]
     }
 
@@ -104,6 +123,7 @@ export function useReKyouView(options: {
 
         // State
         target_kyou,
+        is_target_not_found,
 
         // Computed
         is_row,
