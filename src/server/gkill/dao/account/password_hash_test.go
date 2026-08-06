@@ -83,16 +83,26 @@ func TestVerifyPasswordDetectsTamperedHash(t *testing.T) {
 		t.Fatalf("HashPassword failed: %v", err)
 	}
 
-	// ハッシュ部分の末尾1文字を書き換える
-	tampered := []rune(hash)
-	last := len(tampered) - 1
-	if tampered[last] == 'A' {
-		tampered[last] = 'B'
-	} else {
-		tampered[last] = 'A'
+	// ハッシュ部の先頭1文字を書き換える。
+	// 末尾文字を書き換えてはいけない: 32バイトのハッシュはbase64で43文字になり、
+	// 末尾文字の下位2ビットは余剰(データを表さない)。'A'→'B' のように
+	// 余剰ビットだけが変わる書き換えだと復号結果が変わらず、
+	// 「改竄したのに検知できない」ことがある(約1/16でテストが落ちていた)。
+	// 先頭文字は6ビット全部がデータなので、どの文字に変えても必ず値が変わる。
+	parts := strings.Split(hash, "$")
+	if len(parts) != 6 {
+		t.Fatalf("想定外のPHC形式: %q", hash)
 	}
+	hashPart := []rune(parts[5])
+	if hashPart[0] == 'A' {
+		hashPart[0] = 'B'
+	} else {
+		hashPart[0] = 'A'
+	}
+	parts[5] = string(hashPart)
+	tampered := strings.Join(parts, "$")
 
-	ok, err := VerifyPassword(string(tampered), testCredential)
+	ok, err := VerifyPassword(tampered, testCredential)
 	if err == nil && ok {
 		t.Error("改竄されたハッシュで照合が通ってしまった")
 	}
