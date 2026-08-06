@@ -42,8 +42,7 @@ server/
         ├── common/            # 共有初期化・ログ・オプション
         ├── gkill/             # デスクトップアプリ (go-astilectron)
         ├── gkill_server/      # HTTP サーバ
-        ├── gkill_fitbit_kc_convert_batch/
-        └── old_data_transfomer_for_old_rykv/
+        └── gkill_fitbit_kc_convert_batch/
 ```
 
 ## 設計思想
