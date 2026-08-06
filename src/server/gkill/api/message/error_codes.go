@@ -402,4 +402,10 @@ const (
 	InvalidGetMiReKyouResponseDataError                              = "ERR000399"
 	GetMiReKyouError                                                 = "ERR000400"
 	CommitTxGetMiReKyouError                                         = "ERR000401"
+	InvalidGetReKyousByTargetIDRequestDataError                      = "ERR000402"
+	InvalidGetReKyousByTargetIDResponseDataError                     = "ERR000403"
+	GetReKyousByTargetIDError                                        = "ERR000404"
+	InvalidGetMiReKyousByTargetIDRequestDataError                    = "ERR000405"
+	InvalidGetMiReKyousByTargetIDResponseDataError                   = "ERR000406"
+	GetMiReKyousByTargetIDError                                      = "ERR000407"
 )

@@ -849,6 +849,8 @@
     "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "ファイルが見つかりませんでした",
     "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLogが見つかりませんでした",
     "NOT_FOUND_REKYOU_ERROR_MESSAGE": "リポストが見つかりませんでした",
+    "FAILED_CASCADE_DELETE_KYOU_MESSAGE": "関連する情報の削除に失敗しました",
+    "CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE": "リポストの参照が深すぎるため、途中までを削除しました",
     "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "リポスト対象の情報が見つかりませんでした",
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "リポストタスクが見つかりませんでした",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "リポストタスク対象の情報が見つかりませんでした",

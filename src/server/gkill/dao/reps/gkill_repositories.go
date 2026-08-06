@@ -1686,6 +1686,18 @@ loop:
 	return notificationHistoriesList, nil
 }
 
+// GetReKyousByTargetID は target_id のKyouをリポストしている未削除ReKyouを返します。
+// 契約は ReKyouRepositories.GetReKyousByTargetID を参照。
+func (g *GkillRepositories) GetReKyousByTargetID(ctx context.Context, target_id string) ([]ReKyou, error) {
+	return g.ReKyouReps.GetReKyousByTargetID(ctx, target_id)
+}
+
+// GetMiReKyousByTargetID は target_id のKyouをタスク化している未削除MiReKyouを返します。
+// 契約は MiReKyouRepositories.GetMiReKyousByTargetID を参照。
+func (g *GkillRepositories) GetMiReKyousByTargetID(ctx context.Context, target_id string) ([]MiReKyou, error) {
+	return g.MiReKyouReps.GetMiReKyousByTargetID(ctx, target_id)
+}
+
 func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]Text, error) {
 	textHistories := map[string]Text{}
 	existErr := false

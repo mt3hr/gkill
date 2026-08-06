@@ -849,6 +849,8 @@
     "NOT_FOUND_IDFKYOU_ERROR_MESSAGE": "Datei nicht gefunden",
     "NOT_FOUND_GITCOMMITLOG_ERROR_MESSAGE": "GitCommitLog nicht gefunden",
     "NOT_FOUND_REKYOU_ERROR_MESSAGE": "Repost nicht gefunden",
+    "FAILED_CASCADE_DELETE_KYOU_MESSAGE": "Löschen der zugehörigen Informationen fehlgeschlagen",
+    "CASCADE_DELETE_DEPTH_EXCEEDED_MESSAGE": "Repost-Verweise sind zu tief verschachtelt; das Löschen wurde vorzeitig beendet",
     "NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE": "Ziel des Repost nicht gefunden",
     "NOT_FOUND_MI_REKYOU_ERROR_MESSAGE": "Repost-Aufgabe nicht gefunden",
     "NOT_FOUND_MI_REKYOU_TARGET_ERROR_MESSAGE": "Ziel der Repost-Aufgabe nicht gefunden",

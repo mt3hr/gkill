@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 247個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 249個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -172,6 +172,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-scoped-ctrl-v-for-clipboard.ts` | Ctrl+V キーボードショートカットハンドラ（rykv/mi/plaing 画面でクリップボード保存） |
 | `use-scoped-enter-for-kftl.ts` | Enter キーショートカットハンドラ（KFTL ダイアログ起動） |
 | `use-dialog-history-stack.ts` | ダイアログ履歴スタック管理（バック操作・Escape キー対応） |
+| `use-delayed-loading.ts` | 読み込み中表示の遅延（速く終わった読み込みでインジケータを明滅させない） |
 
 ### ユーティリティファイル
 

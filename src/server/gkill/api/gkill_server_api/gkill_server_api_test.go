@@ -221,6 +221,8 @@ func setupTestRouter(t *testing.T) (*httptest.Server, *GkillServerAPI, func()) {
 	router.HandleFunc(gkillAPI.APIAddress.GetRekyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetRekyou)).Methods(gkillAPI.APIAddress.GetRekyouMethod)
 	router.HandleFunc(gkillAPI.APIAddress.AddMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleAddMiReKyou)).Methods(gkillAPI.APIAddress.AddMiReKyouMethod)
 	router.HandleFunc(gkillAPI.APIAddress.GetMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMiReKyou)).Methods(gkillAPI.APIAddress.GetMiReKyouMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetReKyousByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetReKyousByTargetID)).Methods(gkillAPI.APIAddress.GetReKyousByTargetIDMethod)
+	router.HandleFunc(gkillAPI.APIAddress.GetMiReKyousByTargetIDAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleGetMiReKyousByTargetID)).Methods(gkillAPI.APIAddress.GetMiReKyousByTargetIDMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateMiReKyouAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateMiReKyou)).Methods(gkillAPI.APIAddress.UpdateMiReKyouMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateKmemoAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateKmemo)).Methods(gkillAPI.APIAddress.UpdateKmemoMethod)
 	router.HandleFunc(gkillAPI.APIAddress.UpdateMiAddress, gkillAPI.wrapAuthRepos(gkillAPI.HandleUpdateMi)).Methods(gkillAPI.APIAddress.UpdateMiMethod)
@@ -803,6 +805,8 @@ func TestAuthMiddleware_RejectsInvalidSession(t *testing.T) {
 		{"AddMiReKyou", addr.AddMiReKyouAddress},
 		{"GetMiReKyou", addr.GetMiReKyouAddress},
 		{"UpdateMiReKyou", addr.UpdateMiReKyouAddress},
+		{"GetReKyousByTargetID", addr.GetReKyousByTargetIDAddress},
+		{"GetMiReKyousByTargetID", addr.GetMiReKyousByTargetIDAddress},
 		{"GetKyou", addr.GetKyouAddress},
 		{"GetMiBoardList", addr.GetMiBoardListAddress},
 		{"GetAllTagNames", addr.GetAllTagNamesAddress},
@@ -1352,6 +1356,197 @@ func TestHandleAddTag_AndGetTagsByTargetID(t *testing.T) {
 	}
 	if !foundTag {
 		t.Error("expected tag '重要' targeting kmemo not found in response")
+	}
+}
+
+func TestHandleAddRekyou_AndGetReKyousByTargetID(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	now := time.Now().Truncate(time.Second)
+	kmemoID := GenerateNewID()
+
+	// リポスト対象のKmemoを作る
+	addKmemoReq := &req_res.AddKmemoRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		Kmemo: reps.Kmemo{
+			ID:          kmemoID,
+			Content:     "リポスト逆引きテスト用メモ",
+			RelatedTime: now,
+			DataType:    "kmemo",
+			CreateTime:  now,
+			CreateApp:   "test",
+			CreateUser:  "admin",
+			UpdateTime:  now,
+			UpdateApp:   "test",
+			UpdateUser:  "admin",
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/add_kmemo", addKmemoReq)
+	resp.Body.Close()
+
+	rekyouID := GenerateNewID()
+	rekyou := reps.ReKyou{
+		ID:          rekyouID,
+		TargetID:    kmemoID,
+		DataType:    "re_kyou",
+		RelatedTime: now,
+		CreateTime:  now,
+		CreateApp:   "test",
+		CreateUser:  "admin",
+		UpdateTime:  now,
+		UpdateApp:   "test",
+		UpdateUser:  "admin",
+	}
+	addReKyouReq := &req_res.AddReKyouRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		ReKyou:     rekyou,
+	}
+	resp2 := postJSON(t, tsURL+"/api/add_rekyou", addReKyouReq)
+	defer resp2.Body.Close()
+
+	var addResp req_res.AddReKyouResponse
+	if err := json.NewDecoder(resp2.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode add rekyou response: %v", err)
+	}
+	if len(addResp.Errors) > 0 {
+		t.Fatalf("add rekyou errors: %+v", addResp.Errors)
+	}
+
+	// 逆引きで1件返る
+	getReKyousReq := &req_res.GetReKyousByTargetIDRequest{
+		SessionID:  sessionID,
+		TargetID:   kmemoID,
+		LocaleName: "en",
+	}
+	resp3 := postJSON(t, tsURL+"/api/get_rekyous_by_target_id", getReKyousReq)
+	defer resp3.Body.Close()
+
+	var getReKyousResp req_res.GetReKyousByTargetIDResponse
+	if err := json.NewDecoder(resp3.Body).Decode(&getReKyousResp); err != nil {
+		t.Fatalf("decode get rekyous by target id response: %v", err)
+	}
+	if len(getReKyousResp.Errors) > 0 {
+		t.Fatalf("get rekyous by target id errors: %+v", getReKyousResp.Errors)
+	}
+	if len(getReKyousResp.ReKyous) != 1 {
+		t.Fatalf("ReKyous len = %d, want 1", len(getReKyousResp.ReKyous))
+	}
+	if getReKyousResp.ReKyous[0].ID != rekyouID {
+		t.Errorf("ID = %q, want %q", getReKyousResp.ReKyous[0].ID, rekyouID)
+	}
+
+	// リポストを論理削除すると逆引きから消える
+	deletedReKyou := rekyou
+	deletedReKyou.IsDeleted = true
+	deletedReKyou.UpdateTime = now.Add(time.Hour)
+	updateReKyouReq := &req_res.UpdateReKyouRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		ReKyou:     deletedReKyou,
+	}
+	resp4 := postJSON(t, tsURL+"/api/update_rekyou", updateReKyouReq)
+	resp4.Body.Close()
+
+	resp5 := postJSON(t, tsURL+"/api/get_rekyous_by_target_id", getReKyousReq)
+	defer resp5.Body.Close()
+
+	var getReKyousAfterDeleteResp req_res.GetReKyousByTargetIDResponse
+	if err := json.NewDecoder(resp5.Body).Decode(&getReKyousAfterDeleteResp); err != nil {
+		t.Fatalf("decode get rekyous by target id response: %v", err)
+	}
+	if len(getReKyousAfterDeleteResp.Errors) > 0 {
+		t.Fatalf("get rekyous by target id errors: %+v", getReKyousAfterDeleteResp.Errors)
+	}
+	if len(getReKyousAfterDeleteResp.ReKyous) != 0 {
+		t.Errorf("ReKyous len = %d, want 0 after deleting the rekyou", len(getReKyousAfterDeleteResp.ReKyous))
+	}
+}
+
+func TestHandleAddMiReKyou_AndGetMiReKyousByTargetID(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	now := time.Now().Truncate(time.Second)
+	kmemoID := GenerateNewID()
+
+	addKmemoReq := &req_res.AddKmemoRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		Kmemo: reps.Kmemo{
+			ID:          kmemoID,
+			Content:     "タスク化逆引きテスト用メモ",
+			RelatedTime: now,
+			DataType:    "kmemo",
+			CreateTime:  now,
+			CreateApp:   "test",
+			CreateUser:  "admin",
+			UpdateTime:  now,
+			UpdateApp:   "test",
+			UpdateUser:  "admin",
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/add_kmemo", addKmemoReq)
+	resp.Body.Close()
+
+	mirekyouID := GenerateNewID()
+	addMiReKyouReq := &req_res.AddMiReKyouRequest{
+		SessionID:  sessionID,
+		LocaleName: "en",
+		MiReKyou: reps.MiReKyou{
+			ID:           mirekyouID,
+			TargetID:     kmemoID,
+			DataType:     "mirekyou_create",
+			BoardName:    "default",
+			CreateTime:   now,
+			CreateApp:    "test",
+			CreateUser:   "admin",
+			CreateDevice: "test_device",
+			UpdateTime:   now,
+			UpdateApp:    "test",
+			UpdateUser:   "admin",
+			UpdateDevice: "test_device",
+		},
+	}
+	resp2 := postJSON(t, tsURL+"/api/add_mirekyou", addMiReKyouReq)
+	defer resp2.Body.Close()
+
+	var addResp req_res.AddMiReKyouResponse
+	if err := json.NewDecoder(resp2.Body).Decode(&addResp); err != nil {
+		t.Fatalf("decode add mirekyou response: %v", err)
+	}
+	if len(addResp.Errors) > 0 {
+		t.Fatalf("add mirekyou errors: %+v", addResp.Errors)
+	}
+
+	getMiReKyousReq := &req_res.GetMiReKyousByTargetIDRequest{
+		SessionID:  sessionID,
+		TargetID:   kmemoID,
+		LocaleName: "en",
+	}
+	resp3 := postJSON(t, tsURL+"/api/get_mirekyous_by_target_id", getMiReKyousReq)
+	defer resp3.Body.Close()
+
+	var getMiReKyousResp req_res.GetMiReKyousByTargetIDResponse
+	if err := json.NewDecoder(resp3.Body).Decode(&getMiReKyousResp); err != nil {
+		t.Fatalf("decode get mirekyous by target id response: %v", err)
+	}
+	if len(getMiReKyousResp.Errors) > 0 {
+		t.Fatalf("get mirekyous by target id errors: %+v", getMiReKyousResp.Errors)
+	}
+	if len(getMiReKyousResp.MiReKyous) != 1 {
+		t.Fatalf("MiReKyous len = %d, want 1", len(getMiReKyousResp.MiReKyous))
+	}
+	if getMiReKyousResp.MiReKyous[0].ID != mirekyouID {
+		t.Errorf("ID = %q, want %q", getMiReKyousResp.MiReKyous[0].ID, mirekyouID)
 	}
 }
 

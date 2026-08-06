@@ -756,6 +756,39 @@ loop:
 	return matchReKyousList, nil
 }
 
+// GetReKyousByTargetID は targetID のKyouをリポストしている未削除ReKyouをUpdateTimeの新しい順に返します。
+//
+// IDごとの最新版だけが対象です。
+// 参照先Kyouが削除済みかどうかは見ません。FindKyous が持つ参照先削除フィルタ
+// （GetLatestDataRepositoryAddress の IsDeleted を見るもの）は意図的に適用していません。
+// 逆引きの目的は「参照している側」の列挙であり、参照先の生死は呼び出し元の関心事だからです。
+// GetReKyousAllLatest を土台にしているのは、そのフィルタを持ち込まずに済むためでもあります。
+//
+// 内部で並列集約するため threads.Go のスロットを保持したまま呼ばないでください。
+func (r *ReKyouRepositories) GetReKyousByTargetID(ctx context.Context, target_id string) ([]ReKyou, error) {
+	allLatestReKyous, err := r.GetReKyousAllLatest(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rekyous by target id target id = %s: %w", target_id, err)
+		return nil, err
+	}
+
+	matchReKyous := []ReKyou{}
+	for _, rekyou := range allLatestReKyous {
+		if rekyou.TargetID != target_id {
+			continue
+		}
+		if rekyou.IsDeleted {
+			continue
+		}
+		matchReKyous = append(matchReKyous, rekyou)
+	}
+
+	slices.SortFunc(matchReKyous, func(a, b ReKyou) int {
+		return b.UpdateTime.Compare(a.UpdateTime)
+	})
+	return matchReKyous, nil
+}
+
 func (r *ReKyouRepositories) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
 	if r.GkillRepositories == nil {
 		// リポジトリ群を辿れない場合はターゲット解決を行わない。呼び出し側で判定する

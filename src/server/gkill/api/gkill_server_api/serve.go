@@ -99,6 +99,8 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router.HandleFunc(g.APIAddress.GetLantanaAddress, g.wrapAuthRepos(g.HandleGetLantana)).Methods(g.APIAddress.GetLantanaMethod)
 	router.HandleFunc(g.APIAddress.GetRekyouAddress, g.wrapAuthRepos(g.HandleGetRekyou)).Methods(g.APIAddress.GetRekyouMethod)
 	router.HandleFunc(g.APIAddress.GetMiReKyouAddress, g.wrapAuthRepos(g.HandleGetMiReKyou)).Methods(g.APIAddress.GetMiReKyouMethod)
+	router.HandleFunc(g.APIAddress.GetReKyousByTargetIDAddress, g.wrapAuthRepos(g.HandleGetReKyousByTargetID)).Methods(g.APIAddress.GetReKyousByTargetIDMethod)
+	router.HandleFunc(g.APIAddress.GetMiReKyousByTargetIDAddress, g.wrapAuthRepos(g.HandleGetMiReKyousByTargetID)).Methods(g.APIAddress.GetMiReKyousByTargetIDMethod)
 	router.HandleFunc(g.APIAddress.GetGitCommitLogAddress, g.wrapAuthRepos(g.HandleGetGitCommitLog)).Methods(g.APIAddress.GetGitCommitLogMethod)
 	router.HandleFunc(g.APIAddress.GetIDFKyouAddress, g.wrapAuthRepos(g.HandleGetIDFKyou)).Methods(g.APIAddress.GetIDFKyouMethod)
 	router.HandleFunc(g.APIAddress.GetMiBoardListAddress, g.wrapAuthRepos(g.HandleGetMiBoardList)).Methods(g.APIAddress.GetMiBoardListMethod)

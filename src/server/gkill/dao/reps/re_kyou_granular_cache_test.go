@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
@@ -190,5 +191,82 @@ func TestReKyouHistoriesByGranularRepNameWithCachedRepo(t *testing.T) {
 	}
 	if reKyouHistories[0].RepName != pixelRepName {
 		t.Fatalf("GetReKyouHistoriesByRepName() rep = %s, want %s", reKyouHistories[0].RepName, pixelRepName)
+	}
+}
+
+// TestReKyouGetReKyousByTargetIDReturnsEvenIfTargetDeleted は、参照先Kyouを論理削除したあとでも
+// 逆引きがReKyouを返すことを押さえます。
+//
+// FindKyous は参照先の LatestDataRepositoryAddress.IsDeleted を見てReKyouを結果から外しますが、
+// GetReKyousByTargetID はそのフィルタを持ちません。Kyou削除の連鎖処理が削除の前後どちらからでも
+// 残骸を辿れるようにするための、意図的な差です。ここを揃えてしまうと連鎖が途切れます。
+func TestReKyouGetReKyousByTargetIDReturnsEvenIfTargetDeleted(t *testing.T) {
+	ctx := context.Background()
+	old := gkill_options.CacheReKyouReps
+	enable := true
+	gkill_options.CacheReKyouReps = &enable
+	t.Cleanup(func() { gkill_options.CacheReKyouReps = old })
+
+	repositories, _, _, sharedID := newGranularReKyouFixture(t)
+	// newGranularReKyouFixture が作るKmemoのID
+	targetID := "shared-target"
+
+	if err := repositories.UpdateCache(ctx); err != nil {
+		t.Fatalf("UpdateCache() error: %v", err)
+	}
+
+	// 参照先が生きているうちはFindKyousにも出る
+	matchKyous, err := repositories.ReKyouReps.FindKyous(ctx, makeDefaultFindQuery())
+	if err != nil {
+		t.Fatalf("FindKyous() error: %v", err)
+	}
+	if len(matchKyous) == 0 {
+		t.Fatalf("FindKyous() returned no results before deleting the target")
+	}
+
+	// 参照先Kmemoを論理削除する。
+	// アドレス表の更新まで含めて usecase.UpdateKmemo と同じことをする（repへの追記だけでは
+	// LatestDataRepositoryAddress.IsDeleted が立たず、参照先削除フィルタが効かない）
+	deletedKmemo := makeKmemo(targetID, "target content")
+	deletedKmemo.IsDeleted = true
+	deletedKmemo.UpdateTime = deletedKmemo.UpdateTime.Add(time.Hour)
+	if err := repositories.WriteKmemoRep.AddKmemoInfo(ctx, deletedKmemo); err != nil {
+		t.Fatalf("AddKmemoInfo() error: %v", err)
+	}
+	kmemoRepName, err := repositories.WriteKmemoRep.GetRepName(ctx)
+	if err != nil {
+		t.Fatalf("GetRepName() error: %v", err)
+	}
+	deletedAddress := gkill_cache.LatestDataRepositoryAddress{
+		IsDeleted:                              true,
+		TargetID:                               targetID,
+		DataUpdateTime:                         deletedKmemo.UpdateTime,
+		LatestDataRepositoryName:               kmemoRepName,
+		LatestDataRepositoryAddressUpdatedTime: time.Now(),
+	}
+	repositories.SetLatestDataRepositoryAddress(targetID, deletedAddress)
+	if _, err := repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(ctx, deletedAddress); err != nil {
+		t.Fatalf("AddOrUpdateLatestDataRepositoryAddress() error: %v", err)
+	}
+
+	// FindKyousは参照先削除フィルタで0件になる
+	matchKyous, err = repositories.ReKyouReps.FindKyous(ctx, makeDefaultFindQuery())
+	if err != nil {
+		t.Fatalf("FindKyous() error: %v", err)
+	}
+	if len(matchKyous) != 0 {
+		t.Fatalf("FindKyous() len = %d, want 0 after deleting the target", len(matchKyous))
+	}
+
+	// 逆引きはフィルタを持たないので返り続ける
+	matchReKyous, err := repositories.GetReKyousByTargetID(ctx, targetID)
+	if err != nil {
+		t.Fatalf("GetReKyousByTargetID() error: %v", err)
+	}
+	if len(matchReKyous) != 1 {
+		t.Fatalf("GetReKyousByTargetID() len = %d, want 1 even after deleting the target", len(matchReKyous))
+	}
+	if matchReKyous[0].ID != sharedID {
+		t.Fatalf("GetReKyousByTargetID() ID = %s, want %s", matchReKyous[0].ID, sharedID)
 	}
 }

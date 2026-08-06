@@ -5,7 +5,7 @@
 gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エンドポイントは **POST メソッド**（一部 GET あり）で、`/api/` プレフィックス配下に配置される。
 
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
-- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、94ファイル）
+- **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、96ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
 - **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（182ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
@@ -20,7 +20,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 |---|---|---|---|
 | `wrapNoAuth` | 13 | `filterLocalOnly` のみ | `login`, `logout`, `reset_password`, `set_new_password`, `get_shared_kyous`, `urlog_bookmarklet`, `urlog_bookmarklet_page`, `get_kyous_mcp`, `upload_files`, `upload_gpslog_files`, `browse_zip_contents`, `get_idf_kyou_by_relative_path`, `get_idf_file_path` |
 | `wrapAuth` | 19 | セッション検証 → Account / UserID / Device を `AuthContext` に設定 | `get_application_config`, `update_server_configs`, `add_user`, `generate_tls_file`, `update_cache`, プラグイン4本 等 |
-| `wrapAuthRepos` | 56 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得23 + 共有4 + リポジトリ/TX 4） |
+| `wrapAuthRepos` | 58 | 上記に加えて `GkillRepositories` を解決 | データCRUD系（追加12 + 更新13 + 取得25 + 共有4 + リポジトリ/TX 4） |
 
 > **`wrapNoAuth` = 認証なし、ではない。** 上表の `wrapNoAuth` のうち
 > `upload_files` / `upload_gpslog_files` / `browse_zip_contents` /
@@ -280,7 +280,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/update_text` | Text | テキスト注釈更新 |
 | `/api/update_gkill_notification` | Notification | 通知更新 |
 
-## Kyouデータ取得（14件）
+## Kyouデータ取得（16件）
 
 | パス | 説明 |
 |---|---|
@@ -298,6 +298,8 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/get_git_commit_log` | Gitコミットログ取得 |
 | `/api/get_idf_kyou` | IDFKyou（ファイル参照）取得 |
 | `/api/get_updated_datas_by_time` | 指定時刻以降に更新されたデータ取得 |
+| `/api/get_rekyous_by_target_id` | 対象Kyouを参照しているReKyou一覧取得（逆引き。参照先の削除状態は見ない） |
+| `/api/get_mirekyous_by_target_id` | 対象Kyouを参照しているMiReKyou一覧取得（逆引き。参照先の削除状態は見ない） |
 
 ## タグ・テキスト・通知 メタデータ取得（8件）
 
