@@ -2,7 +2,7 @@
 
 ## 概要
 
-Vue 3 フロントエンドのテスト。ユニットテスト（841テスト宣言、71ファイル）と E2E テスト（196テスト宣言、34 specファイル）の合計1037テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
+Vue 3 フロントエンドのテスト。ユニットテスト（879テスト宣言、73ファイル）と E2E テスト（196テスト宣言、34 specファイル）の合計1075テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
 
 ## テストフレームワーク
 
@@ -13,9 +13,9 @@ Vue 3 フロントエンドのテスト。ユニットテスト（841テスト�
 
 ```
 src/client/__tests__/
-├── unit/                    # ユニットテスト (841テスト宣言, 71ファイル)
+├── unit/                    # ユニットテスト (864テスト宣言, 72ファイル)
 │   ├── api/                 #   GkillAPI クライアント
-│   ├── classes/             #   ユーティリティクラス (11ファイル, markdown-to-html / mermaid-render / use-dialog-history-stack / foldable-struct-move / kyou-content-text 含む)
+│   ├── classes/             #   ユーティリティクラス (12ファイル, markdown-to-html / mermaid-render / use-dialog-history-stack / delayed-loading / foldable-struct-move / kyou-content-text 含む)
 │   ├── datas/               #   データモデル (28ファイル, dashboard-config / mi-re-kyou / append-not-found-tags 含む)
 │   ├── dnote/               #   D-note モジュール (7ファイル, trend-aggregator.test.ts 含む)
 │   ├── kftl/                #   KFTL パーサ (5ファイル)
@@ -36,7 +36,7 @@ src/client/__tests__/
 
 ## テスト内容
 
-### ユニットテスト（841テスト宣言、71ファイル）
+### ユニットテスト（879テスト宣言、73ファイル）
 
 | カテゴリ | テスト数（概算） | 内容 |
 |---------|----------------|------|
@@ -44,7 +44,7 @@ src/client/__tests__/
 | データモデル | 28ファイル | 各データ型の生成・代入・シリアライゼーション（DashboardConfig / MiReKyou 含む）+ タグ付与の横断検証 |
 | D-note | 7ファイル | 述語関数、キー取得、集計ターゲット、アグリゲータ、トレンドグラフ集計（trend-aggregator） |
 | KFTL パーサ | 5ファイル | 構文解析、型判定、リクエスト生成 |
-| Composable | 14ファイル | 追加/編集ビュー、コンテキストメニュー、削除確認、クリップボード保存、ページ/クエリ Composable、Kyouビュー（未取得時の日時非表示）、IDFKyouビュー（Markdown表示）、ReKyou / MiReKyou ビュー |
+| Composable | 14ファイル | 追加/編集ビュー、コンテキストメニュー、削除確認、クリップボード保存、ページ/クエリ Composable、Kyouビュー（未取得時の日時非表示・読み込み中表示）、IDFKyouビュー（Markdown表示）、ReKyou / MiReKyou ビュー（参照先なしの終端状態） |
 | ルーター | 1ファイル | 13ルートの定義と遷移（dashboard 含む） |
 | i18n | 1ファイル | 7ロケールのキー完全性 |
 | Service Worker | 1ファイル | Workbox プリキャッシュ、POST キャッシュ、プッシュ通知、`/zip_cache/.*` denylist |

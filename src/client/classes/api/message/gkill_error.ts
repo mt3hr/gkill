@@ -90,6 +90,8 @@ export enum GkillErrorCodes {
     not_found_mi_rekyou = "ERR900089",
     not_found_mi_rekyou_target = "ERR900090",
     client_mi_rekyou_is_null = "ERR900091",
-    mi_rekyou_is_no_update = "ERR900092"
+    mi_rekyou_is_no_update = "ERR900092",
+    cascade_delete_depth_exceeded = "ERR900093",
+    cascade_delete_failed = "ERR900094"
 }
 

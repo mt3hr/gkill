@@ -212,3 +212,22 @@ func (uc *UsecaseContext) GetMiReKyouHistories(ctx context.Context, repositories
 
 	return mirekyouHistories, nil, nil
 }
+
+// GetMiReKyousByTargetID は対象Kyouをタスク化している未削除MiReKyouを取得するユースケース。
+// 参照先Kyouが削除済みかどうかは見ません（契約は reps.MiReKyouRepositories.GetMiReKyousByTargetID を参照）。
+func (uc *UsecaseContext) GetMiReKyousByTargetID(ctx context.Context, repositories *reps.GkillRepositories, userID, device, localeName string, targetID string) ([]reps.MiReKyou, []*message.GkillError, error) {
+	var gkillErrors []*message.GkillError
+
+	mirekyous, err := repositories.GetMiReKyousByTargetID(ctx, targetID)
+	if err != nil {
+		err = fmt.Errorf("error at get mirekyous by target id user id = %s device = %s target id = %s: %w", userID, device, targetID, err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		gkillErrors = append(gkillErrors, &message.GkillError{
+			ErrorCode:    message.GetMiReKyousByTargetIDError,
+			ErrorMessage: api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_REKYOU_MESSAGE"}),
+		})
+		return nil, gkillErrors, nil
+	}
+
+	return mirekyous, nil, nil
+}
