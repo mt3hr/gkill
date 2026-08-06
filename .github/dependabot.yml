@@ -1,0 +1,39 @@
+# Dependabotの更新設定。
+#
+# この設定を置くまではセキュリティ更新しか動いておらず、通常のバージョン更新が
+# 止まっていた。依存が古びたまま放置されると新しいadvisoryが出るたびに
+# アラートが積み上がるので、定期的に上げる。
+#
+# PRが洪水にならないよう、npmはminor/patchを1本のPRにまとめ、
+# 各エコシステムに同時オープン数の上限を入れている。
+version: 2
+updates:
+  # ルートのpackage.json / package-lock.json。
+  # src/mcp配下のサーバもここのnode_modulesから解決するので、npmはこれ1つでよい。
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # minor/patchはまとめて1本にする。majorは個別PRのまま目視で見る
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Goは本体のみ。src/plugins配下の4モジュールは依存が
+  # go-zglob + 本体(replaceでローカル参照)だけで、ここと重複するPRが4本立つうえ
+  # replace付きmoduleはDependabotが扱いあぐねるので対象にしない。
+  - package-ecosystem: gomod
+    directory: /src/server
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+
+  # ワークフローで使うActions。現状すでに全部最新メジャーなのでmonthlyで十分。
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
