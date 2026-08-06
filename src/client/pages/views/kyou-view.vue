@@ -30,82 +30,90 @@
             </v-row>
         </div>
         <div :class="kyou_class">
-            <KmemoView v-if="cloned_kyou.typed_kmemo" :kmemo="cloned_kyou.typed_kmemo" :draggable=draggable
-                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :height="height" :width="width" :max-width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="kmemo_view" />
-            <KCView v-if="cloned_kyou.typed_kc" :kc="cloned_kyou.typed_kc" :application_config="application_config"
-                :draggable=draggable :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
-                :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="kc_view" />
-            <miKyouView v-if="cloned_kyou.typed_mi" :mi="cloned_kyou.typed_mi" :application_config="application_config"
-                :draggable=draggable :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
-                :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="mi_view" />
-            <NlogView v-if="cloned_kyou.typed_nlog" :nlog="cloned_kyou.typed_nlog" :draggable=draggable
-                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="nlog_view" />
-            <LantanaView v-if="cloned_kyou.typed_lantana" :lantana="cloned_kyou.typed_lantana" :draggable=draggable
-                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="lantana_view" />
-            <TimeIsView v-if="cloned_kyou.typed_timeis" :timeis="cloned_kyou.typed_timeis" :draggable=draggable
-                :show_timeis_elapsed_time="show_timeis_elapsed_time"
-                :show_timeis_plaing_end_button="show_timeis_plaing_end_button" :application_config="application_config"
-                :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
-                :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="timeis_view" />
-            <URLogView v-if="cloned_kyou.typed_urlog" :urlog="cloned_kyou.typed_urlog" :draggable=draggable
-                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="urlog_view" />
-            <IDFKyouView v-if="cloned_kyou.typed_idf_kyou" :idf_kyou="cloned_kyou.typed_idf_kyou" :draggable=draggable
-                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :enable_md_link_dialog="enable_md_link_dialog" :is_image_request_to_thumb_size="is_image_request_to_thumb_size"
-                v-on="crudRelayHandlers"
-                ref="idf_kyou_view" />
-            <ReKyouView v-if="cloned_kyou.typed_rekyou" :rekyou="cloned_kyou.typed_rekyou" :draggable=draggable
-                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="rekyou_view" />
-            <MiReKyouView v-if="cloned_kyou.typed_mirekyou" :mirekyou="cloned_kyou.typed_mirekyou" :draggable=draggable
-                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="mirekyou_view" />
-            <GitCommitLogView v-if="cloned_kyou.typed_git_commit_log" :git_commit_log="cloned_kyou.typed_git_commit_log"
-                :draggable=draggable :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="highlight_targets" :kyou="cloned_kyou"
-                :height="height" :width="width" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="git_commit_log_view" />
-            <PluginHtmlView v-if="cloned_kyou.typed_plugin"
-                :kyou="cloned_kyou" :application_config="application_config"
-                :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
-                ref="plugin_html_view" />
+            <!-- 種別データを取りに行っている間の表示。PluginKyouの読み込み中表示に体裁を合わせる。
+                 読み終わるまで下の各ビューを出さないのは、インジケータと中身が同時に出て
+                 高さが二重になり行からはみ出すのを防ぐため -->
+            <div v-if="show_loading_indicator" class="kyou_loading">
+                <v-progress-circular indeterminate size="20" />
+            </div>
+            <template v-else>
+                <KmemoView v-if="cloned_kyou.typed_kmemo" :kmemo="cloned_kyou.typed_kmemo" :draggable=draggable
+                    :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                    :kyou="cloned_kyou" :height="height" :width="width" :max-width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="kmemo_view" />
+                <KCView v-if="cloned_kyou.typed_kc" :kc="cloned_kyou.typed_kc" :application_config="application_config"
+                    :draggable=draggable :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
+                    :height="height" :width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="kc_view" />
+                <miKyouView v-if="cloned_kyou.typed_mi" :mi="cloned_kyou.typed_mi" :application_config="application_config"
+                    :draggable=draggable :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
+                    :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="mi_view" />
+                <NlogView v-if="cloned_kyou.typed_nlog" :nlog="cloned_kyou.typed_nlog" :draggable=draggable
+                    :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                    :kyou="cloned_kyou" :height="height" :width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="nlog_view" />
+                <LantanaView v-if="cloned_kyou.typed_lantana" :lantana="cloned_kyou.typed_lantana" :draggable=draggable
+                    :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                    :kyou="cloned_kyou" :height="height" :width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="lantana_view" />
+                <TimeIsView v-if="cloned_kyou.typed_timeis" :timeis="cloned_kyou.typed_timeis" :draggable=draggable
+                    :show_timeis_elapsed_time="show_timeis_elapsed_time"
+                    :show_timeis_plaing_end_button="show_timeis_plaing_end_button" :application_config="application_config"
+                    :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
+                    :height="height" :width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="timeis_view" />
+                <URLogView v-if="cloned_kyou.typed_urlog" :urlog="cloned_kyou.typed_urlog" :draggable=draggable
+                    :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                    :kyou="cloned_kyou" :height="height" :width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="urlog_view" />
+                <IDFKyouView v-if="cloned_kyou.typed_idf_kyou" :idf_kyou="cloned_kyou.typed_idf_kyou" :draggable=draggable
+                    :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                    :kyou="cloned_kyou" :height="height" :width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :enable_md_link_dialog="enable_md_link_dialog" :is_image_request_to_thumb_size="is_image_request_to_thumb_size"
+                    v-on="crudRelayHandlers"
+                    ref="idf_kyou_view" />
+                <ReKyouView v-if="cloned_kyou.typed_rekyou" :rekyou="cloned_kyou.typed_rekyou" :draggable=draggable
+                    :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                    :kyou="cloned_kyou" :height="height" :width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="rekyou_view" />
+                <MiReKyouView v-if="cloned_kyou.typed_mirekyou" :mirekyou="cloned_kyou.typed_mirekyou" :draggable=draggable
+                    :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                    :kyou="cloned_kyou" :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="mirekyou_view" />
+                <GitCommitLogView v-if="cloned_kyou.typed_git_commit_log" :git_commit_log="cloned_kyou.typed_git_commit_log"
+                    :draggable=draggable :application_config="application_config" :gkill_api="gkill_api"
+                    :highlight_targets="highlight_targets" :kyou="cloned_kyou"
+                    :height="height" :width="width" :enable_context_menu="enable_context_menu"
+                    :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="git_commit_log_view" />
+                <PluginHtmlView v-if="cloned_kyou.typed_plugin"
+                    :kyou="cloned_kyou" :application_config="application_config"
+                    :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                    :height="height" :width="width"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    v-on="crudRelayHandlers"
+                    ref="plugin_html_view" />
+            </template>
         </div>
         <div v-if="!show_content_only">
             <AttachedText v-for="attached_text in cloned_kyou.attached_texts" :text="attached_text"
@@ -171,6 +179,7 @@ const {
     update_time,
     rep_name,
     kyou_class,
+    show_loading_indicator,
 
     // Business logic
     show_context_menu,
@@ -203,5 +212,13 @@ const {
 .kyou_related_time,
 .kyou_update_time {
     min-height: 1.5em;
+}
+
+/* 読み込み中表示はPluginKyou(.plugin-loading)と同じ体裁にする。
+   v-progress-circularは色をcurrentColorから取るのでスピナーもグレーになる */
+.kyou_loading {
+    padding: 8px;
+    font-size: 0.85em;
+    color: gray;
 }
 </style>

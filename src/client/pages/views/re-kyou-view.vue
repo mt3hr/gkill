@@ -5,7 +5,11 @@
             生かすと参照先Kyou（Kmemo等）のメニューが先に出てしまい、
             ReKyou自身の編集・削除にどの経路からも到達できなくなる。MiReKyouと同じ扱い。
         -->
-        <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="false"
+        <!-- 参照先が消えているときの終端表示。出さないと読み込み中表示のまま止まってしまう -->
+        <div v-if="is_target_not_found" class="rekyou_not_found">
+            {{ i18n.global.t('NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE') }}
+        </div>
+        <KyouView v-else :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets" :is_image_request_to_thumb_size="false"
             :is_image_view="false" :kyou="target_kyou" :show_checkbox="false"
             :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
             :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
@@ -23,6 +27,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import type { ReKyouViewProps } from './re-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import ReKyouContextMenu from './re-kyou-context-menu.vue'
@@ -35,9 +40,18 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     context_menu,
     target_kyou,
+    is_target_not_found,
     show_context_menu,
     crudRelayHandlers,
 } = useReKyouView({ props, emits })
 
 defineExpose({ show_context_menu })
 </script>
+<style lang="css" scoped>
+/* 参照先なしの表示はPluginKyou(.plugin-error)と同じ体裁にする */
+.rekyou_not_found {
+    padding: 8px;
+    font-size: 0.85em;
+    color: gray;
+}
+</style>

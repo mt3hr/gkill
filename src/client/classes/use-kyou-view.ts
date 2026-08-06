@@ -1,6 +1,7 @@
 import { computed, watch, type Ref, ref, nextTick, onUnmounted } from 'vue'
 import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { format_time } from '@/classes/format-date-time'
+import { useDelayedLoading } from '@/classes/use-delayed-loading'
 import { Kyou } from '@/classes/datas/kyou'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type { KyouViewProps } from '@/pages/views/kyou-view-props'
@@ -44,6 +45,12 @@ export function useKyouView(options: {
 
     // ── State refs ──
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
+    // 種別データ(typed_*)をこのKyouViewが読んでいる最中か。
+    // Kyou側のis_typed_data_loadedを直接見てはいけない。TimeIsViewが再生中TimeIsの
+    // 最新化でreload_with_typed_datas()を呼び、親から渡したcloned_kyouのフラグを
+    // 途中で倒すことがある。それを読み込み中とみなすとTimeIsView自身がunmount→remountされ、
+    // onMountedの再取得が無限に走る。自分が始めた読み込みだけを追う
+    const is_typed_datas_loading: Ref<boolean> = ref(!props.kyou.is_typed_data_loaded)
 
     // ── Lifecycle ──
     onUnmounted(() => {
@@ -59,6 +66,12 @@ export function useKyouView(options: {
     const related_time = computed(() => is_kyou_loaded.value ? format_time(props.kyou.related_time) : "")
     const update_time = computed(() => is_kyou_loaded.value ? format_time(props.kyou.update_time) : "")
     const rep_name = computed(() => props.kyou.rep_name)
+
+    // 参照先を取りに行っている最中(idが空)か、種別データがまだ入っていない間は読み込み中。
+    // 種別データはどの型でも必ずAPIを1回叩くので、どのKyouにも待ち時間がある
+    const is_kyou_loading = computed(() => !is_kyou_loaded.value || is_typed_datas_loading.value)
+    // 速く終わる読み込みでスピナーが明滅しないよう、一定時間かかったときだけ出す
+    const show_loading_indicator = useDelayedLoading(is_kyou_loading)
 
     const kyou_class = computed(() => {
         let highlighted = false
@@ -81,6 +94,10 @@ export function useKyouView(options: {
         cloned_kyou.value.abort_controller.abort()
         cloned_kyou.value = props.kyou.clone()
         cloned_kyou.value.abort_controller = new AbortController()
+        // reloadを待つ間にも中身は無い。ここで同期的に立てておかないと、
+        // force_show_latest_kyou_info(ReKyou/MiReKyouの経路)のときだけ
+        // スピナーも中身も出ない空白の時間ができる
+        is_typed_datas_loading.value = !cloned_kyou.value.is_typed_data_loaded
         if (props.force_show_latest_kyou_info) {
             await cloned_kyou.value.reload(props.force_show_latest_kyou_info);//最新を読み込むためにReload
         }
@@ -91,22 +108,37 @@ export function useKyouView(options: {
     load_attached_infos() // awaitしない(セットアップをブロックせずバックグラウンドで読み込む)
 
     // ── Internal helpers ──
+    /** 読み込み中フラグを立てたうえで種別データを読む */
+    async function load_typed_datas_with_loading(target_kyou: Kyou): Promise<Array<GkillError>> {
+        is_typed_datas_loading.value = !target_kyou.is_typed_data_loaded
+        try {
+            return await target_kyou.load_typed_datas()
+        } finally {
+            // 読み込み中に別のKyouへ差し替わっていたら、後始末は後発の読み込みに任せる
+            if (cloned_kyou.value === target_kyou) {
+                is_typed_datas_loading.value = false
+            }
+        }
+    }
+
     async function load_attached_infos(): Promise<void> {
+        // 読み込み中にcloned_kyouが差し替わっても、始めたときの対象へ書き込むようにする
+        const target_kyou = cloned_kyou.value
         try {
             const await_promises = new Array<Promise<Array<GkillError>>>()
             try {
-                await_promises.push(cloned_kyou.value.load_typed_datas())
+                await_promises.push(load_typed_datas_with_loading(target_kyou))
                 if (props.show_attached_tags) {
-                    await_promises.push(cloned_kyou.value.load_attached_tags())
+                    await_promises.push(target_kyou.load_attached_tags())
                 }
                 if (props.show_attached_texts) {
-                    await_promises.push(cloned_kyou.value.load_attached_texts())
+                    await_promises.push(target_kyou.load_attached_texts())
                 }
                 if (props.show_attached_notifications) {
-                    await_promises.push(cloned_kyou.value.load_attached_notifications())
+                    await_promises.push(target_kyou.load_attached_notifications())
                 }
                 if (props.show_attached_timeis) {
-                    await_promises.push(cloned_kyou.value.load_attached_timeis())
+                    await_promises.push(target_kyou.load_attached_timeis())
                 }
                 await Promise.all(await_promises)
             } catch (err: unknown) {
@@ -204,6 +236,8 @@ export function useKyouView(options: {
         update_time,
         rep_name,
         kyou_class,
+        is_kyou_loading,
+        show_loading_indicator,
 
         // Business logic
         show_context_menu,

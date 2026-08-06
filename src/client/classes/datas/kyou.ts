@@ -106,6 +106,16 @@ export class Kyou extends InfoBase {
         if (this.is_typed_data_loaded) {
             return []
         }
+        // ReKyou/MiReKyouが参照先を取りに行っている間に置かれる空のKyou。
+        // idが空のまま先へ進むとdata_typeも空なので既知のプレフィックスに一つも当たらず、
+        // 末尾のフォールバックでプラグインKyouと誤判定される。その結果rep_nameが空のまま
+        // Content HTMLを取りに行き、サーバから「プラグインが見つかりません」が返ってしまう。
+        // data_typeではなくidで見るのは、プラグインのdata_typeがプラグイン側の申告を
+        // そのまま使っており空になりうるため（空のdata_typeを持つ本物のプラグインKyouを潰さない）。
+        // is_typed_data_loadedは立てない。中身の入ったKyouに差し替わったときに読み直させる
+        if (this.id === "") {
+            return []
+        }
         let errors = new Array<GkillError>()
         if (this.data_type.startsWith("kmemo")) {
             const e = await this.load_typed_kmemo(query)
@@ -602,6 +612,10 @@ export class Kyou extends InfoBase {
         this.typed_git_commit_log = null
         this.typed_rekyou = null
         this.typed_mirekyou = null
+        this.typed_plugin = null
+        // フラグを戻さないと次のload_typed_datas()が冒頭で早期returnしてしまい、
+        // 種別データが二度と入らないKyouになる
+        this.is_typed_data_loaded = false
         return new Array<GkillError>()
     }
 

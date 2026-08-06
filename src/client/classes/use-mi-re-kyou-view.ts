@@ -46,6 +46,9 @@ export function useMiReKyouView(options: {
     const is_checked_mi: Ref<boolean> = ref(props.mirekyou.is_checked)
     // 参照先の本文を1行にしたもの。取得できるまでは高さを確定させるために「取得中」を入れておく
     const target_summary: Ref<string> = ref(i18n.global.t('LOADING_MESSAGE'))
+    // 参照先が見つからなかったか。終端状態として持たないと、
+    // 中身の入らないKyouViewが読み込み中表示のまま止まってしまう
+    const is_target_not_found: Ref<boolean> = ref(false)
     // 取得済みのtarget_id。仮想スクロールで行を使い回すときに同じ参照先を引き直さないために持つ
     let loaded_target_id = ''
 
@@ -70,17 +73,32 @@ export function useMiReKyouView(options: {
 
     // ── Business logic ──
     async function get_target_kyou() {
+        // target_idが空だと下の使い回しガード(初期値'')に引っかかってリクエストすら飛ばず、
+        // 中身の入らないKyouViewが読み込み中表示のまま止まる。見つからなかった扱いにして終端させる
+        if (props.mirekyou.target_id === '') {
+            is_target_not_found.value = true
+            fallback_summary()
+            return
+        }
         // 仮想スクロールの行使い回しでpropsだけ差し替わることがある。参照先が同じなら引き直さない
         if (loaded_target_id === props.mirekyou.target_id) {
             return
         }
         loaded_target_id = props.mirekyou.target_id
         target_summary.value = i18n.global.t('LOADING_MESSAGE')
+        is_target_not_found.value = false
 
+        const requested_target_id = props.mirekyou.target_id
         const req = new GetKyouRequest()
-        req.id = props.mirekyou.target_id
+        req.id = requested_target_id
         const res = await props.gkill_api.get_kyou(req)
+        // 応答が返るまでに行が別の参照先へ使い回されていたら捨てる。
+        // loaded_target_idは連続する同一idしか抑制しないので、A→B→Aで応答が入れ替わりうる
+        if (loaded_target_id !== requested_target_id) {
+            return
+        }
         if (res.errors && res.errors.length !== 0) {
+            is_target_not_found.value = true
             fallback_summary()
             // 一覧では行数ぶんスナックバーが出てしまうので、行では黙って諦める
             if (!is_compact.value) {
@@ -89,6 +107,7 @@ export function useMiReKyouView(options: {
             return
         }
         if (!res.kyou_histories || res.kyou_histories.length < 1) {
+            is_target_not_found.value = true
             fallback_summary()
             if (!is_compact.value) {
                 const error = new GkillError()
@@ -98,13 +117,21 @@ export function useMiReKyouView(options: {
             }
             return
         }
+        is_target_not_found.value = false
         target_kyou.value = res.kyou_histories[0]
-        await update_target_summary()
+        await update_target_summary(requested_target_id)
     }
 
-    /** 参照先の種別データまで読んでから本文を1行に落とす */
-    async function update_target_summary() {
+    /**
+     * 参照先の種別データまで読んでから本文を1行に落とす。
+     * 書き込みの前に毎回requested_target_idを見るのは、ここでもawaitを2回挟むため。
+     * 遅い要約が、行の使い回しで別の参照先になった後のtarget_summaryを上書きしてしまう
+     */
+    async function update_target_summary(requested_target_id: string) {
         const errors = await target_kyou.value.load_typed_datas()
+        if (loaded_target_id !== requested_target_id) {
+            return
+        }
         if (errors && errors.length !== 0) {
             fallback_summary()
             return
@@ -115,6 +142,9 @@ export function useMiReKyouView(options: {
             allow_remote: !is_compact.value,
             max_lazy_depth: is_compact.value ? 1 : undefined,
         })
+        if (loaded_target_id !== requested_target_id) {
+            return
+        }
         if (text.length === 0) {
             fallback_summary()
             return
@@ -213,6 +243,7 @@ export function useMiReKyouView(options: {
         target_kyou,
         is_checked_mi,
         target_summary,
+        is_target_not_found,
         effective_draggable,
 
         // Computed
