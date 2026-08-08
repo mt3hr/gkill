@@ -1,5 +1,6 @@
 import { i18n } from '@/i18n'
-import { computed, ref, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
+import { useContextMenuPosition } from '@/classes/use-context-menu-position'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { OpenDirectoryRequest } from '@/classes/api/req_res/open-directory-request'
 import { OpenFileRequest } from '@/classes/api/req_res/open-file-request'
@@ -19,20 +20,13 @@ export function useNlogContextMenu(options: {
 
     // ── State refs ──
     const is_requested_submit = ref(false)
-    const is_show: Ref<boolean> = ref(false)
-    const position_x: Ref<number> = ref(0)
-    const position_y: Ref<number> = ref(0)
+    const { is_show, menu_target, open_at } = useContextMenuPosition()
     const tag_history: Ref<string[]> = ref([])
-
-    // ── Computed ──
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * (10 + (tag_history.value.length > 0 ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
 
     // ── Business logic ──
     async function show(e: PointerEvent): Promise<void> {
         tag_history.value = props.gkill_api.get_saved_tag_history()
-        position_x.value = e.clientX
-        position_y.value = e.clientY
-        is_show.value = true
+        open_at(e)
     }
 
     async function copy_content(): Promise<void> {
@@ -169,7 +163,7 @@ export function useNlogContextMenu(options: {
         is_show,
         is_requested_submit,
         tag_history,
-        context_menu_style,
+        menu_target,
 
         // Business logic
         show,

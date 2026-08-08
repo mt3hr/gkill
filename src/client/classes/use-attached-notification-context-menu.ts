@@ -1,5 +1,5 @@
+import { useContextMenuPosition } from '@/classes/use-context-menu-position'
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref } from 'vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import type { AttachedNotificationContextMenuProps } from '@/pages/views/attached-notification-context-menu-props'
@@ -11,15 +11,10 @@ export function useAttachedNotificationContextMenu(options: {
 }) {
     const { props, emits } = options
 
-    const is_show: Ref<boolean> = ref(false)
-    const position_x: Ref<number> = ref(0)
-    const position_y: Ref<number> = ref(0)
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * 4))), position_y.value.valueOf())}px; }`)
+    const { is_show, menu_target, open_at } = useContextMenuPosition()
 
     async function show(e: PointerEvent): Promise<void> {
-        position_x.value = e.clientX
-        position_y.value = e.clientY
-        is_show.value = true
+        open_at(e)
     }
 
     async function hide(): Promise<void> {
@@ -50,9 +45,7 @@ export function useAttachedNotificationContextMenu(options: {
 
     return {
         is_show,
-        position_x,
-        position_y,
-        context_menu_style,
+        menu_target,
         show,
         hide,
         show_edit_notification_dialog,
