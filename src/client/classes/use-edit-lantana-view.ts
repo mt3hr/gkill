@@ -8,11 +8,8 @@ import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-reque
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { Tag } from '@/classes/datas/tag'
-import type { Text } from '@/classes/datas/text'
-import type { Notification } from '@/classes/datas/notification'
 import type { ComponentRef } from '@/classes/component-ref'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useEditLantanaView(options: {
     props: EditLantanaViewProps,
@@ -81,8 +78,10 @@ export function useEditLantanaView(options: {
                 return
             }
 
-            // 更新がなかったらエラーメッセージを出力する
-            if (lantana.mood === await edit_lantana_flowers.value?.get_mood()) {
+            // 更新がなかったらエラーメッセージを出力する。
+            // 関連日時もこの画面で編集できるので比較に含める（含めないと日時だけ変えても保存できない）
+            if (lantana.mood === await edit_lantana_flowers.value?.get_mood() &&
+                moment(lantana.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime()) {
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.lantana_is_no_update
                 error.error_message = i18n.global.t("LANTANA_IS_NO_UPDATE_MESSAGE")
@@ -94,7 +93,8 @@ export function useEditLantanaView(options: {
 
             // 更新後Lantana情報を用意する
             const updated_lantana = lantana.clone()
-            updated_lantana.mood = await edit_lantana_flowers.value!.get_mood()
+            // refがnullでも例外にしない。throwするとダイアログが閉じないまま固まる
+            updated_lantana.mood = await edit_lantana_flowers.value?.get_mood() ?? lantana.mood
             updated_lantana.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
             updated_lantana.update_app = "gkill"
             updated_lantana.update_device = props.application_config.device
@@ -141,25 +141,7 @@ export function useEditLantanaView(options: {
     }
 
     // ── Event relay objects ──
-    const crudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
-        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
-        'deleted_text': (text: Text) => emits('deleted_text', text),
-        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
-        'registered_text': (text: Text) => emits('registered_text', text),
-        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
-        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
-        'updated_text': (text: Text) => emits('updated_text', text),
-        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
-        'requested_reload_list': () => emits('requested_reload_list'),
-        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => emits('requested_update_check_kyous', kyous, checked),
-    }
+    const crudRelayHandlers = build_kyou_view_relay(emits)
 
     // ── Init calls ──
     load()
@@ -192,3 +174,4 @@ export function useEditLantanaView(options: {
         crudRelayHandlers,
     }
 }
+
