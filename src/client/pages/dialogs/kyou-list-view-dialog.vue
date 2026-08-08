@@ -28,23 +28,7 @@
                         :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
                         :show_timeis_plaing_end_button="false" :show_rep_name="show_rep_name"
                         :force_show_latest_kyou_info="force_show_latest_kyou_info"
-                        @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-                        @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-                        @focused_kyou="(kyou: Kyou) => emits('focused_kyou', kyou)"
-                        @clicked_kyou="(kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) }"
-                        @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
-                        @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)"
-                        ref="kyou_list_views"
-                        @deleted_kyou="(deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou)"
-                        @deleted_tag="(_deleted_tag: Tag) => { /* intentionally ignored */ }" @deleted_text="(_deleted_text: Text) => { /* intentionally ignored */ }"
-                        @deleted_notification="(_deleted_notification: Notification) => { /* intentionally ignored */ }"
-                        @registered_kyou="(_registered_kyou: Kyou) => { /* intentionally ignored */ }"
-                        @registered_tag="(_registered_tag: Tag) => { /* intentionally ignored */ }"
-                        @registered_text="(_registered_text: Text) => { /* intentionally ignored */ }"
-                        @registered_notification="(_registered_notification: Notification) => { /* intentionally ignored */ }"
-                        @updated_kyou="(updated_kyou: Kyou) => reload_kyou(updated_kyou)"
-                        @updated_tag="(_updated_tag: Tag) => { /* intentionally ignored */ }" @updated_text="(_updated_text: Text) => { /* intentionally ignored */ }"
-                        @updated_notification="(_updated_notification: Notification) => { /* intentionally ignored */ }" />
+                        ref="kyou_list_views" v-on="crudRelayHandlers" />
                 </v-card>
                 <!-- App.vue の .gkill-floating-dialog__body .v-card が flex: 1 1 auto を与えるので、
                      flex-shrink だけ潰すと grow が残り、件数表示がKyouListViewと領域を半分ずつ分け合ってしまう。
@@ -66,18 +50,32 @@ import { computed, onBeforeUnmount, type ComponentPublicInstance, type Ref, ref,
 import KyouListView from '../views/kyou-list-view.vue';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 import type { Kyou } from '@/classes/datas/kyou';
-import type { Tag } from '@/classes/datas/tag';
-import type { Text } from '@/classes/datas/text';
-import type { Notification } from '@/classes/datas/notification';
 import type { KyouListViewDialogProps } from './kyou-list-view-dialog-props';
 import type { KyouListViewEmits } from '../views/kyou-list-view-emits';
-import type { GkillError } from '@/classes/api/gkill-error';
-import type { GkillMessage } from '@/classes/api/gkill-message';
-import type { RykvDialogKind, RykvDialogPayload } from '../views/rykv-dialog-kind';
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay';
 
 const props = defineProps<KyouListViewDialogProps>()
 const model_value = defineModel<Array<Kyou>>()
 const emits = defineEmits<KyouListViewEmits>()
+
+// このダイアログは自分が抱えているリストを自分で更新する。
+// 付随データ(Tag/Text/Notification)のCRUDと新規Kyouは、このリストの内容を
+// 変えないので意図的に握りつぶす。
+const crudRelayHandlers = build_kyou_dialog_relay(emits, {
+  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+  'deleted_kyou': (deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou),
+  'updated_kyou': (updated_kyou: Kyou) => reload_kyou(updated_kyou),
+  'registered_kyou': () => { /* intentionally ignored */ },
+  'registered_tag': () => { /* intentionally ignored */ },
+  'updated_tag': () => { /* intentionally ignored */ },
+  'deleted_tag': () => { /* intentionally ignored */ },
+  'registered_text': () => { /* intentionally ignored */ },
+  'updated_text': () => { /* intentionally ignored */ },
+  'deleted_text': () => { /* intentionally ignored */ },
+  'registered_notification': () => { /* intentionally ignored */ },
+  'updated_notification': () => { /* intentionally ignored */ },
+  'deleted_notification': () => { /* intentionally ignored */ },
+})
 
 defineExpose({ show, hide })
 

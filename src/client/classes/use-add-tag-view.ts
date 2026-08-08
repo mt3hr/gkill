@@ -6,14 +6,11 @@ import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { Kyou } from '@/classes/datas/kyou'
-import type { Notification } from '@/classes/datas/notification'
-import type { Text } from '@/classes/datas/text'
 import { useFloatingDialog } from '@/classes/use-floating-dialog'
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { AddTagViewProps } from '@/pages/views/add-tag-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useAddTagView(options: {
     props: AddTagViewProps,
@@ -123,25 +120,7 @@ export function useAddTagView(options: {
     }
 
     // ── CRUD relay handlers ──
-    const crudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
-        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
-        'deleted_text': (text: Text) => emits('deleted_text', text),
-        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
-        'registered_text': (text: Text) => emits('registered_text', text),
-        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
-        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
-        'updated_text': (text: Text) => emits('updated_text', text),
-        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
-        'requested_reload_list': () => emits('requested_reload_list'),
-        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => emits('requested_update_check_kyous', kyous, checked),
-    }
+    const crudRelayHandlers = build_kyou_view_relay(emits)
 
     // ── Return ──
     return {
@@ -164,3 +143,4 @@ export function useAddTagView(options: {
         crudRelayHandlers,
     }
 }
+

@@ -93,24 +93,7 @@
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true" :show_attached_timeis="true"
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
-                :show_update_time="false" :show_related_time="true"
-                @deleted_kyou="crudRelayHandlers['deleted_kyou']"
-                @deleted_tag="crudRelayHandlers['deleted_tag']"
-                @deleted_text="crudRelayHandlers['deleted_text']"
-                @deleted_notification="crudRelayHandlers['deleted_notification']"
-                @registered_kyou="crudRelayHandlers['registered_kyou']"
-                @registered_tag="crudRelayHandlers['registered_tag']"
-                @registered_text="crudRelayHandlers['registered_text']"
-                @registered_notification="crudRelayHandlers['registered_notification']"
-                @updated_kyou="crudRelayHandlers['updated_kyou']"
-                @updated_tag="crudRelayHandlers['updated_tag']"
-                @updated_text="crudRelayHandlers['updated_text']"
-                @updated_notification="crudRelayHandlers['updated_notification']"
-                @received_errors="crudRelayHandlers['received_errors']"
-                @received_messages="crudRelayHandlers['received_messages']"
-                @requested_reload_kyou="crudRelayHandlers['requested_reload_kyou']"
-                @requested_reload_list="crudRelayHandlers['requested_reload_list']"
-                @requested_update_check_kyous="crudRelayHandlers['requested_update_check_kyous']" />
+                :show_update_time="false" :show_related_time="true" v-on="crudRelayHandlers" />
         </v-card>
     </v-card>
     </div>
