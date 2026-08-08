@@ -14,25 +14,25 @@
                         <v-card-title>
                             {{ i18n.global.t("FILE_NAME_COLLISION_TITLE") }}
                         </v-card-title>
-                        <v-radio-group v-model="conflict_behavior_file">
+                        <v-radio-group v-model="conflict_behavior_file" :readonly="is_requested_submit">
                             <v-radio :label="i18n.global.t('RENAME_TITLE')" :value="'rename'" />
                             <v-radio :label="i18n.global.t('OVERRIDE_TITLE')" :value="'override'" />
                         </v-radio-group>
-                        <v-select class="select" v-model="target_rep_name_for_file" :items="target_rep_names_for_file"
+                        <v-select class="select" v-model="target_rep_name_for_file" :readonly="is_requested_submit" :items="target_rep_names_for_file"
                             :label="i18n.global.t('UPLOAD_DESTINATION_TITLE')" />
                         <div
                             class="drop_zone"
                             :class="{ 'drop_zone_active': is_dragging_over_file }"
-                            @click="trigger_file_input"
+                            @click="() => { if (!is_requested_submit) trigger_file_input() }"
                             @dragenter.stop="onDragenterFile"
                             @dragleave.stop="onDragleaveFile"
                             @dragover.prevent.stop="onDragoverFile"
-                            @drop.prevent.stop="onDropFile"
+                            @drop.prevent.stop="(e: DragEvent) => { if (!is_requested_submit) onDropFile(e) }"
                         >
                             <v-icon size="48">mdi-cloud-upload-outline</v-icon>
                             <div>{{ i18n.global.t('DROP_FILE_ZONE_LABEL') }}</div>
                         </div>
-                        <input type="file" multiple ref="file_input" style="display:none"
+                        <input type="file" multiple ref="file_input" :disabled="is_requested_submit" style="display:none"
                             @change="onFileInputChange" />
                     </v-card>
                 </v-window-item>
@@ -41,25 +41,25 @@
                         <v-card-title>
                             {{ i18n.global.t("FILE_NAME_COLLISION_TITLE") }}
                         </v-card-title>
-                        <v-radio-group v-model="conflict_behavior_gps_file">
+                        <v-radio-group v-model="conflict_behavior_gps_file" :readonly="is_requested_submit">
                             <v-radio :label="i18n.global.t('MERGE_TITLE')" :value="'merge'" />
                             <v-radio :label="i18n.global.t('OVERRIDE_TITLE')" :value="'override'" />
                         </v-radio-group>
-                        <v-select class="select" v-model="target_rep_name_for_gps_file"
+                        <v-select class="select" v-model="target_rep_name_for_gps_file" :readonly="is_requested_submit"
                             :items="target_rep_names_for_gps_file" :label="i18n.global.t('UPLOAD_DESTINATION_TITLE')" />
                         <div
                             class="drop_zone"
                             :class="{ 'drop_zone_active': is_dragging_over_gps_file }"
-                            @click="trigger_gps_file_input"
+                            @click="() => { if (!is_requested_submit) trigger_gps_file_input() }"
                             @dragenter.stop="onDragenterGpsFile"
                             @dragleave.stop="onDragleaveGpsFile"
                             @dragover.prevent.stop="onDragoverGpsFile"
-                            @drop.prevent.stop="onDropGpsFile"
+                            @drop.prevent.stop="(e: DragEvent) => { if (!is_requested_submit) onDropGpsFile(e) }"
                         >
                             <v-icon size="48">mdi-cloud-upload-outline</v-icon>
                             <div>{{ i18n.global.t('DROP_GPS_FILE_ZONE_LABEL') }}</div>
                         </div>
-                        <input type="file" multiple accept=".gpx" ref="gps_file_input" style="display:none"
+                        <input type="file" multiple accept=".gpx" ref="gps_file_input" :disabled="is_requested_submit" style="display:none"
                             @change="onGpsFileInputChange" />
                     </v-card>
                 </v-window-item>
@@ -89,6 +89,7 @@ const {
     gps_file_input,
 
     // State
+    is_requested_submit,
     tab,
     conflict_behavior_file,
     conflict_behavior_gps_file,

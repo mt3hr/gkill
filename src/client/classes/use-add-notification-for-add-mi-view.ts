@@ -15,7 +15,6 @@ export function useAddNotificationForAddMiView(options: {
     const emits = options.emits
 
     // ── State refs ──
-    const is_requested_submit = ref(false)
     const content_value: Ref<string> = ref(props.default_notification ? props.default_notification.content : "")
     const notification_date_typed: Ref<Date> = ref(props.default_notification && props.default_notification.notification_time.getTime() !== new Date(0).getTime() ? moment(props.default_notification.notification_time).toDate() : new Date(Date.now()))
     const notification_date_string: Ref<string> = computed(() => moment(notification_date_typed.value).format("YYYY-MM-DD"))
@@ -66,14 +65,20 @@ export function useAddNotificationForAddMiView(options: {
         return new_notification
     }
 
+    // 通知日時だけを初期値に戻す（日時の横のリセットボタン用）
     function reset_notification_date_time(): void {
         notification_date_typed.value = props.default_notification && props.default_notification.notification_time.getTime() !== new Date(0).getTime() ? moment(props.default_notification.notification_time).toDate() : new Date(Date.now())
         notification_time_string.value = props.default_notification && props.default_notification.notification_time.getTime() !== new Date(0).getTime() ? moment(props.default_notification.notification_time).format("HH:mm:ss") : ""
     }
 
+    // 通知内容と通知日時の両方を初期値に戻す（下のリセットボタン用）
+    function reset_notification(): void {
+        content_value.value = props.default_notification ? props.default_notification.content : ""
+        reset_notification_date_time()
+    }
+
     return {
         // State
-        is_requested_submit,
         content_value,
         notification_date_typed,
         notification_date_string,
@@ -84,5 +89,6 @@ export function useAddNotificationForAddMiView(options: {
         // Methods
         get_notification,
         reset_notification_date_time,
+        reset_notification,
     }
 }

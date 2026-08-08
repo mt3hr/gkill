@@ -7,7 +7,7 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :readonly="is_requested_submit" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
@@ -15,7 +15,8 @@
         <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="rekyou()">{{ i18n.global.t('REKYOU_TITLE') }}</v-btn>
+                <v-btn dark color="primary" @click="rekyou()" :disabled="is_requested_submit">{{
+                    i18n.global.t('REKYOU_TITLE') }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -44,6 +45,7 @@ const props = defineProps<ConfirmReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const {
+    is_requested_submit,
     show_kyou,
     rekyou,
     crudRelayHandlers,
