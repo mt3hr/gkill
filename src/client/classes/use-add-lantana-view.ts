@@ -74,7 +74,8 @@ export function useAddLantanaView(options: {
             // 追加するLantana情報を用意する
             const new_lantana = lantana.value.clone()
             new_lantana.id = props.gkill_api.generate_uuid()
-            new_lantana.mood = await edit_lantana_flowers.value!.get_mood()
+            // refがnullでも例外にしない。throwするとダイアログが閉じないまま固まる
+            new_lantana.mood = await edit_lantana_flowers.value?.get_mood() ?? lantana.value.mood
             new_lantana.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
             new_lantana.create_app = "gkill"
             new_lantana.create_device = props.application_config.device
