@@ -31,27 +31,7 @@
           </v-card-title>
           <KyouHistoriesView :application_config="application_config" :gkill_api="gkill_api" :kyou="kyou"
             :highlight_targets="[kyou.generate_info_identifier()]"
-            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"
-            @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"
-            @deleted_text="(deleted_text: Text) => emits('deleted_text', deleted_text)"
-            @deleted_notification="(deleted_notification: Notification) => emits('deleted_notification', deleted_notification)"
-            @registered_kyou="(registered_kyou: Kyou) => emits('registered_kyou', registered_kyou)"
-            @registered_tag="(registered_tag: Tag) => emits('registered_tag', registered_tag)"
-            @registered_text="(registered_text: Text) => emits('registered_text', registered_text)"
-            @registered_notification="(registered_notification: Notification) => emits('registered_notification', registered_notification)"
-            @updated_kyou="(updated_kyou: Kyou) => emits('updated_kyou', updated_kyou)"
-            @updated_tag="(updated_tag: Tag) => emits('updated_tag', updated_tag)"
-            @updated_text="(updated_text: Text) => emits('updated_text', updated_text)"
-            @updated_notification="(updated_notification: Notification) => emits('updated_notification', updated_notification)"
-            @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-            @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @focused_kyou="(kyou: Kyou) => emits('focused_kyou', kyou)"
-          @clicked_kyou="(kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) }"
-            @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
-            @requested_reload_list="emits('requested_reload_list')"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyous, is_checked)"
-            @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)" />
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" v-on="crudRelayHandlers" />
           <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
               :is_image_request_to_thumb_size="false" :highlight_targets="[kyou.generate_info_identifier()]"
@@ -63,26 +43,7 @@
               :is_readonly_mi_check="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
               :show_update_time="true" :show_related_time="false" :show_attached_tags="true" :show_attached_texts="true"
               :show_attached_notifications="true"
-              @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"
-              @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"
-              @deleted_text="(deleted_text: Text) => emits('deleted_text', deleted_text)"
-              @deleted_notification="(deleted_notification: Notification) => emits('deleted_notification', deleted_notification)"
-              @registered_kyou="(registered_kyou: Kyou) => emits('registered_kyou', registered_kyou)"
-              @registered_tag="(registered_tag: Tag) => emits('registered_tag', registered_tag)"
-              @registered_text="(registered_text: Text) => emits('registered_text', registered_text)"
-              @registered_notification="(registered_notification: Notification) => emits('registered_notification', registered_notification)"
-              @updated_kyou="(updated_kyou: Kyou) => emits('updated_kyou', updated_kyou)"
-              @updated_tag="(updated_tag: Tag) => emits('updated_tag', updated_tag)"
-              @updated_text="(updated_text: Text) => emits('updated_text', updated_text)"
-              @updated_notification="(updated_notification: Notification) => emits('updated_notification', updated_notification)"
-              @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-              @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
-              @requested_reload_list="emits('requested_reload_list')"
-              @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @focused_kyou="(kyou: Kyou) => emits('focused_kyou', kyou)"
-          @clicked_kyou="(kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) }"
-              @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyous, is_checked)"
-              @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)" />
+               />
           </v-card>
         </v-card>
       </div>
@@ -95,16 +56,15 @@ import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import { type Ref, ref } from 'vue'
 import KyouView from '../views/kyou-view.vue'
 import KyouHistoriesView from '../views/kyou-histories-view.vue'
-import type { GkillError } from '@/classes/api/gkill-error'
 import type { Kyou } from '@/classes/datas/kyou'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { Tag } from '@/classes/datas/tag';
-import type { Text } from '@/classes/datas/text';
-import type { Notification } from '@/classes/datas/notification';
-import type { RykvDialogKind, RykvDialogPayload } from '../views/rykv-dialog-kind';
 
 defineProps<KyouHistoriesDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
+
+// クリックはフォーカス移動も伴う
+const crudRelayHandlers = build_kyou_dialog_relay(emits, {
+  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+})
 defineExpose({ show, hide })
 
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
@@ -112,6 +72,7 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 const ui = useFloatingDialog("kyou-histories-dialog", {
   centerMode: "always",
   onEscape: () => hide(),

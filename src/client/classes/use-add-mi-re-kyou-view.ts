@@ -4,16 +4,15 @@ import { MiReKyou } from '@/classes/datas/mi-re-kyou'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
 import { AddMiReKyouRequest } from '@/classes/api/req_res/add-mi-re-kyou-request'
-import { Kyou } from '@/classes/datas/kyou'
 import { Notification } from '@/classes/datas/notification'
 import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { AddMiReKyouViewProps } from '@/pages/views/add-mi-re-kyou-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useMiReKyouScheduleFields } from '@/classes/use-mi-re-kyou-schedule-fields'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useAddMiReKyouView(options: {
     props: AddMiReKyouViewProps,
@@ -156,12 +155,7 @@ export function useAddMiReKyouView(options: {
     }
 
     // ── CRUD relay handlers ──
-    const crudRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
-        'requested_reload_list': () => emits('requested_reload_list'),
-    }
+    const crudRelayHandlers = build_kyou_view_relay(emits)
 
     // ── Return ──
     return {
