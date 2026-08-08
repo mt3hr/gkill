@@ -1,6 +1,7 @@
 'use strict'
 
-import { computed, type Ref, ref, watch } from 'vue'
+import { ref, type Ref, watch } from 'vue'
+import { useContextMenuPosition } from '@/classes/use-context-menu-position'
 import { i18n } from '@/i18n'
 import type { AttachedTimeIsPlaingContextMenuProps } from '@/pages/views/attached-time-is-plaing-context-menu-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
@@ -20,10 +21,7 @@ export function useAttachedTimeIsPlaingContextMenu(options: { props: AttachedTim
 
     reload_cloned_timeis_kyou()
 
-    const is_show: Ref<boolean> = ref(false)
-    const position_x: Ref<number> = ref(0)
-    const position_y: Ref<number> = ref(0)
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * 5))), position_y.value.valueOf())}px; }`)
+    const { is_show, menu_target, open_at } = useContextMenuPosition()
 
     function reload_cloned_timeis_kyou(): void {
         cloned_timeis_kyou.value = props.timeis_kyou.clone()
@@ -32,9 +30,7 @@ export function useAttachedTimeIsPlaingContextMenu(options: { props: AttachedTim
     }
 
     async function show(e: PointerEvent): Promise<void> {
-        position_x.value = e.clientX
-        position_y.value = e.clientY
-        is_show.value = true
+        open_at(e)
     }
 
     async function hide(): Promise<void> {
@@ -77,9 +73,7 @@ export function useAttachedTimeIsPlaingContextMenu(options: { props: AttachedTim
     return {
         cloned_timeis_kyou,
         is_show,
-        position_x,
-        position_y,
-        context_menu_style,
+        menu_target,
         show,
         hide,
         show_edit_timeis_dialog,

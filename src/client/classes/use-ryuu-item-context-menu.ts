@@ -1,4 +1,5 @@
-import { computed, type Ref, ref } from 'vue'
+import { type Ref } from 'vue'
+import { useContextMenuPosition } from '@/classes/use-context-menu-position'
 import type { RyuuItemContextMenuEmits } from '@/pages/views/ryuu-item-context-menu-emits'
 import type EditRyuuItemDialog from '@/pages/dialogs/edit-ryuu-item-dialog.vue'
 import type ConfirmDeleteRyuuItemDialog from '@/pages/dialogs/confirm-delete-ryuu-item-dialog.vue'
@@ -14,16 +15,11 @@ export function useRyuuItemContextMenu(options: {
     const { emits: _emits, edit_related_kyou_query_dialog, confirm_delete_ryuu_item_dialog, model_value } = options
 
     // ── State refs ──
-    const is_show: Ref<boolean> = ref(false)
-    const position_x: Ref<number> = ref(0)
-    const position_y: Ref<number> = ref(0)
-    const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * 2))), position_y.value.valueOf())}px; }`)
+    const { is_show, menu_target, open_at } = useContextMenuPosition()
 
     // ── Methods ──
     async function show(e: PointerEvent): Promise<void> {
-        position_x.value = e.clientX
-        position_y.value = e.clientY
-        is_show.value = true
+        open_at(e)
     }
 
     async function hide(): Promise<void> {
@@ -42,9 +38,7 @@ export function useRyuuItemContextMenu(options: {
     return {
         // State
         is_show,
-        position_x,
-        position_y,
-        context_menu_style,
+        menu_target,
 
         // Methods
         show,
