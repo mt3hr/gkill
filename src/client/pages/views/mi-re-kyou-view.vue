@@ -10,7 +10,8 @@
         @dragstart="(e: DragEvent) => onDragStart(e)">
         <div class="mirekyou_head">
             <!-- 既定のdensityだと56pxあり、板名と日時と合わせると行に収まらない -->
-            <v-checkbox v-model="is_checked_mi" hide-details density="compact" @click="clicked_mi_check()" />
+            <v-checkbox v-model="is_checked_mi" hide-details density="compact" @click="clicked_mi_check()"
+                :readonly="is_requested_submit" />
             <!-- 既存の記録をタスクにしたものであることをMiと区別できるようにする -->
             <v-icon class="mirekyou_mark" size="16">mdi-subdirectory-arrow-right</v-icon>
             <div class="py-1 mi_title mirekyou_summary" :title="target_summary">{{ target_summary }}</div>
@@ -78,6 +79,7 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     context_menu,
     target_kyou,
+    is_requested_submit,
     is_checked_mi,
     target_summary,
     is_target_not_found,

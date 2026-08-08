@@ -7,8 +7,8 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
-                        color="primary" />
+                    <v-checkbox v-model="show_kyou" :readonly="is_requested_submit"
+                        :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
@@ -21,7 +21,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <v-menu v-model="show_notification_date_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_notification_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="notification_date_string"
@@ -33,7 +33,7 @@
                                 </v-menu>
                             </td>
                             <td>
-                                <v-menu v-model="show_notification_time_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_notification_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="notification_time_string"

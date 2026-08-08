@@ -7,7 +7,7 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :readonly="is_requested_submit" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
@@ -16,7 +16,8 @@
         <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="delete_text()">{{ i18n.global.t("DELETE_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="delete_text()" :disabled="is_requested_submit">{{
+                    i18n.global.t("DELETE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -45,6 +46,7 @@ const props = defineProps<ConfirmDeleteTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const {
+    is_requested_submit,
     show_kyou,
     text_highlight_targets,
     delete_text,

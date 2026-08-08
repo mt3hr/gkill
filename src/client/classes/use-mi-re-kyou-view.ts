@@ -1,6 +1,5 @@
 import { i18n } from '@/i18n'
 import { computed, type Ref, ref, watch } from 'vue'
-import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { MiReKyouViewProps } from '@/pages/views/mi-re-kyou-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
@@ -11,11 +10,8 @@ import { Kyou } from '@/classes/datas/kyou'
 import { get_kyou_content_text } from '@/classes/kyou-content-text'
 import { is_row_height } from '@/classes/kyou-row-height'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import type { Tag } from '@/classes/datas/tag'
-import type { Text } from '@/classes/datas/text'
-import type { Notification } from '@/classes/datas/notification'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 /** 一覧の行で日時を1行だけ出すときの優先順。Miの並びに合わせる */
 const MI_RE_KYOU_TIME_PRIORITY = [
@@ -42,6 +38,7 @@ export function useMiReKyouView(options: {
     const is_compact = computed(() => is_row_height(props.height))
 
     // ── State refs ──
+    const is_requested_submit = ref(false)
     const target_kyou: Ref<Kyou> = ref(new Kyou())
     const is_checked_mi: Ref<boolean> = ref(props.mirekyou.is_checked)
     // 参照先の本文を1行にしたもの。取得できるまでは高さを確定させるために「取得中」を入れておく
@@ -162,12 +159,24 @@ export function useMiReKyouView(options: {
         }
     }
 
+    // 一覧上のチェックはそのままサーバ更新に繋がる。連打で同じ更新が重なるのを防ぐ
     async function clicked_mi_check(): Promise<void> {
         // 読み取り専用表示だったら何もしない
         if (props.is_readonly_mi_check) {
             return
         }
+        if (is_requested_submit.value) {
+            return
+        }
+        is_requested_submit.value = true
+        try {
+            await update_mi_check()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
 
+    async function update_mi_check(): Promise<void> {
         is_checked_mi.value = !is_checked_mi.value
 
         // 更新がなかったらエラーメッセージを出力する
@@ -213,26 +222,7 @@ export function useMiReKyouView(options: {
     get_target_kyou()
 
     // ── Event relay objects ──
-    const crudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
-        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
-        'deleted_text': (text: Text) => emits('deleted_text', text),
-        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
-        'registered_text': (text: Text) => emits('registered_text', text),
-        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
-        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
-        'updated_text': (text: Text) => emits('updated_text', text),
-        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
-        'requested_reload_list': () => emits('requested_reload_list'),
-        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => emits('requested_update_check_kyous', kyous, checked),
-        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
-    }
+    const crudRelayHandlers = build_kyou_view_relay(emits)
 
     // ── Return ──
     return {
@@ -241,6 +231,7 @@ export function useMiReKyouView(options: {
 
         // State
         target_kyou,
+        is_requested_submit,
         is_checked_mi,
         target_summary,
         is_target_not_found,
@@ -260,3 +251,4 @@ export function useMiReKyouView(options: {
         crudRelayHandlers,
     }
 }
+

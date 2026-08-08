@@ -7,7 +7,8 @@
                     <tbody>
                         <tr>
                             <td class="pa-0 ma-0">
-                                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
+                                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()"
+                                    :readonly="is_requested_submit" />
                             </td>
                             <td class="pa-0 ma-0">
                                 <div class="py-1 mi_title">{{ kyou.typed_mi.title }}</div>
@@ -58,6 +59,7 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     context_menu,
     cloned_kyou: _cloned_kyou,
+    is_requested_submit,
     is_checked_mi,
     mi_title_style,
     effective_draggable,

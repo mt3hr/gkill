@@ -184,8 +184,8 @@ export function useKftlView(options: {
 
         invalid_line_numbers.value = await statement.get_invalid_line_indexs()
 
+        // 送信中の再トリガーを避ける。フラグ自体は do_submit が立てる
         if ((text_area_content.value.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n") || text_area_content.value.endsWith("\n" + KFTL_ASCII_SAVE_CHARACTOR + "\n")) && !is_requested_submit.value) {
-            is_requested_submit.value = true
             submit()
         }
     }
@@ -255,7 +255,15 @@ export function useKftlView(options: {
         await do_submit(true)
     }
 
+    // 保存本体。KFTLは複数リクエストをtxで束ねて送るので、二重送信すると
+    // Kyouが丸ごと重複登録される。フラグはここで立てる
+    // （テンプレートの :disabled / :readonly はこのフラグを見ている。
+    //   以前は保存マーカー検出経路でしか立てておらず、保存ボタン経由では実質ノーガードだった）
     async function do_submit(skip_unknown_tag_check: boolean): Promise<void> {
+        if (is_requested_submit.value) {
+            return
+        }
+        is_requested_submit.value = true
         try {
             if (invalid_line_numbers.value.length != 0) {
                 const error = new GkillError()

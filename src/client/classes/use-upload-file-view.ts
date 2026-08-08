@@ -1,17 +1,15 @@
 import { nextTick, type Ref, ref } from 'vue'
-import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { UploadFileViewProps } from '@/pages/views/upload-file-view-props'
 import type { UploadFileViewEmits } from '@/pages/views/upload-file-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { Repository } from '@/classes/datas/config/repository'
-import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import { FileUploadConflictBehavior } from '@/classes/api/req_res/file-upload-conflict-behavior'
 import { UploadFilesRequest } from '@/classes/api/req_res/upload-files-request'
 import { UploadGPSLogFilesRequest } from '@/classes/api/req_res/upload-gps-log-files-request'
 import { FileData } from '@/classes/api/file-data'
 import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import type DecideRelatedTimeUploadedFileDialog from '@/pages/dialogs/decide-related-time-uploaded-file-dialog.vue'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useUploadFileView(options: {
     props: UploadFileViewProps,
@@ -25,6 +23,7 @@ export function useUploadFileView(options: {
     const gps_file_input = ref<HTMLInputElement | null>(null)
 
     // ── State refs ──
+    const is_requested_submit = ref(false)
     const tab = ref(2)
     const conflict_behavior_file: Ref<FileUploadConflictBehavior> = ref(FileUploadConflictBehavior.rename)
     const conflict_behavior_gps_file: Ref<FileUploadConflictBehavior> = ref(FileUploadConflictBehavior.merge)
@@ -70,7 +69,21 @@ export function useUploadFileView(options: {
         })
     }
 
+    // アップロードはbase64化に時間がかかるぶん、待っている間に次を落とされやすい。
+    // 二重に走らせると同じファイルが2つ登録されるので直列化する
     async function upload_files(): Promise<void> {
+        if (is_requested_submit.value) {
+            return
+        }
+        is_requested_submit.value = true
+        try {
+            await execute_upload_files()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    async function execute_upload_files(): Promise<void> {
         if (!files.value) {
             return
         }
@@ -111,6 +124,18 @@ export function useUploadFileView(options: {
     }
 
     async function upload_gps_log_files(): Promise<void> {
+        if (is_requested_submit.value) {
+            return
+        }
+        is_requested_submit.value = true
+        try {
+            await execute_upload_gps_log_files()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    async function execute_upload_gps_log_files(): Promise<void> {
         if (!gps_log_files.value) {
             return
         }
@@ -262,13 +287,11 @@ export function useUploadFileView(options: {
     }
 
     // ── CRUD relay handlers ──
-    const crudRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+    const crudRelayHandlers = build_kyou_view_relay(emits, {
+        // アップロード直後のKyouはこの画面が抱えているので、再読込・削除は自前で処理する
         'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
         'deleted_kyou': (kyou: Kyou) => remove_uploaded_kyou(kyou),
-        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
-    }
+    })
 
     // ── Return ──
     return {
@@ -278,6 +301,7 @@ export function useUploadFileView(options: {
         gps_file_input,
 
         // State
+        is_requested_submit,
         tab,
         conflict_behavior_file,
         conflict_behavior_gps_file,
