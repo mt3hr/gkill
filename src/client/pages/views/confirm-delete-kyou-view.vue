@@ -15,7 +15,8 @@
         <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="delete_kyou()">{{ i18n.global.t("DELETE_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="delete_kyou()" :disabled="is_requested_submit">{{
+                    i18n.global.t("DELETE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -45,6 +46,7 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     cloned_kyou: _cloned_kyou,
+    is_requested_submit,
     show_kyou,
     delete_kyou,
     crudRelayHandlers,

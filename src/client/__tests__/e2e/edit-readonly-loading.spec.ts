@@ -4,10 +4,12 @@ import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv,
   makeUniqueLabel, waitForKyouByText,
+  clickFabButton, clickContextMenuItem,
+  MENU,
 } from './crud-helpers'
 
 /**
- * Edit系ダイアログの「処理中は入力フォームreadonly」検証。
+ * Add/Edit系ダイアログの「処理中は入力フォームreadonly」検証。
  *
  * readonly は is_busy = is_loading || is_requested_submit にバインドされている
  * (use-edit-kmemo-view.ts)。このうち is_loading 側は、リストから開いた Kyou は
@@ -72,6 +74,64 @@ test.describe('Edit Dialog Readonly While Submitting', () => {
     }).toPass({ timeout: 60000 })
 
     // 保存完了でダイアログが閉じること (= 実際に更新リクエストが通ったこと)
+    await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 30000 })
+  })
+
+  /**
+   * Add系は入力欄の readonly は入っていたが、日時ピッカーを開く v-menu に
+   * :disabled が無く、保存中でも日付・時刻を変更できてしまっていた。
+   * 日時の v-text-field は元から静的 readonly（ピッカー専用）なので、
+   * 塞ぐべきは v-menu 側であり、readOnly プロパティでは検出できない。
+   */
+  test('add urlog inputs and date picker are locked during save', async ({ page }) => {
+    const label = makeUniqueLabel('add_ro')
+    await navigateToRykv(page)
+
+    await clickFabButton(page)
+    await clickContextMenuItem(page, MENU.addURLog)
+
+    const dialog = page.locator('.gkill-floating-dialog').first()
+    await expect(dialog, 'URLog追加ダイアログが開かない').toBeVisible({ timeout: 15000 })
+
+    const urlField = dialog.locator('.v-text-field input').first()
+    await expect(urlField).toBeVisible({ timeout: 15000 })
+    await expect(urlField).toHaveJSProperty('readOnly', false, { timeout: 20000 })
+    await urlField.fill(`https://example.com/${label}`)
+
+    // 日付ピッカーは v-menu の中身なので、開いているときだけ active な overlay に載る。
+    // rykv のサイドバー (calendar-query.vue) が v-show で隠した .v-date-picker を
+    // 常時DOMに残しているため、overlay に限定しないと常に1件見つかってしまう。
+    const openDatePicker = page.locator('.v-overlay--active .v-date-picker')
+    const dateField = dialog.locator('.v-text-field input').nth(2)
+
+    // 保存前は開くこと。これが無いと後段の「開かない」検証が
+    // セレクタ間違いでも通ってしまう
+    await dateField.click()
+    await expect(openDatePicker, '保存前なのに日付ピッカーが開かない').toHaveCount(1, { timeout: 15000 })
+    // 外側 (URL欄) をクリックして閉じる。Escapeはダイアログごと閉じうるので使わない
+    await urlField.click()
+    await expect(openDatePicker, '日付ピッカーが閉じない').toHaveCount(0, { timeout: 15000 })
+
+    // 保存APIを遅延させ、Submitting 中の状態を観測可能にする。
+    // 遅延中に readonly と日付ピッカーの両方を見るので、edit側より長めに取る
+    await page.route('**/api/add_urlog', async (route) => {
+      await new Promise((r) => setTimeout(r, 15000))
+      await route.continue()
+    })
+
+    const saveButton = dialog.locator('button').filter({ hasText: /保存|save/i }).first()
+    await expect(saveButton).toBeEnabled({ timeout: 15000 })
+    await saveButton.click()
+
+    // 保存中: URL欄が readonly になっていること
+    await expect(urlField, '保存中にURL欄が編集できる').toHaveJSProperty('readOnly', true, { timeout: 10000 })
+
+    // 保存中: 日付欄を押しても日付ピッカーが開かないこと
+    await dateField.click({ force: true })
+    await expect(openDatePicker, '保存中に日付ピッカーが開いてしまう')
+      .toHaveCount(0, { timeout: 5000 })
+
+    // 保存完了でダイアログが閉じること
     await expect(page.locator('.gkill-floating-dialog')).toHaveCount(0, { timeout: 30000 })
   })
 })

@@ -19,7 +19,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <v-menu v-model="show_related_date_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_related_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="related_date_string"
@@ -31,7 +31,7 @@
                                 </v-menu>
                             </td>
                             <td>
-                                <v-menu v-model="show_related_time_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_related_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="related_time_string"

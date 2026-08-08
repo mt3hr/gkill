@@ -1,5 +1,4 @@
 import { i18n } from '@/i18n'
-import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { MiKyouViewProps } from '@/pages/views/mi-kyou-view-props'
@@ -8,11 +7,8 @@ import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import type { Tag } from '@/classes/datas/tag'
-import type { Text } from '@/classes/datas/text'
-import type { Notification } from '@/classes/datas/notification'
-import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useMiKyouView(options: {
     props: MiKyouViewProps,
@@ -29,6 +25,7 @@ export function useMiKyouView(options: {
     const effective_draggable = computed(() => is_mobile ? false : (props.draggable ?? false))
 
     // ── State refs ──
+    const is_requested_submit = ref(false)
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const is_checked_mi: Ref<boolean> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.is_checked : false)
     const mi_title_style = ref({
@@ -62,12 +59,24 @@ export function useMiKyouView(options: {
         }
     }
 
+    // 一覧上のチェックはそのままサーバ更新に繋がる。連打で同じ更新が重なるのを防ぐ
     async function clicked_mi_check(): Promise<void> {
         // 読み取り専用表示だったら何もしない
         if (props.is_readonly_mi_check) {
             return
         }
+        if (is_requested_submit.value) {
+            return
+        }
+        is_requested_submit.value = true
+        try {
+            await update_mi_check()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
 
+    async function update_mi_check(): Promise<void> {
         is_checked_mi.value = !is_checked_mi.value
 
         cloned_kyou.value = props.kyou.clone()
@@ -156,26 +165,7 @@ export function useMiKyouView(options: {
     }
 
     // ── Event relay objects ──
-    const crudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
-        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
-        'deleted_text': (text: Text) => emits('deleted_text', text),
-        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
-        'registered_text': (text: Text) => emits('registered_text', text),
-        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
-        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
-        'updated_text': (text: Text) => emits('updated_text', text),
-        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        'requested_reload_kyou': (kyou: Kyou) => emits('requested_reload_kyou', kyou),
-        'requested_reload_list': () => emits('requested_reload_list'),
-        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => emits('requested_update_check_kyous', kyous, checked),
-        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
-    }
+    const crudRelayHandlers = build_kyou_view_relay(emits)
 
     // ── Return ──
     return {
@@ -184,6 +174,7 @@ export function useMiKyouView(options: {
 
         // State
         cloned_kyou,
+        is_requested_submit,
         is_checked_mi,
         mi_title_style,
         effective_draggable,
@@ -197,3 +188,4 @@ export function useMiKyouView(options: {
         crudRelayHandlers,
     }
 }
+

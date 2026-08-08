@@ -8,7 +8,7 @@
                     </v-list-item>
                 </template>
                 <v-list-item v-for="(history_tag, index) in tag_history" :key="index"
-                    @click="add_tag_from_history(history_tag)">
+                    @click="add_tag_from_history(history_tag)" :disabled="is_requested_submit">
                     <v-list-item-title>{{ history_tag }}</v-list-item-title>
                 </v-list-item>
             </v-list-group>
@@ -66,6 +66,7 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     // State
     is_show,
+    is_requested_submit,
     tag_history,
     context_menu_style,
 

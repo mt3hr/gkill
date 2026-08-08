@@ -16,7 +16,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <v-menu v-model="show_start_date_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_start_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="timeis_start_date_string"
@@ -28,7 +28,7 @@
                                 </v-menu>
                             </td>
                             <td>
-                                <v-menu v-model="show_start_time_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_start_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="timeis_start_time_string"
@@ -68,7 +68,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <v-menu v-model="show_end_date_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_end_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="timeis_end_date_string"
@@ -80,7 +80,7 @@
                                 </v-menu>
                             </td>
                             <td>
-                                <v-menu v-model="show_end_time_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_end_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="timeis_end_time_string"

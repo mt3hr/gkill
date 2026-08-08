@@ -1,13 +1,14 @@
 <template>
     <v-card class="pa-0 ma-0" variant="flat">
-        <v-textarea v-model="content_value" :label="i18n.global.t('NOTIFICATION_CONTENT_TITLE')" />
+        <v-textarea v-model="content_value" :label="i18n.global.t('NOTIFICATION_CONTENT_TITLE')"
+            :readonly="is_readonly" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <table>
                     <tbody>
                         <tr>
                             <td>
-                                <v-menu v-model="show_notification_date_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_readonly" v-model="show_notification_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="notification_date_string"
@@ -19,7 +20,7 @@
                                 </v-menu>
                             </td>
                             <td>
-                                <v-menu v-model="show_notification_time_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_readonly" v-model="show_notification_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="notification_time_string"
@@ -31,14 +32,17 @@
                                 </v-menu>
                             </td>
                             <td>
+                                <!-- 日時の横のリセットは通知日時だけを戻す -->
                                 <v-btn dark color="secondary" @click="reset_notification_date_time()"
-                                    :disabled="is_requested_submit">{{
+                                    :disabled="is_readonly">{{
                                         i18n.global.t("RESET_TITLE") }}</v-btn>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <v-btn dark color="secondary" @click="reset_notification_date_time()">{{ i18n.global.t("RESET_TITLE") }}</v-btn>
+                <!-- 下のリセットは通知内容と通知日時の両方を戻す -->
+                <v-btn dark color="secondary" @click="reset_notification()" :disabled="is_readonly">{{
+                    i18n.global.t("RESET_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -56,7 +60,6 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     // State
-    is_requested_submit,
     content_value,
     notification_date_typed,
     notification_date_string,
@@ -67,6 +70,7 @@ const {
     // Business logic
     get_notification,
     reset_notification_date_time,
+    reset_notification,
 } = useAddNotificationForAddMiView({ props, emits })
 
 defineExpose({ get_notification })
