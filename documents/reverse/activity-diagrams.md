@@ -395,5 +395,48 @@ flowchart TD
 ```
 
 MiReKyou はタイトルを持たないため、対象 Kyou が削除されると表示できるものが無くなる。
+ただし**画面から対象 Kyou を削除した場合は、その MiReKyou も連鎖して論理削除される**ので、
+この状態は通常見えない（`classes/cascade-delete-kyou.ts`。→ 本資料「Kyou 連鎖削除フロー」）。
+見えるのは連鎖削除が途中で失敗して部分確定した場合や、MCP・他クライアントから対象 Kyou だけを消した場合。
 また `DATA_TYPE` は `mirekyou_create` / `_check` / `_limit` / `_start` / `_end` の5種に射影され、
 いずれも `mi` で始まるので前方一致判定では `mirekyou` を先に評価する必要がある。
+
+## 13. Kyou 連鎖削除フロー
+
+Kyou を削除すると、付随する Tag / Text / Notification と、それを参照している ReKyou / MiReKyou も
+まとめて論理削除する（`classes/cascade-delete-kyou.ts`）。**探索（read）と削除（write）を完全に分ける**のが要点で、
+サーバの `FindKyous` は参照先が削除済みの ReKyou を検索結果から外すため、先に消してしまうと参照元を辿れなくなる。
+
+```mermaid
+flowchart TD
+    Start([削除確認ダイアログで「削除」]) --> Guard{is_requested_submit?}
+    Guard -->|true| Ignore([何もしない・二重送信を弾く])
+    Guard -->|false| Share{for_share_kyou?}
+    Share -->|Yes| NoOp([共有画面では削除しない])
+    Share -->|No| Load[kyou.load_typed_datas]
+    Load --> Discover[探索フェーズ開始<br>frontier = 削除対象Kyouのid]
+
+    Discover --> DepthCheck{深さ > 32?}
+    DepthCheck -->|Yes| DepthErr[ERR900093<br>cascade_delete_depth_exceeded<br>を積んで探索を打ち切る]
+    DepthCheck -->|No| Fetch[16件ずつ並列で逆引き<br>Tag / Text / Notification<br>ReKyou / MiReKyou]
+    Fetch --> Dedupe[idごとにupdate_time最新だけ残す<br>is_deleted と訪問済みは除外]
+    Dedupe --> More{次のfrontierが空?}
+    More -->|No| DepthCheck
+    More -->|Yes| Mutate[削除フェーズ開始]
+    DepthErr --> Mutate
+
+    Mutate --> Attached[Tag / Text / Notification を<br>並列で IS_DELETED=true に更新]
+    Attached --> ReKyou[ReKyou を深い方から逆順に更新]
+    ReKyou --> MiReKyou[MiReKyou を深い方から逆順に更新]
+    MiReKyou --> Body[Kyou自身のtyped dataを最後に更新<br>data_typeごとにエンドポイントを選ぶ<br>mirekyou を mi より先に判定]
+    Body --> Cache[visited_ids ぶんの<br>Service Workerキャッシュを削除]
+    Cache --> Emit[deleted_ids のぶん deleted_kyou を emit]
+    Emit --> Close([finally でダイアログを閉じる])
+```
+
+**Tag / Text / Notification の逆引きだけ `force_reget=true`。** Service Worker が `target_id` 単位で
+キャッシュしているため、古い一覧のまま消すと取りこぼす（ReKyou / MiReKyou の逆引きには付けていない）。
+
+**原子性は無い。** TXID / commit_tx は使わない。1本失敗しても止めずに全部投げ、
+エラーは `ERR900094 cascade_delete_failed` として集約して返す。途中で失敗しても
+Kyou 自身が最後まで生きていれば、同じダイアログをもう一度開くだけで残骸を再発見できる。

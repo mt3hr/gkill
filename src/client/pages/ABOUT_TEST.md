@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、34 specファイル196テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、34 specファイル198テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -74,7 +74,7 @@ const record = await waitForKyouByText(page, label)
 
 ## テストファイル一覧
 
-### E2E テスト（34 specファイル, 196テスト宣言）
+### E2E テスト（34 specファイル, 198テスト宣言）
 
 #### ページ表示・ナビゲーション系（12ファイル）
 
@@ -107,7 +107,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 | `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）: rykvのコンテキストメニュー「タスクにする」→Mi画面に出る。API面はGo側の TestHandleAddMiReKyou_* 系へ移管 |
 
-#### 認証・ユースケース・設定系（12ファイル）
+#### 認証・ユースケース・設定系（13ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -123,8 +123,9 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/dashboard.spec.ts` | ダッシュボード画面（ナビゲーション、描画、JSエラーなし確認） |
 | `src/client/__tests__/e2e/dialog-history.spec.ts` | ダイアログ履歴不変条件（×/Escape/ブラウザバックで閉じてもバックスタックに使用済みエントリが残らない、複数ダイアログを開いたまま画面遷移可能） |
 | `src/client/__tests__/e2e/edit-readonly-loading.spec.ts` | Edit系ダイアログの Loading 中 readonly 化とロード完了後の編集可能復帰（API 遅延注入で検証） |
+| `src/client/__tests__/e2e/re-kyou.spec.ts` | ReKyou（リポスト）の行を右クリックしたとき、入れ子の参照先ではなくリポスト自身のコンテキストメニューが出ること |
 
-### Composable ユニットテスト（13ファイル）
+### Composable ユニットテスト（14ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -141,6 +142,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/unit/composables/gps-log-map.test.ts` | GPSログ地図ビュー Composable |
 | `src/client/__tests__/unit/composables/kyou-count-calendar.test.ts` | Kyou件数カレンダー Composable |
 | `src/client/__tests__/unit/composables/overlay-and-ur-log-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
+| `src/client/__tests__/unit/composables/kyou-view.test.ts` | Kyou ビュー Composable（ReKyou / MiReKyou の参照先を読み込み中はゼロ値の日時を出さず、読み込み中として扱う） |
 
 ### ルーターテスト
 

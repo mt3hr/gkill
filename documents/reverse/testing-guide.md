@@ -13,12 +13,12 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
 | Go バックエンド | 688 | 78 | Go `testing` |
-| フロントエンド ユニット | 879 | 73 | Vitest |
-| フロントエンド E2E | 196 | 34（+auth.setup.ts） | Playwright |
+| フロントエンド ユニット | 897 | 77 | Vitest |
+| フロントエンド E2E | 198 | 34（+auth.setup.ts） | Playwright |
 | MCP サーバ | 703 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 118 | 9 | JUnit 4 + MockK |
-| **合計** | **2,402** | **188** | |
+| **合計** | **2,616** | **220** | |
 
 数え直すコマンド:
 
@@ -203,14 +203,17 @@ src/server/gkill/
 │   ├── message/message_test.go        ← メッセージフォーマット
 │   ├── kftl/                          ← KFTL パーサ（3ファイル）
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
-│   └── gkill_server_api/              ← ハンドラ層（7ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（10ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
 │       ├── handle_get_idf_kyou_by_relative_path_test.go ← 相対パス解決
 │       ├── handle_get_shared_kyous_test.go       ← 共有Kyou取得
 │       ├── handle_zip_cache_file_serve_test.go   ← ZIPキャッシュの利用者分離
-│       └── utils_ssrf_test.go                    ← SSRF対策
+│       ├── utils_ssrf_test.go                    ← SSRF対策
+│       ├── get_device_cache_test.go              ← デバイス一覧キャッシュ
+│       ├── handle_reset_password_test.go         ← パスワードリセット
+│       └── plugin_content_html_cache_test.go     ← プラグイン本文HTMLのキャッシュ
 ├── plugin/
 │   └── sdk/                           ← プラグインSDK（sdk_test.go, config_test.go）
 ├── dao/
@@ -223,12 +226,12 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（17ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
+│   └── reps/                          ← リポジトリ実装（28ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
 ├── dvnf/                              ← DVNF ファイル管理（2ファイル）
-└── main/                              ← CLI・エントリポイント（8ファイル）
+└── main/                              ← CLI・エントリポイント（7ファイル）
 ```
 
 **テスト戦略:**
@@ -248,7 +251,7 @@ src/client/__tests__/
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（11ファイル）
+│   ├── classes/                       ← ユーティリティ（17ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -259,14 +262,22 @@ src/client/__tests__/
 │   │   ├── mermaid-render.test.ts
 │   │   ├── foldable-struct-move.test.ts
 │   │   ├── kyou-content-text.test.ts  ← 内容コピー / IDコピー
-│   │   └── use-dialog-history-stack.test.ts
+│   │   ├── use-dialog-history-stack.test.ts
+│   │   ├── delayed-loading.test.ts
+│   │   ├── cascade-delete-kyou.test.ts    ← Kyou削除の連鎖削除（探索・削除順・循環参照・深さ上限）
+│   │   ├── use-confirm-delete-kyou-view.test.ts ← 削除確認ビュー（二重送信ガード・finallyでのクローズ）
+│   │   ├── kyou-view-relay.test.ts        ← 中継束の網羅性（ビュー18件 / ダイアログ20件、overrides の差し替え）
+│   │   ├── confirm-dialog-close.test.ts   ← 確認ダイアログが例外時も finally で閉じること
+│   │   └── edit-view-no-update-check.test.ts ← 「更新がありません」判定に related_time を含めること
 │   ├── datas/                         ← データモデル（28ファイル）
 │   ├── dnote/                         ← D-note モジュール（7ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
-│   ├── composables/                   ← Vue Composable（13ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（14ファイル。add-views / edit-views /
 │   │                                     confirm-delete / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
-│   │                                     mi-re-kyou-view / save-clipboard-to-file-dialog）
+│   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
+│   │                                     gps-log-map / overlay-and-ur-log-view /
+│   │                                     save-clipboard-to-file-dialog）
 │   ├── router.test.ts                 ← ルーター（13ルート）
 │   ├── i18n-completeness.test.ts      ← i18n 完全性（7ロケール）
 │   └── service-worker.test.ts         ← Service Worker
@@ -286,7 +297,7 @@ src/client/__tests__/
 
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
-全13ルートを Playwright で検証し、CRUD 操作フローもカバー（34 specファイル + auth.setup.ts、195テスト宣言）。各テストでは以下を共通チェック：
+全13ルートを Playwright で検証し、CRUD 操作フローもカバー（34 specファイル + auth.setup.ts、198テスト宣言）。各テストでは以下を共通チェック：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
@@ -358,7 +369,7 @@ src/client/__tests__/
 | `server-config-crud.spec.ts` | プロファイル追加・変更、TLS有効化・無効化・生成、アドレス変更、アカウント管理(追加/有効化/無効化/パスワードリセット)、Rep管理(追加/設定変更/有効化/無効化/削除/書き込み制御/ID自動割当/デバイス割当/RepType編集) |
 | `user-config-crud.spec.ts` | GoogleMapAPIキー、画像ビューア列数、miデフォルト板名、ホットリロード、タグ/Rep/Device/RepType/KFTLテンプレート構造(フォルダ追加/並替/適用) |
 
-#### 回帰テスト・その他（3 spec files）
+#### 回帰テスト・その他（4 spec files）
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
@@ -449,7 +460,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 
 ## 5. テストカバレッジの範囲
 
-### Go バックエンド（31ディレクトリにテスト有）
+### Go バックエンド（30ディレクトリにテスト有）
 
 ```mermaid
 graph LR

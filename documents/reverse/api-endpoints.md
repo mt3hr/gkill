@@ -7,7 +7,7 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 - **エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`（パス・メソッド定義）
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル、96ファイル）
 - **認証ミドルウェア:** `src/server/gkill/api/gkill_server_api/auth_middleware.go`（`wrapNoAuth`/`wrapAuth`/`wrapAuthRepos`でハンドラ登録）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（182ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/`（186ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/`（HTTP非依存のユースケース関数、17ファイル）
 
 ## 共通仕様
@@ -55,10 +55,12 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 }
 ```
 
-- **正常:** HTTP 200 + `errors` が空配列
+- **正常:** HTTP 200 + `errors` が `null`（要素なし）
 - **業務エラー:** HTTP 200 + `errors` に詳細あり（エラーコードで判別）
 - **アクセス拒否:** HTTP 403（ローカルアクセス制限時）
 - **サーバーエラー:** HTTP 500
+
+> **`errors` は成功時 `null` で返る。** Go 側のレスポンス構造体は `json:"errors"`（`omitempty` 無し）で、ハンドラはエラーが起きたときだけ `append` するため、nil slice がそのまま `null` になり空配列 `[]` にはならない。クライアントは `res.errors ?? []` のように必ず null を吸収してから扱うこと。なお `messages` は成功時に成功メッセージが1件入るので `null` ではない。
 
 ### 代表的なリクエスト/レスポンス例
 
@@ -123,8 +125,10 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
       "data_type": "kmemo"
     }
   ],
-  "messages": [],
-  "errors": []
+  "messages": [
+    { "message_code": "MSG000025", "message": "検索完了" }
+  ],
+  "errors": null
 }
 ```
 
@@ -167,9 +171,9 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 // レスポンス例（成功時）
 {
   "messages": [
-    { "message_code": "KFTLSubmitSuccess", "message": "KFTLテキストを記録しました" }
+    { "message_code": "MSG000076", "message": "メモ帳のテキストを記録しました" }
   ],
-  "errors": []
+  "errors": null
 }
 ```
 
@@ -212,8 +216,10 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
       "rep_name": "files_desktop"
     }
   ],
-  "messages": [],
-  "errors": []
+  "messages": [
+    { "message_code": "MSG000043", "message": "ファイルアップロードが完了しました" }
+  ],
+  "errors": null
 }
 ```
 
@@ -469,9 +475,9 @@ MCPサーバは9個のReadツールを提供する。内訳は固有の8つ（`g
 
 ## 補足
 
-- **合計:** `/api/` エンドポイント 90件定義（うち88件はハンドラ登録済み、2件はアドレス定義のみ。メソッドはPOST中心、一部GET）+ 非APIルート 19件（PathPrefix 18 + Path 1）
+- **合計:** `/api/` エンドポイント 92件定義（91 POST + 1 GET。うち90件はハンドラ登録済み、2件はアドレス定義のみ）+ 非APIルート 19件（PathPrefix 18 + Path 1）
 - **全エンドポイント定義:** `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go`
 - **ハンドラ実装:** `src/server/gkill/api/gkill_server_api/handle_*.go`（1ハンドラ1ファイル）
-- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（182ファイル）
+- **リクエスト/レスポンス型:** `src/server/gkill/api/req_res/` 配下に各エンドポイント対応の構造体（186ファイル）
 - **ビジネスロジック:** `src/server/gkill/usecase/` 配下にHTTP非依存のユースケース関数（17ファイル）
 - `get_kftl_template` と `get_gkill_info` はアドレス定義（`gkill_server_api_address.go`）が存在するが、`HandleFunc` 登録もハンドラ関数実装も存在しない。コードベース全体を調査した結果、これらは**未実装のエンドポイント**であることが確認された。リクエストは404となる

@@ -22,6 +22,7 @@ server/
     │   ├── gkill_server_api/  # HTTP ハンドラ（96 handle_*.go + 認証・ルーティング）
     │   ├── embed/             # ビルド生成物（Vue SPA 埋め込み）
     │   ├── find/              # 検索クエリ型
+    │   ├── gkill_plugin/      # プラグイン通信プロトコル型（PluginManifest / PluginRequest / PluginResponse / PluginKyou）
     │   ├── gpslogs/           # GPS ログパーサ
     │   ├── kftl/              # KFTL パーサ → api/kftl/README.md
     │   ├── message/           # エラー/メッセージコード
@@ -37,6 +38,8 @@ server/
     │   ├── share_kyou_info/   # 共有情報
     │   ├── sqlite3impl/       # SQLite3 ユーティリティ
     │   └── user_config/       # ユーザ設定
+    ├── plugin/                # プラグイン作者向け SDK → plugin/README.md
+    │   └── sdk/               # sdk.Run() の stdio ループ・Handler・Config
     ├── dvnf/                  # データバージョニング → dvnf/README.md
     └── main/                  # CLI エントリポイント → main/README.md
         ├── common/            # 共有初期化・ログ・オプション
@@ -104,7 +107,7 @@ go build ./...
 ```
 
 **前提条件:**
-- Go 1.26.0+
+- Go 1.26.4+（`src/server/go.mod` が `go 1.26.4` を宣言）
 - フロントエンドビルド済み（`npm run build` → `embed/html/` にコピー済み）
 
 ## コード規約

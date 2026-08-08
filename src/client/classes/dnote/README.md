@@ -74,6 +74,7 @@ dnote/
 | `related-kyou-query.ts` | 関連 Kyou クエリ |
 | `related-time-match-type.ts` | 関連時刻マッチ型 |
 | `aggregate-grouping-list-result-record.ts` | グルーピング集計結果レコード |
+| `dnote-trend-aggregator.ts` | トレンドグラフの時系列バケット集計（詳細は「トレンドグラフ」節） |
 
 ## `dnote-aggregate-target/`（21ファイル）— 集計対象
 
@@ -118,6 +119,7 @@ dnote/
 | ファイル | 説明 |
 |---------|------|
 | `average-info.ts` | 平均値計算の補助情報 |
+| `time-of-day-average-info.ts` | 時刻（TimeIs 開始/終了時刻）の平均計算の補助情報 |
 
 ## `dnote-filter/`（2ファイル）— データフィルタ
 

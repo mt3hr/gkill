@@ -299,6 +299,14 @@ Page（ルートページ、Vue Router で遷移）
 
 多くのコンポーネントで Props と Emits を別ファイルに分離し、型安全性と再利用性を確保。
 
+### イベント中継の網羅性をコンパイル時に保証する判断
+
+Kyou 系のビュー/ダイアログは入れ子になっており、子の CRUD 系イベント（`registered_kyou`、`deleted_tag`、`requested_open_rykv_dialog` 等）を親へそのまま中継する必要がある。かつては各 `use-*-view.ts` / `*-dialog.vue` が中継束（`crudRelayHandlers`）を手書きしており、約63箇所のうち多くで新規イベントの中継漏れが起きていた（大半が `requested_open_rykv_dialog`）。
+
+そこで生成を `src/client/classes/kyou-view-relay.ts` に一本化し、**網羅性を型で強制する**方針にした。中継束はマップ型（`{ [K in KyouViewRelayEventName]: … }`）なので1件でも実装を落とすとコンパイルエラーになり、イベント名配列は `as const satisfies ReadonlyArray<…>` に加えて `Exclude<…>` を空配列へ代入する検査を置いているので、型に足して配列に足し忘れる（＝実行時に中継されない）とビルドが落ちる。`.vue` 側は `@deleted_kyou="…"` の羅列をやめ `v-on="crudRelayHandlers"` の1行にした。
+
+中継しないものも明示的に決めている。`requested_close_dialog` はダイアログが `@requested_close_dialog="hide()"` に自分で繋ぐので中継しない。`focused_kyou` / `clicked_kyou` はビュー層が発火源なので中継せず、ダイアログ層だけが中継する（入れ子のビューまで持ち上げると外側と内側で二重発火するため）。結果、ビュー層18件・ダイアログ層20件になる。
+
 ## 9. 画面別機能・役割
 
 | 画面 | 役割 | 主な操作 |

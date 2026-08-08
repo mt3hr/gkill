@@ -149,6 +149,7 @@ npm run go_install
 | `extract_manual_src.mjs` | 生成済みマニュアルから `manual_src` フラグメントを抽出（移行用） |
 | `verify_docs.mjs` | docs CI。件数・リンク・参照パス・Mermaid・マニュアルを検証 |
 | `verify_release_artifacts.mjs` | リリース成果物の存在確認 |
+| `test_plugins.mjs` | `npm run test_plugins` の実体。`src/plugins/` 配下の各 Go モジュール（独立プラグイン）のテストを実行 |
 | `license_getter.ps1` | 依存ライブラリのライセンス情報を収集する PowerShell スクリプト |
 
 ## 開発ガイドライン
