@@ -284,9 +284,21 @@ export async function clickDialogButton(page: Page, label: RegExp | string): Pro
 
 /**
  * Confirm a delete dialog by clicking the delete/confirm button.
+ *
+ * 削除を確定したら確認ダイアログは自動で閉じる。押しただけで先へ進むと、
+ * 「サーバ側は消えているのに画面が閉じない」不具合を素通ししてしまう
+ * （このあと再読み込みしてから消えたことを見るテストは、閉じなくても通ってしまう）。
+ * 重なって開いている他のダイアログを巻き込まないよう、枚数が1枚減ることで見る。
  */
 export async function confirmDelete(page: Page): Promise<void> {
+  const dialogs = page.locator('.gkill-floating-dialog')
+  const countBeforeDelete = await dialogs.count()
+  expect(countBeforeDelete, '削除確認ダイアログが開いていない').toBeGreaterThan(0)
+
   await clickDialogButton(page, /削除|delete/i)
+
+  await expect(dialogs, '削除後に確認ダイアログが自動で閉じない')
+    .toHaveCount(countBeforeDelete - 1, { timeout: 15000 })
 }
 
 /**

@@ -4,7 +4,8 @@ import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToRykv, navigateToMi,
   makeUniqueLabel, clickContextMenuItem, clickDialogButton, createAndSelectMiBoard,
-  expectPageToContainText, waitForKyouByText,
+  confirmDelete, expectPageToContainText, waitForKyouByText,
+  searchByKeyword, waitForKyouRowByRepName,
   MENU, SAVE_BUTTON,
 } from './crud-helpers'
 
@@ -116,5 +117,52 @@ test.describe('MiReKyou (既存Kyouのタスク化)', () => {
     // 外側と内側のKyouViewで時刻が二重に出ていないこと
     expect(await row.locator('.kyou_related_time').count(), '行に時刻が2つ以上出ている')
       .toBeLessThanOrEqual(1)
+  })
+
+  /**
+   * 連鎖削除 (cascade-delete-kyou.ts) を入れたとき、update系APIが成功時に
+   * errors: null を返すことを見落として spread で TypeError を投げており、
+   * 確認ダイアログのクローズまで到達していなかった。
+   * サーバ側の削除は成功しているので、再読み込みしてから消えたことを見るだけでは
+   * 検出できない。閉じるところまでを confirmDelete が見る。
+   */
+  test('タスク化した記録を削除すると確認ダイアログが閉じて一覧から消える', async ({ page }) => {
+    const label = makeUniqueLabel('mirekyou_delete')
+
+    await submitKftlText(page, label)
+    await navigateToRykv(page)
+
+    const record = await waitForKyouByText(page, label)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.addMiReKyou)
+
+    const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
+    await expect(dialog, 'タスク化ダイアログが開かない').toBeVisible({ timeout: 15000 })
+    const board = makeUniqueLabel('mirekyou_del_board')
+    await createAndSelectMiBoard(page, dialog, board)
+    await clickDialogButton(page, SAVE_BUTTON)
+
+    // タスク化した行は元の記録と同じ本文で表示されるので、リポジトリ名で特定する。
+    // Mi画面ではなく rykv で操作するのは、新しく作った板が選択中とは限らず、
+    // 行がDOMにはあっても非表示のことがあるため（削除リポストのテストと同じ方針）。
+    await navigateToRykv(page)
+    await searchByKeyword(page, label)
+    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*MiReKyou\s*$/ }), 'タスク化した行が作られていない')
+      .toHaveCount(1, { timeout: 30000 })
+
+    const taskRow = await waitForKyouRowByRepName(page, 'MiReKyou')
+    await taskRow.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.delete)
+    // confirmDelete が確認ダイアログの自動クローズまで検証する
+    await confirmDelete(page)
+
+    await navigateToRykv(page)
+    await searchByKeyword(page, label)
+    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*MiReKyou\s*$/ }), 'タスク化した行が消えていない')
+      .toHaveCount(0, { timeout: 30000 })
+    // タスク化した側だけが消え、元の記録は残る
+    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*Kmemo\s*$/ }), '元の記録まで消えている')
+      .toHaveCount(1, { timeout: 30000 })
+    await expectPageToContainText(page, label)
   })
 })
