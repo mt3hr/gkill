@@ -18,6 +18,7 @@ export function usePluginHtmlContextMenu(options: {
     const { props, emits } = options
 
     // ── State refs ──
+    const is_requested_submit = ref(false)
     const is_show: Ref<boolean> = ref(false)
     const position_x: Ref<number> = ref(0)
     const position_y: Ref<number> = ref(0)
@@ -111,7 +112,20 @@ export function usePluginHtmlContextMenu(options: {
         }
     }
 
+    // タグ履歴からの付与はそのままサーバ更新に繋がる。連打で同じタグが重なるのを防ぐ
     async function add_tag_from_history(tag_value: string): Promise<void> {
+        if (is_requested_submit.value) {
+            return
+        }
+        is_requested_submit.value = true
+        try {
+            await execute_add_tag_from_history(tag_value)
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    async function execute_add_tag_from_history(tag_value: string): Promise<void> {
         props.gkill_api.push_tag_to_history(tag_value)
         const tag_names = tag_value.split("、")
         for (let i = 0; i < tag_names.length; i++) {
@@ -153,6 +167,7 @@ export function usePluginHtmlContextMenu(options: {
     return {
         // State
         is_show,
+        is_requested_submit,
         tag_history,
         context_menu_style,
 

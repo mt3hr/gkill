@@ -86,6 +86,8 @@ export function useMiView(options: {
     const enable_context_menu = ref(true)
     const enable_dialog = ref(true)
     const opened_dialogs: Ref<Array<OpenedRykvDialog>> = ref([])
+    // 板のドラッグ&ドロップ移動が進行中か
+    const is_moving_board_task = ref(false)
 
     const querys: Ref<Array<FindKyouQuery>> = ref([new FindKyouQuery()])
     const querys_backup: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>()) // 更新検知用バックアップ
@@ -615,7 +617,21 @@ export function useMiView(options: {
         }
     }
 
+    // ドロップは板の移動をそのままサーバへ書き込む。前の移動が終わる前に
+    // 次をドロップされると、同じタスクに対する更新が重なるので直列化する
     async function onDropBoardTask(e: DragEvent, find_kyou_query: FindKyouQuery) {
+        if (is_moving_board_task.value) {
+            return
+        }
+        is_moving_board_task.value = true
+        try {
+            await move_board_task(e, find_kyou_query)
+        } finally {
+            is_moving_board_task.value = false
+        }
+    }
+
+    async function move_board_task(e: DragEvent, find_kyou_query: FindKyouQuery) {
         // MiとMiReKyouのどちらがドロップされたか判定する
         const mi_json = e.dataTransfer!.getData("gkill_mi")
         const mirekyou_json = e.dataTransfer!.getData("gkill_mi_re_kyou")
