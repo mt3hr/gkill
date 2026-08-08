@@ -47,15 +47,12 @@ export function usePlaingTimeIsView(options: {
     const focused_kyou: Ref<Kyou | null> = ref(null)
     const focused_time: Ref<Date> = ref(moment().toDate())
     const last_added_request_time: Ref<Date | null> = ref(null)
-    const position_x: Ref<number> = ref(0)
-    const position_y: Ref<number> = ref(0)
     const is_loading = ref(false)
     const skip_search_this_tick = ref(false)
     const abort_controller: Ref<AbortController> = ref(new AbortController())
 
     // ── Computed ──
     const kyou_list_view_height = computed(() => props.app_content_height)
-    const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
     const timeis_kyou_list_view_width = computed(() => {
         const app_content_width = props.app_content_width
         if ((typeof app_content_width) !== "number") {
@@ -377,7 +374,6 @@ export function usePlaingTimeIsView(options: {
 
         // Computed
         kyou_list_view_height,
-        add_kyou_menu_style,
         timeis_kyou_list_view_width,
 
         // Business logic

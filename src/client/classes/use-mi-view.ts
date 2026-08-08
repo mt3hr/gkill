@@ -102,8 +102,6 @@ export function useMiView(options: {
     const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
     const drawer: Ref<boolean | null> = ref(false)
     const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
-    const position_x: Ref<number> = ref(0)
-    const position_y: Ref<number> = ref(0)
     const is_loading: Ref<boolean> = ref(true)
     const inited = ref(false)
     const received_init_request = ref(false)
@@ -112,7 +110,6 @@ export function useMiView(options: {
 
     // ── Computed ──
     const kyou_list_view_height = computed(() => props.app_content_height)
-    const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
 
     const page_list = computed(() => [
         { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
@@ -968,7 +965,6 @@ export function useMiView(options: {
 
         // Computed
         kyou_list_view_height,
-        add_kyou_menu_style,
         page_list,
 
         // Template event handlers
