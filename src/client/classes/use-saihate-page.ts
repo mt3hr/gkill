@@ -46,9 +46,6 @@ export function useSaihatePage() {
     const app_content_height: Ref<number> = ref(0)
     const app_content_width: Ref<number> = ref(0)
 
-    const position_x: Ref<number> = ref(0)
-    const position_y: Ref<number> = ref(0)
-    const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
 
     const is_loading = ref(true)
 
@@ -385,7 +382,6 @@ export function useSaihatePage() {
         app_content_width,
         is_loading,
         messages,
-        add_kyou_menu_style,
 
         // Methods
         write_errors,
