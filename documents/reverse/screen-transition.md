@@ -57,7 +57,7 @@ stateDiagram-v2
 | `/kftl` | KFTLPage | 要 | KFTL テキストベース記録 |
 | `/mi` | MiPage | 要 | タスク管理（ボード形式） |
 | `/rykv` | RykvPage | 要 | ライフログ閲覧・検索・編集 |
-| `/kyou` | KyouPage | 要 | Kyou 記録一覧 |
+| `/kyou` | KyouPage | 要 | 単一 Kyou の記録詳細表示 |
 | `/mkfl` | MkflPage | 要 | 打刻メモ帳（KFTL入力+TimeIs表示） |
 | `/plaing` | PlaingPage | 要 | 稼働中 TimeIs 一覧 |
 | `/dashboard` | DashboardPage | 要 | 日次サマリー（Dnote・GPS・MI一覧） |

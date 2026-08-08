@@ -21,14 +21,16 @@ type GkillMessage struct {
 ```
 
 **判定ルール:**
-- `errors` が空配列 → 正常
+- `errors` が `null` または空配列 → 正常
 - `errors` に要素あり → 業務エラー（`error_code` で判別）
 - HTTP 403 → アクセス拒否（ローカルアクセス制限）
 - HTTP 500 → サーバー内部エラー
 
+> **成功時の `errors` は空配列ではなく `null` で返る。** レスポンス構造体のタグは `json:"errors"` で `omitempty` が付いておらず（`src/server/gkill/api/req_res/` 配下 90 箇所すべて）、ハンドラは `response := &req_res.XxxResponse{}` と初期化してエラー時だけ `append` するため、成功時は nil slice がそのまま `null` になる。クライアントで `[...res.errors]` のように素のスプレッドをすると `TypeError` で落ち、呼び出し元のダイアログクローズまで巻き添えになるので、必ず `res.errors ?? []` を通すこと（`cascade-delete-kyou.ts` 参照）。
+
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **400件** のエラーコードが存在する（ERR000001〜ERR000401、ERR000243は欠番）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **406件** のエラーコードが存在する（ERR000001〜ERR000407、ERR000243は欠番）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
 
 ```bash
 # 数え直すとき
@@ -69,6 +71,7 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | `ERR000387`〜`ERR000388` | InvalidGetIDFFilePathRequestDataError / GetIDFFilePathError | IDFファイル絶対パス解決のパース/処理エラー |
 | `ERR000389` | GetIDFFilePathNotLocalRequestError | IDFファイル絶対パス解決を localhost 以外からリクエストした場合の拒否エラー |
 | `ERR000390`〜`ERR000401` | InvalidAddMiReKyouRequestDataError 〜 CommitTxGetMiReKyouError | MiReKyou（既存記録のタスク化）系の追加・取得・更新・トランザクションのパース/処理エラー（12件） |
+| `ERR000402`〜`ERR000407` | InvalidGetReKyousByTargetIDRequestDataError 〜 GetMiReKyousByTargetIDError | 逆引き取得（`get_rekyous_by_target_id` / `get_mirekyous_by_target_id`）のパース/処理エラー（6件）。クライアントの連鎖削除が参照元を辿るのに使う |
 
 ### 1.3 HTTPステータスコードの使い分け
 
@@ -348,12 +351,12 @@ JSON API 側がボディで `session_id` を運ぶ設計になっているため
 
 | 脅威 | 対策 |
 |------|------|
-| **パストラバーサル** | 展開先パスが `zip_cache/{rep_name}/{sha1}/` 配下に収まることを検証。`../` 等を含むエントリは拒否しスキップする |
+| **パストラバーサル** | 一時展開ディレクトリ配下に収まることを `reps.SecureJoin` で検証し、`../` 等を含むエントリは拒否しスキップする。成功時のみ `caches/zip_cache/{user_id}/{rep_name}/{sha1}/` にリネームする |
 | **シンボリックリンク** | シンボリックリンクエントリはスキップする |
 | **Shift_JISファイル名** | ZIP内のファイル名がShift_JISでエンコードされている場合にUTF-8にデコードして正しく表示する |
 | **アトミック展開** | 一時ディレクトリに展開後、成功時のみ最終パスにリネームする。展開途中で失敗した場合は中間ファイルが残らない |
 | **認証** | `/zip_cache/` ファイルサーバーはルータ上は `wrapNoAuth` で登録され、認証は**ハンドラ内部で cookie**（`gkill_session_id`）を読んで行う。`/files/` も同様 |
-| **キャッシュパス** | リポジトリ名と**ZIPファイルパス文字列**のSHA1ハッシュをキーとして `$HOME/gkill/caches/zip_cache/{rep_name}/{sha1}/` に展開。ファイル内容のハッシュではないため、同じパスのまま中身を差し替えると古いキャッシュが再利用される |
+| **キャッシュパス** | リポジトリ名と**ZIPファイルパス文字列**のSHA1ハッシュをキーとして `$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に展開。ファイル内容のハッシュではないため、同じパスのまま中身を差し替えると古いキャッシュが再利用される。利用者IDをパスの先頭に置くのは、rep名が利用者間で一意でないため（2.4節参照） |
 
 ### 2.9 初期セットアップのセキュリティ
 
@@ -402,7 +405,7 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 
 `GkillAPI` クラスに `gkill_fetch()` ヘルパーを導入し、全API呼び出しのネットワークエラーを統一的に処理：
 - `navigator.onLine` が false、または `TypeError`（fetch失敗）を検出
-- エラーコード `NETWORK_ERROR` の `GkillError` を含むモックレスポンスを返却
+- エラーコード `ERR900088`（`network_error`）の `GkillError` を含むモックレスポンスを返却。メッセージは i18n キー `NETWORK_ERROR_MESSAGE`
 - 呼び出し元の既存エラーハンドリングパスでユーザーに通知
 
 `App.vue` にオフラインバナーを追加（`navigator.onLine` + `online`/`offline` イベント監視）。
@@ -422,3 +425,19 @@ Wear OS companion アプリの gkill サーバー接続は、デフォルトで�
 
 - **セッション有効期限**: API呼び出し時にセッションの `ExpirationTime` を検証。期限切れの場合は `ERR000373`（`AccountSessionExpiredError`）を返し、クライアント側でログイン画面にリダイレクト
 - **ログインレート制限**: IP単位で15分間に10回までのログイン試行を許可。超過時は `ERR000374`（`LoginRateLimitError`）を返却。`loginRateLimiter` 構造体でスライディングウィンドウ方式を実装。インメモリのみで永続化されないため、サーバー再起動でリセットされる
+
+### 3.6 クライアント側エラーコード（ERR9xxxxx）
+
+サーバの `ERR0xxxxx` とは別系統で、クライアントだけで発生するエラーに `ERR9xxxxx` を割り当てている。定義は `src/client/classes/api/message/gkill_error.ts` の `GkillErrorCodes` enum（`ERR900001`〜`ERR900098` の98件）。サーバには存在しないコードで、`received_errors` イベントに乗ってそのまま画面に出る。
+
+| コード | 名前 | 説明 |
+|---|---|---|
+| `ERR900088` | network_error | `gkill_fetch()` がオフライン/fetch 失敗を検出したときに合成する |
+| `ERR900093` | cascade_delete_depth_exceeded | 連鎖削除の参照の深さが上限（32、`max_cascade_depth`）を超えたので途中で打ち切った |
+| `ERR900094` | cascade_delete_failed | 連鎖削除が想定外の例外で失敗した |
+| `ERR900095` | failed_delete_tag | タグ削除の確認ダイアログが例外で落ちた |
+| `ERR900096` | failed_delete_text | テキスト削除の確認ダイアログが例外で落ちた |
+| `ERR900097` | failed_delete_notification | 通知削除の確認ダイアログが例外で落ちた |
+| `ERR900098` | failed_add_rekyou | リポスト追加の確認ダイアログが例外で落ちた |
+
+`ERR900095`〜`ERR900098` は確認ダイアログの `catch` 専用で、表示文言は既存の `FAILED_UPDATE_*_MESSAGE` を流用する（論理削除は実際には update なので嘘にならない）。

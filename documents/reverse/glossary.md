@@ -132,7 +132,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | **Repository 4層パターン** | 各データ型のデータアクセスを4層で実装するパターン: (1) `*_repository.go`（インタフェース定義） → (2) `*_repository_sqlite3_impl.go`（SQLite3 直接アクセス） → (3) `*_repository_cached_sqlite3_impl.go`（キャッシュ付きラッパー） → (4) `*_repository_temp_sqlite3_impl.go`（トランザクション用一時リポジトリ） |
 | **GkillRepositories** | ユーザ別の全リポジトリ集約構造体。読み取り用（`XxxReps` = 複数リポジトリの集約）と書き込み用（`WriteXxxRep` = 単一リポジトリ）を保持する |
 | **GkillDAOManager** | 全 DAO の中央管理。`GetRepositories()` でユーザ別リポジトリを取得し、`GetTempReps()` でトランザクション用一時リポジトリを管理する |
-| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（90定義・90登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 96ファイル）に分割実装 |
+| **GkillServerAPI** | HTTP API ハンドラ。gorilla/mux で全エンドポイント（92定義・90登録）を提供する。`gkill_server_api/` パッケージ（handle_*.go 96ファイル）に分割実装 |
 | **TempReps** | KFTL パース時のトランザクション用一時リポジトリ。`CommitTX` で本リポジトリに反映、`DiscardTX` で破棄する |
 | **Rep / 記録保管場所** | データ保存先の SQLite3 ファイル。ユーザ・デバイス・データ型ごとに割り当てられる |
 | **RepType / 記録タイプ** | リポジトリの分類。メモ帳、打刻帳、支出、数値記録、タスク、気分、ブックマーク、リポスト等 |
@@ -210,6 +210,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **ZIPキャッシュ** | IDFKyouのZIPファイルを展開したキャッシュ。`$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に保存される。利用者ID・リポジトリ名・**ZIPファイルの絶対パス文字列**のSHA1をキーとし、同一ファイルの再展開を回避する。配信時は利用者のディレクトリを起点に固定するので、他人のキャッシュは読めない |
 | **ZipEntry** | ZIP内のファイルエントリ情報。ファイル名・サイズ・パス等を含む。`/api/browse_zip_contents` のレスポンスとして返却される |
 | **OnlyLatestData** | 検索フィルタ。同一 ID のレコードのうち `UpdateTime` が最新のもののみを返す。Kyou 本体だけでなく**付随するタグ・テキストにも同じ規則が適用される**ため、タグ名を書き換えたあとに旧タグ名で検索してもヒットしない（`find_filter.go` 各所と `find_kyou_context.go` の `isLatestData`） |
+| **連鎖削除 (cascade delete)** | Kyou を削除したとき、付随する Tag / Text / Notification と、その Kyou を `TargetID` で参照している ReKyou / MiReKyou を幅優先で辿って一緒に論理削除する処理（`src/client/classes/cascade-delete-kyou.ts`）。探索（read）と削除（write）を完全に分け、Kyou 自身は**最後**に消す（先に消すとサーバの FindKyous が参照元を結果から外し、途中失敗時に残骸を再発見できなくなるため）。TXID / commit_tx は使わないので部分確定しうるが、追記型DAOなので再実行で収束する。深さ上限32（超過時 `ERR900093 cascade_delete_depth_exceeded`）、失敗時は `ERR900094 cascade_delete_failed` |
 | **セッション** | UUID ベースの認証トークン。有効期限は30日。Cookie に `session_id` を保持する。期限以外に、**パスワードを設定しなおすとそのユーザの全セッションが失効する**（他端末のログインも落ちる） |
 | **Argon2id** | パスワードの保存に使うメモリハードな鍵導出関数。gkill は `m=65536 KiB, t=3, p=4`、ソルト16バイト、鍵長32バイトで用いる。総当たりに必要な計算資源を引き上げ、`account.db` が流出しても資格情報にならないようにするのが目的 |
 | **PHC文字列** | Argon2id の保存形式。`$argon2id$v=19$m=65536,t=3,p=4$<ソルト>$<ハッシュ>` のようにアルゴリズム・パラメータ・ソルトを値自身に含む。パラメータが保存値側にあるので、後からコストを変えても既存の値をそのまま照合できる |
@@ -233,11 +234,11 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 概念 | ファイルパス | 説明 |
 |------|-----------|------|
-| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全90エンドポイントのパス・メソッド定義（うち90登録） |
+| APIエンドポイント定義 | `src/server/gkill/api/gkill_server_api/gkill_server_api_address.go` | 全92エンドポイントのパス・メソッド定義（91 POST + 1 GET。うち90登録） |
 | APIハンドラ（個別） | `src/server/gkill/api/gkill_server_api/handle_*.go` | 個別エンドポイントのハンドラ（handle_*.go 96ファイル、1ハンドラ1ファイル） |
 | アクセスログミドルウェア | `src/server/gkill/api/gkill_server_api/gkill_server_api_access_log.go` | gorilla/mux ミドルウェア。全HTTPリクエストのアクセスログを `ACCESS` レベルで記録 |
 | リクエスト/レスポンス型 | `src/server/gkill/api/req_res/` | 全エンドポイントの入出力構造体（186ファイル） |
-| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000401 の定数定義（計400件。ERR000243は欠番） |
+| エラーコード定義 | `src/server/gkill/api/message/error_codes.go` | ERR000001〜ERR000407 の定数定義（計406件。ERR000243は欠番） |
 | GkillError / GkillMessage | `src/server/gkill/api/message/` | エラー・メッセージ構造体 |
 | KFTLパーサー | `src/server/gkill/api/kftl/` | KFTL テキストパース・リクエスト生成 |
 | Embed（SPA埋め込み） | `src/server/gkill/api/embed.go` | `//go:embed embed` ディレクティブ |
@@ -261,8 +262,8 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
-| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（~3,660行） |
-| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（168ファイル） |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,400行） |
+| リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（172ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
 | ダッシュボードページ | `src/client/pages/dashboard-page.vue` | `/dashboard` ルートのページコンポーネント |
@@ -275,7 +276,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（856キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（858キー/言語） |
 
 ### その他
 

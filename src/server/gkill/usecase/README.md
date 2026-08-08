@@ -81,12 +81,12 @@ type UsecaseContext struct {
 | `text.go` | Text の追加・更新・対象 ID 検索・履歴取得 | 4 |
 | `notification.go` | Notification の追加・更新・対象 ID 検索・履歴取得 | 4 |
 | `idf_kyou.go` | IDFKyou（ファイル）の更新・履歴取得 | 2 |
-| `rekyou.go` | ReKyou（リポスト）の追加・更新・履歴取得 | 3 |
-| `mirekyou.go` | MiReKyou（既存記録のタスク化）の追加・更新・履歴取得 + 最新版アドレス更新（非公開） | 4 |
+| `rekyou.go` | ReKyou（リポスト）の追加・更新・履歴取得・対象ID逆引き | 4 |
+| `mirekyou.go` | MiReKyou（既存記録のタスク化）の追加・更新・履歴取得・対象ID逆引き + 最新版アドレス更新（非公開） | 5 |
 | `git_commit_log.go` | GitCommitLog の取得 | 1 |
 | `rep_names.go` | 全タグ名一覧・全リポジトリ名一覧の取得 | 2 |
 
-**合計: 51 関数**（コンストラクタ 1 + Add 系 12 + Update 系 13 + Get 系 22 + 非公開ヘルパ 1）
+**合計: 51 関数**（コンストラクタ 1 + Add 系 12 + Update 系 13 + Get 系 24 + 非公開ヘルパ 1）
 
 ## エクスポート関数一覧
 
@@ -131,7 +131,7 @@ type UsecaseContext struct {
 | `UpdateText` | `text.go` | `*reps.Text` を返す |
 | `UpdateNotification` | `notification.go` | `*reps.Notification` を返す |
 
-### データ取得系（22関数）
+### データ取得系（24関数）
 
 | 関数 | ファイル | 説明 |
 |------|---------|------|
@@ -146,7 +146,9 @@ type UsecaseContext struct {
 | `GetMiHistories` | `mi.go` | Mi 履歴取得 |
 | `GetMiBoardList` | `mi.go` | Mi ボード一覧取得 |
 | `GetReKyouHistories` | `rekyou.go` | ReKyou 履歴取得 |
+| `GetReKyousByTargetID` | `rekyou.go` | 対象 ID を参照している ReKyou 一覧（Kyou 連鎖削除の逆引き） |
 | `GetMiReKyouHistories` | `mirekyou.go` | MiReKyou 履歴取得 |
+| `GetMiReKyousByTargetID` | `mirekyou.go` | 対象 ID を参照している MiReKyou 一覧（同上） |
 | `GetIDFKyouHistories` | `idf_kyou.go` | IDFKyou 履歴取得 |
 | `GetGitCommitLog` | `git_commit_log.go` | GitCommitLog 取得 |
 | `GetTagsByTargetID` | `tag.go` | 対象 ID に紐づく Tag 一覧 |

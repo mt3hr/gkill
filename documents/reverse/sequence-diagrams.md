@@ -169,25 +169,54 @@ sequenceDiagram
     UI-->>User: 更新成功メッセージ
 ```
 
-## 6. Kyou データ削除（論理削除）
+## 6. Kyou データ削除（論理削除・連鎖削除）
 
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
-    participant UI as Vue フロントエンド
+    participant UI as confirm-delete-kyou-view
+    participant CD as cascade_delete_kyou
     participant API as GkillServerAPI
     participant Rep as Repository
 
     User->>UI: コンテキストメニュー → 削除
     UI->>UI: 削除確認ダイアログ表示
     User->>UI: 「削除」ボタン押下
-    UI->>API: POST /api/update_kmemo<br>{session_id, kmemo: {IS_DELETED: true}}
-    API->>Rep: AddKmemoInfo(kmemo with IS_DELETED=true)
-    Note right of Rep: INSERT INTO KMEMO<br>(IS_DELETED=TRUE)<br>最新レコードが削除済み
+    UI->>UI: is_requested_submit で二重送信を弾く
+    UI->>CD: cascade_delete_kyou(kyou)
+
+    Note over CD: ① 探索フェーズ（updateは1本も投げない）
+    loop 幅優先・訪問済みidで循環を止める<br>最大深さ32 / 16件ずつ並列
+        CD->>API: get_tags_by_target_id<br>get_texts_by_target_id<br>get_notifications_by_target_id<br>（force_reget=true）
+        CD->>API: get_rekyous_by_target_id<br>get_mirekyous_by_target_id
+        API-->>CD: Tag / Text / Notification<br>ReKyou / MiReKyou
+    end
+
+    Note over CD: ② 削除フェーズ（Kyou自身は最後）
+    par 付随データ（親子関係が無いので順序不問）
+        CD->>API: POST /api/update_tag<br>{IS_DELETED: true}
+    and
+        CD->>API: POST /api/update_text<br>{IS_DELETED: true}
+    and
+        CD->>API: POST /api/update_notification<br>{IS_DELETED: true}
+    end
+    CD->>API: POST /api/update_rekyou（深い方から逆順）
+    CD->>API: POST /api/update_mirekyou（深い方から逆順）
+    CD->>API: POST /api/update_kmemo 等<br>{IS_DELETED: true}（Kyou自身・最後）
+    API->>Rep: AddXxxInfo(IS_DELETED=TRUE)
+    Note right of Rep: 追記型なので各テーブルに<br>IS_DELETED=TRUE の新レコードがINSERT
     Rep-->>API: OK
-    API-->>UI: {updated_kmemo}
-    UI-->>User: 削除成功メッセージ
+    CD->>CD: visited_ids ぶんの<br>Service Workerキャッシュを削除
+    CD-->>UI: {deleted_ids, errors}
+    UI->>UI: deleted_ids のぶん deleted_kyou を emit
+    UI-->>User: finally でダイアログを閉じる（例外時も閉じる）
 ```
+
+> **Kyou自身を最後に消す理由。** サーバの `FindKyous` は参照先が削除済みの ReKyou を検索結果から外すため、Kyou を先に消すと参照元を辿れなくなる。探索（read）と削除（write）を完全に分けてあるのも同じ理由で、削除が途中で失敗しても Kyou 自身が生きていれば同じダイアログをもう一度開くだけで残骸を再発見できる。追記型 DAO なので再実行で収束する。
+>
+> **TXID / commit_tx は使わない。** 名前に反して DB トランザクションではなく部分確定しうるため、原子性は得られない。1本失敗しても止めずに全部投げ、エラーは集約して返す（`ERR900094 cascade_delete_failed`、深さ超過は `ERR900093 cascade_delete_depth_exceeded`）。
+>
+> **削除成功メッセージは出ない。** 画面からその行が消えることが結果の提示になる。
 
 ## 7. Kyou 検索（GetKyous）
 
@@ -263,8 +292,11 @@ sequenceDiagram
 ```
 
 > **新規タグの確認ゲート**は完全にクライアント側の処理。`do_submit(skip_unknown_tag_check)`
-> （`use-kftl-view.ts:258,272`）が未確認のときだけ `collect_unknown_tags()` を呼び、
+> （`use-kftl-view.ts:262,281`）が未確認のときだけ `collect_unknown_tags()` を呼び、
 > 打ち間違いで似たタグが増えるのを防ぐ。サーバ側は確認の有無を関知しない。
+> なお `do_submit()` の先頭には `is_requested_submit` の二重送信ガードがある
+> （`use-kftl-view.ts:263-266`）。KFTL は複数リクエストを1つの TXID で束ねて送るため、
+> 二重送信すると Kyou が丸ごと重複登録される。
 
 ## 9. ファイルアップロード
 
