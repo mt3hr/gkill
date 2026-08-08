@@ -351,6 +351,32 @@ describe('cascade_delete_kyou', () => {
     expect(api.update_rekyou).toHaveBeenCalled()
   })
 
+  // サーバは成功時 Errors を nil のまま返す。json:"errors" に omitempty が無いので
+  // レスポンスは "errors": null になり、クライアントも正規化していない。
+  // spread で展開すると TypeError になって呼び出し元の close 処理まで巻き込んで落ちる
+  it('サーバが errors: null を返しても throw せず削除しきる', async () => {
+    const { api } = create_cascade_api({
+      tags: { 'kmemo-1': [make_meta_stub('tag-1', 'kmemo-1')] },
+      texts: { 'kmemo-1': [make_meta_stub('text-1', 'kmemo-1')] },
+      notifications: { 'kmemo-1': [make_meta_stub('notification-1', 'kmemo-1')] },
+      rekyous: { 'kmemo-1': [make_ref_stub('rekyou-1', 'kmemo-1')] },
+      mirekyous: { 'kmemo-1': [make_ref_stub('mirekyou-1', 'kmemo-1', { data_type: 'mirekyou_create' })] },
+    })
+    const null_response = { messages: null, errors: null } as unknown as { messages: Array<never>, errors: Array<ErrorStub> }
+    api.update_tag.mockImplementation(async () => null_response)
+    api.update_text.mockImplementation(async () => null_response)
+    api.update_notification.mockImplementation(async () => null_response)
+    api.update_rekyou.mockImplementation(async () => null_response)
+    api.update_mirekyou.mockImplementation(async () => null_response)
+    api.update_kmemo.mockImplementation(async () => null_response)
+
+    const result = await run(make_kmemo_kyou('kmemo-1'), api)
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.deleted_ids.sort()).toEqual(['kmemo-1', 'mirekyou-1', 'rekyou-1'])
+    expect(api.update_kmemo).toHaveBeenCalledTimes(1)
+  })
+
   it('共有画面では何もしない', async () => {
     const { api } = create_cascade_api({
       rekyous: { 'kmemo-1': [make_ref_stub('rekyou-B', 'kmemo-1')] },
