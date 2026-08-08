@@ -1,5 +1,5 @@
 <template>
-    <v-menu v-model="is_show" :style="context_menu_style">
+    <v-menu v-model="is_show" :target="menu_target" location="bottom start">
         <v-list class="gkill_context_menu_list">
             <v-list-item @click="show_edit_notification_dialog()">
                 <v-list-item-title>{{ i18n.global.t("NOTIFICATION_CONTEXTMENU_EDIT_NOTIFICATION") }}</v-list-item-title>
@@ -27,7 +27,7 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     is_show,
-    context_menu_style,
+    menu_target,
     show,
     hide,
     show_edit_notification_dialog,

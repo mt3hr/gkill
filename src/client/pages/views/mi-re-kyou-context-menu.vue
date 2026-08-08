@@ -1,5 +1,5 @@
 <template>
-    <v-menu v-model="is_show" :style="context_menu_style">
+    <v-menu v-model="is_show" :target="menu_target" location="bottom start">
         <v-list class="gkill_context_menu_list">
             <v-list-group v-if="tag_history.length > 0">
                 <template v-slot:activator="{ props: activatorProps }">
@@ -62,7 +62,7 @@ const {
     is_show,
     is_requested_submit,
     tag_history,
-    context_menu_style,
+    menu_target,
 
     // Business logic
     show,
