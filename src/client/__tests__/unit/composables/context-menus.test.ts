@@ -180,8 +180,18 @@ describe('useKmemoContextMenu', () => {
     expect(props.gkill_api.open_file).toHaveBeenCalled()
   })
 
-  test('context_menu_style computed is a string', () => {
-    expect(typeof menu.context_menu_style.value).toBe('string')
+  // 位置は自前計算をやめて Vuetify の :target に渡す座標そのものになった。
+  // 以前は `typeof ... === 'string'` を見るだけで、値が正しいかは検証していなかった
+  test('show() puts the click point into menu_target', async () => {
+    const event = new MouseEvent('contextmenu', { clientX: 731, clientY: 402 }) as never
+    await menu.show(event)
+    expect(menu.menu_target.value).toEqual([731, 402])
+  })
+
+  test('menu_target follows the latest click point', async () => {
+    await menu.show(new MouseEvent('contextmenu', { clientX: 10, clientY: 20 }) as never)
+    await menu.show(new MouseEvent('contextmenu', { clientX: 300, clientY: 400 }) as never)
+    expect(menu.menu_target.value).toEqual([300, 400])
   })
 
   test('tag_history ref is initialized as array', () => {
