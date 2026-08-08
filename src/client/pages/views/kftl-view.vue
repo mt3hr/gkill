@@ -78,7 +78,8 @@
                     </v-card-text>
                     <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                         <v-col cols="auto" class="pa-0 ma-0">
-                            <v-btn dark color="primary" @click="confirm_submit()">{{ i18n.global.t("SAVE_TITLE")
+                            <v-btn dark color="primary" @click="confirm_submit()"
+                                :disabled="is_requested_submit">{{ i18n.global.t("SAVE_TITLE")
                                 }}</v-btn>
                         </v-col>
                         <v-col cols="auto" class="pa-0 ma-0">

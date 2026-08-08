@@ -36,7 +36,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <v-menu v-model="show_start_date_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_start_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="mi_estimate_start_date_string"
@@ -48,7 +48,7 @@
                                 </v-menu>
                             </td>
                             <td>
-                                <v-menu v-model="show_start_time_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_start_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="mi_estimate_start_time_string"
@@ -86,7 +86,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <v-menu v-model="show_end_date_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_end_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="mi_estimate_end_date_string"
@@ -98,7 +98,7 @@
                                 </v-menu>
                             </td>
                             <td>
-                                <v-menu v-model="show_end_time_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_end_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="mi_estimate_end_time_string"
@@ -136,7 +136,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <v-menu v-model="show_limit_date_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_limit_date_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="mi_limit_date_string"
@@ -148,7 +148,7 @@
                                 </v-menu>
                             </td>
                             <td>
-                                <v-menu v-model="show_limit_time_menu" :close-on-content-click="false"
+                                <v-menu :disabled="is_requested_submit" v-model="show_limit_time_menu" :close-on-content-click="false"
                                     transition="scale-transition" offset-y min-width="auto">
                                     <template #activator="{ props }">
                                         <v-text-field v-model="mi_limit_time_string"
@@ -198,8 +198,8 @@
                     <v-col cols="auto" class="pa-0 ma-0">
                         <AddNotificationForAddMiView :application_config="application_config" :gkill_api="gkill_api"
                             :enable_context_menu="false" :enable_dialog="true" :highlight_targets="[]" :kyou="kyou"
-                            :default_notification="notification" ref="add_notification_views"
-                            v-on="crudRelayHandlers" />
+                            :default_notification="notification" :is_readonly="is_requested_submit"
+                            ref="add_notification_views" v-on="crudRelayHandlers" />
                     </v-col>
                 </v-row>
             </v-col>
@@ -215,7 +215,8 @@
                     i18n.global.t("RESET_TITLE") }}</v-btn>
             </v-col>
         </v-row>
-        <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details color="primary" />
+        <v-checkbox v-model="show_kyou" :readonly="is_requested_submit"
+            :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details color="primary" />
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
                 :is_image_request_to_thumb_size="false" :highlight_targets="[kyou.generate_info_identifier()]"

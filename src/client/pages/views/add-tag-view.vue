@@ -7,8 +7,8 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
-                        color="primary" />
+                    <v-checkbox v-model="show_kyou" :readonly="is_requested_submit"
+                        :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
@@ -72,7 +72,8 @@
                     </v-card-text>
                     <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
                         <v-col cols="auto" class="pa-0 ma-0">
-                            <v-btn dark color="primary" @click="confirm_save()">{{ i18n.global.t("SAVE_TITLE")
+                            <v-btn dark color="primary" @click="confirm_save()"
+                                :disabled="is_requested_submit">{{ i18n.global.t("SAVE_TITLE")
                                 }}</v-btn>
                         </v-col>
                         <v-col cols="auto" class="pa-0 ma-0">
