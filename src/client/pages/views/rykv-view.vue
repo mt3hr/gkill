@@ -230,7 +230,7 @@
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...subViewFocusHandlers, ...rykv_dialog_handler }" />
             <v-avatar v-if="!is_shared_rykv_view" :style="floating_action_button_style()" color="primary"
                 class="position-fixed">
-                <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
+                <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-plus" v-long-press="() => show_kftl_dialog()" variant="text"
                             v-bind="props" />
@@ -353,7 +353,6 @@ const {
 
     // Computed
     kyou_list_view_height,
-    add_kyou_menu_style,
     page_list,
 
     // Template event handlers
