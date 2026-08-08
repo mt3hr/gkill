@@ -2,7 +2,7 @@
 
 ## 概要
 
-Vue 3 フロントエンドのテスト。ユニットテスト（897テスト宣言、77ファイル）と E2E テスト（198テスト宣言、34 specファイル）の合計1095テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
+Vue 3 フロントエンドのテスト。ユニットテスト（904テスト宣言、78ファイル）と E2E テスト（199テスト宣言、35 specファイル）の合計1103テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
 
 ## テストフレームワーク
 
@@ -15,7 +15,7 @@ Vue 3 フロントエンドのテスト。ユニットテスト（897テスト�
 src/client/__tests__/
 ├── unit/                    # ユニットテスト (897テスト宣言, 77ファイル)
 │   ├── api/                 #   GkillAPI クライアント
-│   ├── classes/             #   ユーティリティクラス (17ファイル, kyou-view-relay / cascade-delete-kyou / confirm-dialog-close / edit-view-no-update-check / markdown-to-html / mermaid-render / use-dialog-history-stack / delayed-loading / foldable-struct-move / kyou-content-text 含む)
+│   ├── classes/             #   ユーティリティクラス (18ファイル, kyou-view-relay / cascade-delete-kyou / confirm-dialog-close / edit-view-no-update-check / markdown-to-html / mermaid-render / use-dialog-history-stack / delayed-loading / foldable-struct-move / kyou-content-text / use-context-menu-position 含む)
 │   ├── datas/               #   データモデル (28ファイル, dashboard-config / mi-re-kyou / append-not-found-tags 含む)
 │   ├── dnote/               #   D-note モジュール (7ファイル, trend-aggregator.test.ts 含む)
 │   ├── kftl/                #   KFTL パーサ (5ファイル)
@@ -36,7 +36,7 @@ src/client/__tests__/
 
 ## テスト内容
 
-### ユニットテスト（897テスト宣言、77ファイル）
+### ユニットテスト（904テスト宣言、78ファイル）
 
 | カテゴリ | テスト数（概算） | 内容 |
 |---------|----------------|------|
@@ -48,7 +48,7 @@ src/client/__tests__/
 | ルーター | 1ファイル | 13ルートの定義と遷移（dashboard 含む） |
 | i18n | 1ファイル | 7ロケールのキー完全性 |
 | Service Worker | 1ファイル | Workbox プリキャッシュ、POST キャッシュ、プッシュ通知、`/zip_cache/.*` denylist |
-| ユーティリティ | 17ファイル | deep-equals, format-date-time, looks-like-url, long-press, save-as, delete-gkill-cache, markdown-to-html, mermaid-render, use-dialog-history-stack, delayed-loading, foldable-struct-move, kyou-content-text, kyou-view-relay（イベント中継束の網羅）, cascade-delete-kyou（Kyou削除の連鎖削除）, use-confirm-delete-kyou-view, confirm-dialog-close（確認ダイアログが例外時も閉じる）, edit-view-no-update-check（更新なし判定に関連日時を含める） |
+| ユーティリティ | 18ファイル | deep-equals, format-date-time, looks-like-url, long-press, save-as, delete-gkill-cache, markdown-to-html, mermaid-render, use-dialog-history-stack, delayed-loading, foldable-struct-move, kyou-content-text, kyou-view-relay（イベント中継束の網羅）, cascade-delete-kyou（Kyou削除の連鎖削除）, use-confirm-delete-kyou-view, confirm-dialog-close（確認ダイアログが例外時も閉じる）, edit-view-no-update-check（更新なし判定に関連日時を含める）, use-context-menu-position（コンテキストメニューの座標ターゲット） |
 
 ### E2E テスト (198テスト宣言, 34 specファイル)
 
