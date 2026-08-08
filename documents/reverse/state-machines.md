@@ -315,6 +315,10 @@ stateDiagram-v2
         レコードがINSERTされる
         検索結果から除外される
         履歴ダイアログからは参照可能
+        画面からKyouを削除した場合は
+        付随するTag/Text/Notificationと
+        参照元のReKyou/MiReKyouも
+        同じ操作で論理削除される
     end note
 ```
 
@@ -334,11 +338,11 @@ stateDiagram-v2
     未完了 --> 未完了: UpdateMiReKyou<br>(ボード名/期限/見積の編集)
     完了 --> 完了: UpdateMiReKyou<br>(ボード名/期限/見積の編集)
 
-    未完了 --> 論理削除: UpdateMiReKyou<br>(IS_DELETED=true)
-    完了 --> 論理削除: UpdateMiReKyou<br>(IS_DELETED=true)
+    未完了 --> 論理削除: UpdateMiReKyou<br>(IS_DELETED=true)<br>対象Kyou削除時もここを通る<br>(cascade_delete_kyou)
+    完了 --> 論理削除: UpdateMiReKyou<br>(IS_DELETED=true)<br>対象Kyou削除時もここを通る<br>(cascade_delete_kyou)
 
-    未完了 --> 対象Kyou欠損: 対象Kyouが削除された
-    完了 --> 対象Kyou欠損: 対象Kyouが削除された
+    未完了 --> 対象Kyou欠損: 対象Kyouだけが失われた
+    完了 --> 対象Kyou欠損: 対象Kyouだけが失われた
 
     note right of 対象Kyou欠損
         load_attached_kyou() が対象を解決できない
@@ -347,6 +351,10 @@ stateDiagram-v2
         表示する内容が無くなる
     end note
 ```
+
+**画面から対象 Kyou を削除したときは「対象Kyou欠損」にはならない。** その MiReKyou も連鎖して
+論理削除される（MiReKyou を先に、対象 Kyou 自身を最後に消す）。「対象Kyou欠損」に落ちるのは、
+連鎖削除が途中で失敗して部分確定した場合や、MCP・他クライアントから対象 Kyou だけを消した場合。
 
 ### DATA_TYPE の射影
 
@@ -436,3 +444,41 @@ stateDiagram-v2
 
 **重要:** プログラムから閉じるときに `show.value = false` を直接書くと履歴とずれる。
 必ず `close_dialog_via_history()` を使うこと。約44のコンポーザブルがこの規約に従っている。
+
+## 10. フォーム送信の状態遷移（二重送信ガード）
+
+追加・編集・削除・コンテキストメニューからのタグ付与など、サーバ更新につながる操作は
+`is_requested_submit` ref で再入を弾く。`src/client/classes/` 配下の45ファイルがこのフラグを持つ。
+
+```mermaid
+stateDiagram-v2
+    [*] --> 待機: ダイアログ / コンテキストメニューを開く
+
+    待機 --> 送信中: 保存・削除ボタン押下<br>(is_requested_submit = true)
+    待機 --> 待機: 送信中の再押下は無視<br>(先頭ガードで即 return)
+
+    送信中 --> 待機: 成功<br>(finally で is_requested_submit = false)
+    送信中 --> 待機: 失敗<br>(received_errors を emit した上で<br>finally で is_requested_submit = false)
+
+    note right of 送信中
+        ボタンは :disabled
+        入力欄は :readonly
+        確認ダイアログでは finally で
+        requested_close_dialog も emit する
+    end note
+
+    note right of 待機
+        is_requested_submit = false
+        操作を受け付ける
+    end note
+```
+
+**クローズを `finally` に置く理由:** 削除・保存リクエストはサーバに届いているのに、後続処理の例外で
+クローズまで到達せず「消えているのに閉じない」状態になるのを防ぐため。これに伴い、
+**従来はエラー時に early return して開いたままだった確認ダイアログ（`use-confirm-delete-tag-view.ts` など）も、
+いまはエラー時・例外時を問わず必ず閉じる**（`use-confirm-delete-kyou-view.ts` は元からエラー時も閉じていた）。
+
+**KFTL の事情:** KFTL は複数リクエストを1つの TXID で束ねて送るため、二重送信すると Kyou が丸ごと
+重複登録される。以前は保存マーカー（「！」）検出経路でしかフラグを立てておらず、保存ボタン経由では
+実質ノーガードだった（`use-kftl-view.ts` の `do_submit`）。なお KFTL だけは初期値が `true` で、
+`application_config` の読み込みが終わるまで送信できない。

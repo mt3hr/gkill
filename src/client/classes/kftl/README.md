@@ -45,6 +45,7 @@ kftl/
 | `kftl-statement-line.ts` | `kftl_statement_line.go` | 各行のインタフェース定義 |
 | `kftl-statement-line-context.ts` | `kftl_statement_line_context.go` | 行パース時のコンテキスト |
 | `kftl-statement-line-constructor-factory.ts` | `kftl_factory.go` | 行コンストラクタファクトリ |
+| `kftl-prefixes.ts` | `kftl_factory.go`（`splitter*Ascii`） | ASCII プレフィックスの定数と判定・除去ヘルパー |
 | `kftl-request.ts` | `kftl_request.go` | リクエストインタフェース |
 | `kftl-request-base.ts` | — | リクエスト基底クラス |
 | `kftl-request-map.ts` | `kftl_request_map.go` | リクエスト ID マップ |

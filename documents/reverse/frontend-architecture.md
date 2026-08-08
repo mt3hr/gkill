@@ -5,10 +5,10 @@
 | カテゴリ | 技術 | バージョン |
 |---|---|---|
 | フレームワーク | Vue 3 (Composition API) | ^3.5.40 |
-| UIライブラリ | Vuetify 4 (Material Design) | ^4.1.5 |
+| UIライブラリ | Vuetify 4 (Material Design) | ^4.1.7 |
 | ルーティング | Vue Router 5 | ^5.2.0 |
-| 国際化 | vue-i18n 11 | ^11.4.7 |
-| ビルドツール | Vite 8 | ^8.1.5 |
+| 国際化 | vue-i18n 11 | ^11.4.8 |
+| ビルドツール | Vite 8 | ^8.2.0 |
 | PWA | vite-plugin-pwa + Workbox | ^1.2.0 |
 | TypeScript | TypeScript 6 | ~6.0.0 |
 | アイコン | @mdi/font (Material Design Icons) | ^7.4.47 |
@@ -16,10 +16,10 @@
 | 日時 | moment | ^2.30.1 |
 | Markdown描画 | marked + dompurify | ^18.0.7 / ^3.4.12 |
 | 図表描画 | mermaid | ^11.16.0 |
-| 型チェック | vue-tsc 3 | ^3.3.7 |
-| リンター | ESLint 10 + eslint-plugin-vue 10 (flat config) | ^10.7.0 / ^10.10.0 |
-| ユニットテスト | Vitest + jsdom | ^4.1.10 / ^29.0.1 |
-| E2Eテスト | @playwright/test | ^1.58.2 |
+| 型チェック | vue-tsc 3 | ^3.3.9 |
+| リンター | ESLint 10 + eslint-plugin-vue 10 (flat config) | ^10.8.0 / ^10.10.0 |
+| ユニットテスト | Vitest + jsdom | ^4.1.10 / ^30.0.1 |
+| E2Eテスト | @playwright/test | ^1.62.1 |
 
 > バージョンは `package.json` の値。表を更新するときは `package.json` を正とすること。
 
@@ -34,28 +34,30 @@ src/client/
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,330行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,400行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
-│   │   └── req_res/                # リクエスト/レスポンス型 (168ファイル、サーバー側は186ファイル)
+│   │   └── req_res/                # リクエスト/レスポンス型 (172ファイル、サーバー側は186ファイル)
 │   ├── datas/                       # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dto/                         # データ転送オブジェクト
 │   ├── kftl/                        # KFTLパーサー (41 ステートメント型、日本語/ASCII両プレフィックス対応。ASCII定数とヘルパーは kftl-prefixes.ts)
 │   ├── dnote/                       # Dnote集計ユーティリティ（トレンドグラフ集計 dnote-trend-aggregator.ts・dnote-trend/ 含む）
 │   ├── lantana/                     # 気分値関連クラス
+│   ├── cascade-delete-kyou.ts       # Kyou削除の連鎖削除（Tag/Text/Notification/ReKyou/MiReKyou）
 │   ├── component-ref.ts             # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts         # Kyou の内容/IDのクリップボードコピー
+│   ├── kyou-view-relay.ts           # Kyou系CRUDイベントの中継ハンドラ束（crudRelayHandlers）
 │   ├── markdown-to-html.ts          # marked + dompurify による Markdown 描画
 │   ├── mermaid-render.ts            # Mermaid 図の描画
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、231ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、232ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
 │   ├── helpers/                    # テストヘルパー
-│   └── unit/                       # ユニットテスト（api / classes / composables / datas / dnote）
+│   └── unit/                       # ユニットテスト（api / classes / composables / datas / dnote / kftl。直下に i18n-completeness / router / service-worker）
 ├── pages/                           # ルートページコンポーネント (15ファイル)
 │   ├── login-page.vue
 │   ├── kftl-page.vue
@@ -197,7 +199,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（231ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（232ファイル） |
 
 ### ComponentRef 型
 
@@ -213,12 +215,23 @@ export type ComponentRef = Record<string, any>
 JSON からクラスインスタンスへの詰め替えは `classes/api/hydrate.ts` の `hydrate()` / `hydrate_all()` に集約されており、
 `gkill-api.ts` と `datas/kyou.ts` はこれを使うことでファイル全体の `eslint-disable` を解消している。
 
+### Kyou系イベントの中継束（crudRelayHandlers）
+
+Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは View → Dialog → Page と手で中継する必要がある。この中継束は `classes/kyou-view-relay.ts` に共通化されている。
+
+| 関数 | 中継件数 | 用途 |
+|---|---|---|
+| `build_kyou_view_relay(emits, overrides?)` | 18 | ビュー層。`focused_kyou`/`clicked_kyou` は含めない（発火源なので二重発火する） |
+| `build_kyou_dialog_relay(emits, overrides?)` | 20 | ダイアログ層。上の18件＋`focused_kyou`/`clicked_kyou` |
+
+返り値はそのまま `v-on="crudRelayHandlers"` に渡せる。`requested_close_dialog` は中継対象外で、ダイアログが `@requested_close_dialog="hide()"` で自分に繋ぐ。中継イベントを増やすときは `KyouViewRelayArgs` と `kyou_view_relay_event_names` の両方に足すこと（片方だけだとコンパイルエラーになる）。
+
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約3,330行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,400行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
-- 全88登録エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは86件）
+- 全90登録エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは88件）
 - `GkillAPIForSharedKyou` サブクラス（共有データ用）
 - 各メソッドは `fetch()` → JSONパース → エラーチェック → データ返却
 
@@ -252,7 +265,7 @@ JSON からクラスインスタンスへの詰め替えは `classes/api/hydrate
   - キャッシュキー: `/cache/api/plugin_content_html/{kyou_id}`
 
 **SPAフォールバック:**
-- `/`、`/api/*`、`/files/*`、`/zip_cache/*` 以外の全パスを `index.html` にフォールバック
+- `/`、`/api/*`、`/files/*`、`/zip_cache/*`、`/resources/manual/*` 以外の全パスを `index.html` にフォールバック（`/resources/manual/*` はヘルプHTMLの実体なので除外）
 - `/zip_cache/.*` パターンは Service Worker の denylist に追加されており、キャッシュされない
 
 ### Web Share Target
@@ -317,13 +330,13 @@ Service Worker が `/share-target` POSTを処理：
 
 | コード | 言語 | キー数 |
 |---|---|---|
-| `ja` | 日本語 | 856 |
-| `en` | 英語 | 856 |
-| `zh` | 中国語 | 856 |
-| `ko` | 韓国語 | 856 |
-| `es` | スペイン語 | 856 |
-| `fr` | フランス語 | 856 |
-| `de` | ドイツ語 | 856 |
+| `ja` | 日本語 | 858 |
+| `en` | 英語 | 858 |
+| `zh` | 中国語 | 858 |
+| `ko` | 韓国語 | 858 |
+| `es` | スペイン語 | 858 |
+| `fr` | フランス語 | 858 |
+| `de` | ドイツ語 | 858 |
 
 > キー数は全ロケールで一致している必要がある（`npm run verify_docs` が検査する）。
 
@@ -353,7 +366,7 @@ Service Worker が `/share-target` POSTを処理：
 | 項目 | 値 |
 |---|---|
 | パスエイリアス | `@/` → `./src/client/` |
-| minify | `false`（デフォルト）、環境変数 `MINIFY=true` で有効化 |
+| minify | `true`（デフォルト）。デバッグで読めるJSが欲しいときだけ環境変数 `MINIFY=false` で無効化する（既定offにすると `install_server` / `install_app` が未minifyの約5MBのJSをGoバイナリに埋め込んでしまう） |
 | Vue devtools | プロダクションでも有効（`__VUE_PROD_DEVTOOLS__: true`） |
 | propsDestructure | 有効 |
 
@@ -561,3 +574,17 @@ Service Worker が `/share-target` POSTを処理：
 ### 未保存データ警告
 
 KFTL テキストエリアに内容がある状態でページ離脱しようとすると `beforeunload` イベントで警告を表示。加えて、各ページ composable（use-rykv-page, use-mi-page, use-mkfl-page, use-plaing-time-is-page, use-kyou-page, use-saihate-page）にも `beforeunload` ガードを追加し、ダイアログ表示中やロード中のページ離脱を防止。
+
+### 二重送信ガード
+
+確認ビュー・編集ビュー・コンテキストメニュー（タグ履歴からのクイック付与など）の送信系ハンドラは `is_requested_submit` ref を持ち、処理中の再入を先頭で弾く。連打やEnter長押しで同じ登録・削除が二重に走るのを防ぐ。`classes/use-*.ts` の45ファイルが実装している。
+
+### 確認ダイアログのクローズは finally で行う
+
+削除・更新の確認ダイアログは、リクエスト送出後に例外が出てもクローズまで必ず到達させる。クローズ（`emits('requested_close_dialog')`）と `is_requested_submit` の解除は `try` の中ではなく `finally` に置く。`try` の末尾に置くと「サーバには届いていて実際は消えているのに、例外でダイアログが閉じない」状態になる。
+
+### 読み込み中表示の遅延（`use-delayed-loading.ts`）
+
+Kyou は種別を問わず表示のたびに API を1回叩くため、一覧では数十行が同時に読み込み中になる。ローカルサーバでは数十msで返るので、`useDelayedLoading(is_loading, delay_ms = 200)` を通し、読み込みが200msを超えたときだけインジケータを出す（`use-kyou-view.ts` の `show_loading_indicator`）。タイマーは `onScopeDispose` で片付けるので、仮想スクロールで行が使い回されても漏れない。
+
+また KyouView は `kyou.id` が空の間（ReKyou / MiReKyou が参照先を取得している最中など）は日時を表示しない。`related_time` の初期値 `new Date(0)` がそのまま出ると 1970/01/01 が一瞬見えるため。参照先が見つからないときだけ終端メッセージ（`NOT_FOUND_REKYOU_TARGET_ERROR_MESSAGE`）を出す。

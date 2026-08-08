@@ -120,7 +120,7 @@ cmd := exec.CommandContext(context.Background(),
 
 | 側 | 上限 | 実装 |
 |---|---|---|
-| 親（gkill 本体） | **32MB** | `dao/reps/plugin_repository_impl.go:95` |
+| 親（gkill 本体） | **32MB** | `dao/reps/plugin_repository_impl.go:174` |
 | 子（プラグイン SDK） | **1MB** | `plugin/sdk/sdk.go:83-84` |
 
 親側が 32MB なのは大きな HTML レスポンスで `bufio.Scanner: token too long` を防ぐため。

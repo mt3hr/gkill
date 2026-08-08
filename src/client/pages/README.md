@@ -9,7 +9,7 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 
 ```
 pages/
-├── (ルートページ 14 .vue + 2 .ts)  # Vue Router ルートページ
+├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
 ├── views/                          # View コンポーネント（189 .vue）
 └── dialogs/                        # Dialog コンポーネント（103 .vue）
 ```
@@ -34,6 +34,18 @@ xxx-view-emits.ts     # Emits 定義
 ```
 
 ロジックは `classes/use-xxx-view.ts` Composable に分離。
+
+### イベント中継は `v-on="crudRelayHandlers"` に統一
+
+Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_open_rykv_dialog` など）は、子から親へそのまま流すだけの中継が大半を占める。以前は各 View / Dialog が `@deleted_kyou="..."` を手書きで羅列しており、約63箇所で取りこぼしが起きていた（大半が `requested_open_rykv_dialog`）。
+
+現在は `classes/kyou-view-relay.ts` の `build_kyou_view_relay(emits)` / `build_kyou_dialog_relay(emits)` でハンドラ束を1箇所で生成し、テンプレート側は
+
+```vue
+<KyouView … v-on="crudRelayHandlers" />
+```
+
+の1行で張る。挙動を変えたいイベントだけ第2引数の `overrides` で差し替える。ビュー層は18件、ダイアログ層はそれにフォーカス系2件（`focused_kyou` / `clicked_kyou`）を足した20件を中継する。
 
 ## ルートページ（15 .vue + 2 .ts）
 
