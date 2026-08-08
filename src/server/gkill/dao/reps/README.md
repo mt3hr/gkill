@@ -57,7 +57,7 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 
 ### doc コメントの方針
 
-`*_repository.go` のインターフェースメソッド（454件）と `gkill_server_api` の `HandleXxx`（90件）は
+`*_repository.go` のインターフェースメソッド（454件）と `gkill_server_api` の `HandleXxx`（92件）は
 **doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
 共通契約の完全文は基底 `repository.go` に1回だけ書き、型別ファイルは
 「契約は `Repository.Xxx` を参照。」の1行参照＋型固有の差分のみにする。
@@ -273,7 +273,7 @@ SQLite3 をバックエンドとし、4層のアーキテクチャで構成さ�
 | ファイル | 説明 |
 |---------|------|
 | `plugin_repository.go` | プラグインリポジトリのインタフェース |
-| `plugin_repository_impl.go` | プラグインサブプロセスのライフサイクル管理実装（起動、mutex 保護付き stdio 通信、クラッシュ時の自動再起動）。stdio の改行区切り JSON でプラグインバイナリと通信する |
+| `plugin_repository_impl.go` | プラグインサブプロセスのライフサイクル管理実装（起動、容量1のチャネル `callSlot` によるスロット制御付き stdio 通信、クラッシュ時の自動再起動）。stdio の改行区切り JSON でプラグインバイナリと通信する。直列化は mutex ではなくチャネルで行い、**デッドラインはスロットを取ってから張る**。順番待ちの上限は別枠（`maxPluginQueueWait`、既定10秒）で、待ちきれなければ `ErrPluginBusy` を返すだけでプロセスには手を出さない |
 
 ### ファイルサーバ — 2ファイル
 

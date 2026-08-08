@@ -2,7 +2,7 @@
 
 ## 概要
 
-`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装89ファイル（+ テスト5ファイル））に対する統合テストを含む。
+`gkill/api/gkill_server_api/` パッケージのテスト。`gkill/api/` から移動された HTTP API ハンドラ層（handle_*.go 実装91ファイル（+ テスト5ファイル））に対する統合テストを含む。
 
 ## テストフレームワーク
 
@@ -19,6 +19,8 @@ Go `testing` パッケージ
 | `handle_get_idf_kyou_by_relative_path_test.go` | Markdown 相対リンクの IDFKyou 解決ハンドラ（同一 Rep 内解決、パストラバーサル防止） |
 | `handle_zip_cache_file_serve_test.go` | `/zip_cache/` の利用者分離（他人のキャッシュを読めないこと、ユーザーごとに分かれていない旧レイアウトを配信しないこと、`../` / `..%2F` で抜けられないこと、セッション無し・不正セッションの拒否）と、利用者ファイル配信のセキュリティヘッダ（後述） |
 | `handle_reset_password_test.go` | パスワードリセットのセッション検証（後述） |
+| `get_device_cache_test.go` | デバイス名キャッシュ（`sync.Once` による `GetAllServerConfigs` 呼び出し削減）の検証 |
+| `plugin_content_html_cache_test.go` | プラグイン本文HTMLキャッシュ（TTL・件数上限・singleflight による同時要求の集約）の検証 |
 | `utils_ssrf_test.go` | `httpGetBase64Data` の SSRF 対策（スキーム制限、内部アドレス拒否、サイズ上限、タイムアウト） |
 
 ## テスト内容

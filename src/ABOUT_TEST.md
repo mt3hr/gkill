@@ -12,12 +12,12 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
 | Go バックエンド (`server/`) | 688 | 78 | Go `testing` |
-| フロントエンド ユニット (`client/`) | 879 | 73 | Vitest |
-| フロントエンド E2E (`client/`) | 196 | 34 | Playwright |
+| フロントエンド ユニット (`client/`) | 897 | 77 | Vitest |
+| フロントエンド E2E (`client/`) | 198 | 34 | Playwright |
 | MCP サーバ (`mcp/`) | 703 | 20 | Vitest |
 | Android (`android/`) | 12 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 118 | 9 | JUnit 4 + MockK |
-| **合計** | **2,536** | **211** | |
+| **合計** | **2,616** | **220** | |
 
 `src/plugins/` の Go テスト 28件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -27,7 +27,7 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 - **型やコンパイラが保証済みのものは書かない** — `typeof api.foo === 'function'`、コンストラクタで代入した既定値、`instanceof` の確認など。`vue-tsc --build` と Go のコンパイラが既に保証している
 - **同じ経路の繰り返しはテーブル駆動に畳む** — 例: エンドポイントごとに書かれていた認証エラーテスト48本は、フィクスチャを1回だけ作る `TestAuthMiddleware_RejectsInvalidSession` の96サブテストになった（粒度は `t.Run` で維持、実行時間は約40秒短縮）
-- **手書きの一覧はソースから機械的に導出する** — 例: エラーコードの重複チェックは、手書きした29個だけでなく `go/parser` で読み取った全400個が対象になった
+- **手書きの一覧はソースから機械的に導出する** — 例: エラーコードの重複チェックは、手書きした29個だけでなく `go/parser` で読み取った全406個が対象になった
 - **条件で包んで「静かに成功する」テストを作らない** — E2E の `if (await x.count() > 0) { ...本体... }` は、要素が見つからないと何も検証せずパスする。対象が見つかることを前提にする書き方へ移行中（`eslint.config.js` の `playwright/no-conditional-in-test` 参照）
 
 <details>
@@ -66,7 +66,7 @@ npm run verify_docs -- --list
 
 | ディレクトリ | テスト仕様 | 概要 |
 |-------------|-----------|------|
-| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit 839 + E2E 196） |
+| `client/` | [client/ABOUT_TEST.md](client/ABOUT_TEST.md) | フロントエンド全体（unit 897 + E2E 198） |
 | `client/classes/` | [client/classes/ABOUT_TEST.md](client/classes/ABOUT_TEST.md) | ユーティリティクラス |
 | `client/classes/api/` | [client/classes/api/ABOUT_TEST.md](client/classes/api/ABOUT_TEST.md) | GkillAPI クライアント |
 | `client/classes/datas/` | [client/classes/datas/ABOUT_TEST.md](client/classes/datas/ABOUT_TEST.md) | 28ファイル（データモデル + 横断検証） |
@@ -76,7 +76,7 @@ npm run verify_docs -- --list
 | `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) | i18n 完全性検証（7言語） |
 | `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（688テスト / 30パッケージ） |
 | `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) | API 共通基盤（FindFilter等） |
-| `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) | API ハンドラ統合テスト（handle_*.go 実装89ファイル） |
+| `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) | API ハンドラ統合テスト（handle_*.go 実装91ファイル） |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) | KFTL パーサ (Go) |
 | `server/gkill/api/req_res/` | [server/gkill/api/req_res/ABOUT_TEST.md](server/gkill/api/req_res/ABOUT_TEST.md) | ワイヤ契約（JSONタグ名 / omitempty） |
 | `server/gkill/dao/` | [server/gkill/dao/ABOUT_TEST.md](server/gkill/dao/ABOUT_TEST.md) | DAO 層全体 |

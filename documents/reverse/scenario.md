@@ -743,7 +743,7 @@ stateDiagram-v2
 
 **物語：** 振り返り中に「この店、今度もう一度行こう」と思った記録が出てくる。内容を書き写して新しいタスクを作るのは面倒なので、その記録を右クリックして「タスクにする」を選び、期限だけ決めて保存する。以後その記録はタスク画面の板にも並び、普通のタスクと同じようにチェックを付けられる。
 
-**裏で何が起きるか：** MiReKyou は **タイトルを持たない Mi** です。`target_id` で元の Kyou を指すだけで、表示内容は常に元の Kyou から引いてきます。`data_type` は `mirekyou_create` / `_check` / `_limit` / `_start` / `_end` の5射影に分かれるため、前方一致で判定するコードは **`mirekyou` を `mi` より先に**評価しなければなりません。元の Kyou を削除すると表示する内容が無くなる点も MiReKyou 特有です。
+**裏で何が起きるか：** MiReKyou は **タイトルを持たない Mi** です。`target_id` で元の Kyou を指すだけで、表示内容は常に元の Kyou から引いてきます。`data_type` は `mirekyou_create` / `_check` / `_limit` / `_start` / `_end` の5射影に分かれるため、前方一致で判定するコードは **`mirekyou` を `mi` より先に**評価しなければなりません。元の Kyou を画面から削除すると、その MiReKyou も**連鎖して論理削除されます**（`classes/cascade-delete-kyou.ts`。付随する Tag / Text / Notification と参照元の ReKyou / MiReKyou を先に消し、元の Kyou 自身を最後に消す。サーバの `FindKyous` が参照先の消えた ReKyou を結果から外すため、先に元を消すと参照元を辿れなくなる）。連鎖削除が途中で失敗した場合や、MCP・他クライアントから元の Kyou だけを消した場合には、タイトルを持たない MiReKyou が表示する内容を失った状態で残ります。
 
 ```mermaid
 sequenceDiagram

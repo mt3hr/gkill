@@ -366,7 +366,7 @@ classDiagram
         +HandleAddKmemo(w, r)
         +HandleUpdateKmemo(w, r)
         +HandleGetKyous(w, r)
-        %% 残り84エンドポイント省略（合計88登録）
+        %% 残り86エンドポイント省略（合計90登録）
     }
 
     GkillServerAPI --> GkillDAOManager : uses
@@ -652,7 +652,7 @@ classDiagram
         +add_kmemo(req) Promise~AddKmemoResponse~
         +update_kmemo(req) Promise~UpdateKmemoResponse~
         +get_kyous(req) Promise~GetKyousResponse~
-        %% 残りメソッド省略（async メソッドは合計155）
+        %% 残りメソッド省略（async メソッドは合計160）
     }
 
     InfoBase <|-- Kyou : extends
@@ -691,7 +691,7 @@ classDiagram
 
     note for Kyou "typed_xxx フィールドで\n具体的なデータ型を保持\nload_all() で遅延ロード\ntyped_plugin は既存型に該当しない\nプラグインKyouの場合にセットされる"
     note for MetaInfoBase "Kyou に付随するメタ情報の基底。\ntarget_id で対象 Kyou を指す。\nTag / Text / Notification が継承する\n（InfoBase ではない点に注意）"
-    note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n約3,330行"
+    note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n約3,400行"
 ```
 
 ### ZIP閲覧関連の構造体

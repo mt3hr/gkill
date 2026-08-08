@@ -85,10 +85,10 @@ src/client/
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,330行、全API呼び出しを集約）
+│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,400行、全API呼び出しを集約）
 │   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
-│   │   └── req_res/        # リクエスト/レスポンス型（168ファイル）
+│   │   └── req_res/        # リクエスト/レスポンス型（172ファイル）
 │   ├── datas/              # TypeScriptデータモデル（Go構造体のミラー）
 │   ├── dnote/              # Dnote集計ユーティリティ（dnote-trend-aggregator.ts, dnote-predicate/ 等）
 │   ├── dto/                # データ転送オブジェクト
@@ -96,7 +96,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（41ステートメント型）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（231ファイル）
+│   └── use-*.ts            # Composition関数群（232ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -134,10 +134,10 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（108ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（115ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
-    │       ├── gkill_server_api_address.go  # ルーティング定義（90エンドポイント定義・88登録：89 POST + 1 GET）
+    │       ├── gkill_server_api_address.go  # ルーティング定義（92エンドポイント定義・90登録：89 POST + 1 GET）
     │       ├── auth.go             # セッション認証ヘルパー
     │       ├── auth_context.go     # AuthContext構造体（認証済みコンテキスト）
     │       ├── auth_middleware.go  # authMiddleware / authWithReposMiddleware
@@ -181,6 +181,8 @@ src/server/
         │   ├── gkill_options/      # CLIフラグ・ディレクトリ構造定義
         │   ├── gkill_log/          # ログ設定
         │   └── threads/            # ゴルーチンプール（セマフォ）
+        ├── gkill_fitbit_kc_convert_batch/
+        │   └── gkill_fitbit_kc_convert_batch.go # FitbitエクスポートをKC記録へ変換するバッチ
         ├── gkill_server/
         │   └── main.go             # gkill_server エントリーポイント（ヘッドレスHTTP）
         └── gkill/
@@ -303,11 +305,12 @@ src/tools/
 ├── manual_ascii_fix.mjs         # マニュアルのASCII正規化
 ├── extract_manual_src.mjs       # 既存マニュアルから manual_src を抽出
 ├── verify_release_artifacts.mjs # リリース成果物の検証（npm run verify_release_artifacts）
+├── test_plugins.mjs             # src/plugins/ 配下の各 Go モジュールを個別に go test（npm run test_plugins）
 ├── license_getter.ps1           # ライセンス情報収集スクリプト
 └── README.md
 ```
 
-このうち `dev.mjs` / `verify_docs.mjs` / `build_manuals.mjs` / `verify_release_artifacts.mjs` は
+このうち `dev.mjs` / `verify_docs.mjs` / `build_manuals.mjs` / `verify_release_artifacts.mjs` / `test_plugins.mjs` は
 `package.json` の npm スクリプトから直接呼ばれる。
 
 ## documents/ — ドキュメント
@@ -316,7 +319,7 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（90項目）
+│   ├── glossary.md                   # 用語集（91項目）
 │   ├── design-philosophy.md          # 設計思想
 │   ├── usecase.md                    # ユースケース一覧（84件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
@@ -327,7 +330,7 @@ documents/
 │   ├── screen-transition.md          # 画面遷移図
 │   ├── screen-specs.md               # 画面仕様（項目定義）
 │   ├── frontend-architecture.md      # フロントエンド設計ガイド
-│   ├── api-endpoints.md              # APIエンドポイント一覧（90件定義・88件登録）
+│   ├── api-endpoints.md              # APIエンドポイント一覧（92件定義・90件登録）
 │   ├── error-handling-and-security.md # エラー処理・セキュリティ
 │   ├── operations-guide.md           # 運用ガイド
 │   ├── dvnf-rep-type-spec.md         # DVNF/RepType仕様

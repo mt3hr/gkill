@@ -38,12 +38,13 @@ Vitest
 | `src/client/__tests__/unit/datas/dashboard-config.test.ts` | DashboardConfig（ダッシュボード設定: MI検索条件・Dnote検索条件） |
 | `src/client/__tests__/unit/datas/rep-type-map.test.ts` | RepTypeローカライズマップ・ApplicationConfig未定義RepType自動追加時の表示名ローカライズ |
 
-上記に加えて、エンティティ横断のテストが1つある。
+上記に加えて、エンティティ横断のテストが3つある。
 
 | ファイル | テスト内容 |
 |---------|-----------|
 | `src/client/__tests__/unit/datas/attached-histories.test.ts` | 11エンティティの `load_attached_histories` / `load_attached_datas` |
 | `src/client/__tests__/unit/datas/append-not-found-tags.test.ts` | ApplicationConfig のタグ構造に未登録タグを自動追加する処理 |
+| `src/client/__tests__/unit/datas/kyou-load-all-request-count.test.ts` | `Kyou.load_all()` が1件あたりに飛ばすリクエスト本数の回帰テスト（`load_attached_histories` の二重呼び出し、`load_attached_timeis` からの `get_application_config` 呼び出しを検出する） |
 
 ## テスト内容
 

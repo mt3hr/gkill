@@ -23,6 +23,7 @@ gkill_server_api/
 ├── web_push.go                      # Web Push 通知送信
 ├── gkill_server_api_access_log.go   # アクセスログ
 ├── gkill_server_api_rate_limit.go   # ログインレートリミット
+├── plugin_content_html_cache.go     # プラグイン本文HTMLのキャッシュ（TTL・件数上限・singleflight）
 ├── gkill_server_api_test.go         # 統合テスト
 ├── gkill_server_api_rate_limit_test.go # レートリミットテスト
 ├── handle_get_idf_file_path_test.go # IDFファイルパス解決ハンドラテスト
@@ -31,12 +32,13 @@ gkill_server_api/
 ├── handle_reset_password_test.go    # パスワードリセットハンドラテスト
 ├── handle_zip_cache_file_serve_test.go # ZIPキャッシュ配信ハンドラテスト
 ├── get_device_cache_test.go         # デバイスキャッシュ取得テスト
+├── plugin_content_html_cache_test.go # プラグイン本文HTMLキャッシュのテスト
 ├── utils_ssrf_test.go               # httpGetBase64Data の SSRF 対策テスト
 └── handle_*.go                      # 各エンドポイントのハンドラ（実装91ファイル + テスト5ファイル）
 ```
 
-**合計: 113ファイル**（基盤13 + ハンドラ実装91 + テスト9 + README.md 1 + ABOUT_TEST.md 1）
-`.go` だけなら111ファイル。`handle_*.go` という名前のファイルは94あるが、うち5つはテスト。
+**合計: 117ファイル**（基盤14 + ハンドラ実装91 + テスト10 + README.md 1 + ABOUT_TEST.md 1）
+`.go` だけなら115ファイル。`handle_*.go` という名前のファイルは96あるが、うち5つはテスト。
 
 ## GkillServerAPI 構造体
 
@@ -48,12 +50,23 @@ type GkillServerAPI struct {
     FindFilter       *api.FindFilter
     UsecaseCtx       *usecase.UsecaseContext
     RebootServerCh   chan (struct{})
-    device           string
-    loginRateLimiter *loginRateLimiter
-    closeOnce        sync.Once
-    closeErr         error
+
+    deviceOnce sync.Once
+    device     string
+    deviceErr  error
+
+    loginRateLimiter         *loginRateLimiter
+    passwordResetRateLimiter *loginRateLimiter
+
+    pluginContentHTMLCacheOnce sync.Once
+    pluginContentHTMLCacheRef  *pluginContentHTMLCache
+
+    closeOnce sync.Once
+    closeErr  error
 }
 ```
+
+`device` は取得元の `GetAllServerConfigs` が重いSQLなので `sync.Once` でキャッシュする。設定更新時は `GkillServerAPI` ごと作り直されるので無効化は不要。
 
 `NewGkillServerAPI()` で初期化。初回起動時に admin アカウント（パスワードなし）を自動作成し、
 VAPID 鍵を含むサーバ設定とアプリケーション設定を初期化する。
@@ -89,6 +102,11 @@ VAPID 鍵を含むサーバ設定とアプリケーション設定を初期化�
 ### ログインレートリミット（`gkill_server_api_rate_limit.go`）
 
 IP アドレス単位で 15 分間に 10 回までのログイン試行を許可。超過時はエラーを返す。
+レートリミッタはログイン用（`loginRateLimiter`）とパスワードリセット用（`passwordResetRateLimiter`）の2本を持つ。後者は `handle_set_new_password.go` から使う。
+
+### プラグイン本文HTMLキャッシュ（`plugin_content_html_cache.go`）
+
+プラグインKyouの本文はgkillに保存されておらず、要求のたびにプラグインプロセスへ問い合わせる。プラグインの stdio は1本で呼び出しが直列化されるため、仮想スクロールで同じKyouのHTMLが繰り返し要求されると待ち行列ができる。`pluginContentHTMLCache` が userID + rep_name + kyou_id をキーに TTL 10分・最大2000件（挿入順に古いものから破棄）でキャッシュし、`singleflight` で同時要求を1回の問い合わせにまとめる。
 
 ### アクセスログ（`gkill_server_api_access_log.go`）
 
@@ -97,7 +115,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 ## ハンドラパターン
 
-全86ハンドラは共通のパターンに従う。`handle_add_kmemo.go` を例に:
+全92ハンドラは共通のパターンに従う。`handle_add_kmemo.go` を例に:
 
 ```
 1. Content-Type: application/json 設定
@@ -148,7 +166,7 @@ IP アドレス単位で 15 分間に 10 回までのログイン試行を許可
 
 ### doc コメントの方針
 
-`HandleXxx` は **90/90 で doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
+`HandleXxx` は **92/92 で doc コメント 100% を維持**する（`verify_docs` が網羅率を機械検査する）。
 書式は「1行説明 / 空行 / パス・HTTPメソッド・認証区分 / req_res 型」。
 ハンドラを追加したら doc コメントも必ず書くこと（書かないと `npm test` が落ちる）。
 
