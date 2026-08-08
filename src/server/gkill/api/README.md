@@ -11,16 +11,18 @@ HTTP API の共通基盤とハンドラ層。全エンドポイントは POST �
 ```
 api/
 ├── embed.go                     # //go:embed ディレクティブ（Vue SPA 配信）
+├── filter_tags_kyous_test.go    # タグ絞り込みテスト
 ├── find_filter.go               # 検索フィルタロジック
 ├── find_filter_helpers.go       # 検索フィルタヘルパー
 ├── find_filter_test.go          # 検索フィルタテスト
 ├── find_kyou_context.go         # Kyou 検索コンテキスト
 ├── gkill_version_data.go        # バージョンデータ構造体
+├── select_match_reps_cache_test.go # 対象リポジトリ選択キャッシュテスト
 ├── version.go                   # バージョン情報
 ├── gkill_server_api/            # HTTP ハンドラ（115ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
-│   ├── serve.go                 # gorilla/mux ルーター設定・全88ルート登録
+│   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
 │   ├── close.go                 # サーバ終了処理
 │   ├── auth.go                  # 認証処理
 │   ├── auth_context.go          # 認証コンテキスト
@@ -30,8 +32,9 @@ api/
 │   ├── web_push.go              # Web Push 通知
 │   ├── gkill_server_api_access_log.go # アクセスログ
 │   ├── gkill_server_api_rate_limit.go # レートリミット
-│   └── handle_*.go              # 各エンドポイントのハンドラ（94ファイル。うちテスト5）
+│   └── handle_*.go              # 各エンドポイントのハンドラ（96ファイル。うちテスト5）
 ├── find/                        # 検索クエリ型定義
+├── gkill_plugin/                # プラグイン通信プロトコル型
 ├── gpslogs/                     # GPS ログパーサ
 ├── kftl/                        # KFTL パーサ → kftl/README.md 参照
 ├── message/                     # エラー/メッセージコード
@@ -39,21 +42,23 @@ api/
 └── embed/                       # ビルド生成物（.gitignore 対象）
 ```
 
-## api/ ルートレベルファイル（7ファイル）
+## api/ ルートレベルファイル（9ファイル）
 
 | ファイル | 役割 |
 |---------|------|
 | `embed.go` | `//go:embed embed` ディレクティブ。ビルド時にフロントエンドの dist/ をバイナリに埋め込む |
+| `filter_tags_kyous_test.go` | タグ絞り込みのテスト |
 | `find_filter.go` | Kyou の検索フィルタロジック。FindQuery に基づいたデータ絞り込み |
 | `find_filter_helpers.go` | 検索フィルタのヘルパー関数群 |
 | `find_filter_test.go` | 検索フィルタのテスト |
 | `find_kyou_context.go` | Kyou 検索時のコンテキスト構造体 |
 | `gkill_version_data.go` | バージョンデータ構造体定義 |
+| `select_match_reps_cache_test.go` | 対象リポジトリ選択キャッシュのテスト |
 | `version.go` | ビルド時に埋め込まれるバージョン情報 |
 
 ## サブディレクトリ
 
-### `gkill_server_api/`（111ファイル）— HTTP ハンドラ
+### `gkill_server_api/`（115ファイル）— HTTP ハンドラ
 
 詳細は [gkill_server_api/README.md](gkill_server_api/README.md) を参照。
 
@@ -73,6 +78,13 @@ handle_*.go は96ファイル（実装91 + テスト5）で、1ハンドラ1フ�
 | `week_of_days.go` | 曜日フィルタ enum |
 | `find_query_test.go` | JSON シリアライズ・デシリアライズテスト |
 
+### `gkill_plugin/`（2ファイル）— プラグイン通信プロトコル型
+
+| ファイル | 説明 |
+|---------|------|
+| `plugin_manifest.go` | `PluginManifest` 構造体 — manifest.json の型 |
+| `plugin_protocol.go` | `PluginRequest` / `PluginResponse` / `PluginKyou` — stdio 改行区切り JSON のメッセージ型 |
+
 ### `gpslogs/`（2ファイル）— GPS ログパーサ
 
 | ファイル | 説明 |
@@ -88,7 +100,7 @@ handle_*.go は96ファイル（実装91 + テスト5）で、1ハンドラ1フ�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用 |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
-| `error_codes.go` | エラーコード定数（406定数、ERR000001〜ERR000401・ERR000243欠番） |
+| `error_codes.go` | エラーコード定数（406定数、ERR000001〜ERR000407・ERR000243欠番） |
 | `message_codes.go` | メッセージコード定数（87定数） |
 | `message_test.go` | コード形式テスト |
 
@@ -100,9 +112,9 @@ handle_*.go は96ファイル（実装91 + テスト5）で、1ハンドラ1フ�
 
 詳細は [req_res/README.md](req_res/README.md) を参照。
 
-## 全エンドポイント一覧（90エンドポイント定義・88登録）
+## 全エンドポイント一覧（92エンドポイント定義・90登録）
 
-全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。`gkill_server_api/serve.go` 内で gorilla/mux に登録。`GetKFTLTemplate` と `GetGkillInfo` の2件はアドレス定義のみで未登録。
+全エンドポイントは `/api/` 配下に配置（POST 中心、一部 GET）。`gkill_server_api/serve.go` 内で gorilla/mux に登録。`GetKFTLTemplate` と `GetGkillInfo` の2件はアドレス定義のみで未登録。`GkillWebpushServiceWorkerJs`（`/serviceWorker.js`、GET）だけは `/api/` 配下ではなく、`router.PathPrefix` で別途登録している。
 
 ### 認証系（5エンドポイント）
 
@@ -170,7 +182,7 @@ handle_*.go は96ファイル（実装91 + テスト5）で、1ハンドラ1フ�
 | `GetGPSLog` | GPS ログ取得 |
 | `GetUpdatedDatasByTime` | 時刻指定で更新データ取得 |
 
-### メタ情報取得系（9エンドポイント）
+### メタ情報取得系（11エンドポイント）
 
 | エンドポイント | 説明 |
 |---------------|------|
@@ -183,6 +195,8 @@ handle_*.go は96ファイル（実装91 + テスト5）で、1ハンドラ1フ�
 | `GetTextHistoriesByTextID` | テキストの変更履歴 |
 | `GetNotificationsByTargetID` | 対象 ID に紐づく通知一覧 |
 | `GetNotificationHistoriesByNotificationID` | 通知の変更履歴 |
+| `GetReKyousByTargetID` | 対象 ID を参照している ReKyou 一覧（Kyou 連鎖削除の逆引きに使う） |
+| `GetMiReKyousByTargetID` | 対象 ID を参照している MiReKyou 一覧（同上） |
 
 ### 設定系（8エンドポイント）
 

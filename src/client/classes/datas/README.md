@@ -22,6 +22,7 @@ datas/
 ├── text.ts                        # テキスト
 ├── notification.ts                # 通知
 ├── re-kyou.ts                     # リポスト
+├── mi-re-kyou.ts                  # リポストタスク
 ├── idf-kyou.ts                    # ファイル
 ├── git-commit-log.ts              # Git コミットログ
 ├── gps-log.ts                     # GPS ログ
@@ -53,6 +54,7 @@ datas/
 | `text.ts` | `reps/text.go` | Text — テキスト（対象 ID に紐づく） |
 | `notification.ts` | `reps/notification.go` | Notification — 通知（対象 ID に紐づく） |
 | `re-kyou.ts` | `reps/re_kyou.go` | ReKyou — リポスト |
+| `mi-re-kyou.ts` | `reps/mi_re_kyou.go` | MiReKyou — リポストタスク（タイトルを持たず `target_id` で元の Kyou を指す） |
 | `idf-kyou.ts` | `reps/idf_kyou.go` | IDFKyou — ファイル |
 | `git-commit-log.ts` | `reps/git_commit_log.go` | GitCommitLog — Git コミットログ |
 | `gps-log.ts` | `reps/gps_log.go` | GPSLog — GPS ログ |

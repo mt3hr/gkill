@@ -15,6 +15,7 @@ api/
 ├── gkill-api-response.ts                 # 基底レスポンス型
 ├── gkill-error.ts                        # エラー型
 ├── gkill-message.ts                      # メッセージ型
+├── hydrate.ts                            # 生JSON→クラスインスタンスの詰め替え
 ├── drop-type-foldable-struct.ts          # ドロップ型折り畳み構造体
 ├── file-data.ts                          # ファイルデータ型
 ├── generate-get-plaing-timeis-kyous-query.ts  # Plaing TimeIs クエリ生成
@@ -24,7 +25,7 @@ api/
 └── req_res/                              # 全 Request/Response 型
 ```
 
-## ルートファイル（9ファイル）
+## ルートファイル（10ファイル）
 
 | ファイル | 役割 |
 |---------|------|
@@ -33,6 +34,7 @@ api/
 | `gkill-api-response.ts` | 基底レスポンス型（errors, messages 等の共通フィールド） |
 | `gkill-error.ts` | `GkillError` 型定義 |
 | `gkill-message.ts` | `GkillMessage` 型定義 |
+| `hydrate.ts` | `hydrate()` / `hydrate_all()` — API から返る生 JSON をクラスインスタンスへ詰め替えるヘルパー |
 | `drop-type-foldable-struct.ts` | ドラッグ&ドロップ時のデータ型折り畳み構造体 |
 | `file-data.ts` | `FileData` 型（アップロードファイル情報） |
 | `generate-get-plaing-timeis-kyous-query.ts` | 稼働中 TimeIs の Kyou 取得クエリ生成ユーティリティ |

@@ -37,9 +37,11 @@ type GkillMessage struct {
 | `ERR000023` 〜 `ERR000095` | CRUD 操作（Add, Update, Get, NotFound — 全データ型） |
 | `ERR000098` 〜 `ERR000199` | 複合操作（共有リスト、MiSharedTasks、GPSLog 等） |
 | `ERR000203` 〜 `ERR000280` | 拡張機能（KFTL、通知、構造体、Danote） |
-| `ERR000300` 〜 `ERR000401` | 新機能（KC 数値記録、トランザクション、ZIP ブラウズ、レートリミット、プラグイン、IDF パス解決） |
+| `ERR000300` 〜 `ERR000407` | 新機能（KC 数値記録、トランザクション、ZIP ブラウズ、レートリミット、プラグイン、IDF パス解決、ReKyou/MiReKyou の対象ID逆引き） |
 
-## メッセージコード体系（85 コード）
+`ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在98定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
+
+## メッセージコード体系（87 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -47,7 +49,7 @@ type GkillMessage struct {
 | `MSG000005` 〜 `MSG000024` | CRUD 成功（Add, Update 系） |
 | `MSG000025` 〜 `MSG000040` | Get 操作成功 |
 | `MSG000041` 〜 `MSG000074` | 設定・アップロード・KC・トランザクション |
-| `MSG000075` 〜 `MSG000085` | KFTL、MCP、キャッシュ、通知、ZIP ブラウズ |
+| `MSG000075` 〜 `MSG000087` | KFTL、MCP、キャッシュ、通知、ZIP ブラウズ、ReKyou/MiReKyou の対象ID逆引き |
 
 ## HTTP ステータスコードとの関係
 

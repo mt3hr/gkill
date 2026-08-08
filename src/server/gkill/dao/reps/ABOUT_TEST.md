@@ -34,8 +34,10 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 |---------|-----------|
 | `cached_and_temp_test.go` | キャッシュ層 / 一時リポジトリ層の動作検証（MiReKyou のキャッシュ再構築・TX分離を含む）。各 `TestCached*_AddAndGet` は **Add した直後に Get で取り直せること**を確認する（後述） |
 | `re_kyou_granular_cache_test.go` | ReKyou のグラニュラーキャッシュ動作検証 |
+| `idf_granular_cache_test.go` | IDFKyou のグラニュラーキャッシュ動作検証（`re_kyou_granular_cache_test.go` の IDFKyou 版） |
 | `re_kyou_cached_deadlock_test.go` | 共有RWMutexの再帰RLockによる検索恒久ハングの回帰テスト |
 | `git_commit_log_cached_nested_pool_test.go` | gitキャッシュビルド中フォールバックのネスト並列プール枯渇と isCacheBuilding データ競合の回帰テスト |
+| `mi_re_kyou_cached_nested_pool_test.go` | MiReKyou キャッシュのネスト並列プール枯渇の回帰テスト（`git_commit_log_cached_nested_pool_test.go` と同種） |
 | `gkill_repositories_test.go` | 最新版アドレスキャッシュの排他制御（後述） |
 | `target_resolution_memo_test.go` | ReKyou/MiReKyou ワード委譲検索のターゲット解決メモ |
 | `db_file_change_detector_test.go` | DBファイル変更検出（キャッシュ無効化トリガ） |
@@ -104,8 +106,10 @@ stdio の改行区切りJSONで会話する。ここが壊れると
   同じプロセスで応答が返ることまで確認する
 - **古い応答の読み捨て**: 打ち切った呼び出しの応答が遅れて届いても、レスポンスIDの
   突き合わせで読み捨てられ、後続の呼び出しに混入しないこと
-- **直列化**: stdio は1本しかないので、並行リクエストが mutex で直列化され
-  レスポンスが取り違わらないこと（偽プラグインが KyouID をそのまま返すので検出できる）
+- **直列化**: stdio は1本しかないので、並行リクエストが容量1のチャネル（`callSlot`）で直列化され
+  レスポンスが取り違わらないこと（偽プラグインが KyouID をそのまま返すので検出できる）。
+  順番待ちが `maxPluginQueueWait`（既定10秒）を超えた呼び出しは `ErrPluginBusy` になるだけで、
+  プロセスは回収されないこと
 
 ### `gkill_repositories_test.go`（最新版アドレスキャッシュの排他制御）
 

@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 249個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 250個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -62,7 +62,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 
 | ファイル | 対応コンポーネント |
 |---------|------------------|
-| `use-confirm-delete-kyou-view.ts` | Kyou 削除確認 |
+| `use-confirm-delete-kyou-view.ts` | Kyou 削除確認（`cascade-delete-kyou.ts` 経由で連鎖削除） |
 | `use-confirm-delete-idf-kyou-dialog.ts` | IDFKyou 削除確認 |
 | `use-confirm-delete-tag-view.ts` / `use-confirm-delete-tag-dialog.ts` | Tag 削除確認 |
 | `use-confirm-delete-text-view.ts` / `use-confirm-delete-text-dialog.ts` | Text 削除確認 |
@@ -187,7 +187,13 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `markdown-to-html.ts` | Markdown → HTML 変換（IDFKyou の .md/.markdown リッチ表示用。DOMPurify サニタイズ付き） |
 | `mermaid-render.ts` | Markdown 内 ```mermaid コードブロックの図描画 |
 | `decode-text.ts` | テキストファイルの文字コード判定・デコード |
+| `kyou-view-relay.ts` | Kyou 系イベントの中継ハンドラ束（`build_kyou_view_relay` / `build_kyou_dialog_relay`）。`v-on="crudRelayHandlers"` にそのまま渡す |
+| `cascade-delete-kyou.ts` | Kyou 削除時の連鎖削除。付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も論理削除する |
 | `cookie-store.d.ts` | Cookie Store API 型定義 |
+
+`KyouViewEmits` の21イベントのうち、ビュー層は18件を中継する。`requested_close_dialog` はダイアログが自分で `hide()` に繋ぐため中継しない。`focused_kyou` / `clicked_kyou` はビュー層が発火源で、入れ子の KyouView で二重発火するためダイアログ層（`build_kyou_dialog_relay`、18+2＝20件）だけが中継する。イベント名はマップ型 + `satisfies` + `Exclude` で網羅を機械検査しており、型に足して配列に足し忘れるとビルドが落ちる。
+
+連鎖削除は Kyou 自身を最後に消す。先に消すとサーバの `FindKyous` が参照元を結果から外してしまい、ReKyou / MiReKyou を辿れなくなるため。TXID / commit_tx は使っていないので途中で失敗すると部分的に確定した状態が残る。その場合は `ERR900094 cascade_delete_failed`（i18n: `FAILED_CASCADE_DELETE_KYOU_MESSAGE`）を返す。参照の連鎖を辿る深さは32段で打ち切り（`ERR900093 cascade_delete_depth_exceeded`）。
 
 ## `dto/` サブディレクトリ（3ファイル）
 

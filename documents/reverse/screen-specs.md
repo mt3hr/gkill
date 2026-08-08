@@ -289,7 +289,7 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 | text | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | notification | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | idf_kyou | — | — | ✅ | ✅ | ✅ | ✅ | — |
-| re_kyou | — | — | ✅ | ✅ | ✅ | ✅ | — |
+| re_kyou | — | — | ✅ | ✅ | ✅ | — | — |
 | mi_re_kyou | ✅ | ✅ | ✅ | ✅ | ✅ | — | — |
 | git_commit_log | — | — | — | — | ✅ | — | — |
 | plugin | — | — | — | — | ✅ | — | — |
@@ -302,6 +302,16 @@ Dnote 関連のコンポーネントは他に以下がある（追加・編集�
 - **git_commit_log** / **plugin**: 読み取り専用。gkill 側から追加・編集・削除はできない
 - **kyou-view**: 全12データ型を多態的に表示する統合コンポーネント（`kyou.ts` の `typed_*` スロットと1対1）
 - **削除確認・履歴**: 個別の「—」は専用コンポーネントが存在しないことを示す。全データ型の削除確認は `confirm-delete-kyou-view` (共通)、履歴表示は `kyou-histories-view` (共通) で対応する
+
+### Kyou削除時の連鎖削除
+
+`confirm-delete-kyou-view`（`classes/use-confirm-delete-kyou-view.ts`）の削除は `classes/cascade-delete-kyou.ts` の `cascade_delete_kyou()` に委譲され、対象 Kyou 単体では終わらない。
+
+1. 探索（read のみ）: 対象 Kyou に付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou を幅優先で収集する。参照元をさらに辿るため入れ子のリポストも対象になる。循環参照は訪問済みIDで止め、深さ上限は32（超過時 `ERR900093 cascade_delete_depth_exceeded`）。
+2. 削除（write）: 集めたものを全件 `is_deleted=true` で論理削除する。Kyou 自身は**最後**に消す（先に消すとサーバの FindKyous が参照元を結果から外し、途中で失敗したときに残骸を再発見できなくなるため）。
+3. 画面からは消したID分だけ `deleted_kyou` を発行して取り除く（全件再検索はしない）。
+
+TXID / commit_tx は使わないので部分確定しうるが、追記型DAOのため同じダイアログをもう一度開いて再実行すれば収束する。失敗時は `ERR900094 cascade_delete_failed`（i18n キー `FAILED_CASCADE_DELETE_KYOU_MESSAGE`）。共有画面では削除自体を行わない。
 
 ### 3.1 kmemo（テキストメモ）画面仕様
 
@@ -819,14 +829,21 @@ IDFKyouのZIPファイルの内容を階層的に閲覧するフローティン�
 コンポーネント間のイベント伝播は以下のパターンで統一されています。
 
 ```
-CRUDリレーイベント:
-├── deleted_kyou / deleted_tag / deleted_text / deleted_notification
-├── registered_kyou / registered_tag / registered_text / registered_notification
-├── updated_kyou / updated_tag / updated_text / updated_notification
-├── received_errors / received_messages
-├── focused_kyou / clicked_kyou
-└── requested_reload_kyou / requested_reload_list
+CRUDリレーイベント（ビュー層 18件）:
+├── received_messages / received_errors
+├── registered_kyou / updated_kyou / deleted_kyou
+├── registered_tag / updated_tag / deleted_tag
+├── registered_text / updated_text / deleted_text
+├── registered_notification / updated_notification / deleted_notification
+├── requested_update_check_kyous
+├── requested_reload_kyou / requested_reload_list
+└── requested_open_rykv_dialog
+
+ダイアログ層だけが追加で中継する 2件:
+└── focused_kyou / clicked_kyou
 ```
+
+> `KyouViewEmits`（`pages/views/kyou-view-emits.ts`）は全21イベント。`requested_close_dialog` は中継しない（ダイアログが `@requested_close_dialog="hide()"` で自分に繋ぐ）。`focused_kyou`/`clicked_kyou` はビュー層が発火源なので中継せず、ダイアログ層だけが中継する（入れ子の KyouView で二重発火するため）。
 
 各ViewコンポーネントはTypeScriptで型定義されたProps/Emitsを持ちます。
 
@@ -834,6 +851,12 @@ CRUDリレーイベント:
 |---|---|
 | `*-props.ts` | 入力プロパティのインターフェース定義 |
 | `*-emits.ts` | イベント発信のシグネチャ定義 |
+
+### 中継束の共通化（`classes/kyou-view-relay.ts`）
+
+中継ハンドラは各コンポーザブルで手書きせず、`build_kyou_view_relay(emits)` / `build_kyou_dialog_relay(emits)` が返すハンドラ束（慣例名 `crudRelayHandlers`）を使う。テンプレート側は `v-on="crudRelayHandlers"` の1行で受け渡す。挙動を変えたいイベントだけ第2引数 `overrides` で差し替える。
+
+中継対象は `kyou_view_relay_event_names`（18件）と `kyou_focus_relay_event_names`（2件）が唯一の情報源で、型（`KyouViewRelayArgs`）と配列の両方に足さないとコンパイルエラーになる（`Exclude` による網羅チェック）。イベントを増やすときは両方を更新すること。
 
 ## 8. コンテキストメニュー
 

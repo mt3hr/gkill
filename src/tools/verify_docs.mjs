@@ -56,6 +56,12 @@ function listFilesRec(dir, filter) {
   return out
 }
 
+// ファイルの行数。docs が「約N行」と書いている値の実測に使う。
+function lineCount(rel) {
+  if (!exists(rel)) return 0
+  return readText(rel).split(/\r?\n/).length
+}
+
 // ファイル群に正規表現が何回マッチするかの合計（静的計数）。
 function countMatches(files, re) {
   let n = 0
@@ -87,6 +93,22 @@ function computeMetrics() {
   const serve = readText('src/server/gkill/api/gkill_server_api/serve.go')
   const endpoints = (serve.match(/HandleFunc\(/g) || []).length
 
+  // アドレス定義数 = gkill_server_api_address.go の XxxMethod 定数。
+  //   登録数（endpoints）より多い＝ハンドラ未実装のアドレスがある、という関係。
+  //   両方を別々に検査しないと「定義90・登録88」のような古い組が資料に残り続ける。
+  const addressGo = readText('src/server/gkill/api/gkill_server_api/gkill_server_api_address.go')
+  const endpointMethods = addressGo.match(/Method\s*=\s*"(GET|POST|PUT|DELETE)"/g) || []
+  const endpointsDefined = endpointMethods.length
+  const endpointsPost = endpointMethods.filter((m) => m.includes('"POST"')).length
+  const endpointsGet = endpointMethods.filter((m) => m.includes('"GET"')).length
+
+  // 認証ラッパー別の登録数（serve.go）。PathPrefix 経由の2件は HandleFunc ではないので除く。
+  const wrapCount = (name) =>
+    (serve.match(new RegExp(`HandleFunc\\([^\\n]*g\\.${name}\\(`, 'g')) || []).length
+  const wrapNoAuth = wrapCount('wrapNoAuth')
+  const wrapAuth = wrapCount('wrapAuth')
+  const wrapAuthRepos = wrapCount('wrapAuthRepos')
+
   // i18n キー数（全ロケール一致を検査、ja を代表値に）
   const localeFiles = listFiles('src/locales', (f) => f.endsWith('.json'))
   const localeKeyCounts = {}
@@ -102,6 +124,8 @@ function computeMetrics() {
 
   return {
     handlers, reqRes, views, dialogs, pages, endpoints, i18nKeys,
+    endpointsDefined, endpointsPost, endpointsGet,
+    wrapNoAuth, wrapAuth, wrapAuthRepos,
     componentTotal: views + dialogs + pages,
     localeKeyCounts,
     ...computeDirMetrics(),
@@ -135,6 +159,10 @@ function computeDirMetrics() {
     sdkGo: countIn('src/server/gkill/plugin/sdk', '.go'),
     // クライアント
     classesRoot: countIn('src/client/classes', '.ts'),
+    classesUse: countIn('src/client/classes', '.ts', { prefix: 'use-' }),
+    // gkill-api.ts は編集のたびに数行動くので、100の位に丸めた「約N,N00行」を検査する。
+    // 素の行数で検査すると1行足すたびに docs CI が落ちて、かえって形骸化する。
+    gkillApiLinesApprox: Math.round(lineCount('src/client/classes/api/gkill-api.ts') / 100) * 100,
     classesApiRoot: countIn('src/client/classes/api', '.ts'),
     classesApiReqRes: countIn('src/client/classes/api/req_res', '.ts'),
     classesDatasRoot: countIn('src/client/classes/datas', '.ts'),
@@ -170,8 +198,15 @@ function computeTestMetrics() {
   const e2eFiles = listFilesRec('src/client/__tests__/e2e', (f) => f.endsWith('.spec.ts'))
   const mcpFiles = listFilesRec('src/mcp/__tests__', (f) => /\.test\.(mjs|js|ts)$/.test(f))
   const kt = (dir) => countMatches(listFilesRec(dir, (f) => f.endsWith('.kt')), /@Test/g)
+  // @Test を1つでも含む .kt の本数（＝テストファイル数）
+  const ktFiles = (dir) => listFilesRec(dir, (f) => f.endsWith('.kt'))
+    .filter((f) => /@Test/.test(fs.readFileSync(f, 'utf8'))).length
 
-  return {
+  // ABOUT_TEST.md 群がディレクトリ単位で「（Nファイル）」と書いている数の実測。
+  const unitDirFiles = (sub) =>
+    listFiles(`src/client/__tests__/unit/${sub}`, (f) => f.endsWith('.test.ts')).length
+
+  const m = {
     goTests: countMatches(goTestFiles, GO_TEST_RE),
     goTestFiles: goTestFiles.length,
     goTestPkgs: goPkgs.size,
@@ -188,7 +223,22 @@ function computeTestMetrics() {
     wearCompanionTests: kt('src/wear_os/phone_companion'),
     wearWatchTests: kt('src/wear_os/watch_app'),
     androidTests: kt('src/android'),
+    androidTestFiles: ktFiles('src/android'),
+    wearTestFiles: ktFiles('src/wear_os/phone_companion') + ktFiles('src/wear_os/watch_app'),
+    unitClassesFiles: unitDirFiles('classes'),
+    unitComposablesFiles: unitDirFiles('composables'),
+    serverApiTestFiles: listFiles('src/server/gkill/api/gkill_server_api',
+      (f) => f.endsWith('_test.go')).length,
+    serverMainTestFiles: listFilesRec('src/server/gkill/main', (f) => f.endsWith('_test.go')).length,
   }
+
+  // ABOUT_TEST.md の「合計」行。手計算で合わないまま放置されやすいので実測から出す。
+  // Wear OS は phone_companion + watch_app の2モジュール分。
+  m.totalTests = m.goTests + m.unitTests + m.e2eTests + m.mcpTests +
+    m.androidTests + m.wearCompanionTests + m.wearWatchTests
+  m.totalTestFiles = m.goTestFiles + m.unitTestFiles + m.e2eTestFiles + m.mcpTestFiles +
+    m.androidTestFiles + m.wearTestFiles
+  return m
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -231,6 +281,20 @@ function computeMiscMetrics() {
   const codeCount = (rel, re) => (exists(rel) ? new Set(readText(rel).match(re) || []).size : 0)
   const errCodes = codeCount('src/server/gkill/api/message/error_codes.go', /ERR000\d+/g)
   const msgCodes = codeCount('src/server/gkill/api/message/message_codes.go', /MSG000\d+/g)
+
+  // 採番の上端。件数だけ検査していると「406定数、ERR000001〜ERR000401」のように
+  // 件数は合っているのに範囲が古い、という書き方が通り抜けるので別途検査する。
+  const codeMax = (rel, re) => {
+    if (!exists(rel)) return ''
+    const all = [...new Set(readText(rel).match(re) || [])].sort()
+    return all.length ? all[all.length - 1] : ''
+  }
+  const errCodeMax = codeMax('src/server/gkill/api/message/error_codes.go', /ERR000\d+/g)
+  const msgCodeMax = codeMax('src/server/gkill/api/message/message_codes.go', /MSG000\d+/g)
+
+  // クライアント専用のエラーコード（ERR9xxxxx）。Go 側の error_codes.go には存在しない帯。
+  const clientErrCodes = codeCount('src/client/classes/api/message/gkill_error.ts', /ERR9\d{5}/g)
+  const clientErrCodeMax = codeMax('src/client/classes/api/message/gkill_error.ts', /ERR9\d{5}/g)
 
   // FindQuery のフィールド数（json タグ付き。json:"-" の ExcludeURLogThumbnailImage も含む）
   let findQueryFields = 0
@@ -287,6 +351,10 @@ function computeMiscMetrics() {
     seqDiagrams,
     errCodes,
     msgCodes,
+    errCodeMax,
+    msgCodeMax,
+    clientErrCodes,
+    clientErrCodeMax,
     findQueryFields,
     goVersion,
     repsIfaceMethods: repsIfaceDocs.total,
@@ -461,6 +529,83 @@ function buildCountAssertions(m) {
   add('src/client/pages/README.md', `Dialog コンポーネント（${m.dialogs} .vue）`)
   add('src/wear_os/README.md', `Kotlin ソース（${m.wearCompanionKt}ファイル）`)
   add('src/wear_os/README.md', `Kotlin ソース（${m.wearWatchKt}ファイル）`)
+
+  // ── 2026-08 追加分。
+  //   ここから下は「同じ数字が複数の資料に散っているのに、検査は1〜2ファイルしか
+  //   見ていなかった」ために静かにドリフトしていた箇所。実例:
+  //     - req_res が api-endpoints.md だけ 182 のまま（他は186）
+  //     - gkill-api.ts の行数が 3,330 と 3,660 の2説に割れていた
+  //     - エラーコードが「406定数」なのに範囲は「〜ERR000401」のまま
+  //   数字を書いた資料は漏れなくここに登録すること。
+
+  // gkill-api.ts の行数（100の位で丸め。「3,400」表記）
+  const apiLines = m.gkillApiLinesApprox.toLocaleString('en-US')
+  add('documents/reverse/frontend-architecture.md', `(~${apiLines}行)`)
+  add('documents/reverse/frontend-architecture.md', `約${apiLines}行`)
+  add('documents/reverse/folder-structure.md', `~${apiLines}行`)
+  add('documents/reverse/glossary.md', `約${apiLines}行`)
+  add('documents/reverse/program-spec.md', `約${apiLines}行`)
+  add('documents/reverse/class-diagrams.md', `約${apiLines}行`)
+  add('CLAUDE.md', `(~${apiLines} lines)`)
+
+  // req_res（Go / TypeScript）
+  add('documents/reverse/api-endpoints.md', `req_res/\`（${m.reqRes}ファイル）`)
+  add('documents/reverse/api-endpoints.md', `構造体（${m.reqRes}ファイル）`)
+  add('CLAUDE.md', `Request/response structs for every endpoint (${m.reqRes} files)`)
+  add('documents/reverse/folder-structure.md', `リクエスト/レスポンス型（${m.classesApiReqRes}ファイル）`)
+  add('documents/reverse/frontend-architecture.md',
+    `(${m.classesApiReqRes}ファイル、サーバー側は${m.reqRes}ファイル)`)
+  add('documents/reverse/glossary.md', `TypeScript 版入出力型（${m.classesApiReqRes}ファイル）`)
+
+  // エンドポイント: 定義数と登録数は別物なので両方検査する
+  add('documents/reverse/api-endpoints.md',
+    `${m.endpointsDefined}件定義（${m.endpointsPost} POST + ${m.endpointsGet} GET。うち${m.endpoints}件はハンドラ登録済み`)
+  add('documents/reverse/README.md', `全${m.endpointsDefined}エンドポイント（登録済み${m.endpoints}）`)
+  add('documents/reverse/README.md', `（${m.endpointsDefined}件定義・${m.endpoints}件登録）`)
+  add('documents/reverse/folder-structure.md', `（${m.endpointsDefined}件定義・${m.endpoints}件登録）`)
+  add('documents/reverse/folder-structure.md', `${m.endpointsDefined}エンドポイント定義・${m.endpoints}登録`)
+  add('documents/reverse/glossary.md', `（${m.endpointsDefined}定義・${m.endpoints}登録）`)
+  add('documents/reverse/glossary.md', `全${m.endpointsDefined}エンドポイントのパス・メソッド定義`)
+  add('documents/reverse/program-spec.md', `アドレス定義は${m.endpointsDefined}件`)
+  add('documents/reverse/program-spec.md',
+    `アドレス定義${m.endpointsDefined}件 = ${m.endpointsPost} POST + ${m.endpointsGet} GET`)
+  add('documents/reverse/program-spec.md', `（${m.endpointsDefined}件、うち${m.endpoints}件が登録済み）`)
+  add('src/server/gkill/api/README.md',
+    `## 全エンドポイント一覧（${m.endpointsDefined}エンドポイント定義・${m.endpoints}登録）`)
+  add('documents/reverse/program-spec.md', `| \`wrapAuthRepos\` | ${m.wrapAuthRepos} |`)
+
+  // エラー/メッセージコードは件数だけでなく採番の上端も見る。
+  // 「406定数、ERR000001〜ERR000401」のように件数だけ直された状態を弾くため。
+  add('documents/reverse/error-handling-and-security.md',
+    `合計 **${m.errCodes}件** のエラーコードが存在する（ERR000001〜${m.errCodeMax}`)
+  add('documents/reverse/glossary.md', `ERR000001〜${m.errCodeMax} の定数定義（計${m.errCodes}件`)
+  add('src/server/gkill/api/message/README.md', `\`${m.errCodeMax}\` |`)
+  add('src/server/gkill/api/message/README.md', `\`${m.msgCodeMax}\` |`)
+  add('src/server/gkill/api/README.md', `ERR000001〜${m.errCodeMax}`)
+  add('documents/reverse/error-handling-and-security.md',
+    `\`ERR900001\`〜\`${m.clientErrCodeMax}\` の${m.clientErrCodes}件`)
+
+  // i18n / ディレクトリ別ファイル数
+  add('documents/reverse/glossary.md', `（${m.i18nKeys}キー/言語）`)
+  add('documents/reverse/folder-structure.md', `HTTPハンドラ層（${m.serverApiGo}ファイル）`)
+  add('documents/reverse/folder-structure.md', `Composition関数群（${m.classesUse}ファイル）`)
+  add('documents/reverse/frontend-architecture.md', `等、${m.classesUse}ファイル）`)
+  add('documents/reverse/frontend-architecture.md', `共有ロジック（${m.classesUse}ファイル）`)
+
+  // テスト件数（合計行 / ディレクトリ別）。合計は手計算で放置されやすいので実測から出す。
+  const totalRow = `| **合計** | **${m.totalTests.toLocaleString('en-US')}** | **${m.totalTestFiles}** |`
+  add('src/ABOUT_TEST.md', totalRow)
+  add('documents/reverse/testing-guide.md', totalRow)
+  add('documents/reverse/testing-guide.md', `ハンドラ層（${m.serverApiTestFiles}ファイル）`)
+  add('documents/reverse/testing-guide.md', `リポジトリ実装（${m.repsTestFiles}ファイル`)
+  add('documents/reverse/testing-guide.md', `CLI・エントリポイント（${m.serverMainTestFiles}ファイル）`)
+  add('documents/reverse/testing-guide.md', `ユーティリティ（${m.unitClassesFiles}ファイル）`)
+  add('documents/reverse/testing-guide.md', `Vue Composable（${m.unitComposablesFiles}ファイル`)
+  add('src/client/ABOUT_TEST.md', `ユーティリティクラス (${m.unitClassesFiles}ファイル`)
+  add('src/client/ABOUT_TEST.md', `Vue Composable (${m.unitComposablesFiles}ファイル`)
+  add('src/client/ABOUT_TEST.md', `| ユーティリティ | ${m.unitClassesFiles}ファイル |`)
+  add('src/client/ABOUT_TEST.md', `| Composable | ${m.unitComposablesFiles}ファイル |`)
+  add('src/client/pages/ABOUT_TEST.md', `${m.e2eTests}テスト宣言`)
 
   return A
 }

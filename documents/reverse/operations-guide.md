@@ -464,12 +464,12 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 #### サムネイル・動画キャッシュ（ファイルキャッシュ）
 
-`caches/thumb_cache/{rep_name}/{sha1}.webp`（サムネイル）と`caches/video_cache/{rep_name}/{sha1}.webm`（互換動画）の形式でファイルを保存する。キャッシュキーにはファイルのSHA1ハッシュを使用するため、同一内容のファイルは1つのキャッシュエントリで共有される。
+`caches/thumb_cache/{user_id}/{rep_name}/`（サムネイル）と `caches/video_cache/{user_id}/{rep_name}/`（互換動画）の配下にファイルを保存する。ファイル名は `{sha1(リポジトリ内相対パス)}_{ファイルサイズ}_{幅}x{高さ}.jpg`（サムネイル）／`{sha1(相対パス)}_{ファイルサイズ}_compat_{高さ}p.mp4`（互換動画）。キャッシュキーは**ファイル内容ではなく相対パス**のSHA1なので、同一内容の別ファイルはキャッシュを共有しない。ファイルサイズをキーに含めることで、同じパスのファイルが差し替わったときに自動で別エントリになる。rep名は利用者間で一意でないため、利用者IDを1階層挟んで混ざらないようにしている（`derivedCacheDirForUser`）。
 
 | キャッシュ種別 | パス形式 | 生成タイミング |
 |---|---|---|
-| サムネイル | `caches/thumb_cache/{rep_name}/{sha1}.webp` | 初回ブラウザアクセス時 or `generate_thumb_cache` 事前生成 |
-| 互換動画 | `caches/video_cache/{rep_name}/{sha1}.webm` | 初回ブラウザアクセス時 or `generate_video_cache` 事前生成 |
+| サムネイル | `caches/thumb_cache/{user_id}/{rep_name}/{sha1}_{size}_{W}x{H}.jpg` | 初回ブラウザアクセス時 or `generate_thumb_cache` 事前生成 |
+| 互換動画 | `caches/video_cache/{user_id}/{rep_name}/{sha1}_{size}_compat_{H}p.mp4` | 初回ブラウザアクセス時 or `generate_video_cache` 事前生成 |
 
 #### ZIPキャッシュ（アトミック展開）
 

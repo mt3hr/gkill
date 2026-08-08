@@ -23,8 +23,10 @@
 - `SessionID string` — 認証セッション（login 以外）
 
 **Response 共通:**
-- `Errors []message.GkillError` — エラー情報
-- `Messages []message.GkillMessage` — メッセージ情報
+- `Errors []*message.GkillError` — エラー情報（json タグは `errors`）
+- `Messages []*message.GkillMessage` — メッセージ情報（json タグは `messages`）
+
+> どちらも `omitempty` を付けていないので、**成功時は nil スライスがそのまま `"errors": null` / `"messages": null` として出る**。TypeScript 側で受けるときは `res.errors ?? []` を通してからスプレッドすること（素の `[...res.errors]` は例外になる）。
 
 ## 全ファイル一覧（186ファイル: 型定義185 + テスト `req_res_test.go` 1）
 
@@ -78,7 +80,7 @@
 | `update_account_status_request.go` / `update_account_status_response.go` | アカウントステータス |
 | `update_share_kyou_list_infos_response.go` | 共有リスト情報（複数） |
 
-### データ取得系（60ファイル）
+### データ取得系（64ファイル）
 
 #### 個別データ取得
 
@@ -110,6 +112,8 @@
 | `get_text_history_by_text_id_request.go` / `get_text_history_by_text_id_response.go` | テキストの履歴 |
 | `get_notifications_by_target_id_request.go` / `get_notifications_by_target_id_response.go` | 対象 ID に紐づく通知一覧 |
 | `get_notifications_history_by_text_id_request.go` / `get_notification_history_by_text_id_response.go` | 通知の履歴 |
+| `get_re_kyous_by_target_id_request.go` / `get_re_kyous_by_target_id_response.go` | 対象 ID を参照している ReKyou 一覧（Kyou 連鎖削除の逆引き用） |
+| `get_mi_re_kyous_by_target_id_request.go` / `get_mi_re_kyous_by_target_id_response.go` | 対象 ID を参照している MiReKyou 一覧（同上） |
 | `get_all_tag_names_request.go` / `get_all_tag_names_response.go` | 全タグ名一覧 |
 | `get_all_rep_names_request.go` / `get_all_rep_names_response.go` | 全リポジトリ名一覧 |
 
