@@ -52,7 +52,7 @@ src/client/
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、232ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、233ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
@@ -199,7 +199,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（232ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（233ファイル） |
 
 ### ComponentRef 型
 
@@ -582,6 +582,14 @@ KFTL テキストエリアに内容がある状態でページ離脱しようと
 ### 確認ダイアログのクローズは finally で行う
 
 削除・更新の確認ダイアログは、リクエスト送出後に例外が出てもクローズまで必ず到達させる。クローズ（`emits('requested_close_dialog')`）と `is_requested_submit` の解除は `try` の中ではなく `finally` に置く。`try` の末尾に置くと「サーバには届いていて実際は消えているのに、例外でダイアログが閉じない」状態になる。
+
+### コンテキストメニューの位置決め（`use-context-menu-position.ts`）
+
+25個の `*-context-menu.vue` は位置を自前で計算しない。共通 composable が返す `menu_target`（`[clientX, clientY]`）を `<v-menu v-model="is_show" :target="menu_target" location="bottom start">` に渡し、Vuetify の connected location strategy に任せる。メニューの実寸を測ったうえで、はみ出す方向へ flip / shift される。
+
+以前は各 composable が `left: min(innerWidth - 130, x)` / `top: min(max(50, innerHeight - (8 + 48 * 項目数)), y)` を25箇所にコピペしていた。幅130px は実際のリスト幅（実測79px）と無関係で、高さの項目数はテンプレートと手で同期する不文律だったため、構成ツリー系（`*-struct-context-menu`）は実項目5個に対して `48 * 2` のまま下端ではみ出していた。またこのスタイル文字列は `{ }` で囲まれていたため Vue の `parseStringStyle` が `position: absolute` を捨てており、`.v-overlay`（`position: fixed`）の `left` / `top` だけが効いている状態だった。
+
+`.gkill_context_menu_list { max-height: 70vh; overflow-y: scroll }`（`App.vue`）は残す。極端に項目が多いメニューの高さ上限として機能し、Vuetify はその上限込みの実高さに対して配置する。
 
 ### 読み込み中表示の遅延（`use-delayed-loading.ts`）
 

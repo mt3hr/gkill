@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、34 specファイル198テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、35 specファイル199テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -74,7 +74,7 @@ const record = await waitForKyouByText(page, label)
 
 ## テストファイル一覧
 
-### E2E テスト（34 specファイル, 198テスト宣言）
+### E2E テスト（35 specファイル, 199テスト宣言）
 
 #### ページ表示・ナビゲーション系（12ファイル）
 
@@ -107,7 +107,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 | `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）: rykvのコンテキストメニュー「タスクにする」→Mi画面に出る。API面はGo側の TestHandleAddMiReKyou_* 系へ移管 |
 
-#### 認証・ユースケース・設定系（13ファイル）
+#### 認証・ユースケース・設定系（14ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -124,6 +124,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/dialog-history.spec.ts` | ダイアログ履歴不変条件（×/Escape/ブラウザバックで閉じてもバックスタックに使用済みエントリが残らない、複数ダイアログを開いたまま画面遷移可能） |
 | `src/client/__tests__/e2e/edit-readonly-loading.spec.ts` | Edit系ダイアログの Loading 中 readonly 化とロード完了後の編集可能復帰（API 遅延注入で検証） |
 | `src/client/__tests__/e2e/re-kyou.spec.ts` | ReKyou（リポスト）の行を右クリックしたとき、入れ子の参照先ではなくリポスト自身のコンテキストメニューが出ること |
+| `src/client/__tests__/e2e/context-menu-viewport.spec.ts` | コンテキストメニューの外接矩形がビューポートに収まること（縦に狭い画面で上向きに反転する経路）。「メニューが出た」だけでは自前クランプ時代でも通るので矩形を測る |
 
 ### Composable ユニットテスト（14ファイル）
 

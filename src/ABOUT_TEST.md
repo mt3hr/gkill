@@ -12,12 +12,12 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
 | Go バックエンド (`server/`) | 688 | 78 | Go `testing` |
-| フロントエンド ユニット (`client/`) | 897 | 77 | Vitest |
-| フロントエンド E2E (`client/`) | 198 | 34 | Playwright |
+| フロントエンド ユニット (`client/`) | 904 | 78 | Vitest |
+| フロントエンド E2E (`client/`) | 199 | 35 | Playwright |
 | MCP サーバ (`mcp/`) | 703 | 20 | Vitest |
 | Android (`android/`) | 12 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 118 | 9 | JUnit 4 + MockK |
-| **合計** | **2,616** | **220** | |
+| **合計** | **2,624** | **222** | |
 
 `src/plugins/` の Go テスト 28件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
