@@ -233,6 +233,10 @@ async function fetch_cascade_delete_node(id: string, gkill_api: GkillAPI): Promi
  *
  * 1本失敗しても止めずに全部投げ、エラーは集約して返す。TXID/commit_txは使わない
  * （名前に反してDBトランザクションではなく部分確定しうるので、原子性は得られない）。
+ *
+ * update系のレスポンスは成功時 errors が null で来る（Goの構造体タグにomitemptyが無く、
+ * nil sliceがそのまま "errors": null になる）。素のspreadはnullで例外を投げ、
+ * 呼び出し元のダイアログクローズまで巻き添えにするので、必ず ?? [] を通す。
  */
 async function mutate_cascade_delete_targets(targets: CascadeDeleteTargets, gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
     const errors = new Array<GkillError>()
@@ -251,19 +255,19 @@ async function mutate_cascade_delete_targets(targets: CascadeDeleteTargets, gkil
             const req = new UpdateTagRequest()
             req.tag = Object.assign(tag.clone(), stamp)
             const res = await gkill_api.update_tag(req)
-            errors.push(...res.errors)
+            errors.push(...(res.errors ?? []))
         }),
         ...targets.texts.map(async text => {
             const req = new UpdateTextRequest()
             req.text = Object.assign(text.clone(), stamp)
             const res = await gkill_api.update_text(req)
-            errors.push(...res.errors)
+            errors.push(...(res.errors ?? []))
         }),
         ...targets.notifications.map(async notification => {
             const req = new UpdateNotificationRequest()
             req.notification = Object.assign(notification.clone(), stamp)
             const res = await gkill_api.update_notification(req)
-            errors.push(...res.errors)
+            errors.push(...(res.errors ?? []))
         }),
     ])
 
@@ -273,13 +277,13 @@ async function mutate_cascade_delete_targets(targets: CascadeDeleteTargets, gkil
         const req = new UpdateReKyouRequest()
         req.rekyou = Object.assign(targets.rekyous[i].clone(), stamp)
         const res = await gkill_api.update_rekyou(req)
-        errors.push(...res.errors)
+        errors.push(...(res.errors ?? []))
     }
     for (let i = targets.mirekyous.length - 1; i >= 0; i--) {
         const req = new UpdateMiReKyouRequest()
         req.mirekyou = Object.assign(targets.mirekyous[i].clone(), stamp)
         const res = await gkill_api.update_mirekyou(req)
-        errors.push(...res.errors)
+        errors.push(...(res.errors ?? []))
     }
 
     // Kyou自身は最後。先に消すとサーバのFindKyousが参照元を結果から外してしまい、
@@ -294,59 +298,61 @@ async function mutate_cascade_delete_targets(targets: CascadeDeleteTargets, gkil
 
 /**
  * Kyou自身のtyped dataに is_deleted を立てる。data_typeごとにエンドポイントが違う。
+ *
+ * 成功時のerrorsはnullで来るので ?? [] を通す（mutate_cascade_delete_targetsのコメント参照）。
  */
 export async function delete_kyou_body(kyou: Kyou, gkill_api: GkillAPI, stamp: UpdateStamp): Promise<Array<GkillError>> {
     try {
         if (kyou.data_type.startsWith("kmemo")) {
             const req = new UpdateKmemoRequest()
             req.kmemo = Object.assign(kyou.typed_kmemo!.clone(), stamp)
-            return (await gkill_api.update_kmemo(req)).errors
+            return (await gkill_api.update_kmemo(req)).errors ?? []
         }
         if (kyou.data_type.startsWith("kc")) {
             const req = new UpdateKCRequest()
             req.kc = Object.assign(kyou.typed_kc!.clone(), stamp)
-            return (await gkill_api.update_kc(req)).errors
+            return (await gkill_api.update_kc(req)).errors ?? []
         }
         if (kyou.data_type.startsWith("urlog")) {
             const req = new UpdateURLogRequest()
             req.urlog = Object.assign(kyou.typed_urlog!.clone(), stamp)
-            return (await gkill_api.update_urlog(req)).errors
+            return (await gkill_api.update_urlog(req)).errors ?? []
         }
         if (kyou.data_type.startsWith("nlog")) {
             const req = new UpdateNlogRequest()
             req.nlog = Object.assign(kyou.typed_nlog!.clone(), stamp)
-            return (await gkill_api.update_nlog(req)).errors
+            return (await gkill_api.update_nlog(req)).errors ?? []
         }
         if (kyou.data_type.startsWith("timeis")) {
             const req = new UpdateTimeisRequest()
             req.timeis = Object.assign(kyou.typed_timeis!.clone(), stamp)
-            return (await gkill_api.update_timeis(req)).errors
+            return (await gkill_api.update_timeis(req)).errors ?? []
         }
         // mirekyou_* は "mi" で始まるためMiより先に判定し、Mi側からは除外する
         if (kyou.data_type.startsWith("mirekyou")) {
             const req = new UpdateMiReKyouRequest()
             req.mirekyou = Object.assign(kyou.typed_mirekyou!.clone(), stamp)
-            return (await gkill_api.update_mirekyou(req)).errors
+            return (await gkill_api.update_mirekyou(req)).errors ?? []
         }
         if (kyou.data_type.startsWith("mi")) {
             const req = new UpdateMiRequest()
             req.mi = Object.assign(kyou.typed_mi!.clone(), stamp)
-            return (await gkill_api.update_mi(req)).errors
+            return (await gkill_api.update_mi(req)).errors ?? []
         }
         if (kyou.data_type.startsWith("lantana")) {
             const req = new UpdateLantanaRequest()
             req.lantana = Object.assign(kyou.typed_lantana!.clone(), stamp)
-            return (await gkill_api.update_lantana(req)).errors
+            return (await gkill_api.update_lantana(req)).errors ?? []
         }
         if (kyou.data_type.startsWith("idf")) {
             const req = new UpdateIDFKyouRequest()
             req.idf_kyou = Object.assign(kyou.typed_idf_kyou!.clone(), stamp)
-            return (await gkill_api.update_idf_kyou(req)).errors
+            return (await gkill_api.update_idf_kyou(req)).errors ?? []
         }
         if (kyou.data_type.startsWith("rekyou")) {
             const req = new UpdateReKyouRequest()
             req.rekyou = Object.assign(kyou.typed_rekyou!.clone(), stamp)
-            return (await gkill_api.update_rekyou(req)).errors
+            return (await gkill_api.update_rekyou(req)).errors ?? []
         }
         // git_commit_logは削除できない。ここに落ちたら未対応のdata_type
         return [build_cascade_delete_failed_error()]
@@ -368,7 +374,10 @@ export function build_deleted_kyou_stub(id: string): Kyou {
     return kyou
 }
 
-function build_cascade_delete_failed_error(): GkillError {
+/**
+ * 連鎖削除が想定外に失敗したときのエラー。呼び出し元の catch でも使う。
+ */
+export function build_cascade_delete_failed_error(): GkillError {
     const error = new GkillError()
     error.error_code = GkillErrorCodes.cascade_delete_failed
     error.error_message = i18n.global.t('FAILED_CASCADE_DELETE_KYOU_MESSAGE')
