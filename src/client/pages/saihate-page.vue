@@ -29,7 +29,7 @@
                 </v-overlay>
             </div>
             <v-avatar :style="floating_action_button_style()" color="primary" class="position-fixed">
-                <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
+                <v-menu transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" v-long-press="() => show_kftl_dialog()" icon="mdi-plus" variant="text"
                             v-bind="props" />
@@ -183,7 +183,6 @@ const {
     app_content_width,
     is_loading,
     messages,
-    add_kyou_menu_style,
 
     // Methods
     write_errors,
