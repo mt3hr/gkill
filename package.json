@@ -66,7 +66,7 @@
     "@googlemaps/js-api-loader": "^2.0.2",
     "@mdi/font": "^7.4.47",
     "copyfiles": "^2.4.1",
-    "dompurify": "^3.4.12",
+    "dompurify": "^3.4.13",
     "marked": "^18.0.7",
     "mermaid": "^11.16.0",
     "mkdirp": "^3.0.1",
