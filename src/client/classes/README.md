@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 251個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 269個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -63,6 +63,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | ファイル | 対応コンポーネント |
 |---------|------------------|
 | `use-confirm-delete-kyou-view.ts` | Kyou 削除確認（`cascade-delete-kyou.ts` 経由で連鎖削除） |
+| `use-confirm-unknown-mi-board.ts` | まだ実在しない板名を保存する前の確認ゲート（Mi/MiReKyou の追加・編集、KFTL、板間D&D の6経路で共有） |
 | `use-confirm-delete-idf-kyou-dialog.ts` | IDFKyou 削除確認 |
 | `use-confirm-delete-tag-view.ts` / `use-confirm-delete-tag-dialog.ts` | Tag 削除確認 |
 | `use-confirm-delete-text-view.ts` / `use-confirm-delete-text-dialog.ts` | Text 削除確認 |
@@ -75,6 +76,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | ファイル | 対応コンポーネント |
 |---------|------------------|
 | `use-kyou-view.ts` / `use-kyou-list-view.ts` | Kyou 表示 / 一覧 |
+| `use-kyou-list-view-dialog.ts` | Kyou 一覧ダイアログ（DNote から開く）。抱えているリストを自分で引き直し、rykv ダイアログも自分でホストする |
 | `use-kc-view.ts` / `use-kmemo-view.ts` | KC / Kmemo 表示 |
 | `use-lantana-view.ts` / `use-mi-view.ts` | Lantana / Mi 表示 |
 | `use-nlog-view.ts` / `use-ur-log-view.ts` | Nlog / URLog 表示 |
@@ -123,6 +125,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-edit-kftl-template-struct-*.ts` | KFTL テンプレート編集 |
 | `use-edit-rep-struct-*.ts` / `use-edit-rep-type-struct-*.ts` | リポジトリ構造編集 |
 | `use-edit-tag-struct-*.ts` | タグ構造編集 |
+| `use-edit-mi-board-struct-view.ts` / `use-mi-board-struct-context-menu.ts` | 板構造編集（Mi の板の並び順の変更と削除） |
 | `use-manage-account-view.ts` | アカウント管理 |
 
 ### コンテキストメニュー系 Composable
@@ -148,6 +151,8 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | ファイル | 説明 |
 |---------|------|
 | `use-find-query-editor-view.ts` / `use-find-query-editor-dialog.ts` | 検索クエリエディタ |
+| `use-find-time-is-query-editor-view.ts` / `use-find-time-is-query-editor-dialog.ts` | 実行中検索条件エディタ（plaing検索カスタム条件用。編集面はキーワードとタグのみで、記録タイプはTimeIs固定） |
+| `use-edit-plaing-time-is-dialog.ts` | 実行中検索条件設定の中間ダイアログ（`is_use_custom_find_kyou_query` のON/OFFで未設定へ戻せる） |
 | `use-keyword-query.ts` | キーワードクエリ |
 | `use-period-of-time-query.ts` | 期間クエリ |
 | `use-tag-query.ts` | タグクエリ |
@@ -173,6 +178,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `use-scoped-enter-for-kftl.ts` | Enter キーショートカットハンドラ（KFTL ダイアログ起動） |
 | `use-dialog-history-stack.ts` | ダイアログ履歴スタック管理（バック操作・Escape キー対応） |
 | `use-delayed-loading.ts` | 読み込み中表示の遅延（速く終わった読み込みでインジケータを明滅させない） |
+| `use-device-kind.ts` | 端末種別（PC / タブレット / スマートフォン）とタッチの有無。ドラッグ&ドロップの可否は `is_pc` で判断する。モジュールレベルのシングルトン |
 
 ### ユーティリティファイル
 
@@ -183,11 +189,13 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `format-date-time.ts` | 日時フォーマット |
 | `long-press.ts` | ロングプレスディレクティブ |
 | `looks-like-url.ts` | URL 判定ユーティリティ |
+| `linkify-text.ts` | テキストを URL / 非 URL のセグメント列に分割（`linkified-text.vue` の本文中 URL リンク化用） |
 | `save-as.ts` | ファイル保存ユーティリティ |
 | `markdown-to-html.ts` | Markdown → HTML 変換（IDFKyou の .md/.markdown リッチ表示用。DOMPurify サニタイズ付き） |
 | `mermaid-render.ts` | Markdown 内 ```mermaid コードブロックの図描画 |
 | `decode-text.ts` | テキストファイルの文字コード判定・デコード |
-| `kyou-view-relay.ts` | Kyou 系イベントの中継ハンドラ束（`build_kyou_view_relay` / `build_kyou_dialog_relay`）。`v-on="crudRelayHandlers"` にそのまま渡す |
+| `kyou-view-relay.ts` | Kyou 系イベントの中継ハンドラ束（`build_kyou_view_relay` / `build_kyou_dialog_relay` / ページ最上位の `RykvDialogHost` 用 `build_kyou_dialog_host_handlers`）。`v-on="crudRelayHandlers"` にそのまま渡す |
+| `kyou-reload.ts` | Kyou を最新化する唯一の手順（`refresh_kyou` / `refresh_kyou_in_list` / `build_mi_reload_query`）。同じ更新から派生した引き直しは `new_reload_batch()` の値を共有して合流させる。引き直し中は `is_kyou_reloading(id)` が真 |
 | `cascade-delete-kyou.ts` | Kyou 削除時の連鎖削除。付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も論理削除する |
 | `cookie-store.d.ts` | Cookie Store API 型定義 |
 

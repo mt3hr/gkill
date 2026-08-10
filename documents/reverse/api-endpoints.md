@@ -68,42 +68,35 @@ gkill サーバーは gorilla/mux ベースの HTTP API を提供する。全エ
 
 リクエストは `GetKyousRequest`（`session_id` + `query` + `locale_name`）。**検索条件は `query` オブジェクト（`FindQuery`）で包む**。出典: `src/server/gkill/api/req_res/get_kyous_request.go`, `src/server/gkill/api/find/find_query.go`。
 
-`FindQuery` の主要フィールド：
+`FindQuery` の主要フィールド。**フィルタの有効/無効は値の null 判定で表す**（`null`/キー欠落=未使用、非nullの空配列 `[]`=有効だが空指定=0件。例外として `timeis_words: []` は「任意のTimeIsに覆われたKyouのみ」）：
 
 | フィールド | 型 | 説明 |
 |---|---|---|
-| `use_words` | bool | テキスト検索を使用するか |
-| `words` | []string | 検索キーワード |
+| `words` | []string \| null | 検索キーワード（`words`/`not_words` のどちらかが非nullでテキスト検索有効） |
 | `words_and` | bool | `words` をAND条件にするか（false=OR） |
-| `not_words` | []string | 除外キーワード |
-| `use_tags` | bool | タグフィルタを使用するか |
-| `tags` | []string | タグ名一覧 |
+| `not_words` | []string \| null | 除外キーワード |
+| `tags` | []string \| null | タグ名一覧（非nullでタグフィルタ有効） |
 | `tags_and` | bool | `tags` をAND条件にするか |
-| `use_reps` | bool | リポジトリフィルタを使用するか |
-| `reps` | []string | リポジトリ名一覧 |
-| `use_timeis` | bool | TimeIsフィルタを使用するか |
+| `reps` | []string \| null | リポジトリ名一覧（非nullでリポジトリフィルタ有効） |
+| `timeis_words` | []string \| null | TimeIs検索キーワード（`timeis_words`/`timeis_not_words` のどちらかが非nullでTimeIsフィルタ有効） |
 | `include_end_timeis` | bool | 終了済みTimeIsを含めるか |
-| `use_calendar` | bool | 日付範囲フィルタを使用するか |
-| `calendar_start_date` | string | 検索開始日時（RFC3339） |
-| `calendar_end_date` | string | 検索終了日時（RFC3339） |
+| `calendar_start_date` | string \| null | 検索開始日時（RFC3339。開始/終了のどちらかが非nullで日付範囲フィルタ有効） |
+| `calendar_end_date` | string \| null | 検索終了日時（RFC3339） |
+| `plaing_time` | string \| null | 非nullならその時刻に実行中のTimeIsを検索 |
+| `mi_board_name` | string \| null | 非nullならそのMi板だけに絞る（null=すべて） |
 | `only_latest_data` | bool | 最新データのみ取得するか |
 | `include_deleted_data` | bool | 削除済みデータを含めるか |
 
 > ページング用の `page` / `page_size` フィールドは存在しない。`FindQuery` にページング機構はない。
+> かつての `use_*` 有効化フラグ群は全廃された（値のnull判定に一本化）。
 
 ```json
 // リクエスト例
 {
   "session_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
   "query": {
-    "use_words": true,
     "words": ["今日", "作業"],
     "words_and": true,
-    "use_tags": false,
-    "tags": [],
-    "use_reps": false,
-    "reps": [],
-    "use_calendar": true,
     "calendar_start_date": "2026-06-01T00:00:00+09:00",
     "calendar_end_date":   "2026-06-30T23:59:59+09:00"
   },
@@ -346,7 +339,7 @@ Append-Only DAOのため「更新」は同一IDで新しいレコードをINSERT
 | `/api/upload_gpslog_files` | GPSログファイルアップロード |
 | `/api/open_directory` | ディレクトリを開く（OS コマンド実行） |
 | `/api/open_file` | ファイルを開く（OS コマンド実行） |
-| `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（ファイル名・サイズ・パス等）を返却する。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
+| `/api/browse_zip_contents` | ZIPファイル内容閲覧。IDFKyouのZIPファイルを `$HOME/gkill/caches/zip_cache/{user_id}/{rep_name}/{sha1}/` に展開し、ZipEntry リスト（パス・サイズ・種別フラグ `is_image`/`is_text`/`is_video`/`is_audio`/`is_pdf`・配信URL）を返却する。種別フラグはクライアントの開き方（プレビュー・再生・新タブ・ダウンロード）の分岐に使う。セッション認証必須。パストラバーサル防止、Shift_JISファイル名デコード、アトミック展開に対応 |
 | `/api/get_idf_kyou_by_relative_path` | IDFKyou相対パス解決。基準IDFKyou（`target_id`）のファイルからの相対パス（`relative_path`）を同一Rep内で解決し、対象ファイルのIDFKyou IDを返却する（Markdown内相対リンクのKyouDialog表示用）。見つからない場合は `kyou_id` 空文字。セッション認証必須。パストラバーサル防止対応 |
 | `/api/get_idf_file_path` | IDFファイル絶対パス解決。`rep_name` + `file_name` から実ファイルの絶対パス（`file_path`）を返却する。MCPクライアントがbase64転送を経ずにファイルを直接読むための導線。**リクエスト元がlocalhostのときのみ応答**し、それ以外は `file_path` 空 + `ERR000389`。DB登録済みファイルしか引けないためパストラバーサル不可。リポジトリに無い場合は `exists` false。セッション認証必須 |
 

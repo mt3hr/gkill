@@ -15,6 +15,7 @@ Go `testing` パッケージ
 | ファイル | テスト内容 |
 |---------|-----------|
 | `common/common_test.go` | 共有 CLI ロジック（14テスト）。サブコマンド登録（idf / dvnf / version / generate_thumb_cache / generate_video_cache / optimize / update_cache）の確認と、`clear_cache` の挙動固定 — `all` で全キャッシュディレクトリを消す / 単一モードで他を残す / `plugin` モードは plugin_cache だけ消す / `ClearPluginCache` が対象ユーザ以外を消さない / 危険な user_id を弾く |
+| `common/auto_tag_test.go` | `auto_tag` サブコマンド。ルール文字列の解釈（`<prefix>=<tag>` / rep 種別）、付与予定の重複排除、タグ ID が (対象ID, タグ名) で一意かつ**過去に発行した値と一致し続ける**こと、付与済み照会のクエリが `tags_and` を立てて呼び出し元のクエリを壊さないこと |
 | `common/gkill_options/option_test.go` | CLI フラグのデフォルト値（`--gkill_home_dir`, `--cache_in_memory`, `--goroutine_pool` 等） |
 | `common/gkill_log/gkill_log_test.go` | ログレベル別ルーティング（error, warn, info, debug, trace, trace_sql） |
 | `common/threads/threads_test.go` | ゴルーチンプールの生成・タスク実行・プールサイズ管理 |
@@ -39,6 +40,7 @@ Go `testing` パッケージ
 - **ゴルーチンプール**: プール生成、並行タスク実行、`runtime.NumCPU()` 準拠のプールサイズ
 - **エントリポイント**: cobra コマンド登録、サブコマンド（version, idf, dvnf 等）の存在確認
 - **バッチ**: Fitbit JSON → KC レコード変換
+- **自動タグ付け**: `auto_tag` のルール解釈・差分計算・タグ ID の再現性（稼働中サーバへの HTTP 部分はテストしない）
 
 ## 実行方法
 
