@@ -286,54 +286,13 @@ var (
 			ctx := cmd.Context()
 
 			configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
-			serverConfigDAO, err := server_config.NewServerConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "server_config.db"))
+			endpoint, err := ResolveLocalServerEndpoint(ctx)
 			if err != nil {
-				err = fmt.Errorf("error at create server config dao: %w", err)
 				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			}
-			defer serverConfigDAO.Close(ctx)
-
-			serverConfigs, err := serverConfigDAO.GetAllServerConfigs(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get all server configs: %w", err)
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
-			}
-
-			var currentServerConfig *server_config.ServerConfig
-			for _, sc := range serverConfigs {
-				if sc.EnableThisDevice {
-					currentServerConfig = sc
-					break
-				}
-			}
-			if currentServerConfig == nil {
-				err = fmt.Errorf("error: no enabled device found in server configs")
-				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
-			}
-
-			scheme := "http"
-			if currentServerConfig.EnableTLS && !gkill_options.DisableTLSForce {
-				scheme = "https"
-			}
-			portSuffix := gkill_options.ServerAddressPortSuffix(currentServerConfig.Address)
-
-			var httpClient *http.Client
-			if scheme == "https" {
-				// localhostの自己署名証明書への接続のためTLS検証をスキップする
-				httpClient = &http.Client{
-					Transport: &http.Transport{
-						TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
-					},
-				}
-			} else {
-				httpClient = &http.Client{}
-			}
+			httpClient := endpoint.Client
 
 			// 認証: update_cacheは管理者セッションを要求する。
 			// サブコマンドはサーバーと同一マシンで実行される前提なので、ローカルのDBを直接触って
@@ -342,7 +301,7 @@ var (
 			//  そのやり方は「DBを読めた者がログインできる」ことに依存していた。
 			//  Argon2idで保存するようになったのでハッシュからのログインはできないし、
 			//  そもそもそこに依存しないほうがよい)
-			sessionID, cleanupSession, err := issueLocalAdminSession(ctx, configDBRootDir, currentServerConfig.Device)
+			sessionID, cleanupSession, err := issueLocalAdminSession(ctx, configDBRootDir, endpoint.Device)
 			if err != nil {
 				slog.Log(ctx, gkill_log.Error, "error", "error", fmt.Sprintf("%q", err))
 				fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -350,7 +309,7 @@ var (
 			}
 			defer cleanupSession()
 
-			address := fmt.Sprintf("%s://localhost%s/api/update_cache", scheme, portSuffix)
+			address := endpoint.BaseURL + "/api/update_cache"
 			requestBody := &req_res.UpdateCacheRequest{
 				SessionID: sessionID,
 				UserIDs:   targetUserIDs,
@@ -404,6 +363,73 @@ func init() {
 	*/
 
 	IDFCmd.PersistentFlags().StringArrayVarP(&gkill_options.IDFIgnore, "ignore", "i", gkill_options.IDFIgnore, "ignore files")
+}
+
+// LocalServerEndpoint は稼働中のgkill_serverへAPIを投げるための宛先とクライアント。
+type LocalServerEndpoint struct {
+	// BaseURL は "http://localhost:9999" のようなスキーム込みの宛先。末尾にスラッシュは付かない
+	BaseURL string
+
+	// Device はこのサーバのデバイス名。セッション発行に使う
+	Device string
+
+	// Client は自己署名証明書を許容するHTTPクライアント
+	Client *http.Client
+}
+
+// ResolveLocalServerEndpoint は設定DBを読んで、このマシンで動いているサーバの宛先を組み立てる。
+//
+// サブコマンドがサーバのAPIを叩くときの共通の入口。
+// TLSが有効な場合、localhostの自己署名証明書へ繋ぐため証明書検証をスキップする。
+func ResolveLocalServerEndpoint(ctx context.Context) (*LocalServerEndpoint, error) {
+	configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
+	serverConfigDAO, err := server_config.NewServerConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "server_config.db"))
+	if err != nil {
+		return nil, fmt.Errorf("error at create server config dao: %w", err)
+	}
+	defer func() {
+		if err := serverConfigDAO.Close(ctx); err != nil {
+			slog.Log(ctx, gkill_log.Debug, "error at close server config dao", "error", err)
+		}
+	}()
+
+	serverConfigs, err := serverConfigDAO.GetAllServerConfigs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error at get all server configs: %w", err)
+	}
+
+	var currentServerConfig *server_config.ServerConfig
+	for _, sc := range serverConfigs {
+		if sc.EnableThisDevice {
+			currentServerConfig = sc
+			break
+		}
+	}
+	if currentServerConfig == nil {
+		return nil, fmt.Errorf("error: no enabled device found in server configs")
+	}
+
+	scheme := "http"
+	if currentServerConfig.EnableTLS && !gkill_options.DisableTLSForce {
+		scheme = "https"
+	}
+	portSuffix := gkill_options.ServerAddressPortSuffix(currentServerConfig.Address)
+
+	httpClient := &http.Client{}
+	if scheme == "https" {
+		// localhostの自己署名証明書への接続のためTLS検証をスキップする
+		httpClient = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			},
+		}
+	}
+
+	return &LocalServerEndpoint{
+		BaseURL: fmt.Sprintf("%s://localhost%s", scheme, portSuffix),
+		Device:  currentServerConfig.Device,
+		Client:  httpClient,
+	}, nil
 }
 
 func InitGkillOptions() {
