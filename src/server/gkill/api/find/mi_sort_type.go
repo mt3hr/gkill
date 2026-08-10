@@ -22,6 +22,7 @@ func (m *MiSortType) UnmarshalJSON(b []byte) error {
 }
 
 func (m MiSortType) MarshalJSON() ([]byte, error) {
-	var sortTypeStr = string(m)
-	return json.Marshal([]byte(sortTypeStr))
+	// []byteでMarshalするとBase64文字列になってしまうため、stringのままMarshalする。
+	// UnmarshalJSON側は文字列を期待しており、Base64だと往復で壊れる
+	return json.Marshal(string(m))
 }

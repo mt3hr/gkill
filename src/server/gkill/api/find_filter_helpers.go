@@ -3,10 +3,12 @@ package api
 import (
 	"errors"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/message"
+	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 )
 
 const (
@@ -68,13 +70,74 @@ func containsString(slice []string, target string) bool {
 	return false
 }
 
-// calcDistanceKm は2点間の距離(km)を返す (Haversine)
+// calcDistanceKm は2点間の距離(km)を返す (球面余弦定理)
 func calcDistanceKm(lat1, lng1, lat2, lng2 float64) float64 {
 	lat1 *= R_DEGREE
 	lng1 *= R_DEGREE
 	lat2 *= R_DEGREE
 	lng2 *= R_DEGREE
-	return 6371.0 * math.Acos(math.Cos(lat1)*math.Cos(lat2)*math.Cos(lng2-lng1)+math.Sin(lat1)*math.Sin(lat2))
+	cosValue := math.Cos(lat1)*math.Cos(lat2)*math.Cos(lng2-lng1) + math.Sin(lat1)*math.Sin(lat2)
+	// 同一座標だと浮動小数誤差で1をわずかに超え、Acosの定義域外(NaN)になり
+	// 「中心点ちょうどのGPSログが圏外扱い」になるため[-1,1]に丸める
+	cosValue = math.Min(1, math.Max(-1, cosValue))
+	return 6371.0 * math.Acos(cosValue)
+}
+
+// kyouEntryKey はsortAndTrimKyousMapの重複排除キー。
+// 「版(UpdateTime) × 射影(DataType) × 表示時刻(RelatedTime)」で同一entryを識別し、
+// 同一版の同一射影がrep間で重複したものだけを1件に潰す
+type kyouEntryKey struct {
+	updateTimeUnix  int64
+	dataType        string
+	relatedTimeUnix int64
+}
+
+// uniqueStrings は順序を保って重複を除いたスライスを返す
+func uniqueStrings(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if _, exist := seen[value]; exist {
+			continue
+		}
+		seen[value] = struct{}{}
+		result = append(result, value)
+	}
+	return result
+}
+
+// compareKyouEntryPriority は同一Kyouの複数entry(版・射影)の代表選出の優先度を比較する。
+// 新しい版が先、同じ版なら開始射影(_start)優先、以降はDataType辞書順→RelatedTime降順で決定化する。
+// 負の値ならaが優先。
+func compareKyouEntryPriority(a, b reps.Kyou) int {
+	if c := b.UpdateTime.Compare(a.UpdateTime); c != 0 {
+		return c
+	}
+	aStart := strings.HasSuffix(a.DataType, "_start")
+	bStart := strings.HasSuffix(b.DataType, "_start")
+	if aStart != bStart {
+		if aStart {
+			return -1
+		}
+		return 1
+	}
+	if c := strings.Compare(a.DataType, b.DataType); c != 0 {
+		return c
+	}
+	return b.RelatedTime.Compare(a.RelatedTime)
+}
+
+// newestKyouEntry は同一Kyouの複数entryから表示用の1件を決定的に選ぶ。
+// 以前は不安定ソートの先頭を採っており、同一UpdateTimeの射影(TimeIsのstart/end等)の
+// どちらが残るかが実行毎に変わっていた
+func newestKyouEntry(kyous []reps.Kyou) reps.Kyou {
+	best := kyous[0]
+	for _, kyou := range kyous[1:] {
+		if compareKyouEntryPriority(kyou, best) < 0 {
+			best = kyou
+		}
+	}
+	return best
 }
 
 // upsertIfNewer はmapにkeyが存在しないか、既存より新しい場合に上書きする

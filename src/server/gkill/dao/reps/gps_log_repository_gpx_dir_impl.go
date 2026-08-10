@@ -112,7 +112,8 @@ func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTim
 			}
 
 			for _, gpslog := range matchGPSLogs {
-				if gpslog.RelatedTime.After(*startTime) && gpslog.RelatedTime.Before(*endTime) {
+				// 他の時刻フィルタと同じく両端を含む(以前は排他で境界ちょうどの点が落ちていた)
+				if !gpslog.RelatedTime.Before(*startTime) && !gpslog.RelatedTime.After(*endTime) {
 					gpsLogs = append(gpsLogs, gpslog)
 				}
 			}
