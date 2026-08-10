@@ -184,7 +184,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 		}
 	}
 
-	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
+	// ワードフィルタ: ワード指定が非nilの場合、Targetに対してワード検索を実行しマッチしたIDを収集する
 	wordMatchTargetIDs := map[string]bool{}
 	useWordFilter := !allowAllTargets && isWordFilterEnabled(query)
 	if useWordFilter {
@@ -204,10 +204,10 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 		}
 
 		matchID := false
-		if !query.UseIDs {
+		if query.IDs == nil {
 			matchID = true
-		} else if query.UseIDs {
-			if query.IDs != nil && len(query.IDs) != 0 {
+		} else {
+			if len(query.IDs) != 0 {
 				for _, id := range query.IDs {
 					if id == rekyou.ID {
 						matchID = true
@@ -277,10 +277,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -401,8 +399,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		dataType,
@@ -779,10 +776,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -906,8 +901,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		dataType,

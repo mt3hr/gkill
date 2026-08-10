@@ -1,7 +1,7 @@
 <template>
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
-            <v-checkbox v-model="query.use_calendar" @change="clicked_use_calendar_checkbox"
+            <v-checkbox v-model="use_calendar" @change="clicked_use_calendar_checkbox"
                 :label="i18n.global.t('CALENDAR_QUERY_TITLE')" hide-details class="pb-0 mb-0" />
         </v-col>
         <v-spacer class="pa-0 ma-0" />
@@ -10,7 +10,7 @@
                 i18n.global.t("CLEAR_TITLE") }}</v-btn>
         </v-col>
     </v-row>
-    <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="312" :model-value="dates"
+    <VDatePicker v-show="use_calendar" class="calendar_query_date_picker" :max-width="312" :model-value="dates"
         :multible="true" :color="'primary'" :multiple="'range'" :year="calendar_year" :month="calendar_month"
         @wheel.prevent.stop="(e: WheelEvent) => onWheel(e)" @update:model-value="clicked_date" ref="calendar" />
 </template>
@@ -29,7 +29,7 @@ const emits = defineEmits<CalendarQueryEmits>()
 
 
 const {
-    query,
+    use_calendar,
     calendar_year,
     calendar_month,
     dates,

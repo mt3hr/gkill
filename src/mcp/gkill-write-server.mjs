@@ -441,7 +441,7 @@ const TOOLS = [
       "The MCP server internally fetches the current entity by ID, merges your changes, updates metadata (update_time, update_app, update_device, update_user), and sends the update to the backend. " +
       "To obtain the entity ID: use the id from a previous gkill_add_kmemo response (added_kmemo.id), or search with gkill_get_kyous (include_id:true) to find existing entries and their IDs. " +
       "Response fields: updated_kmemo (full Kmemo entity after update, with id, rep_name, content, related_time, create_time, update_time, etc.), updated_kyou (parent Kyou wrapper). " +
-      "Typical workflow: gkill_get_kyous({include_id:true, query:{use_words:true, words:[\"keyword\"]}}) → find the entry → gkill_update_kmemo({id: found_id, content: \"updated text\"}).",
+      "Typical workflow: gkill_get_kyous({include_id:true, query:{words:[\"keyword\"]}}) → find the entry → gkill_update_kmemo({id: found_id, content: \"updated text\"}).",
     inputSchema: {
       type: "object",
       properties: {

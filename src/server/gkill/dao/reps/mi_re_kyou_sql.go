@@ -144,12 +144,12 @@ var miReKyouProjections = []miReKyouProjection{
 
 // generateMiReKyouWhere は射影ごとのWHERE句とパラメータを組み立てます。
 // MiReKyouはタイトルを持たないためワード検索はSQLでは行いません。
-// (検索対象列が空のままUseWordsをGenerateFindSQLCommonへ渡すと "1 = 0" になり全件落ちるため、
+// (検索対象列が空のままワード条件をGenerateFindSQLCommonへ渡すと "1 = 0" になり全件落ちるため、
 //
-//	ワード条件を落としたクエリでSQLを組み立て、ワード判定はターゲットKyou側へ委譲します)
+//	ワード条件を落とした（Words/NotWords=nil=未使用の）クエリでSQLを組み立て、
+//	ワード判定はターゲットKyou側へ委譲します)
 func generateMiReKyouWhere(query *find.FindQuery, projection miReKyouProjection, onlyLatestData bool, repName string, tableName string) (string, []any, error) {
 	queryWithoutWords := *query
-	queryWithoutWords.UseWords = false
 	queryWithoutWords.Words = nil
 	queryWithoutWords.NotWords = nil
 
@@ -165,10 +165,10 @@ func generateMiReKyouWhere(query *find.FindQuery, projection miReKyouProjection,
 		return "", nil, err
 	}
 	whereSQL = projection.notNullColumn + " IS NOT NULL AND " + whereSQL
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		whereSQL += " AND "
 		whereSQL += " BOARD_NAME = ? "
-		queryArgs = append(queryArgs, query.MiBoardName)
+		queryArgs = append(queryArgs, *query.MiBoardName)
 	}
 	return whereSQL, queryArgs, nil
 }
@@ -451,7 +451,7 @@ func newMiReKyouTargetFilter(ctx context.Context, repsWithoutMiReKyou *GkillRepo
 		wordMatchTargetIDs: map[string]bool{},
 	}
 
-	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
+	// ワードフィルタ: ワード条件が有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
 	filter.useWordFilter = isWordFilterEnabled(query)
 	if filter.useWordFilter {
 		// repsWithoutMiReKyou.Reps は cloneRepositoriesWithoutMiReKyou が

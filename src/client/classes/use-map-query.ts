@@ -14,6 +14,18 @@ export function useMapQuery(options: {
 
     const google_map_api_key: Ref<string> = ref(props.gkill_api.get_google_map_api_key())
 
+    // チェックボックスのUI状態。クエリ上は map_latitude/longitude/radius の null 判定
+    // （3値そろって有効）が担うため、ローカルrefに分離してprops片方向同期する。
+    // サーバ側のゲート(HasMapFilter)も3値そろって初めて有効なので、緯度だけ非nullのような
+    // 半端なクエリでチェックが入ると「入っているのに絞られない」表示になる
+    function is_map_filter_enabled(query: FindKyouQuery | null | undefined): boolean {
+        if (!query) {
+            return false
+        }
+        return query.map_latitude !== null && query.map_longitude !== null && query.map_radius !== null
+    }
+
+    const use_map: Ref<boolean> = ref(is_map_filter_enabled(props.find_kyou_query))
     const latitude: Ref<number> = ref(35.6586295)
     const longitude: Ref<number> = ref(139.7449018)
     const radius: Ref<number> = ref(500)
@@ -38,12 +50,22 @@ export function useMapQuery(options: {
         if (!props.find_kyou_query || JSON.stringify(query.value) === JSON.stringify(props.find_kyou_query)) {
             return
         }
+        // props同期はユーザー操作ではないのでemitしない。
+        // ここでemitすると、フォーカス切替のたびにサイドバーが実検索を発火してループする
         query.value = props.find_kyou_query.clone()
-        latitude.value = props.find_kyou_query.map_latitude.valueOf()
-        longitude.value = props.find_kyou_query.map_longitude.valueOf()
+        use_map.value = is_map_filter_enabled(props.find_kyou_query)
+        // null着信（フィルタ未使用）ではローカルの座標・半径を既定値のまま保持し、
+        // 非null着信のときだけ上書きする
+        if (props.find_kyou_query.map_latitude !== null) {
+            latitude.value = props.find_kyou_query.map_latitude
+        }
+        if (props.find_kyou_query.map_longitude !== null) {
+            longitude.value = props.find_kyou_query.map_longitude
+        }
         is_enable_circle.value = props.find_kyou_query.is_enable_map_circle_in_sidebar
-        radius.value = props.find_kyou_query.map_radius.valueOf()
-        emits('request_update_area', latitude.value, longitude.value, radius.value)
+        if (props.find_kyou_query.map_radius !== null) {
+            radius.value = props.find_kyou_query.map_radius
+        }
     })
 
     watch(() => props.application_config, async () => {
@@ -51,6 +73,11 @@ export function useMapQuery(options: {
     })
 
     watch(() => radius.value, () => {
+        // v-sliderのv-modelはユーザー操作でも上のprops同期でも書き込まれる。
+        // 同期済みクエリと同値なら同期由来なのでemitしない(値比較で判定。タイミングフラグは使わない)
+        if (radius.value === query.value.map_radius) {
+            return
+        }
         emits('request_update_area', latitude.value, longitude.value, radius.value)
     })
 
@@ -69,7 +96,7 @@ export function useMapQuery(options: {
 
     // ── Exposed getters ──
     function get_use_map(): boolean {
-        return query.value.use_map
+        return use_map.value
     }
     function get_latitude(): number {
         return latitude.value
@@ -89,6 +116,7 @@ export function useMapQuery(options: {
         // State
         query,
         google_map_api_key,
+        use_map,
         latitude,
         longitude,
         radius,

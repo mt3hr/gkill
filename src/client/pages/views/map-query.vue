@@ -1,7 +1,7 @@
 <template>
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
-            <v-checkbox v-model="query.use_map" @change=" emits('request_update_use_map_query', query.use_map)"
+            <v-checkbox v-model="use_map" @change=" emits('request_update_use_map_query', use_map)"
                 :label="i18n.global.t('MAP_QUERY_TITLE')" hide-details class="pb-0 mb-0" />
         </v-col>
         <v-spacer class="pa-0 ma-0" />
@@ -10,7 +10,7 @@
             }}</v-btn>
         </v-col>
     </v-row>
-    <v-sheet v-show="query.use_map">
+    <v-sheet v-show="use_map">
         <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key" @click="handle_map_click"
             style="width: 100%; height: 400px" class="googlemap search_google_map"
             :key="application_config.google_map_api_key + (application_config.use_dark_theme ? '_dark' : '_light')"
@@ -19,7 +19,7 @@
                 :key="(circle.center?.lat.toString().concat(circle.center?.lng.toString()).concat(radius.toString()))" />
         </GoogleMap>
     </v-sheet>
-    <v-sheet v-show="query.use_map">
+    <v-sheet v-show="use_map">
         <v-slider min="0" max="10000" v-model="radius" :label="i18n.global.t('RANGE_TITLE')" />
     </v-sheet>
 </template>
@@ -37,8 +37,8 @@ const emits = defineEmits<MapQueryEmits>()
 const gmap = ref<InstanceType<typeof GoogleMap> | null>(null)
 
 const {
-    query,
     google_map_api_key,
+    use_map,
     radius,
     zoom,
     center,

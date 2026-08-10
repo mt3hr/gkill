@@ -374,10 +374,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -546,7 +544,6 @@ WHERE
 
 	targetIDs := []string{target_id}
 	query := &find.FindQuery{
-		UseWords: true,
 		Words:    targetIDs,
 	}
 	queryArgs := []any{
@@ -697,7 +694,8 @@ SELECT
 FROM NOTIFICATION
 WHERE 
 `
-	sql += " (datetime(NOTIFICATION_TIME, 'localtime') BETWEEN datetime(?, 'localtime') AND datetime(?, 'localtime')) "
+	// 他の時刻比較と同じくunixepochで正規化する(オフセット異表記でも正しく比較でき、式インデックスも効く)
+	sql += " (unixepoch(NOTIFICATION_TIME) BETWEEN unixepoch(?) AND unixepoch(?)) "
 
 	repName, err := n.GetRepName(ctx)
 	if err != nil {
@@ -718,7 +716,9 @@ WHERE
 	tableName := "NOTIFICATION"
 	tableNameAlias := "NOTIFICATION"
 	whereCounter := 1
-	var onlyLatestData bool
+	// 通知スケジューラは各通知の最新版だけを見る前提(IsDeleted/IsNotificatedの判定は最新版で行う)。
+	// 以前は全版が返っており、削除済み・時刻変更前の旧版で通知が飛ぶ余地があった
+	onlyLatestData := true
 	relatedTimeColumnName := "NOTIFICATION_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -904,7 +904,6 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
 		IDs:    ids,
 	}
 	queryArgs := []any{
@@ -1166,14 +1165,15 @@ FROM NOTIFICATION
 			return nil, ctx.Err()
 		default:
 			addr := gkill_cache.LatestDataRepositoryAddress{}
-			var isDeletedStr string
 			var dataUpdateTimeStr string
 			var targetIDInData *string
-			err := rows.Scan(&isDeletedStr, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
+			// IS_DELETEDはboolバインドでINTEGER(0/1)格納なので直接boolへScanする。
+			// 以前は文字列に受けて "TRUE" と比較しており(実値は"0"/"1")、常にfalseになって
+			// 削除済みターゲットを指すReKyou/MiReKyouが検索結果に残っていた
+			err := rows.Scan(&addr.IsDeleted, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
 			if err != nil {
 				return nil, err
 			}
-			addr.IsDeleted = isDeletedStr == "TRUE"
 			addr.TargetIDInData = targetIDInData
 			addr.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {

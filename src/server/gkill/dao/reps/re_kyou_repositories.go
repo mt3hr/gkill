@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"slices"
@@ -79,7 +80,7 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 		}
 	}
 
-	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
+	// ワードフィルタ: ワード指定が非nilの場合、Targetに対してワード検索を実行しマッチしたIDを収集する
 	// allowAllTargetsのときrepsWithoutRekyouはnilなので、先に見て弾く
 	wordMatchTargetIDs := map[string]bool{}
 	useWordFilter := !allowAllTargets && isWordFilterEnabled(query)
@@ -169,7 +170,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -234,7 +235,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -286,8 +287,7 @@ func (r *ReKyouRepositories) GetPath(ctx context.Context, id string) (string, er
 	ids := []string{id}
 	for _, rep := range r.ReKyouRepositories {
 		query := &find.FindQuery{
-			IDs:    ids,
-			UseIDs: true,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -328,7 +328,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -381,7 +381,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -472,7 +472,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get rekyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get rekyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -537,7 +537,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get rekyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get rekyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -630,7 +630,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get rekyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get rekyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -712,7 +712,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find rekyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find rekyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -853,7 +853,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

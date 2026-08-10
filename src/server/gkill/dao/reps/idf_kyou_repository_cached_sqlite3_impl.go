@@ -5,10 +5,8 @@ import (
 	sqllib "database/sql"
 	"fmt"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
-	"io"
 	"log/slog"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -204,7 +202,10 @@ WHERE
 	// 最終的な並び順は find_filter の Go 側ソートで決まる。
 	appendOrderBy := false
 	findWordUseLike := true
-	ignoreCase := false
+	// 非キャッシュ側のFindKyousと揃える。
+	// ignoreFindWordが真なのでキーワードのSQLは組み立てられず現状は効かないが、
+	// 同じ検索に対して実装ごとに大文字小文字の扱いが違う状態を残さない。
+	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
@@ -239,22 +240,8 @@ WHERE
 		}
 	}()
 
-	words := []string{}
-	notWords := []string{}
-	// query は全repで共有されているので、スライスの中身を直接書き換えると
-	// 並列に走っている他repの検索語まで小文字化して壊してしまう。必ず複製すること。
-	if query.Words != nil {
-		words = make([]string, len(query.Words))
-		for i, word := range query.Words {
-			words[i] = strings.ToLower(word)
-		}
-	}
-	if query.NotWords != nil {
-		notWords = make([]string, len(query.NotWords))
-		for i, notWord := range query.NotWords {
-			notWords[i] = strings.ToLower(notWord)
-		}
-	}
+	words := lowerFindWords(query.Words)
+	notWords := lowerFindWords(query.NotWords)
 
 	kyous := map[string][]Kyou{}
 	for rows.Next() {
@@ -303,69 +290,15 @@ WHERE
 			idf.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
 			// 判定OKであれば追加する
-			// ファイルの内容を取得する
-			fileContentText := ""
 			filename := idf.ContentPath
 			if filename == "" {
-				// err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
-				// return nil, err
-
 				// 接続されていないRepのIDがあったときは無視する
 				continue
 			}
-			if query.UseWords {
-				fileContentText += strings.ToLower(filename)
-				switch filepath.Ext(idf.TargetFile) {
-				case ".md":
-					fallthrough
-				case ".txt":
-					file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-					if err != nil {
-						err = fmt.Errorf("error at open file %s: %w", filename, err)
-						return nil, err
-					}
-					b, err := io.ReadAll(file)
-					file.Close()
-					if err != nil {
-						err = fmt.Errorf("error at read all file content %s: %w", filename, err)
-						return nil, err
-					}
-					fileContentText += strings.ToLower(string(b))
-				}
-			}
 
 			match := true
-			if query.UseWords {
-				// ワードand検索である場合の判定
-				if query.WordsAnd {
-					match = true
-					for _, word := range words {
-						match = strings.Contains(fileContentText, word)
-						if !match {
-							break
-						}
-					}
-					if !match {
-						continue
-					}
-				} else if !(query.WordsAnd) {
-					// ワードor検索である場合の判定
-					match = false
-					for _, word := range words {
-						match = strings.Contains(fileContentText, word)
-						if match {
-							break
-						}
-					}
-				}
-				// notワードを除外する場合の判定
-				for _, notWord := range notWords {
-					match = strings.Contains(fileContentText, notWord)
-					if match {
-						match = false
-						break
-					}
-				}
+			if query.HasWordFilter() {
+				match = matchFindWords(findWordTextOfIDFKyou(ctx, idf.TargetFile, filename), words, notWords, query.WordsAnd)
 			}
 
 			if match {
@@ -433,10 +366,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -593,8 +524,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	tableName := i.dbName
@@ -967,7 +897,8 @@ WHERE
 	ignoreFindWord := true
 	appendOrderBy := true
 	findWordUseLike := true
-	ignoreCase := false
+	// 非キャッシュ側のFindIDFKyouと揃える。理由はFindKyousと同じ。
+	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
@@ -1004,22 +935,8 @@ WHERE
 		}
 	}()
 
-	words := []string{}
-	notWords := []string{}
-	// query は全repで共有されているので、スライスの中身を直接書き換えると
-	// 並列に走っている他repの検索語まで小文字化して壊してしまう。必ず複製すること。
-	if query.Words != nil {
-		words = make([]string, len(query.Words))
-		for i, word := range query.Words {
-			words[i] = strings.ToLower(word)
-		}
-	}
-	if query.NotWords != nil {
-		notWords = make([]string, len(query.NotWords))
-		for i, notWord := range query.NotWords {
-			notWords[i] = strings.ToLower(notWord)
-		}
-	}
+	words := lowerFindWords(query.Words)
+	notWords := lowerFindWords(query.NotWords)
 
 	idfKyous := []IDFKyou{}
 	for rows.Next() {
@@ -1071,66 +988,15 @@ WHERE
 			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			idf.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
-			// ファイルの内容を取得する
-			fileContentText := ""
 			filename := idf.ContentPath
 			if filename == "" {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
-			if query.UseWords {
-				fileContentText += filename
-				switch filepath.Ext(idf.TargetFile) {
-				case ".md":
-					fallthrough
-				case ".txt":
-					file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-					if err != nil {
-						err = fmt.Errorf("error at open file %s: %w", filename, err)
-						return nil, err
-					}
-					b, err := io.ReadAll(file)
-					file.Close()
-					if err != nil {
-						err = fmt.Errorf("error at read all file content %s: %w", filename, err)
-						return nil, err
-					}
-					fileContentText += strings.ToLower(string(b))
-				}
-			}
 
 			match := true
-			if query.UseWords {
-				// ワードand検索である場合の判定
-				if query.WordsAnd {
-					match = true
-					for _, word := range words {
-						match = strings.Contains(fileContentText, word)
-						if !match {
-							break
-						}
-					}
-					if !match {
-						continue
-					}
-				} else if !(query.WordsAnd) {
-					// ワードor検索である場合の判定
-					match = false
-					for _, word := range words {
-						match = strings.Contains(fileContentText, word)
-						if match {
-							break
-						}
-					}
-				}
-				// notワードを除外する場合の判定
-				for _, notWord := range notWords {
-					match = strings.Contains(fileContentText, notWord)
-					if match {
-						match = false
-						break
-					}
-				}
+			if query.HasWordFilter() {
+				match = matchFindWords(findWordTextOfIDFKyou(ctx, idf.TargetFile, filename), words, notWords, query.WordsAnd)
 			}
 
 			if match {
@@ -1173,10 +1039,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1449,8 +1313,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	dataType := "idf"

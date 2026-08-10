@@ -11,6 +11,9 @@ export function useKeywordQuery(options: {
 
     // ── State refs ──
     const cloned_find_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
+    // チェックボックスのUI状態。クエリ上は words の null 判定が担うため、
+    // ローカルrefに分離してprops片方向同期する（use-period-of-time-queryと同じパターン）
+    const use_words: Ref<boolean> = ref(props.find_kyou_query ? props.find_kyou_query.words !== null : false)
 
     // ── Watchers ──
     watch(() => props.find_kyou_query, () => {
@@ -18,6 +21,7 @@ export function useKeywordQuery(options: {
             return
         }
         cloned_find_query.value = props.find_kyou_query.clone()
+        use_words.value = props.find_kyou_query.words !== null
         emits('inited')
     })
 
@@ -26,7 +30,7 @@ export function useKeywordQuery(options: {
         return cloned_find_query.value.keywords
     }
     function get_use_words(): boolean {
-        return cloned_find_query.value.use_words
+        return use_words.value
     }
     function get_use_word_and_search(): boolean {
         return cloned_find_query.value.words_and
@@ -36,6 +40,7 @@ export function useKeywordQuery(options: {
     return {
         // State
         cloned_find_query,
+        use_words,
 
         // Business logic
         get_keywords,
