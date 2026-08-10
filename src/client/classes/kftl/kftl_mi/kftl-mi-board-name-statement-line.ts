@@ -4,14 +4,14 @@ import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import { KFTLMiLimitTimeStatementLine } from './kftl-mi-limit-time-statement-line'
+import { KFTLMiEstimateStartTimeStatementLine } from './kftl-mi-estimate-start-time-statement-line'
 import type { KFTLMiRequest } from './kftl-mi-request'
 
 export class KFTLMiBoardNameStatementLine extends KFTLStatementLine {
 
     constructor(line_text: string, context: KFTLStatementLineContext) {
         super(line_text, context)
-        context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLMiLimitTimeStatementLine(line_text, context))
+        context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLMiEstimateStartTimeStatementLine(line_text, context))
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
     }
 

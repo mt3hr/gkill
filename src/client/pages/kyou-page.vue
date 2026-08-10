@@ -48,7 +48,11 @@
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true"
                 @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)" />
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                @registered_kyou="onRegisteredKyou"
+                @updated_kyou="onUpdatedKyou"
+                @registered_tag="onRegisteredTag"
+                @updated_tag="onUpdatedTag" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :is_show="is_show_application_config_dialog"
@@ -112,6 +116,10 @@ const {
     navigate_to_page,
     write_errors,
     write_messages,
+    onRegisteredKyou,
+    onUpdatedKyou,
+    onRegisteredTag,
+    onUpdatedTag,
     close_message,
     load_application_config,
     show_application_config_dialog,

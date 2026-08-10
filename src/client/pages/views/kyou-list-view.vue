@@ -47,6 +47,9 @@
                         <tbody>
                             <tr>
                                 <td v-for="kyou in item" :key="kyou.id">
+                                    <!-- 画像一覧のセルは 200x200 固定なので、参照先を埋め込むビュー(ReKyou/MiReKyou)は
+                                         行と同じく詰めた表示にする必要がある。'100%' は is_row_height で行と判定されるので
+                                         ここだけは意図的にパーセントを渡している (kyou-row-height.ts のコメント参照) -->
                                     <KyouView class="kyou_image_in_list" :application_config="application_config"
                                         :draggable="draggable" :key="kyou.id" :gkill_api="gkill_api" :highlight_targets="[]"
                                         :is_image_view="true" :kyou="kyou" :show_checkbox="false" :show_content_only="true"

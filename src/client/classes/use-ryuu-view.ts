@@ -4,7 +4,6 @@ import RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
 import type RyuuViewProps from '@/pages/views/ryuu-view-props'
 import type RyuuViewEmits from '@/pages/views/ryuu-view-emits'
 import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
-import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { Tag } from '@/classes/datas/tag'
@@ -23,9 +22,8 @@ export interface RyuuDefinition {
 export function useRyuuView(options: {
     props: RyuuViewProps,
     emits: RyuuViewEmits,
-    model_value: Ref<ApplicationConfig | undefined>,
 }) {
-    const { props, emits, model_value } = options
+    const { props, emits } = options
 
     // ── Template refs ──
     const add_ryuu_item_dialog = ref<ComponentRef | null>(null)
@@ -188,10 +186,14 @@ export function useRyuuView(options: {
         related_kyou_queries.value.push(related_kyou_query)
     }
 
+    /**
+     * 編集内容を親へ渡すだけにする。
+     * 以前は v-model で受け取った ApplicationConfig のプロパティを直接書き換えていたが、
+     * それは設定画面の clone そのものなので、設定画面でキャンセルしても戻らなくなっていた。
+     * 反映先は requested_apply_ryuu_struct を受けた側が決める
+     */
     async function apply(): Promise<void> {
-        if (!model_value.value) return
         const ryuu_json_data = to_json()
-        model_value.value.ryuu_json_data = ryuu_json_data
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         emits('requested_apply_ryuu_struct', ryuu_json_data as any)
         nextTick(() => emits('requested_close_dialog'))

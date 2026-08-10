@@ -133,17 +133,18 @@ defineExpose({ generate_query, get_default_query })
     flex-direction: column;
     align-items: center;
     min-height: 40vh;
-    min-width: 40vw;
 }
 
+/* min-width は持たせない。App.vue の .gkill-floating-dialog__body .v-card { overflow: auto } は
+   入れ子のv-card全部をスクロール箱にするので、ここに 40vw を置くと
+   ダイアログ幅(min(500px, 85vw))を超えた分だけ外側のv-cardにも横スクロールが出て二重になる。
+   中身のツリー(foldable-struct の .tree_item が階層ごとに200px)は内側1本で受ける */
 .find_query_editor_view.dummy {
     position: relative;
     min-height: 40vh;
-    min-width: 40vw;
 }
 
 .loading_find_query_editor_view {
     overflow-y: hidden !important;
-    min-width: calc(40vw + 8px);
 }
 </style>

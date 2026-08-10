@@ -197,7 +197,7 @@
                     :show_timeis_plaing_end_button="false" :highlight_targets="highlight_targets" :is_image_view="false"
                     :kyou="cloned_kyou" :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                     :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                    :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
+                    :height="'unset'" :width="'100%'" :enable_context_menu="enable_context_menu"
                     :enable_dialog="enable_dialog" :is_readonly_mi_check="true" :show_rep_name="true"
                     :force_show_latest_kyou_info="true" :show_attached_timeis="true" :show_attached_tags="true"
                     :show_attached_texts="true" :show_attached_notifications="true" :show_update_time="false"
@@ -208,6 +208,9 @@
                 v-on="crudRelayHandlers"
                 @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
                 ref="new_board_name_dialog" />
+            <ConfirmUnknownMiBoardDialog :unknown_mi_boards="unknown_mi_boards" :is_requested_submit="is_busy"
+                @requested_confirm="confirm_save()" @requested_cancel="cancel_save()"
+                ref="confirm_unknown_mi_board_dialog" />
         </v-card>
     </div>
 </template>
@@ -217,6 +220,7 @@ import type { EditMiReKyouViewProps } from './edit-mi-re-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
+import ConfirmUnknownMiBoardDialog from '../dialogs/confirm-unknown-mi-board-dialog.vue'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
 import { useEditMiReKyouView } from '@/classes/use-edit-mi-re-kyou-view'
@@ -227,6 +231,12 @@ const emits = defineEmits<KyouViewEmits>()
 const {
     // Template refs
     new_board_name_dialog,
+    confirm_unknown_mi_board_dialog,
+
+    // Confirm unknown mi board
+    unknown_mi_boards,
+    cancel_save,
+    confirm_save,
 
     // State
     is_loading,

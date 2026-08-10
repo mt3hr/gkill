@@ -8,13 +8,9 @@ import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
-import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
-import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
 import type { Kyou } from '@/classes/datas/kyou'
-import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
-import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
-import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
+import { useConfigStructSync } from '@/classes/use-config-struct-sync'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -37,9 +33,12 @@ export function useMiPage() {
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 
-    // ── 連打/連続登録で二重に通信しないため ──
-    let tag_struct_refresh_promise: Promise<void> | null = null
-    let mi_board_struct_refresh_promise: Promise<void> | null = null
+    // ── 板ツリー/タグツリーの追随 ──
+    const { check_tag_update, check_mi_board_update, resync_structs } = useConfigStructSync({
+        application_config,
+        gkill_api: () => gkill_api.value,
+        write_errors: (errors) => write_errors(errors),
+    })
 
     // ── Helpers ──
     const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
@@ -146,104 +145,6 @@ export function useMiPage() {
 
     function show_application_config_dialog(): void {
         application_config_dialog.value?.show()
-    }
-
-    function tag_struct_has(tag_struct: TagStructElementData, tag_name: string): boolean {
-        if (tag_struct.tag_name === tag_name) return true
-        for (const c of (tag_struct.children ?? [])) {
-            if (tag_struct_has(c, tag_name)) return true
-        }
-        return false
-    }
-
-    async function check_tag_update(tag: Tag): Promise<void> {
-        const name = tag.tag
-        if (!name) return
-
-        const req = new GetAllTagNamesRequest()
-        req.force_reget = true
-        await gkill_api.value.get_all_tag_names(req)
-
-        if (tag_struct_has(application_config.value.tag_struct, name)) return
-
-        // すでに更新中ならそれに乗る
-        if (tag_struct_refresh_promise) {
-            await tag_struct_refresh_promise
-            return
-        }
-
-        tag_struct_refresh_promise = (async () => {
-            const errors = await application_config.value.append_not_found_tags()
-            if (errors && errors.length) {
-                write_errors(errors)
-                return
-            }
-
-            application_config.value = application_config.value.clone()
-
-            gkill_api.value.set_saved_application_config(application_config.value)
-        })()
-
-        try {
-            await tag_struct_refresh_promise
-        } finally {
-            tag_struct_refresh_promise = null
-        }
-    }
-
-    function mi_board_struct_has(mi_board_struct: MiBoardStructElementData, mi_board_name: string): boolean {
-        if (mi_board_struct.board_name === mi_board_name) return true
-        for (const c of (mi_board_struct.children ?? [])) {
-            if (mi_board_struct_has(c, mi_board_name)) return true
-        }
-        return false
-    }
-
-    async function check_mi_board_update(kyou: Kyou): Promise<void> {
-        const get_kyou_req = new GetKyouRequest()
-        get_kyou_req.id = kyou.id
-        const get_kyou_res = await gkill_api.value.get_kyou(get_kyou_req)
-        if (!get_kyou_res.kyou_histories || get_kyou_res.kyou_histories.length === 0) {
-            return
-        }
-        kyou = get_kyou_res.kyou_histories[0]
-
-        await kyou.load_typed_mi()
-        if (!kyou.typed_mi) {
-            return
-        }
-        const name = kyou.typed_mi.board_name
-        if (!name) return
-
-        const req = new GetMiBoardRequest()
-        req.force_reget = true
-        await gkill_api.value.get_mi_board_list(req)
-
-        if (mi_board_struct_has(application_config.value.mi_board_struct, name)) return
-
-        // すでに更新中ならそれに乗る
-        if (mi_board_struct_refresh_promise) {
-            await mi_board_struct_refresh_promise
-            return
-        }
-
-        mi_board_struct_refresh_promise = (async () => {
-            const errors = await application_config.value.append_not_found_mi_boards()
-            if (errors && errors.length) {
-                write_errors(errors)
-                return
-            }
-
-            application_config.value = application_config.value.clone()
-
-            gkill_api.value.set_saved_application_config(application_config.value)
-        })()
-
-        try {
-            await mi_board_struct_refresh_promise
-        } finally {
-            mi_board_struct_refresh_promise = null
-        }
     }
 
     // プッシュ通知登録用
@@ -397,6 +298,8 @@ export function useMiPage() {
         'received_errors': (errors: Array<GkillError>) => onReceivedErrors(errors),
         'received_messages': (messages: Array<GkillMessage>) => onReceivedMessages(messages),
         'requested_reload_application_config': () => onRequestedReloadApplicationConfig(),
+        // KFTL/MKFL はタグを registered_tag で上げてこないので、保存完了で両方取り直す
+        'saved_kyou_by_kftl': () => resync_structs(),
     }
 
     // ── beforeunload guard ──

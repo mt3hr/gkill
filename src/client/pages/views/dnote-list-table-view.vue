@@ -7,21 +7,7 @@
         @requested_delete_dnote_list_query="(id: string) => delete_dnote_list_query(id)"
         @requested_update_dnote_list_query="(qq: DnoteListQuery) => update_dnote_list_query(qq)"
         @finish_a_aggregate_task="emits('finish_a_aggregate_task')"
-        @focused_kyou="(kyou: Kyou) => emits('focused_kyou', kyou)"
-        @clicked_kyou="(kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) }"
-        @deleted_kyou="(kyou: Kyou) => emits('deleted_kyou', kyou)"
-        @deleted_tag="(tag: Tag) => emits('deleted_tag', tag)"
-        @deleted_text="(text: Text) => emits('deleted_text', text)"
-        @deleted_notification="(n: Notification) => emits('deleted_notification', n)"
-        @registered_kyou="(kyou: Kyou) => emits('registered_kyou', kyou)"
-        @registered_tag="(tag: Tag) => emits('registered_tag', tag)"
-        @registered_text="(text: Text) => emits('registered_text', text)"
-        @registered_notification="(n: Notification) => emits('registered_notification', n)"
-        @updated_kyou="(kyou: Kyou) => emits('updated_kyou', kyou)"
-        @updated_tag="(tag: Tag) => emits('updated_tag', tag)"
-        @updated_text="(text: Text) => emits('updated_text', text)"
-        @updated_notification="(n: Notification) => emits('updated_notification', n)"
-        @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)"
+        v-on="crudRelayHandlers"
         ref="dnote_list_views" />
     </div>
   </div>
@@ -29,11 +15,6 @@
 
 <script lang="ts" setup>
 import DnoteListView from "./dnote-list-view.vue"
-import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
-import type { Kyou } from "@/classes/datas/kyou"
-import type { Tag } from "@/classes/datas/tag"
-import type { Text } from "@/classes/datas/text"
-import type { Notification } from "@/classes/datas/notification"
 import type DnoteListTableViewEmits from "./dnote-list-table-view-emits"
 import type DnoteListTableViewProps from "./dnote-list-table-view-props"
 import { useDnoteListTableView } from '@/classes/use-dnote-list-table-view'
@@ -58,6 +39,9 @@ const {
     // Exposed methods
     load_aggregate_grouping_list,
     reset,
+
+    // Event relay objects
+    crudRelayHandlers,
 } = useDnoteListTableView({ props, emits, model_value })
 
 defineExpose({ load_aggregate_grouping_list, reset })

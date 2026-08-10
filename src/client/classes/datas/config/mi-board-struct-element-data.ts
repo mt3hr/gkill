@@ -13,8 +13,6 @@ export class MiBoardStructElementData implements FoldableStructModel {
 
     check_when_inited: boolean
 
-    ignore_check_rep_rykv: boolean
-
     children: Array<MiBoardStructElementData> | null
 
     key: string
@@ -23,10 +21,6 @@ export class MiBoardStructElementData implements FoldableStructModel {
 
     indeterminate: boolean
 
-    parent_folder_id: string | null
-
-    seq: number
-
     is_dir: boolean
 
     constructor() {
@@ -34,13 +28,10 @@ export class MiBoardStructElementData implements FoldableStructModel {
         this.id = ""
         this.board_name = ""
         this.check_when_inited = false
-        this.ignore_check_rep_rykv = false
         this.children = null
         this.key = ""
         this.is_checked = false
         this.indeterminate = false
-        this.parent_folder_id = ""
-        this.seq = 0
         this.is_dir = false
     }
 }

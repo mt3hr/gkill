@@ -29,11 +29,15 @@
         <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog" :app_content_width="app_content_width"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="kftl_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
+            ref="kftl_dialog" />
         <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog" :app_content_width="app_content_width"
-            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }" ref="mkfl_dialog" />
+            v-on="{ ...crudRelayHandlers, ...dialogReloadRequestHandlers }"
+            @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
+            ref="mkfl_dialog" />
         <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" v-on="crudRelayHandlers"
             ref="upload_file_dialog" />

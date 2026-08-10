@@ -12,7 +12,7 @@ import { Tag } from '@/classes/datas/tag'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
-import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function usePlaingTimeIsView(options: {
@@ -115,36 +115,27 @@ export function usePlaingTimeIsView(options: {
     }
 
     async function reload_kyou(kyou: Kyou): Promise<void> {
-        const kyous_list = match_kyous_list.value
-        for (let j = 0; j < kyous_list.length; j++) {
-            const kyou_in_list = kyous_list[j]
-            if (kyou.id === kyou_in_list.id) {
-                const updated_kyou = kyou.clone()
-                await delete_gkill_kyou_cache(kyou.id)
-                await updated_kyou.reload(true)
-                updated_kyou.is_typed_data_loaded = false
-                await updated_kyou.load_all()
-                const new_list = [...match_kyous_list.value]
-                new_list[j] = updated_kyou
-                match_kyous_list.value = new_list
-            }
-        }
+        // 以前は3ブロックとも load_all の force_attached が無く添付タグを引き直せていなかった。
+        // focused の分岐だけ reload(false) になっていて「更新後の最新版を取る」意図とも
+        // 食い違っていたが、共通関数に寄せて reload(true) に揃う
+        // 3ブロックは同じ更新から派生しているので、同じ値を渡して1往復に合流させる
+        const requested_at = new_reload_batch()
+        await refresh_kyou_in_list(match_kyous_list.value, kyou, {
+            requested_at: requested_at,
+            replace: (next_list) => { match_kyous_list.value = next_list },
+        })
         if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
-            const updated_kyou = kyou.clone()
-            await delete_gkill_kyou_cache(kyou.id)
-            await updated_kyou.reload(false)
-            updated_kyou.is_typed_data_loaded = false
-            await updated_kyou.load_all()
-            focused_kyou.value = updated_kyou
+            const refreshed = await refresh_kyou(kyou, undefined, requested_at)
+            if (refreshed) {
+                focused_kyou.value = refreshed
+            }
         }
         for (let i = 0; i < opened_dialogs.value.length; i++) {
             if (opened_dialogs.value[i].kyou.id === kyou.id) {
-                const updated_kyou = kyou.clone()
-                await delete_gkill_kyou_cache(kyou.id)
-                await updated_kyou.reload(true)
-                updated_kyou.is_typed_data_loaded = false
-                await updated_kyou.load_all()
-                opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
+                const refreshed = await refresh_kyou(kyou, undefined, requested_at)
+                if (refreshed) {
+                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: refreshed }
+                }
             }
         }
     }

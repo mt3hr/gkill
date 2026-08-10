@@ -8,6 +8,7 @@ import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { Ref } from 'vue'
 import type { ComponentRef } from '@/classes/component-ref'
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 export function useDnoteItemListView(options: {
     props: DnoteItemListViewProps
@@ -81,6 +82,15 @@ export function useDnoteItemListView(options: {
         e.stopPropagation()
     }
 
+    // ── Event relay objects ──
+    // 手書きで17個並べていた頃は requested_reload_kyou / requested_reload_list /
+    // requested_update_check_kyous を落としていた。
+    // 自分ではフォーカスを発火しない中間層なので dialog 版（focus系込み）を使う
+    const crudRelayHandlers = build_kyou_dialog_relay(emits, {
+        // クリックはフォーカス移動も伴う
+        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+    })
+
     return {
         dnote_item_views,
         dnd_list_index,
@@ -90,5 +100,6 @@ export function useDnoteItemListView(options: {
         reset,
         onListDragover,
         onListDrop,
+        crudRelayHandlers,
     }
 }

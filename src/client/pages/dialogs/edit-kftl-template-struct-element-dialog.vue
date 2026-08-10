@@ -25,7 +25,7 @@
           :struct_obj="kftl_template_struct"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @requested_update_kftl_template_struct="(kftl_template_struct: KFTLTemplateStructElementData) => emits('requested_update_kftl_template_struct', kftl_template_struct)"
+          @requested_update_kftl_template_struct="(kftl_template_struct: KFTLTemplateElementData) => emits('requested_update_kftl_template_struct', kftl_template_struct)"
           @requested_close_dialog="hide" />
         </v-card>
         <HelpDialog screen_name="kftl" ref="help_dialog" />
@@ -42,7 +42,7 @@ import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
+import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
@@ -52,7 +52,7 @@ defineExpose({ show, hide })
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
-const kftl_template_struct: Ref<KFTLTemplateStructElementData> = ref(new KFTLTemplateStructElementData())
+const kftl_template_struct: Ref<KFTLTemplateElementData> = ref(new KFTLTemplateElementData())
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 const ui = useFloatingDialog("edit-kftl-template-struct-element-dialog", {
@@ -61,7 +61,7 @@ const ui = useFloatingDialog("edit-kftl-template-struct-element-dialog", {
 })
 
 
-async function show(kftl_template_struct_obj: KFTLTemplateStructElementData): Promise<void> {
+async function show(kftl_template_struct_obj: KFTLTemplateElementData): Promise<void> {
   kftl_template_struct.value = kftl_template_struct_obj
   is_show_dialog.value = true
 }

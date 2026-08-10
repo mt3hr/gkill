@@ -20,7 +20,6 @@ export class KFTLTemplateElementData implements FoldableStructModel {
     indeterminate: boolean // 使わない
 
     is_dir: boolean
-    is_open_default: boolean
 
     constructor() {
         this.name = ""
@@ -32,7 +31,6 @@ export class KFTLTemplateElementData implements FoldableStructModel {
         this.indeterminate = false
         this.key = ""
         this.is_dir = false
-        this.is_open_default = false
     }
 
 }

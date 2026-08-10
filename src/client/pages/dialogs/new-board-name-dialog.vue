@@ -24,11 +24,14 @@
               <v-text-field v-model="board_name" :label="i18n.global.t('MI_BOARD_NAME_TITLE')" />
             </v-col>
           </v-row>
-          <v-row class="ma-0 pa-0">
-            <v-spacer />
+          <v-row class="ma-0 pa-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="ma-0 pa-0">
               <v-btn color="primary" @click="emits_board_name" dark>{{ i18n.global.t('ADD_MI_BOARD_TITLE')
               }}</v-btn>
+            </v-col>
+            <v-spacer />
+            <v-col cols="auto" class="ma-0 pa-0">
+              <v-btn color="secondary" @click="hide" dark>{{ i18n.global.t('CANCEL_TITLE') }}</v-btn>
             </v-col>
           </v-row>
         </v-card>

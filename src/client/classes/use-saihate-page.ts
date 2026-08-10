@@ -15,6 +15,10 @@ import { LogoutRequest } from '@/classes/api/req_res/logout-request'
 import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-repositories-request'
 import { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { build_kyou_dialog_host_handlers } from '@/classes/kyou-view-relay'
+import { useConfigStructSync } from '@/classes/use-config-struct-sync'
+import type { Kyou } from '@/classes/datas/kyou'
+import type { Tag } from '@/classes/datas/tag'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function useSaihatePage() {
@@ -233,6 +237,36 @@ export function useSaihatePage() {
         }
     }
 
+    // ── 板ツリー/タグツリーの追随 ──
+    const { check_tag_update, check_mi_board_update, resync_structs } = useConfigStructSync({
+        application_config,
+        gkill_api: () => gkill_api.value,
+        write_errors: (errors) => write_errors(errors),
+    })
+
+    // ── Event relay object ──
+    // 各追加ダイアログに同じ束を渡す。
+    // saihate は一覧も RykvDialogHost も持たない「追加するだけ」のページなので、
+    // 必須5件のうち画面更新に関わるものは no-op でよい（消すものも開くものも無い）
+    const saihateKyouHandlers = build_kyou_dialog_host_handlers({
+        'closed': () => { /* saihate に RykvDialogHost は無い */ },
+        'deleted_kyou': () => { /* 一覧を持たないので更新するものが無い */ },
+        'requested_reload_kyou': () => { /* 同上 */ },
+        'requested_open_rykv_dialog': () => { /* rykv ダイアログを開く導線は持たない */ },
+        'updated_kyou': (kyou: Kyou) => check_mi_board_update(kyou),
+    }, {
+        'received_errors': (errors: Array<GkillError>) => write_errors(errors),
+        'received_messages': (received_messages: Array<GkillMessage>) => write_messages(received_messages),
+        'registered_kyou': (kyou: Kyou) => check_mi_board_update(kyou),
+        'registered_tag': (tag: Tag) => check_tag_update(tag),
+        'updated_tag': (tag: Tag) => check_tag_update(tag),
+    })
+
+    // KFTL/MKFL はタグを registered_tag で上げてこないので、保存完了で両方取り直す
+    function onSavedKyouByKftl(): void {
+        resync_structs()
+    }
+
     function floating_action_button_style() {
         return {
             'bottom': '60px',
@@ -358,6 +392,10 @@ export function useSaihatePage() {
 
     // ── Return ──
     return {
+        // Event relay objects
+        saihateKyouHandlers,
+        onSavedKyouByKftl,
+
         // Template refs
         saihate_root,
         add_mi_dialog,
