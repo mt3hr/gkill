@@ -89,6 +89,50 @@ var ResetPasswordCmd = &cobra.Command{
 // サブコマンドがサーバのAPIを叩くための認証手段。
 // サーバと同じマシンでconfigディレクトリを読み書きできることを信頼の根拠にしている。
 func issueLocalAdminSession(ctx context.Context, configDBRootDir string, device string) (sessionID string, cleanup func(), err error) {
+	adminUserID, err := findLocalAdminUserID(ctx, configDBRootDir)
+	if err != nil {
+		return "", nil, err
+	}
+	return issueLocalSession(ctx, configDBRootDir, device, adminUserID)
+}
+
+// findLocalAdminUserID は有効な管理者アカウントのユーザIDを返す。
+// 同じ条件のアカウントが複数あっても結果が変わらないよう、ユーザIDの昇順で最初の1つを選ぶ。
+func findLocalAdminUserID(ctx context.Context, configDBRootDir string) (string, error) {
+	accountDBFilename := filepath.Join(configDBRootDir, "account.db")
+	accountDAO, err := account.NewAccountDAOSQLite3Impl(ctx, accountDBFilename)
+	if err != nil {
+		return "", fmt.Errorf("error at create account dao: %w", err)
+	}
+	defer func() {
+		if err := accountDAO.Close(ctx); err != nil {
+			slog.Log(ctx, gkill_log.Debug, "error at close account dao", "error", err)
+		}
+	}()
+
+	accounts, err := accountDAO.GetAllAccounts(ctx)
+	if err != nil {
+		return "", fmt.Errorf("error at get all accounts: %w", err)
+	}
+	slices.SortFunc(accounts, func(a *account.Account, b *account.Account) int {
+		return strings.Compare(a.UserID, b.UserID)
+	})
+
+	for _, a := range accounts {
+		if a.IsAdmin && a.IsEnable {
+			return a.UserID, nil
+		}
+	}
+	return "", fmt.Errorf("error: no enabled admin account found in %s", accountDBFilename)
+}
+
+// issueLocalSession は指定したユーザの短命セッションをローカルのDBへ直接書いて発行する。
+// 返り値のcleanupは、発行したセッションを削除してDAOを閉じる。
+//
+// APIはセッションのユーザとして動くので、あるユーザのKyouを扱うサブコマンドは
+// そのユーザのセッションが要る（管理者セッションでは管理者のリポジトリを見てしまう）。
+// 信頼の根拠はissueLocalAdminSessionと同じで、管理者を騙らないぶん権限は狭い。
+func issueLocalSession(ctx context.Context, configDBRootDir string, device string, userID string) (sessionID string, cleanup func(), err error) {
 	accountDBFilename := filepath.Join(configDBRootDir, "account.db")
 	accountDAO, err := account.NewAccountDAOSQLite3Impl(ctx, accountDBFilename)
 	if err != nil {
@@ -100,23 +144,15 @@ func issueLocalAdminSession(ctx context.Context, configDBRootDir string, device 
 		}
 	}()
 
-	accounts, err := accountDAO.GetAllAccounts(ctx)
+	targetAccount, err := accountDAO.GetAccount(ctx, userID)
 	if err != nil {
-		return "", nil, fmt.Errorf("error at get all accounts: %w", err)
+		return "", nil, fmt.Errorf("error at get account %s: %w", userID, err)
 	}
-	slices.SortFunc(accounts, func(a *account.Account, b *account.Account) int {
-		return strings.Compare(a.UserID, b.UserID)
-	})
-
-	var adminAccount *account.Account
-	for _, a := range accounts {
-		if a.IsAdmin && a.IsEnable {
-			adminAccount = a
-			break
-		}
+	if targetAccount == nil {
+		return "", nil, fmt.Errorf("error: account not found %s in %s", userID, accountDBFilename)
 	}
-	if adminAccount == nil {
-		return "", nil, fmt.Errorf("error: no enabled admin account found in %s", accountDBFilename)
+	if !targetAccount.IsEnable {
+		return "", nil, fmt.Errorf("error: account is disabled %s", userID)
 	}
 
 	loginSessionDAO, err := account_state.NewLoginSessionDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "account_state.db"))
@@ -126,7 +162,7 @@ func issueLocalAdminSession(ctx context.Context, configDBRootDir string, device 
 
 	loginSession := &account_state.LoginSession{
 		ID:              sqlite3impl.GenerateNewID(),
-		UserID:          adminAccount.UserID,
+		UserID:          targetAccount.UserID,
 		Device:          device,
 		ApplicationName: "gkill",
 		SessionID:       sqlite3impl.GenerateNewID(),
@@ -144,7 +180,7 @@ func issueLocalAdminSession(ctx context.Context, configDBRootDir string, device 
 
 	cleanup = func() {
 		if _, err := loginSessionDAO.DeleteLoginSession(ctx, loginSession.SessionID); err != nil {
-			slog.Log(ctx, gkill_log.Debug, "error at delete local admin session", "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error at delete local session", "error", err)
 		}
 		if err := loginSessionDAO.Close(ctx); err != nil {
 			slog.Log(ctx, gkill_log.Debug, "error at close login session dao", "error", err)

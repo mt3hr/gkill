@@ -44,6 +44,7 @@ func init() {
 	ServerCmd.AddCommand(common.UpdateCacheCmd)
 	ServerCmd.AddCommand(common.ClearCacheCmd)
 	ServerCmd.AddCommand(common.ResetPasswordCmd)
+	ServerCmd.AddCommand(common.AutoTagCmd)
 }
 
 var (
