@@ -49,6 +49,9 @@
                 :application_config="application_config" :gkill_api="gkill_api"
                 @received_errors="onReceivedErrors"
                 @received_messages="onReceivedMessages"
+                @registered_kyou="onRegisteredKyou"
+                @updated_kyou="onUpdatedKyou"
+                @saved_kyou_by_kftl="onSavedKyouByKftl"
                 ref="kftl_view" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
@@ -114,6 +117,9 @@ const {
     onCloseMessage,
     onReceivedErrors,
     onReceivedMessages,
+    onRegisteredKyou,
+    onUpdatedKyou,
+    onSavedKyouByKftl,
     onRequestedReloadApplicationConfig,
 } = useKftlPage()
 

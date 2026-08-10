@@ -36,7 +36,12 @@ export function useFindQueryEditorDialog(options: {
     async function show(find_kyou_query: FindKyouQuery): Promise<void> {
         return nextTick(async () => {
             cloned_find_kyou_query.value = find_kyou_query.clone()
-            cloned_find_kyou_query.value.query_id = props.gkill_api.generate_uuid()
+            // query_idが空=「値が未セット」の印で、エディタ側がApplicationConfig既定を
+            // 適用する判定に使う。ここで無条件に採番すると空の印が潰れて既定が効かない。
+            // セット済みのクエリだけ、呼び出し元のIDと衝突しないよう新IDへ振り直す
+            if (cloned_find_kyou_query.value.query_id !== "") {
+                cloned_find_kyou_query.value.query_id = props.gkill_api.generate_uuid()
+            }
             is_show_dialog.value = true
             received_application_config.value = new ApplicationConfig()
             await nextTick(() => received_application_config.value = props.application_config) // TODO なんかApplicationConfigが切り替わったタイミングでQueryEditorが読み込まれるっぽい・・・

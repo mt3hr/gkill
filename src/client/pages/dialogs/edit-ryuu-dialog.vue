@@ -20,7 +20,7 @@
 
       <div class="gkill-floating-dialog__body">
         <v-card variant="flat" class="edit_ryuu_dialog_view">
-          <RyuuView v-model="model_value" :application_config="application_config" :gkill_api="gkill_api"
+          <RyuuView :application_config="application_config" :gkill_api="gkill_api"
             :editable="true" :find_kyou_query_default="new FindKyouQuery()" :target_kyou="new Kyou()"
             @requested_apply_ryuu_struct="(ryuu_data: Record<string, unknown>) => { emits('requested_apply_ryuu_struct', ryuu_data) }"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
@@ -38,7 +38,6 @@ import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import HelpDialog from './help-dialog.vue'
 import RyuuView from '../views/ryuu-view.vue'
-import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { EditRyuuDialogEmits } from './edit-ryuu-dialog-emits'
 import type { EditRyuuDialogProps } from './edit-ryuu-dialog-props'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -49,7 +48,6 @@ import { i18n } from '@/i18n'
 
 const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
-const model_value = defineModel<ApplicationConfig>()
 const props = defineProps<EditRyuuDialogProps>()
 const emits = defineEmits<EditRyuuDialogEmits>()
 

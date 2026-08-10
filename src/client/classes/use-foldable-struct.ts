@@ -4,6 +4,7 @@ import type { FoldableStructProps } from '@/pages/views/foldable-struct-props'
 import { CheckState } from '@/pages/views/check-state'
 import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
 import { DropTypeFoldableStruct } from '@/classes/api/drop-type-foldable-struct'
+import { useDeviceKind } from '@/classes/use-device-kind'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
@@ -27,9 +28,20 @@ export function useFoldableStruct(options: {
     // ── Computed ──
     const font_size_px = computed(() => font_size.value.valueOf().toString().concat("px"))
 
-    // タッチデバイス（モバイル）ではドラッグを無効にする。ロングプレスでcontextmenuイベントを発火させるため。
-    const is_mobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    const effective_draggable = computed(() => is_mobile ? false : props.is_editable)
+    // ドラッグ&ドロップでの並べ替えはPCでのみ有効にする。
+    // タブレット・スマートフォンでは、コンテキストメニューの「上へ / 下へ / フォルダへ移動」
+    // （classes/foldable-struct-move.ts）で並べ替えるので操作不能にはならない。
+    const { is_pc, has_touch } = useDeviceKind()
+    const effective_draggable = computed(() => is_pc.value && props.is_editable)
+
+    // ロングプレスでcontextmenuを補完するのは「他に開く手段が無い端末」だけにする。
+    // タッチPCでこれを有効にすると、Windows の Chrome / Edge が指の長押しに対して
+    // 発火するネイティブ contextmenu（約500ms）と、v-long-press（600ms、
+    // long-press.ts は pointerType を見ない）が二重に発火してメニューが2回開く。
+    // タッチPCには右クリックがあるので、無効にしても機能は欠落しない。
+    // なおスマートフォン・タブレットでは has_touch && !is_pc が旧 is_mobile と
+    // 論理的に一致するため、挙動は変わらない。
+    const use_long_press_context_menu = computed(() => has_touch.value && !is_pc.value)
 
     // ── Watchers ──
     watch(() => props.is_open, () => {
@@ -211,8 +223,8 @@ export function useFoldableStruct(options: {
     }
 
     function drag_start(e: DragEvent): void {
-        // 編集が有効でなければ何もしない
-        if (!props.is_editable) {
+        // ドラッグが有効でなければ何もしない
+        if (!effective_draggable.value) {
             return
         }
 
@@ -222,8 +234,8 @@ export function useFoldableStruct(options: {
     }
 
     function drop(e: DragEvent): void {
-        // 編集が有効でなければ何もしない
-        if (!props.is_editable) {
+        // ドラッグが有効でなければ何もしない
+        if (!effective_draggable.value) {
             return
         }
 
@@ -376,6 +388,11 @@ export function useFoldableStruct(options: {
     }
 
     function dragover(e: DragEvent): void {
+        // ドラッグが有効でない端末では、preventDefault()して
+        // 全行をドロップ対象にしてしまわないようにする
+        if (!effective_draggable.value) {
+            return
+        }
         if (e.dataTransfer) {
             e.dataTransfer.dropEffect = "move"
         }
@@ -447,7 +464,7 @@ export function useFoldableStruct(options: {
 
     // iOS Safariは長押しでcontextmenuイベントを発火しないため、v-long-pressで補完する
     function onLongPressItem(e: PointerEvent) {
-        if (!is_mobile || !props.is_editable) {
+        if (!use_long_press_context_menu.value || !props.is_editable) {
             return
         }
         emits('contextmenu_item', e, props.struct_obj.id)

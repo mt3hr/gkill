@@ -2,7 +2,7 @@ import { nextTick, type Ref, ref, watch } from 'vue'
 import type { EditKFTLTemplateStructViewEmits } from '@/pages/views/edit-kftl-template-struct-view-emits'
 import type { EditKFTLTemplateStructViewProps } from '@/pages/views/edit-kftl-template-struct-view-props'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
+import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
@@ -45,9 +45,9 @@ export function useEditKftlTemplateStructView(options: {
         if (!foldable_struct.value) {
             return
         }
-        let target_struct_object: KFTLTemplateStructElementData | null = null
-        let kftl_template_walk = (_kftl_template: KFTLTemplateStructElementData): void => { }
-        kftl_template_walk = (kftl_template: KFTLTemplateStructElementData): void => {
+        let target_struct_object: KFTLTemplateElementData | null = null
+        let kftl_template_walk = (_kftl_template: KFTLTemplateElementData): void => { }
+        kftl_template_walk = (kftl_template: KFTLTemplateElementData): void => {
             const kftl_template_children = kftl_template.children
             if (kftl_template.id === id) {
                 target_struct_object = kftl_template
@@ -68,9 +68,9 @@ export function useEditKftlTemplateStructView(options: {
         edit_kftl_template_struct_element_dialog.value?.show(target_struct_object)
     }
 
-    function update_kftl_template_struct(kftl_template_struct_obj: KFTLTemplateStructElementData): void {
-        let kftl_template_walk = (_kftl_template: KFTLTemplateStructElementData): boolean => false
-        kftl_template_walk = (kftl_template: KFTLTemplateStructElementData): boolean => {
+    function update_kftl_template_struct(kftl_template_struct_obj: KFTLTemplateElementData): void {
+        let kftl_template_walk = (_kftl_template: KFTLTemplateElementData): boolean => false
+        kftl_template_walk = (kftl_template: KFTLTemplateElementData): boolean => {
             const kftl_template_children = kftl_template.children
             if (kftl_template.id === kftl_template_struct_obj.id) {
                 return true
@@ -102,24 +102,24 @@ export function useEditKftlTemplateStructView(options: {
     }
 
     async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
-        const kftl_template_struct_element = new KFTLTemplateStructElementData()
+        const kftl_template_struct_element = new KFTLTemplateElementData()
         kftl_template_struct_element.id = folder_struct_element.id
         kftl_template_struct_element.is_dir = true
         kftl_template_struct_element.title = folder_struct_element.folder_name
-        kftl_template_struct_element.children = new Array<KFTLTemplateStructElementData>()
+        kftl_template_struct_element.children = new Array<KFTLTemplateElementData>()
         kftl_template_struct_element.key = folder_struct_element.folder_name
         kftl_template_struct_element.name = folder_struct_element.folder_name
         cloned_application_config.value.kftl_template_struct.children?.push(kftl_template_struct_element)
     }
 
-    async function add_kftl_template_struct_element(kftl_template_struct_element: KFTLTemplateStructElementData): Promise<void> {
+    async function add_kftl_template_struct_element(kftl_template_struct_element: KFTLTemplateElementData): Promise<void> {
         cloned_application_config.value.kftl_template_struct.children?.push(kftl_template_struct_element)
     }
 
     function show_confirm_delete_kftl_template_struct_dialog(id: string): void {
-        let target_struct_object: KFTLTemplateStructElementData | null = null
-        let kftl_template_walk = (_kftl_template_struct: KFTLTemplateStructElementData): void => { }
-        kftl_template_walk = (kftl_template_struct: KFTLTemplateStructElementData): void => {
+        let target_struct_object: KFTLTemplateElementData | null = null
+        let kftl_template_walk = (_kftl_template_struct: KFTLTemplateElementData): void => { }
+        kftl_template_walk = (kftl_template_struct: KFTLTemplateElementData): void => {
             const kftl_template_children = kftl_template_struct.children
             if (kftl_template_struct.id === id) {
                 target_struct_object = kftl_template_struct
@@ -140,8 +140,8 @@ export function useEditKftlTemplateStructView(options: {
     }
 
     function delete_kftl_template_struct(id: string): void {
-        let kftl_template_walk = (_kftl_template_struct: KFTLTemplateStructElementData): boolean => false
-        kftl_template_walk = (kftl_template_struct: KFTLTemplateStructElementData): boolean => {
+        let kftl_template_walk = (_kftl_template_struct: KFTLTemplateElementData): boolean => false
+        kftl_template_walk = (kftl_template_struct: KFTLTemplateElementData): boolean => {
             const kftl_template_children = kftl_template_struct.children
             if (kftl_template_struct.id === id) {
                 return true

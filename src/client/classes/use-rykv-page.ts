@@ -8,9 +8,9 @@ import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
-import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
-import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
+import type { Kyou } from '@/classes/datas/kyou'
+import { useConfigStructSync } from '@/classes/use-config-struct-sync'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -33,8 +33,12 @@ export function useRykvPage() {
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
 
-    // ── 連打/連続登録で二重に通信しないため ──
-    let tag_struct_refresh_promise: Promise<void> | null = null
+    // ── 板ツリー/タグツリーの追随 ──
+    const { check_tag_update, check_mi_board_update, resync_structs } = useConfigStructSync({
+        application_config,
+        gkill_api: () => gkill_api.value,
+        write_errors: (errors) => write_errors(errors),
+    })
 
     // ── Helpers ──
     const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
@@ -143,49 +147,6 @@ export function useRykvPage() {
         application_config_dialog.value?.show()
     }
 
-    function tag_struct_has(tag_struct: TagStructElementData, tag_name: string): boolean {
-        if (tag_struct.tag_name === tag_name) return true
-        for (const c of (tag_struct.children ?? [])) {
-            if (tag_struct_has(c, tag_name)) return true
-        }
-        return false
-    }
-
-    async function check_tag_update(tag: Tag): Promise<void> {
-        const name = tag.tag
-        if (!name) return
-
-        const req = new GetAllTagNamesRequest()
-        req.force_reget = true
-        await gkill_api.value.get_all_tag_names(req)
-
-        if (tag_struct_has(application_config.value.tag_struct, name)) return
-
-        // すでに更新中ならそれに乗る
-        if (tag_struct_refresh_promise) {
-            await tag_struct_refresh_promise
-            return
-        }
-
-        tag_struct_refresh_promise = (async () => {
-            const errors = await application_config.value.append_not_found_tags()
-            if (errors && errors.length) {
-                write_errors(errors)
-                return
-            }
-
-            application_config.value = application_config.value.clone()
-
-            gkill_api.value.set_saved_application_config(application_config.value)
-        })()
-
-        try {
-            await tag_struct_refresh_promise
-        } finally {
-            tag_struct_refresh_promise = null
-        }
-    }
-
     // プッシュ通知登録用
     function url_base64_to_uint8_array(base64_string: string): Uint8Array {
         const padding = '='.repeat((4 - (base64_string.length % 4)) % 4);
@@ -267,8 +228,8 @@ export function useRykvPage() {
         // no-op in page
     }
 
-    function onRegisteredKyou(): void {
-        // no-op in page
+    function onRegisteredKyou(kyou: Kyou): void {
+        check_mi_board_update(kyou)
     }
 
     function onRegisteredTag(tag: Tag): void {
@@ -283,8 +244,8 @@ export function useRykvPage() {
         // no-op in page
     }
 
-    function onUpdatedKyou(): void {
-        // no-op in page
+    function onUpdatedKyou(kyou: Kyou): void {
+        check_mi_board_update(kyou)
     }
 
     function onUpdatedTag(tag: Tag): void {
@@ -321,17 +282,19 @@ export function useRykvPage() {
         'deleted_tag': () => onDeletedTag(),
         'deleted_text': () => onDeletedText(),
         'deleted_notification': () => onDeletedNotification(),
-        'registered_kyou': () => onRegisteredKyou(),
+        'registered_kyou': (kyou: Kyou) => onRegisteredKyou(kyou),
         'registered_tag': (tag: Tag) => onRegisteredTag(tag),
         'registered_text': () => onRegisteredText(),
         'registered_notification': () => onRegisteredNotification(),
-        'updated_kyou': () => onUpdatedKyou(),
+        'updated_kyou': (kyou: Kyou) => onUpdatedKyou(kyou),
         'updated_tag': (tag: Tag) => onUpdatedTag(tag),
         'updated_text': () => onUpdatedText(),
         'requested_show_application_config_dialog': () => onRequestedShowApplicationConfigDialog(),
         'received_errors': (errors: Array<GkillError>) => onReceivedErrors(errors),
         'received_messages': (messages: Array<GkillMessage>) => onReceivedMessages(messages),
         'requested_reload_application_config': () => onRequestedReloadApplicationConfig(),
+        // KFTL/MKFL はタグを registered_tag で上げてこないので、保存完了で両方取り直す
+        'saved_kyou_by_kftl': () => resync_structs(),
     }
 
     // ── beforeunload guard ──

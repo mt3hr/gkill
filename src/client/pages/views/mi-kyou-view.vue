@@ -1,29 +1,14 @@
 <template>
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height" :draggable="effective_draggable"
         @dragstart="(e: DragEvent) => onDragStart(e)">
-        <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
-            <v-col cols="auto" class="pa-0 ma-0" :style="mi_title_style">
-                <table class="pa-0 ma-0">
-                    <tbody>
-                        <tr>
-                            <td class="pa-0 ma-0">
-                                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()"
-                                    :readonly="is_requested_submit" />
-                            </td>
-                            <td class="pa-0 ma-0">
-                                <div class="py-1 mi_title">{{ kyou.typed_mi.title }}</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </v-col>
-            <v-spacer />
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-card-title>
-                    <div class="py-1 mi_board_name">{{ kyou.typed_mi.board_name }}</div>
-                </v-card-title>
-            </v-col>
-        </v-row>
+        <div v-if="kyou.typed_mi" class="mi_head">
+            <v-checkbox class="mi_check" v-model="is_checked_mi" hide-details @click="clicked_mi_check()"
+                :readonly="is_requested_submit" />
+            <div class="py-1 mi_title" :title="kyou.typed_mi.title">{{ kyou.typed_mi.title }}</div>
+            <v-card-title class="mi_board">
+                <div class="py-1 mi_board_name">{{ kyou.typed_mi.board_name }}</div>
+            </v-card-title>
+        </div>
         <div :style="{ 'padding-top': '30px' }">
             <div v-if="kyou.typed_mi && kyou.typed_mi.estimate_start_time">
                 <span>{{ i18n.global.t("MI_START_DATE_TIME_TITLE") }}：</span>
@@ -61,7 +46,6 @@ const {
     cloned_kyou: _cloned_kyou,
     is_requested_submit,
     is_checked_mi,
-    mi_title_style,
     effective_draggable,
     show_context_menu,
     clicked_mi_check,
@@ -72,7 +56,32 @@ const {
 defineExpose({ show_context_menu })
 </script>
 <style lang="css" scoped>
-.mi_title_card {
-    border: solid white 0px;
+/*
+ * チェックボックス・タイトル・板名を1行に収める。
+ * v-checkboxのルートは.v-input--horizontalのgridで中身のトラックがminmax(0,1fr)なので、
+ * min-content幅が0になりflexの縮小がそのまま効く。タイトルが長いほど縮小の取り分を
+ * 持っていかれ、チェックボックスが幅0まで潰れてタイトルの下に隠れてしまう。
+ * 縮んでよいのはタイトルだけにして、溢れたら三点リーダにする(全文はtitle属性で読める)。
+ * MiReKyou(.mirekyou_head)と同じ作りに揃えてある
+ */
+.mi_head {
+    display: flex;
+    align-items: center;
+}
+
+.mi_check {
+    flex: 0 0 auto;
+}
+
+.mi_title {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mi_board {
+    flex: 0 0 auto;
 }
 </style>

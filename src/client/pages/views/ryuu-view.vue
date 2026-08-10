@@ -72,12 +72,10 @@ import RyuuItemView from './ryuu-item-view.vue'
 import RelatedKyouQuery from '../../classes/dnote/related-kyou-query'
 import type RyuuViewProps from './ryuu-view-props'
 import type RyuuViewEmits from './ryuu-view-emits'
-import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useRyuuView } from '@/classes/use-ryuu-view'
 
-const model_value = defineModel<ApplicationConfig>()
 const props = defineProps<RyuuViewProps>()
 const emits = defineEmits<RyuuViewEmits>()
 
@@ -111,7 +109,7 @@ const {
     ryuuListItemRequestHandlers,
     ryuuListItemFocusHandlers,
     rykvDialogHandlers,
-} = useRyuuView({ props, emits, model_value })
+} = useRyuuView({ props, emits })
 </script>
 
 <style lang="css" scoped>
@@ -128,6 +126,21 @@ const {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
+}
+
+/* 編集時(ダイアログ表示)は横スクロールを外側1本に集約する。
+   App.vue の .gkill-floating-dialog__body .v-card { overflow: auto } が入れ子のv-card全部に効くので、
+   400pxの下限(外側)と各アイテム行のカード(内側)で横スクロールバーが二重に出ていた。
+   ダイアログ外の経路には rykv-view.vue の .ryuu_view.dummy :deep(.ryuu_views) に同じ手当てがある */
+.ryuu_views.ryuu_editable_mode {
+    min-width: 0;
+}
+
+/* hidden で潰すと fit-content 幅の KyouView がクリップされて読めなくなるので visible にし、
+   溢れは1つ外の箱(ryuu-view のv-card)に受けさせる */
+.ryuu_editable_mode :deep(.related_kyou_list_item) {
+    overflow: visible;
+    flex: 0 0 auto;
 }
 
 /* アイテムテーブル領域: 最小高さ80px + ダイアログ拡大時の余白吸収 */

@@ -1,7 +1,7 @@
 <template>
     <div>
         <div :class="text_class" @contextmenu.prevent="async (e: PointerEvent) => show_context_menu(e)">
-            <div class="text_content">{{ text.text }}</div>
+            <div class="text_content"><LinkifiedText :text="text.text" /></div>
         </div>
         <AttachedTextContextMenu :application_config="application_config" :gkill_api="gkill_api" :text="text"
             :kyou="kyou" :highlight_targets="highlight_targets"
@@ -32,6 +32,7 @@ import type { AttachedTextProps } from './attached-text-props'
 import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
 import type { KyouViewEmits } from './kyou-view-emits'
 import AttachedTextContextMenu from './attached-text-context-menu.vue'
+import LinkifiedText from './linkified-text.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'

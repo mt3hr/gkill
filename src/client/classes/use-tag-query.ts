@@ -4,7 +4,7 @@ import type { TagQueryProps } from '@/pages/views/tag-query-props'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from '@/pages/views/check-state'
-import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
+import { apply_check_state_to_struct } from '@/classes/foldable-struct-check'
 
 export function useTagQuery(options: {
     props: TagQueryProps,
@@ -31,7 +31,8 @@ export function useTagQuery(options: {
         cloned_application_config.value = props.application_config.clone()
         skip_emits_this_tick.value = true
         nextTick(() => skip_emits_this_tick.value = false)
-        update_check(cloned_query.value.tags, CheckState.checked, true, true)
+        // tags は null（フィルタ未使用。plaing検索の既定クエリ等）でありうる
+        update_check(cloned_query.value.tags ?? [], CheckState.checked, true, true)
         if (!props.inited) {
             emits('inited')
         }
@@ -70,50 +71,7 @@ export function useTagQuery(options: {
     }
 
     function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean) {
-        if (pre_uncheck_all) {
-            let f = (_struct: FoldableStructModel) => { }
-            const func = (struct: FoldableStructModel) => {
-                struct.is_checked = false
-                struct.indeterminate = false
-                if (struct.children) {
-                    struct.children.forEach(child => {
-                        f(child)
-                    })
-                }
-            }
-            f = func
-            f(cloned_application_config.value.tag_struct)
-        }
-
-        for (let i = 0; i < items.length; i++) {
-            const key_name = items[i]
-            let f = (_struct: FoldableStructModel) => { }
-            const func = (struct: FoldableStructModel) => {
-                if (struct.key === key_name) {
-                    switch (is_checked) {
-                        case CheckState.checked:
-                            struct.is_checked = true
-                            struct.indeterminate = false
-                            break
-                        case CheckState.unchecked:
-                            struct.is_checked = false
-                            struct.indeterminate = false
-                            break
-                        case CheckState.indeterminate:
-                            struct.is_checked = false
-                            struct.indeterminate = true
-                            break
-                    }
-                }
-                if (struct.children) {
-                    struct.children.forEach(child => {
-                        f(child)
-                    })
-                }
-            }
-            f = func
-            f(cloned_application_config.value.tag_struct)
-        }
+        apply_check_state_to_struct(cloned_application_config.value.tag_struct, items, is_checked, pre_uncheck_all)
 
         const checked_items = foldable_struct.value?.get_selected_items()
         if (checked_items) {

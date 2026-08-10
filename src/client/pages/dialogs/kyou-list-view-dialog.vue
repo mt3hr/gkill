@@ -10,12 +10,12 @@
                 <div class="gkill-floating-dialog__spacer"></div>
                 <v-checkbox v-model="ui.isTransparent.value" color="white" size="small" variant="flat"
                     :label="i18n.global.t('TRANSPARENT_TITLE')" hide-details />
-                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat"> 
+                <v-btn size="small" class="rounded-sm mx-auto" icon @click.prevent="hide" hide-details :color="'primary'" variant="flat">
           <v-icon>mdi-close</v-icon>
         </v-btn>
             </div>
 
-            <div class="gkill-floating-dialog__body"> 
+            <div class="gkill-floating-dialog__body">
 
                 <!-- 件数表示以外の残り全部を占める。basis 0 + grow 1 で body の高さから素直に決まる -->
                 <v-card v-if="is_show_dialog" class="kyou_list_view_dialog_view pa-2" style="flex: 1 1 0; min-height: 0; width: 100%;"
@@ -44,46 +44,53 @@
             </div>
         </div>
     </Teleport>
+
+    <!-- このダイアログの中から開くrykvダイアログは、ページ最上位ではなくここでホストする。
+         上へ持ち上げるとタグ追加等の requested_reload_kyou がページにしか届かず、
+         このリストに戻ってこない（Vueのイベントは上方向にしか流れない）。
+         Teleportの外に置くのは、中に入れるとリストダイアログを閉じた瞬間に
+         子ダイアログが強制unmountされ、ダイアログ履歴の巻き戻しと競合するため。
+         dialogs が空なら v-for は0回なのでDOMは一切生まない -->
+    <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
+        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" v-on="dialogHostHandlers" />
 </template>
 <script setup lang="ts">
-import { computed, onBeforeUnmount, type ComponentPublicInstance, type Ref, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, type ComponentPublicInstance, ref, watch } from 'vue'
 import KyouListView from '../views/kyou-list-view.vue';
+import RykvDialogHost from '../views/rykv-dialog-host.vue';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 import type { Kyou } from '@/classes/datas/kyou';
 import type { KyouListViewDialogProps } from './kyou-list-view-dialog-props';
 import type { KyouListViewEmits } from '../views/kyou-list-view-emits';
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay';
+import { useKyouListViewDialog } from '@/classes/use-kyou-list-view-dialog';
+import { i18n } from '@/i18n'
+import { useFloatingDialog } from "@/classes/use-floating-dialog"
+
+// ルートが Teleport と RykvDialogHost の2つになるので、props に無い属性
+// (kyou_height / width 等。中の KyouListView 用に呼び出し元が付けている) の
+// 自動継承ができず警告になる。元々どこにも当てていない属性なので継承を切る
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps<KyouListViewDialogProps>()
 const model_value = defineModel<Array<Kyou>>()
 const emits = defineEmits<KyouListViewEmits>()
 
-// このダイアログは自分が抱えているリストを自分で更新する。
-// 付随データ(Tag/Text/Notification)のCRUDと新規Kyouは、このリストの内容を
-// 変えないので意図的に握りつぶす。
-const crudRelayHandlers = build_kyou_dialog_relay(emits, {
-  'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-  'deleted_kyou': (deleted_kyou: Kyou) => onDeletedKyou(deleted_kyou),
-  'updated_kyou': (updated_kyou: Kyou) => reload_kyou(updated_kyou),
-  'registered_kyou': () => { /* intentionally ignored */ },
-  'registered_tag': () => { /* intentionally ignored */ },
-  'updated_tag': () => { /* intentionally ignored */ },
-  'deleted_tag': () => { /* intentionally ignored */ },
-  'registered_text': () => { /* intentionally ignored */ },
-  'updated_text': () => { /* intentionally ignored */ },
-  'deleted_text': () => { /* intentionally ignored */ },
-  'registered_notification': () => { /* intentionally ignored */ },
-  'updated_notification': () => { /* intentionally ignored */ },
-  'deleted_notification': () => { /* intentionally ignored */ },
-})
+const {
+    // State
+    is_show_dialog,
+    opened_dialogs,
+
+    // Business logic
+    show,
+    hide,
+
+    // Event relay objects
+    crudRelayHandlers,
+    dialogHostHandlers,
+} = useKyouListViewDialog({ props, emits, model_value })
 
 defineExpose({ show, hide })
 
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { i18n } from '@/i18n'
-const is_show_dialog: Ref<boolean> = ref(false)
-useDialogHistoryStack(is_show_dialog)
-import { useFloatingDialog } from "@/classes/use-floating-dialog"
 const ui = useFloatingDialog("kyou-list-view-dialog", {
   centerMode: "always",
   onEscape: () => hide(),
@@ -125,40 +132,6 @@ watch(list_card_ref, (el, old_el) => {
     }
 }, { flush: 'post' })
 onBeforeUnmount(() => { card_ro?.disconnect(); card_ro = null })
-
-async function show(): Promise<void> {
-    is_show_dialog.value = true
-}
-async function hide(): Promise<void> {
-    close_dialog_via_history(is_show_dialog)
-}
-
-async function reload_kyou(kyou: Kyou): Promise<void> {
-    (async (): Promise<void> => {
-        const kyous_list = model_value.value!
-        for (let j = 0; j < kyous_list.length; j++) {
-            const kyou_in_list = kyous_list[j]
-            if (kyou.id === kyou_in_list.id) {
-                const updated_kyou = kyou.clone()
-                await updated_kyou.reload(true)
-                await updated_kyou.load_all()
-                kyous_list.splice(j, 1, updated_kyou)
-            }
-        }
-    })();
-}
-
-function onDeletedKyou(deleted_kyou: Kyou): void {
-    if (!model_value.value) {
-        return
-    }
-    for (let i = model_value.value.length - 1; i >= 0; i--) {
-        if (model_value.value[i].id === deleted_kyou.id) {
-            model_value.value.splice(i, 1)
-        }
-    }
-    emits('deleted_kyou', deleted_kyou)
-}
 </script>
 
 <style scoped lang="css">
@@ -218,4 +191,3 @@ function onDeletedKyou(deleted_kyou: Kyou): void {
     min-height: 0;
 }
 </style>
-

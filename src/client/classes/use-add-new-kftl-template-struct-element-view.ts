@@ -1,6 +1,6 @@
 import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
-import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
+import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { AddNewKFTLTemplateStructElementViewProps } from '@/pages/views/add-new-kftl-template-struct-element-view-props'
@@ -32,7 +32,7 @@ export function useAddNewKftlTemplateStructElementView(options: {
             return
         }
 
-        const kftl_template_struct_element = new KFTLTemplateStructElementData()
+        const kftl_template_struct_element = new KFTLTemplateElementData()
         kftl_template_struct_element.id = props.gkill_api.generate_uuid()
         kftl_template_struct_element.is_dir = false
         kftl_template_struct_element.key = title.value

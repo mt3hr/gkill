@@ -50,6 +50,7 @@
                 @registered_notification="onMkflViewRegisteredNotification"
                 @updated_kyou="onMkflViewUpdatedKyou"
                 @updated_tag="onMkflViewUpdatedTag"
+                @saved_kyou_by_kftl="onMkflViewSavedKyouByKftl"
                 ref="mkfl_view" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
@@ -125,6 +126,7 @@ const {
     onMkflViewRegisteredText,
     onMkflViewRegisteredNotification,
     onMkflViewUpdatedKyou,
+    onMkflViewSavedKyouByKftl,
     onMkflViewUpdatedTag,
     onApplicationConfigReceivedErrors,
     onApplicationConfigReceivedMessages,

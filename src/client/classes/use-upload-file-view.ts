@@ -10,6 +10,7 @@ import { FileData } from '@/classes/api/file-data'
 import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import type DecideRelatedTimeUploadedFileDialog from '@/pages/dialogs/decide-related-time-uploaded-file-dialog.vue'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import { refresh_kyou_in_list } from '@/classes/kyou-reload'
 
 export function useUploadFileView(options: {
     props: UploadFileViewProps,
@@ -266,15 +267,9 @@ export function useUploadFileView(options: {
     }
 
     async function reload_kyou(kyou: Kyou): Promise<void> {
-        for (let i = 0; i < uploaded_kyous.value.length; i++) {
-            const uploaded_kyou = uploaded_kyous.value[i]
-            if (kyou.id === uploaded_kyou.id) {
-                const updated_kyou = kyou.clone()
-                await updated_kyou.reload(true)
-                await updated_kyou.load_all()
-                uploaded_kyous.value.splice(i, 1, updated_kyou)
-            }
-        }
+        // 以前はここでキャッシュ削除も is_typed_data_loaded のリセットも
+        // load_all の force_attached も無く、添付タグを引き直せていなかった
+        await refresh_kyou_in_list(uploaded_kyous.value, kyou)
     }
 
     function remove_uploaded_kyou(deleted_kyou: Kyou): void {

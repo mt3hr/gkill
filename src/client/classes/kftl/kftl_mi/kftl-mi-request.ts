@@ -90,6 +90,12 @@ export class KFTLMiRequest extends KFTLRequest {
         this.board_name = board_name
     }
 
+    // 板名行を書かなかったときは空のまま。do_request が既定の板へフォールバックするので、
+    // 「ユーザが新しい板名を入力した」ことにはならない
+    get_mi_board_name(): string {
+        return this.board_name
+    }
+
     async set_limit_time(limit_time: Date | null): Promise<void> {
         this.limit_time = limit_time
     }

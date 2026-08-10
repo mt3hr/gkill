@@ -12,6 +12,19 @@
                 :inited="inited_sidebar_header_for_query_sidebar"
                 @requested_search_with_update_cache="onSidebarHeaderRequestedSearchWithUpdateCache"
                 @requested_clear_find_query="emits_default_query()" ref="sidebar_header" />
+            <v-avatar v-if="saved_find_querys.length > 0" color="primary" class="saved_find_query_fab">
+                <v-menu transition="slide-x-transition">
+                    <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-bookmark-multiple" variant="text" v-bind="props"
+                            :title="i18n.global.t('OPEN_SAVED_FIND_QUERY_LIST_TITLE')" />
+                    </template>
+                    <v-list>
+                        <v-list-item v-for="item in saved_find_querys" :key="item.id" @click="apply_saved_query(item)">
+                            <v-list-item-title>{{ item.title }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+            </v-avatar>
         </v-card>
         <div class="rykv_sidebar">
             <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
@@ -65,6 +78,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import CalendarQuery from './calendar-query.vue'
 import KeywordQuery from './keyword-query.vue'
 import MapQuery from './map-query.vue'
@@ -111,10 +125,12 @@ const {
     sidebar_height,
     header_top_px,
     sidebar_top_px,
+    saved_find_querys,
 
     // Business logic / exposed
     generate_query,
     get_default_query,
+    apply_saved_query,
 
     // Template event handlers
     emits_current_query,
@@ -150,6 +166,16 @@ defineExpose({ generate_query, get_default_query })
     border-top: solid 2px #2672ed;
     z-index: 10000;
     border-radius: 0;
+    /* 保存済み検索条件FABをバーの上へはみ出させるため(v-cardの既定はhidden) */
+    overflow: visible;
+}
+
+.saved_find_query_fab {
+    position: absolute;
+    top: -60px;
+    right: 10px;
+    height: 50px;
+    width: 50px;
 }
 
 .sidebar_header {

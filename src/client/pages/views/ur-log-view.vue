@@ -30,7 +30,7 @@
                         <img v-if="kyou.typed_urlog" class="urlog_thumbnail" :src="thumbnail_src" />
                     </td>
                     <td>
-                        <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>
+                        <div v-if="kyou.typed_urlog" class="urlog_description"><LinkifiedText :text="kyou.typed_urlog.description" /></div>
                     </td>
                 </tr>
             </tbody>
@@ -62,6 +62,7 @@
 import type { URLogViewProps } from './ur-log-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import URLogContextMenu from './ur-log-context-menu.vue'
+import LinkifiedText from './linkified-text.vue'
 import { useURLogView } from '@/classes/use-ur-log-view'
 
 const props = defineProps<URLogViewProps>()

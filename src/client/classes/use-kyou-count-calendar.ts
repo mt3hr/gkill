@@ -22,6 +22,8 @@ export function useKyouCountCalendar(options: {
     const date = ref(new Date(Date.now()))
     const slider_model: Ref<number> = ref(props.for_mi ? 0 : 86399)
     const events: Ref<Array<Record<string, unknown>>> = ref(new Array<Record<string, unknown>>())
+    // 非表示中にkyousが変わったら立てて、表示時にupdate_eventsで追いつくためのフラグ
+    let is_events_stale = false
 
     // ── Computed ──
     const time = computed(() => {
@@ -40,8 +42,22 @@ export function useKyouCountCalendar(options: {
     // 参照の入れ替えだけでなく件数の増減でも更新する。
     // 削除は use-rykv-view.ts の remove_kyou_from_list_by_id が splice で行うため、
     // 参照だけ見ていると Kyou を消してもカレンダーの件数バッジが更新されなかった。
+    // 非表示中(is_active=false)は集計しない。親はv-showで隠すだけなのでwatcherは生きており、
+    // 数十万件の検索のたびに見えないカレンダーへ全件集計していた
     watch([() => props.kyous, () => props.kyous.length], () => {
+        if (!props.is_active) {
+            is_events_stale = true
+            return
+        }
         update_events()
+    })
+
+    // 表示されたとき、非表示中に溜まった変更へ追いつく
+    watch(() => props.is_active, () => {
+        if (props.is_active && is_events_stale) {
+            is_events_stale = false
+            update_events()
+        }
     })
 
     watch(() => slider_model.value, () => {
@@ -49,6 +65,8 @@ export function useKyouCountCalendar(options: {
     })
 
     // ── Business logic ──
+    const pad2 = (n: number): string => ('00' + n.toString()).slice(-2)
+
     function update_events(): void {
         events.value.splice(0)
         if (!props.kyous) {
@@ -57,7 +75,9 @@ export function useKyouCountCalendar(options: {
         const date_event_map: Map<string, number> = new Map<string, number>()
         for (let i = 0; i < props.kyous.length; i++) {
             const kyou = props.kyous[i]
-            const date_str = moment(kyou.related_time).format("yyyy-MM-DD")
+            // momentは1件あたりの生成+formatが重く、数十万件で秒単位になるためネイティブで組む
+            const d = kyou.related_time
+            const date_str = d.getFullYear().toString() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate())
             const count = date_event_map.get(date_str)?.valueOf()
             if (count) {
                 date_event_map.set(date_str, count + 1)
@@ -67,10 +87,12 @@ export function useKyouCountCalendar(options: {
         }
 
         date_event_map.forEach((count: number, date_str: string): void => {
+            const [year, month, day] = date_str.split("-").map(Number)
+            const start = new Date(year, month - 1, day)
             events.value.push({
                 title: count.toString(),
-                start: moment(date_str).toDate(),
-                end: moment(date_str).add(1, 'day').add(-1, 'milliseconds').toDate(),
+                start: start,
+                end: new Date(new Date(year, month - 1, day + 1).getTime() - 1),
             })
         })
     }
@@ -133,7 +155,11 @@ export function useKyouCountCalendar(options: {
     })
 
     // ── Init calls ──
-    update_events()
+    if (props.is_active) {
+        update_events()
+    } else {
+        is_events_stale = true
+    }
     nextTick(() => {
         set_handler_on_calendar_date_texts()
     })
