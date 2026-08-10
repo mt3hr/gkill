@@ -7,7 +7,7 @@ gkill プロジェクト用のユーティリティスクリプト。
 | ファイル | 内容 |
 |---|---|
 | `dev.mjs` | `npm run dev` の実体。`--api=<url>` で接続先gkill_serverを指定してViteを起動する |
-| `license_getter.ps1` | 依存ライブラリのライセンス一覧を `LICENSES_DEPENDENCE` ファイルに出力する PowerShell スクリプト |
+| `license_getter.mjs` | `npm run license_getter` の実体。依存ライブラリのライセンス一覧を `LICENSES_DEPENDENCE` に出力する |
 | `verify_docs.mjs` | `npm run verify_docs` の実体。資料の件数・リンク・Mermaid・マニュアル鮮度等の機械検査 |
 | `build_manuals.mjs` | `resources/manual_src/` から `resources/manual/` を生成する |
 | `manual_build.mjs` | マニュアル生成の共通ロジック（`build_manuals.mjs` / `verify_docs.mjs` から利用） |
@@ -30,18 +30,25 @@ npm run dev -- --api=19999 --port 5180
 
 優先順位は `--api` > 環境変数 `GKILL_API_PROXY_TARGET` > 既定値。
 
-## license_getter.ps1
+## license_getter.mjs
 
-Go モジュール（`src/server/`）と Node.js プロジェクト（プロジェクトルート）の依存ライセンスを収集し、`LICENSES_DEPENDENCE` ファイルを生成する。
+依存パッケージのライセンス一覧をリポジトリルートの `LICENSES_DEPENDENCE` に生成する。4セクション構成:
 
-```powershell
-# プロジェクトルートから実行
-cd src/tools
-./license_getter.ps1
+| セクション | ソース | 内容 |
+|---|---|---|
+| Go Modules | `src/server` + `src/plugins` 配下の全 go.mod（5モジュール自動発見） | 推移依存含む本文全文。`path@version` でモジュール横断の重複排除。リポジトリ内 replace（自プロジェクト）は除外 |
+| Node.js Modules | ルート `package-lock.json` (v3) | ルート package.json の dependencies から到達可能な本番依存のみ（devDependencies はビルドツールチェーンであり配布物に含まれないため対象外）。本文全文 |
+| Android (Gradle) | `src/android` の `releaseRuntimeClasspath` | 推移依存のライセンス名+URL（POM から抽出、無ければ親 POM を追跡）。テスト専用依存は配布物に入らないため対象外 |
+| Wear OS (Gradle) | `src/wear_os` の phone_companion + watch_app（同上） | 同上（2プロジェクトを GAV で重複排除して統合） |
+
+```bash
+npm run license_getter                 # 全セクション収集
+npm run license_getter -- --skip-gradle  # Gradle 環境が無い環境用（該当セクションは未収集の注記のみ）
 ```
 
-**出力先:** `../../LICENSES_DEPENDENCE`（プロジェクトルートの `LICENSES_DEPENDENCE` ファイル）
+**前提:**
+- `go` が PATH にあること（`go mod tidy` は実行しない。go.mod / go.sum への副作用なし）
+- `npm ci`（または `npm i`）済み
+- Gradle 部のみ JDK + Android SDK（無ければ `--skip-gradle`）
 
-**必要なツール:**
-- `go-licenses` (`go install github.com/google/go-licenses@latest`)
-- Node.js + npm (`npm install` 済み)
+出力は全セクション成功後に一括書き出し（途中失敗で既存ファイルを壊さない）、エントリはソート済みで2回実行しても diff が出ない。

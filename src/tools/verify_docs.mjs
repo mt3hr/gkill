@@ -538,6 +538,19 @@ function buildCountAssertions(m) {
   //     - エラーコードが「406定数」なのに範囲は「〜ERR000401」のまま
   //   数字を書いた資料は漏れなくここに登録すること。
 
+  // ── 2026-08-10 追加分。
+  //   検査から漏れていたために、同じ数字が資料の中で自己矛盾していた箇所。実例:
+  //     - folder-structure.md のダイアログ数だけ 103 のまま（他は110）
+  //     - pages/ABOUT_TEST.md が冒頭「41 specファイル218テスト宣言」・
+  //       見出し「38 specファイル, 212テスト宣言」と同一ファイル内で食い違い
+  //     - pages/ABOUT_TEST.md の Composable ファイル数が 18 のまま（実測と乖離）
+  add('documents/reverse/folder-structure.md', `ダイアログコンポーネント（${m.dialogs}ファイル`)
+  add('src/client/pages/ABOUT_TEST.md', `${m.e2eTestFiles} specファイル${m.e2eTests}テスト宣言`)
+  add('src/client/pages/ABOUT_TEST.md', `### E2E テスト（${m.e2eTestFiles} specファイル, ${m.e2eTests}テスト宣言）`)
+  add('src/client/pages/ABOUT_TEST.md', `### Composable ユニットテスト（${m.unitComposablesFiles}ファイル）`)
+  // e2eTestFiles は *.spec.ts の数（auth.setup.ts は含まない）
+  add('documents/reverse/testing-guide.md', `| フロントエンド E2E | ${m.e2eTests} | ${m.e2eTestFiles}（+auth.setup.ts） |`)
+
   // gkill-api.ts の行数（100の位で丸め。「3,400」表記）
   const apiLines = m.gkillApiLinesApprox.toLocaleString('en-US')
   add('documents/reverse/frontend-architecture.md', `(~${apiLines}行)`)
