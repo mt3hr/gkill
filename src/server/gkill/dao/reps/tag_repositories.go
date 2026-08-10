@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"slices"
@@ -47,7 +48,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find tag: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find tag: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -127,7 +128,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -172,7 +173,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get tag: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get tag: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -237,7 +238,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get tags by tag name: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get tags by tag name: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -311,7 +312,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get tags by target id: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get tags by target id: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -377,7 +378,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -414,7 +415,6 @@ func (t TagRepositories) GetPath(ctx context.Context, id string) (string, error)
 	for _, rep := range t {
 		query := &find.FindQuery{
 			IDs:    ids,
-			UseIDs: true,
 		}
 		tags, err := rep.FindTags(ctx, query)
 		if len(tags) == 0 || err != nil {
@@ -468,7 +468,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get tag histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get tag histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -555,7 +555,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get tag histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get tag histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -673,7 +673,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get all tags: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get all tags: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -760,7 +760,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

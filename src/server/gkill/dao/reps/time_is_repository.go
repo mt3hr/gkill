@@ -49,7 +49,7 @@ type TimeIsRepository interface {
 	// 1件のtimeisは開始行（DataType=timeis_start）と終了行（timeis_end）に分かれて返ります。
 	// 時刻範囲での絞り込みは開始行なら開始時刻、終了行なら終了時刻に対して効きます。
 	// 終了行が含まれるのは query.IncludeEndTimeIs が true かつ終了時刻が入っているときだけです。
-	// query.UsePlaing が true のときは query.PlaingTime を挟んでいる計測（終了時刻が無いものは計測中とみなす）
+	// query.PlaingTime が非nilのときはその時刻を挟んでいる計測（終了時刻が無いものは計測中とみなす）
 	// だけに絞り、あわせて最新版のみに限定します。
 	//
 	// 単一リポジトリはUNIONで組み立てるため順序を保証しません。

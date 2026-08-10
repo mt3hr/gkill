@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"slices"
@@ -47,7 +48,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find text: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find text: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -127,7 +128,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -172,7 +173,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get text: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get text: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -237,7 +238,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get texts by target id: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get texts by target id: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -305,7 +306,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -342,7 +343,6 @@ func (t TextRepositories) GetPath(ctx context.Context, id string) (string, error
 	for _, rep := range t {
 		query := &find.FindQuery{
 			IDs:    ids,
-			UseIDs: true,
 		}
 		texts, err := rep.FindTexts(ctx, query)
 		if len(texts) == 0 || err != nil {
@@ -396,7 +396,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get text histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get text histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -484,7 +484,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get text histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get text histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -577,7 +577,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -69,7 +70,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find kyous: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -156,7 +157,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -236,7 +237,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -300,8 +301,7 @@ func (m *MiReKyouRepositories) getPath(ctx context.Context, id string) (string, 
 	ids := []string{id}
 	for _, rep := range m.MiReKyouRepositories {
 		query := &find.FindQuery{
-			IDs:    ids,
-			UseIDs: true,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -358,7 +358,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -411,7 +411,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -456,7 +456,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find mirekyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find mirekyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -546,7 +546,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get mirekyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get mirekyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -647,7 +647,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get mirekyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get mirekyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -743,7 +743,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find mirekyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find mirekyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -920,7 +920,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

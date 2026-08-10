@@ -1,8 +1,9 @@
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { collect_inited_tag_names } from '@/classes/api/find_query/collect-inited-tag-names'
+import { type Ref, ref, watch } from 'vue'
 import { CheckState } from '@/pages/views/check-state'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
-import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
+import { apply_check_state_to_struct } from '@/classes/foldable-struct-check'
 import type { TimeIsQueryEmits } from '@/pages/views/time-is-query-emits'
 import type { TimeIsQueryProps } from '@/pages/views/time-is-query-props'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -22,28 +23,29 @@ export function useTimeIsQuery(options: {
     const old_cloned_query: Ref<FindKyouQuery | null> = ref(null)
     const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
     const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
+    // チェックボックスのUI状態。クエリ上は timeis_words / timeis_tags の null 判定が担うため、
+    // ローカルrefに分離してprops片方向同期する（use-period-of-time-queryと同じパターン）
+    const use_timeis: Ref<boolean> = ref(props.find_kyou_query.timeis_words !== null)
+    const use_timeis_tags: Ref<boolean> = ref(props.find_kyou_query.timeis_tags !== null)
+    // 同一query_id内の null 着信（チェックオフ）ではローカルのタグ選択・キーワードを保持し、
+    // query_id が変わったときだけ着信値でリセットするための同期済みquery_id
+    const last_synced_query_id: Ref<string | null> = ref(null)
 
-    const loading = ref(false)
-    const skip_emits_this_tick = ref(false)
+    // タグツリーへ反映するチェック集合。timeis_tags=null（グループ未使用）のときは
+    // 初期チェックタグ集合へフォールバックする（既定クエリ生成と同じ集合）
+    function timeis_tags_for_tree(timeis_tags: Array<string> | null): Array<string> {
+        return timeis_tags ?? collect_inited_tag_names(cloned_application_config.value.tag_struct)
+    }
 
     // ── Watchers ──
-    watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
-        if (new_value !== old_value && new_value) {
-            const tags = cloned_query.value.tags
-            if (tags) {
-                await update_check(tags, CheckState.checked, true)
-            }
-        }
-    })
-
     watch(() => props.application_config, async () => {
-        loading.value = true
         cloned_query.value = props.find_kyou_query
         cloned_application_config.value = props.application_config.clone()
         if (props.inited) {
-            skip_emits_this_tick.value = true
-            nextTick(() => skip_emits_this_tick.value = false)
-            update_check(cloned_query.value.timeis_tags, CheckState.checked, true)
+            // props同期はユーザー操作ではないのでemitしない(disable_emits)。
+            // タイミングフラグ(nextTickで倒す方式)はマイクロタスクの順序次第で
+            // すり抜けるため使わない
+            update_check(timeis_tags_for_tree(cloned_query.value.timeis_tags), CheckState.checked, true, true)
             return
         }
         if (!props.inited) {
@@ -55,11 +57,29 @@ export function useTimeIsQuery(options: {
         if (!new_value) {
             return
         }
-        loading.value = true
         old_cloned_query.value = old_value
-        cloned_query.value = new_value.clone()
+        const query_id_changed = last_synced_query_id.value !== new_value.query_id
+        last_synced_query_id.value = new_value.query_id
+        const local_timeis_keywords = cloned_query.value.timeis_keywords
         cloned_query.value = props.find_kyou_query.clone()
-        await update_check_state(cloned_query.value.timeis_tags, CheckState.checked)
+        use_timeis.value = new_value.timeis_words !== null
+        use_timeis_tags.value = new_value.timeis_tags !== null
+        if (!query_id_changed && new_value.timeis_words === null) {
+            // 同一query_id内のオフ着信（クエリ上はnull）ではローカルのキーワードを保持する。
+            // 即時トグルで値が復活する（query_idが変わったら着信値でリセット）
+            cloned_query.value.timeis_keywords = local_timeis_keywords
+        }
+        if (!query_id_changed && new_value.timeis_tags === null) {
+            // 同一query_id内のオフ着信ではツリーのローカルタグ選択も保持する
+            // （チェックrefだけ上で更新済み）
+            return
+        }
+        // props同期はユーザー操作ではないのでemitしない(disable_emits=true)。
+        // RepQuery/TagQueryの同期経路と同じ扱い。これをis_by_user=trueで流すと、
+        // フォーカス切替のたびにサイドバーが実検索を発火してループする。
+        // pre_uncheck_all=trueで「列のクエリの写し」に置き換える
+        // (falseだと列をまたいでチェックが和集合に累積し、生成クエリが列クエリと一致しなくなる)
+        await update_check(timeis_tags_for_tree(cloned_query.value.timeis_tags), CheckState.checked, true, true)
         const checked_items = foldable_struct.value?.get_selected_items()
         if (checked_items) {
             emits('request_update_checked_timeis_tags', checked_items, false)
@@ -72,10 +92,10 @@ export function useTimeIsQuery(options: {
     }
 
     function get_use_timeis(): boolean {
-        return cloned_query.value.use_timeis
+        return use_timeis.value
     }
     function get_use_timeis_tags(): boolean {
-        return cloned_query.value.use_timeis_tags
+        return use_timeis_tags.value
     }
     function get_use_and_search_timeis_words(): boolean {
         return cloned_query.value.timeis_words_and
@@ -99,54 +119,11 @@ export function useTimeIsQuery(options: {
     }
 
     async function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean): Promise<void> {
-        if (pre_uncheck_all) {
-            let f = (_struct: FoldableStructModel) => { }
-            const func = (struct: FoldableStructModel) => {
-                struct.is_checked = false
-                struct.indeterminate = false
-                if (struct.children) {
-                    struct.children.forEach(child => {
-                        f(child)
-                    })
-                }
-            }
-            f = func
-            f(cloned_application_config.value.tag_struct)
-        }
-
-        for (let i = 0; i < items.length; i++) {
-            const key_name = items[i]
-            let f = (_struct: FoldableStructModel) => { }
-            const func = (struct: FoldableStructModel) => {
-                if (struct.key === key_name) {
-                    switch (is_checked) {
-                        case CheckState.checked:
-                            struct.is_checked = true
-                            struct.indeterminate = false
-                            break
-                        case CheckState.unchecked:
-                            struct.is_checked = false
-                            struct.indeterminate = false
-                            break
-                        case CheckState.indeterminate:
-                            struct.is_checked = false
-                            struct.indeterminate = true
-                            break
-                    }
-                }
-                if (struct.children) {
-                    struct.children.forEach(child => {
-                        f(child)
-                    })
-                }
-            }
-            f = func
-            f(cloned_application_config.value.tag_struct)
-        }
+        apply_check_state_to_struct(cloned_application_config.value.tag_struct, items, is_checked, pre_uncheck_all)
 
         const checked_items = foldable_struct.value?.get_selected_items()
         if (checked_items) {
-            if (!skip_emits_this_tick.value && !disable_emits) {
+            if (!disable_emits) {
                 emits('request_update_checked_timeis_tags', checked_items, true)
             }
         }
@@ -155,7 +132,7 @@ export function useTimeIsQuery(options: {
 
     // ── Template event handlers ──
     function onChangeUseTimeis(): void {
-        emits('request_update_use_timeis_query', cloned_query.value.use_timeis)
+        emits('request_update_use_timeis_query', use_timeis.value)
     }
 
     function onClickClear(): void {
@@ -177,8 +154,8 @@ export function useTimeIsQuery(options: {
     }
 
     function onClickUseTimeisTags(): void {
-        cloned_query.value.use_timeis_tags = !cloned_query.value.use_timeis_tags
-        emits('request_update_use_timeis_query', cloned_query.value.use_timeis_tags)
+        use_timeis_tags.value = !use_timeis_tags.value
+        emits('request_update_use_timeis_query', use_timeis_tags.value)
     }
 
     // ── Event relay objects ──
@@ -194,6 +171,8 @@ export function useTimeIsQuery(options: {
         // State
         cloned_application_config,
         cloned_query,
+        use_timeis,
+        use_timeis_tags,
 
         // Business logic
         get_use_timeis,

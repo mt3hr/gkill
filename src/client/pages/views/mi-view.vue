@@ -79,11 +79,12 @@
                             <v-card dropzone="true" @dragenter.prevent.stop="() => { }"
                                 @drop.prevent.stop="(e: DragEvent) => onDropBoardTask(e, query)"
                                 @dragover.prevent.stop="(e: DragEvent) => onDragoverBoardTask(e, query)">
-                                <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
-                                <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                                }}</v-card-title>
+                                <v-card-title class="mi_board_column_title" v-if="query.mi_board_name !== null">{{
+                                    query.mi_board_name }}</v-card-title>
+                                <v-card-title class="mi_board_column_title" v-if="query.mi_board_name === null">{{
+                                    i18n.global.t("MI_ALL_TITLE") }}</v-card-title>
                                 <KyouListView :kyou_height="56 + 35" :width="400" :draggable="true"
-                                    :list_height="kyou_list_view_height.valueOf() - 48"
+                                    :list_height="kyou_list_view_height.valueOf() - MI_BOARD_TITLE_HEIGHT"
                                     :application_config="application_config" :gkill_api="gkill_api"
                                     :matched_kyous="match_kyous_list[index]" :query="query"
                                     :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
@@ -130,6 +131,7 @@
                         <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                             <MiKyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                                 :gkill_api="gkill_api" :kyous="focused_kyous_list" :mi_sort_type="focused_query.mi_sort_type"
+                                :is_active="is_show_kyou_count_calendar"
                                 @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
                         </td>
                     </tr>
@@ -138,7 +140,7 @@
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_kc_dialog" />
             <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
@@ -172,20 +174,22 @@
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 :app_content_width="app_content_width"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 :app_content_width="app_content_width"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
-                v-on="crudRelayHandlers"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="upload_file_dialog" />
             <SaveClipboardToFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
-                v-on="crudRelayHandlers"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="save_clipboard_to_file_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -261,6 +265,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import RykvDialogHost from './rykv-dialog-host.vue'
 import HelpDialog from '../dialogs/help-dialog.vue'
 import { useMiView } from '@/classes/use-mi-view'
+import { MI_BOARD_TITLE_HEIGHT } from '@/classes/mi-board-column-layout'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
@@ -347,6 +352,13 @@ const {
 } = useMiView({ props, emits })
 </script>
 <style lang="css" scoped>
+/* 列の高さ計算 (list_height = app_content_height - MI_BOARD_TITLE_HEIGHT) が
+   Vuetify の既定サイズに依存しないよう、見出しの高さをここで固定する。
+   mi-board-column-layout.ts の MI_BOARD_TITLE_HEIGHT と必ず同じ値にすること */
+.mi_board_column_title {
+    height: 44px;
+}
+
 .kyou_detail_view.dummy {
     resize: horizontal;
     overflow-x: hidden;

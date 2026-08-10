@@ -177,7 +177,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 		}
 	}
 
-	// ワードフィルタ: UseWordsが有効な場合、Targetに対してワード検索を実行しマッチしたIDを収集する
+	// ワードフィルタ: ワード指定が非nilの場合、Targetに対してワード検索を実行しマッチしたIDを収集する
 	wordMatchTargetIDs := map[string]bool{}
 	useWordFilter := !allowAllTargets && isWordFilterEnabled(query)
 	if useWordFilter {
@@ -197,10 +197,10 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 		}
 
 		matchID := false
-		if !query.UseIDs {
+		if query.IDs == nil {
 			matchID = true
-		} else if query.UseIDs {
-			if query.IDs != nil && len(query.IDs) != 0 {
+		} else {
+			if len(query.IDs) != 0 {
 				for _, id := range query.IDs {
 					if id == rekyou.ID {
 						matchID = true
@@ -293,10 +293,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -452,8 +450,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		repName,
@@ -691,10 +688,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -852,8 +847,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		repName,
@@ -1268,14 +1262,15 @@ FROM REKYOU
 			return nil, ctx.Err()
 		default:
 			addr := gkill_cache.LatestDataRepositoryAddress{}
-			var isDeletedStr string
 			var dataUpdateTimeStr string
 			var targetIDInData *string
-			err := rows.Scan(&isDeletedStr, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
+			// IS_DELETEDはboolバインドでINTEGER(0/1)格納なので直接boolへScanする。
+			// 以前は文字列に受けて "TRUE" と比較しており(実値は"0"/"1")、常にfalseになって
+			// 削除済みターゲットを指すReKyou/MiReKyouが検索結果に残っていた
+			err := rows.Scan(&addr.IsDeleted, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
 			if err != nil {
 				return nil, err
 			}
-			addr.IsDeleted = isDeletedStr == "TRUE"
 			addr.TargetIDInData = targetIDInData
 			addr.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {

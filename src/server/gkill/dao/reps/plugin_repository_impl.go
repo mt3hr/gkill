@@ -386,6 +386,9 @@ func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQu
 	resp, err := p.callCommand(ctx, req)
 	if err != nil {
 		slog.Error(fmt.Sprintf("plugin find_kyous error %q: %q", p.manifest.Name, err))
+		// プラグイン障害で検索全体を落とさない方針は維持しつつ、
+		// 「静かな欠落」にならないよう警告として記録する(呼び出し元がメッセージ表示に使う)
+		AppendPluginFindWarning(ctx, p.manifest.Name)
 		return map[string][]Kyou{p.manifest.RepName: {}}, nil
 	}
 
@@ -584,17 +587,17 @@ func findQueryToPluginQuery(q *find.FindQuery) *gkill_plugin.PluginQuery {
 		IsDeleted:      q.IsDeleted,
 		OnlyLatestData: q.OnlyLatestData,
 	}
-	if q.UseWords {
+	if q.HasWordFilter() {
 		pq.Words = q.Words
 		pq.NotWords = q.NotWords
 		pq.WordsAnd = q.WordsAnd
 	}
-	if q.UseTags {
+	if q.Tags != nil {
 		pq.Tags = q.Tags
 		pq.NotTags = q.HideTags
 		pq.TagsAnd = q.TagsAnd
 	}
-	if q.UseCalendar {
+	if q.HasCalendarFilter() {
 		pq.CalendarStartDate = q.CalendarStartDate
 		pq.CalendarEndDate = q.CalendarEndDate
 	}
@@ -606,20 +609,18 @@ func pluginKyouMatchesQuery(kyou Kyou, q *find.FindQuery) bool {
 	if q == nil {
 		return true
 	}
-	if q.UseCalendar {
-		if q.CalendarStartDate != nil && kyou.RelatedTime.Before(*q.CalendarStartDate) {
-			return false
-		}
-		if q.CalendarEndDate != nil && kyou.RelatedTime.After(*q.CalendarEndDate) {
-			return false
-		}
+	if q.CalendarStartDate != nil && kyou.RelatedTime.Before(*q.CalendarStartDate) {
+		return false
 	}
-	// UseIDsフィルタ:
-	// findQueryToPluginQueryはUseIDsをPluginQueryに変換しないため、
+	if q.CalendarEndDate != nil && kyou.RelatedTime.After(*q.CalendarEndDate) {
+		return false
+	}
+	// IDフィルタ:
+	// findQueryToPluginQueryはIDsをPluginQueryに変換しないため、
 	// プラグインはID指定クエリを受けても全件返す。
 	// gkill側でIDフィルタを補完することで、
 	// textMatchFindByIDQueryでプラグイン全件が混入するのを防ぐ。
-	if q.UseIDs {
+	if q.IDs != nil {
 		idSet := make(map[string]struct{}, len(q.IDs))
 		for _, id := range q.IDs {
 			idSet[id] = struct{}{}

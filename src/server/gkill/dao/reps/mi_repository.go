@@ -53,7 +53,7 @@ type MiRepository interface {
 	// 時刻範囲での絞り込みはその切り口の時刻（作成時刻・更新時刻・期限・予定開始・予定終了）に対して効きます。
 	// 期限・予定開始・予定終了の切り口は、その時刻が入っている行だけを対象にします。
 	// **切り口を1つも有効にしていない場合は空スライスを返します**（エラーではありません）。
-	// query.UseMiBoardName が true のときは query.MiBoardName と一致するボードだけに絞ります。
+	// query.MiBoardName が非nilのときは一致するボードだけに絞ります。
 	//
 	// 単一リポジトリはUNIONで組み立てるため順序を保証しません。
 	// 集約は ID（query.OnlyLatestData が false なら ID に UpdateTime の Unix 秒を連結したキー）

@@ -412,10 +412,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -549,7 +547,6 @@ WHERE
 	words := []string{tagname}
 
 	query := &find.FindQuery{
-		UseWords: true,
 		Words:    words,
 	}
 	queryArgs := []any{
@@ -909,7 +906,6 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
 		IDs:    ids,
 	}
 	queryArgs := []any{

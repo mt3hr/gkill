@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"slices"
@@ -47,7 +48,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find notification: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find notification: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -128,7 +129,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -173,7 +174,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get notification: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get notification: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -238,7 +239,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get notifications by target id: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get notifications by target id: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -314,7 +315,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get notifications between notification time: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get notifications between notification time: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -382,7 +383,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -419,7 +420,6 @@ func (t NotificationRepositories) GetPath(ctx context.Context, id string) (strin
 	for _, rep := range t {
 		query := &find.FindQuery{
 			IDs:    ids,
-			UseIDs: true,
 		}
 		notifications, err := rep.FindNotifications(ctx, query)
 		if len(notifications) == 0 || err != nil {
@@ -473,7 +473,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get notification histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get notification histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -561,7 +561,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get notification histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get notification histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -654,7 +654,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

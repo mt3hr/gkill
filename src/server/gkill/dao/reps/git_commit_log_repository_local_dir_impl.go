@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -60,7 +59,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	kyous := map[string][]Kyou{}
 
 	var logs object.CommitIter
-	if query.UseIDs && len(query.IDs) == 1 {
+	if len(query.IDs) == 1 {
 		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((query.IDs)[0])})
 		if err != nil {
 			// IDがこのリポジトリに無いだけでもLogはエラーを返すため、
@@ -76,12 +75,9 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	}
 	defer func() { logs.Close() }()
 
-	useCalendar := false
+	useCalendar := query.HasCalendarFilter()
 	calendarStartDate := query.CalendarStartDate
 	calendarEndDate := query.CalendarEndDate
-	if query.UseCalendar {
-		useCalendar = query.UseCalendar
-	}
 
 loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
@@ -95,21 +91,17 @@ loop:
 			// 判定
 			match := true
 
-			// 削除済みであるかどうかの判定
+			// gitコミットに削除の概念はないため、削除済み検索(IsDeleted=true)には該当しない
 			if query.IsDeleted {
-				match = false
-				if !match {
-					continue
-				}
+				continue
 			}
 
-			// id検索である場合のSQL追記
-			if query.UseIDs {
-				ids := []string{}
-				if query.IDs != nil {
-					ids = query.IDs
-				}
-				for _, id := range ids {
+			// ID検索
+			if query.IDs != nil {
+				// SQL側(GenerateFindSQLCommon)の「IDs非nil かつ IDs空 → 0件」と意味論を揃える。
+				// 以前はIDs空だとループが回らずmatch=trueのままで、全コミットが返っていた
+				match = false
+				for _, id := range query.IDs {
 					match = id == commit.Hash.String()
 					if match {
 						break
@@ -117,44 +109,11 @@ loop:
 				}
 			}
 
-			words := []string{}
-			notWords := []string{}
-			if query.Words != nil {
-				words = query.Words
-			}
-			if query.NotWords != nil {
-				notWords = query.NotWords
-			}
-
-			if query.UseWords {
-				// ワードand検索である場合の判定
-				if query.WordsAnd {
-					match = true
-					for _, word := range words {
-						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word)) || strings.Contains(strings.ToLower(commit.ID().String()), strings.ToLower(word))
-						if !match {
-							break
-						}
-					}
-				} else if !(query.WordsAnd) {
-					// ワードor検索である場合の判定
-					match = false
-					for _, word := range words {
-						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word)) || strings.Contains(strings.ToLower(commit.ID().String()), strings.ToLower(word))
-						if match {
-							break
-						}
-					}
-				}
-
-				// notワードを除外する場合の判定
-				for _, notWord := range notWords {
-					match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(notWord)) || strings.Contains(strings.ToLower(commit.ID().String()), strings.ToLower(notWord))
-					if match {
-						match = false
-						break
-					}
-				}
+			if query.HasWordFilter() {
+				words := lowerFindWords(query.Words)
+				notWords := lowerFindWords(query.NotWords)
+				findWordText := findWordTextOfGitCommit(commit.Message, commit.ID().String())
+				match = match && matchFindWords(findWordText, words, notWords, query.WordsAnd)
 			}
 
 			if !match {
@@ -162,14 +121,15 @@ loop:
 			}
 
 			// 日付範囲指定ありの場合
+			// SQL側(unixepoch >= / <=)と同じく両端を含む(以前は排他で境界ちょうどのコミットが落ちていた)
 			if useCalendar {
 				if calendarStartDate != nil {
-					if !commit.Committer.When.After(*calendarStartDate) {
+					if commit.Committer.When.Before(*calendarStartDate) {
 						continue
 					}
 				}
 				if calendarEndDate != nil {
-					if !commit.Committer.When.Before(*calendarEndDate) {
+					if commit.Committer.When.After(*calendarEndDate) {
 						continue
 					}
 				}
@@ -218,7 +178,7 @@ loop:
 			}
 			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 
-			if query.UseIDs && len(query.IDs) == 1 {
+			if len(query.IDs) == 1 {
 				break loop
 			}
 		}
@@ -373,7 +333,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	// Phase 1: フィルタに一致するコミットを収集（StatsContextなし）
 	var matchedCommits []*object.Commit
 	var logs object.CommitIter
-	if query.UseIDs && len(query.IDs) == 1 {
+	if len(query.IDs) == 1 {
 		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((query.IDs)[0])})
 		if err != nil {
 			// IDがこのリポジトリに無いだけでもLogはエラーを返すため、
@@ -418,46 +378,11 @@ loop:
 				}
 			}
 
-			words := []string{}
-			notWords := []string{}
-			if query.Words != nil {
-				words = query.Words
-			}
-			if query.NotWords != nil {
-				notWords = query.NotWords
-			}
-
-			if query.UseWords {
-				// ワードand検索である場合の判定
-				if query.WordsAnd {
-					match = true
-					for _, word := range words {
-						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
-						if !match {
-							break
-						}
-					}
-					if !match {
-						continue
-					}
-				} else if !(query.WordsAnd) {
-					// ワードor検索である場合の判定
-					match = false
-					for _, word := range words {
-						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
-						if match {
-							break
-						}
-					}
-				}
-				// notワードを除外する場合の判定
-				for _, notWord := range notWords {
-					match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(notWord))
-					if match {
-						match = false
-						break
-					}
-				}
+			if query.HasWordFilter() {
+				words := lowerFindWords(query.Words)
+				notWords := lowerFindWords(query.NotWords)
+				findWordText := findWordTextOfGitCommit(commit.Message, commit.ID().String())
+				match = match && matchFindWords(findWordText, words, notWords, query.WordsAnd)
 			}
 
 			if !match {
@@ -466,7 +391,7 @@ loop:
 
 			matchedCommits = append(matchedCommits, commit)
 
-			if query.UseIDs && len(query.IDs) == 1 {
+			if len(query.IDs) == 1 {
 				break loop
 			}
 		}
@@ -724,7 +649,7 @@ func (g *gitCommitLogRepositoryLocalImpl) UnWrap() ([]Repository, error) {
 }
 
 func buildPeriodOfTimeSeconds(query *find.FindQuery) (use bool, stOK bool, stSec int, etOK bool, etSec int) {
-	if !query.UsePeriodOfTime {
+	if !query.HasPeriodOfTimeFilter() {
 		return false, false, 0, false, 0
 	}
 	use = true

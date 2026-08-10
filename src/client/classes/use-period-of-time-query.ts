@@ -29,13 +29,14 @@ export function usePeriodOfTimeQuery(options: {
         cloned_application_config.value = props.application_config.clone()
     })
 
-    watch(() => props.find_kyou_query.use_period_of_time, (new_value: boolean, old_value: boolean) => {
+    // 活性はクエリ上 period_of_time_week_of_days の null 判定が担う
+    watch(() => props.find_kyou_query.period_of_time_week_of_days !== null, (new_value: boolean, old_value: boolean) => {
         if (new_value === old_value) {
             return
         }
         skip_emits_this_tick.value = true
         nextTick(() => skip_emits_this_tick.value = false)
-        use_period_of_time.value = props.find_kyou_query.use_period_of_time
+        use_period_of_time.value = new_value
     })
 
     watch(
@@ -66,7 +67,9 @@ export function usePeriodOfTimeQuery(options: {
 
     watch(() => props.find_kyou_query.period_of_time_week_of_days, () => {
         week_of_days.value.splice(0)
-        week_of_days.value.push(...props.find_kyou_query.period_of_time_week_of_days)
+        // 古い世代のビルドが保存したクエリではフィールドが欠落しうる
+        // (spread of undefined は TypeError で同期が死ぬ)
+        week_of_days.value.push(...(props.find_kyou_query.period_of_time_week_of_days ?? []))
     })
 
     // ── Watchers: local state -> emits ──

@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
@@ -50,7 +51,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find kyous: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -119,7 +120,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -184,7 +185,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -231,8 +232,7 @@ func (i IDFKyouRepositories) GetPath(ctx context.Context, id string) (string, er
 	ids := []string{id}
 	for _, rep := range i {
 		query := &find.FindQuery{
-			IDs:    ids,
-			UseIDs: true,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -273,7 +273,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -339,7 +339,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -384,7 +384,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find idfkyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find idfkyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -460,7 +460,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get idfkyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get idfkyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -525,7 +525,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get idfkyou by target file: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get idfkyou by target file: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -590,7 +590,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get idfkyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get idfkyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -679,7 +679,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get idfkyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get idfkyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -892,7 +892,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

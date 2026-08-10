@@ -123,19 +123,29 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	useIDs := len(kyous) != 0
 	findQueryValueForKyouInstances := *findQuery
 	findQueryForKyouInstances := &findQueryValueForKyouInstances
-	findQueryForKyouInstances.UseIDs = useIDs
 	findQueryForKyouInstances.IncludeCreateMi = true
 	findQueryForKyouInstances.IncludeStartMi = true
 	findQueryForKyouInstances.IncludeCheckMi = true
 	findQueryForKyouInstances.IncludeEndMi = true
 	findQueryForKyouInstances.IncludeLimitMi = true
 	findQueryForKyouInstances.IncludeEndTimeIs = true
-	findQueryForKyouInstances.IDs = []string{}
-	for _, kyou := range kyous {
-		findQueryForKyouInstances.IDs = append(findQueryForKyouInstances.IDs, kyou.ID)
+	if len(kyous) == 0 {
+		// 検索結果なし → 実体も1件も返さない。
+		// ここは「明示的に0件指定」である非nilの空スライスでなければならない。
+		// nil は「ID で絞らない」の意味なので、実体取得（FindKmemo 等）が
+		// タグ・打刻・実行中といった条件を解釈しないぶん素通しになり、
+		// 共有していない記録の本文まで返ってしまう。
+		// /api/get_shared_kyous は wrapNoAuth（共有IDを知っていれば誰でも叩ける）ため、
+		// これがそのまま第三者への漏洩になる。
+		findQueryForKyouInstances.IDs = []string{}
+	} else {
+		ids := make([]string, 0, len(kyous))
+		for _, kyou := range kyous {
+			ids = append(ids, kyou.ID)
+		}
+		findQueryForKyouInstances.IDs = ids
 	}
 	findQueryForKyouInstances.OnlyLatestData = false
 
@@ -357,22 +367,22 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 
 		timeisQueryValue := *findQuery
 		timeisQuery := timeisQueryValue
-		timeisQuery.UseRepTypes = true
 		timeisQuery.RepTypes = []string{"timeis"}
 		timeisQuery.OnlyLatestData = true
 		queries = append(queries, timeisQuery)
 
-		if timeisQuery.UseCalendar && timeisQuery.CalendarStartDate != nil {
+		if timeisQuery.CalendarStartDate != nil {
 			timeisPlaingHeadQuery := find.FindQuery{}
-			timeisPlaingHeadQuery.UsePlaing = true
-			timeisPlaingHeadQuery.PlaingTime = *timeisQuery.CalendarStartDate
+			// 浅いコピー由来のポインタ共有を避けるため値コピーで新規に作る
+			plaingHeadTime := *timeisQuery.CalendarStartDate
+			timeisPlaingHeadQuery.PlaingTime = &plaingHeadTime
 			queries = append(queries, timeisPlaingHeadQuery)
 		}
 
-		if timeisQuery.UseCalendar && timeisQuery.CalendarEndDate != nil {
+		if timeisQuery.CalendarEndDate != nil {
 			timeisPlaingHipQuery := find.FindQuery{}
-			timeisPlaingHipQuery.UsePlaing = true
-			timeisPlaingHipQuery.PlaingTime = *timeisQuery.CalendarEndDate
+			plaingHipTime := *timeisQuery.CalendarEndDate
+			timeisPlaingHipQuery.PlaingTime = &plaingHipTime
 			queries = append(queries, timeisPlaingHipQuery)
 		}
 

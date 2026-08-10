@@ -227,7 +227,7 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]Text, error) {
 	var err error
 
-	if query.UseWords {
+	if query.HasWordFilter() {
 		if len(query.Words) == 0 {
 			return []Text{}, nil
 		}
@@ -418,10 +418,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -791,7 +789,6 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
 		IDs:    ids,
 	}
 	queryArgs := []any{

@@ -2,20 +2,38 @@
 
 import { GkillAPI } from "../api/gkill-api"
 import { GkillError } from "../api/gkill-error"
+import { generate_plaing_timeis_query } from "../api/find_query/generate-plaing-timeis-query"
 import { GetApplicationConfigRequest } from "../api/req_res/get-application-config-request"
 import { GetKyousRequest } from "../api/req_res/get-kyous-request"
 import { GetNotificationsByTargetIDRequest } from "../api/req_res/get-notifications-by-target-id-request"
 import { GetTagsByTargetIDRequest } from "../api/req_res/get-tags-by-target-id-request"
 import { GetTextsByTargetIDRequest } from "../api/req_res/get-texts-by-target-id-request"
-import type { RepStructElementData } from "./config/rep-struct-element-data"
-import type { TagStructElementData } from "./config/tag-struct-element-data"
 import type { Kyou } from "./kyou"
 import type { Notification } from "./notification"
 import type { Tag } from "./tag"
 import type { Text } from "./text"
 
 export abstract class InfoBase {
-    abort_controller: AbortController
+    // AbortControllerは初アクセスまで生成しない。
+    // 数十万件の検索応答を実体化するとき、1件ごとの生成コスト(WebIDLラッパ)が
+    // 合計で数百msを占めていたため。ほとんどのインスタンスは一度も使わない。
+    // ES private(#)はVueのreactive Proxy越しのthisで壊れる。
+    // TS privateはVueのUnwrapRefがprivateメンバーを落とすため
+    // `Ref<Array<Kyou>> = ref(new Array<Kyou>())` が全部型エラーになる。
+    // どちらも使えないのでunderscore公開フィールド。直接触らずゲッターを使うこと。
+    _abort_controller: AbortController | null
+
+    get abort_controller(): AbortController {
+        if (!this._abort_controller) {
+            this._abort_controller = new AbortController()
+        }
+        return this._abort_controller
+    }
+
+    set abort_controller(abort_controller: AbortController) {
+        this._abort_controller = abort_controller
+    }
+
     is_deleted: boolean
     id: string
     rep_name: string
@@ -105,10 +123,6 @@ export abstract class InfoBase {
         const req = new GetKyousRequest()
         req.abort_controller = this.abort_controller
 
-        req.query.use_tags = false
-        req.query.use_plaing = true
-        req.query.plaing_time = this.related_time
-
         // アプリ設定はKyou 1件ごとに取り直すものではない。
         // get_application_config() は毎回ネットワークに出たうえ、
         // 内部の load_all() で get_all_rep_names / get_all_tag_names /
@@ -118,40 +132,9 @@ export abstract class InfoBase {
         const gkill_api = GkillAPI.get_gkill_api()
         const application_config = gkill_api.get_saved_application_config()
             ?? (await gkill_api.get_application_config(new GetApplicationConfigRequest())).application_config
-        if (!application_config.for_share_kyou) {
-            let rep_name_walk = (_rep: RepStructElementData): Array<string> => []
-            rep_name_walk = (rep: RepStructElementData): Array<string> => {
-                const rep_names = new Array<string>()
-                const rep_children = rep.children
-                if (rep_children) {
-                    rep_children.forEach(child_rep => {
-                        rep_names.push(child_rep.rep_name)
-                        if (child_rep) {
-                            rep_names.push(...rep_name_walk(child_rep))
-                        }
-                    })
-                }
-                return rep_names
-            }
-            req.query.reps = rep_name_walk(application_config.rep_struct)
-            let tag_name_walk = (_tag: TagStructElementData): Array<string> => []
-            tag_name_walk = (tag: TagStructElementData): Array<string> => {
-                const tag_names = new Array<string>()
-                const tag_children = tag.children
-                if (tag_children) {
-                    tag_children.forEach(child_tag => {
-                        if (child_tag.check_when_inited) {
-                            tag_names.push(child_tag.tag_name)
-                        }
-                        if (child_tag) {
-                            tag_names.push(...tag_name_walk(child_tag))
-                        }
-                    })
-                }
-                return tag_names
-            }
-            req.query.tags = tag_name_walk(application_config.tag_struct)
-        }
+        // 検索条件の組み立ては実行中画面・KFTL終了候補と共通。
+        // ApplicationConfigのカスタム検索条件（plaing_timeis_json_data）もそこで適用される
+        req.query = generate_plaing_timeis_query(application_config, this.related_time)
 
         const res = await GkillAPI.get_gkill_api().get_kyous(req)
         if (res.errors && res.errors.length !== 0) {
@@ -218,7 +201,7 @@ export abstract class InfoBase {
     abstract clone(): InfoBase
 
     constructor() {
-        this.abort_controller = new AbortController()
+        this._abort_controller = null
         this.is_deleted = false
         this.id = ""
         this.rep_name = ""

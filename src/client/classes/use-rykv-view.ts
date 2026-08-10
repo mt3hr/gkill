@@ -1,7 +1,6 @@
 import { i18n } from '@/i18n'
 import router from '@/router'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import type { RykvViewEmits } from '@/pages/views/rykv-view-emits'
@@ -17,6 +16,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import { Tag } from '@/classes/datas/tag'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
+import { build_mi_reload_query, new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -72,7 +72,8 @@ export function useRykvView(options: {
     const inited = ref(false)
     const received_init_request = ref(false)
     const skip_search_this_tick = ref(false)
-    const abort_controllers: Ref<Array<AbortController>> = ref([])
+    const abort_controllers = new Map<string, AbortController>() // 列ごとの検索中断用。キーは列のquery_id
+    const search_seqs = new Map<string, number>() // 列ごとの検索の世代番号。キーは列のquery_id。最後の検索だけが結果を書き戻せるようにする
     const dnote_reload_seq = ref(0) // Dnote再集計の世代番号。列を連打したとき古い再集計が後勝ちしないようにする
     const kyou_detail_view_width: Ref<number> = ref(400) // KyouDetailViewの初期幅とあわせる。ryuuの最大幅に使う
 
@@ -114,11 +115,13 @@ export function useRykvView(options: {
     })
 
     watch(() => focused_time.value, () => {
-        if (!kyou_list_views.value) {
+        // 共有ページでは初期クエリのquery_idが空文字のまま使われるので、
+        // 「列が無い」判定はquery_idの真偽値ではなく列の存在で行う
+        const focused_column_query = querys.value[focused_column_index.value]
+        if (!focused_column_query) {
             return
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
+        const kyou_list_view = get_kyou_list_view(focused_column_query.query_id)
         if (!kyou_list_view) {
             return
         }
@@ -170,6 +173,27 @@ export function useRykvView(options: {
     // ── Internal helpers ──
     const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
+    // 列コンポーネントをquery_idで引く。v-forのテンプレートref配列はマウント順で
+    // 並び順が保証されないため、indexではなくquery_idで解決する
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function get_kyou_list_view(query_id: string): any {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return kyou_list_views.value?.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query_id)[0]
+    }
+
+    // フォーカス切り替え等でfocused_queryを差し替えると、サイドバーが機械的に
+    // updated_queryを発火しうるので、差し替えを行うfnをこれで包んで1回分だけ検索を抑止する。
+    // 抑止解除のnextTickは「fnのリアクティブ書き込みでflushが予約された後」に登録すること。
+    // 書き込みより先に登録すると、VueのnextTickはresolvedPromiseへ直結し、
+    // 解除がウォッチャflushより先に走って抑止が一度も効かない(マイクロタスクはFIFO)。
+    // コールバック式はこの登録順を構造的に保証する。
+    // 立てっぱなしにするとユーザの次の編集を黙殺するため、必ずnextTickで倒す
+    function run_with_sidebar_search_suppressed(fn: () => void): void {
+        skip_search_this_tick.value = true
+        fn()
+        nextTick(() => skip_search_this_tick.value = false)
+    }
+
     function update_focused_kyous_list(column_index: number): void {
         if (props.is_shared_rykv_view) {
             return
@@ -208,8 +232,7 @@ export function useRykvView(options: {
         }
 
         // 対象列がまだ検索中なら終わるまで待つ
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const kyou_list_view = kyou_list_views.value?.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === target_query.query_id)[0] as any
+        const kyou_list_view = get_kyou_list_view(target_query.query_id)
         if (kyou_list_view && kyou_list_view.get_is_loading()) {
             dnote_view.value?.set_loading(true)
             while (kyou_list_view.get_is_loading()) {
@@ -218,8 +241,12 @@ export function useRykvView(options: {
                     return
                 }
             }
-            // 待っている間に検索結果が差し替わっているので取り直す
-            update_focused_kyous_list(column_index)
+            // 待っている間に検索結果が差し替わっている(列の位置も動きうる)ので取り直す
+            const current_index = querys.value.findIndex(q => q.query_id === target_query.query_id)
+            if (current_index === -1) {
+                return
+            }
+            update_focused_kyous_list(current_index)
         }
 
         try {
@@ -270,75 +297,82 @@ export function useRykvView(options: {
         emits('deleted_kyou', deleted_kyou)
     }
 
-    function build_mi_reload_query(base_query: FindKyouQuery, data_type: string): FindKyouQuery | undefined {
-        if (!data_type.startsWith("mi")) {
-            return undefined
+    // 対象のKyouが載っている列のクエリを探す。focused_kyou と opened_dialogs は
+    // 自分がどの列由来か知らないので、列を総当たりして最初に見つかったものを使う
+    function find_reload_query_for(kyou_id: string, data_type: string): FindKyouQuery | undefined {
+        for (let i = 0; i < match_kyous_list.value.length; i++) {
+            if (match_kyous_list.value[i].some(k => k.id === kyou_id)) {
+                return build_mi_reload_query(querys.value[i], data_type)
+            }
         }
-        const q = base_query.clone()
-        q.for_mi = true
-        // MiReKyouはmirekyou_*で来るので接頭辞を落として同じ扱いにする
-        const suffix = data_type.startsWith("mirekyou_") ? data_type.slice("mirekyou_".length) : data_type.slice("mi_".length)
-        switch (suffix) {
-            case "start": q.mi_sort_type = MiSortType.estimate_start_time; break
-            case "end": q.mi_sort_type = MiSortType.estimate_end_time; break
-            case "limit": q.mi_sort_type = MiSortType.limit_time; break
-            default: q.mi_sort_type = MiSortType.create_time; break
-        }
-        return q
+        return undefined
     }
 
     async function reload_kyou(kyou: Kyou): Promise<void> {
+        // 列・focused・開いているダイアログは同じ更新を受けて独立に引き直す。
+        // 同じ値を渡して1往復に合流させる（渡さないと系統ごとに往復が増える）
+        const requested_at = new_reload_batch();
         (async (): Promise<void> => {
             for (let i = 0; i < match_kyous_list.value.length; i++) {
-                const kyous_list = match_kyous_list.value[i]
-                for (let j = 0; j < kyous_list.length; j++) {
-                    const kyou_in_list = kyous_list[j]
-                    if (kyou.id === kyou_in_list.id) {
-                        const reload_query = build_mi_reload_query(querys.value[i], kyou_in_list.data_type)
-                        const updated_kyou = kyou.clone()
-                        await delete_gkill_kyou_cache(kyou.id)
-                        await updated_kyou.reload(true, reload_query)
-                        updated_kyou.is_typed_data_loaded = false
-                        await updated_kyou.load_all(reload_query, true)
-                        const new_kyous_list = [...kyous_list]
-                        new_kyous_list[j] = updated_kyou
-                        match_kyous_list.value[i] = new_kyous_list
-                    }
+                const column_query = querys.value[i]
+                const target_list = match_kyous_list.value[i]
+                if (!column_query || !target_list) {
+                    continue
                 }
+                await refresh_kyou_in_list(target_list, kyou, {
+                    requested_at: requested_at,
+                    query: (kyou_in_list) => build_mi_reload_query(column_query, kyou_in_list.data_type),
+                    replace: (next_list) => {
+                        // await中に列の削除・再検索・別Kyouのreloadでリストが差し替わりうる。
+                        // 列はquery_idで引き直し、リストごと巻き戻さず現在のリストの該当行だけ
+                        // 差し替える(リストごと戻すと新しい検索結果や他のreload結果を潰す)
+                        const current_index = querys.value.findIndex(q => q.query_id === column_query.query_id)
+                        if (current_index === -1) {
+                            return
+                        }
+                        const refreshed = next_list.find(next_kyou => next_kyou.id === kyou.id)
+                        const current_list = match_kyous_list.value[current_index]
+                        if (!refreshed || !current_list || !current_list.some(current_kyou => current_kyou.id === kyou.id)) {
+                            return
+                        }
+                        let used_refreshed = false
+                        match_kyous_list.value[current_index] = current_list.map(current_kyou => {
+                            if (current_kyou.id !== kyou.id) {
+                                return current_kyou
+                            }
+                            // 同一インスタンスを複数行に置くと後段のload_typed_datas等で副作用が出る
+                            const next_kyou = used_refreshed ? refreshed.clone() : refreshed
+                            used_refreshed = true
+                            return next_kyou
+                        })
+                    },
+                })
             }
         })();
         (async (): Promise<void> => {
             if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
-                let reload_query: FindKyouQuery | undefined
-                for (let i = 0; i < match_kyous_list.value.length; i++) {
-                    if (match_kyous_list.value[i].some(k => k.id === kyou.id)) {
-                        reload_query = build_mi_reload_query(querys.value[i], focused_kyou.value.data_type)
-                        break
-                    }
+                const reload_query = find_reload_query_for(kyou.id, focused_kyou.value.data_type)
+                const refreshed = await refresh_kyou(kyou, reload_query, requested_at)
+                if (refreshed) {
+                    focused_kyou.value = refreshed
                 }
-                const updated_kyou = kyou.clone()
-                await updated_kyou.reload(true, reload_query)
-                await updated_kyou.load_all(reload_query, true)
-                focused_kyou.value = updated_kyou
             }
         })();
         (async (): Promise<void> => {
-            for (let i = 0; i < opened_dialogs.value.length; i++) {
-                if (opened_dialogs.value[i].kyou.id === kyou.id) {
-                    let reload_query: FindKyouQuery | undefined
-                    for (let j = 0; j < match_kyous_list.value.length; j++) {
-                        if (match_kyous_list.value[j].some(k => k.id === kyou.id)) {
-                            reload_query = build_mi_reload_query(querys.value[j], opened_dialogs.value[i].kyou.data_type)
-                            break
-                        }
-                    }
-                    const updated_kyou = kyou.clone()
-                    await delete_gkill_kyou_cache(kyou.id)
-                    await updated_kyou.reload(true, reload_query)
-                    updated_kyou.is_typed_data_loaded = false
-                    await updated_kyou.load_all(reload_query, true)
-                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
+            const target_dialogs = opened_dialogs.value.filter(dialog => dialog.kyou.id === kyou.id)
+            for (const target_dialog of target_dialogs) {
+                const reload_query = find_reload_query_for(kyou.id, target_dialog.kyou.data_type)
+                const refreshed = await refresh_kyou(kyou, reload_query, requested_at)
+                if (!refreshed) {
+                    continue
                 }
+                // await中にダイアログの開閉で並びが変わりうるので、書き戻し先はIDで引き直す。
+                // 位置のまま書くと別のダイアログのkyouを差し替えてしまう
+                const current_index = opened_dialogs.value.findIndex(dialog => dialog.id === target_dialog.id)
+                if (current_index === -1) {
+                    continue
+                }
+                opened_dialogs.value[current_index] = { ...opened_dialogs.value[current_index], kyou: refreshed }
             }
         })();
     }
@@ -374,15 +408,17 @@ export function useRykvView(options: {
                             skip_search_this_tick.value = true
                             wait_promises.push(search(i, saved_querys[i], true).then(async () => {
                                 return nextTick(() => {
-                                    kyou_list_views.value[i].scroll_to(match_kyous_list_top_list.value[i])
-                                    kyou_list_views.value[i].set_loading(false)
+                                    const kyou_list_view = get_kyou_list_view(saved_querys[i].query_id)
+                                    kyou_list_view?.scroll_to(match_kyous_list_top_list.value[i] ?? 0)
+                                    kyou_list_view?.set_loading(false)
                                 })
                             }))
                         })
                     }
                 } else {
                     querys.value = saved_querys.concat()
-                    querys_backup.value = saved_querys.concat()
+                    // バックアップは複製で持つ。同一参照だと差分検知が機能しない
+                    querys_backup.value = saved_querys.map(query => query.clone())
                     for (let i = 0; i < saved_querys.length; i++) {
                         match_kyous_list.value.push([])
                     }
@@ -390,7 +426,13 @@ export function useRykvView(options: {
             } finally {
                 Promise.all(wait_promises).then(async () => {
                     focused_column_index.value = 0
-                    if (querys.value[focused_column_index.value].use_calendar && querys.value[focused_column_index.value].calendar_start_date && querys.value[focused_column_index.value].calendar_end_date) {
+                    // サイドバーを列0の保存済み条件へ同期する。hot reload OFFではsearch()を
+                    // 通らずfocused_queryが初期値のままになり、検索ボタンがサイドバーの
+                    // 既定値から条件を組んで保存済み条件を上書きしてしまう
+                    if (querys.value[0]) {
+                        focused_query.value = querys.value[0]
+                    }
+                    if (querys.value[focused_column_index.value].calendar_start_date && querys.value[focused_column_index.value].calendar_end_date) {
                         gps_log_map_start_time.value = querys.value[focused_column_index.value].calendar_start_date!
                         gps_log_map_end_time.value = querys.value[focused_column_index.value].calendar_end_date!
                     }
@@ -408,12 +450,10 @@ export function useRykvView(options: {
 
     async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean, preserve_scroll?: boolean): Promise<void> {
         const query_id = query.query_id
-        let my_abort_controller: AbortController | null = null
-        // フォーカス列の検索のときだけDnoteを止める。他列の検索で集計中の内容を消さない
-        if (column_index === focused_column_index.value) {
-            dnote_reload_seq.value++
-            await dnote_view.value?.abort()
-        }
+        // この列の最新の検索だけが結果を書き戻せるようにする世代番号。
+        // 検索中に同じ列で条件が変更されたら、最後の検索条件の結果だけを表示する
+        let seq = -1
+        const is_current = () => seq !== -1 && search_seqs.get(query_id) === seq
         // 検索する。Tickでまとめる
         try {
             if (!force_search) {
@@ -422,27 +462,46 @@ export function useRykvView(options: {
                 }
             }
 
+            seq = (search_seqs.get(query_id) ?? 0) + 1
+            search_seqs.set(query_id, seq)
+
+            // フォーカス列の検索のときだけDnoteを止める。他列の検索で集計中の内容を消さない。
+            // 止めるのは実際に検索することが確定した後。deep_equalsの早期returnより前に
+            // 止めると、無変更のupdated_query(クリア操作等)でDnoteを消したまま誰も再集計しない
+            if (column_index === focused_column_index.value) {
+                dnote_reload_seq.value++
+                await dnote_view.value?.abort()
+            }
+
             querys.value[column_index] = query
-            querys_backup.value[column_index] = query
-            focused_query.value = query
+            // バックアップは複製で持つ。同一参照だと後からの変更が両方に映って差分検知が壊れる
+            querys_backup.value[column_index] = query.clone()
+            // フォーカス列の検索だけがサイドバーの表示対象(focused_query)を更新する。
+            // 無条件に更新すると全列リロード等でサイドバーが別列の条件に乗っ取られ、
+            // そのquery_idを引き継いだ編集が列間のquery_id重複(結果の誤配送)を生む。
+            // 差し替えはサイドバーのprops同期を誘発するので、機械的な残響を1回分抑止する
+            if (column_index === focused_column_index.value) {
+                run_with_sidebar_search_suppressed(() => {
+                    focused_query.value = query
+                })
+            }
 
             props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
 
             focused_column_checked_kyous.value = []
 
             // 前の検索処理を中断する
-            if (abort_controllers.value[column_index]) {
-                abort_controllers.value[column_index].abort()
-                abort_controllers.value[column_index] = new AbortController()
-            }
+            abort_controllers.get(query_id)?.abort()
 
             if (match_kyous_list.value[column_index]) {
                 match_kyous_list.value[column_index] = []
             }
 
             nextTick(() => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+                if (!is_current()) {
+                    return
+                }
+                const kyou_list_view = get_kyou_list_view(query_id)
                 if (kyou_list_view) {
                     if (inited.value && !preserve_scroll) {
                         kyou_list_view.scroll_to(0)
@@ -454,8 +513,7 @@ export function useRykvView(options: {
             const wait_promises = new Array<Promise<unknown>>()
 
             const req = new GetKyousRequest()
-            my_abort_controller = req.abort_controller
-            abort_controllers.value[column_index] = my_abort_controller
+            abort_controllers.set(query_id, req.abort_controller)
             req.query = query.clone()
             req.query.parse_words_and_not_words()
             if (update_cache) {
@@ -470,8 +528,16 @@ export function useRykvView(options: {
 
             await Promise.all(wait_promises)
 
+            // 待っている間に同じ列で新しい検索が始まっていたら、この結果は捨てる。
+            // スピナーは新しい検索が所有しているので触らない
+            if (!is_current()) {
+                return
+            }
+
             if (res.errors && res.errors.length !== 0) {
                 emits('received_errors', res.errors)
+                // エラー時もスピナーを解除する。解除しないと列が読み込み中のまま残る
+                nextTick(() => get_kyou_list_view(query_id)?.set_loading(false))
                 return
             }
             if (res.messages && res.messages.length !== 0) {
@@ -500,18 +566,21 @@ export function useRykvView(options: {
                 }
             }
             await nextTick(() => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+                if (!is_current()) {
+                    return
+                }
+                const kyou_list_view = get_kyou_list_view(query_id)
                 if (kyou_list_view) {
                     ((async () => kyou_list_view.set_loading(false))());
-                }
-
-                if (inited.value) {
-                    if (preserve_scroll) {
-                        kyou_list_view.scroll_to(match_kyous_list_top_list.value[column_index])
-                    } else {
-                        kyou_list_view.scroll_to(0)
+                    if (inited.value) {
+                        if (preserve_scroll) {
+                            kyou_list_view.scroll_to(match_kyous_list_top_list.value[column_index] ?? 0)
+                        } else {
+                            kyou_list_view.scroll_to(0)
+                        }
                     }
+                }
+                if (inited.value) {
                     skip_search_this_tick.value = false
                 }
                 if (column_index === focused_column_index.value) {
@@ -525,51 +594,46 @@ export function useRykvView(options: {
                 console.error(err)
             }
             // abort含め例外時はloading状態を解除する（ただし新しいsearchが開始されていない場合のみ）
-            if (my_abort_controller && abort_controllers.value[column_index] === my_abort_controller) {
-                nextTick(() => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const kyou_list_view = kyou_list_views.value?.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
-                    if (kyou_list_view) {
-                        kyou_list_view.set_loading(false)
-                    }
-                })
+            if (is_current()) {
+                nextTick(() => get_kyou_list_view(query_id)?.set_loading(false))
             }
         }
     }
 
     async function close_list_view(column_index: number): Promise<void> {
         return nextTick(() => {
-            skip_search_this_tick.value = true
+            // ここでの書き込み(focused_column_index・列配列のsplice)はサイドバーの
+            // props(focused_query)に触れないので抑止は不要。抑止が要るのは
+            // focused_queryを差し替える下のfocus_columnだけ
+            const closed_query = querys.value[column_index]
+            const focused_index_before_close = focused_column_index.value
             focused_column_index.value = -1
 
             querys.value.splice(column_index, 1)
             querys_backup.value.splice(column_index, 1)
 
-            if (abort_controllers.value[column_index]) {
-                abort_controllers.value[column_index].abort()
-                abort_controllers.value[column_index] = new AbortController()
+            if (closed_query) {
+                // 飛行中の検索は中断し、世代表からも消す。遅れて届いた結果は世代照合で破棄される
+                abort_controllers.get(closed_query.query_id)?.abort()
+                abort_controllers.delete(closed_query.query_id)
+                search_seqs.delete(closed_query.query_id)
             }
 
             match_kyous_list.value.splice(column_index, 1)
             match_kyous_list_top_list.value.splice(column_index, 1)
-            abort_controllers.value.splice(column_index, 1)
 
-            for (let i = column_index; i < querys.value.length; i++) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const kyou_list_view = kyou_list_views.value[i] as any
-                if (!kyou_list_view) {
-                    continue
-                }
-                if (inited.value) {
-                    kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
-                }
-            }
             props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
             props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
             nextTick(() => {
-                skip_search_this_tick.value = true
+                // 閉じた列の最近傍の列へフォーカスを移す。
                 // 削除で-1にしてあるのでfocus_columnが「切り替わった」と判定しDnoteを再集計する
-                focus_column(0)
+                const next_focused_index = Math.max(0, Math.min(
+                    focused_index_before_close > column_index ? focused_index_before_close - 1 : focused_index_before_close,
+                    querys.value.length - 1,
+                ))
+                run_with_sidebar_search_suppressed(() => {
+                    focus_column(next_focused_index)
+                })
             })
         })
     }
@@ -615,7 +679,7 @@ export function useRykvView(options: {
         for (let i = 0; i < update_target_column_indexs.length; i++) {
             const target_column_index = update_target_column_indexs[i]
             if (inited.value && column_index !== target_column_index) {
-                kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
+                get_kyou_list_view(querys.value[target_column_index].query_id)?.scroll_to_time(kyou.related_time)
             }
         }
     }
@@ -628,9 +692,7 @@ export function useRykvView(options: {
         if (inited.value && kyou_list_views.value) {
             for (let i = 0; i < querys.value.length; i++) {
                 if (querys.value[i].is_focus_kyou_in_list_view) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const kyou_list_view = kyou_list_views.value[i] as any
-                    kyou_list_view?.scroll_to_time(kyou.related_time)
+                    get_kyou_list_view(querys.value[i].query_id)?.scroll_to_time(kyou.related_time)
                 }
             }
         }
@@ -657,12 +719,20 @@ export function useRykvView(options: {
     }
 
     function onSidebarRequestedSearch(update_cache: boolean): void {
-        const current_query = querys.value[focused_column_index.value]
-        if (current_query.use_calendar && current_query.calendar_start_date && current_query.calendar_end_date) {
+        const column_index = focused_column_index.value
+        const base_query = querys.value[column_index]
+        if (!base_query) {
+            return
+        }
+        // 検索ボタンはサイドバーに今見えている条件で検索する。
+        // hot reload OFFでは編集が列のクエリに保存されていないため、保存済みクエリではなく
+        // サイドバーから現在値を組み立てる(query_idは列のものを引き継ぐ)
+        const current_query = query_editor_sidebar.value?.generate_query(base_query.query_id) ?? base_query
+        if (current_query.calendar_start_date && current_query.calendar_end_date) {
             gps_log_map_start_time.value = current_query.calendar_start_date
             gps_log_map_end_time.value = current_query.calendar_end_date
         }
-        nextTick(() => search(focused_column_index.value, current_query, true, update_cache))
+        nextTick(() => search(column_index, current_query, true, update_cache))
     }
 
     function onSidebarUpdatedQuery(new_query: FindKyouQuery): void {
@@ -673,8 +743,14 @@ export function useRykvView(options: {
             nextTick(() => skip_search_this_tick.value = false)
             return
         }
-        search(focused_column_index.value, new_query)
-        if (new_query.use_calendar && new_query.calendar_start_date && new_query.calendar_end_date) {
+        // どの列宛ての編集かはquery_idで解決する。focused_column_indexを盲信すると、
+        // フォーカス切り替えと編集が交錯したときに別列へ書き込んでしまう
+        const column_index = querys.value.findIndex(q => q.query_id === new_query.query_id)
+        if (column_index === -1) {
+            return
+        }
+        search(column_index, new_query)
+        if (new_query.calendar_start_date && new_query.calendar_end_date) {
             gps_log_map_start_time.value = new_query.calendar_start_date
             gps_log_map_end_time.value = new_query.calendar_end_date
         }
@@ -696,14 +772,15 @@ export function useRykvView(options: {
         if (props.is_shared_rykv_view) {
             return
         }
-        skip_search_this_tick.value = true
-        focus_column(index)
-        nextTick(() => skip_search_this_tick.value = false)
+        run_with_sidebar_search_suppressed(() => {
+            focus_column(index)
+        })
     }
 
     function onColumnClickedKyou(index: number, kyou: Kyou): void {
-        skip_search_this_tick.value = true
-        focus_column(index)
+        run_with_sidebar_search_suppressed(() => {
+            focus_column(index)
+        })
         clicked_kyou_in_list_view(index, kyou)
         gps_log_map_start_time.value = kyou.related_time
         gps_log_map_end_time.value = kyou.related_time
@@ -711,40 +788,40 @@ export function useRykvView(options: {
     }
 
     function onColumnRequestedChangeFocusKyou(index: number, is_focus: boolean): void {
-        focused_column_index.value = index
-        skip_search_this_tick.value = true
-        const query = querys.value[index].clone()
-        query.is_focus_kyou_in_list_view = is_focus
-        querys.value.splice(index, 1, query)
-        querys_backup.value.splice(index, 1, query)
+        run_with_sidebar_search_suppressed(() => {
+            focused_column_index.value = index
+            const query = querys.value[index].clone()
+            query.is_focus_kyou_in_list_view = is_focus
+            querys.value.splice(index, 1, query)
+            querys_backup.value.splice(index, 1, query.clone())
+            // サイドバーの表示対象も差し替え後のクエリへ揃える
+            focused_query.value = query
+        })
     }
 
     function onColumnRequestedSearch(index: number): void {
-        focused_column_index.value = index
-        skip_search_this_tick.value = true
-        const query = querys.value[index].clone()
-        query.query_id = props.gkill_api.generate_uuid()
-        querys.value[index] = query
-        querys.value.splice(index, 1, query)
-        querys_backup.value.splice(index, 1, query)
+        run_with_sidebar_search_suppressed(() => {
+            focused_column_index.value = index
+            const query = querys.value[index].clone()
+            querys.value.splice(index, 1, query)
+            querys_backup.value.splice(index, 1, query.clone())
+        })
         reload_list(index)
     }
 
     function onColumnRequestedChangeImageOnlyView(index: number, is_image_only: boolean): void {
-        focused_column_index.value = index
-        skip_search_this_tick.value = true
-        const query = querys.value[index].clone()
-        query.query_id = props.gkill_api.generate_uuid()
-        query.is_image_only = is_image_only
-        querys.value[index] = query
-        querys.value.splice(index, 1, query)
-        querys_backup.value.splice(index, 1, query)
-        search(index, query, true)
+        run_with_sidebar_search_suppressed(() => {
+            focused_column_index.value = index
+            const query = querys.value[index].clone()
+            query.is_image_only = is_image_only
+            querys.value.splice(index, 1, query)
+            querys_backup.value.splice(index, 1, query.clone())
+        })
+        search(index, querys.value[index], true)
     }
 
     function onColumnRequestedReloadList(index: number): void {
         const query = querys.value[index].clone()
-        query.query_id = props.gkill_api.generate_uuid()
         querys.value[index] = query
         reload_list(index)
     }
@@ -761,8 +838,10 @@ export function useRykvView(options: {
     }
 
     function onAddColumnClick(): void {
-        add_list_view()
-        skip_search_this_tick.value = true
+        // add_list_viewはfocused_queryを差し替えるので抑止で包む
+        run_with_sidebar_search_suppressed(() => {
+            add_list_view()
+        })
         if (props.application_config.rykv_hot_reload) {
             search(querys.value.length - 1, querys.value[querys.value.length - 1], true)
         }
@@ -777,25 +856,21 @@ export function useRykvView(options: {
             payload: payload ?? null,
             opened_at: Date.now(),
         })
+        // 開いた直後にも最新化する。リストのKyouは検索時点のものなので、
+        // 別経路で更新されていると古い内容でダイアログが開いてしまう
         ;(async (): Promise<void> => {
-                let reload_query: FindKyouQuery | undefined
-                for (let i = 0; i < match_kyous_list.value.length; i++) {
-                    if (match_kyous_list.value[i].some(k => k.id === kyou.id)) {
-                        reload_query = build_mi_reload_query(querys.value[i], kyou.data_type)
-                        break
-                    }
+            const reload_query = find_reload_query_for(kyou.id, kyou.data_type)
+            const refreshed = await refresh_kyou(kyou, reload_query)
+            if (!refreshed) {
+                return
+            }
+            for (let i = 0; i < opened_dialogs.value.length; i++) {
+                if (opened_dialogs.value[i].id === dialog_id) {
+                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: refreshed }
+                    return
                 }
-                const updated_kyou = kyou.clone()
-                await updated_kyou.reload(true, reload_query)
-                updated_kyou.is_typed_data_loaded = false
-                await updated_kyou.load_all(reload_query, true)
-                for (let i = 0; i < opened_dialogs.value.length; i++) {
-                    if (opened_dialogs.value[i].id === dialog_id) {
-                        opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
-                        break
-                    }
-                }
-            })()
+            }
+        })().catch((err: unknown) => console.error(err))
     }
 
     function close_rykv_dialog(dialog_id: string): void {

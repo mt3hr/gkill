@@ -211,7 +211,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		onlyLatestData = true
 	}
 	queryArgsForPlaingStart := []any{}
@@ -220,7 +220,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
@@ -232,7 +232,11 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	tableNameAlias = sqlite3impl.QuoteIdent(t.dbName)
 	queryArgsForEnd := []any{}
 	whereCounter = 0
-	onlyLatestData = true
+	// start分岐と同じくquery依存にする(以前はend分岐だけtrue固定で非対称だった)
+	onlyLatestData = query.OnlyLatestData
+	if query.PlaingTime != nil {
+		onlyLatestData = true
+	}
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -244,7 +248,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisEnd += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
 		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Unix())
 		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Unix())
@@ -358,10 +362,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -487,8 +489,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	tableName := sqlite3impl.QuoteIdent(t.dbName)
@@ -853,7 +854,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		onlyLatestData = true
 	}
 	queryArgsForPlaingStart := []any{}
@@ -862,7 +863,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
@@ -874,7 +875,11 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	tableName = sqlite3impl.QuoteIdent(t.dbName)
 	tableNameAlias = sqlite3impl.QuoteIdent(t.dbName)
 	whereCounter = 0
-	onlyLatestData = true
+	// start分岐と同じくquery依存にする(以前はend分岐だけtrue固定で非対称だった)
+	onlyLatestData = query.OnlyLatestData
+	if query.PlaingTime != nil {
+		onlyLatestData = true
+	}
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -886,7 +891,7 @@ FROM ` + sqlite3impl.QuoteIdent(t.dbName) + `
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisEnd += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
 		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Unix())
 		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Unix())
@@ -1001,10 +1006,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1030,7 +1033,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
@@ -1148,8 +1151,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	dataType := "timeis"
@@ -1174,7 +1176,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Unix())

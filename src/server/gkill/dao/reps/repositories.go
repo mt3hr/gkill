@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -93,12 +94,13 @@ func (r Repositories) findKyous(ctx context.Context, query *find.FindQuery, para
 	}
 	wg.Wait()
 
-	// エラー集約
+	// エラー集約。複数repが同時に失敗しても全部残す
+	// (以前は最後の1件で上書きされ、他のrepの故障が見えなかった)
 errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find kyous: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -108,7 +110,7 @@ errloop:
 		return nil, err
 	}
 
-	// Kyou集約。UpdateTimeが最新のものを収める
+	// Kyou集約。キーごとに全repの全entryをappendする(最新版の選択は後段のfind_filterが行う)
 loop:
 	for {
 		select {
@@ -169,7 +171,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -214,7 +216,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -290,7 +292,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -309,8 +311,7 @@ func (r Repositories) GetPath(ctx context.Context, id string) (string, error) {
 	ids := []string{id}
 	for _, rep := range r {
 		query := &find.FindQuery{
-			IDs:    ids,
-			UseIDs: true,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -364,7 +365,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -456,7 +457,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -542,7 +543,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

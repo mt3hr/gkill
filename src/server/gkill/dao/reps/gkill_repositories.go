@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -748,8 +749,7 @@ func (g *GkillRepositories) GetPath(ctx context.Context, id string) (string, err
 	ids := []string{id}
 	for _, rep := range g.Reps {
 		query := &find.FindQuery{
-			IDs:    ids,
-			UseIDs: true,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -803,7 +803,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -867,7 +867,8 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 			queryLatest := &clonedQuery
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs == nil || len(query.IDs) == 0 {
+			// （IDs=[]（非nil空）は「明示的に0件指定」なのでここでは補完しない）
+			if query.IDs == nil {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -888,7 +889,6 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 				}
 
 				queryLatest.IDs = ids
-				queryLatest.UseIDs = true
 			}
 
 			matchTagsInRep, err := rep.FindTags(ctx, queryLatest)
@@ -909,7 +909,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find tag: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find tag: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -991,7 +991,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get tag: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get tag: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1056,7 +1056,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get tags by tag name: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get tags by tag name: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1158,7 +1158,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get tag histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get tag histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1247,7 +1247,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get all repnames: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get all repnames: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1303,7 +1303,8 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 				ids = append([]string{}, query.IDs...)
 			}
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs == nil || len(ids) == 0 {
+			// （IDs=[]（非nil空）は「明示的に0件指定」なのでここでは補完しない）
+			if query.IDs == nil {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -1323,7 +1324,6 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 				}
 
 				queryLatest.IDs = ids
-				queryLatest.UseIDs = true
 			}
 
 			matchTextsInRep, err := rep.FindTexts(ctx, queryLatest)
@@ -1344,7 +1344,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find text: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find text: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1426,7 +1426,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get text: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get text: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1491,7 +1491,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get notification: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get notification: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1556,7 +1556,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get texts by target id: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get texts by target id: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1638,7 +1638,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get notifications by target id: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get notifications by target id: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1730,7 +1730,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get text histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get text histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -1809,7 +1809,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get notification histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get notification histories: %w", e))
 			existErr = true
 		default:
 			break errloop

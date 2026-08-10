@@ -243,14 +243,14 @@ FROM TIMEIS
 	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		onlyLatestData = true
 	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
@@ -274,14 +274,14 @@ FROM TIMEIS
 	ignoreCase = true
 
 	onlyLatestData = query.OnlyLatestData
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		onlyLatestData = true
 	}
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
 		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
@@ -424,10 +424,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -585,8 +583,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	queryArgs := []any{
@@ -839,14 +836,14 @@ FROM TIMEIS
 	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		onlyLatestData = true
 	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
@@ -860,7 +857,11 @@ FROM TIMEIS
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	// start分岐と同じくquery依存にする(以前はend分岐だけtrue固定で非対称だった)
+	onlyLatestData = query.OnlyLatestData
+	if query.PlaingTime != nil {
+		onlyLatestData = true
+	}
 	relatedTimeColumnName = "RELATED_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -873,7 +874,7 @@ FROM TIMEIS
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
 		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
@@ -1021,10 +1022,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1050,7 +1049,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
@@ -1201,8 +1200,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	dataType := "timeis"
@@ -1227,7 +1225,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	if query.UsePlaing {
+	if query.PlaingTime != nil {
 		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
 		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (query.PlaingTime).Format(sqlite3impl.TimeLayout))
@@ -1492,14 +1490,15 @@ FROM TIMEIS
 			return nil, ctx.Err()
 		default:
 			addr := gkill_cache.LatestDataRepositoryAddress{}
-			var isDeletedStr string
 			var dataUpdateTimeStr string
 			var targetIDInData *string
-			err := rows.Scan(&isDeletedStr, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
+			// IS_DELETEDはboolバインドでINTEGER(0/1)格納なので直接boolへScanする。
+			// 以前は文字列に受けて "TRUE" と比較しており(実値は"0"/"1")、常にfalseになって
+			// 削除済みターゲットを指すReKyou/MiReKyouが検索結果に残っていた
+			err := rows.Scan(&addr.IsDeleted, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
 			if err != nil {
 				return nil, err
 			}
-			addr.IsDeleted = isDeletedStr == "TRUE"
 			addr.TargetIDInData = targetIDInData
 			addr.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {

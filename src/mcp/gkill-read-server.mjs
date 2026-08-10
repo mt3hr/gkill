@@ -24,6 +24,7 @@ import {
   INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH,
 } from "./lib/constants.mjs";
 import { normalizeKyouArgs, normalizeLocaleOnlyArgs, normalizeGpsArgs, normalizeIdfFileArgs } from "./lib/normalization.mjs";
+import { FIND_QUERY_SCHEMA } from "./lib/find-query-schema.mjs";
 import {
   PLUGIN_TOOLS,
   handlePluginToolCall,
@@ -53,120 +54,6 @@ const AUTH_ERROR_CODES = new Set([
   "ERR000013", // AccountSessionNotFoundError
   "ERR000238", // AccountDisabledError
 ]);
-
-const FIND_QUERY_SCHEMA = {
-  type: "object",
-  description:
-    "gkill find query. Omitted fields follow server defaults. Datetime fields use ISO-8601 strings. " +
-    "General rule: each filter group requires its use_X flag set to true to activate (e.g., use_calendar:true activates calendar_start/end_date; use_words:true activates words). Without the flag, the related fields are ignored. " +
-    "Recommended filtering strategy: fetch ApplicationConfig and all tag names first, then build a visible-tag allowlist — a tag is visible when is_force_hide=false AND check_when_inited=true in ApplicationConfig tag_struct. Pass visible tags via tags/timeis_tags with use_tags/use_timeis_tags=true. For repositories, prefer checked leaf rep_types from ApplicationConfig and treat unchecked leaf rep_type leaves as inferred hidden sources. " +
-    "Payload varies by data_type: kmemo body is in texts[], lantana has mood (0-10), nlog has title/shop/amount, timeis has title/start_time/end_time, mi has title/is_checked/board_name/limit_time, urlog has title/url, kc has title/num_value, idf has file_name/is_image/is_video/is_audio/rep_name/mime_type. To view/read an idf file, prefer in this order: (1) file_path in the payload — read it directly from the local filesystem (local clients only); (2) file_url in the payload — fetch that URL to get the bytes, no auth needed, works for any size (images: file_url is a downscaled thumbnail, file_url_full is the original); (3) gkill_get_idf_file tool with rep_name and file_name — base64 fallback, capped in size. git_commit_log has commit_message. Plugin-provided entries (any data_type that is not one of the built-ins above) have payload.kind='plugin' carrying data_type/rep_name/kyou_id/plugin_name; their body is not stored in gkill, so set include_plugin_content:true on this same call to get it inline as payload.content_text.",
-  properties: {
-    update_cache: { type: "boolean", description: "Force cache refresh before query." },
-    is_deleted: { type: "boolean", description: "Include soft-deleted entries." },
-    use_tags: { type: "boolean", description: "Activate tag filtering (tags, hide_tags, tags_and)." },
-    use_reps: { type: "boolean", description: "Activate repository name filtering (reps)." },
-    use_rep_types: { type: "boolean", description: "Activate rep-type filtering (rep_types)." },
-    rep_types: {
-      type: "array",
-      description:
-        "Allowed rep-type names. These values are backend-specific and may be case-sensitive. Do not assume ApplicationConfig display labels map 1:1 to accepted query values. In some deployments, lower-case values such as \"kmemo\" work where title-case labels such as \"Kmemo\" do not. If unsure, omit use_rep_types first, confirm the search works, then add rep_types gradually.",
-      items: { type: "string" },
-    },
-    use_ids: { type: "boolean", description: "Activate ID filtering (ids)." },
-    use_include_id: { type: "boolean", description: "When true, ids is an include-list; when false, an exclude-list." },
-    ids: { type: "array", description: "Entry IDs to include or exclude.", items: { type: "string" } },
-    use_words: { type: "boolean", description: "Activate keyword filtering (words, not_words, words_and)." },
-    words: { type: "array", description: "Keywords to match.", items: { type: "string" } },
-    words_and: { type: "boolean", description: "AND logic for words (true=all must match, false=any)." },
-    not_words: { type: "array", description: "Keywords to exclude.", items: { type: "string" } },
-    reps: {
-      type: "array",
-      description:
-        "Allowed rep names. Use this as an allowlist when you already know the visible repos to include. If rep_struct (from ApplicationConfig) is unavailable, infer hidden repos from unchecked rep_type leaves and keep this list aligned with visible sources only.",
-      items: { type: "string" },
-    },
-    tags: {
-      type: "array",
-      description:
-        "Allowed tag names. For ordinary browsing, you may build a visible-tag allowlist from ApplicationConfig. If you intentionally need a hidden tag, you can pass it here directly with use_tags=true instead of excluding it from the query.",
-      items: { type: "string" },
-    },
-    hide_tags: {
-      type: "array",
-      description:
-        "Explicit tag exclusion list. Prefer a visible-tag allowlist in tags when you need to exclude hidden tags reliably.",
-      items: { type: "string" },
-    },
-    tags_and: { type: "boolean", description: "AND logic for tags (true=all must match, false=any)." },
-    use_timeis: { type: "boolean", description: "Activate TimeIs keyword filtering (timeis_words, timeis_not_words)." },
-    timeis_words: { type: "array", description: "Keywords to match in TimeIs titles.", items: { type: "string" } },
-    timeis_not_words: { type: "array", description: "Keywords to exclude from TimeIs titles.", items: { type: "string" } },
-    timeis_words_and: { type: "boolean", description: "AND logic for timeis_words." },
-    use_timeis_tags: { type: "boolean", description: "Activate TimeIs tag filtering." },
-    timeis_tags: {
-      type: "array",
-      description:
-        "Allowed TimeIs tag names. For ordinary browsing, you may use the same visible-tag allowlist strategy as tags. If you intentionally need a hidden tag, you can pass it here directly with use_timeis_tags=true.",
-      items: { type: "string" },
-    },
-    hide_timeis_tags: {
-      type: "array",
-      description:
-        "Explicit TimeIs tag exclusion list. Prefer a visible-tag allowlist in timeis_tags when you need to exclude hidden tags reliably.",
-      items: { type: "string" },
-    },
-    timeis_tags_and: { type: "boolean", description: "AND logic for timeis_tags." },
-    use_calendar: { type: "boolean", description: "Activate date range filtering (calendar_start/end_date)." },
-    calendar_start_date: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
-    calendar_end_date: { type: "string", description: `${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
-    use_map: { type: "boolean", description: "Activate geographic filtering (map_latitude, map_longitude, map_radius)." },
-    map_radius: { type: "number", description: "Search radius in meters." },
-    map_latitude: { type: "number", description: "Center latitude." },
-    map_longitude: { type: "number", description: "Center longitude." },
-    include_create_mi: { type: "boolean", description: "Include Mi tasks in 'created' state. Effective only when for_mi=true." },
-    include_check_mi: { type: "boolean", description: "Include Mi tasks in 'checked' (completed) state. Effective only when for_mi=true." },
-    include_limit_mi: { type: "boolean", description: "Include Mi tasks that have a deadline (limit_time). Effective only when for_mi=true." },
-    include_start_mi: { type: "boolean", description: "Include Mi tasks that have an estimate_start_time. Effective only when for_mi=true." },
-    include_end_mi: { type: "boolean", description: "Include Mi tasks that have an estimate_end_time. Effective only when for_mi=true." },
-    include_end_timeis: { type: "boolean", description: "Include TimeIs entries that have ended (have end_time)." },
-    use_plaing: { type: "boolean", description: "Activate plaing time filtering — shows what was happening at a specific moment (e.g., which TimeIs was running, which records existed). Unlike calendar range, this is a point-in-time snapshot." },
-    plaing_time: { type: "string", description: `Target time for plaing view. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
-    use_update_time: { type: "boolean", description: "Activate update-time filtering (records updated after this time)." },
-    update_time: { type: "string", description: `Filter by last update time. ${ISO_DATETIME_DESC} or ${DATE_ONLY_DESC}` },
-    is_image_only: { type: "boolean", description: "Return only entries that have images attached." },
-    for_mi: { type: "boolean", description: "Query Mi (task) entries specifically." },
-    use_mi_board_name: { type: "boolean", description: "Activate Mi board filtering (mi_board_name)." },
-    use_period_of_time: { type: "boolean", description: "Activate time-of-day/weekday filtering." },
-    period_of_time_start_time_second: {
-      type: "integer",
-      description: "Start of time-of-day window, seconds from 00:00:00 (0-86399).",
-    },
-    period_of_time_end_time_second: {
-      type: "integer",
-      description: "End of time-of-day window, seconds from 00:00:00 (0-86399).",
-    },
-    period_of_time_week_of_days: {
-      type: "array",
-      description: "Weekdays to include: Sunday=0 ... Saturday=6.",
-      items: { type: "integer", minimum: 0, maximum: 6 },
-    },
-    mi_board_name: { type: "string", description: "Filter Mi tasks by board name." },
-    mi_check_state: {
-      type: "string",
-      description: "Filter Mi tasks by check state.",
-      enum: ["all", "checked", "uncheck"],
-    },
-    mi_sort_type: {
-      type: "string",
-      description: "Sort order for Mi tasks.",
-      enum: ["create_time", "estimate_start_time", "estimate_end_time", "limit_time"],
-    },
-    only_latest_data: { type: "boolean", description: "Return only the latest version of each entry (server default: true)." },
-  },
-  additionalProperties: true,
-};
-
 
 function summarizeToolPayload(name, payload) {
   const pluginSummary = summarizePluginToolPayload(name, payload);
@@ -284,11 +171,12 @@ const TOOLS = [
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
       "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), mi (task). Plugins add their own data_type values (e.g. claude_conversation) — list them with gkill_get_plugin_list, and set include_plugin_content:true to read their bodies in this same response. " +
-      "Most used query fields: use_calendar + calendar_start/end_date, use_words + words, use_tags + tags, for_mi. Advanced: use_map, use_plaing, use_period_of_time, use_update_time. " +
+      "A filter activates simply by being present and non-null in the query; omit (or pass null for) filters you don't use. " +
+      "Most used query fields: calendar_start_date/calendar_end_date, words, tags, for_mi. Advanced: map_latitude/map_longitude/map_radius, plaing_time, period_of_time_*, update_time. " +
       "Common query patterns: " +
-      "Date range: {use_calendar:true, calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}. " +
-      "Keyword search: {use_words:true, words:[\"keyword\"]}. " +
-      "Tag filter: {use_tags:true, tags:[\"tagname\"]}. " +
+      "Date range: {calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}. " +
+      "Keyword search: {words:[\"keyword\"]}. " +
+      "Tag filter: {tags:[\"tagname\"]}. " +
       "Mi tasks: {for_mi:true, mi_check_state:\"uncheck\"}. " +
       "Practical recommendation: start with a minimal query, keep limit small, and add filters gradually. Hidden tags can be searched intentionally by passing them directly in query.tags or query.timeis_tags. rep_types are backend-specific and may be case-sensitive, so do not assume ApplicationConfig display labels map 1:1 to accepted query values. " +
       "If a query fails, first retry with fewer query fields, a smaller limit, and is_include_timeis=false; then add rep_types or TimeIs expansion back step by step. " +
@@ -342,7 +230,7 @@ const TOOLS = [
             "content_skipped_reason ('max_kyous' | 'budget' | 'deadline' | 'rep_error') when it was skipped, and " +
             "content_error when the fetch failed. Only content_status='ok' means the body is complete. " +
             `At most ${MAX_INLINE_PLUGIN_CONTENT_KYOUS} plugin kyous per call are inlined, and ${INLINE_PLUGIN_CONTENT_TOTAL_TEXT_LENGTH} characters in total. ` +
-            "To read one long body in full, narrow the query to that single entry (query.use_ids + query.ids) and " +
+            "To read one long body in full, narrow the query to that single entry (query.ids) and " +
             "raise plugin_content_max_text_length. " +
             "Enable this only when you actually intend to read plugin bodies: it costs one extra request per plugin kyou.",
           default: false,
@@ -373,7 +261,7 @@ const TOOLS = [
     name: "gkill_get_mi_board_list",
     description:
       "Get the list of Mi (task) board names configured in gkill. Boards are like Kanban columns that organize tasks. " +
-      "Use this to discover existing board names for Mi queries (query.mi_board_name with use_mi_board_name:true). " +
+      "Use this to discover existing board names for Mi queries (query.mi_board_name). " +
       "Response fields: boards[] (array of board name strings).",
     inputSchema: {
       type: "object",
@@ -385,7 +273,7 @@ const TOOLS = [
   },
   {
     name: "gkill_get_all_tag_names",
-    description: "Get all tag names defined in gkill. Use this to discover available tags for filtering in gkill_get_kyous via query.tags (with use_tags:true) or query.timeis_tags (with use_timeis_tags:true).",
+    description: "Get all tag names defined in gkill. Use this to discover available tags for filtering in gkill_get_kyous via query.tags or query.timeis_tags.",
     inputSchema: {
       type: "object",
       properties: {
@@ -396,7 +284,7 @@ const TOOLS = [
   },
   {
     name: "gkill_get_all_rep_names",
-    description: "Get all repository names configured in gkill. Use this to discover rep names for filtering in gkill_get_kyous via query.reps (with use_reps:true).",
+    description: "Get all repository names configured in gkill. Use this to discover rep names for filtering in gkill_get_kyous via query.reps.",
     inputSchema: {
       type: "object",
       properties: {

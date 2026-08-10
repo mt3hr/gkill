@@ -36,7 +36,7 @@ export const PLUGIN_TOOLS = [
       "Each entry has name, version, description, data_type (the data_type its kyous carry), rep_name " +
       "(the repository name its kyous carry) and is_alive (whether the plugin process currently responds). " +
       "Use this to discover which data_type / rep_name values belong to plugins, then filter gkill_get_kyous " +
-      "with query.reps (use_reps:true) or query.rep_types to fetch only that plugin's records, passing " +
+      "with query.reps or query.rep_types to fetch only that plugin's records, passing " +
       "include_plugin_content:true to get their bodies in the same call. " +
       "Response fields: plugins[].",
     inputSchema: {

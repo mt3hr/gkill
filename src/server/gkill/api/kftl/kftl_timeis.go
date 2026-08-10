@@ -327,9 +327,9 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	}
 	endTime := r.GetRelatedTime()
 
+	plaingNow := time.Now()
 	query := &find.FindQuery{
-		UsePlaing:      true,
-		PlaingTime:     time.Now(),
+		PlaingTime:     &plaingNow,
 		OnlyLatestData: true,
 	}
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)
@@ -487,9 +487,9 @@ func (r *kftlTimeIsEndByTagRequest) DoRequest(ctx context.Context) error {
 	}
 	endTime := r.GetRelatedTime()
 
+	plaingNow := time.Now()
 	query := &find.FindQuery{
-		UsePlaing:      true,
-		PlaingTime:     time.Now(),
+		PlaingTime:     &plaingNow,
 		OnlyLatestData: true,
 	}
 	playingEntries, err := r.Ctx.Repositories.TimeIsReps.FindTimeIs(ctx, query)

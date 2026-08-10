@@ -26,6 +26,7 @@ import {
   KYOUS_QUERY_INTEGER_FIELDS,
   KYOUS_QUERY_DATETIME_FIELDS,
   KYOUS_QUERY_ALL_FIELDS,
+  LEGACY_USE_FLAG_KEYS,
   MI_CHECK_STATES,
   MI_SORT_TYPES,
   PLUGIN_CONTENT_FORMATS,
@@ -84,12 +85,56 @@ export function normalizeDateTimeString(value, field, { allowDateOnly = false, e
   throw invalidArgument(field, `must be ${allowedFormat}`, value);
 }
 
+// 旧 use_X フラグと、そのフラグが束ねていた値キーの対応表。
+// use_X:false は「そのグループを使わない」の意思表示なので値キーを落とし、
+// use_X:true は捨てるだけでよい (値キーの非null存在がフィルタを活性化する)。
+// use_include_id は対応する値キーを持たない (ids は常に include リスト)。
+// use_timeis は複合ゲート (timeis_words/timeis_not_words の存在で活性、
+// TimeIsタグはそのゲート内でだけ効く) を束ねていたので、false のときは
+// timeis_tags も一緒に落とす。
+const LEGACY_USE_FLAG_VALUE_KEYS = new Map([
+  ["use_tags", ["tags"]],
+  ["use_reps", ["reps"]],
+  ["use_rep_types", ["rep_types"]],
+  ["use_ids", ["ids"]],
+  ["use_include_id", []],
+  // 値キーは落とさない (Go の移行実装もフラグ削除のみ)
+  ["use_mi_sort_type", []],
+  ["use_mi_check_state", []],
+  ["use_words", ["words", "not_words"]],
+  ["use_timeis", ["timeis_words", "timeis_not_words", "timeis_tags"]],
+  ["use_timeis_tags", ["timeis_tags"]],
+  ["use_calendar", ["calendar_start_date", "calendar_end_date"]],
+  ["use_map", ["map_latitude", "map_longitude", "map_radius"]],
+  ["use_plaing", ["plaing_time"]],
+  ["use_update_time", ["update_time"]],
+  ["use_mi_board_name", ["mi_board_name"]],
+  [
+    "use_period_of_time",
+    ["period_of_time_start_time_second", "period_of_time_end_time_second", "period_of_time_week_of_days"],
+  ],
+]);
+
 export function normalizeKyouQuery(query) {
   const source = assertObject(query, "query");
   const normalized = {};
+  const disabledLegacyFlags = [];
 
   for (const [key, value] of Object.entries(source)) {
     const field = `query.${key}`;
+    // null はキー欠落と同義 (フィルタ未使用)。normalized には積まない。
+    if (value === null) {
+      continue;
+    }
+    // 廃止済みの use_X フラグは後方互換のために受理だけする。
+    // false は「そのグループを使わない」なので、束ねていた値キーをループ後に落とす。
+    // true は捨てる (値キーの存在自体がフィルタを活性化する)。
+    if (LEGACY_USE_FLAG_KEYS.has(key)) {
+      if (assertBoolean(value, field) === false) {
+        disabledLegacyFlags.push(key);
+      }
+      continue;
+    }
     if (KYOUS_QUERY_BOOLEAN_FIELDS.has(key)) {
       normalized[key] = assertBoolean(value, field);
       continue;
@@ -108,6 +153,11 @@ export function normalizeKyouQuery(query) {
     }
     if (KYOUS_QUERY_DATETIME_FIELDS.has(key)) {
       if (value === "") continue; // skip empty datetime strings (ChatGPT sends "" for unused fields)
+      // plaing_time はリテラル "now" を受け、現在時刻のRFC3339へ展開する
+      if (key === "plaing_time" && typeof value === "string" && value.trim() === "now") {
+        normalized[key] = formatLocalRfc3339(new Date());
+        continue;
+      }
       normalized[key] = normalizeDateTimeString(value, field, KYOUS_QUERY_DATETIME_FIELDS.get(key));
       continue;
     }
@@ -143,49 +193,24 @@ export function normalizeKyouQuery(query) {
     });
   }
 
-  // filter group の自動活性化:
-  // AIクライアントが use_X フラグを省略しても、対応データフィールドが指定されていれば
-  // use_X=true を自動設定する（明示的に false が渡された場合は上書きしない）
-  if (!Object.prototype.hasOwnProperty.call(normalized, "use_words")) {
-    if (
-      (Array.isArray(normalized.words) && normalized.words.length > 0) ||
-      (Array.isArray(normalized.not_words) && normalized.not_words.length > 0)
-    ) {
-      normalized.use_words = true;
+  // 旧 use_X:false は「そのグループを使わない」だったので、束ねていた値キーを取り除く。
+  // フラグと値キーの出現順に依存しないよう、ループ後にまとめて落とす。
+  for (const flagKey of disabledLegacyFlags) {
+    for (const valueKey of LEGACY_USE_FLAG_VALUE_KEYS.get(flagKey)) {
+      delete normalized[valueKey];
     }
   }
-  if (!Object.prototype.hasOwnProperty.call(normalized, "use_tags")) {
-    if (Array.isArray(normalized.tags) && normalized.tags.length > 0) {
-      normalized.use_tags = true;
-    }
-  }
-  if (!Object.prototype.hasOwnProperty.call(normalized, "use_calendar")) {
-    if (normalized.calendar_start_date !== undefined || normalized.calendar_end_date !== undefined) {
-      normalized.use_calendar = true;
-    }
-  }
-  if (!Object.prototype.hasOwnProperty.call(normalized, "use_timeis")) {
-    if (
-      (Array.isArray(normalized.timeis_words) && normalized.timeis_words.length > 0) ||
-      (Array.isArray(normalized.timeis_not_words) && normalized.timeis_not_words.length > 0)
-    ) {
-      normalized.use_timeis = true;
-    }
-  }
-  if (!Object.prototype.hasOwnProperty.call(normalized, "use_timeis_tags")) {
-    if (Array.isArray(normalized.timeis_tags) && normalized.timeis_tags.length > 0) {
-      normalized.use_timeis_tags = true;
-    }
-  }
-  if (!Object.prototype.hasOwnProperty.call(normalized, "use_reps")) {
-    if (Array.isArray(normalized.reps) && normalized.reps.length > 0) {
-      normalized.use_reps = true;
-    }
-  }
-  if (!Object.prototype.hasOwnProperty.call(normalized, "use_ids")) {
-    if (Array.isArray(normalized.ids) && normalized.ids.length > 0) {
-      normalized.use_ids = true;
-    }
+
+  // TimeIsタグフィルタはサーバ側で「timeis_words/timeis_not_words の非null存在」を
+  // ゲートにしている (HasTimeIsFilter && TimeIsTags != nil)。timeis_tags だけを
+  // 指定したクエリでもゲートを満たすよう、timeis_words: []
+  // (「任意のTimeIsに覆われたKyou」) を補完する。
+  if (
+    normalized.timeis_tags !== undefined &&
+    normalized.timeis_words === undefined &&
+    normalized.timeis_not_words === undefined
+  ) {
+    normalized.timeis_words = [];
   }
 
   normalized.only_latest_data = true;
