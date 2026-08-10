@@ -159,11 +159,13 @@ INSERT INTO ` + sqlite3impl.QuoteIdent(dbName) + ` (
 		return nil, err
 	}
 
+	// 板名は「最新版かつ未削除」のレコードからだけ集める。
+	// 削除済みを含めると、タスクを全部消した板が板一覧に残り続ける
 	getBoardNamesSQL := `
 SELECT
   DISTINCT BOARD_NAME
 FROM ` + sqlite3impl.QuoteIdent(dbName) + `
-` + fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", dbName, dbName) + " GROUP BY BOARD_NAME"
+` + fmt.Sprintf(" WHERE IS_DELETED = 0 AND UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", dbName, dbName) + " GROUP BY BOARD_NAME"
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", getBoardNamesSQL))
 	getBoardNamesStmt, err := cacheDB.PrepareContext(ctx, getBoardNamesSQL)
 	if err != nil {
@@ -295,7 +297,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
-	ignoreCase := false
+	// 他の4分岐・非cached実装と同じく大文字小文字を無視する(以前はcreate分岐だけfalseだった)
+	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
@@ -303,10 +306,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
-		queryArgsForCreate = append(queryArgsForCreate, query.MiBoardName)
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -326,10 +329,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		return nil, err
 	}
 	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCheck += " AND "
 		sqlWhereForCheck += " BOARD_NAME = ? "
-		queryArgsForCheck = append(queryArgsForCheck, query.MiBoardName)
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -349,10 +352,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		return nil, err
 	}
 	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
-		queryArgsForLimit = append(queryArgsForLimit, query.MiBoardName)
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -372,10 +375,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		return nil, err
 	}
 	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
-		queryArgsForStart = append(queryArgsForStart, query.MiBoardName)
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -395,10 +398,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		return nil, err
 	}
 	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
-		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
 	}
 
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s",
@@ -490,13 +493,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	var err error
 
 	query := &find.FindQuery{
-		UseIDs:          true,
 		IDs:             []string{id},
 		IncludeCreateMi: true,
 		IncludeStartMi:  true,
 		IncludeCheckMi:  true,
 		OnlyLatestData:  updateTime == nil,
-		UseUpdateTime:   updateTime != nil,
 		UpdateTime:      updateTime,
 	}
 
@@ -611,7 +612,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
-	ignoreCase := false
+	// 他の4分岐・非cached実装と同じく大文字小文字を無視する(以前はcreate分岐だけfalseだった)
+	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
@@ -619,10 +621,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
-		queryArgsForCreate = append(queryArgsForCreate, query.MiBoardName)
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -642,10 +644,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		return nil, err
 	}
 	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCheck += " AND "
 		sqlWhereForCheck += " BOARD_NAME = ? "
-		queryArgsForCheck = append(queryArgsForCheck, query.MiBoardName)
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -665,10 +667,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		return nil, err
 	}
 	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
-		queryArgsForLimit = append(queryArgsForLimit, query.MiBoardName)
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -688,10 +690,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		return nil, err
 	}
 	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
-		queryArgsForStart = append(queryArgsForStart, query.MiBoardName)
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -711,10 +713,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 		return nil, err
 	}
 	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
-		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
 	}
 
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s",
@@ -806,7 +808,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	var err error
 
 	query := &find.FindQuery{
-		UseIDs:          true,
 		IDs:             []string{id},
 		IncludeCreateMi: true,
 		IncludeStartMi:  true,
@@ -924,7 +925,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
-	ignoreCase := false
+	// 他の4分岐・非cached実装と同じく大文字小文字を無視する(以前はcreate分岐だけfalseだった)
+	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
@@ -932,10 +934,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
-		queryArgsForCreate = append(queryArgsForCreate, query.MiBoardName)
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -955,10 +957,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		return nil, err
 	}
 	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCheck += " AND "
 		sqlWhereForCheck += " BOARD_NAME = ? "
-		queryArgsForCheck = append(queryArgsForCheck, query.MiBoardName)
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -978,10 +980,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		return nil, err
 	}
 	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
-		queryArgsForLimit = append(queryArgsForLimit, query.MiBoardName)
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1001,10 +1003,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		return nil, err
 	}
 	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
-		queryArgsForStart = append(queryArgsForStart, query.MiBoardName)
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1024,10 +1026,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		return nil, err
 	}
 	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
-		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
 	}
 
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s",
@@ -1475,7 +1477,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	ignoreFindWord := false
 	appendOrderBy := false
 	findWordUseLike := true
-	ignoreCase := false
+	// 他の4分岐・非cached実装と同じく大文字小文字を無視する(以前はcreate分岐だけfalseだった)
+	ignoreCase := true
 
 	onlyLatestData = query.OnlyLatestData
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
@@ -1483,10 +1486,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
-		queryArgsForCreate = append(queryArgsForCreate, query.MiBoardName)
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1506,10 +1509,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		return nil, err
 	}
 	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCheck += " AND "
 		sqlWhereForCheck += " BOARD_NAME = ? "
-		queryArgsForCheck = append(queryArgsForCheck, query.MiBoardName)
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1529,10 +1532,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		return nil, err
 	}
 	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
-		queryArgsForLimit = append(queryArgsForLimit, query.MiBoardName)
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1552,10 +1555,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		return nil, err
 	}
 	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
-		queryArgsForStart = append(queryArgsForStart, query.MiBoardName)
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1575,10 +1578,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		return nil, err
 	}
 	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
-		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
 	}
 
 	sqlSegments := []string{}
@@ -1700,13 +1703,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 	var err error
 
 	query := &find.FindQuery{
-		UseIDs:          true,
 		IDs:             []string{id},
 		IncludeCreateMi: true,
 		IncludeStartMi:  true,
 		IncludeCheckMi:  true,
 		OnlyLatestData:  updateTime == nil,
-		UseUpdateTime:   updateTime != nil,
 		UpdateTime:      updateTime,
 	}
 
@@ -1840,10 +1841,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
-		queryArgsForCreate = append(queryArgsForCreate, query.MiBoardName)
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1862,10 +1863,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		return nil, err
 	}
 	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCheck += " AND "
 		sqlWhereForCheck += " BOARD_NAME = ? "
-		queryArgsForCheck = append(queryArgsForCheck, query.MiBoardName)
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1884,10 +1885,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		return nil, err
 	}
 	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
-		queryArgsForLimit = append(queryArgsForLimit, query.MiBoardName)
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1906,10 +1907,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		return nil, err
 	}
 	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
-		queryArgsForStart = append(queryArgsForStart, query.MiBoardName)
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -1928,10 +1929,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 		return nil, err
 	}
 	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
-		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
 	}
 
 	sqlSegments := []string{}
@@ -2057,7 +2058,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	var err error
 
 	query := &find.FindQuery{
-		UseIDs:          true,
 		IDs:             []string{id},
 		IncludeCreateMi: true,
 		IncludeStartMi:  true,
@@ -2195,10 +2195,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
-		queryArgsForCreate = append(queryArgsForCreate, query.MiBoardName)
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -2217,10 +2217,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		return nil, err
 	}
 	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForCheck += " AND "
 		sqlWhereForCheck += " BOARD_NAME = ? "
-		queryArgsForCheck = append(queryArgsForCheck, query.MiBoardName)
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -2239,10 +2239,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		return nil, err
 	}
 	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
-		queryArgsForLimit = append(queryArgsForLimit, query.MiBoardName)
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -2261,10 +2261,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		return nil, err
 	}
 	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
-		queryArgsForStart = append(queryArgsForStart, query.MiBoardName)
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
 	tableName = m.dbName
@@ -2283,10 +2283,10 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		return nil, err
 	}
 	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
-	if query.UseMiBoardName {
+	if query.MiBoardName != nil {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
-		queryArgsForEnd = append(queryArgsForEnd, query.MiBoardName)
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
 	}
 
 	sqlSegments := []string{}

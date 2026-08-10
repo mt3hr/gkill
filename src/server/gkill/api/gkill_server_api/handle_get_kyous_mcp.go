@@ -181,7 +181,6 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	// 候補ID用クエリを作成
 	findQueryForBatch := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            candidateIDs,
 		OnlyLatestData: true,
 	}

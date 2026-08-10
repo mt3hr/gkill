@@ -17,6 +17,14 @@ export function useCalendarQuery(options: {
     const calendar_year = ref(now.getFullYear())
     const calendar_month = ref(now.getMonth())
     const dates: Ref<Array<Date>> = ref([])
+    // チェックボックスのUI状態。クエリ上は calendar_start_date / calendar_end_date の
+    // null 判定が担うため、ローカルrefに分離してprops片方向同期する
+    const use_calendar: Ref<boolean> = ref(props.find_kyou_query
+        ? (props.find_kyou_query.calendar_start_date !== null || props.find_kyou_query.calendar_end_date !== null)
+        : false)
+    // 同一query_id内の null 着信（チェックオフ）ではローカルの日付選択を保持し、
+    // query_id が変わったときだけ着信値で再構築するための同期済みquery_id
+    const last_synced_query_id: Ref<string | null> = ref(null)
 
     watch(() => props.application_config, async () => {
         emits('inited')
@@ -29,28 +37,36 @@ export function useCalendarQuery(options: {
             query.value = new FindKyouQuery()
         }
 
-        const start_date = moment(query.value.calendar_start_date)
-        const date_list = Array<Date>()
-        if (query.value.calendar_start_date && query.value.calendar_end_date) {
-            // Vuetify4のrange modeは[start, end]の2要素のみを受け付ける。
-            // 中間日付を全て詰めるとレンジではなく個別選択として解釈されてしまう。
-            date_list.push(start_date.toDate())
-            const end_day = moment(query.value.calendar_end_date).startOf('day')
-            // startとendが同日の場合は1要素のみにする。
-            // 2要素にするとVDatePickerが「レンジ完了状態」と判断し、
-            // 次のクリックで新しいレンジが始まってしまうため。
-            if (!end_day.isSame(start_date, 'day')) {
-                date_list.push(end_day.toDate())
-            }
-        } else {
-            if (query.value.calendar_start_date) {
+        const query_id_changed = last_synced_query_id.value !== query.value.query_id
+        last_synced_query_id.value = query.value.query_id
+        use_calendar.value = query.value.calendar_start_date !== null || query.value.calendar_end_date !== null
+
+        if (query_id_changed || query.value.calendar_start_date !== null || query.value.calendar_end_date !== null) {
+            const start_date = moment(query.value.calendar_start_date)
+            const date_list = Array<Date>()
+            if (query.value.calendar_start_date && query.value.calendar_end_date) {
+                // Vuetify4のrange modeは[start, end]の2要素のみを受け付ける。
+                // 中間日付を全て詰めるとレンジではなく個別選択として解釈されてしまう。
                 date_list.push(start_date.toDate())
+                const end_day = moment(query.value.calendar_end_date).startOf('day')
+                // startとendが同日の場合は1要素のみにする。
+                // 2要素にするとVDatePickerが「レンジ完了状態」と判断し、
+                // 次のクリックで新しいレンジが始まってしまうため。
+                if (!end_day.isSame(start_date, 'day')) {
+                    date_list.push(end_day.toDate())
+                }
+            } else {
+                if (query.value.calendar_start_date) {
+                    date_list.push(start_date.toDate())
+                }
+                if (query.value.calendar_end_date) {
+                    date_list.push(moment(query.value.calendar_end_date).startOf('day').toDate())
+                }
             }
-            if (query.value.calendar_end_date) {
-                date_list.push(moment(query.value.calendar_end_date).startOf('day').toDate())
-            }
+            dates.value = date_list
         }
-        dates.value = date_list
+        // 同一query_idで両方null着信（チェックオフ）のときはローカルの日付選択を保持する
+        // （即時トグルで値が復活する。チェックrefだけ上で更新済み）
 
         if (!props.inited) {
             nextTick(() => {
@@ -66,6 +82,10 @@ export function useCalendarQuery(options: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function clicked_date(recved_dates: any[]): void {
         if (!recved_dates || recved_dates.length === 0) {
+            if (dates.value.length === 0) {
+                // props同期の書き戻し(空のまま)はユーザー操作ではないのでemitしない
+                return
+            }
             dates.value = []
             emits('request_update_dates', null, null)
             return
@@ -74,7 +94,16 @@ export function useCalendarQuery(options: {
         // 中間日付を全て含む配列が来ても先頭と末尾のみ残す。
         const first = recved_dates[0]
         const last = recved_dates[recved_dates.length - 1]
-        dates.value = recved_dates.length === 1 ? [first] : [first, last]
+        const new_dates = recved_dates.length === 1 ? [first] : [first, last]
+        // VDatePickerはprops同期で受け取ったmodel値を正規化して書き戻すことがある。
+        // 日付が変わらない書き戻しはユーザー操作ではないのでemitしない
+        // (get_start_date/get_end_dateは日granularityなので比較も日で足りる)
+        const is_same_dates = new_dates.length === dates.value.length
+            && new_dates.every((date, i) => moment(date).isSame(moment(dates.value[i]), 'day'))
+        if (is_same_dates) {
+            return
+        }
+        dates.value = new_dates
         emits('request_update_dates', moment(first).toDate(), moment(last).add(1, 'day').add(-1, 'millisecond').toDate())
     }
 
@@ -91,11 +120,11 @@ export function useCalendarQuery(options: {
     }
 
     function clicked_use_calendar_checkbox(): void {
-        emits('request_update_use_calendar_query', query.value.use_calendar)
+        emits('request_update_use_calendar_query', use_calendar.value)
     }
 
     function get_use_calendar(): boolean {
-        return query.value.use_calendar
+        return use_calendar.value
     }
 
     function get_start_date(): Date | null {
@@ -114,6 +143,7 @@ export function useCalendarQuery(options: {
 
     return {
         query,
+        use_calendar,
         calendar_year,
         calendar_month,
         dates,

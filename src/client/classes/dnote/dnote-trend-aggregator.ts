@@ -58,7 +58,7 @@ export class DnoteTrendAggregator {
         // バケット期間の決定
         let window_start: Date
         let window_end: Date
-        if (find_kyou_query.use_calendar && (find_kyou_query.calendar_start_date || find_kyou_query.calendar_end_date)) {
+        if (find_kyou_query.calendar_start_date || find_kyou_query.calendar_end_date) {
             window_start = find_kyou_query.calendar_start_date ?? find_kyou_query.calendar_end_date!
             window_end = find_kyou_query.calendar_end_date ?? new Date(Date.now())
         } else if (cloned_kyous.length > 0) {
@@ -103,7 +103,6 @@ export class DnoteTrendAggregator {
             }
             const bucket_query = typeof find_kyou_query.clone === 'function' ? find_kyou_query.clone() : find_kyou_query
             if (bucket_query !== find_kyou_query) {
-                bucket_query.use_calendar = true
                 bucket_query.calendar_start_date = bucket_start.toDate()
                 bucket_query.calendar_end_date = bucket_end_exclusive.toDate()
             }

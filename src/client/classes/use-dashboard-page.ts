@@ -19,8 +19,19 @@ import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/page
 import moment from 'moment'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
+import { build_kyou_dialog_host_handlers } from '@/classes/kyou-view-relay'
+import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import { useConfigStructSync } from '@/classes/use-config-struct-sync'
+import type { Tag } from '@/classes/datas/tag'
 
-export function useDashboardPage() {
+export function useDashboardPage(options?: {
+    /**
+     * requested_reload_list / registered_kyou を受けたときに全体を取り直す処理。
+     * DnoteView の reload() はテンプレートref経由でしか呼べないので、実体は .vue 側が渡す。
+     * 呼ばれるのは常に setup 完了後なので、.vue 側の関数宣言をラップして渡せばよい
+     */
+    reload_all?: () => Promise<void>,
+}) {
     const theme = useTheme()
 
     // ── Template refs ──
@@ -47,6 +58,13 @@ export function useDashboardPage() {
     const app_content_height: Ref<number> = ref(0)
     const app_content_width: Ref<number> = ref(0)
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
+
+    // ── 板ツリー/タグツリーの追随 ──
+    const { check_tag_update, check_mi_board_update, resync_structs } = useConfigStructSync({
+        application_config,
+        gkill_api: () => gkill_api.value,
+        write_errors: (errors) => write_errors(errors),
+    })
 
     const selected_date: Ref<Date> = ref(moment().startOf('day').toDate())
     const checked_kyous: Ref<Array<Kyou>> = ref([])
@@ -91,24 +109,21 @@ export function useDashboardPage() {
 
     const dnote_query = computed<FindKyouQuery>(() => {
         const base_query = new FindKyouQuery()
-        base_query.use_reps = false
-        base_query.use_tags = false
+        // rep/tagフィルタは既定で未使用(null)。保存済み条件があればそちらを採用する
+        base_query.reps = null
+        base_query.tags = null
         if (application_config.value.dashboard_json_data) {
             const config = DashboardConfig.parse(application_config.value.dashboard_json_data)
             if (config.dashboard_dnote_find_kyou_query) {
                 const saved = config.dashboard_dnote_find_kyou_query
-                base_query.use_tags = saved.use_tags
-                base_query.tags = saved.tags.concat()
+                base_query.tags = saved.tags === null ? null : saved.tags.concat()
                 base_query.tags_and = saved.tags_and
-                base_query.use_reps = saved.use_reps
-                base_query.reps = saved.reps.concat()
-                base_query.use_words = saved.use_words
+                base_query.reps = saved.reps === null ? null : saved.reps.concat()
                 base_query.keywords = saved.keywords
-                base_query.words = saved.words.concat()
-                base_query.not_words = saved.not_words.concat()
+                base_query.words = saved.words === null ? null : saved.words.concat()
+                base_query.not_words = saved.not_words === null ? null : saved.not_words.concat()
             }
         }
-        base_query.use_calendar = true
         base_query.calendar_start_date = target_date_start.value
         base_query.calendar_end_date = target_date_end.value
         base_query.apply_hide_tags(application_config.value)
@@ -126,23 +141,18 @@ export function useDashboardPage() {
                 query.include_limit_mi = saved.include_limit_mi
                 query.include_start_mi = saved.include_start_mi
                 query.include_end_mi = saved.include_end_mi
-                query.use_mi_sort_type = saved.use_mi_sort_type
                 query.mi_sort_type = saved.mi_sort_type
-                query.use_tags = saved.use_tags
-                query.tags = saved.tags.concat()
+                query.tags = saved.tags === null ? null : saved.tags.concat()
                 query.tags_and = saved.tags_and
-                query.use_words = saved.use_words
                 query.keywords = saved.keywords
-                query.words = saved.words.concat()
-                query.not_words = saved.not_words.concat()
-                query.use_mi_check_state = saved.use_mi_check_state
+                query.words = saved.words === null ? null : saved.words.concat()
+                query.not_words = saved.not_words === null ? null : saved.not_words.concat()
                 query.mi_check_state = saved.mi_check_state
             }
         }
         query.for_mi = true
         query.include_limit_mi = true
-        query.use_reps = false
-        query.use_calendar = true
+        query.reps = null
         query.calendar_start_date = target_date_start.value
         query.calendar_end_date = target_date_end.value
         query.apply_hide_tags(application_config.value)
@@ -335,18 +345,128 @@ export function useDashboardPage() {
             payload: payload ?? null,
             opened_at: Date.now(),
         });
+        // 開いた直後にも最新化する。リストのKyouは検索時点のものなので、
+        // 別経路で更新されていると古い内容でダイアログが開いてしまう
         (async (): Promise<void> => {
-            const updated_kyou = kyou.clone()
-            await updated_kyou.reload(true, mi_kyou_query.value)
-            updated_kyou.is_typed_data_loaded = false
-            await updated_kyou.load_all(mi_kyou_query.value, true)
+            const refreshed = await refresh_kyou(kyou, mi_kyou_query.value)
+            if (!refreshed) {
+                return
+            }
             for (let i = 0; i < opened_dialogs.value.length; i++) {
                 if (opened_dialogs.value[i].id === dialog_id) {
-                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
-                    break
+                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: refreshed }
+                    return
                 }
             }
-        })()
+        })().catch((err: unknown) => console.error(err))
+    }
+
+    // ── Kyou update propagation ──
+    // ダッシュボードは Mi リスト / Dnote / 開いているダイアログの3箇所にKyouを抱えている。
+    // 以前は RykvDialogHost に closed / received_errors / received_messages しか配線しておらず、
+    // Kyouもタグもどう編集しても、どこも（開いているダイアログ自身すら）更新されなかった
+    async function reload_kyou(kyou: Kyou): Promise<void> {
+        // 再検索ではなく該当Kyouだけ差し替える。再検索するとソート順もヒット集合も変わって
+        // スクロール位置が飛ぶし、KyouListView は配列参照の差し替えでフル再描画する。
+        // 再検索したいときは requested_reload_list という別のイベントが飛んでくる
+        // 3ブロックは同じ更新から派生しているので、同じ値を渡して1往復に合流させる
+        const requested_at = new_reload_batch()
+        await refresh_kyou_in_list(mi_kyous.value, kyou, {
+            requested_at: requested_at,
+            query: mi_kyou_query.value,
+            replace: (next_list) => { mi_kyous.value = next_list },
+        })
+        await refresh_kyou_in_list(checked_kyous.value, kyou, { requested_at: requested_at })
+        for (let i = 0; i < opened_dialogs.value.length; i++) {
+            if (opened_dialogs.value[i].kyou.id === kyou.id) {
+                const refreshed = await refresh_kyou(kyou, mi_kyou_query.value, requested_at)
+                if (refreshed) {
+                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: refreshed }
+                }
+            }
+        }
+    }
+
+    function remove_kyou_by_id(list: Array<Kyou>, deleted_id: string): void {
+        for (let i = list.length - 1; i >= 0; i--) {
+            if (list[i].id === deleted_id) {
+                list.splice(i, 1)
+            }
+        }
+    }
+
+    function onDeletedKyou(deleted_kyou: Kyou): void {
+        remove_kyou_by_id(mi_kyous.value, deleted_kyou.id)
+        remove_kyou_by_id(dnote_kyous.value, deleted_kyou.id)
+        remove_kyou_by_id(checked_kyous.value, deleted_kyou.id)
+    }
+
+    function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): void {
+        for (let i = 0; i < kyous.length; i++) {
+            const index = checked_kyous.value.findIndex(checked_kyou => checked_kyou.id === kyous[i].id)
+            if (is_checked && index < 0) {
+                checked_kyous.value.push(kyous[i])
+            } else if (!is_checked && index >= 0) {
+                checked_kyous.value.splice(index, 1)
+            }
+        }
+    }
+
+    async function reload_all(): Promise<void> {
+        if (options?.reload_all) {
+            await options.reload_all()
+            return
+        }
+        await Promise.all([fetch_mi_kyous(), fetch_dnote_kyous()])
+    }
+
+    // 新規Kyouがクエリにマッチするかはクライアントでは判定できないので取り直すしかないが、
+    // KFTLで複数行を一度に投げると registered_kyou が連続発火するのでまとめる
+    let reload_all_timer: ReturnType<typeof setTimeout> | null = null
+    function schedule_reload_all(): void {
+        if (reload_all_timer) {
+            clearTimeout(reload_all_timer)
+        }
+        reload_all_timer = setTimeout(() => {
+            reload_all_timer = null
+            reload_all()
+        }, 300)
+    }
+    onUnmounted(() => {
+        if (reload_all_timer) {
+            clearTimeout(reload_all_timer)
+            reload_all_timer = null
+        }
+    })
+
+    // ── Event relay objects ──
+    // RykvDialogHost / DnoteView / KyouListView の3箇所に同じ束を渡す。
+    // closed を出さないコンポーネントに渡っても発火しないので無害
+    const dashboardKyouHandlers = build_kyou_dialog_host_handlers({
+        'closed': (dialog_id: string) => close_rykv_dialog(dialog_id),
+        'updated_kyou': (kyou: Kyou) => {
+            check_mi_board_update(kyou)
+            reload_kyou(kyou)
+        },
+        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
+        'requested_reload_kyou': (kyou: Kyou) => reload_kyou(kyou),
+        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload),
+    }, {
+        'received_errors': (errors: Array<GkillError>) => write_errors(errors),
+        'received_messages': (received_messages: Array<GkillMessage>) => write_messages(received_messages),
+        'requested_reload_list': () => reload_all(),
+        'requested_update_check_kyous': (kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked),
+        'registered_kyou': (kyou: Kyou) => {
+            check_mi_board_update(kyou)
+            schedule_reload_all()
+        },
+        'registered_tag': (tag: Tag) => check_tag_update(tag),
+        'updated_tag': (tag: Tag) => check_tag_update(tag),
+    })
+
+    // KFTL/MKFL ダイアログはタグを registered_tag で上げてこないので、保存完了で両方取り直す
+    function onSavedKyouByKftl(): void {
+        resync_structs()
     }
 
     function close_rykv_dialog(dialog_id: string): void {
@@ -526,5 +646,10 @@ export function useDashboardPage() {
         logout,
         open_rykv_dialog,
         close_rykv_dialog,
+        reload_kyou,
+
+        // Event relay objects
+        dashboardKyouHandlers,
+        onSavedKyouByKftl,
     }
 }

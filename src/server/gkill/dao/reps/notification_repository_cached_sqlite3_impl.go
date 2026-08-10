@@ -333,10 +333,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -471,7 +469,6 @@ WHERE
 
 	targetIDs := []string{target_id}
 	query := &find.FindQuery{
-		UseWords: true,
 		Words:    targetIDs,
 	}
 	queryArgs := []any{
@@ -609,7 +606,9 @@ WHERE
 	tableName := n.dbName
 	tableNameAlias := n.dbName
 	whereCounter := 1
-	var onlyLatestData bool
+	// 通知スケジューラは各通知の最新版だけを見る前提(IsDeleted/IsNotificatedの判定は最新版で行う)。
+	// 以前は全版が返っており、削除済み・時刻変更前の旧版で通知が飛ぶ余地があった
+	onlyLatestData := true
 	relatedTimeColumnName := "NOTIFICATION_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -898,7 +897,6 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
 		IDs:    ids,
 	}
 	queryArgs := []any{

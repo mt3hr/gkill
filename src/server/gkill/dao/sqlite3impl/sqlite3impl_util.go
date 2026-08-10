@@ -42,6 +42,18 @@ func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }
 
+// EscapeLikePattern はLIKEパターンに埋め込む検索語の % _ \ をリテラル扱いさせるためにエスケープします。
+// 生成側の `LIKE ?` には必ず ` ESCAPE '\'` を併記すること。
+// 以前は未エスケープのままで、検索語「100%」が前方一致に化けたり、
+// 除外語「%」で全件が消えたり、snake_case の「_」が任意1文字にマッチしたりしていました。
+// Go側のワード判定(strings.Contains)はリテラル一致なので、これでrep間の意味論も揃います。
+func EscapeLikePattern(word string) string {
+	word = strings.ReplaceAll(word, `\`, `\\`)
+	word = strings.ReplaceAll(word, `%`, `\%`)
+	word = strings.ReplaceAll(word, `_`, `\_`)
+	return word
+}
+
 // sqliteDataDSNParams は実データDBを開くときのPRAGMAです。
 //
 // journal_mode は DELETE のまま変えないこと。
@@ -99,13 +111,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	}
 
 	// WHERE
-	// id検索である場合のSQL追記
-	useIDs := false
-	ids := []string{}
-	useIDs = query.UseIDs
-	ids = query.IDs
+	// id検索である場合のSQL追記（IDs=nilは未使用、非nil空は0件指定）
+	ids := query.IDs
 
-	if useIDs {
+	if ids != nil {
 		if len(ids) != 0 {
 			if *whereCounter != 0 {
 				sqlBuilder.WriteString(" AND ")
@@ -137,60 +146,102 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	*whereCounter++
 
 	// ワードand検索である場合のSQL追記
-	if query.UseWords {
-		// ワード指定ありで検索対象列がない場合は全部false
-		if ignoreFindWord && len(findWordTargetColumns) == 0 {
-			if *whereCounter != 0 {
-				sqlBuilder.WriteString(" AND ")
+	if query.HasWordFilter() {
+		if len(findWordTargetColumns) == 0 {
+			// 検索対象列が無いrep(Lantana等)はID列だけを対象にする。
+			// 他のrepでもID列は常に検索対象なので、それと同じ意味論に揃える。
+			// 以前は無条件で 1=0 を出力しており、ID検索が効かないうえ、
+			// 除外語(NotWords)だけの検索でも全件が消えていた。
+			if len(query.Words) != 0 {
+				if *whereCounter != 0 {
+					sqlBuilder.WriteString(" AND ")
+				}
+				sqlBuilder.WriteString(" ( ")
+				for i, word := range query.Words {
+					if i != 0 {
+						if query.WordsAnd {
+							sqlBuilder.WriteString(" AND ")
+						} else {
+							sqlBuilder.WriteString(" OR ")
+						}
+					}
+					if findWordUseLike {
+						fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
+						*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
+					} else {
+						fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
+						*queryArgs = append(*queryArgs, word)
+					}
+					*whereCounter++
+				}
+				sqlBuilder.WriteString(" ) ")
 			}
-			sqlBuilder.WriteString(" 1 = 0 ")
-			*whereCounter++
+			if len(query.NotWords) != 0 {
+				if *whereCounter != 0 {
+					sqlBuilder.WriteString(" AND ")
+				}
+				sqlBuilder.WriteString(" ( ")
+				for i, notWord := range query.NotWords {
+					if i != 0 {
+						sqlBuilder.WriteString(" AND ")
+					}
+					if findWordUseLike {
+						fmt.Fprintf(sqlBuilder, "%s(%s) NOT LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
+						*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(notWord)+"%")
+					} else {
+						fmt.Fprintf(sqlBuilder, "%s(%s) <> %s(?)", lower, "ID", lower)
+						*queryArgs = append(*queryArgs, notWord)
+					}
+					*whereCounter++
+				}
+				sqlBuilder.WriteString(" ) ")
+			}
+		} else if ignoreFindWord {
+			// 検索対象列はあるがSQLでは絞らない。
+			// IDFRepのように、ファイル名だけでなくrep内相対パスや
+			// .md/.txt の本文まで見てGo側で判定するリポジトリ向け。
+			// ここでSQLが先に絞ると、列に無い語がGo側の判定に到達できなくなる。
 		} else {
 			if len(query.Words) != 0 {
 				if query.WordsAnd {
 					if *whereCounter != 0 {
 						sqlBuilder.WriteString(" AND ")
 					}
-					for j, findWordTargetColumnName := range findWordTargetColumns {
-						if j == 0 {
+					// and検索は「語ごとにAND、列どうしはOR」。
+					// 外側を列にしてANDで連結すると「全列に含む」になってしまい、
+					// URLog(URL/TITLE/DESCRIPTION)やNlog(TITLE/SHOP)のように
+					// 複数列を持つrepで、片方の列にしか無い語が落ちる。
+					for i, word := range query.Words {
+						if i == 0 {
 							sqlBuilder.WriteString(" ( ")
 						} else {
 							sqlBuilder.WriteString(" AND ")
 						}
 
-						for i, word := range query.Words {
-							if i == 0 {
-								sqlBuilder.WriteString(" ( ")
-							} else {
-								sqlBuilder.WriteString(" AND ")
-							}
+						sqlBuilder.WriteString(" ( ")
+						for _, findWordTargetColumnName := range findWordTargetColumns {
 							if findWordUseLike {
-								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
-								*queryArgs = append(*queryArgs, "%"+word+"%")
-
-								sqlBuilder.WriteString(" OR ")
-
-								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?)", lower, "ID", lower)
-								*queryArgs = append(*queryArgs, "%"+word+"%")
+								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, findWordTargetColumnName, lower)
+								*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
 							} else {
 								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
-								*queryArgs = append(*queryArgs, "%"+word+"%")
-
-								sqlBuilder.WriteString(" OR ")
-
-								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
-								*queryArgs = append(*queryArgs, "%"+word+"%")
-
+								*queryArgs = append(*queryArgs, word)
 							}
-							if i == len(query.Words)-1 {
-								sqlBuilder.WriteString(" ) ")
-							}
-							*whereCounter++
+							sqlBuilder.WriteString(" OR ")
 						}
+						if findWordUseLike {
+							fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
+							*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
+						} else {
+							fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
+							*queryArgs = append(*queryArgs, word)
+						}
+						sqlBuilder.WriteString(" ) ")
 
-						if j == len(findWordTargetColumns)-1 {
+						if i == len(query.Words)-1 {
 							sqlBuilder.WriteString(" ) ")
 						}
+						*whereCounter++
 					}
 				} else {
 					// ワードor検索である場合のSQL追記
@@ -211,13 +262,13 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 								sqlBuilder.WriteString(" OR ")
 							}
 							if findWordUseLike {
-								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
-								*queryArgs = append(*queryArgs, "%"+word+"%")
+								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, findWordTargetColumnName, lower)
+								*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
 
 								sqlBuilder.WriteString(" OR ")
 
-								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?)", lower, "ID", lower)
-								*queryArgs = append(*queryArgs, "%"+word+"%")
+								fmt.Fprintf(sqlBuilder, "%s(%s) LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
+								*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(word)+"%")
 							} else {
 								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, word)
@@ -225,7 +276,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 								sqlBuilder.WriteString(" OR ")
 
 								fmt.Fprintf(sqlBuilder, "%s(%s) = %s(?)", lower, "ID", lower)
-								*queryArgs = append(*queryArgs, "%"+word+"%")
+								*queryArgs = append(*queryArgs, word)
 							}
 							if i == len(query.Words)-1 {
 								sqlBuilder.WriteString(" ) ")
@@ -263,16 +314,20 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 						//   NOT(COL LIKE ? OR ID LIKE ?) = COL NOT LIKE ? AND ID NOT LIKE ?
 						// ここがORだったころは、IDがUUIDで検索語を含むことは実質ないため
 						// 右辺が常に真になり、除外がまったく効いていなかった。
+						//
+						// 否定側の対象列はIFNULLで包む。SQLの NULL NOT LIKE x はNULL(偽扱い)なので、
+						// 素のままだとNULL列を持つ行(urlogのDESCRIPTION等)が
+						// 除外語と無関係でも丸ごと消えてしまう。
 						if findWordUseLike {
-							fmt.Fprintf(sqlBuilder, "%s(%s) NOT LIKE %s(?)", lower, findWordTargetColumnName, lower)
-							*queryArgs = append(*queryArgs, "%"+notWord+"%")
+							fmt.Fprintf(sqlBuilder, "%s(IFNULL(%s,'')) NOT LIKE %s(?) ESCAPE '\\'", lower, findWordTargetColumnName, lower)
+							*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(notWord)+"%")
 
 							sqlBuilder.WriteString(" AND ")
 
-							fmt.Fprintf(sqlBuilder, "%s(%s) NOT LIKE %s(?)", lower, "ID", lower)
-							*queryArgs = append(*queryArgs, "%"+notWord+"%")
+							fmt.Fprintf(sqlBuilder, "%s(%s) NOT LIKE %s(?) ESCAPE '\\'", lower, "ID", lower)
+							*queryArgs = append(*queryArgs, "%"+EscapeLikePattern(notWord)+"%")
 						} else {
-							fmt.Fprintf(sqlBuilder, "%s(%s) <> %s(?)", lower, findWordTargetColumnName, lower)
+							fmt.Fprintf(sqlBuilder, "%s(IFNULL(%s,'')) <> %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, notWord)
 
 							sqlBuilder.WriteString(" AND ")
@@ -295,19 +350,13 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	}
 
 	// 日付範囲指定ありの場合
-	useCalendar := false
-	var calendarStartDate *time.Time
-	var calendarEndDate *time.Time
-	useCalendar = query.UseCalendar
-	if query.CalendarStartDate != nil {
-		calendarStartDate = query.CalendarStartDate
-	}
-	if query.CalendarEndDate != nil {
-		calendarEndDate = query.CalendarEndDate
-	}
+	useCalendar := query.HasCalendarFilter()
+	calendarStartDate := query.CalendarStartDate
+	calendarEndDate := query.CalendarEndDate
 
 	// UPDATE_TIMEか、Calendarの条件をSQLに追記
-	if query.UseUpdateTime {
+	// UpdateTime指定(非nil)が優先で、未指定ならCalendar側へ倒す
+	if query.UpdateTime != nil {
 		if strings.HasSuffix(relatedTimeColumnName, "_UNIX") { // UNIXついてればキャッシュでしょ（適当）
 			if *whereCounter != 0 {
 				sqlBuilder.WriteString(" AND ")
@@ -364,16 +413,9 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	}
 
 	// 時間範囲指定ありの場合
-	usePeriodOfTime := false
-	var periodOfStartTimeSecond *int64
-	var periodOfEndTimeSecond *int64
-	usePeriodOfTime = query.UsePeriodOfTime
-	if query.PeriodOfTimeStartTimeSecond != nil {
-		periodOfStartTimeSecond = query.PeriodOfTimeStartTimeSecond
-	}
-	if query.PeriodOfTimeEndTimeSecond != nil {
-		periodOfEndTimeSecond = query.PeriodOfTimeEndTimeSecond
-	}
+	usePeriodOfTime := query.HasPeriodOfTimeFilter()
+	periodOfStartTimeSecond := query.PeriodOfTimeStartTimeSecond
+	periodOfEndTimeSecond := query.PeriodOfTimeEndTimeSecond
 
 	// 時間帯比較用
 	timeExpr := ""
@@ -429,8 +471,11 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			*whereCounter++
 		}
 
-		// 曜日判定
-		if len(query.PeriodOfTimeWeekOfDays) == 0 {
+		// 曜日判定（nil=曜日制限なし / 非nil空=0件 / 全7曜日=制限なし）
+		// nil を len==0 や len!=7 の分岐へ落とすと全件が消えるので、必ず nil を先に外すこと
+		if query.PeriodOfTimeWeekOfDays == nil {
+			// 曜日制限なし
+		} else if len(query.PeriodOfTimeWeekOfDays) == 0 {
 			if *whereCounter != 0 {
 				sqlBuilder.WriteString(" AND ")
 			}
