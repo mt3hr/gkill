@@ -278,21 +278,22 @@ DNote 設定の JSON シリアライズ/デシリアライズ用辞書。
 | `dnote-predicate-dictionary.ts` | 述語の型辞書 |
 | `register-dictionary.ts` | 辞書登録ユーティリティ |
 
-### 旧綴り `Agregate*` の後方互換
+### 型判別文字列は永続データ
 
 集計対象の型判別文字列（`{ "type": "AggregateCountKyou" }` など19種）は
 **ユーザの集計定義として永続化される**（`user_config` の `APPLICATION_CONFIG` /
 `KEY='DNOTE_JSON_DATA'` に JSON で入り、`/api/get_application_config` と
 `/api/update_application_config` で往復する）。
 
-かつては `Agregate*` という綴りだったため、`register-dictionary.ts` には
-**旧綴り19キーのエイリアスが恒久で登録してある**。読み込みは新旧どちらも受け付け、
-書き出し（`to_json()`）は新綴りのみなので、ユーザが定義を編集保存すれば自然に移行する。
-ただし編集されない定義は旧綴りのまま残り続けるため、**このエイリアスは消さないこと**。
-（`TextContentContainsPredicate` → `KmemoContentContainsPredicate` も同じ方式のエイリアス）
+辞書に無い `type` を読むと `build_dnote_aggregate_target_from_json` が
+`Unknown aggregate type` を投げ、`use-dnote-view.ts` の `from_json()` は
+これを捕捉しないため **Dnote 画面全体が描画不能になる**。
+したがって型判別文字列のリネームは、辞書のキーを差し替えるだけでは済まず、
+保存済みデータ（サンプルデータ `resources/gkill_sample_data/configs/user_config.db` を含む）の
+移行が必須。かつての `Agregate*` → `Aggregate*` の改名は移行済み。
 
-回帰テストは `src/client/__tests__/unit/dnote/serialization.test.ts` の
-「aggregate target backward compatibility」ブロック。
+なお `TextContentContainsPredicate` → `KmemoContentContainsPredicate` は
+述語辞書に旧名エイリアスを登録する方式で互換を取っている。
 
 ## トレンドグラフ（`dnote-trend/` + `dnote-trend-aggregator.ts`）
 
