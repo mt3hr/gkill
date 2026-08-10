@@ -357,6 +357,9 @@ func buildZipEntries(cacheDir string, repName string, hash string) ([]*req_res.Z
 			Size:    info.Size(),
 			IsImage: reps.IsImagePublic(rel),
 			IsText:  reps.IsTextPublic(rel),
+			IsVideo: reps.IsVideoPublic(rel),
+			IsAudio: reps.IsAudioPublic(rel),
+			IsPdf:   strings.ToLower(filepath.Ext(rel)) == ".pdf",
 			FileURL: fileURL,
 		}
 		entries = append(entries, entry)
