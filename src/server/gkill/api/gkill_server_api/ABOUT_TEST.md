@@ -13,11 +13,13 @@ Go `testing` パッケージ
 | ファイル | テスト内容 |
 |---------|-----------|
 | `gkill_server_api_test.go` | API ハンドラ統合テスト（全エンドポイント） |
-| `handle_get_shared_kyous_test.go` | 共有ページ（認証なしの公開エンドポイント）の共有スコープ検証 |
+| `handle_get_shared_kyous_test.go` | 共有ページ（認証なしの公開エンドポイント）の共有スコープ検証。共有条件に一致するKyouが0件のとき、実体データまで含めて1件も返さないこと（キーワード以外の条件で0件になった場合も含む。ID絞り込みを外すと実体取得は条件を解釈しないため全件返ってしまう） |
+| `get_kyous_regressions_test.go` | 記録取得の回帰。プラグイン検索失敗が警告として返ること（エラーにしない）、実行中の指定が無いときは実行中で絞らないこと、打刻タグでの絞り込みが記録側のタグ指定なしでも効くこと |
+| `gzip_middleware_test.go` | API応答のgzip圧縮。`Accept-Encoding` を見て圧縮すること、対象外パスや非対応クライアントには圧縮をかけないこと、ストリーミング応答を壊さないこと |
 | `gkill_server_api_rate_limit_test.go` | ログインレート制限テスト（IP別カウント、ウィンドウ期限、IP抽出） |
 | `handle_get_idf_file_path_test.go` | IDF ファイル絶対パス解決ハンドラ（localhost 限定応答、ERR000389、存在確認） |
 | `handle_get_idf_kyou_by_relative_path_test.go` | Markdown 相対リンクの IDFKyou 解決ハンドラ（同一 Rep 内解決、パストラバーサル防止） |
-| `handle_zip_cache_file_serve_test.go` | `/zip_cache/` の利用者分離（他人のキャッシュを読めないこと、ユーザーごとに分かれていない旧レイアウトを配信しないこと、`../` / `..%2F` で抜けられないこと、セッション無し・不正セッションの拒否）と、利用者ファイル配信のセキュリティヘッダ（後述） |
+| `handle_zip_cache_file_serve_test.go` | `/zip_cache/` の利用者分離（他人のキャッシュを読めないこと、ユーザーごとに分かれていない旧レイアウトを配信しないこと、`../` / `..%2F` で抜けられないこと、セッション無し・不正セッションの拒否）と、利用者ファイル配信のセキュリティヘッダ（後述）、ZIP展開物一覧の種別フラグ（`TestBuildZipEntriesMediaFlags`、後述） |
 | `handle_reset_password_test.go` | パスワードリセットのセッション検証（後述） |
 | `get_device_cache_test.go` | デバイス名キャッシュ（`sync.Once` による `GetAllServerConfigs` 呼び出し削減）の検証 |
 | `plugin_content_html_cache_test.go` | プラグイン本文HTMLキャッシュ（TTL・件数上限・singleflight による同時要求の集約）の検証 |
@@ -112,10 +114,23 @@ Kyou だけが返る」ことが唯一の防壁になる。ここが崩れると
 `sandbox` はドキュメントとして読み込まれたときにだけ効くため、
 `<img>` や `<video>` のサブリソースとしての表示には影響しない。
 
-`TestZipCacheFileServeSetsSecurityHeaders` がこれを固定する。
+例外として `.pdf`（大小無視）には `sandbox` を付けない。付けると opaque origin に
+なり Chrome の内蔵PDFビューワが無効化されて、新しいタブでの表示がダウンロードに
+落ちるため。`nosniff` は `.pdf` にも付き Content-Type は `application/pdf` に
+固定されるので、HTMLを `.pdf` にリネームして持ち込んでもHTMLとしては解釈されない。
+
+`TestZipCacheFileServeSetsSecurityHeaders` がこれを固定する
+（HTMLは `sandbox` + `nosniff`、PDFは `sandbox` 無し + `nosniff` +
+`application/pdf`、拡張子の大小無視、の3サブテスト）。
 **ルート登録を `serve.go` と同じ形（ラッパー経由）にしないと素通りする**ので注意。
 また `index.html` という名前は `http.FileServer` がディレクトリへ
 リダイレクトしてしまうため、テストでは別名を使っている。
+
+`TestBuildZipEntriesMediaFlags` は、ZIP展開物一覧の種別フラグ
+（`is_image` / `is_text` / `is_video` / `is_audio` / `is_pdf`）が拡張子どおりに
+立つことをテーブルテストで固定する。`.ts` が TypeScript（is_text）と
+MPEG-TS（is_video）の両方に該当する既知の重複もここで文書化している
+（クライアントはテンプレートの分岐順で is_text を優先する）。
 
 ### `handle_reset_password_test.go`（パスワードリセットのセッション検証）
 

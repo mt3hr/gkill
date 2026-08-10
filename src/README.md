@@ -79,8 +79,8 @@ src/
 │   │   ├── dnote/   #     Dynamic Note (集計・フィルタ)
 │   │   └── kftl/    #     KFTL パーサ
 │   └── pages/       #   Vue ページ・ビュー・ダイアログ
-│       ├── views/   #     View コンポーネント (189個)
-│       └── dialogs/ #     Dialog コンポーネント (103個)
+│       ├── views/   #     View コンポーネント (194個)
+│       └── dialogs/ #     Dialog コンポーネント (110個)
 ├── server/          # Go バックエンド
 │   └── gkill/
 │       ├── api/     #   HTTP API (90エンドポイント)
@@ -150,7 +150,7 @@ npm run go_install
 | `verify_docs.mjs` | docs CI。件数・リンク・参照パス・Mermaid・マニュアルを検証 |
 | `verify_release_artifacts.mjs` | リリース成果物の存在確認 |
 | `test_plugins.mjs` | `npm run test_plugins` の実体。`src/plugins/` 配下の各 Go モジュール（独立プラグイン）のテストを実行 |
-| `license_getter.ps1` | 依存ライブラリのライセンス情報を収集する PowerShell スクリプト |
+| `license_getter.mjs` | 依存ライブラリのライセンス一覧を生成する（`npm run license_getter`） |
 
 ## 開発ガイドライン
 

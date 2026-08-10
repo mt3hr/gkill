@@ -691,14 +691,14 @@ classDiagram
 
     note for Kyou "typed_xxx フィールドで\n具体的なデータ型を保持\nload_all() で遅延ロード\ntyped_plugin は既存型に該当しない\nプラグインKyouの場合にセットされる"
     note for MetaInfoBase "Kyou に付随するメタ情報の基底。\ntarget_id で対象 Kyou を指す。\nTag / Text / Notification が継承する\n（InfoBase ではない点に注意）"
-    note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n約3,400行"
+    note for GkillAPI "シングルトン\n全APIエンドポイントのラッパー\n約3,300行"
 ```
 
 ### ZIP閲覧関連の構造体
 
 | 構造体 (Go) | 説明 |
 |-------------|------|
-| `ZipEntry` | ZIP内のファイルエントリ情報。ファイル名（`Name`）、サイズ（`Size`）、パス（`Path`）等を含む |
+| `ZipEntry` | ZIP内のファイルエントリ情報。パス（`Path`）、サイズ（`Size`）、種別フラグ（`IsImage`/`IsText`/`IsVideo`/`IsAudio`/`IsPdf`）、配信URL（`FileURL`）等を含む |
 | `BrowseZipContentsRequest` | `/api/browse_zip_contents` のリクエスト構造体。`SessionID`、対象IDFKyouのID等を含む |
 | `BrowseZipContentsResponse` | `/api/browse_zip_contents` のレスポンス構造体。`ZipEntries []ZipEntry`、共通の `Messages`/`Errors` を含む |
 

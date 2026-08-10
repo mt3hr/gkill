@@ -114,7 +114,7 @@ gkill_server version
 | `node src/tools/manual_a11y.mjs` | マニュアルのアクセシビリティ検査 |
 | `node src/tools/manual_ascii_fix.mjs` | fr/es マニュアルの ASCII 代替表記（アクセント欠落）を辞書ベースで是正（コード/pre/href は保護。要ネイティブレビューの初回パス） |
 | `npm run verify_release_artifacts` | リリース成果物（zip/apk）の検証。`npm run release` の最後に実行される |
-| `src/tools/license_getter.ps1` | 依存パッケージのライセンス情報収集（`LICENSES_DEPENDENCE` の生成） |
+| `src/tools/license_getter.mjs` | 依存パッケージのライセンス情報収集（`npm run license_getter` で `LICENSES_DEPENDENCE` を生成。Go 5モジュール + npm 本番依存 + Android / Wear OS の Gradle 依存。Gradle 環境が無ければ `--skip-gradle`） |
 
 **マニュアル編集の流儀:** マニュアルは手書きHTMLではなく `resources/manual_src/` の原稿（HTMLフラグメント）を編集し、`npm run build_manuals` で `resources/manual/` を再生成する。`resources/manual/` を直接編集しても `verify_docs` の生成鮮度チェックで検出される。共通の head/style/テーマスクリプトは `_layout.html` に集約されている。
 

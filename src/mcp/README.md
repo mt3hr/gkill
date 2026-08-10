@@ -223,7 +223,7 @@ Write専用サーバにはRead便利ツール3つ（`gkill_get_all_rep_names`, `
 導線は次の2ステップ:
 
 1. `gkill_get_plugin_list` でプラグインの `data_type` / `rep_name` を把握する。
-2. `gkill_get_kyous` に `include_plugin_content: true` を付けて検索する（`query.reps` + `use_reps:true` でそのプラグインに絞れる）。プラグインKyouの `payload` は `kind: "plugin"` で、`data_type` / `rep_name` / `kyou_id` / `plugin_name` に加えて本文フィールドを持つ。
+2. `gkill_get_kyous` に `include_plugin_content: true` を付けて検索する（`query.reps` でそのプラグインに絞れる）。プラグインKyouの `payload` は `kind: "plugin"` で、`data_type` / `rep_name` / `kyou_id` / `plugin_name` に加えて本文フィールドを持つ。
 
 各プラグインペイロードに付くフィールド:
 
@@ -243,7 +243,7 @@ Write専用サーバにはRead便利ツール3つ（`gkill_get_all_rep_names`, `
 - `html` — 生HTMLをそのまま返す（表示やマークアップ自体が必要なとき）。
 - `both` — 両方返す。
 
-長い記録1件の全文が欲しいときは、`query.use_ids` + `query.ids` でその1件に絞ったうえで `plugin_content_max_text_length` を上げる。
+長い記録1件の全文が欲しいときは、`query.ids` でその1件に絞ったうえで `plugin_content_max_text_length` を上げる。
 
 **上限と安全弁**: 1回のリクエストで本文を埋めるのは20件・合計200000文字まで、全体30秒で打ち切る。取得は `rep_name` ごとにグループ化し、**同一プラグインへは必ず1件ずつ直列**、プラグイン間は並列（既定4）で叩く。gkill側は1プラグイン1プロセスで呼び出しが直列化され（容量1のチャネル `callSlot`）、同時に投げても速くならず順番待ちが伸びるだけで、待ちきれなかったぶんは `ErrPluginBusy` になるからである。（2026-08-06以前の gkill は30秒デッドラインを排他ロックの**前**に張っていたため、同時発行するとロック待ちで期限を食い潰し、期限切れ時にプラグインプロセスが回収されていた。現在は期限をスロット取得後に張るのでこの誤射はない。）実行中のリクエストをabortしないのも同じ配慮（abort自体は現在のgkillではプロセスに影響しないが、MCPサーバは古いgkillにも接続しうる）。あるプラグインで1件失敗したら、そのプラグインの残りは投げずに `rep_error` として諦める。
 
@@ -322,6 +322,8 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 
 #### 6) `gkill_get_kyous` の実用クエリ例
 
+フィルタは**値フィールドが非nullで存在すれば有効**になる（旧 `use_X` フラグは廃止。後方互換として受理はされ、`use_X: false` はそのグループの値を無効化、`use_X: true` は無視される）。使わないフィルタはキーごと省略するか `null` を渡す。空配列 `[]` は「フィルタ有効だが0件指定」（例外: `timeis_words: []` は「任意のTimeIsに覆われたKyou」）。
+
 最小（デフォルト条件）:
 ```json
 {
@@ -333,7 +335,6 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 ```json
 {
   "query": {
-    "use_tags": true,
     "tags": ["work", "meeting"],
     "tags_and": false
   }
@@ -344,7 +345,6 @@ AIが安定して呼び出せるよう、以下のルールを推奨します。
 ```json
 {
   "query": {
-    "use_calendar": true,
     "calendar_start_date": "2026-02-01T00:00:00+09:00",
     "calendar_end_date": "2026-02-28T23:59:59+09:00"
   }
@@ -358,6 +358,15 @@ Mi抽出:
     "for_mi": true,
     "mi_check_state": "uncheck",
     "mi_sort_type": "limit_time"
+  }
+}
+```
+
+実行中の絞り込み（`plaing_time`）: その時刻に実行中だった TimeIs を取る。カレンダ範囲と違い「その一瞬のスナップショット」になる。**リテラル `"now"` を渡すと現在時刻に展開される**ので、いま動いているものを聞きたいときは時刻を組み立てなくてよい:
+```json
+{
+  "query": {
+    "plaing_time": "now"
   }
 }
 ```
@@ -409,5 +418,5 @@ Mi抽出:
 - `limit` と `max_size_mb` を適切に設定してレスポンスサイズを制御する
 - ChatGPTではまず `limit=20` 前後、`max_size_mb=0.25` 前後、`is_include_timeis=false` で試す
 - `has_more: true` の場合は `next_cursor` を使って続きを取得する
-- まず期間を絞り込んでから取得する（`use_calendar` 推奨）
+- まず期間を絞り込んでから取得する（`calendar_start_date` / `calendar_end_date` 推奨）
 - 同一条件の連打を避け、必要最小限のクエリにする
