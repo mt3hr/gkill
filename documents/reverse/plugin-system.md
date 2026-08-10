@@ -628,7 +628,7 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 - HTMLエンティティをデコード（`&amp;` は最後に処理し、エスケープ済みマークアップが復活しないようにする）
 - `plugin_content_max_text_length`（既定4000文字）を超えたら切り詰め、`content_status: "truncated"` にする
 
-`plugin_content_format: "html"` で生HTMLを `content_html` に、`"both"` で両方返す。長い記録1件の全文が欲しいときは `query.use_ids` + `query.ids` でその1件に絞り、`plugin_content_max_text_length` を上げる。
+`plugin_content_format: "html"` で生HTMLを `content_html` に、`"both"` で両方返す。長い記録1件の全文が欲しいときは `query.ids`（非null）でその1件に絞り、`plugin_content_max_text_length` を上げる。
 
 ---
 

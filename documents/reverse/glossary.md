@@ -144,16 +144,20 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 | 用語 | UI表示名 | 説明 |
 |------|---------|------|
 | **Device / プロファイル** | プロファイル | デバイスや利用環境の設定単位。PC・スマートフォン・Wear OS 等のプロファイルを使い分けられる |
-| **ApplicationConfig** | 設定 | ユーザ別のアプリケーション設定。UI テーマ・デフォルト表示日数・テンプレート・構造定義等を含む。`dashboard_json_data` フィールドでダッシュボード設定も保持する |
+| **ApplicationConfig** | 設定 | ユーザ別のアプリケーション設定。UI テーマ・デフォルト表示日数・テンプレート・構造定義等を含む。`dashboard_json_data` フィールドでダッシュボード設定、`plaing_timeis_json_data` フィールドで実行中検索条件、`saved_find_query_json_data` フィールドで保存済み検索条件も保持する |
 | **DashboardConfig** | ダッシュボード設定 | ダッシュボード画面の表示設定クラス（`src/client/classes/datas/config/dashboard-config.ts`）。`dashboard_mi_find_kyou_query`（MI一覧の検索条件）と `dashboard_dnote_find_kyou_query`（Dnoteビューの検索条件）の2つの `FindKyouQuery` を保持する。`ApplicationConfig.dashboard_json_data` にJSON文字列として格納される |
 | **dashboard_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、DashboardConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれるため、デバイス固有設定の上書きを受けない |
+| **PlaingTimeIsConfig** | 実行中検索条件 | plaing検索（Kyou付随の実行中表示・実行中画面・KFTLの/end系終了候補検索）のカスタム検索条件クラス（`src/client/classes/datas/config/plaing-time-is-config.ts`）。`plaing_timeis_find_kyou_query`（`FindKyouQuery \| null`）を1本保持し、null は「未設定＝従来どおり全リポジトリ対象」を表す。適用の実体は `generate_plaing_timeis_query()`（`src/client/classes/api/find_query/generate-plaing-timeis-query.ts`）。Wear OS の `buildPlaingFindQuery`（`GkillApiClient.kt`）とサーバ内 KFTL（`kftl_timeis.go`）の plaing 検索は別系統のため、この設定は Web クライアントにのみ効く |
+| **plaing_timeis_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY（`PLAING_TIMEIS_JSON_DATA`）として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、PlaingTimeIsConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれる |
+| **SavedFindQueryConfig** | 検索条件 | 保存済み検索条件クラス（`src/client/classes/datas/config/saved-find-query-config.ts`）。`saved_rykv_find_kyou_querys`（ライフログ用）と `saved_mi_find_kyou_querys`（タスク用）の2つの名前付き検索条件リストを保持する。各アイテムは `{id, title, find_kyou_query}`（Ryuu の関連情報クエリと同形式）。設定画面の「検索条件」ボタン → ハブダイアログ（`edit-saved-find-query-dialog.vue`）→ 種別別の一覧管理ダイアログ（`edit-saved-find-query-list-dialog.vue`、1コンポーネント2インスタンス）で登録・更新・削除・並べ替えする。rykv/mi サイドバーの呼び出しFAB（0件時非表示）から選択すると `apply_saved_query()` がサイドバーへ適用する（query_id は列側を維持。ホットリロードONなら自動検索、OFFなら検索ボタンで実行） |
+| **saved_find_query_json_data** | — | `APPLICATION_CONFIG` テーブルの KEY（`SAVED_FIND_QUERY_JSON_DATA`）として使用されるキー名。`DEVICE='ALL'`（デバイス非依存）で保存され、SavedFindQueryConfig の JSON 文字列を VALUE に格納する。`ignoreDeviceNameConfigKey` リストに含まれる |
 | **ServerConfig** | サーバ設定 | サーバ全体の設定。TLS・ポート番号・データディレクトリ・コマンドパス等 |
 | **TagStruct** | タグ構造 | タグの階層構造定義。フォルダでグルーピングし、初期化時チェック・非表示優先等のオプションを持つ |
 | **RepStruct** | 記録保管場所構造 | リポジトリの構造定義 |
 | **RepTypeStruct** | 記録タイプ構造 | リポジトリ型の分類定義 |
 | **KFTLTemplate** | テンプレート | KFTL 入力のテンプレート定義。テンプレート名と内容を持ち、Wear OS タイルからの入力にも使用される |
 | **DeviceStruct** | プロファイル構造 | デバイスプロファイルの定義 |
-| **MiBoardStruct** | — | タスクボードの構造定義 |
+| **MiBoardStruct** | — | タスクボードの構造定義。設定画面の「板構造」から並び順の変更と削除ができる（板名は実データ由来なので編集不可。フォルダ分けや表示名の変更もしない）。ApplicationConfig の `MI_BOARD_STRUCT` として全端末で共有される |
 
 ## 7. Dnote 集計システム用語
 
@@ -224,7 +228,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 
 | 綴り | 一般的な綴り | 凍結理由 |
 |---|---|---|
-| `plaing` / `Plaing` | playing | SPAルート `/plaing`・`FindQuery` の JSONキー（`use_plaing` / `plaing_time`）・MCP ツール入力スキーマ・Wear OS のデータレイヤーパス・7言語マニュアルのページ名・`default_page` の保存値と、互換面が5系統に及ぶ。造語としての由来もある（上表参照） |
+| `plaing` / `Plaing` | playing | SPAルート `/plaing`・`FindQuery` の JSONキー（`plaing_time`）・MCP ツール入力スキーマ・Wear OS のデータレイヤーパス・7言語マニュアルのページ名・`default_page` の保存値と、互換面が5系統に及ぶ。造語としての由来もある（上表参照） |
 
 ## 10. 主要ファイルパス相互参照
 
@@ -262,13 +266,17 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | エントリポイント | `src/client/main.ts` | アプリ初期化（Vuetify, Router, i18n, v-long-press） |
 | ルートコンポーネント | `src/client/App.vue` | テーマ管理・オーバーレイ・グローバルスタイル |
 | ルート定義 | `src/client/router/index.ts` | 13ルートの定義 |
-| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,400行） |
+| GkillAPI シングルトン | `src/client/classes/api/gkill-api.ts` | バックエンド通信クライアント（約3,300行） |
 | リクエスト/レスポンス型 | `src/client/classes/api/req_res/` | TypeScript 版入出力型（172ファイル） |
 | データモデル | `src/client/classes/datas/` | Go構造体のTypeScriptミラー |
 | DashboardConfig | `src/client/classes/datas/config/dashboard-config.ts` | ダッシュボード設定クラス（MI検索条件・Dnote検索条件） |
+| PlaingTimeIsConfig | `src/client/classes/datas/config/plaing-time-is-config.ts` | 実行中検索条件クラス（plaing検索のカスタム条件） |
+| SavedFindQueryConfig | `src/client/classes/datas/config/saved-find-query-config.ts` | 保存済み検索条件クラス（ライフログ用・タスク用の名前付き検索条件リスト） |
 | ダッシュボードページ | `src/client/pages/dashboard-page.vue` | `/dashboard` ルートのページコンポーネント |
 | ダッシュボードComposable | `src/client/classes/use-dashboard-page.ts` | ダッシュボードページのComposable |
 | EditDashboardDialog | `src/client/pages/dialogs/edit-dashboard-dialog.vue` | ダッシュボード設定編集ダイアログ |
+| EditSavedFindQueryDialog | `src/client/pages/dialogs/edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブダイアログ（ライフログ/タスクの2ボタン） |
+| EditSavedFindQueryListDialog | `src/client/pages/dialogs/edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理ダイアログ（`query_type` prop で rykv/mi の2インスタンス） |
 | MiFindQueryEditorView | `src/client/pages/views/mi-find-query-editor-view.vue` | MI専用検索条件エディタビュー |
 | MiFindQueryEditorDialog | `src/client/pages/dialogs/mi-find-query-editor-dialog.vue` | MI専用検索条件エディタダイアログ |
 | KFTLパーサー（フロント） | `src/client/classes/kftl/` | フロントエンド版KFTLパーサー（41ステートメント型。`kftl_*/` 配下の具象クラス数） |
@@ -276,7 +284,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（858キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（876キー/言語） |
 
 ### その他
 

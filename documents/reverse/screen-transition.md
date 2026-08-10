@@ -302,6 +302,8 @@ stateDiagram-v2
     AppConfig --> EditDnote: Dnote設定編集
     AppConfig --> EditRyuu: Ryuu設定編集
     AppConfig --> EditDashboard: ダッシュボード設定編集
+    AppConfig --> EditSavedFindQuery: 保存済み検索条件編集
+    EditSavedFindQuery --> EditSavedFindQueryList: ライフログ/タスク別一覧管理
     AppConfig --> NewBoardName: ボード名新規作成
     AppConfig --> ServerConfig: サーバ設定へ
 ```
