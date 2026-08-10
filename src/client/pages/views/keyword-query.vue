@@ -1,8 +1,8 @@
 <template>
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
-            <v-checkbox v-model="cloned_find_query.use_words"
-                @change="emits('request_update_use_keyword_query', cloned_find_query.use_words)"
+            <v-checkbox v-model="use_words"
+                @change="emits('request_update_use_keyword_query', use_words)"
                 :label="i18n.global.t('WORD_QUERY_TITLE')" hide-details class="pa-0 ma-0" />
         </v-col>
         <v-spacer />
@@ -12,7 +12,7 @@
         </v-col>
     </v-row>
 
-    <v-row v-show="cloned_find_query.use_words" class="pa-0 ma-0">
+    <v-row v-show="use_words" class="pa-0 ma-0">
         <v-col cols="2" class="pa-0 ma-0">
             <v-btn v-if="cloned_find_query.words_and" icon="mdi-set-center"
                 @click="cloned_find_query.words_and = !cloned_find_query.words_and; emits('request_update_and_search', cloned_find_query.words_and)" />
@@ -36,6 +36,7 @@ const emits = defineEmits<KeywordQueryEmits>()
 
 const {
     cloned_find_query,
+    use_words,
     get_keywords,
     get_use_words,
     get_use_word_and_search,

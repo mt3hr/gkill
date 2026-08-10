@@ -359,10 +359,8 @@ func (m *miReKyouRepositorySQLite3Impl) getKyousByID(ctx context.Context, id str
 	}
 
 	query := &find.FindQuery{
-		UseIDs:        true,
-		IDs:           []string{id},
-		UseUpdateTime: updateTime != nil,
-		UpdateTime:    updateTime,
+		IDs:        []string{id},
+		UpdateTime: updateTime,
 	}
 
 	sql, queryArgs, err := buildMiReKyouKyouSQL(query, repName, miReKyouTableName, false, onlyLatest)
@@ -506,10 +504,8 @@ func (m *miReKyouRepositorySQLite3Impl) getMiReKyousByID(ctx context.Context, id
 	}
 
 	query := &find.FindQuery{
-		UseIDs:        true,
-		IDs:           []string{id},
-		UseUpdateTime: updateTime != nil,
-		UpdateTime:    updateTime,
+		IDs:        []string{id},
+		UpdateTime: updateTime,
 	}
 
 	sql, queryArgs, err := buildMiReKyouSingleProjectionSQL(query, repName, miReKyouTableName, onlyLatest)
@@ -638,8 +634,15 @@ func (m *miReKyouRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx conte
 }
 
 // queryMiReKyouBoardNames は板名の一覧を取得します。
+//
+// 板名は「最新版かつ未削除」のレコードからだけ集めます。
+// 全履歴を見ると、板名を打ち間違えて直したあとも旧バージョンの名前が板一覧に出続け、
+// 板ツリーへ足し直されてしまいます（Miのキャッシュ実装は元から最新版に絞っています）。
+// 実体テーブルとキャッシュテーブルは列定義が同じ(miReKyouColumns)なのでSQLは共通です。
 func queryMiReKyouBoardNames(ctx context.Context, db *sqllib.DB, tableName string) ([]string, error) {
-	sql := `SELECT DISTINCT BOARD_NAME FROM ` + tableName
+	sql := `SELECT DISTINCT BOARD_NAME FROM ` + tableName + `
+WHERE IS_DELETED = 0
+  AND UPDATE_TIME = ( SELECT UPDATE_TIME FROM ` + tableName + ` AS INNER_TABLE WHERE INNER_TABLE.ID = ` + tableName + `.ID ORDER BY datetime(INNER_TABLE.UPDATE_TIME) DESC LIMIT 1 )`
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", sql))
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -688,7 +691,8 @@ func queryMiReKyouBoardNames(ctx context.Context, db *sqllib.DB, tableName strin
 }
 
 // queryMiReKyouLatestDataRepositoryAddress は最新データ位置キャッシュ用の情報を取得します。
-// ReKyouと同様、TARGET_ID_IN_DATAにリポスト対象のIDを入れます。
+// TARGET_ID_IN_DATAにはリポスト対象のIDを入れます
+// (ReKyouはNULLを入れており同様ではない。tag/text/notificationがMiReKyouと同じく対象IDを入れる)。
 func queryMiReKyouLatestDataRepositoryAddress(ctx context.Context, db *sqllib.DB, tableName string, repName string) ([]gkill_cache.LatestDataRepositoryAddress, error) {
 	sql := `
 SELECT IS_DELETED, ID AS TARGET_ID, TARGET_ID AS TARGET_ID_IN_DATA,
@@ -724,14 +728,15 @@ FROM ` + tableName
 			return nil, ctx.Err()
 		default:
 			addr := gkill_cache.LatestDataRepositoryAddress{}
-			var isDeletedStr string
 			var dataUpdateTimeStr string
 			var targetIDInData *string
-			err := rows.Scan(&isDeletedStr, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
+			// IS_DELETEDはboolバインドでINTEGER(0/1)格納なので直接boolへScanする。
+			// 以前は文字列に受けて "TRUE" と比較しており(実値は"0"/"1")、常にfalseになって
+			// 削除済みターゲットを指すReKyou/MiReKyouが検索結果に残っていた
+			err := rows.Scan(&addr.IsDeleted, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
 			if err != nil {
 				return nil, err
 			}
-			addr.IsDeleted = isDeletedStr == "TRUE"
 			addr.TargetIDInData = targetIDInData
 			addr.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {

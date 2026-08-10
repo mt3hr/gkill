@@ -9,12 +9,13 @@ import (
 	"sync"
 
 	_ "modernc.org/sqlite"
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
-const CURRENT_SCHEMA_VERSION_SHARE_KYOU_INFO_DAO = "1.0.0"
+const CURRENT_SCHEMA_VERSION_SHARE_KYOU_INFO_DAO = "1.1.0"
 
 type shareKyouInfoDAOSQLite3Impl struct {
 	filename string
@@ -1108,7 +1109,10 @@ VALUES(?, ?)`
 	if currentSchemaVersion != dbSchemaVersion {
 		switch dbSchemaVersion {
 		case "1.0.0":
-			// 過去のDAOを作って返す or 最新のDAOに変換して返す
+			if err := migrateShareKyouInfoSchemaFrom100(ctx, db, schemaVersionKey, currentSchemaVersion); err != nil {
+				return true, nil, err
+			}
+			return false, nil, nil
 		}
 		err = fmt.Errorf("invalid db schema version %s", dbSchemaVersion)
 		return true, nil, err
@@ -1116,4 +1120,91 @@ VALUES(?, ?)`
 	// ここまで 過去バージョンのスキーマだった場合の対応
 
 	return false, nil, nil
+}
+
+// migrateShareKyouInfoSchemaFrom100 はスキーマ1.0.0のSHARE_KYOU_INFOを1.1.0へ移行する。
+//
+// FIND_QUERY_JSON に保存されている旧形式の FindQuery JSON（use_* フラグ入り）を
+// null判定の新形式へ書き換える（find.MigrateLegacyFindQueryJSON）。
+// 共有URLは外部に配布済みで再発行できないため、読み出し側に互換層を置くのではなく
+// 保存データそのものを移行する。
+// パース不能な行は警告ログを出してスキップする（旧実装でも読み出し時にUnmarshalで
+// 失敗するだけの壊れ行なので、移行で起動を止めない）。
+func migrateShareKyouInfoSchemaFrom100(ctx context.Context, db *sql.DB, schemaVersionKey string, currentSchemaVersion string) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("error at begin tx for share kyou info schema migration: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			if err := tx.Rollback(); err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at rollback share kyou info schema migration", "error", err)
+			}
+		}
+	}()
+
+	// checkAndResolve は CREATE TABLE より前に走るため、
+	// 版番号だけが残った不完全DBでも壊れないようテーブルの存在を確認する
+	tableCount := 0
+	err = tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'SHARE_KYOU_INFO'`).Scan(&tableCount)
+	if err != nil {
+		return fmt.Errorf("error at check SHARE_KYOU_INFO table existence: %w", err)
+	}
+
+	if tableCount != 0 {
+		// LIKE は候補を絞る最適化で、旧形式かどうかの正確な判定はウォーカーが行う
+		selectSQL := `SELECT ID, FIND_QUERY_JSON FROM SHARE_KYOU_INFO WHERE FIND_QUERY_JSON LIKE '%"use_%'`
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSQL))
+		rows, err := tx.QueryContext(ctx, selectSQL)
+		if err != nil {
+			return fmt.Errorf("error at select legacy find query json for share kyou info schema migration: %w", err)
+		}
+		type migratedRow struct {
+			id   string
+			json string
+		}
+		migratedRows := []migratedRow{}
+		for rows.Next() {
+			id := ""
+			findQueryJSON := ""
+			if err := rows.Scan(&id, &findQueryJSON); err != nil {
+				rows.Close()
+				return fmt.Errorf("error at scan legacy find query json for share kyou info schema migration: %w", err)
+			}
+			migrated, changed, err := find.MigrateLegacyFindQueryJSON([]byte(findQueryJSON))
+			if err != nil {
+				slog.Log(ctx, gkill_log.Debug, "共有クエリJSONの移行をスキップしました（パース不能）", "id", id, "error", err)
+				continue
+			}
+			if changed {
+				migratedRows = append(migratedRows, migratedRow{id: id, json: string(migrated)})
+			}
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return fmt.Errorf("error at iterate legacy find query json for share kyou info schema migration: %w", err)
+		}
+		rows.Close()
+
+		updateSQL := `UPDATE SHARE_KYOU_INFO SET FIND_QUERY_JSON = ? WHERE ID = ?`
+		for _, row := range migratedRows {
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateSQL), "id", row.id)
+			if _, err := tx.ExecContext(ctx, updateSQL, row.json, row.id); err != nil {
+				return fmt.Errorf("error at update find query json for share kyou info schema migration id = %s: %w", row.id, err)
+			}
+		}
+	}
+
+	updateVersionSQL := `UPDATE GKILL_META_INFO SET VALUE = ? WHERE KEY = ?`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateVersionSQL))
+	if _, err := tx.ExecContext(ctx, updateVersionSQL, currentSchemaVersion, schemaVersionKey); err != nil {
+		return fmt.Errorf("error at update schema version for share kyou info schema migration: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error at commit share kyou info schema migration: %w", err)
+	}
+	committed = true
+	return nil
 }

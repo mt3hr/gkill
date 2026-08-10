@@ -1,5 +1,4 @@
 import { i18n } from '@/i18n'
-import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import DnoteItem from '@/classes/dnote/dnote-item'
@@ -11,9 +10,7 @@ import register_dictionary, { build_dnote_aggregate_target_from_json, build_dnot
 import moment from 'moment'
 import { save_as } from '@/classes/save-as'
 import type { Kyou } from '@/classes/datas/kyou'
-import type { Tag } from '@/classes/datas/tag'
-import type { Text } from '@/classes/datas/text'
-import type { Notification } from '@/classes/datas/notification'
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
@@ -76,8 +73,8 @@ export function useDnoteView(options: {
     const last_reload_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
     // ── Computed ──
-    const start_date_str: Ref<string> = computed(() => props.query.use_calendar ? (moment(props.query.calendar_start_date ? props.query.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")) : first_kyou_date_str.value)
-    const end_date_str: Ref<string> = computed(() => props.query.use_calendar ? (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")) : last_kyou_date_str.value)
+    const start_date_str: Ref<string> = computed(() => props.query.calendar_start_date !== null ? moment(props.query.calendar_start_date).format("YYYY-MM-DD") : first_kyou_date_str.value)
+    const end_date_str: Ref<string> = computed(() => props.query.calendar_end_date !== null ? moment(props.query.calendar_end_date).format("YYYY-MM-DD") : last_kyou_date_str.value)
 
     const dnote_item_table_view_data = computed({
         get: () => {
@@ -543,30 +540,17 @@ export function useDnoteView(options: {
     }
 
     // ── Event relay objects ──
-    const crudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
-        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
-        'deleted_text': (text: Text) => emits('deleted_text', text),
-        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
-        'registered_text': (text: Text) => emits('registered_text', text),
-        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
-        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
-        'updated_text': (text: Text) => emits('updated_text', text),
-        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
-    }
-
-    const focusClickRelayHandlers = {
-        'focused_kyou': (kyou: Kyou) => emits('focused_kyou', kyou),
+    // 以前は crud / focusClick / rykvDialog の3束に分かれていて、
+    // どの束にも requested_reload_kyou / requested_reload_list /
+    // requested_update_check_kyous が入っていなかった。
+    // rykv-view.vue は allColumnsRequestHandlers を渡してくれているのに、
+    // Dnote側がこれらをemitしないので死んでいた
+    const crudRelayHandlers = build_kyou_dialog_relay(emits, {
+        // クリックはフォーカス移動も伴う
         'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
-    }
+    })
 
-    const rykvDialogHandlers = {
-        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
-    }
-
+    // errors/messagesしかemitしない子（AddDnote*Dialog等）には20件束を渡す意味がない
     const errorsMessagesRelayHandlers = {
         'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
         'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
@@ -624,8 +608,6 @@ export function useDnoteView(options: {
 
         // Event relay objects
         crudRelayHandlers,
-        focusClickRelayHandlers,
-        rykvDialogHandlers,
         errorsMessagesRelayHandlers,
     }
 }

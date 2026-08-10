@@ -2,20 +2,20 @@ package reps
 
 import (
 	"context"
-	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	sqllib "database/sql"
 	"encoding/json"
 	"fmt"
+	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"log/slog"
 	"strconv"
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 type nlogRepositoryCachedSQLite3Impl struct {
@@ -309,10 +309,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -432,8 +430,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	dataType := "nlog"
@@ -767,7 +764,9 @@ WHERE
 	tableName := n.dbName
 	tableNameAlias := n.dbName
 	whereCounter := 0
-	var onlyLatestData bool
+	// 以前は var 宣言のみで未代入(常にfalse)になっており、
+	// OnlyLatestData=true でも全版(編集履歴)が重複して返っていた
+	onlyLatestData := query.OnlyLatestData
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
@@ -881,10 +880,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1013,8 +1010,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	dataType := "nlog"

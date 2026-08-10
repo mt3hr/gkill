@@ -30,33 +30,43 @@ export const KYOUS_TOP_LEVEL_FIELDS = new Set([
 export const KYOUS_QUERY_BOOLEAN_FIELDS = new Set([
   "update_cache",
   "is_deleted",
-  "use_tags",
-  "use_reps",
-  "use_rep_types",
-  "use_ids",
-  "use_include_id",
-  "use_words",
   "words_and",
   "tags_and",
-  "use_timeis",
   "timeis_words_and",
-  "use_timeis_tags",
   "timeis_tags_and",
-  "use_calendar",
-  "use_map",
   "include_create_mi",
   "include_check_mi",
   "include_limit_mi",
   "include_start_mi",
   "include_end_mi",
   "include_end_timeis",
-  "use_plaing",
-  "use_update_time",
   "is_image_only",
   "for_mi",
+  "only_latest_data",
+]);
+
+// 廃止された旧 use_X フラグ (フィルタの活性化は値フィールドの非null存在で決まる)。
+// 後方互換のために受理だけする: use_X:false は対応グループの値キーを落とし、
+// use_X:true は捨てる。normalized クエリには決して積まれない。
+export const LEGACY_USE_FLAG_KEYS = new Set([
+  "use_tags",
+  "use_reps",
+  "use_rep_types",
+  "use_ids",
+  "use_include_id",
+  "use_words",
+  "use_timeis",
+  "use_timeis_tags",
+  "use_calendar",
+  "use_map",
+  "use_plaing",
+  "use_update_time",
   "use_mi_board_name",
   "use_period_of_time",
-  "only_latest_data",
+  // 値キーを束ねない (フラグだけ落とす) が、受理しないと未知キーとして throw してしまい
+  // 「後方互換で受け付ける」という約束が破れるので、Go の移行実装と同じ16キーを揃える
+  "use_mi_sort_type",
+  "use_mi_check_state",
 ]);
 
 export const KYOUS_QUERY_STRING_ARRAY_FIELDS = new Set([

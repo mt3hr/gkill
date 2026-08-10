@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue'
-import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { Kyou } from '@/classes/datas/kyou'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import { refresh_kyou } from '@/classes/kyou-reload'
 import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
 import AndPredicate from '@/classes/dnote/dnote-predicate/and-predicate'
 import RelatedTimeBeforePredicate from '@/classes/dnote/dnote-predicate/related-time-before-predicate'
@@ -107,7 +108,7 @@ export function useRyuuItemView(options: {
         ])
         const matcher_for_after = new DnoteMatcher(predicate_for_after)
         const find_kyou_query = model_value.value?.find_kyou_query ? model_value.value.find_kyou_query.clone() : props.find_kyou_query_default.clone()
-        find_kyou_query.use_calendar = true
+        // カレンダーフィルタの活性は下のswitchでのcalendar_*_date代入（全分岐で少なくとも片側非null）が担う
         find_kyou_query.apply_rep_summary_to_detaul(props.application_config)
 
         switch (related_time_match_type) {
@@ -140,6 +141,9 @@ export function useRyuuItemView(options: {
                         if (kyou.data_type.startsWith("urlog")) return kyou.typed_urlog ? kyou.typed_urlog.url : null
                         if (kyou.data_type.startsWith("nlog")) return kyou.typed_nlog ? kyou.typed_nlog.title : null
                         if (kyou.data_type.startsWith("timeis")) return kyou.typed_timeis ? kyou.typed_timeis.title : null
+                        // "mirekyou" は "mi" に前方一致するので、MiReKyou を先に判定すること。
+                        // MiReKyou は自身のタイトルを持たない(ターゲットの内容が実体)ため対象外にする
+                        if (kyou.data_type.startsWith("mirekyou")) return null
                         if (kyou.data_type.startsWith("mi")) return kyou.typed_mi ? kyou.typed_mi.title : null
                         if (kyou.data_type.startsWith("lantana")) return null
                         if (kyou.data_type.startsWith("idf")) return kyou.typed_idf_kyou ? kyou.typed_idf_kyou.file_name : null
@@ -149,8 +153,9 @@ export function useRyuuItemView(options: {
                     }
                     const title = get_title_func(props.target_kyou)
                     if (title && title !== "") {
-                        find_kyou_query.use_words = true
+                        // 非nullの words / not_words 代入がキーワードグループ有効を表す
                         find_kyou_query.words = [title]
+                        find_kyou_query.not_words = []
                     }
                 }
             })
@@ -158,8 +163,8 @@ export function useRyuuItemView(options: {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (ryuu_predicate as any).predicates.forEach((predicate: DnotePredicate) => {
                     if (predicate && (predicate instanceof EqualTagsAndTargetKyouPredicate || predicate instanceof EqualTagsOrTargetKyouPredicate)) {
-                        find_kyou_query.use_tags = true
                         find_kyou_query.tags_and = predicate instanceof EqualTagsAndTargetKyouPredicate
+                        // 非nullのtags代入がタグフィルタ有効を表す
                         find_kyou_query.tags = props.target_kyou ? props.target_kyou.attached_tags.map(tag => tag.tag) : []
                     }
                 })
@@ -300,11 +305,31 @@ export function useRyuuItemView(options: {
     }
 
     // ── Event relay objects ──
-    const kyouViewRelayHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        // Ryuuのクリックでは Focused を変更しない（focused_kyou/clicked_kyou を中継しない）
-        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
+    // Ryuuのクリックでは Focused を変更しないので、focused_kyou/clicked_kyou を張らない
+    // view版を使う（dialog版だとフォーカス2件も中継してしまう）。
+    // 手書きで3件だけ並べていた頃は残り15件を全部落としており、
+    // Ryuuに出ているKyouは編集してもタグを足しても永久に古いままだった
+    const kyouViewRelayHandlers = build_kyou_view_relay(emits, {
+        'requested_reload_kyou': (kyou: Kyou) => { refresh_match_kyou(kyou); emits('requested_reload_kyou', kyou) },
+        'updated_kyou': (kyou: Kyou) => { refresh_match_kyou(kyou); emits('updated_kyou', kyou) },
+        'deleted_kyou': (kyou: Kyou) => {
+            if (match_kyou.value?.id === kyou.id) {
+                match_kyou.value = null
+                is_no_data.value = true
+            }
+            emits('deleted_kyou', kyou)
+        },
+    })
+
+    async function refresh_match_kyou(kyou: Kyou): Promise<void> {
+        if (match_kyou.value?.id !== kyou.id) {
+            return
+        }
+        const refreshed = await refresh_kyou(kyou)
+        if (!refreshed) {
+            return
+        }
+        match_kyou.value = refreshed
     }
 
     const contextMenuRelayHandlers = {
