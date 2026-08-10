@@ -11,6 +11,12 @@ android {
     // androidx 1.19.0 系が compileSdk 37 以上を要求する
     compileSdk = 37
 
+    testOptions {
+        // getPlaingTimeis 等が android.util.Log を呼ぶため、JVM単体テストでは
+        // Log をno-op化する（モックされていないandroid APIで落とさない）
+        unitTests.isReturnDefaultValues = true
+    }
+
     defaultConfig {
         // Must match the watch_app applicationId for Wearable MessageClient to work
         applicationId = "com.mt3hr.gkill.wear"

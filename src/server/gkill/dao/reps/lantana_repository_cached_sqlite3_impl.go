@@ -295,10 +295,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -419,7 +417,6 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
 		IDs:    ids,
 	}
 
@@ -852,10 +849,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -979,7 +974,6 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
 		IDs:    ids,
 	}
 

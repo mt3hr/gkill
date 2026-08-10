@@ -13,6 +13,7 @@ import type TagQuery from '@/pages/views/tag-query.vue'
 import type CalendarQuery from '@/pages/views/calendar-query.vue'
 import type MapQuery from '@/pages/views/map-query.vue'
 import type PeriodOfTimeQuery from '@/pages/views/period-of-time-query.vue'
+import { SavedFindQueryConfig, type SavedFindQueryItem } from '@/classes/datas/config/saved-find-query-config'
 
 export function useRykvQueryEditorSideBar(options: {
     props: RykvQueryEditorSidebarProps,
@@ -36,6 +37,8 @@ export function useRykvQueryEditorSideBar(options: {
     const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
     const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
     const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
+    // 保存済み検索条件(ライフログ用)。0件なら呼び出しFABごと非表示にする
+    const saved_find_querys = computed(() => SavedFindQueryConfig.parse(props.application_config.saved_find_query_json_data).saved_rykv_find_kyou_querys)
 
     // ── State refs ──
     const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
@@ -80,16 +83,17 @@ export function useRykvQueryEditorSideBar(options: {
         query.value = new_value
     })
 
+    // immediate必須。マウント時点で設定が既に渡っているとwatcherは発火せず、
+    // default_queryが空のFindKyouQueryのまま列追加・クリアに使われてしまう
     watch(() => props.application_config, () => {
         default_query.value = FindKyouQuery.generate_default_query_for_rykv(props.application_config)
-    })
+    }, { immediate: true })
 
     // ── Business logic ──
     function get_default_query(): FindKyouQuery {
         const q = default_query.value?.clone()
         q.query_id = props.gkill_api.generate_uuid()
         if (props.application_config.rykv_default_period !== -1) {
-            q.use_calendar = true
             q.calendar_start_date = moment(moment().add(-props.application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
             q.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
         }
@@ -98,6 +102,13 @@ export function useRykvQueryEditorSideBar(options: {
 
     function emits_current_query(): void {
         const current_query = generate_query(query.value.query_id)
+        // フォーカス切替等でfind_kyou_queryを差し替えると、子ビューのprops同期の残響が
+        // このハンドラへ機械的に届く(1tickより遅れて来るのでタイミングでは抑止できない)。
+        // 機械的な発火は再生成結果が同期済みクエリと同値になるので、値比較で捨てる。
+        // これを外すと「検索中の列をクリック→飛行中の検索がabortされ最初からやり直し」が再発する
+        if (deep_equals(current_query, query.value)) {
+            return
+        }
         emits('updated_query', current_query)
     }
 
@@ -109,24 +120,36 @@ export function useRykvQueryEditorSideBar(options: {
 
         find_query.is_focus_kyou_in_list_view = props.find_kyou_query ? props.find_kyou_query.is_focus_kyou_in_list_view : false
         find_query.is_image_only = query.value.is_image_only
-        find_query.include_create_mi = true
-        find_query.include_check_mi = true
-        find_query.include_limit_mi = true
-        find_query.include_start_mi = true
-        find_query.include_end_mi = true
+        // Mi射影フラグはサイドバーにUIが無いので列のクエリから引き継ぐ。
+        // 以前は5つともtrue固定で、既定列(create のみ)と必ず不一致になり、
+        // 「無変更の再生成をdeep_equalsで吸収する」安全網が一度も効かなかった。
+        // ??の既定値はFindKyouQueryコンストラクタと同値にする
+        find_query.include_create_mi = props.find_kyou_query?.include_create_mi ?? true
+        find_query.include_check_mi = props.find_kyou_query?.include_check_mi ?? false
+        find_query.include_limit_mi = props.find_kyou_query?.include_limit_mi ?? false
+        find_query.include_start_mi = props.find_kyou_query?.include_start_mi ?? false
+        find_query.include_end_mi = props.find_kyou_query?.include_end_mi ?? false
 
         if (keyword_query.value) {
-            find_query.use_words = keyword_query.value.get_use_words()
+            // 有効時は未パースプレースホルダの[]（パースは送信直前のcloneで行う）、無効時はnull
+            const use_words = keyword_query.value.get_use_words()
+            find_query.words = use_words ? [] : null
+            find_query.not_words = use_words ? [] : null
             find_query.words_and = keyword_query.value.get_use_word_and_search()
             find_query.keywords = keyword_query.value.get_keywords().concat()
         }
 
         if (timeis_query.value) {
-            find_query.use_timeis = timeis_query.value.get_use_timeis()
+            // グループ有効時は未パースプレースホルダの[]、無効時はnull。
+            // timeis_tags はグループ有効かつタグ絞り込み有効のときだけ非null
+            const use_timeis = timeis_query.value.get_use_timeis()
+            find_query.timeis_words = use_timeis ? [] : null
+            find_query.timeis_not_words = use_timeis ? [] : null
             find_query.timeis_keywords = timeis_query.value.get_timeis_keywords().concat()
             find_query.timeis_words_and = timeis_query.value.get_use_and_search_timeis_words()
-            find_query.use_timeis_tags = timeis_query.value.get_use_timeis_tags()
-            find_query.timeis_tags = timeis_query.value.get_timeis_tags().concat()
+            find_query.timeis_tags = use_timeis && timeis_query.value.get_use_timeis_tags()
+                ? timeis_query.value.get_timeis_tags().concat()
+                : null
             find_query.timeis_tags_and = timeis_query.value.get_use_and_search_timeis_tags()
         }
 
@@ -154,24 +177,24 @@ export function useRykvQueryEditorSideBar(options: {
         }
 
         if (calendar_query.value) {
-            find_query.use_calendar = calendar_query.value.get_use_calendar()
-            find_query.calendar_start_date = calendar_query.value.get_start_date()
-            find_query.calendar_end_date = calendar_query.value.get_end_date()
+            const use_calendar = calendar_query.value.get_use_calendar()
+            find_query.calendar_start_date = use_calendar ? calendar_query.value.get_start_date() : null
+            find_query.calendar_end_date = use_calendar ? calendar_query.value.get_end_date() : null
         }
 
         if (map_query.value) {
-            find_query.use_map = map_query.value.get_use_map()
-            find_query.map_latitude = map_query.value.get_latitude()
-            find_query.map_longitude = map_query.value.get_longitude()
-            find_query.map_radius = map_query.value.get_radius()
+            const use_map = map_query.value.get_use_map()
+            find_query.map_latitude = use_map ? map_query.value.get_latitude() : null
+            find_query.map_longitude = use_map ? map_query.value.get_longitude() : null
+            find_query.map_radius = use_map ? map_query.value.get_radius() : null
             find_query.is_enable_map_circle_in_sidebar = map_query.value.get_is_enable_circle()
         }
 
         if (period_of_time_query.value) {
-            find_query.use_period_of_time = period_of_time_query.value.get_use_period_of_time()
-            find_query.period_of_time_start_time_second = period_of_time_query.value.get_period_of_time_start_time_second()
-            find_query.period_of_time_end_time_second = period_of_time_query.value.get_period_of_time_end_time_second()
-            find_query.period_of_time_week_of_days = period_of_time_query.value.get_period_of_time_week_of_days()
+            const use_period_of_time = period_of_time_query.value.get_use_period_of_time()
+            find_query.period_of_time_start_time_second = use_period_of_time ? period_of_time_query.value.get_period_of_time_start_time_second() : null
+            find_query.period_of_time_end_time_second = use_period_of_time ? period_of_time_query.value.get_period_of_time_end_time_second() : null
+            find_query.period_of_time_week_of_days = use_period_of_time ? period_of_time_query.value.get_period_of_time_week_of_days() : null
         }
 
         find_query.apply_hide_tags(props.application_config)
@@ -181,95 +204,113 @@ export function useRykvQueryEditorSideBar(options: {
 
     function emits_cleard_keyword_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_words = get_default_query().use_words
-        find_query.keywords = get_default_query().keywords.concat()
-        find_query.words_and = get_default_query().words_and
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.words = d.words === null ? null : d.words.concat()
+        find_query.not_words = d.not_words === null ? null : d.not_words.concat()
+        find_query.keywords = d.keywords.concat()
+        find_query.words_and = d.words_and
         query.value = find_query
         emits('updated_query', find_query)
     }
 
     function emits_cleard_timeis_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_timeis = get_default_query().use_timeis
-        find_query.use_timeis_tags = get_default_query().use_timeis_tags
-        find_query.timeis_keywords = get_default_query().timeis_keywords.concat()
-        find_query.timeis_words_and = get_default_query().timeis_words_and
-        find_query.use_timeis_tags = get_default_query().use_timeis_tags
-        find_query.timeis_tags = get_default_query().timeis_tags.concat()
-        find_query.timeis_tags_and = get_default_query().timeis_tags_and
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.timeis_words = d.timeis_words === null ? null : d.timeis_words.concat()
+        find_query.timeis_not_words = d.timeis_not_words === null ? null : d.timeis_not_words.concat()
+        find_query.timeis_keywords = d.timeis_keywords.concat()
+        find_query.timeis_words_and = d.timeis_words_and
+        find_query.timeis_tags = d.timeis_tags === null ? null : d.timeis_tags.concat()
+        find_query.timeis_tags_and = d.timeis_tags_and
         query.value = find_query
-        timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+        timeis_query.value?.update_check(find_query.timeis_tags ?? [], CheckState.checked, true, true)
         emits('updated_query', find_query)
     }
 
     function emits_cleard_rep_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.reps = get_default_query().reps.concat()
-        find_query.devices_in_sidebar = get_default_query().devices_in_sidebar.concat()
-        find_query.rep_types_in_sidebar = get_default_query().rep_types_in_sidebar.concat()
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.reps = d.reps === null ? null : d.reps.concat()
+        find_query.devices_in_sidebar = d.devices_in_sidebar.concat()
+        find_query.rep_types_in_sidebar = d.rep_types_in_sidebar.concat()
         query.value = find_query
         rep_query.value?.update_check_devices(find_query.devices_in_sidebar, CheckState.checked, true, true)
         rep_query.value?.update_check_rep_types(find_query.rep_types_in_sidebar, CheckState.checked, true, true)
-        rep_query.value?.update_check_reps(find_query.reps, CheckState.checked, true, true)
+        rep_query.value?.update_check_reps(find_query.reps ?? [], CheckState.checked, true, true)
         emits('updated_query', find_query)
     }
 
     function emits_cleard_tag_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.tags = get_default_query().tags.concat()
-        find_query.tags_and = get_default_query().tags_and
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.tags = d.tags === null ? null : d.tags.concat()
+        find_query.tags_and = d.tags_and
         query.value = find_query
-        tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+        tag_query.value?.update_check(find_query.tags ?? [], CheckState.checked, true, true)
         emits('updated_query', find_query)
     }
 
     function emits_cleard_map_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_map = get_default_query().use_map
-        find_query.map_latitude = get_default_query().map_latitude
-        find_query.map_longitude = get_default_query().map_longitude
-        find_query.is_enable_map_circle_in_sidebar = get_default_query().is_enable_map_circle_in_sidebar
-        find_query.map_radius = get_default_query().map_radius
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.map_latitude = d.map_latitude
+        find_query.map_longitude = d.map_longitude
+        find_query.is_enable_map_circle_in_sidebar = d.is_enable_map_circle_in_sidebar
+        find_query.map_radius = d.map_radius
         query.value = find_query
         emits('updated_query', find_query)
     }
 
     function emits_cleard_calendar_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_calendar = get_default_query().use_calendar
-        find_query.calendar_start_date = get_default_query().calendar_start_date
-        find_query.calendar_end_date = get_default_query().calendar_end_date
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.calendar_start_date = d.calendar_start_date
+        find_query.calendar_end_date = d.calendar_end_date
         query.value = find_query
         emits('updated_query', find_query)
     }
 
     function emits_cleard_period_of_time_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_calendar = get_default_query().use_calendar
-        find_query.use_period_of_time = default_query.value.use_period_of_time
-        find_query.period_of_time_start_time_second = default_query.value.period_of_time_start_time_second
-        find_query.period_of_time_end_time_second = default_query.value.period_of_time_end_time_second
-        find_query.period_of_time_week_of_days = default_query.value.period_of_time_week_of_days.concat()
+        find_query.query_id = query.value.query_id
+        const d = default_query.value
+        find_query.period_of_time_start_time_second = d.period_of_time_start_time_second
+        find_query.period_of_time_end_time_second = d.period_of_time_end_time_second
+        find_query.period_of_time_week_of_days = d.period_of_time_week_of_days === null ? null : d.period_of_time_week_of_days.concat()
         query.value = find_query
         emits('updated_query', find_query)
     }
 
     async function emits_default_query(): Promise<void> {
         const find_query = get_default_query().clone()
-        find_query.query_id = props.gkill_api.generate_uuid()
+        find_query.query_id = query.value.query_id
         query.value = find_query
-        timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+        timeis_query.value?.update_check(find_query.timeis_tags ?? [], CheckState.checked, true, true)
         rep_query.value?.update_check_devices(find_query.devices_in_sidebar, CheckState.checked, true, true)
         rep_query.value?.update_check_rep_types(find_query.rep_types_in_sidebar, CheckState.checked, true, true)
-        rep_query.value?.update_check_reps(find_query.reps, CheckState.checked, true, true)
-        tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+        rep_query.value?.update_check_reps(find_query.reps ?? [], CheckState.checked, true, true)
+        tag_query.value?.update_check(find_query.tags ?? [], CheckState.checked, true, true)
+        emits('updated_query', find_query)
+    }
+
+    // 保存済み検索条件をサイドバーへ適用する（手で編集したのと同じ扱い。
+    // ホットリロードONなら親が自動検索し、OFFなら検索ボタンで実行される）。
+    // query_id は列の恒久IDなので、保存条件のものは使わず必ず現在の列のIDを維持する
+    async function apply_saved_query(item: SavedFindQueryItem): Promise<void> {
+        const find_query = item.find_kyou_query.clone()
+        find_query.query_id = query.value.query_id
+        query.value = find_query
+        timeis_query.value?.update_check(find_query.timeis_tags ?? [], CheckState.checked, true, true)
+        rep_query.value?.update_check_devices(find_query.devices_in_sidebar, CheckState.checked, true, true)
+        rep_query.value?.update_check_rep_types(find_query.rep_types_in_sidebar, CheckState.checked, true, true)
+        rep_query.value?.update_check_reps(find_query.reps ?? [], CheckState.checked, true, true)
+        tag_query.value?.update_check(find_query.tags ?? [], CheckState.checked, true, true)
         emits('updated_query', find_query)
     }
 
@@ -355,10 +396,12 @@ export function useRykvQueryEditorSideBar(options: {
         sidebar_height,
         header_top_px,
         sidebar_top_px,
+        saved_find_querys,
 
         // Business logic / exposed
         generate_query,
         get_default_query,
+        apply_saved_query,
 
         // Template event handlers
         emits_current_query,

@@ -13,12 +13,12 @@ import (
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
+	_ "modernc.org/sqlite"
 )
 
 const CURRENT_SCHEMA_VERSION_NLOG_REPOSITORY_SQLITE3IMPL_DAO = "1.0.0"
@@ -361,10 +361,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -521,8 +519,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	dataType := "nlog"
@@ -892,10 +889,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1061,8 +1056,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	dataType := "nlog"
@@ -1342,14 +1336,15 @@ FROM NLOG
 			return nil, ctx.Err()
 		default:
 			addr := gkill_cache.LatestDataRepositoryAddress{}
-			var isDeletedStr string
 			var dataUpdateTimeStr string
 			var targetIDInData *string
-			err := rows.Scan(&isDeletedStr, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
+			// IS_DELETEDはboolバインドでINTEGER(0/1)格納なので直接boolへScanする。
+			// 以前は文字列に受けて "TRUE" と比較しており(実値は"0"/"1")、常にfalseになって
+			// 削除済みターゲットを指すReKyou/MiReKyouが検索結果に残っていた
+			err := rows.Scan(&addr.IsDeleted, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
 			if err != nil {
 				return nil, err
 			}
-			addr.IsDeleted = isDeletedStr == "TRUE"
 			addr.TargetIDInData = targetIDInData
 			addr.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {

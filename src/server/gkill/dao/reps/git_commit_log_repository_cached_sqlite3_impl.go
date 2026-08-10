@@ -338,10 +338,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	queryArgs := []any{
@@ -471,8 +469,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		dataType,
@@ -1234,10 +1231,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 	dataType := "git_commit_log"

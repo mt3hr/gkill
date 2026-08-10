@@ -11,14 +11,12 @@ import type { MiQueryEditorSidebarEmits } from '@/pages/views/mi-query-editor-si
 import type { MiQueryEditorSidebarProps } from '@/pages/views/mi-query-editor-sidebar-props'
 import type SidebarHeader from '@/pages/views/sidebar-header.vue'
 import type KeywordQuery from '@/pages/views/keyword-query.vue'
-import type TimeIsQuery from '@/pages/views/time-is-query.vue'
 import type TagQuery from '@/pages/views/tag-query.vue'
 import type CalendarQuery from '@/pages/views/calendar-query.vue'
-import type MapQuery from '@/pages/views/map-query.vue'
 import type miExtractCheckStateQuery from '@/pages/views/mi-extract-check-state-query.vue'
 import type miSortTypeQuery from '@/pages/views/mi-sort-type-query.vue'
 import type MiBoardQuery from '@/pages/views/mi-board-query.vue'
-import type PeriodOfTimeQuery from '@/pages/views/period-of-time-query.vue'
+import { SavedFindQueryConfig, type SavedFindQueryItem } from '@/classes/datas/config/saved-find-query-config'
 
 export function useMiQueryEditorSidebar(options: {
     props: MiQueryEditorSidebarProps,
@@ -29,14 +27,11 @@ export function useMiQueryEditorSidebar(options: {
     // ── Template refs ──
     const sidebar_header = ref<InstanceType<typeof SidebarHeader> | null>(null)
     const keyword_query = ref<InstanceType<typeof KeywordQuery> | null>(null)
-    const timeis_query = ref<InstanceType<typeof TimeIsQuery> | null>(null)
     const tag_query = ref<InstanceType<typeof TagQuery> | null>(null)
     const calendar_query = ref<InstanceType<typeof CalendarQuery> | null>(null)
-    const map_query = ref<InstanceType<typeof MapQuery> | null>(null)
     const check_state_query = ref<InstanceType<typeof miExtractCheckStateQuery> | null>(null)
     const sort_type_query = ref<InstanceType<typeof miSortTypeQuery> | null>(null)
     const board_query = ref<InstanceType<typeof MiBoardQuery> | null>(null)
-    const period_of_time_query = ref<InstanceType<typeof PeriodOfTimeQuery> | null>(null)
 
     // ── State refs ──
     const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
@@ -46,14 +41,11 @@ export function useMiQueryEditorSidebar(options: {
 
     const inited_sidebar_header_for_query_sidebar = ref(true)
     const inited_keyword_query_for_query_sidebar = ref(true)
-    const inited_timeis_query_for_query_sidebar = ref(false)
     const inited_tag_query_for_query_sidebar = ref(false)
     const inited_calendar_query_for_query_sidebar = ref(false)
-    const inited_map_query_for_query_sidebar = ref(false)
     const inited_check_state_query_for_query_sidebar = ref(false)
     const inited_sort_query_for_query_sidebar = ref(false)
     const inited_board_query_for_query_sidebar = ref(false)
-    const inited_period_of_time_query_for_query_sidebar = ref(true)
 
     // ── Computed ──
     const header_margin = computed(() => props.application_config.is_show_share_footer ? 12 : 6)
@@ -61,21 +53,23 @@ export function useMiQueryEditorSidebar(options: {
     const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
     const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
     const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
+    // 保存済み検索条件(タスク用)。0件なら呼び出しFABごと非表示にする
+    const saved_find_querys = computed(() => SavedFindQueryConfig.parse(props.application_config.saved_find_query_json_data).saved_mi_find_kyou_querys)
 
     const inited = computed(() => {
         if (!is_mounted.value) {
             return false
         }
 
+        // ここに載せてよいのは実際に @inited を発火する子だけ。
+        // 画面から消した子のフラグを残すと永久にfalseのままで inited が立たず、
+        // mi画面が init() を走らせられずスピナーのまま固まる
         return inited_keyword_query_for_query_sidebar.value &&
-            inited_timeis_query_for_query_sidebar.value &&
             inited_tag_query_for_query_sidebar.value &&
             inited_calendar_query_for_query_sidebar.value &&
-            inited_map_query_for_query_sidebar.value &&
             inited_check_state_query_for_query_sidebar.value &&
             inited_sort_query_for_query_sidebar.value &&
-            inited_board_query_for_query_sidebar.value &&
-            inited_period_of_time_query_for_query_sidebar.value
+            inited_board_query_for_query_sidebar.value
     })
 
     // ── Watchers ──
@@ -85,12 +79,14 @@ export function useMiQueryEditorSidebar(options: {
         }
     })
 
+    // immediate必須。マウント時点で設定が既に渡っているとwatcherは発火せず、
+    // default_queryが空のFindKyouQueryのまま列追加・クリアに使われてしまう
     watch(() => props.application_config, () => {
         default_query.value = FindKyouQuery.generate_default_query_for_mi(props.application_config)
         default_query.value.query_id = props.gkill_api.generate_uuid()
-        default_query.value.use_mi_board_name = false
-        default_query.value.mi_board_name = i18n.global.t("MI_ALL_BOARD_NAME_TITLE")
-    })
+        // mi_board_name はコンストラクタ既定の null（=「すべて」）のまま。
+        // 番兵文字列(MI_ALL_BOARD_NAME_TITLE)は表示層だけが使い、クエリへは持ち込まない
+    }, { immediate: true })
 
     watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
         if (deep_equals(new_value, old_value)) {
@@ -104,7 +100,6 @@ export function useMiQueryEditorSidebar(options: {
         const q = default_query.value.clone()
         q.query_id = props.gkill_api.generate_uuid()
         if (props.application_config.mi_default_period !== -1) {
-            q.use_calendar = true
             q.calendar_start_date = moment(moment().add(-props.application_config.mi_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
             q.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
         }
@@ -122,31 +117,21 @@ export function useMiQueryEditorSidebar(options: {
         find_query.is_image_only = query.value.is_image_only
 
         if (keyword_query.value) {
-            find_query.use_words = keyword_query.value.get_use_words()
+            // 有効時は未パースプレースホルダの[]（パースは送信直前のcloneで行う）、無効時はnull
+            const use_words = keyword_query.value.get_use_words()
+            find_query.words = use_words ? [] : null
+            find_query.not_words = use_words ? [] : null
             find_query.words_and = keyword_query.value.get_use_word_and_search()
             find_query.keywords = keyword_query.value.get_keywords().concat()
         }
 
-        if (timeis_query.value) {
-            find_query.use_timeis = timeis_query.value.get_use_timeis()
-            find_query.timeis_keywords = timeis_query.value.get_timeis_keywords().concat()
-            find_query.timeis_words_and = timeis_query.value.get_use_and_search_timeis_words()
-            find_query.use_timeis_tags = timeis_query.value.get_use_timeis_tags()
-            find_query.timeis_tags = timeis_query.value.get_timeis_tags().concat()
-            find_query.timeis_tags_and = timeis_query.value.get_use_and_search_timeis_tags()
-        }
-
         if (board_query.value) {
-            find_query.mi_board_name = board_query.value.get_board_name()
-            if (find_query.mi_board_name !== i18n.global.t("MI_ALL_BOARD_NAME_TITLE")) {
-                find_query.use_mi_board_name = true
-            } else {
-                find_query.use_mi_board_name = false
-            }
+            // 「すべて」の番兵文字列→null変換はここ1点のみ（番兵は表示層専用。クエリ上のnull=「すべて」）
+            const board_name = board_query.value.get_board_name()
+            find_query.mi_board_name = board_name === i18n.global.t("MI_ALL_BOARD_NAME_TITLE") ? null : board_name
         }
 
         find_query.reps = get_default_query().reps
-        find_query.use_rep_types = true
         find_query.rep_types = ["mi"]
 
         if (check_state_query.value) {
@@ -180,25 +165,13 @@ export function useMiQueryEditorSidebar(options: {
         }
 
         if (calendar_query.value) {
-            find_query.use_calendar = calendar_query.value.get_use_calendar()
-            find_query.calendar_start_date = calendar_query.value.get_start_date()
-            find_query.calendar_end_date = calendar_query.value.get_end_date()
+            const use_calendar = calendar_query.value.get_use_calendar()
+            find_query.calendar_start_date = use_calendar ? calendar_query.value.get_start_date() : null
+            find_query.calendar_end_date = use_calendar ? calendar_query.value.get_end_date() : null
         }
 
-        if (map_query.value) {
-            find_query.use_map = map_query.value.get_use_map()
-            find_query.map_latitude = map_query.value.get_latitude()
-            find_query.map_longitude = map_query.value.get_longitude()
-            find_query.map_radius = map_query.value.get_radius()
-            find_query.is_enable_map_circle_in_sidebar = map_query.value.get_is_enable_circle()
-        }
-
-        if (period_of_time_query.value) {
-            find_query.use_period_of_time = period_of_time_query.value.get_use_period_of_time()
-            find_query.period_of_time_start_time_second = period_of_time_query.value.get_period_of_time_start_time_second()
-            find_query.period_of_time_end_time_second = period_of_time_query.value.get_period_of_time_end_time_second()
-            find_query.period_of_time_week_of_days = period_of_time_query.value.get_period_of_time_week_of_days()
-        }
+        // 状況(TimeIs)・時間帯・場所はこのサイドバーから外したので、
+        // それらのフィールドは FindKyouQuery の既定値（すべてOFF）のままにする
 
         find_query.apply_hide_tags(props.application_config)
 
@@ -208,87 +181,61 @@ export function useMiQueryEditorSidebar(options: {
     // ── Template event handlers ──
     function emits_current_query(): void {
         const current_query = generate_query(query.value.query_id)
+        // フォーカス切替等でfind_kyou_queryを差し替えると、子ビューのprops同期の残響が
+        // このハンドラへ機械的に届く(1tickより遅れて来るのでタイミングでは抑止できない)。
+        // 機械的な発火は再生成結果が同期済みクエリと同値になるので、値比較で捨てる。
+        // これを外すと「検索中の列をクリック→飛行中の検索がabortされ最初からやり直し」が再発する
+        if (deep_equals(current_query, query.value)) {
+            return
+        }
         emits('updated_query', current_query)
     }
 
     function emits_cleard_sort_type_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
+        find_query.query_id = query.value.query_id
         find_query.mi_sort_type = get_default_query().mi_sort_type
+        query.value = find_query
         emits('updated_query', find_query)
     }
 
     function emits_cleard_check_state(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
+        find_query.query_id = query.value.query_id
         find_query.mi_check_state = get_default_query().mi_check_state
+        query.value = find_query
         emits('updated_query', find_query)
     }
 
     function emits_cleard_keyword_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_words = get_default_query().use_words
-        find_query.keywords = get_default_query().keywords.concat()
-        find_query.words_and = get_default_query().words_and
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.words = d.words === null ? null : d.words.concat()
+        find_query.not_words = d.not_words === null ? null : d.not_words.concat()
+        find_query.keywords = d.keywords.concat()
+        find_query.words_and = d.words_and
         query.value = find_query
-        emits('updated_query', find_query)
-    }
-
-    function emits_cleard_timeis_query(): void {
-        const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_timeis = get_default_query().use_timeis
-        find_query.use_timeis_tags = get_default_query().use_timeis_tags
-        find_query.timeis_keywords = get_default_query().timeis_keywords.concat()
-        find_query.timeis_words_and = get_default_query().timeis_words_and
-        find_query.use_timeis_tags = get_default_query().use_timeis_tags
-        find_query.timeis_tags = get_default_query().timeis_tags.concat()
-        find_query.timeis_tags_and = get_default_query().timeis_tags_and
-        query.value = find_query
-        timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
         emits('updated_query', find_query)
     }
 
     function emits_cleard_tag_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.tags = get_default_query().tags.concat()
-        find_query.tags_and = get_default_query().tags_and
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.tags = d.tags === null ? null : d.tags.concat()
+        find_query.tags_and = d.tags_and
         query.value = find_query
-        tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-        emits('updated_query', find_query)
-    }
-
-    function emits_cleard_map_query(): void {
-        const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_map = get_default_query().use_map
-        find_query.map_latitude = get_default_query().map_latitude
-        find_query.map_longitude = get_default_query().map_longitude
-        find_query.is_enable_map_circle_in_sidebar = get_default_query().is_enable_map_circle_in_sidebar
-        find_query.map_radius = get_default_query().map_radius
-        query.value = find_query
+        tag_query.value?.update_check(find_query.tags ?? [], CheckState.checked, true, true)
         emits('updated_query', find_query)
     }
 
     function emits_cleard_calendar_query(): void {
         const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_calendar = get_default_query().use_calendar
-        find_query.calendar_start_date = get_default_query().calendar_start_date
-        find_query.calendar_end_date = get_default_query().calendar_end_date
-        query.value = find_query
-        emits('updated_query', find_query)
-    }
-
-    function emits_cleard_period_of_time_query(): void {
-        const find_query = generate_query()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_period_of_time = default_query.value.use_period_of_time
-        find_query.period_of_time_start_time_second = default_query.value.period_of_time_start_time_second
-        find_query.period_of_time_end_time_second = default_query.value.period_of_time_end_time_second
-        find_query.period_of_time_week_of_days = default_query.value.period_of_time_week_of_days.concat()
+        find_query.query_id = query.value.query_id
+        const d = get_default_query()
+        find_query.calendar_start_date = d.calendar_start_date
+        find_query.calendar_end_date = d.calendar_end_date
         query.value = find_query
         emits('updated_query', find_query)
     }
@@ -296,11 +243,22 @@ export function useMiQueryEditorSidebar(options: {
     async function emits_default_query(): Promise<void> {
         const board_name = props.find_kyou_query.mi_board_name
         const find_query = get_default_query().clone()
-        find_query.query_id = props.gkill_api.generate_uuid()
-        find_query.use_mi_board_name = false
+        find_query.query_id = query.value.query_id
         find_query.mi_board_name = board_name
-        timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-        tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+        query.value = find_query
+        tag_query.value?.update_check(find_query.tags ?? [], CheckState.checked, true, true)
+        emits('updated_query', find_query)
+    }
+
+    // 保存済み検索条件をサイドバーへ適用する（手で編集したのと同じ扱い。
+    // ホットリロードONなら親が自動検索し、OFFなら検索ボタンで実行される）。
+    // query_id は列の恒久IDなので、保存条件のものは使わず必ず現在の列のIDを維持する。
+    // 板名はクリアと違って保持しない（保存された条件の板名も条件の一部として勝つ）
+    async function apply_saved_query(item: SavedFindQueryItem): Promise<void> {
+        const find_query = item.find_kyou_query.clone()
+        find_query.query_id = query.value.query_id
+        query.value = find_query
+        tag_query.value?.update_check(find_query.tags ?? [], CheckState.checked, true, true)
         emits('updated_query', find_query)
     }
 
@@ -336,24 +294,12 @@ export function useMiQueryEditorSidebar(options: {
         if (is_by_user) emits_current_query()
     }
 
-    function onTimeisQueryRequestUpdateCheckedTimeisTags(_tags: string[], is_by_user: boolean): void {
-        if (is_by_user) emits_current_query()
-    }
-
-    function onInitedTimeis(): void {
-        inited_timeis_query_for_query_sidebar.value = true
-    }
-
     function onInitedTag(): void {
         inited_tag_query_for_query_sidebar.value = true
     }
 
     function onInitedCalendar(): void {
         inited_calendar_query_for_query_sidebar.value = true
-    }
-
-    function onInitedMap(): void {
-        inited_map_query_for_query_sidebar.value = true
     }
 
     function onInitedCheckState(): void {
@@ -377,14 +323,11 @@ export function useMiQueryEditorSidebar(options: {
         // Template refs
         sidebar_header,
         keyword_query,
-        timeis_query,
         tag_query,
         calendar_query,
-        map_query,
         check_state_query,
         sort_type_query,
         board_query,
-        period_of_time_query,
 
         // State
         default_query,
@@ -392,14 +335,11 @@ export function useMiQueryEditorSidebar(options: {
         is_mounted,
         inited_sidebar_header_for_query_sidebar,
         inited_keyword_query_for_query_sidebar,
-        inited_timeis_query_for_query_sidebar,
         inited_tag_query_for_query_sidebar,
         inited_calendar_query_for_query_sidebar,
-        inited_map_query_for_query_sidebar,
         inited_check_state_query_for_query_sidebar,
         inited_sort_query_for_query_sidebar,
         inited_board_query_for_query_sidebar,
-        inited_period_of_time_query_for_query_sidebar,
 
         // Computed
         header_margin,
@@ -407,22 +347,21 @@ export function useMiQueryEditorSidebar(options: {
         sidebar_height,
         header_top_px,
         sidebar_top_px,
+        saved_find_querys,
         inited,
 
         // Exposed methods (for defineExpose)
         generate_query,
         get_default_query,
+        apply_saved_query,
 
         // Template event handlers
         emits_current_query,
         emits_cleard_sort_type_query,
         emits_cleard_check_state,
         emits_cleard_keyword_query,
-        emits_cleard_timeis_query,
         emits_cleard_tag_query,
-        emits_cleard_map_query,
         emits_cleard_calendar_query,
-        emits_cleard_period_of_time_query,
         emits_default_query,
         show_manage_share_kyou_dialog,
         show_share_kyou_dialog,
@@ -432,11 +371,8 @@ export function useMiQueryEditorSidebar(options: {
         onReceivedMessages,
         onReceivedErrors,
         onTagQueryRequestUpdateCheckedTags,
-        onTimeisQueryRequestUpdateCheckedTimeisTags,
-        onInitedTimeis,
         onInitedTag,
         onInitedCalendar,
-        onInitedMap,
         onInitedCheckState,
         onInitedSort,
         onInitedBoard,

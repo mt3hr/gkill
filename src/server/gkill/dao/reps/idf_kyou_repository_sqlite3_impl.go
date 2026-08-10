@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -336,22 +335,8 @@ WHERE
 		}
 	}()
 
-	words := []string{}
-	notWords := []string{}
-	// query は全repで共有されているので、スライスの中身を直接書き換えると
-	// 並列に走っている他repの検索語まで小文字化して壊してしまう。必ず複製すること。
-	if query.Words != nil {
-		words = make([]string, len(query.Words))
-		for i, word := range query.Words {
-			words[i] = strings.ToLower(word)
-		}
-	}
-	if query.NotWords != nil {
-		notWords = make([]string, len(query.NotWords))
-		for i, notWord := range query.NotWords {
-			notWords[i] = strings.ToLower(notWord)
-		}
-	}
+	words := lowerFindWords(query.Words)
+	notWords := lowerFindWords(query.NotWords)
 
 	kyous := map[string][]Kyou{}
 	for rows.Next() {
@@ -450,60 +435,9 @@ WHERE
 				}
 			}
 
-			fileContentText := ""
-			if query.UseWords {
-				fileContentText += strings.ToLower(filename)
-				switch filepath.Ext(idf.TargetFile) {
-				case ".md":
-					fallthrough
-				case ".txt":
-					file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-					if err != nil {
-						err = fmt.Errorf("error at open file %s: %w", filename, err)
-						return nil, err
-					}
-					b, err := io.ReadAll(file)
-					file.Close()
-					if err != nil {
-						err = fmt.Errorf("error at read all file content %s: %w", filename, err)
-						return nil, err
-					}
-					fileContentText += strings.ToLower(string(b))
-				}
-			}
-
 			match := true
-			if query.UseWords {
-				// ワードand検索である場合の判定
-				if query.WordsAnd {
-					match = true
-					for _, word := range words {
-						match = strings.Contains(fileContentText, word)
-						if !match {
-							break
-						}
-					}
-					if !match {
-						continue
-					}
-				} else if !(query.WordsAnd) {
-					// ワードor検索である場合の判定
-					match = false
-					for _, word := range words {
-						match = strings.Contains(fileContentText, word)
-						if match {
-							break
-						}
-					}
-				}
-				// notワードを除外する場合の判定
-				for _, notWord := range notWords {
-					match = strings.Contains(fileContentText, notWord)
-					if match {
-						match = false
-						break
-					}
-				}
+			if query.HasWordFilter() {
+				match = matchFindWords(findWordTextOfIDFKyou(ctx, idf.TargetFile, filename), words, notWords, query.WordsAnd)
 			}
 
 			if match {
@@ -592,10 +526,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -780,8 +712,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	tableName := "IDF"
@@ -949,8 +880,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 	queryArgs := []any{
 		repName,
@@ -1213,22 +1143,8 @@ WHERE
 		}
 	}()
 
-	words := []string{}
-	notWords := []string{}
-	// query は全repで共有されているので、スライスの中身を直接書き換えると
-	// 並列に走っている他repの検索語まで小文字化して壊してしまう。必ず複製すること。
-	if query.Words != nil {
-		words = make([]string, len(query.Words))
-		for i, word := range query.Words {
-			words[i] = strings.ToLower(word)
-		}
-	}
-	if query.NotWords != nil {
-		notWords = make([]string, len(query.NotWords))
-		for i, notWord := range query.NotWords {
-			notWords[i] = strings.ToLower(notWord)
-		}
-	}
+	words := lowerFindWords(query.Words)
+	notWords := lowerFindWords(query.NotWords)
 
 	idfKyous := []IDFKyou{}
 	for rows.Next() {
@@ -1306,66 +1222,11 @@ WHERE
 				return nil, err
 			}
 
-			fileContentText := ""
-
 			filename := filepath.Join(i.contentDir, idf.TargetFile)
-			if err != nil {
-				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
-				return nil, err
-			}
-			if query.UseWords {
-				fileContentText += filename
-				switch filepath.Ext(idf.TargetFile) {
-				case ".md":
-					fallthrough
-				case ".txt":
-					file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-					if err != nil {
-						err = fmt.Errorf("error at open file %s: %w", filename, err)
-						return nil, err
-					}
-					b, err := io.ReadAll(file)
-					file.Close()
-					if err != nil {
-						err = fmt.Errorf("error at read all file content %s: %w", filename, err)
-						return nil, err
-					}
-					fileContentText += strings.ToLower(string(b))
-				}
-			}
 
 			match := true
-			if query.UseWords {
-				// ワードand検索である場合の判定
-				if query.WordsAnd {
-					match = true
-					for _, word := range words {
-						match = strings.Contains(fileContentText, word)
-						if !match {
-							break
-						}
-					}
-					if !match {
-						continue
-					}
-				} else if !(query.WordsAnd) {
-					// ワードor検索である場合の判定
-					match = false
-					for _, word := range words {
-						match = strings.Contains(fileContentText, word)
-						if match {
-							break
-						}
-					}
-				}
-				// notワードを除外する場合の判定
-				for _, notWord := range notWords {
-					match = strings.Contains(fileContentText, notWord)
-					if match {
-						match = false
-						break
-					}
-				}
+			if query.HasWordFilter() {
+				match = matchFindWords(findWordTextOfIDFKyou(ctx, idf.TargetFile, filename), words, notWords, query.WordsAnd)
 			}
 
 			if match {
@@ -1422,10 +1283,8 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs:         true,
 		IDs:            ids,
 		OnlyLatestData: updateTime == nil,
-		UseUpdateTime:  updateTime != nil,
 		UpdateTime:     updateTime,
 	}
 
@@ -1775,8 +1634,7 @@ WHERE
 
 	ids := []string{id}
 	query := &find.FindQuery{
-		UseIDs: true,
-		IDs:    ids,
+		IDs: ids,
 	}
 
 	repName, err := i.GetRepName(ctx)
@@ -2528,6 +2386,16 @@ func IsImagePublic(filename string) bool {
 	return isImage(filename)
 }
 
+// IsVideoPublic は外部パッケージからisVideo判定を利用するための公開関数
+func IsVideoPublic(filename string) bool {
+	return isVideo(filename)
+}
+
+// IsAudioPublic は外部パッケージからisAudio判定を利用するための公開関数
+func IsAudioPublic(filename string) bool {
+	return isAudio(filename)
+}
+
 func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) error {
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -2703,14 +2571,15 @@ FROM IDF
 			return nil, ctx.Err()
 		default:
 			addr := gkill_cache.LatestDataRepositoryAddress{}
-			var isDeletedStr string
 			var dataUpdateTimeStr string
 			var targetIDInData *string
-			err := rows.Scan(&isDeletedStr, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
+			// IS_DELETEDはboolバインドでINTEGER(0/1)格納なので直接boolへScanする。
+			// 以前は文字列に受けて "TRUE" と比較しており(実値は"0"/"1")、常にfalseになって
+			// 削除済みターゲットを指すReKyou/MiReKyouが検索結果に残っていた
+			err := rows.Scan(&addr.IsDeleted, &addr.TargetID, &targetIDInData, &addr.LatestDataRepositoryName, &dataUpdateTimeStr)
 			if err != nil {
 				return nil, err
 			}
-			addr.IsDeleted = isDeletedStr == "TRUE"
 			addr.TargetIDInData = targetIDInData
 			addr.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {

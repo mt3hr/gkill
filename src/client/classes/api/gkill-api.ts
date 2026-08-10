@@ -141,6 +141,7 @@ import type { GetIDFKyouRequest } from "./req_res/get-idf-kyou-request"
 import { GetIDFKyouResponse } from "./req_res/get-idf-kyou-response"
 import { GPSLog } from "../datas/gps-log"
 import { FindKyouQuery } from "./find_query/find-kyou-query"
+import { is_legacy_find_kyou_query_json } from "./find_query/normalize-legacy-find-kyou-query-json"
 import type { UpdateIDFKyouRequest } from "./req_res/update-idf-kyou-request"
 import type { UpdateIDFKyouResponse } from "./req_res/update-idf-kyou-response"
 import type { GetServerConfigsRequest } from "./req_res/get-server-configs-request"
@@ -154,7 +155,7 @@ import type { RegisterGkillNotificationRequest } from "./req_res/register-gkill-
 import type { RegisterGkillNotificationResponse } from "./req_res/register-gkill-notification-response"
 import type { AddNotificationRequest } from "./req_res/add-notification-request"
 import type { AddNotificationResponse } from "./req_res/add-notification-response"
-import { hydrate } from "./hydrate"
+import { hydrate, hydrate_all_chunked } from "./hydrate"
 import type { GetNotificationHistoryByNotificationIDRequest } from "./req_res/get-notification-history-by-notification-id-request"
 import { GetNotificationHistoryByNotificationIDResponse } from "./req_res/get-notification-history-by-notification-id-response"
 import type { GetNotificationsByTargetIDRequest } from "./req_res/get-notifications-by-target-id-request"
@@ -1070,32 +1071,16 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
-                let json = await res.json()
-
-                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
-                const response: GetKyousResponse = json
+                const response: GetKyousResponse = await res.json()
                 this.check_auth(response)
                 if (!response.kyous) {
                         response.kyous = new Array<Kyou>()
                 }
 
-                hydrate(response, json, { date_suffixes: [] })
-                json = null
-
-                const wait_promises = Array<Promise<void>>()
-                // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
-                const worker_task_limit = 5000
-                for (let i = 0; i < response.kyous.length; i += worker_task_limit) {
-                        wait_promises.push((async (): Promise<void> => {
-                                for (let j = i; j < response.kyous.length && j < i + worker_task_limit; j++) {
-                                        let kyou: Kyou | null = new Kyou()
-                                        hydrate(kyou, response.kyous[j])
-                                        response.kyous[j] = kyou
-                                        kyou = null
-                                }
-                        })())
-                }
-                await Promise.all(wait_promises)
+                // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）。
+                // 数十万件を1タスクで実体化するとメインスレッドが数秒止まるので、
+                // チャンクごとにyieldしながら変換する。検索が中断されたらチャンク境界で抜ける
+                await hydrate_all_chunked(response.kyous, () => new Kyou(), { signal: req.abort_controller?.signal })
                 return response
         }
 
@@ -2071,150 +2056,32 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: GetSharedKyousResponse = new GetSharedKyousResponse()
                 hydrate(response, json, { date_suffixes: [] })
-                if (json.kyous) {
-                        for (let i = 0; i < json.kyous.length; i++) {
-                                const kyou = new Kyou()
-                                hydrate(kyou, json.kyous[i])
-                                response.kyous[i] = kyou
+                // 共有ページは全typed・添付データを一括で返すため応答が大きくなりうる。
+                // 各配列をチャンクでyieldしながら実体化する(1チャンク未満の配列はyieldなしで即完了)
+                const signal = req.abort_controller?.signal
+                const hydrate_list = async <T extends object>(list: Array<unknown> | null | undefined, factory: () => T): Promise<Array<T>> => {
+                        if (!list) {
+                                return []
                         }
-                } else {
-                        response.kyous = []
+                        await hydrate_all_chunked(list, factory, { signal })
+                        return list as Array<T>
                 }
-                if (json.kmemos) {
-                        for (let i = 0; i < json.kmemos.length; i++) {
-                                const kmemo = new Kmemo()
-                                hydrate(kmemo, json.kmemos[i])
-                                response.kmemos[i] = kmemo
-                        }
-                } else {
-                        response.kmemos = []
-                }
-                if (json.kcs) {
-                        for (let i = 0; i < json.kcs.length; i++) {
-                                const kc = new KC()
-                                hydrate(kc, json.kcs[i])
-                                response.kcs[i] = kc
-                        }
-                } else {
-                        response.kcs = []
-                }
-                if (json.timeiss) {
-                        for (let i = 0; i < json.timeiss.length; i++) {
-                                const timeis = new TimeIs()
-                                hydrate(timeis, json.timeiss[i])
-                                response.timeiss[i] = timeis
-                        }
-                } else {
-                        response.timeiss = []
-                }
-                if (json.mis) {
-                        for (let i = 0; i < json.mis.length; i++) {
-                                const mi = new Mi()
-                                hydrate(mi, json.mis[i])
-                                response.mis[i] = mi
-                        }
-                } else {
-                        response.mis = []
-                }
-                if (json.nlogs) {
-                        for (let i = 0; i < json.nlogs.length; i++) {
-                                const nlog = new Nlog()
-                                hydrate(nlog, json.nlogs[i])
-                                response.nlogs[i] = nlog
-                        }
-                } else {
-                        response.nlogs = []
-                }
-                if (json.lantanas) {
-                        for (let i = 0; i < json.lantanas.length; i++) {
-                                const lantana = new Lantana()
-                                hydrate(lantana, json.lantanas[i])
-                                response.lantanas[i] = lantana
-                        }
-                } else {
-                        response.lantanas = []
-                }
-                if (json.urlogs) {
-                        for (let i = 0; i < json.urlogs.length; i++) {
-                                const urlog = new URLog()
-                                hydrate(urlog, json.urlogs[i])
-                                response.urlogs[i] = urlog
-                        }
-                } else {
-                        response.urlogs = []
-                }
-                if (json.idf_kyous) {
-                        for (let i = 0; i < json.idf_kyous.length; i++) {
-                                const idf_kyou = new IDFKyou()
-                                hydrate(idf_kyou, json.idf_kyous[i])
-                                response.idf_kyous[i] = idf_kyou
-                        }
-                } else {
-                        response.idf_kyous = []
-                }
-                if (json.rekyous) {
-                        for (let i = 0; i < json.rekyous.length; i++) {
-                                const rekyou = new ReKyou()
-                                hydrate(rekyou, json.rekyous[i])
-                                response.rekyous[i] = rekyou
-                        }
-                } else {
-                        response.rekyous = []
-                }
-                if (json.git_commit_logs) {
-                        for (let i = 0; i < json.git_commit_logs.length; i++) {
-                                const git_commit_log = new GitCommitLog()
-                                hydrate(git_commit_log, json.git_commit_logs[i])
-                                response.git_commit_logs[i] = git_commit_log
-                        }
-                } else {
-                        response.git_commit_logs = []
-                }
-                if (json.gps_logs) {
-                        for (let i = 0; i < json.gps_logs.length; i++) {
-                                const gps_log = new GPSLog()
-                                hydrate(gps_log, json.gps_logs[i])
-                                response.gps_logs[i] = gps_log
-                        }
-                } else {
-                        response.gps_logs = []
-                }
-                if (json.attached_tags) {
-                        for (let i = 0; i < json.attached_tags.length; i++) {
-                                const tag = new Tag()
-                                hydrate(tag, json.attached_tags[i])
-                                response.attached_tags[i] = tag
-                        }
-                } else {
-                        response.attached_tags = []
-                }
-                if (json.attached_texts) {
-                        for (let i = 0; i < json.attached_texts.length; i++) {
-                                const text = new Text()
-                                hydrate(text, json.attached_texts[i])
-                                response.attached_texts[i] = text
-                        }
-                } else {
-                        response.attached_texts = []
-                }
-                if (json.attached_timeiss) {
-                        for (let i = 0; i < json.attached_timeiss.length; i++) {
-                                const timeis = new TimeIs()
-                                hydrate(timeis, json.attached_timeiss[i])
-                                response.attached_timeiss[i] = timeis
-                        }
-                } else {
-                        response.attached_timeiss = []
-                }
-                if (json.attached_timeis_kyous) {
-                        for (let i = 0; i < json.attached_timeis_kyous.length; i++) {
-                                const timeis_kyou = new Kyou()
-                                hydrate(timeis_kyou, json.attached_timeis_kyous[i])
-                                response.attached_timeis_kyous[i] = timeis_kyou
-                        }
-                } else {
-                        response.attached_timeis_kyous = []
-                }
+                response.kyous = await hydrate_list(json.kyous, () => new Kyou())
+                response.kmemos = await hydrate_list(json.kmemos, () => new Kmemo())
+                response.kcs = await hydrate_list(json.kcs, () => new KC())
+                response.timeiss = await hydrate_list(json.timeiss, () => new TimeIs())
+                response.mis = await hydrate_list(json.mis, () => new Mi())
+                response.nlogs = await hydrate_list(json.nlogs, () => new Nlog())
+                response.lantanas = await hydrate_list(json.lantanas, () => new Lantana())
+                response.urlogs = await hydrate_list(json.urlogs, () => new URLog())
+                response.idf_kyous = await hydrate_list(json.idf_kyous, () => new IDFKyou())
+                response.rekyous = await hydrate_list(json.rekyous, () => new ReKyou())
+                response.git_commit_logs = await hydrate_list(json.git_commit_logs, () => new GitCommitLog())
+                response.gps_logs = await hydrate_list(json.gps_logs, () => new GPSLog())
+                response.attached_tags = await hydrate_list(json.attached_tags, () => new Tag())
+                response.attached_texts = await hydrate_list(json.attached_texts, () => new Text())
+                response.attached_timeiss = await hydrate_list(json.attached_timeiss, () => new TimeIs())
+                response.attached_timeis_kyous = await hydrate_list(json.attached_timeis_kyous, () => new Kyou())
                 return response
         }
 
@@ -2580,14 +2447,34 @@ export class GkillAPI {
                 if (!querys_json) {
                         return new Array<FindKyouQuery>()
                 }
-                // 型に合わせる（そのままキャストするとメソッドが生えないため）
+                // parse_find_kyou_query が旧形式(use_*入り)の正規化と日付復元まで面倒を見る。
+                // hydrate だと旧キーがインスタンスへ生えて deep_equals のキー数比較を壊す
                 const querys = Array<FindKyouQuery>()
+                let migrated_from_legacy = false
                 for (let i = 0; i < querys_json.length; i++) {
-                        const query = new FindKyouQuery()
-                        hydrate(query, querys_json[i], { date_suffixes: ['time', 'date'] })
-                        querys.push(query)
+                        migrated_from_legacy = is_legacy_find_kyou_query_json(querys_json[i]) || migrated_from_legacy
+                        querys.push(FindKyouQuery.parse_find_kyou_query(querys_json[i]))
+                }
+                if (this.repair_saved_query_ids(querys) || migrated_from_legacy) {
+                        this.set_saved_rykv_find_kyou_querys(querys)
                 }
                 return querys
+        }
+
+        // query_idは列の恒久IDなので、空や重複があれば振り直して修復する。
+        // 過去の不具合で重複したまま永続化されている場合があり、放置すると
+        // query_id→列の逆引きが別の列に誤配送する。修復したらtrueを返す
+        private repair_saved_query_ids(querys: Array<FindKyouQuery>): boolean {
+                const seen_query_ids = new Set<string>()
+                let repaired = false
+                for (let i = 0; i < querys.length; i++) {
+                        if (!querys[i].query_id || seen_query_ids.has(querys[i].query_id)) {
+                                querys[i].query_id = this.generate_uuid()
+                                repaired = true
+                        }
+                        seen_query_ids.add(querys[i].query_id)
+                }
+                return repaired
         }
 
         private mi_find_kyou_querys_localstorage_key = "mi_find_kyou_querys"
@@ -2603,12 +2490,16 @@ export class GkillAPI {
                 if (!querys_json) {
                         return new Array<FindKyouQuery>()
                 }
-                // 型に合わせる（そのままキャストするとメソッドが生えないため）
+                // parse_find_kyou_query が旧形式(use_*入り)の正規化と日付復元まで面倒を見る。
+                // hydrate だと旧キーがインスタンスへ生えて deep_equals のキー数比較を壊す
                 const querys = Array<FindKyouQuery>()
+                let migrated_from_legacy = false
                 for (let i = 0; i < querys_json.length; i++) {
-                        const query = new FindKyouQuery()
-                        hydrate(query, querys_json[i], { date_suffixes: ['time', 'date'] })
-                        querys.push(query)
+                        migrated_from_legacy = is_legacy_find_kyou_query_json(querys_json[i]) || migrated_from_legacy
+                        querys.push(FindKyouQuery.parse_find_kyou_query(querys_json[i]))
+                }
+                if (this.repair_saved_query_ids(querys) || migrated_from_legacy) {
+                        this.set_saved_mi_find_kyou_querys(querys)
                 }
                 return querys
         }
@@ -3004,11 +2895,9 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_kyous(req: GetKyousRequest): Promise<GetKyousResponse> {
                 const res = new GetKyousResponse()
-                if (!req.query.use_plaing) {
-                        res.kyous = this.kyous
-                        return res
-                }
+                // plaing_time 非null = plaing検索（null=未使用は全件返す）
                 if (!req.query.plaing_time) {
+                        res.kyous = this.kyous
                         return res
                 }
                 const kyous = new Map<string, Kyou>()

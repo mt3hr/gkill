@@ -32,7 +32,7 @@ export function useShareKyouView(options: { props: ShareKyousListViewProps, emit
     async function share(): Promise<void> {
         const query = props.find_kyou_query.clone()
         if (view_type.value === "mi") {
-            query.use_rep_types = true
+            // 非nullの配列代入がフィルタ有効を表す
             query.rep_types = ["mi"]
         }
 

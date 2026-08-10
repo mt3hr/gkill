@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"slices"
@@ -47,7 +48,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find kyous: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -153,7 +154,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -218,7 +219,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -270,8 +271,7 @@ func (t TimeIsRepositories) GetPath(ctx context.Context, id string) (string, err
 	ids := []string{id}
 	for _, rep := range t {
 		query := &find.FindQuery{
-			IDs:    ids,
-			UseIDs: true,
+			IDs: ids,
 		}
 		kyous, err := rep.FindKyous(ctx, query)
 		if len(kyous) == 0 || err != nil {
@@ -312,7 +312,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -378,7 +378,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -423,7 +423,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find timeis: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find timeis: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -464,7 +464,7 @@ loop:
 	for _, timeis := range matchTimeIss {
 
 		// Plaingで最新のものが範囲外だったらそれは追加しない
-		if query.UsePlaing {
+		if query.PlaingTime != nil {
 			if query.PlaingTime.After(timeis.StartTime) && (timeis.EndTime == nil || query.PlaingTime.Before(*timeis.EndTime)) {
 				matchTimeIssList = append(matchTimeIssList, timeis)
 			}
@@ -508,7 +508,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get timeis: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get timeis: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -573,7 +573,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get timeis histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get timeis histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -662,7 +662,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get timeis histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find get timeis histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -768,7 +768,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

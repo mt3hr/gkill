@@ -13,7 +13,7 @@ package reps
 // 委譲先には query がそのまま渡っているので3回とも結果は同一で、1回引けば足りる。
 //
 // 委譲クエリを1本に正規化してしまう案は採らない。
-// 委譲先の絞り込み(UseCalendar・UseIDs・UsePeriodOfTime など)が効かなくなり、
+// 委譲先の絞り込み(カレンダー・ID・時間帯 など)が効かなくなり、
 // 例えば「今日作った、2020年のKmemoを指すReKyou」がカレンダー範囲=今日の検索で
 // 落ちるようになる。ここで潰すのは「同じ query での重複解決」だけなので、
 // 結果は1ビットも変わらない。
@@ -166,6 +166,7 @@ func resolveMiReKyouWordMatchTargetIDs(ctx context.Context, dataReps Repositorie
 
 // isWordFilterEnabled はワード委譲検索が要るかを返す。
 // ReKyou/MiReKyouの3実装で同じ判定をするのでここに置く。
+// （nilは未使用、非nil空は語なし=委譲不要なので、実質len判定だけで足りる）
 func isWordFilterEnabled(query *find.FindQuery) bool {
-	return query.UseWords && (len(query.Words) > 0 || len(query.NotWords) > 0)
+	return len(query.Words) > 0 || len(query.NotWords) > 0
 }

@@ -13,7 +13,7 @@ import (
 // 保持するのは数値だけでテキスト列を持たないため、キーワード検索は常に0件になります。
 type LantanaRepository interface {
 	// FindKyous の契約は Repository.FindKyous を参照。
-	// lantana は検索対象のテキスト列を持たないため、query.UseWords が true のクエリでは常に0件です。
+	// lantana は検索対象のテキスト列を持たないため、ワード条件（query.Words / query.NotWords）が有効なクエリでは常に0件です。
 	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error)
 
 	// GetKyou の契約は Repository.GetKyou を参照。
@@ -49,7 +49,7 @@ type LantanaRepository interface {
 	// 集約は Kyou.ID（query.OnlyLatestData が false なら ID に UpdateTime の Unix 秒を連結したキー）
 	// ごとに UpdateTime が最も新しい1件だけを残します。
 	// query.UpdateCache が true のときは検索前にキャッシュを更新します。
-	// FindKyous と同じく、query.UseWords が true のクエリでは常に0件です。
+	// FindKyous と同じく、ワード条件が有効なクエリでは常に0件です。
 	FindLantana(ctx context.Context, query *find.FindQuery) ([]Lantana, error)
 
 	// GetLantana は id に対応するLantanaを1件、気分値込みで返します。

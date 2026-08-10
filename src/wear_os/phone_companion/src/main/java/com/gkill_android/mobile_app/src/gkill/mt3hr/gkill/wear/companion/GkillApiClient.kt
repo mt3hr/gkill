@@ -178,14 +178,14 @@ class GkillApiClient(
      *
      * Steps:
      * 1. get_application_config → extract all rep_names from rep_struct tree
-     * 2. get_kyous with use_plaing=true → get Kyou IDs of playing items
+     * 2. get_kyous with a non-null plaing_time → get Kyou IDs of playing items
      * 3. For each Kyou, get_timeis → get the latest TimeIs object
      * 4. Return as JSON array
      */
     fun getPlaingTimeis(sessionId: String): String? {
         val tag = "GkillApiClient"
         try {
-            // get_kyous with use_plaing=true, use_reps=false
+            // get_kyous with a non-null plaing_time (all other filters unused = omitted)
             val now = java.time.OffsetDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             Log.d(tag, "getPlaingTimeis: querying get_kyous with plaing_time=$now")
             val findQuery = buildPlaingFindQuery(now)
@@ -339,56 +339,13 @@ class GkillApiClient(
         }
     }
 
+    // FindQuery is null-based: a filter group is active only when its value field is
+    // present and non-null. Omitted keys mean "filter unused", so the plaing query
+    // sends only plaing_time. Never send empty arrays for unused filters — [] means
+    // "filter enabled with zero selections", which matches nothing.
     private fun buildPlaingFindQuery(plaingTime: String): JsonObject {
         return JsonObject(mapOf(
-            "update_cache" to JsonPrimitive(false),
-            "is_deleted" to JsonPrimitive(false),
-            "use_tags" to JsonPrimitive(false),
-            "use_reps" to JsonPrimitive(false),
-            "use_rep_types" to JsonPrimitive(false),
-            "rep_types" to JsonArray(emptyList()),
-            "use_ids" to JsonPrimitive(false),
-            "use_include_id" to JsonPrimitive(false),
-            "ids" to JsonArray(emptyList()),
-            "use_words" to JsonPrimitive(false),
-            "words" to JsonArray(emptyList()),
-            "words_and" to JsonPrimitive(false),
-            "not_words" to JsonArray(emptyList()),
-            "reps" to JsonArray(emptyList()),
-            "tags" to JsonArray(emptyList()),
-            "hide_tags" to JsonArray(emptyList()),
-            "tags_and" to JsonPrimitive(false),
-            "use_timeis" to JsonPrimitive(false),
-            "timeis_words" to JsonArray(emptyList()),
-            "timeis_not_words" to JsonArray(emptyList()),
-            "timeis_words_and" to JsonPrimitive(false),
-            "use_timeis_tags" to JsonPrimitive(false),
-            "timeis_tags" to JsonArray(emptyList()),
-            "hide_timeis_tags" to JsonArray(emptyList()),
-            "timeis_tags_and" to JsonPrimitive(false),
-            "use_calendar" to JsonPrimitive(false),
-            "use_map" to JsonPrimitive(false),
-            "map_radius" to JsonPrimitive(0.0),
-            "map_latitude" to JsonPrimitive(0.0),
-            "map_longitude" to JsonPrimitive(0.0),
-            "include_create_mi" to JsonPrimitive(false),
-            "include_check_mi" to JsonPrimitive(false),
-            "include_limit_mi" to JsonPrimitive(false),
-            "include_start_mi" to JsonPrimitive(false),
-            "include_end_mi" to JsonPrimitive(false),
-            "include_end_timeis" to JsonPrimitive(false),
-            "use_plaing" to JsonPrimitive(true),
-            "plaing_time" to JsonPrimitive(plaingTime),
-            "use_update_time" to JsonPrimitive(false),
-            "is_image_only" to JsonPrimitive(false),
-            "for_mi" to JsonPrimitive(false),
-            "use_mi_board_name" to JsonPrimitive(false),
-            "use_period_of_time" to JsonPrimitive(false),
-            "mi_board_name" to JsonPrimitive(""),
-            "mi_check_state" to JsonPrimitive(""),
-            "mi_sort_type" to JsonPrimitive(""),
-            "only_latest_data" to JsonPrimitive(false),
-            "include_deleted_data" to JsonPrimitive(false)
+            "plaing_time" to JsonPrimitive(plaingTime)
         ))
     }
 
