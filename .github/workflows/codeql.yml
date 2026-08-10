@@ -142,6 +142,12 @@ jobs:
       # 対象:
       #   src/android/app
       # ------------------------------------------------------------
+      # --no-build-cache が要る理由:
+      #   CodeQLはinit以降に走ったコンパイルを追跡して解析データベースを作る。
+      #   ビルドキャッシュ(org.gradle.caching=true)が効くとコンパイルタスクが
+      #   キャッシュから復元されて実際には走らないため、CodeQLは何も観測できず
+      #   「didn't build any of it」で解析ごと失敗する。
+      #   キャッシュが温まった2回目以降に必ず起きるので、ここでは無効にする。
       - name: Build Android application
         if: matrix.language == 'java-kotlin'
         working-directory: src/android
@@ -149,6 +155,7 @@ jobs:
         run: |
           ./gradlew \
             :app:assembleDebug \
+            --no-build-cache \
             --no-daemon \
             --stacktrace
 
@@ -167,6 +174,7 @@ jobs:
           ./gradlew \
             :watch_app:assembleDebug \
             :phone_companion:assembleDebug \
+            --no-build-cache \
             --no-daemon \
             --stacktrace
 
