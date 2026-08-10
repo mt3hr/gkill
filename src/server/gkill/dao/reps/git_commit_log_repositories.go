@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"fmt"
 	"slices"
@@ -66,7 +67,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find kyous: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -147,7 +148,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -227,7 +228,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyou histories: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get kyou histories: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -315,7 +316,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at update cache: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -373,7 +374,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at close: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at close: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -433,7 +434,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find git commit log: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find git commit log: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -525,7 +526,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find git commit log by ids: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find git commit log by ids: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -611,7 +612,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get git commit log: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get git commit log: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -715,7 +716,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at get latest data repository address: %w", e))
 			existErr = true
 		default:
 			break errloop

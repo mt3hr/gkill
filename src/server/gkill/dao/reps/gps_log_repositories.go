@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -44,7 +45,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find gpsLogs: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find gpsLogs: %w", e))
 			existErr = true
 		default:
 			break errloop
@@ -106,7 +107,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find gpsLogs: %w", e)
+			err = errors.Join(err, fmt.Errorf("error at find gpsLogs: %w", e))
 			existErr = true
 		default:
 			break errloop

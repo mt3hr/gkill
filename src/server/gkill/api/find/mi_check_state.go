@@ -21,6 +21,7 @@ func (m *MiCheckState) UnmarshalJSON(b []byte) error {
 }
 
 func (m MiCheckState) MarshalJSON() ([]byte, error) {
-	var checkStateStr = string(m)
-	return json.Marshal([]byte(checkStateStr))
+	// []byteでMarshalするとBase64文字列になってしまうため、stringのままMarshalする。
+	// UnmarshalJSON側は文字列を期待しており、Base64だと往復で壊れる
+	return json.Marshal(string(m))
 }
