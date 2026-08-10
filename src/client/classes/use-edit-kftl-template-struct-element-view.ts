@@ -1,7 +1,7 @@
 import { type Ref, ref } from 'vue'
 import type { EditKFTLTemplateStructElementViewEmits } from '@/pages/views/edit-kftl-template-struct-element-view-emits'
 import type { EditKFTLTemplateStructElementViewProps } from '@/pages/views/edit-kftl-template-struct-element-view-props'
-import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
+import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 
 export function useEditKFTLTemplateStructElementView(options: {
     props: EditKFTLTemplateStructElementViewProps,
@@ -15,7 +15,7 @@ export function useEditKFTLTemplateStructElementView(options: {
 
     // ── Methods ──
     async function apply(): Promise<void> {
-        const kftl_template_struct = new KFTLTemplateStructElementData()
+        const kftl_template_struct = new KFTLTemplateElementData()
         kftl_template_struct.id = props.struct_obj.id
         kftl_template_struct.title = title.value
         kftl_template_struct.template = template.value ? template.value : ""

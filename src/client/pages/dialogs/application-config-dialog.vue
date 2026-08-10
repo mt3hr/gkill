@@ -66,6 +66,9 @@ async function show(): Promise<void> {
   application_config_view.value?.reload_cloned_application_config()
 }
 async function hide(): Promise<void> {
+  // ×・Escape・キャンセルのどれで閉じても、「適用」していない変更は破棄する。
+  // ロケールとダークテーマは選ばせるために即時プレビューしているので、明示的に戻す必要がある
+  application_config_view.value?.cancel_pending_changes()
   close_dialog_via_history(is_show_dialog)
 }
 </script>

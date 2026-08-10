@@ -18,6 +18,7 @@ import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
 import type { KFTLRequest } from '@/classes/kftl/kftl-request'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
+import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
 
 export function useKftlView(options: {
     props: KFTLProps,
@@ -27,6 +28,9 @@ export function useKftlView(options: {
 
     // ── Template refs ──
     const kftl_template_dialog = ref<ComponentRef | null>(null)
+
+    // ── Confirm unknown mi board ──
+    const confirm_unknown_mi_board = useConfirmUnknownMiBoard({ application_config: () => props.application_config })
 
     // ── State refs ──
     const text_area_content: Ref<string> = ref("")
@@ -241,7 +245,7 @@ export function useKftlView(options: {
     }
 
     async function submit(): Promise<void> {
-        await do_submit(false)
+        await do_submit(false, false)
     }
 
     function cancel_submit(): void {
@@ -252,14 +256,25 @@ export function useKftlView(options: {
     async function confirm_submit(): Promise<void> {
         close_dialog_via_history(show_confirm_unknown_tag_dialog)
         unknown_tags.value = []
-        await do_submit(true)
+        // タグの確認を通しただけ。板名の確認はこの後の do_submit で改めて出る
+        await do_submit(true, false)
+    }
+
+    function cancel_mi_board_submit(): void {
+        confirm_unknown_mi_board.close_confirm()
+    }
+
+    async function confirm_mi_board_submit(): Promise<void> {
+        confirm_unknown_mi_board.remember_confirmed_mi_boards()
+        confirm_unknown_mi_board.close_confirm()
+        await do_submit(true, true)
     }
 
     // 保存本体。KFTLは複数リクエストをtxで束ねて送るので、二重送信すると
     // Kyouが丸ごと重複登録される。フラグはここで立てる
     // （テンプレートの :disabled / :readonly はこのフラグを見ている。
     //   以前は保存マーカー検出経路でしか立てておらず、保存ボタン経由では実質ノーガードだった）
-    async function do_submit(skip_unknown_tag_check: boolean): Promise<void> {
+    async function do_submit(skip_unknown_tag_check: boolean, skip_unknown_mi_board_check: boolean): Promise<void> {
         if (is_requested_submit.value) {
             return
         }
@@ -284,6 +299,20 @@ export function useKftlView(options: {
                     // 保存マーカーを消しておかないと、確認中の入力で再度submitされてしまう
                     text_area_content.value = remove_save_marker(text_area_content.value)
                     show_confirm_unknown_tag_dialog.value = true
+                    return
+                }
+            }
+
+            // まだ実在しない板名を検出したら、送信前に確認を取る。
+            // 板名行は自由入力なので、打ち間違いがそのまま新しい板になってしまう。
+            // タグの確認を通した後に改めてここへ来る（確認は1つずつ順に出す）
+            if (!skip_unknown_mi_board_check) {
+                const board_names = kftl_requests.map(kftl_request => kftl_request.get_mi_board_name())
+                const not_found_boards = confirm_unknown_mi_board.collect_unknown_mi_boards(board_names)
+                if (not_found_boards.length > 0) {
+                    // タグ確認と同じ理由で保存マーカーを消しておく
+                    text_area_content.value = remove_save_marker(text_area_content.value)
+                    confirm_unknown_mi_board.open_confirm(not_found_boards)
                     return
                 }
             }
@@ -362,6 +391,12 @@ export function useKftlView(options: {
     return {
         // Template refs
         kftl_template_dialog,
+        confirm_unknown_mi_board_dialog: confirm_unknown_mi_board.confirm_unknown_mi_board_dialog,
+
+        // Confirm unknown mi board
+        unknown_mi_boards: confirm_unknown_mi_board.unknown_mi_boards,
+        cancel_mi_board_submit,
+        confirm_mi_board_submit,
 
         // State
         text_area_content,

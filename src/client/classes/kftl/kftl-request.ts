@@ -101,6 +101,14 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         return this.tags
     }
 
+    /**
+     * このリクエストが設定するタスクの板名。Mi以外は空。
+     * 送信前に「まだ実在しない板名」を検出するために使う（use-kftl-view.ts の collect_unknown_mi_boards）
+     */
+    get_mi_board_name(): string {
+        return ""
+    }
+
     set_tags(tags: Array<string>): void {
         this.tags = tags
     }

@@ -1,5 +1,5 @@
 import { i18n, set_locale } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import { UpdateApplicationConfigRequest } from '@/classes/api/req_res/update-application-config-request'
@@ -19,8 +19,11 @@ import type { RepStructElementData } from '@/classes/datas/config/rep-struct-ele
 import type { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
+import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
 import { DashboardConfig } from '@/classes/datas/config/dashboard-config'
+import { PlaingTimeIsConfig } from '@/classes/datas/config/plaing-time-is-config'
+import { SavedFindQueryConfig } from '@/classes/datas/config/saved-find-query-config'
 
 export function useApplicationConfigView(options: {
     props: ApplicationConfigViewProps,
@@ -36,10 +39,13 @@ export function useApplicationConfigView(options: {
     const edit_rep_struct_dialog = ref<ComponentRef | null>(null)
     const edit_rep_type_struct_dialog = ref<ComponentRef | null>(null)
     const edit_tag_struct_dialog = ref<ComponentRef | null>(null)
+    const edit_mi_board_struct_dialog = ref<ComponentRef | null>(null)
     const edit_kftl_template_dialog = ref<ComponentRef | null>(null)
     const edit_dnote_dialog = ref<ComponentRef | null>(null)
     const edit_ryuu_dialog = ref<ComponentRef | null>(null)
     const edit_dashboard_dialog = ref<ComponentRef | null>(null)
+    const edit_plaing_time_is_dialog = ref<ComponentRef | null>(null)
+    const edit_saved_find_query_dialog = ref<ComponentRef | null>(null)
     const server_config_dialog = ref<ComponentRef | null>(null)
 
     // ── State refs ──
@@ -70,9 +76,24 @@ export function useApplicationConfigView(options: {
     const is_show_share_footer: Ref<boolean> = ref(cloned_application_config.value.is_show_share_footer)
     const default_page: Ref<string> = ref(cloned_application_config.value.default_page)
 
+    // ロケールとダークテーマは入力の都度プレビューする（見せないと選べない）。
+    // 「適用」を押さずに閉じたときは開いた時点の状態へ戻すので、そのために控えておく
+    const locale_name_on_open: Ref<'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de'> = ref(locale_name.value)
+    const use_dark_theme_on_open: Ref<boolean> = ref(use_dark_theme.value)
+
+    // 表示の作り直し中は、チェックボックスの watcher に日数を上書きさせない
+    let is_restoring_view_state = false
+
+    // 子ダイアログの「適用」はサーバへ送らず clone に溜めるだけ。
+    // 溜めている間に props が差し替わっても捨てない（捨てると未適用の編集が消える）
+    let has_pending_child_edits = false
+
     // ── Watchers ──
     watch(() => props.application_config, async () => {
-        cloned_application_config.value = props.application_config.clone()
+        if (has_pending_child_edits) {
+            return
+        }
+        await reload_cloned_application_config()
     })
 
     watch(() => locale_name.value, async () => {
@@ -95,6 +116,10 @@ export function useApplicationConfigView(options: {
     })
 
     watch(() => is_checked_use_rykv_period.value, () => {
+        // 保存済みの日数を復元しているだけのときは既定値で潰さない
+        if (is_restoring_view_state) {
+            return
+        }
         if (is_checked_use_rykv_period.value) {
             rykv_default_period.value = 31
         } else {
@@ -103,6 +128,9 @@ export function useApplicationConfigView(options: {
     })
 
     watch(() => is_checked_use_mi_period.value, () => {
+        if (is_restoring_view_state) {
+            return
+        }
         if (is_checked_use_mi_period.value) {
             mi_default_period.value = 31
         } else {
@@ -180,6 +208,8 @@ javascript: (function () {
     const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
     async function reload_cloned_application_config(): Promise<void> {
+        is_restoring_view_state = true
+        has_pending_child_edits = false
         cloned_application_config.value = props.application_config.clone()
         google_map_api_key.value = cloned_application_config.value.google_map_api_key
         rykv_image_list_column_number.value = cloned_application_config.value.rykv_image_list_column_number
@@ -189,9 +219,34 @@ javascript: (function () {
         mi_board_names.value = []
         rykv_default_period.value = cloned_application_config.value.rykv_default_period
         mi_default_period.value = cloned_application_config.value.mi_default_period
+        is_checked_use_rykv_period.value = cloned_application_config.value.rykv_default_period !== -1
+        is_checked_use_mi_period.value = cloned_application_config.value.mi_default_period !== -1
         is_show_share_footer.value = cloned_application_config.value.is_show_share_footer
         default_page.value = cloned_application_config.value.default_page
+
+        // ロケールとテーマは ApplicationConfig ではなく「いま効いているもの」が正。
+        // 前回キャンセルで戻してあるので、実際に効いている値へ揃え直せばよい
+        locale_name.value = i18n.global.locale
+        use_dark_theme.value = theme.global.name.value === 'gkill_dark_theme'
+        locale_name_on_open.value = locale_name.value
+        use_dark_theme_on_open.value = use_dark_theme.value
+
+        // watcher(pre flush)を消化してからフラグを下ろす
+        await nextTick()
+        is_restoring_view_state = false
+
         load_mi_board_names()
+    }
+
+    /**
+     * 「適用」を押さずに閉じたときに、プレビューだけしていた変更を開く前の状態へ戻す。
+     * ×・Escape・キャンセルのどれで閉じても呼ばれるよう、
+     * application-config-dialog.vue の hide() から呼ぶ。
+     */
+    function cancel_pending_changes(): void {
+        // 同じ値の代入では watcher が動かないので、戻す必要があるときだけ実際に走る
+        use_dark_theme.value = use_dark_theme_on_open.value
+        locale_name.value = locale_name_on_open.value
     }
 
     async function load_mi_board_names(): Promise<void> {
@@ -228,7 +283,12 @@ javascript: (function () {
         application_config.ryuu_json_data = cloned_application_config.value.ryuu_json_data
         application_config.dnote_json_data = cloned_application_config.value.dnote_json_data
         application_config.dashboard_json_data = cloned_application_config.value.dashboard_json_data
+        application_config.plaing_timeis_json_data = cloned_application_config.value.plaing_timeis_json_data
+        application_config.saved_find_query_json_data = cloned_application_config.value.saved_find_query_json_data
         application_config.mi_board_struct = cloned_application_config.value.mi_board_struct
+        // この画面で編集しない永続化フィールドも詰め直す。
+        // 落とすとJSONから欠落し、サーバ側でゼロ値に巻き戻って保存される
+        application_config.show_tutorial_on_startup = cloned_application_config.value.show_tutorial_on_startup
 
         const req = new UpdateApplicationConfigRequest()
         req.application_config = application_config
@@ -319,6 +379,9 @@ javascript: (function () {
     function show_edit_rep_type_dialog() {
         edit_rep_type_struct_dialog.value?.show()
     }
+    function show_edit_mi_board_dialog() {
+        edit_mi_board_struct_dialog.value?.show()
+    }
     function show_edit_kftl_template_dialog() {
         edit_kftl_template_dialog.value?.show()
     }
@@ -338,6 +401,18 @@ javascript: (function () {
         }
         edit_dashboard_dialog.value?.show(dnote_query, mi_query)
     }
+    function show_edit_plaing_time_is_dialog() {
+        let plaing_timeis_query = undefined
+        if (cloned_application_config.value.plaing_timeis_json_data) {
+            const config = PlaingTimeIsConfig.parse(cloned_application_config.value.plaing_timeis_json_data)
+            plaing_timeis_query = config.plaing_timeis_find_kyou_query ?? undefined
+        }
+        edit_plaing_time_is_dialog.value?.show(plaing_timeis_query)
+    }
+    function show_edit_saved_find_query_dialog() {
+        const config = SavedFindQueryConfig.parse(cloned_application_config.value.saved_find_query_json_data)
+        edit_saved_find_query_dialog.value?.show(config)
+    }
     function show_new_board_name_dialog(): void {
         new_board_name_dialog.value?.show()
     }
@@ -351,39 +426,66 @@ javascript: (function () {
         mi_default_board.value = board_name
     }
 
+    // 子ダイアログの「適用」はどれもサーバへ送らず、この画面の clone に組み立てるだけ。
+    // 実際の送信は update_application_config()（この画面の「適用」）1箇所に閉じている
     function onRequestedApplyDeviceStruct(device_struct_element_data: DeviceStructElementData): void {
+        has_pending_child_edits = true
         cloned_application_config.value.device_struct = device_struct_element_data
     }
 
     function onRequestedApplyKftlTemplateStruct(kftl_template_struct_element_data: KFTLTemplateElementData): void {
+        has_pending_child_edits = true
         cloned_application_config.value.kftl_template_struct = kftl_template_struct_element_data
     }
 
     function onRequestedApplyRepStruct(rep_struct_element_data: RepStructElementData): void {
+        has_pending_child_edits = true
         cloned_application_config.value.rep_struct = rep_struct_element_data
     }
 
     function onRequestedApplyRepTypeStruct(rep_type_struct_element_data: RepTypeStructElementData): void {
+        has_pending_child_edits = true
         cloned_application_config.value.rep_type_struct = rep_type_struct_element_data
     }
 
     function onRequestedApplyTagStruct(tag_struct_element_data: TagStructElementData): void {
+        has_pending_child_edits = true
         cloned_application_config.value.tag_struct = tag_struct_element_data
     }
 
+    function onRequestedApplyMiBoardStruct(mi_board_struct_element_data: MiBoardStructElementData): void {
+        has_pending_child_edits = true
+        cloned_application_config.value.mi_board_struct = mi_board_struct_element_data
+    }
+
+    // 以下4つは struct 系と同じく clone にだけ書く。
+    // props.application_config を直接書くと、この画面の「キャンセル」を押しても
+    // 子ダイアログでの編集が残ってしまう（保存はされないが表示は変わったまま）。
+    // props が差し替わっても編集が消えないようにするのは has_pending_child_edits の役目で、
+    // props への書き戻しでやってはいけない
     function onRequestedApplyDnote(dnote_data: Record<string, unknown>): void {
+        has_pending_child_edits = true
         cloned_application_config.value.dnote_json_data = dnote_data
-        props.application_config.dnote_json_data = dnote_data
     }
 
     function onRequestedApplyRyuuStruct(ryuu_data: Record<string, unknown>): void {
+        has_pending_child_edits = true
         cloned_application_config.value.ryuu_json_data = ryuu_data
-        props.application_config.ryuu_json_data = ryuu_data
     }
 
     function onRequestedApplyDashboardStruct(dashboard_data: Record<string, unknown>): void {
+        has_pending_child_edits = true
         cloned_application_config.value.dashboard_json_data = dashboard_data
-        props.application_config.dashboard_json_data = dashboard_data
+    }
+
+    function onRequestedApplyPlaingTimeIs(plaing_timeis_data: Record<string, unknown>): void {
+        has_pending_child_edits = true
+        cloned_application_config.value.plaing_timeis_json_data = plaing_timeis_data
+    }
+
+    function onRequestedApplySavedFindQueryStruct(saved_find_query_data: Record<string, unknown>): void {
+        has_pending_child_edits = true
+        cloned_application_config.value.saved_find_query_json_data = saved_find_query_data
     }
 
     // ── Event relay objects ──
@@ -403,10 +505,13 @@ javascript: (function () {
         edit_rep_struct_dialog,
         edit_rep_type_struct_dialog,
         edit_tag_struct_dialog,
+        edit_mi_board_struct_dialog,
         edit_kftl_template_dialog,
         edit_dnote_dialog,
         edit_ryuu_dialog,
         edit_dashboard_dialog,
+        edit_plaing_time_is_dialog,
+        edit_saved_find_query_dialog,
         server_config_dialog,
 
         // State
@@ -433,6 +538,7 @@ javascript: (function () {
 
         // Business logic
         reload_cloned_application_config,
+        cancel_pending_changes,
         update_application_config,
         logout,
         reload_repositories,
@@ -442,10 +548,13 @@ javascript: (function () {
         show_edit_rep_dialog,
         show_edit_tag_dialog,
         show_edit_rep_type_dialog,
+        show_edit_mi_board_dialog,
         show_edit_kftl_template_dialog,
         show_edit_dnote_dialog,
         show_edit_ryuu_dialog,
         show_edit_dashboard_dialog,
+        show_edit_plaing_time_is_dialog,
+        show_edit_saved_find_query_dialog,
         show_new_board_name_dialog,
         show_server_config_dialog,
 
@@ -456,9 +565,12 @@ javascript: (function () {
         onRequestedApplyRepStruct,
         onRequestedApplyRepTypeStruct,
         onRequestedApplyTagStruct,
+        onRequestedApplyMiBoardStruct,
         onRequestedApplyDnote,
         onRequestedApplyRyuuStruct,
         onRequestedApplyDashboardStruct,
+        onRequestedApplyPlaingTimeIs,
+        onRequestedApplySavedFindQueryStruct,
 
         // Event relay objects
         errorMessageRelayHandlers,

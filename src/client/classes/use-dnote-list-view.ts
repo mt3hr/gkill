@@ -1,10 +1,6 @@
-import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { nextTick, type Ref, ref } from 'vue'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import type { Kyou } from '@/classes/datas/kyou'
-import type { Tag } from '@/classes/datas/tag'
-import type { Text } from '@/classes/datas/text'
-import type { Notification } from '@/classes/datas/notification'
 import type AggregatedItem from '@/classes/dnote/aggregate-grouping-list-result-record'
 import { DnoteListAggregator } from '@/classes/dnote/dnote-list-aggregator'
 import type DnoteListViewProps from '@/pages/views/dnote-list-view-props'
@@ -13,6 +9,7 @@ import type DnoteListViewEmits from '@/pages/views/dnote-list-view-emits'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ComponentRef } from '@/classes/component-ref'
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 export function useDnoteListView(options: {
     props: DnoteListViewProps,
@@ -125,26 +122,17 @@ export function useDnoteListView(options: {
         'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
     }
 
+    // 手書きで並べていた頃は requested_reload_kyou / requested_reload_list /
+    // requested_update_check_kyous の3つを落としていた。
+    // AggregatedListItem 側は全20件を出しているのに、ここで捨てられていた
     const aggregatedListItemHandlers = {
-        'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
-        'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
-        'focused_kyou': (kyou: Kyou) => emits('focused_kyou', kyou),
-        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+        ...build_kyou_dialog_relay(emits, {
+            // クリックはフォーカス移動も伴う
+            'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+        }),
+        // Dnote固有のイベントは共通束に含まれない
         'requested_delete_dnote_list_query': (value: string) => emits('requested_delete_dnote_list_query', value),
         'requested_update_dnote_list_query': (query: DnoteListQuery) => emits('requested_update_dnote_list_query', query),
-        'deleted_kyou': (kyou: Kyou) => emits('deleted_kyou', kyou),
-        'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
-        'deleted_text': (text: Text) => emits('deleted_text', text),
-        'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
-        'registered_tag': (tag: Tag) => emits('registered_tag', tag),
-        'registered_text': (text: Text) => emits('registered_text', text),
-        'registered_notification': (notification: Notification) => emits('registered_notification', notification),
-        'updated_kyou': (kyou: Kyou) => emits('updated_kyou', kyou),
-        'updated_tag': (tag: Tag) => emits('updated_tag', tag),
-        'updated_text': (text: Text) => emits('updated_text', text),
-        'updated_notification': (notification: Notification) => emits('updated_notification', notification),
-        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload),
     }
 
     const contextMenuHandlers = {

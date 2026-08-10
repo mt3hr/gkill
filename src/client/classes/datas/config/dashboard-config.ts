@@ -16,10 +16,6 @@ export class DashboardConfig {
             if (obj.dashboard_dnote_find_kyou_query) {
                 config.dashboard_dnote_find_kyou_query = FindKyouQuery.parse_find_kyou_query(obj.dashboard_dnote_find_kyou_query)
             }
-            // 後方互換: 旧フィールド名からマイグレーション
-            if (!config.dashboard_mi_find_kyou_query && obj.dashboard_default_find_kyou_query) {
-                config.dashboard_mi_find_kyou_query = FindKyouQuery.parse_find_kyou_query(obj.dashboard_default_find_kyou_query)
-            }
         }
         return config
     }

@@ -14,9 +14,9 @@
                     <tr>
                         <td valign="top">
                             <v-card>
-                                <v-card-title>{{ share_title }}</v-card-title>
+                                <v-card-title class="mi_board_column_title">{{ share_title }}</v-card-title>
                                 <KyouListView :kyou_height="56 + 35" :width="400" :show_timeis_plaing_end_button="false"
-                                    :list_height="kyou_list_view_height.valueOf() - 48"
+                                    :list_height="kyou_list_view_height.valueOf() - MI_BOARD_TITLE_HEIGHT"
                                     :application_config="application_config" :gkill_api="gkill_api"
                                     :matched_kyous="match_kyous" :query="new FindKyouQuery()"
                                     :is_focused_list="true" :closable="false" :is_readonly_mi_check="true"
@@ -41,6 +41,7 @@
                                             <KyouCountCalendar v-show="is_show_kyou_count_calendar"
                                                 :application_config="application_config" :gkill_api="gkill_api"
                                                 :kyous="match_kyous" :for_mi="true" class="kyou_list_calendar_in_share_mi_view"
+                                                :is_active="is_show_kyou_count_calendar"
                                                 @requested_focus_time="(time: Date) => { focused_time = time }" />
                                         </td>
                                     </tr>
@@ -94,6 +95,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type { KyouViewEmits } from './kyou-view-emits'
 import RykvDialogHost from './rykv-dialog-host.vue'
 import { useSharedMiView } from '@/classes/use-shared-mi-view'
+import { MI_BOARD_TITLE_HEIGHT } from '@/classes/mi-board-column-layout'
 
 const props = defineProps<SharedMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -127,6 +129,13 @@ const {
 } = useSharedMiView({ props, emits })
 </script>
 <style lang="css" scoped>
+/* 列の高さ計算 (list_height = app_content_height - MI_BOARD_TITLE_HEIGHT) が
+   Vuetify の既定サイズに依存しないよう、見出しの高さをここで固定する。
+   mi-board-column-layout.ts の MI_BOARD_TITLE_HEIGHT と必ず同じ値にすること */
+.mi_board_column_title {
+    height: 44px;
+}
+
 .overlay_target {
     z-index: -10000;
     position: absolute;

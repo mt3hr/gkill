@@ -57,9 +57,7 @@
                                 :app_content_height="panel_height" :app_content_width="app_content_width"
                                 :fill_height="true"
                                 :application_config="application_config" :gkill_api="gkill_api" :editable="false"
-                                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
-                                @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)" />
+                                v-on="dashboardKyouHandlers" />
                         </v-col>
                         <v-col cols="12" md="6" class="pa-0 ma-0">
                             <div class="gps-map-container">
@@ -83,9 +81,7 @@
                                     :is_show_arrow_button="false" :force_show_latest_kyou_info="true"
                                     :show_rep_name="false" :application_config="application_config"
                                     :gkill_api="gkill_api"
-                                    @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                                    @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
-                                    @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => open_rykv_dialog(kind, kyou, payload)" />
+                                    v-on="dashboardKyouHandlers" />
                             </v-card>
                         </v-col>
                     </v-row>
@@ -163,12 +159,14 @@
                 :enable_dialog="false" :app_content_width="app_content_width"
                 @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
                 @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                @saved_kyou_by_kftl="onSavedKyouByKftl"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="true"
                 :enable_dialog="false" :app_content_width="app_content_width"
                 @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
                 @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                @saved_kyou_by_kftl="onSavedKyouByKftl"
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
@@ -181,9 +179,7 @@
                 @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
                 ref="save_clipboard_to_file_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
-                :enable_context_menu="true" :enable_dialog="true" @closed="(id: string) => close_rykv_dialog(id)"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)" />
+                :enable_context_menu="true" :enable_dialog="true" v-on="dashboardKyouHandlers" />
             <ConfirmLogoutDialog @requested_logout="(close_database: boolean) => logout(close_database)"
                 ref="confirm_logout_dialog" />
             <HelpDialog screen_name="dashboard" ref="help_dialog" />
@@ -236,7 +232,6 @@ import SaveClipboardToFileDialog from './dialogs/save-clipboard-to-file-dialog.v
 import { Kyou } from '@/classes/datas/kyou'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import { useDashboardPage } from '@/classes/use-dashboard-page'
 
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
@@ -312,9 +307,16 @@ const {
     show_upload_file_dialog,
     show_save_clipboard_to_file_dialog: _show_save_clipboard_to_file_dialog,
     logout,
-    open_rykv_dialog,
-    close_rykv_dialog,
-} = useDashboardPage()
+    open_rykv_dialog: _open_rykv_dialog,
+    close_rykv_dialog: _close_rykv_dialog,
+
+    // Event relay objects
+    dashboardKyouHandlers,
+    onSavedKyouByKftl,
+} = useDashboardPage({
+    // fetch_for_date は関数宣言なので巻き上げられる。呼ばれるのは setup 完了後
+    reload_all: () => fetch_for_date(),
+})
 
 // 日付変更時: DnoteView・KyouListView それぞれのローディングを使う
 let fetch_id = 0

@@ -7,23 +7,9 @@
                         @dragover="onCellDragover" @drop="(e) => onCellDrop(e, listIndex)">
                         <DnoteItemListView v-model="model_value[listIndex]" :dnd_list_index="listIndex" :editable="editable"
                             :application_config="application_config" :gkill_api="gkill_api"
+                            v-on="crudRelayHandlers"
                             @requested_move_dnote_item="(list_id: string, list_index: number, item_id: string, item_index: number, direction: 'up' | 'down') => handle_move_dnote_item(list_id, list_index, item_id, item_index, direction)"
                             @finish_a_aggregate_task="emits('finish_a_aggregate_task')"
-                            @focused_kyou="(kyou: Kyou) => emits('focused_kyou', kyou)"
-                            @clicked_kyou="(kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) }"
-                            @deleted_kyou="(kyou: Kyou) => emits('deleted_kyou', kyou)"
-                            @deleted_tag="(tag: Tag) => emits('deleted_tag', tag)"
-                            @deleted_text="(text: Text) => emits('deleted_text', text)"
-                            @deleted_notification="(n: Notification) => emits('deleted_notification', n)"
-                            @registered_kyou="(kyou: Kyou) => emits('registered_kyou', kyou)"
-                            @registered_tag="(tag: Tag) => emits('registered_tag', tag)"
-                            @registered_text="(text: Text) => emits('registered_text', text)"
-                            @registered_notification="(n: Notification) => emits('registered_notification', n)"
-                            @updated_kyou="(kyou: Kyou) => emits('updated_kyou', kyou)"
-                            @updated_tag="(tag: Tag) => emits('updated_tag', tag)"
-                            @updated_text="(text: Text) => emits('updated_text', text)"
-                            @updated_notification="(n: Notification) => emits('updated_notification', n)"
-                            @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)"
                             ref="dnote_item_list_views" />
                     </td>
                 </tr>
@@ -34,11 +20,6 @@
 
 <script lang="ts" setup>
 import DnoteItemListView from "./dnote-item-list-view.vue"
-import type { RykvDialogKind, RykvDialogPayload } from "./rykv-dialog-kind"
-import type { Kyou } from "@/classes/datas/kyou"
-import type { Tag } from "@/classes/datas/tag"
-import type { Text } from "@/classes/datas/text"
-import type { Notification } from "@/classes/datas/notification"
 import type DnoteItemTableViewEmits from "./dnote-item-table-view-emits"
 import type DnoteItemTableViewProps from "./dnote-item-table-view-props"
 import type DnoteItem from "@/classes/dnote/dnote-item"
@@ -61,6 +42,9 @@ const {
     // Exposed methods
     load_aggregated_value,
     reset,
+
+    // Event relay objects
+    crudRelayHandlers,
 } = useDnoteItemTableView({ props, emits, model_value })
 
 defineExpose({ load_aggregated_value, reset })

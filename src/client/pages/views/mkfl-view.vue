@@ -19,6 +19,7 @@
             @saved_kyou_by_kftl="(last_added_request_time: Date) => {
                 plaing_timeis_view?.set_last_added_request_time(new Date(Math.max(last_added_request_time.getTime(), Date.now())))
                 reload_plaing_timeis_view()
+                emits('saved_kyou_by_kftl', last_added_request_time)
             }" ref="kftl_view" />
         <PlaingTimeIsView :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="(app_content_height.valueOf() / 2) + 4" :app_content_width="app_content_width"

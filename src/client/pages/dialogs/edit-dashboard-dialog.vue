@@ -45,7 +45,7 @@
           </v-row>
           <v-row class="pa-0 ma-0 pt-2 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
-              <v-btn color="primary" @click="onSave">{{ i18n.global.t('SAVE_TITLE') }}</v-btn>
+              <v-btn color="primary" @click="onSave">{{ i18n.global.t('APPLY_TITLE') }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -55,13 +55,13 @@
         </v-card>
         <FindQueryEditorDialog v-model="current_dnote_query" :application_config="props.application_config"
           :gkill_api="props.gkill_api"
-          @requested_apply="(query) => { current_dnote_query = query; emit_current_config() }"
+          @requested_apply="(query) => onAppliedDnoteQuery(query)"
           @received_errors="(errors) => emits('received_errors', errors)"
           @received_messages="(messages) => emits('received_messages', messages)"
           ref="dnote_query_editor_dialog" />
         <MiFindQueryEditorDialog v-model="current_mi_query" :application_config="props.application_config"
           :gkill_api="props.gkill_api"
-          @requested_apply="(query) => { current_mi_query = query; emit_current_config() }"
+          @requested_apply="(query) => onAppliedMiQuery(query)"
           @received_errors="(errors) => emits('received_errors', errors)"
           @received_messages="(messages) => emits('received_messages', messages)"
           ref="mi_query_editor_dialog" />
@@ -76,6 +76,7 @@ import { i18n } from '@/i18n'
 import HelpDialog from './help-dialog.vue'
 import FindQueryEditorDialog from './find-query-editor-dialog.vue'
 import MiFindQueryEditorDialog from './mi-find-query-editor-dialog.vue'
+import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { DashboardConfig } from '@/classes/datas/config/dashboard-config'
 import type { EditDashboardDialogProps } from './edit-dashboard-dialog-props'
 import type { EditDashboardDialogEmits } from './edit-dashboard-dialog-emits'
@@ -95,6 +96,16 @@ function open_dnote_query_editor(): void {
 
 function open_mi_query_editor(): void {
     mi_query_editor_dialog.value?.show(current_mi_query.value)
+}
+
+// クエリエディタの適用はローカル反映のみ。永続化はこのダイアログの保存で確定する
+// （エディタで適用した時点で親に伝えてしまうと、ここでキャンセルしても戻らなくなる）
+function onAppliedDnoteQuery(query: FindKyouQuery): void {
+    current_dnote_query.value = query
+}
+
+function onAppliedMiQuery(query: FindKyouQuery): void {
+    current_mi_query.value = query
 }
 
 function emit_current_config(): void {

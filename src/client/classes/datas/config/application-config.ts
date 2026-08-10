@@ -13,6 +13,31 @@ import { GetAllRepNamesRequest } from '@/classes/api/req_res/get-all-rep-names-r
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
 import { MiBoardStructElementData } from './mi-board-struct-element-data'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
+import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
+
+/**
+ * ツリー全体を探して条件に合うノードがあるか調べる。
+ *
+ * 「無ければ足す」系(`append_no_tags` / `append_no_devices` / `append_all_mi_board`)は
+ * 直下の children しか見ておらず、ユーザーがそのノードをフォルダへ移動すると
+ * 読み込みのたびにルート直下へ再生成されて重複していた。
+ * mi_board_struct には編集UIが無かったので到達不能だったが、
+ * 板構造の編集UIを足した時点で踏めるようになる
+ */
+function has_struct_node(root: FoldableStructModel | null | undefined, matches: (node: FoldableStructModel) => boolean): boolean {
+    if (!root) {
+        return false
+    }
+    if (matches(root)) {
+        return true
+    }
+    for (const child of root.children ?? []) {
+        if (has_struct_node(child, matches)) {
+            return true
+        }
+    }
+    return false
+}
 
 export class ApplicationConfig {
     is_loaded: boolean
@@ -29,6 +54,8 @@ export class ApplicationConfig {
     dnote_json_data: unknown
     ryuu_json_data: unknown
     dashboard_json_data: unknown
+    plaing_timeis_json_data: unknown
+    saved_find_query_json_data: unknown
 
     user_is_admin: boolean
     cache_clear_count_limit: number
@@ -69,11 +96,17 @@ export class ApplicationConfig {
         application_config.rep_struct = (JSON.parse(JSON.stringify(this.rep_struct)) as RepStructElementData)
         application_config.device_struct = (JSON.parse(JSON.stringify(this.device_struct)) as DeviceStructElementData)
         application_config.rep_type_struct = (JSON.parse(JSON.stringify(this.rep_type_struct)) as RepTypeStructElementData)
-        application_config.kftl_template_struct = this.kftl_template_struct
-        application_config.mi_board_struct = this.mi_board_struct
+        // 編集ダイアログは cloned_application_config の構造を in-place で書き換える
+        // (children.push / splice / move_struct_*)。参照コピーのままだと
+        // 実体まで到達してしまい、キャンセルしても編集が取り消せない
+        application_config.kftl_template_struct = (JSON.parse(JSON.stringify(this.kftl_template_struct)) as KFTLTemplateElementData)
+        application_config.mi_board_struct = (JSON.parse(JSON.stringify(this.mi_board_struct)) as MiBoardStructElementData)
         application_config.dnote_json_data = this.dnote_json_data
         application_config.ryuu_json_data = this.ryuu_json_data
         application_config.dashboard_json_data = this.dashboard_json_data
+        // JSONデータは保存時に丸ごと差し替える運用なので参照コピーでよい（dashboard等と同じ）
+        application_config.plaing_timeis_json_data = this.plaing_timeis_json_data
+        application_config.saved_find_query_json_data = this.saved_find_query_json_data
         application_config.account_is_admin = this.account_is_admin
         application_config.session_is_local = this.session_is_local
         application_config.urlog_bookmarklet_session = this.urlog_bookmarklet_session
@@ -150,7 +183,6 @@ export class ApplicationConfig {
             }
         })
 
-        let i = 0
         not_found.forEach(rep_name => {
             const rep_struct = new RepStructElementData()
             rep_struct.key = rep_name
@@ -159,11 +191,8 @@ export class ApplicationConfig {
             rep_struct.is_checked = rep_struct.check_when_inited
             rep_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             rep_struct.ignore_check_rep_rykv = false
-            rep_struct.parent_folder_id = null
             rep_struct.rep_name = rep_name
-            rep_struct.seq = 1000 + i++
             rep_struct.is_dir = false
-            rep_struct.is_open_default = false
             if (!this.rep_struct.children) {
                 this.rep_struct.children = []
             }
@@ -229,7 +258,6 @@ export class ApplicationConfig {
             tag_struct.is_force_hide = false
             tag_struct.tag_name = tag_name
             tag_struct.is_dir = false
-            tag_struct.is_open_default = false
             if (!this.tag_struct.children) {
                 this.tag_struct.children = []
             }
@@ -239,6 +267,32 @@ export class ApplicationConfig {
     }
 
     async append_not_found_mi_boards(): Promise<Array<GkillError>> {
+        const collect_not_found = (board_names: Array<string>): Set<string> => {
+            const not_found = new Set<string>()
+            board_names.forEach(board_name => {
+                let exist = false
+                let board_name_walk = (_board_name: MiBoardStructElementData): void => { }
+                board_name_walk = (board: MiBoardStructElementData): void => {
+                    const board_children = board.children
+                    if (board_name === board.board_name) {
+                        exist = true
+                    }
+                    if (board_children) {
+                        board_children.forEach(child_board => {
+                            if (child_board) {
+                                board_name_walk(child_board)
+                            }
+                        })
+                    }
+                }
+                board_name_walk(this.mi_board_struct)
+                if (!exist) {
+                    not_found.add(board_name)
+                }
+            })
+            return not_found
+        }
+
         const req = new GetMiBoardRequest()
 
         const res = await GkillAPI.get_gkill_api().get_mi_board_list(req)
@@ -246,30 +300,22 @@ export class ApplicationConfig {
             return res.errors
         }
 
-        const not_found = new Set<string>()
-        res.boards.forEach(board_name => {
-            let exist = false
-            let board_name_walk = (_board_name: MiBoardStructElementData): void => { }
-            board_name_walk = (board: MiBoardStructElementData): void => {
-                const board_children = board.children
-                if (board_name === board.board_name) {
-                    exist = true
-                }
-                if (board_children) {
-                    board_children.forEach(child_board => {
-                        if (child_board) {
-                            board_name_walk(child_board)
-                        }
-                    })
-                }
-            }
-            board_name_walk(this.mi_board_struct)
-            if (!exist) {
-                not_found.add(board_name)
-            }
-        })
+        let not_found = collect_not_found(res.boards)
 
-        let i = 0
+        // MiBoardStructは永続化されるので、ServiceWorkerがキャッシュした古い一覧に含まれる
+        // 改名前の板名を書き込まないよう、追加するものがあるときだけサーバに問い直す。
+        // これが無いと「板名を直す前の名前」が毎回ツリーに足し直され、
+        // 削除しても復活する板になる（タグ版と同じ対策）
+        if (not_found.size !== 0) {
+            const reget_req = new GetMiBoardRequest()
+            reget_req.force_reget = true
+            const reget_res = await GkillAPI.get_gkill_api().get_mi_board_list(reget_req)
+            if (reget_res.errors && reget_res.errors.length !== 0) {
+                return reget_res.errors
+            }
+            not_found = collect_not_found(reget_res.boards)
+        }
+
         not_found.forEach(board_name => {
             const board_struct = new MiBoardStructElementData()
             board_struct.key = board_name
@@ -277,9 +323,7 @@ export class ApplicationConfig {
             board_struct.check_when_inited = true
             board_struct.is_checked = board_struct.check_when_inited
             board_struct.id = GkillAPI.get_gkill_api().generate_uuid()
-            board_struct.parent_folder_id = null
             board_struct.board_name = board_name
-            board_struct.seq = 1000 + i++
             if (!this.mi_board_struct.children) {
                 this.mi_board_struct.children = []
             }
@@ -289,12 +333,8 @@ export class ApplicationConfig {
     }
 
     async append_no_devices(): Promise<Array<GkillError>> {
-        let exist = false
-        this.device_struct.children?.forEach(device => {
-            if (device.device_name === "なし") {
-                exist = true
-            }
-        })
+        // 直下だけでなくツリー全体を探す。フォルダへ移動されていても重複生成しない
+        const exist = has_struct_node(this.device_struct, node => (node as DeviceStructElementData).device_name === "なし")
 
         if (!exist) {
             const device_struct = new DeviceStructElementData()
@@ -305,7 +345,6 @@ export class ApplicationConfig {
             device_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             device_struct.device_name = "なし"
             device_struct.is_dir = false
-            device_struct.is_open_default = false
             if (!this.device_struct.children) {
                 this.device_struct.children = []
             }
@@ -355,7 +394,6 @@ export class ApplicationConfig {
             device_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             device_struct.device_name = device_name
             device_struct.is_dir = false
-            device_struct.is_open_default = false
             if (!this.device_struct.children) {
                 this.device_struct.children = []
             }
@@ -421,7 +459,6 @@ export class ApplicationConfig {
             rep_type_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             rep_type_struct.rep_type_name = rep_type
             rep_type_struct.is_dir = false
-            rep_type_struct.is_open_default = false
             if (!this.rep_type_struct.children) {
                 this.rep_type_struct.children = []
             }
@@ -431,12 +468,8 @@ export class ApplicationConfig {
     }
 
     async append_no_tags(): Promise<Array<GkillError>> {
-        let exist = false
-        this.tag_struct.children?.forEach(tag => {
-            if (tag.tag_name === "no tags") {
-                exist = true
-            }
-        })
+        // 直下だけでなくツリー全体を探す。フォルダへ移動されていても重複生成しない
+        const exist = has_struct_node(this.tag_struct, node => (node as TagStructElementData).tag_name === "no tags")
 
         if (!exist) {
             const tag_struct = new TagStructElementData()
@@ -448,19 +481,15 @@ export class ApplicationConfig {
             tag_struct.is_force_hide = false
             tag_struct.tag_name = "no tags"
             tag_struct.is_dir = false
-            tag_struct.is_open_default = false
             this.tag_struct.children?.unshift(tag_struct)
         }
         return new Array<GkillError>()
     }
 
     async append_all_mi_board(): Promise<Array<GkillError>> {
-        let exist = false
-        this.mi_board_struct.children?.forEach(board => {
-            if (board.board_name === "すべて") {
-                exist = true
-            }
-        })
+        // 直下だけでなくツリー全体を探す。
+        // 「すべて」をフォルダへ入れると、直下だけ見ていた頃はルートに再生成されて2個になっていた
+        const exist = has_struct_node(this.mi_board_struct, node => (node as MiBoardStructElementData).board_name === "すべて")
 
         if (!exist) {
             const board_struct = new MiBoardStructElementData()
@@ -469,9 +498,7 @@ export class ApplicationConfig {
             board_struct.check_when_inited = true
             board_struct.is_checked = board_struct.check_when_inited
             board_struct.id = GkillAPI.get_gkill_api().generate_uuid()
-            board_struct.parent_folder_id = null
             board_struct.board_name = "すべて"
-            board_struct.seq = -1000
             this.mi_board_struct.children?.unshift(board_struct)
         }
         return new Array<GkillError>()

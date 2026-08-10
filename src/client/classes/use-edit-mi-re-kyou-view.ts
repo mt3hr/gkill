@@ -13,6 +13,7 @@ import type { Notification } from '@/classes/datas/notification'
 import type { EditMiReKyouViewProps } from '@/pages/views/edit-mi-re-kyou-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { useMiReKyouScheduleFields } from '@/classes/use-mi-re-kyou-schedule-fields'
+import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
 
 export function useEditMiReKyouView(options: {
     props: EditMiReKyouViewProps,
@@ -30,6 +31,9 @@ export function useEditMiReKyouView(options: {
 
     // ── 板名・日時のフォーム ──
     const schedule = useMiReKyouScheduleFields({ props, emits, default_board_name: "" })
+
+    // ── Confirm unknown mi board ──
+    const confirm_unknown_mi_board = useConfirmUnknownMiBoard({ application_config: () => props.application_config })
 
     // ── Business logic ──
     async function load(): Promise<void> {
@@ -98,6 +102,40 @@ export function useEditMiReKyouView(options: {
                 return
             }
 
+            // 実在しない板名なら、保存する前に確認を取る。
+            // 板はサーバ側で検証されず「その名前のタスクが1件でもあること」で実体化するので、
+            // 打ち間違いがそのまま新しい板になってしまう
+            const unknown_boards = confirm_unknown_mi_board.collect_unknown_mi_boards([schedule.mi_board_name.value])
+            if (unknown_boards.length !== 0) {
+                confirm_unknown_mi_board.open_confirm(unknown_boards)
+                return
+            }
+
+            await execute_save()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    function cancel_save(): void {
+        confirm_unknown_mi_board.close_confirm()
+    }
+
+    async function confirm_save(): Promise<void> {
+        confirm_unknown_mi_board.remember_confirmed_mi_boards()
+        confirm_unknown_mi_board.close_confirm()
+        await execute_save()
+    }
+
+    async function execute_save(): Promise<void> {
+        try {
+            is_requested_submit.value = true
+            const mirekyou = cloned_kyou.value.typed_mirekyou
+            if (!mirekyou) {
+                return
+            }
+            const times = schedule.resolve_times()
+
             // 更新後MiReKyou情報を用意する
             const updated_mirekyou = mirekyou.clone()
             updated_mirekyou.board_name = schedule.mi_board_name.value
@@ -160,6 +198,12 @@ export function useEditMiReKyouView(options: {
     return {
         // Template refs
         new_board_name_dialog: schedule.new_board_name_dialog,
+        confirm_unknown_mi_board_dialog: confirm_unknown_mi_board.confirm_unknown_mi_board_dialog,
+
+        // Confirm unknown mi board
+        unknown_mi_boards: confirm_unknown_mi_board.unknown_mi_boards,
+        cancel_save,
+        confirm_save,
 
         // State
         is_loading,

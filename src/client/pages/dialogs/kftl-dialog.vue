@@ -24,7 +24,9 @@
        <KFTLView :app_content_height="view_height" :app_content_width="view_width"
           :application_config="application_config" :gkill_api="gkill_api"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)" ref="kftl_view" />
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
+          ref="kftl_view" />
         </v-card>
         <HelpDialog screen_name="kftl" ref="help_dialog" />
 </div>

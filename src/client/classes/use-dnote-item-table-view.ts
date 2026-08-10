@@ -6,13 +6,14 @@ import type DnoteItemTableViewEmits from '@/pages/views/dnote-item-table-view-em
 import type DnoteItemTableViewProps from '@/pages/views/dnote-item-table-view-props'
 import type { ComponentRef } from '@/classes/component-ref'
 import type { GkillError } from '@/classes/api/gkill-error'
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 export function useDnoteItemTableView(options: {
     props: DnoteItemTableViewProps,
     emits: DnoteItemTableViewEmits,
     model_value: Ref<Array<Array<DnoteItem>>>,
 }) {
-    const { props, emits: _emits, model_value } = options
+    const { props, emits, model_value } = options
 
     // ── Template refs ──
     const dnote_item_list_views = ref<ComponentRef | null>(null)
@@ -99,6 +100,15 @@ export function useDnoteItemTableView(options: {
         e.stopPropagation()
     }
 
+    // ── Event relay objects ──
+    // 手書きで17個並べていた頃は requested_reload_kyou / requested_reload_list /
+    // requested_update_check_kyous を落としていた。
+    // 自分ではフォーカスを発火しない中間層なので dialog 版（focus系込み）を使う
+    const crudRelayHandlers = build_kyou_dialog_relay(emits, {
+        // クリックはフォーカス移動も伴う
+        'clicked_kyou': (kyou: Kyou) => { emits('focused_kyou', kyou); emits('clicked_kyou', kyou) },
+    })
+
     // ── Return ──
     return {
         // Template refs
@@ -112,5 +122,8 @@ export function useDnoteItemTableView(options: {
         // Exposed methods
         load_aggregated_value,
         reset,
+
+        // Event relay objects
+        crudRelayHandlers,
     }
 }

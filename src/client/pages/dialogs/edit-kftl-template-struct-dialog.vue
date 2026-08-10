@@ -26,7 +26,7 @@
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @requested_reload_application_config="emits('requested_reload_application_config')"
-          @requested_apply_kftl_template_struct="(kftl_template_struct_element_data: KFTLTemplateStructElementData) => emits('requested_apply_kftl_template_struct', kftl_template_struct_element_data)"
+          @requested_apply_kftl_template_struct="(kftl_template_struct_element_data: KFTLTemplateElementData) => emits('requested_apply_kftl_template_struct', kftl_template_struct_element_data)"
           @requested_close_dialog="hide" />
         </v-card>
         <HelpDialog screen_name="kftl-template-struct" ref="help_dialog" />
@@ -50,7 +50,7 @@ defineExpose({ show, hide })
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)
 
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import type { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data.js'
+import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)

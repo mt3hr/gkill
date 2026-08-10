@@ -18,6 +18,7 @@ import type MiReKyouView from '@/pages/views/mi-re-kyou-view.vue'
 import type GitCommitLogView from '@/pages/views/git-commit-log-view.vue'
 import type PluginHtmlView from '@/pages/views/plugin-html-view.vue'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import { is_kyou_reloading } from '@/classes/kyou-reload'
 
 export function useKyouView(options: {
     props: KyouViewProps,
@@ -68,6 +69,12 @@ export function useKyouView(options: {
     const is_kyou_loading = computed(() => !is_kyou_loaded.value || is_typed_datas_loading.value)
     // 速く終わる読み込みでスピナーが明滅しないよう、一定時間かかったときだけ出す
     const show_loading_indicator = useDelayedLoading(is_kyou_loading)
+
+    // 保存後の引き直し中。上のis_kyou_loadingと違い、こちらは中身が既にあるので
+    // 差し替えずに重ねて出す。引き直しはページ側(reload_kyou)が回していて、
+    // 完了時にこのKyouViewのpropsごと差し替わるため、状態はidで購読する
+    const is_reloading = computed(() => is_kyou_reloading(props.kyou.id))
+    const show_reloading_indicator = useDelayedLoading(is_reloading)
 
     const kyou_class = computed(() => {
         let highlighted = false
@@ -215,6 +222,8 @@ export function useKyouView(options: {
         kyou_class,
         is_kyou_loading,
         show_loading_indicator,
+        is_reloading,
+        show_reloading_indicator,
 
         // Business logic
         show_context_menu,

@@ -91,6 +91,10 @@
             </div>
         </div>
     </Teleport>
+    <!-- タグの確認を通した後に出る。両方新規なら「タグ確認 → 板名確認」の順になる -->
+    <ConfirmUnknownMiBoardDialog :unknown_mi_boards="unknown_mi_boards" :is_requested_submit="is_requested_submit"
+        @requested_confirm="confirm_mi_board_submit()" @requested_cancel="cancel_mi_board_submit()"
+        ref="confirm_unknown_mi_board_dialog" />
 </template>
 
 <script setup lang="ts">
@@ -101,6 +105,7 @@ import type { KFTLViewEmits } from './kftl-view-emits'
 
 import KFTLLineLabel from './kftl-line-label.vue'
 import KFTLTemplateDialog from '../dialogs/kftl-template-dialog.vue'
+import ConfirmUnknownMiBoardDialog from '../dialogs/confirm-unknown-mi-board-dialog.vue'
 import { useKftlView } from '@/classes/use-kftl-view'
 
 const props = defineProps<KFTLProps>()
@@ -109,6 +114,12 @@ const emits = defineEmits<KFTLViewEmits>()
 const {
     // Template refs
     kftl_template_dialog,
+    confirm_unknown_mi_board_dialog,
+
+    // Confirm unknown mi board
+    unknown_mi_boards,
+    cancel_mi_board_submit,
+    confirm_mi_board_submit,
 
     // State
     text_area_content,

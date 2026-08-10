@@ -250,6 +250,15 @@ body::-webkit-scrollbar {
   position: absolute;
 }
 
+/* フローティングダイアログ内のFAB。.gkill-floating-dialog__body 直下に置くこと。
+   body は overflow:auto だが position を持たないので、包含ブロックはスクロール箱の外側の
+   .gkill-floating-dialog になる（＝中身をスクロールしてもFABは右下に固定されたまま）。
+   v-card の中に入れると Vuetify の .v-card { position: relative } に捕まって一緒に流れる */
+.position-fixed-saved-find-query {
+  position: absolute;
+  z-index: 3;
+}
+
 
 /* =========================================================
    Scrollbar style (dedup)

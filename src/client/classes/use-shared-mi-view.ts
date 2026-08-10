@@ -9,7 +9,7 @@ import type { Notification } from '@/classes/datas/notification'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
-import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
 
 export function useSharedMiView(options: {
     props: SharedMiViewProps,
@@ -48,36 +48,25 @@ export function useSharedMiView(options: {
     }
 
     async function reload_kyou(kyou: Kyou): Promise<void> {
-        const kyous_list = match_kyous.value
-        for (let j = 0; j < kyous_list.length; j++) {
-            const kyou_in_list = kyous_list[j]
-            if (kyou.id === kyou_in_list.id) {
-                const updated_kyou = kyou.clone()
-                await delete_gkill_kyou_cache(kyou.id)
-                await updated_kyou.reload(true)
-                updated_kyou.is_typed_data_loaded = false
-                await updated_kyou.load_all()
-                const new_list = [...match_kyous.value]
-                new_list[j] = updated_kyou
-                match_kyous.value = new_list
-            }
-        }
+        // 以前は3ブロックとも load_all の force_attached が無く添付タグを引き直せていなかった。
+        // 3ブロックは同じ更新から派生しているので、同じ値を渡して1往復に合流させる
+        const requested_at = new_reload_batch()
+        await refresh_kyou_in_list(match_kyous.value, kyou, {
+            requested_at: requested_at,
+            replace: (next_list) => { match_kyous.value = next_list },
+        })
         if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
-            const updated_kyou = kyou.clone()
-            await delete_gkill_kyou_cache(kyou.id)
-            await updated_kyou.reload(true)
-            updated_kyou.is_typed_data_loaded = false
-            await updated_kyou.load_all()
-            focused_kyou.value = updated_kyou
+            const refreshed = await refresh_kyou(kyou, undefined, requested_at)
+            if (refreshed) {
+                focused_kyou.value = refreshed
+            }
         }
         for (let i = 0; i < opened_dialogs.value.length; i++) {
             if (opened_dialogs.value[i].kyou.id === kyou.id) {
-                const updated_kyou = kyou.clone()
-                await delete_gkill_kyou_cache(kyou.id)
-                await updated_kyou.reload(true)
-                updated_kyou.is_typed_data_loaded = false
-                await updated_kyou.load_all()
-                opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: updated_kyou }
+                const refreshed = await refresh_kyou(kyou, undefined, requested_at)
+                if (refreshed) {
+                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: refreshed }
+                }
             }
         }
     }
@@ -99,13 +88,28 @@ export function useSharedMiView(options: {
     }
 
     function open_rykv_dialog(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void {
+        const dialog_id = props.gkill_api.generate_uuid()
         opened_dialogs.value.push({
-            id: props.gkill_api.generate_uuid(),
+            id: dialog_id,
             kind,
             kyou: kyou.clone(),
             payload: payload ?? null,
             opened_at: Date.now(),
         })
+        // 開いた直後にも最新化する。リストのKyouは検索時点のものなので、
+        // 別経路で更新されていると古い内容でダイアログが開いてしまう
+        ;(async (): Promise<void> => {
+            const refreshed = await refresh_kyou(kyou)
+            if (!refreshed) {
+                return
+            }
+            for (let i = 0; i < opened_dialogs.value.length; i++) {
+                if (opened_dialogs.value[i].id === dialog_id) {
+                    opened_dialogs.value[i] = { ...opened_dialogs.value[i], kyou: refreshed }
+                    return
+                }
+            }
+        })().catch((err: unknown) => console.error(err))
     }
 
     function close_rykv_dialog(dialog_id: string): void {

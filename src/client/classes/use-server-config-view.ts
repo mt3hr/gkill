@@ -21,20 +21,31 @@ export function useServerConfigView(options: {
 
     // ── State refs ──
     const is_loading = ref(false)
-    const cloned_server_configs: Ref<Array<ServerConfig>> = ref(props.server_configs.concat())
+    const cloned_server_configs: Ref<Array<ServerConfig>> = ref(new Array<ServerConfig>())
     const server_config: Ref<ServerConfig> = ref(new ServerConfig())
     const device: Ref<string> = ref("")
     const devices: Ref<Array<string>> = ref(new Array<string>())
 
+    /**
+     * props の ServerConfig を要素ごと複製する。
+     * `concat()` は配列だけの浅いコピーで、要素は props と同一参照になる。
+     * 入力欄は `v-model="server_config.address"` のようにオブジェクトを直接書き換えるので、
+     * 浅いコピーだと「適用」を押す前から props 側が変わってしまう
+     */
+    async function reload_cloned_server_configs(): Promise<void> {
+        cloned_server_configs.value = await Promise.all(props.server_configs.map((config) => config.clone()))
+    }
+
     // ── Init ──
-    nextTick(() => {
+    nextTick(async () => {
+        await reload_cloned_server_configs()
         load_devices()
         device.value = props.server_configs.filter((server_cofnig) => server_cofnig.enable_this_device)[0].device
     })
 
     // ── Watchers ──
-    watch(() => props.server_configs, () => {
-        cloned_server_configs.value = props.server_configs.concat()
+    watch(() => props.server_configs, async () => {
+        await reload_cloned_server_configs()
         device.value = props.server_configs.filter((server_cofnig) => server_cofnig.enable_this_device)[0].device
         load_devices()
         load_current_server_config()

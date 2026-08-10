@@ -8,6 +8,7 @@
 // - 右下コーナーのリサイズハンドルでユーザがダイアログサイズを変更可能
 
 import { computed, onBeforeUnmount, onMounted, ref, watch, type ComputedRef, type Ref } from "vue"
+import { find_autofocus_target, has_focus_inside } from "@/classes/dialog-autofocus"
 
 type Point = { x: number; y: number }
 export type Size = { w: number; h: number }
@@ -159,6 +160,9 @@ export function useFloatingDialog(
     persistHeight?: boolean
     // Escape キー押下時のコールバック
     onEscape?: () => void
+    // 開いたときに最初のテキスト入力欄へフォーカスするか（デフォルト true）
+    // 自前でフォーカス先を決めているダイアログだけ false にする
+    autofocus?: boolean
   }
 ): UseFloatingDialogResult {
   const margin = opts?.margin ?? 8
@@ -170,6 +174,7 @@ export function useFloatingDialog(
   const min_w = opts?.minSize?.w ?? 200
   const min_h = opts?.minSize?.h ?? 150
   const persist_height = opts?.persistHeight ?? true
+  const autofocus_enabled = opts?.autofocus ?? true
 
   const pos_key = `${storage_key}:pos`
   const transparent_key = `${storage_key}:transparent`
@@ -234,6 +239,52 @@ export function useFloatingDialog(
     escape_handler = null
   }
 
+  // --- Autofocus ---
+  // 入力欄はさらに内側の v-if でデータ待ちのことが多い（編集ダイアログは
+  // typed data を取ってから本体を描く）ので、生えてくるのを見張って一度だけ当てる
+  const autofocus_deadline_ms = 2000
+  let autofocus_observer: MutationObserver | null = null
+  let autofocus_timer: ReturnType<typeof setTimeout> | null = null
+
+  function detach_autofocus(): void {
+    if (autofocus_observer) {
+      autofocus_observer.disconnect()
+      autofocus_observer = null
+    }
+    if (autofocus_timer !== null) {
+      clearTimeout(autofocus_timer)
+      autofocus_timer = null
+    }
+  }
+
+  function try_autofocus(el: HTMLElement): boolean {
+    // 待っている間にユーザーが自分で入力欄を選んでいたら手を出さない
+    if (has_focus_inside(el)) {
+      detach_autofocus()
+      return true
+    }
+    const target = find_autofocus_target(el)
+    if (!target) {
+      return false
+    }
+    // focus は Vuetify のクラス付け替えを誘発するので、先に監視を止める
+    detach_autofocus()
+    // ダイアログ本文は overflow:auto なので、素の focus だと中身がスクロールする
+    target.focus({ preventScroll: true })
+    return true
+  }
+
+  function attach_autofocus(el: HTMLElement): void {
+    detach_autofocus()
+    if (!autofocus_enabled) return
+    if (try_autofocus(el)) return
+
+    autofocus_observer = new MutationObserver(() => {
+      try_autofocus(el)
+    })
+    autofocus_observer.observe(el, { childList: true, subtree: true })
+    autofocus_timer = setTimeout(() => detach_autofocus(), autofocus_deadline_ms)
+  }
 
   // --- End Accessibility ---
 
@@ -490,6 +541,7 @@ export function useFloatingDialog(
   })
 
   onBeforeUnmount(() => {
+    detach_autofocus()
     detach_escape_handler()
     remove_resize_handle()
     detach_observer()
@@ -508,6 +560,7 @@ export function useFloatingDialog(
     container_ref,
     (el) => {
       if (!el) {
+        detach_autofocus()
         detach_escape_handler()
         remove_resize_handle()
         detach_observer()
@@ -522,9 +575,10 @@ export function useFloatingDialog(
       // is-user-resized クラスを反映
       update_resized_class()
 
-      // Accessibility: ARIA attributes, escape handler, focus trap, focus management
+      // Accessibility: ARIA attributes, escape handler, focus management
       apply_aria_attributes(el)
       attach_escape_handler(el)
+      attach_autofocus(el)
 
       // 出現直後は rect が 0 のことがあるので次フレームで処理
       requestAnimationFrame(() => {

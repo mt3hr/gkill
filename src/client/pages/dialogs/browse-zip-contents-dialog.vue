@@ -39,7 +39,7 @@
             </v-btn>
             <div class="zip-overlay-top-bar">
               <span class="zip-image-counter">{{ enlarged_image_index + 1 }} / {{ current_image_entries.length }}</span>
-              <a :href="current_image_entries[enlarged_image_index].file_url" :download="file_name(current_image_entries[enlarged_image_index].path)" class="zip-text-download-link">
+              <a :href="current_image_entries[enlarged_image_index].file_url" :download="file_name(current_image_entries[enlarged_image_index].path)" class="zip-text-download-link" :title="i18n.global.t('ZIP_DOWNLOAD_LINK_TITLE')">
                 <v-btn icon variant="flat" color="primary">
                   <v-icon>mdi-download</v-icon>
                 </v-btn>
@@ -58,7 +58,7 @@
             </v-btn>
             <div class="zip-text-viewer" @click.stop>
               <v-progress-circular v-if="text_viewer_loading" indeterminate color="primary" class="ma-4 align-self-center" />
-              <pre v-else class="zip-text-content">{{ text_viewer_content }}</pre>
+              <pre v-else class="zip-text-content"><LinkifiedText :text="text_viewer_content" /></pre>
             </div>
             <v-btn v-if="text_viewer_index < current_text_entries.length - 1" icon class="zip-nav-btn zip-nav-next"
               @click.stop="show_next_text()" variant="flat" color="primary">
@@ -66,12 +66,57 @@
             </v-btn>
             <div class="zip-overlay-top-bar">
               <span class="zip-image-counter">{{ file_name(text_viewer_entry.path) }}<template v-if="current_text_entries.length > 1"> ({{ text_viewer_index + 1 }} / {{ current_text_entries.length }})</template></span>
-              <a :href="text_viewer_entry.file_url" :download="file_name(text_viewer_entry.path)" class="zip-text-download-link">
+              <a :href="text_viewer_entry.file_url" :download="file_name(text_viewer_entry.path)" class="zip-text-download-link" :title="i18n.global.t('ZIP_DOWNLOAD_LINK_TITLE')">
                 <v-btn icon variant="flat" color="primary">
                   <v-icon>mdi-download</v-icon>
                 </v-btn>
               </a>
               <v-btn icon @click.stop="close_text_viewer()" variant="flat" color="primary">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </div>
+          </div>
+
+          <!-- メディアビューワーオーバーレイ（動画・音声） -->
+          <div v-if="media_viewer_entry !== null" class="zip-media-overlay" @click.self="close_media_viewer()">
+            <v-btn v-if="media_viewer_index > 0" icon class="zip-nav-btn zip-nav-prev"
+              @click.stop="show_prev_media()" variant="flat" color="primary">
+              <v-icon>mdi-chevron-left</v-icon>
+            </v-btn>
+            <div v-if="media_error" class="zip-media-error" @click.stop>
+              <div>{{ i18n.global.t('ZIP_MEDIA_PLAYBACK_FAILED_MESSAGE') }}</div>
+              <a :href="media_viewer_entry.file_url" :download="file_name(media_viewer_entry.path)"
+                class="zip-text-download-link">
+                <v-btn prepend-icon="mdi-download" variant="flat" color="primary">
+                  {{ i18n.global.t('ZIP_DOWNLOAD_LINK_TITLE') }}
+                </v-btn>
+              </a>
+            </div>
+            <!-- :key でエントリごとに要素を作り直し、autoplayとエラー状態をリセットする -->
+            <video v-else-if="media_viewer_entry.is_video" :key="media_viewer_entry.path"
+              :src="media_viewer_entry.file_url" class="zip-media-video" controls autoplay playsinline
+              @click.stop @error="onMediaError" />
+            <audio v-else :key="media_viewer_entry.path" :src="media_viewer_entry.file_url"
+              class="zip-media-audio" controls autoplay @click.stop @error="onMediaError" />
+            <v-btn v-if="media_viewer_index >= 0 && media_viewer_index < current_media_entries.length - 1" icon
+              class="zip-nav-btn zip-nav-next" @click.stop="show_next_media()" variant="flat" color="primary">
+              <v-icon>mdi-chevron-right</v-icon>
+            </v-btn>
+            <div class="zip-overlay-top-bar">
+              <span class="zip-image-counter">{{ file_name(media_viewer_entry.path) }}<template v-if="current_media_entries.length > 1"> ({{ media_viewer_index + 1 }} / {{ current_media_entries.length }})</template></span>
+              <a :href="media_viewer_entry.file_url" target="_blank" rel="noopener" class="zip-text-download-link"
+                :title="i18n.global.t('ZIP_OPEN_IN_NEW_TAB_TITLE')">
+                <v-btn icon variant="flat" color="primary">
+                  <v-icon>mdi-open-in-new</v-icon>
+                </v-btn>
+              </a>
+              <a :href="media_viewer_entry.file_url" :download="file_name(media_viewer_entry.path)"
+                class="zip-text-download-link" :title="i18n.global.t('ZIP_DOWNLOAD_LINK_TITLE')">
+                <v-btn icon variant="flat" color="primary">
+                  <v-icon>mdi-download</v-icon>
+                </v-btn>
+              </a>
+              <v-btn icon @click.stop="close_media_viewer()" variant="flat" color="primary">
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </div>
@@ -123,6 +168,29 @@
                 <a :href="entry.file_url" class="text-caption" @click.prevent="open_text_viewer(entry)">{{ file_name(entry.path) }}</a>
                 <span class="text-caption text-grey ml-1">({{ format_size(entry.size) }})</span>
               </template>
+              <template v-else-if="entry.is_video || entry.is_audio">
+                <v-icon size="small" class="mr-1">{{ entry.is_video ? 'mdi-movie-outline' : 'mdi-music-note' }}</v-icon>
+                <a :href="entry.file_url" class="text-caption" @click.prevent="open_media_viewer(entry)">{{ file_name(entry.path) }}</a>
+                <span class="text-caption text-grey ml-1">({{ format_size(entry.size) }})</span>
+                <a :href="entry.file_url" target="_blank" rel="noopener" class="zip-entry-action-link"
+                  :title="i18n.global.t('ZIP_OPEN_IN_NEW_TAB_TITLE')">
+                  <v-icon size="small">mdi-open-in-new</v-icon>
+                </a>
+                <a :href="entry.file_url" :download="file_name(entry.path)" class="zip-entry-action-link"
+                  :title="i18n.global.t('ZIP_DOWNLOAD_LINK_TITLE')">
+                  <v-icon size="small">mdi-download</v-icon>
+                </a>
+              </template>
+              <template v-else-if="entry.is_pdf">
+                <v-icon size="small" class="mr-1">mdi-file-pdf-box</v-icon>
+                <a :href="entry.file_url" target="_blank" rel="noopener" class="text-caption"
+                  :title="i18n.global.t('ZIP_OPEN_IN_NEW_TAB_TITLE')">{{ file_name(entry.path) }}</a>
+                <span class="text-caption text-grey ml-1">({{ format_size(entry.size) }})</span>
+                <a :href="entry.file_url" :download="file_name(entry.path)" class="zip-entry-action-link"
+                  :title="i18n.global.t('ZIP_DOWNLOAD_LINK_TITLE')">
+                  <v-icon size="small">mdi-download</v-icon>
+                </a>
+              </template>
               <template v-else>
                 <v-icon size="small" class="mr-1">mdi-file-download-outline</v-icon>
                 <a :href="entry.file_url" :download="file_name(entry.path)" class="text-caption">{{ file_name(entry.path) }}</a>
@@ -153,6 +221,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 import { detect_and_decode_text } from '@/classes/decode-text'
+import LinkifiedText from '../views/linkified-text.vue'
 
 type BrowseZipContentsDialogProps = KyouViewPropsBase
 
@@ -175,16 +244,23 @@ const enlarged_image_index: Ref<number> = ref(-1)
 // オーバーレイ用ヒストリースタック管理
 const is_enlarged: Ref<boolean> = ref(false)
 const is_text_viewer: Ref<boolean> = ref(false)
+const is_media_viewer: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_enlarged)
 useDialogHistoryStack(is_text_viewer)
+useDialogHistoryStack(is_media_viewer)
 watch(is_enlarged, (v) => { if (!v) enlarged_image_index.value = -1 })
 watch(is_text_viewer, (v) => { if (!v) close_text_viewer() })
+watch(is_media_viewer, (v) => { if (!v) close_media_viewer() })
 
 // テキストビューワー
 const text_viewer_entry: Ref<ZipEntry | null> = ref(null)
 const text_viewer_content: Ref<string> = ref('')
 const text_viewer_loading: Ref<boolean> = ref(false)
 const TEXT_VIEWER_MAX_BYTES = 512 * 1024
+
+// メディアビューワー（動画・音声）
+const media_viewer_entry: Ref<ZipEntry | null> = ref(null)
+const media_error: Ref<boolean> = ref(false)
 
 interface BreadcrumbItem {
   name: string
@@ -246,11 +322,18 @@ const text_viewer_index = computed((): number => {
   if (text_viewer_entry.value === null) return -1
   return current_text_entries.value.findIndex(e => e.path === text_viewer_entry.value!.path)
 })
+// テンプレートの分岐順（image・text優先）と揃えるため、両者に該当するものは除く（.ts等の拡張子重複対策）
+const current_media_entries = computed(() => current_files.value.filter(e => (e.is_video || e.is_audio) && !e.is_image && !e.is_text))
+const media_viewer_index = computed((): number => {
+  if (media_viewer_entry.value === null) return -1
+  return current_media_entries.value.findIndex(e => e.path === media_viewer_entry.value!.path)
+})
 
 function navigate_to(dir: string): void {
   current_dir.value = dir
   enlarged_image_index.value = -1
   close_text_viewer()
+  close_media_viewer()
 }
 
 function navigate_up(): void {
@@ -258,6 +341,7 @@ function navigate_up(): void {
   current_dir.value = last_slash >= 0 ? current_dir.value.slice(0, last_slash) : ''
   enlarged_image_index.value = -1
   close_text_viewer()
+  close_media_viewer()
 }
 
 function file_name(path: string): string {
@@ -274,6 +358,7 @@ async function show(): Promise<void> {
 async function hide(): Promise<void> {
   close_enlarged()
   close_text_viewer()
+  close_media_viewer()
   close_dialog_via_history(is_show_dialog)
 }
 
@@ -325,6 +410,38 @@ function show_next_image(): void {
   if (enlarged_image_index.value < current_image_entries.value.length - 1) {
     enlarged_image_index.value++
   }
+}
+
+function open_media_viewer(entry: ZipEntry): void {
+  media_error.value = false
+  media_viewer_entry.value = entry
+  is_media_viewer.value = true
+}
+
+function close_media_viewer(): void {
+  media_viewer_entry.value = null
+  media_error.value = false
+  close_dialog_via_history(is_media_viewer)
+}
+
+function show_prev_media(): void {
+  const idx = media_viewer_index.value
+  if (idx > 0) {
+    media_error.value = false
+    media_viewer_entry.value = current_media_entries.value[idx - 1]
+  }
+}
+
+function show_next_media(): void {
+  const idx = media_viewer_index.value
+  if (idx >= 0 && idx < current_media_entries.value.length - 1) {
+    media_error.value = false
+    media_viewer_entry.value = current_media_entries.value[idx + 1]
+  }
+}
+
+function onMediaError(): void {
+  media_error.value = true
 }
 
 function show_prev_text(): void {
@@ -405,6 +522,14 @@ function close_text_viewer(): void {
 }
 
 function onKeydown(e: KeyboardEvent): void {
+  if (media_viewer_entry.value !== null) {
+    // 矢印キーはネイティブプレイヤーのシーク・音量操作に譲るため、Escapeだけ扱う
+    if (e.key === 'Escape') {
+      close_media_viewer()
+      e.stopPropagation()
+    }
+    return
+  }
   if (text_viewer_entry.value !== null) {
     if (e.key === 'Escape') {
       close_text_viewer()
@@ -579,5 +704,45 @@ onUnmounted(() => {
 }
 .zip-text-download-link {
   text-decoration: none;
+}
+/* メディアビューワーオーバーレイ */
+.zip-media-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 56px;
+  box-sizing: border-box;
+}
+.zip-media-video {
+  max-width: 90vw;
+  max-height: calc(90vh - 56px);
+}
+.zip-media-audio {
+  width: min(90vw, 500px);
+}
+.zip-media-error {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.zip-entry-action-link {
+  margin-left: 8px;
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 </style>

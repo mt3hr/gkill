@@ -19,7 +19,7 @@
             </a>
             <v-progress-linear v-if="text_loading" indeterminate color="primary" height="2" />
             <pre v-if="text_content !== null"
-                :class="['idf_text_content', is_image_request_to_thumb_size ? 'idf_text_content--noscroll' : '']">{{ text_content }}</pre>
+                :class="['idf_text_content', is_image_request_to_thumb_size ? 'idf_text_content--noscroll' : '']"><LinkifiedText :text="text_content" /></pre>
         </div>
         <!-- その他のファイル: リンクのみ -->
         <a v-if="kyou.typed_idf_kyou && !is_text && !is_markdown && !kyou.typed_idf_kyou.is_image && !kyou.typed_idf_kyou.is_video && !kyou.typed_idf_kyou.is_audio"
@@ -59,6 +59,7 @@
 </template>
 <script setup lang="ts">
 import IDFKyouContextMenu from './idf-kyou-context-menu.vue'
+import LinkifiedText from './linkified-text.vue'
 import type { IDFKyouProps } from './idf-kyou-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { useIDFKyouView } from '@/classes/use-idf-kyou-view'

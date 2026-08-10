@@ -124,6 +124,9 @@ const props = defineProps<SaveClipboardToFileDialogProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const ui = useFloatingDialog('save-clipboard-to-file-dialog', {
+    // ファイル名の入力欄は折りたたみの中にあり、既定のフォーカス先は保存ボタン
+    // （use-save-clipboard-to-file-dialog.ts の show / do_save）。共通の自動フォーカスは切る
+    autofocus: false,
     centerMode: 'always',
     onEscape: () => hide(),
 })
