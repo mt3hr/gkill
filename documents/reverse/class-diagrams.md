@@ -720,8 +720,8 @@ classDiagram
 ## 6. Dnote 集計システム（TypeScript フロントエンド）
 
 > **綴りについて:** かつては `Agregate*`（`DnoteAgregateTarget` 等）という誤綴りだったが、現在は `Aggregate*` に統一済み（`DnoteAggregateTarget`, `AggregateAverageKCNumValue` 等）。
-> ただし `ApplicationConfig.dnote_json_data` に保存済みの定義には旧綴りの `type` 文字列が残るため、
-> `serialize/register-dictionary.ts` に旧綴り19キーの**読み込み専用エイリアスを恒久で登録してある**（書き出しは新綴りのみ）。
+> 型判別文字列は `ApplicationConfig.dnote_json_data` に永続化されるため、改名時は保存済みデータの移行が必須
+> （辞書に無い `type` は例外になり Dnote 画面が描画不能になる）。旧綴りのデータは移行済み。
 > 詳細は [`src/client/classes/dnote/README.md`](../../src/client/classes/dnote/README.md)。
 
 ```mermaid
