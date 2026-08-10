@@ -76,7 +76,7 @@
                 <div class="dnote-scroll-wrap">
                     <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api"
                         :editable="editable" v-model="dnote_definitions[i].items"
-                        v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandlers }"
+                        v-on="crudRelayHandlers"
                         @finish_a_aggregate_task="increment_finished_aggregate_task"
                         :ref="(el) => set_item_table_ref(i, el)" />
                     <DnoteTrendGraphTableView :application_config="application_config" :gkill_api="gkill_api"
@@ -85,7 +85,7 @@
                         :ref="(el) => set_trend_table_ref(i, el)" />
                     <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api"
                         :editable="editable" v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
-                        v-on="{ ...crudRelayHandlers, ...focusClickRelayHandlers, ...rykvDialogHandlers }"
+                        v-on="crudRelayHandlers"
                         @finish_a_aggregate_task="increment_finished_aggregate_task"
                         :ref="(el) => set_list_table_ref(i, el)" />
                 </div>
@@ -199,8 +199,6 @@ const {
 
     // Event relay objects
     crudRelayHandlers,
-    focusClickRelayHandlers,
-    rykvDialogHandlers,
     errorsMessagesRelayHandlers,
 } = useDnoteView({ props, emits })
 

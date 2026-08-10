@@ -35,7 +35,8 @@
           @updated_text="(updated_text: Text) => emits('updated_text', updated_text)"
           @updated_notification="(updated_notification: Notification) => emits('updated_notification', updated_notification)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)" />
+          @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)" />
         <HelpDialog screen_name="mkfl" ref="help_dialog" />
       </div>
     </div>

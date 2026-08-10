@@ -37,7 +37,7 @@ import type { ConfirmDeleteKFTLTemplateStructDialogProps } from './confirm-delet
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data';
+import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data';
 import { i18n } from '@/i18n'
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
 
@@ -45,7 +45,7 @@ defineProps<ConfirmDeleteKFTLTemplateStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteKFTLTemplateStructDialogEmits>()
 defineExpose({ show, hide })
 
-const kftl_template_struct: Ref<KFTLTemplateStructElementData> = ref(new KFTLTemplateStructElementData())
+const kftl_template_struct: Ref<KFTLTemplateElementData> = ref(new KFTLTemplateElementData())
 
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
@@ -55,13 +55,13 @@ const ui = useFloatingDialog("confirm-delete-kftl-template-struct-dialog", {
 })
 
 
-async function show(kftl_template_struct_obj: KFTLTemplateStructElementData): Promise<void> {
+async function show(kftl_template_struct_obj: KFTLTemplateElementData): Promise<void> {
   kftl_template_struct.value = kftl_template_struct_obj
   is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
   close_dialog_via_history(is_show_dialog)
-  kftl_template_struct.value = new KFTLTemplateStructElementData()
+  kftl_template_struct.value = new KFTLTemplateElementData()
 }
 </script>
 

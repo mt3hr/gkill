@@ -229,6 +229,10 @@
             v-on="crudRelayHandlers"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
+        <ConfirmUnknownMiBoardDialog :unknown_mi_boards="unknown_mi_boards"
+            :is_requested_submit="is_requested_submit"
+            @requested_confirm="confirm_save()" @requested_cancel="cancel_save()"
+            ref="confirm_unknown_mi_board_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
@@ -237,6 +241,7 @@ import AddNotificationForAddMiView from './add-notification-for-add-mi-view.vue'
 import type { AddMiViewProps } from './add-mi-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
+import ConfirmUnknownMiBoardDialog from '../dialogs/confirm-unknown-mi-board-dialog.vue'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
 import { useAddMiView } from '@/classes/use-add-mi-view'
@@ -248,6 +253,12 @@ const {
     // Template refs
     new_board_name_dialog,
     add_notification_views,
+    confirm_unknown_mi_board_dialog,
+
+    // Confirm unknown mi board
+    unknown_mi_boards,
+    cancel_save,
+    confirm_save,
 
     // State
     is_requested_submit,

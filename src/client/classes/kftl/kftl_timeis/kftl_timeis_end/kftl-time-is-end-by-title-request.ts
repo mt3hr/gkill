@@ -41,7 +41,10 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()! : new Date(Date.now())
 
-        // 対象のtimeisを取得する
+        // 対象のtimeisを取得する。
+        // plaing検索のカスタム検索条件（ApplicationConfig）が適用されるため、
+        // 条件外の実行中TimeIsは終了対象として見つからない（仕様）。
+        // 終了できないときは設定の実行中検索条件を確認すること
         let target_timeis: TimeIs | null = null
         const get_plaing_timeis_query = generate_get_plaing_timeis_kyous_query(null)
         const get_plaing_timeis_req = new GetKyousRequest()

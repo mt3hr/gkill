@@ -169,6 +169,7 @@
                         <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                             <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                                 :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="false"
+                                :is_active="is_show_kyou_count_calendar"
                                 @requested_focus_time="(date: Date) => onRequestedFocusTime(date)" />
                         </td>
                     </tr>
@@ -177,7 +178,7 @@
             <AddKCDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                v-on="crudRelayHandlers"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="add_kc_dialog" />
             <AddTimeIsDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
@@ -209,20 +210,22 @@
                 :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :app_content_width="app_content_width"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="kftl_dialog" />
             <mkflDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :kyou="new Kyou()"
                 :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :app_content_width="app_content_width"
                 v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
+                @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
                 ref="mkfl_dialog" />
             <UploadFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
-                v-on="{ ...crudRelayHandlers, ...rykv_dialog_handler }"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers, ...rykv_dialog_handler }"
                 ref="upload_file_dialog" />
             <SaveClipboardToFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
-                v-on="{ ...crudRelayHandlers }"
+                v-on="{ ...crudRelayHandlers, ...allColumnsRequestHandlers }"
                 ref="save_clipboard_to_file_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="enable_context_menu"

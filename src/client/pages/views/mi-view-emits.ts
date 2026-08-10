@@ -20,4 +20,7 @@ export interface MiViewEmits {
     (e: 'deleted_notification', deleted_notification: Notification): void
     (e: 'requested_show_application_config_dialog'): void
     (e: 'requested_reload_application_config'): void
+    // KFTL/MKFL はタグを registered_tag で上げてこないので、保存完了のこの合図で
+    // ページ側が板ツリー/タグツリーを取り直す（useConfigStructSync の resync_structs）
+    (e: 'saved_kyou_by_kftl', last_added_request_time: Date): void
 }

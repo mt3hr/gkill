@@ -25,7 +25,7 @@
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @requested_close_dialog="hide()"
-          @requested_add_kftl_template_struct_element="(kftl_template_struct_element: KFTLTemplateStructElementData) => emits('requested_add_kftl_template_struct_element', kftl_template_struct_element)" />
+          @requested_add_kftl_template_struct_element="(kftl_template_struct_element: KFTLTemplateElementData) => emits('requested_add_kftl_template_struct_element', kftl_template_struct_element)" />
         </v-card>
         <HelpDialog screen_name="kftl" ref="help_dialog" />
 </div>
@@ -40,7 +40,7 @@ import AddNewKFTLTemplateStructElementView from '../views/add-new-kftl-template-
 import HelpDialog from './help-dialog.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
+import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 
 const add_new_kftl_template_struct_element_view = ref<InstanceType<typeof AddNewKFTLTemplateStructElementView> | null>(null);
 const help_dialog = ref<InstanceType<typeof HelpDialog> | null>(null)

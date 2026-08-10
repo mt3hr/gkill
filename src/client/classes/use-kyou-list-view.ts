@@ -1,5 +1,5 @@
 import { Kyou } from '@/classes/datas/kyou'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, type Ref, ref, watch } from 'vue'
 import type { VVirtualScroll } from 'vuetify/components'
 import type { KyouListViewProps } from '@/pages/views/kyou-list-view-props'
 import type { KyouListViewEmits } from '@/pages/views/kyou-list-view-emits'
@@ -91,21 +91,49 @@ export function useKyouListView(options: {
     }
 
     // ── Exposed methods ──
+
+    // scroll_toのリトライ世代。新しいscroll_to呼び出し・unmountで古いリトライチェーンを破棄する。
+    // 世代なしの自己再帰だと、0件のまま終わった列(scrollHeight=0)への呼び出しが
+    // 50ms間隔の強制レイアウト付きで永久に残り、列操作のたびに増殖してレンダラを飽和させる
+    let scroll_to_epoch = 0
+    const scroll_to_max_retry_count = 40 // 50ms x 40 = 約2秒でリトライを打ち切る
+
+    onUnmounted(() => { scroll_to_epoch++ })
+
     async function scroll_to(scroll_top: number): Promise<void> {
+        const epoch = ++scroll_to_epoch
         return nextTick(async () => {
-            const target_element_id = props.query.query_id.concat(props.query.is_image_only ? "_kyou_image_list_view" : "_kyou_list_view")
-            const kyou_list_view_element = document.getElementById(target_element_id)
-            const virtual_scroll_container = kyou_list_view_element?.querySelector(".v-virtual-scroll__container")
-            const scroll_height = virtual_scroll_container?.scrollHeight ?? kyou_list_view_element?.scrollHeight
-            if (!kyou_list_view_element || !scroll_height || scroll_height < scroll_top) {
-                nextTick(async () => { // nextTickじゃ動かんかったのでsleepで対応
-                    await sleep(50)
-                    scroll_to(scroll_top)
-                })
+            try_scroll_to(scroll_top, epoch, 0)
+        })
+    }
+
+    function try_scroll_to(scroll_top: number, epoch: number, retry_count: number): void {
+        if (epoch !== scroll_to_epoch) {
+            return
+        }
+        const target_element_id = props.query.query_id.concat(props.query.is_image_only ? "_kyou_image_list_view" : "_kyou_list_view")
+        const kyou_list_view_element = document.getElementById(target_element_id)
+        const virtual_scroll_container = kyou_list_view_element?.querySelector(".v-virtual-scroll__container")
+        const scroll_height = virtual_scroll_container?.scrollHeight ?? kyou_list_view_element?.scrollHeight
+        // 要素がまだ無い/描画前(高さ0)/目標に届かない間は少し待って引き直す。
+        // ただし上限まで。以前は打ち切りが無く、別条件の再検索で件数が減った列へ
+        // 保存済みスクロール位置を復元するケースなどで成立し得ない条件を永久に待っていた
+        if (!kyou_list_view_element || !scroll_height || scroll_height < scroll_top) {
+            if (retry_count >= scroll_to_max_retry_count) {
+                if (kyou_list_view_element) {
+                    // 要素はあるが高さが目標に届かないまま打ち切り。
+                    // scrollTopは範囲外ならブラウザがクランプするのでそのまま代入する
+                    kyou_list_view_element.scrollTop = (scroll_top)
+                }
                 return
             }
-            kyou_list_view_element.scrollTop = (scroll_top)
-        })
+            nextTick(async () => { // nextTickじゃ動かんかったのでsleepで対応
+                await sleep(50)
+                try_scroll_to(scroll_top, epoch, retry_count + 1)
+            })
+            return
+        }
+        kyou_list_view_element.scrollTop = (scroll_top)
     }
 
     async function scroll_to_kyou(kyou: Kyou): Promise<boolean> {
@@ -146,7 +174,11 @@ export function useKyouListView(options: {
 
     function set_loading(loading: boolean): void {
         is_loading.value = loading
-        if (!loading) {
+        if (loading) {
+            // 再検索中は「読み込み済み」を倒す。列は検索で再マウントされないので、
+            // ここで戻さないと空にした直後のリストが「該当なし」と誤表示される
+            has_loaded.value = false
+        } else {
             has_loaded.value = true
         }
     }

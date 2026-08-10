@@ -22,13 +22,7 @@ export class RepStructElementData implements FoldableStructModel {
 
     indeterminate: boolean
 
-    parent_folder_id: string | null
-
-    seq: number
-
     is_dir: boolean
-
-    is_open_default: boolean
 
     constructor() {
         this.name = ""
@@ -40,12 +34,7 @@ export class RepStructElementData implements FoldableStructModel {
         this.key = ""
         this.is_checked = false
         this.indeterminate = false
-        this.parent_folder_id = ""
-        this.seq = 0
         this.is_dir = false
-        this.is_open_default = false
     }
 
 }
-
-

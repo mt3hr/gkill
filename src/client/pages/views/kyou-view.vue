@@ -1,6 +1,12 @@
 <template>
     <div @dblclick="show_kyou_dialog()" @click.prevent="onRootClick()"
-        :key="kyou.id" :class="'kyou_'.concat(kyou.id)">
+        :key="kyou.id" class="kyou_view_root" :class="'kyou_'.concat(kyou.id)">
+        <!-- 保存後の引き直し中。中身は消さずに重ねる。
+             消すと一覧の行がちらつき、高さ可変の詳細ビューでは高さが跳ねる。
+             体裁はPluginKyouの読み込み中表示に合わせる -->
+        <div v-if="show_reloading_indicator" class="kyou_reloading">
+            <v-progress-circular indeterminate size="16" />
+        </div>
         <div v-if="!show_content_only" :class="kyou_class">
             <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag" :key="attached_tag.id"
                 :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
@@ -180,6 +186,7 @@ const {
     rep_name,
     kyou_class,
     show_loading_indicator,
+    show_reloading_indicator,
 
     // Business logic
     show_context_menu,
@@ -220,5 +227,23 @@ const {
     padding: 8px;
     font-size: 0.85em;
     color: gray;
+}
+
+/* 引き直し中のスピナーを重ねるための基準。
+   直下の子はどれもstatic配置なので、ここにrelativeを足しても配置は変わらない */
+.kyou_view_root {
+    position: relative;
+}
+
+/* 引き直し中は中身を残したまま右上に重ねる。
+   行(.kyou_in_list)は高さ固定でoverflow:hiddenなので、行内に収まる位置に置く。
+   クリックとコンテキストメニューを奪わないようpointer-eventsは切る */
+.kyou_reloading {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    z-index: 1;
+    color: gray;
+    pointer-events: none;
 }
 </style>
