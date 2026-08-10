@@ -39,6 +39,7 @@ import type { KyouDialogProps } from './kyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import KyouView from '../views/kyou-view.vue'
 import type { Kyou } from '@/classes/datas/kyou'
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 defineProps<KyouDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
@@ -55,7 +56,6 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 const ui = useFloatingDialog("kyou-dialog", {
   centerMode: "always",
   persistHeight: false,
