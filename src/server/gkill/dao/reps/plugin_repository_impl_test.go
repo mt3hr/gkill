@@ -289,7 +289,7 @@ func TestPluginRepository_RoundTrip(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("FindKyous", func(t *testing.T) {
-		query := &find.FindQuery{UseWords: true, Words: []string{"alpha", "beta"}}
+		query := &find.FindQuery{Words: []string{"alpha", "beta"}}
 		got, err := fp.rep.FindKyous(ctx, query)
 		if err != nil {
 			t.Fatalf("FindKyous failed: %v", err)
@@ -401,17 +401,15 @@ func TestPluginRepository_ContentAndConfigCommands(t *testing.T) {
 }
 
 // TestPluginRepository_FindKyousAppliesIDFilter は、プラグインが返した全件から
-// gkill側がUseIDsで絞り込むことを確認する。
-// findQueryToPluginQueryがUseIDsを渡さない設計なので、ここが抜けると
+// gkill側がIDs指定で絞り込むことを確認する。
+// findQueryToPluginQueryがIDsを渡さない設計なので、ここが抜けると
 // ID指定検索にプラグインの全件が混入する。
 func TestPluginRepository_FindKyousAppliesIDFilter(t *testing.T) {
 	fp := newFakePluginRepository(t, behaviorNormal)
 
 	query := &find.FindQuery{
-		UseWords: true,
-		Words:    []string{"alpha"},
-		UseIDs:   true,
-		IDs:      []string{"word:alpha"},
+		Words: []string{"alpha"},
+		IDs:   []string{"word:alpha"},
 	}
 	got, err := fp.rep.FindKyous(context.Background(), query)
 	if err != nil {
@@ -420,7 +418,7 @@ func TestPluginRepository_FindKyousAppliesIDFilter(t *testing.T) {
 	kyous := got["fake_plugin_rep"]
 	for _, k := range kyous {
 		if k.ID != "word:alpha" {
-			t.Errorf("UseIDsで指定していないKyou %q が混入している", k.ID)
+			t.Errorf("IDsで指定していないKyou %q が混入している", k.ID)
 		}
 	}
 	if len(kyous) != 1 {
@@ -681,5 +679,59 @@ func TestPluginRepository_QueueTimeoutDoesNotReapProcess(t *testing.T) {
 	}
 	if got := countPluginStarts(t, fp.startLog); got != 1 {
 		t.Fatalf("起動回数 = %d, want 1", got)
+	}
+}
+
+// TestPluginRepository_FindKyousFailureIsWarningNotError は、プラグイン検索が
+// 失敗しても検索全体をエラーにせず、警告コレクタへプラグイン名だけを残すことを確認する。
+//
+// プラグインが1本壊れているだけで検索がエラーになると、
+// クライアントは他repの結果まで丸ごと捨ててしまう。かといって黙って0件にすると
+// 「静かな欠落」になるので、errはnil・結果は空・警告に名前を残す、の3点セットが結線。
+func TestPluginRepository_FindKyousFailureIsWarningNotError(t *testing.T) {
+	// 実行できない実行ファイルを指すマニフェスト。起動に失敗して検索が失敗する
+	manifest := gkill_plugin.PluginManifest{
+		ProtocolVersion: "1",
+		Name:            "broken_plugin",
+		Version:         "1.0.0",
+		DataType:        "broken_plugin_kyou",
+		RepName:         "broken_plugin_rep",
+		Executable:      "no_such_plugin_executable",
+	}
+	rep := NewPluginRepository("testuser", t.TempDir(), manifest)
+	t.Cleanup(func() { _ = rep.Close(context.Background()) })
+
+	ctx := WithFindWarnings(context.Background())
+	got, err := rep.FindKyous(ctx, &find.FindQuery{})
+	if err != nil {
+		t.Fatalf("プラグイン障害はエラーにせず警告にするはず: err = %v", err)
+	}
+
+	kyouCount := 0
+	for _, kyous := range got {
+		kyouCount += len(kyous)
+	}
+	if kyouCount != 0 {
+		t.Errorf("失敗時の結果は空のはず: got %d件", kyouCount)
+	}
+
+	warnings := PluginFindWarnings(ctx)
+	if len(warnings) != 1 || warnings[0] != "broken_plugin" {
+		t.Errorf("警告にプラグイン名が残るはず: got %v", warnings)
+	}
+}
+
+// TestPluginRepository_FindKyousSuccessLeavesNoWarning は対照。
+// 正常に応答したプラグインで警告が立つと、毎回「取得できませんでした」が出てしまう。
+func TestPluginRepository_FindKyousSuccessLeavesNoWarning(t *testing.T) {
+	fp := newFakePluginRepository(t, behaviorNormal)
+
+	ctx := WithFindWarnings(context.Background())
+	if _, err := fp.rep.FindKyous(ctx, &find.FindQuery{}); err != nil {
+		t.Fatalf("FindKyous failed: %v", err)
+	}
+
+	if warnings := PluginFindWarnings(ctx); len(warnings) != 0 {
+		t.Errorf("正常時に警告が立ってはいけない: got %v", warnings)
 	}
 }

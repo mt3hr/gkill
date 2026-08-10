@@ -6,6 +6,8 @@ import {
   DATE_ONLY_REGEX,
   KYOUS_TOP_LEVEL_FIELDS,
   KYOUS_QUERY_BOOLEAN_FIELDS,
+  KYOUS_QUERY_ALL_FIELDS,
+  LEGACY_USE_FLAG_KEYS,
   KYOUS_QUERY_STRING_ARRAY_FIELDS,
   KYOUS_QUERY_NUMBER_FIELDS,
   KYOUS_QUERY_INTEGER_FIELDS,
@@ -187,10 +189,59 @@ describe("KYOUS_QUERY_BOOLEAN_FIELDS", () => {
   test("contains expected boolean fields", () => {
     expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("update_cache")).toBe(true);
     expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("is_deleted")).toBe(true);
-    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("use_tags")).toBe(true);
-    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("use_words")).toBe(true);
     expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("is_image_only")).toBe(true);
     expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("only_latest_data")).toBe(true);
+  });
+
+  test("no longer contains the removed use_X flags", () => {
+    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("use_tags")).toBe(false);
+    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("use_words")).toBe(false);
+    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("use_calendar")).toBe(false);
+    expect(KYOUS_QUERY_BOOLEAN_FIELDS.has("use_include_id")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// LEGACY_USE_FLAG_KEYS
+// ---------------------------------------------------------------------------
+describe("LEGACY_USE_FLAG_KEYS", () => {
+  // Go (find/find_query_legacy_json.go) と client
+  // (classes/api/find_query/normalize-legacy-find-kyou-query-json.ts) と同じ16キー。
+  // ここが欠けると、その旧フラグを送ってきたクライアントが未知キー扱いで弾かれる
+  test("contains exactly the 16 removed use_X flags", () => {
+    expect(LEGACY_USE_FLAG_KEYS).toBeInstanceOf(Set);
+    expect(Array.from(LEGACY_USE_FLAG_KEYS).sort()).toEqual(
+      [
+        "use_tags",
+        "use_reps",
+        "use_rep_types",
+        "use_ids",
+        "use_include_id",
+        "use_words",
+        "use_timeis",
+        "use_timeis_tags",
+        "use_calendar",
+        "use_map",
+        "use_plaing",
+        "use_update_time",
+        "use_mi_board_name",
+        "use_period_of_time",
+        "use_mi_sort_type",
+        "use_mi_check_state",
+      ].sort(),
+    );
+  });
+
+  test("does not overlap KYOUS_QUERY_BOOLEAN_FIELDS", () => {
+    for (const key of LEGACY_USE_FLAG_KEYS) {
+      expect(KYOUS_QUERY_BOOLEAN_FIELDS.has(key)).toBe(false);
+    }
+  });
+
+  test("derived KYOUS_QUERY_ALL_FIELDS follows the removal (no use_X keys advertised)", () => {
+    for (const key of LEGACY_USE_FLAG_KEYS) {
+      expect(KYOUS_QUERY_ALL_FIELDS.has(key)).toBe(false);
+    }
   });
 });
 

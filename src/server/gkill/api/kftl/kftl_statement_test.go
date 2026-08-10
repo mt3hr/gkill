@@ -355,6 +355,23 @@ func TestStatement_MiWithTag(t *testing.T) {
 	}
 }
 
+func TestStatement_MiLineOrder(t *testing.T) {
+	// The Mi line order must match the AddMi screen (add-mi-view.vue):
+	// title -> board name -> estimate start -> estimate end -> limit.
+	// Nothing else pins this order down, so a chain edit would go unnoticed.
+	text := "ーみ\nテストタスク\n仕事\n2025-03-20\n2025-03-21\n2025-03-22"
+	lines := helperGenerateLines(t, text)
+	expected := []string{"mi", "miTitle", "miBoardName", "miEstimateStartTime", "miEstimateEndTime", "miLimitTime"}
+	if len(lines) != len(expected) {
+		t.Fatalf("expected %d lines, got %d", len(expected), len(lines))
+	}
+	for i, want := range expected {
+		if lines[i].GetLabelName() != want {
+			t.Errorf("line %d: expected %s, got %s", i, want, lines[i].GetLabelName())
+		}
+	}
+}
+
 func TestStatement_NlogLine(t *testing.T) {
 	// "ーん" triggers nlog, next lines are shop name then amount (項番15)
 	text := "ーん\n500\nテスト店"
@@ -851,8 +868,8 @@ func helperApplyToRequestMapAllowError(t *testing.T, text string) (*KFTLRequestM
 // ─── H4: Mi ASCII ? time fields ─────────────────────────────────────────────
 
 func TestApply_AsciiMiLimitTime(t *testing.T) {
-	// /mi + title + board(empty) + ?2025-01-01 → limitTime should be parsed
-	text := "/mi\nTest Task\n\n?2025-01-01"
+	// /mi + title + board(empty) + start(empty) + end(empty) + ?2025-01-01 → limitTime should be parsed
+	text := "/mi\nTest Task\n\n\n\n?2025-01-01"
 	requestMap := helperApplyToRequestMap(t, text)
 	all := requestMap.All()
 	if len(all) != 1 {
@@ -868,8 +885,8 @@ func TestApply_AsciiMiLimitTime(t *testing.T) {
 }
 
 func TestApply_AsciiMiEstimateStartTime(t *testing.T) {
-	// /mi + title + board(empty) + limitTime(empty) + ?2025-06-01 10:00
-	text := "/mi\nTest Task\n\n\n?2025-06-01 10:00"
+	// /mi + title + board(empty) + ?2025-06-01 10:00
+	text := "/mi\nTest Task\n\n?2025-06-01 10:00"
 	requestMap := helperApplyToRequestMap(t, text)
 	all := requestMap.All()
 	if len(all) != 1 {
@@ -885,8 +902,8 @@ func TestApply_AsciiMiEstimateStartTime(t *testing.T) {
 }
 
 func TestApply_AsciiMiEstimateEndTime(t *testing.T) {
-	// /mi + title + board(empty) + limitTime(empty) + estimateStartTime(empty) + ?2025-06-01 18:00
-	text := "/mi\nTest Task\n\n\n\n?2025-06-01 18:00"
+	// /mi + title + board(empty) + estimateStartTime(empty) + ?2025-06-01 18:00
+	text := "/mi\nTest Task\n\n\n?2025-06-01 18:00"
 	requestMap := helperApplyToRequestMap(t, text)
 	all := requestMap.All()
 	if len(all) != 1 {

@@ -28,11 +28,11 @@ import AggregateSumNlogAmount from '@/classes/dnote/dnote-aggregate-target/aggre
 import AggregateSumTimeIsTime from '@/classes/dnote/dnote-aggregate-target/aggregate-sum-timeis-time'
 
 const controller = new AbortController()
-const emptyQuery = {} as never
+// カレンダー未使用（新形式では null が「フィルタ未使用」の正規値）
+const emptyQuery = { calendar_start_date: null, calendar_end_date: null } as never
 
 function makeQuery(start: string, end: string) {
   return {
-    use_calendar: true,
     calendar_start_date: new Date(start),
     calendar_end_date: new Date(end),
   } as never
@@ -205,7 +205,6 @@ describe('DnoteTrendAggregator TimeIs 0:00区切り', () => {
   // 本番のFindKyouQueryと同様にclone可能なクエリ（バケットごとのTrim範囲が効く）
   function makeCloneableQuery(start: Date, end: Date) {
     return {
-      use_calendar: true,
       calendar_start_date: start,
       calendar_end_date: end,
       clone(): unknown {

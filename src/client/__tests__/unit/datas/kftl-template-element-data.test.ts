@@ -19,12 +19,10 @@ describe('KFTLTemplateElementData', () => {
       expect(parent.children[0].name).toBe('child-template')
     })
 
-    test('can set is_dir and is_open_default', () => {
+    test('can set is_dir', () => {
       const elem = new KFTLTemplateElementData()
       elem.is_dir = true
-      elem.is_open_default = true
       expect(elem.is_dir).toBe(true)
-      expect(elem.is_open_default).toBe(true)
     })
   })
 

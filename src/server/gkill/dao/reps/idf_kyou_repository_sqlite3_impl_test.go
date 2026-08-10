@@ -2,9 +2,13 @@ package reps
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"slices"
 	"testing"
 	"time"
 
+	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
 
@@ -357,5 +361,128 @@ func TestIDFKyouGetRepName(t *testing.T) {
 	}
 	if repName == "" {
 		t.Error("GetRepName returned empty string")
+	}
+}
+
+// findIDFKyouTargetFiles は検索結果のTargetFileを集めます。
+func findIDFKyouTargetFiles(t *testing.T, repo IDFKyouRepository, query *find.FindQuery) []string {
+	t.Helper()
+	idfKyous, err := repo.FindIDFKyou(context.Background(), query)
+	if err != nil {
+		t.Fatalf("FindIDFKyou failed: %v", err)
+	}
+	targetFiles := []string{}
+	for _, idfKyou := range idfKyous {
+		targetFiles = append(targetFiles, idfKyou.TargetFile)
+	}
+	slices.Sort(targetFiles)
+	return targetFiles
+}
+
+// rykvで「-.jpg」と入力したときの形（肯定語なし・除外語のみ・OR検索）。
+// 以前は除外語の判定が代入になっていたため、除外語を1語でも指定すると
+// IDFRepの検索結果が必ず0件になっていた。
+func TestIDFKyouFindIDFKyou_NotWordsOnly(t *testing.T) {
+	repo := newTempIDFKyouRepo(t)
+	ctx := context.Background()
+
+	for i, name := range []string{"a.jpg", "b.png", "c.pdf"} {
+		idf := makeIDFKyou("idf-"+string(rune('a'+i)), name)
+		if err := repo.AddIDFKyouInfo(ctx, idf); err != nil {
+			t.Fatalf("AddIDFKyouInfo failed: %v", err)
+		}
+	}
+
+	query := makeDefaultFindQuery()
+	query.Words = []string{}
+	query.NotWords = []string{".jpg"}
+	query.WordsAnd = false
+
+	got := findIDFKyouTargetFiles(t, repo, query)
+	want := []string{"b.png", "c.pdf"}
+	if !slices.Equal(got, want) {
+		t.Errorf(".jpg以外が返るべき: got %v, want %v", got, want)
+	}
+}
+
+// 肯定語と除外語の併用。以前は除外語のループが肯定側の判定結果を上書きしていた。
+func TestIDFKyouFindIDFKyou_WordsWithNotWords(t *testing.T) {
+	repo := newTempIDFKyouRepo(t)
+	ctx := context.Background()
+
+	for i, name := range []string{"photo_p0.jpg", "photo_p0.png", "other.png"} {
+		idf := makeIDFKyou("idf-"+string(rune('a'+i)), name)
+		if err := repo.AddIDFKyouInfo(ctx, idf); err != nil {
+			t.Fatalf("AddIDFKyouInfo failed: %v", err)
+		}
+	}
+
+	query := makeDefaultFindQuery()
+	query.Words = []string{"p0"}
+	query.NotWords = []string{".jpg"}
+	query.WordsAnd = true
+
+	got := findIDFKyouTargetFiles(t, repo, query)
+	want := []string{"photo_p0.png"}
+	if !slices.Equal(got, want) {
+		t.Errorf("肯定語を含み除外語を含まないものだけが返るべき: got %v, want %v", got, want)
+	}
+}
+
+// キーワード検索の対象はrep内相対パスと .md/.txt の本文。
+// 以前はSQLがTARGET_FILEだけで先に絞っていたため、
+// ファイル名に無い語がGo側の判定に到達できず本文検索が効かなかった。
+func TestIDFKyouFindIDFKyou_SearchesFileBody(t *testing.T) {
+	repo, dir := newTempIDFKyouRepoWithDir(t)
+	ctx := context.Background()
+
+	if err := os.WriteFile(filepath.Join(dir, "note.md"), []byte("body has kaerimichi"), os.ModePerm); err != nil {
+		t.Fatalf("error at write file: %v", err)
+	}
+	for i, name := range []string{"note.md", "other.png"} {
+		idf := makeIDFKyou("idf-"+string(rune('a'+i)), name)
+		if err := repo.AddIDFKyouInfo(ctx, idf); err != nil {
+			t.Fatalf("AddIDFKyouInfo failed: %v", err)
+		}
+	}
+
+	query := makeDefaultFindQuery()
+	query.Words = []string{"kaerimichi"}
+	query.WordsAnd = true
+
+	got := findIDFKyouTargetFiles(t, repo, query)
+	want := []string{"note.md"}
+	if !slices.Equal(got, want) {
+		t.Errorf("本文にしか無い語でも引けるべき: got %v, want %v", got, want)
+	}
+}
+
+// 絶対パスは検索対象に含めない。
+// 含めていたころは、repの置かれたフォルダ名を除外語にするとrepが丸ごと消えていた。
+func TestIDFKyouFindIDFKyou_DoesNotSearchAbsolutePath(t *testing.T) {
+	repo, dir := newTempIDFKyouRepoWithDir(t)
+	ctx := context.Background()
+
+	idf := makeIDFKyou("idf-a", "a.png")
+	if err := repo.AddIDFKyouInfo(ctx, idf); err != nil {
+		t.Fatalf("AddIDFKyouInfo failed: %v", err)
+	}
+
+	repDirName := filepath.Base(dir)
+
+	query := makeDefaultFindQuery()
+	query.Words = []string{repDirName}
+	query.WordsAnd = true
+	if got := findIDFKyouTargetFiles(t, repo, query); len(got) != 0 {
+		t.Errorf("repのフォルダ名では引けないべき: got %v", got)
+	}
+
+	query = makeDefaultFindQuery()
+	query.NotWords = []string{repDirName}
+	query.WordsAnd = false
+	got := findIDFKyouTargetFiles(t, repo, query)
+	want := []string{"a.png"}
+	if !slices.Equal(got, want) {
+		t.Errorf("repのフォルダ名を除外語にしてもrepは消えないべき: got %v, want %v", got, want)
 	}
 }

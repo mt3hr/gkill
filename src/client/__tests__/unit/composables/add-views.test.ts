@@ -43,6 +43,14 @@ function createBaseProps() {
       user_id: 'admin',
       mi_default_board: 'Inbox',
       tag_struct: { children: [] },
+      // 板の実在確認(use-confirm-unknown-mi-board)が参照する板ツリー
+      mi_board_struct: {
+        board_name: '',
+        children: [
+          { board_name: 'Inbox', children: [] },
+          { board_name: 'Work', children: [] },
+        ],
+      },
     } as never,
   }
 }

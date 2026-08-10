@@ -9,6 +9,8 @@ import { describe, test, expect, vi } from 'vitest'
 // 本番同様に gkill-api を先に評価させないと class extends が undefined になる。
 import '@/classes/api/gkill-api'
 import { useKyouView } from '@/classes/use-kyou-view'
+import { refresh_kyou } from '@/classes/kyou-reload'
+import type { Kyou } from '@/classes/datas/kyou'
 import type { KyouViewProps } from '@/pages/views/kyou-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 
@@ -119,6 +121,26 @@ describe('useKyouView 読み込み中の判定', () => {
     })
 })
 
+/** ページ側の引き直し(refresh_kyou)を止めたまま走らせるための最小のKyou */
+function make_reloadable_kyou(id: string, gate: Promise<void>): Kyou {
+    const kyou = {
+        id: id,
+        is_typed_data_loaded: true,
+        abort_controller: new AbortController(),
+        async reload(): Promise<Array<never>> {
+            await gate
+            return []
+        },
+        async load_all(): Promise<Array<never>> {
+            return []
+        },
+        clone(): unknown {
+            return make_reloadable_kyou(id, gate)
+        },
+    }
+    return kyou as unknown as Kyou
+}
+
 describe('useKyouView 読み込み中表示', () => {
     test('すぐ終わる読み込みではインジケータを出さない (一覧の明滅防止)', async () => {
         vi.useFakeTimers()
@@ -154,6 +176,57 @@ describe('useKyouView 読み込み中表示', () => {
             await vi.advanceTimersByTimeAsync(1000)
 
             expect(show_loading_indicator.value).toBe(true)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+})
+
+// 保存後の引き直しはページ側(reload_kyou)が回すので、このKyouViewからは見えない。
+// idで購読して「引き直し中」を出す
+describe('useKyouView 引き直し中表示', () => {
+    test('引き直しの間だけインジケータを出し、中身は消さない', async () => {
+        vi.useFakeTimers()
+        try {
+            const props = createProps({ loaded: true, is_typed_data_loaded: true })
+            const { show_loading_indicator, show_reloading_indicator } = useKyouView({ props, emits: noop_emits })
+
+            expect(show_reloading_indicator.value).toBe(false)
+
+            let open_gate = (): void => { }
+            const gate = new Promise<void>((resolve) => { open_gate = () => resolve() })
+            const reloading = refresh_kyou(make_reloadable_kyou('test-kyou-id', gate))
+
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(show_reloading_indicator.value).toBe(true)
+            // 中身を差し替える側のフラグは立てない（消すと一覧の行がちらつく）
+            expect(show_loading_indicator.value).toBe(false)
+
+            open_gate()
+            await reloading
+            await vi.advanceTimersByTimeAsync(1000)
+
+            expect(show_reloading_indicator.value).toBe(false)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    test('別のKyouの引き直しでは出さない', async () => {
+        vi.useFakeTimers()
+        try {
+            const props = createProps({ loaded: true, is_typed_data_loaded: true })
+            const { show_reloading_indicator } = useKyouView({ props, emits: noop_emits })
+
+            let open_gate = (): void => { }
+            const gate = new Promise<void>((resolve) => { open_gate = () => resolve() })
+            const reloading = refresh_kyou(make_reloadable_kyou('other-kyou-id', gate))
+
+            await vi.advanceTimersByTimeAsync(1000)
+            expect(show_reloading_indicator.value).toBe(false)
+
+            open_gate()
+            await reloading
         } finally {
             vi.useRealTimers()
         }

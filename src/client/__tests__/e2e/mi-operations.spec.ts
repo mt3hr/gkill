@@ -5,7 +5,7 @@ import { loginAsAdmin } from './helpers'
 import {
   submitKftlText, navigateToMi, createAndSelectMiBoard,
   makeUniqueLabel, clickContextMenuItem, clickDialogButton,
-  expectPageToContainText, waitForKyouByText,
+  expectPageToContainText, waitForKyouByText, searchByKeyword,
   MENU, SAVE_BUTTON,
 } from './crud-helpers'
 
@@ -128,6 +128,42 @@ test.describe('Mi (Task) Operations', () => {
       .not.toContainText(label, { timeout: 30000 })
   })
 
+  /**
+   * v-checkbox のルート（.v-input--horizontal）は grid の中身が minmax(0,1fr) で、
+   * min-content 幅が 0 まで潰れる。タイトルが長いほど flex の縮小量を持っていかれ、
+   * チェックボックスが幅0になってタイトルの下に隠れていた。
+   * 幅は toBeAttached では見えないので、実寸で確認する。
+   */
+  test('タイトルが長くてもチェックボックスが潰れない', async ({ page }) => {
+    const label = makeUniqueLabel('mi_long_title').concat('あ'.repeat(120))
+    await submitKftlText(page, `ーみ\n${label}`)
+    await navigateToMi(page)
+
+    await waitForKyouByText(page, label)
+    const card = page.locator('.v-card').filter({ hasText: label }).last()
+    await expect(card, 'タスクのカードが見つからない').toBeVisible({ timeout: 30000 })
+    await expect(card.locator('.mi_check'), 'チェックボックスが見つからない')
+      .toBeVisible({ timeout: 15000 })
+
+    // 潰れるのは v-checkbox のルート。内側の .v-selection-control__wrapper は
+    // width 固定で縮まず枠外へはみ出すので、そちらの幅を見ても検出できない
+    const layout = await card.evaluate((el) => {
+      const root = el.querySelector('.mi_check') as HTMLElement
+      const mark = el.querySelector('.mi_check .v-selection-control__wrapper') as HTMLElement
+      const title = el.querySelector('.mi_title') as HTMLElement
+      return {
+        root_width: root.getBoundingClientRect().width,
+        // 正の値ならチェックボックスの絵がタイトルの左端を追い越している＝重なっている
+        overlap: mark.getBoundingClientRect().right - title.getBoundingClientRect().left,
+      }
+    })
+
+    expect(layout.root_width, `チェックボックスが潰れている (width=${layout.root_width})`)
+      .toBeGreaterThanOrEqual(24)
+    expect(layout.overlap, `チェックボックスがタイトルに重なっている (overlap=${layout.overlap})`)
+      .toBeLessThanOrEqual(1)
+  })
+
   // 項番76 / 項番77: タスク共有状況の閲覧と共有停止
   //
   // 共有はコンテキストメニューではなく、Mi画面サイドバーのフッタにある
@@ -150,6 +186,9 @@ test.describe('Mi (Task) Operations', () => {
     await enableShareFooter(page)
 
     await navigateToMi(page)
+    // 一覧は仮想スクロールで数件しか描画しないので、並列に走る他テストの記録に
+    // 押し出される。キーワードで絞ってから存在を確認する
+    await searchByKeyword(page, label)
     await waitForKyouByText(page, label)
 
     const manageShareButton = page.locator('button').filter({ hasText: /^\s*共有管理\s*$/ }).first()
