@@ -79,13 +79,13 @@ src/client/
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/              # ビューコンポーネント（189ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（103ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（194ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（110ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,400行、全API呼び出しを集約）
+│   │   ├── gkill-api.ts    # GkillAPI シングルトン（~3,300行、全API呼び出しを集約）
 │   │   ├── hydrate.ts      # JSON→クラスインスタンスの詰め替え（any を使わない共通ヘルパー）
 │   │   ├── find_query/     # 検索クエリビルダー
 │   │   └── req_res/        # リクエスト/レスポンス型（172ファイル）
@@ -96,7 +96,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（41ステートメント型）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（233ファイル）
+│   └── use-*.ts            # Composition関数群（245ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -134,7 +134,7 @@ src/server/
     │   ├── gkill_plugin/           # プラグインプロトコル型
     │   │   ├── plugin_manifest.go  # PluginManifest（8フィールド）
     │   │   └── plugin_protocol.go  # PluginRequest / PluginResponse / PluginKyou
-    │   └── gkill_server_api/       # HTTPハンドラ層（115ファイル）
+    │   └── gkill_server_api/       # HTTPハンドラ層（118ファイル）
     │       ├── serve.go            # HTTPサーバー起動・停止
     │       ├── close.go            # サーバー終了処理
     │       ├── gkill_server_api_address.go  # ルーティング定義（92エンドポイント定義・90登録：89 POST + 1 GET）
@@ -291,7 +291,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-858キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+876キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
@@ -306,12 +306,12 @@ src/tools/
 ├── extract_manual_src.mjs       # 既存マニュアルから manual_src を抽出
 ├── verify_release_artifacts.mjs # リリース成果物の検証（npm run verify_release_artifacts）
 ├── test_plugins.mjs             # src/plugins/ 配下の各 Go モジュールを個別に go test（npm run test_plugins）
-├── license_getter.ps1           # ライセンス情報収集スクリプト
+├── license_getter.mjs           # 依存ライセンス一覧の生成（npm run license_getter）
 └── README.md
 ```
 
-このうち `dev.mjs` / `verify_docs.mjs` / `build_manuals.mjs` / `verify_release_artifacts.mjs` / `test_plugins.mjs` は
-`package.json` の npm スクリプトから直接呼ばれる。
+このうち `dev.mjs` / `verify_docs.mjs` / `build_manuals.mjs` / `verify_release_artifacts.mjs` / `test_plugins.mjs` /
+`license_getter.mjs` は `package.json` の npm スクリプトから直接呼ばれる。
 
 ## documents/ — ドキュメント
 
@@ -319,9 +319,9 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（91項目）
+│   ├── glossary.md                   # 用語集（95項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（84件）
+│   ├── usecase.md                    # ユースケース一覧（86件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
 │   ├── sequence-diagrams.md          # シーケンス図（29本: 正常系24 + 異常系5）

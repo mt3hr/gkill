@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、35 specファイル199テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、40 specファイル215テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -74,7 +74,7 @@ const record = await waitForKyouByText(page, label)
 
 ## テストファイル一覧
 
-### E2E テスト（35 specファイル, 199テスト宣言）
+### E2E テスト（40 specファイル, 215テスト宣言）
 
 #### ページ表示・ナビゲーション系（12ファイル）
 
@@ -107,7 +107,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/notification-crud.spec.ts` | Notification の追加/編集/削除/閲覧/履歴 |
 | `src/client/__tests__/e2e/mi-re-kyou.spec.ts` | MiReKyou（既存Kyouのタスク化）: rykvのコンテキストメニュー「タスクにする」→Mi画面に出る。API面はGo側の TestHandleAddMiReKyou_* 系へ移管 |
 
-#### 認証・ユースケース・設定系（14ファイル）
+#### 認証・ユースケース・設定系（16ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -125,8 +125,11 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/edit-readonly-loading.spec.ts` | Edit系ダイアログの Loading 中 readonly 化とロード完了後の編集可能復帰（API 遅延注入で検証） |
 | `src/client/__tests__/e2e/re-kyou.spec.ts` | ReKyou（リポスト）の行を右クリックしたとき、入れ子の参照先ではなくリポスト自身のコンテキストメニューが出ること |
 | `src/client/__tests__/e2e/context-menu-viewport.spec.ts` | コンテキストメニューの外接矩形がビューポートに収まること（縦に狭い画面で上向きに反転する経路）。「メニューが出た」だけでは自前クランプ時代でも通るので矩形を測る |
+| `src/client/__tests__/e2e/rykv-columns.spec.ts` | rykv の複数列×検索: 別列で検索した結果が検索した列だけに反映される、列リロード・列削除で他列の絞り込みが壊れない |
+| `src/client/__tests__/e2e/mi-board-columns.spec.ts` | mi の板列×検索: 各板の列に自板のタスクだけが出る、板クリック後に別列で検索しても板名表示と検索条件が汚染されない |
+| `src/client/__tests__/e2e/saved-find-query.spec.ts` | 保存済み検索条件: 設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示 |
 
-### Composable ユニットテスト（14ファイル）
+### Composable ユニットテスト（41ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -144,6 +147,12 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/unit/composables/kyou-count-calendar.test.ts` | Kyou件数カレンダー Composable |
 | `src/client/__tests__/unit/composables/overlay-and-ur-log-view.test.ts` | オーバーレイ表示と URLog ビュー Composable |
 | `src/client/__tests__/unit/composables/kyou-view.test.ts` | Kyou ビュー Composable（ReKyou / MiReKyou の参照先を読み込み中はゼロ値の日時を出さず、読み込み中として扱う） |
+| `src/client/__tests__/unit/composables/rykv-view-search-routing.test.ts` | useRykvView の列×検索ルーティング（get_kyous を deferred 化し、検索結果が検索した列に届くこと・同一列は最後の検索条件が勝つこと・列削除中の応答が破棄されること・reload_kyou が別列を潰さないことをレース再現で固定） |
+| `src/client/__tests__/unit/composables/mi-view-search-routing.test.ts` | useMiView の列(板)×検索ルーティング（rykv 版と対。mi 固有のカレンダー汚染防止と open_or_focus_board の板一致判定を含む） |
+| `src/client/__tests__/unit/composables/mi-board-query.test.ts` | mi サイドバーの板選択がフォーカス列の検索条件に追随すること（追随しないと最後にクリックした板名が別列の条件に混入する） |
+| `src/client/__tests__/unit/composables/rykv-sidebar-saved-query-apply.test.ts` | rykv サイドバーの保存済み検索条件適用（query_id は列側維持・updated_query は1回・emit は保存側の clone・0件時は FAB 非表示条件の computed が空） |
+| `src/client/__tests__/unit/composables/mi-sidebar-saved-query-apply.test.ts` | mi サイドバーの保存済み検索条件適用（rykv 側と対称＋板名は全クリアと違い保存された条件が勝つこと） |
+| `src/client/__tests__/unit/composables/kyou-list-view-loading.test.ts` | KyouListView のローディング表示（set_loading(true) が has_loaded を倒し、再検索中に「該当なし」と誤表示しない） |
 
 ### ルーターテスト
 

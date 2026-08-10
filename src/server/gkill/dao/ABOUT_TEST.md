@@ -22,7 +22,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 |---------|-----------|
 | `account/account_dao_sqlite3_impl_test.go` | ユーザアカウント CRUD |
 | `account/password_hash_test.go` | Argon2id のラウンドトリップ、誤った資格情報の否認、ソルトが毎回変わること、改竄・不正な PHC 文字列の拒否、パスワード未設定アカウントが常に不一致になること（fail-closed）、資格情報とユーザIDの形式検証 |
-| `account/account_schema_migration_test.go` | スキーマ 1.0.0 → 1.1.0 の移行。**全アカウントのパスワードが無効化されリセットトークンが再発行されること**、カラムのリネームと追加、版の更新、再起動しても移行が二度走らないこと |
+| `account/account_schema_migration_test.go` | スキーマ 1.0.0 → 1.1.0 の移行。**全アカウントのパスワードが無効化されリセットトークンが再発行されること**、カラムのリネームと追加、版の更新、再起動しても移行が二度走らないこと。**版を記録する行そのものが無い旧DB（版管理の仕組みが入る前のもの）を新規DBと誤認せず移行すること**と、本当の新規DBは移行しないことも含む |
 | `account_state/login_session_dao_sqlite3_impl_test.go` | ログインセッション管理 |
 | `account_state/file_upload_history_dao_sqlite3_impl_test.go` | ファイルアップロード履歴 |
 
@@ -39,13 +39,17 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `share_kyou_info/share_kyou_info_dao_sqlite3_impl_test.go` | Kyou 共有設定 CRUD |
+| `share_kyou_info/share_kyou_info_schema_migration_test.go` | スキーマ 1.0.0 → 1.1.0 の移行。保存済み検索条件JSONを新形式へ書き換えること、再実行しても壊れないこと。共有URLは配布済みで再発行できないため、読み出し時の互換層ではなく保存データ自体を移行する |
 | `gkill_notification/gkill_notificate_target_dao_sqlite3_impl_test.go` | プッシュ通知ターゲット DAO |
 
 ### ユーティリティ
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `sqlite3impl/sqlite3impl_util_test.go` | SQLite3 ユーティリティ関数 |
+| `sqlite3impl/sqlite3impl_util_test.go` | 検索SQLの組み立て。LIKE のエスケープ、列をまたぐAND、検索対象列を持たないリポジトリ、曜日フィルタの nil ガード |
+| `sqlite3impl/index_usage_test.go` | 主要クエリがインデックスを使うこと（EXPLAIN QUERY PLAN で確認） |
+| `sqlite3impl/unixepoch_index_test.go` | 時刻比較を `unixepoch()` に統一してもインデックスが効くこと |
+| `sqlite3impl/sqlite_connection_test.go` | SQLite3 接続の設定（PRAGMA 等） |
 | `hide_files/file_hider_test.go` | ファイル非表示ロジック |
 
 ## テスト内容

@@ -210,6 +210,7 @@ graph LR
 - 認証ミドルウェアによるセッション検証（`auth_middleware.go`）
 - レスポンス構築
 - アクセスログミドルウェア（gorilla/mux `Use()` で全ルートに適用。リモートIP・メソッド・パス・ステータス・所要時間・ユーザIDを `ACCESS` レベルで記録。実装: `gkill_server_api_access_log.go`）
+- gzip圧縮ミドルウェア（`gzip_middleware.go`。recover・アクセスログの次に `Use()` で登録。**`/api/` 前方一致かつリクエストの `Accept-Encoding` に gzip があるときだけ**圧縮する。Range配信する `/files/` `/zip_cache/`（既に圧縮済みのメディアが主）と静的アセットは対象外。`Content-Length` は付けず、`Flush()` は gzip バッファを掃いてから下位の Flusher へ委譲するのでストリーミング応答も壊れない）
 
 ### 認証ミドルウェアパターン
 
@@ -529,7 +530,7 @@ sequenceDiagram
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts`（約3,400行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
+`src/client/classes/api/gkill-api.ts`（約3,300行）は、バックエンドAPIとの通信を一元管理するシングルトンクラスです。
 
 #### 主な責務
 
@@ -562,8 +563,8 @@ Kyou の削除は Kyou 単体の論理削除ではなく、`src/client/classes/c
 | 種別 | 数 | 配置 |
 |---|---|---|
 | ページ | 15 | `pages/*.vue` |
-| ビュー | 189 | `pages/views/*.vue` |
-| ダイアログ | 103 | `pages/dialogs/*.vue` |
+| ビュー | 194 | `pages/views/*.vue` |
+| ダイアログ | 110 | `pages/dialogs/*.vue` |
 
 ### テーマ
 

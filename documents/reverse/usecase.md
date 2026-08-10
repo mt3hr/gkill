@@ -117,13 +117,13 @@ graph LR
 
 ## 2. 機能カテゴリ別ユースケース一覧
 
-> **件数について:** ユースケースは **84件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 89 行で、一部のユースケースは複数カテゴリに再掲されているため行数のほうが多くなる。件数を引用する際はユニーク ID 数（84）を使うこと。
+> **件数について:** ユースケースは **86件（ユニークな UC-ID 数）**。以下のカテゴリ別表の行数は 91 行で、一部のユースケースは複数カテゴリに再掲されているため行数のほうが多くなる。件数を引用する際はユニーク ID 数（86）を使うこと。
 >
 > 数え直すときは **4桁に限定**すること。`UC-[0-9]+` だと本文中の「UC-04xx」「UC-05xx」という
 > 記述（後述の欠番の説明）まで拾ってしまい、2件多く数えられる。
 >
 > ```bash
-> grep -oE 'UC-[0-9]{4}' documents/reverse/usecase.md | sort -u | wc -l   # 84
+> grep -oE 'UC-[0-9]{4}' documents/reverse/usecase.md | sort -u | wc -l   # 86
 > grep -cE '^\|\s*UC-[0-9]{4}' documents/reverse/usecase.md               # 89
 > ```
 
@@ -217,6 +217,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0713 | Markdown ファイル内の相対リンクから対象記録を開く | `GetIDFKyouByRelativePath` |
 | UC-0714 | ZIP ファイルの内容を閲覧する | `BrowseZipContents` |
 | UC-0715 | 全リポジトリ名を取得する | `GetAllRepNames` |
+| UC-0716 | 保存済み検索条件を呼び出して検索する | `GetKyous`（rykv/mi サイドバーの呼び出しFABから選択し、QueryEditorSidebar へ適用。ホットリロードONなら自動検索） |
 
 ### 2.8 ファイルアップロード
 
@@ -248,6 +249,7 @@ Kmemo, KC, Lantana, Mi, Nlog, TimeIs, URLog + Tag, Text
 | UC-0906 | リポジトリ一覧を取得する | `GetRepositories` |
 | UC-0907 | リポジトリを再読み込みする | `ReloadRepositories` |
 | UC-0908 | アカウントステータスを更新する | `UpdateAccountStatus` |
+| UC-0909 | 保存済み検索条件を登録・更新・削除する | `UpdateApplicationConfig`（SavedFindQueryConfig を `saved_find_query_json_data` に保存） |
 
 ### 2.11 共有
 

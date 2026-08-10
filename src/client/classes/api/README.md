@@ -37,18 +37,19 @@ api/
 | `hydrate.ts` | `hydrate()` / `hydrate_all()` — API から返る生 JSON をクラスインスタンスへ詰め替えるヘルパー |
 | `drop-type-foldable-struct.ts` | ドラッグ&ドロップ時のデータ型折り畳み構造体 |
 | `file-data.ts` | `FileData` 型（アップロードファイル情報） |
-| `generate-get-plaing-timeis-kyous-query.ts` | 稼働中 TimeIs の Kyou 取得クエリ生成ユーティリティ |
+| `generate-get-plaing-timeis-kyous-query.ts` | 稼働中 TimeIs の Kyou 取得クエリ生成ユーティリティ（実体は `find_query/generate-plaing-timeis-query.ts` へ委譲） |
 | `upload-file-conflict-behavior-type.ts` | ファイルアップロード競合時の動作 enum |
 
 ## サブディレクトリ
 
-### `find_query/`（5ファイル）— 検索クエリ型
+### `find_query/`（6ファイル）— 検索クエリ型
 
 サーバ側 `api/find/` と対応。
 
 | ファイル | 説明 |
 |---------|------|
 | `find-kyou-query.ts` | `FindKyouQuery` — 検索条件（キーワード、日付範囲、タグ等） |
+| `generate-plaing-timeis-query.ts` | `generate_plaing_timeis_query()` — plaing検索クエリの共通生成（カスタム検索条件の適用と未設定時の既定動作。GkillAPI 非依存の純関数） |
 | `mi-check-state.ts` | Mi チェック状態 enum |
 | `mi-sort-type.ts` | Mi ソート順 enum |
 | `mood-operator.ts` | 気分値比較演算子 enum |

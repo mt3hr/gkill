@@ -28,6 +28,15 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | `mi_re_kyou_repository_sqlite3_impl_test.go` | MiReKyou（リポストタスク）リポジトリ。5射影・板名フィルタ・履歴・最新データ位置 |
 | `idf_kyou_repository_sqlite3_impl_test.go` | IDFKyou（ファイル）リポジトリ |
 
+### 外部ソースを直接読むリポジトリ実装テスト（2ファイル）
+
+SQLite3 を持たず、ローカルの git リポジトリや GPX ファイルをその場で読む実装。4層（interface → sqlite3 → cached → temp）の型に当てはまらない。
+
+| ファイル | テスト対象 |
+|---------|-----------|
+| `git_commit_log_repository_local_dir_impl_test.go` | git コミットログ（ローカルディレクトリ直読み）。削除フラグ付きなら該当なし、ID 指定の意味論（未指定=全件 / 非nil空=0件 / 実ハッシュ=1件）、期間の両端を含むこと |
+| `gps_log_repository_gpx_dir_impl_test.go` | GPS ログ（GPX ディレクトリ直読み）。日付ごとのファイル解決、期間の両端を含むこと、開始と終了が逆なら入れ替えること、該当日のファイルが無ければ読み飛ばすこと |
+
 ### キャッシュ・一時・ユーティリティテスト
 
 | ファイル | テスト内容 |
@@ -45,7 +54,11 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | `idf_kyou_repository_batch_test.go` | IDFKyou のバッチ処理 |
 | `ur_log_cache_thumbnail_test.go` | URLog サムネイルキャッシュ |
 | `shared_find_query_mutation_test.go` | 共有 FindQuery の変更検証 |
-| `plugin_repository_impl_test.go` | プラグインのサブプロセス管理（後述） |
+| `plugin_repository_impl_test.go` | プラグインのサブプロセス管理（後述）と、検索失敗をエラーではなく警告として返す結線 |
+| `find_warnings_test.go` | 検索中の警告コレクタ（収集、コレクタ未設定時の無害さ、並行追加） |
+| `find_word_match_test.go` | キーワード一致判定の共通化。除外語のみの検索、AND/OR、ファイル本文の走査、絶対パスを検索対象に含めないこと |
+| `cached_find_only_latest_test.go` | 「最新版のみ」指定がキャッシュ実装でも非キャッシュ実装と同じに効くこと（Nlog / KC / TimeIs） |
+| `mi_find_kyous_parity_test.go` | Mi のキャッシュ実装と非キャッシュ実装で、大小無視と「最新版のみ」の扱いが一致すること |
 | `testhelper_test.go` | テストヘルパーユーティリティ |
 | `cache/latest_data_repository_address_dao_sqlite3_impl_test.go` | キャッシュアドレス DAO |
 | `cache/rep_cache_updater/rep_cache_updater_test.go` | キャッシュ更新処理 |
@@ -93,7 +106,7 @@ stdio の改行区切りJSONで会話する。ここが壊れると
   `GetConfigHTML` / `PostConfig` / `IsAlive` が stdio 越しに往復する。
   偽プラグインはクエリの Words をそのまま Kyou のIDに詰めて返すので、
   `FindQuery` → `PluginQuery` の変換が効いているかも同時に見える
-- **IDフィルタ**: `findQueryToPluginQuery` は `UseIDs` をプラグインへ渡さない設計なので、
+- **IDフィルタ**: `findQueryToPluginQuery` は `IDs` をプラグインへ渡さない設計なので、
   gkill側で補完しないとID指定検索にプラグインの全件が混入する
 - **自動再起動**: プラグインが落ちても次のリクエストで再起動され、呼び出し側にはエラーが見えない
 - **デッドライン**: 応答しないプラグインが Deadline で打ち切られ、かつリトライ対象外

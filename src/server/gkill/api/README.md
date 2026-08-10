@@ -19,7 +19,7 @@ api/
 ├── gkill_version_data.go        # バージョンデータ構造体
 ├── select_match_reps_cache_test.go # 対象リポジトリ選択キャッシュテスト
 ├── version.go                   # バージョン情報
-├── gkill_server_api/            # HTTP ハンドラ（115ファイル）
+├── gkill_server_api/            # HTTP ハンドラ（118ファイル）
 │   ├── gkill_server_api.go      # GkillServerAPI 構造体定義
 │   ├── gkill_server_api_address.go # エンドポイントアドレス定義
 │   ├── serve.go                 # gorilla/mux ルーター設定・全90ルート登録
@@ -72,7 +72,7 @@ handle_*.go は96ファイル（実装91 + テスト5）で、1ハンドラ1フ�
 
 | ファイル | 説明 |
 |---------|------|
-| `find_query.go` | `FindQuery` 構造体 — 検索条件（55フィールド: キーワード、日付範囲、タグ、データ型等） |
+| `find_query.go` | `FindQuery` 構造体 — 検索条件（41フィールド: キーワード、日付範囲、タグ、データ型等。値がnullなら未使用） |
 | `mi_check_state.go` | Mi（タスク）のチェック状態 enum |
 | `mi_sort_type.go` | Mi のソート順 enum |
 | `week_of_days.go` | 曜日フィルタ enum |
@@ -101,7 +101,7 @@ handle_*.go は96ファイル（実装91 + テスト5）で、1ハンドラ1フ�
 | `gkill_error.go` | `GkillError` 構造体 — API エラーレスポンス用 |
 | `gkill_message.go` | `GkillMessage` 構造体 — API メッセージレスポンス用 |
 | `error_codes.go` | エラーコード定数（406定数、ERR000001〜ERR000407・ERR000243欠番） |
-| `message_codes.go` | メッセージコード定数（87定数） |
+| `message_codes.go` | メッセージコード定数（88定数） |
 | `message_test.go` | コード形式テスト |
 
 ### `kftl/`（22ファイル）— KFTL パーサ
