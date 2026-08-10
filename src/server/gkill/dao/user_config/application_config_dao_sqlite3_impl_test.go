@@ -2,6 +2,7 @@ package user_config
 
 import (
 	"context"
+	"encoding/json"
 	"path/filepath"
 	"testing"
 )
@@ -131,6 +132,98 @@ func TestApplicationConfigDelete(t *testing.T) {
 		if cfg.UserID == "user-del" && cfg.Device == "dev-del" {
 			t.Error("deleted config still present in GetAll")
 		}
+	}
+}
+
+func TestApplicationConfigPlaingTimeIsJSONDataRoundTrip(t *testing.T) {
+	dao := newTempApplicationConfigDAO(t)
+	ctx := context.Background()
+
+	if def := GetDefaultApplicationConfig("user-pt", "dev-pt"); def.PlaingTimeIsJSONData == nil {
+		t.Fatal("GetDefaultApplicationConfig().PlaingTimeIsJSONData should not be nil")
+	}
+
+	if _, err := dao.AddDefaultApplicationConfig(ctx, "user-pt", "dev-pt"); err != nil {
+		t.Fatalf("AddDefaultApplicationConfig failed: %v", err)
+	}
+
+	cfg, err := dao.GetApplicationConfig(ctx, "user-pt", "dev-pt")
+	if err != nil {
+		t.Fatalf("GetApplicationConfig failed: %v", err)
+	}
+
+	saved := json.RawMessage(`{"plaing_timeis_find_kyou_query":{"reps":["rep1"]}}`)
+	cfg.PlaingTimeIsJSONData = &saved
+	ok, err := dao.UpdateApplicationConfig(ctx, cfg)
+	if err != nil {
+		t.Fatalf("UpdateApplicationConfig failed: %v", err)
+	}
+	if !ok {
+		t.Fatal("UpdateApplicationConfig returned false")
+	}
+
+	got, err := dao.GetApplicationConfig(ctx, "user-pt", "dev-pt")
+	if err != nil {
+		t.Fatalf("GetApplicationConfig after update failed: %v", err)
+	}
+	if got.PlaingTimeIsJSONData == nil {
+		t.Fatal("PlaingTimeIsJSONData should not be nil after update")
+	}
+	if string(*got.PlaingTimeIsJSONData) != string(saved) {
+		t.Errorf("PlaingTimeIsJSONData = %s, want %s", string(*got.PlaingTimeIsJSONData), string(saved))
+	}
+}
+
+func TestApplicationConfigSavedFindQueryJSONDataRoundTrip(t *testing.T) {
+	dao := newTempApplicationConfigDAO(t)
+	ctx := context.Background()
+
+	if def := GetDefaultApplicationConfig("user-sfq", "dev-sfq"); def.SavedFindQueryJSONData == nil {
+		t.Fatal("GetDefaultApplicationConfig().SavedFindQueryJSONData should not be nil")
+	}
+
+	if _, err := dao.AddDefaultApplicationConfig(ctx, "user-sfq", "dev-sfq"); err != nil {
+		t.Fatalf("AddDefaultApplicationConfig failed: %v", err)
+	}
+
+	cfg, err := dao.GetApplicationConfig(ctx, "user-sfq", "dev-sfq")
+	if err != nil {
+		t.Fatalf("GetApplicationConfig failed: %v", err)
+	}
+
+	saved := json.RawMessage(`{"saved_rykv_find_kyou_querys":[{"id":"id1","title":"仕事","find_kyou_query":{"words":["メモ"]}}],"saved_mi_find_kyou_querys":[]}`)
+	cfg.SavedFindQueryJSONData = &saved
+	ok, err := dao.UpdateApplicationConfig(ctx, cfg)
+	if err != nil {
+		t.Fatalf("UpdateApplicationConfig failed: %v", err)
+	}
+	if !ok {
+		t.Fatal("UpdateApplicationConfig returned false")
+	}
+
+	got, err := dao.GetApplicationConfig(ctx, "user-sfq", "dev-sfq")
+	if err != nil {
+		t.Fatalf("GetApplicationConfig after update failed: %v", err)
+	}
+	if got.SavedFindQueryJSONData == nil {
+		t.Fatal("SavedFindQueryJSONData should not be nil after update")
+	}
+	if string(*got.SavedFindQueryJSONData) != string(saved) {
+		t.Errorf("SavedFindQueryJSONData = %s, want %s", string(*got.SavedFindQueryJSONData), string(saved))
+	}
+
+	// DEVICE='ALL' で保存されるため、別デバイスの設定行を作った後でも同じ値が見えること
+	cfgOtherDevice := got
+	cfgOtherDevice.Device = "dev-sfq-other"
+	if _, err := dao.UpdateApplicationConfig(ctx, cfgOtherDevice); err != nil {
+		t.Fatalf("UpdateApplicationConfig (other device) failed: %v", err)
+	}
+	gotOther, err := dao.GetApplicationConfig(ctx, "user-sfq", "dev-sfq-other")
+	if err != nil {
+		t.Fatalf("GetApplicationConfig (other device) failed: %v", err)
+	}
+	if gotOther.SavedFindQueryJSONData == nil || string(*gotOther.SavedFindQueryJSONData) != string(saved) {
+		t.Error("SavedFindQueryJSONData should be shared across devices (DEVICE='ALL')")
 	}
 }
 

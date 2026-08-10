@@ -2433,7 +2433,6 @@ func findKyousForMiBoard(t *testing.T, tsURL, sessionID, board string) []reps.Ky
 		"locale_name": "en",
 		"query": map[string]any{
 			"for_mi":            true,
-			"use_mi_board_name": true,
 			"mi_board_name":     board,
 			"mi_check_state":    "all",
 			"mi_sort_type":      "create_time",
@@ -2931,7 +2930,6 @@ func TestHandleGetKyous_EmptyResult(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseCalendar:       true,
 			CalendarStartDate: &farPast,
 			CalendarEndDate:   &farPastEnd,
 		},
@@ -2993,7 +2991,6 @@ func TestHandleGetKyous_WithData(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -3086,7 +3083,6 @@ func TestHandleGetKyous_CalendarFilter(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -6508,16 +6504,14 @@ func TestHandleGetKyous_WordFilter(t *testing.T) {
 		resp.Body.Close()
 	}
 
-	// Query with UseWords=true + Words=["unique_keyword_xyz"]
+	// Query with Words=["unique_keyword_xyz"]
 	startDate := now.Add(-time.Hour)
 	endDate := now.Add(time.Hour)
 	getReq := &req_res.GetKyousRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseWords:          true,
 			Words:             []string{"unique_keyword_xyz"},
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -6598,10 +6592,8 @@ func TestHandleGetKyous_WordsAndFilter(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseWords:          true,
 			Words:             []string{"wand_alpha_test", "wand_beta_test"},
 			WordsAnd:          true,
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -6696,16 +6688,14 @@ func TestHandleGetKyous_TagFilter(t *testing.T) {
 	resp := postJSON(t, tsURL+"/api/add_tag", addTagReq)
 	resp.Body.Close()
 
-	// Query with UseTags=true
+	// Query with Tags filter
 	startDate := now.Add(-time.Hour)
 	endDate := now.Add(time.Hour)
 	getReq := &req_res.GetKyousRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseTags:           true,
 			Tags:              []string{"specific_tag_filter_test"},
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -6768,16 +6758,14 @@ func TestHandleGetKyous_RepFilter(t *testing.T) {
 	resp := postJSON(t, tsURL+"/api/add_kmemo", addReq)
 	resp.Body.Close()
 
-	// Query with UseReps=true and a non-existent rep name — should return nothing
+	// Query with Reps naming a non-existent rep — should return nothing
 	startDate := now.Add(-time.Hour)
 	endDate := now.Add(time.Hour)
 	getReq := &req_res.GetKyousRequest{
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseReps:           true,
 			Reps:              []string{"nonexistent_rep_name_xyz"},
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -6906,7 +6894,6 @@ func TestHandleGetKyous_MiCheckStateFilter(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 			IncludeCreateMi:   true,
@@ -6990,7 +6977,6 @@ func TestHandleGetKyous_CalendarRange(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -7084,7 +7070,6 @@ func TestHandleGetKyous_OnlyLatestData(t *testing.T) {
 		LocaleName: "en",
 		Query: &find.FindQuery{
 			OnlyLatestData:    true,
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -7199,9 +7184,7 @@ func TestHandleGetKyous_CombinedFilters(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseWords:          true,
 			Words:             []string{"combined_filter_word"},
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -7280,9 +7263,7 @@ func TestHandleSubmitKFTLText_SimpleKmemo(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseWords:          true,
 			Words:             []string{"kftl_simple_test_memo_content"},
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -7375,9 +7356,7 @@ func TestHandleSubmitKFTLText_MultipleStatements(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseWords:          true,
 			Words:             []string{"kftl_multi_statement_test_content"},
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -7441,7 +7420,6 @@ func TestHandleGetKyousMCP_BasicQuery(t *testing.T) {
 		SessionID:  sessionID,
 		LocaleName: "en",
 		Query: &find.FindQuery{
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		},
@@ -7550,9 +7528,7 @@ func helperGetKyousWithWord(t *testing.T, tsURL string, sessionID string, word s
 		SessionID:  sessionID,
 		LocaleName: "ja",
 		Query: &find.FindQuery{
-			UseWords:          true,
 			Words:             []string{word},
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 			IncludeCreateMi:   true,
@@ -8840,9 +8816,7 @@ func TestHandleGetKyous_WordFilter_ReKyouTargetingMiReKyou(t *testing.T) {
 	startDate := now.Add(-time.Hour)
 	endDate := now.Add(time.Hour)
 	foundIDs := findKyouIDs(t, tsURL, sessionID, &find.FindQuery{
-		UseWords:          true,
 		Words:             []string{"rekyou_over_mirekyou_word"},
-		UseCalendar:       true,
 		CalendarStartDate: &startDate,
 		CalendarEndDate:   &endDate,
 	})
@@ -8897,7 +8871,6 @@ func TestHandleGetKyous_ReKyouWithDeletedTarget(t *testing.T) {
 	endDate := now.Add(time.Hour)
 	query := func() *find.FindQuery {
 		return &find.FindQuery{
-			UseCalendar:       true,
 			CalendarStartDate: &startDate,
 			CalendarEndDate:   &endDate,
 		}

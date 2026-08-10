@@ -95,32 +95,7 @@ describe('Page Composables', () => {
   }
 })
 
-// Test page composable patterns without importing actual composables
-describe('Page Composable Patterns', () => {
-  test('GkillAPI.get_instance is available in mocked environment', async () => {
-    const { GkillAPI } = await import('@/classes/api/gkill-api')
-    const instance = GkillAPI.get_instance()
-    expect(instance.get_session_id()).toBe('mock-session')
-  })
-
-  test('vue-router mock provides useRouter', async () => {
-    const { useRouter } = await import('vue-router')
-    const router = useRouter()
-    expect(typeof router.push).toBe('function')
-  })
-
-  test('page composables should handle error messages via emits pattern', () => {
-    // Verify that error message handling pattern works
-    const messages: unknown[] = []
-    const addMessage = (msg: unknown) => messages.push(msg)
-    addMessage({ message_code: 'MSG001', message: 'test' })
-    expect(messages.length).toBe(1)
-  })
-
-  test('page composables should handle application_config loading', async () => {
-    const { GkillAPI } = await import('@/classes/api/gkill-api')
-    const instance = GkillAPI.get_instance()
-    const config = await instance.get_application_config()
-    expect(config.application_config).toBeDefined()
-  })
-})
+// 「モック自身が動くこと」を確かめる自己言及テスト（GkillAPI/vue-router のモック検査、
+// ローカル配列へのpush検査）はここにあったが、production コードを一切通らないので削除した。
+// ページコンポーザブルの実挙動は上の生成テストと、個別の
+// dashboard-page-reload.test.ts などの専用テストで見る。

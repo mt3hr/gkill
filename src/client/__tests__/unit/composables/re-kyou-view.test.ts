@@ -94,6 +94,43 @@ describe('useReKyouView 参照先の取得', () => {
         await get_target_kyou()
         expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(1)
     })
+
+    // 参照先にタグが付いても、ReKyou側のupdate_timeも参照先のupdate_timeも動かない。
+    // ローカルには「古くなった」を判定する材料が無いので、通知を受けて明示的に引き直すしかない
+    test('参照先の requested_reload_kyou を受けたら使い回しガードを越えて引き直す', async () => {
+        const props = createProps()
+        const { crudRelayHandlers } = useReKyouView({ props, emits: noop_emits })
+
+        await flush()
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(1)
+
+        crudRelayHandlers.requested_reload_kyou(makeKyou({ id: 'test-target-id' }))
+        await flush()
+
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(2)
+    })
+
+    test('別のKyouの requested_reload_kyou では引き直さない', async () => {
+        const props = createProps()
+        const { crudRelayHandlers } = useReKyouView({ props, emits: noop_emits })
+
+        await flush()
+        crudRelayHandlers.requested_reload_kyou(makeKyou({ id: 'other-kyou-id' }))
+        await flush()
+
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(1)
+    })
+
+    test('参照先の updated_kyou でも引き直す', async () => {
+        const props = createProps()
+        const { crudRelayHandlers } = useReKyouView({ props, emits: noop_emits })
+
+        await flush()
+        crudRelayHandlers.updated_kyou(makeKyou({ id: 'test-target-id' }))
+        await flush()
+
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(2)
+    })
 })
 
 describe('useReKyouView 参照先が見つからないときのエラー', () => {

@@ -460,10 +460,7 @@ export function makeRepStructElement(overrides: Record<string, unknown> = {}) {
     key: '',
     is_checked: false,
     indeterminate: false,
-    parent_folder_id: null,
-    seq: 0,
     is_dir: false,
-    is_open_default: false,
     ...overrides,
   }
 }
@@ -479,7 +476,6 @@ export function makeDeviceStructElement(overrides: Record<string, unknown> = {})
     is_checked: false,
     indeterminate: false,
     is_dir: false,
-    is_open_default: false,
     ...overrides,
   }
 }
@@ -495,7 +491,6 @@ export function makeRepTypeStructElement(overrides: Record<string, unknown> = {}
     is_checked: false,
     indeterminate: false,
     is_dir: false,
-    is_open_default: false,
     ...overrides,
   }
 }
@@ -512,7 +507,6 @@ export function makeTagStructElement(overrides: Record<string, unknown> = {}) {
     is_checked: false,
     indeterminate: false,
     is_dir: false,
-    is_open_default: false,
     ...overrides,
   }
 }
@@ -521,6 +515,21 @@ export function makeTagStructElement(overrides: Record<string, unknown> = {}) {
  * FindKyouQuery が参照する範囲の ApplicationConfig を作る。
  * 各 struct はルート要素で、実データは children にぶら下がる。
  */
+export function makeMiBoardStructElement(overrides: Record<string, unknown> = {}) {
+  return {
+    name: '',
+    id: '',
+    board_name: '',
+    check_when_inited: false,
+    children: null,
+    key: '',
+    is_checked: false,
+    indeterminate: false,
+    is_dir: false,
+    ...overrides,
+  }
+}
+
 export function makeApplicationConfig(overrides: Record<string, unknown> = {}) {
   return {
     rykv_default_period: -1,
@@ -528,6 +537,7 @@ export function makeApplicationConfig(overrides: Record<string, unknown> = {}) {
     device_struct: makeDeviceStructElement({ name: 'root' }),
     rep_type_struct: makeRepTypeStructElement({ name: 'root' }),
     tag_struct: makeTagStructElement({ name: 'root' }),
+    mi_board_struct: makeMiBoardStructElement({ name: 'root' }),
     ...overrides,
   }
 }

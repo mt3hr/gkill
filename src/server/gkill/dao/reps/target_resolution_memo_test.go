@@ -64,7 +64,7 @@ func newCountingRep(name string, ids ...string) *countingRepository {
 }
 
 func wordQuery() *find.FindQuery {
-	return &find.FindQuery{UseWords: true, Words: []string{"word"}}
+	return &find.FindQuery{Words: []string{"word"}}
 }
 
 func sortedKeys(ids map[string]bool) []string {
@@ -289,5 +289,35 @@ func TestReKyouRepositoryFindKyousWithoutRepositoriesDoesNotPanic(t *testing.T) 
 		if len(matchKyous) != 1 {
 			t.Errorf("%s: ヒット件数 = %d, want 1 (ターゲット解決できないときは全部通す)", name, len(matchKyous))
 		}
+	}
+}
+
+// ワード委譲検索が要るかの判定は「語が1つでもあるか」だけを見ること。
+//
+// FindQuery のゲート判定 HasWordFilter() は「Words/NotWordsが非nilか」なので、
+// 非nil空(明示的に語なし)でも真になる。これをそのまま委譲の要否に使うと、
+// 語が1つも無いのに実データrepを全部舐めてターゲット解決を走らせてしまう。
+// SQL側は語なしなら条件を足さない（＝素通し）ので、解決した結果で絞る意味も無い。
+func TestIsWordFilterEnabledIgnoresEmptyWordSlices(t *testing.T) {
+	for name, testCase := range map[string]struct {
+		query *find.FindQuery
+		want  bool
+	}{
+		"Words/NotWordsともnil":   {&find.FindQuery{}, false},
+		"Wordsが非nil空":           {&find.FindQuery{Words: []string{}}, false},
+		"NotWordsが非nil空":        {&find.FindQuery{NotWords: []string{}}, false},
+		"Words/NotWordsとも非nil空": {&find.FindQuery{Words: []string{}, NotWords: []string{}}, false},
+		"Wordsに語がある":            {&find.FindQuery{Words: []string{"word"}}, true},
+		"NotWordsに語がある":         {&find.FindQuery{NotWords: []string{"word"}}, true},
+	} {
+		if got := isWordFilterEnabled(testCase.query); got != testCase.want {
+			t.Errorf("%s: isWordFilterEnabled = %v, want %v", name, got, testCase.want)
+		}
+	}
+
+	// 非nil空でも HasWordFilter は真。両者を取り違えないことをここで示しておく
+	emptyWordsQuery := &find.FindQuery{Words: []string{}}
+	if !emptyWordsQuery.HasWordFilter() {
+		t.Fatal("前提が変わっている: 非nil空の Words は HasWordFilter では有効のはず")
 	}
 }

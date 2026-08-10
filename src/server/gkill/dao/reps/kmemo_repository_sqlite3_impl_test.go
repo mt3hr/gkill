@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -209,7 +210,6 @@ func TestKmemoFindKyous_NotWordFilter(t *testing.T) {
 	}
 
 	query := &find.FindQuery{
-		UseWords:       true,
 		NotWords:       []string{"カレー"},
 		OnlyLatestData: true,
 	}
@@ -271,5 +271,46 @@ func TestKmemoRepositories_GetKmemoReturnsNewestAcrossReps(t *testing.T) {
 				t.Errorf("Content = %q, want %q（古い版が返っている）", got.Content, "新しい内容")
 			}
 		})
+	}
+}
+
+// 最新版アドレスのIS_DELETEDが正しく読めること。
+// 以前は文字列に受けて "TRUE" と比較しており(bool格納の実値は"0"/"1")常にfalseになり、
+// cache無効構成で削除済みターゲットを指すReKyou/MiReKyouが検索結果に残っていた。
+func TestKmemoGetLatestDataRepositoryAddress_ReadsIsDeleted(t *testing.T) {
+	ctx := context.Background()
+
+	repo, err := NewKmemoRepositorySQLite3Impl(ctx, filepath.Join(t.TempDir(), "kmemo.db"), true)
+	if err != nil {
+		t.Fatalf("failed to create kmemo repository: %v", err)
+	}
+	t.Cleanup(func() { repo.Close(ctx) })
+
+	alive := makeKmemo("kmemo-alive", "生きている")
+	deletedV1 := makeKmemo("kmemo-deleted", "あとで消す")
+	deletedV2 := makeKmemo("kmemo-deleted", "あとで消す")
+	deletedV2.IsDeleted = true
+	deletedV2.UpdateTime = deletedV1.UpdateTime.Add(1 * time.Hour)
+
+	for _, kmemo := range []Kmemo{alive, deletedV1, deletedV2} {
+		if err := repo.AddKmemoInfo(ctx, kmemo); err != nil {
+			t.Fatalf("AddKmemoInfo failed: %v", err)
+		}
+	}
+
+	addrs, err := repo.GetLatestDataRepositoryAddress(ctx, false)
+	if err != nil {
+		t.Fatalf("GetLatestDataRepositoryAddress failed: %v", err)
+	}
+	addrByTargetID := map[string]bool{}
+	for _, addr := range addrs {
+		addrByTargetID[addr.TargetID] = addr.IsDeleted
+	}
+
+	if isDeleted, exist := addrByTargetID["kmemo-alive"]; !exist || isDeleted {
+		t.Errorf("kmemo-alive は IsDeleted=false のはず: exist=%v isDeleted=%v", exist, isDeleted)
+	}
+	if isDeleted, exist := addrByTargetID["kmemo-deleted"]; !exist || !isDeleted {
+		t.Errorf("kmemo-deleted は最新版が削除済みなので IsDeleted=true のはず: exist=%v isDeleted=%v", exist, isDeleted)
 	}
 }

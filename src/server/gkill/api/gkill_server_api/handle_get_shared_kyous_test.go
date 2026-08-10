@@ -107,7 +107,7 @@ func TestHandleGetSharedKyous_ReturnsOnlySharedKyous(t *testing.T) {
 
 	// 共有する検索条件は「kyoyusuruwadai を含むもの」だけ
 	shareInfo := addSharedKyouList(t, tsURL, sessionID, device,
-		`{"use_words":true,"words":["kyoyusuruwadai"],"words_and":true}`)
+		`{"words":["kyoyusuruwadai"],"words_and":true}`)
 
 	getResp := getSharedKyous(t, tsURL, shareInfo.ShareID)
 	if len(getResp.Errors) > 0 {
@@ -170,7 +170,7 @@ func TestHandleGetSharedKyous_RevokedShareIsNotAccessible(t *testing.T) {
 
 	addTestKmemo(t, tsURL, sessionID, "kyoyusuruwadai の記録")
 	shareInfo := addSharedKyouList(t, tsURL, sessionID, device,
-		`{"use_words":true,"words":["kyoyusuruwadai"],"words_and":true}`)
+		`{"words":["kyoyusuruwadai"],"words_and":true}`)
 
 	// 取り消し前は取得できる
 	before := getSharedKyous(t, tsURL, shareInfo.ShareID)
@@ -200,6 +200,121 @@ func TestHandleGetSharedKyous_RevokedShareIsNotAccessible(t *testing.T) {
 	}
 	if len(after.Kyous) != 0 {
 		t.Errorf("共有取り消し後にKyouが %d 件返っている", len(after.Kyous))
+	}
+}
+
+// TestHandleGetSharedKyous_ZeroMatchDoesNotReturnEverything は、共有条件に一致するKyouが
+// 1件も無いとき、共有ページが利用者の記録を丸ごと返してしまわないことを確認する。
+//
+// ハンドラは Kyou 本体を検索したあと、型ごとの実体（Kmemo/TimeIs/…）を引き直すために
+// 検索結果のIDでもう一度絞り込む。0件のときは IDs に nil（＝ID絞り込みなし）を入れており、
+// 非nilの空スライス [] を入れた場合の「明示的に0件」とは意味が違う。
+// つまり0件時の実体取得は共有条件そのもの（ここではキーワード）だけが防壁になるので、
+// 公開エンドポイントから記録が溢れないことをここで固定する。
+func TestHandleGetSharedKyous_ZeroMatchDoesNotReturnEverything(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	secretIDs := []string{
+		addTestKmemo(t, tsURL, sessionID, "himitsu1 の記録"),
+		addTestKmemo(t, tsURL, sessionID, "himitsu2 の記録"),
+	}
+
+	// どの記録にも含まれない語を共有条件にする＝共有対象0件
+	shareInfo := addSharedKyouList(t, tsURL, sessionID, device,
+		`{"words":["zettainihittoshinaigo"],"words_and":true}`)
+
+	getResp := getSharedKyous(t, tsURL, shareInfo.ShareID)
+	if len(getResp.Errors) > 0 {
+		t.Fatalf("get shared kyous errors: %+v", getResp.Errors)
+	}
+
+	if len(getResp.Kyous) != 0 {
+		t.Errorf("共有条件に一致するKyouが無いのに %d 件返っている", len(getResp.Kyous))
+	}
+	if len(getResp.Kmemos) != 0 {
+		t.Errorf("共有対象0件なのにKmemoの実体が %d 件返っている（ID絞り込みが外れて全件取得になっている）", len(getResp.Kmemos))
+	}
+	for _, kmemo := range getResp.Kmemos {
+		for _, secretID := range secretIDs {
+			if kmemo.ID == secretID {
+				t.Errorf("共有していない記録 %s が公開エンドポイントから取得できてしまっている", secretID)
+			}
+		}
+	}
+	// 他の型の実体も同様に空でなければならない
+	if len(getResp.KCs) != 0 || len(getResp.TimeIss) != 0 || len(getResp.Mis) != 0 ||
+		len(getResp.Nlogs) != 0 || len(getResp.Lantanas) != 0 || len(getResp.URLogs) != 0 ||
+		len(getResp.IDFKyous) != 0 || len(getResp.ReKyous) != 0 || len(getResp.GitCommitLogs) != 0 {
+		t.Errorf("共有対象0件なのに実体データが返っている: kcs=%d timeiss=%d mis=%d nlogs=%d lantanas=%d urlogs=%d idf_kyous=%d rekyous=%d git_commit_logs=%d",
+			len(getResp.KCs), len(getResp.TimeIss), len(getResp.Mis), len(getResp.Nlogs),
+			len(getResp.Lantanas), len(getResp.URLogs), len(getResp.IDFKyous),
+			len(getResp.ReKyous), len(getResp.GitCommitLogs))
+	}
+}
+
+// TestHandleGetSharedKyous_ZeroMatchByTagDoesNotLeakEntities は、共有条件が
+// キーワード以外（タグ）で0件になったときも実体データが漏れないことを確認する。
+//
+// 実体取得（FindKmemo 等）はタグ・打刻・実行中といった条件を解釈しないため、
+// Kyou の検索が0件でも「ID絞り込みが無い」状態で実体を引くと全件返ってしまう。
+// キーワード条件のときは実体取得側も同じ語で絞られるので偶然0件になり、
+// この穴は露見しない。/api/get_shared_kyous は認証不要なので、
+// 共有IDを知っているだけの第三者に共有していない記録の本文が渡ることになる。
+func TestHandleGetSharedKyous_ZeroMatchByTagDoesNotLeakEntities(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	device, err := gkillAPI.GetDevice()
+	if err != nil {
+		t.Fatalf("GetDevice failed: %v", err)
+	}
+
+	addTestKmemo(t, tsURL, sessionID, "himitsu1 の記録")
+	addTestKmemo(t, tsURL, sessionID, "himitsu2 の記録")
+
+	for _, testCase := range []struct {
+		name          string
+		findQueryJSON string
+	}{
+		{
+			// どの記録にも付いていないタグ。Kyou検索は0件になるが、
+			// 実体取得はタグ条件を解釈しないので絞り込みが効かない
+			name:          "存在しないタグ",
+			findQueryJSON: `{"tags":["zettainitsuitenaitag"],"tags_and":true}`,
+		},
+		{
+			// 非nilの空配列は「明示的に0件指定」。ID絞り込みで潰されてはいけない
+			name:          "IDを空配列で明示指定",
+			findQueryJSON: `{"ids":[]}`,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			shareInfo := addSharedKyouList(t, tsURL, sessionID, device, testCase.findQueryJSON)
+
+			getResp := getSharedKyous(t, tsURL, shareInfo.ShareID)
+			if len(getResp.Errors) > 0 {
+				t.Fatalf("get shared kyous errors: %+v", getResp.Errors)
+			}
+
+			if len(getResp.Kyous) != 0 {
+				t.Errorf("共有条件に一致するKyouが無いのに %d 件返っている", len(getResp.Kyous))
+			}
+			if len(getResp.Kmemos) != 0 {
+				t.Errorf("共有対象0件なのにKmemoの実体が %d 件返っている（認証不要の公開エンドポイントからの漏洩）", len(getResp.Kmemos))
+			}
+		})
 	}
 }
 
@@ -297,7 +412,7 @@ func TestHandleUpdateShareKyouListInfo_OtherUsersShareIsRejected(t *testing.T) {
 
 	// admin が「kyoyusuruwadai を含むもの」だけを共有する
 	shareInfo := addSharedKyouList(t, tsURL, adminSession, device,
-		`{"use_words":true,"words":["kyoyusuruwadai"],"words_and":true}`)
+		`{"words":["kyoyusuruwadai"],"words_and":true}`)
 
 	// 別ユーザーが同じ共有IDに対して、全件が返る条件へ広げようとする
 	addSecondAccount(t, gkillAPI, "attacker")
@@ -346,7 +461,7 @@ func TestHandleDeleteShareKyouListInfos_OtherUsersShareIsRejected(t *testing.T) 
 
 	addTestKmemo(t, tsURL, adminSession, "kyoyusuruwadai の記録")
 	shareInfo := addSharedKyouList(t, tsURL, adminSession, device,
-		`{"use_words":true,"words":["kyoyusuruwadai"],"words_and":true}`)
+		`{"words":["kyoyusuruwadai"],"words_and":true}`)
 
 	addSecondAccount(t, gkillAPI, "attacker")
 	attackerSession := loginAndGetSession(t, tsURL, gkillAPI, "attacker", passwordHash)

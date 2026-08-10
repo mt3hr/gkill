@@ -57,12 +57,19 @@ async function flush(): Promise<void> {
 }
 
 describe('useMiReKyouView is_compact', () => {
-    // 実際に渡ってくる高さは 91 (タスクボードの行) / 180 (rykvの一覧) / 'unset' (詳細・ダイアログ)
+    // 行として渡ってくるのは 91 (タスクボードの行) / 180 (rykvの一覧)。
+    // 行ではない場所は 'unset' / 'auto' を渡す。
     test.each([
         { height: 91 as number | string, expected: true, name: 'タスクボードの行高 91 はcompact' },
         { height: '91px', expected: true, name: '単位付きの文字列でもcompact' },
         { height: 180, expected: false, name: 'rykvの一覧 180 はcompactではない' },
         { height: 'unset', expected: false, name: "'unset' はcompactではない" },
+        { height: 'auto', expected: false, name: "'auto' はcompactではない" },
+        // パーセントは parseFloat で数値になるので行と誤判定される。
+        // ダイアログや詳細ペインでパーセントを渡すと参照先が丸ごと消えるので、
+        // 行ではない場所には渡さないこと (kyou-row-height.ts のコメント参照)
+        { height: '80%', expected: true, name: "'80%' は行と誤判定される (パーセントを渡してはいけない)" },
+        { height: '100%', expected: true, name: "'100%' も行と誤判定される" },
     ])('$name', ({ height, expected }) => {
         const { is_compact } = useMiReKyouView({ props: createProps({ height }), emits: noop_emits })
         expect(is_compact.value).toBe(expected)
@@ -180,6 +187,56 @@ describe('useMiReKyouView 参照先が見つからないときのエラー', () 
         await flush()
 
         expect(emits).toHaveBeenCalledWith('received_errors', expect.anything())
+    })
+})
+
+describe('useMiReKyouView 参照先の引き直し', () => {
+    test('参照先が同じなら引き直さない (仮想スクロールの行使い回し)', async () => {
+        const props = createProps()
+        const { get_target_kyou } = useMiReKyouView({ props, emits: noop_emits })
+
+        await flush()
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(1)
+
+        await get_target_kyou()
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(1)
+    })
+
+    // 参照先にタグが付いても、MiReKyou側のupdate_timeも参照先のupdate_timeも動かない。
+    // ローカルには「古くなった」を判定する材料が無いので、通知を受けて明示的に引き直すしかない
+    test('参照先の requested_reload_kyou を受けたら使い回しガードを越えて引き直す', async () => {
+        const props = createProps()
+        const { crudRelayHandlers } = useMiReKyouView({ props, emits: noop_emits })
+
+        await flush()
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(1)
+
+        crudRelayHandlers.requested_reload_kyou(makeKyou({ id: 'test-target-id' }))
+        await flush()
+
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(2)
+    })
+
+    test('別のKyouの requested_reload_kyou では引き直さない', async () => {
+        const props = createProps()
+        const { crudRelayHandlers } = useMiReKyouView({ props, emits: noop_emits })
+
+        await flush()
+        crudRelayHandlers.requested_reload_kyou(makeKyou({ id: 'other-kyou-id' }))
+        await flush()
+
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(1)
+    })
+
+    test('参照先の updated_kyou でも引き直す', async () => {
+        const props = createProps()
+        const { crudRelayHandlers } = useMiReKyouView({ props, emits: noop_emits })
+
+        await flush()
+        crudRelayHandlers.updated_kyou(makeKyou({ id: 'test-target-id' }))
+        await flush()
+
+        expect(props.gkill_api.get_kyou).toHaveBeenCalledTimes(2)
     })
 })
 
