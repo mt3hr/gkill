@@ -109,6 +109,98 @@ func TestMigrateFrom100ResetsAllPasswords(t *testing.T) {
 	}
 }
 
+// newSchema100AccountDBWithoutVersionRow は GKILL_META_INFO を持たない
+// 1.0.0 相当の account.db を作る。バージョン管理の仕組みが入る前のDBはこの形。
+func newSchema100AccountDBWithoutVersionRow(t *testing.T, accounts map[string]*string) string {
+	t.Helper()
+	filename := newSchema100AccountDB(t, accounts)
+
+	db, err := sql.Open("sqlite", "file:"+filename)
+	if err != nil {
+		t.Fatalf("failed to open db: %v", err)
+	}
+	defer db.Close()
+	if _, err := db.ExecContext(context.Background(), `DROP TABLE GKILL_META_INFO`); err != nil {
+		t.Fatalf("failed to drop GKILL_META_INFO: %v", err)
+	}
+	return filename
+}
+
+// TestMigrateFrom100WithoutVersionRow は、バージョン行が無いだけの旧DBを
+// 「新規DB」と誤認せずに移行することを確認する。
+//
+// 誤認すると、旧スキーマのまま現行版として記録してしまい、以降
+// PASSWORD_HASH を参照する全クエリが「no such column」で落ち続ける。
+// しかもバージョンは現行値なので移行も二度と走らない（同梱のサンプルデータが
+// まさにこの状態で、ログインどころかアカウント一覧の取得すらできなかった）。
+func TestMigrateFrom100WithoutVersionRow(t *testing.T) {
+	oldHash := testCredential
+	filename := newSchema100AccountDBWithoutVersionRow(t, map[string]*string{"admin": &oldHash})
+
+	ctx := context.Background()
+	dao, err := NewAccountDAOSQLite3Impl(ctx, filename)
+	if err != nil {
+		t.Fatalf("NewAccountDAOSQLite3Impl failed: %v", err)
+	}
+	defer func() {
+		if err := dao.Close(ctx); err != nil {
+			t.Fatalf("Close failed: %v", err)
+		}
+	}()
+
+	// 移行後のスキーマで読めること（旧スキーマのままだとここで no such column になる）
+	accounts, err := dao.GetAllAccounts(ctx)
+	if err != nil {
+		t.Fatalf("GetAllAccounts failed: %v", err)
+	}
+	if len(accounts) != 1 {
+		t.Fatalf("accounts = %d件, want 1件", len(accounts))
+	}
+	// 1.0.0 は無塩SHA-256をそのまま資格情報にしていたので、移行時に無効化される
+	if accounts[0].PasswordHash != nil && *accounts[0].PasswordHash != "" {
+		t.Errorf("PasswordHash = %q, 移行時に無効化されるはず", *accounts[0].PasswordHash)
+	}
+
+	db, err := sql.Open("sqlite", "file:"+filename)
+	if err != nil {
+		t.Fatalf("failed to open db: %v", err)
+	}
+	defer db.Close()
+	version := ""
+	if err := db.QueryRowContext(ctx, "SELECT VALUE FROM GKILL_META_INFO WHERE KEY = 'SCHEMA_VERSION_ACCOUNT'").Scan(&version); err != nil {
+		t.Fatalf("failed to get schema version: %v", err)
+	}
+	if version != CURRENT_SCHEMA_VERSION_ACCOUNT_DAO {
+		t.Errorf("schema version = %q, want %q", version, CURRENT_SCHEMA_VERSION_ACCOUNT_DAO)
+	}
+}
+
+// TestFreshDBWithoutVersionRowIsNotTreatedAsOld は、本当に新規のDB
+// （ACCOUNTテーブルがまだ無い）を旧スキーマ扱いしないことを確認する。
+// 上の判定を「バージョン行が無ければ移行」だけにすると、新規DBで移行が走ってしまう。
+func TestFreshDBWithoutVersionRowIsNotTreatedAsOld(t *testing.T) {
+	filename := filepath.Join(t.TempDir(), "account.db")
+
+	ctx := context.Background()
+	dao, err := NewAccountDAOSQLite3Impl(ctx, filename)
+	if err != nil {
+		t.Fatalf("NewAccountDAOSQLite3Impl failed: %v", err)
+	}
+	defer func() {
+		if err := dao.Close(ctx); err != nil {
+			t.Fatalf("Close failed: %v", err)
+		}
+	}()
+
+	accounts, err := dao.GetAllAccounts(ctx)
+	if err != nil {
+		t.Fatalf("GetAllAccounts failed: %v", err)
+	}
+	if len(accounts) != 0 {
+		t.Errorf("accounts = %d件, want 0件", len(accounts))
+	}
+}
+
 func TestMigrateFrom100RenamesColumnAndBumpsVersion(t *testing.T) {
 	oldHash := testCredential
 	filename := newSchema100AccountDB(t, map[string]*string{"admin": &oldHash})
