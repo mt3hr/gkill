@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（4ファイル、60テスト）とウォッチ側アプリ（5ファイル、58テスト）の合計118テスト（9ファイル）で構成される。
+Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（4ファイル、62テスト）とウォッチ側アプリ（5ファイル、58テスト）の合計120テスト（9ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -10,13 +10,13 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 
 ## テストファイル一覧
 
-### phone_companion（スマホ側コンパニオン）— 60テスト
+### phone_companion（スマホ側コンパニオン）— 62テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
 | `phone_companion/src/test/java/.../GkillCredentialStoreTest.kt` | 18 | 認証情報ストアの保存・取得・削除。`GkillSecretCipher`（Android Keystore による暗号化）経由の保存も含む（MockK使用） |
 | `phone_companion/src/test/java/.../MainActivityTest.kt` | 8 | コンパニオンアプリの Activity ライフサイクル |
-| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 15 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得） |
+| `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 17 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・plaing検索クエリの形状検証） |
 | `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |
 
 ### watch_app（ウォッチ側アプリ）— 58テスト

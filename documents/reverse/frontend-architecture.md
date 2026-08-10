@@ -34,7 +34,7 @@ src/client/
 ├── env.d.ts                         # TypeScript環境型定義
 ├── classes/
 │   ├── api/
-│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,400行)
+│   │   ├── gkill-api.ts            # APIクライアント シングルトン (~3,300行)
 │   │   ├── gkill-api-response.ts   # レスポンス型
 │   │   ├── find_query/             # 検索クエリビルダー
 │   │   └── req_res/                # リクエスト/レスポンス型 (172ファイル、サーバー側は186ファイル)
@@ -52,7 +52,7 @@ src/client/
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、233ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、245ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
@@ -150,14 +150,17 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 ### ダイアログ アクセシビリティ
 
-103ダイアログ中82件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
+110ダイアログ中86件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
 
 | 機能 | 説明 |
 |------|------|
 | **Escape キー閉じ** | Escape キーで `onEscape` コールバックを呼び出しダイアログを閉じる |
 | **ARIA属性** | `role="dialog"`, `aria-modal="true"`, `aria-labelledby`（`.gkill-floating-dialog__title` 要素を参照、見つからない場合は `aria-label` にフォールバック） |
+| **自動フォーカス** | 開いたときに本文の最初のテキスト入力欄へフォーカスする（`opts.autofocus`、既定 true） |
 
-※ v1.1.0でフォーカストラップ（Tab循環）、自動フォーカス、フォーカス復帰は削除された。
+**自動フォーカスの選び方**（`src/client/classes/dialog-autofocus.ts`）: 探索は `.gkill-floating-dialog__body` の中だけ。ヘッダには透過トグルの `v-checkbox` と×ボタンが常に先頭にあるため、ルートから探すと必ずそれを掴む。既に `autofocus` を書いた要素があるダイアログでは何もせず Vuetify に任せる。`readonly`（日付ピッカーの見せかけ入力）・`disabled`・非表示・`v-selection-control` 配下のチェックボックス・`inputmode="none"` の `v-select` は候補から外す。入力欄は内側の `v-if` でデータ待ちのことが多いので、`MutationObserver` で生えてくるのを2秒だけ見張って一度だけ当てる。自前でフォーカス先を決めているダイアログ（`save-clipboard-to-file-dialog.vue` は保存ボタン）は `autofocus: false` で切る。
+
+※ フォーカストラップ（Tab循環）とフォーカス復帰は v1.1.0 で削除されたまま。自動フォーカスのみ復活させた。
 
 ### アラート アクセシビリティ
 
@@ -199,7 +202,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（233ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（245ファイル） |
 
 ### ComponentRef 型
 
@@ -228,7 +231,7 @@ Props/Emit のみで状態を持ち回すため、Kyou の CRUD イベントは 
 
 ### GkillAPI シングルトン
 
-`src/client/classes/api/gkill-api.ts` に定義。約3,400行。
+`src/client/classes/api/gkill-api.ts` に定義。約3,300行。
 
 - `GkillAPI.get_instance()` / `GkillAPI.get_gkill_api()` でインスタンス取得
 - 全90登録エンドポイントに対応するメソッドを持つ（`gkill-api.ts` が保持する `/api/` アドレスは88件）
@@ -483,9 +486,8 @@ Service Worker が `/share-target` POSTを処理：
 | ソート順（`mi-sort-type-query`） | 並び順の選択 |
 | キーワード | 全文検索 |
 | タグ | タグでの絞り込み |
-| TimeIs | 打刻期間での絞り込み |
-| 地図（map-query） | GPS位置での絞り込み |
-| 時間帯 | 時間範囲での絞り込み |
+
+打刻期間（TimeIs）・GPS位置（map-query）・時間帯の3節は、Mi のサイドバー（`mi-query-editor-sidebar.vue`）と揃えて画面から外してある。`generate_query()` は毎回 `new FindKyouQuery()` から組み直すため、該当フィールドは常に既定値（すべてOFF）になる。
 
 **クエリ反映タイミング:** 「保存」ボタン押下時のみ `emits('requested_apply', query)` を発行し、クエリを親コンポーネントに反映する（リアルタイム反映なし）。
 
@@ -499,6 +501,33 @@ Service Worker が `/share-target` POSTを処理：
 |---|---|
 | MI検索条件 | `MiFindQueryEditorView` でMI一覧の絞り込み条件を設定 |
 | Dnote検索条件 | `FindQueryEditorView` でDnoteビューの条件を設定 |
+
+### PlaingTimeIsConfig クラスと実行中検索条件（ダッシュボード設定と同型）
+
+定義:
+- `src/client/classes/datas/config/plaing-time-is-config.ts`（設定クラス。`plaing_timeis_find_kyou_query: FindKyouQuery | null` を1本保持し、`parse()` / `to_json()` を持つ。null は「未設定＝従来どおり全リポジトリ対象」）
+- `src/client/classes/api/find_query/generate-plaing-timeis-query.ts`（適用の実体 `generate_plaing_timeis_query()`。GkillAPI 非依存の同期純関数）
+- `src/client/pages/dialogs/edit-plaing-time-is-dialog.vue` + `src/client/classes/use-edit-plaing-time-is-dialog.ts`（中間ダイアログ。Ryuu の関連情報アイテムと同じ「☑検索条件をカスタマイズする ＋ [検索条件]」形式で、チェックを外すと null＝未設定に戻る。`is_use_custom_find_kyou_query` は `current_query !== null` の computed get/set。dashboard版と違い emit は Save 時のみでキャンセルで破棄される）
+- `src/client/pages/views/find-time-is-query-editor-view.vue` + `src/client/pages/dialogs/find-time-is-query-editor-dialog.vue`（+ 各 props/emits / use-*。Mi 版と同型の専用エディタ。編集面はキーワード・タグ絞り込みトグル・タグの3ブロック。記録保管場所と記録タイプは選ばせず、`generate_query()` が `rep_types=["timeis"]` を立てる）
+
+plaing検索（Kyou付随の実行中表示 `info-base.ts` の `load_attached_timeis()`・実行中画面・KFTLの/end系終了候補検索 `generate-get-plaing-timeis-kyous-query.ts`）の検索条件を `ApplicationConfig.plaing_timeis_json_data`（EAVキー `PLAING_TIMEIS_JSON_DATA`、DEVICE='ALL'）でカスタマイズできる。3経路すべてが `generate_plaing_timeis_query()` を通る。
+
+**適用の意味論:** 保存クエリからコピーされるのは明示リストの6フィールドだけ（`keywords` / `words_and` / `words` / `not_words` / `tags` / `tags_and`。エディタの編集面と1:1。nullable値はnullガード付きコピー）。`plaing_time`（非null）と `rep_types=["timeis"]` は呼び出し元が常に強制上書きする（記録タイプはカスタム条件の有無によらずTimeIs固定。サーバのタイプ系フィルタは和集合で、`plaing_time` 非nullが既にTimeIsのrepへ絞っているため結果は変わらない冪等な明示）。**rep名での絞り込みは常に切る**（`reps=null`）―― 記録保管場所はエディタから外したので保存JSONの `reps` は無視するが、`new FindKyouQuery()` の既定が `reps=[]`（有効・0件指定）なので明示的にnullへ倒さないとサーバのrep名絞り込み（`find_filter.go` Step4）で常に0件になる。カスタム条件適用時のみ `apply_hide_tags` で非表示タグを反映する（未設定時は従来どおり適用しない）。カスタム条件で候補を絞ると、条件外の実行中TimeIsはKFTLの/endで終了できない（仕様）。Wear OS とサーバ内 KFTL の plaing 検索は別系統のため、この設定は Web クライアントにのみ効く。
+
+### SavedFindQueryConfig クラスと保存済み検索条件（ダッシュボード設定と同型）
+
+定義:
+- `src/client/classes/datas/config/saved-find-query-config.ts`（設定クラス。`saved_rykv_find_kyou_querys` / `saved_mi_find_kyou_querys` の2リストを保持し、`parse()` / `to_json()` / `clone()` / `clone_items()` を持つ。各アイテムは `SavedFindQueryItem { id, title, find_kyou_query }`（Ryuu の関連情報クエリと同形式）。`parse()` は null・非オブジェクト・不正アイテムを空/除外にフォールバックする＝初回起動考慮）
+- `src/client/pages/dialogs/edit-saved-find-query-dialog.vue` + `src/client/classes/use-edit-saved-find-query-dialog.ts`（ハブダイアログ。「ライフログ検索条件」「タスク検索条件」の2ボタン。edit-dashboard-dialog と同型）
+- `src/client/pages/dialogs/edit-saved-find-query-list-dialog.vue` + `src/client/classes/use-edit-saved-find-query-list-dialog.ts`（一覧管理ダイアログ。**1コンポーネントを `query_type: 'rykv' | 'mi'` prop で2インスタンス化**。`useFloatingDialog` の storage_key に query_type を含めて位置/サイズ保存を分離。行UIは名前 text-field＋「検索条件を編集」＋上へ/下へ/削除、追加は他画面と揃えた右下FAB（`.position-fixed-saved-find-query`＝`position: absolute`。内側に positioned な祖先を作らないので包含ブロックがスクロール箱の外側 `.gkill-floating-dialog` になり、一覧をスクロールしても右下に固定される）で既定クエリ `generate_default_query_for_rykv/for_mi` ＋既定名の行を足す。クエリ編集は既存 `find-query-editor-dialog.vue`（rykv用）/ `mi-find-query-editor-dialog.vue`（mi用）を再利用）
+
+ユーザ定義の検索条件に名前を付けて何個でも保存し、rykv/mi のサイドバーから呼び出せる機能。`ApplicationConfig.saved_find_query_json_data`（EAVキー `SAVED_FIND_QUERY_JSON_DATA`、DEVICE='ALL'＝全端末共有）に保存される。
+
+**適用の入れ子（キャンセルが全階層で効く）:** クエリエディタの適用→一覧ダイアログのローカル行→一覧の適用→ハブのローカル `current_config`→ハブの適用→`requested_apply_saved_find_query_struct` で `use-application-config-view.ts` の `cloned_application_config` へ→設定画面全体の「適用」で `update_application_config()` が一括送信（`location.reload()` で確定）。各段階で `clone()` を挟み、どの段階のキャンセルでも下位の編集が破棄される。
+
+**サイドバーからの呼び出し:** `use-rykv-query-editor-side-bar.ts` / `use-mi-query-editor-sidebar.ts` の computed `saved_find_querys`（0件なら FAB ごと v-if 非表示）と `apply_saved_query(item)`。適用は `emits_default_query()` と同経路で、`item.find_kyou_query.clone()` に**列側の `query_id` を差し込んで** `query.value` を差し替え、`updated_query` を emit する（＝手編集と同じ扱い。ホットリロードONなら親が自動検索、OFFなら検索ボタンで実行）。保存条件由来の query_id を列へ持ち込むと「列×検索」不変条件が崩れるため、必ず列側を維持する。mi 側は全クリアと違い**板名も保存された条件が勝つ**。FAB はサイドバー下端の sticky 検索バー（`.sidebar_header_wrap`、`overflow: visible` 化）に絶対配置で載せている（position:fixed ではないのでドロワー閉時に一緒に隠れる）。
+
+**制約:** ライフログ用エディタ（`find-query-editor-view.vue`）にはカレンダー節が無いため、保存条件はカレンダー未使用（`calendar_start_date`/`calendar_end_date`=null）で保存される（期間指定はエディタにあるので保存可能）。サイドバーへ反映されるのは「サイドバーに表示される条件」がすべてで、保存された条件がそのまま勝つ。タスク用は打刻期間・GPS位置・時間帯の3節がエディタにもサイドバーにも無いので、それらの絞り込みは保存も復元もされない（過去の保存条件に残っていても、サイドバーを次に触った時点の `generate_query()` で既定値へ落ちる）。
 
 ---
 

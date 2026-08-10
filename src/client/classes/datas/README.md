@@ -71,7 +71,7 @@ datas/
 | `circle-options.ts` | 地図上の円描画オプション |
 | `lat-lng.ts` | 緯度経度座標 |
 
-## `config/` サブディレクトリ（14ファイル）
+## `config/` サブディレクトリ（16ファイル）
 
 アプリケーション設定・サーバ設定のモデル定義。
 サーバ側の対応: `src/server/gkill/dao/user_config/`, `server_config/`
@@ -80,6 +80,8 @@ datas/
 |---------|------|
 | `application-config.ts` | アプリケーション設定（KFTL テンプレート、表示設定等） |
 | `dashboard-config.ts` | ダッシュボード設定（MI検索条件・Dnote検索条件の2つの FindKyouQuery を保持） |
+| `plaing-time-is-config.ts` | 実行中検索条件（plaing検索カスタム条件の FindKyouQuery を1つ保持。null=未設定） |
+| `saved-find-query-config.ts` | 保存済み検索条件（ライフログ用・タスク用の名前付き検索条件リスト。各アイテムは `{id, title, find_kyou_query}`） |
 | `server-config.ts` | サーバ設定（ポート、パス等） |
 | `repository.ts` | リポジトリ設定（データ保存先定義） |
 | `account.ts` | アカウント情報 |
@@ -87,7 +89,6 @@ datas/
 | `folder-struct-element-data.ts` | フォルダ構造要素 |
 | `kftl-template-struct-element-data.ts` | KFTL テンプレート構造要素 |
 | `mi-board-struct-element-data.ts` | Mi ボード構造要素 |
-| `mi-board-struct.ts` | Mi ボード構造体 |
 | `rep-struct-element-data.ts` | リポジトリ構造要素 |
 | `rep-type-struct-element-data.ts` | リポジトリ型構造要素 |
 | `rep-type-map.ts` | リポジトリ型マッピング |

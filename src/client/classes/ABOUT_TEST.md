@@ -15,6 +15,7 @@ Vitest
 | `src/client/__tests__/unit/classes/deep-equals.test.ts` | オブジェクトの深い等価比較 |
 | `src/client/__tests__/unit/classes/format-date-time.test.ts` | 日付・時刻のフォーマット処理 |
 | `src/client/__tests__/unit/classes/looks-like-url.test.ts` | URL 判定ユーティリティ |
+| `src/client/__tests__/unit/classes/linkify-text.test.ts` | 本文中 URL のセグメント分割（リンク化用） |
 | `src/client/__tests__/unit/classes/long-press.test.ts` | `v-long-press` ディレクティブ |
 | `src/client/__tests__/unit/classes/save-as.test.ts` | ファイル保存ユーティリティ |
 | `src/client/__tests__/unit/classes/delete-gkill-cache.test.ts` | gkill キャッシュ削除処理 |
@@ -29,12 +30,30 @@ Vitest
 | `src/client/__tests__/unit/classes/confirm-dialog-close.test.ts` | 確認ダイアログ（Tag/Text/Notification 削除・リポスト作成）が例外時も必ず閉じること、連打で多重リクエストにならないこと |
 | `src/client/__tests__/unit/classes/edit-view-no-update-check.test.ts` | 「更新がありません」判定に `related_time` を含めること（日時だけ変更しても保存される） |
 | `src/client/__tests__/unit/classes/delayed-loading.test.ts` | 読み込み中表示の遅延（速く終わった読み込みで明滅させない） |
+| `src/client/__tests__/unit/classes/use-device-kind.test.ts` | 端末種別の判定（PC / タブレット / スマートフォン）とシングルトン性・リアクティブ性 |
+| `src/client/__tests__/unit/classes/kyou-reload.test.ts` | Kyou の引き直し手順（キャッシュ削除→reload→型付きデータ再取得の順、添付タグの強制再取得、同一更新由来の合流、失敗時のリトライ、引き直し中フラグ） |
+| `src/client/__tests__/unit/classes/foldable-struct-check.test.ts` | チェック状態をツリーへ単一走査で適用すること（旧実装との等価性） |
+| `src/client/__tests__/unit/classes/use-context-menu-position.test.ts` | コンテキストメニューの表示位置（Vuetify の実測配置へ委ねるための状態管理） |
+| `src/client/__tests__/unit/classes/dialog-autofocus.test.ts` | ダイアログを開いたときにカーソルを載せる入力欄の選定規則（チェックボックス・読み取り専用・非表示を除く） |
+| `src/client/__tests__/unit/classes/use-application-config-view.test.ts` | 設定画面。子ダイアログの適用で props を書き換えないこと、キャンセルで言語・テーマ・期間が開いた時点へ戻ること |
+| `src/client/__tests__/unit/classes/use-kyou-list-view-dialog.test.ts` | 一覧ダイアログ。20件のイベント中継と、自分で記録詳細ダイアログをホストする経路 |
+| `src/client/__tests__/unit/classes/mi-board-struct.test.ts` | 板ツリーへの板の存在判定と追加（冪等、空文字スキップ、子配列の初期化） |
+| `src/client/__tests__/unit/classes/mi-board-column-layout.test.ts` | 板の列見出しの高さ定数が CSS と一致すること（二重管理のズレ検出） |
+
+### 走査型テスト（型では検出できない書き間違いをソース走査で検出する）
+
+| ファイル | テスト内容 |
+|---------|-----------|
+| `src/client/__tests__/unit/classes/relay-bundle-source-scan.test.ts` | イベント中継束を `v-on` で渡した要素に同じイベントの `@` を併記していないこと（両方登録されて二重に発火する） |
+| `src/client/__tests__/unit/classes/kyou-view-height-source-scan.test.ts` | 記録ビューの高さにパーセント指定を渡していないこと |
+| `src/client/__tests__/unit/classes/application-config-update-fields-scan.test.ts` | 設定保存の詰め替え漏れ（書き忘れたフィールドが保存のたびに初期値へ巻き戻る）。永続化フィールド一覧がサーバ実装のキーと一致することも検査する |
 
 ## テスト内容
 
 - **deep-equals**: ネストされたオブジェクト、配列、プリミティブ値の等価比較
 - **format-date-time**: 日付文字列のフォーマット変換、ロケール対応
 - **looks-like-url**: URL 形式判定（http/https、相対パス等）
+- **linkify-text**: 本文テキストの URL / 非 URL セグメント分割（末尾約物のトリム、括弧対応、和文区切り）
 - **long-press**: Vue カスタムディレクティブの登録・発火タイミング
 - **save-as**: Blob ダウンロードの処理フロー
 - **delete-gkill-cache**: Service Worker キャッシュのクリア処理
@@ -48,6 +67,7 @@ Vitest
 - **confirm-dialog-close**: Tag / Text / Notification の削除確認とリポスト作成の各ダイアログが、成功時も例外時も必ず閉じること、連打してもリクエストが1回だけであること
 - **edit-view-no-update-check**: 本文を変えずに関連日時だけ変更しても更新リクエストが飛ぶこと（kmemo / kc）、本文も日時も変えなければ「更新なし」で閉じないこと
 - **delayed-loading**: しきい値未満で終わった読み込みではインジケータを立てないこと、しきい値を超えたら立てて完了で下ろすこと、待ち時間を指定できること
+- **use-device-kind**: 実機UAを使った端末種別の判定（タッチ搭載Windowsノートは PC、素の iPad はタブレット、iPad + トラックパッドは PC、スタイラス対応スマートフォンはスマートフォン、Android WebView のスマホ/タブレット、UA-CH 優先、短辺600pxのフォールバック）、`matchMedia` が無い環境で PC に倒れること、`useDeviceKind()` を何度呼んでも購読が増えず同一参照を返すこと、メディアクエリ変化が取得済みの ref に伝わること
 
 ## 実行方法
 

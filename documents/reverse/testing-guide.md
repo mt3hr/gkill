@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 688 | 78 | Go `testing` |
-| フロントエンド ユニット | 904 | 78 | Vitest |
-| フロントエンド E2E | 199 | 35（+auth.setup.ts） | Playwright |
-| MCP サーバ | 703 | 20 | Vitest |
+| Go バックエンド | 794 | 95 | Go `testing` |
+| フロントエンド ユニット | 1332 | 126 | Vitest |
+| フロントエンド E2E | 215 | 40（+auth.setup.ts） | Playwright |
+| MCP サーバ | 721 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
-| Wear OS | 118 | 9 | JUnit 4 + MockK |
-| **合計** | **2,624** | **222** | |
+| Wear OS | 120 | 9 | JUnit 4 + MockK |
+| **合計** | **3,194** | **292** | |
 
 数え直すコマンド:
 
@@ -203,7 +203,7 @@ src/server/gkill/
 │   ├── message/message_test.go        ← メッセージフォーマット
 │   ├── kftl/                          ← KFTL パーサ（3ファイル）
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
-│   └── gkill_server_api/              ← ハンドラ層（10ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（12ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
@@ -226,12 +226,12 @@ src/server/gkill/
 │   ├── gkill_notification/            ← 通知ターゲット
 │   ├── hide_files/                    ← ファイル非表示
 │   ├── sqlite3impl/                   ← SQLite3 ユーティリティ
-│   └── reps/                          ← リポジトリ実装（28ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
+│   └── reps/                          ← リポジトリ実装（34ファイル。plugin_repository_impl_test.go, mi_re_kyou_repository_sqlite3_impl_test.go, re_kyou_granular_cache_test.go 等）
 │       ├── *_repository_sqlite3_impl_test.go  ← 11データ型
 │       ├── cached_and_temp_test.go    ← キャッシュ層・一時層
 │       └── cache/                     ← キャッシュ更新
 ├── dvnf/                              ← DVNF ファイル管理（2ファイル）
-└── main/                              ← CLI・エントリポイント（7ファイル）
+└── main/                              ← CLI・エントリポイント（8ファイル）
 ```
 
 **テスト戦略:**
@@ -251,7 +251,7 @@ src/client/__tests__/
 │   │   ├── gkill-api.test.ts         ← GkillAPI シングルトン（全メソッド）
 │   │   ├── find-kyou-query.test.ts   ← 検索クエリビルダー
 │   │   └── hydrate.test.ts           ← hydrate() / hydrate_all()（JSON→クラス詰め替え）
-│   ├── classes/                       ← ユーティリティ（18ファイル）
+│   ├── classes/                       ← ユーティリティ（30ファイル）
 │   │   ├── deep-equals.test.ts
 │   │   ├── format-date-time.test.ts
 │   │   ├── looks-like-url.test.ts
@@ -269,15 +269,20 @@ src/client/__tests__/
 │   │   ├── kyou-view-relay.test.ts        ← 中継束の網羅性（ビュー18件 / ダイアログ20件、overrides の差し替え）
 │   │   ├── confirm-dialog-close.test.ts   ← 確認ダイアログが例外時も finally で閉じること
 │   │   └── edit-view-no-update-check.test.ts ← 「更新がありません」判定に related_time を含めること
-│   ├── datas/                         ← データモデル（28ファイル）
+│   ├── datas/                         ← データモデル（31ファイル）
 │   ├── dnote/                         ← D-note モジュール（7ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
-│   ├── composables/                   ← Vue Composable（14ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（41ファイル。add-views / edit-views /
 │   │                                     confirm-delete / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /
 │   │                                     gps-log-map / overlay-and-ur-log-view /
-│   │                                     save-clipboard-to-file-dialog）
+│   │                                     save-clipboard-to-file-dialog /
+│   │                                     rykv-view-search-routing / mi-view-search-routing /
+│   │                                     rykv-sidebar-saved-query-apply / mi-sidebar-saved-query-apply /
+│   │                                     mi-board-query / kyou-list-view-loading /
+│   │                                     sidebar-child-query-sync-emission / kyou-list-view-scroll-to /
+│   │                                     rep-query-summary-detail / find-query-editor-dialog-default-signal）
 │   ├── router.test.ts                 ← ルーター（13ルート）
 │   ├── i18n-completeness.test.ts      ← i18n 完全性（7ロケール）
 │   └── service-worker.test.ts         ← Service Worker
@@ -297,7 +302,7 @@ src/client/__tests__/
 
 ### 3.3 フロントエンド E2E（`src/client/__tests__/e2e/`）
 
-全13ルートを Playwright で検証し、CRUD 操作フローもカバー（34 specファイル + auth.setup.ts、198テスト宣言）。各テストでは以下を共通チェック：
+全13ルートを Playwright で検証し、CRUD 操作フローもカバー（40 specファイル + auth.setup.ts、215テスト宣言）。各テストでは以下を共通チェック：
 
 - **JS エラー検出**: ページ遷移時にコンソールエラーがないことを検証
 - **インタラクティブ操作**: ボタンクリック、フォーム入力、ダイアログ開閉
@@ -361,13 +366,14 @@ src/client/__tests__/
 |-------------|-----------|
 | `mi-operations.spec.ts` | タスク板間移動、完了状態トグル、共有状況閲覧+スクロール確認、共有停止 |
 
-#### 設定機能テスト系（3 spec files）
+#### 設定機能テスト系（4 spec files）
 
 | テストファイル | テスト内容 |
 |-------------|-----------|
 | `settings-crud.spec.ts` | サーバ設定/ユーザ設定/タグ構造/Rep 構造/Device 構造/KFTL テンプレート構造の表示確認 |
 | `server-config-crud.spec.ts` | プロファイル追加・変更、TLS有効化・無効化・生成、アドレス変更、アカウント管理(追加/有効化/無効化/パスワードリセット)、Rep管理(追加/設定変更/有効化/無効化/削除/書き込み制御/ID自動割当/デバイス割当/RepType編集) |
 | `user-config-crud.spec.ts` | GoogleMapAPIキー、画像ビューア列数、miデフォルト板名、ホットリロード、タグ/Rep/Device/RepType/KFTLテンプレート構造(フォルダ追加/並替/適用) |
+| `saved-find-query.spec.ts` | 保存済み検索条件（設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示） |
 
 #### 回帰テスト・その他（4 spec files）
 
@@ -377,6 +383,21 @@ src/client/__tests__/
 | `misc-operations.spec.ts` | ブックマークレット確認、GPSログアップロード、無効共有リンクエラー表示、サーバコンフィグ適用で再起動 |
 | `mi-re-kyou.spec.ts` | MiReKyou（既存記録のタスク化）の追加・編集・表示 |
 | `re-kyou.spec.ts` | リポストの行を右クリックしたとき、元の記録ではなくリポスト自身のコンテキストメニューが出ること |
+
+#### 列×検索・サイドバー系（3 spec files）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `rykv-columns.spec.ts` | 別列で検索した結果が検索した列だけに反映され列リロードでも混ざらないこと、列を閉じても残った列の結果が保たれること、検索中に別列をクリックしても飛行中の検索が中断されず追加検索も発生しないこと |
+| `mi-board-columns.spec.ts` | 板の列に自分の板のタスクだけが表示され、検索しても板名が汚染されないこと |
+| `rykv-sidebar-defaults.spec.ts` | 列追加時に ApplicationConfig 由来の既定検索条件が適用されること、記録分類のチェック変更で記録先詳細が再計算されること |
+
+#### UI 挙動系（2 spec files）
+
+| テストファイル | テスト内容 |
+|-------------|-----------|
+| `context-menu-viewport.spec.ts` | 縦に狭い画面でコンテキストメニューを開いても下にはみ出さないこと（配置は Vuetify の実測に任せている） |
+| `dialog-autofocus.spec.ts` | autofocus を書いていないダイアログでも入力欄にカーソルが載ること、明示指定した欄が優先されること、入力欄が無いダイアログではフォーカスを動かさないこと |
 
 #### ヘルパーファイル
 
@@ -442,7 +463,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 - インストルメンテーションテスト: Android フレームワーク統合
 
 **Wear OS** (`src/wear_os/`): JUnit 4 + MockK
-- phone_companion（4ファイル / 60テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer）、メッセージハンドリング
+- phone_companion（4ファイル / 62テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、plaing検索クエリの形状検証含む）、メッセージハンドリング
 - watch_app（5ファイル / 58テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル
 
 ## 4. テスト設定ファイル
