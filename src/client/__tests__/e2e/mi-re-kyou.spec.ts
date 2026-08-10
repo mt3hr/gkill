@@ -59,8 +59,13 @@ test.describe('MiReKyou (既存Kyouのタスク化)', () => {
 
     await clickDialogButton(page, SAVE_BUTTON)
 
-    // タスク化した記録がMi画面に出ること
+    // タスク化した記録がMi画面に出ること。
+    // 一覧は仮想スクロールで数件しか描画しないので、絞り込まないと
+    // 並列に走る他テストの記録に押し出されて見つからなくなる。
+    // 確認はページ本文の有無で行う（同じ要約は「すべて」列と板の列の両方に出て、
+    // 先に見つかるほうが描画対象外＝非表示のことがあるため、可視性は要求しない）
     await navigateToMi(page)
+    await searchByKeyword(page, label)
     await expectPageToContainText(page, board)
     await expectPageToContainText(page, label)
   })
@@ -71,7 +76,9 @@ test.describe('MiReKyou (既存Kyouのタスク化)', () => {
    * MiReKyouは参照先Kyouを丸ごと埋め込んでいたため日時が枠外に出ていた。
    */
   test('Mi画面の行に参照先の要約と日時が収まる', async ({ page }) => {
-    const label = makeUniqueLabel('mirekyou_row')
+    // 要約は長くしておく。v-checkbox は min-content 幅が 0 まで潰れるので、
+    // 要約が長いほど flex の縮小量を持っていかれてチェックボックスが消えていた
+    const label = makeUniqueLabel('mirekyou_row').concat('あ'.repeat(120))
 
     await submitKftlText(page, label)
     await navigateToRykv(page)
@@ -117,6 +124,66 @@ test.describe('MiReKyou (既存Kyouのタスク化)', () => {
     // 外側と内側のKyouViewで時刻が二重に出ていないこと
     expect(await row.locator('.kyou_related_time').count(), '行に時刻が2つ以上出ている')
       .toBeLessThanOrEqual(1)
+
+    // チェックボックスが要約に押し潰されていないこと
+    // 潰れるのは v-checkbox のルート。内側の .v-selection-control__wrapper は
+    // width 固定で縮まず枠外へはみ出すので、そちらの幅を見ても検出できない
+    const layout = await row.evaluate((el) => {
+      const root = el.querySelector('.mirekyou_check') as HTMLElement
+      const mark = el.querySelector('.mirekyou_check .v-selection-control__wrapper') as HTMLElement
+      const summary = el.querySelector('.mirekyou_summary') as HTMLElement
+      return {
+        root_width: root.getBoundingClientRect().width,
+        // 正の値ならチェックボックスの絵が要約の左端を追い越している＝重なっている
+        overlap: mark.getBoundingClientRect().right - summary.getBoundingClientRect().left,
+      }
+    })
+    expect(layout.root_width, `チェックボックスが潰れている (width=${layout.root_width})`)
+      .toBeGreaterThanOrEqual(20)
+    expect(layout.overlap, `チェックボックスが要約に重なっている (overlap=${layout.overlap})`)
+      .toBeLessThanOrEqual(1)
+  })
+
+  /**
+   * Kyouダイアログは行ではないので、参照先を丸ごと出す（詳細ペインと同じ）。
+   * kyou-dialog.vue が高さに '80%' を渡していたせいで is_row_height が
+   * 行と誤判定し、mi-re-kyou-view.vue の参照先ブロックが丸ごと消えていた。
+   */
+  test('Kyouダイアログを開くと参照先の内容が出る', async ({ page }) => {
+    const label = makeUniqueLabel('mirekyou_dialog')
+
+    await submitKftlText(page, label)
+    await navigateToRykv(page)
+
+    const record = await waitForKyouByText(page, label)
+    await record.click({ button: 'right', force: true })
+    await clickContextMenuItem(page, MENU.addMiReKyou)
+
+    const dialog = page.locator('.gkill-floating-dialog, .v-dialog').first()
+    await expect(dialog, 'タスク化ダイアログが開かない').toBeVisible({ timeout: 15000 })
+    const board = makeUniqueLabel('mirekyou_dialog_board')
+    await createAndSelectMiBoard(page, dialog, board)
+    await clickDialogButton(page, SAVE_BUTTON)
+
+    // タスク化した行は元の記録と同じ本文なので、リポジトリ名で特定する
+    await navigateToRykv(page)
+    await searchByKeyword(page, label)
+    const taskRow = await waitForKyouRowByRepName(page, 'MiReKyou')
+
+    // 参照先を詰める(compact)のは行高が KYOU_ROW_MAX_HEIGHT 未満のときだけなので、
+    // rykv の一覧(180px)では行でも参照先が出る。詰まるのは Mi 画面の行(91px)で、
+    // そちらは「Mi画面の行に参照先の要約と日時が収まる」が見ている。
+    // kyou-view.vue のルート要素に @dblclick があるので、行のどこをダブルクリックしてもよい
+    await taskRow.dblclick()
+
+    const kyouDialog = page.locator('.kyou_dialog')
+    await expect(kyouDialog, 'Kyouダイアログが開かない').toBeVisible({ timeout: 15000 })
+
+    const target = kyouDialog.locator('.mirekyou_target')
+    await expect(target, 'Kyouダイアログに参照先が出ていない').toBeVisible({ timeout: 15000 })
+    // 参照先は元の記録（Kmemo）そのもの
+    await expect(target.locator('.kyou_rep_name').filter({ hasText: /^\s*Kmemo\s*$/ }), '参照先が元の記録になっていない')
+      .toHaveCount(1, { timeout: 15000 })
   })
 
   /**

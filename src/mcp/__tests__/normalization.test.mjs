@@ -14,6 +14,7 @@ import {
   DEFAULT_INCLUDE_PLUGIN_CONTENT,
   DEFAULT_INLINE_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
   DEFAULT_PLUGIN_CONTENT_FORMAT,
+  LEGACY_USE_FLAG_KEYS,
   MAX_PLUGIN_CONTENT_MAX_TEXT_LENGTH,
 } from "../lib/constants.mjs";
 
@@ -160,14 +161,14 @@ describe("normalizeKyouQuery", () => {
   });
 
   test("validates boolean fields", () => {
-    const result = normalizeKyouQuery({ use_tags: true, is_deleted: false });
-    expect(result.use_tags).toBe(true);
+    const result = normalizeKyouQuery({ tags_and: true, is_deleted: false });
+    expect(result.tags_and).toBe(true);
     expect(result.is_deleted).toBe(false);
     expect(result.only_latest_data).toBe(true);
   });
 
   test("throws for non-boolean in boolean field", () => {
-    expect(() => normalizeKyouQuery({ use_tags: "yes" })).toThrow(GkillApiError);
+    expect(() => normalizeKyouQuery({ words_and: "yes" })).toThrow(GkillApiError);
   });
 
   test("validates string array fields", () => {
@@ -216,12 +217,10 @@ describe("normalizeKyouQuery", () => {
 
   test("skips empty string datetime alongside valid fields", () => {
     const result = normalizeKyouQuery({
-      use_calendar: true,
       calendar_start_date: "2026-03-18",
       plaing_time: "",
       update_time: "",
     });
-    expect(result.use_calendar).toBe(true);
     expect(result.calendar_start_date).toBeTruthy();
     expect(result).not.toHaveProperty("plaing_time");
     expect(result).not.toHaveProperty("update_time");
@@ -282,93 +281,240 @@ describe("normalizeKyouQuery", () => {
     expect(() => normalizeKyouQuery(null)).toThrow(GkillApiError);
   });
 
-  // --- use_X フラグ自動活性化 ---
-  describe("auto-activation of use_X flags", () => {
-    test("sets use_words=true when words is non-empty", () => {
-      const result = normalizeKyouQuery({ words: ["test"] });
-      expect(result.use_words).toBe(true);
+  // --- null は「キー欠落」と同義 ---
+  describe("null value handling", () => {
+    test("skips null values entirely (filter not used)", () => {
+      const result = normalizeKyouQuery({
+        tags: null,
+        words: null,
+        calendar_start_date: null,
+        mi_board_name: null,
+        map_latitude: null,
+        plaing_time: null,
+        period_of_time_week_of_days: null,
+      });
+      expect(result).toEqual({ only_latest_data: true });
     });
 
-    test("sets use_words=true when not_words is non-empty", () => {
-      const result = normalizeKyouQuery({ not_words: ["exclude"] });
-      expect(result.use_words).toBe(true);
+    test("keeps non-null values alongside skipped nulls", () => {
+      const result = normalizeKyouQuery({ tags: ["tagA"], words: null });
+      expect(result.tags).toEqual(["tagA"]);
+      expect(result).not.toHaveProperty("words");
     });
 
-    test("does not override explicit use_words=false when words is non-empty", () => {
-      const result = normalizeKyouQuery({ words: ["test"], use_words: false });
-      expect(result.use_words).toBe(false);
+    test("preserves empty arrays (filter enabled but matches nothing)", () => {
+      const result = normalizeKyouQuery({ tags: [], reps: [], ids: [] });
+      expect(result.tags).toEqual([]);
+      expect(result.reps).toEqual([]);
+      expect(result.ids).toEqual([]);
+    });
+  });
+
+  // --- plaing_time の "now" 展開 ---
+  describe("plaing_time literal now", () => {
+    test("expands \"now\" to the current local RFC3339 time", () => {
+      const before = Date.now();
+      const result = normalizeKyouQuery({ plaing_time: "now" });
+      const after = Date.now();
+      expect(result.plaing_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
+      const parsed = Date.parse(result.plaing_time);
+      // 秒未満切り捨てぶんの1秒を許容する
+      expect(parsed).toBeGreaterThanOrEqual(before - 1000);
+      expect(parsed).toBeLessThanOrEqual(after + 1000);
     });
 
-    test("does not set use_words when words is empty array", () => {
-      const result = normalizeKyouQuery({ words: [] });
-      expect(result).not.toHaveProperty("use_words");
+    test("trims surrounding whitespace before matching \"now\"", () => {
+      const result = normalizeKyouQuery({ plaing_time: "  now  " });
+      expect(result.plaing_time).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
     });
 
-    test("sets use_tags=true when tags is non-empty", () => {
-      const result = normalizeKyouQuery({ tags: ["tagA"] });
-      expect(result.use_tags).toBe(true);
+    test("does not expand \"now\" for other datetime fields", () => {
+      expect(() => normalizeKyouQuery({ update_time: "now" })).toThrow(GkillApiError);
     });
+  });
 
-    test("does not override explicit use_tags=false when tags is non-empty", () => {
-      const result = normalizeKyouQuery({ tags: ["tagA"], use_tags: false });
-      expect(result.use_tags).toBe(false);
-    });
-
-    test("does not set use_tags when tags is empty array", () => {
-      const result = normalizeKyouQuery({ tags: [] });
-      expect(result).not.toHaveProperty("use_tags");
-    });
-
-    test("sets use_calendar=true when calendar_start_date is provided", () => {
-      const result = normalizeKyouQuery({ calendar_start_date: "2026-01-01" });
-      expect(result.use_calendar).toBe(true);
-    });
-
-    test("sets use_calendar=true when calendar_end_date is provided", () => {
-      const result = normalizeKyouQuery({ calendar_end_date: "2026-12-31" });
-      expect(result.use_calendar).toBe(true);
-    });
-
-    test("does not override explicit use_calendar=false", () => {
-      const result = normalizeKyouQuery({ calendar_start_date: "2026-01-01", use_calendar: false });
-      expect(result.use_calendar).toBe(false);
-    });
-
-    test("sets use_timeis=true when timeis_words is non-empty", () => {
-      const result = normalizeKyouQuery({ timeis_words: ["keyword"] });
-      expect(result.use_timeis).toBe(true);
-    });
-
-    test("does not override explicit use_timeis=false", () => {
-      const result = normalizeKyouQuery({ timeis_words: ["keyword"], use_timeis: false });
-      expect(result.use_timeis).toBe(false);
-    });
-
-    test("sets use_timeis_tags=true when timeis_tags is non-empty", () => {
+  // --- timeis_words の自動補完 (サーバの複合ゲート対策) ---
+  describe("timeis_words auto-completion", () => {
+    test("adds timeis_words: [] when only timeis_tags is set", () => {
       const result = normalizeKyouQuery({ timeis_tags: ["tagB"] });
-      expect(result.use_timeis_tags).toBe(true);
+      expect(result.timeis_tags).toEqual(["tagB"]);
+      expect(result.timeis_words).toEqual([]);
     });
 
-    test("sets use_reps=true when reps is non-empty", () => {
-      const result = normalizeKyouQuery({ reps: ["rep1"] });
-      expect(result.use_reps).toBe(true);
+    test("also applies when timeis_tags is an empty array", () => {
+      const result = normalizeKyouQuery({ timeis_tags: [] });
+      expect(result.timeis_words).toEqual([]);
     });
 
-    test("does not set use_reps when reps is empty array", () => {
-      const result = normalizeKyouQuery({ reps: [] });
-      expect(result).not.toHaveProperty("use_reps");
+    test("does not overwrite an explicit timeis_words", () => {
+      const result = normalizeKyouQuery({ timeis_tags: ["tagB"], timeis_words: ["keyword"] });
+      expect(result.timeis_words).toEqual(["keyword"]);
     });
 
-    test("sets use_ids=true when ids is non-empty", () => {
-      const result = normalizeKyouQuery({ ids: ["abc123"] });
-      expect(result.use_ids).toBe(true);
+    test("does not add timeis_words when timeis_not_words already opens the gate", () => {
+      const result = normalizeKyouQuery({ timeis_tags: ["tagB"], timeis_not_words: ["exclude"] });
+      expect(result).not.toHaveProperty("timeis_words");
     });
 
-    test("auto-activates use_words for typical AI request with words only", () => {
-      const result = normalizeKyouQuery({ words: ["test", "keyword"] });
-      expect(result.use_words).toBe(true);
-      expect(result.words).toEqual(["test", "keyword"]);
-      expect(result.only_latest_data).toBe(true);
+    test("does not add timeis_words when legacy use_timeis:false removed timeis_tags", () => {
+      const result = normalizeKyouQuery({ timeis_tags: ["tagB"], use_timeis: false });
+      expect(result).not.toHaveProperty("timeis_tags");
+      expect(result).not.toHaveProperty("timeis_words");
+    });
+  });
+
+  // --- 旧 use_X フラグの後方互換受理 ---
+  describe("legacy use_X flag acceptance", () => {
+    test("use_X:true is dropped and the values stay authoritative", () => {
+      const result = normalizeKyouQuery({ use_tags: true, tags: ["tagA"], use_words: true, words: ["w"] });
+      expect(result).not.toHaveProperty("use_tags");
+      expect(result).not.toHaveProperty("use_words");
+      expect(result.tags).toEqual(["tagA"]);
+      expect(result.words).toEqual(["w"]);
+    });
+
+    test("use_tags:false removes tags", () => {
+      const result = normalizeKyouQuery({ use_tags: false, tags: ["tagA"] });
+      expect(result).not.toHaveProperty("use_tags");
+      expect(result).not.toHaveProperty("tags");
+    });
+
+    test("use_words:false removes words and not_words", () => {
+      const result = normalizeKyouQuery({ use_words: false, words: ["w"], not_words: ["x"] });
+      expect(result).not.toHaveProperty("words");
+      expect(result).not.toHaveProperty("not_words");
+    });
+
+    test("use_reps:false and use_rep_types:false remove their lists", () => {
+      const result = normalizeKyouQuery({
+        use_reps: false,
+        reps: ["rep1"],
+        use_rep_types: false,
+        rep_types: ["kmemo"],
+      });
+      expect(result).not.toHaveProperty("reps");
+      expect(result).not.toHaveProperty("rep_types");
+    });
+
+    test("use_ids:false removes ids", () => {
+      const result = normalizeKyouQuery({ use_ids: false, ids: ["abc123"] });
+      expect(result).not.toHaveProperty("ids");
+    });
+
+    test("use_include_id is dropped without touching ids", () => {
+      expect(normalizeKyouQuery({ use_include_id: true, ids: ["abc123"] }).ids).toEqual(["abc123"]);
+      expect(normalizeKyouQuery({ use_include_id: false, ids: ["abc123"] }).ids).toEqual(["abc123"]);
+    });
+
+    test("use_timeis:false removes timeis_words, timeis_not_words and timeis_tags", () => {
+      const result = normalizeKyouQuery({
+        use_timeis: false,
+        timeis_words: ["a"],
+        timeis_not_words: ["b"],
+        timeis_tags: ["c"],
+      });
+      expect(result).not.toHaveProperty("timeis_words");
+      expect(result).not.toHaveProperty("timeis_not_words");
+      expect(result).not.toHaveProperty("timeis_tags");
+    });
+
+    test("use_timeis_tags:false removes only timeis_tags", () => {
+      const result = normalizeKyouQuery({
+        use_timeis_tags: false,
+        timeis_words: ["a"],
+        timeis_tags: ["c"],
+      });
+      expect(result.timeis_words).toEqual(["a"]);
+      expect(result).not.toHaveProperty("timeis_tags");
+    });
+
+    test("use_calendar:false removes calendar_start_date and calendar_end_date", () => {
+      const result = normalizeKyouQuery({
+        use_calendar: false,
+        calendar_start_date: "2026-01-01",
+        calendar_end_date: "2026-12-31",
+      });
+      expect(result).not.toHaveProperty("calendar_start_date");
+      expect(result).not.toHaveProperty("calendar_end_date");
+    });
+
+    test("use_map:false removes map_latitude, map_longitude and map_radius", () => {
+      const result = normalizeKyouQuery({
+        use_map: false,
+        map_latitude: 35.0,
+        map_longitude: 135.0,
+        map_radius: 100,
+      });
+      expect(result).not.toHaveProperty("map_latitude");
+      expect(result).not.toHaveProperty("map_longitude");
+      expect(result).not.toHaveProperty("map_radius");
+    });
+
+    test("use_plaing:false removes plaing_time", () => {
+      const result = normalizeKyouQuery({ use_plaing: false, plaing_time: "2026-01-01" });
+      expect(result).not.toHaveProperty("plaing_time");
+    });
+
+    test("use_update_time:false removes update_time", () => {
+      const result = normalizeKyouQuery({ use_update_time: false, update_time: "2026-01-01" });
+      expect(result).not.toHaveProperty("update_time");
+    });
+
+    test("use_mi_board_name:false removes mi_board_name", () => {
+      const result = normalizeKyouQuery({ use_mi_board_name: false, mi_board_name: "board1" });
+      expect(result).not.toHaveProperty("mi_board_name");
+    });
+
+    test("use_period_of_time:false removes the period_of_time value keys", () => {
+      const result = normalizeKyouQuery({
+        use_period_of_time: false,
+        period_of_time_start_time_second: 0,
+        period_of_time_end_time_second: 3600,
+        period_of_time_week_of_days: [0, 6],
+      });
+      expect(result).not.toHaveProperty("period_of_time_start_time_second");
+      expect(result).not.toHaveProperty("period_of_time_end_time_second");
+      expect(result).not.toHaveProperty("period_of_time_week_of_days");
+    });
+
+    test("flag position relative to the values does not matter", () => {
+      const result = normalizeKyouQuery({ tags: ["tagA"], use_tags: false });
+      expect(result).not.toHaveProperty("tags");
+    });
+
+    test("null legacy flag is ignored (treated as omitted)", () => {
+      const result = normalizeKyouQuery({ use_tags: null, tags: ["tagA"] });
+      expect(result.tags).toEqual(["tagA"]);
+    });
+
+    test("throws for a non-boolean legacy flag value", () => {
+      expect(() => normalizeKyouQuery({ use_tags: "yes" })).toThrow(GkillApiError);
+    });
+
+    test("unknown keys still throw despite legacy acceptance", () => {
+      expect(() => normalizeKyouQuery({ use_unknown_thing: true })).toThrow(GkillApiError);
+    });
+
+    // use_mi_sort_type / use_mi_check_state は値キーを束ねないので、受理し損ねると
+    // 「未知キー」として throw してしまう。旧クライアントが送る16キーはすべて受理する
+    test("use_mi_sort_type and use_mi_check_state are accepted without dropping their values", () => {
+      const result = normalizeKyouQuery({
+        use_mi_sort_type: false,
+        mi_sort_type: "limit_time",
+        use_mi_check_state: false,
+        mi_check_state: "checked",
+      });
+      expect(result).not.toHaveProperty("use_mi_sort_type");
+      expect(result).not.toHaveProperty("use_mi_check_state");
+      expect(result.mi_sort_type).toBe("limit_time");
+      expect(result.mi_check_state).toBe("checked");
+    });
+
+    test("every legacy flag key is accepted (no unknown-key throw)", () => {
+      for (const key of LEGACY_USE_FLAG_KEYS) {
+        expect(() => normalizeKyouQuery({ [key]: true }), `${key} が受理されない`).not.toThrow();
+        expect(() => normalizeKyouQuery({ [key]: false }), `${key} が受理されない`).not.toThrow();
+      }
     });
   });
 });
@@ -437,7 +583,7 @@ describe("normalizeKyouArgs", () => {
 
   test("passes query through normalizeKyouQuery", () => {
     const result = normalizeKyouArgs({ query: { use_tags: true, tags: ["test"] } });
-    expect(result.query.use_tags).toBe(true);
+    expect(result.query).not.toHaveProperty("use_tags");
     expect(result.query.tags).toEqual(["test"]);
     expect(result.query.only_latest_data).toBe(true);
   });

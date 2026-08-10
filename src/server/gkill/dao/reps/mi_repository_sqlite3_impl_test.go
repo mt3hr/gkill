@@ -63,8 +63,7 @@ func TestMiFindByBoard(t *testing.T) {
 	}
 
 	query := makeDefaultFindQuery()
-	query.UseMiBoardName = true
-	query.MiBoardName = "work"
+	query.MiBoardName = testPtr("work")
 
 	mis, err := repo.FindMi(ctx, query)
 	if err != nil {
@@ -146,6 +145,58 @@ func TestMiGetBoardNames(t *testing.T) {
 	}
 	if !boardSet["personal"] {
 		t.Errorf("expected board 'personal' in results, got %v", boards)
+	}
+}
+
+// 板名を打ち間違えて直したときに、旧バージョンの板名が板一覧に残らないことを確かめる。
+// 残ると板ツリーへ足し直され、削除しても復活する板になる。
+func TestMiGetBoardNames_ExcludesOldVersionAndDeleted(t *testing.T) {
+	repo := newTempMiRepo(t)
+	ctx := context.Background()
+
+	// 打ち間違い → 直す、の2バージョン
+	typo := makeMi("mi-bn-typo", "打ち間違えたタスク")
+	typo.BoardName = "2026/07/1 09:00"
+	if err := repo.AddMiInfo(ctx, typo); err != nil {
+		t.Fatalf("AddMiInfo failed: %v", err)
+	}
+	fixed := makeMi("mi-bn-typo", "打ち間違えたタスク")
+	fixed.BoardName = "work"
+	fixed.UpdateTime = fixed.UpdateTime.Add(1 * time.Hour)
+	if err := repo.AddMiInfo(ctx, fixed); err != nil {
+		t.Fatalf("AddMiInfo failed: %v", err)
+	}
+
+	// 板ごと消したタスク（最新版が削除済み）
+	removed := makeMi("mi-bn-removed", "消したタスク")
+	removed.BoardName = "obsolete"
+	if err := repo.AddMiInfo(ctx, removed); err != nil {
+		t.Fatalf("AddMiInfo failed: %v", err)
+	}
+	deleted := makeMi("mi-bn-removed", "消したタスク")
+	deleted.BoardName = "obsolete"
+	deleted.IsDeleted = true
+	deleted.UpdateTime = deleted.UpdateTime.Add(1 * time.Hour)
+	if err := repo.AddMiInfo(ctx, deleted); err != nil {
+		t.Fatalf("AddMiInfo failed: %v", err)
+	}
+
+	boards, err := repo.GetBoardNames(ctx)
+	if err != nil {
+		t.Fatalf("GetBoardNames failed: %v", err)
+	}
+	boardSet := make(map[string]bool)
+	for _, b := range boards {
+		boardSet[b] = true
+	}
+	if boardSet["2026/07/1 09:00"] {
+		t.Errorf("旧バージョンの板名が残っている: %v", boards)
+	}
+	if boardSet["obsolete"] {
+		t.Errorf("削除済みタスクだけの板が残っている: %v", boards)
+	}
+	if !boardSet["work"] {
+		t.Errorf("最新版の板名が消えている: %v", boards)
 	}
 }
 

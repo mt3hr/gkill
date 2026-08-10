@@ -59,6 +59,23 @@ async function confirmUnknownTagIfShown(page: Page): Promise<void> {
 }
 
 /**
+ * 板ツリーに無い板名を指定して保存しようとすると、保存の前に確認ダイアログが出る
+ * （CONFIRM_UNKNOWN_MI_BOARD_MESSAGE =「新しい板です。追加しますか？」）。
+ * タグ版（confirmUnknownTagIfShown）と同じで、確定しないと保存リクエストが飛ばない。
+ *
+ * createAndSelectMiBoard は毎回新しい板を作るので、Mi / MiReKyou の保存は必ずここを通る。
+ */
+async function confirmUnknownMiBoardIfShown(page: Page): Promise<void> {
+  const dialog = page.locator(DIALOG_ROOT).filter({ hasText: '新しい板です' }).first()
+  await dialog.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {
+    // 既知の板だけなら確認ダイアログは出ない
+  })
+  if (await dialog.count() > 0) {
+    await dialog.locator('button').filter({ hasText: SAVE_BUTTON }).first().click()
+  }
+}
+
+/**
  * Submit KFTL text via the KFTL page.
  * Navigates to /kftl, fills textarea, and clicks save.
  *
@@ -271,8 +288,9 @@ export async function clickDialogButton(page: Page, label: RegExp | string): Pro
 
   const responsePromise = page.waitForResponse((res) => isWriteApiResponse(res.url()), { timeout: 30000 })
   await button.click()
-  // 新しいタグを付ける保存では、確定しないとリクエストが飛ばない
+  // 新しいタグ・新しい板を伴う保存では、確定しないとリクエストが飛ばない
   await confirmUnknownTagIfShown(page)
+  await confirmUnknownMiBoardIfShown(page)
   const response = await responsePromise
 
   // gkillは失敗も HTTP 200 + errors配列 で返すので、中身まで見る。
@@ -339,6 +357,22 @@ export async function searchByKeyword(page: Page, keyword: string): Promise<void
   await expect(keywordField).toHaveValue(keyword)
 
   await waitForLoadingOverlayToFinish(page)
+}
+
+/**
+ * サイドバーの「検索」ボタンを押して、get_kyous の応答が返るまで待つ。
+ *
+ * `rykv_hot_reload` は既定 false のため、サイドバーで条件を編集しただけでは
+ * 検索は走らない（searchByKeyword の Enter は hot reload ON のときだけ効く）。
+ * フォーカス中の列に条件を確実に適用するテストは、編集後にこれを呼ぶこと。
+ */
+export async function clickSidebarSearchButton(page: Page): Promise<void> {
+  const drawer = page.locator('.v-navigation-drawer').first()
+  const searchButton = drawer.locator('button').filter({ hasText: /^\s*検索\s*$/ }).first()
+  await expect(searchButton, 'サイドバーの検索ボタンが見つからない').toBeVisible({ timeout: 15000 })
+  const responsePromise = page.waitForResponse((res) => res.url().includes('/api/get_kyous'), { timeout: 30000 })
+  await searchButton.click()
+  await responsePromise
 }
 
 /**

@@ -93,4 +93,41 @@ test.describe('Mi Board', () => {
     // Restore
     await page.setViewportSize({ width: 1280, height: 720 })
   })
+
+  /**
+   * 列は「板名の見出し + KyouListView」でコンテンツ領域を分け合う。
+   * KyouListView に渡す list_height は app_content_height から見出しのぶんを
+   * 引いた値なので、見出しの実高さが定数（MI_BOARD_TITLE_HEIGHT = 44）と
+   * ずれるとその差がそのまま列の下の空白になる。
+   * 以前は 44px の見出しに対して 48 を引いており 4px の空白が出ていた。
+   */
+  test('板の列がコンテンツ領域をぴったり埋める', async ({ page }) => {
+    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
+
+    const column = page.locator('.mi_view_table td > .v-card').first()
+    await expect(column, '板の列が出ない').toBeVisible({ timeout: 30000 })
+
+    const title = column.locator('.mi_board_column_title').first()
+    await expect(title, '板名の見出しが出ない').toBeVisible({ timeout: 15000 })
+
+    const measured = await column.evaluate((el) => {
+      const app_bar = document.querySelector('.app_bar') as HTMLElement | null
+      const heading = el.querySelector('.mi_board_column_title') as HTMLElement | null
+      return {
+        column_height: (el as HTMLElement).offsetHeight,
+        title_height: heading ? heading.offsetHeight : -1,
+        app_bar_height: app_bar ? app_bar.offsetHeight : -1,
+        inner_height: window.innerHeight,
+      }
+    })
+
+    expect(measured.title_height, '見出しの高さが MI_BOARD_TITLE_HEIGHT と違う').toBe(44)
+
+    // app_content_height = window.innerHeight - アプリバー(50px)
+    const content_height = measured.inner_height - measured.app_bar_height
+    expect(
+      Math.abs(measured.column_height - content_height),
+      `列がコンテンツ領域を埋めていない (列=${measured.column_height}px, 領域=${content_height}px)`,
+    ).toBeLessThanOrEqual(1)
+  })
 })

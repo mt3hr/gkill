@@ -1,5 +1,6 @@
 package com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.companion
 
+import kotlinx.serialization.json.jsonObject
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -204,6 +205,58 @@ class GkillApiClientTest {
         mockServer.enqueue(MockResponse().setResponseCode(500))
 
         val result = client.getKftlTemplateStructJson("session-123")
+
+        assertNull(result)
+    }
+
+    // ─── getPlaingTimeis ───────────────────────────────────────────────────
+
+    // FindQuery is null-based: unused filters must be omitted (or null), never
+    // sent as empty arrays ([] means "enabled with zero selections" = matches
+    // nothing). The plaing query must therefore contain only plaing_time.
+    // A legacy client that sent use_*=false with empty arrays would silently
+    // get zero results from a null-based server, so this pins the wire shape.
+    @Test
+    fun getPlaingTimeis_sendsNullBasedPlaingQuery() {
+        val responseJson = """{"kyous":[],"errors":null}"""
+        mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(200))
+
+        val result = client.getPlaingTimeis("session-123")
+
+        assertEquals("[]", result)
+
+        val request = mockServer.takeRequest()
+        assertEquals("/api/get_kyous", request.path)
+        assertEquals("POST", request.method)
+        val body = request.body.readUtf8()
+        assertTrue(body.contains("\"session_id\":\"session-123\""))
+
+        val queryJson = kotlinx.serialization.json.Json.parseToJsonElement(body)
+            .jsonObject["query"]!!.jsonObject
+
+        // plaing_time is the only filter and must be a non-null string
+        val plaingTime = queryJson["plaing_time"]
+        assertNotNull(plaingTime)
+        assertTrue(plaingTime is kotlinx.serialization.json.JsonPrimitive)
+        assertTrue((plaingTime as kotlinx.serialization.json.JsonPrimitive).isString)
+
+        // no legacy use_* keys
+        for (key in queryJson.keys) {
+            assertFalse("legacy flag key must not be sent: $key", key.startsWith("use_"))
+        }
+
+        // unused filters must be omitted, not sent as empty arrays
+        for (key in listOf("tags", "reps", "rep_types", "ids", "words", "not_words", "timeis_words", "timeis_tags", "mi_board_name")) {
+            assertFalse("unused filter key must be omitted: $key", queryJson.containsKey(key))
+        }
+    }
+
+    @Test
+    fun getPlaingTimeis_withErrors_returnsNull() {
+        val responseJson = """{"kyous":null,"errors":[{"error_code":"NO_SESSION","error_message":"session expired"}]}"""
+        mockServer.enqueue(MockResponse().setBody(responseJson).setResponseCode(200))
+
+        val result = client.getPlaingTimeis("expired-session")
 
         assertNull(result)
     }

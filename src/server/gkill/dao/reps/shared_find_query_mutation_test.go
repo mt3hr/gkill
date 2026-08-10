@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
@@ -25,7 +26,6 @@ func TestIDFKyouFindKyous_DoesNotMutateQueryWords(t *testing.T) {
 	}
 
 	query := &find.FindQuery{
-		UseWords: true,
 		Words:    []string{"Photo", "MiXeD"},
 		NotWords: []string{"NotThis"},
 	}
@@ -66,19 +66,28 @@ func TestGkillRepositoriesFindTags_DoesNotMutateCallerQuery(t *testing.T) {
 		LatestDataRepositoryAddressDAO: addrDAO,
 	}
 
+	// IDs が nil（フィルタ未使用）のまま渡し、rep 側で ID 一覧が詰められても
+	// 呼び出し元の query.IDs が nil のままであることを確認する。
+	// ポインタフィールド（MiBoardName/PlaingTime等）は浅いコピーでポインタ先が共有されるので、
+	// 「ポインタ先へ書かず、差し替えは必ずポインタごと」の規約もここで固定する。
+	boardName := "board-mut"
+	plaingTime := time.Date(2024, 4, 1, 12, 0, 0, 0, time.UTC)
 	query := &find.FindQuery{
-		UseIDs: false,
-		IDs:    []string{},
+		MiBoardName: &boardName,
+		PlaingTime:  &plaingTime,
 	}
 
 	if _, err := repositories.FindTags(ctx, query); err != nil {
 		t.Fatalf("FindTags failed: %v", err)
 	}
 
-	if query.UseIDs {
-		t.Error("呼び出し元の query.UseIDs が true に書き換えられた")
-	}
-	if len(query.IDs) != 0 {
+	if query.IDs != nil {
 		t.Errorf("呼び出し元の query.IDs が書き換えられた: %v", query.IDs)
+	}
+	if query.MiBoardName == nil || *query.MiBoardName != "board-mut" {
+		t.Errorf("呼び出し元の query.MiBoardName（ポインタ先）が書き換えられた: %v", query.MiBoardName)
+	}
+	if query.PlaingTime == nil || !query.PlaingTime.Equal(plaingTime) {
+		t.Errorf("呼び出し元の query.PlaingTime（ポインタ先）が書き換えられた: %v", query.PlaingTime)
 	}
 }
