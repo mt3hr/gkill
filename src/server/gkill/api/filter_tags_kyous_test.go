@@ -8,6 +8,11 @@ package api
 //
 // map参照へ置き換えても結果は変わらないはずなので、
 // 「全部のタグを持つKyouだけが残る」という結果そのものを固定する。
+//
+// 同じ filterTagsKyous を別観点で見るテストが find_filter_tags_test.go にある。
+// あちらはAND/ORの意味論のエッジケース（"no tags"・大小無視・0件タグ名・空タグ指定）担当で、
+// こちらはAND交差の性能改修に対する結果不変の担保。ヘルパ（kyouForTagFilter / tagMapOf /
+// tagFor / keysOfKyouMap）はこのファイルで定義し、あちらからも使う。
 
 import (
 	"context"
@@ -48,7 +53,6 @@ func TestFilterTagsKyous_And_KeepsOnlyKyousHavingAllTags(t *testing.T) {
 	// kyou-all は両方のタグを持つ / kyou-a と kyou-b は片方だけ / kyou-none はタグ無し
 	findCtx := &FindKyouContext{
 		ParsedFindQuery: &find.FindQuery{
-			UseTags: true,
 			TagsAnd: true,
 			Tags:    []string{"tagA", "tagB"},
 		},
@@ -90,7 +94,6 @@ func TestFilterTagsKyous_And_SingleTag(t *testing.T) {
 
 	findCtx := &FindKyouContext{
 		ParsedFindQuery: &find.FindQuery{
-			UseTags: true,
 			TagsAnd: true,
 			Tags:    []string{"tagA"},
 		},
@@ -127,7 +130,6 @@ func TestFilterTagsKyous_And_NoKyouHasAllTags(t *testing.T) {
 
 	findCtx := &FindKyouContext{
 		ParsedFindQuery: &find.FindQuery{
-			UseTags: true,
 			TagsAnd: true,
 			Tags:    []string{"tagA", "tagB"},
 		},

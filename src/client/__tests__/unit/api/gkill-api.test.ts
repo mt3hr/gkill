@@ -16,6 +16,7 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
 
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { delete_gkill_attached_tags_cache } from '@/classes/delete-gkill-cache'
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 
 describe('GkillAPI', () => {
   describe('singleton access', () => {
@@ -324,7 +325,7 @@ describe('GkillAPI', () => {
       const api = GkillAPI.get_instance()
       const req = {
         session_id: 'test-session',
-        query: { words: [], tags: [], use_plaing: false },
+        query: { query_id: 'q1', words: null, tags: [], reps: [], plaing_time: null },
         abort_controller: new AbortController(),
         force_reget: false,
         locale_name: 'ja',
@@ -339,6 +340,56 @@ describe('GkillAPI', () => {
           body: JSON.stringify(req),
         })
       )
+    })
+
+    // 大量応答の実体化はチャンク分割される。応答全件がKyouクラスになり日付が変換されること
+    test('get_kyous materializes every kyou across multiple chunks', async () => {
+      const kyou_count = 12000 // chunk_size 5000 の3チャンク分
+      const raw_kyous = Array.from({ length: kyou_count }, (_, i) => ({
+        id: `kyou-${i}`,
+        related_time: '2026-08-05T10:00:00.000Z',
+        data_type: 'kmemo',
+      }))
+      ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        json: () => Promise.resolve({ kyous: raw_kyous, messages: [], errors: [] }),
+      })
+
+      const api = GkillAPI.get_instance()
+      const req = {
+        session_id: 'test-session',
+        query: { query_id: 'q1', words: null, tags: [], reps: [], plaing_time: null },
+        abort_controller: new AbortController(),
+        force_reget: false,
+        locale_name: 'ja',
+      }
+      const res = await api.get_kyous(req as never)
+
+      expect(res.kyous).toHaveLength(kyou_count)
+      expect(res.kyous[0].related_time).toBeInstanceOf(Date)
+      expect(res.kyous[kyou_count - 1].related_time).toBeInstanceOf(Date)
+      expect(typeof res.kyous[kyou_count - 1].load_all).toBe('function')
+    })
+
+    // 検索やり直しで中断されたら実体化を続けない。
+    // 例外はfetch中断と同型(name === "AbortError")で、main.tsのunhandledrejection網が握れること
+    test('get_kyous rejects with AbortError when the request is already aborted', async () => {
+      const raw_kyous = Array.from({ length: 12000 }, (_, i) => ({ id: `kyou-${i}` }))
+      ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        json: () => Promise.resolve({ kyous: raw_kyous, messages: [], errors: [] }),
+      })
+
+      const api = GkillAPI.get_instance()
+      const abort_controller = new AbortController()
+      abort_controller.abort()
+      const req = {
+        session_id: 'test-session',
+        query: { query_id: 'q1', words: null, tags: [], reps: [], plaing_time: null },
+        abort_controller,
+        force_reget: false,
+        locale_name: 'ja',
+      }
+
+      await expect(api.get_kyous(req as never)).rejects.toMatchObject({ name: 'AbortError' })
     })
 
     test('get_kmemo sends POST to /api/get_kmemo with session_id and id', async () => {
@@ -2022,6 +2073,109 @@ describe('GkillAPI', () => {
 
     test('register_gkill_notification_address is /api/register_gkill_notification', () => {
       expect(api.register_gkill_notification_address).toBe('/api/register_gkill_notification')
+    })
+  })
+
+  // query_idは列の恒久ID。過去の不具合で重複・空のまま localStorage に永続化されている
+  // 場合があり、放置すると query_id→列の逆引きが別の列へ誤配送する。
+  // 読み込み時に修復されることを固定する。
+  describe('saved find kyou querys の query_id 修復', () => {
+    function makeSavedQuery(query_id: string): FindKyouQuery {
+      const query = new FindKyouQuery()
+      query.query_id = query_id
+      return query
+    }
+
+    beforeEach(() => {
+      window.localStorage.removeItem('rykv_find_kyou_querys')
+      window.localStorage.removeItem('mi_find_kyou_querys')
+    })
+
+    test.each([
+      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys() },
+      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys() },
+    ])('$key: 重複query_idは読み込み時に振り直され、永続化も直る', ({ key, load }) => {
+      window.localStorage.setItem(key, JSON.stringify([makeSavedQuery('dup'), makeSavedQuery('dup'), makeSavedQuery('unique')]))
+
+      const loaded = load()
+
+      expect(loaded.length).toBe(3)
+      // 先勝ちで最初の列がIDを保持し、以降の重複だけ振り直される
+      expect(loaded[0].query_id).toBe('dup')
+      expect(loaded[1].query_id).not.toBe('dup')
+      expect(loaded[2].query_id).toBe('unique')
+      const ids = loaded.map((query) => query.query_id)
+      expect(new Set(ids).size).toBe(ids.length)
+
+      // 修復結果は即座に書き戻される(リロードしても直った状態が続く)
+      const persisted = JSON.parse(window.localStorage.getItem(key)!) as Array<{ query_id: string }>
+      expect(persisted.map((query) => query.query_id)).toEqual(ids)
+    })
+
+    test.each([
+      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys() },
+      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys() },
+    ])('$key: 空のquery_idも振り直される', ({ key, load }) => {
+      window.localStorage.setItem(key, JSON.stringify([makeSavedQuery(''), makeSavedQuery('a')]))
+
+      const loaded = load()
+
+      expect(loaded[0].query_id).not.toBe('')
+      expect(loaded[1].query_id).toBe('a')
+    })
+
+    test('重複も旧形式もなければ書き戻さない', () => {
+      const stored = JSON.stringify([makeSavedQuery('a'), makeSavedQuery('b')])
+      window.localStorage.setItem('rykv_find_kyou_querys', stored)
+
+      const loaded = GkillAPI.get_instance().get_saved_rykv_find_kyou_querys()
+
+      expect(loaded.map((query) => query.query_id)).toEqual(['a', 'b'])
+      expect(window.localStorage.getItem('rykv_find_kyou_querys')).toBe(stored)
+    })
+
+    // 保存クエリは parse_find_kyou_query 経由で読まれ、旧形式(use_*入り)は
+    // 正規化のうえ新形式で書き戻される。旧キーがインスタンスへ生えると
+    // deep_equals のキー数比較が崩れ、サイドバーの機械的emitガードが効かなくなる
+    test.each([
+      { key: 'rykv_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_rykv_find_kyou_querys() },
+      { key: 'mi_find_kyou_querys', load: () => GkillAPI.get_instance().get_saved_mi_find_kyou_querys() },
+    ])('$key: 旧形式(use_*入り)は正規化して読まれ、新形式で書き戻される', ({ key, load }) => {
+      const legacy_query = {
+        query_id: 'legacy-col',
+        keywords: 'old',
+        use_words: false,
+        words: ['old'],
+        use_tags: true,
+        tags: null,
+        use_plaing: false,
+        plaing_time: '2020-01-01T00:00:00.000Z',
+        use_update_time: true,
+        update_time: '2020-01-01T00:00:00.000Z',
+      }
+      window.localStorage.setItem(key, JSON.stringify([legacy_query]))
+
+      const loaded = load()
+
+      expect(loaded).toHaveLength(1)
+      // インスタンスに旧キーが生えない
+      expect(Object.keys(loaded[0]).filter((field) => field.startsWith('use_'))).toEqual([])
+      expect(Object.keys(loaded[0])).not.toContain('update_time')
+      // use_X=false の値は null 化、use_X=true の null は [] に物質化
+      expect(loaded[0].query_id).toBe('legacy-col')
+      expect(loaded[0].keywords).toBe('old')
+      expect(loaded[0].words).toBeNull()
+      expect(loaded[0].tags).toEqual([])
+      expect(loaded[0].plaing_time).toBeNull()
+
+      // 旧形式を検出したら新形式で書き戻す(次回以降の読み込みで正規化が不要になる)
+      const persisted = JSON.parse(window.localStorage.getItem(key)!) as Array<Record<string, unknown>>
+      expect(persisted).toHaveLength(1)
+      expect(Object.keys(persisted[0]).filter((field) => field.startsWith('use_'))).toEqual([])
+      expect(Object.keys(persisted[0])).not.toContain('update_time')
+      expect(persisted[0].words).toBeNull()
+      expect(persisted[0].tags).toEqual([])
+      expect(persisted[0].plaing_time).toBeNull()
     })
   })
 

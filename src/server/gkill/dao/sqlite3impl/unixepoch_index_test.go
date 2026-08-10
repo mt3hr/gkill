@@ -38,7 +38,6 @@ func newUnixepochTestDB(t *testing.T) *sql.DB {
 func calendarRangeSQL(t *testing.T, from, to time.Time) (string, []any) {
 	t.Helper()
 	query := &find.FindQuery{
-		UseCalendar:       true,
 		CalendarStartDate: &from,
 		CalendarEndDate:   &to,
 	}

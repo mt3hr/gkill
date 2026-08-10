@@ -11,6 +11,9 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
 
+// testPtr returns a pointer to v, for FindQuery pointer fields in test fixtures.
+func testPtr[T any](v T) *T { return &v }
+
 // newTempKmemoRepo creates a KmemoRepository backed by a temp SQLite3 file.
 func newTempKmemoRepo(t *testing.T) KmemoRepository {
 	t.Helper()
@@ -148,6 +151,15 @@ func newTempReKyouRepo(t *testing.T, reps *GkillRepositories) ReKyouRepository {
 // An empty mux.Router is passed; it is only used for file-serving routes and does not affect CRUD.
 func newTempIDFKyouRepo(t *testing.T) IDFKyouRepository {
 	t.Helper()
+	repo, _ := newTempIDFKyouRepoWithDir(t)
+	return repo
+}
+
+// newTempIDFKyouRepoWithDir is newTempIDFKyouRepo plus the content dir,
+// for tests that need to place real files the repository will read
+// (keyword search reads the body of .md / .txt files).
+func newTempIDFKyouRepoWithDir(t *testing.T) (IDFKyouRepository, string) {
+	t.Helper()
 	dir := t.TempDir()
 	dbFile := filepath.Join(dir, "idf.db")
 	r := gorilla_mux.NewRouter()
@@ -157,7 +169,7 @@ func newTempIDFKyouRepo(t *testing.T) IDFKyouRepository {
 		t.Fatalf("failed to create IDFKyou repo: %v", err)
 	}
 	t.Cleanup(func() { repo.Close(context.Background()) })
-	return repo
+	return repo, dir
 }
 
 // testTime returns a fixed time for testing.
@@ -270,7 +282,6 @@ func makeDefaultFindQuery() *find.FindQuery {
 // makeCalendarFindQuery creates a FindQuery with calendar filter.
 func makeCalendarFindQuery(start, end time.Time) *find.FindQuery {
 	return &find.FindQuery{
-		UseCalendar:       true,
 		CalendarStartDate: &start,
 		CalendarEndDate:   &end,
 		OnlyLatestData:    true,
@@ -280,7 +291,6 @@ func makeCalendarFindQuery(start, end time.Time) *find.FindQuery {
 // makeWordFindQuery creates a FindQuery with word filter.
 func makeWordFindQuery(words []string) *find.FindQuery {
 	return &find.FindQuery{
-		UseWords:       true,
 		Words:          words,
 		WordsAnd:       false,
 		OnlyLatestData: true,
