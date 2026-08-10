@@ -65,7 +65,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 	userID := auth.UserID
 	device := auth.Device
 
-	kyous, gkillErrors, err := g.UsecaseCtx.GetKyous(r.Context(), userID, device, request.LocaleName, request.Query)
+	kyous, warningMessages, gkillErrors, err := g.UsecaseCtx.GetKyous(r.Context(), userID, device, request.LocaleName, request.Query)
 	if err != nil {
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		response.Errors = append(response.Errors, gkillErrors...)
@@ -77,6 +77,8 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 	}
 
 	response.Kyous = kyous
+	// プラグイン検索失敗などの警告(検索自体は成功)
+	response.Messages = append(response.Messages, warningMessages...)
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetKyousSuccessMessage,
 		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOUS_MESSAGE"}),

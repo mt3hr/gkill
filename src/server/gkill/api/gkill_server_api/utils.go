@@ -613,10 +613,19 @@ func globalIP(ctx context.Context) (net.IP, error) {
 //     HTML/SVG の中のスクリプトは実行されない。
 //     sandbox はドキュメントとして読み込まれたときにだけ効くので、
 //     <img> や <video> のサブリソースとしての表示には影響しない。
+//
+// 例外として .pdf には sandbox を付けない。sandbox 下のドキュメントは
+// opaque origin になり、Chrome が内蔵PDFビューワを無効化して表示ではなく
+// ダウンロードに落ちるため。.pdf は nosniff と組み合わせて Content-Type が
+// application/pdf に固定されるので、HTML/SVG と違い同一オリジンで
+// スクリプトが動く経路にはならない（中身がHTMLでもPDFのパース失敗になるだけ）。
 func withUserContentSecurityHeaders(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("Content-Security-Policy", "sandbox")
+		// r.URL.Path はデコード済みなので %2Epdf のような表記もここで .pdf に揃う
+		if !strings.HasSuffix(strings.ToLower(r.URL.Path), ".pdf") {
+			w.Header().Set("Content-Security-Policy", "sandbox")
+		}
 		next(w, r)
 	}
 }

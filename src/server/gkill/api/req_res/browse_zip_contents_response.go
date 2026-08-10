@@ -13,6 +13,12 @@ type ZipEntry struct {
 
 	IsText bool `json:"is_text"`
 
+	IsVideo bool `json:"is_video"`
+
+	IsAudio bool `json:"is_audio"`
+
+	IsPdf bool `json:"is_pdf"`
+
 	FileURL string `json:"file_url"`
 }
 
