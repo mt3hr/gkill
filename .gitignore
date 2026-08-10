@@ -68,3 +68,9 @@ resources/manual/*
 # rsrc が build_windows_amd64 / build_windows_amd64_app の中で生成し、
 # ビルド後に消す一時ファイル。中断すると残る
 *.syso
+
+# Git Bash のクラッシュダンプ（作業と無関係な事故ファイル）
+*.stackdump
+
+# 手元検証で作られる SQLite の残骸
+user_config_test.db
