@@ -521,8 +521,25 @@ WHERE KEY = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", selectSchemaVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint(queryArgs)))
 	err = selectSchemaVersionStmt.QueryRowContext(ctx, queryArgs...).Scan(&dbSchemaVersion)
 	if err != nil {
-		// データがなかったら今のバージョンをいれる
+		// データがなかったら今のバージョンをいれる。
+		// ただし GKILL_META_INFO 自体が無かった時代のDBがあるので、
+		// 「行が無い＝新規DB」と決めつけずに実際のテーブルの形を見る。
+		// 決めつけると、旧スキーマのまま現行版と記録してしまい、
+		// 以降 PASSWORD_HASH を参照する全クエリが
+		// 「no such column」で落ち続ける（移行も二度と走らない）。
 		if errors.Is(err, sql.ErrNoRows) {
+			hasOldPasswordColumn, columnErr := columnExists(ctx, db, "ACCOUNT", "PASSWORD_SHA256")
+			if columnErr != nil {
+				return false, nil, columnErr
+			}
+			if hasOldPasswordColumn {
+				// バージョン行が無いだけの 1.0.0 のDB。移行してから現行版として記録する
+				if migrateErr := migrateAccountSchemaFrom100(ctx, db, schemaVersionKey, currentSchemaVersion); migrateErr != nil {
+					return true, nil, migrateErr
+				}
+				return false, nil, nil
+			}
+
 			insertCurrentVersionSQL := `
 INSERT INTO GKILL_META_INFO(KEY, VALUE)
 VALUES(?, ?)`
@@ -667,9 +684,15 @@ WHERE USER_ID = ?
 		resetTokens[userID] = token
 	}
 
-	updateVersionSQL := `UPDATE GKILL_META_INFO SET VALUE = ? WHERE KEY = ?`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint([]any{currentSchemaVersion, schemaVersionKey})))
-	if _, err := tx.ExecContext(ctx, updateVersionSQL, currentSchemaVersion, schemaVersionKey); err != nil {
+	// バージョン管理の仕組みが入る前のDBには行そのものが無い。
+	// UPDATE だけだと黙って0行更新になり、次の起動でまた移行を試みることになるので
+	// 行が無ければ作る
+	updateVersionSQL := `
+INSERT INTO GKILL_META_INFO(KEY, VALUE)
+VALUES(?, ?)
+ON CONFLICT(KEY) DO UPDATE SET VALUE = excluded.VALUE`
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", fmt.Sprintf("%q", updateVersionSQL), "query", fmt.Sprintf("%q", fmt.Sprint([]any{schemaVersionKey, currentSchemaVersion})))
+	if _, err := tx.ExecContext(ctx, updateVersionSQL, schemaVersionKey, currentSchemaVersion); err != nil {
 		return fmt.Errorf("error at update account schema version: %w", err)
 	}
 
@@ -702,6 +725,21 @@ func printMigrationNotice(accountCount int, expiration time.Time) {
 	os.Stdout.WriteString(sb.String())
 }
 
+// columnExists は指定したテーブルに指定した名前のカラムがあるかを返す。
+// テーブル自体が無いときは false を返す（PRAGMA は空を返すだけでエラーにならない）。
+func columnExists(ctx context.Context, db *sql.DB, tableName string, columnName string) (bool, error) {
+	rows, err := db.QueryContext(ctx, fmt.Sprintf("PRAGMA table_info(%s)", tableName))
+	if err != nil {
+		return false, fmt.Errorf("error at get table info %s: %w", tableName, err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
+	return scanColumnExists(rows, tableName, columnName)
+}
+
 // columnExistsInTx は指定したテーブルに指定した名前のカラムがあるかを返す。
 func columnExistsInTx(ctx context.Context, tx *sql.Tx, tableName string, columnName string) (bool, error) {
 	rows, err := tx.QueryContext(ctx, fmt.Sprintf("PRAGMA table_info(%s)", tableName))
@@ -713,7 +751,11 @@ func columnExistsInTx(ctx context.Context, tx *sql.Tx, tableName string, columnN
 			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
 		}
 	}()
+	return scanColumnExists(rows, tableName, columnName)
+}
 
+// scanColumnExists は PRAGMA table_info の結果から目的のカラムを探す。
+func scanColumnExists(rows *sql.Rows, tableName string, columnName string) (bool, error) {
 	for rows.Next() {
 		var cid int
 		var name string
