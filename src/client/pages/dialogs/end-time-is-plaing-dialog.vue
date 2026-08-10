@@ -33,6 +33,7 @@ import EndTimeIsPlaingView from '../views/end-time-is-plaing-view.vue'
 import type { EndTimeIsPlaingDialogProps } from './end-time-is-plaing-dialog-props'
 import type { KyouViewEmits } from '../views/kyou-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 defineProps<EndTimeIsPlaingDialogProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -48,7 +49,6 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 const ui = useFloatingDialog("end-time-is-plaing-dialog", {
   centerMode: "always",
   onEscape: () => hide(),

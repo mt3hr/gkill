@@ -33,6 +33,7 @@ import type { EditLantanaDialogProps } from './edit-lantana-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditLantanaView from '../views/edit-lantana-view.vue';
 import type { Kyou } from '@/classes/datas/kyou';
+import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 
 defineProps<EditLantanaDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
@@ -48,7 +49,6 @@ import { i18n } from '@/i18n'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog, { onClosed: () => emits('closed') })
 import { useFloatingDialog } from "@/classes/use-floating-dialog"
-import { build_kyou_dialog_relay } from '@/classes/kyou-view-relay'
 const ui = useFloatingDialog("edit-lantana-dialog", {
   centerMode: "always",
   onEscape: () => hide(),
