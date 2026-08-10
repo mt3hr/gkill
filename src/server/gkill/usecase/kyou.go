@@ -47,9 +47,16 @@ func (uc *UsecaseContext) GetKyouHistories(ctx context.Context, repositories *re
 	return kyouHistories, nil, nil
 }
 
-// GetKyous はKyou一覧を取得するユースケース
-func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeName string, query *find.FindQuery) ([]reps.Kyou, []*message.GkillError, error) {
+// GetKyous はKyou一覧を取得するユースケース。
+// 第2戻り値は致命的ではない警告メッセージ(プラグイン検索の失敗など)で、
+// 検索自体は成功として結果と一緒に返す。
+func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeName string, query *find.FindQuery) ([]reps.Kyou, []*message.GkillMessage, []*message.GkillError, error) {
 	query.OnlyLatestData = true
+
+	// プラグイン検索の失敗は警告として回収する。
+	// エラー(errors)に載せるとハンドラ・クライアントが検索全体を失敗扱いにして
+	// 結果を破棄するため、メッセージ(messages)として返す
+	ctx = reps.WithFindWarnings(ctx)
 
 	kyous, gkillErrors, err := uc.FindFilter.FindKyous(ctx, userID, device, uc.DAOManager, query)
 	if len(gkillErrors) != 0 || err != nil {
@@ -57,8 +64,16 @@ func (uc *UsecaseContext) GetKyous(ctx context.Context, userID, device, localeNa
 			err = fmt.Errorf("error at find kyous: %w", err)
 			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
-		return nil, gkillErrors, nil
+		return nil, nil, gkillErrors, nil
 	}
 
-	return kyous, nil, nil
+	var warningMessages []*message.GkillMessage
+	for _, pluginName := range reps.PluginFindWarnings(ctx) {
+		warningMessages = append(warningMessages, &message.GkillMessage{
+			MessageCode: message.FindKyousPluginWarningMessage,
+			Message:     api.GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_FIND_PLUGIN_MESSAGE"}) + " (" + pluginName + ")",
+		})
+	}
+
+	return kyous, warningMessages, nil, nil
 }

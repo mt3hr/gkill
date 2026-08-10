@@ -21,6 +21,7 @@ func (g *GkillServerAPI) Serve(ctx context.Context) error {
 	router := g.GkillDAOManager.GetRouter()
 	router.Use(g.recoverMiddleware)
 	router.Use(g.accessLogMiddleware)
+	router.Use(gzipMiddleware())
 	// --- PathPrefix routes (wrapNoAuth) ---
 	// 利用者のファイルをそのまま返す2経路には、下流(サムネイル・動画・ZIP展開物)まで
 	// まとめて効くようルート側でセキュリティヘッダを付ける。
