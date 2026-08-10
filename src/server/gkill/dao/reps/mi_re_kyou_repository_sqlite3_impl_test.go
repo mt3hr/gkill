@@ -106,8 +106,7 @@ func TestMiReKyouFindByBoard(t *testing.T) {
 	}
 
 	query := makeDefaultFindQuery()
-	query.UseMiBoardName = true
-	query.MiBoardName = "work"
+	query.MiBoardName = testPtr("work")
 
 	mirekyous, err := repo.FindMiReKyou(ctx, query)
 	if err != nil {
@@ -223,6 +222,55 @@ func TestMiReKyouGetBoardNames(t *testing.T) {
 	}
 	if !boardSet["personal"] {
 		t.Errorf("expected board 'personal' in results, got %v", boards)
+	}
+}
+
+// Mi版と同じく、旧バージョン・削除済みの板名を板一覧に出さないことを確かめる
+func TestMiReKyouGetBoardNames_ExcludesOldVersionAndDeleted(t *testing.T) {
+	repo := newTempMiReKyouRepo(t)
+	ctx := context.Background()
+
+	typo := makeMiReKyou("mirekyou-bn-typo", "target-bn-typo")
+	typo.BoardName = "2026/07/1 09:00"
+	if err := repo.AddMiReKyouInfo(ctx, typo); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+	fixed := makeMiReKyou("mirekyou-bn-typo", "target-bn-typo")
+	fixed.BoardName = "work"
+	fixed.UpdateTime = fixed.UpdateTime.Add(1 * time.Hour)
+	if err := repo.AddMiReKyouInfo(ctx, fixed); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	removed := makeMiReKyou("mirekyou-bn-removed", "target-bn-removed")
+	removed.BoardName = "obsolete"
+	if err := repo.AddMiReKyouInfo(ctx, removed); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+	deleted := makeMiReKyou("mirekyou-bn-removed", "target-bn-removed")
+	deleted.BoardName = "obsolete"
+	deleted.IsDeleted = true
+	deleted.UpdateTime = deleted.UpdateTime.Add(1 * time.Hour)
+	if err := repo.AddMiReKyouInfo(ctx, deleted); err != nil {
+		t.Fatalf("AddMiReKyouInfo failed: %v", err)
+	}
+
+	boards, err := repo.GetBoardNames(ctx)
+	if err != nil {
+		t.Fatalf("GetBoardNames failed: %v", err)
+	}
+	boardSet := make(map[string]bool)
+	for _, b := range boards {
+		boardSet[b] = true
+	}
+	if boardSet["2026/07/1 09:00"] {
+		t.Errorf("旧バージョンの板名が残っている: %v", boards)
+	}
+	if boardSet["obsolete"] {
+		t.Errorf("削除済みタスクだけの板が残っている: %v", boards)
+	}
+	if !boardSet["work"] {
+		t.Errorf("最新版の板名が消えている: %v", boards)
 	}
 }
 

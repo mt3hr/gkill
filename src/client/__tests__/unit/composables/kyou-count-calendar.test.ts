@@ -33,6 +33,7 @@ function mountCalendar(emits: KyouCountCalendarEmits, root: HTMLElement) {
     const props = reactive({
         kyous: [] as unknown[],
         for_mi: false,
+        is_active: true,
     }) as unknown as KyouCountCalendarProps
 
     let api: ReturnType<typeof useKyouCountCalendar> | null = null
@@ -113,6 +114,67 @@ describe('useKyouCountCalendar の日付セルハンドラ', () => {
 
         // splice でも再集計されること（参照だけ見ていると 0 にならない）
         expect(api.events.value).toHaveLength(0)
+        app.unmount()
+    })
+
+    // 親はv-showで隠すだけなのでwatcherは生きている。非表示中に数十万件の集計を
+    // 走らせない(is_active=false中はスキップし、表示時に追いつく)ことの回帰テスト
+    it('is_active=false中はkyousが変わっても集計せず、trueになったら追いつく', async () => {
+        const emits = (() => { }) as unknown as KyouCountCalendarEmits
+        const root = makeCalendarDom()
+        const { app, api, props } = mountCalendar(emits, root)
+        await nextTick()
+
+        ;(props as unknown as { is_active: boolean }).is_active = false
+        await nextTick()
+
+        props.kyous.push({ related_time: new Date(2026, 7, 10), id: 'a' } as never)
+        await nextTick()
+        expect(api.events.value, '非表示中は集計しない').toHaveLength(0)
+
+        ;(props as unknown as { is_active: boolean }).is_active = true
+        await nextTick()
+        expect(api.events.value.length, '表示されたら非表示中の変更へ追いつく').toBeGreaterThan(0)
+        app.unmount()
+    })
+
+    // moment(related_time).format("yyyy-MM-DD") をネイティブ実装へ置き換えた際の
+    // 日付キー互換の検証。月初・月末・年跨ぎ・1桁月日の境界で同じ日付に集計されること
+    it('日付キーの互換: 境界日でも従来(moment)と同じ日に集計される', async () => {
+        const emits = (() => { }) as unknown as KyouCountCalendarEmits
+        const root = makeCalendarDom()
+        const { app, api, props } = mountCalendar(emits, root)
+        await nextTick()
+
+        const boundary_dates = [
+            new Date(2026, 0, 1, 0, 0, 0),    // 年始・1桁月日
+            new Date(2025, 11, 31, 23, 59, 59), // 年末・大晦日の終端
+            new Date(2026, 1, 28, 12, 0, 0),  // 月末(平年2月)
+            new Date(2024, 1, 29, 12, 0, 0),  // 閏日
+            new Date(2026, 8, 9, 0, 0, 0),    // 1桁月・1桁日
+        ]
+        for (let i = 0; i < boundary_dates.length; i++) {
+            props.kyous.push({ related_time: boundary_dates[i], id: `boundary-${i}` } as never)
+        }
+        await nextTick()
+
+        // どの境界日も1日1件として独立に集計される
+        expect(api.events.value).toHaveLength(boundary_dates.length)
+        for (let i = 0; i < boundary_dates.length; i++) {
+            const source = boundary_dates[i]
+            const found = api.events.value.find((event) => {
+                const start = event.start as Date
+                return start.getFullYear() === source.getFullYear()
+                    && start.getMonth() === source.getMonth()
+                    && start.getDate() === source.getDate()
+            })
+            expect(found, `${source.toISOString()} が同じ日付キーへ集計されていない`).toBeTruthy()
+            // startはその日の0時、endはその日の終端(翌日0時の1ms前)
+            const start = found!.start as Date
+            const end = found!.end as Date
+            expect(start.getHours()).toBe(0)
+            expect(end.getTime()).toBe(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1).getTime() - 1)
+        }
         app.unmount()
     })
 })
