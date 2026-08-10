@@ -49,6 +49,7 @@
                 @registered_text="onPlaingViewRegisteredText"
                 @registered_notification="onPlaingViewRegisteredNotification"
                 @updated_kyou="onPlaingViewUpdatedKyou"
+                @saved_kyou_by_kftl="onPlaingViewSavedKyouByKftl"
                 @updated_tag="onPlaingViewUpdatedTag"
                 @updated_text="onPlaingViewUpdatedText"
                 @updated_notification="onPlaingViewUpdatedNotification"
@@ -127,6 +128,7 @@ const {
     onPlaingViewRegisteredText,
     onPlaingViewRegisteredNotification,
     onPlaingViewUpdatedKyou,
+    onPlaingViewSavedKyouByKftl,
     onPlaingViewUpdatedTag,
     onPlaingViewUpdatedText,
     onPlaingViewUpdatedNotification,

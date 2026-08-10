@@ -9,13 +9,13 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-checkbox v-model="is_use_custom_find_kyou_query"
-                    :label="i18n.global.t('RYUU_CUSTOM_FIND_QUERY_TITLE')" />
+                    :label="i18n.global.t('CUSTOM_FIND_QUERY_TITLE')" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pt-3 ma-0">
                 <v-btn v-if="is_use_custom_find_kyou_query" dark color="primary"
                     @click="show_find_query_editor_dialog()">{{
-                        i18n.global.t('RYUU_FIND_QUERY_TITLE') }} </v-btn>
+                        i18n.global.t('FIND_QUERY_TITLE') }} </v-btn>
             </v-col>
         </v-row>
         <v-text-field v-if="is_use_custom_find_kyou_query" type="number" v-model="find_duration_hour" min="0"

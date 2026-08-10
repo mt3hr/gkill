@@ -10,8 +10,8 @@
         @dragstart="(e: DragEvent) => onDragStart(e)">
         <div class="mirekyou_head">
             <!-- 既定のdensityだと56pxあり、板名と日時と合わせると行に収まらない -->
-            <v-checkbox v-model="is_checked_mi" hide-details density="compact" @click="clicked_mi_check()"
-                :readonly="is_requested_submit" />
+            <v-checkbox class="mirekyou_check" v-model="is_checked_mi" hide-details density="compact"
+                @click="clicked_mi_check()" :readonly="is_requested_submit" />
             <!-- 既存の記録をタスクにしたものであることをMiと区別できるようにする -->
             <v-icon class="mirekyou_mark" size="16">mdi-subdirectory-arrow-right</v-icon>
             <div class="py-1 mi_title mirekyou_summary" :title="target_summary">{{ target_summary }}</div>
@@ -119,6 +119,16 @@ defineExpose({ show_context_menu })
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/*
+ * v-checkboxのルートは.v-input--horizontalのgridで、中身のトラックがminmax(0,1fr)。
+ * min-content幅が0になるのでflexの縮小がそのまま効き、参照先の要約が長いほど
+ * 取り分を持っていかれて幅0まで潰れ、チェックボックスが要約の下に隠れる。
+ * 他の固定要素と同じく縮ませない
+ */
+.mirekyou_check {
+    flex: 0 0 auto;
 }
 
 .mirekyou_mark {

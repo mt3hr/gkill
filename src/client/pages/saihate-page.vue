@@ -67,45 +67,39 @@
             </v-avatar>
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                v-on="saihateKyouHandlers"
                 ref="add_kc_dialog" />
             <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                v-on="saihateKyouHandlers"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                v-on="saihateKyouHandlers"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                v-on="saihateKyouHandlers"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                v-on="saihateKyouHandlers"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                v-on="saihateKyouHandlers"
                 ref="add_nlog_dialog" />
             <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :app_content_width="app_content_width"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                v-on="saihateKyouHandlers"
+                @saved_kyou_by_kftl="onSavedKyouByKftl"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :app_content_width="app_content_width"
-                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                v-on="saihateKyouHandlers"
+                @saved_kyou_by_kftl="onSavedKyouByKftl"
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
@@ -187,6 +181,8 @@ const {
     // Methods
     write_errors,
     write_messages,
+    saihateKyouHandlers,
+    onSavedKyouByKftl,
     close_message,
     floating_action_button_style,
 

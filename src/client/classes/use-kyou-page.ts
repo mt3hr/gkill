@@ -14,6 +14,8 @@ import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
+import { useConfigStructSync } from '@/classes/use-config-struct-sync'
+import type { Tag } from '@/classes/datas/tag'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function useKyouPage() {
@@ -41,6 +43,29 @@ export function useKyouPage() {
     const kyou: Ref<Kyou> = ref(new Kyou())
 
     const is_loading = ref(true)
+
+    // ── 板ツリー/タグツリーの追随 ──
+    const { check_tag_update, check_mi_board_update } = useConfigStructSync({
+        application_config,
+        gkill_api: () => gkill_api.value,
+        write_errors: (errors) => write_errors(errors),
+    })
+
+    function onRegisteredKyou(registered_kyou: Kyou): void {
+        check_mi_board_update(registered_kyou)
+    }
+
+    function onUpdatedKyou(updated_kyou: Kyou): void {
+        check_mi_board_update(updated_kyou)
+    }
+
+    function onRegisteredTag(registered_tag: Tag): void {
+        check_tag_update(registered_tag)
+    }
+
+    function onUpdatedTag(updated_tag: Tag): void {
+        check_tag_update(updated_tag)
+    }
 
     // ── Computed ──
     const page_list = computed(() => [
@@ -317,6 +342,10 @@ export function useKyouPage() {
         navigate_to_page,
         write_errors,
         write_messages,
+        onRegisteredKyou,
+        onUpdatedKyou,
+        onRegisteredTag,
+        onUpdatedTag,
         close_message,
         load_application_config,
         show_application_config_dialog,

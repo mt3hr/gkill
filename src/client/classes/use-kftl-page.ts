@@ -9,6 +9,8 @@ import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
+import { useConfigStructSync } from '@/classes/use-config-struct-sync'
+import type { Kyou } from '@/classes/datas/kyou'
 import type { ComponentRef } from '@/classes/component-ref'
 
 export function useKftlPage() {
@@ -31,6 +33,13 @@ export function useKftlPage() {
     const is_loading = ref(true)
 
     const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
+
+    // ── 板ツリー/タグツリーの追随 ──
+    const { check_mi_board_update, resync_structs } = useConfigStructSync({
+        application_config,
+        gkill_api: () => gkill_api.value,
+        write_errors: (errors) => write_errors(errors),
+    })
 
     // ── Helpers ──
     const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
@@ -216,6 +225,19 @@ export function useKftlPage() {
         load_application_config()
     }
 
+    function onRegisteredKyou(kyou: Kyou): void {
+        check_mi_board_update(kyou)
+    }
+
+    function onUpdatedKyou(kyou: Kyou): void {
+        check_mi_board_update(kyou)
+    }
+
+    // KFTL はタグを registered_tag で上げてこないので、保存完了で板・タグの両方を取り直す
+    function onSavedKyouByKftl(): void {
+        resync_structs()
+    }
+
     function onCloseMessage(message_id: string): void {
         close_message(message_id)
     }
@@ -263,6 +285,9 @@ export function useKftlPage() {
         // Event handlers
         onCloseMessage,
         onReceivedErrors,
+        onRegisteredKyou,
+        onUpdatedKyou,
+        onSavedKyouByKftl,
         onReceivedMessages,
         onRequestedReloadApplicationConfig,
     }

@@ -8,6 +8,9 @@ export interface ZipEntry {
     size: number
     is_image: boolean
     is_text: boolean
+    is_video: boolean
+    is_audio: boolean
+    is_pdf: boolean
     file_url: string
 }
 

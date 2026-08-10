@@ -31,6 +31,10 @@ export default class EqualTitleTargetKyouPredicate implements DnotePredicate {
             if (kyou.data_type.startsWith("timeis")) {
                 return kyou.typed_timeis ? kyou.typed_timeis.title : null
             }
+            // "mirekyou" は "mi" に前方一致するが、ここでは先に弾かなくてよい。
+            // Kyou.load_all が mirekyou を load_typed_mi の対象外にしているので
+            // MiReKyou の typed_mi は必ず null になり、結果は null で一致する。
+            // （タイトルを持たないので対象外、という意図も同じ）
             if (kyou.data_type.startsWith("mi")) {
                 return kyou.typed_mi ? kyou.typed_mi.title : null
             }

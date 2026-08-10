@@ -1,5 +1,5 @@
 import { i18n } from '@/i18n'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { MiKyouViewProps } from '@/pages/views/mi-kyou-view-props'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -9,6 +9,7 @@ import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { ComponentRef } from '@/classes/component-ref'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import { useDeviceKind } from '@/classes/use-device-kind'
 
 export function useMiKyouView(options: {
     props: MiKyouViewProps,
@@ -19,34 +20,23 @@ export function useMiKyouView(options: {
     // ── Template refs ──
     const context_menu = ref<ComponentRef | null>(null)
 
-    // タッチデバイス（モバイル）ではドラッグを無効にする。
-    // ロングプレスでcontextmenuイベントを発火させるため。
-    const is_mobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    const effective_draggable = computed(() => is_mobile ? false : (props.draggable ?? false))
+    // ドラッグ&ドロップはPCでのみ有効にする。
+    // タブレット・スマートフォンでは長押しでcontextmenuイベントを発火させるため。
+    const { is_pc } = useDeviceKind()
+    const effective_draggable = computed(() => is_pc.value && (props.draggable ?? false))
 
     // ── State refs ──
     const is_requested_submit = ref(false)
     const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
     const is_checked_mi: Ref<boolean> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.is_checked : false)
-    const mi_title_style = ref({
-        maxWidth: 'calc(100% - 0px)'
-    })
-
-    // ── Init ──
-    nextTick(() => update_mi_title_style())
 
     // ── Watchers ──
     watch(() => props.kyou, async () => {
         await load_cloned_kyou()
-        nextTick(() => update_mi_title_style())
         is_checked_mi.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.is_checked : false
     })
 
     // ── Business logic ──
-    function update_mi_title_style(): void {
-        mi_title_style.value.maxWidth = `calc(100% - ${get_board_name_text_width_px()}px)`
-    }
-
     async function load_cloned_kyou() {
         const kyou = props.kyou.clone()
         await kyou.load_typed_datas()
@@ -131,35 +121,6 @@ export function useMiKyouView(options: {
         return
     }
 
-    function get_board_name_text_width_px(): number {
-        const mi_board_name_element = document.querySelector(".kyou_".concat(props.kyou.id).concat(" ").concat(".mi_board_name"))
-        if (mi_board_name_element == null) {
-            return 0
-        }
-        const text_width = get_text_width(props.kyou.typed_mi?.board_name ?? '', get_canvas_font(mi_board_name_element as HTMLElement)).valueOf() + 16 + 16 + 4 // padding + padding + 4px
-        return text_width
-    }
-
-    function get_text_width(text: string, font: string): number {
-        const fn = get_text_width as unknown as Record<string, HTMLCanvasElement>
-        const canvas: HTMLCanvasElement = fn.canvas || (fn.canvas = document.createElement("canvas"))
-        const context = canvas.getContext("2d")!
-        context.font = font
-        const metrics = context.measureText(text)
-        return metrics.width
-    }
-
-    function get_css_style(element: Element, prop: string): string {
-        return window.getComputedStyle(element, null).getPropertyValue(prop)
-    }
-
-    function get_canvas_font(element = document.body): string {
-        const font_weight = get_css_style(element, 'font-weight') || 'normal'
-        const font_size = get_css_style(element, 'font-size') || '16px'
-        const font_family = get_css_style(element, 'font-family') || 'Times New Roman'
-        return `${font_weight} ${font_size} ${font_family}`
-    }
-
     function onDragStart(e: DragEvent) {
         e.dataTransfer!.setData("gkill_mi", JSON.stringify(props.kyou.typed_mi))
     }
@@ -176,7 +137,6 @@ export function useMiKyouView(options: {
         cloned_kyou,
         is_requested_submit,
         is_checked_mi,
-        mi_title_style,
         effective_draggable,
 
         // Business logic

@@ -35,15 +35,19 @@ export function useReKyouView(options: {
     watch(() => props.rekyou, () => get_target_kyou())
 
     // ── Business logic ──
-    async function get_target_kyou() {
+    // force: 参照先が更新された通知(requested_reload_kyou / updated_kyou)を受けたときだけ true。
+    // 参照先にタグが付いてもReKyou側のupdate_timeも参照先のupdate_timeも動かないので、
+    // 「古くなった」をローカルに判定する材料が無い。明示的に引き直すしかない
+    async function get_target_kyou(force = false) {
         // target_idが空だと下の使い回しガード(初期値'')に引っかかってリクエストすら飛ばず、
         // 中身の入らないKyouViewが読み込み中表示のまま止まる。見つからなかった扱いにして終端させる
         if (props.rekyou.target_id === '') {
             is_target_not_found.value = true
             return
         }
-        // 仮想スクロールの行使い回しでpropsだけ差し替わることがある。参照先が同じなら引き直さない
-        if (loaded_target_id === props.rekyou.target_id) {
+        // 仮想スクロールの行使い回しでpropsだけ差し替わることがある。参照先が同じなら引き直さない。
+        // ここを外すとスクロール中に行数ぶんget_kyouが飛ぶので、forceのときだけ通す
+        if (!force && loaded_target_id === props.rekyou.target_id) {
             return
         }
         loaded_target_id = props.rekyou.target_id
@@ -91,7 +95,22 @@ export function useReKyouView(options: {
     get_target_kyou()
 
     // ── Event relay objects ──
-    const crudRelayHandlers = build_kyou_view_relay(emits)
+    // 参照先のタグ等が変わっても、このReKyou行が抱えている target_kyou は
+    // 使い回しガードのせいで引き直されない。対象idが一致したときだけ強制的に引き直す
+    const crudRelayHandlers = build_kyou_view_relay(emits, {
+        'requested_reload_kyou': (kyou: Kyou) => {
+            if (kyou.id === props.rekyou.target_id) {
+                get_target_kyou(true)
+            }
+            emits('requested_reload_kyou', kyou)
+        },
+        'updated_kyou': (kyou: Kyou) => {
+            if (kyou.id === props.rekyou.target_id) {
+                get_target_kyou(true)
+            }
+            emits('updated_kyou', kyou)
+        },
+    })
 
     // ── Return ──
     return {

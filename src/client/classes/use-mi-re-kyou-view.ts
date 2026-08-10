@@ -12,6 +12,7 @@ import { is_row_height } from '@/classes/kyou-row-height'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { ComponentRef } from '@/classes/component-ref'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import { useDeviceKind } from '@/classes/use-device-kind'
 
 /** 一覧の行で日時を1行だけ出すときの優先順。Miの並びに合わせる */
 const MI_RE_KYOU_TIME_PRIORITY = [
@@ -29,10 +30,10 @@ export function useMiReKyouView(options: {
     // ── Template refs ──
     const context_menu = ref<ComponentRef | null>(null)
 
-    // タッチデバイス（モバイル）ではドラッグを無効にする。
-    // ロングプレスでcontextmenuイベントを発火させるため。
-    const is_mobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    const effective_draggable = computed(() => is_mobile ? false : (props.draggable ?? false))
+    // ドラッグ&ドロップはPCでのみ有効にする。
+    // タブレット・スマートフォンでは長押しでcontextmenuイベントを発火させるため。
+    const { is_pc } = useDeviceKind()
+    const effective_draggable = computed(() => is_pc.value && (props.draggable ?? false))
 
     // 一覧の行に収まる高さしか無いときは参照先の埋め込みをやめる
     const is_compact = computed(() => is_row_height(props.height))
@@ -69,7 +70,10 @@ export function useMiReKyouView(options: {
     })
 
     // ── Business logic ──
-    async function get_target_kyou() {
+    // force: 参照先が更新された通知(requested_reload_kyou / updated_kyou)を受けたときだけ true。
+    // 参照先にタグが付いてもMiReKyou側のupdate_timeも参照先のupdate_timeも動かないので、
+    // 「古くなった」をローカルに判定する材料が無い。明示的に引き直すしかない
+    async function get_target_kyou(force = false) {
         // target_idが空だと下の使い回しガード(初期値'')に引っかかってリクエストすら飛ばず、
         // 中身の入らないKyouViewが読み込み中表示のまま止まる。見つからなかった扱いにして終端させる
         if (props.mirekyou.target_id === '') {
@@ -77,8 +81,9 @@ export function useMiReKyouView(options: {
             fallback_summary()
             return
         }
-        // 仮想スクロールの行使い回しでpropsだけ差し替わることがある。参照先が同じなら引き直さない
-        if (loaded_target_id === props.mirekyou.target_id) {
+        // 仮想スクロールの行使い回しでpropsだけ差し替わることがある。参照先が同じなら引き直さない。
+        // ここを外すとスクロール中に行数ぶんget_kyouが飛ぶので、forceのときだけ通す
+        if (!force && loaded_target_id === props.mirekyou.target_id) {
             return
         }
         loaded_target_id = props.mirekyou.target_id
@@ -222,7 +227,22 @@ export function useMiReKyouView(options: {
     get_target_kyou()
 
     // ── Event relay objects ──
-    const crudRelayHandlers = build_kyou_view_relay(emits)
+    // 参照先のタグ等が変わっても、このMiReKyou行が抱えている target_kyou は
+    // 使い回しガードのせいで引き直されない。対象idが一致したときだけ強制的に引き直す
+    const crudRelayHandlers = build_kyou_view_relay(emits, {
+        'requested_reload_kyou': (kyou: Kyou) => {
+            if (kyou.id === props.mirekyou.target_id) {
+                get_target_kyou(true)
+            }
+            emits('requested_reload_kyou', kyou)
+        },
+        'updated_kyou': (kyou: Kyou) => {
+            if (kyou.id === props.mirekyou.target_id) {
+                get_target_kyou(true)
+            }
+            emits('updated_kyou', kyou)
+        },
+    })
 
     // ── Return ──
     return {

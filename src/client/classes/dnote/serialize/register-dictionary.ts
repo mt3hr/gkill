@@ -140,31 +140,6 @@ export default function register_dictionary(): void {
     AggregateTargetDictionary.set("AggregateMaxKCNumValue", AggregateMaxKCNumValue)
     AggregateTargetDictionary.set("AggregateMinKCNumValue", AggregateMinKCNumValue)
     AggregateTargetDictionary.set("AggregateSumKCNumValue", AggregateSumKCNumValue)
-
-    // 旧綴り "Agregate*" の後方互換エイリアス。
-    // 保存済みの集計定義(user_config の APPLICATION_CONFIG / DNOTE_JSON_DATA)には
-    // 旧綴りの type 文字列が入っているため、読み込みは新旧どちらも受け付ける。
-    // 書き出し(to_json)は新綴りのみなので、ユーザが編集保存すれば自然に移行する。
-    // 旧データを読めなくなるので、このブロックは消さないこと。
-    AggregateTargetDictionary.set("AgregateAverageGitCommitLogAdditionCodeCount", AggregateAverageGitCommitLogAdditionCodeCount)
-    AggregateTargetDictionary.set("AgregateAverageGitCommitLogCodeCount", AggregateAverageGitCommitLogCodeCount)
-    AggregateTargetDictionary.set("AgregateAverageGitCommitLogDeletionCodeCount", AggregateAverageGitCommitLogDeletionCodeCount)
-    AggregateTargetDictionary.set("AgregateAverageLantanaMood", AggregateAverageLantanaMood)
-    AggregateTargetDictionary.set("AgregateAverageNlogAmount", AggregateAverageNlogAmount)
-    AggregateTargetDictionary.set("AgregateAverageTimeIsEndTime", AggregateAverageTimeIsEndTime)
-    AggregateTargetDictionary.set("AgregateAverageTimeIsStartTime", AggregateAverageTimeIsStartTime)
-    AggregateTargetDictionary.set("AgregateAverageTimeIsTime", AggregateAverageTimeIsTime)
-    AggregateTargetDictionary.set("AgregateCountKyou", AggregateCountKyou)
-    AggregateTargetDictionary.set("AgregateSumGitCommitLogAdditionCodeCount", AggregateSumGitCommitLogAdditionCodeCount)
-    AggregateTargetDictionary.set("AgregateSumGitCommitLogCodeCount", AggregateSumGitCommitLogCodeCount)
-    AggregateTargetDictionary.set("AgregateSumGitCommitLogDeletionCodeCount", AggregateSumGitCommitLogDeletionCodeCount)
-    AggregateTargetDictionary.set("AgregateSumLantanaMood", AggregateSumLantanaMood)
-    AggregateTargetDictionary.set("AgregateSumNlogAmount", AggregateSumNlogAmount)
-    AggregateTargetDictionary.set("AgregateSumTimeIsTime", AggregateSumTimeIsTime)
-    AggregateTargetDictionary.set("AgregateAverageKCNumValue", AggregateAverageKCNumValue)
-    AggregateTargetDictionary.set("AgregateMaxKCNumValue", AggregateMaxKCNumValue)
-    AggregateTargetDictionary.set("AgregateMinKCNumValue", AggregateMinKCNumValue)
-    AggregateTargetDictionary.set("AgregateSumKCNumValue", AggregateSumKCNumValue)
     DnoteKyouFilterDictionary.set("FilterTopKyous", FilterTopKyous)
     DnoteKyouFilterDictionary.set("FilterBottomKyous", FilterBottomKyous)
 }

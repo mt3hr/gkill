@@ -15,6 +15,7 @@ import type { AddMiViewProps } from '@/pages/views/add-mi-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type NewBoardNameDialog from '@/pages/dialogs/new-board-name-dialog.vue'
 import type { ComponentRef } from '@/classes/component-ref'
+import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
 
 export function useAddMiView(options: {
     props: AddMiViewProps,
@@ -25,6 +26,9 @@ export function useAddMiView(options: {
     // ── Template refs ──
     const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null)
     const add_notification_views = ref<ComponentRef | null>(null)
+
+    // ── Confirm unknown mi board ──
+    const confirm_unknown_mi_board = useConfirmUnknownMiBoard({ application_config: () => props.application_config })
 
     // ── State refs ──
     const is_requested_submit = ref(false)
@@ -241,6 +245,54 @@ export function useAddMiView(options: {
                 return
             }
 
+            // 実在しない板名なら、保存する前に確認を取る。
+            // 板はサーバ側で検証されず「その名前のタスクが1件でもあること」で実体化するので、
+            // 打ち間違いがそのまま新しい板になってしまう
+            const unknown_boards = confirm_unknown_mi_board.collect_unknown_mi_boards([mi_board_name.value])
+            if (unknown_boards.length !== 0) {
+                confirm_unknown_mi_board.open_confirm(unknown_boards)
+                return
+            }
+
+            await execute_save(notification_results)
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    function cancel_save(): void {
+        confirm_unknown_mi_board.close_confirm()
+    }
+
+    async function confirm_save(): Promise<void> {
+        confirm_unknown_mi_board.remember_confirmed_mi_boards()
+        confirm_unknown_mi_board.close_confirm()
+        try {
+            is_requested_submit.value = true
+            // 確認を挟んでいる間に Notification の入力が変わっている可能性があるので取り直す
+            const notification_results = new Array<Notification>()
+            if (add_notification_views.value) {
+                for (let i = 0; i < add_notification_views.value.length; i++) {
+                    const notification = await add_notification_views.value[i].get_notification()
+                    if (!notification) {
+                        return
+                    }
+                    notification_results.push(notification)
+                }
+            }
+            await execute_save(notification_results)
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    async function execute_save(notification_results: Array<Notification>): Promise<void> {
+        try {
+            is_requested_submit.value = true
+            if (!mi.value) {
+                return
+            }
+
             // Mi 追加
 
             // 作成するMi情報を用意する
@@ -340,6 +392,12 @@ export function useAddMiView(options: {
         // Template refs
         new_board_name_dialog,
         add_notification_views,
+        confirm_unknown_mi_board_dialog: confirm_unknown_mi_board.confirm_unknown_mi_board_dialog,
+
+        // Confirm unknown mi board
+        unknown_mi_boards: confirm_unknown_mi_board.unknown_mi_boards,
+        cancel_save,
+        confirm_save,
 
         // State
         is_requested_submit,

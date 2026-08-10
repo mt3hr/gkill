@@ -141,10 +141,51 @@ export function build_kyou_view_relay(
     return build_relay(emits, kyou_view_relay_event_names, overrides) as unknown as KyouViewRelay
 }
 
-/** ダイアログ層のリレー束を作る。ビュー層の18件にフォーカス系2件を足したもの */
+/**
+ * ダイアログ層のリレー束を作る。ビュー層の18件にフォーカス系2件を足したもの。
+ *
+ * どちらを使うかの基準は「ダイアログかどうか」ではなく
+ * **「自分がフォーカスの発火源かどうか」**。
+ * 子が上げてきた `focused_kyou` / `clicked_kyou` を素通しするだけの中間層
+ * （`dnote-item-list-view` 等）は、自分では発火しないのでこちらを使う。
+ * 関数名に `dialog` と付いているせいで誤読されやすいので注意。
+ */
 export function build_kyou_dialog_relay(
     emits: KyouViewEmits,
     overrides?: Partial<KyouDialogRelay>,
 ): KyouDialogRelay {
     return build_relay(emits, kyou_dialog_relay_event_names, overrides) as unknown as KyouDialogRelay
+}
+
+/**
+ * ページ最上位の `RykvDialogHost` に渡すハンドラ束。
+ *
+ * ページには emit 先の親がいないので、`build_kyou_*_relay` と違って
+ * **未指定のイベントは no-op で埋める**。
+ *
+ * ただし次の5つだけは省略できない。
+ * 「Kyou を抱えているページが自分で決めなければならないこと」であり、
+ * `dashboard-page.vue` はここを全部落としていて
+ * 「ダッシュボードでは何を編集しても画面が更新されない」状態になっていた。
+ * 束を n 個スプレッドする書き方だと1つ欠けても型エラーにならないので、
+ * 型で必須にして取りこぼしをコンパイルエラーにする。
+ */
+export type KyouDialogHostRequiredHandlers =
+    Pick<KyouDialogRelay, 'updated_kyou' | 'deleted_kyou' | 'requested_reload_kyou' | 'requested_open_rykv_dialog'>
+    & { closed: (dialog_id: string) => void }
+
+/** 必須の5件を除いた残り。重複して書くと型エラーになる */
+export type KyouDialogHostOptionalHandlers = Omit<Partial<KyouDialogRelay>, keyof KyouDialogHostRequiredHandlers>
+
+export type KyouDialogHostHandlers = KyouDialogRelay & { closed: (dialog_id: string) => void }
+
+export function build_kyou_dialog_host_handlers(
+    required: KyouDialogHostRequiredHandlers,
+    overrides?: KyouDialogHostOptionalHandlers,
+): KyouDialogHostHandlers {
+    const handlers: LooseRelay = {}
+    for (const event_name of kyou_dialog_relay_event_names) {
+        handlers[event_name] = () => { /* ページ側で処理しないイベントは握りつぶす */ }
+    }
+    return Object.assign(handlers, overrides, required) as unknown as KyouDialogHostHandlers
 }

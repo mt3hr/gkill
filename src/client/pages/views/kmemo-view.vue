@@ -1,6 +1,6 @@
 <template>
     <v-card elevation="0" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <div v-if="kyou.typed_kmemo" class="kmemo_text_content">{{ kyou.typed_kmemo.content }}</div>
+        <div v-if="kyou.typed_kmemo" class="kmemo_text_content"><LinkifiedText :text="kyou.typed_kmemo.content" /></div>
         <KmemoContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -10,6 +10,7 @@
 </template>
 <script setup lang="ts">
 import KmemoContextMenu from './kmemo-context-menu.vue'
+import LinkifiedText from './linkified-text.vue'
 import type { KmemoViewProps } from './kmemo-view-props.ts'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { useKmemoView } from '@/classes/use-kmemo-view'

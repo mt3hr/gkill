@@ -158,6 +158,8 @@
                             }}</v-btn>
                             <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                                 i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_mi_board_dialog">{{
+                                i18n.global.t("EDIT_MI_BOARD_STRUCT_TITLE") }}</v-btn>
                         </td>
                     </tr>
                     <tr>
@@ -170,6 +172,10 @@
                                 i18n.global.t("EDIT_RYUU_TITLE") }}</v-btn>
                             <v-btn dark color="primary" @click="show_edit_dashboard_dialog">{{
                                 i18n.global.t("EDIT_DASHBOARD_TITLE") }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_plaing_time_is_dialog">{{
+                                i18n.global.t("EDIT_PLAING_TIMEIS_TITLE") }}</v-btn>
+                            <v-btn dark color="primary" @click="show_edit_saved_find_query_dialog">{{
+                                i18n.global.t("EDIT_SAVED_FIND_QUERY_TITLE") }}</v-btn>
                         </td>
                     </tr>
                 </tbody>
@@ -202,7 +208,7 @@
         <EditKFTLTemplateDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
-            @requested_apply_kftl_template_struct="(data: KFTLTemplateStructElementData) => onRequestedApplyKftlTemplateStruct(data)"
+            @requested_apply_kftl_template_struct="(data: KFTLTemplateElementData) => onRequestedApplyKftlTemplateStruct(data)"
             @requested_reload_application_config="() => () => { }" ref="edit_kftl_template_dialog" />
         <EditRepStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
@@ -221,12 +227,17 @@
             v-on="errorMessageRelayHandlers"
             @requested_apply_tag_struct="(data: TagStructElementData) => onRequestedApplyTagStruct(data)"
             @requested_reload_application_config="() => { }" ref="edit_tag_struct_dialog" />
+        <EditMiBoardStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            @requested_apply_mi_board_struct="(data: MiBoardStructElementData) => onRequestedApplyMiBoardStruct(data)"
+            @requested_reload_application_config="() => { }" ref="edit_mi_board_struct_dialog" />
         <EditDnoteDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             @requested_apply_dnote="(data: DnoteData) => onRequestedApplyDnote(data)"
             @requested_reload_application_config="() => { }" ref="edit_dnote_dialog" />
-        <EditRyuuDialog v-model="cloned_application_config" :app_content_height="app_content_height"
+        <EditRyuuDialog :app_content_height="app_content_height"
             :app_content_width="app_content_width" :application_config="cloned_application_config"
             :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
@@ -237,6 +248,16 @@
             v-on="errorMessageRelayHandlers"
             @requested_apply_dashboard_struct="(data: DashboardData) => onRequestedApplyDashboardStruct(data)"
             @requested_reload_application_config="() => { }" ref="edit_dashboard_dialog" />
+        <EditPlaingTimeIsDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            @requested_apply_plaing_timeis="(data: PlaingTimeIsData) => onRequestedApplyPlaingTimeIs(data)"
+            @requested_reload_application_config="() => { }" ref="edit_plaing_time_is_dialog" />
+        <EditSavedFindQueryDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
+            v-on="errorMessageRelayHandlers"
+            @requested_apply_saved_find_query_struct="(data: SavedFindQueryData) => onRequestedApplySavedFindQueryStruct(data)"
+            @requested_reload_application_config="() => { }" ref="edit_saved_find_query_dialog" />
         <NewBoardNameDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             v-on="errorMessageRelayHandlers"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
@@ -254,23 +275,29 @@ import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-struct-dialog.
 import EditRepStructDialog from '../dialogs/edit-rep-struct-dialog.vue'
 import EditRepTypeStructDialog from '../dialogs/edit-rep-type-struct-dialog.vue'
 import EditTagStructDialog from '../dialogs/edit-tag-struct-dialog.vue'
+import EditMiBoardStructDialog from '../dialogs/edit-mi-board-struct-dialog.vue'
 import EditDnoteDialog from '../dialogs/edit-dnote-dialog.vue'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
 import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
 import EditDashboardDialog from '../dialogs/edit-dashboard-dialog.vue'
+import EditPlaingTimeIsDialog from '../dialogs/edit-plaing-time-is-dialog.vue'
+import EditSavedFindQueryDialog from '../dialogs/edit-saved-find-query-dialog.vue'
 
 import type { ApplicationConfigViewEmits } from './application-config-view-emits'
 import type { ApplicationConfigViewProps } from './application-config-view-props'
 import { useApplicationConfigView } from '@/classes/use-application-config-view'
 import type { DeviceStructElementData } from "@/classes/datas/config/device-struct-element-data"
-import type { KFTLTemplateStructElementData } from "@/classes/datas/config/kftl-template-struct-element-data"
+import type { KFTLTemplateElementData } from "@/classes/datas/kftl-template-element-data"
 import type { RepStructElementData } from "@/classes/datas/config/rep-struct-element-data"
 import type { RepTypeStructElementData } from "@/classes/datas/config/rep-type-struct-element-data"
 import type { TagStructElementData } from "@/classes/datas/config/tag-struct-element-data"
+import type { MiBoardStructElementData } from "@/classes/datas/config/mi-board-struct-element-data"
 type DnoteData = Record<string, unknown>
 type RyuuData = Record<string, unknown>
 type DashboardData = Record<string, unknown>
+type PlaingTimeIsData = Record<string, unknown>
+type SavedFindQueryData = Record<string, unknown>
 
 const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()
@@ -282,10 +309,13 @@ const {
     edit_rep_struct_dialog,
     edit_rep_type_struct_dialog,
     edit_tag_struct_dialog,
+    edit_mi_board_struct_dialog,
     edit_kftl_template_dialog,
     edit_dnote_dialog,
     edit_ryuu_dialog,
     edit_dashboard_dialog,
+    edit_plaing_time_is_dialog,
+    edit_saved_find_query_dialog,
     server_config_dialog,
 
     // State
@@ -310,6 +340,7 @@ const {
 
     // Business logic
     reload_cloned_application_config,
+    cancel_pending_changes,
     update_application_config,
     logout,
     reload_repositories,
@@ -319,10 +350,13 @@ const {
     show_edit_rep_dialog,
     show_edit_tag_dialog,
     show_edit_rep_type_dialog,
+    show_edit_mi_board_dialog,
     show_edit_kftl_template_dialog,
     show_edit_dnote_dialog,
     show_edit_ryuu_dialog,
     show_edit_dashboard_dialog,
+    show_edit_plaing_time_is_dialog,
+    show_edit_saved_find_query_dialog,
     show_new_board_name_dialog,
     show_server_config_dialog,
 
@@ -333,15 +367,18 @@ const {
     onRequestedApplyRepStruct,
     onRequestedApplyRepTypeStruct,
     onRequestedApplyTagStruct,
+    onRequestedApplyMiBoardStruct,
     onRequestedApplyDnote,
     onRequestedApplyRyuuStruct,
     onRequestedApplyDashboardStruct,
+    onRequestedApplyPlaingTimeIs,
+    onRequestedApplySavedFindQueryStruct,
 
     // Event relay objects
     errorMessageRelayHandlers,
 } = useApplicationConfigView({ props, emits })
 
-defineExpose({ reload_cloned_application_config })
+defineExpose({ reload_cloned_application_config, cancel_pending_changes })
 </script>
 <style lang="css" scoped>
 .gkill_version_info {

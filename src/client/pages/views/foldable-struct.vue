@@ -1,6 +1,6 @@
 <template>
     <tr v-if="is_item()" :draggable="effective_draggable" @dragstart="drag_start" @drop="drop"
-        :dropzone="effective_draggable" :key="props.struct_obj.key" @dragover="dragover"
+        :key="props.struct_obj.key" @dragover="dragover"
         :class="effective_draggable ? 'foldable_struct_item foldable_struct_draggable' : 'foldable_struct_item'"
         @contextmenu.prevent.stop="onContextmenuItem" v-long-press="onLongPressItem">
         <td>
@@ -19,7 +19,7 @@
         </td>
     </tr>
     <tr v-if="!is_item()" :draggable="effective_draggable" @dragstart="drag_start" @drop="drop"
-        :dropzone="effective_draggable" :key="props.struct_obj.key" @dragover="dragover"
+        :key="props.struct_obj.key" @dragover="dragover"
         :class="effective_draggable ? 'foldable_struct_item foldable_struct_draggable' : 'foldable_struct_item'"
         @contextmenu.prevent.stop="onContextmenuItem" v-long-press="onLongPressItem">
         <td>
@@ -132,6 +132,16 @@ defineExpose({ get_selected_items, handle_move_struct_obj, get_foldable_struct, 
 }
 
 .foldable_struct_draggable {
-    touch-action: none;
+    /*
+     * touch-action: none にしてはいけない。gkillはネイティブHTML5 D&Dしか使っておらず
+     * （タッチからはdragstartが発火しない）、none にすると
+     * ①タッチPCでツリーを指で縦スクロールできなくなり、
+     * ②スクロール時にpointercancelが飛ばなくなるので、スクロールしようとしただけで
+     * v-long-pressが確定してコンテキストメニューが開く（long-press.tsはpointercancelで
+     * タイマーをクリアする設計）。
+     * manipulation ならスクロールとピンチズームを残しつつ、
+     * ダブルタップズーム待ちだけを落とせる。
+     */
+    touch-action: manipulation;
 }
 </style>
