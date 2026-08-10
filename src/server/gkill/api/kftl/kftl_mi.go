@@ -150,7 +150,7 @@ func newKFTLMiBoardNameStatementLine(lineText string, ctx *KFTLStatementLineCont
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
 	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
-		return newKFTLMiLimitTimeStatementLine(lt, c, req)
+		return newKFTLMiEstimateStartTimeStatementLine(lt, c, req)
 	}
 	return &kftlMiBoardNameStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
@@ -164,6 +164,7 @@ func (l *kftlMiBoardNameStatementLine) GetContext() *KFTLStatementLineContext { 
 func (l *kftlMiBoardNameStatementLine) GetStatementLineText() string         { return l.lineText }
 
 // kftlMiLimitTimeStatementLine reads the Mi limit time (optional, may be empty).
+// After this, next constructor reverts to None.
 // Mirrors: kftl-mi-limit-time-statement-line.ts
 type kftlMiLimitTimeStatementLine struct {
 	lineText string
@@ -174,9 +175,7 @@ type kftlMiLimitTimeStatementLine struct {
 func newKFTLMiLimitTimeStatementLine(lineText string, ctx *KFTLStatementLineContext, req *kftlMiRequest) *kftlMiLimitTimeStatementLine {
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
-	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
-		return newKFTLMiEstimateStartTimeStatementLine(lt, c, req)
-	}
+	ctx.NextStatementLineConstructor = ctx.factory.generateNoneConstructor(ctx.NextStatementLineText)
 	return &kftlMiLimitTimeStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
@@ -234,7 +233,6 @@ func (l *kftlMiEstimateStartTimeStatementLine) GetContext() *KFTLStatementLineCo
 func (l *kftlMiEstimateStartTimeStatementLine) GetStatementLineText() string { return l.lineText }
 
 // kftlMiEstimateEndTimeStatementLine reads the Mi estimate end time (optional).
-// After this, next constructor reverts to None.
 // Mirrors: kftl-mi-estimate-end-time-statement-line.ts
 type kftlMiEstimateEndTimeStatementLine struct {
 	lineText string
@@ -245,7 +243,9 @@ type kftlMiEstimateEndTimeStatementLine struct {
 func newKFTLMiEstimateEndTimeStatementLine(lineText string, ctx *KFTLStatementLineContext, req *kftlMiRequest) *kftlMiEstimateEndTimeStatementLine {
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
-	ctx.NextStatementLineConstructor = ctx.factory.generateNoneConstructor(ctx.NextStatementLineText)
+	ctx.NextStatementLineConstructor = func(lt string, c *KFTLStatementLineContext) KFTLStatementLine {
+		return newKFTLMiLimitTimeStatementLine(lt, c, req)
+	}
 	return &kftlMiEstimateEndTimeStatementLine{lineText: lineText, ctx: ctx, req: req}
 }
 
