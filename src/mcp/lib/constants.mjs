@@ -22,6 +22,7 @@ export const KYOUS_TOP_LEVEL_FIELDS = new Set([
   "max_size_mb",
   "is_include_timeis",
   "include_id",
+  "include_rep_name",
   "include_plugin_content",
   "plugin_content_max_text_length",
   "plugin_content_format",
