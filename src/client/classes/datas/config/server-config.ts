@@ -25,7 +25,8 @@ export class ServerConfig {
 
     open_file_command: string
 
-    urlog_timeout: string
+    /** ブックマーク取得のタイムアウト。Go の time.Duration と同じくナノ秒 */
+    urlog_timeout: number
 
     urlog_useragent: string
 
@@ -37,9 +38,9 @@ export class ServerConfig {
 
     accounts: Array<Account>
 
-    mi_notification_public_key: string
+    gkill_notification_public_key: string
 
-    mi_notification_private_key: string
+    gkill_notification_private_key: string
 
     use_gkill_notification: boolean
 
@@ -67,8 +68,8 @@ export class ServerConfig {
         server_config.user_data_directory = this.user_data_directory
         server_config.repositories = this.repositories
         server_config.accounts = this.accounts
-        server_config.mi_notification_public_key = this.mi_notification_public_key
-        server_config.mi_notification_private_key = this.mi_notification_private_key
+        server_config.gkill_notification_public_key = this.gkill_notification_public_key
+        server_config.gkill_notification_private_key = this.gkill_notification_private_key
         server_config.use_gkill_notification = this.use_gkill_notification
         server_config.google_map_api_key = this.google_map_api_key
         server_config.lan_hostname = this.lan_hostname
@@ -81,18 +82,18 @@ export class ServerConfig {
         this.enable_this_device = false
         this.device = ""
         this.is_local_only_access = true
-        this.address = "8888"
+        this.address = ":9999"
         this.enable_tls = false
         this.tls_cert_file = ""
         this.tls_key_file = ""
         this.open_directory_command = ""
         this.open_file_command = ""
-        this.urlog_timeout = "10s"
+        this.urlog_timeout = 60_000_000_000
         this.urlog_useragent = ""
-        this.upload_size_limit_month = 0
+        this.upload_size_limit_month = -1
         this.user_data_directory = ""
-        this.mi_notification_public_key = ""
-        this.mi_notification_private_key = ""
+        this.gkill_notification_public_key = ""
+        this.gkill_notification_private_key = ""
         this.repositories = new Array<Repository>()
         this.accounts = new Array<Account>()
         this.use_gkill_notification = false

@@ -27,9 +27,9 @@ type ServerConfig struct {
 
 	OpenFileCommand string `json:"open_file_command"`
 
-	URLogTimeout time.Duration `json:"ur_log_timeout"`
+	URLogTimeout time.Duration `json:"urlog_timeout"`
 
-	URLogUserAgent string `json:"ur_log_user_agent"`
+	URLogUserAgent string `json:"urlog_useragent"`
 
 	UploadSizeLimitMonth int `json:"upload_size_limit_month"`
 
