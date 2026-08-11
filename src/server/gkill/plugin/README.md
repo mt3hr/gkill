@@ -6,7 +6,7 @@ gkill プラグインシステムのサーバー側実装。プラグインプ�
 
 ```
 plugin/
-└── sdk/                # プラグイン作者向け Go SDK（6ファイル。うちテスト2）
+└── sdk/                # プラグイン作者向け Go SDK（8ファイル。うちテスト3）
     ├── types.go        # 公開型定義（Query, Kyou, Config）
     ├── handler.go      # Handler struct（プラグイン作者が実装するインターフェース）
     ├── sdk.go          # Run() — メインループ（stdin/stdout 改行区切りJSONループ）
@@ -41,6 +41,11 @@ func main() {
         PostConfig: func(ctx context.Context, form map[string]string, cfg sdk.Config) (sdk.Config, error) {
             // フォームデータを受けて設定を更新する（省略可、デフォルトで JSON 保存）
         },
+
+        GetGPSLogs: func(ctx context.Context, q sdk.GPSLogQuery, cfg sdk.Config) (sdk.GPSLogPage, error) {
+            // 期間内の GPS ログを返す（manifest.json の provides に "gpslog" を書いたときのみ必須）
+            // q.Limit を必ず尊重すること。無視するとgkill側の受信バッファ(32MB)を超える
+        },
     })
 }
 ```
@@ -59,11 +64,30 @@ gkill サーバーとプラグインプロセスは **stdin/stdout 改行区切�
 | `get_content_html` | gkill → plugin | 詳細 HTML 取得（kyou_id 指定） |
 | `get_config_html` | gkill → plugin | 設定フォーム HTML 取得 |
 | `post_config` | gkill → plugin | 設定フォームデータ保存 |
+| `get_gps_logs` | gkill → plugin | 期間内の GPS ログ取得（`provides` に `gpslog` があるプラグインのみ。ページングあり） |
 
 起動引数:
 - `--gkill-plugin-dir <path>` — プラグイン専用ディレクトリ（config.json を保存する場所）
 - `--gkill-user-id <id>` — リクエスト元ユーザー ID
 - `--gkill-protocol-version <version>` — プロトコルバージョン（現在は `"1"`）
+
+## 型別データ・付随データ
+
+`manifest.json` の `provides` に種別を書くと、`sdk.Kyou` の `Typed` / `Tags` / `Texts` /
+`Notifications` が gkill 本体の型別リポジトリに載る。
+
+```go
+sdk.Kyou{
+    ID: "...", DataType: "kc", RelatedTime: t, UpdateTime: t,
+    Tags:  []string{"fitbit"},
+    Typed: &sdk.TypedData{KC: &sdk.KC{Title: "歩数", NumValue: "12345"}},
+}
+```
+
+`Typed` に非nilにしてよいのは高々1つ。型別データは ID も時刻も持たず、親の Kyou からコピーされる。
+`provides` を書かないプラグインでは何も登録されない（従来どおりの動作）。
+
+詳細は [`documents/reverse/plugin-system.md`](../../../../documents/reverse/plugin-system.md) の14章。
 
 ## プラグインの配置場所
 

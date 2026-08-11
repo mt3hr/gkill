@@ -39,6 +39,39 @@ plugins/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
+├── gkill_plugin_fitbit/        # Fitbit / Google Health 日別集計プラグイン
+│   ├── main.go
+│   ├── config.go
+│   ├── metrics.go
+│   ├── loader.go
+│   ├── timeparse.go
+│   ├── builder.go
+│   ├── cache.go
+│   ├── cache_path.go
+│   ├── query.go
+│   ├── render.go
+│   ├── html.go
+│   ├── uuid.go
+│   ├── types.go
+│   ├── metrics_test.go / timeparse_test.go / loader_test.go / cache_test.go / cache_path_test.go
+│   ├── testdata/
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
+├── gkill_google_locationhistory_plugin/  # Google ロケーション履歴プラグイン
+│   ├── main.go
+│   ├── formats.go
+│   ├── parsers.go
+│   ├── source.go
+│   ├── cache.go
+│   ├── cache_path.go
+│   ├── html.go
+│   ├── types.go
+│   ├── parsers_test.go / cache_test.go / cache_path_test.go
+│   ├── testdata/
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
 └── gkill_plugin_claudecode/     # Claude Code チャットログプラグイン
     ├── main.go
     ├── loader.go
@@ -63,6 +96,8 @@ plugins/
 | [`gkill_plugin_claudeai`](gkill_plugin_claudeai/README.md) | `claude_conversation` | Claude.ai のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_chatgpt`](gkill_plugin_chatgpt/README.md) | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを、自分の発言と一連の応答に分けてタイムライン表示 |
+| [`gkill_plugin_fitbit`](gkill_plugin_fitbit/README.md) | `kc` | Google Takeout の Fitbit / Google Health を日別集計し、数値記録として返す（推移グラフで集計できる） |
+| [`gkill_google_locationhistory_plugin`](gkill_google_locationhistory_plugin/README.md) | `google_location_visit` | Google Takeout のロケーション履歴を位置情報ログとして読み込む（記録は作らない） |
 
 ---
 
@@ -106,6 +141,29 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 2. 自動生成される `config.json` の `source_dirs` は既定で `~/.claude/projects`。
    他の場所を読ませたい場合は書き換える
 
+### gkill_plugin_fitbit / gkill_google_locationhistory_plugin
+
+Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダに置く。**
+
+```
+~/Kyou/GoogleTakeout_<端末>_<日付>/
+  takeout-20260808T230152Z-1-001.zip
+  takeout-20260808T230152Z-1-002.zip   ← 分割されていればそのまま並べる
+```
+
+1. Google Takeout から Fitbit / Google Health / タイムライン を書き出す
+2. ダウンロードした ZIP を上のようなフォルダに置く（解凍しない）
+3. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
+4. 自動生成される `config.json` の `source_dirs` は既定で `~/Kyou/GoogleTakeout_*`
+
+**展開済みのフォルダは読まない**（どの書き出しのものか判別できないため）。
+走査は `plugin/sdk/source.go` の `sdk.OpenSources` で、2つのプラグインで共通。
+
+新しい書き出しは**別のフォルダ**に置く。fitbit は日が重なったところで新しい書き出しだけを
+採用するので、古い書き出しを消さなくても歩数などが二重にならない。
+位置情報のほうは読み出し時に同じ点を1つに畳むので、そもそも重ならない
+（むしろ Google は古いデータを間引くので、古い書き出しを残すと消えた期間が保たれる）。
+
 ---
 
 ## config.json（データソース設定）
@@ -135,8 +193,10 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 - 先頭の `~` と環境変数（`$HOME` など）を展開する。ただし gkill を Windows サービスで動かして
   いる場合は**実行アカウントのホーム**になるため、絶対パスのほうが確実
 - 空にすると各プラグインの既定（claudeai / chatgpt はプラグインフォルダ自身、
-  claudecode は `~/.claude/projects`）を使う
+  claudecode は `~/.claude/projects`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`）を使う
 - 編集は**次の検索から反映される**（gkill_server の再起動は不要）
+- **fitbit と位置情報だけは ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
+  再帰的に探し、ZIP の中を走査する。ZIP を直接指定してもよい
 
 ---
 
@@ -354,6 +414,14 @@ go build -o gkill_plugin_chatgpt .
 # gkill_plugin_claudecode
 cd src/plugins/gkill_plugin_claudecode
 go build -o gkill_plugin_claudecode .
+
+# gkill_plugin_fitbit
+cd src/plugins/gkill_plugin_fitbit
+go build -o gkill_plugin_fitbit .
+
+# gkill_google_locationhistory_plugin
+cd src/plugins/gkill_google_locationhistory_plugin
+go build -o gkill_google_locationhistory_plugin .
 ```
 
 ---

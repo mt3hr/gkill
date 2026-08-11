@@ -55,6 +55,16 @@ const (
 	// ここで待ちきれなかったのは「混んでいる」だけなので、
 	// プロセスには手を出さずにビジーとして返す。
 	maxPluginQueueWait = 10 * time.Second
+
+	// pluginGPSLogPageSize は get_gps_logs 1回で受け取る点数。
+	// 1点はJSONで約95バイト。親の bufio.Scanner は32MBなので、
+	// 余裕をみて10万点（約9.5MB）で切る。
+	pluginGPSLogPageSize = 100000
+
+	// maxPluginGPSLogPoints は1回の取得で受け取る合計の上限。
+	// ロケーション履歴の全件書き出しは数百万点になることがあり、
+	// 際限なく受け取るとgkillのヒープを食い潰す。
+	maxPluginGPSLogPoints = 2000000
 )
 
 // ErrPluginBusy はプラグインの実行スロットが空かずに待ちきれなかったことを表す。
@@ -76,20 +86,55 @@ type pluginRepositoryImpl struct {
 	manifest  gkill_plugin.PluginManifest
 
 	proc *pluginProcess // nil = 未起動
+
+	// typedIndex は manifest.provides が空でないときだけ作られる型別/付随データの索引。
+	// providesを宣言していないプラグイン（chatgpt/claudeai/claudecode/example）ではnilのままで、
+	// UpdateCacheも従来どおり何もしない。
+	typedIndex *PluginTypedIndex
 }
 
 // インターフェース適合確認（コンパイル時チェック）
 var _ PluginRepository = (*pluginRepositoryImpl)(nil)
+var _ pluginIndexSource = (*pluginRepositoryImpl)(nil)
 
 // NewPluginRepository はプラグインリポジトリを作成する。
 // プロセスは初回クエリ時に遅延起動する。
 func NewPluginRepository(userID string, pluginDir string, manifest gkill_plugin.PluginManifest) PluginRepository {
-	return &pluginRepositoryImpl{
+	rep := &pluginRepositoryImpl{
 		callSlot:  make(chan struct{}, 1),
 		userID:    userID,
 		pluginDir: pluginDir,
 		manifest:  manifest,
 	}
+	if len(manifest.Provides) != 0 {
+		rep.typedIndex = newPluginTypedIndex(rep)
+	}
+	return rep
+}
+
+// TypedIndex は型別データ・付随データの索引を返す。providesが空ならnil。
+func (p *pluginRepositoryImpl) TypedIndex() *PluginTypedIndex {
+	return p.typedIndex
+}
+
+// indexRepName は索引用にリポジトリ表示名を返す。
+func (p *pluginRepositoryImpl) indexRepName() string {
+	return p.manifest.RepName
+}
+
+// indexPluginName は索引用にプラグイン名を返す。
+func (p *pluginRepositoryImpl) indexPluginName() string {
+	return p.manifest.Name
+}
+
+// indexProvidedKinds は索引用に manifest.provides の集合を返す。
+func (p *pluginRepositoryImpl) indexProvidedKinds() map[gkill_plugin.PluginProvidedKind]struct{} {
+	return p.manifest.ProvidedKinds()
+}
+
+// indexFetchAll は索引の材料を1回のfind_kyousで取ってくる。
+func (p *pluginRepositoryImpl) indexFetchAll(ctx context.Context) ([]gkill_plugin.PluginKyou, error) {
+	return p.findPluginKyous(ctx, &gkill_plugin.PluginQuery{OnlyLatestData: true})
 }
 
 // slot は実行スロットのチャネルを返す。
@@ -375,15 +420,23 @@ func (p *pluginRepositoryImpl) callCommand(ctx context.Context, req gkill_plugin
 
 // --- Repository interface 実装 ---
 
-func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
-	pq := findQueryToPluginQuery(query)
+// findPluginKyous はfind_kyousを1回投げて生のPluginKyouを返す。
+// FindKyous と索引の再構築(indexFetchAll)で共有する。
+func (p *pluginRepositoryImpl) findPluginKyous(ctx context.Context, pq *gkill_plugin.PluginQuery) ([]gkill_plugin.PluginKyou, error) {
 	req := gkill_plugin.PluginRequest{
 		ID:      uuid.New().String(),
 		Command: "find_kyous",
 		Query:   pq,
 	}
-
 	resp, err := p.callCommand(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Kyous, nil
+}
+
+func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]Kyou, error) {
+	pluginKyous, err := p.findPluginKyous(ctx, findQueryToPluginQuery(query))
 	if err != nil {
 		slog.Error(fmt.Sprintf("plugin find_kyous error %q: %q", p.manifest.Name, err))
 		// プラグイン障害で検索全体を落とさない方針は維持しつつ、
@@ -392,8 +445,8 @@ func (p *pluginRepositoryImpl) FindKyous(ctx context.Context, query *find.FindQu
 		return map[string][]Kyou{p.manifest.RepName: {}}, nil
 	}
 
-	kyous := make([]Kyou, 0, len(resp.Kyous))
-	for _, pk := range resp.Kyous {
+	kyous := make([]Kyou, 0, len(pluginKyous))
+	for _, pk := range pluginKyous {
 		k := convertPluginKyouToKyou(pk)
 		if pluginKyouMatchesQuery(k, query) {
 			kyous = append(kyous, k)
@@ -440,8 +493,56 @@ func (p *pluginRepositoryImpl) GetRepName(_ context.Context) (string, error) {
 	return p.manifest.RepName, nil
 }
 
-func (p *pluginRepositoryImpl) UpdateCache(_ context.Context) error {
-	return nil
+func (p *pluginRepositoryImpl) UpdateCache(ctx context.Context) error {
+	// providesを宣言していないプラグインでは索引を持たない。
+	// 従来どおり何もしないことで、既存プラグインに新たなfind_kyousを発生させない。
+	if p.typedIndex == nil {
+		return nil
+	}
+	return p.typedIndex.Refresh(ctx)
+}
+
+// GetPluginGPSLogs は期間に含まれるGPSログをプラグインから取得する。
+func (p *pluginRepositoryImpl) GetPluginGPSLogs(ctx context.Context, startTime *time.Time, endTime *time.Time) ([]GPSLog, error) {
+	if !p.manifest.ProvidesKind(gkill_plugin.PluginProvidesGPSLog) {
+		return nil, fmt.Errorf("plugin %s does not provide gpslog", p.manifest.Name)
+	}
+	start, end := NormalizeGPSLogPeriod(startTime, endTime)
+
+	gpsLogs := []GPSLog{}
+	offset := 0
+	for {
+		resp, err := p.callCommand(ctx, gkill_plugin.PluginRequest{
+			ID:      uuid.New().String(),
+			Command: "get_gps_logs",
+			GPSLogQuery: &gkill_plugin.PluginGPSLogQuery{
+				StartTime: start,
+				EndTime:   end,
+				Offset:    offset,
+				Limit:     pluginGPSLogPageSize,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, pluginGPSLog := range resp.GPSLogs {
+			gpsLogs = append(gpsLogs, GPSLog{
+				RelatedTime: pluginGPSLog.RelatedTime,
+				Longitude:   pluginGPSLog.Longitude,
+				Latitude:    pluginGPSLog.Latitude,
+			})
+		}
+		// 「続きがある」と言いながら0件を返すプラグインで無限ループにしない
+		if !resp.HasMoreGPSLogs || len(resp.GPSLogs) == 0 {
+			break
+		}
+		offset += len(resp.GPSLogs)
+		if len(gpsLogs) >= maxPluginGPSLogPoints {
+			slog.Warn(fmt.Sprintf("plugin %q returned more than %d gps logs, truncated", p.manifest.Name, maxPluginGPSLogPoints))
+			break
+		}
+	}
+	return gpsLogs, nil
 }
 
 func (p *pluginRepositoryImpl) GetLatestDataRepositoryAddress(_ context.Context, _ bool) ([]gkill_cache.LatestDataRepositoryAddress, error) {
@@ -560,6 +661,13 @@ func (p *pluginRepositoryImpl) IsAlive(ctx context.Context) bool {
 // --- 変換ヘルパー ---
 
 // convertPluginKyouToKyou はPluginKyouをgkill本体のKyouに変換する。
+//
+// Kyouはメタ情報しか持たないので、Tags / Texts / Typed / Notifications は
+// ここでは落ちる。それらは pluginTypedIndex が別途 reps.Tag などに組み立て、
+// 型別リポジトリのアダプタ経由で配る（manifest.jsonのprovidesに書いた種別だけ）。
+//
+// ImageSource だけは Kyou に置き場所が無いが、画像かどうかは IsImage で表現できる。
+// 空でなければ画像として扱い、一覧の画像表示から漏れないようにする。
 func convertPluginKyouToKyou(pk gkill_plugin.PluginKyou) Kyou {
 	return Kyou{
 		IsDeleted:    pk.IsDeleted,
@@ -575,6 +683,7 @@ func convertPluginKyouToKyou(pk gkill_plugin.PluginKyou) Kyou {
 		UpdateApp:    pk.UpdateApp,
 		UpdateDevice: pk.UpdateDevice,
 		UpdateUser:   pk.UpdateUser,
+		IsImage:      pk.ImageSource != "",
 	}
 }
 

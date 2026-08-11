@@ -4,7 +4,7 @@
   <p>Mit einem installierten Plugin erscheinen auch Einträge, die in anderen Diensten als gkill liegen, in derselben Liste wie Ihre gkill-Einträge. So können Sie an einer Stelle nachvollziehen, was Sie an einem bestimmten Tag gemacht haben.</p>
 
   <h2>Verfügbare Plugins</h2>
-  <p>Standardmäßig sind die folgenden drei enthalten.</p>
+  <p>Standardmäßig sind die folgenden fünf enthalten.</p>
   <table>
     <tr>
       <th>Plugin</th>
@@ -21,6 +21,14 @@
     <tr>
       <td>ClaudeCode</td>
       <td>Chat-Protokolle von Claude Code</td>
+    </tr>
+    <tr>
+      <td>Fitbit</td>
+      <td>Gesundheitsdaten aus Google Takeout (Schritte, Herzfrequenz, verbrauchte Kalorien usw., zu einem Wert pro Tag zusammengefasst)</td>
+    </tr>
+    <tr>
+      <td>GoogleLocation</td>
+      <td>Standortverlauf aus Google Takeout (wird auf der Karte angezeigt; es werden keine Einträge erstellt)</td>
     </tr>
   </table>
   <div class="tip">
@@ -67,6 +75,26 @@
       <td>ChatGPT und Claude.ai sehen im Plugin-Ordner nach, ClaudeCode am Standardspeicherort von Claude Code</td>
     </tr>
   </table>
+  <h3>Beim Importieren von Google-Takeout-Daten</h3>
+  <p>Legen Sie für Gesundheitsdaten und Standortverlauf die von Google Takeout heruntergeladene <strong>ZIP-Datei unentpackt in einen Ordner</strong>. Selbst entpackte Ordner werden nicht gelesen.</p>
+  <p>Tragen Sie in <code>source_dirs</code> den Ordner ein, der die ZIP-Datei enthält. Sie können auch den Pfad der ZIP-Datei selbst angeben.</p>
+  <table>
+    <tr>
+      <th>Art der Ablage</th>
+      <th>Was passiert</th>
+    </tr>
+    <tr>
+      <td>Mehrere aufgeteilte ZIP-Dateien nebeneinander in einem Ordner</td>
+      <td>Sie werden zusammen als ein einziger Download gelesen</td>
+    </tr>
+    <tr>
+      <td>Ein neuerer Download in einem anderen Ordner</td>
+      <td>Bei überlappenden Daten wird nur der neuere verwendet. Zeiträume, die es nur im älteren gibt, bleiben erhalten</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Tipp:</strong> Alte Downloads müssen Sie nicht löschen. Auch bei überlappenden Daten werden Werte wie Schrittzahlen niemals doppelt gezählt.
+  </div>
   <div class="tip">
     <strong>Tipp:</strong> Einträge in <code>config.json</code>, die mit <code>_</code> (Unterstrich) beginnen, dienen nur der Erläuterung des Formats. Sie können sie löschen.
   </div>

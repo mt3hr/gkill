@@ -1,0 +1,6 @@
+{
+  "locations": [
+    { "latitudeE7": 353527647, "longitudeE7": 1395164201, "accuracy": 25, "timestampMs": "1700000000000", "source": "GPS", "deviceTag": 266860123 },
+    { "latitudeE7": 353530143, "longitudeE7": 1395160284, "accuracy": 3000, "timestamp": "2023-11-15T00:00:00Z", "source": "CELL" }
+  ]
+}

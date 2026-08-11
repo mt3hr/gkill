@@ -1,0 +1,12 @@
+{
+  "protocol_version": "1",
+  "name": "gkill_google_locationhistory_plugin",
+  "version": "1.0.0",
+  "description": "Google Takeout のロケーション履歴を gkill の位置情報ログとして読み込む。ZIP を展開せずそのまま置いて使う。タイムライン編集(Timeline Edits.json)・旧ロケーション履歴(Records.json)・端末からの書き出し(location-history.json)・Fitbitワークアウトのトラック(gps_location_*.csv)に対応。設定画面でフォルダを指定して使用。",
+  "data_type": "google_location_visit",
+  "rep_name": "GoogleLocation",
+  "executable": "gkill_google_locationhistory_plugin",
+  "min_gkill_version": "1.1.7",
+  "provides": ["gpslog"],
+  "emits_kyou": false
+}

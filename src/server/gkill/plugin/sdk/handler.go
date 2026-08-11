@@ -23,6 +23,14 @@ type Handler struct {
 	// nilの場合はデフォルトの保存処理（Config をJSON保存）が使われる。
 	PostConfig func(ctx context.Context, form map[string]string, cfg Config) (Config, error)
 
+	// GetGPSLogs は期間に含まれるGPSログを返す。
+	// manifest.jsonのprovidesに"gpslog"を書いたプラグインでは必須。
+	// nilのままだと get_gps_logs は「未実装」エラーを返す。
+	//
+	// q.Limit を必ず尊重すること。無視して全件返すと、
+	// gkill側の bufio.Scanner（32MB）が token too long で読めなくなる。
+	GetGPSLogs func(ctx context.Context, q GPSLogQuery, cfg Config) (GPSLogPage, error)
+
 	// RepName はリポジトリ表示名（manifest.jsonのrep_nameと一致させること）。
 	RepName string
 
