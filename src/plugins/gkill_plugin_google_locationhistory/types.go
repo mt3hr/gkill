@@ -9,7 +9,7 @@ const (
 	dataType = "google_location_visit"
 
 	// appName はログに出す名前。
-	appName = "gkill_google_locationhistory_plugin"
+	appName = "gkill_plugin_google_locationhistory"
 )
 
 // 設定キー。
