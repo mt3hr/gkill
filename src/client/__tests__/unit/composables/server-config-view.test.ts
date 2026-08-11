@@ -151,6 +151,33 @@ describe('有効な端末が見つからない場合', () => {
     })
 })
 
+// 設定ダイアログは get_server_configs の応答を待たずに開き、このviewを
+// v-show で隠すだけ（v-if ではない）ので、空の props でも初期化が走る。
+// それを「有効なプロファイルが見つかりません」として通知していたため、
+// ダイアログを開くたびに毎回エラーが出ていた
+describe('サーバ設定がまだ届いていない場合', () => {
+    test('0件では通知しない', async () => {
+        const { view, emitted } = create_view([])
+        await flush()
+
+        expect(errors_of(emitted), '未ロードをエラーとして通知している').toHaveLength(0)
+        expect(view.devices.value).toEqual([])
+    })
+
+    test('応答が届いたら改めて初期化され、エラーも出ない', async () => {
+        const { view, props, emitted } = create_view([])
+        await flush()
+
+        props.server_configs = make_server_configs()
+        await flush()
+
+        expect(view.device.value).toBe('desktop')
+        expect(view.server_config.value.address).toBe(':9999')
+        expect(view.devices.value).toEqual(['desktop', 'laptop'])
+        expect(errors_of(emitted)).toHaveLength(0)
+    })
+})
+
 // Go/DBはナノ秒の time.Duration、入力欄は秒。
 // 変換を挟まないと入力欄に 60000000000 が出て、30と入れると30ナノ秒が保存される
 describe('urlog_timeout_sec', () => {
@@ -241,6 +268,26 @@ describe('delete_current_server_config', () => {
             view.cloned_server_configs.value[0].enable_this_device,
             '選択し直したデバイスが有効になっていない',
         ).toBe(true)
+    })
+
+    // 全件消すとサーバ設定が0件になり、「有効なプロファイルがちょうど1件」を
+    // 前提にしている起動処理が通らなくなる。
+    // 以前は splice 後の cloned_server_configs[0] を無条件に読んでいたので、
+    // 最後の1件では undefined.device で TypeError になっていた
+    test('最後の1件は削除しない', async () => {
+        const { view, emitted } = create_view([
+            make_server_config('desktop', { enable_this_device: true, address: ':9999' }),
+        ])
+        await flush()
+
+        view.delete_current_server_config()
+        await flush()
+
+        expect(view.cloned_server_configs.value).toHaveLength(1)
+        expect(view.devices.value).toEqual(['desktop'])
+        expect(view.device.value).toBe('desktop')
+        expect(view.server_config.value.device).toBe('desktop')
+        expect(errors_of(emitted)).toHaveLength(0)
     })
 
     test('削除しても props 側の配列は減らない（適用まで確定しない）', async () => {
