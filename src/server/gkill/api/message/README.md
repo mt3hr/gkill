@@ -11,7 +11,7 @@ gkill API のエラーコードとメッセージコードの定数定義、お�
 |---------|------|
 | `gkill_error.go` | `GkillError` 構造体 — `ErrorCode` + `ErrorMessage` |
 | `gkill_message.go` | `GkillMessage` 構造体 — `MessageCode` + `Message` |
-| `error_codes.go` | エラーコード定数（406 定数: `ERR000001` 〜 `ERR000407`、`ERR000243` は欠番） |
+| `error_codes.go` | エラーコード定数（408 定数: `ERR000001` 〜 `ERR000409`、`ERR000243` は欠番） |
 | `message_codes.go` | メッセージコード定数（88 定数: `MSG000001` 〜 `MSG000088`） |
 | `message_test.go` | コード形式・空文字チェックのテスト |
 
@@ -29,7 +29,7 @@ type GkillMessage struct {
 }
 ```
 
-## エラーコード体系（406 コード）
+## エラーコード体系（408 コード）
 
 | コード範囲 | カテゴリ |
 |-----------|---------|
@@ -38,6 +38,7 @@ type GkillMessage struct {
 | `ERR000098` 〜 `ERR000199` | 複合操作（共有リスト、MiSharedTasks、GPSLog 等） |
 | `ERR000203` 〜 `ERR000280` | 拡張機能（KFTL、通知、構造体、Danote） |
 | `ERR000300` 〜 `ERR000407` | 新機能（KC 数値記録、トランザクション、ZIP ブラウズ、レートリミット、プラグイン、IDF パス解決、ReKyou/MiReKyou の対象ID逆引き） |
+| `ERR000408` 〜 `ERR000409` | アカウント運用の防護（リセットトークンの期限切れ、自分自身の無効化の拒否） |
 
 `ERR9000xx` 帯はフロントエンドだけで採番するコードで、Go 側の `error_codes.go` には存在しない（定義元は `src/client/classes/api/message/gkill_error.ts`、現在98定数）。番号が衝突しないよう帯を分けてあるので、Go 側でこの帯を使ってはならない。
 

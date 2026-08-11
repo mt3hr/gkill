@@ -408,4 +408,6 @@ const (
 	InvalidGetMiReKyousByTargetIDRequestDataError                    = "ERR000405"
 	InvalidGetMiReKyousByTargetIDResponseDataError                   = "ERR000406"
 	GetMiReKyousByTargetIDError                                      = "ERR000407"
+	ExpiredPasswordResetTokenError                                   = "ERR000408"
+	CannotDisableOwnAccountError                                     = "ERR000409"
 )
