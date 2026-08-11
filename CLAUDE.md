@@ -65,7 +65,7 @@ src/
               #   gkill_plugin_fitbit/     — Google Takeout Fitbit/Google Health, aggregated to
               #                              one KC per (day, metric). 34 metrics, background
               #                              build (~155s first / <1s incremental on a 271MB zip)
-              #   gkill_google_locationhistory_plugin/ — Google Takeout location history as
+              #   gkill_plugin_google_locationhistory/ — Google Takeout location history as
               #                              GPSLog (no Kyou, `emits_kyou: false` so it stays out
               #                              of the rep list). Format detected by content, not path
               # The two Takeout plugins read the export **as a zip, never extracted** — scan lives

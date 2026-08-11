@@ -1,4 +1,4 @@
-module github.com/mt3hr/gkill_google_locationhistory_plugin
+module github.com/mt3hr/gkill_plugin_google_locationhistory
 
 go 1.26.4
 

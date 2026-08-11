@@ -562,7 +562,7 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | gkill_plugin_claudeai | Claude.ai | `claude_conversation` | `src/plugins/gkill_plugin_claudeai/` |
 | gkill_plugin_claudecode | ClaudeCode | `claude_code_turn` | `src/plugins/gkill_plugin_claudecode/` |
 | gkill_plugin_fitbit | Fitbit | `kc` | `src/plugins/gkill_plugin_fitbit/` |
-| gkill_google_locationhistory_plugin | GoogleLocation | `google_location_visit` | `src/plugins/gkill_google_locationhistory_plugin/` |
+| gkill_plugin_google_locationhistory | GoogleLocation | `google_location_visit` | `src/plugins/gkill_plugin_google_locationhistory/` |
 | gkill_example | （サンプル） | `example_kyou` | `src/plugins/examples/gkill_example/` |
 
 `gkill_example` は固定の Kyou を返すだけのサンプル実装で、`DefaultConfig` を持たない
@@ -583,8 +583,8 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudecode.exe .
 cd src/plugins/gkill_plugin_fitbit
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_fitbit.exe .
 
-cd src/plugins/gkill_google_locationhistory_plugin
-GOOS=windows GOARCH=amd64 go build -o gkill_google_locationhistory_plugin.exe .
+cd src/plugins/gkill_plugin_google_locationhistory
+GOOS=windows GOARCH=amd64 go build -o gkill_plugin_google_locationhistory.exe .
 ```
 
 デプロイ先: `$GKILL_HOME/plugins/{userID}/{pluginName}/`
