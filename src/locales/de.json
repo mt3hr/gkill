@@ -334,7 +334,7 @@
     "URLOG_USERAGENT_TITLE": "Lesezeichen-User-Agent",
     "MI_APP_NAME": "Aufgaben",
     "EDIT_MI_TITLE": "Aufgabe bearbeiten",
-    "URLOG_TIMEOUT_TITLE": "Lesezeichen-Timeout",
+    "URLOG_TIMEOUT_TITLE": "Lesezeichen-Timeout (Sek.)",
     "DNOTE_PREDICATE_TITLE": "Bedingung",
     "DNOTE_JOIN_LOGIC_TITLE": "Verknüpfungsbedingung",
     "DNOTE_LOGIC_AND_TITLE": "Alle erfüllen",

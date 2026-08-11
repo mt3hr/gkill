@@ -334,7 +334,7 @@
     "URLOG_USERAGENT_TITLE": "Agente de usuario de marcadores",
     "MI_APP_NAME": "Tareas",
     "EDIT_MI_TITLE": "Editar tarea",
-    "URLOG_TIMEOUT_TITLE": "Tiempo de espera de marcadores",
+    "URLOG_TIMEOUT_TITLE": "Tiempo de espera de marcadores (s)",
     "DNOTE_PREDICATE_TITLE": "Condición",
     "DNOTE_JOIN_LOGIC_TITLE": "Condición de unión",
     "DNOTE_LOGIC_AND_TITLE": "Cumple todas",
