@@ -1,0 +1,11 @@
+{
+  "protocol_version": "1",
+  "name": "gkill_plugin_fitbit",
+  "version": "1.0.0",
+  "description": "Google Takeout の Fitbit / Google Health のデータを日別に集計して gkill のタイムラインに表示する。ZIP を展開せずそのまま置いて使う。1日1指標を1件の数値記録として返すので、推移グラフでそのまま集計できる。設定画面で ZIP を置いたフォルダを指定して使用。",
+  "data_type": "kc",
+  "rep_name": "Fitbit",
+  "executable": "gkill_plugin_fitbit",
+  "min_gkill_version": "1.1.7",
+  "provides": ["kc", "tag"]
+}

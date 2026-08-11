@@ -13,11 +13,20 @@ import (
 
 // pluginRequest はgkillからプラグインへのリクエスト。
 type pluginRequest struct {
-	ID       string            `json:"id"`
-	Command  string            `json:"command"`
-	Query    *pluginQuery      `json:"query,omitempty"`
-	KyouID   string            `json:"kyou_id,omitempty"`
-	FormData map[string]string `json:"form_data,omitempty"`
+	ID          string             `json:"id"`
+	Command     string             `json:"command"`
+	Query       *pluginQuery       `json:"query,omitempty"`
+	KyouID      string             `json:"kyou_id,omitempty"`
+	FormData    map[string]string  `json:"form_data,omitempty"`
+	GPSLogQuery *pluginGPSLogQuery `json:"gps_log_query,omitempty"`
+}
+
+// pluginGPSLogQuery はget_gps_logsコマンドの取得条件。
+type pluginGPSLogQuery struct {
+	StartTime *time.Time `json:"start_time,omitempty"`
+	EndTime   *time.Time `json:"end_time,omitempty"`
+	Offset    int        `json:"offset"`
+	Limit     int        `json:"limit"`
 }
 
 // pluginQuery はfind_kyousコマンドの検索条件。
@@ -37,13 +46,29 @@ type pluginQuery struct {
 
 // pluginResponse はプラグインからgkillへのレスポンス。
 type pluginResponse struct {
-	ID      string   `json:"id"`
-	Kyous   []Kyou   `json:"kyous,omitempty"`
-	Kyou    *Kyou    `json:"kyou,omitempty"`
-	RepName string   `json:"rep_name,omitempty"`
-	HTML    string   `json:"html,omitempty"`
-	Pong    bool     `json:"pong,omitempty"`
-	Errors  []string `json:"errors,omitempty"`
+	ID             string   `json:"id"`
+	Kyous          []Kyou   `json:"kyous,omitempty"`
+	Kyou           *Kyou    `json:"kyou,omitempty"`
+	RepName        string   `json:"rep_name,omitempty"`
+	HTML           string   `json:"html,omitempty"`
+	Pong           bool     `json:"pong,omitempty"`
+	GPSLogs        []GPSLog `json:"gps_logs,omitempty"`
+	HasMoreGPSLogs bool     `json:"has_more_gps_logs,omitempty"`
+	Errors         []string `json:"errors,omitempty"`
+}
+
+// pluginGPSLogQueryToQuery はプロトコル上の取得条件を公開型に変換する。
+// nilは「期間指定なし・プラグイン既定の件数」を意味する。
+func pluginGPSLogQueryToQuery(q *pluginGPSLogQuery) GPSLogQuery {
+	if q == nil {
+		return GPSLogQuery{}
+	}
+	return GPSLogQuery{
+		StartTime: q.StartTime,
+		EndTime:   q.EndTime,
+		Offset:    q.Offset,
+		Limit:     q.Limit,
+	}
 }
 
 // Run はプラグインのメインループを起動する。
@@ -165,6 +190,19 @@ func runLoop(h Handler, cfg Config, pluginDir, userID string, in io.Reader, out 
 				resp := pluginResponse{ID: req.ID, HTML: html}
 				_ = encoder.Encode(resp)
 			}
+
+		case "get_gps_logs":
+			if h.GetGPSLogs == nil {
+				writeError(encoder, req.ID, "get_gps_logs not implemented")
+				continue
+			}
+			page, err := h.GetGPSLogs(newCtx(userID), pluginGPSLogQueryToQuery(req.GPSLogQuery), cfg)
+			if err != nil {
+				writeError(encoder, req.ID, err.Error())
+				continue
+			}
+			resp := pluginResponse{ID: req.ID, GPSLogs: page.GPSLogs, HasMoreGPSLogs: page.HasMore}
+			_ = encoder.Encode(resp)
 
 		case "get_config_html":
 			if h.GetConfigHTML != nil {

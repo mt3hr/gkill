@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 
@@ -189,6 +190,38 @@ func (pm *PluginManager) loadManifest(pluginDir string) (*gkill_plugin.PluginMan
 	}
 	if manifest.DataType == "" {
 		return nil, fmt.Errorf("manifest.json in %s: data_type is required", pluginDir)
+	}
+
+	// providesの検証。
+	// 必須項目と違ってエラーにはせず「未知の値だけ落として警告」にする。
+	// providesのタイプミスでプラグインごと無効化すると、
+	// それまで出ていたタイムライン上の記録まで丸ごと消えてしまうため。
+	validatedKinds := make([]gkill_plugin.PluginProvidedKind, 0, len(manifest.Provides))
+	seenKinds := map[gkill_plugin.PluginProvidedKind]struct{}{}
+	for _, kind := range manifest.Provides {
+		if !slices.Contains(gkill_plugin.AllPluginProvidedKinds, kind) {
+			slog.Warn(fmt.Sprintf("manifest.json in %q: unknown provides %q, ignored", pluginDir, kind))
+			continue
+		}
+		if _, duplicated := seenKinds[kind]; duplicated {
+			continue
+		}
+		seenKinds[kind] = struct{}{}
+		validatedKinds = append(validatedKinds, kind)
+	}
+	manifest.Provides = validatedKinds
+
+	// data_typeとprovidesの食い違いを警告する。
+	// クライアントはdata_typeの接頭辞で型別ビューを出し分けるので、
+	// providesにkcを書いてもdata_typeが"kc"で始まらなければ
+	// 型別データを取りに行く経路が一度も走らない。
+	for _, kind := range validatedKinds {
+		if !kind.IsTyped() {
+			continue
+		}
+		if !strings.HasPrefix(manifest.DataType, string(kind)) {
+			slog.Warn(fmt.Sprintf("manifest.json in %q: provides %q but data_type is %q; the client will never request the typed view", pluginDir, kind, manifest.DataType))
+		}
 	}
 
 	return &manifest, nil

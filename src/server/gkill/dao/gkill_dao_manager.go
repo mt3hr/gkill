@@ -1087,8 +1087,67 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			slog.Warn(fmt.Sprintf("plugin discovery error for user %q: %q", userID, discoverErr))
 		}
 		for _, pluginRepo := range pm.GetRepositories() {
-			repositories.PluginReps = append(repositories.PluginReps, pluginRepo.(reps.PluginRepository))
-			repositories.Reps = append(repositories.Reps, pluginRepo)
+			pluginRep := pluginRepo.(reps.PluginRepository)
+			repositories.PluginReps = append(repositories.PluginReps, pluginRep)
+
+			// manifest.jsonのemits_kyouがfalseのプラグインはRepsに入れない。
+			//
+			// GPSログだけを提供するプラグインがこれにあたる。Kyouを1件も返さないのに
+			// Repsに居ると「記録保管場所」の一覧（GetAllRepNames）に並び、
+			// 選んでも0件の項目になる。検索のたびに空振りの往復も1回発生する。
+			//
+			// PluginReps（設定・死活確認）とGPSLogReps（下で登録）には入るので、
+			// GPSログは rep の選択状態と無関係に常に使われる。
+			if pluginRep.GetManifest().EmitsKyouOrDefault() {
+				repositories.Reps = append(repositories.Reps, pluginRepo)
+			}
+
+			// manifest.jsonのprovidesに応じて型別/付随データのアダプタを登録する。
+			//
+			// ここが上のRepsへのコピーループより後にあることが要点。
+			// 先に足すとKCReps→Repsのコピーでアダプタまで Reps に入り、
+			// プラグイン本体と二重に検索されて同じ記録が2回出る。
+			//
+			// WriteXxxRepには絶対に入れない（プラグインは読み取り専用）。
+			// TagRepsWatchTarget / TextRepsWatchTargetにも入れない
+			// （ファイル実体が無くfsnotifyの監視対象にならないため）。
+			adapters := reps.NewPluginTypedRepositories(pluginRep)
+			if adapters.Kmemo != nil {
+				repositories.KmemoReps = append(repositories.KmemoReps, adapters.Kmemo)
+			}
+			if adapters.KC != nil {
+				repositories.KCReps = append(repositories.KCReps, adapters.KC)
+			}
+			if adapters.URLog != nil {
+				repositories.URLogReps = append(repositories.URLogReps, adapters.URLog)
+			}
+			if adapters.Nlog != nil {
+				repositories.NlogReps = append(repositories.NlogReps, adapters.Nlog)
+			}
+			if adapters.Lantana != nil {
+				repositories.LantanaReps = append(repositories.LantanaReps, adapters.Lantana)
+			}
+			if adapters.TimeIs != nil {
+				repositories.TimeIsReps = append(repositories.TimeIsReps, adapters.TimeIs)
+			}
+			if adapters.Mi != nil {
+				repositories.MiReps = append(repositories.MiReps, adapters.Mi)
+			}
+			if adapters.Tag != nil {
+				repositories.TagReps = append(repositories.TagReps, adapters.Tag)
+			}
+			if adapters.Text != nil {
+				repositories.TextReps = append(repositories.TextReps, adapters.Text)
+			}
+			if adapters.Notification != nil {
+				repositories.NotificationReps = append(repositories.NotificationReps, adapters.Notification)
+			}
+
+			// GPSログを提供するプラグインは GPSLogRepository としても登録する。
+			// 書き込み口を持たないので WriteGPSLogRep には決してしない。
+			if gpsLogRep, ok := reps.NewGPSLogPluginRepIfProvided(pluginRep); ok {
+				repositories.GPSLogReps = append(repositories.GPSLogReps, gpsLogRep)
+			}
 		}
 
 		err = repositories.UpdateCache(ctx)

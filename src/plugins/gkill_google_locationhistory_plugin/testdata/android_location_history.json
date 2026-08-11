@@ -1,0 +1,10 @@
+[
+  {
+    "startTime": "2026-05-01T00:00:00.000Z",
+    "endTime": "2026-05-01T01:00:00.000Z",
+    "timelinePath": [
+      { "point": "35.1234000°, 139.1234000°", "durationMinutesOffsetFromStartTime": "0" },
+      { "point": "35.2000000°, 139.2000000°", "durationMinutesOffsetFromStartTime": "30" }
+    ]
+  }
+]

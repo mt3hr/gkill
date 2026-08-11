@@ -41,7 +41,19 @@ const (
 	// 応答が届いてしまう可能性があり、壊れたコードでもテストが通る
 	// （偽グリーンになる）。ファイルなら順序を確実に作れる。
 	behaviorGate = "gate"
+	// behaviorTyped は型別データ・付随データ・GPSログを返す。
+	// リクエストのたびにコマンド名を state ファイルに追記するので、
+	// 「アダプタが1件ずつプラグインへ往復していないか」を回数で検査できる。
+	behaviorTyped = "typed"
 )
+
+// fakeTypedKyouCount は behaviorTyped の偽プラグインが返すKyouの件数。
+const fakeTypedKyouCount = 3
+
+// fakeGPSLogTotal は behaviorTyped の偽プラグインが返すGPSログの総点数。
+// pluginGPSLogPageSize より小さいので1ページで返るが、
+// テストは Limit を小さくして複数ページを作る。
+const fakeGPSLogTotal = 250
 
 func TestMain(m *testing.M) {
 	if os.Getenv(envPluginMode) != "" {
@@ -115,7 +127,45 @@ func runFakePlugin() {
 			}
 		}
 
+		// typed のときは、どのコマンドが何回来たかを記録する。
+		// アダプタがプラグインへ往復していないことを回数で検査するために使う。
+		if behavior == behaviorTyped {
+			if statePath := os.Getenv(envPluginStateFile); statePath != "" {
+				if f, err := os.OpenFile(statePath+".commands", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600); err == nil {
+					fmt.Fprintln(f, req.Command)
+					_ = f.Close()
+				}
+			}
+		}
+
 		resp := gkill_plugin.PluginResponse{ID: req.ID}
+		if behavior == behaviorTyped {
+			switch req.Command {
+			case "find_kyous":
+				resp.Kyous = fakeTypedPluginKyous()
+				_ = encoder.Encode(resp)
+				continue
+			case "get_gps_logs":
+				offset, limit := 0, fakeGPSLogTotal
+				if req.GPSLogQuery != nil {
+					offset = req.GPSLogQuery.Offset
+					if req.GPSLogQuery.Limit > 0 {
+						limit = req.GPSLogQuery.Limit
+					}
+				}
+				base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+				for i := offset; i < offset+limit && i < fakeGPSLogTotal; i++ {
+					resp.GPSLogs = append(resp.GPSLogs, gkill_plugin.PluginGPSLog{
+						RelatedTime: base.Add(time.Duration(i) * time.Minute),
+						Latitude:    35.0 + float64(i)/10000.0,
+						Longitude:   139.0 + float64(i)/10000.0,
+					})
+				}
+				resp.HasMoreGPSLogs = offset+len(resp.GPSLogs) < fakeGPSLogTotal
+				_ = encoder.Encode(resp)
+				continue
+			}
+		}
 		switch req.Command {
 		case "find_kyous":
 			// クエリのWordsをそのままKyouのIDに詰めて返し、
@@ -158,6 +208,33 @@ func runFakePlugin() {
 	}
 }
 
+// fakeTypedPluginKyous は型別データ・付随データ付きのKyouを返す。
+// KC / Kmemo と、タグ・テキスト・通知を混ぜてある。
+func fakeTypedPluginKyous() []gkill_plugin.PluginKyou {
+	now := time.Date(2026, 8, 9, 12, 0, 0, 0, time.UTC)
+	kyous := []gkill_plugin.PluginKyou{}
+	for i := range fakeTypedKyouCount {
+		kyou := fakePluginKyou(fmt.Sprintf("typed-%d", i))
+		kyou.RelatedTime = now.AddDate(0, 0, -i)
+		kyou.CreateTime = kyou.RelatedTime
+		kyou.UpdateTime = kyou.RelatedTime
+		kyou.DataType = "kc"
+		kyou.Typed = &gkill_plugin.PluginTypedData{
+			KC: &gkill_plugin.PluginKC{
+				Title:    fmt.Sprintf("歩数%d", i),
+				NumValue: json.Number(fmt.Sprintf("%d", 1000+i)),
+			},
+		}
+		kyou.Tags = []string{"fitbit", fmt.Sprintf("歩数%d", i)}
+		kyou.Texts = []string{fmt.Sprintf("メモ%d", i)}
+		kyou.Notifications = []gkill_plugin.PluginNotification{
+			{Content: fmt.Sprintf("通知%d", i), NotificationTime: kyou.RelatedTime},
+		}
+		kyous = append(kyous, kyou)
+	}
+	return kyous
+}
+
 func fakePluginKyou(id string) gkill_plugin.PluginKyou {
 	now := time.Now().Truncate(time.Second)
 	return gkill_plugin.PluginKyou{
@@ -184,6 +261,13 @@ type fakePlugin struct {
 // リポジトリを組み立てる。
 func newFakePluginRepository(t *testing.T, behavior string) fakePlugin {
 	t.Helper()
+	return newFakePluginRepositoryWithProvides(t, behavior, nil)
+}
+
+// newFakePluginRepositoryWithProvides は provides 付きのmanifestで偽プラグインを組み立てる。
+// 型別データ・付随データ・GPSログのアダプタを検証するときに使う。
+func newFakePluginRepositoryWithProvides(t *testing.T, behavior string, provides []gkill_plugin.PluginProvidedKind) fakePlugin {
+	t.Helper()
 
 	exePath, err := os.Executable()
 	if err != nil {
@@ -207,6 +291,7 @@ func newFakePluginRepository(t *testing.T, behavior string) fakePlugin {
 		DataType:        "fake_plugin_kyou",
 		RepName:         "fake_plugin_rep",
 		Executable:      execName,
+		Provides:        provides,
 	}
 
 	rep := NewPluginRepository("testuser", pluginDir, manifest)

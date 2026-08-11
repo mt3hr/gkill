@@ -1,0 +1,4 @@
+timestamp,level,data source
+2024-04-03T02:01:00Z,SEDENTARY,Fitbit App
+2024-04-03T02:02:00Z,SEDENTARY,Fitbit App
+2024-04-03T02:05:00Z,LIGHTLY_ACTIVE,Fitbit App

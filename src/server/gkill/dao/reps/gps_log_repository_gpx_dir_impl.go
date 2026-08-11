@@ -62,16 +62,8 @@ func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTim
 			return nil, err
 		}
 	} else {
-		if startTime == nil {
-			startTime = endTime
-		}
-		if endTime == nil {
-			endTime = startTime
-		}
-		// 順番がおかしかったら入れ替える
-		if startTime.After(*endTime) {
-			startTime, endTime = endTime, startTime
-		}
+		// nil解決と逆順の入れ替えは NormalizeGPSLogPeriod に集約してある
+		startTime, endTime = NormalizeGPSLogPeriod(startTime, endTime)
 
 		// ファイル名をリストアップ
 		dates := []string{}
