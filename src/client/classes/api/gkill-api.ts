@@ -1,6 +1,7 @@
 
 
 import { ApplicationConfig } from "../datas/config/application-config"
+import { ServerConfig } from "../datas/config/server-config"
 import { FOLDABLE_STRUCT_ROOT_KEY } from "@/pages/views/foldable-struct-model"
 import type { AddAccountRequest } from "./req_res/add-account-request"
 import type { AddAccountResponse } from "./req_res/add-account-response"
@@ -1796,9 +1797,13 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: GetServerConfigsResponse = json
                 this.check_auth(response)
-                for (let i = 0; i < response.server_configs.length; i++) {
-                        response.server_configs[i].is_loaded = true
-                }
+                // fetchが返すのは生のオブジェクトでメソッドを持たない。
+                // 受け取り側は clone() を呼ぶので、ここでクラスに詰め直しておく
+                response.server_configs = (response.server_configs ?? []).map((server_config) => {
+                        const config = Object.assign(new ServerConfig(), server_config)
+                        config.is_loaded = true
+                        return config
+                })
                 return response
         }
 

@@ -1,6 +1,6 @@
 import { i18n } from '@/i18n'
 import { ServerConfig } from '@/classes/datas/config/server-config'
-import { nextTick, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import type { ServerConfigViewEmits } from '@/pages/views/server-config-view-emits'
 import type { ServerConfigViewProps } from '@/pages/views/server-config-view-props'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -36,19 +36,44 @@ export function useServerConfigView(options: {
         cloned_server_configs.value = await Promise.all(props.server_configs.map((config) => config.clone()))
     }
 
+    /**
+     * 有効な端末のプロファイルを選択中にする。
+     * 見つからない場合はここでは何もしない。
+     * 通知は load_current_server_config() の not_found_enable_device に任せる
+     * （両方で出すとエラーが二重に飛ぶ）
+     */
+    function select_enable_device(): void {
+        const enable_server_config = props.server_configs.find((server_config) => server_config.enable_this_device)
+        if (!enable_server_config) {
+            return
+        }
+        device.value = enable_server_config.device
+    }
+
+    /** props を編集用の状態へ取り込み直す。初期化とpropsの差し替えで同じ手順を通す */
+    async function reload_from_props(): Promise<void> {
+        await reload_cloned_server_configs()
+        select_enable_device()
+        load_devices()
+        load_current_server_config()
+    }
+
+    /** 入力欄は秒で扱う。ServerConfig の保持はGoの time.Duration と同じナノ秒 */
+    const urlog_timeout_sec = computed<number>({
+        get: () => server_config.value.urlog_timeout / 1_000_000_000,
+        set: (value) => {
+            server_config.value.urlog_timeout = Math.round(Number(value) * 1_000_000_000)
+        },
+    })
+
     // ── Init ──
     nextTick(async () => {
-        await reload_cloned_server_configs()
-        load_devices()
-        device.value = props.server_configs.filter((server_cofnig) => server_cofnig.enable_this_device)[0].device
+        await reload_from_props()
     })
 
     // ── Watchers ──
     watch(() => props.server_configs, async () => {
-        await reload_cloned_server_configs()
-        device.value = props.server_configs.filter((server_cofnig) => server_cofnig.enable_this_device)[0].device
-        load_devices()
-        load_current_server_config()
+        await reload_from_props()
     })
 
     watch(() => device.value, () => {
@@ -87,6 +112,7 @@ export function useServerConfigView(options: {
         new_server_config.urlog_useragent = server_config.value.urlog_useragent
         new_server_config.upload_size_limit_month = server_config.value.upload_size_limit_month
         new_server_config.user_data_directory = server_config.value.user_data_directory
+        new_server_config.google_map_api_key = server_config.value.google_map_api_key
         new_server_config.lan_hostname = server_config.value.lan_hostname
         new_server_config.global_hostname = server_config.value.global_hostname
         new_server_config.device = device_name
@@ -195,6 +221,7 @@ export function useServerConfigView(options: {
         server_config,
         device,
         devices,
+        urlog_timeout_sec,
 
         // Template event handlers
         show_manage_account_dialog,

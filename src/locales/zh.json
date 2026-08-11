@@ -334,7 +334,7 @@
     "URLOG_USERAGENT_TITLE": "书签用户代理",
     "MI_APP_NAME": "任务",
     "EDIT_MI_TITLE": "编辑任务",
-    "URLOG_TIMEOUT_TITLE": "书签超时",
+    "URLOG_TIMEOUT_TITLE": "书签超时（秒）",
     "DNOTE_PREDICATE_TITLE": "条件",
     "DNOTE_JOIN_LOGIC_TITLE": "组合条件",
     "DNOTE_LOGIC_AND_TITLE": "满足全部",

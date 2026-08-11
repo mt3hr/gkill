@@ -334,7 +334,7 @@
     "URLOG_USERAGENT_TITLE": "Bookmark User Agent",
     "MI_APP_NAME": "Tasks",
     "EDIT_MI_TITLE": "Edit Task",
-    "URLOG_TIMEOUT_TITLE": "Bookmark Timeout",
+    "URLOG_TIMEOUT_TITLE": "Bookmark Timeout (sec)",
     "DNOTE_PREDICATE_TITLE": "Condition",
     "DNOTE_JOIN_LOGIC_TITLE": "Join Condition",
     "DNOTE_LOGIC_AND_TITLE": "Match all",

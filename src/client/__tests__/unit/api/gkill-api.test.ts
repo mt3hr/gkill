@@ -17,6 +17,7 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { delete_gkill_attached_tags_cache } from '@/classes/delete-gkill-cache'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import { ServerConfig } from '@/classes/datas/config/server-config'
 
 describe('GkillAPI', () => {
   describe('singleton access', () => {
@@ -103,6 +104,149 @@ describe('GkillAPI', () => {
       const stale = NON_WEB_CLIENT_ADDRESSES.filter((address) => !go.has(address))
 
       expect(stale, 'サーバから消えたのでリストからも消すこと').toEqual([])
+    })
+  })
+
+  // ServerConfig のフィールド名もエンドポイントと同じで、Go側(server_config.go の jsonタグ)と
+  // TypeScript側(server-config.ts のフィールド)が独立に書かれている。
+  // 片方だけ直すとビルドもtype-checkも通り、値が undefined で入ってこないことに実行するまで気付かない。
+  // 実際 ur_log_timeout/ur_log_user_agent と mi_notification_* がこれで長期間ズレていて、
+  // 設定画面の2欄が空になり、保存のたびVAPID鍵が作り直されていた。
+  describe('ServerConfig field parity with Go', () => {
+    const GO_SERVER_CONFIG_FILE = 'src/server/gkill/dao/server_config/server_config.go'
+    const TS_SERVER_CONFIG_FILE = 'src/client/classes/datas/config/server-config.ts'
+
+    // サーバに送らないクライアント専用のフィールド
+    const CLIENT_ONLY_FIELDS = ['is_loaded']
+
+    function goFields(): Set<string> {
+      const source = readFileSync(GO_SERVER_CONFIG_FILE, 'utf8')
+      const fields = new Set<string>()
+      for (const m of source.matchAll(/`json:"([^",]+)"`/g)) {
+        fields.add(m[1])
+      }
+      return fields
+    }
+
+    function tsFields(): Set<string> {
+      const source = readFileSync(TS_SERVER_CONFIG_FILE, 'utf8')
+      const body = source.slice(source.indexOf('export class ServerConfig'), source.indexOf('async clone()'))
+      const fields = new Set<string>()
+      for (const m of body.matchAll(/^\s{4}(\w+)\s*:\s*[^=\n]+$/gm)) {
+        fields.add(m[1])
+      }
+      for (const field of CLIENT_ONLY_FIELDS) {
+        fields.delete(field)
+      }
+      return fields
+    }
+
+    test('両側のフィールドを読み取れている', () => {
+      // 抽出の正規表現が実装の書き方とズレていないことの確認。
+      // ここが0件のまま下のテストが通ると、何も検証していないことになる。
+      expect(goFields().size).toBeGreaterThan(15)
+      expect(tsFields().size).toBeGreaterThan(15)
+    })
+
+    test('Goのjsonタグがすべてクライアントにも存在する', () => {
+      const ts = tsFields()
+      const missingInTS = [...goFields()].filter((field) => !ts.has(field))
+
+      expect(missingInTS, 'サーバが送るのにクライアントが受け取れないフィールド（undefinedになる）').toEqual([])
+    })
+
+    test('クライアントのフィールドがすべてGoにも存在する', () => {
+      const go = goFields()
+      const missingInGo = [...tsFields()].filter((field) => !go.has(field))
+
+      expect(missingInGo, 'クライアントが送るのにサーバが読まないフィールド（保存時に消える）').toEqual([])
+    })
+  })
+
+  // fetch が返すのはメソッドを持たない生のオブジェクト。
+  // 受け取り側(useServerConfigView)は clone() を呼ぶので、ここで詰め直しておかないと
+  // TypeError が nextTick の中で握り潰され、設定画面が既定値の空フォームになる。
+  describe('get_server_configs response hydration', () => {
+    const originalFetch = globalThis.fetch
+
+    // Go の server_config.go が実際に吐く形
+    const GO_JSON = {
+      enable_this_device: true,
+      device: 'desktop',
+      is_local_only_access: false,
+      address: ':9999',
+      enable_tls: true,
+      tls_cert_file: '$HOME/gkill/tls/cert.cer',
+      tls_key_file: '$HOME/gkill/tls/key.pem',
+      open_directory_command: 'explorer /select,$filename',
+      open_file_command: 'rundll32 url.dll,FileProtocolHandler $filename',
+      urlog_timeout: 60000000000,
+      urlog_useragent: 'Mozilla/5.0',
+      upload_size_limit_month: -1,
+      user_data_directory: '$HOME/gkill/datas',
+      gkill_notification_public_key: 'public-key',
+      gkill_notification_private_key: 'private-key',
+      use_gkill_notification: true,
+      google_map_api_key: 'map-key',
+      lan_hostname: 'lan.example',
+      global_hostname: 'global.example',
+      repositories: [],
+      accounts: [],
+    }
+
+    beforeEach(() => {
+      globalThis.fetch = vi.fn()
+      ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        json: () => Promise.resolve({ server_configs: [GO_JSON], messages: null, errors: null }),
+      })
+    })
+
+    afterEach(() => {
+      globalThis.fetch = originalFetch
+    })
+
+    test('生JSONではなく ServerConfig のインスタンスを返す', async () => {
+      const api = GkillAPI.get_instance()
+      const res = await api.get_server_configs({} as never)
+
+      expect(res.server_configs).toHaveLength(1)
+      expect(res.server_configs[0]).toBeInstanceOf(ServerConfig)
+      expect(
+        typeof res.server_configs[0].clone,
+        '生オブジェクトのまま返している（useServerConfigView の clone() が TypeError になる）',
+      ).toBe('function')
+      expect(res.server_configs[0].is_loaded).toBe(true)
+    })
+
+    test('Goが送った値が欠落せず載っている', async () => {
+      const api = GkillAPI.get_instance()
+      const res = await api.get_server_configs({} as never)
+      const config = res.server_configs[0]
+
+      // コンストラクタ既定値で上書きされていないこと
+      expect(config.device).toBe('desktop')
+      expect(config.is_local_only_access).toBe(false)
+      expect(config.address).toBe(':9999')
+      expect(config.open_directory_command).toBe('explorer /select,$filename')
+      // キー名がズレていた4件
+      expect(config.urlog_timeout).toBe(60000000000)
+      expect(config.urlog_useragent).toBe('Mozilla/5.0')
+      expect(config.gkill_notification_public_key).toBe('public-key')
+      expect(
+        config.gkill_notification_private_key,
+        '空だと保存のたびサーバがVAPID鍵を作り直し、既存の購読が全部切れる',
+      ).toBe('private-key')
+    })
+
+    test('clone() が全フィールドを引き継ぐ', async () => {
+      const api = GkillAPI.get_instance()
+      const res = await api.get_server_configs({} as never)
+      const cloned = await res.server_configs[0].clone()
+
+      expect(cloned).not.toBe(res.server_configs[0])
+      for (const key of Object.keys(GO_JSON) as Array<keyof typeof GO_JSON>) {
+        expect(cloned[key], `clone() が ${key} を落としている`).toEqual(GO_JSON[key])
+      }
     })
   })
 
