@@ -122,7 +122,7 @@
                             {{ i18n.global.t("URLOG_TIMEOUT_TITLE") }}
                         </td>
                         <td>
-                            <v-text-field type="number" min="5" v-model="server_config.urlog_timeout"></v-text-field>
+                            <v-text-field type="number" min="5" v-model.number="urlog_timeout_sec"></v-text-field>
                         </td>
                     </tr>
                     <tr>
@@ -206,6 +206,7 @@ const {
     server_config,
     device,
     devices,
+    urlog_timeout_sec,
 
     // Template event handlers
     show_manage_account_dialog,
