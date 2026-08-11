@@ -11,6 +11,7 @@ type GetKyousMCPRequest struct {
 	MaxSizeMB       float64         `json:"max_size_mb"`       // default 1.0
 	IsIncludeTimeIs *bool           `json:"is_include_timeis"` // default true
 	IncludeID       bool            `json:"include_id"`        // default false
+	IncludeRepName  bool            `json:"include_rep_name"`  // default false
 }
 
 func (r *GetKyousMCPRequest) ShouldIncludeTimeIs() bool {

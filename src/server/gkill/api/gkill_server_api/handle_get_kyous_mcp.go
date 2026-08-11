@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/mt3hr/gkill/src/server/gkill/api"
@@ -35,7 +36,11 @@ import (
 // ReturnedCountがLimitに満たないことがあります。
 // URLogのサムネイル画像はAIクライアントで扱えないうえ巨大なので、DBから読む段階で外します。
 // IDFペイロードのFilePathはローカルリクエストのときだけ入ります。
-// 既知のdata_typeに当てはまらないKyouはプラグイン由来とみなし、rep_nameでプラグインを
+// Kyouのrep_nameはIncludeRepNameのときだけ載せます（全件に載せるとMaxSizeMBの打ち切りが早まるため）。
+// ペイロードの分岐はDataTypeそのものではなく payloadKindOfDataType で寄せた種別で行います。
+// Mi/MiReKyou/TimeIsのDataTypeは射影ごとに枝分かれする(mi_create、mirekyou_limit、
+// timeis_start ...)ので、素の型名との完全一致では拾えません。
+// そこにも当てはまらないKyouはプラグイン由来とみなし、rep_nameでプラグインを
 // 引き当てて、本文の代わりにrep_name/kyou_idを載せたペイロードを返します
 // （本文はgkill側に保存されておらず、別途コンテンツHTML取得が要るため）。
 func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Request) {
@@ -246,10 +251,32 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	// Mi / MiReKyou のFindは、5つのIncludeXxxMiがどのSQL射影を流すかのスイッチになっており、
+	// 全falseだとUNIONの元が1本も無くなって必ず空を返す(mi_repository_sqlite3_impl.goの
+	// len(sqlSegments)==0、mi_re_kyou_sql.goのbuildMiReKyouSQLも同じ)。
+	// ここはID指定でペイロードの元データを引くだけなので、
+	// 全行に当たる作成射影(CREATE_TIME IS NOT NULL)だけを立てる。
+	findQueryForMi := *findQueryForBatch
+	findQueryForMi.IncludeCreateMi = true
+
 	miMap := map[string]reps.Mi{}
-	if mis, miErr := repositories.MiReps.FindMi(r.Context(), findQueryForBatch); miErr == nil {
+	if mis, miErr := repositories.MiReps.FindMi(r.Context(), &findQueryForMi); miErr == nil {
 		for _, m := range mis {
 			miMap[m.ID] = m
+		}
+	}
+
+	miReKyouMap := map[string]reps.MiReKyou{}
+	if miReKyous, miReKyouErr := repositories.MiReKyouReps.FindMiReKyou(r.Context(), &findQueryForMi); miReKyouErr == nil {
+		for _, m := range miReKyous {
+			miReKyouMap[m.ID] = m
+		}
+	}
+
+	reKyouMap := map[string]reps.ReKyou{}
+	if reKyous, reKyouErr := repositories.ReKyouReps.FindReKyou(r.Context(), findQueryForBatch); reKyouErr == nil {
+		for _, rk := range reKyous {
+			reKyouMap[rk.ID] = rk
 		}
 	}
 
@@ -330,9 +357,11 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			}
 		}
 
-		// ペイロード構築
+		// ペイロード構築。
+		// DataTypeは射影ごとに枝分かれする(mi_create, timeis_start ...)ので、
+		// 種別へ寄せてから分岐する。詳細は payloadKindOfDataType を参照。
 		var payload any
-		switch kyou.DataType {
+		switch payloadKindOfDataType(kyou.DataType) {
 		case "kmemo":
 			if k, ok := kmemoMap[kyou.ID]; ok {
 				payload = req_res.KmemoPayloadMCPDTO{
@@ -376,9 +405,10 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		case "urlog":
 			if u, ok := urlogMap[kyou.ID]; ok {
 				payload = req_res.URLogPayloadMCPDTO{
-					Kind:  "urlog",
-					Title: u.Title,
-					URL:   u.URL,
+					Kind:        "urlog",
+					Title:       u.Title,
+					URL:         u.URL,
+					Description: u.Description,
 				}
 			}
 		case "idf":
@@ -396,6 +426,7 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 					IsImage:  idfk.IsImage,
 					IsVideo:  idfk.IsVideo,
 					IsAudio:  idfk.IsAudio,
+					IsZip:    idfk.IsZip,
 					RepName:  repName,
 					MimeType: mimeType,
 					FilePath: filePath,
@@ -417,9 +448,30 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 					Title:             m.Title,
 					IsChecked:         m.IsChecked,
 					BoardName:         m.BoardName,
+					CreateTime:        m.CreateTime,
 					LimitTime:         m.LimitTime,
 					EstimateStartTime: m.EstimateStartTime,
 					EstimateEndTime:   m.EstimateEndTime,
+				}
+			}
+		case "mirekyou":
+			if m, ok := miReKyouMap[kyou.ID]; ok {
+				payload = req_res.MiReKyouPayloadMCPDTO{
+					Kind:              "mirekyou",
+					TargetID:          m.TargetID,
+					IsChecked:         m.IsChecked,
+					BoardName:         m.BoardName,
+					CreateTime:        m.CreateTime,
+					LimitTime:         m.LimitTime,
+					EstimateStartTime: m.EstimateStartTime,
+					EstimateEndTime:   m.EstimateEndTime,
+				}
+			}
+		case "rekyou":
+			if rk, ok := reKyouMap[kyou.ID]; ok {
+				payload = req_res.ReKyouPayloadMCPDTO{
+					Kind:     "rekyou",
+					TargetID: rk.TargetID,
 				}
 			}
 		default:
@@ -448,6 +500,9 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		}
 		if request.IncludeID {
 			dto.ID = kyou.ID
+		}
+		if request.IncludeRepName {
+			dto.RepName = kyou.RepName
 		}
 
 		dtoJSON, marshalErr := json.Marshal(dto)
@@ -478,4 +533,27 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 		MessageCode: message.GetKyousMCPSuccessMessage,
 		Message:     api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOUS_MESSAGE"}),
 	})
+}
+
+// payloadKindOfDataType は射影ごとに枝分かれしたDataTypeをペイロード種別へ寄せます。
+//
+// Mi / MiReKyou / TimeIs のDataTypeはリポジトリのSQLが射影名を焼き込むため
+// (mi_create / mi_check / mi_limit / mi_start / mi_end、mirekyou_*、
+// timeis_start / timeis_end)、素の "mi" / "timeis" とは一致しません。
+// さらに FindFilter.overrideKyous がMi検索時にMiSortTypeへ合わせて付け替えます。
+// 完全一致のswitchで書くと全射影がdefaultへ落ち、payloadごと消えます。
+//
+// mirekyou_ を mi_ より先に判定すること（接頭辞判定の順序の罠）。
+// 単体取得経路は素の "mi" / "timeis" を使うので、既知の射影に当たらない値は
+// そのまま返して呼び出し側のcaseに任せます。
+func payloadKindOfDataType(dataType string) string {
+	switch {
+	case strings.HasPrefix(dataType, "mirekyou_"):
+		return "mirekyou"
+	case strings.HasPrefix(dataType, "mi_"):
+		return "mi"
+	case strings.HasPrefix(dataType, "timeis_"):
+		return "timeis"
+	}
+	return dataType
 }
