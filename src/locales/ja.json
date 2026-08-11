@@ -334,7 +334,7 @@
     "URLOG_USERAGENT_TITLE": "ブックマークユーザエージェント",
     "MI_APP_NAME": "タスク",
     "EDIT_MI_TITLE": "タスク編集",
-    "URLOG_TIMEOUT_TITLE": "ブックマークタイムアウト",
+    "URLOG_TIMEOUT_TITLE": "ブックマークタイムアウト（秒）",
     "DNOTE_PREDICATE_TITLE": "条件",
     "DNOTE_JOIN_LOGIC_TITLE": "結合条件",
     "DNOTE_LOGIC_AND_TITLE": "全てを満たす",

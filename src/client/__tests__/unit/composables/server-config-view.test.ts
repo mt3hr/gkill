@@ -25,18 +25,27 @@ import type { ServerConfigViewProps } from '@/pages/views/server-config-view-pro
 import type { ServerConfigViewEmits } from '@/pages/views/server-config-view-emits'
 import type { GkillError } from '@/classes/api/gkill-error'
 
+/**
+ * 本番と同じ経路で props を組む。
+ * サーバから来るのはメソッドを持たない生JSONで、GkillAPI.get_server_configs が
+ * Object.assign で ServerConfig に詰め直している。ここで直接 new ServerConfig() を
+ * 組み立ててしまうと、詰め直しを外したときにこのテストだけ通ってしまう
+ */
 function make_server_config(device: string, options: { enable_this_device: boolean, address: string }): ServerConfig {
-    const config = new ServerConfig()
-    config.device = device
-    config.enable_this_device = options.enable_this_device
-    config.address = options.address
-    return config
+    const json = {
+        device: device,
+        enable_this_device: options.enable_this_device,
+        address: options.address,
+        urlog_timeout: 60_000_000_000,
+        gkill_notification_private_key: 'private-key',
+    }
+    return Object.assign(new ServerConfig(), json)
 }
 
 function make_server_configs(): Array<ServerConfig> {
     return [
-        make_server_config('desktop', { enable_this_device: true, address: '9999' }),
-        make_server_config('laptop', { enable_this_device: false, address: '8888' }),
+        make_server_config('desktop', { enable_this_device: true, address: ':9999' }),
+        make_server_config('laptop', { enable_this_device: false, address: ':8888' }),
     ]
 }
 
@@ -99,8 +108,8 @@ describe('props の複製', () => {
         view.cloned_server_configs.value[1].address = '18888'
         await flush()
 
-        expect(server_configs[0].address, '適用前に props 側が書き換わっている').toBe('9999')
-        expect(server_configs[1].address, '適用前に props 側が書き換わっている').toBe('8888')
+        expect(server_configs[0].address, '適用前に props 側が書き換わっている').toBe(':9999')
+        expect(server_configs[1].address, '適用前に props 側が書き換わっている').toBe(':8888')
     })
 
     test('現在のデバイスが選択され、その設定が編集対象になる', async () => {
@@ -110,6 +119,57 @@ describe('props の複製', () => {
         expect(view.device.value).toBe('desktop')
         expect(view.server_config.value.device).toBe('desktop')
         expect(view.devices.value).toEqual(['desktop', 'laptop'])
+    })
+
+    // 画面に出ていない項目も複製に載っていないと、「適用」が全レコード
+    // DELETE→再INSERTなので保存時に消える。とくに通知の秘密鍵が空になると
+    // サーバがVAPID鍵を作り直し、既存のプッシュ通知購読が全部切れる
+    test('画面に出ていない項目も複製に引き継がれる', async () => {
+        const { view } = create_view()
+        await flush()
+
+        expect(view.server_config.value.gkill_notification_private_key).toBe('private-key')
+        expect(view.server_config.value.urlog_timeout).toBe(60_000_000_000)
+    })
+})
+
+// 有効な端末が1つも無いDBでも、初期化で落ちずにエラーを通知して止まること。
+// 以前は filter(...)[0].device と書いていたので TypeError になり、
+// nextTick の中で握り潰されて画面が空のまま無言で固まっていた
+describe('有効な端末が見つからない場合', () => {
+    test('例外にならず not_found_enable_device を通知する', async () => {
+        const { view, emitted } = create_view([
+            make_server_config('desktop', { enable_this_device: false, address: ':9999' }),
+            make_server_config('laptop', { enable_this_device: false, address: ':8888' }),
+        ])
+        await flush()
+
+        expect(view.devices.value, '端末一覧の読み込みまで巻き添えで止まっている').toEqual(['desktop', 'laptop'])
+        const errors = errors_of(emitted)
+        expect(errors).toHaveLength(1)
+        expect(errors[0].error_code).toBe(GkillErrorCodes.not_found_enable_device)
+    })
+})
+
+// Go/DBはナノ秒の time.Duration、入力欄は秒。
+// 変換を挟まないと入力欄に 60000000000 が出て、30と入れると30ナノ秒が保存される
+describe('urlog_timeout_sec', () => {
+    test('ナノ秒を秒にして見せる', async () => {
+        const { view } = create_view()
+        await flush()
+
+        expect(view.urlog_timeout_sec.value).toBe(60)
+    })
+
+    test('秒で書き込むとナノ秒で保持される', async () => {
+        const { view } = create_view()
+        await flush()
+
+        view.urlog_timeout_sec.value = 30
+        await flush()
+
+        expect(view.server_config.value.urlog_timeout).toBe(30_000_000_000)
+        expect(view.urlog_timeout_sec.value).toBe(30)
     })
 })
 

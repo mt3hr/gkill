@@ -334,7 +334,7 @@
     "URLOG_USERAGENT_TITLE": "Agent utilisateur des signets",
     "MI_APP_NAME": "Tâches",
     "EDIT_MI_TITLE": "Modifier la tâche",
-    "URLOG_TIMEOUT_TITLE": "Délai des signets",
+    "URLOG_TIMEOUT_TITLE": "Délai des signets (s)",
     "DNOTE_PREDICATE_TITLE": "Condition",
     "DNOTE_JOIN_LOGIC_TITLE": "Condition de jointure",
     "DNOTE_LOGIC_AND_TITLE": "Remplit toutes",
