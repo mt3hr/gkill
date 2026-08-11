@@ -135,6 +135,26 @@ func TestMCPPayloadDTO_JSONFieldNames(t *testing.T) {
 		{"KCPayloadMCPDTO", KCPayloadMCPDTO{Kind: "kc"}, []string{"kind", "title", "num_value"}},
 		{"TimeIsPayloadMCPDTO", TimeIsPayloadMCPDTO{Kind: "timeis"}, []string{"kind", "title", "start_time"}},
 		{
+			"MiPayloadMCPDTO",
+			MiPayloadMCPDTO{Kind: "mi", BoardName: "inbox"},
+			[]string{"kind", "title", "is_checked", "board_name", "create_time"},
+		},
+		{
+			"MiReKyouPayloadMCPDTO",
+			MiReKyouPayloadMCPDTO{Kind: "mirekyou", TargetID: "target-1", BoardName: "inbox"},
+			[]string{"kind", "target_id", "is_checked", "board_name", "create_time"},
+		},
+		{
+			"ReKyouPayloadMCPDTO",
+			ReKyouPayloadMCPDTO{Kind: "rekyou", TargetID: "target-1"},
+			[]string{"kind", "target_id"},
+		},
+		{
+			"URLogPayloadMCPDTO",
+			URLogPayloadMCPDTO{Kind: "urlog", Description: "概要"},
+			[]string{"kind", "title", "url", "description"},
+		},
+		{
 			"IDFPayloadMCPDTO",
 			IDFPayloadMCPDTO{Kind: "idf", MimeType: "image/jpeg"},
 			[]string{"kind", "file_name", "is_image", "is_video", "is_audio", "rep_name", "mime_type"},
@@ -170,7 +190,22 @@ func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
 		{
 			"IDFPayloadMCPDTO",
 			IDFPayloadMCPDTO{Kind: "idf", FileName: "data.bin", RepName: "files_repo"},
-			[]string{"mime_type"},
+			[]string{"mime_type", "is_zip"},
+		},
+		{
+			"MiPayloadMCPDTO",
+			MiPayloadMCPDTO{Kind: "mi", Title: "タスク"},
+			[]string{"board_name", "limit_time", "estimate_start_time", "estimate_end_time"},
+		},
+		{
+			"MiReKyouPayloadMCPDTO",
+			MiReKyouPayloadMCPDTO{Kind: "mirekyou", TargetID: "target-1"},
+			[]string{"board_name", "limit_time", "estimate_start_time", "estimate_end_time"},
+		},
+		{
+			"URLogPayloadMCPDTO",
+			URLogPayloadMCPDTO{Kind: "urlog", Title: "ページ", URL: "https://example.com"},
+			[]string{"description"},
 		},
 		{
 			"PluginPayloadMCPDTO",
@@ -185,7 +220,7 @@ func TestMCPPayloadDTO_OmitsEmptyOptionalFields(t *testing.T) {
 		{
 			"KyouMCPDTO",
 			KyouMCPDTO{DataType: "kmemo", RelatedTime: time.Now()},
-			[]string{"id", "tags", "texts", "notifications", "timeis", "payload"},
+			[]string{"id", "rep_name", "tags", "texts", "notifications", "timeis", "payload"},
 		},
 	}
 

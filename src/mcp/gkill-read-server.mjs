@@ -170,14 +170,15 @@ const TOOLS = [
       "Each result contains data_type, related_time, tags[], texts[], notifications[], timeis[] (attached TimeIs), and payload (type-specific fields). " +
       "Supports cursor-based pagination via next_cursor / cursor parameters. " +
       "Use limit and max_size_mb to control response size. " +
-      "Available data_type values: kmemo (text memo), kc (numeric record), timeis (time stamp start/end), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), mi (task). Plugins add their own data_type values (e.g. claude_conversation) — list them with gkill_get_plugin_list, and set include_plugin_content:true to read their bodies in this same response. " +
+      "Available data_type values: kmemo (text memo), kc (numeric record), nlog (expense/income), lantana (mood 0-10), urlog (URL/bookmark), idf (file/image — use gkill_get_idf_file to fetch file content), git_commit_log (git commit), rekyou (repost of another entry), " +
+      "timeis_start / timeis_end (time stamp), mi_create / mi_check / mi_limit / mi_start / mi_end (task, one value per projection — which one you get follows query.mi_sort_type), mirekyou_create / mirekyou_check / mirekyou_limit / mirekyou_start / mirekyou_end (an existing entry turned into a task). Plugins add their own data_type values (e.g. claude_conversation) — list them with gkill_get_plugin_list, and set include_plugin_content:true to read their bodies in this same response. " +
       "A filter activates simply by being present and non-null in the query; omit (or pass null for) filters you don't use. " +
       "Most used query fields: calendar_start_date/calendar_end_date, words, tags, for_mi. Advanced: map_latitude/map_longitude/map_radius, plaing_time, period_of_time_*, update_time. " +
       "Common query patterns: " +
       "Date range: {calendar_start_date:\"2026-03-01\", calendar_end_date:\"2026-03-07\"}. " +
       "Keyword search: {words:[\"keyword\"]}. " +
       "Tag filter: {tags:[\"tagname\"]}. " +
-      "Mi tasks: {for_mi:true, mi_check_state:\"uncheck\"}. " +
+      "Mi tasks: {for_mi:true, mi_check_state:\"uncheck\", include_create_mi:true} — for_mi needs at least one include_*_mi flag or it returns nothing. " +
       "Practical recommendation: start with a minimal query, keep limit small, and add filters gradually. Hidden tags can be searched intentionally by passing them directly in query.tags or query.timeis_tags. rep_types are backend-specific and may be case-sensitive, so do not assume ApplicationConfig display labels map 1:1 to accepted query values. " +
       "If a query fails, first retry with fewer query fields, a smaller limit, and is_include_timeis=false; then add rep_types or TimeIs expansion back step by step. " +
       "The server always applies only_latest_data=true. " +
@@ -218,6 +219,15 @@ const TOOLS = [
             "Set to true when you need IDs for subsequent operations such as gkill_update_* (patch update), gkill_delete_kyou (soft-delete), " +
             "gkill_add_tag (tagging by target_id), or gkill_add_text (annotating by target_id). " +
             "When true, each result includes an 'id' field at the top level of the kyou object.",
+          default: false,
+        },
+        include_rep_name: {
+          type: "boolean",
+          description:
+            "Include the source repository name in each result object. Default: false (omitted to reduce response size). " +
+            "When true, each result includes a 'rep_name' field at the top level of the kyou object — the repository the entry came from, " +
+            "which is the value you pass to query.reps to narrow later searches. " +
+            "Note idf and plugin payloads already carry their own rep_name inside payload regardless of this flag.",
           default: false,
         },
         include_plugin_content: {
@@ -690,6 +700,7 @@ class McpServer {
             max_size_mb: normalized.max_size_mb,
             is_include_timeis: normalized.is_include_timeis,
             include_id: normalized.include_id || false,
+            include_rep_name: normalized.include_rep_name || false,
           },
           true,
           sid,

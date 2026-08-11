@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 817 | 98 | Go `testing` |
+| Go バックエンド | 824 | 99 | Go `testing` |
 | フロントエンド ユニット | 1342 | 126 | Vitest |
 | フロントエンド E2E | 215 | 40（+auth.setup.ts） | Playwright |
-| MCP サーバ | 721 | 20 | Vitest |
+| MCP サーバ | 724 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 120 | 9 | JUnit 4 + MockK |
-| **合計** | **3,227** | **295** | |
+| **合計** | **3,237** | **296** | |
 
 数え直すコマンド:
 
@@ -203,7 +203,7 @@ src/server/gkill/
 │   ├── message/message_test.go        ← メッセージフォーマット
 │   ├── kftl/                          ← KFTL パーサ（3ファイル）
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
-│   └── gkill_server_api/              ← ハンドラ層（12ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（13ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得

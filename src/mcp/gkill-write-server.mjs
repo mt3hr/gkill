@@ -544,10 +544,10 @@ const TOOLS = [
     description:
       "Update an existing task (mi) in gkill using patch semantics — only specify the fields you want to change; unspecified fields are preserved as-is. " +
       "The MCP server internally fetches the current entity, merges changes, and sends the update. " +
-      "To obtain the entity ID: use the id from a previous gkill_add_mi response, or search with gkill_get_kyous (include_id:true, query:{for_mi:true}). " +
+      "To obtain the entity ID: use the id from a previous gkill_add_mi response, or search with gkill_get_kyous (include_id:true, query:{for_mi:true, include_create_mi:true}). " +
       "Response fields: updated_mi (full Mi entity after update, with id, title, is_checked, board_name, limit_time, estimate_start_time, estimate_end_time, rep_name, etc.), updated_kyou (parent Kyou wrapper). " +
       "Common use cases: mark a task as completed (is_checked:true), move to a different board (board_name), update deadline (limit_time), rename a task. " +
-      "Typical workflow: gkill_get_kyous({include_id:true, query:{for_mi:true, mi_check_state:\"uncheck\"}}) → find the task → gkill_update_mi({id, is_checked:true}).",
+      "Typical workflow: gkill_get_kyous({include_id:true, query:{for_mi:true, mi_check_state:\"uncheck\", include_create_mi:true}}) → find the task → gkill_update_mi({id, is_checked:true}).",
     inputSchema: {
       type: "object",
       properties: {

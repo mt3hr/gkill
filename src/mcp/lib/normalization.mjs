@@ -249,6 +249,9 @@ export function normalizeKyouArgs(args) {
   if (Object.prototype.hasOwnProperty.call(source, "include_id") && source.include_id !== undefined) {
     normalized.include_id = assertBoolean(source.include_id, "include_id");
   }
+  if (Object.prototype.hasOwnProperty.call(source, "include_rep_name") && source.include_rep_name !== undefined) {
+    normalized.include_rep_name = assertBoolean(source.include_rep_name, "include_rep_name");
+  }
   if (
     Object.prototype.hasOwnProperty.call(source, "include_plugin_content") &&
     source.include_plugin_content !== undefined
