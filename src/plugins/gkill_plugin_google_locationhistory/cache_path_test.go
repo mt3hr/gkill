@@ -11,10 +11,10 @@ func TestCacheDBPath_UsesGkillCacheDir(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("GKILL_HOME", home)
 
-	pluginDir := filepath.Join(home, "plugins", "testuser", "gkill_google_locationhistory_plugin")
+	pluginDir := filepath.Join(home, "plugins", "testuser", "gkill_plugin_google_locationhistory")
 	got := cacheDBPath(pluginDir)
 
-	want := filepath.Join(home, "caches", "plugin_cache", "testuser", "gkill_google_locationhistory_plugin", "cache.db")
+	want := filepath.Join(home, "caches", "plugin_cache", "testuser", "gkill_plugin_google_locationhistory", "cache.db")
 	if got != want {
 		t.Errorf("cacheDBPath = %q, want %q", got, want)
 	}
@@ -29,10 +29,10 @@ func TestCacheDBPath_FallsBackToPluginDirLayout(t *testing.T) {
 	t.Setenv("GKILL_HOME", "")
 
 	home := t.TempDir()
-	pluginDir := filepath.Join(home, "plugins", "testuser", "gkill_google_locationhistory_plugin")
+	pluginDir := filepath.Join(home, "plugins", "testuser", "gkill_plugin_google_locationhistory")
 	got := cacheDBPath(pluginDir)
 
-	want := filepath.Join(home, "caches", "plugin_cache", "testuser", "gkill_google_locationhistory_plugin", "cache.db")
+	want := filepath.Join(home, "caches", "plugin_cache", "testuser", "gkill_plugin_google_locationhistory", "cache.db")
 	if got != want {
 		t.Errorf("cacheDBPath = %q, want %q", got, want)
 	}
@@ -42,7 +42,7 @@ func TestCacheDBPath_FallsBackToPluginDirLayout(t *testing.T) {
 func TestCacheDBPath_FallsBackToPluginDir(t *testing.T) {
 	t.Setenv("GKILL_HOME", "")
 
-	pluginDir := filepath.Join(t.TempDir(), "somewhere", "gkill_google_locationhistory_plugin")
+	pluginDir := filepath.Join(t.TempDir(), "somewhere", "gkill_plugin_google_locationhistory")
 	got := cacheDBPath(pluginDir)
 
 	want := filepath.Join(pluginDir, "cache.db")

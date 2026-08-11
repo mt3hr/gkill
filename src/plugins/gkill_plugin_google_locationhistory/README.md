@@ -1,4 +1,4 @@
-# gkill_google_locationhistory_plugin
+# gkill_plugin_google_locationhistory
 
 Google Takeout のロケーション履歴を、gkill の**位置情報ログ**として読み込むプラグイン。
 地図の表示と、地図による絞り込み（緯度・経度・半径）で使える。
@@ -10,26 +10,26 @@ Google Takeout のロケーション履歴を、gkill の**位置情報ログ**�
 ### 1. ビルド
 
 ```bash
-cd src/plugins/gkill_google_locationhistory_plugin
-go build -o gkill_google_locationhistory_plugin .
+cd src/plugins/gkill_plugin_google_locationhistory
+go build -o gkill_plugin_google_locationhistory .
 # Windows の場合
-go build -o gkill_google_locationhistory_plugin.exe .
+go build -o gkill_plugin_google_locationhistory.exe .
 ```
 
 ### 2. 配置
 
 ```
-$GKILL_HOME/plugins/{userID}/gkill_google_locationhistory_plugin/
+$GKILL_HOME/plugins/{userID}/gkill_plugin_google_locationhistory/
 ├── manifest.json
-├── gkill_google_locationhistory_plugin
+├── gkill_plugin_google_locationhistory
 └── config.json               # 初回起動時に自動生成
 ```
 
-キャッシュは `$GKILL_HOME/caches/plugin_cache/{userID}/gkill_google_locationhistory_plugin/cache.db`。
+キャッシュは `$GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_google_locationhistory/cache.db`。
 
 ```bash
-./gkill_google_locationhistory_plugin --gkill-print-manifest > manifest.json
-./gkill_google_locationhistory_plugin --gkill-print-config   > config.json
+./gkill_plugin_google_locationhistory --gkill-print-manifest > manifest.json
+./gkill_plugin_google_locationhistory --gkill-print-config   > config.json
 ```
 
 ### 3. 取り込み元のフォルダを指定する
@@ -138,7 +138,7 @@ $GKILL_HOME/plugins/{userID}/gkill_google_locationhistory_plugin/
 ## テスト
 
 ```bash
-cd src/plugins/gkill_google_locationhistory_plugin
+cd src/plugins/gkill_plugin_google_locationhistory
 go test ./...
 ```
 
