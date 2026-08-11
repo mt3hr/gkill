@@ -22,6 +22,8 @@
           :server_configs="server_configs" :account="cloned_account"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
+          @requested_reload_server_config="emits('requested_reload_server_config')"
+          @requested_show_show_password_reset_dialog="(account: Account) => emits('requested_show_show_password_reset_dialog', account)"
           @requested_close_dialog="hide" />
         </v-card>
 </div>

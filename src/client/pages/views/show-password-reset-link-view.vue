@@ -11,6 +11,12 @@
             <pre>{{ i18n.global.t("RESETED_PASSWORD_MESSAGE") }}</pre>
         </div>
         <div>{{ account.user_id }}</div>
+        <div v-if="password_reset_token_expiration_label !== ''" class="password_reset_token_expiration">
+            {{ i18n.global.t("PASSWORD_RESET_TOKEN_EXPIRATION_TITLE") }}: {{ password_reset_token_expiration_label }}
+        </div>
+        <v-alert v-if="is_password_reset_link_expired" type="warning" variant="tonal" density="compact" class="my-2">
+            {{ i18n.global.t("PASSWORD_RESET_LINK_EXPIRED_MESSAGE") }}
+        </v-alert>
 
         <v-text-field v-model="local_password_reset_url" :label="i18n.global.t('LOCAL_TITLE')" readonly
             @click="copy_local_password_reset_url" @focus="$event.target.select()" />
@@ -20,6 +26,12 @@
             @click="copy_over_lan_password_reset_url" @focus="$event.target.select()" />
         <v-card-action>
             <v-row class="pa-0 ma-0 gkill-dialog-actions">
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn dark color="primary" :loading="is_reissuing" :disabled="is_reissuing"
+                        @click="reissue_password_reset_link()">{{
+                            i18n.global.t("REISSUE_PASSWORD_RESET_LINK_TITLE")
+                        }}</v-btn>
+                </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CLOSE_TITLE")
@@ -42,8 +54,18 @@ const {
     local_password_reset_url,
     lan_password_reset_url,
     over_lan_password_reset_url,
+    is_reissuing,
+    password_reset_token_expiration_label,
+    is_password_reset_link_expired,
     copy_local_password_reset_url,
     copy_lan_password_reset_url,
     copy_over_lan_password_reset_url,
+    reissue_password_reset_link,
 } = useShowPasswordResetLinkView({ props, emits })
 </script>
+<style lang="css" scoped>
+.password_reset_token_expiration {
+    font-size: small;
+    opacity: 0.8;
+}
+</style>

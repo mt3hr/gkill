@@ -46,3 +46,20 @@ func (a *Account) IsPasswordResetTokenValid(token string, now time.Time) bool {
 	}
 	return constantTimeEquals(*a.PasswordResetToken, token)
 }
+
+// IsPasswordResetTokenExpired は渡されたトークンが「このアカウントのものだが期限切れ」かを返す。
+//
+// IsPasswordResetTokenValid が偽を返した理由が期限切れなのかを区別するために使う。
+// 期限切れだと分からないと、利用者にはリンクが壊れているようにしか見えず、
+// 再発行を頼めばよいことに気づけない。
+// トークンが一致しないときは偽を返すので、トークンを知らない者が
+// 「そのアカウントにリセットトークンがあるか」を探る手がかりにはならない。
+func (a *Account) IsPasswordResetTokenExpired(token string, now time.Time) bool {
+	if a.PasswordResetToken == nil {
+		return false
+	}
+	if !constantTimeEquals(*a.PasswordResetToken, token) {
+		return false
+	}
+	return a.PasswordResetTokenExpiration != nil && now.After(*a.PasswordResetTokenExpiration)
+}
