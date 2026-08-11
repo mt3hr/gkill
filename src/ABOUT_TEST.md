@@ -11,15 +11,15 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド (`server/`) | 794 | 95 | Go `testing` |
+| Go バックエンド (`server/`) | 817 | 98 | Go `testing` |
 | フロントエンド ユニット (`client/`) | 1332 | 126 | Vitest |
 | フロントエンド E2E (`client/`) | 215 | 40 | Playwright |
 | MCP サーバ (`mcp/`) | 721 | 20 | Vitest |
 | Android (`android/`) | 12 | 2 | JUnit 4 |
 | Wear OS (`wear_os/`) | 120 | 9 | JUnit 4 + MockK |
-| **合計** | **3,194** | **292** | |
+| **合計** | **3,217** | **295** | |
 
-`src/plugins/` の Go テスト 28件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
+`src/plugins/` の Go テスト 90件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
 ### テストの書き方の方針
 
@@ -74,7 +74,7 @@ npm run verify_docs -- --list
 | `client/classes/kftl/` | [client/classes/kftl/ABOUT_TEST.md](client/classes/kftl/ABOUT_TEST.md) | KFTL パーサ (TypeScript) |
 | `client/pages/` | [client/pages/ABOUT_TEST.md](client/pages/ABOUT_TEST.md) | E2E + Composable + Router |
 | `locales/` | [locales/ABOUT_TEST.md](locales/ABOUT_TEST.md) | i18n 完全性検証（7言語） |
-| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（765テスト / 30パッケージ） |
+| `server/` | [server/ABOUT_TEST.md](server/ABOUT_TEST.md) | Go バックエンド全体（817テスト / 30パッケージ） |
 | `server/gkill/api/` | [server/gkill/api/ABOUT_TEST.md](server/gkill/api/ABOUT_TEST.md) | API 共通基盤（FindFilter等） |
 | `server/gkill/api/gkill_server_api/` | [server/gkill/api/gkill_server_api/ABOUT_TEST.md](server/gkill/api/gkill_server_api/ABOUT_TEST.md) | API ハンドラ統合テスト（handle_*.go 実装91ファイル） |
 | `server/gkill/api/kftl/` | [server/gkill/api/kftl/ABOUT_TEST.md](server/gkill/api/kftl/ABOUT_TEST.md) | KFTL パーサ (Go) |

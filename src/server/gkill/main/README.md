@@ -30,8 +30,6 @@ main/
 │   └── main.go                # デスクトップアプリエントリポイント
 ├── gkill_server/
 │   └── main.go                # HTTP サーバエントリポイント
-└── gkill_fitbit_kc_convert_batch/
-    └── gkill_fitbit_kc_convert_batch.go  # Fitbit データ変換バッチ
 ```
 
 ## デプロイモード
@@ -97,12 +95,6 @@ cobra/viper 連携のグローバル変数群（70+ パラメータ）。GkillHo
 ### `threads/`（2ファイル）— ゴルーチンプール
 
 セマフォベースの並行度制限。`gkill_options.GoroutinePool`（デフォルト: `runtime.NumCPU()`）に基づき `Acquire()` / `Release()` で管理。
-
-## ユーティリティバッチ
-
-### `gkill_fitbit_kc_convert_batch/`
-
-Fitbit のヘルスデータ（歩数等）を gkill の KC（数値記録）形式に変換するバッチ処理。
 
 ## 開発ガイドライン
 

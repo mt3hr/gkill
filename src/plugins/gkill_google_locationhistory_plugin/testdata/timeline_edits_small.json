@@ -1,0 +1,51 @@
+{
+  "timelineEdits": [{
+    "deviceId": "-1000000001",
+    "rawSignal": {
+      "signal": {
+        "position": {
+          "point": { "latE7": 351234000, "lngE7": 1391234000 },
+          "accuracyMm": 100000,
+          "altitudeMeters": 10.0,
+          "source": "WIFI",
+          "timestamp": "2024-01-15T12:00:00.500Z",
+          "speedMetersPerSecond": 0.0
+        }
+      },
+      "additionalTimestamp": "2024-01-15T12:00:00.600Z"
+    }
+  }, {
+    "deviceId": "-1000000001",
+    "rawSignal": { "signal": { "wifiScan": { "deliveryTime": "2024-01-15T12:00:00.500Z" } } }
+  }, {
+    "deviceId": "-1000000001",
+    "rawSignal": { "signal": { "activityRecord": { "probability": 0.5 } } }
+  }, {
+    "deviceId": "-1000000002",
+    "rawSignal": {
+      "signal": {
+        "position": {
+          "point": { "latE7": 352000000, "lngE7": 1392000000 },
+          "accuracyMm": 2599999,
+          "source": "CELL",
+          "timestamp": "2024-01-15T13:00:00.000Z"
+        }
+      }
+    }
+  }, {
+    "deviceId": "-1000000001",
+    "inferredSemanticSegment": {
+      "startTime": "2024-01-15T10:00:00.000Z",
+      "endTime": "2024-01-16T00:00:00.000Z",
+      "segment": {
+        "visit": {
+          "topCandidate": {
+            "placeId": "ChIJtestplaceid0000000000001",
+            "semanticType": "HOME",
+            "placeLocation": { "latE7": 352000000, "lngE7": 1392000000 }
+          }
+        }
+      }
+    }
+  }]
+}

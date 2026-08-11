@@ -110,6 +110,12 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 	// repNameが一致するGPSLogRepを取得する
 	var targetRep reps.GPSLogRepository
 	for _, gpsLogRep := range repositories.GPSLogReps {
+		// 書き込み口の無いrep(プラグイン由来など)はアップロード先にしない。
+		// 画面の選択肢は端末のrep設定から作られるので出てこないが、
+		// リクエストを手で組めばrep名で当ててしまえるため、サーバ側でも弾く。
+		if _, readOnly := gpsLogRep.(reps.ReadOnlyGPSLogRepository); readOnly {
+			continue
+		}
 		repName, err := gpsLogRep.GetRepName(r.Context())
 		if err != nil {
 			err = fmt.Errorf("error at get rep name from gpsLog rep: %w", err)
