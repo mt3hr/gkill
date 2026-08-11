@@ -626,7 +626,9 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 
 そのほかの上限: 1回あたり20件・1件4000文字（`plugin_content_max_text_length` で最大200000）・合計200000文字。あるrepで1件失敗したらそのrepの残りは投げず `content_skipped_reason: "rep_error"` にする（タイムアウトでプロセスが死んでいる可能性が高く、投げ続けてもコールドスタートで待たされるだけのため）。個別の失敗は `content_status` に落ち、`gkill_get_kyous` 全体は失敗しない。
 
-`handle_get_kyous_mcp.go` のペイロード構築は既存 data_type の switch で分岐しており、そのどれにも当たらないKyouは `repositories.PluginReps` から `rep_name` で manifest を引き当てて `PluginPayloadMCPDTO`（`kind: "plugin"`）にする。`kyou_id` をペイロードに載せているのは、`include_id` 指定なしでもコンテンツ取得ができるようにするため（idfペイロードが `rep_name` / `file_name` を常に載せているのと同じ考え方）。
+`handle_get_kyous_mcp.go` のペイロード構築は、`data_type` そのものではなく `payloadKindOfDataType` で寄せた**ペイロード種別**の switch で分岐する。Mi / MiReKyou / TimeIs の `data_type` はリポジトリのSQLが射影名を焼き込むため（`mi_create` / `mi_check` / `mi_limit` / `mi_start` / `mi_end`、`mirekyou_*`、`timeis_start` / `timeis_end`）、素の型名との完全一致では拾えないからである。接頭辞判定は `mirekyou_` を `mi_` より先に見ること。そこにも当たらないKyouは `repositories.PluginReps` から `rep_name` で manifest を引き当てて `PluginPayloadMCPDTO`（`kind: "plugin"`）にする。`kyou_id` をペイロードに載せているのは、`include_id` 指定なしでもコンテンツ取得ができるようにするため（idfペイロードが `rep_name` / `file_name` を常に載せているのと同じ考え方）。
+
+> 完全一致の switch で書いていた期間は Mi / TimeIs / MiReKyou / ReKyou の4型が丸ごと `default` へ落ち、`Payload` が `omitempty` なのでキーごと消えていた（Miの板名もタイトルもMCPに届かなかった）。加えて、ペイロードの元データを引く `FindMi` / `FindMiReKyou` は5つの `IncludeXxxMi` がSQL射影を選ぶスイッチになっており、**全falseだと必ず空を返す**ので、ID指定の一括取得でも作成射影を明示的に立てる必要がある。回帰は `handle_get_kyous_mcp_test.go` が押さえる。
 
 ### HTML → テキスト変換
 
