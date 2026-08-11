@@ -58,7 +58,7 @@ plugins/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
-├── gkill_google_locationhistory_plugin/  # Google ロケーション履歴プラグイン
+├── gkill_plugin_google_locationhistory/  # Google ロケーション履歴プラグイン
 │   ├── main.go
 │   ├── formats.go
 │   ├── parsers.go
@@ -97,7 +97,7 @@ plugins/
 | [`gkill_plugin_chatgpt`](gkill_plugin_chatgpt/README.md) | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを、自分の発言と一連の応答に分けてタイムライン表示 |
 | [`gkill_plugin_fitbit`](gkill_plugin_fitbit/README.md) | `kc` | Google Takeout の Fitbit / Google Health を日別集計し、数値記録として返す（推移グラフで集計できる） |
-| [`gkill_google_locationhistory_plugin`](gkill_google_locationhistory_plugin/README.md) | `google_location_visit` | Google Takeout のロケーション履歴を位置情報ログとして読み込む（記録は作らない） |
+| [`gkill_plugin_google_locationhistory`](gkill_plugin_google_locationhistory/README.md) | `google_location_visit` | Google Takeout のロケーション履歴を位置情報ログとして読み込む（記録は作らない） |
 
 ---
 
@@ -141,7 +141,7 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 2. 自動生成される `config.json` の `source_dirs` は既定で `~/.claude/projects`。
    他の場所を読ませたい場合は書き換える
 
-### gkill_plugin_fitbit / gkill_google_locationhistory_plugin
+### gkill_plugin_fitbit / gkill_plugin_google_locationhistory
 
 Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダに置く。**
 
@@ -220,11 +220,26 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 | フィールド | 説明 |
 |---|---|
 | `protocol_version` | プロトコルバージョン（現在は `"1"` 固定） |
-| `name` | プラグイン識別子（ディレクトリ名と合わせる） |
+| `name` | プラグイン識別子（ディレクトリ名・`executable` と合わせる） |
 | `data_type` | このプラグインが返す Kyou の `data_type` 値 |
 | `rep_name` | gkill UI 上のリポジトリ表示名 |
 | `executable` | 実行ファイル名（拡張子なし。Windows では `.exe` を自動補完） |
 | `min_gkill_version` | 動作に必要な最低 gkill バージョン |
+
+**名前は `gkill_plugin_<名前>` にすること。** ディレクトリ名・`name`・`executable`・
+配置先のフォルダ名がすべて同じ文字列である必要がある（配布スクリプトがこの1つの名前から
+ソース・ビルド出力・配置先を組み立てるため）。
+
+接頭辞まで規約なのは、Termux 側の配布スクリプト
+（`termux-tasker/update_gkill_plugins.sh`）が更新前に
+
+```bash
+pkill -KILL -f gkill_plugin_
+```
+
+で起動中のプラグインを落としているから。この接頭辞を持たない名前だとプロセスが落ちず、
+古いバイナリを掴んだまま生き残る。かつて `gkill_google_locationhistory_plugin` という
+名前で作ってしまい、あとから改名した。
 
 ---
 
@@ -419,9 +434,9 @@ go build -o gkill_plugin_claudecode .
 cd src/plugins/gkill_plugin_fitbit
 go build -o gkill_plugin_fitbit .
 
-# gkill_google_locationhistory_plugin
-cd src/plugins/gkill_google_locationhistory_plugin
-go build -o gkill_google_locationhistory_plugin .
+# gkill_plugin_google_locationhistory
+cd src/plugins/gkill_plugin_google_locationhistory
+go build -o gkill_plugin_google_locationhistory .
 ```
 
 ---
