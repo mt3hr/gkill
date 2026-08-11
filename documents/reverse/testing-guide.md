@@ -12,13 +12,13 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 
 | コンポーネント | テスト宣言数 | テストファイル数 | フレームワーク |
 |--------------|---------|----------------|---------------|
-| Go バックエンド | 824 | 99 | Go `testing` |
-| フロントエンド ユニット | 1342 | 126 | Vitest |
+| Go バックエンド | 830 | 101 | Go `testing` |
+| フロントエンド ユニット | 1354 | 127 | Vitest |
 | フロントエンド E2E | 215 | 40（+auth.setup.ts） | Playwright |
 | MCP サーバ | 724 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
 | Wear OS | 120 | 9 | JUnit 4 + MockK |
-| **合計** | **3,237** | **296** | |
+| **合計** | **3,255** | **299** | |
 
 数え直すコマンド:
 
@@ -203,7 +203,7 @@ src/server/gkill/
 │   ├── message/message_test.go        ← メッセージフォーマット
 │   ├── kftl/                          ← KFTL パーサ（3ファイル）
 │   ├── req_res/req_res_test.go        ← JSON 往復テスト
-│   └── gkill_server_api/              ← ハンドラ層（13ファイル）
+│   └── gkill_server_api/              ← ハンドラ層（15ファイル）
 │       ├── gkill_server_api_test.go              ← 統合テスト（全エンドポイント）
 │       ├── gkill_server_api_rate_limit_test.go   ← ログインレート制限
 │       ├── handle_get_idf_file_path_test.go      ← IDFファイル絶対パス取得
@@ -272,7 +272,7 @@ src/client/__tests__/
 │   ├── datas/                         ← データモデル（31ファイル）
 │   ├── dnote/                         ← D-note モジュール（7ファイル、trend-aggregator.test.ts 含む）
 │   ├── kftl/                          ← KFTL パーサ（5ファイル）
-│   ├── composables/                   ← Vue Composable（41ファイル。add-views / edit-views /
+│   ├── composables/                   ← Vue Composable（42ファイル。add-views / edit-views /
 │   │                                     confirm-delete / context-menus / page-composables /
 │   │                                     query-composables / idf-kyou-view / re-kyou-view /
 │   │                                     mi-re-kyou-view / kyou-view / kyou-count-calendar /

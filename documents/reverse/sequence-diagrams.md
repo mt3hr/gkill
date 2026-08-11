@@ -85,8 +85,10 @@ sequenceDiagram
     AccDAO-->>API: Account
 
     API->>API: リセットトークン照合<br>（constant-time + 期限72h）
-    alt 不一致 or 期限切れ
+    alt 不一致
         API-->>UI: ERR000247
+    else 一致したが期限切れ
+        API-->>UI: ERR000408<br>（再発行を依頼すればよいと伝えるため区別する）
     end
 
     API->>API: HashPassword(new_password_sha256)<br>Argon2id m=65536,t=3,p=4

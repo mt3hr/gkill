@@ -18,7 +18,7 @@
                 <tbody>
                     <tr v-for="account in cloned_accounts" :key="account.user_id">
                         <td>
-                            <v-checkbox v-model="account.is_enable"
+                            <v-checkbox v-model="account.is_enable" :disabled="is_own_account(account)"
                                 @click="update_is_enable_account(account, !account.is_enable)" />
                         </td>
                         <td>
@@ -94,6 +94,7 @@ const {
     cloned_accounts,
 
     // Business logic
+    is_own_account,
     show_create_account_dialog,
     update_is_enable_account,
     show_allocate_rep_dialog,

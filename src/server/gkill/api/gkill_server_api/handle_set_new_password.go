@@ -112,12 +112,21 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 
 	// リセットトークンがあっているか確認する。
 	// トークン自体が秘密なので、照合はconstant-timeで行い、期限も見る
-	if !targetAccount.IsPasswordResetTokenValid(request.ResetToken, time.Now()) {
+	now := time.Now()
+	if !targetAccount.IsPasswordResetTokenValid(request.ResetToken, now) {
 		err = fmt.Errorf("error at reset token is not match or expired user id = %s", request.UserID)
 		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+		// 期限切れは「リンクが壊れている」のではなく「再発行してもらえばよい」状態なので、
+		// 汎用の失敗メッセージと区別して伝える。
+		// トークンが一致している場合しか期限切れとは言わないので、
+		// トークンを知らない者への情報にはならない
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidPasswordResetTokenError,
 			ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
+		}
+		if targetAccount.IsPasswordResetTokenExpired(request.ResetToken, now) {
+			gkillError.ErrorCode = message.ExpiredPasswordResetTokenError
+			gkillError.ErrorMessage = api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "EXPIRED_PASSWORD_RESET_TOKEN_MESSAGE"})
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return

@@ -10,7 +10,7 @@
   <p>Registered accounts are displayed in a list. Each account row contains the following items:</p>
   <table>
     <tr><th>Item</th><th>Description</th></tr>
-    <tr><td>Enable/Disable checkbox</td><td>Toggle the account between enabled and disabled</td></tr>
+    <tr><td>Enable/Disable checkbox</td><td>Toggle the account between enabled and disabled (the account you are currently signed in with cannot be toggled)</td></tr>
     <tr><td>User ID</td><td>Displays the account's user ID</td></tr>
     <tr><td>Storage Allocation button</td><td>Assign data repositories to the user</td></tr>
     <tr><td>Password Reset button</td><td>Generate a password reset link</td></tr>
@@ -40,7 +40,7 @@
     <li>You will be redirected to the login screen — log in with your new password.</li>
   </ol>
   <div class="tip">
-    <strong>Tip:</strong> The reset link is single-use and becomes invalid after use. If the link has expired, ask the admin to generate a new one.
+    <strong>Tip:</strong> The reset link is single-use and becomes invalid after use. It is valid for 72 hours from issuance, and the expiry is shown in the link dialog. Once it has expired, use the "Reissue link" button in the same dialog to generate a new one.
   </div>
 
   <h2>Storage Assignment</h2>
