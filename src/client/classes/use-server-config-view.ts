@@ -129,6 +129,15 @@ export function useServerConfigView(options: {
     }
 
     async function load_current_server_config(): Promise<void> {
+        // まだサーバ設定が届いていない。設定ダイアログは応答を待たずに開き、
+        // このviewを v-show で隠すだけ（v-if ではない）なので初期化はここまで走る。
+        // 0件を「有効なプロファイルが見つかりません」として通知すると、
+        // ダイアログを開くたびに毎回そのエラーが出る。
+        // 応答が届けば props の差し替えでウォッチャが動き、改めてここを通る
+        if (cloned_server_configs.value.length === 0) {
+            return
+        }
+
         let current_server_config: ServerConfig | null = null
         for (let i = 0; i < cloned_server_configs.value.length; i++) {
             if (cloned_server_configs.value[i].enable_this_device) {
@@ -180,6 +189,13 @@ export function useServerConfigView(options: {
     }
 
     function delete_current_server_config(): void {
+        // 最後の1件は消させない。サーバは「有効なプロファイルがちょうど1件」を前提に
+        // 起動するので、0件にしてしまうと次の再起動で立ち上がらなくなる。
+        // 削除ボタン自体も2件以上のときしか出していないので、ここは保険
+        if (cloned_server_configs.value.length <= 1) {
+            return
+        }
+
         let delete_target_server_config_index = -1
         for (let i = 0; i < cloned_server_configs.value.length; i++) {
             if (cloned_server_configs.value[i].device === device.value) {
