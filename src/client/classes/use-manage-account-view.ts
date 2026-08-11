@@ -29,6 +29,14 @@ export function useManageAccountView(options: {
     })
 
     // ── Business logic ──
+    // is_own_account は「今この画面を見ているセッションのアカウント」かを返す。
+    // 自分を無効化すると管理画面に入れなくなり、復帰手段がサーバと同じマシンでの
+    // CLI操作だけになるので、有効・無効のチェックボックスを触らせない。
+    // サーバ側 (handle_update_account_status.go) でも同じ条件で弾いている
+    function is_own_account(account: Account): boolean {
+        return account.user_id === props.application_config.user_id
+    }
+
     function show_create_account_dialog(): void {
         create_account_dialog.value?.show()
     }
@@ -96,6 +104,8 @@ export function useManageAccountView(options: {
     const showPasswordResetLinkDialogHandlers = {
         'received_errors': (errors: Array<GkillError>) => emits('received_errors', errors),
         'received_messages': (messages: Array<GkillMessage>) => emits('received_messages', messages),
+        'requested_show_show_password_reset_dialog': (arg0: Account) => show_show_password_reset_link_dialog(arg0),
+        'requested_reload_server_config': () => emits('requested_reload_server_config'),
     }
 
     // ── Return ──
@@ -110,6 +120,7 @@ export function useManageAccountView(options: {
         cloned_accounts,
 
         // Business logic
+        is_own_account,
         show_create_account_dialog,
         update_is_enable_account,
         show_allocate_rep_dialog,
