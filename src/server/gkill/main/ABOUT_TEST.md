@@ -31,7 +31,6 @@ Go `testing` パッケージ
 
 | ファイル | テスト内容 |
 |---------|-----------|
-| `gkill_fitbit_kc_convert_batch/gkill_fitbit_kc_convert_batch_test.go` | Fitbit データ → KC 変換バッチ処理 |
 
 ## テスト内容
 
@@ -39,7 +38,6 @@ Go `testing` パッケージ
 - **ログ**: レベル別（none/error/warn/info/debug/trace/trace_sql）のファイルルーティング
 - **ゴルーチンプール**: プール生成、並行タスク実行、`runtime.NumCPU()` 準拠のプールサイズ
 - **エントリポイント**: cobra コマンド登録、サブコマンド（version, idf, dvnf 等）の存在確認
-- **バッチ**: Fitbit JSON → KC レコード変換
 - **自動タグ付け**: `auto_tag` のルール解釈・差分計算・タグ ID の再現性（稼働中サーバへの HTTP 部分はテストしない）
 
 ## 実行方法

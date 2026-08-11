@@ -43,3 +43,17 @@ type GPSLogRepository interface {
 	// UnWrapTyped の契約は Repository.UnWrap を参照。GPSLogRepository型で返す版です。
 	UnWrapTyped() ([]GPSLogRepository, error)
 }
+
+// ReadOnlyGPSLogRepository は書き込み口を持たないGPSログリポジトリの目印です。
+//
+// GPXファイルのアップロード先の候補から外すためだけに使います。
+// 画面の選択肢は端末のrep設定から作られるのでプラグイン由来のrepは出てきませんが、
+// サーバ側はリクエストのrep名を GPSLogReps 全件と突き合わせるだけなので、
+// 名前を指定されるとプラグインフォルダにGPXを書き込んでしまいます。
+type ReadOnlyGPSLogRepository interface {
+	GPSLogRepository
+
+	// IsReadOnlyGPSLogRepository はこのリポジトリがアップロード先に選べないことを表します。
+	// 実装は空で構いません（型で区別するための目印です）。
+	IsReadOnlyGPSLogRepository()
+}

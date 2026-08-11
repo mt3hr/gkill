@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // runLoop は Run から stdin/stdout を切り出したメッセージループ。
@@ -328,5 +329,137 @@ func TestRunLoop_PassesConfigToHandler(t *testing.T) {
 
 	if gotConfig["source_dirs"] != "/var/logs" {
 		t.Errorf("cfg = %v, want source_dirs=/var/logs", gotConfig)
+	}
+}
+
+// TestRunLoop_GetGPSLogsNotImplemented は、GetGPSLogs 未実装のプラグインに
+// get_gps_logs を投げたときエラー応答になることを確認する。
+// GPSログを提供しないプラグイン（既存3本）にgkillがこのコマンドを送ることは無いが、
+// 送られたときに黙って空を返すと「0件」と区別が付かなくなる。
+func TestRunLoop_GetGPSLogsNotImplemented(t *testing.T) {
+	resp := runLoopOnce(t, Handler{}, pluginRequest{ID: "req-1", Command: "get_gps_logs"})
+
+	if len(resp.Errors) != 1 {
+		t.Fatalf("errors = %v, want 1件", resp.Errors)
+	}
+	if !strings.Contains(resp.Errors[0], "get_gps_logs") {
+		t.Errorf("errors[0] = %q, want get_gps_logs を含む", resp.Errors[0])
+	}
+}
+
+// TestRunLoop_GetGPSLogs は、取得条件がハンドラまで届き、
+// ページングの情報がレスポンスに載ることを確認する。
+func TestRunLoop_GetGPSLogs(t *testing.T) {
+	start := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2026, 8, 31, 0, 0, 0, 0, time.UTC)
+
+	var gotQuery GPSLogQuery
+	h := Handler{
+		GetGPSLogs: func(_ context.Context, q GPSLogQuery, _ Config) (GPSLogPage, error) {
+			gotQuery = q
+			return GPSLogPage{
+				GPSLogs: []GPSLog{{RelatedTime: start, Latitude: 35.1, Longitude: 139.2}},
+				HasMore: true,
+			}, nil
+		},
+	}
+
+	resp := runLoopOnce(t, h, pluginRequest{
+		ID:      "req-1",
+		Command: "get_gps_logs",
+		GPSLogQuery: &pluginGPSLogQuery{
+			StartTime: &start,
+			EndTime:   &end,
+			Offset:    100,
+			Limit:     50,
+		},
+	})
+
+	if len(resp.Errors) != 0 {
+		t.Fatalf("errors: %v", resp.Errors)
+	}
+	if gotQuery.StartTime == nil || !gotQuery.StartTime.Equal(start) {
+		t.Errorf("StartTime = %v, want %v", gotQuery.StartTime, start)
+	}
+	if gotQuery.EndTime == nil || !gotQuery.EndTime.Equal(end) {
+		t.Errorf("EndTime = %v, want %v", gotQuery.EndTime, end)
+	}
+	if gotQuery.Offset != 100 || gotQuery.Limit != 50 {
+		t.Errorf("Offset/Limit = %d/%d, want 100/50", gotQuery.Offset, gotQuery.Limit)
+	}
+	if len(resp.GPSLogs) != 1 {
+		t.Fatalf("gps_logs = %d件, want 1", len(resp.GPSLogs))
+	}
+	if resp.GPSLogs[0].Latitude != 35.1 || resp.GPSLogs[0].Longitude != 139.2 {
+		t.Errorf("座標 = %v, want (35.1, 139.2)", resp.GPSLogs[0])
+	}
+	if !resp.HasMoreGPSLogs {
+		t.Error("has_more_gps_logs = false, want true（続きがあることが伝わっていない）")
+	}
+}
+
+// TestRunLoop_GetGPSLogsNilQuery は、取得条件が無いときにゼロ値の
+// GPSLogQuery（期間指定なし・件数はプラグイン任せ）が渡ることを確認する。
+func TestRunLoop_GetGPSLogsNilQuery(t *testing.T) {
+	var gotQuery GPSLogQuery
+	h := Handler{
+		GetGPSLogs: func(_ context.Context, q GPSLogQuery, _ Config) (GPSLogPage, error) {
+			gotQuery = q
+			return GPSLogPage{GPSLogs: []GPSLog{}}, nil
+		},
+	}
+
+	resp := runLoopOnce(t, h, pluginRequest{ID: "req-1", Command: "get_gps_logs"})
+
+	if len(resp.Errors) != 0 {
+		t.Fatalf("errors: %v", resp.Errors)
+	}
+	if gotQuery.StartTime != nil || gotQuery.EndTime != nil {
+		t.Errorf("期間 = %v〜%v, want nil〜nil", gotQuery.StartTime, gotQuery.EndTime)
+	}
+	if gotQuery.Offset != 0 || gotQuery.Limit != 0 {
+		t.Errorf("Offset/Limit = %d/%d, want 0/0", gotQuery.Offset, gotQuery.Limit)
+	}
+}
+
+// TestKyouTypedDataRoundTrip は、型別データと通知がJSONを往復しても
+// 落ちないことを確認する。gkill本体側の PluginKyou と同じJSONタグを
+// 持たせているので、片方だけタグを変えるとここで落ちる。
+func TestKyouTypedDataRoundTrip(t *testing.T) {
+	related := time.Date(2026, 8, 9, 12, 0, 0, 0, time.UTC)
+	kyou := Kyou{
+		ID:          "kyou-1",
+		RepName:     "Fitbit",
+		DataType:    "kc",
+		RelatedTime: related,
+		UpdateTime:  related,
+		Tags:        []string{"fitbit"},
+		Texts:       []string{"メモ"},
+		Typed:       &TypedData{KC: &KC{Title: "歩数", NumValue: "12345"}},
+		Notifications: []Notification{
+			{Content: "通知", NotificationTime: related},
+		},
+	}
+
+	encoded, err := json.Marshal(kyou)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var decoded Kyou
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	if decoded.Typed == nil || decoded.Typed.KC == nil {
+		t.Fatalf("typed.kc が落ちている: %s", encoded)
+	}
+	if decoded.Typed.KC.Title != "歩数" || decoded.Typed.KC.NumValue.String() != "12345" {
+		t.Errorf("kc = %+v, want 歩数/12345", decoded.Typed.KC)
+	}
+	if len(decoded.Notifications) != 1 || decoded.Notifications[0].Content != "通知" {
+		t.Errorf("notifications = %+v, want 1件", decoded.Notifications)
+	}
+	if len(decoded.Tags) != 1 || len(decoded.Texts) != 1 {
+		t.Errorf("tags/texts が落ちている: %+v / %+v", decoded.Tags, decoded.Texts)
 	}
 }

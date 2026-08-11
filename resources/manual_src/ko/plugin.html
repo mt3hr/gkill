@@ -4,7 +4,7 @@
   <p>플러그인을 넣으면 gkill 이외의 서비스에 남아 있는 기록도 gkill의 기록과 같은 목록에 나란히 볼 수 있게 됩니다. 「그날 무엇을 하고 있었는지」를 한곳에서 돌아볼 수 있도록 하기 위한 기능입니다.</p>
 
   <h2>사용할 수 있는 플러그인</h2>
-  <p>기본으로 다음 3가지가 준비되어 있습니다.</p>
+  <p>기본으로 다음 5가지가 준비되어 있습니다.</p>
   <table>
     <tr>
       <th>플러그인</th>
@@ -21,6 +21,14 @@
     <tr>
       <td>ClaudeCode</td>
       <td>Claude Code의 채팅 로그</td>
+    </tr>
+    <tr>
+      <td>Fitbit</td>
+      <td>Google Takeout의 건강 데이터(걸음 수·심박수·소모 칼로리 등. 하루 단위의 수치로 정리합니다)</td>
+    </tr>
+    <tr>
+      <td>GoogleLocation</td>
+      <td>Google Takeout의 위치 정보 이력(지도에 표시할 수 있습니다. 기록은 만들지 않습니다)</td>
     </tr>
   </table>
   <div class="tip">
@@ -67,6 +75,26 @@
       <td>ChatGPT·Claude.ai는 플러그인의 폴더를, ClaudeCode는 Claude Code의 표준 저장 위치를 봅니다</td>
     </tr>
   </table>
+  <h3>Google Takeout의 데이터를 가져올 때</h3>
+  <p>건강 데이터와 위치 정보 이력 두 가지는 Google Takeout에서 내려받은 <strong>ZIP 파일을 풀지 말고 그대로 폴더에 두세요</strong>. 직접 푼 폴더는 읽지 않습니다.</p>
+  <p><code>source_dirs</code>에는 그 ZIP 파일을 둔 폴더를 적습니다. ZIP 파일 자체를 적어도 됩니다.</p>
+  <table>
+    <tr>
+      <th>두는 방법</th>
+      <th>어떻게 되는가</th>
+    </tr>
+    <tr>
+      <td>한 폴더에 나뉜 ZIP 파일을 나란히 둔다</td>
+      <td>한 번의 내려받기로 묶어서 읽습니다</td>
+    </tr>
+    <tr>
+      <td>새로 내려받은 것을 다른 폴더에 둔다</td>
+      <td>날짜가 겹치는 곳은 새로운 쪽만 씁니다. 예전 것에만 있는 기간은 그대로 남습니다</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>힌트:</strong> 예전에 내려받은 것을 지울 필요는 없습니다. 날짜가 겹쳐도 걸음 수 등이 두 번 세어지는 일은 없습니다.
+  </div>
   <div class="tip">
     <strong>힌트:</strong> <code>config.json</code> 안에서 <code>_</code>(밑줄)로 시작하는 항목은 적는 방법을 설명하기 위해 놓여 있을 뿐입니다. 지워도 상관없습니다.
   </div>

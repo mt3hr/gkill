@@ -4,7 +4,7 @@
   <p>Si instala un complemento, los registros que quedaron en servicios distintos de gkill aparecerán en la misma lista que sus registros de gkill. Sirve para poder repasar en un solo sitio «qué estuve haciendo aquel día».</p>
 
   <h2>Complementos disponibles</h2>
-  <p>De serie se incluyen estos tres.</p>
+  <p>De serie se incluyen estos cinco.</p>
   <table>
     <tr>
       <th>Complemento</th>
@@ -21,6 +21,14 @@
     <tr>
       <td>ClaudeCode</td>
       <td>Registros de chat de Claude Code</td>
+    </tr>
+    <tr>
+      <td>Fitbit</td>
+      <td>Datos de salud de Google Takeout (pasos, frecuencia cardíaca, calorías quemadas, etc., resumidos en un número por día)</td>
+    </tr>
+    <tr>
+      <td>GoogleLocation</td>
+      <td>Historial de ubicaciones de Google Takeout (se muestra en el mapa; no crea registros)</td>
     </tr>
   </table>
   <div class="tip">
@@ -67,6 +75,26 @@
       <td>ChatGPT y Claude.ai miran la carpeta del complemento; ClaudeCode mira la ubicación estándar de Claude Code</td>
     </tr>
   </table>
+  <h3>Al importar datos de Google Takeout</h3>
+  <p>Para los datos de salud y el historial de ubicaciones, <strong>deje el archivo ZIP descargado de Google Takeout tal cual y colóquelo en una carpeta</strong>. Las carpetas que usted mismo haya descomprimido no se leen.</p>
+  <p>En <code>source_dirs</code>, escriba la carpeta que contiene el archivo ZIP. También puede escribir la ruta del propio archivo ZIP.</p>
+  <table>
+    <tr>
+      <th>Cómo coloca los archivos</th>
+      <th>Qué ocurre</th>
+    </tr>
+    <tr>
+      <td>Varios archivos ZIP divididos juntos en una carpeta</td>
+      <td>Se leen juntos como una sola descarga</td>
+    </tr>
+    <tr>
+      <td>Una descarga más reciente en otra carpeta</td>
+      <td>Donde las fechas se solapan, solo se usa la más reciente. Los periodos que solo existen en la antigua se conservan</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Consejo:</strong> No hace falta borrar las descargas antiguas. Aunque las fechas se solapen, valores como el número de pasos nunca se cuentan dos veces.
+  </div>
   <div class="tip">
     <strong>Consejo:</strong> Las claves de <code>config.json</code> que empiezan por <code>_</code> (guion bajo) solo están ahí para explicar el formato. Puede borrarlas.
   </div>

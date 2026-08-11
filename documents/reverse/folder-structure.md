@@ -96,7 +96,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（41ステートメント型）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（245ファイル）
+│   └── use-*.ts            # Composition関数群（246ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -181,8 +181,6 @@ src/server/
         │   ├── gkill_options/      # CLIフラグ・ディレクトリ構造定義
         │   ├── gkill_log/          # ログ設定
         │   └── threads/            # ゴルーチンプール（セマフォ）
-        ├── gkill_fitbit_kc_convert_batch/
-        │   └── gkill_fitbit_kc_convert_batch.go # FitbitエクスポートをKC記録へ変換するバッチ
         ├── gkill_server/
         │   └── main.go             # gkill_server エントリーポイント（ヘッドレスHTTP）
         └── gkill/

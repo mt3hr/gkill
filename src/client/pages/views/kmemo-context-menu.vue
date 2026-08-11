@@ -27,7 +27,7 @@
             <v-list-item @click="show_add_notification_dialog()">
                 <v-list-item-title>{{ i18n.global.t("ADD_NOTIFICATION_TITLE") }}</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="show_edit_kmemo_dialog()">
+            <v-list-item v-if="!is_plugin_rep(kyou.rep_name)" @click="show_edit_kmemo_dialog()">
                 <v-list-item-title>{{ i18n.global.t("EDIT_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_kyou_histories_dialog()">
@@ -45,7 +45,7 @@
             <v-list-item v-if="application_config.session_is_local" @click="open_file()">
                 <v-list-item-title>{{ i18n.global.t("OPEN_FILE_TITLE") }}</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="show_confirm_delete_kyou_dialog()">
+            <v-list-item v-if="!is_plugin_rep(kyou.rep_name)" @click="show_confirm_delete_kyou_dialog()">
                 <v-list-item-title>{{ i18n.global.t("DELETE_TITLE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
@@ -53,6 +53,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
+import { usePluginRepNames } from '@/classes/use-plugin-rep-names'
 import type { KmemoContextMenuProps } from './kmemo-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { useKmemoContextMenu } from '@/classes/use-kmemo-context-menu'
@@ -83,6 +84,9 @@ const {
     open_file,
     add_tag_from_history,
 } = useKmemoContextMenu({ props, emits })
+
+// プラグインが返した記録は読み取り専用なので、編集・削除は出さない
+const { is_plugin_rep } = usePluginRepNames()
 
 defineExpose({ show })
 </script>

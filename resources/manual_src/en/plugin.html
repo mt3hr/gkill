@@ -4,7 +4,7 @@
   <p>With a plugin installed, records left in services other than gkill appear in the same list as your gkill records. It is meant to let you look back on "what was I doing that day" in one place.</p>
 
   <h2>Available plugins</h2>
-  <p>Three plugins are provided as standard.</p>
+  <p>Five plugins are provided as standard.</p>
   <table>
     <tr>
       <th>Plugin</th>
@@ -21,6 +21,14 @@
     <tr>
       <td>ClaudeCode</td>
       <td>Chat logs from Claude Code</td>
+    </tr>
+    <tr>
+      <td>Fitbit</td>
+      <td>Health data from Google Takeout (steps, heart rate, calories burned and so on, summarised into one number per day)</td>
+    </tr>
+    <tr>
+      <td>GoogleLocation</td>
+      <td>Location history from Google Takeout (shown on the map; no records are created)</td>
     </tr>
   </table>
   <div class="tip">
@@ -67,6 +75,26 @@
       <td>ChatGPT and Claude.ai look in the plugin folder; ClaudeCode looks in the standard Claude Code location</td>
     </tr>
   </table>
+  <h3>When you import data from Google Takeout</h3>
+  <p>For health data and location history, <strong>leave the ZIP file you downloaded from Google Takeout as it is and just put it in a folder</strong>. Folders you have unzipped yourself are not read.</p>
+  <p>In <code>source_dirs</code>, write the folder that holds the ZIP file. You may also write the path of the ZIP file itself.</p>
+  <table>
+    <tr>
+      <th>How you place the files</th>
+      <th>What happens</th>
+    </tr>
+    <tr>
+      <td>Several split ZIP files side by side in one folder</td>
+      <td>They are read together as a single download</td>
+    </tr>
+    <tr>
+      <td>A newer download placed in a separate folder</td>
+      <td>Where the dates overlap, only the newer one is used. Periods that exist only in the older one are kept</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Tip:</strong> You do not need to delete older downloads. Even when the dates overlap, values such as step counts are never counted twice.
+  </div>
   <div class="tip">
     <strong>Tip:</strong> Entries in <code>config.json</code> that start with <code>_</code> (an underscore) are only there to explain the format. You may delete them.
   </div>
