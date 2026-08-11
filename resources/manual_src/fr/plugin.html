@@ -4,7 +4,7 @@
   <p>Avec une extension installée, les enregistrements laissés dans des services autres que gkill apparaissent dans la même liste que vos enregistrements gkill. Cela vous permet de revenir en un seul endroit sur « ce que je faisais ce jour-là ».</p>
 
   <h2>Extensions disponibles</h2>
-  <p>Trois extensions sont fournies en standard.</p>
+  <p>Cinq extensions sont fournies en standard.</p>
   <table>
     <tr>
       <th>Extension</th>
@@ -21,6 +21,14 @@
     <tr>
       <td>ClaudeCode</td>
       <td>Journaux de discussion de Claude Code</td>
+    </tr>
+    <tr>
+      <td>Fitbit</td>
+      <td>Données de santé de Google Takeout (pas, fréquence cardiaque, calories brûlées, etc., résumées en une valeur par jour)</td>
+    </tr>
+    <tr>
+      <td>GoogleLocation</td>
+      <td>Historique des positions de Google Takeout (affiché sur la carte ; aucun enregistrement n'est créé)</td>
     </tr>
   </table>
   <div class="tip">
@@ -67,6 +75,26 @@
       <td>ChatGPT et Claude.ai regardent le dossier de l'extension ; ClaudeCode regarde l'emplacement standard de Claude Code</td>
     </tr>
   </table>
+  <h3>Lors de l&rsquo;importation de données Google Takeout</h3>
+  <p>Pour les données de santé et l&rsquo;historique des positions, <strong>laissez le fichier ZIP téléchargé depuis Google Takeout tel quel et placez-le simplement dans un dossier</strong>. Les dossiers que vous avez décompressés vous-même ne sont pas lus.</p>
+  <p>Dans <code>source_dirs</code>, indiquez le dossier qui contient le fichier ZIP. Vous pouvez aussi indiquer le chemin du fichier ZIP lui-même.</p>
+  <table>
+    <tr>
+      <th>Façon de placer les fichiers</th>
+      <th>Ce qui se passe</th>
+    </tr>
+    <tr>
+      <td>Plusieurs fichiers ZIP découpés côte à côte dans un même dossier</td>
+      <td>Ils sont lus ensemble comme un seul téléchargement</td>
+    </tr>
+    <tr>
+      <td>Un téléchargement plus récent placé dans un autre dossier</td>
+      <td>Là où les dates se recouvrent, seule la plus récente est utilisée. Les périodes présentes uniquement dans l&rsquo;ancienne sont conservées</td>
+    </tr>
+  </table>
+  <div class="tip">
+    <strong>Astuce :</strong> Il n&rsquo;est pas nécessaire de supprimer les anciens téléchargements. Même si les dates se recouvrent, les valeurs comme le nombre de pas ne sont jamais comptées deux fois.
+  </div>
   <div class="tip">
     <strong>Astuce :</strong> Les entrées de <code>config.json</code> commençant par <code>_</code> (tiret bas) ne sont là que pour expliquer le format. Vous pouvez les supprimer.
   </div>

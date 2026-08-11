@@ -59,7 +59,7 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 }
 ```
 
-定義は `src/server/gkill/api/gkill_plugin/plugin_manifest.go` の `PluginManifest` 構造体（8フィールド）。
+定義は `src/server/gkill/api/gkill_plugin/plugin_manifest.go` の `PluginManifest` 構造体（9フィールド）。
 
 | フィールド | 説明 |
 |---|---|
@@ -67,10 +67,11 @@ $GKILL_HOME/plugins/admin/gkill_plugin_claudeai/
 | `name` | プラグインの識別名。**ディレクトリ名と一致させること**（`rep_name` とは別物） |
 | `version` | プラグインのバージョン（例: `"1.0.0"`） |
 | `description` | プラグインの説明文 |
-| `data_type` | このプラグインが生成する Kyou の `data_type` 値。既存の `data_type`（kmemo, kc 等）と衝突しない一意な名前にする |
+| `data_type` | このプラグインが生成する Kyou の `data_type` 値。`provides` を使わないなら既存の `data_type`（kmemo, kc 等）と衝突しない一意な名前にする。**`provides` に型別データを書く場合は逆に、その種別と同じ値（`kc` 等）にしなければならない**（クライアントは `data_type` の接頭辞で型別ビューを出し分けるため） |
 | `rep_name` | タイムライン上でのリポジトリ表示名。`GetRepName()` が返す値 |
 | `executable` | 実行ファイル名（拡張子なし、OS に応じて `.exe` 等を自動付与） |
 | `min_gkill_version` | このプラグインが動作する最低 gkill バージョン |
+| `provides` | このプラグインが Kyou のメタ情報以外に提供するデータ種別（省略可）。詳細は「14. 型別データ・付随データの提供」参照 |
 
 ### manifest.json / config.json の自動生成
 
@@ -168,6 +169,7 @@ cmd := exec.CommandContext(context.Background(),
 | `get_content_html` | 指定 ID の Kyou のコンテンツ HTML を返す |
 | `get_config_html` | プラグイン設定画面の HTML を返す |
 | `post_config` | 設定フォームの送信データを受け取る |
+| `get_gps_logs` | 期間内の GPS ログを返す（`provides` に `gpslog` があるプラグインのみ）。1レスポンス32MBの上限があるためページングする |
 | `ping` | 疎通確認 |
 | `close` | プロセス終了要求 |
 
@@ -559,6 +561,8 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | gkill_plugin_chatgpt | ChatGPT | `chatgpt_conversation` | `src/plugins/gkill_plugin_chatgpt/` |
 | gkill_plugin_claudeai | Claude.ai | `claude_conversation` | `src/plugins/gkill_plugin_claudeai/` |
 | gkill_plugin_claudecode | ClaudeCode | `claude_code_turn` | `src/plugins/gkill_plugin_claudecode/` |
+| gkill_plugin_fitbit | Fitbit | `kc` | `src/plugins/gkill_plugin_fitbit/` |
+| gkill_google_locationhistory_plugin | GoogleLocation | `google_location_visit` | `src/plugins/gkill_google_locationhistory_plugin/` |
 | gkill_example | （サンプル） | `example_kyou` | `src/plugins/examples/gkill_example/` |
 
 `gkill_example` は固定の Kyou を返すだけのサンプル実装で、`DefaultConfig` を持たない
@@ -575,6 +579,12 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudeai.exe .
 
 cd src/plugins/gkill_plugin_claudecode
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudecode.exe .
+
+cd src/plugins/gkill_plugin_fitbit
+GOOS=windows GOARCH=amd64 go build -o gkill_plugin_fitbit.exe .
+
+cd src/plugins/gkill_google_locationhistory_plugin
+GOOS=windows GOARCH=amd64 go build -o gkill_google_locationhistory_plugin.exe .
 ```
 
 デプロイ先: `$GKILL_HOME/plugins/{userID}/{pluginName}/`
@@ -583,7 +593,7 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudecode.exe .
 
 ## 13. MCP からのプラグイン内容取得
 
-AIクライアント（MCP）からもプラグインの記録を読める。プラグインKyouの本文はgkill本体に保存されていない（`convertPluginKyouToKyou` は Texts / Tags / ImageSource を落とし、メタデータだけをKyouにする）ので、AIに本文を届けるには画面と同じく `GetContentHTML` を経由するしかない。
+AIクライアント（MCP）からもプラグインの記録を読める。プラグインKyouの本文はgkill本体に保存されていない（`convertPluginKyouToKyou` は `Kyou` の形に収まらない Texts / Tags / Typed / Notifications を落とし、メタデータだけをKyouにする。落とされたぶんは `provides` を宣言していれば `PluginTypedIndex` が別途組み立てて型別リポジトリのアダプタから配る）ので、AIに本文を届けるには画面と同じく `GetContentHTML` を経由するしかない。
 
 ### 提供ツール（read / write / readwrite の3サーバ共通）
 
@@ -629,6 +639,206 @@ gkill_get_kyous              … include_plugin_content:true を付けて検索�
 - `plugin_content_max_text_length`（既定4000文字）を超えたら切り詰め、`content_status: "truncated"` にする
 
 `plugin_content_format: "html"` で生HTMLを `content_html` に、`"both"` で両方返す。長い記録1件の全文が欲しいときは `query.ids`（非null）でその1件に絞り、`plugin_content_max_text_length` を上げる。
+
+---
+
+## 14. 型別データ・付随データの提供
+
+プラグインは Kyou のメタ情報だけでなく、**その Kyou の型別データ**（数値記録・メモ・ブックマーク等）と
+**付随データ**（タグ・テキスト・通知）、および **GPS ログ**も提供できる。
+
+これがあると、プラグインの記録がネイティブの記録と同じように扱われる。
+数値記録として返せば Dnote の推移グラフでそのまま集計でき、タグを返せばタグ一覧に載って絞り込みに使える。
+
+### 有効化 — `manifest.json` の `provides`
+
+```json
+{
+  "data_type": "kc",
+  "provides": ["kc", "tag"]
+}
+```
+
+| 値 | 提供するもの | 登録されるリポジトリ |
+|---|---|---|
+| `kmemo` / `kc` / `urlog` / `nlog` / `lantana` / `timeis` / `mi` | Kyou の型別データ | `KmemoReps` / `KCReps` / … |
+| `tag` / `text` / `notification` | Kyou の付随データ | `TagReps` / `TextReps` / `NotificationReps` |
+| `gpslog` | GPS ログ（Kyou ではない） | `GPSLogReps` |
+
+**未指定（省略・空配列）が既定で、このとき gkill はアダプタを一切登録しない。**
+既存プラグイン（chatgpt / claudeai / claudecode / example）は manifest.json を書き換えなくても従来どおり動く。
+
+未知の値は警告して読み飛ばす（`dao/plugin_manager.go` の `loadManifest`）。
+タイプミスでプラグインごと無効化すると、それまで出ていた記録まで丸ごと消えてしまうため、エラーにはしない。
+
+### プロトコル — `PluginKyou` に載せる
+
+```json
+{
+  "id": "...", "data_type": "kc", "related_time": "...", "update_time": "...",
+  "tags": ["fitbit", "歩数(日計)"],
+  "texts": ["メモ"],
+  "typed": { "kc": { "title": "歩数(日計)", "num_value": "12345" } },
+  "notifications": [{ "content": "通知", "notification_time": "..." }]
+}
+```
+
+`typed` に非nilにしてよいのは高々1つ。2つ以上あるときは
+Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi の順で最初の1つだけを採用し、残りは警告ログに落とす。
+
+型別データは **ID も時刻も持たない**。親の `PluginKyou` からコピーされる。
+クライアントは「Kyou の `update_time` と型別データの `update_time` が**秒精度で一致する版**」を選んで表示するので
+（`client/classes/datas/kyou.ts`）、別々の更新時刻を持たせられるようにすると
+1秒ずれただけで型別ビューが空になる罠をプラグイン作者に押し付けることになる。
+
+タグ・テキスト・通知の ID はサーバ側で**値から決定的に導出**する（`pluginDerivedID`、UUIDv5）。
+添字ではなく値を種にしているので、プラグインが返す並び順が変わっても ID が変わらず、
+一度消したタグを付け直すと同じ ID に戻る（gkill 側の削除版が効き続ける）。
+
+### インメモリ索引 — `PluginTypedIndex`
+
+実装: `src/server/gkill/dao/reps/plugin_typed_index.go`
+
+アダプタの読み取りメソッドは**決してプラグインへ往復しない**。1件ずつ聞きに行くと破綻するため。
+
+- `find_filter` の `getAllTags` は検索1回につき全 `TagReps` の `FindTags` を呼ぶ
+- MCP の `handle_get_kyous_mcp` は Kyou 1件ごとに `GetTagsByTargetID` 等を呼ぶ
+- ブラウザは画面上の Kyou ごとに `get_kc` / `get_tags_by_target_id` を8並列で投げる
+
+一方プラグインへの呼び出しは容量1のスロットで完全に直列化される（「5. 並行制御」参照）。
+15,000件の一覧を Dnote で舐めると15,000回の直列 stdio 呼び出しになり、プロセスが殺され続ける。
+
+| 項目 | 動き |
+|---|---|
+| 索引を埋めるのは | `pluginRepositoryImpl.FindKyous` の副作用と、`UpdateCache` からの明示的な再構築 |
+| 読み取りは | 不変スナップショット（`atomic.Pointer`）から即答。冷たければ空を返し、バックグラウンドで温め直しを予約する |
+| 再構築の最短間隔 | 30秒。`UpdateCache` は `Reps` / `TagReps` / `TextReps` / `NotificationReps` から立て続けに呼ばれるため |
+| 失敗時 | 既存のスナップショットを**空で潰さない**。`AppendPluginFindWarning` に記録してメッセージに出す |
+
+`FindKyous` で索引を埋めるのは、`Reps` 経由の検索が `goForRep`（`dao/reps/repositories.go`）で
+スレッドプールを迂回するので、そこでブロックしても安全なため。
+しかも「一覧を出した直後に、その一覧の各件の型別データが引かれる」という実際の順序に一致する。
+
+### アダプタ
+
+実装: `plugin_typed_adapters.go`（型別7種 + 共通ベース）、`plugin_attached_adapters.go`（付随3種）、
+`gps_log_repository_plugin_impl.go`（GPS ログ）。
+
+| メソッド群 | 挙動 |
+|---|---|
+| `Find*` / `Get*` / `Get*ByTargetID` / `FindKyous` | 索引から即答。プラグインへは委譲しない |
+| `Add*Info`（書き込み） | 必ずエラー。プラグインの記録は読み取り専用 |
+| `Close` | **no-op**。プロセスを閉じるのは `pluginRepositoryImpl.Close` と `PluginManager.CloseAll` だけ |
+| `GetLatestDataRepositoryAddress` | **型別は空・付随は実データ**（下記） |
+
+型別アダプタがアドレス表を返さないのは意図的。`KCReps` 等は `UpdateCache` の `getAddrTargets` に
+含まれないのでそもそも呼ばれないが、仮に返すと `replaceLatestKyouInfos` の対象になり、
+プラグインが `UpdateTime` をわずかに揺らしただけでレコードごと検索結果から消える。
+逆に付随データ（Tag/Text/Notification）は `getAddrTargets` に含まれ、
+`find_filter` が `isLatestData` でふるうので、返さないと `--cache_in_memory=false` で全部落ちる。
+
+`FindKyous` も索引から答える。`KCRepositories.FindKyous` は `threads.Go` でファンアウトするので
+（`goForRep` の迂回は `Repositories` にしかない）、ここで委譲すると rep 種別指定の検索が
+プールのスロットを握ったままプラグインのロックを待つことになる。
+
+また `findCtx.MatchReps` は rep 名がキーなので、1つのプラグインが2種類以上を提供すると
+アダプタが片方しか入らない。そのため rep 種別が指定されているときは
+「自分の種別」ではなく「`provides` ∩ 指定された種別」を返す。
+
+### 登録
+
+`dao/gkill_dao_manager.go` のプラグイン発見のループで、`provides` に応じて各リストへ append する。
+**`KCReps` → `Reps` のコピーループより後**にあることが要点で、
+先に足すとアダプタまで `Reps` に入り、プラグイン本体と二重に検索されて同じ記録が2回出る。
+`WriteXxxRep` には決して入れない（読み取り専用のため）。
+
+### `emits_kyou` — 記録を返さないプラグイン
+
+`manifest.json` の `emits_kyou` を `false` にすると、そのプラグインは `Reps` に登録されない。
+省略時は `true` なので、既存プラグインは書き換えなくても従来どおり動く。
+
+GPS ログだけを提供するプラグインがこれにあたる。記録を1件も返さないのに `Reps` に居ると
+`GetAllRepNames`（`Reps.UnWrap()`）に載り、rykv の「記録保管場所」の絞り込みツリーに
+選んでも0件の項目が並ぶ。検索のたびに空振りの往復も1回発生する。
+
+| 登録先 | `emits_kyou: false` のとき |
+|---|---|
+| `Repositories.Reps` | **入れない** |
+| `Repositories.PluginReps` | 入れる（設定画面・死活確認・`get_plugin_list` に要る） |
+| `Repositories.GPSLogReps` | 入れる |
+
+**GPS ログは rep の選択状態と無関係に常に効く。** 消費側（`handle_get_gps_log.go` と
+`find_filter.go` の地図フィルタ）は `GPSLogReps` を素通しで舐めており、`FindQuery.Reps` を見ない。
+
+`provides` の内容から推測はしない（`provides: ["kc"]` と書いた作者の記録が黙って消えると
+原因の分からない不具合になるため、明示的に切ってもらう）。
+
+### GPS ログ
+
+GPS ログは Kyou ではない（ID も更新時刻も持たない）ので、Kyou 経路ではなく専用コマンド
+`get_gps_logs` で受け渡す。
+
+- **ページングする**。1点は JSON で約95バイト、親の受信バッファは32MBなので1レスポンス約35万点が上限。
+  フル `Records.json` は数百万点になる。`offset` を進めて `has_more_gps_logs` が false になるまで繋ぐ
+- **アダプタは全件を1回取ってメモリに持つ**（TTL 5分・singleflight）。
+  GPS ログは地図の描画1回ごと・地図フィルタの評価1回ごとに引かれるので、
+  窓を素通しすると列の数だけ行列が伸びて `ErrPluginBusy` になる
+- **エラーを飲む**。`GPSLogRepositories.GetGPSLogs` も `find_filter.collectFromRepos` も
+  「1つでも rep がエラーを返したら全体を失敗にする」作りなので、
+  ここでエラーを返すとプラグインが混んでいるだけで地図も検索も丸ごと落ちる。
+  失敗時は空を返して `AppendPluginFindWarning` に記録する
+- **アップロード先には選べない**。`ReadOnlyGPSLogRepository` の目印を付けてあり、
+  `handle_upload_gps_log_files` が候補から外す（画面の選択肢は端末の rep 設定から作られるので
+  元々出てこないが、リクエストを手で組めば rep 名で当ててしまえるためサーバ側でも弾く）
+
+### 記録の読み取り専用をどう守るか
+
+型別データを提供すると、その記録はネイティブと同じビューで描かれる。
+つまり `data_type: "kc"` の記録には `KCView` が出て、編集・削除メニューが付いてしまう。
+
+クライアントは `/api/get_plugin_list` からプラグインの rep 名の集合を1度だけ取り
+（`client/classes/use-plugin-rep-names.ts`）、`kyou.rep_name` がそこに含まれる記録では
+編集・削除の項目を出さない。対象は kc / kmemo / ur-log / nlog / lantana / time-is / mi の7つのメニュー。
+
+なお仮に編集されても破綻はしない。`WriteXxxRep` に同一 ID の新しい版が積まれ、
+追記式の「`UpdateTime` が新しい版が勝つ」で上書きされ、
+`find_filter` の最終段にある ID 単位の重複排除で表示は1件になる。
+
+### 取り込み元の ZIP — `sdk.OpenSources`
+
+Google Takeout を取り込む2つのプラグイン（fitbit / 位置情報）は、**ZIP を展開せずそのまま読む**。
+走査は `plugin/sdk/source.go` に置いてあり、両プラグインで共通。
+
+- **展開しない。** 中央ディレクトリを読んでエントリを列挙し、読むときにその場で伸長する。
+  本体の `handle_browse_zip_contents.go` は `caches/zip_cache/` へ展開するが、実データは
+  展開後3.7GBあるうえ、あのキャッシュのキーは `sha1(パス)` だけで中身が変わっても無効化されない
+- **展開済みのフォルダは読まない。** どの書き出しのものか判別できないため。
+  ZIP が無いフォルダは `extracted_folder` として設定画面に出す
+- **差分判定は `(CRC32, Size)`。** Takeout は書き出し時刻を全エントリに同じ値で入れるので、
+  **エントリの更新時刻は中身が変わっても動かない**（実データで全11,813エントリが同一値）。
+  CRC32 は中央ディレクトリに入っているので、読むのに伸長は要らない
+- **取り込み世代 = 「ZIP を含むフォルダ + ZIP名の書き出し時刻」。** 分割された
+  `takeout-...-1-001.zip` / `-1-002.zip` は書き出し時刻が同じなので1つの世代にまとまる。
+  **フォルダだけを単位にしてはいけない** ―― 同じフォルダに翌月の書き出しを足したとき
+  両方が同じ世代になり、合計する指標（歩数など）が2倍になる
+- **並行読み取りは安全。** `zip.File.Open()` は共有の `*os.File` に対する `SectionReader` を作るだけで、
+  `os.File.ReadAt` は並行安全。fitbit の取り込みは4並列で回している
+- 入れ子の ZIP には潜らない。分割アーカイブ（`.z01` + `.zip`。Go の `archive/zip` では読めない）は
+  黙って壊れるのではなく検出して報告する。壊れた ZIP 1本で走査全体を止めない
+- エントリ名のデコードは本体の `decodeZipEntryName` と同じ3段階
+  （汎用フラグ bit 11 → `utf8.ValidString` → Shift_JIS）
+
+**世代をまたいで合算しないのは fitbit だけの問題。** 位置情報は読み出し時に
+`SELECT DISTINCT (時刻, 緯度, 経度)` で重複を除くので、別の書き出しの同じ点は自動的に1つに畳まれる。
+むしろ Google は古いデータを間引くので、古い書き出しを残しておくと消えた期間が保たれる。
+fitbit 側は `export` 表に順位を持ち、日が重なったときは rank が最小の世代の行だけを合算する。
+
+### 制限
+
+- 索引は最新版だけを持つので、**プラグインの型別データに履歴は無い**（`Get*Histories` は0件か1件）
+- 削除済みデータの取り込みには対応していない（ゴミ箱にプラグインの記録は出ない）
+- 型別データを提供するプラグインは、**内容が変わっていない記録の `UpdateTime` を安定させること**。
+  毎回 `time.Now()` を入れると、gkill 側で消した記録がプラグインの再構築で復活する
 
 ---
 

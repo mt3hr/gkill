@@ -220,6 +220,8 @@ function computeTestMetrics() {
       listFilesRec('src/plugins', (f) => f.endsWith('_test.go')), GO_TEST_RE),
     sdkTests: countMatches(
       listFilesRec('src/server/gkill/plugin/sdk', (f) => f.endsWith('_test.go')), GO_TEST_RE),
+    sdkTestFiles: listFilesRec(
+      'src/server/gkill/plugin/sdk', (f) => f.endsWith('_test.go')).length,
     wearCompanionTests: kt('src/wear_os/phone_companion'),
     wearWatchTests: kt('src/wear_os/watch_app'),
     androidTests: kt('src/android'),
@@ -458,7 +460,7 @@ function buildCountAssertions(m) {
   add('documents/reverse/testing-guide.md', `| MCP サーバ | ${m.mcpTests} | ${m.mcpTestFiles} |`)
   add('documents/reverse/testing-guide.md', `| Wear OS | ${m.wearCompanionTests + m.wearWatchTests} |`)
   add('src/server/ABOUT_TEST.md', `${m.goTests}テスト関数、${m.goTestFiles}テストファイル、${m.goTestPkgs}パッケージ`)
-  add('src/server/gkill/plugin/sdk/ABOUT_TEST.md', `**${m.sdkTests}テスト（2ファイル）**`)
+  add('src/server/gkill/plugin/sdk/ABOUT_TEST.md', `**${m.sdkTests}テスト（${m.sdkTestFiles}ファイル）**`)
   add('src/mcp/ABOUT_TEST.md', `${m.mcpTests}テスト（${m.mcpTestFiles}ファイル）`)
   add('src/wear_os/ABOUT_TEST.md', `合計${m.wearCompanionTests + m.wearWatchTests}テスト`)
 
