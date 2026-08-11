@@ -30,7 +30,7 @@ type GkillMessage struct {
 
 ### 1.2 エラーコード体系
 
-エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **406件** のエラーコードが存在する（ERR000001〜ERR000407、ERR000243は欠番）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
+エラーコードは `ERR??????`（6桁数字）形式で、`src/server/gkill/api/message/error_codes.go` に定数として定義されている。合計 **408件** のエラーコードが存在する（ERR000001〜ERR000409、ERR000243は欠番）。クライアントだけで発生するエラーには別系統の `ERR9xxxxx` を割り当てている（3.6 参照）。
 
 ```bash
 # 数え直すとき
@@ -72,6 +72,8 @@ grep -oE 'ERR[0-9]{6}' src/server/gkill/api/message/error_codes.go | sort -u | w
 | `ERR000389` | GetIDFFilePathNotLocalRequestError | IDFファイル絶対パス解決を localhost 以外からリクエストした場合の拒否エラー |
 | `ERR000390`〜`ERR000401` | InvalidAddMiReKyouRequestDataError 〜 CommitTxGetMiReKyouError | MiReKyou（既存記録のタスク化）系の追加・取得・更新・トランザクションのパース/処理エラー（12件） |
 | `ERR000402`〜`ERR000407` | InvalidGetReKyousByTargetIDRequestDataError 〜 GetMiReKyousByTargetIDError | 逆引き取得（`get_rekyous_by_target_id` / `get_mirekyous_by_target_id`）のパース/処理エラー（6件）。クライアントの連鎖削除が参照元を辿るのに使う |
+| `ERR000408` | ExpiredPasswordResetTokenError | パスワードリセットトークンが一致したが期限切れ（72時間）。汎用の失敗と区別して「再発行してもらえばよい」と伝えるためのコード |
+| `ERR000409` | CannotDisableOwnAccountError | ログイン中のアカウント自身を無効化しようとした。管理者が自分を締め出す事故を防ぐ |
 
 ### 1.3 HTTPステータスコードの使い分け
 
