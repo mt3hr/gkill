@@ -566,6 +566,20 @@ describe("normalizeKyouArgs", () => {
     expect(result.is_include_timeis).toBe(true);
   });
 
+  test("accepts include_rep_name", () => {
+    expect(normalizeKyouArgs({ include_rep_name: true }).include_rep_name).toBe(true);
+    expect(normalizeKyouArgs({ include_rep_name: false }).include_rep_name).toBe(false);
+  });
+
+  // 未指定なら送らず、サーバ側の既定(false)に任せる。include_id と同じ扱い。
+  test("omits include_rep_name when not given", () => {
+    expect(normalizeKyouArgs({}).include_rep_name).toBeUndefined();
+  });
+
+  test("throws for non-boolean include_rep_name", () => {
+    expect(() => normalizeKyouArgs({ include_rep_name: "yes" })).toThrow(GkillApiError);
+  });
+
   test("accepts locale_name", () => {
     const result = normalizeKyouArgs({ locale_name: "en" });
     expect(result.locale_name).toBe("en");
