@@ -25,7 +25,14 @@ type timeIsRepositorySQLite3ImplLocalCached struct {
 
 	fullConnect bool
 
-	lastUpdateCacheChanged bool
+	// cacheChange は元DBファイルが前回のキャッシュ再構築から変わったかを見ます。
+	// 上位のキャッシュrepはこれが false のときフルリビルドを飛ばします。
+	cacheChange *dbFileChangeDetector
+
+	// skipRebuild はローカルキャッシュを更新できなかった回だけ立ちます。
+	// 古いコピーのまま上位に再構築させると、そのあと基準が進んで
+	// 新しい内容が二度と取り込まれなくなるため、その回だけ再構築を見送らせます。
+	skipRebuild bool
 }
 
 func NewTimeIsRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool) (TimeIsRepository, error) {
@@ -96,6 +103,8 @@ func NewTimeIsRepositorySQLite3ImplLocalCached(ctx context.Context, userID strin
 
 		fullConnect: fullConnect,
 
+		cacheChange: &dbFileChangeDetector{},
+
 		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
@@ -133,6 +142,20 @@ func (t *timeIsRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	t.m.Lock()
 	defer t.m.Unlock()
 
+	// 上位のキャッシュrepへ「元DBが変わったか」を伝えるための観測。
+	// 基準が進むのは再構築が成功したときのCommitCacheRebuildだけなので、
+	// 途中で失敗した回のぶんは次回も再構築される。
+	t.cacheChange.refresh(t.originalDBFileName)
+	t.skipRebuild = false
+
+	// 元DBがローカルキャッシュと同じなら、閉じる・消す・コピーし直す・開き直すを全部飛ばす。
+	// この判定を os.Remove のあとに置くと、消した直後なので必ず「要コピー」になり、
+	// 変更のないrepまで LastUpdateCacheChanged() が true を返して
+	// 上位のキャッシュrepが毎回フルリビルドする。
+	if !localRepCacheNeedsCopy(t.originalDBFileName, t.localCacheDBFileName) {
+		return nil
+	}
+
 	err := t.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at update cache: %w", err)
@@ -147,7 +170,7 @@ func (t *timeIsRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
 	if err = os.Remove(t.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
 		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", t.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
-		t.lastUpdateCacheChanged = false
+		t.skipRebuild = true
 		reopenedRep, reopenErr := NewTimeIsRepositorySQLite3Impl(ctx, t.localCacheDBFileName, t.fullConnect)
 		if reopenErr != nil {
 			return fmt.Errorf("error at reopen local cached rep %s: %w", t.localCacheDBFileName, reopenErr)
@@ -168,39 +191,9 @@ func (t *timeIsRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 		return err
 	}
 
-	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
-	originalStat, originalStatErr := os.Stat(t.originalDBFileName)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
-	t.lastUpdateCacheChanged = updateCache
-	if updateCache {
-		originalDBFile, err := os.Open(t.originalDBFileName)
-		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", t.originalDBFileName, err)
-			return err
-		}
-		defer func() {
-			err := originalDBFile.Close()
-			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-			}
-		}()
-		cacheDBFile, err := os.Create(localCacheDBFileName)
-		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
-			return err
-		}
-		defer func() {
-			err := cacheDBFile.Close()
-			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-			}
-		}()
-		_, err = io.Copy(cacheDBFile, originalDBFile)
-		if err != nil {
-			err = fmt.Errorf("error at copy local cache db %s to %s: %w", t.originalDBFileName, localCacheDBFileName, err)
-			return err
-		}
-		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
+	// ここへ来るのは冒頭の判定でコピーが要ると分かったときだけ。
+	if err := copyLocalRepCacheDB(t.originalDBFileName, localCacheDBFileName); err != nil {
+		return err
 	}
 
 	newLocalCachedRep, err := NewTimeIsRepositorySQLite3Impl(ctx, localCacheDBFileName, t.fullConnect)
@@ -213,7 +206,16 @@ func (t *timeIsRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 }
 
 func (t *timeIsRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
-	return t.lastUpdateCacheChanged
+	// ローカルキャッシュを更新できなかった回は、古いコピーから作り直させない。
+	if t.skipRebuild {
+		return false
+	}
+	return t.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (t *timeIsRepositorySQLite3ImplLocalCached) CommitCacheRebuild() {
+	t.cacheChange.commit()
 }
 
 func (i *timeIsRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {
