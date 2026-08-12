@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -50,12 +49,10 @@ func (uc *UsecaseContext) UpdateIDFKyou(ctx context.Context, repositories *reps.
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
-			err = repositories.IDFKyouReps[0].AddIDFKyouInfo(ctx, idfKyou)
-			if err != nil {
-				err = fmt.Errorf("error at update idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughIDFKyouCache(ctx, idfKyou)
+		if err != nil {
+			err = fmt.Errorf("error at update idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err := repositories.TempReps.IDFKyouTempRep.AddIDFKyouInfo(ctx, idfKyou, *txID, userID, device)

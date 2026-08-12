@@ -176,7 +176,8 @@ import type { ReloadRepositoriesResponse } from "./req_res/reload-repositories-r
 import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-infos-response"
 import { GetUpdatedDatasByTimeRequest } from "./req_res/get-updated-datas-by-time-request"
 import { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
-import delete_gkill_kyou_cache, { delete_gkill_all_tag_names_cache, delete_gkill_attached_tags_cache, delete_gkill_config_cache } from "../delete-gkill-cache"
+import delete_gkill_kyou_cache, { delete_gkill_all_tag_names_cache, delete_gkill_attached_datas_cache, delete_gkill_config_cache } from "../delete-gkill-cache"
+import { KYOU_CACHE_NAME } from "../service-worker-utils"
 import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
@@ -671,7 +672,7 @@ export class GkillAPI {
                 await delete_gkill_all_tag_names_cache()
                 // ServiceWorkerがtarget_id単位でキャッシュしている
                 // /api/get_tags_by_id の古い一覧を捨てる
-                await delete_gkill_attached_tags_cache(req.tag.target_id)
+                await delete_gkill_attached_datas_cache(req.tag.target_id)
                 return response
         }
 
@@ -688,6 +689,9 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: AddTextResponse = json
                 this.check_auth(response)
+                // ServiceWorkerがtarget_id単位でキャッシュしている
+                // /api/get_texts_by_id の古い一覧を捨てる
+                await delete_gkill_attached_datas_cache(req.text.target_id)
                 return response
         }
 
@@ -704,6 +708,9 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: AddNotificationResponse = json
                 this.check_auth(response)
+                // ServiceWorkerがtarget_id単位でキャッシュしている
+                // /api/get_gkill_notifications_by_id の古い一覧を捨てる
+                await delete_gkill_attached_datas_cache(req.notification.target_id)
                 return response
         }
 
@@ -867,7 +874,7 @@ export class GkillAPI {
                 await delete_gkill_all_tag_names_cache()
                 // ServiceWorkerがtarget_id単位でキャッシュしている
                 // /api/get_tags_by_id の古い一覧を捨てる
-                await delete_gkill_attached_tags_cache(req.tag.target_id)
+                await delete_gkill_attached_datas_cache(req.tag.target_id)
                 return response
         }
 
@@ -884,6 +891,9 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: UpdateTextResponse = json
                 this.check_auth(response)
+                // ServiceWorkerがtarget_id単位でキャッシュしている
+                // /api/get_texts_by_id の古い一覧を捨てる
+                await delete_gkill_attached_datas_cache(req.text.target_id)
                 return response
         }
 
@@ -900,6 +910,9 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: UpdateNotificationResponse = json
                 this.check_auth(response)
+                // ServiceWorkerがtarget_id単位でキャッシュしている
+                // /api/get_gkill_notifications_by_id の古い一覧を捨てる
+                await delete_gkill_attached_datas_cache(req.notification.target_id)
                 return response
         }
 
@@ -2705,7 +2718,7 @@ export class GkillAPI {
         }
 
         async delete_updated_gkill_caches(): Promise<void> {
-                const cache = await caches.open('gkill-post-kyou-cache')
+                const cache = await caches.open(KYOU_CACHE_NAME)
                 try {
                         if ((await cache.keys()).length === 0) {
                                 return
@@ -2722,13 +2735,20 @@ export class GkillAPI {
                         const req = new GetUpdatedDatasByTimeRequest()
                         req.last_updated_time = last_cache_update_time
                         const res = await this.get_updated_datas_by_time(req)
-                        if (res.updated_ids) {
-                                if (res.updated_ids.length > application_config_res.application_config.cache_clear_count_limit) {
-                                        await delete_gkill_kyou_cache(null)
-                                } else {
-                                        for (let i = 0; i < res.updated_ids.length; i++) {
-                                                await delete_gkill_kyou_cache(res.updated_ids[i])
-                                        }
+                        // 更新IDを引けなかったときはウォーターマークを進めない。
+                        // 進めてしまうとこの時間帯の更新は二度と通知されず、
+                        // 消し損ねた古い応答がキャッシュに焼き付いたまま残る
+                        if (res.errors && res.errors.length !== 0) {
+                                return
+                        }
+                        if (!res.updated_ids) {
+                                return
+                        }
+                        if (res.updated_ids.length > application_config_res.application_config.cache_clear_count_limit) {
+                                await delete_gkill_kyou_cache(null)
+                        } else {
+                                for (let i = 0; i < res.updated_ids.length; i++) {
+                                        await delete_gkill_kyou_cache(res.updated_ids[i])
                                 }
                         }
                 }

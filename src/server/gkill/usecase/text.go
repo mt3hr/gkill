@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -51,12 +50,10 @@ func (uc *UsecaseContext) AddText(ctx context.Context, repositories *reps.GkillR
 			})
 			return nil, gkillErrors, nil
 		}
-		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
-			err = repositories.TextReps[0].AddTextInfo(ctx, text)
-			if err != nil {
-				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTextCache(ctx, text)
+		if err != nil {
+			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(ctx, text, *txID, userID, device)
@@ -148,12 +145,10 @@ func (uc *UsecaseContext) UpdateText(ctx context.Context, repositories *reps.Gki
 			return nil, gkillErrors, nil
 		}
 
-		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
-			err = repositories.TextReps[0].AddTextInfo(ctx, text)
-			if err != nil {
-				err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTextCache(ctx, text)
+		if err != nil {
+			err = fmt.Errorf("error at update text user id = %s device = %s text = %#v: %w", userID, device, text, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(ctx, text, *txID, userID, device)
