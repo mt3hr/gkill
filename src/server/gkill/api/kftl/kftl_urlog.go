@@ -6,7 +6,6 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // ─── KFTLURLogRequest ─────────────────────────────────────────────────────────
@@ -60,9 +59,7 @@ func (r *kftlURLogRequest) DoRequest(ctx context.Context) error {
 	repName, _ := r.Ctx.Repositories.WriteURLogRep.GetRepName(ctx)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	if len(r.Ctx.Repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-		_ = r.Ctx.Repositories.URLogReps[0].AddURLogInfo(ctx, urlog)
-	}
+	_ = r.Ctx.Repositories.WriteThroughURLogCache(ctx, urlog)
 	return nil
 }
 

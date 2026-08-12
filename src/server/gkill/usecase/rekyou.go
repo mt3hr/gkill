@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -50,12 +49,10 @@ func (uc *UsecaseContext) AddReKyou(ctx context.Context, repositories *reps.Gkil
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
-			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(ctx, rekyou)
-			if err != nil {
-				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughReKyouCache(ctx, rekyou)
+		if err != nil {
+			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(ctx, rekyou, *txID, userID, device)
@@ -134,12 +131,10 @@ func (uc *UsecaseContext) UpdateReKyou(ctx context.Context, repositories *reps.G
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
-			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(ctx, rekyou)
-			if err != nil {
-				err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughReKyouCache(ctx, rekyou)
+		if err != nil {
+			err = fmt.Errorf("error at update rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(ctx, rekyou, *txID, userID, device)

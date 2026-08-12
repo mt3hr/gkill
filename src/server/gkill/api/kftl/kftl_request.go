@@ -8,7 +8,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // KFTLRequest is the interface implemented by all KFTL request types.
@@ -122,9 +121,7 @@ func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string) er
 		repName, _ := b.Ctx.Repositories.WriteTagRep.GetRepName(ctx)
 		updateLatestDataRepositoryAddress(ctx, b.Ctx.Repositories, tagObj.ID, &targetID, false, now, repName)
 		// キャッシュに書き込み
-		if len(b.Ctx.Repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
-			_ = b.Ctx.Repositories.TagReps[0].AddTagInfo(ctx, tagObj)
-		}
+		_ = b.Ctx.Repositories.WriteThroughTagCache(ctx, tagObj)
 	}
 
 	// Add texts
@@ -153,9 +150,7 @@ func (b *KFTLRequestBase) doBaseRequest(ctx context.Context, targetID string) er
 		repName, _ := b.Ctx.Repositories.WriteTextRep.GetRepName(ctx)
 		updateLatestDataRepositoryAddress(ctx, b.Ctx.Repositories, textObj.ID, &targetID, false, now, repName)
 		// キャッシュに書き込み
-		if len(b.Ctx.Repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
-			_ = b.Ctx.Repositories.TextReps[0].AddTextInfo(ctx, textObj)
-		}
+		_ = b.Ctx.Repositories.WriteThroughTextCache(ctx, textObj)
 	}
 
 	return nil

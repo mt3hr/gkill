@@ -8,7 +8,6 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // ─── KFTLMiRequest ────────────────────────────────────────────────────────────
@@ -72,9 +71,7 @@ func (r *kftlMiRequest) DoRequest(ctx context.Context) error {
 	repName, _ := r.Ctx.Repositories.WriteMiRep.GetRepName(ctx)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	if len(r.Ctx.Repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
-		_ = r.Ctx.Repositories.MiReps[0].AddMiInfo(ctx, mi)
-	}
+	_ = r.Ctx.Repositories.WriteThroughMiCache(ctx, mi)
 	return nil
 }
 

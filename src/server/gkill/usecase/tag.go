@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -52,12 +51,10 @@ func (uc *UsecaseContext) AddTag(ctx context.Context, repositories *reps.GkillRe
 			return nil, gkillErrors, nil
 		}
 		// キャッシュに書き込み
-		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
-			err = repositories.TagReps[0].AddTagInfo(ctx, tag)
-			if err != nil {
-				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTagCache(ctx, tag)
+		if err != nil {
+			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(ctx, tag, *txID, userID, device)
@@ -150,12 +147,10 @@ func (uc *UsecaseContext) UpdateTag(ctx context.Context, repositories *reps.Gkil
 		}
 
 		// キャッシュに書き込み
-		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
-			err = repositories.TagReps[0].AddTagInfo(ctx, tag)
-			if err != nil {
-				err = fmt.Errorf("error at update tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTagCache(ctx, tag)
+		if err != nil {
+			err = fmt.Errorf("error at update tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(ctx, tag, *txID, userID, device)

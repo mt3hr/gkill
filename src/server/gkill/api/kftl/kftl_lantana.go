@@ -7,7 +7,6 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // ─── KFTLLantanaRequest ───────────────────────────────────────────────────────
@@ -54,9 +53,7 @@ func (r *kftlLantanaRequest) DoRequest(ctx context.Context) error {
 	repName, _ := r.Ctx.Repositories.WriteLantanaRep.GetRepName(ctx)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	if len(r.Ctx.Repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
-		_ = r.Ctx.Repositories.LantanaReps[0].AddLantanaInfo(ctx, lantana)
-	}
+	_ = r.Ctx.Repositories.WriteThroughLantanaCache(ctx, lantana)
 	return nil
 }
 
