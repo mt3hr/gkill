@@ -25,7 +25,14 @@ type lantanaRepositorySQLite3ImplLocalCached struct {
 
 	fullConnect bool
 
-	lastUpdateCacheChanged bool
+	// cacheChange は元DBファイルが前回のキャッシュ再構築から変わったかを見ます。
+	// 上位のキャッシュrepはこれが false のときフルリビルドを飛ばします。
+	cacheChange *dbFileChangeDetector
+
+	// skipRebuild はローカルキャッシュを更新できなかった回だけ立ちます。
+	// 古いコピーのまま上位に再構築させると、そのあと基準が進んで
+	// 新しい内容が二度と取り込まれなくなるため、その回だけ再構築を見送らせます。
+	skipRebuild bool
 }
 
 func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool) (LantanaRepository, error) {
@@ -96,6 +103,8 @@ func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, userID stri
 
 		fullConnect: fullConnect,
 
+		cacheChange: &dbFileChangeDetector{},
+
 		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
@@ -134,6 +143,20 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 	l.m.Lock()
 	defer l.m.Unlock()
 
+	// 上位のキャッシュrepへ「元DBが変わったか」を伝えるための観測。
+	// 基準が進むのは再構築が成功したときのCommitCacheRebuildだけなので、
+	// 途中で失敗した回のぶんは次回も再構築される。
+	l.cacheChange.refresh(l.originalDBFileName)
+	l.skipRebuild = false
+
+	// 元DBがローカルキャッシュと同じなら、閉じる・消す・コピーし直す・開き直すを全部飛ばす。
+	// この判定を os.Remove のあとに置くと、消した直後なので必ず「要コピー」になり、
+	// 変更のないrepまで LastUpdateCacheChanged() が true を返して
+	// 上位のキャッシュrepが毎回フルリビルドする。
+	if !localRepCacheNeedsCopy(l.originalDBFileName, l.localCacheDBFileName) {
+		return nil
+	}
+
 	err := l.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at update cache: %w", err)
@@ -148,7 +171,7 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
 	if err = os.Remove(l.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
 		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", l.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
-		l.lastUpdateCacheChanged = false
+		l.skipRebuild = true
 		reopenedRep, reopenErr := NewLantanaRepositorySQLite3Impl(ctx, l.localCacheDBFileName, l.fullConnect)
 		if reopenErr != nil {
 			return fmt.Errorf("error at reopen local cached rep %s: %w", l.localCacheDBFileName, reopenErr)
@@ -169,39 +192,9 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		return err
 	}
 
-	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
-	originalStat, originalStatErr := os.Stat(l.originalDBFileName)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
-	l.lastUpdateCacheChanged = updateCache
-	if updateCache {
-		originalDBFile, err := os.Open(l.originalDBFileName)
-		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", l.originalDBFileName, err)
-			return err
-		}
-		defer func() {
-			err := originalDBFile.Close()
-			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-			}
-		}()
-		cacheDBFile, err := os.Create(localCacheDBFileName)
-		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
-			return err
-		}
-		defer func() {
-			err := cacheDBFile.Close()
-			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-			}
-		}()
-		_, err = io.Copy(cacheDBFile, originalDBFile)
-		if err != nil {
-			err = fmt.Errorf("error at copy local cache db %s to %s: %w", l.originalDBFileName, localCacheDBFileName, err)
-			return err
-		}
-		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
+	// ここへ来るのは冒頭の判定でコピーが要ると分かったときだけ。
+	if err := copyLocalRepCacheDB(l.originalDBFileName, localCacheDBFileName); err != nil {
+		return err
 	}
 
 	newLocalCachedRep, err := NewLantanaRepositorySQLite3Impl(ctx, localCacheDBFileName, l.fullConnect)
@@ -214,7 +207,16 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
-	return l.lastUpdateCacheChanged
+	// ローカルキャッシュを更新できなかった回は、古いコピーから作り直させない。
+	if l.skipRebuild {
+		return false
+	}
+	return l.cacheChange.lastChanged()
+}
+
+// CommitCacheRebuild は上位のキャッシュrepが再構築に成功したときに呼ばれます。
+func (l *lantanaRepositorySQLite3ImplLocalCached) CommitCacheRebuild() {
+	l.cacheChange.commit()
 }
 
 func (l *lantanaRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {

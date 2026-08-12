@@ -23,9 +23,8 @@ type reKyouRepositorySQLite3ImplLocalCached struct {
 	localCachedRep       ReKyouRepository
 	m                    sync.RWMutex
 
-	fullConnect            bool
-	reps                   *GkillRepositories
-	lastUpdateCacheChanged bool
+	fullConnect bool
+	reps        *GkillRepositories
 }
 
 func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, userID string, filename string, fullConnect bool, reps *GkillRepositories) (ReKyouRepository, error) {
@@ -135,6 +134,12 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	r.m.Lock()
 	defer r.m.Unlock()
 
+	// 元DBがローカルキャッシュと同じなら、閉じる・消す・コピーし直す・開き直すを全部飛ばす。
+	// 判定は os.Remove の前に置くこと。消したあとでは必ず「要コピー」になる。
+	if !localRepCacheNeedsCopy(r.originalDBFileName, r.localCacheDBFileName) {
+		return nil
+	}
+
 	err := r.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at update cache: %w", err)
@@ -149,7 +154,6 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	// この回の再取得だけ諦めて、閉じたハンドルを開き直して継続する。
 	if err = os.Remove(r.localCacheDBFileName); err != nil && !os.IsNotExist(err) {
 		slog.Log(ctx, gkill_log.Warn, "skip local rep cache refresh", "file", fmt.Sprintf("%q", r.localCacheDBFileName), "error", fmt.Sprintf("%q", err))
-		r.lastUpdateCacheChanged = false
 		reopenedRep, reopenErr := NewReKyouRepositorySQLite3Impl(ctx, r.localCacheDBFileName, r.fullConnect, r.reps)
 		if reopenErr != nil {
 			return fmt.Errorf("error at reopen local cached rep %s: %w", r.localCacheDBFileName, reopenErr)
@@ -170,39 +174,9 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 		return err
 	}
 
-	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
-	originalStat, originalStatErr := os.Stat(r.originalDBFileName)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
-	r.lastUpdateCacheChanged = updateCache
-	if updateCache {
-		originalDBFile, err := os.Open(r.originalDBFileName)
-		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", r.originalDBFileName, err)
-			return err
-		}
-		defer func() {
-			err := originalDBFile.Close()
-			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-			}
-		}()
-		cacheDBFile, err := os.Create(localCacheDBFileName)
-		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
-			return err
-		}
-		defer func() {
-			err := cacheDBFile.Close()
-			if err != nil {
-				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
-			}
-		}()
-		_, err = io.Copy(cacheDBFile, originalDBFile)
-		if err != nil {
-			err = fmt.Errorf("error at copy local cache db %s to %s: %w", r.originalDBFileName, localCacheDBFileName, err)
-			return err
-		}
-		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
+	// ここへ来るのは冒頭の判定でコピーが要ると分かったときだけ。
+	if err := copyLocalRepCacheDB(r.originalDBFileName, localCacheDBFileName); err != nil {
+		return err
 	}
 
 	newLocalCachedRep, err := NewReKyouRepositorySQLite3Impl(ctx, localCacheDBFileName, r.fullConnect, r.reps)
@@ -214,8 +188,15 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 	return nil
 }
 
+// LastUpdateCacheChanged は常にtrueを返します。
+//
+// ReKyouのキャッシュ内容は自分のDBファイルだけでなく、
+// 他repのLatestDataRepositoryAddress（ターゲット解決結果）にも依存します。
+// GkillRepositories.UpdateCache はアドレス確定後にもう一度ここを更新するので、
+// ファイルのmtimeで判定するとその2回目が丸ごと飛び、ターゲット未解決の中身が残ります。
+// だから下層のsqlite3実装と同じく、常に「変更あり」を返します。
 func (r *reKyouRepositorySQLite3ImplLocalCached) LastUpdateCacheChanged() bool {
-	return r.lastUpdateCacheChanged
+	return true
 }
 
 func (r *reKyouRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {
