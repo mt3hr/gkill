@@ -6,7 +6,6 @@ import (
 
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // ─── KFTLKmemoStatementLine ───────────────────────────────────────────────────
@@ -130,9 +129,7 @@ func (r *kftlKmemoRequest) DoRequest(ctx context.Context) error {
 	repName, _ := r.Ctx.Repositories.WriteKmemoRep.GetRepName(ctx)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	if len(r.Ctx.Repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
-		_ = r.Ctx.Repositories.KmemoReps[0].AddKmemoInfo(ctx, kmemo)
-	}
+	_ = r.Ctx.Repositories.WriteThroughKmemoCache(ctx, kmemo)
 	return nil
 }
 

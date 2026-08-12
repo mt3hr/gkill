@@ -9,7 +9,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/find"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // ─── KFTLTimeIsRequest (ーち): full TimeIs with start + optional end ──────────
@@ -65,9 +64,7 @@ func (r *kftlTimeIsRequest) DoRequest(ctx context.Context) error {
 	repName, _ := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	if len(r.Ctx.Repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-		_ = r.Ctx.Repositories.TimeIsReps[0].AddTimeIsInfo(ctx, timeis)
-	}
+	_ = r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, timeis)
 	return nil
 }
 
@@ -236,9 +233,7 @@ func (r *kftlTimeIsStartRequest) DoRequest(ctx context.Context) error {
 	repName, _ := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, r.RequestID, nil, false, now, repName)
 	// キャッシュに書き込み
-	if len(r.Ctx.Repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-		_ = r.Ctx.Repositories.TimeIsReps[0].AddTimeIsInfo(ctx, timeis)
-	}
+	_ = r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, timeis)
 	return nil
 }
 
@@ -366,9 +361,7 @@ func (r *kftlTimeIsEndByTitleRequest) DoRequest(ctx context.Context) error {
 	repName, _ := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, target.ID, nil, false, now, repName)
 	// キャッシュに書き込み
-	if len(r.Ctx.Repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-		_ = r.Ctx.Repositories.TimeIsReps[0].AddTimeIsInfo(ctx, updated)
-	}
+	_ = r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, updated)
 	return nil
 }
 
@@ -535,9 +528,7 @@ outer:
 	repName, _ := r.Ctx.Repositories.WriteTimeIsRep.GetRepName(ctx)
 	updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, target.ID, nil, false, now, repName)
 	// キャッシュに書き込み
-	if len(r.Ctx.Repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-		_ = r.Ctx.Repositories.TimeIsReps[0].AddTimeIsInfo(ctx, updated)
-	}
+	_ = r.Ctx.Repositories.WriteThroughTimeIsCache(ctx, updated)
 	return nil
 }
 

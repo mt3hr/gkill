@@ -754,6 +754,21 @@ Kmemo→KC→URLog→Nlog→Lantana→TimeIs→Mi の順で最初の1つだけ�
 先に足すとアダプタまで `Reps` に入り、プラグイン本体と二重に検索されて同じ記録が2回出る。
 `WriteXxxRep` には決して入れない（読み取り専用のため）。
 
+**`XxxReps` の要素数でキャッシュ rep を判定してはいけない。**
+アダプタの append は「キャッシュ rep で `XxxReps` を1個に差し替える」処理より**後**なので、
+`provides` を持つプラグインが1つ入るだけで `len(XxxReps)` は2になる。
+かつて書き込み後のキャッシュ反映が `len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps`
+という個数判定で守られており、Fitbit プラグイン（`provides: ["kc","tag"]`）を入れた環境で
+**タグと数値記録の書き込みがキャッシュ rep へ反映されなくなっていた**。
+読み取りはキャッシュ rep しか見ない（下層 rep へフォールバックしない）ので、
+付けたタグが次の `UpdateCache` まで最大1分間見えず、その間に PWA が古い応答を
+キャッシュし直すと更新 ID の再通知が来ないぶん恒久的に古いまま焼き付く。
+
+キャッシュ rep の実体は構築時に `GkillRepositories.CachedReps` へ控えてあり、
+書き込み後の反映は `repositories.WriteThroughXxxCache(ctx, ...)` を使う。
+個数判定の再発は `usecase/write_through_cache_test.go` の `TestNoRepsCountCacheGuard`
+（ソース走査）が落とす。
+
 ### `emits_kyou` — 記録を返さないプラグイン
 
 `manifest.json` の `emits_kyou` を `false` にすると、そのプラグインは `Reps` に登録されない。

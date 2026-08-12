@@ -16,7 +16,7 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
   default: vi.fn().mockResolvedValue(undefined),
   delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
   delete_gkill_all_tag_names_cache: vi.fn().mockResolvedValue(undefined),
-  delete_gkill_attached_tags_cache: vi.fn().mockResolvedValue(undefined),
+  delete_gkill_attached_datas_cache: vi.fn().mockResolvedValue(undefined),
 }))
 vi.mock('@/classes/use-dialog-history-stack', () => ({
   reset_dialog_history: vi.fn().mockResolvedValue(undefined),

@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -50,12 +49,10 @@ func (uc *UsecaseContext) AddNlog(ctx context.Context, repositories *reps.GkillR
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
-			err = repositories.NlogReps[0].AddNlogInfo(ctx, nlog)
-			if err != nil {
-				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughNlogCache(ctx, nlog)
+		if err != nil {
+			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(ctx, nlog, *txID, userID, device)
@@ -133,12 +130,10 @@ func (uc *UsecaseContext) UpdateNlog(ctx context.Context, repositories *reps.Gki
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
-			err = repositories.NlogReps[0].AddNlogInfo(ctx, nlog)
-			if err != nil {
-				err = fmt.Errorf("error at update nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughNlogCache(ctx, nlog)
+		if err != nil {
+			err = fmt.Errorf("error at update nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(ctx, nlog, *txID, userID, device)
