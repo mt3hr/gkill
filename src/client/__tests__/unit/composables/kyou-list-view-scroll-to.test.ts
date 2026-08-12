@@ -17,7 +17,7 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
   default: vi.fn().mockResolvedValue(undefined),
   delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
   delete_gkill_all_tag_names_cache: vi.fn().mockResolvedValue(undefined),
-  delete_gkill_attached_tags_cache: vi.fn().mockResolvedValue(undefined),
+  delete_gkill_attached_datas_cache: vi.fn().mockResolvedValue(undefined),
 }))
 
 // GkillAPIRequest→GkillAPI→ApplicationConfig→req_res の循環importがあるため、

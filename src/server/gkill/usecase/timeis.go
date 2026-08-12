@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -50,12 +49,10 @@ func (uc *UsecaseContext) AddTimeIs(ctx context.Context, repositories *reps.Gkil
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-			err = repositories.TimeIsReps[0].AddTimeIsInfo(ctx, timeis)
-			if err != nil {
-				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTimeIsCache(ctx, timeis)
+		if err != nil {
+			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, *txID, userID, device)
@@ -133,12 +130,10 @@ func (uc *UsecaseContext) UpdateTimeIs(ctx context.Context, repositories *reps.G
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-			err = repositories.TimeIsReps[0].AddTimeIsInfo(ctx, timeis)
-			if err != nil {
-				err = fmt.Errorf("error at update timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTimeIsCache(ctx, timeis)
+		if err != nil {
+			err = fmt.Errorf("error at update timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(ctx, timeis, *txID, userID, device)

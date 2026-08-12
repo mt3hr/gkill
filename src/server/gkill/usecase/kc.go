@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -50,12 +49,10 @@ func (uc *UsecaseContext) AddKC(ctx context.Context, repositories *reps.GkillRep
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
-			err = repositories.KCReps[0].AddKCInfo(ctx, kc)
-			if err != nil {
-				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughKCCache(ctx, kc)
+		if err != nil {
+			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(ctx, kc, *txID, userID, device)
@@ -133,12 +130,10 @@ func (uc *UsecaseContext) UpdateKC(ctx context.Context, repositories *reps.Gkill
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
-			err = repositories.WriteKCRep.AddKCInfo(ctx, kc)
-			if err != nil {
-				err = fmt.Errorf("error at update kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughKCCache(ctx, kc)
+		if err != nil {
+			err = fmt.Errorf("error at update kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(ctx, kc, *txID, userID, device)

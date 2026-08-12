@@ -9,7 +9,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
 // ─── KFTLNlogRequest ──────────────────────────────────────────────────────────
@@ -78,9 +77,7 @@ func (r *kftlNlogRequest) DoRequest(ctx context.Context) error {
 		repName, _ := r.Ctx.Repositories.WriteNlogRep.GetRepName(ctx)
 		updateLatestDataRepositoryAddress(ctx, r.Ctx.Repositories, id, nil, false, now, repName)
 		// キャッシュに書き込み
-		if len(r.Ctx.Repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
-			_ = r.Ctx.Repositories.NlogReps[0].AddNlogInfo(ctx, nlog)
-		}
+		_ = r.Ctx.Repositories.WriteThroughNlogCache(ctx, nlog)
 	}
 	return nil
 }

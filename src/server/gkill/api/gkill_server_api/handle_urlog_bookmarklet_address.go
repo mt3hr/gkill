@@ -16,7 +16,6 @@ import (
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -162,12 +161,10 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, urlog.ID)
 
-	if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-		err = repositories.URLogReps[0].AddURLogInfo(r.Context(), *urlog)
-		if err != nil {
-			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-		}
+	err = repositories.WriteThroughURLogCache(r.Context(), *urlog)
+	if err != nil {
+		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 	}
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())

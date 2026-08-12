@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -59,12 +58,10 @@ func (uc *UsecaseContext) AddMiReKyou(ctx context.Context, repositories *reps.Gk
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.MiReKyouReps.MiReKyouRepositories) == 1 && *gkill_options.CacheMiReKyouReps {
-			err = repositories.MiReKyouReps.MiReKyouRepositories[0].AddMiReKyouInfo(ctx, mirekyou)
-			if err != nil {
-				err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughMiReKyouCache(ctx, mirekyou)
+		if err != nil {
+			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiReKyouTempRep.AddMiReKyouInfo(ctx, mirekyou, *txID, userID, device)
@@ -133,12 +130,10 @@ func (uc *UsecaseContext) UpdateMiReKyou(ctx context.Context, repositories *reps
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.MiReKyouReps.MiReKyouRepositories) == 1 && *gkill_options.CacheMiReKyouReps {
-			err = repositories.MiReKyouReps.MiReKyouRepositories[0].AddMiReKyouInfo(ctx, mirekyou)
-			if err != nil {
-				err = fmt.Errorf("error at update mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughMiReKyouCache(ctx, mirekyou)
+		if err != nil {
+			err = fmt.Errorf("error at update mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.MiReKyouTempRep.AddMiReKyouInfo(ctx, mirekyou, *txID, userID, device)

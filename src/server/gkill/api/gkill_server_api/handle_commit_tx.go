@@ -13,7 +13,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/api/req_res"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -254,12 +253,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
-			err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), idfKyou)
-			if err != nil {
-				err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughIDFKyouCache(r.Context(), idfKyou)
+		if err != nil {
+			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 		latestDataRepositoryAddress := gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              idfKyou.IsDeleted,
@@ -289,12 +286,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
-			err = repositories.KCReps[0].AddKCInfo(r.Context(), kc)
-			if err != nil {
-				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughKCCache(r.Context(), kc)
+		if err != nil {
+			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteKCRep.GetRepName(r.Context())
@@ -337,12 +332,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
-			err = repositories.KmemoReps[0].AddKmemoInfo(r.Context(), kmemo)
-			if err != nil {
-				err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughKmemoCache(r.Context(), kmemo)
+		if err != nil {
+			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
@@ -385,12 +378,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
-			err = repositories.LantanaReps[0].AddLantanaInfo(r.Context(), lantana)
-			if err != nil {
-				err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughLantanaCache(r.Context(), lantana)
+		if err != nil {
+			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteLantanaRep.GetRepName(r.Context())
@@ -433,12 +424,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
-			err = repositories.MiReps[0].AddMiInfo(r.Context(), mi)
-			if err != nil {
-				err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughMiCache(r.Context(), mi)
+		if err != nil {
+			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteMiRep.GetRepName(r.Context())
@@ -481,12 +470,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
-			err = repositories.NlogReps[0].AddNlogInfo(r.Context(), nlog)
-			if err != nil {
-				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughNlogCache(r.Context(), nlog)
+		if err != nil {
+			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
@@ -529,12 +516,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
-			err = repositories.NotificationReps[0].AddNotificationInfo(r.Context(), notification)
-			if err != nil {
-				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughNotificationCache(r.Context(), notification)
+		if err != nil {
+			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
@@ -578,12 +563,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
-			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(r.Context(), rekyou)
-			if err != nil {
-				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughReKyouCache(r.Context(), rekyou)
+		if err != nil {
+			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
@@ -637,12 +620,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.MiReKyouReps.MiReKyouRepositories) == 1 && *gkill_options.CacheMiReKyouReps {
-			err = repositories.MiReKyouReps.MiReKyouRepositories[0].AddMiReKyouInfo(r.Context(), mirekyou)
-			if err != nil {
-				err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughMiReKyouCache(r.Context(), mirekyou)
+		if err != nil {
+			err = fmt.Errorf("error at add mirekyou user id = %s device = %s mirekyou = %#v: %w", userID, device, mirekyou, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteMiReKyouRep.GetRepName(r.Context())
@@ -687,12 +668,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		// キャッシュに書き込み
-		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
-			err = repositories.TagReps[0].AddTagInfo(r.Context(), tag)
-			if err != nil {
-				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTagCache(r.Context(), tag)
+		if err != nil {
+			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteTagRep.GetRepName(r.Context())
@@ -735,12 +714,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
-			err = repositories.TextReps[0].AddTextInfo(r.Context(), text)
-			if err != nil {
-				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTextCache(r.Context(), text)
+		if err != nil {
+			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteTextRep.GetRepName(r.Context())
@@ -784,12 +761,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-			err = repositories.TimeIsReps[0].AddTimeIsInfo(r.Context(), timeis)
-			if err != nil {
-				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughTimeIsCache(r.Context(), timeis)
+		if err != nil {
+			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
@@ -832,12 +807,10 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-			err = repositories.URLogReps[0].AddURLogInfo(r.Context(), urlog)
-			if err != nil {
-				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughURLogCache(r.Context(), urlog)
+		if err != nil {
+			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 
 		repName, err := repositories.WriteURLogRep.GetRepName(r.Context())

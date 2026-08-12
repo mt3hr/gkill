@@ -64,6 +64,22 @@ describe('delete_gkill_kyou_cache', () => {
     expect(mockCachesDelete).toHaveBeenCalledWith('gkill-post-kyou-cache')
     expect(mockCacheDelete).not.toHaveBeenCalled()
   })
+
+  // 待たずに返すと、呼び出し元が始めた引き直しが消し終わる前にキャッシュへ
+  // 書き戻し、その新しい応答ごと消える
+  test('awaits the whole-cache deletion before resolving', async () => {
+    let finish_delete: (value: boolean) => void = () => { }
+    mockCachesDelete.mockReturnValueOnce(new Promise<boolean>((resolve) => { finish_delete = resolve }))
+
+    let settled = false
+    const deleting = delete_gkill_kyou_cache(null).then(() => { settled = true })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(settled).toBe(false)
+
+    finish_delete(true)
+    await deleting
+    expect(settled).toBe(true)
+  })
 })
 
 describe('delete_gkill_config_cache', () => {

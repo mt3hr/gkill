@@ -5,7 +5,7 @@ import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { CacheFirst } from 'workbox-strategies'
-import { should_cache_response, parse_bool_loose } from './classes/service-worker-utils';
+import { should_cache_response, parse_bool_loose, KYOU_CACHE_NAME, CONFIG_CACHE_NAME } from './classes/service-worker-utils';
 
 declare let clients: Clients;
 declare let self: ServiceWorkerGlobalScope
@@ -16,6 +16,15 @@ self.skipWaiting()
 clientsClaim()
 
 cleanupOutdatedCaches()
+
+// 版が変わったらKyou系の派生キャッシュは丸ごと捨てる。
+// このキャッシュの個別削除は「検索直前に get_updated_datas_by_time で更新IDを引く」
+// 経路に頼っているが、あの表のUpdatedTimeは前進しないので、一度取りこぼした更新は
+// 二度と通知されず古い応答が焼き付いたまま残る。
+// cleanupOutdatedCaches() はWorkboxのprecacheしか掃除しないのでここで消す。
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.delete(KYOU_CACHE_NAME))
+})
 
 precacheAndRoute(self.__WB_MANIFEST, {
   directoryIndex: null as unknown as string,
@@ -104,7 +113,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           const data_type = new URL(request.url).pathname.replace('/api/get_', '')
           const cache_key = `/cache/api/${data_type}/${id}`
 
-          const kyou_cache = await caches.open('gkill-post-kyou-cache')
+          const kyou_cache = await caches.open(KYOU_CACHE_NAME)
           if (!force_reget) {
             const cached = await kyou_cache.match(cache_key)
             if (cached) return cached
@@ -141,7 +150,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
           const cache_key = `/cache/api/plugin_content_html/${id}`
 
-          const kyou_cache = await caches.open('gkill-post-kyou-cache')
+          const kyou_cache = await caches.open(KYOU_CACHE_NAME)
           if (!force_reget) {
             const cached = await kyou_cache.match(cache_key)
             if (cached) return cached
@@ -182,7 +191,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           const data_type = new URL(request.url).pathname.replace('/api/get_', '')
           const cache_key = `/cache/api/${data_type}`
 
-          const config_cache = await caches.open('gkill-post-config-cache')
+          const config_cache = await caches.open(CONFIG_CACHE_NAME)
           if (!force_reget) {
             const cached = await config_cache.match(cache_key)
             if (cached) return cached

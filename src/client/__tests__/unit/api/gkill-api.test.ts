@@ -11,11 +11,11 @@ vi.mock('@/classes/delete-gkill-cache', () => ({
   default: vi.fn().mockResolvedValue(undefined),
   delete_gkill_config_cache: vi.fn().mockResolvedValue(undefined),
   delete_gkill_all_tag_names_cache: vi.fn().mockResolvedValue(undefined),
-  delete_gkill_attached_tags_cache: vi.fn().mockResolvedValue(undefined),
+  delete_gkill_attached_datas_cache: vi.fn().mockResolvedValue(undefined),
 }))
 
 import { GkillAPI } from '@/classes/api/gkill-api'
-import { delete_gkill_attached_tags_cache } from '@/classes/delete-gkill-cache'
+import { delete_gkill_attached_datas_cache } from '@/classes/delete-gkill-cache'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { ServerConfig } from '@/classes/datas/config/server-config'
 
@@ -431,7 +431,7 @@ describe('GkillAPI', () => {
       ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         json: () => Promise.resolve(mockResponse),
       })
-      vi.mocked(delete_gkill_attached_tags_cache).mockClear()
+      vi.mocked(delete_gkill_attached_datas_cache).mockClear()
 
       const api = GkillAPI.get_instance()
       const tag = makeTag()
@@ -445,7 +445,7 @@ describe('GkillAPI', () => {
       }
       await api.add_tag(req as never)
 
-      expect(delete_gkill_attached_tags_cache).toHaveBeenCalledWith(tag.target_id)
+      expect(delete_gkill_attached_datas_cache).toHaveBeenCalledWith(tag.target_id)
     })
   })
 
@@ -1246,7 +1246,7 @@ describe('GkillAPI', () => {
       ;(globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         json: () => Promise.resolve(mockResponse),
       })
-      vi.mocked(delete_gkill_attached_tags_cache).mockClear()
+      vi.mocked(delete_gkill_attached_datas_cache).mockClear()
 
       const api = GkillAPI.get_instance()
       const tag = makeTag({ tag: 'updated-tag' })
@@ -1260,7 +1260,7 @@ describe('GkillAPI', () => {
       }
       await api.update_tag(req as never)
 
-      expect(delete_gkill_attached_tags_cache).toHaveBeenCalledWith(tag.target_id)
+      expect(delete_gkill_attached_datas_cache).toHaveBeenCalledWith(tag.target_id)
     })
 
     test('update_timeis sends POST to /api/update_timeis with session_id and timeis', async () => {
