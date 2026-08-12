@@ -460,7 +460,20 @@ gkillは複数層のキャッシュを組み合わせてパフォーマンスを
 
 #### ローカルキャッシュ（SQLite3ImplLocalCached）
 
-`--cache_reps_local=true`の場合、リモートリポジトリのデータを`caches/local_rep_cache/`配下のSQLite3 DBにコピーしてローカルから高速検索する。ネットワーク遅延が大きい環境（NAS等）で有効。
+`--cache_reps_local=true`の場合、リモートリポジトリのデータを`caches/local_rep_cache/{user_id}/`配下のSQLite3 DBにコピーしてローカルから高速検索する。ネットワーク遅延が大きい環境（NAS等）で有効。
+
+**コピーするかどうかは元DBとキャッシュDBの mtime + サイズ で決める**（`localRepCacheNeedsCopy`）。判定は必ず「閉じる・消す」より**前**に行うこと。`os.Remove`のあとに`os.Stat`すると、消した直後なので必ず「要コピー」と判定され、
+
+- 変更のないrepまで毎回まるごとコピーし直す
+- `LastUpdateCacheChanged()`が常に`true`になり、上位のキャッシュrep（`CachedSQLite3Impl`）のフルリビルド抑止が丸ごと効かなくなる
+
+の2つが同時に起きる。実データ（rep約940・約83万行・外付けUSB上のDB 818本 1.3GB）では、これで`update_cache`1回のphase1が **0.2秒から1〜2分** へ悪化していた。回帰は`local_rep_cache_granular_test.go`が検出する。
+
+再構築成功の通知（`CommitCacheRebuild`）を受けるまで基準を進めない点も他repと同じ。途中で失敗した回のぶんは次回も再構築される。
+
+ただし**ReKyou / MiReKyouのローカルキャッシュrepは常に「変更あり」を返す**。この2つのキャッシュ内容は自分のDBファイルだけでなく他repのターゲット解決結果にも依存し、`GkillRepositories.UpdateCache`がアドレス確定後にもう一度更新するため、mtimeで判定するとその2回目が飛んでターゲット未解決の中身が残る（`db_file_change_detector.go`の説明と同じ理由）。コピーの省略だけは行う。
+
+**上の判定が効いていれば、この層の定常コストはほぼゼロ**（実データの反復`update_cache`で、有効26.8秒 / 無効30.3秒。むしろ有効なほうが速い。再構築の読み出し元が外付けUSBではなくC:になるため）。逆に**元ファイルのmtimeがまとめて動く運用（同期直後など）では毎回1.3GBのコピーが上乗せされる**ので、その場合だけは`--cache_reps_local`を外したほうが速くなる。効かせたいなら同期側でmtimeを保存させるのが本筋。
 
 #### サムネイル・動画キャッシュ（ファイルキャッシュ）
 
