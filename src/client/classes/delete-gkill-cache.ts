@@ -1,4 +1,13 @@
+import { CONFIG_CACHE_NAME, KYOU_CACHE_NAME } from './service-worker-utils'
+
 export default async function delete_gkill_kyou_cache(id: string | null): Promise<void> {
+    if (!id) {
+        // 全消しは削除の完了まで待つ。待たずに返すと、呼び出し元が始めた引き直しが
+        // 消し終わる前にキャッシュへ書き戻し、その新しい応答ごと消えてしまう
+        await caches.delete(KYOU_CACHE_NAME)
+        return
+    }
+
     const data_types = [
         'kyou',
         'kmemo',
@@ -18,16 +27,12 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
         'plugin_content_html',
     ]
 
-    const cache = await caches.open('gkill-post-kyou-cache')
+    const cache = await caches.open(KYOU_CACHE_NAME)
     const wait_promises = new Array<Promise<boolean>>()
-    if (id) {
-        for (let i = 0; i < data_types.length; i++) {
-            const data_type = data_types[i]
-            const cache_key = `/cache/api/${data_type}/${id}`
-            wait_promises.push(cache.delete(new Request(cache_key)))
-        }
-    } else {
-        caches.delete('gkill-post-kyou-cache')
+    for (let i = 0; i < data_types.length; i++) {
+        const data_type = data_types[i]
+        const cache_key = `/cache/api/${data_type}/${id}`
+        wait_promises.push(cache.delete(new Request(cache_key)))
     }
     await Promise.all(wait_promises)
 }
@@ -41,7 +46,7 @@ export async function delete_gkill_config_cache(target_data_types: Array<string>
         'mi_board_list'
     ]
 
-    const cache = await caches.open('gkill-post-config-cache')
+    const cache = await caches.open(CONFIG_CACHE_NAME)
     const wait_promises = new Array<Promise<boolean>>()
     for (let i = 0; i < data_types.length; i++) {
         const data_type = data_types[i]
@@ -61,10 +66,13 @@ export async function delete_gkill_all_tag_names_cache(): Promise<void> {
     }
 }
 
-// タグの追加・更新でそのKyouに紐づくタグ一覧が変わるため、ServiceWorkerが
-// target_id単位でキャッシュした /api/get_tags_by_id の古い一覧を捨てる。
-// 捨てないと改名前のタグ名がKyouに付いたまま表示され続ける
-export async function delete_gkill_attached_tags_cache(target_id: string): Promise<void> {
+// 付随データ(タグ/テキスト/通知)の追加・更新でそのKyouに紐づく一覧が変わるため、
+// ServiceWorkerがtarget_id単位でキャッシュした /api/get_tags_by_id ・
+// /api/get_texts_by_id ・ /api/get_gkill_notifications_by_id の古い一覧を捨てる。
+// 捨てないと更新前の内容がKyouに付いたまま表示され続ける。
+// 応答を受け取ったあとに呼ぶこと。送信前に消しても、書き込みが確定する前に
+// 別のコンポーネントが引くと古い応答が入り直す
+export async function delete_gkill_attached_datas_cache(target_id: string): Promise<void> {
     if (!target_id) {
         return
     }

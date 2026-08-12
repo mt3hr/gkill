@@ -104,6 +104,11 @@ type GkillRepositories struct {
 
 	WriteGPSLogRep GPSLogRepository
 
+	// CachedReps はキャッシュrepが有効なときの、その実体を型別に控えたもの。
+	// 書き込み後にキャッシュへ反映する経路は、必ずここを見ること
+	// (WriteThroughXxxCacheを使う)。
+	CachedReps CachedReps
+
 	LatestDataRepositoryAddressDAO gkill_cache.LatestDataRepositoryAddressDAO
 	TempReps                       *TempReps
 
@@ -130,6 +135,149 @@ type GkillRepositories struct {
 	TempMemoryDB       *sql.DB
 
 	SkipUpdateCache *bool // fsnotifyによるUpdateCacheの再帰トリガーを防止するためのフラグ。GkillDAOManagerのskipUpdateCacheと同じポインタを共有する。
+}
+
+// CachedRepsはキャッシュrepが有効なときの、その実体を型別に控えたもの。
+// キャッシュ無効時(--cache_xxx_reps=false)はnilのままになる。
+//
+// 「XxxRepsの長さが1ならそれがキャッシュrepである」という個数判定をしてはいけない。
+// GkillDAOManagerはキャッシュrepでXxxRepsを差し替えたあとに、
+// プラグインの型別アダプタ(NewPluginTypedRepositories)をappendする。
+// providesを持つプラグインが1つ入るだけで長さが2になり、判定が常にfalseになって
+// 書き込みがキャッシュへ反映されなくなる。
+// 読み取りはキャッシュrepしか見ない(下層repへフォールバックしない)ので、
+// 反映されないと次のUpdateCacheまで古い値が返り続ける。
+type CachedReps struct {
+	IDFKyou      IDFKyouRepository
+	MiReKyou     MiReKyouRepository
+	ReKyou       ReKyouRepository
+	KC           KCRepository
+	Kmemo        KmemoRepository
+	Lantana      LantanaRepository
+	Mi           MiRepository
+	Nlog         NlogRepository
+	Notification NotificationRepository
+	Tag          TagRepository
+	Text         TextRepository
+	TimeIs       TimeIsRepository
+	URLog        URLogRepository
+}
+
+// WriteThroughReKyouCacheは書き込み済みのReKyouをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughReKyouCache(ctx context.Context, rekyou ReKyou) error {
+	if g.CachedReps.ReKyou == nil {
+		return nil
+	}
+	return g.CachedReps.ReKyou.AddReKyouInfo(ctx, rekyou)
+}
+
+// WriteThroughMiReKyouCacheは書き込み済みのMiReKyouをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughMiReKyouCache(ctx context.Context, mirekyou MiReKyou) error {
+	if g.CachedReps.MiReKyou == nil {
+		return nil
+	}
+	return g.CachedReps.MiReKyou.AddMiReKyouInfo(ctx, mirekyou)
+}
+
+// WriteThroughIDFKyouCacheは書き込み済みのIDFKyouをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughIDFKyouCache(ctx context.Context, idfKyou IDFKyou) error {
+	if g.CachedReps.IDFKyou == nil {
+		return nil
+	}
+	return g.CachedReps.IDFKyou.AddIDFKyouInfo(ctx, idfKyou)
+}
+
+// WriteThroughKCCacheは書き込み済みのKCをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughKCCache(ctx context.Context, kc KC) error {
+	if g.CachedReps.KC == nil {
+		return nil
+	}
+	return g.CachedReps.KC.AddKCInfo(ctx, kc)
+}
+
+// WriteThroughKmemoCacheは書き込み済みのKmemoをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughKmemoCache(ctx context.Context, kmemo Kmemo) error {
+	if g.CachedReps.Kmemo == nil {
+		return nil
+	}
+	return g.CachedReps.Kmemo.AddKmemoInfo(ctx, kmemo)
+}
+
+// WriteThroughLantanaCacheは書き込み済みのLantanaをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughLantanaCache(ctx context.Context, lantana Lantana) error {
+	if g.CachedReps.Lantana == nil {
+		return nil
+	}
+	return g.CachedReps.Lantana.AddLantanaInfo(ctx, lantana)
+}
+
+// WriteThroughMiCacheは書き込み済みのMiをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughMiCache(ctx context.Context, mi Mi) error {
+	if g.CachedReps.Mi == nil {
+		return nil
+	}
+	return g.CachedReps.Mi.AddMiInfo(ctx, mi)
+}
+
+// WriteThroughNlogCacheは書き込み済みのNlogをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughNlogCache(ctx context.Context, nlog Nlog) error {
+	if g.CachedReps.Nlog == nil {
+		return nil
+	}
+	return g.CachedReps.Nlog.AddNlogInfo(ctx, nlog)
+}
+
+// WriteThroughNotificationCacheは書き込み済みの通知をキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughNotificationCache(ctx context.Context, notification Notification) error {
+	if g.CachedReps.Notification == nil {
+		return nil
+	}
+	return g.CachedReps.Notification.AddNotificationInfo(ctx, notification)
+}
+
+// WriteThroughTagCacheは書き込み済みのタグをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughTagCache(ctx context.Context, tag Tag) error {
+	if g.CachedReps.Tag == nil {
+		return nil
+	}
+	return g.CachedReps.Tag.AddTagInfo(ctx, tag)
+}
+
+// WriteThroughTextCacheは書き込み済みのテキストをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughTextCache(ctx context.Context, text Text) error {
+	if g.CachedReps.Text == nil {
+		return nil
+	}
+	return g.CachedReps.Text.AddTextInfo(ctx, text)
+}
+
+// WriteThroughTimeIsCacheは書き込み済みのTimeIsをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughTimeIsCache(ctx context.Context, timeis TimeIs) error {
+	if g.CachedReps.TimeIs == nil {
+		return nil
+	}
+	return g.CachedReps.TimeIs.AddTimeIsInfo(ctx, timeis)
+}
+
+// WriteThroughURLogCacheは書き込み済みのURLogをキャッシュrepにも反映します。
+// キャッシュrepが無いときは何もせずnilを返します。
+func (g *GkillRepositories) WriteThroughURLogCache(ctx context.Context, urlog URLog) error {
+	if g.CachedReps.URLog == nil {
+		return nil
+	}
+	return g.CachedReps.URLog.AddURLogInfo(ctx, urlog)
 }
 
 // gkillRepositoriesSyncはGkillRepositoriesの同期状態。

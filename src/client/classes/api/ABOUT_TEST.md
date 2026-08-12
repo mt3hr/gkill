@@ -16,6 +16,7 @@ Vitest
 | `src/client/__tests__/unit/api/find-kyou-query.test.ts` | `FindKyouQuery`（rykv / mi / plaing の検索条件） |
 | `src/client/__tests__/unit/api/generate-plaing-timeis-query.test.ts` | `generate_plaing_timeis_query()`（plaing検索クエリの共通生成。カスタム条件の6フィールドコピー・未設定時の既定動作・共有ページでの不適用・rep名絞り込みを常に切ること・記録タイプのTimeIs固定） |
 | `src/client/__tests__/unit/api/hydrate.test.ts` | `hydrate()` / `hydrate_all()` — 生JSONからクラスインスタンスへの詰め替え（`gkill-api.ts` / `datas/kyou.ts` のファイル全体 eslint-disable を解消したヘルパー） |
+| `src/client/__tests__/unit/api/delete-updated-gkill-caches.test.ts` | `delete_updated_gkill_caches()` — 検索直前の差分キャッシュ削除。ウォーターマーク（`last_cache_update_time`）を進めてよい条件 |
 
 ## テスト内容
 
@@ -67,6 +68,17 @@ rykv / mi の検索条件そのもの。ここが壊れると検索条件が黙�
   非既定値を入れた個体を往復させ、落ちたフィールドが無いことを確認する。
   両者のコピー対象が一致することも見る（片方だけに足すと
   「保存はできるのに復元できない」非対称なバグになる）
+
+### `delete_updated_gkill_caches`（検索直前の差分キャッシュ削除）
+
+別のブラウザが付けたタグを反映する唯一の経路。検索直前にサーバへ
+「前回以降に更新されたID」を問い合わせ、そのIDのSWキャッシュを捨てる。
+
+- 更新IDのぶんだけ `delete_gkill_kyou_cache(id)` を呼び、ウォーターマークを進めること
+- 件数が `cache_clear_count_limit` を超えたら個別削除ではなく全消し（`null`）に切り替えること
+- **エラー応答・`updated_ids` 未返却ではウォーターマークを進めないこと**。
+  進めるとその時間帯の更新は二度と通知されず、消し損ねた古い応答が恒久的に焼き付く
+- キャッシュが空なら問い合わせすらしないこと
 
 ## テストヘルパー
 

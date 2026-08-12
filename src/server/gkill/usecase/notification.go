@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -51,12 +50,10 @@ func (uc *UsecaseContext) AddNotification(ctx context.Context, repositories *rep
 			})
 			return nil, gkillErrors, nil
 		}
-		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
-			err = repositories.NotificationReps[0].AddNotificationInfo(ctx, notification)
-			if err != nil {
-				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughNotificationCache(ctx, notification)
+		if err != nil {
+			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(ctx, notification, *txID, userID, device)
@@ -147,12 +144,10 @@ func (uc *UsecaseContext) UpdateNotification(ctx context.Context, repositories *
 			})
 			return nil, gkillErrors, nil
 		}
-		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
-			err = repositories.NotificationReps[0].AddNotificationInfo(ctx, notification)
-			if err != nil {
-				err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughNotificationCache(ctx, notification)
+		if err != nil {
+			err = fmt.Errorf("error at update notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(ctx, notification, *txID, userID, device)

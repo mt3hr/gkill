@@ -910,7 +910,11 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			}
 		}
 
-		// キャッシュしたRep
+		// キャッシュしたRep。
+		// XxxRepsをキャッシュrep1個で差し替えると同時に、その実体をCachedRepsへ控える。
+		// このあと(プラグイン読み込み時)に型別アダプタがXxxRepsへappendされるので、
+		// 「XxxRepsの長さが1ならキャッシュrep」という個数判定は成立しない。
+		// 書き込み後の反映はrepositories.WriteThroughXxxCacheを使うこと
 		if *gkill_options.CacheKmemoReps {
 			cachedKmemoRep, err := reps.NewKmemoRepositoryCachedSQLite3Impl(ctx, repositories.KmemoReps, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_KMEMO")
 			if err != nil {
@@ -918,6 +922,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.KmemoReps = []reps.KmemoRepository{cachedKmemoRep}
+			repositories.CachedReps.Kmemo = cachedKmemoRep
 		}
 
 		if *gkill_options.CacheURLogReps {
@@ -927,6 +932,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.URLogReps = []reps.URLogRepository{cachedURLogRep}
+			repositories.CachedReps.URLog = cachedURLogRep
 		}
 
 		if *gkill_options.CacheKCReps {
@@ -936,6 +942,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.KCReps = []reps.KCRepository{cachedKCRep}
+			repositories.CachedReps.KC = cachedKCRep
 		}
 
 		if *gkill_options.CacheIDFKyouReps {
@@ -945,6 +952,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.IDFKyouReps = []reps.IDFKyouRepository{cachedIDFKyouRep}
+			repositories.CachedReps.IDFKyou = cachedIDFKyouRep
 		}
 
 		if *gkill_options.CacheLantanaReps {
@@ -954,6 +962,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.LantanaReps = []reps.LantanaRepository{cachedLantanaRep}
+			repositories.CachedReps.Lantana = cachedLantanaRep
 		}
 
 		if *gkill_options.CacheTimeIsReps {
@@ -963,6 +972,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.TimeIsReps = []reps.TimeIsRepository{cachedTimeIsRep}
+			repositories.CachedReps.TimeIs = cachedTimeIsRep
 		}
 
 		if *gkill_options.CacheMiReps {
@@ -972,6 +982,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.MiReps = []reps.MiRepository{cachedMiRep}
+			repositories.CachedReps.Mi = cachedMiRep
 		}
 
 		if *gkill_options.CacheNlogReps {
@@ -981,6 +992,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.NlogReps = []reps.NlogRepository{cachedNlogRep}
+			repositories.CachedReps.Nlog = cachedNlogRep
 		}
 
 		if *gkill_options.CacheTagReps {
@@ -990,6 +1002,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.TagReps = []reps.TagRepository{cachedTagRep}
+			repositories.CachedReps.Tag = cachedTagRep
 		}
 
 		if *gkill_options.CacheTextReps {
@@ -999,6 +1012,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.TextReps = []reps.TextRepository{cachedTextRep}
+			repositories.CachedReps.Text = cachedTextRep
 		}
 
 		if *gkill_options.CacheNotificationReps {
@@ -1008,6 +1022,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.NotificationReps = []reps.NotificationRepository{cachedNotificationRep}
+			repositories.CachedReps.Notification = cachedNotificationRep
 		}
 		if *gkill_options.CacheReKyouReps {
 			// キャッシュ差し替え前の実体を固定化して自己参照を防ぐ
@@ -1019,6 +1034,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.ReKyouReps = reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{cachedReKyouRep}, GkillRepositories: repositories}
+			repositories.CachedReps.ReKyou = cachedReKyouRep
 		}
 		if *gkill_options.CacheMiReKyouReps {
 			// キャッシュ差し替え前の実体を固定化して自己参照を防ぐ
@@ -1030,6 +1046,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.MiReKyouReps = reps.MiReKyouRepositories{MiReKyouRepositories: []reps.MiReKyouRepository{cachedMiReKyouRep}, GkillRepositories: repositories}
+			repositories.CachedReps.MiReKyou = cachedMiReKyouRep
 		}
 		if *gkill_options.CacheGitCommitLogReps {
 			// Phase 1: GitCommitLog専用の永続ファイルベースSQLite DBを使用

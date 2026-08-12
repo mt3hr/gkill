@@ -11,7 +11,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -50,12 +49,10 @@ func (uc *UsecaseContext) AddURLog(ctx context.Context, repositories *reps.Gkill
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-			err = repositories.URLogReps[0].AddURLogInfo(ctx, urlog)
-			if err != nil {
-				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughURLogCache(ctx, urlog)
+		if err != nil {
+			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(ctx, urlog, *txID, userID, device)
@@ -133,12 +130,10 @@ func (uc *UsecaseContext) UpdateURLog(ctx context.Context, repositories *reps.Gk
 			})
 			return gkillErrors, nil
 		}
-		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-			err = repositories.URLogReps[0].AddURLogInfo(ctx, urlog)
-			if err != nil {
-				err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
-				slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-			}
+		err = repositories.WriteThroughURLogCache(ctx, urlog)
+		if err != nil {
+			err = fmt.Errorf("error at update urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(ctx, urlog, *txID, userID, device)

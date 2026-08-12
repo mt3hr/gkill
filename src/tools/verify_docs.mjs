@@ -153,9 +153,12 @@ function computeDirMetrics() {
     kftlGo: countIn('src/server/gkill/api/kftl', '.go'),
     repsGo: countIn('src/server/gkill/dao/reps', '.go'),
     repsImpl: countIn('src/server/gkill/dao/reps', '.go', { excludeTest: true }),
-    usecaseGo: countIn('src/server/gkill/usecase', '.go'),
+    // usecase/README.md が数えているのは本番の実装面。
+    // テストファイルを混ぜると「ファイル一覧」に載っていないファイルまで数に入り、
+    // 「Add 系 12 + Update 系 13 + ...」という関数の内訳とも合わなくなる
+    usecaseGo: countIn('src/server/gkill/usecase', '.go', { excludeTest: true }),
     usecaseFuncs: countMatches(
-      listFilesRec('src/server/gkill/usecase', (f) => f.endsWith('.go')), /^func /gm),
+      listFilesRec('src/server/gkill/usecase', (f) => f.endsWith('.go') && !f.endsWith('_test.go')), /^func /gm),
     sdkGo: countIn('src/server/gkill/plugin/sdk', '.go'),
     // クライアント
     classesRoot: countIn('src/client/classes', '.ts'),

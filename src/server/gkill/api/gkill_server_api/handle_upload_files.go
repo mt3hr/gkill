@@ -22,7 +22,6 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/reps"
 	gkill_cache "github.com/mt3hr/gkill/src/server/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -302,12 +301,10 @@ loop:
 					response.Errors = append(response.Errors, gkillError)
 					return
 				}
-				if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
-					err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), *idfKyou)
-					if err != nil {
-						err = fmt.Errorf("error at add idf kyou info to cache rep at %s: %w", request.TargetRepName, err)
-						slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
-					}
+				err = repositories.WriteThroughIDFKyouCache(r.Context(), *idfKyou)
+				if err != nil {
+					err = fmt.Errorf("error at add idf kyou info to cache rep at %s: %w", request.TargetRepName, err)
+					slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
 				}
 
 				// defer g.WebPushUpdatedData(r.Context(), userID, device, idfKyou.ID)
