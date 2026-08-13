@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"math"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -191,4 +192,93 @@ func collectFromRepos[R any, T any](repos []R, fn func(R) ([]T, error)) ([]T, er
 		combined = append(combined, items...)
 	}
 	return combined, nil
+}
+
+// inclusiveTimeInterval は両端を含む時間区間。
+// end=nil は終端なしを表す。
+type inclusiveTimeInterval struct {
+	start time.Time
+	end   *time.Time
+}
+
+// inclusiveTimeIntervalIndex は重複・連続する時間区間をマージした検索用索引。
+//
+// TimeIs検索と位置情報検索は、以前は「区間数 × Kyou数」の総当たりだった。
+// 区間を開始時刻順にマージしておけば、各Kyouは二分探索1回で判定できる。
+type inclusiveTimeIntervalIndex struct {
+	intervals []inclusiveTimeInterval
+}
+
+// newInclusiveTimeIntervalIndex は区間の集まりから索引を作る。
+//
+// 開始時刻で並べたうえで、重なる区間・隣接する区間を1つに畳む。
+// 畳んでおくことで contains が「直前の区間1つ」だけを見れば済むようになる。
+// 終端が開始より前の壊れた区間は、どの時刻にも一致しないので先に捨てる。
+func newInclusiveTimeIntervalIndex(intervals []inclusiveTimeInterval) inclusiveTimeIntervalIndex {
+	validIntervals := make([]inclusiveTimeInterval, 0, len(intervals))
+	for _, interval := range intervals {
+		if interval.end != nil && interval.end.Before(interval.start) {
+			continue
+		}
+		validIntervals = append(validIntervals, interval)
+	}
+
+	slices.SortFunc(validIntervals, func(a, b inclusiveTimeInterval) int {
+		if c := a.start.Compare(b.start); c != 0 {
+			return c
+		}
+		if a.end == nil {
+			if b.end == nil {
+				return 0
+			}
+			return 1
+		}
+		if b.end == nil {
+			return -1
+		}
+		return a.end.Compare(*b.end)
+	})
+
+	merged := make([]inclusiveTimeInterval, 0, len(validIntervals))
+	for _, interval := range validIntervals {
+		if len(merged) == 0 {
+			merged = append(merged, interval)
+			continue
+		}
+
+		last := &merged[len(merged)-1]
+		if last.end != nil && interval.start.After(*last.end) {
+			merged = append(merged, interval)
+			continue
+		}
+
+		// 重複区間を拡張する。どちらかが終端なしなら和集合も終端なし。
+		if last.end == nil || interval.end == nil {
+			last.end = nil
+			continue
+		}
+		if interval.end.After(*last.end) {
+			last.end = interval.end
+		}
+	}
+
+	return inclusiveTimeIntervalIndex{intervals: merged}
+}
+
+// contains は target がいずれかの区間に含まれるかを返す。両端を含む。
+func (i inclusiveTimeIntervalIndex) contains(target time.Time) bool {
+	// targetより後に始まる最初の区間を探し、その直前だけを確認する。
+	// 区間はマージ済みなので、さらに前の区間を見る必要はない。
+	index, _ := slices.BinarySearchFunc(i.intervals, target, func(interval inclusiveTimeInterval, target time.Time) int {
+		if interval.start.After(target) {
+			return 1
+		}
+		return -1
+	})
+	if index == 0 {
+		return false
+	}
+
+	interval := i.intervals[index-1]
+	return interval.end == nil || !target.After(*interval.end)
 }

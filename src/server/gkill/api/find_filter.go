@@ -681,7 +681,41 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 }
 
 func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	query := findCtx.ParsedFindQuery
 	resultKyous := map[string][]reps.Kyou{}
+
+	// 時間帯フィルタが有効かどうかの判定はゲートヘルパに任せる。
+	// ここから下はその内側の高速化で、検索中に変わらない値をKyouごとではなく
+	// 最初に一度だけ計算しておく。時刻への変換と曜日スライスの走査は、
+	// 検索結果が多いほど無視できない負荷になる。
+	filterPeriodOfTime := query.HasPeriodOfTimeFilter()
+	var filterWeekdays bool
+	var allowedWeekdays [7]bool
+	var hasPeriodStart, hasPeriodEnd bool
+	var periodStartSecond, periodEndSecond int64
+	if filterPeriodOfTime {
+		// 曜日フィルタ（nil=曜日制限なし / 非nil空=0件 / 全7曜日=制限なし）
+		// nil を len==0 や len!=7 の分岐へ落とすと全件が消えるので、必ず nil を先に外すこと
+		filterWeekdays = query.PeriodOfTimeWeekOfDays != nil && len(query.PeriodOfTimeWeekOfDays) != 7
+		if filterWeekdays {
+			for _, weekday := range query.PeriodOfTimeWeekOfDays {
+				if weekday >= find.SunDay && weekday <= find.SaturDay {
+					allowedWeekdays[weekday] = true
+				}
+			}
+		}
+
+		hasPeriodStart = query.PeriodOfTimeStartTimeSecond != nil
+		if hasPeriodStart {
+			start := time.Unix(*query.PeriodOfTimeStartTimeSecond, 0).In(time.Local)
+			periodStartSecond = int64(start.Hour()*3600 + start.Minute()*60 + start.Second())
+		}
+		hasPeriodEnd = query.PeriodOfTimeEndTimeSecond != nil
+		if hasPeriodEnd {
+			end := time.Unix(*query.PeriodOfTimeEndTimeSecond, 0).In(time.Local)
+			periodEndSecond = int64(end.Hour()*3600 + end.Minute()*60 + end.Second())
+		}
+	}
 
 	for id, kyous := range findCtx.MatchKyousCurrent {
 		if len(kyous) == 0 {
@@ -695,64 +729,38 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		// replaceLatestKyouInfosがレコードごと除外して「出たり消えたり」していた。
 		trimedKyousMap := map[kyouEntryKey]reps.Kyou{}
 		for _, kyou := range kyous {
-			if (findCtx.ParsedFindQuery.CalendarStartDate != nil && kyou.RelatedTime.Before(*findCtx.ParsedFindQuery.CalendarStartDate)) ||
-				(findCtx.ParsedFindQuery.CalendarEndDate != nil && kyou.RelatedTime.After(*findCtx.ParsedFindQuery.CalendarEndDate)) {
+			if (query.CalendarStartDate != nil && kyou.RelatedTime.Before(*query.CalendarStartDate)) ||
+				(query.CalendarEndDate != nil && kyou.RelatedTime.After(*query.CalendarEndDate)) {
 				continue
 			}
-			if findCtx.ParsedFindQuery.HasPeriodOfTimeFilter() {
+			if filterPeriodOfTime {
 				localTime := kyou.RelatedTime.In(time.Local)
 
-				// 曜日フィルタ（nil=曜日制限なし / 非nil空=0件 / 全7曜日=制限なし）
-				// nil を len==0 や len!=7 の分岐へ落とすと全件が消えるので、必ず nil を先に外すこと
-				if findCtx.ParsedFindQuery.PeriodOfTimeWeekOfDays != nil {
-					if len(findCtx.ParsedFindQuery.PeriodOfTimeWeekOfDays) == 0 {
-						continue
-					}
-					if len(findCtx.ParsedFindQuery.PeriodOfTimeWeekOfDays) != 7 {
-						weekday := find.WeekOfDays(int(localTime.Weekday()))
-						matched := false
-						for _, w := range findCtx.ParsedFindQuery.PeriodOfTimeWeekOfDays {
-							if w == weekday {
-								matched = true
-								break
-							}
-						}
-						if !matched {
-							continue
-						}
-					}
+				// 曜日フィルタ
+				if filterWeekdays && !allowedWeekdays[localTime.Weekday()] {
+					continue
 				}
 
 				// 時間帯フィルタ
 				timeSec := int64(localTime.Hour()*3600 + localTime.Minute()*60 + localTime.Second())
-				startPtr := findCtx.ParsedFindQuery.PeriodOfTimeStartTimeSecond
-				endPtr := findCtx.ParsedFindQuery.PeriodOfTimeEndTimeSecond
-				if startPtr != nil && endPtr != nil {
-					st := time.Unix(*startPtr, 0).In(time.Local)
-					et := time.Unix(*endPtr, 0).In(time.Local)
-					stSec := int64(st.Hour()*3600 + st.Minute()*60 + st.Second())
-					etSec := int64(et.Hour()*3600 + et.Minute()*60 + et.Second())
-					if stSec > etSec {
-						// 夜跨ぎ: timeSec >= stSec OR timeSec <= etSec
-						if timeSec < stSec && timeSec > etSec {
+				if hasPeriodStart && hasPeriodEnd {
+					if periodStartSecond > periodEndSecond {
+						// 夜跨ぎ: timeSec >= start OR timeSec <= end
+						if timeSec < periodStartSecond && timeSec > periodEndSecond {
 							continue
 						}
 					} else {
-						// 通常: timeSec >= stSec AND timeSec <= etSec
-						if timeSec < stSec || timeSec > etSec {
+						// 通常: timeSec >= start AND timeSec <= end
+						if timeSec < periodStartSecond || timeSec > periodEndSecond {
 							continue
 						}
 					}
-				} else if startPtr != nil {
-					st := time.Unix(*startPtr, 0).In(time.Local)
-					stSec := int64(st.Hour()*3600 + st.Minute()*60 + st.Second())
-					if timeSec < stSec {
+				} else if hasPeriodStart {
+					if timeSec < periodStartSecond {
 						continue
 					}
-				} else if endPtr != nil {
-					et := time.Unix(*endPtr, 0).In(time.Local)
-					etSec := int64(et.Hour()*3600 + et.Minute()*60 + et.Second())
-					if timeSec > etSec {
+				} else if hasPeriodEnd {
+					if timeSec > periodEndSecond {
 						continue
 					}
 				}
@@ -783,7 +791,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		resultKyous[id] = sortedKyous
 	}
 
-	if (findCtx.ParsedFindQuery.PlaingTime != nil) || (findCtx.ParsedFindQuery.ForMi) {
+	if query.PlaingTime != nil || query.ForMi {
 		for id := range resultKyous {
 			// 最新版の代表射影1件に決定的に絞る(以前は不安定ソートで
 			// 開始/終了射影のどちらが残るかが実行毎に変わり、plaingの表示時刻が揺れていた)
@@ -1190,16 +1198,19 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 		return nil, nil
 	}
 
-	// 時刻の範囲比較なので、等値のようにmap参照へは置き換えられない。総当たりのまま。
-	filteredByTimeIs := map[string][]reps.Kyou{}
+	intervals := make([]inclusiveTimeInterval, 0, len(findCtx.MatchTimeIssAtFilterTags))
 	for _, timeis := range findCtx.MatchTimeIssAtFilterTags {
-		for id, kyous := range findCtx.MatchKyousCurrent {
-			if len(kyous) == 0 {
-				continue
-			}
-			if (timeis.EndTime != nil && !kyous[0].RelatedTime.Before(timeis.StartTime) && !kyous[0].RelatedTime.After(*timeis.EndTime)) || (timeis.EndTime == nil && !kyous[0].RelatedTime.Before(timeis.StartTime)) {
-				filteredByTimeIs[id] = kyous
-			}
+		intervals = append(intervals, inclusiveTimeInterval{start: timeis.StartTime, end: timeis.EndTime})
+	}
+	intervalIndex := newInclusiveTimeIntervalIndex(intervals)
+
+	filteredByTimeIs := make(map[string][]reps.Kyou, len(findCtx.MatchKyousCurrent))
+	for id, kyous := range findCtx.MatchKyousCurrent {
+		if len(kyous) == 0 {
+			continue
+		}
+		if intervalIndex.contains(kyous[0].RelatedTime) {
+			filteredByTimeIs[id] = kyous
 		}
 	}
 	findCtx.MatchKyousCurrent = filteredByTimeIs
@@ -1343,17 +1354,20 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		preTrue = inRadius
 	}
 
-	// KyouがLocation内か判定
-	// 時刻の範囲比較なので、等値のようにmap参照へは置き換えられない。総当たりのまま。
+	intervals := make([]inclusiveTimeInterval, 0, len(matchGPSLogSetList))
 	for _, gpsLogSet := range matchGPSLogSetList {
-		for id, kyous := range findCtx.MatchKyousCurrent {
-			if len(kyous) == 0 {
-				continue
-			}
-			// 他の時刻フィルタと同じく両端を含む(以前は排他で、ログ時刻ちょうどのKyouが落ちていた)
-			if !kyous[0].RelatedTime.Before(gpsLogSet[0].RelatedTime) && !kyous[0].RelatedTime.After(gpsLogSet[1].RelatedTime) {
-				matchKyous[id] = kyous
-			}
+		end := gpsLogSet[1].RelatedTime
+		intervals = append(intervals, inclusiveTimeInterval{start: gpsLogSet[0].RelatedTime, end: &end})
+	}
+	intervalIndex := newInclusiveTimeIntervalIndex(intervals)
+
+	// KyouがLocation内か判定。他の時刻フィルタと同じく両端を含む。
+	for id, kyous := range findCtx.MatchKyousCurrent {
+		if len(kyous) == 0 {
+			continue
+		}
+		if intervalIndex.contains(kyous[0].RelatedTime) {
+			matchKyous[id] = kyous
 		}
 	}
 
