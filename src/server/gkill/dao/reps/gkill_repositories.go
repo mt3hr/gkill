@@ -742,6 +742,24 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	g.cancelPreFunc = cancelFunc
 
 	var err error
+
+	// 最新版アドレス表(LATEST_DATA_REPOSITORY_ADDRESS)のスナップショット。
+	//
+	// 1回だけ読んで、自分の書き込みで更新しながら使い回す。これが成立するのは
+	// 次の3つが揃っているため。どれかを崩すと古いアドレスで上書きしうるので注意すること。
+	//   1. この表へ実際に書くのは下の persistLatestDataRepositoryAddresses だけ
+	//      (LatestDataRepositoryAddressDAO の書き込みメソッドの呼び出し元はここ1箇所)
+	//   2. UpdateCache は先頭で updateCacheMutex を排他ロックしており、
+	//      UpdateCache 同士が重ならない
+	//   3. APIの書き込み経路(usecase/*.go や handle_commit_tx.go の約40箇所)が呼ぶのは
+	//      SetLatestDataRepositoryAddress で、これはメモリ上の
+	//      g.latestDataRepositoryAddresses を触るだけでこの表には書かない
+	//
+	// そのため g.latestDataRepositoryAddresses でこのスナップショットを代用してはいけない。
+	// あちらには「まだこの表に無いAPI書き込み由来のエントリ」が入っているので、
+	// 突き合わせに使うとその永続化を「更新不要」と判断して飛ばしてしまう。
+	var existingLatestDataRepositoryAddresses map[string]gkill_cache.LatestDataRepositoryAddress
+	existingLatestDataRepositoryAddressesLoaded := false
 	persistLatestDataRepositoryAddresses := func(addrs []gkill_cache.LatestDataRepositoryAddress, now time.Time) error {
 		allLatestDataRepositoryAddresses := map[string]gkill_cache.LatestDataRepositoryAddress{}
 		for _, addr := range addrs {
@@ -756,11 +774,34 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, addr)
 		}
 
-		updatedLatestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.ExtractUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
-		if err != nil {
-			return fmt.Errorf("error at update latest data repository address cache data: %w", err)
+		// Phase2、ReKyou、MiReKyouのたびに最新版アドレス表を全件読み直さない。
+		// 同じUpdateCache内ではこのスナップショットを更新しながら使い回せる。
+		if !existingLatestDataRepositoryAddressesLoaded {
+			loadedLatestDataRepositoryAddresses, loadErr := g.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+			if loadErr != nil {
+				return fmt.Errorf("error at update latest data repository address cache data: %w", loadErr)
+			}
+			existingLatestDataRepositoryAddresses = loadedLatestDataRepositoryAddresses
+			if existingLatestDataRepositoryAddresses == nil {
+				existingLatestDataRepositoryAddresses = map[string]gkill_cache.LatestDataRepositoryAddress{}
+			}
+			existingLatestDataRepositoryAddressesLoaded = true
 		}
 
+		// 更新すべきものだけを抜き出す。「表に無い」か「表のものより新しい」なら更新対象。
+		// 変わっていないものまで書くと、AddOrUpdate が1件ずつ DELETE+INSERT する
+		// トランザクションが無駄に膨らむ。
+		updatedLatestDataRepositoryAddresses := make([]gkill_cache.LatestDataRepositoryAddress, 0, len(latestDataRepositoryAddresses))
+		for _, addr := range latestDataRepositoryAddresses {
+			existing, exist := existingLatestDataRepositoryAddresses[addr.TargetID]
+			if !exist || existing.DataUpdateTime.Before(addr.DataUpdateTime) {
+				updatedLatestDataRepositoryAddresses = append(updatedLatestDataRepositoryAddresses, addr)
+			}
+		}
+
+		// メモリ側を先に更新する。読み取り(GetLatestDataRepositoryAddress)が見るのは
+		// こちらなので、この後のDB書き込みが失敗しても検索は最新のアドレスを見られる。
+		// 書けなかったぶんは次回のUpdateCacheがrepから計算し直して永続化する。
 		func() {
 			sync := g.syncState()
 			sync.latestDataAddressesMutex.Lock()
@@ -774,9 +815,14 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			}
 		}()
 
-		_, err = g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, updatedLatestDataRepositoryAddresses)
-		if err != nil {
-			return fmt.Errorf("error at update latest data repository address cache data: %w", err)
+		if len(updatedLatestDataRepositoryAddresses) > 0 {
+			if _, updateErr := g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, updatedLatestDataRepositoryAddresses); updateErr != nil {
+				return fmt.Errorf("error at update latest data repository address cache data: %w", updateErr)
+			}
+			// 書けたぶんだけスナップショットへ反映する（失敗時は反映しない）
+			for _, addr := range updatedLatestDataRepositoryAddresses {
+				existingLatestDataRepositoryAddresses[addr.TargetID] = addr
+			}
 		}
 
 		func() {
@@ -874,11 +920,33 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	}
 	timer.mark("mirekyou")
 
-	if _, err := g.CacheMemoryDB.Exec(`ANALYZE;`); err != nil {
-		return fmt.Errorf("ANALYZE: %w", err)
-	}
-	if _, err := g.CacheMemoryDB.Exec(`PRAGMA optimize;`); err != nil {
-		return fmt.Errorf("PRAGMA optimize: %w", err)
+	// 素のANALYZEは、変更のない定期更新でもキャッシュ全体を走査するので重い。
+	// analysis_limitを付けると1インデックスあたりの走査行数が打ち切られ、
+	// 統計の精度をほぼ落とさずに定数時間で終わる。
+	//
+	// PRAGMA optimize だけに置き換えてはいけない。optimize が解析するのは
+	// 「その接続で実際に参照された表」に限られるが、CacheMemoryDBはコネクションプールで、
+	// 再構築直後の接続は書き込みしかしていないことがある。その場合は1表も解析されず
+	// 統計ゼロのままになり、狙いと逆にプランナが劣化する。
+	// ANALYZEで土台を作ったうえで、optimizeに追加ぶんを任せる（sqlite3impl_util.goと同じ形）。
+	//
+	// analysis_limit も optimize も接続ごとの設定なので、
+	// プールから3回取り直すと効かない。1本の接続に固定して続けて流す。
+	if err := func() error {
+		conn, err := g.CacheMemoryDB.Conn(ctx)
+		if err != nil {
+			return fmt.Errorf("get connection for ANALYZE: %w", err)
+		}
+		defer conn.Close()
+
+		for _, statement := range []string{`PRAGMA analysis_limit=400;`, `ANALYZE;`, `PRAGMA optimize;`} {
+			if _, err := conn.ExecContext(ctx, statement); err != nil {
+				return fmt.Errorf("%s: %w", statement, err)
+			}
+		}
+		return nil
+	}(); err != nil {
+		return err
 	}
 	timer.mark("analyze")
 	return nil
