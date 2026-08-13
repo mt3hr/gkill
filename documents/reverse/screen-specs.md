@@ -10,9 +10,9 @@
 |---|---|
 | ルート | 13 |
 | ページコンポーネント | 15 |
-| ビューコンポーネント | 194 |
-| ダイアログコンポーネント | 110 |
-| **コンポーネント合計** | **319**（ルートを除く。ビュー194 + ダイアログ108 + ページ15） |
+| ビューコンポーネント | 201 |
+| ダイアログコンポーネント | 113 |
+| **コンポーネント合計** | **329**（ルートを除く。ビュー201 + ダイアログ113 + ページ15） |
 
 ## 1. ルート定義
 
@@ -182,24 +182,30 @@ gkill独自のテキスト形式（KFTL）で複数種類の記録を一括入�
 
 #### DnoteView（集計ビュー）の構成要素
 
-DnoteView はダッシュボードのほか rykv 画面からも利用される。定義タブ内に以下3種類の集計要素を配置できる（フローティング「＋」メニューから追加）:
+DnoteView はダッシュボードのほか rykv 画面からも利用される。定義タブ内に以下4種類の集計要素を配置できる（フローティング「＋」メニューから追加）:
 
 | 要素 | コンポーネント | 説明 |
 |---|---|---|
 | 集計項目 | `dnote-item-view.vue` | 単一の集計値（件数・合計・平均等）を表示 |
 | 集計リスト | `dnote-list-view.vue` | 条件に合致するKyou一覧を表示 |
 | トレンドグラフ | `dnote-trend-graph-view.vue` | 時系列の集計値をスパークライン（折れ線/棒）で表示。集計粒度（日/週/月）・グラフ種別を設定可能。ダブルクリックで編集、右クリックでコンテキストメニュー（編集/削除）、ドラッグ&ドロップで並べ替え |
-| トレンドグラフ（表） | `dnote-trend-graph-table-view.vue` | 集計値のテーブル表示 |
+| 相関グラフ | `dnote-correlation-graph-view.vue` | 2～10指標のPearson／Spearman相関をヒートマップと散布図で表示。共通粒度と方向付きlagを設定可能 |
 
 Dnote 関連のコンポーネントは他に以下がある（追加・編集・削除確認の3点セット）。
 
 | 種別 | コンポーネント |
 |---|---|
-| ビュー | `dnote-item-table-view.vue`, `dnote-list-table-view.vue`, `dnote-item-list-view.vue`, `edit-dnote-card.vue`, `edit-dnote-predicate-group.vue`, `aggregated-list-item.vue`, `dnote-trend-graph-context-menu.vue` |
-| ダイアログ | `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue` |
+| ビュー | `dnote-item-table-view.vue`, `dnote-list-table-view.vue`, `dnote-item-list-view.vue`, `edit-dnote-card.vue`, `edit-dnote-predicate-group.vue`, `aggregated-list-item.vue`, `dnote-trend-graph-table-view.vue`, `dnote-trend-graph-context-menu.vue`, `dnote-correlation-graph-table-view.vue`, `dnote-correlation-graph-context-menu.vue`, `dnote-correlation-graph-editor-view.vue`, `add-dnote-correlation-graph-view.vue`, `edit-dnote-correlation-graph-view.vue`, `confirm-delete-dnote-correlation-graph-view.vue` |
+| ダイアログ | `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `add-dnote-correlation-graph-dialog.vue`, `edit-dnote-correlation-graph-dialog.vue`, `confirm-delete-dnote-correlation-graph-dialog.vue` |
+
+> 相関グラフも他の集計要素と同じ3点セット（追加・編集・削除確認）に揃えてある。
+> 追加ダイアログは `dnote-view.vue` が直接持ち、編集・削除ダイアログとコンテキストメニューは
+> 各グラフのビューが持つ。以前は1つのダイアログでモードを切り替え、表ビューが抱えていたため、
+> 「＋」メニューから2段のテンプレート ref を辿る必要があり、途中が null だと無言で失敗していた。
 
 集計は全てクライアント側で行われ、専用のバックエンドAPIは存在しない
-（`classes/dnote/dnote-trend-aggregator.ts`、`classes/dnote/dnote-trend/`）。
+（`classes/dnote/dnote-trend-aggregator.ts` + `classes/dnote/dnote-trend/`、
+`classes/dnote/dnote-correlation-aggregator.ts` + `classes/dnote/dnote-correlation/`）。
 
 #### FABメニュー（右下）
 
@@ -666,7 +672,7 @@ Teleport to body
 
 ### ダイアログ一覧（カテゴリ別）
 
-> ダイアログは全部で103件ある。以下は主要なものをカテゴリ別に整理したもので、網羅的な一覧ではない。
+> ダイアログは全部で111件ある。以下は主要なものをカテゴリ別に整理したもので、網羅的な一覧ではない。
 > 実体は `src/client/pages/dialogs/*.vue` を参照。
 
 #### データ追加ダイアログ

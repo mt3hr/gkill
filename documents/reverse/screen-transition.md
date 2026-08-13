@@ -220,7 +220,7 @@ stateDiagram-v2
 
 ### 集計ビュー（DnoteView）のダイアログ遷移
 
-Rykv 画面・ダッシュボード画面に埋め込まれる集計ビューのダイアログ遷移。フローティング「＋」メニューから集計項目・集計リスト・トレンドグラフの3種類の集計要素を追加できる。
+Rykv 画面・ダッシュボード画面に埋め込まれる集計ビューのダイアログ遷移。フローティング「＋」メニューから集計項目・集計リスト・トレンドグラフ・相関グラフの4種類の集計要素を追加できる。
 
 ```mermaid
 stateDiagram-v2
@@ -228,23 +228,26 @@ stateDiagram-v2
     AddMenu --> AddDnoteItem: 集計項目追加
     AddMenu --> AddDnoteList: 集計リスト追加
     AddMenu --> AddDnoteTrendGraph: トレンドグラフ追加
+    AddMenu --> CorrelationGraphDialog: 相関グラフ追加
 
     DnoteView --> EditDnoteItem: 集計項目ダブルクリック
     DnoteView --> EditDnoteList: 集計リストダブルクリック
     DnoteView --> EditDnoteTrendGraph: トレンドグラフダブルクリック
+    DnoteView --> CorrelationGraphDialog: 相関グラフ右クリックから編集
 
     DnoteView --> TrendGraphCtx: トレンドグラフ右クリック
     TrendGraphCtx --> EditDnoteTrendGraph: 編集選択
     TrendGraphCtx --> ConfirmDeleteDnoteTrendGraph: 削除選択
+    DnoteView --> CorrelationGraphDialog: 相関グラフ右クリックから削除確認
 ```
 
-**追加ダイアログ:** AddDnoteItem（`add-dnote-item-dialog.vue`）, AddDnoteList（`add-dnote-list-dialog.vue`）, AddDnoteTrendGraph（`add-dnote-trend-graph-dialog.vue`）
+**追加ダイアログ:** AddDnoteItem（`add-dnote-item-dialog.vue`）, AddDnoteList（`add-dnote-list-dialog.vue`）, AddDnoteTrendGraph（`add-dnote-trend-graph-dialog.vue`）, CorrelationGraphDialog（`dnote-correlation-graph-dialog.vue`）
 
 **編集ダイアログ:** EditDnoteItem, EditDnoteList, EditDnoteTrendGraph（`edit-dnote-trend-graph-dialog.vue`）
 
 **削除確認ダイアログ:** ConfirmDeleteDnoteItemList, ConfirmDeleteDnoteListQuery, ConfirmDeleteDnoteTrendGraph（`confirm-delete-dnote-trend-graph-dialog.vue`）
 
-トレンドグラフはドラッグ&ドロップで並べ替え可能（ダイアログ遷移なし）。
+トレンドグラフと相関グラフはドラッグ&ドロップで並べ替え可能（ダイアログ遷移なし）。相関グラフは小さなダイアログファイルを増やさないため、追加・編集・削除確認を1つのダイアログのモードで処理する。
 
 ## 4. Mi 画面のダイアログ遷移
 

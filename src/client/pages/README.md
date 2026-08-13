@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（194 .vue）
-└── dialogs/                        # Dialog コンポーネント（110 .vue）
+├── views/                          # View コンポーネント（201 .vue）
+└── dialogs/                        # Dialog コンポーネント（113 .vue）
 ```
 
 ## 設計パターン
@@ -69,9 +69,9 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（194 .vue）
+## views/ — 全 View コンポーネント一覧（201 .vue）
 
-### データ追加系（22コンポーネント）
+### データ追加系（23コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -98,7 +98,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `add-new-rep-type-struct-element-view.vue` | リポジトリ型要素追加 |
 | `add-new-tag-struct-element-view.vue` | タグ構造要素追加 |
 
-### データ編集系（32コンポーネント）
+### データ編集系（33コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -146,7 +146,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `gps-log-map.vue` | GPS ログ地図表示 |
 | `kyou-count-calendar.vue` | Kyou カウントカレンダー |
 
-### 削除確認系（20コンポーネント）
+### 削除確認系（21コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -195,6 +195,8 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `dnote-item-list-context-menu.vue` / `dnote-list-query-context-menu.vue` | DNote コンテキストメニュー |
 | `dnote-trend-graph-view.vue` / `dnote-trend-graph-table-view.vue` | DNote トレンドグラフ（スパークライン表示 / テーブル表示） |
 | `dnote-trend-graph-context-menu.vue` | DNote トレンドグラフ コンテキストメニュー |
+| `dnote-correlation-graph-view.vue` / `dnote-correlation-graph-table-view.vue` | DNote 相関ヒートマップ・散布図 / 一覧管理 |
+| `dnote-correlation-graph-editor-view.vue` | DNote 相関グラフ設定（既存Predicate・AggregateTargetを再利用） |
 | `aggregated-list-item.vue` | 集計アイテム |
 
 ### コンテキストメニュー系
@@ -249,17 +251,17 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（110 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（113 .vue）
 
-### データ追加ダイアログ（21コンポーネント）
+### データ追加ダイアログ（22コンポーネント）
 
 `add-kc-dialog.vue`, `add-lantana-dialog.vue`, `add-mi-dialog.vue`, `add-mi-re-kyou-dialog.vue`, `add-nlog-dialog.vue`, `add-time-is-dialog.vue`, `add-ur-log-dialog.vue`, `add-tag-dialog.vue`, `add-text-dialog.vue`, `add-notification-dialog.vue`, `add-rep-dialog.vue`, `add-ryuu-item-dialog.vue`, `add-dnote-item-dialog.vue`, `add-dnote-list-dialog.vue`, `add-dnote-trend-graph-dialog.vue`, `add-new-device-struct-element-dialog.vue`, `add-new-folder-dialog.vue`, `add-new-kftl-template-struct-element-dialog.vue`, `add-new-rep-struct-element-dialog.vue`, `add-new-rep-type-struct-element-dialog.vue`, `add-new-tag-struct-element-dialog.vue`
 
-### データ編集ダイアログ（35コンポーネント）
+### データ編集ダイアログ（36コンポーネント）
 
 `edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-folder-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`
 
-### 削除確認ダイアログ（21コンポーネント）
+### 削除確認ダイアログ（22コンポーネント）
 
 `confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-mi-board-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`（+ `select-move-target-folder-dialog.vue` は移動先フォルダ選択、+ `confirm-unknown-mi-board-dialog.vue` は「まだ実在しない板名で保存してよいか」の確認）
 
@@ -272,6 +274,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `confirm-re-kyou-dialog.vue` | ReKyou 確認 |
 | `confirm-reset-password-dialog.vue` | パスワードリセット確認 |
 | `edit-dashboard-dialog.vue` | ダッシュボード設定（MI検索条件・Dnote検索条件の編集） |
+| `dnote-correlation-graph-dialog.vue` | DNote 相関グラフの追加・編集・削除を共通処理 |
 | `edit-plaing-time-is-dialog.vue` | 実行中検索条件設定（「検索条件をカスタマイズする」チェックボックス＋条件編集ボタン） |
 | `edit-saved-find-query-dialog.vue` | 保存済み検索条件のハブ（ライフログ検索条件・タスク検索条件の2ボタン） |
 | `edit-saved-find-query-list-dialog.vue` | 保存済み検索条件の一覧管理（名前・条件編集・並べ替え・削除。追加は右下FAB。`query_type` prop で rykv/mi の2インスタンス） |

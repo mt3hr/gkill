@@ -881,6 +881,95 @@ classDiagram
     DnoteTrendAggregator ..> DnoteTrendGranularity : 粒度指定
 ```
 
+### Dnote 相関グラフ集計（DnoteCorrelationAggregator）
+
+集計項目・集計リスト・トレンドグラフに並ぶ第4の集計要素「相関グラフ」の集計クラス
+（`src/client/classes/dnote/dnote-correlation-aggregator.ts`）。指標（2〜10個）ごとに
+`DnoteTrendAggregator` と同じ時系列集計を回し、全指標の総当たりで相関行列を作る。
+統計量そのもの（相関係数・p値・95%信頼区間）は
+`src/client/classes/dnote/dnote-correlation/correlation-statistics.ts` の純粋関数が持ち、
+Kyou にも Vue にも依存しない。`dnote-correlation-graph-view.vue` がヒートマップと散布図として描画する。
+トレンドグラフと同じくサーバー API は使用しない。
+
+粒度と時間ずれ（lag）は全指標で共通。lag はバケットの添字差で表すため、
+日・週・月のどの粒度でも「行の指標が lag だけ先」という同じ意味になる。
+記録が1件も無いバケットの0は観測値ではないので、相関には混ぜない。
+
+```mermaid
+classDiagram
+    class DnoteCorrelationAggregator {
+        -DnoteCorrelationGraphQuery query
+        +aggregate(abort_controller, kyous, find_kyou_query, kyou_is_loaded) Promise~DnoteCorrelationResult~
+    }
+
+    class DnoteCorrelationGraphQuery {
+        +string id
+        +string title
+        +DnoteTrendGranularity granularity
+        +DnoteCorrelationMethod method
+        +number lag
+        +Array~DnoteCorrelationMetric~ metrics
+    }
+
+    class DnoteCorrelationMetric {
+        +string id
+        +string title
+        +DnotePredicate predicate
+        +DnoteAggregateTarget aggregate_target
+    }
+
+    class DnoteCorrelationCell {
+        <<interface>>
+        +string row_metric_id
+        +string column_metric_id
+        +number coefficient
+        +number p_value
+        +number confidence_low
+        +number confidence_high
+        +number sample_size
+        +Array~DnoteCorrelationPairPoint~ points
+    }
+
+    class DnoteCorrelationPairPoint {
+        <<interface>>
+        +string row_bucket_key
+        +string column_bucket_key
+        +number x
+        +number y
+        +Array~Kyou~ row_match_kyous
+        +Array~Kyou~ column_match_kyous
+    }
+
+    class DnoteCorrelationResult {
+        <<interface>>
+        +DnoteCorrelationGraphQuery query
+        +Map~string, Array~DnoteTrendPoint~~ series
+        +Array~Array~DnoteCorrelationCell~~ cells
+    }
+
+    class DnoteCorrelationMethod {
+        <<type>>
+        'pearson' | 'spearman'
+    }
+
+    class correlation_statistics {
+        <<module>>
+        +pearson_correlation(xs, ys) number
+        +correlation_statistics(xs, ys, method) DnoteCorrelationCell
+    }
+
+    DnoteCorrelationAggregator --> DnoteCorrelationGraphQuery : 設定
+    DnoteCorrelationAggregator --> DnoteTrendAggregator : 指標ごとに時系列集計
+    DnoteCorrelationAggregator --> DnoteCorrelationResult : 生成
+    DnoteCorrelationGraphQuery *-- DnoteCorrelationMetric : 2〜10個
+    DnoteCorrelationMetric --> DnotePredicate : フィルタリング
+    DnoteCorrelationMetric --> DnoteAggregateTarget : 集計
+    DnoteCorrelationResult *-- DnoteCorrelationCell : 指標数の二乗
+    DnoteCorrelationCell *-- DnoteCorrelationPairPoint : 散布図の点
+    DnoteCorrelationCell ..> correlation_statistics : 統計量を委譲
+    DnoteCorrelationGraphQuery ..> DnoteCorrelationMethod : 手法指定
+```
+
 ### Dnote 述語の全実装クラス
 
 `src/client/classes/dnote/dnote-predicate/`（33クラス）と

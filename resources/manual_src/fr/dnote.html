@@ -1,7 +1,7 @@
 <!-- title: Vue d'agrégation - Aide -->
   <nav class="breadcrumb"><a href="getting-started.html">Premiers pas</a> &gt; <span>Vue d'agrégation</span></nav>
   <h1>Vue d'agrégation</h1>
-  <p>Écran d'agrégation et de visualisation des données du journal de vie selon des conditions. Trois types peuvent être définis : les « Éléments » pour des valeurs agrégées individuelles, les « Listes » pour des agrégations groupées par clé et les « Graphiques de tendance » pour visualiser l'évolution dans le temps.</p>
+  <p>Écran d'agrégation et de visualisation des données du journal de vie. Vous pouvez définir quatre types : des Éléments, des Listes, des Graphiques de tendance et des Graphiques de corrélation pour comparer plusieurs indicateurs.</p>
   <div class="tip">
     <strong>Astuce :</strong> La vue d'agrégation est une fonctionnalité à bascule intégrée à la vue journal de vie. Cliquez sur l'icône d'agrégation dans la barre d'outils de la vue journal de vie pour l'afficher.
   </div>
@@ -46,7 +46,7 @@
     </tr>
     <tr>
       <td>Bouton ＋ (flottant)</td>
-      <td>Affiche un menu pour choisir entre l'ajout d'un Élément, d'une Liste ou d'un graphique de tendance.</td>
+      <td>Affiche un menu pour ajouter un Élément, une Liste, un graphique de tendance ou un graphique de corrélation.</td>
     </tr>
   </table>
 
@@ -149,6 +149,11 @@
       <td>Filtre la cible d'agrégation avec des conditions AND/OR.</td>
     </tr>
   </table>
+
+  <h2>Graphique de corrélation</h2>
+  <p>Agrège de 2 à 10 métriques par même jour, semaine ou mois et affiche leurs relations sous forme de carte thermique et de nuage de points. Chaque métrique possède un nom, une cible d'agrégation et des conditions.</p>
+  <p>Sélectionnez une cellule pour afficher le coefficient, le nombre de périodes appariées, la valeur p, l'intervalle de confiance à 95 % et le nuage de points. Pearson et Spearman sont disponibles ; les résultats inférentiels de Spearman sont des approximations analytiques. Une corrélation ne prouve pas une causalité.</p>
+  <p>Avec un décalage positif, la métrique de ligne d'une période antérieure est comparée à la métrique de colonne d'une période ultérieure. Les périodes où une observation manque sont exclues.</p>
 
   <h2>Édition du groupe de conditions</h2>
   <table>

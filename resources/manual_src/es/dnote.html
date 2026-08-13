@@ -1,7 +1,7 @@
 <!-- title: Vista de agregación - Ayuda -->
   <nav class="breadcrumb"><a href="getting-started.html">Primeros Pasos</a> &gt; <span>Vista de Agregación</span></nav>
   <h1>Vista de agregación</h1>
-  <p>Pantalla para agregar y visualizar datos del registro de vida según condiciones. Se pueden definir tres tipos: «Elementos» para valores agregados individuales, «Listas» para agregaciones agrupadas por clave y «Gráficos de tendencia» para visualizar la evolución temporal.</p>
+  <p>Pantalla para agregar y visualizar datos del registro de vida. Se pueden definir Elementos, Listas, Gráficos de tendencia y Gráficos de correlación para comparar varias métricas.</p>
   <div class="tip">
     <strong>Consejo:</strong> La vista de agregación es una función de alternancia dentro de la vista de registro de vida. Haga clic en el icono de agregación en la barra de herramientas de la vista de registro de vida para mostrarla.
   </div>
@@ -46,7 +46,7 @@
     </tr>
     <tr>
       <td>Botón ＋ (flotante)</td>
-      <td>Muestra un menú para seleccionar añadir un elemento, añadir una lista o agregar un gráfico de tendencia.</td>
+      <td>Muestra un menú para añadir un Elemento, una Lista, un Gráfico de tendencia o un Gráfico de correlación.</td>
     </tr>
   </table>
 
@@ -149,6 +149,11 @@
       <td>Filtra el objetivo de agregación con condiciones AND/OR.</td>
     </tr>
   </table>
+
+  <h2>Gráfico de correlación</h2>
+  <p>Agrega de 2 a 10 métricas por el mismo día, semana o mes y muestra sus relaciones mediante un mapa de calor y un gráfico de dispersión. Cada métrica tiene nombre, objetivo de agregación y condiciones.</p>
+  <p>Seleccione una celda para ver el coeficiente, el número de períodos emparejados, el valor p, el intervalo de confianza del 95 % y la dispersión. Están disponibles Pearson y Spearman; los resultados inferenciales de Spearman son aproximaciones analíticas. La correlación no demuestra causalidad.</p>
+  <p>Con un desfase positivo, la métrica de fila de un período anterior se compara con la métrica de columna de uno posterior. Se excluyen los períodos sin alguna observación.</p>
 
   <h2>Edición de grupo de condiciones</h2>
   <table>
