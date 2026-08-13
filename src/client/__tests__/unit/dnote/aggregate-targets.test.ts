@@ -19,6 +19,9 @@ import AggregateAverageNlogAmount from '@/classes/dnote/dnote-aggregate-target/a
 import AggregateSumGitCommitLogCodeCount from '@/classes/dnote/dnote-aggregate-target/aggregate-sum-git-commit-log-code-count'
 import AggregateAverageTimeIsStartTime from '@/classes/dnote/dnote-aggregate-target/aggregate-average-timeis-start-time'
 import AggregateAverageTimeIsEndTime from '@/classes/dnote/dnote-aggregate-target/aggregate-average-timeis-end-time'
+import AggregateAverageKCNumValue from '@/classes/dnote/dnote-aggregate-target/aggregate-average-kc-num-value'
+import AggregateMaxKCNumValue from '@/classes/dnote/dnote-aggregate-target/aggregate-max-kc-num-value'
+import format_aggregated_number from '@/classes/dnote/dnote-aggregate-target/format-aggregated-number'
 
 const asKyou = (obj: unknown) => obj
 const emptyQuery = {} as never
@@ -246,5 +249,74 @@ describe('AggregateAverageTimeIsEndTime', () => {
     expect(await target.result_to_string(val)).toBe('')
     val = await target.append_aggregate_element_value(val, kyouEndingAt(18), emptyQuery)
     expect(await target.result_to_string(val)).toBe('18:00')
+  })
+})
+
+// ========== 表示用の丸め ==========
+
+describe('format_aggregated_number', () => {
+  test('rounds to 2 decimals', () => {
+    // 素の toString() だと 71.28604651162791 になっていた
+    expect(format_aggregated_number(71.28604651162791)).toBe('71.29')
+  })
+
+  test('does not add a decimal point to integers', () => {
+    expect(format_aggregated_number(8903)).toBe('8903')
+  })
+
+  test('drops a trailing zero', () => {
+    expect(format_aggregated_number(71.2)).toBe('71.2')
+  })
+
+  test('keeps the sign of negative values', () => {
+    expect(format_aggregated_number(-1234.5678)).toBe('-1234.57')
+  })
+
+  test('falls back to 0 for non finite values', () => {
+    expect(format_aggregated_number(Number.NaN)).toBe('0')
+    expect(format_aggregated_number(Number.POSITIVE_INFINITY)).toBe('0')
+  })
+})
+
+describe('KC の集計結果は丸めて返す', () => {
+  test('AggregateAverageKCNumValue rounds the average', async () => {
+    const target = new AggregateAverageKCNumValue()
+    let val = await target.append_aggregate_element_value(null, asKyou(makeKyouWithKc('安静時心拍数', 70)), emptyQuery)
+    val = await target.append_aggregate_element_value(val, asKyou(makeKyouWithKc('安静時心拍数', 71)), emptyQuery)
+    val = await target.append_aggregate_element_value(val, asKyou(makeKyouWithKc('安静時心拍数', 73)), emptyQuery)
+    expect(await target.result_to_string(val)).toBe('71.33')
+  })
+
+  test('AggregateSumKCNumValue removes float noise', async () => {
+    const target = new AggregateSumKCNumValue()
+    // 0.1 + 0.2 は素の合計だと 0.30000000000000004 になる
+    let val = await target.append_aggregate_element_value(null, asKyou(makeKyouWithKc('消費カロリー(日計)', 0.1)), emptyQuery)
+    val = await target.append_aggregate_element_value(val, asKyou(makeKyouWithKc('消費カロリー(日計)', 0.2)), emptyQuery)
+    expect(await target.result_to_string(val)).toBe('0.3')
+  })
+
+  test('AggregateMaxKCNumValue keeps the raw value', async () => {
+    const target = new AggregateMaxKCNumValue()
+    let val = await target.append_aggregate_element_value(null, asKyou(makeKyouWithKc('心拍数(最大)', 151)), emptyQuery)
+    val = await target.append_aggregate_element_value(val, asKyou(makeKyouWithKc('心拍数(最大)', 199)), emptyQuery)
+    expect(await target.result_to_string(val)).toBe('199')
+  })
+})
+
+describe('気分と出費の集計結果も丸めて返す', () => {
+  test('AggregateAverageLantanaMood rounds the average', async () => {
+    const target = new AggregateAverageLantanaMood()
+    let val = await target.append_aggregate_element_value(null, asKyou(makeKyouWithLantana(3)), emptyQuery)
+    val = await target.append_aggregate_element_value(val, asKyou(makeKyouWithLantana(4)), emptyQuery)
+    val = await target.append_aggregate_element_value(val, asKyou(makeKyouWithLantana(8)), emptyQuery)
+    expect(await target.result_to_string(val)).toBe('5')
+  })
+
+  test('AggregateSumNlogAmount removes float noise', async () => {
+    const target = new AggregateSumNlogAmount()
+    // 金額に小数が入ると素の合計は 12345.700000000001 になる
+    let val = await target.append_aggregate_element_value(null, asKyou(makeKyouWithNlog('店A', '品A', 12345.6)), emptyQuery)
+    val = await target.append_aggregate_element_value(val, asKyou(makeKyouWithNlog('店B', '品B', 0.1)), emptyQuery)
+    expect(await target.result_to_string(val)).toBe('12345.7')
   })
 })
