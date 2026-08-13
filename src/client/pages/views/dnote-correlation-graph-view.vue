@@ -9,9 +9,12 @@
       <div class="correlation_matrix_scroll">
         <div class="correlation_matrix" :style="matrix_style" role="grid">
           <div class="matrix_corner" />
-          <div v-for="metric in metrics" :key="`column-${metric.id}`" class="matrix_header column_header">{{ metric.title }}</div>
+          <!-- 見出しは狭い列の中で折り返す。span で包むのは、flex の中央寄せを保ったまま
+               span 側だけに行数のクランプ箱を持たせるため -->
+          <div v-for="metric in metrics" :key="`column-${metric.id}`" class="matrix_header column_header"
+            :title="metric.title"><span>{{ metric.title }}</span></div>
           <template v-for="(row_metric, row_index) in metrics" :key="`row-${row_metric.id}`">
-            <div class="matrix_header row_header">{{ row_metric.title }}</div>
+            <div class="matrix_header row_header" :title="row_metric.title"><span>{{ row_metric.title }}</span></div>
             <button v-for="(cell, column_index) in result.cells[row_index]" :key="cell.column_metric_id"
               type="button" class="matrix_cell" role="gridcell"
               :class="{ selected: row_index === selected_row_index && column_index === selected_column_index }"
@@ -25,7 +28,8 @@
         </div>
       </div>
 
-      <v-card v-if="selected_cell && selected_row_metric && selected_column_metric" variant="outlined" class="pa-2 mt-2">
+      <v-card v-if="selected_cell && selected_row_metric && selected_column_metric" variant="outlined"
+        class="pa-1 mt-1 correlation_detail">
         <h3>{{ selected_row_metric.title }} → {{ selected_column_metric.title }}</h3>
         <p>
           {{ i18n.global.t('DNOTE_CORRELATION_COEFFICIENT_TITLE') }}:
@@ -157,11 +161,18 @@ defineExpose({
 
 <style scoped>
 .dnote_correlation_graph {
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
+/* nowrap だけだと長いタイトルがそれ自体で min-content の下限になり、
+   rykv の td 列を広げてしまう。はみ出しは省略記号で切る */
 .dnote_correlation_graph h2 {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .dnote_correlation_graph h2.draggable {
@@ -169,23 +180,29 @@ defineExpose({
   user-select: none;
 }
 
-/* 指標が増えると行列が画面幅を超えるので、行列だけを横スクロールさせる */
+/* 行列は折れ線・棒グラフと同じく列の幅いっぱいに広がる（セルのトラックが 1fr）。
+   contain: inline-size が要点で、「中身は横幅の計算に関与しない」ことにして、
+   行列の max-content が祖先へ伝わるのを止めている。これが無いと rykv の
+   width:fit-content な Dnote 列が最長の指標名ぶん広がる（指標7個で約1400px）。
+   幅が足りないときだけ行列を横スクロールさせる */
 .correlation_matrix_scroll {
   overflow-x: auto;
+  contain: inline-size;
 }
 
+/* min-width: max-content を付けてはいけない。付けるとグリッドが max-content 制約で測られ、
+   全ての列が「行列中で最も長い見出し」の幅に揃えられて、指標7個で1400px近くになる */
 .correlation_matrix {
   display: grid;
-  min-width: max-content;
-  gap: 2px;
+  gap: 1px;
   align-items: stretch;
 }
 
 .matrix_corner,
 .matrix_header,
 .matrix_cell {
-  min-height: 52px;
-  padding: 6px;
+  min-height: 28px;
+  padding: 2px;
 }
 
 .matrix_header {
@@ -194,22 +211,46 @@ defineExpose({
   justify-content: center;
   font-weight: 600;
   text-align: center;
+  overflow: hidden;
 }
 
-/* 横スクロールしても指標名が読めるよう、見出しは行・列とも貼り付ける。
-   交点(corner)は行・列の両方に重なるので z-index を一番上にする */
+/* 見出しは指標名を全文見せる。狭い列では折り返して縦に伸びる。
+   上限を超えた分だけ切り、そのときは title 属性とセルの aria-label、
+   選択時の詳細カードで全文が読める。
+   max-height は line-height の整数倍にして行の途中で切れないようにしてあるので、
+   どちらかを変えるときは必ず対で直すこと。
+   列見出しは5行 = セル幅34pxで3文字/行なので15文字まで、
+   行見出しは3行 = 64px幅で5文字/行なので15文字まで全文入る */
+.matrix_header>span {
+  line-height: 1.2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.column_header>span {
+  font-size: 0.68rem;
+  max-height: 6em;
+}
+
+.row_header>span {
+  font-size: 0.74rem;
+  max-height: 3.6em;
+  text-align: left;
+}
+
+/* 横スクロールしても指標名が読めるよう、行見出しを左に貼り付ける。
+   交点(corner)は行見出しの上に重なるので z-index を上にする。
+   縦方向には貼り付けない: sticky の基準になるスクロールコンテナは
+   .correlation_matrix_scroll で、これは横にしかスクロールしないため top を書いても効かない
+   （縦のスクローラは祖先の .dnote-scroll-wrap 側にある） */
 .matrix_corner {
   position: sticky;
   left: 0;
-  top: 0;
-  z-index: 3;
+  z-index: 2;
   background: rgb(var(--v-theme-surface));
 }
 
 .column_header {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   background: rgb(var(--v-theme-surface));
 }
 
@@ -222,13 +263,18 @@ defineExpose({
 }
 
 .matrix_cell {
-  border: 2px solid transparent;
-  border-radius: 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
   color: rgb(var(--v-theme-on-surface));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.matrix_cell span {
+  font-size: 0.8rem;
+  line-height: 1.2;
 }
 
 /* 選択枠は背景色に埋もれることがあるため、内側にもう1本線を重ねる */
@@ -237,14 +283,40 @@ defineExpose({
   box-shadow: inset 0 0 0 1px rgb(var(--v-theme-on-surface));
 }
 
+/* 件数が4桁を超えても行が崩れないよう、はみ出しは省略記号で切る。
+   正確な件数は aria-label と選択時の詳細カードに残る */
 .matrix_cell small {
-  font-size: 0.7rem;
+  font-size: 0.62rem;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 選択セルの詳細。App.vue が余白を消しているのは h1,h2 だけなので、
+   p はUA既定の上下1emマージンを持つ。4段落で約48px空費していたため潰す */
+.correlation_detail :deep(h3) {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.correlation_detail :deep(p) {
+  margin: 0 0 2px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .correlation_scatter {
   display: block;
   width: 100%;
-  min-height: 240px;
+  /* viewBox 600x320 の比率だと、幅450px未満で min-height:240px が上下に死に余白を作っていた。
+     160pxなら幅300px以上でレターボックスにならない。
+     preserveAspectRatio="none" は点と文字が歪むので使わない */
+  min-height: 160px;
   /* ダブルタップズーム由来のclick遅延を除去する（パンスクロールは維持される） */
   touch-action: manipulation;
 }
