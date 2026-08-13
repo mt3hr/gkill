@@ -329,6 +329,12 @@ PearsonとSpearmanに対応し、係数、比較期間数、p値、Fisher変換�
 | `dnote-correlation-aggregator.ts` | 指標ごとの時系列集計とバケット対応付け（`build_correlation_cell`） |
 | `dnote-correlation/correlation-statistics.ts` | 相関係数・p値・信頼区間の純粋関数。Kyou にも Vue にも依存しない |
 
+ヒートマップのトラック幅は `src/client/classes/dnote-correlation-matrix-layout.ts`（dnote/ の外）に
+定数として置いてある。グリッドの `gap` とセルの `padding` / `border` が同じ計算に乗っているので、
+どれかを変えるときは定数側のコメントと `dnote-correlation-graph-view.vue` の CSS を必ず同時に直すこと。
+`__tests__/unit/classes/dnote-correlation-matrix-layout.test.ts` が
+「7指標が400px列に収まる」ことと CSS の実値を機械検査している。
+
 統計関数を別ファイルに分けてあるのは、`dnote-trend/aggregated-value-to-number.ts` と同じ理由で、
 Kyou の絡まない計算だけを単体で読めて単体で試せるようにするため。
 外部の統計ライブラリは使っておらず、log Γ のLanczos近似と正則化不完全ベータ関数を自前で持つ。
