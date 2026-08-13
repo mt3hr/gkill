@@ -12,6 +12,24 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/main/common/gkill_options"
 )
 
+type countingLatestDataRepositoryAddressDAO struct {
+	gkill_cache.LatestDataRepositoryAddressDAO
+	getAllCount        int
+	addOrUpdateCount   int
+	addOrUpdateAddrSum int
+}
+
+func (d *countingLatestDataRepositoryAddressDAO) GetAllLatestDataRepositoryAddresses(ctx context.Context) (map[string]gkill_cache.LatestDataRepositoryAddress, error) {
+	d.getAllCount++
+	return d.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+}
+
+func (d *countingLatestDataRepositoryAddressDAO) AddOrUpdateLatestDataRepositoryAddresses(ctx context.Context, latestDataRepositoryAddresses []gkill_cache.LatestDataRepositoryAddress) (bool, error) {
+	d.addOrUpdateCount++
+	d.addOrUpdateAddrSum += len(latestDataRepositoryAddresses)
+	return d.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
+}
+
 func sanitizeTestUserID(name string) string {
 	replacer := strings.NewReplacer("/", "_", "\\", "_", ":", "_", "*", "_", "?", "_", "\"", "_", "<", "_", ">", "_", "|", "_", " ", "_")
 	return replacer.Replace(name)
@@ -103,9 +121,19 @@ func TestGkillRepositories_UpdateCacheBuildsReKyouOnFirstPass(t *testing.T) {
 	t.Cleanup(func() { gkill_options.CacheReKyouReps = old })
 
 	repositories, pixelRepName, s11RepName, sharedID := newGranularReKyouFixture(t)
+	countingDAO := &countingLatestDataRepositoryAddressDAO{LatestDataRepositoryAddressDAO: repositories.LatestDataRepositoryAddressDAO}
+	repositories.LatestDataRepositoryAddressDAO = countingDAO
 
 	if err := repositories.UpdateCache(ctx); err != nil {
 		t.Fatalf("UpdateCache() error: %v", err)
+	}
+	// Phase1のReKyouターゲット解決で1回、永続化用スナップショットで1回。
+	// Phase2後とReKyou後に永続化処理が走っても、後者は1回だけであること。
+	if countingDAO.getAllCount != 2 {
+		t.Fatalf("GetAllLatestDataRepositoryAddresses() count = %d, want 2", countingDAO.getAllCount)
+	}
+	if countingDAO.addOrUpdateAddrSum == 0 {
+		t.Fatalf("初回のUpdateCacheで最新版アドレスが1件も書かれていない")
 	}
 
 	matchKyous, err := repositories.ReKyouReps.FindKyous(ctx, makeDefaultFindQuery())
@@ -268,5 +296,46 @@ func TestReKyouGetReKyousByTargetIDReturnsEvenIfTargetDeleted(t *testing.T) {
 	}
 	if matchReKyous[0].ID != sharedID {
 		t.Fatalf("GetReKyousByTargetID() ID = %s, want %s", matchReKyous[0].ID, sharedID)
+	}
+}
+
+// UpdateCacheを続けて2回回したとき、2回目は最新版アドレスを1件も書き直さないこと。
+//
+// 最新版アドレス表への書き込みは UpdateCache のクロージャ1箇所だけで、
+// そこが「表に無い」か「表のものより新しい」ものだけを選ぶ約束になっている。
+// この選別を外すと、データが1件も変わっていない定期更新でも
+// 全件ぶんの DELETE+INSERT が走り、共有の書き込みロックを握り続けてしまう。
+//
+// 全件読み込みが1回で済むことは TestGkillRepositories_UpdateCacheBuildsReKyouOnFirstPass 側で見ている。
+func TestGkillRepositories_UpdateCacheSkipsUnchangedLatestDataAddresses(t *testing.T) {
+	ctx := context.Background()
+	old := gkill_options.CacheReKyouReps
+	enable := true
+	gkill_options.CacheReKyouReps = &enable
+	t.Cleanup(func() { gkill_options.CacheReKyouReps = old })
+
+	repositories, _, _, _ := newGranularReKyouFixture(t)
+	countingDAO := &countingLatestDataRepositoryAddressDAO{LatestDataRepositoryAddressDAO: repositories.LatestDataRepositoryAddressDAO}
+	repositories.LatestDataRepositoryAddressDAO = countingDAO
+
+	if err := repositories.UpdateCache(ctx); err != nil {
+		t.Fatalf("1回目のUpdateCache() error: %v", err)
+	}
+	if countingDAO.addOrUpdateAddrSum == 0 {
+		t.Fatalf("1回目で最新版アドレスが1件も書かれていない")
+	}
+
+	firstAddrSum := countingDAO.addOrUpdateAddrSum
+	countingDAO.addOrUpdateCount = 0
+	countingDAO.addOrUpdateAddrSum = 0
+
+	if err := repositories.UpdateCache(ctx); err != nil {
+		t.Fatalf("2回目のUpdateCache() error: %v", err)
+	}
+	if countingDAO.addOrUpdateAddrSum != 0 {
+		t.Fatalf("データが変わっていないのに2回目で %d 件書き直している(1回目は %d 件)", countingDAO.addOrUpdateAddrSum, firstAddrSum)
+	}
+	if countingDAO.addOrUpdateCount != 0 {
+		t.Fatalf("空の更新でも AddOrUpdate を %d 回呼んでいる", countingDAO.addOrUpdateCount)
 	}
 }
