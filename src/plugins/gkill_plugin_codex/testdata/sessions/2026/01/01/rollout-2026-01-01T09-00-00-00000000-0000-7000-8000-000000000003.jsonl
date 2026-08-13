@@ -1,0 +1,3 @@
+{"timestamp":"2026-01-01T00:00:00.000Z","type":"session_meta","payload":{"id":"00000000-0000-7000-8000-000000000003","cwd":"c:\\work\\old","originator":"codex_vscode","cli_version":"0.104.0-alpha.1"}}
+{"timestamp":"2026-01-01T00:00:01.000Z","type":"event_msg","payload":{"type":"user_message","message":"古い版のログです。","images":[],"local_images":[],"text_elements":[]}}
+{"timestamp":"2026-01-01T00:00:02.000Z","type":"event_msg","payload":{"type":"agent_message","message":"了解です。"}}
