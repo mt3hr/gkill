@@ -130,3 +130,35 @@ func TestSortAndTrimKyousMap_KeepsSameSecondProjections(t *testing.T) {
 		t.Errorf("開始と終了の射影は同秒でも両方残るはず: got %d件", len(findCtx.MatchKyousCurrent["timeis-1"]))
 	}
 }
+
+func BenchmarkSortAndTrimKyousMap_PeriodOfTime(b *testing.B) {
+	const kyouCount = 20_000
+	startSecond := int64(9 * 60 * 60)
+	endSecond := int64(18 * 60 * 60)
+	query := &find.FindQuery{
+		PeriodOfTimeStartTimeSecond: &startSecond,
+		PeriodOfTimeEndTimeSecond:   &endSecond,
+		PeriodOfTimeWeekOfDays:      []find.WeekOfDays{find.MonDay, find.TuesDay, find.WednesDay, find.ThursDay, find.FriDay},
+	}
+	base := time.Date(2026, 8, 3, 0, 0, 0, 0, time.Local)
+	kyous := make(map[string][]reps.Kyou, kyouCount)
+	for i := range kyouCount {
+		id := string(rune(i + 1))
+		relatedTime := base.Add(time.Duration(i) * time.Minute)
+		kyous[id] = []reps.Kyou{{
+			ID:          id,
+			DataType:    "kmemo",
+			RelatedTime: relatedTime,
+			UpdateTime:  relatedTime,
+		}}
+	}
+
+	filter := &FindFilter{}
+	b.ReportAllocs()
+	for b.Loop() {
+		findCtx := &FindKyouContext{ParsedFindQuery: query, MatchKyousCurrent: kyous}
+		if _, err := filter.sortAndTrimKyousMap(context.Background(), findCtx); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
