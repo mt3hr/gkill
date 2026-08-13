@@ -269,3 +269,36 @@ func TestFindTimeIs_ExcludeRenamedAwayVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestFilterPlaingTimeIsKyous_UsesInclusiveMergedIntervals(t *testing.T) {
+	end11 := intervalTestTime(11)
+	end12 := intervalTestTime(12)
+	findCtx := &FindKyouContext{
+		ParsedFindQuery: &find.FindQuery{TimeIsWords: []string{}},
+		MatchTimeIssAtFilterTags: map[string]reps.TimeIs{
+			"first":  {ID: "first", StartTime: intervalTestTime(10), EndTime: &end11},
+			"second": {ID: "second", StartTime: intervalTestTime(11), EndTime: &end12},
+			"open":   {ID: "open", StartTime: intervalTestTime(15)},
+		},
+		MatchKyousCurrent: map[string][]reps.Kyou{
+			"start":    {{ID: "start", RelatedTime: intervalTestTime(10)}},
+			"shared":   {{ID: "shared", RelatedTime: intervalTestTime(11)}},
+			"end":      {{ID: "end", RelatedTime: intervalTestTime(12)}},
+			"gap":      {{ID: "gap", RelatedTime: intervalTestTime(13)}},
+			"open-end": {{ID: "open-end", RelatedTime: intervalTestTime(23)}},
+		},
+	}
+
+	filter := &FindFilter{}
+	if _, err := filter.filterPlaingTimeIsKyous(context.Background(), findCtx); err != nil {
+		t.Fatalf("filterPlaingTimeIsKyous failed: %v", err)
+	}
+	for _, id := range []string{"start", "shared", "end", "open-end"} {
+		if _, exist := findCtx.MatchKyousCurrent[id]; !exist {
+			t.Errorf("%s should match", id)
+		}
+	}
+	if _, exist := findCtx.MatchKyousCurrent["gap"]; exist {
+		t.Error("gap should not match")
+	}
+}
