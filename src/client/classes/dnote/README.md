@@ -10,14 +10,15 @@ KeyGetter でグルーピングし、AggregateTarget で集計値を算出する
 
 ```
 dnote/
-├── (ルートファイル 18個)         # コア型定義 + トレンドグラフ集計（dnote-trend-aggregator.ts）
-├── dnote-aggregate-target/      # 集計対象（21ファイル）
+├── (ルートファイル 21個)         # コア型定義 + トレンド／相関集計
+├── dnote-aggregate-target/      # 集計対象（22ファイル）
+├── dnote-correlation/          # 相関グラフの統計計算（1ファイル）
 ├── dnote-filter/               # フィルタ（2ファイル）
 ├── dnote-key-getter/           # グルーピングキー（9ファイル）
 ├── dnote-predicate/            # 検索条件述語（33ファイル）
 │   └── target-kyou-predicate/  # 対象 Kyou 述語（5ファイル）
 ├── dnote-trend/                # トレンドグラフ型定義（3ファイル）
-├── pulldown-menu/              # UI プルダウンメニュー（6ファイル）
+├── pulldown-menu/              # UI プルダウンメニュー（7ファイル）
 └── serialize/                  # シリアライズ辞書（5ファイル）
 ```
 
@@ -53,7 +54,7 @@ dnote/
 最終結果
 ```
 
-## ルートファイル（18ファイル）
+## ルートファイル（21ファイル）
 
 | ファイル | 役割 |
 |---------|------|
@@ -75,8 +76,11 @@ dnote/
 | `related-time-match-type.ts` | 関連時刻マッチ型 |
 | `aggregate-grouping-list-result-record.ts` | グルーピング集計結果レコード |
 | `dnote-trend-aggregator.ts` | トレンドグラフの時系列バケット集計（詳細は「トレンドグラフ」節） |
+| `dnote-correlation.ts` | 相関グラフの設定・結果・シリアライズ型 |
+| `dnote-correlation-aggregator.ts` | 指標系列の対応付け（統計計算は `dnote-correlation/` に委譲） |
+| `predicate-struct-json.ts` | 条件エディタの素の構造 ⇔ DnotePredicate の JSON の相互変換（トレンド／相関の両編集画面が使う） |
 
-## `dnote-aggregate-target/`（21ファイル）— 集計対象
+## `dnote-aggregate-target/`（22ファイル）— 集計対象
 
 グループごとの集計値を算出するクラス群。
 
@@ -120,6 +124,7 @@ dnote/
 |---------|------|
 | `average-info.ts` | 平均値計算の補助情報 |
 | `time-of-day-average-info.ts` | 時刻（TimeIs 開始/終了時刻）の平均計算の補助情報 |
+| `format-aggregated-number.ts` | 集計結果の数値を表示用文字列にする（小数2桁に丸める） |
 
 ## `dnote-filter/`（2ファイル）— データフィルタ
 
@@ -253,7 +258,7 @@ AND / OR / NOT の論理演算で組み合わせ可能な述語群（33 .ts フ�
 | `equal-tags-or-target-kyou-predicate.ts` | タグが一部対象と等しい |
 | `equal-title-target-kyou-predicate.ts` | タイトル一致 |
 
-## `pulldown-menu/`（6ファイル）— UI プルダウンメニュー
+## `pulldown-menu/`（7ファイル）— UI プルダウンメニュー
 
 DNote 設定 UI 用のプルダウンメニューアイテム定義。
 
@@ -263,8 +268,9 @@ DNote 設定 UI 用のプルダウンメニューアイテム定義。
 | `kyou-getter-menu-items.ts` | Kyou 取得方法の選択肢 |
 | `predicate-menu-items.ts` | 述語の選択肢 |
 | `rep-type-menu-items.ts` | リポジトリ型の選択肢 |
-| `trend-granularity-menu-items.ts` | トレンドグラフ集計粒度（日/週/月）の選択肢 |
+| `trend-granularity-menu-items.ts` | トレンドグラフ集計粒度（日/週/月）の選択肢。相関グラフも同じものを使う |
 | `trend-chart-type-menu-items.ts` | トレンドグラフ種別（折れ線/棒）の選択肢 |
+| `correlation-method-menu-items.ts` | 相関の手法（Pearson/Spearman）の選択肢 |
 
 ## `serialize/`（5ファイル）— シリアライズ辞書
 
@@ -310,6 +316,22 @@ Predicate と AggregateTarget を流用して `related_time` を日/週/月単�
 | `dnote-trend/aggregated-value-to-number.ts` | 累積値（number / AverageInfo）の数値化 |
 
 定義は `dnote_json_data` の各定義オブジェクト内 `dnote_trend_graph_view_data` に保存される（キー欠落時は空扱い＝後方互換）。
+
+## 相関グラフ（`dnote-correlation.ts` + `dnote-correlation-aggregator.ts` + `dnote-correlation/`）
+
+第4の DNote エンティティ。2～10個のPredicate＋AggregateTargetを既存のトレンド集計へ渡し、同じ粒度の系列を作って相関行列と散布図を表示する。正のlagは行系列より列系列が後の期間になる方向付き比較で、片方に観測がないバケットはペアごとに除外する。
+
+PearsonとSpearmanに対応し、係数、比較期間数、p値、Fisher変換による95%信頼区間を計算する。Spearmanのp値と信頼区間は解析的近似であり、因果関係の判定には使わない。定義は `dnote_correlation_graph_view_data` に保存し、キー欠落時は空配列として読む。
+
+| ファイル | 役割 |
+|---------|------|
+| `dnote-correlation.ts` | 設定・結果の型とJSON往復（`parse` / `serialize` / `clone`） |
+| `dnote-correlation-aggregator.ts` | 指標ごとの時系列集計とバケット対応付け（`build_correlation_cell`） |
+| `dnote-correlation/correlation-statistics.ts` | 相関係数・p値・信頼区間の純粋関数。Kyou にも Vue にも依存しない |
+
+統計関数を別ファイルに分けてあるのは、`dnote-trend/aggregated-value-to-number.ts` と同じ理由で、
+Kyou の絡まない計算だけを単体で読めて単体で試せるようにするため。
+外部の統計ライブラリは使っておらず、log Γ のLanczos近似と正則化不完全ベータ関数を自前で持つ。
 
 **既知の制約**: 複数バケットをまたぐ TimeIs は `related_time`（開始時刻）のバケットにのみ計上される。
 バケット内の経過時間はバケット境界でトリムされるため、またいだ先のバケットには時間が計上されない。
