@@ -353,15 +353,36 @@ gkill 本体は起動時に環境変数 `GKILL_HOME` を設定し（`common.Init
 
 インデックス: `idx_msg_time(related_time_unix)`, `idx_msg_session(session_id)`, `idx_msg_src(source_path)`
 
+#### Codex（`gkill_plugin_codex/cache.go`）
+
+Claude Code と似ているが**2段構成**になっている点が違う。
+
+| テーブル | 役割 |
+|---|---|
+| `file_cache` | 走査結果。差分判定は `(mtime_unix, size)`。素性（スレッドID・親・cwd・ブランチ）もここ |
+| `thread_item` | 第1段。1ファイルを正規化した要素列。`(thread_id, seq)` が主キーで、ファイル単位で丸ごと差し替える |
+| `dirty_thread` | 畳み直しが要るスレッド。ルートの解決は畳み直しのときに行う |
+| `thread_title` | `session_index.jsonl` 由来のスレッド名。ロールアウトとは独立した無効化単位 |
+| `kyou_cache` | 第2段。Kyou 1件。`body_json` に詳細ビュー用の本体が入る |
+
+**スレッドIDは `session_meta.session_id` ではなくファイル名の uuid。** 実データ52ファイルのうち
+23ファイルに `session_id` が無く、あってもサブエージェントでは親のIDが入っているため
+（52ファイルに対し38種しかない）、これをキーにすると親子の Kyou ID が衝突する。
+
 ### キャッシュ無効化
 
-プラグインによって2方式ある。
+プラグインによって3方式ある。
 
 - **ChatGPT / Claude.ai（全体再構築）** — `cache_meta` に保存したソースの**署名**を現在のソース状態と
   突き合わせ（`needsRebuild`）、変化していれば `rebuild()` が**キャッシュ全体を作り直す**。
 - **Claude Code（セッション単位の差分更新）** — `refresh`（`cache.go:209`）が `file_cache` の
   `MtimeUnix` / `Size` を突き合わせて（`:236-243`）変化のあったファイルだけを `dirtySessions` として拾い、
   そのセッションだけ作り直す。変化が無ければ早期リターンする（`:255-257`）。
+- **Codex（ファイル単位の取り込み + スレッド木単位の畳み直し）** — 変わったファイルだけ
+  `thread_item` を差し替え、そのスレッドが属する木だけ `kyou_cache` を作り直す。
+  セッション単位にしないのは、サブエージェントを含むグループでは1行の追記のために
+  11ファイル150MBを読み直すことになるため。子が新しく現れたときも親が消えたときも
+  **両方のルート**を畳み直し対象にする。スレッド名の更新はロールアウトを1バイトも読み直さない。
 
 ### 主要メソッド
 
@@ -561,12 +582,13 @@ GitCommitLogContextMenu と同じ項目に加えて、プラグイン固有の�
 | gkill_plugin_chatgpt | ChatGPT | `chatgpt_conversation` | `src/plugins/gkill_plugin_chatgpt/` |
 | gkill_plugin_claudeai | Claude.ai | `claude_conversation` | `src/plugins/gkill_plugin_claudeai/` |
 | gkill_plugin_claudecode | ClaudeCode | `claude_code_turn` | `src/plugins/gkill_plugin_claudecode/` |
+| gkill_plugin_codex | Codex | `codex_turn` | `src/plugins/gkill_plugin_codex/` |
 | gkill_plugin_fitbit | Fitbit | `kc` | `src/plugins/gkill_plugin_fitbit/` |
 | gkill_plugin_google_locationhistory | GoogleLocation | `google_location_visit` | `src/plugins/gkill_plugin_google_locationhistory/` |
 | gkill_example | （サンプル） | `example_kyou` | `src/plugins/examples/gkill_example/` |
 
 `gkill_example` は固定の Kyou を返すだけのサンプル実装で、`DefaultConfig` を持たない
-（＝ `config.json` を生成しない）。上3つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
+（＝ `config.json` を生成しない）。それ以外の5つは `source_dirs` 設定と SQLite3 キャッシュを持つ。
 
 ### ビルド手順
 
@@ -579,6 +601,9 @@ GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudeai.exe .
 
 cd src/plugins/gkill_plugin_claudecode
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_claudecode.exe .
+
+cd src/plugins/gkill_plugin_codex
+GOOS=windows GOARCH=amd64 go build -o gkill_plugin_codex.exe .
 
 cd src/plugins/gkill_plugin_fitbit
 GOOS=windows GOARCH=amd64 go build -o gkill_plugin_fitbit.exe .
