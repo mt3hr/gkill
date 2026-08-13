@@ -189,7 +189,7 @@ DnoteView はダッシュボードのほか rykv 画面からも利用される�
 | 集計項目 | `dnote-item-view.vue` | 単一の集計値（件数・合計・平均等）を表示 |
 | 集計リスト | `dnote-list-view.vue` | 条件に合致するKyou一覧を表示 |
 | トレンドグラフ | `dnote-trend-graph-view.vue` | 時系列の集計値をスパークライン（折れ線/棒）で表示。集計粒度（日/週/月）・グラフ種別を設定可能。ダブルクリックで編集、右クリックでコンテキストメニュー（編集/削除）、ドラッグ&ドロップで並べ替え |
-| 相関グラフ | `dnote-correlation-graph-view.vue` | 2～10指標のPearson／Spearman相関をヒートマップと散布図で表示。共通粒度と方向付きlagを設定可能 |
+| 相関グラフ | `dnote-correlation-graph-view.vue` | 2～10指標のPearson／Spearman相関をヒートマップと散布図で表示。共通粒度と方向付きlagを設定可能。行列は7指標まで400px幅の列に横スクロールなしで収まる（トラック幅の根拠は `classes/dnote-correlation-matrix-layout.ts`。8指標以上は行列だけが横スクロールする） |
 
 Dnote 関連のコンポーネントは他に以下がある（追加・編集・削除確認の3点セット）。
 
