@@ -6,6 +6,7 @@ import type { Kyou } from "@/classes/datas/kyou"
 import type { ComponentRef } from "@/classes/component-ref"
 import type { DnoteCorrelationCell, DnoteCorrelationGraphQuery, DnoteCorrelationPairPoint, DnoteCorrelationResult } from "@/classes/dnote/dnote-correlation"
 import { DnoteCorrelationAggregator } from "@/classes/dnote/dnote-correlation-aggregator"
+import { build_correlation_matrix_columns } from "@/classes/dnote-correlation-matrix-layout"
 import type DnoteCorrelationGraphViewEmits from "@/pages/views/dnote-correlation-graph-view-emits"
 import type DnoteCorrelationGraphViewProps from "@/pages/views/dnote-correlation-graph-view-props"
 
@@ -34,8 +35,10 @@ export function useDnoteCorrelationGraphView(options: {
     const selected_cell = computed<DnoteCorrelationCell | null>(() => result.value?.cells[selected_row_index.value]?.[selected_column_index.value] ?? null)
     const selected_row_metric = computed(() => metrics.value[selected_row_index.value] ?? null)
     const selected_column_metric = computed(() => metrics.value[selected_column_index.value] ?? null)
-    // 1列目は指標名なので内容に合わせ、以降のセルは等幅で伸ばす
-    const matrix_style = computed(() => ({ gridTemplateColumns: `minmax(100px, auto) repeat(${metrics.value.length}, minmax(84px, 1fr))` }))
+    // 1列目は指標名で幅を固定し、以降のセルは狭い列でも入る最小幅と、
+    // 広い画面で間延びしない最大幅の間で伸縮させる。
+    // 幅の根拠は classes/dnote-correlation-matrix-layout.ts のコメント参照
+    const matrix_style = computed(() => ({ gridTemplateColumns: build_correlation_matrix_columns(metrics.value.length) }))
 
     // 散布図はviewBox 600x320の固定座標系。実データの範囲を軸の描画域へ線形写像する。
     // 全点が同値だと範囲0で除算が発散するので、±1に広げてから余白5%を足す

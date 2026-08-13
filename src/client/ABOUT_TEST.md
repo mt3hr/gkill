@@ -2,7 +2,7 @@
 
 ## 概要
 
-Vue 3 フロントエンドのテスト。ユニットテスト（1382テスト宣言、130ファイル）と E2E テスト（215テスト宣言、40ファイル）の合計1597テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計 + 相関グラフの統計計算をカバーする。
+Vue 3 フロントエンドのテスト。ユニットテスト（1389テスト宣言、131ファイル）と E2E テスト（215テスト宣言、40ファイル）の合計1604テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計 + 相関グラフの統計計算をカバーする。
 
 ## テストフレームワーク
 
@@ -15,7 +15,7 @@ Vue 3 フロントエンドのテスト。ユニットテスト（1382テスト�
 src/client/__tests__/
 ├── unit/                    # ユニットテスト (1184テスト宣言, 111ファイル)
 │   ├── api/                 #   GkillAPI クライアント
-│   ├── classes/             #   ユーティリティクラス (30ファイル, kyou-view-relay / cascade-delete-kyou / confirm-dialog-close / edit-view-no-update-check / markdown-to-html / mermaid-render / use-dialog-history-stack / delayed-loading / foldable-struct-move / foldable-struct-check / kyou-content-text / use-context-menu-position / use-device-kind / linkify-text / application-config-update-fields-scan / dialog-autofocus / kyou-view-height-source-scan / mi-board-column-layout / use-application-config-view 含む)
+│   ├── classes/             #   ユーティリティクラス (31ファイル, kyou-view-relay / cascade-delete-kyou / confirm-dialog-close / edit-view-no-update-check / markdown-to-html / mermaid-render / use-dialog-history-stack / delayed-loading / foldable-struct-move / foldable-struct-check / kyou-content-text / use-context-menu-position / use-device-kind / linkify-text / application-config-update-fields-scan / dialog-autofocus / kyou-view-height-source-scan / mi-board-column-layout / use-application-config-view 含む)
 │   ├── datas/               #   データモデル (33ファイル, dashboard-config / saved-find-query-config / plaing-time-is-config / mi-re-kyou / append-not-found-tags 含む)
 │   ├── dnote/               #   D-note モジュール (7ファイル, trend-aggregator.test.ts 含む)
 │   ├── kftl/                #   KFTL パーサ (5ファイル)
@@ -36,7 +36,7 @@ src/client/__tests__/
 
 ## テスト内容
 
-### ユニットテスト（1382テスト宣言、130ファイル）
+### ユニットテスト（1389テスト宣言、131ファイル）
 
 | カテゴリ | テスト数（概算） | 内容 |
 |---------|----------------|------|
@@ -48,7 +48,7 @@ src/client/__tests__/
 | ルーター | 1ファイル | 13ルートの定義と遷移（dashboard 含む） |
 | i18n | 1ファイル | 7ロケールのキー完全性 |
 | Service Worker | 1ファイル | Workbox プリキャッシュ、POST キャッシュ、プッシュ通知、`/zip_cache/.*` denylist |
-| ユーティリティ | 30ファイル | deep-equals, format-date-time, looks-like-url, long-press, save-as, delete-gkill-cache, markdown-to-html, mermaid-render, use-dialog-history-stack, delayed-loading, foldable-struct-move, foldable-struct-check（チェックツリーへの単一パス適用が旧実装＝項目ごと全走査と等価であること。O(項目数×ノード数)化するとrep数百の環境で列フォーカス切替が数秒固まる）, kyou-content-text, kyou-view-relay（イベント中継束の網羅）, cascade-delete-kyou（Kyou削除の連鎖削除）, use-confirm-delete-kyou-view, confirm-dialog-close（確認ダイアログが例外時も閉じる）, edit-view-no-update-check（更新なし判定に関連日時を含める）, use-context-menu-position（コンテキストメニューの座標ターゲット）, kyou-reload（引き直し手順と同時リクエストの合流）, use-kyou-list-view-dialog（DNote から開く一覧ダイアログの伝播）, relay-bundle-source-scan（`v-on` の中継束と `@` の二重配線をソース走査で検出）, use-device-kind（PC / タブレット / スマートフォンの判定とシングルトン性）, linkify-text（本文中URLのセグメント分割）, application-config-update-fields-scan（設定保存の詰め替え網羅をソース走査で検出。漏れると保存のたびにゼロ値へ巻き戻る）, dialog-autofocus（ダイアログを開いたときのフォーカス先選び。ヘッダのチェックボックスや readonly の日付欄を掴まないこと）, kyou-view-height-source-scan（行ではない場所にパーセントの高さを渡していないこと。渡すと MiReKyou の参照先が消える）, mi-board-column-layout（Mi板の列見出しの高さが定数とCSSで一致していること）, use-application-config-view（子ダイアログの適用が props を書き換えないこと・ロケール/テーマがキャンセルで戻ること） |
+| ユーティリティ | 31ファイル | deep-equals, format-date-time, looks-like-url, long-press, save-as, delete-gkill-cache, markdown-to-html, mermaid-render, use-dialog-history-stack, delayed-loading, foldable-struct-move, foldable-struct-check（チェックツリーへの単一パス適用が旧実装＝項目ごと全走査と等価であること。O(項目数×ノード数)化するとrep数百の環境で列フォーカス切替が数秒固まる）, kyou-content-text, kyou-view-relay（イベント中継束の網羅）, cascade-delete-kyou（Kyou削除の連鎖削除）, use-confirm-delete-kyou-view, confirm-dialog-close（確認ダイアログが例外時も閉じる）, edit-view-no-update-check（更新なし判定に関連日時を含める）, use-context-menu-position（コンテキストメニューの座標ターゲット）, kyou-reload（引き直し手順と同時リクエストの合流）, use-kyou-list-view-dialog（DNote から開く一覧ダイアログの伝播）, relay-bundle-source-scan（`v-on` の中継束と `@` の二重配線をソース走査で検出）, use-device-kind（PC / タブレット / スマートフォンの判定とシングルトン性）, linkify-text（本文中URLのセグメント分割）, application-config-update-fields-scan（設定保存の詰め替え網羅をソース走査で検出。漏れると保存のたびにゼロ値へ巻き戻る）, dialog-autofocus（ダイアログを開いたときのフォーカス先選び。ヘッダのチェックボックスや readonly の日付欄を掴まないこと）, kyou-view-height-source-scan（行ではない場所にパーセントの高さを渡していないこと。渡すと MiReKyou の参照先が消える）, mi-board-column-layout（Mi板の列見出しの高さが定数とCSSで一致していること）, use-application-config-view（子ダイアログの適用が props を書き換えないこと・ロケール/テーマがキャンセルで戻ること） |
 
 ### E2E テスト (212テスト宣言, 39 specファイル)
 
