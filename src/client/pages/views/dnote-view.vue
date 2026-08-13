@@ -83,6 +83,12 @@
                         :editable="editable" v-if="dnote_definitions[i].trends" v-model="dnote_definitions[i].trends"
                         v-on="errorsMessagesRelayHandlers" @finish_a_aggregate_task="increment_finished_aggregate_task"
                         :ref="(el) => set_trend_table_ref(i, el)" />
+                    <DnoteCorrelationGraphTableView :application_config="application_config" :gkill_api="gkill_api"
+                        :editable="editable" v-if="dnote_definitions[i].correlations"
+                        v-model="dnote_definitions[i].correlations"
+                        v-on="errorsMessagesRelayHandlers"
+                        @finish_a_aggregate_task="increment_finished_aggregate_task"
+                        :ref="(el) => set_correlation_table_ref(i, el)" />
                     <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api"
                         :editable="editable" v-if="dnote_definitions[i].lists" v-model="dnote_definitions[i].lists"
                         v-on="crudRelayHandlers"
@@ -105,6 +111,9 @@
                     </v-list-item>
                     <v-list-item @click="add_dnote_trend_graph_dialog?.show()">
                         <v-list-item-title>{{ i18n.global.t("ADD_DNOTE_TREND_GRAPH_MENU_TITLE") }}</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="add_dnote_correlation_graph_dialog?.show()">
+                        <v-list-item-title>{{ i18n.global.t("ADD_DNOTE_CORRELATION_GRAPH_MENU_TITLE") }}</v-list-item-title>
                     </v-list-item>
                 </v-list>
             </v-menu>
@@ -134,6 +143,10 @@
             v-on="errorsMessagesRelayHandlers"
             @requested_add_dnote_trend_graph="(query: DnoteTrendGraphQuery) => onRequestedAddDnoteTrendGraph(query)"
             ref="add_dnote_trend_graph_dialog" />
+        <AddDnoteCorrelationGraphDialog :application_config="application_config" :gkill_api="gkill_api"
+            v-on="errorsMessagesRelayHandlers"
+            @requested_add_dnote_correlation_graph="(query: DnoteCorrelationGraphQuery) => onRequestedAddDnoteCorrelationGraph(query)"
+            ref="add_dnote_correlation_graph_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
@@ -142,13 +155,16 @@ import { type DnoteViewProps } from '@/pages/views/dnote-view-props'
 import DnoteItemTableView from './dnote-item-table-view.vue'
 import DnoteListTableView from './dnote-list-table-view.vue'
 import DnoteTrendGraphTableView from './dnote-trend-graph-table-view.vue'
+import DnoteCorrelationGraphTableView from './dnote-correlation-graph-table-view.vue'
 import AddDnoteListDialog from '../../pages/dialogs/add-dnote-list-dialog.vue'
 import AddDnoteItemDialog from '../../pages/dialogs/add-dnote-item-dialog.vue'
 import AddDnoteTrendGraphDialog from '../../pages/dialogs/add-dnote-trend-graph-dialog.vue'
+import AddDnoteCorrelationGraphDialog from '../../pages/dialogs/add-dnote-correlation-graph-dialog.vue'
 import { type DnoteEmits } from '@/pages/views/dnote-emits'
 import { useDnoteView } from '@/classes/use-dnote-view'
 import type DnoteListQuery from "@/pages/views/dnote-list-query"
 import type DnoteTrendGraphQuery from "@/pages/views/dnote-trend-graph-query"
+import type { DnoteCorrelationGraphQuery } from "@/classes/dnote/dnote-correlation"
 import type DnoteItem from "@/classes/dnote/dnote-item"
 type DnoteItemData = DnoteItem
 
@@ -160,11 +176,13 @@ const {
     add_dnote_list_dialog,
     add_dnote_item_dialog,
     add_dnote_trend_graph_dialog,
+    add_dnote_correlation_graph_dialog,
 
     // View ref helpers
     set_item_table_ref,
     set_list_table_ref,
     set_trend_table_ref,
+    set_correlation_table_ref,
 
     // State
     dnote_definitions,
@@ -195,6 +213,7 @@ const {
     onRequestedAddDnoteListQuery,
     onRequestedAddDnoteItem,
     onRequestedAddDnoteTrendGraph,
+    onRequestedAddDnoteCorrelationGraph,
     increment_finished_aggregate_task,
 
     // Event relay objects

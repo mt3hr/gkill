@@ -217,6 +217,33 @@ flowchart TD
     Points --> Render[dnote-trend-graph-view.vue が<br>スパークライン描画<br>折れ線 / 棒]
 ```
 
+### 相関グラフの集計フロー（DnoteCorrelationAggregator）
+
+集計要素「相関グラフ」は、指標（2〜10個）それぞれをトレンドグラフと同じ時系列集計に掛けたうえで、
+全指標の総当たりで相関行列を作る。粒度と時間ずれ（lag）は全指標共通。
+これもサーバーAPIは使用せず、すべてクライアント側で処理する。
+
+対応付けはバケットの添字で行う。lag が正なら「行の指標が先、列の指標が後」を意味し、
+日・週・月のどの粒度でも同じ意味になる。記録が1件も無いバケットの0は観測値ではないため、
+どちらか片方でも空なら、その対は相関から除外する（0埋めしたまま相関を取ると相関が水増しされる）。
+
+```mermaid
+flowchart TD
+    Start([相関グラフ集計要求]) --> PerMetric[指標ごとに並行して<br>DnoteTrendAggregatorで時系列集計]
+    PerMetric --> Pairwise[指標の総当たりでセルを作る<br>行 x 列]
+    Pairwise --> Align[バケット添字 + lag で対応付け]
+    Align --> DropUnobserved{両方のバケットに<br>記録がある?}
+    DropUnobserved -->|No| SkipPair[その対を捨てる]
+    DropUnobserved -->|Yes| Collect[散布図の点として集める]
+    SkipPair --> Method
+    Collect --> Method{手法は?}
+    Method -->|spearman| Rank[値を順位へ変換<br>同値は平均順位]
+    Method -->|pearson| Stats
+    Rank --> Stats[相関係数 / p値 / 95%信頼区間を算出<br>correlation-statistics.ts]
+    Stats --> Cells([DnoteCorrelationResult を返却])
+    Cells --> RenderCorr[dnote-correlation-graph-view.vue が<br>ヒートマップ + 散布図描画]
+```
+
 ## 6. ZIP内容閲覧処理フロー
 
 ```mermaid

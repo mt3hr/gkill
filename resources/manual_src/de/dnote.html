@@ -1,7 +1,7 @@
 <!-- title: Aggregationsansicht - Hilfe -->
   <nav class="breadcrumb"><a href="getting-started.html">Erste Schritte</a> &gt; <span>Aggregationsansicht</span></nav>
   <h1>Aggregationsansicht</h1>
-  <p>Bildschirm zur Aggregation und Visualisierung von Lebensprotokoll-Daten basierend auf Bedingungen. Es können drei Typen definiert werden: „Elemente" für einzelne Aggregatwerte, „Listen" für gruppierte Aggregationen nach Schlüssel und „Trenddiagramme" zur Darstellung der zeitlichen Entwicklung.</p>
+  <p>Bildschirm zur Aggregation und Visualisierung von Lebensprotokoll-Daten. Es können Elemente, Listen, Trenddiagramme und Korrelationsdiagramme zum Vergleich mehrerer Metriken definiert werden.</p>
   <div class="tip">
     <strong>Tipp:</strong> Die Aggregationsansicht ist eine Umschaltfunktion innerhalb der LifeLog-Ansicht. Klicken Sie auf das Aggregationssymbol in der Symbolleiste der LifeLog-Ansicht, um sie anzuzeigen.
   </div>
@@ -46,7 +46,7 @@
     </tr>
     <tr>
       <td>＋-Schaltfläche (schwebend)</td>
-      <td>Zeigt ein Menü zur Auswahl zwischen Element hinzufügen, Liste hinzufügen oder Trenddiagramm hinzufügen an.</td>
+      <td>Zeigt ein Menü zum Hinzufügen eines Elements, einer Liste, eines Trenddiagramms oder eines Korrelationsdiagramms an.</td>
     </tr>
   </table>
 
@@ -149,6 +149,11 @@
       <td>Schränkt das Aggregationsziel mit AND/OR-Bedingungen ein.</td>
     </tr>
   </table>
+
+  <h2>Korrelationsdiagramm</h2>
+  <p>Aggregiert 2 bis 10 Metriken nach demselben Tag, derselben Woche oder demselben Monat und zeigt ihre Beziehungen als Heatmap und Streudiagramm. Jede Metrik besitzt Name, Aggregationsziel und Bedingungen.</p>
+  <p>Wählen Sie eine Zelle, um Koeffizient, Anzahl gepaarter Zeiträume, p-Wert, 95%-Konfidenzintervall und Streudiagramm anzuzeigen. Pearson und Spearman stehen zur Verfügung; Spearman-Werte sind analytische Näherungen. Korrelation beweist keine Kausalität.</p>
+  <p>Bei positivem Zeitversatz wird die Zeilenmetrik aus einem früheren Zeitraum mit der Spaltenmetrik aus einem späteren verglichen. Zeiträume ohne eine der Beobachtungen werden ausgeschlossen.</p>
 
   <h2>Bedingungsgruppe bearbeiten</h2>
   <table>

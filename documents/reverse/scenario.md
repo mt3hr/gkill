@@ -6,7 +6,7 @@
 
 既存の設計資料は「1 操作・1 観点」に分解されています。
 
-- [usecase.md](usecase.md) — ユースケースの**カタログ**（86件、1操作ずつ静的に列挙）
+- [usecase.md](usecase.md) — ユースケースの**カタログ**（87件、1操作ずつ静的に列挙）
 - [sequence-diagrams.md](sequence-diagrams.md) — **1操作単位**のシーケンス図（ログイン、データ登録、検索…）
 - [activity-diagrams.md](activity-diagrams.md) — 実装レベルの内部処理フローチャート
 - [screen-transition.md](screen-transition.md) — 画面遷移
@@ -775,33 +775,38 @@ sequenceDiagram
 
 ---
 
-## シナリオ14. 集計ビューで数字を眺め、推移をグラフにする（Dnote）
+## シナリオ14. 集計ビューで数字を眺め、推移と関係をグラフにする（Dnote）
 
-**物語：** 月末に「今月いくら使ったか」「気分の平均はどうだったか」を確認したい。ユーザは rykv の集計ビューを開き、集計項目を並べる。さらに「体重の推移を折れ線で見たい」と思い、トレンドグラフを追加して粒度を「日」にする。
+**物語：** 月末に「今月いくら使ったか」「気分の平均はどうだったか」を確認したい。ユーザは rykv の集計ビューを開き、集計項目を並べる。さらに「体重の推移を折れ線で見たい」と思い、トレンドグラフを追加して粒度を「日」にする。そのうち「歩数が多い日は気分も良いのだろうか」「昨日よく寝ると今日の集中は上がるのか」が気になり、相関グラフを追加して指標を2つ以上並べ、時間ずれ（lag）を1にしてみる。
 
-**裏で何が起きるか：** **集計はすべてクライアント側で行われます。** 専用の集計 API はありません。`get_kyous` で取得済みの Kyou 配列に対して、`Predicate`（条件）→ `KeyGetter`（グルーピングキー）→ `AggregateTarget`（集計対象）の順にクラス群が適用されます。トレンドグラフも同じ配列を `DnoteTrendAggregator` が時系列にまとめ直すだけで、追加のリクエストは発生しません。定義そのものは `ApplicationConfig` の `dnote_json_data` に JSON で保存され、`update_application_config` で永続化されます。
+**裏で何が起きるか：** **集計はすべてクライアント側で行われます。** 専用の集計 API はありません。`get_kyous` で取得済みの Kyou 配列に対して、`Predicate`（条件）→ `KeyGetter`（グルーピングキー）→ `AggregateTarget`（集計対象）の順にクラス群が適用されます。トレンドグラフも同じ配列を `DnoteTrendAggregator` が時系列にまとめ直すだけで、追加のリクエストは発生しません。相関グラフは指標ごとにその時系列集計を回したうえで、`DnoteCorrelationAggregator` が総当たりで相関係数・p値・95%信頼区間を求めます（統計計算も自前で、外部サービスへは出ません）。定義そのものは `ApplicationConfig` の `dnote_json_data` に JSON で保存され、`update_application_config` で永続化されます。
 
 ```mermaid
 sequenceDiagram
     actor User as ユーザ
-    participant View as dnote-view / dnote-trend-graph-view
-    participant Agg as Predicate → KeyGetter → AggregateTarget<br>DnoteTrendAggregator
+    participant View as dnote-view / dnote-trend-graph-view<br>dnote-correlation-graph-view
+    participant Agg as Predicate → KeyGetter → AggregateTarget<br>DnoteTrendAggregator / DnoteCorrelationAggregator
     participant GkillAPI as GkillAPI (TS)
     participant API as GkillServerAPI (Go)
 
-    User->>View: 集計ビューを開く / トレンドグラフを追加
+    User->>View: 集計ビューを開く / トレンドグラフ・相関グラフを追加
     View->>Agg: 表示中の Kyou[] を渡す
     Agg->>Agg: Predicate で対象を絞り込み
     Agg->>Agg: KeyGetter でグループ化（日 / 週 / 月・タグ 等）
     Agg->>Agg: AggregateTarget で合計・平均・件数を算出
-    Agg-->>View: DnoteItem[] / 時系列データ
-    View-->>User: 集計値・リスト・折れ線/棒グラフを描画
+    Agg->>Agg: 相関グラフは指標の総当たりで係数・p値・信頼区間を算出
+    Agg-->>View: DnoteItem[] / 時系列データ / 相関行列
+    View-->>User: 集計値・リスト・折れ線/棒グラフ・ヒートマップ+散布図を描画
     User->>View: 定義を保存
     View->>GkillAPI: update_application_config(dnote_json_data)
     GkillAPI->>API: POST /api/update_application_config
     API-->>GkillAPI: {messages}
     Note over View,API: サーバへ行くのは「定義の保存」だけ。<br>集計計算そのものはネットワークを使わない
 ```
+
+> 相関はあくまで「一緒に動いているか」であって因果ではない。画面にもその旨の注意書きが出る。
+> 詳細は [class-diagrams.md](class-diagrams.md) の「Dnote 相関グラフ集計」と
+> [activity-diagrams.md](activity-diagrams.md) の「相関グラフの集計フロー」。
 
 **関連：** 集計クラス群の一覧は [class-diagrams.md](class-diagrams.md)、処理フローは [activity-diagrams.md](activity-diagrams.md) の「Dnote 集計処理フロー」、用語は [glossary.md](glossary.md) の「Dnote 集計システム用語」。
 

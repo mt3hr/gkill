@@ -1,7 +1,7 @@
 <!-- title: Aggregation View - Help -->
   <nav class="breadcrumb"><a href="getting-started.html">Getting Started</a> &gt; <span>Aggregation View</span></nav>
   <h1>Aggregation View</h1>
-  <p>A screen for aggregating and visualizing life log data based on conditions. You can define three types: "Items" for single aggregate values, "Lists" for grouped aggregations by key, and "Trend Graphs" for visualizing changes over time.</p>
+  <p>A screen for aggregating and visualizing life log data based on conditions. You can define Items, Lists, Trend Graphs, and Correlation Graphs for comparing multiple metrics.</p>
   <div class="tip">
     <strong>Tip:</strong> The Aggregation View is a toggle feature within the Life Log View screen. Click the aggregation icon in the Life Log View toolbar to display it.
   </div>
@@ -46,7 +46,7 @@
     </tr>
     <tr>
       <td>+ Button (floating)</td>
-      <td>Displays a menu to choose between adding an Item, a List, or a Trend Graph.</td>
+      <td>Displays a menu for adding an Item, List, Trend Graph, or Correlation Graph.</td>
     </tr>
   </table>
 
@@ -149,6 +149,11 @@
       <td>Narrows down the aggregation target with AND/OR conditions.</td>
     </tr>
   </table>
+
+  <h2>Correlation Graph</h2>
+  <p>Aggregate 2 to 10 metrics by the same day, week, or month and display their relationships as a heatmap and scatter plot. Each metric has its own name, aggregate target, and conditions.</p>
+  <p>Select a cell to see the coefficient, number of paired periods, p-value, 95% confidence interval, and scatter plot. Pearson and Spearman are available; Spearman p-values and intervals are analytical approximations. Correlation does not establish causation.</p>
+  <p>With a positive time lag, the row metric is compared from an earlier period to the column metric from a later period. Periods missing either observation are excluded.</p>
 
   <h2>Predicate Group Editing</h2>
   <table>

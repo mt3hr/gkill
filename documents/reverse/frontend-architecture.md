@@ -52,7 +52,7 @@ src/client/
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、246ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、252ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
@@ -74,8 +74,8 @@ src/client/
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/                       # Viewコンポーネント (189)
-│   └── dialogs/                     # ダイアログコンポーネント (103, Esc閉じ対応)
+│   ├── views/                       # Viewコンポーネント (197)
+│   └── dialogs/                     # ダイアログコンポーネント (111, Esc閉じ対応)
 ├── plugins/
 │   └── vuetify.ts                   # Vuetify設定・テーマ定義
 └── router/
@@ -95,8 +95,8 @@ Page（ルートページ）
 | 層 | 配置 | 件数 | 責務 |
 |---|---|---|---|
 | **Page** | `pages/*.vue` | 15 | ルーティング先。ページ全体のレイアウト（13ルート＋共有用2ページ） |
-| **View** | `pages/views/*.vue` | 189 | データ型ごとの追加/編集/一覧表示 |
-| **Dialog** | `pages/dialogs/*.vue` | 103 | モーダル操作（確認、詳細編集等） |
+| **View** | `pages/views/*.vue` | 197 | データ型ごとの追加/編集/一覧表示 |
+| **Dialog** | `pages/dialogs/*.vue` | 111 | モーダル操作（確認、詳細編集等） |
 
 ### 命名規則
 
@@ -146,11 +146,15 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 | `edit-dnote-trend-graph-view.vue` / `edit-dnote-trend-graph-dialog.vue` | トレンドグラフ編集 |
 | `confirm-delete-dnote-trend-graph-view.vue` / `confirm-delete-dnote-trend-graph-dialog.vue` | 削除確認 |
 
+### Dnote相関グラフ コンポーネント
+
+取得済みKyouと既存の `DnoteTrendAggregator` を再利用し、2～10指標の相関ヒートマップと選択セルの散布図をクライアント側で表示する。追加・編集・削除は共通の相関グラフダイアログを使い、設定は `dnote_json_data` 内へ保存する。
+
 **iframe セキュリティ:** `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）でセッションCookieを隔離する。
 
 ### ダイアログ アクセシビリティ
 
-110ダイアログ中86件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
+113ダイアログ中86件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
 
 | 機能 | 説明 |
 |------|------|
@@ -202,7 +206,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（246ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（252ファイル） |
 
 ### ComponentRef 型
 
