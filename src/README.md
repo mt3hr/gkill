@@ -79,8 +79,8 @@ src/
 │   │   ├── dnote/   #     Dynamic Note (集計・フィルタ)
 │   │   └── kftl/    #     KFTL パーサ
 │   └── pages/       #   Vue ページ・ビュー・ダイアログ
-│       ├── views/   #     View コンポーネント (194個)
-│       └── dialogs/ #     Dialog コンポーネント (110個)
+│       ├── views/   #     View コンポーネント (201個)
+│       └── dialogs/ #     Dialog コンポーネント (113個)
 ├── server/          # Go バックエンド
 │   └── gkill/
 │       ├── api/     #   HTTP API (90エンドポイント)
@@ -96,7 +96,10 @@ src/
 │   ├── examples/gkill_example/   # サンプル実装
 │   ├── gkill_plugin_chatgpt/     # ChatGPT 会話履歴
 │   ├── gkill_plugin_claudeai/    # Claude.ai 会話履歴
-│   └── gkill_plugin_claudecode/  # Claude Code チャットログ
+│   ├── gkill_plugin_claudecode/  # Claude Code チャットログ
+│   ├── gkill_plugin_codex/       # Codex CLI セッションログ
+│   ├── gkill_plugin_fitbit/      # Google Takeout の Fitbit / Google Health
+│   └── gkill_plugin_google_locationhistory/  # Google Takeout のロケーション履歴
 ├── android/         # Android APK ラッパー
 ├── wear_os/         # Wear OS (Pixel Watch) KFTL 入力アプリ
 │   ├── phone_companion/  # スマホ側コンパニオン
@@ -224,7 +227,7 @@ npm run go_install
 | `wear_os/` | [wear_os/README.md](wear_os/README.md) |
 | `locales/` | [locales/README.md](locales/README.md) |
 | `mcp/` | [mcp/README.md](mcp/README.md) |
-| `plugins/` | [plugins/README.md](plugins/README.md)（各プラグインにも個別の README がある: [gkill_example](plugins/examples/gkill_example/README.md) / [chatgpt](plugins/gkill_plugin_chatgpt/README.md) / [claudeai](plugins/gkill_plugin_claudeai/README.md) / [claudecode](plugins/gkill_plugin_claudecode/README.md)） |
+| `plugins/` | [plugins/README.md](plugins/README.md)（各プラグインにも個別の README がある: [gkill_example](plugins/examples/gkill_example/README.md) / [chatgpt](plugins/gkill_plugin_chatgpt/README.md) / [claudeai](plugins/gkill_plugin_claudeai/README.md) / [claudecode](plugins/gkill_plugin_claudecode/README.md) / [codex](plugins/gkill_plugin_codex/README.md) / [fitbit](plugins/gkill_plugin_fitbit/README.md) / [google_locationhistory](plugins/gkill_plugin_google_locationhistory/README.md)） |
 | `tools/` | [tools/README.md](tools/README.md) |
 
 ## 各サブディレクトリの ABOUT_TEST.md
