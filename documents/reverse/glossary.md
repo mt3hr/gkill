@@ -33,10 +33,10 @@ gkill で使われる独自用語・略称・概念の定義集。コードベ�
 |------|------|
 | **GitCommitLog** | ローカル Git リポジトリからコミットログを読み取ってキャッシュする型。コミットメッセージ・追加行数（`Addition`）・削除行数（`Deletion`）を含む |
 | **GPSLog** | GPX ファイルから GPS 位置情報を読み取る型 |
-| **PluginKyou** | 外部プラグインバイナリが提供する Kyou。`DataType` はプラグイン定義による（例: `chatgpt_conversation`, `claude_conversation`, `claude_code_turn`）。コンテンツ表示は `GetContentHTML` が返す HTML を iframe (srcdoc) で描画する |
+| **PluginKyou** | 外部プラグインバイナリが提供する Kyou。`DataType` はプラグイン定義による（例: `chatgpt_conversation`, `claude_conversation`, `claude_code_turn`, `codex_turn`）。コンテンツ表示は `GetContentHTML` が返す HTML を iframe (srcdoc) で描画する |
 | **PluginRepository** | プラグインバイナリをサブプロセスとして起動し stdio 改行区切り JSON で通信するリポジトリ実装（`src/server/gkill/dao/reps/plugin_repository_impl.go`）。`RepType` を持たず4層パターンにも属さない |
 | **PluginManager** | ユーザごとにプラグインディレクトリを走査し、`manifest.json` を持つものを `PluginRepository` として登録する（`src/server/gkill/dao/plugin_manager.go`） |
-| **PluginManifest** | プラグインのメタデータ（`protocol_version`, `name`, `version`, `description`, `data_type`, `rep_name`, `executable`, `min_gkill_version` の8フィールド）。`name` はディレクトリ名と一致させる。同梱プラグイン3本（chatgpt / claudeai / claudecode）はバイナリに `//go:embed` しており `--gkill-print-manifest` で出力できる（`--gkill-print-config` で既定の `config.json` も出せる）。`gkill_example` は埋め込みもフラグも持たない |
+| **PluginManifest** | プラグインのメタデータ（`protocol_version`, `name`, `version`, `description`, `data_type`, `rep_name`, `executable`, `min_gkill_version` の8フィールド）。`name` はディレクトリ名と一致させる。同梱プラグイン6本（chatgpt / claudeai / claudecode / codex / fitbit / google_locationhistory）はバイナリに `//go:embed` しており `--gkill-print-manifest` で出力できる（`--gkill-print-config` で既定の `config.json` も出せる）。`gkill_example` は埋め込みもフラグも持たない |
 | **プラグインディレクトリ** | `$GKILL_HOME/plugins/{userID}/{pluginName}/` — manifest.json・実行ファイル・`config.json` を格納するディレクトリ |
 | **plugin_cache** | プラグインの SQLite3 キャッシュ置き場。`$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db`。プラグインディレクトリではなく gkill のキャッシュディレクトリ配下にあるため `clear_cache plugin` で削除できる |
 | **source_dirs** | プラグインの `config.json` で取り込み元フォルダを指定するキー。グロブ・`~`・環境変数を展開し、検索のたびに読み直される |
@@ -161,7 +161,7 @@ KFTL（Key Fairy Textbase Lifelogger）は、テキストで複数のデータ�
 
 ## 7. Dnote 集計システム用語
 
-Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateTarget の3段階で処理する。集計要素として集計項目・集計リスト・トレンドグラフの3種類を定義タブ内に配置できる。
+Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateTarget の3段階で処理する。集計要素として集計項目・集計リスト・トレンドグラフ・相関グラフの4種類を定義タブ内に配置できる。
 
 ### 処理コンポーネント
 
@@ -171,6 +171,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | **KeyGetter / 集計キー** | 集計キー | グルーピング基準。関連日・関連年月・関連曜日・タグ・データタイプ・タイトル・店名・気分値等から選択 |
 | **AggregateTarget / 集計対象** | 集計対象 | 集計関数。件数・合計・平均・最大値・最小値を、支出額・気分値・作業時間・コード行数等に適用可能 |
 | **DnoteTrendGraph / トレンドグラフ** | トレンドグラフ | 時系列集計グラフ。取得済み Kyou を `DnoteTrendAggregator`（`src/client/classes/dnote/dnote-trend-aggregator.ts`）が集計粒度（日/週/月）で時系列集計し、スパークライン（折れ線/棒）で表示する。集計項目・集計リストと並ぶ第3の集計要素。サーバーAPIを持たずクライアント側のみで完結する |
+| **DnoteCorrelationGraph / 相関グラフ** | 相関グラフ | 2～10個の独立した指標を同じ粒度で集計し、Pearson／Spearmanの方向付き相関行列と散布図を表示する第4の集計要素。サーバーAPIを持たずクライアント側のみで完結する |
 
 ### Predicate の主なカテゴリ
 
@@ -284,7 +285,7 @@ Dnote はデータ集計・分析機能。Predicate → KeyGetter → AggregateT
 | Service Worker | `src/client/serviceWorker.ts` | PWA・キャッシュ・Push通知・Web Share Target |
 | Vuetify 設定 | `src/client/plugins/vuetify.ts` | テーマカラー定義 |
 | i18n 設定 | `src/client/i18n.ts` | 7言語の設定・読み込み |
-| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（881キー/言語） |
+| ロケールファイル | `src/locales/*.json` | ja, en, zh, ko, es, fr, de（902キー/言語） |
 
 ### その他
 
