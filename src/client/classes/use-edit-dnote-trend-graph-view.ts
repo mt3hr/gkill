@@ -2,7 +2,7 @@
 
 import { nextTick, ref, type Ref } from 'vue'
 import type PredicateGroupType from '@/classes/dnote/predicate-group-type'
-import type Predicate from '@/classes/dnote/predicate'
+import { predicate_struct_from_json, predicate_struct_to_json } from '@/classes/dnote/predicate-struct-json'
 import aggregate_target_menu_items from '@/classes/dnote/pulldown-menu/aggregate-target-menu-items'
 import trend_granularity_menu_items from '@/classes/dnote/pulldown-menu/trend-granularity-menu-items'
 import trend_chart_type_menu_items from '@/classes/dnote/pulldown-menu/trend-chart-type-menu-items'
@@ -62,36 +62,6 @@ export function useEditDnoteTrendGraphView(options: {
 
         emits('requested_update_dnote_trend_graph', new_dnote_trend_graph_query)
         emits('requested_close_dialog')
-    }
-
-    function predicate_struct_to_json(group: PredicateGroupType | Predicate): Record<string, unknown> {
-        if (is_group(group)) {
-            return {
-                logic: group.logic,
-                predicates: group.predicates.map(p => predicate_struct_to_json(p))
-            }
-        } else {
-            return { type: group.type, value: group.value }
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function predicate_struct_from_json(json: any): PredicateGroupType | Predicate {
-        if (json.logic && Array.isArray(json.predicates)) {
-            return {
-                logic: json.logic,
-                predicates: json.predicates.map(predicate_struct_from_json)
-            }
-        } else {
-            return {
-                type: json.type,
-                value: json.value
-            }
-        }
-    }
-
-    function is_group(p: Predicate | PredicateGroupType): p is PredicateGroupType {
-        return 'logic' in p && Array.isArray(p.predicates)
     }
 
     return {

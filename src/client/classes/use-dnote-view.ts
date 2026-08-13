@@ -4,6 +4,11 @@ import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import DnoteItem from '@/classes/dnote/dnote-item'
 import DnoteListQuery from '@/pages/views/dnote-list-query'
 import DnoteTrendGraphQuery from '@/pages/views/dnote-trend-graph-query'
+import {
+    parse_dnote_correlation_graph,
+    serialize_dnote_correlation_graph,
+    type DnoteCorrelationGraphQuery,
+} from '@/classes/dnote/dnote-correlation'
 import type { DnoteEmits } from '@/pages/views/dnote-emits'
 import type { DnoteViewProps } from '@/pages/views/dnote-view-props'
 import register_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_key_getter_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
@@ -23,6 +28,7 @@ export interface DnoteDefinition {
     items: Array<Array<DnoteItem>>
     lists: Array<DnoteListQuery>
     trends: Array<DnoteTrendGraphQuery>
+    correlations: Array<DnoteCorrelationGraphQuery>
 }
 
 export function useDnoteView(options: {
@@ -35,11 +41,13 @@ export function useDnoteView(options: {
     const add_dnote_list_dialog = ref<ComponentRef | null>(null)
     const add_dnote_item_dialog = ref<ComponentRef | null>(null)
     const add_dnote_trend_graph_dialog = ref<ComponentRef | null>(null)
+    const add_dnote_correlation_graph_dialog = ref<ComponentRef | null>(null)
 
     // ── View refs (Map-based, for dynamic :ref bindings) ──
     const item_view_refs = new Map<number, ComponentRef>()
     const list_view_refs = new Map<number, ComponentRef>()
     const trend_view_refs = new Map<number, ComponentRef>()
+    const correlation_view_refs = new Map<number, ComponentRef>()
 
     function set_item_table_ref(i: number, el: ComponentRef | null): void {
         if (el) item_view_refs.set(i, el)
@@ -52,6 +60,10 @@ export function useDnoteView(options: {
     function set_trend_table_ref(i: number, el: ComponentRef | null): void {
         if (el) trend_view_refs.set(i, el)
         else trend_view_refs.delete(i)
+    }
+    function set_correlation_table_ref(i: number, el: ComponentRef | null): void {
+        if (el) correlation_view_refs.set(i, el)
+        else correlation_view_refs.delete(i)
     }
 
     // ── State refs ──
@@ -124,6 +136,20 @@ export function useDnoteView(options: {
         }
     })
 
+    const dnote_correlation_graph_view_data = computed({
+        get: () => {
+            if (dnote_definitions.value.length === 0) return [] as Array<DnoteCorrelationGraphQuery>
+            const index = current_definition_index.value
+            const safe_index = index >= 0 && index < dnote_definitions.value.length ? index : 0
+            return dnote_definitions.value[safe_index].correlations
+        },
+        set: (value: Array<DnoteCorrelationGraphQuery>) => {
+            if (dnote_definitions.value.length === 0) return
+            const index = current_definition_index.value
+            if (index >= 0 && index < dnote_definitions.value.length) dnote_definitions.value[index].correlations = value
+        },
+    })
+
     // ── Watchers ──
     watch(() => props.application_config, () => {
         load_from_application_config()
@@ -152,6 +178,9 @@ export function useDnoteView(options: {
             for (const ref of trend_view_refs.values()) {
                 await ref.reset()
             }
+            for (const ref of correlation_view_refs.values()) {
+                await ref.reset()
+            }
         })
     }
 
@@ -165,6 +194,10 @@ export function useDnoteView(options: {
 
     async function load_trend_graphs(ac: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<void> {
         return await trend_view_refs.get(current_definition_index.value)?.load_trend_graph(ac, kyous, find_kyou_query, kyou_is_loaded)
+    }
+
+    async function load_correlation_graphs(ac: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<void> {
+        return await correlation_view_refs.get(current_definition_index.value)?.load_correlation(ac, kyous, find_kyou_query, kyou_is_loaded)
     }
 
     function parse_single_definition_json(def_json: Record<string, unknown>): DnoteDefinition {
@@ -207,10 +240,12 @@ export function useDnoteView(options: {
             query.chart_type = query_json.chart_type === 'bar' ? 'bar' : 'line'
             return query
         })
+        const correlations: Array<DnoteCorrelationGraphQuery> = ((def_json && def_json.dnote_correlation_graph_view_data ? def_json.dnote_correlation_graph_view_data : []) as Array<Record<string, unknown>> || [])
+            .map(parse_dnote_correlation_graph)
         if (items.length === 0) {
             items.push(new Array<DnoteItem>())
         }
-        return { name, items, lists, trends }
+        return { name, items, lists, trends, correlations }
     }
 
     function serialize_single_definition(def: DnoteDefinition): Record<string, unknown> {
@@ -262,11 +297,14 @@ export function useDnoteView(options: {
             dnote_trend_graph_view_data_serialized.push(record)
         }
 
+        const dnote_correlation_graph_view_data_serialized = def.correlations.map(serialize_dnote_correlation_graph)
+
         return {
             name: def.name,
             dnote_item_table_view_data: dnote_item_table_view_data_serialized,
             dnote_list_item_table_view_data: dnote_list_item_table_view_data_serialized,
             dnote_trend_graph_view_data: dnote_trend_graph_view_data_serialized,
+            dnote_correlation_graph_view_data: dnote_correlation_graph_view_data_serialized,
         }
     }
 
@@ -279,7 +317,7 @@ export function useDnoteView(options: {
         let definitions_json: Array<Record<string, unknown>>
         if (Array.isArray(json)) {
             definitions_json = json as Array<Record<string, unknown>>
-        } else if (json && typeof json === 'object' && ((json as Record<string, unknown>).dnote_item_table_view_data || (json as Record<string, unknown>).dnote_list_item_table_view_data)) {
+        } else if (json && typeof json === 'object' && ((json as Record<string, unknown>).dnote_item_table_view_data || (json as Record<string, unknown>).dnote_list_item_table_view_data || (json as Record<string, unknown>).dnote_correlation_graph_view_data)) {
             definitions_json = [json as Record<string, unknown>]
         } else {
             definitions_json = []
@@ -307,6 +345,7 @@ export function useDnoteView(options: {
         }
         estimate_aggregate_task.value += dnote_list_item_table_view_data.value.length
         estimate_aggregate_task.value += dnote_trend_graph_view_data.value.length
+        estimate_aggregate_task.value += dnote_correlation_graph_view_data.value.length
         target_kyous_count.value = loaded_kyous.value.length
         getted_kyous_count.value = loaded_kyous.value.length
 
@@ -316,12 +355,14 @@ export function useDnoteView(options: {
         await item_view_refs.get(current_definition_index.value)?.reset()
         await list_view_refs.get(current_definition_index.value)?.reset()
         await trend_view_refs.get(current_definition_index.value)?.reset()
+        await correlation_view_refs.get(current_definition_index.value)?.reset()
 
         const kyou_is_loaded = true
         const wait_promises = new Array<Promise<unknown>>()
         wait_promises.push(load_aggregated_value(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
         wait_promises.push(load_aggregate_grouping_list(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
         wait_promises.push(load_trend_graphs(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
+        wait_promises.push(load_correlation_graphs(abort_controller.value, loaded_kyous.value, last_reload_query.value, kyou_is_loaded))
         await Promise.all(wait_promises)
         is_loading.value = false
     }
@@ -360,6 +401,7 @@ export function useDnoteView(options: {
         }
         estimate_aggregate_task.value += dnote_list_item_table_view_data.value.length
         estimate_aggregate_task.value += dnote_trend_graph_view_data.value.length
+        estimate_aggregate_task.value += dnote_correlation_graph_view_data.value.length
 
         const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous)
         const kyou_is_loaded = true
@@ -367,6 +409,7 @@ export function useDnoteView(options: {
         wait_promises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
         wait_promises.push(load_aggregate_grouping_list(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
         wait_promises.push(load_trend_graphs(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
+        wait_promises.push(load_correlation_graphs(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
         await Promise.all(wait_promises)
         is_loading.value = false
         loaded_kyous.value = cloned_kyou
@@ -391,6 +434,7 @@ export function useDnoteView(options: {
             items: [new Array<DnoteItem>()],
             lists: new Array<DnoteListQuery>(),
             trends: new Array<DnoteTrendGraphQuery>(),
+            correlations: new Array<DnoteCorrelationGraphQuery>(),
         }
         dnote_definitions.value.push(new_def)
         current_definition_index.value = dnote_definitions.value.length - 1
@@ -535,6 +579,11 @@ export function useDnoteView(options: {
         load_trend_graphs(abort_controller.value, [], new FindKyouQuery(), true)
     }
 
+    function onRequestedAddDnoteCorrelationGraph(dnote_correlation_graph_query: DnoteCorrelationGraphQuery): void {
+        dnote_correlation_graph_view_data.value.push(dnote_correlation_graph_query)
+        load_correlation_graphs(abort_controller.value, [], new FindKyouQuery(), true)
+    }
+
     function increment_finished_aggregate_task(): void {
         finished_aggregate_task.value++
     }
@@ -562,14 +611,17 @@ export function useDnoteView(options: {
         add_dnote_list_dialog,
         add_dnote_item_dialog,
         add_dnote_trend_graph_dialog,
+        add_dnote_correlation_graph_dialog,
 
         // View ref helpers
         item_view_refs,
         list_view_refs,
         trend_view_refs,
+        correlation_view_refs,
         set_item_table_ref,
         set_list_table_ref,
         set_trend_table_ref,
+        set_correlation_table_ref,
 
         // State
         dnote_definitions,
@@ -589,6 +641,7 @@ export function useDnoteView(options: {
         dnote_item_table_view_data,
         dnote_list_item_table_view_data,
         dnote_trend_graph_view_data,
+        dnote_correlation_graph_view_data,
 
         // Business logic (exposed for defineExpose)
         reload,
@@ -604,6 +657,7 @@ export function useDnoteView(options: {
         onRequestedAddDnoteListQuery,
         onRequestedAddDnoteItem,
         onRequestedAddDnoteTrendGraph,
+        onRequestedAddDnoteCorrelationGraph,
         increment_finished_aggregate_task,
 
         // Event relay objects

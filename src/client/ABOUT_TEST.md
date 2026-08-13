@@ -2,7 +2,7 @@
 
 ## 概要
 
-Vue 3 フロントエンドのテスト。ユニットテスト（1360テスト宣言、128ファイル）と E2E テスト（215テスト宣言、40ファイル）の合計1575テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計をカバーする。
+Vue 3 フロントエンドのテスト。ユニットテスト（1382テスト宣言、130ファイル）と E2E テスト（215テスト宣言、40ファイル）の合計1597テスト宣言で、API クライアント、データモデル、パーサ、Composable、ルーター、i18n、Service Worker、全13ルート + CRUD操作フロー + 設定機能テスト + 回帰テスト + クリップボード保存機能テスト + ダッシュボード機能テスト + Markdown/Mermaid表示 + トレンドグラフ集計 + 相関グラフの統計計算をカバーする。
 
 ## テストフレームワーク
 
@@ -19,7 +19,7 @@ src/client/__tests__/
 │   ├── datas/               #   データモデル (33ファイル, dashboard-config / saved-find-query-config / plaing-time-is-config / mi-re-kyou / append-not-found-tags 含む)
 │   ├── dnote/               #   D-note モジュール (7ファイル, trend-aggregator.test.ts 含む)
 │   ├── kftl/                #   KFTL パーサ (5ファイル)
-│   ├── composables/         #   Vue Composable (42ファイル, kyou-view / idf-kyou-view / re-kyou-view / mi-re-kyou-view / save-clipboard-to-file-dialog / rykv-view-search-routing / mi-view-search-routing / rykv-sidebar-saved-query-apply / mi-sidebar-saved-query-apply / mi-board-query / kyou-list-view-loading / sidebar-child-query-sync-emission / kyou-list-view-scroll-to / rep-query-summary-detail / find-query-editor-dialog-default-signal 含む)
+│   ├── composables/         #   Vue Composable (43ファイル, kyou-view / idf-kyou-view / re-kyou-view / mi-re-kyou-view / save-clipboard-to-file-dialog / rykv-view-search-routing / mi-view-search-routing / rykv-sidebar-saved-query-apply / mi-sidebar-saved-query-apply / mi-board-query / kyou-list-view-loading / sidebar-child-query-sync-emission / kyou-list-view-scroll-to / rep-query-summary-detail / find-query-editor-dialog-default-signal 含む)
 │   ├── router.test.ts       #   ルーター (13ルート, dashboard 含む)
 │   ├── i18n-completeness.test.ts  #  i18n 完全性 (7ロケール)
 │   └── service-worker.test.ts     #  Service Worker
@@ -36,15 +36,15 @@ src/client/__tests__/
 
 ## テスト内容
 
-### ユニットテスト（1360テスト宣言、128ファイル）
+### ユニットテスト（1382テスト宣言、130ファイル）
 
 | カテゴリ | テスト数（概算） | 内容 |
 |---------|----------------|------|
 | GkillAPI | 多数 | 全11データ型の CRUD、設定、共有、セッション管理 |
 | データモデル | 29ファイル | 各データ型の生成・代入・シリアライゼーション（DashboardConfig / MiReKyou 含む）+ タグ付与の横断検証 |
-| D-note | 7ファイル | 述語関数、キー取得、集計ターゲット、アグリゲータ、トレンドグラフ集計（trend-aggregator） |
+| D-note | 8ファイル | 述語関数、キー取得、集計ターゲット、アグリゲータ、トレンドグラフ集計（trend-aggregator）、相関グラフの統計・ペア対応付け（correlation-aggregator） |
 | KFTL パーサ | 5ファイル | 構文解析、型判定、リクエスト生成 |
-| Composable | 42ファイル | 追加/編集ビュー、コンテキストメニュー、削除確認、クリップボード保存、ページ/クエリ Composable、Kyouビュー（未取得時の日時非表示・読み込み中表示）、IDFKyouビュー（Markdown表示）、ReKyou / MiReKyou ビュー（参照先なしの終端状態、参照先の更新通知での引き直し）、Dnote 中継チェーン（`requested_reload_kyou` が親まで届くこと）、rykv/mi の列×検索ルーティング（検索結果が検索した列に届き最後の条件が勝つこと、フォーカス切替のflush中に届く機械的updated_queryを検索にしないこと）、mi 板選択のフォーカス列追随、KyouListView のローディング表示と `scroll_to` リトライの世代破棄・上限打ち切り、サイドバー子クエリビュー（TimeIs/Map/Calendar）の「props同期ではemitしない」原則、RepQuery のプロファイル×記録分類→記録先詳細算出（例外後も loading が復帰して算出が生き残ること）、検索条件エディタダイアログの初期値規則（query_id空=未セットの印を潰さないこと）、mi サイドバー/検索条件エディタの `inited` 集約（画面から外した節のフラグを残すとスピナーのまま固まるため、フラグ集合を固定する）、パスワードリセットリンク表示（URLにuser_idを載せること・有効期限の表示と期限切れ判定・リンク再発行）と自分自身のアカウント判定 |
+| Composable | 43ファイル | 追加/編集ビュー、コンテキストメニュー、削除確認、クリップボード保存、ページ/クエリ Composable、Kyouビュー（未取得時の日時非表示・読み込み中表示）、IDFKyouビュー（Markdown表示）、ReKyou / MiReKyou ビュー（参照先なしの終端状態、参照先の更新通知での引き直し）、Dnote 中継チェーン（`requested_reload_kyou` が親まで届くこと）、rykv/mi の列×検索ルーティング（検索結果が検索した列に届き最後の条件が勝つこと、フォーカス切替のflush中に届く機械的updated_queryを検索にしないこと）、mi 板選択のフォーカス列追随、KyouListView のローディング表示と `scroll_to` リトライの世代破棄・上限打ち切り、サイドバー子クエリビュー（TimeIs/Map/Calendar）の「props同期ではemitしない」原則、RepQuery のプロファイル×記録分類→記録先詳細算出（例外後も loading が復帰して算出が生き残ること）、検索条件エディタダイアログの初期値規則（query_id空=未セットの印を潰さないこと）、mi サイドバー/検索条件エディタの `inited` 集約（画面から外した節のフラグを残すとスピナーのまま固まるため、フラグ集合を固定する）、パスワードリセットリンク表示（URLにuser_idを載せること・有効期限の表示と期限切れ判定・リンク再発行）と自分自身のアカウント判定 |
 | ルーター | 1ファイル | 13ルートの定義と遷移（dashboard 含む） |
 | i18n | 1ファイル | 7ロケールのキー完全性 |
 | Service Worker | 1ファイル | Workbox プリキャッシュ、POST キャッシュ、プッシュ通知、`/zip_cache/.*` denylist |
