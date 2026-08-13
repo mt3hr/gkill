@@ -703,47 +703,6 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 	return true, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) ExtractUpdatedLatestDataRepositoryAddressDatas(ctx context.Context, latestDataRepositoryAddresses []LatestDataRepositoryAddress) ([]LatestDataRepositoryAddress, error) {
-	existlatestDataRepositoryAddresses, err := l.GetAllLatestDataRepositoryAddresses(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
-		return nil, err
-	}
-
-	latestDataRepositoryAddressMap := map[string]LatestDataRepositoryAddress{}
-	for _, latestDataRepositoryAddress := range existlatestDataRepositoryAddresses {
-		latestDataRepositoryAddressMap[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
-	}
-
-	// 内容が更新された（ハッシュ一が在しないデータのみを抽出する
-	notExistsLatestDataRepositoryAddresses := []LatestDataRepositoryAddress{}
-	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-		if existLatestDataRepositoryAddress, exist := latestDataRepositoryAddressMap[latestDataRepositoryAddress.TargetID]; exist {
-			if existLatestDataRepositoryAddress.DataUpdateTime.Before(latestDataRepositoryAddress.DataUpdateTime) {
-				notExistsLatestDataRepositoryAddresses = append(notExistsLatestDataRepositoryAddresses, latestDataRepositoryAddress)
-			}
-		} else {
-			notExistsLatestDataRepositoryAddresses = append(notExistsLatestDataRepositoryAddresses, latestDataRepositoryAddress)
-		}
-	}
-	return notExistsLatestDataRepositoryAddresses, nil
-}
-
-func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddressesData(ctx context.Context, latestDataRepositoryAddresses []LatestDataRepositoryAddress) error {
-	notExistsLatestDataRepositoryAddresses, err := l.ExtractUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
-	if err != nil {
-		err = fmt.Errorf("error at add or update latest data repository addresses: %w", err)
-		return err
-	}
-	// いれる
-	_, err = l.AddOrUpdateLatestDataRepositoryAddresses(ctx, notExistsLatestDataRepositoryAddresses)
-	if err != nil {
-		err = fmt.Errorf("error at add or update latest data repository addresses: %w", err)
-		return err
-	}
-	return nil
-}
-
 func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) error {
 	l.m.Lock()
 	defer l.m.Unlock()
