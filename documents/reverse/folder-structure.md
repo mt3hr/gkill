@@ -46,7 +46,7 @@ src/
 ├── android/      # Android APKラッパー
 ├── wear_os/      # Wear OSアプリ（phone_companion + watch_app）
 ├── mcp/          # MCPサーバー（AI連携用）
-├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode）
+├── plugins/      # スタンドアロンプラグインバイナリ（examples/gkill_example, gkill_plugin_chatgpt, gkill_plugin_claudeai, gkill_plugin_claudecode, gkill_plugin_codex, gkill_plugin_fitbit, gkill_plugin_google_locationhistory）
 ├── locales/      # i18nリソース（7言語対応）
 ├── tools/        # ユーティリティスクリプト
 └── README.md     # 実装資料への導線
@@ -79,8 +79,8 @@ src/client/
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/              # ビューコンポーネント（194ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（110ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（201ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（113ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
@@ -96,7 +96,7 @@ src/client/
 │   ├── kftl/               # KFTLパーサー（41ステートメント型）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（246ファイル）
+│   └── use-*.ts            # Composition関数群（252ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
@@ -257,18 +257,22 @@ gkill本体とは独立してビルドされるプラグインバイナリです
 ```
 src/plugins/
 ├── examples/
-│   └── gkill_example/         # サンプルプラグイン（固定のKyouレスポンスを返す）
-├── gkill_plugin_chatgpt/      # ChatGPT会話履歴プラグイン
-├── gkill_plugin_claudeai/     # Claude.ai会話履歴プラグイン
-├── gkill_plugin_claudecode/   # Claude Code チャットログプラグイン
+│   └── gkill_example/                  # サンプルプラグイン（固定のKyouレスポンスを返す）
+├── gkill_plugin_chatgpt/               # ChatGPT会話履歴プラグイン
+├── gkill_plugin_claudeai/              # Claude.ai会話履歴プラグイン
+├── gkill_plugin_claudecode/            # Claude Code チャットログプラグイン
+├── gkill_plugin_codex/                 # Codex CLI セッションログプラグイン
+├── gkill_plugin_fitbit/                # Google Takeout の Fitbit / Google Health を KC 化
+├── gkill_plugin_google_locationhistory/ # Google Takeout のロケーション履歴を GPSLog 化（Kyouは出さない）
 ├── ABOUT_TEST.md
 └── README.md
 ```
 
-各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン3本（chatgpt / claudeai / claudecode）は
+各プラグインは独立した `go.mod` を持つ別モジュール。同梱プラグイン6本（chatgpt / claudeai /
+claudecode / codex / fitbit / google_locationhistory）は
 `manifest.json` をバイナリに `//go:embed` しており、`--gkill-print-manifest` / `--gkill-print-config` で
 内容を標準出力に書き出せる（`gkill_example` は埋め込みもフラグも `DefaultConfig` も持たない）。
-この3本は `config.json` の `source_dirs` で取り込み元フォルダを指定し、
+この6本は `config.json` の `source_dirs` で取り込み元フォルダを指定し、
 SQLite3 キャッシュを `$GKILL_HOME/caches/plugin_cache/{userID}/{pluginName}/cache.db` に置く
 （各プラグインの `cache_path.go`）。
 
@@ -289,7 +293,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-881キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+902キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 
@@ -317,9 +321,9 @@ src/tools/
 documents/
 ├── reverse/                          # リバースエンジニアリング設計資料集
 │   ├── README.md                     # 資料集の目次・推奨読み順
-│   ├── glossary.md                   # 用語集（95項目）
+│   ├── glossary.md                   # 用語集（96項目）
 │   ├── design-philosophy.md          # 設計思想
-│   ├── usecase.md                    # ユースケース一覧（86件）
+│   ├── usecase.md                    # ユースケース一覧（87件）
 │   ├── er-diagram.md                 # ER図（Mermaid）
 │   ├── class-diagrams.md             # クラス図
 │   ├── sequence-diagrams.md          # シーケンス図（29本: 正常系24 + 異常系5）
