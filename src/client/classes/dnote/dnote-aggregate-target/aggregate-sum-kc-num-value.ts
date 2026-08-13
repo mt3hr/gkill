@@ -1,6 +1,7 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAggregateTarget from "../dnote-aggregate-target";
+import format_aggregated_number from "./format-aggregated-number";
 
 export default class AggregateSumKCNumValue implements DnoteAggregateTarget {
     static from_json(_json: Record<string, unknown>): DnoteAggregateTarget {
@@ -15,7 +16,7 @@ export default class AggregateSumKCNumValue implements DnoteAggregateTarget {
         return typed_aggregated_value_kc_num_value + num_value
     }
     async result_to_string(kc_num_value: unknown): Promise<string> {
-        return ((kc_num_value === null ? 0 : kc_num_value) as number).toString()
+        return format_aggregated_number((kc_num_value === null ? 0 : kc_num_value) as number)
     }
     to_json(): Record<string, unknown> {
         return {
