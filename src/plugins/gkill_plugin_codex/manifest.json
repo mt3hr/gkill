@@ -1,0 +1,10 @@
+{
+  "protocol_version": "1",
+  "name": "gkill_plugin_codex",
+  "version": "1.0.0",
+  "description": "OpenAI Codex CLI のセッションログ(ロールアウトJSONL)をgkillタイムラインに表示する。人間の発言1つと、それに続く一連の応答をそれぞれ1Kyouとして扱う。ツールの実行結果は保持しない。サブエージェントの会話は親の応答に畳み込む。設定画面でデータソースのフォルダを指定して使用。",
+  "data_type": "codex_turn",
+  "rep_name": "Codex",
+  "executable": "gkill_plugin_codex",
+  "min_gkill_version": "1.1.7"
+}

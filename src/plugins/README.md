@@ -72,16 +72,36 @@ plugins/
 │   ├── go.mod / go.sum
 │   ├── manifest.json
 │   └── README.md
-└── gkill_plugin_claudecode/     # Claude Code チャットログプラグイン
+├── gkill_plugin_claudecode/     # Claude Code チャットログプラグイン
+│   ├── main.go
+│   ├── loader.go
+│   ├── cache.go
+│   ├── cache_path.go
+│   ├── types.go
+│   ├── render.go
+│   ├── html.go
+│   ├── loader_test.go
+│   ├── cache_path_test.go
+│   ├── testdata/
+│   ├── go.mod / go.sum
+│   ├── manifest.json
+│   └── README.md
+└── gkill_plugin_codex/          # Codex CLI セッションログプラグイン
     ├── main.go
-    ├── loader.go
-    ├── cache.go
-    ├── cache_path.go
     ├── types.go
+    ├── reader.go               # 巨大行(実データ最大19.9MB)に耐えるレコードリーダ
+    ├── scan.go
+    ├── loader.go               # ファイル → 正規化した要素列
+    ├── fold.go                 # 要素列 → Kyou、サブエージェントの畳み込み
+    ├── cache.go
+    ├── query.go                # 読み取り(ロックを取らない)
+    ├── builder.go              # 常駐バックグラウンドビルダ
+    ├── config.go
+    ├── cache_path.go
     ├── render.go
     ├── html.go
-    ├── loader_test.go
-    ├── cache_path_test.go
+    ├── uuid.go
+    ├── *_test.go
     ├── testdata/
     ├── go.mod / go.sum
     ├── manifest.json
@@ -96,6 +116,7 @@ plugins/
 | [`gkill_plugin_claudeai`](gkill_plugin_claudeai/README.md) | `claude_conversation` | Claude.ai のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_chatgpt`](gkill_plugin_chatgpt/README.md) | `chatgpt_conversation` | ChatGPT のチャット履歴をタイムライン表示 |
 | [`gkill_plugin_claudecode`](gkill_plugin_claudecode/README.md) | `claude_code_turn` | Claude Code のチャットログを、自分の発言と一連の応答に分けてタイムライン表示 |
+| [`gkill_plugin_codex`](gkill_plugin_codex/README.md) | `codex_turn` | Codex CLI のセッションログを、自分の発言と一連の応答に分けてタイムライン表示（サブエージェントは親に畳み込む） |
 | [`gkill_plugin_fitbit`](gkill_plugin_fitbit/README.md) | `kc` | Google Takeout の Fitbit / Google Health を日別集計し、数値記録として返す（推移グラフで集計できる） |
 | [`gkill_plugin_google_locationhistory`](gkill_plugin_google_locationhistory/README.md) | `google_location_visit` | Google Takeout のロケーション履歴を位置情報ログとして読み込む（記録は作らない） |
 
@@ -140,6 +161,19 @@ $GKILL_HOME/plugins/{userID}/{プラグイン名}/
 1. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
 2. 自動生成される `config.json` の `source_dirs` は既定で `~/.claude/projects`。
    他の場所を読ませたい場合は書き換える
+
+### gkill_plugin_codex
+
+データファイルの配置は不要。読み込むフォルダは `config.json` で指定する。
+
+1. 配置先ディレクトリに `manifest.json`・実行ファイルを置き、gkill_server を再起動する
+2. 自動生成される `config.json` の `source_dirs` は既定で `~/.codex/sessions` と
+   `~/.codex/session_index.jsonl`。他の場所を読ませたい場合は書き換える
+3. 取り込みはバックグラウンドで進むので、**置いた直後の1回目の検索は空が返る**。
+   進捗は設定画面に出る（実測でフル構築4.5秒 / 245MB / 52ファイル）
+
+`session_index.jsonl` はセッションuuid → スレッド名の対応表で、指定すると詳細画面に
+スレッド名が出る。無くても取り込みはできる。
 
 ### gkill_plugin_fitbit / gkill_plugin_google_locationhistory
 
@@ -193,7 +227,8 @@ Google Takeout を読む2つ。**ZIP を解凍せず、そのままフォルダ�
 - 先頭の `~` と環境変数（`$HOME` など）を展開する。ただし gkill を Windows サービスで動かして
   いる場合は**実行アカウントのホーム**になるため、絶対パスのほうが確実
 - 空にすると各プラグインの既定（claudeai / chatgpt はプラグインフォルダ自身、
-  claudecode は `~/.claude/projects`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`）を使う
+  claudecode は `~/.claude/projects`、codex は `~/.codex/sessions` と
+  `~/.codex/session_index.jsonl`、fitbit / 位置情報は `~/Kyou/GoogleTakeout_*`）を使う
 - 編集は**次の検索から反映される**（gkill_server の再起動は不要）
 - **fitbit と位置情報だけは ZIP しか読まない。** フォルダを指定するとその下の `*.zip` を
   再帰的に探し、ZIP の中を走査する。ZIP を直接指定してもよい
@@ -429,6 +464,10 @@ go build -o gkill_plugin_chatgpt .
 # gkill_plugin_claudecode
 cd src/plugins/gkill_plugin_claudecode
 go build -o gkill_plugin_claudecode .
+
+# gkill_plugin_codex
+cd src/plugins/gkill_plugin_codex
+go build -o gkill_plugin_codex .
 
 # gkill_plugin_fitbit
 cd src/plugins/gkill_plugin_fitbit
