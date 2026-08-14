@@ -17,6 +17,7 @@ import TagGetter from '@/classes/dnote/dnote-key-getter/tag-getter'
 import DataTypeGetter from '@/classes/dnote/dnote-key-getter/data-type-getter'
 import RelatedMonthGetter from '@/classes/dnote/dnote-key-getter/related-month-getter'
 import RelatedWeekDayGetter from '@/classes/dnote/dnote-key-getter/related-week-day-getter'
+import RelatedWeekGetter from '@/classes/dnote/dnote-key-getter/related-week-getter'
 import RelatedDateGetter from '@/classes/dnote/dnote-key-getter/related-date-getter'
 import NlogShopNameGetter from '@/classes/dnote/dnote-key-getter/nlog-shop-name-getter'
 import LantanaMoodGetter from '@/classes/dnote/dnote-key-getter/lantana-mood-getter'
@@ -67,12 +68,62 @@ describe('RelatedMonthGetter', () => {
 describe('RelatedWeekDayGetter', () => {
   const getter = new RelatedWeekDayGetter()
 
-  test('returns day-of-week', () => {
+  // 見出しは aggregated-list-item.vue が無加工で描くので、
+  // 0〜6の数字を返すと画面にそのまま数字が並ぶ
+  test('returns localized day-of-week name, not a number', () => {
     // 2025-03-15 is Saturday
     const kyou = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2025, 2, 15) }))
     const keys = getter.get_keys(kyou)
-    expect(keys.length).toBe(1)
-    expect(typeof keys[0]).toBe('string')
+    expect(keys).toEqual(['土'])
+  })
+
+  test('each weekday gets its own key', () => {
+    // 2025-03-10(月) から7日分
+    const keys = []
+    for (let i = 0; i < 7; i++) {
+      const kyou = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2025, 2, 10 + i) }))
+      keys.push(getter.get_keys(kyou)[0])
+    }
+    expect(keys).toEqual(['月', '火', '水', '木', '金', '土', '日'])
+  })
+})
+
+describe('RelatedWeekGetter', () => {
+  const getter = new RelatedWeekGetter()
+
+  test('returns the ISO week date range (Monday to Sunday)', () => {
+    // 2025-03-15 is Saturday -> week of 2025-03-10(Mon) .. 2025-03-16(Sun)
+    const kyou = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2025, 2, 15) }))
+    const keys = getter.get_keys(kyou)
+    expect(keys).toEqual(['2025/03/10〜03/16'])
+  })
+
+  test('every day of the same ISO week shares one key', () => {
+    const monday = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2025, 2, 10) }))
+    const sunday = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2025, 2, 16) }))
+    expect(getter.get_keys(monday)).toEqual(getter.get_keys(sunday))
+    // 翌月曜は別の週
+    const next_monday = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2025, 2, 17) }))
+    expect(getter.get_keys(next_monday)).not.toEqual(getter.get_keys(monday))
+  })
+
+  // 以前は年を持たない週番号("33")を返していたため、
+  // 複数年にまたがる期間で別の年の同一週番号が同じ行に合算されていた
+  test('same week number in different years does not collapse into one key', () => {
+    // 2025-12-31(水) と 2026-01-01(木) は同じISO週
+    const in_2025 = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2025, 11, 31) }))
+    const in_2026 = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2026, 0, 1) }))
+    expect(getter.get_keys(in_2025)).toEqual(getter.get_keys(in_2026))
+    expect(getter.get_keys(in_2025)).toEqual(['2025/12/29〜01/04'])
+
+    // 週番号だけだと 2025-03-15 と 2026-03-14 はどちらも第11週で衝突していた
+    const week11_2025 = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2025, 2, 15) }))
+    const week11_2026 = asKyou(makeKyouWithKmemo('test', { related_time: new Date(2026, 2, 14) }))
+    expect(getter.get_keys(week11_2026)).not.toEqual(getter.get_keys(week11_2025))
+  })
+
+  test('to_json returns correct type', () => {
+    expect(getter.to_json().type).toBe('RelatedWeekGetter')
   })
 })
 
