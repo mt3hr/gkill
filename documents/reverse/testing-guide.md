@@ -17,8 +17,8 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | フロントエンド E2E | 215 | 40（+auth.setup.ts） | Playwright |
 | MCP サーバ | 724 | 20 | Vitest |
 | Android | 12 | 2 | JUnit 4 |
-| Wear OS | 120 | 9 | JUnit 4 + MockK |
-| **合計** | **3,305** | **305** | |
+| Wear OS | 123 | 9 | JUnit 4 + MockK |
+| **合計** | **3,308** | **305** | |
 
 数え直すコマンド:
 
@@ -464,7 +464,7 @@ MCP テストは全てモック/スタブベースで動作し、実行中の gk
 
 **Wear OS** (`src/wear_os/`): JUnit 4 + MockK
 - phone_companion（4ファイル / 62テスト）: 認証ストア（暗号化含む）、Activity、API クライアント（MockWebServer、plaing検索クエリの形状検証含む）、メッセージハンドリング
-- watch_app（5ファイル / 58テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル
+- watch_app（5ファイル / 61テスト）: Activity、テンプレートキャッシュ、Wear クライアント、データモデル
 
 ## 4. テスト設定ファイル
 

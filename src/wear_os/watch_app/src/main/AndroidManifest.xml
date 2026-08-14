@@ -40,13 +40,6 @@
             </intent-filter>
         </service>
 
-        <!-- Tile Refresh Activity -->
-        <activity
-            android:name=".tile.TileRefreshActivity"
-            android:exported="false"
-            android:taskAffinity=""
-            android:excludeFromRecents="true" />
-
     </application>
 
 </manifest>

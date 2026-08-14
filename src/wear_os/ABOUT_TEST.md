@@ -2,7 +2,7 @@
 
 ## 概要
 
-Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（4ファイル、62テスト）とウォッチ側アプリ（5ファイル、58テスト）の合計120テスト（9ファイル）で構成される。
+Wear OS (Pixel Watch) KFTL 入力アプリのテスト。スマホ側コンパニオンアプリ（4ファイル、62テスト）とウォッチ側アプリ（5ファイル、61テスト）の合計123テスト（9ファイル）で構成される。
 
 ## テストフレームワーク
 
@@ -19,12 +19,12 @@ JUnit 4 + MockK（Kotlin モッキングライブラリ）
 | `phone_companion/src/test/java/.../GkillApiClientTest.kt` | 17 | HTTP API クライアント（MockWebServer 使用、ログイン・KFTL送信・テンプレート取得・plaing検索クエリの形状検証） |
 | `phone_companion/src/test/java/.../GkillWearableListenerServiceTest.kt` | 19 | ウォッチ→スマホ間メッセージパスのハンドリング |
 
-### watch_app（ウォッチ側アプリ）— 58テスト
+### watch_app（ウォッチ側アプリ）— 61テスト
 
 | ファイル | テスト数 | テスト内容 |
 |---------|---------|-----------|
 | `watch_app/src/test/java/.../MainActivityTest.kt` | 18 | ウォッチアプリの Activity テスト |
-| `watch_app/src/test/java/.../TemplateCacheManagerTest.kt` | 6 | ウォッチ上のテンプレートキャッシュ管理 |
+| `watch_app/src/test/java/.../TemplateCacheManagerTest.kt` | 9 | ウォッチ上のテンプレートキャッシュ管理と、スマホへ取りに行くかの判定（`shouldFetchFromPhone`） |
 | `watch_app/src/test/java/.../GkillWearClientTest.kt` | 11 | Wearable Data Layer クライアント |
 | `watch_app/src/test/java/.../data/model/TemplateNodeTest.kt` | 10 | テンプレートツリー構造のデータモデル |
 | `watch_app/src/test/java/.../data/model/PlaingTimeIsNodeTest.kt` | 13 | Plaing（計画）UIノードモデル |
