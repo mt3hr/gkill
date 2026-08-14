@@ -11,6 +11,7 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.CompactChip
 import androidx.wear.compose.material.Text
 import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.TemplateNode
 
@@ -18,12 +19,14 @@ import com.gkill_android.mobile_app.src.gkill.mt3hr.gkill.wear.watch.data.model.
  * Displays a scrollable list of KFTL templates.
  * - Folders (is_dir=true) navigate deeper
  * - Leaves (is_dir=false) show a confirmation screen
+ * - 末尾の「🔄 更新」でスマホ経由のテンプレート再取得を要求する
  */
 @Composable
 fun TemplateListScreen(
     nodes: List<TemplateNode>,
     title: String = "テンプレート",
-    onNodeSelected: (TemplateNode) -> Unit
+    onNodeSelected: (TemplateNode) -> Unit,
+    onRefresh: () -> Unit
 ) {
     ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -45,6 +48,13 @@ fun TemplateListScreen(
                 label = { Text("$prefix$label") },
                 onClick = { onNodeSelected(node) },
                 colors = ChipDefaults.primaryChipColors()
+            )
+        }
+
+        item {
+            CompactChip(
+                label = { Text("🔄 更新") },
+                onClick = onRefresh
             )
         }
     }

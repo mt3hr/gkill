@@ -16,8 +16,8 @@ gkill プロジェクトには Go バックエンド、Vue 3 フロントエン�
 | フロントエンド E2E (`client/`) | 215 | 40 | Playwright |
 | MCP サーバ (`mcp/`) | 724 | 20 | Vitest |
 | Android (`android/`) | 12 | 2 | JUnit 4 |
-| Wear OS (`wear_os/`) | 120 | 9 | JUnit 4 + MockK |
-| **合計** | **3,305** | **305** | |
+| Wear OS (`wear_os/`) | 123 | 9 | JUnit 4 + MockK |
+| **合計** | **3,308** | **305** | |
 
 `src/plugins/` の Go テスト 157件は独立モジュールのため上表（`src/server` 基準の集計）には含まれない。実行は `npm run test_plugins` が担当し、`npm test` からも呼ばれる（[plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) 参照）。
 
@@ -86,6 +86,6 @@ npm run verify_docs -- --list
 | `server/gkill/main/` | [server/gkill/main/ABOUT_TEST.md](server/gkill/main/ABOUT_TEST.md) | CLI エントリポイント |
 | `mcp/` | [mcp/ABOUT_TEST.md](mcp/ABOUT_TEST.md) | MCP サーバ（719テスト） |
 | `android/` | [android/ABOUT_TEST.md](android/ABOUT_TEST.md) | Android APK テスト |
-| `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（120テスト） |
+| `wear_os/` | [wear_os/ABOUT_TEST.md](wear_os/ABOUT_TEST.md) | Wear OS テスト（123テスト） |
 | `server/gkill/plugin/sdk/` | [server/gkill/plugin/sdk/ABOUT_TEST.md](server/gkill/plugin/sdk/ABOUT_TEST.md) | プラグイン SDK（stdio ループ + EnsureConfig、18テスト） |
 | `plugins/` | [plugins/ABOUT_TEST.md](plugins/ABOUT_TEST.md) | 同梱プラグイン（独立モジュール。`npm run test_plugins` で実行） |

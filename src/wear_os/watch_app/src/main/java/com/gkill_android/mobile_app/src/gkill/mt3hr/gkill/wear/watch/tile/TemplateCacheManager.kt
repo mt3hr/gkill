@@ -21,4 +21,13 @@ object TemplateCacheManager {
             .getString(KEY_TEMPLATES_JSON, null) ?: return emptyList()
         return GkillWearClient.parseTemplates(json)
     }
+
+    /**
+     * スマホへテンプレートを取りに行くかどうかの判定。
+     *
+     * 一覧の「🔄 更新」が押されたとき（forceReload=true）は、キャッシュが載っていても
+     * 必ず取りに行く。これを飛ばすとサーバ側でテンプレートを直しても永久に反映されない。
+     */
+    fun shouldFetchFromPhone(forceReload: Boolean, cachedSize: Int): Boolean =
+        forceReload || cachedSize == 0
 }
