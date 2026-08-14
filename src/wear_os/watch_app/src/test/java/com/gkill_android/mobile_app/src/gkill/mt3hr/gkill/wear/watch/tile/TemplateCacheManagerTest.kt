@@ -136,6 +136,26 @@ class TemplateCacheManagerTest {
     }
 
     // -----------------------------------------------------------------------
+    // shouldFetchFromPhone
+    // -----------------------------------------------------------------------
+    @Test
+    fun shouldFetchFromPhone_returnsTrue_whenCacheIsEmpty() {
+        assertTrue(TemplateCacheManager.shouldFetchFromPhone(forceReload = false, cachedSize = 0))
+    }
+
+    @Test
+    fun shouldFetchFromPhone_returnsTrue_whenForceReload_evenWithCache() {
+        // 一覧の「🔄 更新」の回帰ガード。
+        // ここが false になると、サーバ側でテンプレートを直しても永久に反映されない。
+        assertTrue(TemplateCacheManager.shouldFetchFromPhone(forceReload = true, cachedSize = 3))
+    }
+
+    @Test
+    fun shouldFetchFromPhone_returnsFalse_whenCacheExistsAndNotForced() {
+        assertFalse(TemplateCacheManager.shouldFetchFromPhone(forceReload = false, cachedSize = 3))
+    }
+
+    // -----------------------------------------------------------------------
     // Constants
     // -----------------------------------------------------------------------
     @Test

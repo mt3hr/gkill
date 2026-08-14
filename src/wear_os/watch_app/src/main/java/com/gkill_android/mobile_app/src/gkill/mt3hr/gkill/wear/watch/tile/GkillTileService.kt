@@ -8,7 +8,6 @@ import androidx.wear.protolayout.ModifiersBuilders
 import androidx.wear.protolayout.TimelineBuilders
 import androidx.wear.protolayout.DimensionBuilders
 import androidx.wear.protolayout.material.Chip
-import androidx.wear.protolayout.material.CompactChip
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.TileBuilders
@@ -78,17 +77,6 @@ class GkillTileService : TileService() {
                     ).build()
             ).build()
 
-        val launchRefresh = ModifiersBuilders.Clickable.Builder()
-            .setOnClick(
-                ActionBuilders.LaunchAction.Builder()
-                    .setAndroidActivity(
-                        ActionBuilders.AndroidActivity.Builder()
-                            .setPackageName(packageName)
-                            .setClassName(TileRefreshActivity::class.java.name)
-                            .build()
-                    ).build()
-            ).build()
-
         val chipWidth = DimensionBuilders.dp(140f)
 
         return LayoutElementBuilders.Box.Builder()
@@ -109,10 +97,6 @@ class GkillTileService : TileService() {
                         Chip.Builder(this, launchPlaing, deviceParams)
                             .setPrimaryLabelContent("▶ 実行中")
                             .setWidth(chipWidth)
-                            .build()
-                    )
-                    .addContent(
-                        CompactChip.Builder(this, "🔄 更新", launchRefresh, deviceParams)
                             .build()
                     )
                     .build()
