@@ -27,7 +27,7 @@ wear_os/
     ├── build.gradle.kts
     └── src/main/
         ├── AndroidManifest.xml
-        ├── java/.../wear/watch/        # Kotlin ソース（14ファイル）
+        ├── java/.../wear/watch/        # Kotlin ソース（13ファイル）
         └── res/
             └── values/strings.xml
 ```
@@ -46,7 +46,7 @@ wear_os/
 | `GkillSecretCipher.kt` | 認証情報の暗号化・復号ユーティリティ |
 | `MainActivity.kt` | コンパニオンアプリのメインアクティビティ（認証情報設定画面） |
 
-### `watch_app/` — ウォッチ側アプリ（14ファイル）
+### `watch_app/` — ウォッチ側アプリ（13ファイル）
 
 Compose for Wear OS で構築されたウォッチアプリ。KFTL テンプレートの選択・送信を行う。
 
@@ -78,15 +78,14 @@ Compose for Wear OS による画面構成。
 | `screens/PlaingEndConfirmScreen.kt` | TimeIs 終了確認 | タイマー終了の確認画面 |
 | `theme/Theme.kt` | テーマ | Compose テーマ定義 |
 
-#### `tile/` — Wear OS タイル（3ファイル）
+#### `tile/` — Wear OS タイル（2ファイル）
 
 ウォッチフェイスから直接アクセスできるタイル。
 
 | ファイル | 役割 |
 |---------|------|
-| `GkillTileService.kt` | タイルサービス。テンプレート一覧をタイルとして表示 |
-| `TemplateCacheManager.kt` | テンプレートのローカルキャッシュ管理 |
-| `TileRefreshActivity.kt` | タイルの手動リフレッシュ |
+| `GkillTileService.kt` | タイルサービス。「📝 記録する」「▶ 実行中」の2つの導線を表示する（テンプレートは並べない） |
+| `TemplateCacheManager.kt` | テンプレートのローカルキャッシュ管理。読み書きするのは `MainActivity` のみ |
 
 ## メッセージパス（Watch ↔ Phone）
 
@@ -151,3 +150,7 @@ Wearable Data Layer 通信にはパッケージ名の一致が必要なため、
 テンプレートは `TemplateNode` として JSON でやり取り:
 - gkill_server の `ApplicationConfig.kftl_template_struct` から取得
 - Watch App でローカルキャッシュ（`TemplateCacheManager`）
+
+キャッシュの更新はテンプレート一覧の一番下の「🔄 更新」から行う（`実行中` 画面と同じ位置・同じ見た目）。
+これを押したときだけキャッシュを無視してスマホへ取りに行く（判定は `TemplateCacheManager.shouldFetchFromPhone`）。
+サーバ側でテンプレートを直したら、ウォッチではこのボタンを押すまで反映されない。
