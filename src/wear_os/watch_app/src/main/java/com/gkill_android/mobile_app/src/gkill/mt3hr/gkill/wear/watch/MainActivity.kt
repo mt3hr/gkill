@@ -52,7 +52,12 @@ const val MODE_PLAING = "plaing"
 
 private sealed class Screen {
     object HomeMenu : Screen()
-    object Loading : Screen()
+
+    /**
+     * テンプレート取得中。
+     * force_reload=true なら一覧の「🔄 更新」経由なので、キャッシュを無視して取り直す。
+     */
+    data class Loading(val force_reload: Boolean = false) : Screen()
     data class TemplateList(
         val nodes: List<TemplateNode>,
         val title: String,
@@ -89,7 +94,7 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
         val mode = intent?.getStringExtra(EXTRA_MODE)
         launchedFromTile = (mode != null)
         screenState = when (mode) {
-            MODE_RECORD -> Screen.Loading
+            MODE_RECORD -> Screen.Loading()
             MODE_PLAING -> Screen.PlaingLoading
             else -> Screen.HomeMenu
         }
@@ -99,15 +104,17 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                 when (val s = screenState) {
                     is Screen.HomeMenu -> {
                         HomeMenuScreen(
-                            onRecord = { screenState = Screen.Loading },
+                            onRecord = { screenState = Screen.Loading() },
                             onPlaing = { screenState = Screen.PlaingLoading }
                         )
                     }
 
                     is Screen.Loading -> {
-                        LoadingScreen()
-                        LaunchedEffect(Unit) {
-                            requestTemplates()
+                        LoadingScreen(
+                            if (s.force_reload) "テンプレートを更新中..." else "読み込み中..."
+                        )
+                        LaunchedEffect(s.force_reload) {
+                            requestTemplates(s.force_reload)
                         }
                     }
 
@@ -139,6 +146,9 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
                                 } else {
                                     screenState = Screen.Confirm(node, s)
                                 }
+                            },
+                            onRefresh = {
+                                screenState = Screen.Loading(force_reload = true)
                             }
                         )
                     }
@@ -276,20 +286,21 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
     // ─── Private helpers (record) ───────────────────────────────────────────────
 
-    private suspend fun requestTemplates() {
-        Log.i(TAG, "requestTemplates: start")
+    private suspend fun requestTemplates(force_reload: Boolean = false) {
+        Log.i(TAG, "requestTemplates: start (force_reload=$force_reload)")
 
-        // キャッシュがある場合はキャッシュを使用
+        // 「🔄 更新」で来たとき以外は、キャッシュがあればそれを使う
         val cached = TemplateCacheManager.loadTemplates(this)
-        if (cached.isNotEmpty()) {
+        if (!TemplateCacheManager.shouldFetchFromPhone(force_reload, cached.size)) {
             Log.i(TAG, "requestTemplates: using cache (${cached.size} root nodes)")
             screenState = Screen.TemplateList(nodes = cached, title = "テンプレート", breadcrumb = emptyList())
             return
         }
 
-        // キャッシュがない場合のみスマホから取得
-        Log.i(TAG, "requestTemplates: no cache, fetching from phone")
-        screenState = Screen.Loading
+        // ここで screenState を書き換えてはいけない。
+        // すでに Screen.Loading の描画中で、force_reload の異なる Loading を代入すると
+        // LaunchedEffect が張り直されて取得が繰り返される。
+        Log.i(TAG, "requestTemplates: fetching from phone")
 
         val sent = wearClient.sendGetTemplatesRequest()
         if (sent == null) {
@@ -313,7 +324,8 @@ class MainActivity : ComponentActivity(), MessageClient.OnMessageReceivedListene
 
         Log.i(TAG, "requestTemplates: received (${json.take(60)})")
         if (json.startsWith("ERROR:")) {
-            screenState = Screen.Result(success = false, error = json.removePrefix("ERROR:"))
+            // 「🔄 更新」が失敗しただけで手元の一覧を捨てないよう、キャッシュがあればそれを残す
+            useCacheOrError(json.removePrefix("ERROR:"))
             return
         }
 
