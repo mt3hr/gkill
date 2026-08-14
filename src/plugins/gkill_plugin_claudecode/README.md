@@ -147,7 +147,7 @@ Kyou になるのは次の2種類。
 | `rep_name` | `ClaudeCode` |
 | `data_type` | `claude_code_turn` |
 | プロトコルバージョン | `1` |
-| 最小 gkill バージョン | `1.1.3` |
+| 最小 gkill バージョン | `1.1.7` |
 
 ## ファイル構成
 

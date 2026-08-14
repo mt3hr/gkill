@@ -82,7 +82,7 @@ $GKILL_HOME/caches/plugin_cache/{userID}/gkill_plugin_chatgpt/cache.db
 | `rep_name` | `ChatGPT` |
 | `data_type` | `chatgpt_conversation` |
 | プロトコルバージョン | `1` |
-| 最小 gkill バージョン | `1.1.3` |
+| 最小 gkill バージョン | `1.1.7` |
 
 ## ファイル構成
 
