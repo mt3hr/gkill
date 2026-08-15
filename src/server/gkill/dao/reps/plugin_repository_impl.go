@@ -215,8 +215,16 @@ func (p *pluginRepositoryImpl) ensureStarted() error {
 	}
 
 	scanner := bufio.NewScanner(stdout)
-	// 大きな会話HTMLレスポンスに対応するためバッファを32MBに拡大
-	scanner.Buffer(make([]byte, 32*1024*1024), 32*1024*1024)
+	// 大きな会話HTMLレスポンスに対応するため上限は32MB。
+	//
+	// ★初期バッファに 32MB を渡してはいけない。
+	//   Scanner.Buffer の第1引数は「最初に確保する領域」で、第2引数が上限。
+	//   make([]byte, 32MB) を渡すと、大きな応答が一度も来なくても
+	//   プロセス1本につき32MBを即時確保してゼロ埋めする。
+	//   プラグイン6本×2ユーザーで常時384MBを占めていた(2026-08-16 実測。
+	//   pprofで ensureStarted が192MB=6本×32MBとして観測された)。
+	//   64KBから始めれば、必要になった行だけが上限まで育つ。
+	scanner.Buffer(make([]byte, 64*1024), 32*1024*1024)
 
 	proc := &pluginProcess{
 		cmd:        cmd,

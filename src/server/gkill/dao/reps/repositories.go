@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"sync"
 	"time"
 
@@ -123,11 +124,11 @@ loop:
 				for _, kyou := range kyous {
 					key := kyou.ID
 					if !query.OnlyLatestData {
-						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
+						key += strconv.FormatInt(kyou.UpdateTime.Unix(), 10)
 					}
-					if _, exist := matchKyous[key]; !exist {
-						matchKyous[key] = []Kyou{}
-					}
+					// 空スライスの事前確保はしない。存在しないキーへの append は
+					// nilスライスに対して働くので結果は同じで、
+					// レコード1件につき1回の無駄な確保(実データで56万回)が消える。
 					matchKyous[key] = append(matchKyous[key], kyou)
 				}
 			}

@@ -32,8 +32,16 @@ import (
 // Limitは1〜1000にクランプ (未指定は50)、MaxSizeMBの未指定は1.0、
 // Queryはnilなら空のクエリに差し替え、いずれの場合も OnlyLatestData = true に上書きします。
 // 並び順はRelatedTimeの降順で、Cursor (RFC3339) を渡すとその時刻より前の最初の件から再開します。
+// Cursorはクエリの期間上限(CalendarEndDate)へ押し下げるため、2ページ目以降は
+// 検索対象そのものが「カーソル以降」に縮みます。これに伴い TotalCount は
+// 「条件に合う全件」ではなく「カーソル以降の残り件数」を指します（HasMoreの判定は変わりません）。
 // DTOを1件ずつJSONにした累積サイズがMaxSizeMBを超えた時点で打ち切るため、
 // ReturnedCountがLimitに満たないことがあります。
+// Cursorは RFC3339 と日付のみ(YYYY-MM-DD)を受け、どちらでもないときはエラーを返します
+// （黙って1ページ目に戻すとページングが終わらないため）。
+// LimitとMaxSizeMBによる打ち切りは同一RelatedTimeのかたまりを割らないので、
+// ReturnedCountがLimitを少し超えることがあります（割ると次ページが取りこぼすため）。
+// NextCursorは RFC3339Nano で返します（秒へ切り捨てると同じ秒の内側が漏れるため）。
 // URLogのサムネイル画像はAIクライアントで扱えないうえ巨大なので、DBから読む段階で外します。
 // IDFペイロードのFilePathはローカルリクエストのときだけ入ります。
 // Kyouのrep_nameはIncludeRepNameのときだけ載せます（全件に載せるとMaxSizeMBの打ち切りが早まるため）。
@@ -94,6 +102,48 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 	request.Query.OnlyLatestData = true
 
+	// カーソルをクエリの期間上限へ押し下げる。
+	//
+	// ★これが無いと、ページ1枚(最大1000件)を返すためだけに毎回全期間を検索し直す。
+	//   実データ(30年・56万件・376リポジトリ)では1リクエストあたり +1.8GB のメモリと
+	//   数十分を要し、それがページ数(約568回)ぶん繰り返されてサーバが膨れ続ける
+	//   (2026-08-16 実測)。ページングがサーバ側の仕事をまったく軽くしていなかった。
+	//
+	//   CalendarEndDate は RelatedTime の上限(境界を含む)としてSQLまで降りるので、
+	//   ここへ落とせば検索対象そのものが「カーソル以降」に縮む。
+	//   境界ちょうど(同一時刻)の件はこのあとのカーソル走査が従来どおり読み飛ばすため、
+	//   返る中身は押し下げの前後で変わらない。
+	//   呼び出し元が期間を指定している場合は狭いほうを採る。
+	cursorTime := time.Time{}
+	hasCursor := false
+	if request.Cursor != "" {
+		parsedCursorTime, parseErr := time.Parse(time.RFC3339, request.Cursor)
+		if parseErr != nil {
+			// 日付のみ(YYYY-MM-DD)も受ける。MCPサーバは日付のみを日時へ正規化してから
+			// 送るが(normalization.mjsのnormalizeDateTimeString)、APIを直接叩く
+			// クライアントはそのまま送ってくる。
+			parsedCursorTime, parseErr = time.ParseInLocation(time.DateOnly, request.Cursor, time.Local)
+		}
+		if parseErr != nil {
+			// ★解釈できないカーソルを黙って無視してはいけない。
+			//   以前は無視して1ページ目を返していたため、呼び出し側は同じページを
+			//   受け取り続け、ページングが永久に終わらなかった。
+			err = fmt.Errorf("error at parse cursor %q: %w", request.Cursor, parseErr)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", fmt.Sprintf("%q", err))
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetKyousMCPRequestDataError,
+				ErrorMessage: api.GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		cursorTime = parsedCursorTime
+		hasCursor = true
+		if request.Query.CalendarEndDate == nil || request.Query.CalendarEndDate.After(cursorTime) {
+			request.Query.CalendarEndDate = &cursorTime
+		}
+	}
+
 	// アカウントを取得
 	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
@@ -132,22 +182,20 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 
 	totalCount := len(allKyous)
 
-	// カーソル適用
+	// カーソル適用。
+	// 期間上限へ押し下げ済みなので、ここで読み飛ばすのは境界(カーソルと同一時刻)ぶんだけ。
 	startIdx := 0
-	if request.Cursor != "" {
-		cursorTime, parseErr := time.Parse(time.RFC3339, request.Cursor)
-		if parseErr == nil {
-			found := false
-			for i, kyou := range allKyous {
-				if kyou.RelatedTime.Before(cursorTime) {
-					startIdx = i
-					found = true
-					break
-				}
+	if hasCursor {
+		found := false
+		for i, kyou := range allKyous {
+			if kyou.RelatedTime.Before(cursorTime) {
+				startIdx = i
+				found = true
+				break
 			}
-			if !found {
-				startIdx = len(allKyous)
-			}
+		}
+		if !found {
+			startIdx = len(allKyous)
 		}
 	}
 
@@ -178,6 +226,17 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	}
 	if candidateCount > maxLimit {
 		candidateCount = maxLimit
+	}
+	// ★同一RelatedTimeのかたまりの途中でページを切らない。
+	//
+	//   次ページは「カーソルより厳密に前」から始まるので、境界が同一時刻の連続の
+	//   途中に落ちると、返しそこねた同時刻の残りが次ページからも漏れて永久に取れない。
+	//   実データでは一括取り込みのIDFやFitbitの日次指標のように同時刻が並ぶため現実に起きる。
+	//   ここでかたまりの終わりまで伸ばしておけば、Limitを少し超える代わりに取りこぼしが無くなる
+	//   (伸びる量はそのかたまりの残り件数ぶんだけ)。
+	for candidateCount > 0 && candidateCount < len(batch) &&
+		batch[candidateCount].RelatedTime.Equal(batch[candidateCount-1].RelatedTime) {
+		candidateCount++
 	}
 	candidateIDs := make([]string, 0)
 	for i := range candidateCount {
@@ -306,6 +365,9 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 	if candidateCount <= len(batch) {
 		resultDTOs = make([]req_res.KyouMCPDTO, 0, candidateCount)
 	}
+	// 直前に採用したKyouのRelatedTime。MaxSizeMBでの打ち切りが
+	// 同一時刻のかたまりを割らないようにするために持つ（割ると次ページが取りこぼす）。
+	lastAppendedRelatedTime := time.Time{}
 
 	for i := range candidateCount {
 		kyou := batch[i]
@@ -510,18 +572,28 @@ func (g *GkillServerAPI) HandleGetKyousMCP(w http.ResponseWriter, r *http.Reques
 			continue
 		}
 
-		if runningSize+int64(len(dtoJSON)) > maxBytes {
+		// サイズ上限での打ち切りも、同一時刻のかたまりの途中では行わない。
+		// ここで割ると、返しそこねた同時刻の記録が次ページ(カーソルより厳密に前)から
+		// 漏れて永久に取れなくなる。かたまりを跨ぐまでは上限を超えても入れ続ける。
+		inSameRelatedTimeGroup := len(resultDTOs) > 0 && kyou.RelatedTime.Equal(lastAppendedRelatedTime)
+		if runningSize+int64(len(dtoJSON)) > maxBytes && !inSameRelatedTimeGroup {
 			break
 		}
 		runningSize += int64(len(dtoJSON))
 		resultDTOs = append(resultDTOs, dto)
+		lastAppendedRelatedTime = kyou.RelatedTime
 	}
 
 	returnedCount := len(resultDTOs)
 	hasMore := (startIdx + returnedCount) < totalCount
 	nextCursor := ""
 	if hasMore && returnedCount > 0 {
-		nextCursor = resultDTOs[returnedCount-1].RelatedTime.Format(time.RFC3339)
+		// ★秒精度(time.RFC3339)で出してはいけない。
+		//   RelatedTimeが小数秒を持つとき、秒へ切り捨てたカーソルは実際の時刻より前を指す。
+		//   次ページは「カーソルより厳密に前」を取るので、切り捨てた秒の内側にある
+		//   未返却の記録が丸ごと漏れる。RFC3339Nanoなら切り捨てが起きない
+		//   (ISO 8601のままなので、受け取る側の time.RFC3339 パースでもそのまま読める)。
+		nextCursor = resultDTOs[returnedCount-1].RelatedTime.Format(time.RFC3339Nano)
 	}
 
 	response.Kyous = resultDTOs
