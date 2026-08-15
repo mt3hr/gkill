@@ -72,6 +72,9 @@ export class KFTLTimeIsRequest extends KFTLRequest {
         await gkill_api.add_timeis(timeis_req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
+            } else {
+                // 成功したものだけ積む。実体は commit_tx のあとに引き直される
+                this.add_registered_kyou_id(timeis_req.timeis.id)
             }
         })
 
