@@ -157,14 +157,26 @@ describe('確認ダイアログは操作が終わったら必ず閉じる', () =
     })
   }
 
-  // 他のadd系と同じく、作ったリポストが一覧に出るようにする
-  it('リポスト作成は registered_kyou と requested_reload_list を上げる', async () => {
+  // 他のadd系と同じく、作ったリポストが一覧に出るようにする。
+  // 一覧へは registered_kyou 由来の局所挿入で載るので、全体の引き直しは要求しない
+  it('リポスト作成は registered_kyou だけを上げる', async () => {
     const spec = cases[3]
     const { view, emits } = build(spec, async () => ({ ...ok_response, ...spec.response_extra }))
 
     await (view.rekyou as () => Promise<void>)()
 
     expect(emitted(emits, 'registered_kyou')).toHaveLength(1)
+    expect(emitted(emits, 'requested_reload_list'), '局所挿入できるのに全列の引き直しまで要求している').toHaveLength(0)
+  })
+
+  // Kyouが返らないと局所挿入できないので、そのときだけ従来の引き直しへ落とす
+  it('リポスト作成でKyouが返らなかったら requested_reload_list へ落とす', async () => {
+    const spec = cases[3]
+    const { view, emits } = build(spec, async () => ({ ...ok_response }))
+
+    await (view.rekyou as () => Promise<void>)()
+
+    expect(emitted(emits, 'registered_kyou')).toHaveLength(0)
     expect(emitted(emits, 'requested_reload_list')).toHaveLength(1)
   })
 })
