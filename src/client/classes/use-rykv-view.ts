@@ -17,6 +17,7 @@ import { Tag } from '@/classes/datas/tag'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { build_mi_reload_query, new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import { useRegisteredKyouLocalInsert } from '@/classes/use-registered-kyou-local-insert'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -380,6 +381,34 @@ export function useRykvView(options: {
     async function reload_list(column_index: number): Promise<void> {
         return search(column_index, querys.value[column_index], true, false, true)
     }
+
+    async function reload_list_by_query_id(query_id: string): Promise<void> {
+        const column_index = querys.value.findIndex(query => query.query_id === query_id)
+        if (column_index === -1) {
+            return
+        }
+        return reload_list(column_index)
+    }
+
+    // 追加されたKyouは再検索せず、各列の正しい位置へ差し込む。
+    // 再検索するとヒット集合もスクロール位置も変わるし、KyouListViewは
+    // 配列参照の差し替えでフル再描画する(reload_kyou と同じ理由)
+    const { onRegisteredKyou, insert_registered_kyou } = useRegisteredKyouLocalInsert({
+        querys: querys,
+        match_kyous_list: match_kyous_list,
+        reload_list_by_query_id: reload_list_by_query_id,
+        onColumnMutated: (query_id: string) => {
+            const column_index = querys.value.findIndex(query => query.query_id === query_id)
+            if (column_index === -1 || column_index !== focused_column_index.value) {
+                return
+            }
+            if (is_show_kyou_count_calendar.value || is_show_dnote.value) {
+                update_focused_kyous_list(column_index)
+            }
+            // Dnoteは命令的にreloadするので、配列を触っただけでは追随しない
+            reload_dnote_for_column(column_index)
+        },
+    })
 
     async function init(): Promise<void> {
         if (inited.value) {
@@ -938,7 +967,7 @@ export function useRykvView(options: {
         'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
         'deleted_text': (text: Text) => emits('deleted_text', text),
         'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_kyou': (kyou: Kyou) => { onRegisteredKyou(kyou); emits('registered_kyou', kyou) },
         'registered_tag': (tag: Tag) => emits('registered_tag', tag),
         'registered_text': (text: Text) => emits('registered_text', text),
         'registered_notification': (notification: Notification) => emits('registered_notification', notification),
@@ -1041,6 +1070,7 @@ export function useRykvView(options: {
         close_rykv_dialog,
         reload_kyou,
         reload_list,
+        insert_registered_kyou,
         update_check_kyous,
 
         // Dialog show methods

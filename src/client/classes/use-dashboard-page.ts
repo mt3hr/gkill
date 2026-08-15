@@ -21,6 +21,8 @@ import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import { useScopedCtrlVForClipboard } from '@/classes/use-scoped-ctrl-v-for-clipboard'
 import { build_kyou_dialog_host_handlers } from '@/classes/kyou-view-relay'
 import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import { can_decide_query_locally, decide_local_insert, insert_kyou_sorted } from '@/classes/kyou-local-insert'
+import { hydrate } from '@/classes/api/hydrate'
 import { useConfigStructSync } from '@/classes/use-config-struct-sync'
 import type { Tag } from '@/classes/datas/tag'
 
@@ -31,6 +33,12 @@ export function useDashboardPage(options?: {
      * 呼ばれるのは常に setup 完了後なので、.vue 側の関数宣言をラップして渡せばよい
      */
     reload_all?: () => Promise<void>,
+    /**
+     * Dnote だけを取り直す処理。
+     * Kyou 1件の追加は Mi リストへ局所挿入できるが、Dnote は集計なので取り直すしかない。
+     * reload_all と同じ理由で実体は .vue 側が渡す
+     */
+    reload_dnote?: () => Promise<void>,
 }) {
     const theme = useTheme()
 
@@ -420,24 +428,94 @@ export function useDashboardPage(options?: {
         await Promise.all([fetch_mi_kyous(), fetch_dnote_kyous()])
     }
 
-    // 新規Kyouがクエリにマッチするかはクライアントでは判定できないので取り直すしかないが、
-    // KFTLで複数行を一度に投げると registered_kyou が連続発火するのでまとめる
-    let reload_all_timer: ReturnType<typeof setTimeout> | null = null
-    function schedule_reload_all(): void {
-        if (reload_all_timer) {
-            clearTimeout(reload_all_timer)
+    async function reload_dnote(): Promise<void> {
+        if (options?.reload_dnote) {
+            await options.reload_dnote()
+            return
         }
-        reload_all_timer = setTimeout(() => {
-            reload_all_timer = null
-            reload_all()
-        }, 300)
+        await fetch_dnote_kyous()
     }
-    onUnmounted(() => {
-        if (reload_all_timer) {
-            clearTimeout(reload_all_timer)
-            reload_all_timer = null
+
+    // KFTLで複数行を一度に投げると registered_kyou が連続発火するのでまとめる。
+    // 予約は引き直しのawaitより後に来ることがあるので、アンマウント後は受け付けない
+    // (cancelだけでは、離脱後に決着した引き直しが張ったタイマーを取り逃がす)
+    let is_unmounted = false
+    const reload_debounce_milli_seconds = 300
+    function make_debounced(run: () => void): { schedule: () => void, cancel: () => void } {
+        let timer: ReturnType<typeof setTimeout> | null = null
+        return {
+            schedule: () => {
+                if (is_unmounted) {
+                    return
+                }
+                if (timer) {
+                    clearTimeout(timer)
+                }
+                timer = setTimeout(() => {
+                    timer = null
+                    run()
+                }, reload_debounce_milli_seconds)
+            },
+            cancel: () => {
+                if (timer) {
+                    clearTimeout(timer)
+                    timer = null
+                }
+            },
         }
+    }
+    const reload_all_debounce = make_debounced(() => { reload_all() })
+    const reload_dnote_debounce = make_debounced(() => { reload_dnote() })
+    onUnmounted(() => {
+        is_unmounted = true
+        reload_all_debounce.cancel()
+        reload_dnote_debounce.cancel()
     })
+
+    /**
+     * 追加されたKyouを、再検索せずにMiリストへ差し込む。
+     * Dnoteは集計なので差し込めず、まとめて取り直す。
+     * Miリストの条件をクライアントで判定しきれないときだけ、従来どおり全体を取り直す。
+     */
+    async function insert_registered_kyou(raw: unknown): Promise<void> {
+        reload_dnote_debounce.schedule()
+
+        const query = mi_kyou_query.value
+        if (!can_decide_query_locally(query).ok) {
+            reload_all_debounce.schedule()
+            return
+        }
+        // add_* の応答は hydrate を通っていない生JSONなので実体化する
+        const kyou = raw instanceof Kyou ? raw : hydrate(new Kyou(), raw)
+        if (!kyou.id) {
+            return
+        }
+        const refreshed = await refresh_kyou(kyou, query, new_reload_batch())
+        if (!refreshed || !refreshed.id) {
+            reload_all_debounce.schedule()
+            return
+        }
+        if (refreshed.is_deleted) {
+            return
+        }
+        const decision = decide_local_insert(refreshed.clone(), query)
+        if (decision.kind === 'undecidable') {
+            reload_all_debounce.schedule()
+            return
+        }
+        if (decision.kind === 'skip') {
+            return
+        }
+        // ダッシュボードは他所も copy-on-write で反応性を飛ばしているので合わせる
+        const next_list = mi_kyous.value.concat()
+        let is_mutated = false
+        for (const row of decision.rows) {
+            is_mutated = insert_kyou_sorted(next_list, row, query) || is_mutated
+        }
+        if (is_mutated) {
+            mi_kyous.value = next_list
+        }
+    }
 
     // ── Event relay objects ──
     // RykvDialogHost / DnoteView / KyouListView の3箇所に同じ束を渡す。
@@ -458,7 +536,7 @@ export function useDashboardPage(options?: {
         'requested_update_check_kyous': (kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked),
         'registered_kyou': (kyou: Kyou) => {
             check_mi_board_update(kyou)
-            schedule_reload_all()
+            insert_registered_kyou(kyou).catch((err: unknown) => console.error(err))
         },
         'registered_tag': (tag: Tag) => check_tag_update(tag),
         'updated_tag': (tag: Tag) => check_tag_update(tag),
@@ -647,6 +725,8 @@ export function useDashboardPage(options?: {
         open_rykv_dialog,
         close_rykv_dialog,
         reload_kyou,
+        insert_registered_kyou,
+        reload_dnote,
 
         // Event relay objects
         dashboardKyouHandlers,

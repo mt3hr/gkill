@@ -60,11 +60,13 @@ export function useConfirmReKyouView(options: {
             if (res.messages && res.messages.length !== 0) {
                 emits('received_messages', res.messages)
             }
-            // 他のadd系と同じく、作ったものを一覧へ反映させる
+            // 他のadd系と同じく、作ったものを一覧へ反映させる。
+            // 列へは局所挿入されるので、Kyouが返らなかったときだけ引き直しへ落とす
             if (res.added_kyou) {
                 emits('registered_kyou', res.added_kyou)
+            } else {
+                emits('requested_reload_list')
             }
-            emits('requested_reload_list')
         } catch (err: unknown) {
             console.error(err)
             const error = new GkillError()

@@ -126,57 +126,47 @@
             </v-avatar>
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 ref="add_kc_dialog" />
             <AddTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :enable_context_menu="true" :enable_dialog="false"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 ref="add_nlog_dialog" />
             <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="true"
                 :enable_dialog="false" :app_content_width="app_content_width"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 @saved_kyou_by_kftl="onSavedKyouByKftl"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :kyou="new Kyou()" :app_content_height="app_content_height" :enable_context_menu="true"
                 :enable_dialog="false" :app_content_width="app_content_width"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 @saved_kyou_by_kftl="onSavedKyouByKftl"
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 ref="upload_file_dialog" />
             <SaveClipboardToFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api"
-                @received_errors="(...errors: unknown[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...msgs: unknown[]) => write_messages(msgs[0] as Array<GkillMessage>)"
+                v-on="dashboardKyouHandlers"
                 ref="save_clipboard_to_file_dialog" />
             <RykvDialogHost :application_config="application_config" :gkill_api="gkill_api" :dialogs="opened_dialogs"
                 :enable_context_menu="true" :enable_dialog="true" v-on="dashboardKyouHandlers" />
@@ -314,9 +304,16 @@ const {
     dashboardKyouHandlers,
     onSavedKyouByKftl,
 } = useDashboardPage({
-    // fetch_for_date は関数宣言なので巻き上げられる。呼ばれるのは setup 完了後
+    // fetch_for_date / fetch_dnote_for_date は関数宣言なので巻き上げられる。呼ばれるのは setup 完了後
     reload_all: () => fetch_for_date(),
+    reload_dnote: () => fetch_dnote_for_date(),
 })
+
+// Dnoteだけ取り直す。Kyou1件の追加はMiリストへ差し込めるが、Dnoteは集計なので取り直すしかない
+async function fetch_dnote_for_date(): Promise<void> {
+    const kyous = await fetch_dnote_kyous()
+    await dnote_view.value?.reload(kyous, dnote_query.value)
+}
 
 // 日付変更時: DnoteView・KyouListView それぞれのローディングを使う
 let fetch_id = 0

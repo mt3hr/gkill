@@ -25,6 +25,8 @@
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
           @requested_reload_list="emits('requested_reload_list')"
+          @registered_kyou="(kyou: Kyou) => emits('registered_kyou', kyou)"
+          @updated_kyou="(kyou: Kyou) => emits('updated_kyou', kyou)"
           @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyous, is_checked)"
           @deleted_kyou="(deleted_kyou: Kyou) => emits('deleted_kyou', deleted_kyou)"
           @requested_open_rykv_dialog="(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => emits('requested_open_rykv_dialog', kind, kyou, payload)" />

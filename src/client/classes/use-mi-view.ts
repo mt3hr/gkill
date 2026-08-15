@@ -21,6 +21,8 @@ import { UpdateMiReKyouRequest } from '@/classes/api/req_res/update-mi-re-kyou-r
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { reset_dialog_history } from '@/classes/use-dialog-history-stack'
 import { new_reload_batch, refresh_kyou, refresh_kyou_in_list } from '@/classes/kyou-reload'
+import { useRegisteredKyouLocalInsert } from '@/classes/use-registered-kyou-local-insert'
+import { apply_mi_projection, insert_kyou_sorted } from '@/classes/kyou-local-insert'
 import type { OpenedRykvDialog, RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
 
@@ -227,17 +229,18 @@ export function useMiView(options: {
         }
     }
 
+    // 移動先の列へ、その列の並び替え規則で差し込む。
+    // 移動元の行の related_time / data_type は「移動元の列の mi_sort_type」で計算されており、
+    // 移動先と一致するとは限らないので、射影を計算し直してから入れる
     function insert_kyou_into_column_if_absent(column_index: number, kyou: Kyou): void {
         const column = match_kyous_list.value[column_index]
-        if (!column) {
+        const column_query = querys.value[column_index]
+        if (!column || !column_query) {
             return
         }
-        for (let i = 0; i < column.length; i++) {
-            if (column[i].id === kyou.id) {
-                return
-            }
-        }
-        column.push(kyou)
+        const inserting_kyou = kyou.clone()
+        apply_mi_projection(inserting_kyou, column_query.mi_sort_type)
+        insert_kyou_sorted(column, inserting_kyou, column_query)
     }
 
     function patch_kyou_mi_board_name(kyou: Kyou, updated_mi: Mi | MiReKyou): void {
@@ -378,6 +381,32 @@ export function useMiView(options: {
     async function reload_list(column_index: number): Promise<void> {
         return search(column_index, querys.value[column_index], true, false, true)
     }
+
+    async function reload_list_by_query_id(query_id: string): Promise<void> {
+        const column_index = querys.value.findIndex(query => query.query_id === query_id)
+        if (column_index === -1) {
+            return
+        }
+        return reload_list(column_index)
+    }
+
+    // 追加されたKyouは再検索せず、各列の正しい位置へ差し込む。
+    // 再検索するとヒット集合もスクロール位置も変わるし、KyouListViewは
+    // 配列参照の差し替えでフル再描画する(reload_kyou と同じ理由)
+    const { onRegisteredKyou, insert_registered_kyou } = useRegisteredKyouLocalInsert({
+        querys: querys,
+        match_kyous_list: match_kyous_list,
+        reload_list_by_query_id: reload_list_by_query_id,
+        onColumnMutated: (query_id: string) => {
+            const column_index = querys.value.findIndex(query => query.query_id === query_id)
+            if (column_index === -1 || column_index !== focused_column_index.value) {
+                return
+            }
+            if (is_show_kyou_count_calendar.value) {
+                update_focused_kyous_list(column_index)
+            }
+        },
+    })
 
     async function init(): Promise<void> {
         if (inited.value) {
@@ -1009,7 +1038,7 @@ export function useMiView(options: {
         'deleted_tag': (tag: Tag) => emits('deleted_tag', tag),
         'deleted_text': (text: Text) => emits('deleted_text', text),
         'deleted_notification': (notification: Notification) => emits('deleted_notification', notification),
-        'registered_kyou': (kyou: Kyou) => emits('registered_kyou', kyou),
+        'registered_kyou': (kyou: Kyou) => { onRegisteredKyou(kyou); emits('registered_kyou', kyou) },
         'registered_tag': (tag: Tag) => emits('registered_tag', tag),
         'registered_text': (text: Text) => emits('registered_text', text),
         'registered_notification': (notification: Notification) => emits('registered_notification', notification),
@@ -1095,6 +1124,7 @@ export function useMiView(options: {
         close_rykv_dialog,
         reload_kyou,
         reload_list,
+        insert_registered_kyou,
         update_check_kyous,
 
         // Dialog show methods
