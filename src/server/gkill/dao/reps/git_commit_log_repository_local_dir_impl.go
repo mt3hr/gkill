@@ -16,6 +16,12 @@ import (
 	"github.com/mt3hr/gkill/src/server/gkill/dao/sqlite3impl"
 )
 
+// ErrNotGitRepository は、指定パスがgitリポジトリでないことを表します。
+// git_commit_logのrep設定は `$HOME/Git/*` のようなglobで書かれ、
+// 展開先にgitリポジトリでないディレクトリやファイルが混ざるのは異常ではないため、
+// 呼び出し側はこのエラーを「そのrepだけスキップ」として扱ってください。
+var ErrNotGitRepository = git.ErrRepositoryNotExists
+
 type gitCommitLogRepositoryLocalImpl struct {
 	gitrep                 *git.Repository
 	filename               string
@@ -24,10 +30,14 @@ type gitCommitLogRepositoryLocalImpl struct {
 	lastUpdateCacheChanged bool
 }
 
+// NewGitRep は、reppathのgitリポジトリを読むGitCommitLogRepositoryを生成します。
+//
+// reppathがgitリポジトリでない場合はErrNotGitRepositoryを含むエラーを返します。
 func NewGitRep(reppath string) (GitCommitLogRepository, error) {
 	gitrep, err := git.PlainOpen(reppath)
 	if err != nil {
-		return nil, err
+		// ErrNotGitRepositoryを判別できるよう%wで包む
+		return nil, fmt.Errorf("error at open git repository %s: %w", reppath, err)
 	}
 
 	return &gitCommitLogRepositoryLocalImpl{

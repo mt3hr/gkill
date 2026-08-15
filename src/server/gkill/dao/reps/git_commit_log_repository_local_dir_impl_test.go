@@ -8,6 +8,7 @@ package reps
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -164,5 +165,54 @@ func TestGitCommitLogLocalDirFindKyousCalendarRangeIncludesBothEnds(t *testing.T
 	}
 	if len(secondOnlyKyous[secondHash]) != 1 || countGitCommitLogKyous(secondOnlyKyous) != 1 {
 		t.Errorf("開始=終了=新しい方のコミット時刻なら新しい方だけが返るはず: got %v", secondOnlyKyous)
+	}
+}
+
+// git_commit_logのrep設定は `$HOME/Git/*` のようなglobで書かれ、
+// zglobはディレクトリだけでなくファイルも返すため、
+// 展開先にgitリポジトリでないエントリが混ざるのは異常ではない。
+// 呼び出し側がそれを「そのrepだけスキップ」と判断できるよう、
+// NewGitRepはErrNotGitRepositoryを包んだエラーを返さなければならない。
+// (これを素のエラーに戻すとGetRepositories全体が失敗し、
+// 対象ユーザの全APIがERR000018になって何もできなくなる)
+func TestNewGitRepReturnsErrNotGitRepositoryForNonGitPath(t *testing.T) {
+	dir, err := os.MkdirTemp("", "gkill_git_commit_log_not_a_repo_test")
+	if err != nil {
+		t.Fatalf("os.MkdirTemp failed: %v", err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
+
+	// gitリポジトリでないファイル(Git Bashのクラッシュダンプ等が実際に混ざる)
+	strayFile := filepath.Join(dir, "bash.exe.stackdump")
+	if err := os.WriteFile(strayFile, []byte("stack trace\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile failed: %v", err)
+	}
+
+	// gitリポジトリでないディレクトリ
+	strayDir := filepath.Join(dir, "not_a_git_repository")
+	if err := os.MkdirAll(strayDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll failed: %v", err)
+	}
+
+	for _, path := range []string{strayFile, strayDir, filepath.Join(dir, "not_exist")} {
+		rep, err := NewGitRep(path)
+		if err == nil {
+			_ = rep.Close(context.Background())
+			t.Errorf("gitリポジトリでない %s でエラーにならなかった", path)
+			continue
+		}
+		if !errors.Is(err, ErrNotGitRepository) {
+			t.Errorf("gitリポジトリでない %s のエラーはErrNotGitRepositoryを包むはず: got %v", path, err)
+		}
+	}
+}
+
+// 正しいgitリポジトリではErrNotGitRepositoryにならないこと。
+// (常にErrNotGitRepository扱いにしてしまうと、全部スキップされて
+// gitのコミットログが1件も出なくなるのに気づけない)
+func TestNewGitRepSuccessForGitRepository(t *testing.T) {
+	rep, _, _ := newTempGitCommitLogRepo(t)
+	if rep == nil {
+		t.Fatal("gitリポジトリなのにrepが生成されなかった")
 	}
 }

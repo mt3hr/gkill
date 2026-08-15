@@ -15,6 +15,7 @@ Go `testing` パッケージ（インメモリ SQLite3 使用）
 | ファイル | テスト内容 |
 |---------|-----------|
 | `gkill_dao_manager_test.go` | GkillDAOManager のライフサイクルと初期化 |
+| `gkill_dao_manager_git_rep_test.go` | git_commit_log の rep 定義（`$HOME/Git/*` のような glob）の展開先に git リポジトリでないディレクトリやファイルが混ざっていても、`GetRepositories` 全体が失敗せず本物の git リポジトリだけを読み込むこと。**ここが崩れると認証ミドルウェアが ERR000018 を返し、対象利用者はログイン直後から全 API が「内部エラー」になる** |
 
 ### アカウント / セッション
 
