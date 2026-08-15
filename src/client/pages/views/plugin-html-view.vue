@@ -24,6 +24,7 @@
         <iframe
             v-show="!!html && !is_loading && !error_message"
             tabindex="-1"
+            :key="iframe_key"
             ref="iframe_ref"
             :srcdoc="effective_srcdoc"
             sandbox="allow-scripts allow-forms"
@@ -56,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onUnmounted, watch } from 'vue'
 import { i18n } from '@/i18n'
 import PluginHtmlContextMenu from './plugin-html-context-menu.vue'
 import PluginConfigDialog from '../dialogs/plugin-config-dialog.vue'
@@ -87,7 +88,19 @@ function show_plugin_config(rep_name: string): void {
 // srcdocには定数ローダーを使い、コンテンツはpostMessageで注入する。
 // ローダーはgkill_plugin_htmlメッセージを受け取るとdocument.open()+write()+close()で
 // コンテンツを差し替える（replacementナビゲーション = joint historyエントリを増やさない）。
-const PLUGIN_IFRAME_LOADER = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:transparent}</style></head><body><script>(function(){window.addEventListener("message",function(e){if(!e.data||typeof e.data.gkill_plugin_html!=="string")return;document.open();document.write(e.data.gkill_plugin_html);document.close();});})();<\/script></body></html>'
+//
+// リスナーを登録したらすぐgkill_plugin_loader_readyを親へ送る。この合図が要る:
+// iframe.contentWindowはローダーが読み込まれる前(about:blankの時点)から真なので、
+// 親がそれを見て先に本文を送ると、リスナー未登録のiframeにメッセージが届いて黙って消える。
+// 親は「一度送ったHTMLは送り直さない」ので、そうなると本文が二度と入らず空箱のままになる。
+const PLUGIN_IFRAME_LOADER = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;background:transparent}</style></head><body><script>(function(){window.addEventListener("message",function(e){if(!e.data||typeof e.data.gkill_plugin_html!=="string")return;document.open();document.write(e.data.gkill_plugin_html);document.close();});window.parent.postMessage({gkill_plugin_loader_ready:true},"*");})();<\/script></body></html>'
+
+// プラグイン本文はiframeの中にあるので、中で起きたダブルクリックは親のDOMへ伝播しない。
+// gkillのKyouはどこでもダブルクリックでKyouDialogが開くので、本文HTMLの末尾にこれを足して
+// postMessageで親へ知らせ、親側で本物のdblclickを撃ち直す。
+// プラグインは各自でHTMLを組み立てる(サードパーティ製もありうる)ため、
+// プラグイン側ではなくクライアント側で包む。
+const PLUGIN_IFRAME_DBLCLICK_FORWARDER = '<script>(function(){document.addEventListener("dblclick",function(){window.parent.postMessage({gkill_iframe_dblclick:true},"*");});})();<\/script>'
 
 const html = ref<string>('')
 const is_loading = ref<boolean>(true)
@@ -95,6 +108,12 @@ const error_message = ref<string>('')
 const iframe_ref = ref<HTMLIFrameElement | null>(null)
 // 最後にiframeに注入したHTML。重複注入・無限ループを防ぐ。
 const sent_html = ref<string>('')
+// ローダーがgkill_plugin_loader_readyを送ってきたか。立つまで本文を送らない。
+const loader_ready = ref<boolean>(false)
+// いま表示している本文へテーマを通知済みか。
+// 本文側はテーマを受け取るとレイアウト安定後にサイズを測り直して送ってくるので、
+// サイズを受けるたびにテーマを送り返すと10ms周期のピンポンが止まらなくなる。
+const theme_notified_to_content = ref<boolean>(false)
 
 const plugin_html_view_style = computed((): Record<string, string> => {
     if (typeof props.height !== 'number') {
@@ -139,6 +158,12 @@ const effective_srcdoc = computed<string | undefined>(() => {
     return PLUGIN_IFRAME_LOADER
 })
 
+// ローダー経路では表示するKyouが変わったらiframeごと作り直す。
+// 一度document.write()するとローダーがwindowに張ったリスナーはdocument.open()で捨てられるので、
+// 同じiframeを使い回すと2件目の本文が永久に入らない。
+// srcdoc直書き経路はhtmlの差し替えだけで足りるので固定キーにする。
+const iframe_key = computed<string>(() => is_list_view.value ? 'srcdoc' : props.kyou.id)
+
 // iframeにテーマをpostMessageで通知する
 function send_theme_to_iframe(): void {
     const theme = props.application_config.use_dark_theme ? 'dark' : 'light'
@@ -146,9 +171,11 @@ function send_theme_to_iframe(): void {
 }
 
 // ダイアログ表示時: htmlが用意できたらpostMessageでiframeローダーに注入する。
+// ローダーがreadyを名乗るまで送らない(先に送ると届かずに消え、二度と送り直さないため)。
 // sent_htmlで重複チェックし、@loadが繰り返し発火しても無限ループにならないようにする。
 function try_inject_html(): void {
     if (is_list_view.value) return
+    if (!loader_ready.value) return
     if (!html.value) return
     if (html.value === sent_html.value) return
     if (!iframe_ref.value?.contentWindow) return
@@ -156,19 +183,47 @@ function try_inject_html(): void {
     iframe_ref.value.contentWindow.postMessage({ gkill_plugin_html: html.value }, '*')
 }
 
+// sent_htmlはここで戻さない。注入後のdocument.close()でもiframeのloadは発火しうるので、
+// ここで戻すと注入→load→注入…の無限ループになる。送り直しはreadyの受信側が受け持つ。
 function onIframeLoad(): void {
     try_inject_html()
     send_theme_to_iframe()
 }
 
-// iframeからのpostMessageを受信してコンテンツサイズを反映
+// iframeからのpostMessageを受信してコンテンツサイズなどを反映
 function onWindowMessage(e: MessageEvent): void {
     // 自分のiframe以外からのメッセージは無視
     if (!iframe_ref.value || e.source !== iframe_ref.value.contentWindow) return
-    if (e.data && e.data.gkill_iframe_size) {
+    if (!e.data) return
+
+    // ローダーが読み込まれた合図。新しいローダー文書なので、前に送ったぶんは失われている
+    if (e.data.gkill_plugin_loader_ready) {
+        loader_ready.value = true
+        sent_html.value = ''
+        // これから本文を入れ直すので、テーマも入れ直す
+        theme_notified_to_content.value = false
+        try_inject_html()
+        return
+    }
+
+    // iframe内のダブルクリック。本物のDOMイベントを撃ち直して親へ流す。
+    // 新しいemit経路を作らずに済み、KyouView/RyuuItemViewの既存の@dblclickがそのまま拾う
+    if (e.data.gkill_iframe_dblclick) {
+        iframe_ref.value.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+        return
+    }
+
+    if (e.data.gkill_iframe_size) {
         const h = e.data.gkill_iframe_size.height
         if (typeof h === 'number' && h > 0) {
             iframe_content_height.value = h
+        }
+        // 最初のサイズ通知は本文が描かれた合図でもある。テーマ通知をiframeのloadイベントだけに
+        // 頼ると、document.close()で2度目のloadを焚かないブラウザでライトテーマのままになる。
+        // 2回目以降に送らないのはピンポンを止めるため（theme_notified_to_content の説明を参照）
+        if (!theme_notified_to_content.value) {
+            theme_notified_to_content.value = true
+            send_theme_to_iframe()
         }
     }
 }
@@ -192,6 +247,10 @@ async function load_html(): Promise<void> {
 
     html.value = ''
     sent_html.value = ''
+    // Kyouが変わるとiframe_keyが変わってiframeが作り直されるので、
+    // 新しいローダーが名乗り直すまでreadyを倒しておく
+    loader_ready.value = false
+    theme_notified_to_content.value = false
     iframe_content_height.value = 0
     is_loading.value = true
     error_message.value = ''
@@ -220,7 +279,8 @@ async function load_html(): Promise<void> {
             error_message.value = res.errors.map(e => e.error_message).join(', ')
             return
         }
-        html.value = res.html
+        // 空のときは足さない。足すと中身が無いのに v-show が真になり、空のiframeが出る
+        html.value = res.html ? res.html + PLUGIN_IFRAME_DBLCLICK_FORWARDER : ''
     } catch (e: unknown) {
         // kyouが変わっていたら別のload_html()に委ねる
         if (props.kyou.id !== target_id) {
@@ -238,9 +298,9 @@ watch(() => props.kyou.id, async () => {
 }, { immediate: true })
 
 // messageリスナー登録のみ。HTMLロードはwatchのimmediate:trueに委ねる。
-onMounted(() => {
-    window.addEventListener('message', onWindowMessage)
-})
+// onMountedではなくセットアップ時に張る。ローダーが名乗るgkill_plugin_loader_readyを
+// 取りこぼすと本文を一度も送れなくなるので、iframeがDOMに入る前から待ち受けておく。
+window.addEventListener('message', onWindowMessage)
 
 onUnmounted(() => {
     window.removeEventListener('message', onWindowMessage)
