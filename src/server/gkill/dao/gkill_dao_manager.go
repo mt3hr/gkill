@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"log/slog"
@@ -903,6 +904,16 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					gitCommitLogRep, err := reps.NewGitRep(filename)
 					if err != nil {
+						// git_commit_logのrep設定は `$HOME/Git/*` のようなglobで書かれ、
+						// zglobはディレクトリだけでなくファイルも返すため、
+						// 展開先にgitリポジトリでないエントリが混ざるのは異常ではない。
+						// ここで全体を失敗させると GetRepositories が丸ごと失敗し、
+						// そのユーザの全APIがERR000018になって何もできなくなるので、
+						// gitリポジトリでないものはそのrepだけスキップする。
+						if errors.Is(err, reps.ErrNotGitRepository) {
+							slog.Log(ctx, gkill_log.Warn, "skip not a git repository", "userID", fmt.Sprintf("%q", userID), "device", fmt.Sprintf("%q", device), "file", fmt.Sprintf("%q", filename))
+							continue
+						}
 						return nil, err
 					}
 					repositories.GitCommitLogReps = append(repositories.GitCommitLogReps, gitCommitLogRep)
