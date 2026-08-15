@@ -41,6 +41,9 @@ export function useKyouListView(options: {
     // ── Watchers ──
     watch(() => props.query, () => reload())
     watch(() => props.matched_kyous, () => reload())
+    // 参照監視だけだと、in-placeのsplice(削除・追加時の局所挿入・mi板のD&D)で
+    // 画像モードのグリッドが作り直されない。deep監視は30万件になるので使えないため長さを見る
+    watch(() => props.matched_kyous?.length ?? 0, () => reload())
     watch(() => props.application_config.rykv_image_list_column_number, () => {
         if (props.query.is_image_only) {
             update_match_kyous_for_image()
