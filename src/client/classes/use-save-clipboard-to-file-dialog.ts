@@ -318,9 +318,14 @@ export function useSaveClipboardToFileDialog(options: {
         show_already_saved_confirm.value = false
         show_saved_snackbar.value = true
 
-        for (const kyou of res.uploaded_kyous ?? []) {
+        const uploaded_kyous = res.uploaded_kyous ?? []
+        for (const kyou of uploaded_kyous) {
             await kyou.reload(true)
             emits('registered_kyou', kyou)
+        }
+        // Kyouが1件も返らないと、保存したのに一覧へ何も伝わらない
+        if (uploaded_kyous.length === 0) {
+            emits('requested_reload_list')
         }
         // Keep dialog open for continuous saving; restore focus to save button
         await nextTick()
