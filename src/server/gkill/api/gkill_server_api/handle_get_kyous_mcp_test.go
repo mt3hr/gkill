@@ -2,6 +2,7 @@ package gkill_server_api
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -419,4 +420,105 @@ func TestPayloadKindOfDataType(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestHandleGetKyousMCP_PagingDoesNotDropSameRelatedTime は、同一RelatedTimeのかたまりが
+// ページ境界で切り捨てられないことを固定する。
+//
+// NextCursorは「その時刻より厳密に前」から次ページを始めるので、同時刻のかたまりの
+// 途中でページを切ると、返しそこねた残りが次ページからも漏れて永久に取れない。
+// 一括取り込みのIDFやFitbitの日次指標のように同時刻が並ぶデータで現実に起きる。
+// Limitを少し超えてでも、かたまりの終わりまで返しきること。
+func TestHandleGetKyousMCP_PagingDoesNotDropSameRelatedTime(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	sameTime := time.Now().Truncate(time.Second).Add(-1 * time.Hour)
+	wantContents := []string{}
+	for i := range 3 {
+		content := fmt.Sprintf("同時刻のメモ%d", i)
+		addTestKmemoWithRelatedTime(t, tsURL, sessionID, content, sameTime)
+		wantContents = append(wantContents, content)
+	}
+	// かたまりより古い時刻にも1件置いて、ページが2枚以上になるようにする
+	olderContent := "ひとつ前の時刻のメモ"
+	addTestKmemoWithRelatedTime(t, tsURL, sessionID, olderContent, sameTime.Add(-1*time.Minute))
+	wantContents = append(wantContents, olderContent)
+
+	// limit=1 で回す。かたまりを割る実装だと同時刻3件のうち1件しか取れず、残り2件が消える。
+	seen := map[string]int{}
+	cursor := ""
+	for range 10 {
+		extra := map[string]any{"limit": 1}
+		if cursor != "" {
+			extra["cursor"] = cursor
+		}
+		mcpResp := getKyousMCP(t, tsURL, sessionID, map[string]any{}, extra)
+		for _, kyou := range mcpResp.Kyous {
+			payload, ok := kyou.Payload.(map[string]any)
+			if !ok {
+				continue
+			}
+			if content, ok := payload["content"].(string); ok {
+				seen[content]++
+			}
+		}
+		if !mcpResp.HasMore || mcpResp.NextCursor == "" {
+			break
+		}
+		cursor = mcpResp.NextCursor
+	}
+
+	for _, content := range wantContents {
+		if seen[content] == 0 {
+			t.Errorf("%q がページングで取りこぼされた (取得できたもの: %v)", content, seen)
+		}
+	}
+}
+
+// TestHandleGetKyousMCP_InvalidCursorIsError は、解釈できないカーソルを黙って無視して
+// 1ページ目に戻さないことを固定する。無視すると呼び出し側は同じページを受け取り続け、
+// ページングが永久に終わらない。
+func TestHandleGetKyousMCP_InvalidCursorIsError(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+
+	resp := postJSON(t, tsURL+"/api/get_kyous_mcp", map[string]any{
+		"session_id":  sessionID,
+		"locale_name": "en",
+		"query":       map[string]any{},
+		"cursor":      "not-a-time",
+	})
+	defer resp.Body.Close()
+
+	var mcpResp req_res.GetKyousMCPResponse
+	if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
+		t.Fatalf("decode get kyous mcp response: %v", err)
+	}
+	if len(mcpResp.Errors) == 0 {
+		t.Error("解釈できないカーソルなのにエラーが返っていない（黙って1ページ目に戻すとページングが終わらない）")
+	}
+	if len(mcpResp.Kyous) != 0 {
+		t.Errorf("エラーなのにKyouを返している: %d件", len(mcpResp.Kyous))
+	}
+}
+
+// TestHandleGetKyousMCP_DateOnlyCursorIsAccepted は日付のみ(YYYY-MM-DD)のカーソルを
+// 受け付けることを固定する。MCPサーバは日付のみを日時へ正規化してから送るが、
+// APIを直接叩くクライアントはそのまま送ってくる。
+func TestHandleGetKyousMCP_DateOnlyCursorIsAccepted(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", mcpTestPasswordHash)
+	addTestKmemoWithRelatedTime(t, tsURL, sessionID, "日付カーソルの手前のメモ", time.Now().Add(-48*time.Hour))
+
+	// エラーが返るとgetKyousMCPが落とすので、通ること自体が検査になる
+	getKyousMCP(t, tsURL, sessionID, map[string]any{}, map[string]any{
+		"cursor": time.Now().Format(time.DateOnly),
+	})
 }
