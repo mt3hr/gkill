@@ -759,11 +759,18 @@ Teleport to body
 
 | コンポーネント | 種別 | 説明 |
 |---|---|---|
-| `plugin-html-view.vue` | ビュー | プラグインが返す HTML を iframe `srcdoc` で描画。`sandbox="allow-scripts allow-forms"`、`scrolling="no"`、高さは postMessage（`gkill_iframe_size`）で親が調整し、未確定時は 80px |
+| `plugin-html-view.vue` | ビュー | プラグインが返す HTML を iframe で描画。`sandbox="allow-scripts allow-forms"`、`scrolling="no"`、高さは postMessage（`gkill_iframe_size`）で親が調整し、未確定時は 80px |
 | `plugin-html-context-menu.vue` | ビュー | プラグインKyou用コンテキストメニュー |
 | `plugin-config-dialog.vue` | ダイアログ | プラグイン設定フォーム（`plugin-html-view.vue` が保持） |
 
 テーマは親から `gkill_theme` を postMessage して CSS 変数を切り替える。
+
+本文の渡し方は表示先で変わる。一覧（height が数値）は `srcdoc` 直書き、
+Ryuu・rykv 詳細ペイン・KyouDialog（height が文字列）は定数ローダーへの postMessage 注入で、
+後者はローダーが `gkill_plugin_loader_ready` を名乗ってから送る。
+iframe 内のダブルクリックは `gkill_iframe_dblclick` で親へ返し、
+親が本物の `dblclick` を撃ち直して KyouDialog を開く。
+詳細は [plugin-system.md](plugin-system.md) の7章。
 
 #### Ryuu（関連情報）コンポーネント
 

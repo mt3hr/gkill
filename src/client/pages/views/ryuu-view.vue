@@ -29,7 +29,7 @@
                         :editable="editable"
                         @requested_move_related_kyou_query="(group_id: string, query_id: string, direction: 'up' | 'down') => onRequestedMoveRelatedKyouQuery(group_id, query_id, direction)"
                         @requested_delete_related_kyou_list_query="(id: string) => onRequestedDeleteRelatedKyouListQuery(id)"
-                        v-on="{ ...ryuuListItemCrudRelayHandlers, ...ryuuListItemRequestHandlers, ...ryuuListItemFocusHandlers, ...rykvDialogHandlers }"
+                        v-on="ryuuItemRelayHandlers"
                         ref="related_kyou_list_item_views" />
                 </v-window-item>
             </v-window>
@@ -105,10 +105,7 @@ const {
     onCancelClick,
 
     // Event relay objects
-    ryuuListItemCrudRelayHandlers,
-    ryuuListItemRequestHandlers,
-    ryuuListItemFocusHandlers,
-    rykvDialogHandlers,
+    ryuuItemRelayHandlers,
 } = useRyuuView({ props, emits })
 </script>
 

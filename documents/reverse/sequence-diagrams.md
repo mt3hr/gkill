@@ -782,11 +782,20 @@ sequenceDiagram
         SW->>SW: gkill-post-kyou-cache に保存
         SW-->>UI: {html}
     end
-    UI->>UI: iframe srcdoc = html (レンダリング)
-    UI->>UI: on_iframe_load() → postMessage({gkill_theme: 'dark'|'light'})
+    alt 一覧 (height が数値)
+        UI->>UI: iframe srcdoc = html (レンダリング)
+    else Ryuu / 詳細ペイン / KyouDialog (height が文字列)
+        UI->>UI: iframe srcdoc = 定数ローダー
+        UI-->>UI: iframe → postMessage({gkill_plugin_loader_ready: true})
+        UI->>UI: postMessage({gkill_plugin_html: html}) → ローダーが document.write
+        Note right of UI: ready を待たずに送ると<br>リスナー未登録の iframe に届いて消え、<br>送り直さないので空箱のまま残る
+    end
+    UI->>UI: onIframeLoad() → postMessage({gkill_theme: 'dark'|'light'})
     Note right of UI: iframe が theme を受信し<br>data-theme 属性を更新 → CSS 変数切り替え
     UI-->>UI: iframe → postMessage({gkill_iframe_size:{width, height}})
     UI->>UI: iframe_content_height 更新 → iframe 高さ自動調整
+    UI-->>UI: iframe → postMessage({gkill_iframe_dblclick: true})
+    UI->>UI: 本物の dblclick を撃ち直す → KyouDialog を開く
 ```
 
 ### 23. MCP からのプラグイン本文取得（include_plugin_content）
