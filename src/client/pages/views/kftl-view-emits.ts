@@ -7,9 +7,11 @@ import type { Kyou } from "@/classes/datas/kyou"
 export interface KFTLViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
+    // 送信で作った Kyou は他のAdd系と同じく1件ずつ registered_kyou で上げる。
+    // 「終了」系は既存のTimeIsの更新なので updated_kyou
     (e: 'registered_kyou', kyou: Kyou): void
     (e: 'updated_kyou', kyou: Kyou): void
-    (e: 'deleted_kyou', kyou: Kyou): void
-    (e: 'requested_close_dialog'): void
+    // 作ったKyouを1件も引き直せなかったときのフォールバック
+    (e: 'requested_reload_list'): void
     (e: 'saved_kyou_by_kftl', last_added_request_time: Date): void
 }

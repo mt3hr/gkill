@@ -25,6 +25,9 @@
           :application_config="application_config" :gkill_api="gkill_api"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @registered_kyou="(kyou: Kyou) => emits('registered_kyou', kyou)"
+          @updated_kyou="(kyou: Kyou) => emits('updated_kyou', kyou)"
+          @requested_reload_list="() => emits('requested_reload_list')"
           @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)"
           ref="kftl_view" />
         </v-card>
@@ -37,6 +40,7 @@
 import { computed, nextTick, onBeforeUnmount, type Ref, ref, watch } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { Kyou } from '@/classes/datas/kyou'
 import type { KFTLDialogEmits } from './kftl-dialog-emits'
 import type { KFTLDialogProps } from './kftl-dialog-props'
 import KFTLView from '../views/kftl-view.vue'
