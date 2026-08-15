@@ -5,14 +5,10 @@ import type RyuuViewProps from '@/pages/views/ryuu-view-props'
 import type RyuuViewEmits from '@/pages/views/ryuu-view-emits'
 import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/register-dictionary'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import type { Kyou } from '@/classes/datas/kyou'
-import type { Tag } from '@/classes/datas/tag'
-import type { Text } from '@/classes/datas/text'
-import type { Notification } from '@/classes/datas/notification'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { RykvDialogKind, RykvDialogPayload } from '@/pages/views/rykv-dialog-kind'
 import type { ComponentRef } from '@/classes/component-ref'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export interface RyuuDefinition {
     name: string
@@ -253,86 +249,12 @@ export function useRyuuView(options: {
         delete_related_kyou_query(id)
     }
 
-    function onDeletedKyou(deleted_kyou: Kyou): void {
-        emits('deleted_kyou', deleted_kyou)
-    }
-
-    function onDeletedTag(deleted_tag: Tag): void {
-        emits('deleted_tag', deleted_tag)
-    }
-
-    function onDeletedText(deleted_text: Text): void {
-        emits('deleted_text', deleted_text)
-    }
-
-    function onDeletedNotification(deleted_notification: Notification): void {
-        emits('deleted_notification', deleted_notification)
-    }
-
-    function onRegisteredKyou(registered_kyou: Kyou): void {
-        emits('registered_kyou', registered_kyou)
-    }
-
-    function onRegisteredTag(registered_tag: Tag): void {
-        emits('registered_tag', registered_tag)
-    }
-
-    function onRegisteredText(registered_text: Text): void {
-        emits('registered_text', registered_text)
-    }
-
-    function onRegisteredNotification(registered_notification: Notification): void {
-        emits('registered_notification', registered_notification)
-    }
-
-    function onUpdatedKyou(updated_kyou: Kyou): void {
-        emits('updated_kyou', updated_kyou)
-    }
-
-    function onUpdatedTag(updated_tag: Tag): void {
-        emits('updated_tag', updated_tag)
-    }
-
-    function onUpdatedText(updated_text: Text): void {
-        emits('updated_text', updated_text)
-    }
-
-    function onUpdatedNotification(updated_notification: Notification): void {
-        emits('updated_notification', updated_notification)
-    }
-
     function onReceivedErrors(errors: Array<GkillError>): void {
         emits('received_errors', errors)
     }
 
     function onReceivedMessages(messages: Array<GkillMessage>): void {
         emits('received_messages', messages)
-    }
-
-    function onRequestedReloadKyou(kyou: Kyou): void {
-        emits('requested_reload_kyou', kyou)
-    }
-
-    function onRequestedReloadList(): void {
-        emits('requested_reload_list')
-    }
-
-    function onRequestedUpdateCheckKyous(kyous: Array<Kyou>, is_checked: boolean): void {
-        emits('requested_update_check_kyous', kyous, is_checked)
-    }
-
-    function onFocusedKyou(kyou: Kyou): void {
-        emits('focused_kyou', kyou)
-    }
-
-    function onClickedKyou(kyou: Kyou): void {
-        emits('focused_kyou', kyou)
-        emits('clicked_kyou', kyou)
-    }
-
-    function onRequestedOpenRykvDialog(kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload): void {
-        // rykv画面のDialogHostで開くように上位へ伝播する（Ryuu内ではDialogHostを持たない）
-        emits('requested_open_rykv_dialog', kind, kyou, payload)
     }
 
     function onRequestedAddRelatedKyouQuery(related_kyou_query: RelatedKyouQuery): void {
@@ -352,37 +274,16 @@ export function useRyuuView(options: {
     }
 
     // ── Event relay objects ──
-    const ryuuListItemCrudRelayHandlers = {
-        'deleted_kyou': (kyou: Kyou) => onDeletedKyou(kyou),
-        'deleted_tag': (tag: Tag) => onDeletedTag(tag),
-        'deleted_text': (text: Text) => onDeletedText(text),
-        'deleted_notification': (notification: Notification) => onDeletedNotification(notification),
-        'registered_kyou': (kyou: Kyou) => onRegisteredKyou(kyou),
-        'registered_tag': (tag: Tag) => onRegisteredTag(tag),
-        'registered_text': (text: Text) => onRegisteredText(text),
-        'registered_notification': (notification: Notification) => onRegisteredNotification(notification),
-        'updated_kyou': (kyou: Kyou) => onUpdatedKyou(kyou),
-        'updated_tag': (tag: Tag) => onUpdatedTag(tag),
-        'updated_text': (text: Text) => onUpdatedText(text),
-        'updated_notification': (notification: Notification) => onUpdatedNotification(notification),
-        'received_errors': (errors: Array<GkillError>) => onReceivedErrors(errors),
-        'received_messages': (messages: Array<GkillMessage>) => onReceivedMessages(messages),
-    }
-
-    const ryuuListItemRequestHandlers = {
-        'requested_reload_kyou': (kyou: Kyou) => onRequestedReloadKyou(kyou),
-        'requested_reload_list': () => onRequestedReloadList(),
-        'requested_update_check_kyous': (kyous: Array<Kyou>, checked: boolean) => onRequestedUpdateCheckKyous(kyous, checked),
-    }
-
-    const ryuuListItemFocusHandlers = {
-        'focused_kyou': (kyou: Kyou) => onFocusedKyou(kyou),
-        'clicked_kyou': (kyou: Kyou) => onClickedKyou(kyou),
-    }
-
-    const rykvDialogHandlers = {
-        'requested_open_rykv_dialog': (kind: RykvDialogKind, kyou: Kyou, payload?: RykvDialogPayload) => onRequestedOpenRykvDialog(kind, kyou, payload),
-    }
+    // RyuuItemViewから上がってくる18件をそのまま上位へ流す。
+    // 手書きで並べるとkyou_view_relay_event_namesの網羅チェック(Exclude<>)の外に出てしまい、
+    // KyouViewRelayArgsにイベントを足したときRyuuからだけ黙って落ちる。
+    // requested_open_rykv_dialogもこの束に含まれる(Ryuu内ではDialogHostを持たないので、
+    // rykv画面のDialogHostで開くように上位へ伝播する)。
+    //
+    // focused_kyou / clicked_kyou は含まない(view版を使う)。Ryuuの行クリックで
+    // rykvのフォーカスKyouが変わるとRyuu自身のtarget_kyouが変わって再検索し続けるため、
+    // RyuuItemView側も意図的に発火していない。
+    const ryuuItemRelayHandlers = build_kyou_view_relay(emits)
 
     // ── Return ──
     return {
@@ -405,35 +306,14 @@ export function useRyuuView(options: {
         // Template event handlers
         onRequestedMoveRelatedKyouQuery,
         onRequestedDeleteRelatedKyouListQuery,
-        onDeletedKyou,
-        onDeletedTag,
-        onDeletedText,
-        onDeletedNotification,
-        onRegisteredKyou,
-        onRegisteredTag,
-        onRegisteredText,
-        onRegisteredNotification,
-        onUpdatedKyou,
-        onUpdatedTag,
-        onUpdatedText,
-        onUpdatedNotification,
         onReceivedErrors,
         onReceivedMessages,
-        onRequestedReloadKyou,
-        onRequestedReloadList,
-        onRequestedUpdateCheckKyous,
-        onFocusedKyou,
-        onClickedKyou,
-        onRequestedOpenRykvDialog,
         onRequestedAddRelatedKyouQuery,
         onAddButtonClick,
         onApplyClick,
         onCancelClick,
 
         // Event relay objects
-        ryuuListItemCrudRelayHandlers,
-        ryuuListItemRequestHandlers,
-        ryuuListItemFocusHandlers,
-        rykvDialogHandlers,
+        ryuuItemRelayHandlers,
     }
 }

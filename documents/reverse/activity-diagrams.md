@@ -362,14 +362,23 @@ flowchart TD
 
     Unlock --> Html[html を返却]
     FromCache --> Render
-    Html --> Render[plugin-html-view.vue が iframe srcdoc に展開]
+    Html --> Render{plugin-html-view.vue<br>height は数値?}
 
-    Render --> Theme["親 → iframe: postMessage (gkill_theme)"]
-    Render --> Size["iframe → 親: postMessage (gkill_iframe_size)<br>高さを親が反映。未確定時は 80px"]
+    Render -->|Yes 一覧| Srcdoc[iframe srcdoc に直接展開]
+    Render -->|No Ryuu/詳細/ダイアログ| Wait["ローダーの gkill_plugin_loader_ready を待つ<br>先に送ると届かずに消え、送り直さないので空箱になる"]
+    Wait --> Inject["親 → iframe: postMessage (gkill_plugin_html)<br>ローダーが document.write で差し替え"]
+
+    Srcdoc --> Theme
+    Inject --> Theme["親 → iframe: postMessage (gkill_theme)"]
+    Srcdoc --> Size
+    Inject --> Size["iframe → 親: postMessage (gkill_iframe_size)<br>高さを親が反映。未確定時は 80px"]
+    Srcdoc --> Dbl
+    Inject --> Dbl["iframe → 親: postMessage (gkill_iframe_dblclick)<br>親が本物の dblclick を撃ち直して KyouDialog を開く"]
 ```
 
 iframe は `sandbox="allow-scripts allow-forms"`（`allow-same-origin` なし）で動くため
-セッション Cookie にアクセスできない。テーマとサイズの受け渡しに postMessage を使うのはこのため。
+セッション Cookie にアクセスできない。テーマとサイズとダブルクリックの受け渡しに
+postMessage を使うのはこのため。
 
 ## 10. プラグイン設定の保存フロー
 

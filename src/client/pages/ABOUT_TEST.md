@@ -129,7 +129,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/mi-board-columns.spec.ts` | mi の板列×検索: 各板の列に自板のタスクだけが出る、板クリック後に別列で検索しても板名表示と検索条件が汚染されない |
 | `src/client/__tests__/e2e/saved-find-query.spec.ts` | 保存済み検索条件: 設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示 |
 
-### Composable ユニットテスト（43ファイル）
+### Composable ユニットテスト（45ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
@@ -153,6 +153,8 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/unit/composables/rykv-sidebar-saved-query-apply.test.ts` | rykv サイドバーの保存済み検索条件適用（query_id は列側維持・updated_query は1回・emit は保存側の clone・0件時は FAB 非表示条件の computed が空） |
 | `src/client/__tests__/unit/composables/mi-sidebar-saved-query-apply.test.ts` | mi サイドバーの保存済み検索条件適用（rykv 側と対称＋板名は全クリアと違い保存された条件が勝つこと） |
 | `src/client/__tests__/unit/composables/kyou-list-view-loading.test.ts` | KyouListView のローディング表示（set_loading(true) が has_loaded を倒し、再検索中に「該当なし」と誤表示しない） |
+| `src/client/__tests__/unit/composables/plugin-html-view.test.ts` | プラグイン本文の iframe 受け渡し（ローダーが `gkill_plugin_loader_ready` を名乗ってから注入すること・ready のたびに送り直すこと・`@load` では送り直さない＝注入ループにしないこと・`gkill_iframe_dblclick` を本物の bubbling する dblclick として撃ち直すこと・一覧は srcdoc 直書きのまま） |
+| `src/client/__tests__/unit/composables/ryuu-relay-chain.test.ts` | Ryuu の中継チェーン（`kyou_view_relay_event_names` の18件が RyuuItemView から親まで届くこと・`requested_open_rykv_dialog` は kind と payload ごと通ること・フォーカス2件は通さないこと・二重発火しないこと） |
 
 ### ルーターテスト
 
