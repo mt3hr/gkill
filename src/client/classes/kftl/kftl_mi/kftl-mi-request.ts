@@ -77,6 +77,9 @@ export class KFTLMiRequest extends KFTLRequest {
         await gkill_api.add_mi(mi_req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
+            } else {
+                // 成功したものだけ積む。実体は commit_tx のあとに引き直される
+                this.add_registered_kyou_id(mi_req.mi.id)
             }
         })
         return errors

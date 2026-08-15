@@ -47,6 +47,9 @@ export class KFTLKCRequest extends KFTLRequest {
         await gkill_api.add_kc(req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
+            } else {
+                // 成功したものだけ積む。実体は commit_tx のあとに引き直される
+                this.add_registered_kyou_id(req.kc.id)
             }
         })
         return errors
