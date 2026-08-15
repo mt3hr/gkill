@@ -23,5 +23,7 @@ export interface MKFLViewEmits {
     (e: 'updated_notification', updated_notification: Notification): void
     (e: 'deleted_notification', deleted_notification: Notification): void
     (e: 'requested_close_dialog'): void
+    // KFTLが作ったKyouを1件も引き直せなかったときのフォールバック
+    (e: 'requested_reload_list'): void
     (e: 'saved_kyou_by_kftl', last_added_request_time: Date): void
 }

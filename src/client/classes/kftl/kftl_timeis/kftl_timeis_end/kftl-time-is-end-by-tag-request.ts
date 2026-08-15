@@ -113,6 +113,9 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
         await gkill_api.update_timeis(update_timeis_req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
+            } else {
+                // 終了させたTimeIsは更新として上げる（列に無ければ何も起きない）
+                this.add_updated_kyou_id(update_timeis_req.timeis.id)
             }
         })
         return errors

@@ -9,9 +9,18 @@ import delete_gkill_kyou_cache from '../delete-gkill-cache'
 import { KFTLRequestBase } from './kftl-request-base'
 import type { KFTLStatementLineContext } from './kftl-statement-line-context'
 
+export type KFTLRequestResultKind = 'registered' | 'updated'
+
+export interface KFTLRequestResult {
+    id: string
+    kind: KFTLRequestResultKind
+}
+
 export abstract class KFTLRequest extends KFTLRequestBase {
 
     private request_id: string
+
+    private result_kyou_ids: Array<KFTLRequestResult>
 
     private tags: Array<string>
 
@@ -26,6 +35,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
     constructor(request_id: string, context: KFTLStatementLineContext) {
         super()
         this.request_id = request_id
+        this.result_kyou_ids = new Array<KFTLRequestResult>()
         this.tags = new Array<string>()
         this.current_text_id = ""
         this.texts_map = new Map<string, string>()
@@ -95,6 +105,26 @@ export abstract class KFTLRequest extends KFTLRequestBase {
 
     get_request_id(): string {
         return this.request_id
+    }
+
+    /**
+     * 作った / 更新した Kyou の id。
+     *
+     * tx中の add_* は added_kyou を返せない（TXID指定時は一時リポジトリにしか無い）ので、
+     * Kyou本体ではなくidだけ積んでおく。実体は commit_tx のあとに
+     * use-kftl-view.ts が get_kyou で引き直す。
+     * 積むのは実際に登録・更新が成功した分だけにすること。
+     */
+    protected add_registered_kyou_id(id: string): void {
+        this.result_kyou_ids.push({ id: id, kind: 'registered' })
+    }
+
+    protected add_updated_kyou_id(id: string): void {
+        this.result_kyou_ids.push({ id: id, kind: 'updated' })
+    }
+
+    get_result_kyou_ids(): ReadonlyArray<KFTLRequestResult> {
+        return this.result_kyou_ids
     }
 
     get_tags(): Array<string> {

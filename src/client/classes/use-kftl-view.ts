@@ -15,7 +15,9 @@ import { useFloatingDialog } from '@/classes/use-floating-dialog'
 import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import type { KFTLProps } from '@/pages/views/kftl-props'
 import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
-import type { KFTLRequest } from '@/classes/kftl/kftl-request'
+import type { KFTLRequest, KFTLRequestResult } from '@/classes/kftl/kftl-request'
+import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
@@ -319,6 +321,7 @@ export function useKftlView(options: {
 
             let last_added_request_time = new Date(Date.now()) // 「、、」でずれた分をPlaingTimeIsにわたすための考慮。リロード時刻より大きかった場合はこの値でTimeIsをリロードする
             let errors = new Array<GkillError>()
+            const result_kyou_ids = new Array<KFTLRequestResult>()
             const tx_id = kftl_requests.length > 0 ? kftl_requests[0].get_tx_id() : null
             for (let i = 0; i < kftl_requests.length; i++) {
                 const request = kftl_requests[i]
@@ -327,6 +330,7 @@ export function useKftlView(options: {
                     last_added_request_time = request_related_time
                 }
                 await request.do_request(props.gkill_api, props.application_config).then(request_errors => errors = errors.concat(request_errors))
+                result_kyou_ids.push(...request.get_result_kyou_ids())
             }
             if (errors.length != 0) {
                 emits('received_errors', errors)
@@ -359,8 +363,62 @@ export function useKftlView(options: {
             message.message = i18n.global.t("SAVED_MESSAGE")
             emits('received_messages', [message])
             emits('saved_kyou_by_kftl', last_added_request_time)
+            // 保存はcommitで完了している。この先は一覧へ知らせるための引き直しだけなので、
+            // 入力欄と各ボタンをreadonly/disabledのまま待たせない
+            // （引き直しはKyouの件数ぶん往復するので、待たせると体感で数秒固まる）
+            is_requested_submit.value = false
+            await emit_saved_kyous(result_kyou_ids)
         } finally {
             is_requested_submit.value = false
+        }
+    }
+
+    /**
+     * commit後に、作った / 更新した Kyou を引き直して上げる。
+     *
+     * tx中は add_* が added_kyou を返せない（一時リポジトリにしか無い）ので、
+     * commitを終えたここで初めて実体が手に入る。
+     * commitより前に引くと「まだ無い」応答をServiceWorkerのPOSTキャッシュが
+     * 掴んでしまうため、引く前にそのidのキャッシュを捨てる。
+     *
+     * 他のAdd系ダイアログと同じく registered_kyou で上げるので、
+     * rykv / mi / dashboard 側は KFTL 専用の分岐を持たなくてよい。
+     */
+    async function emit_saved_kyous(results: ReadonlyArray<KFTLRequestResult>): Promise<void> {
+        if (results.length === 0) {
+            return
+        }
+        const kyous = await Promise.all(results.map(async (result) => {
+            try {
+                await delete_gkill_kyou_cache(result.id)
+            } catch (_err: unknown) {
+                // Cache API が使えない環境ではスキップ
+            }
+            const req = new GetKyouRequest()
+            req.id = result.id
+            const res = await props.gkill_api.get_kyou(req)
+            if (res.errors && res.errors.length !== 0) {
+                return null
+            }
+            return res.kyou_histories[0] ?? null
+        }))
+
+        let is_emitted = false
+        for (let i = 0; i < results.length; i++) {
+            const kyou = kyous[i]
+            if (!kyou) {
+                continue
+            }
+            is_emitted = true
+            if (results[i].kind === 'updated') {
+                emits('updated_kyou', kyou)
+            } else {
+                emits('registered_kyou', kyou)
+            }
+        }
+        // 1件も引けなかったときだけ、従来どおりリスト全体の引き直しへ落とす
+        if (!is_emitted) {
+            emits('requested_reload_list')
         }
     }
 
