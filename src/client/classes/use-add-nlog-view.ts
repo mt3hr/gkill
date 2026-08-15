@@ -123,8 +123,13 @@ export function useAddNlogView(options: {
             if (res.messages && res.messages.length !== 0) {
                 emits('received_messages', res.messages)
             }
-            emits('registered_kyou', res.added_kyou!)
-            emits('requested_reload_list')
+            // 追加した記録は列へ局所挿入されるので、リスト全体の引き直しは要求しない。
+            // Kyouが返らなかったときだけ、従来どおり引き直しへ落とす
+            if (res.added_kyou) {
+                emits('registered_kyou', res.added_kyou)
+            } else {
+                emits('requested_reload_list')
+            }
             emits('requested_close_dialog')
             return
         } finally {

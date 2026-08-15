@@ -77,12 +77,54 @@ function make_kyou(id: string, data_type = 'kmemo'): Kyou {
     } as unknown as Kyou
 }
 
+/**
+ * 局所挿入の対象になれるMi。ダッシュボードのMiリストは for_mi 検索なので、
+ * mi_* の data_type と typed_mi が要る
+ */
+function make_insertable_kyou(id: string): Kyou {
+    const now = new Date()
+    const typed_mi = {
+        board_name: 'board_a',
+        is_checked: false,
+        create_time: now,
+        update_time: now,
+        limit_time: null,
+        estimate_start_time: null,
+        estimate_end_time: null,
+    }
+    const kyou = {
+        id: id,
+        data_type: 'mi_create',
+        rep_name: 'mi_rep',
+        related_time: now,
+        create_time: now,
+        update_time: now,
+        is_deleted: false,
+        attached_tags: [],
+        typed_mi: typed_mi,
+        typed_mirekyou: null,
+        clone: () => make_insertable_kyou(id),
+    }
+    return kyou as unknown as Kyou
+}
+
 function make_fake_api() {
+    // 設定済みのダッシュボード相当。未設定だと mi_kyou_query.tags が
+    // コンストラクタ既定の [] (=有効かつ0件) のままになり、Miリストは元から0件になる
+    const application_config = new ApplicationConfig()
+    application_config.dashboard_json_data = {
+        dashboard_mi_find_kyou_query: {
+            tags: null,
+            mi_check_state: 'all',
+            mi_sort_type: 'create_time',
+            include_create_mi: true,
+        },
+    }
     return {
         get_session_id: vi.fn(() => 'test-session'),
         generate_uuid: vi.fn(() => 'generated-uuid'),
         get_application_config: vi.fn().mockResolvedValue({
-            application_config: new ApplicationConfig(),
+            application_config: application_config,
             messages: null,
             errors: null,
         }),
@@ -97,7 +139,7 @@ function make_fake_api() {
 
 let mounted_apps = new Array<ReturnType<typeof createApp>>()
 
-function mount_page(options?: { reload_all?: () => Promise<void> }) {
+function mount_page(options?: { reload_all?: () => Promise<void>, reload_dnote?: () => Promise<void> }) {
     let page: ReturnType<typeof useDashboardPage> | null = null
     const Host = defineComponent({
         setup() {
@@ -134,41 +176,72 @@ afterEach(() => {
 })
 
 describe('registered_kyou のデバウンス', () => {
-    test('連続して登録されても再読込は1回にまとまる', async () => {
-        const reload_all = vi.fn().mockResolvedValue(undefined)
-        const { page } = mount_page({ reload_all: reload_all })
+    // Dnoteは集計なので局所挿入できず、追加のたびにまとめて取り直す。
+    // Miリストのほうは局所挿入で済ませ、引き直せなかったときだけ reload_all へ落とす
+    test('連続して登録されてもDnoteの取り直しは1回にまとまる', async () => {
+        const reload_dnote = vi.fn().mockResolvedValue(undefined)
+        const { page } = mount_page({ reload_dnote: reload_dnote })
 
         page.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
         page.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-2'))
 
         await vi.advanceTimersByTimeAsync(299)
-        expect(reload_all, '300ms 経つ前に取り直している').not.toHaveBeenCalled()
+        expect(reload_dnote, '300ms 経つ前に取り直している').not.toHaveBeenCalled()
 
         await vi.advanceTimersByTimeAsync(1)
-        expect(reload_all, '登録のたびに全体検索が走っている（まとめられていない）').toHaveBeenCalledTimes(1)
+        expect(reload_dnote, '登録のたびにDnoteの再集計が走っている（まとめられていない）').toHaveBeenCalledTimes(1)
     })
 
     test('間隔を空けた登録はそれぞれ取り直す', async () => {
-        const reload_all = vi.fn().mockResolvedValue(undefined)
-        const { page } = mount_page({ reload_all: reload_all })
+        const reload_dnote = vi.fn().mockResolvedValue(undefined)
+        const { page } = mount_page({ reload_dnote: reload_dnote })
 
         page.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
         await vi.advanceTimersByTimeAsync(300)
         page.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-2'))
         await vi.advanceTimersByTimeAsync(300)
 
-        expect(reload_all).toHaveBeenCalledTimes(2)
+        expect(reload_dnote).toHaveBeenCalledTimes(2)
+    })
+
+    test('局所挿入できたときは全体検索を投げない', async () => {
+        const reload_all = vi.fn().mockResolvedValue(undefined)
+        const reload_dnote = vi.fn().mockResolvedValue(undefined)
+        refresh_kyou_mock.mockResolvedValue(make_insertable_kyou('kyou-1'))
+        const { page } = mount_page({ reload_all: reload_all, reload_dnote: reload_dnote })
+        // 設定の読み込みは非同期。読み込み前は mi_kyou_query が既定のままで判定が変わる
+        await vi.advanceTimersByTimeAsync(0)
+
+        page.dashboardKyouHandlers.registered_kyou(make_insertable_kyou('kyou-1'))
+        await vi.advanceTimersByTimeAsync(1000)
+
+        expect(page.mi_kyous.value.map(kyou => kyou.id)).toEqual(['kyou-1'])
+        expect(reload_all, '差し込めたのに全体検索まで投げている').not.toHaveBeenCalled()
+        expect(reload_dnote).toHaveBeenCalledTimes(1)
+    })
+
+    test('引き直せなかったときは全体検索へフォールバックする', async () => {
+        const reload_all = vi.fn().mockResolvedValue(undefined)
+        refresh_kyou_mock.mockResolvedValue(null)
+        const { page } = mount_page({ reload_all: reload_all })
+
+        page.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
+        await vi.advanceTimersByTimeAsync(300)
+
+        expect(reload_all).toHaveBeenCalledTimes(1)
     })
 
     test('アンマウント後はタイマーが残らない', async () => {
         const reload_all = vi.fn().mockResolvedValue(undefined)
-        const { app, page } = mount_page({ reload_all: reload_all })
+        const reload_dnote = vi.fn().mockResolvedValue(undefined)
+        const { app, page } = mount_page({ reload_all: reload_all, reload_dnote: reload_dnote })
 
         page.dashboardKyouHandlers.registered_kyou(make_kyou('kyou-1'))
         app.unmount()
 
         await vi.advanceTimersByTimeAsync(1000)
         expect(reload_all, '画面を離れたあとに検索が飛んでいる').not.toHaveBeenCalled()
+        expect(reload_dnote, '画面を離れたあとにDnoteの再集計が飛んでいる').not.toHaveBeenCalled()
     })
 })
 
