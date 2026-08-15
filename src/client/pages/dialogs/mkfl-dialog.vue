@@ -36,6 +36,7 @@
           @updated_notification="(updated_notification: Notification) => emits('updated_notification', updated_notification)"
           @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
           @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
+          @requested_reload_list="() => emits('requested_reload_list')"
           @saved_kyou_by_kftl="(last_added_request_time: Date) => emits('saved_kyou_by_kftl', last_added_request_time)" />
         <HelpDialog screen_name="mkfl" ref="help_dialog" />
       </div>

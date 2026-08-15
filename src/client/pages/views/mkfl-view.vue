@@ -6,16 +6,17 @@
             @deleted_tag="(deleted_tag: Tag) => emits('deleted_tag', deleted_tag)"
             @deleted_text="(deleted_text: any) => emits('deleted_text', deleted_text)"
             @deleted_notification="(deleted_notification: any) => emits('deleted_notification', deleted_notification)"
-            @registered_kyou="(registered_kyou: Kyou) => { reload_plaing_timeis_view(); emits('registered_kyou', registered_kyou) }"
+            @registered_kyou="(registered_kyou: Kyou) => emits('registered_kyou', registered_kyou)"
             @registered_tag="(registered_tag: Tag) => emits('registered_tag', registered_tag)"
             @registered_text="(registered_text: any) => emits('registered_text', registered_text)"
             @registered_notification="(registered_notification: any) => emits('registered_notification', registered_notification)"
-            @updated_kyou="(updated_kyou: Kyou) => { reload_plaing_timeis_view(); emits('updated_kyou', updated_kyou) }"
+            @updated_kyou="(updated_kyou: Kyou) => emits('updated_kyou', updated_kyou)"
             @updated_tag="(updated_tag: Tag) => emits('updated_tag', updated_tag)"
             @updated_text="(updated_text: any) => emits('updated_text', updated_text)"
             @updated_notification="(updated_notification: any) => emits('updated_notification', updated_notification)"
             @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
             @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+            @requested_reload_list="() => emits('requested_reload_list')"
             @saved_kyou_by_kftl="(last_added_request_time: Date) => {
                 plaing_timeis_view?.set_last_added_request_time(new Date(Math.max(last_added_request_time.getTime(), Date.now())))
                 reload_plaing_timeis_view()
