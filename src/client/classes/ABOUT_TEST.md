@@ -32,6 +32,8 @@ Vitest
 | `src/client/__tests__/unit/classes/delayed-loading.test.ts` | 読み込み中表示の遅延（速く終わった読み込みで明滅させない） |
 | `src/client/__tests__/unit/classes/use-device-kind.test.ts` | 端末種別の判定（PC / タブレット / スマートフォン）とシングルトン性・リアクティブ性 |
 | `src/client/__tests__/unit/classes/kyou-reload.test.ts` | Kyou の引き直し手順（キャッシュ削除→reload→型付きデータ再取得の順、添付タグの強制再取得、同一更新由来の合流、失敗時のリトライ、引き直し中フラグ） |
+| `src/client/__tests__/unit/classes/kyou-local-insert.test.ts` | 追加した記録を再検索せず列へ差し込む判定と整列（判定できる/できないフィルタの切り分け、タグ・rep・カレンダー・時間帯・mi の一致判定、並び順、冪等な差し込み） |
+| `src/client/__tests__/unit/classes/kyou-local-insert-mi-parity.test.ts` | 上の mi 部分がサーバ側 `find_filter_mi_test.go` と同じ答えを出すこと（対で維持する） |
 | `src/client/__tests__/unit/classes/foldable-struct-check.test.ts` | チェック状態をツリーへ単一走査で適用すること（旧実装との等価性） |
 | `src/client/__tests__/unit/classes/use-context-menu-position.test.ts` | コンテキストメニューの表示位置（Vuetify の実測配置へ委ねるための状態管理） |
 | `src/client/__tests__/unit/classes/dialog-autofocus.test.ts` | ダイアログを開いたときにカーソルを載せる入力欄の選定規則（チェックボックス・読み取り専用・非表示を除く） |
