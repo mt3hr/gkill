@@ -6,6 +6,10 @@ package api
 //   - MiCheckState未指定(空文字)だとswitchにdefaultが無く、mi検索が無条件0件になっていた
 //   - overrideKyousのフォールバックが「_create」を名乗りながらUpdateTimeを表示時刻にしていた
 //   - miソートのCreateTime同着にタイブレークが無く、不安定ソートで順序が実行毎に変わっていた
+//
+// 対になるクライアントのテスト:
+// src/client/__tests__/unit/classes/kyou-local-insert-mi-parity.test.ts
+// （追加した記録を再検索せず列へ差し込むため、クライアントが同じ規則を実装している）
 
 import (
 	"context"

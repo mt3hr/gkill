@@ -696,7 +696,10 @@ export class Kyou extends InfoBase {
                         }
                         break;
                     default:
-                        this.related_time = this.update_time
+                        // 作成日時ソート。サーバのoverrideKyousもmi.CreateTimeを入れるので合わせる。
+                        // ここをupdate_timeにすると、この行だけget_kyousで来た隣接行と
+                        // 表示時刻も並び位置もずれる
+                        this.related_time = this.create_time
                         this.data_type = prefix + "_create"
                         break;
                 }
