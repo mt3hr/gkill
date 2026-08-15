@@ -454,6 +454,69 @@ GetContentHTML(kyouID)
 > ユーザ側メッセージの背景変数名はプラグインで異なる（ChatGPT は `--msg-user-bg`、
 > Claude.ai は `--msg-human-bg`）。送信者ラベルの語彙（`user` / `human`）に合わせてある。
 
+### 本文を iframe へ渡す2つの経路
+
+`plugin-html-view.vue` は表示先によって渡し方を変える。判定は
+`is_list_view = typeof props.height === 'number'`。
+
+| 経路 | 使う画面 | 渡し方 |
+|---|---|---|
+| srcdoc 直書き | 一覧（`kyou-list-view` は数値の height を渡す） | `:srcdoc="html"` |
+| ローダー + postMessage 注入 | Ryuu（`'fit-content'`）／rykv 詳細ペイン（`'auto'`）／KyouDialog（`'unset'`） | srcdoc は定数ローダー。本文は `{ gkill_plugin_html }` で送り、ローダーが `document.open()`+`write()`+`close()` で差し替える |
+
+ローダー方式は**ダイアログのブラウザバック対策**。srcdoc を直接書き換えると
+iframe のナビゲーションがダイアログの `pushState` より後になり、閉じるのに戻る操作が2回要る。
+定数ローダーなら iframe のナビゲーションは最初の1回で終わり、以後の差し替えは
+replacement ナビゲーション（joint history エントリを増やさない）になる。
+
+**注入は必ずローダーの合図を待つ。**
+
+```
+iframe（ローダー）→ 親:  { gkill_plugin_loader_ready: true }   // リスナー登録の直後
+親 → iframe:            { gkill_plugin_html: "<html>…" }
+```
+
+`iframe.contentWindow` はローダーが読み込まれる前（about:blank の時点）から真なので、
+それを見て先に送るとリスナー未登録の iframe にメッセージが届いて**黙って消える**。
+親は同じ HTML を送り直さない（`sent_html` で重複注入と注入ループを防いでいる）ため、
+一度取りこぼすと本文が二度と入らず、80px の空箱になる。
+どちらが先に着くかは `/api/get_plugin_content_html` の応答速度次第で、
+ServiceWorker がこのエンドポイントをキャッシュ優先で返すぶん
+**2回目以降の表示ほど取りこぼしやすい**（＝「ときどき本文が出ない」）。
+
+ready を受けたら `sent_html` を落として送り直す。`document.open()` はローダーが
+`window` に張ったリスナーごと捨てるので、ローダーが読み込み直されたときは
+前に送ったぶんが失われているため。
+表示する Kyou が変わったときは iframe 自体を作り直す（`:key`）—— 同じ iframe を
+使い回すと、本文で上書き済みのローダーには2件目が永久に入らない。
+
+**`@load` では `sent_html` を落としてはいけない。** 注入後の `document.close()` でも
+iframe の `load` は発火しうるので、注入 → load → 注入…の無限ループになる。
+
+### iframe 内のダブルクリックを親へ返す
+
+プラグイン本文は iframe の中なので、中で起きたダブルクリックは親のDOMへ伝播しない。
+gkill の Kyou はどこでもダブルクリックで KyouDialog が開くのに、
+プラグイン本文だけ開かない状態になっていた（Ryuu・rykv 詳細ペイン・KyouDialog のすべて。
+一覧だけは `pointer-events: none` で iframe が受け取らないため素通しされて動いていた）。
+
+対策は**クライアント側で本文 HTML の末尾に転送スクリプトを足す**こと。
+プラグインは各自で HTML を組み立てる（サードパーティ製もありうる）ので、
+プラグイン側には手を入れない。
+
+```
+iframe → 親:  { gkill_iframe_dblclick: true }
+親:           iframe 要素の上で MouseEvent('dblclick', { bubbles: true }) を撃ち直す
+```
+
+新しい emit 経路は作らない。本物のDOMイベントとして撃ち直すことで、
+`kyou-view.vue` の `@dblclick`（詳細ペイン・KyouDialog）と
+`ryuu-item-view.vue` の `@dblclick`（Ryuu）にそのまま届き、
+ネイティブの記録種別と完全に同じ経路で KyouDialog が開く。
+
+右クリックは転送しない。iframe 内リンクのブラウザ標準メニュー
+（「新しいタブで開く」等）を潰してしまうため。
+
 ---
 
 ## 8. ダークテーマ通知（postMessage）
@@ -469,7 +532,16 @@ iframe は `sandbox="allow-scripts allow-forms"` で動作するため、`allow-
 タイミング:
   1. iframe の onload イベント発火時
   2. application_config.use_dark_theme の watch 変更時
+  3. iframe から最初の gkill_iframe_size を受け取ったとき（＝本文が描かれた合図）
 ```
+
+3 が要るのはローダー注入経路のため。ローダーは `gkill_theme` を無視する（本文を差し替えるだけ）ので、
+1 の onload だけに頼ると `document.close()` が2度目の `load` を焚かないブラウザで
+本文がライトテーマのまま残る。
+
+**3 は「最初の1回」に限る。** 本文側はテーマを受け取ると
+`setTimeout(notifySize, 10)` でサイズを測り直して送ってくるので、
+サイズを受けるたびにテーマを送り返すと10ms周期のピンポンが止まらなくなる。
 
 ### iframe 側の処理
 
@@ -507,15 +579,22 @@ function notifySize() {
 ### 親側（受信）
 
 ```typescript
-function on_window_message(e: MessageEvent): void {
+function onWindowMessage(e: MessageEvent): void {
     // 自分の iframe 以外からのメッセージは無視
     if (!iframe_ref.value || e.source !== iframe_ref.value.contentWindow) return
-    if (e.data && e.data.gkill_iframe_size) {
+    if (!e.data) return
+    // 他に gkill_plugin_loader_ready（本文注入の合図）と
+    // gkill_iframe_dblclick（ダブルクリック転送）を同じ入口で捌く
+    if (e.data.gkill_iframe_size) {
         const h = e.data.gkill_iframe_size.height
         if (typeof h === 'number' && h > 0) iframe_content_height.value = h
+        send_theme_to_iframe()
     }
 }
 ```
+
+リスナーは `onMounted` ではなくセットアップ時に張る。
+ローダーが名乗る `gkill_plugin_loader_ready` を取りこぼすと本文を一度も送れなくなるため。
 
 `iframe_content_height` が 0 の間は 80px をフォールバック高さとして使用する。`scrolling="no"` で iframe 自身のスクロールバーを非表示にし、スクロールは親コンポーネントに委譲する。
 
