@@ -921,15 +921,26 @@ func TestApply_AsciiMiEstimateEndTime(t *testing.T) {
 // ─── M10: Nlog title/amount mismatch ────────────────────────────────────────
 
 func TestApply_NlogTitleAmountMismatch(t *testing.T) {
-	// 2 titles + 1 amount → should not error, creates 1 nlog (min of counts)
+	// 2 titles + 1 amount。支払いは1組ずつ別リクエストになるので行の解釈は2件通り、
+	// 金額の無い支払いは DoRequest で弾かれる(黙って切り詰めると取りこぼしになる)
 	text := "ーん\nTestShop\nTitle1\n100\nTitle2"
 	requestMap, err := helperApplyToRequestMapAllowError(t, text)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	all := requestMap.All()
-	if len(all) != 1 {
-		t.Fatalf("expected 1 request, got %d", len(all))
+	if len(all) != 2 {
+		t.Fatalf("expected 2 requests, got %d", len(all))
+	}
+	incomplete, ok := all[1].(*kftlNlogRequest)
+	if !ok {
+		t.Fatalf("expected *kftlNlogRequest, got %T", all[1])
+	}
+	if incomplete.title != "Title2" {
+		t.Fatalf("expected Title2, got %q", incomplete.title)
+	}
+	if err := incomplete.DoRequest(context.Background()); err == nil {
+		t.Fatal("expected an error for a title with no amount, got nil")
 	}
 }
 

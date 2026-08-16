@@ -98,6 +98,22 @@ Sandwich
 150
 Boisson
 120</pre>
+<p>Une ligne d'étiquette <code>。</code> ou un bloc de texte <code>--</code> écrit après une ligne de montant s'applique <strong>uniquement à ce paiement</strong> ; chaque paiement peut donc avoir les siens.</p>
+<pre>/expense
+Superette
+Sandwich
+150
+#nourriture
+--
+Pour le petit-dejeuner
+--
+Boisson
+120
+#boisson</pre>
+<p>La date et l'heure de <code>?</code> s'appliquent à l'ensemble des achats, pas à un paiement particulier.</p>
+<div class="tip">
+  <strong>Remarque :</strong> Écrivez les étiquettes et les textes après la ligne de montant. Écrits avant <code>/expense</code> ou juste après le nom du magasin, aucun paiement ne peut les recevoir et la ligne est considérée comme incorrecte.
+</div>
 
 <h3>11. Journal de temps (complet) : <code>/timeis</code></h3>
 <p>Lignes suivantes : titre, heure de debut, heure de fin.</p>

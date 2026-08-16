@@ -98,6 +98,22 @@ Sandwich
 150
 Getränk
 120</pre>
+<p>Eine <code>。</code>-Tag-Zeile oder ein <code>--</code>-Textblock nach einer Betragszeile gilt <strong>nur für diese Zahlung</strong>, sodass jede Zahlung eigene erhalten kann.</p>
+<pre>/expense
+Supermarkt
+Sandwich
+150
+#essen
+--
+Fuer das Fruehstueck
+--
+Getränk
+120
+#getraenk</pre>
+<p>Datum und Uhrzeit aus <code>?</code> gelten für den gesamten Einkauf, nicht für eine einzelne Zahlung.</p>
+<div class="tip">
+  <strong>Hinweis:</strong> Schreiben Sie Tags und Texte nach der Betragszeile. Vor <code>/expense</code> oder direkt nach dem Geschäftsnamen gibt es keine Zahlung, der sie zugeordnet werden könnten, und die Zeile gilt als ungültig.
+</div>
 
 <h3>11. Zeitprotokoll (vollständig): <code>/timeis</code></h3>
 <p>Folgende Zeilen: Titel, Startzeit, Endzeit.</p>

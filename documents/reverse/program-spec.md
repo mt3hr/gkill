@@ -378,11 +378,11 @@ type kftlFactory struct {
 4. 型に応じたリクエスト（Add/Update）を生成
 5. リクエストを実行
 
-### ステートメント型（Go 46種類 / TypeScript 48種類）
+### ステートメント型（Go 47種類 / TypeScript 50種類）
 
 KFTLは以下のステートメント型をサポートしています。
 
-サーバ側の具象型は `src/server/gkill/api/kftl/*.go` の `kftl*StatementLine` 構造体（46個）。
+サーバ側の具象型は `src/server/gkill/api/kftl/*.go` の `kftl*StatementLine` 構造体（47個）。
 1つのデータ型が複数行で構成されるため、行の役割ごとに型が分かれている。
 
 | カテゴリ | ステートメント型（Go） | 説明 |
@@ -392,7 +392,7 @@ KFTLは以下のステートメント型をサポートしています。
 | 気分 | `kftlStartLantana` / `kftlLantanaMood` | 開始 → 気分値 |
 | タスク | `kftlStartMi` / `kftlMiTitle` / `kftlMiBoardName` / `kftlMiEstimateStartTime` / `kftlMiEstimateEndTime` / `kftlMiLimitTime` | 開始 → タイトル → ボード名 → 見積開始 → 見積終了 → 期限 |
 | 既存の記録をタスク化 | `kftlStartMiReKyou` / `kftlMiReKyouBoardName` / `kftlMiReKyouEstimateStartTime` / `kftlMiReKyouEstimateEndTime` / `kftlMiReKyouLimitTime` / `kftlMiReKyouTag` / `kftlEndMiReKyou` | 開始 → ボード名 → 見積開始 → 見積終了 → 期限 → タグ → 終了（タイトル行は無い。タグは板名の前にも書ける） |
-| 支出 | `kftlStartNlog` / `kftlNlogShopName` / `kftlNlogTitle` / `kftlNlogAmount` | 開始 → 店名 → タイトル → 金額 |
+| 支出 | `kftlStartNlog` / `kftlNlogShopName` / `kftlNlogTitle` / `kftlNlogAmount` / `kftlNlogRelatedTime` | 開始 → 店名 →（タイトル → 金額 →（タグ / テキスト））の繰り返し。**支払い1組ごとに1リクエスト**で、金額の行のあとのタグ・テキストはその支払いに付く。関連時刻だけはブロック全体に効く（`ーん` より前のタグ・テキストはエラー） |
 | ブックマーク | `kftlStartURLog` / `kftlURLogURL` / `kftlURLogTitle` | 開始 → URL → タイトル |
 | 打刻 | `kftlStartTimeIs` / `kftlTimeIsTitle` / `kftlTimeIsStartTime` / `kftlTimeIsEndTime` | 開始+終了を同時指定 |
 | 打刻（開始のみ） | `kftlStartTimeIsStart` / `kftlTimeIsStartTitle` | |
@@ -404,7 +404,7 @@ KFTLは以下のステートメント型をサポートしています。
 | 区切り | `kftlSplit` / `kftlSplitAndNextSecond` | ステートメント区切り（`、` / `、、`） |
 | その他 | `kftlNoneStatementLine` | 該当なし |
 
-> クライアント側（`src/client/classes/kftl/kftl_*/`）は同じ構成で 48 クラス。
+> クライアント側（`src/client/classes/kftl/kftl_*/`）は同じ構成で 50 クラス。
 > `notification` / `template` / `time_set` というステートメント型は**存在しません**。
 
 ### プレフィックスの二重対応

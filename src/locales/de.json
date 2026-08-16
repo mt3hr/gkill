@@ -553,6 +553,7 @@
     "KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE": "Betrag ist ungültig",
     "KFTL_NLOG_INVALID_RECORD_COUNT_MESSAGE_TITLE": "Titel- und Betragsanzahl stimmen nicht überein",
     "KFTL_NLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE": "Ausgabe ohne Inhalt wurde übersprungen",
+    "KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE": "Schreiben Sie Tags und Texte einer Ausgabe nach der Betragszeile",
     "KFTL_NLOG_SHOP_NAME_TITLE": "Geschäftsname",
     "KFTL_NLOG_TITLE_TITLE": "Titel",
     "KFTL_NLOG_NLOG_LABEL_TITLE": "Ausgabe",

@@ -98,6 +98,22 @@ Sandwich
 150
 Bebida
 120</pre>
+<p>Una línea de etiqueta <code>。</code> o un bloque de texto <code>--</code> escrito después de una línea de importe se aplica <strong>solo a ese pago</strong>, de modo que cada pago puede tener los suyos.</p>
+<pre>/expense
+Tienda de conveniencia
+Sandwich
+150
+#comida
+--
+Para el desayuno
+--
+Bebida
+120
+#bebida</pre>
+<p>La fecha y hora de <code>?</code> se aplica a toda la compra, no a un pago concreto.</p>
+<div class="tip">
+  <strong>Nota:</strong> Escriba las etiquetas y los textos después de la línea de importe. Si se escriben antes de <code>/expense</code> o justo después del nombre de la tienda, no hay ningún pago al que asociarlos y la línea se trata como no válida.
+</div>
 
 <h3>11. Registro de tiempo (completo): <code>/timeis</code></h3>
 <p>Líneas siguientes: titulo, hora de inicio, hora de fin.</p>

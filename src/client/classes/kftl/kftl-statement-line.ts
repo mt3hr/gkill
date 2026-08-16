@@ -5,6 +5,17 @@ import type { KFTLRequestMap } from './kftl-request-map'
 import { KFTLStatementLineContext } from './kftl-statement-line-context'
 import type { TextAreaInfo } from './text-area-info'
 
+export type KFTLStatementLineConstructor = { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine }
+
+/**
+ * ブロックの中に書いたメタ情報行（タグ・テキスト）から、ブロックへ復帰するための「次の行」の決め方。
+ *
+ * 素のメタ情報行は次の行を kmemo か none にするので、ブロックの途中に書くとそこでブロックが切れる。
+ * ブロック側がこれを渡すと、メタ情報行のあともブロックの中に留まれる。
+ * 渡さなければ（null）今までどおり kmemo / none へ抜ける。
+ */
+export type KFTLBlockReentryProvider = { (next_line_text: string): KFTLStatementLineConstructor }
+
 export abstract class KFTLStatementLine {
 
     private statement_line_text: string

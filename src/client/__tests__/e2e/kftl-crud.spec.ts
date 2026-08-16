@@ -79,6 +79,26 @@ test.describe('KFTL CRUD Flows', () => {
     await expect(app).toBeVisible()
   })
 
+  // 支払い(品名と金額のペア)1組ごとに1件の記録になり、金額の行のあとに書いたタグは
+  // その支払いだけに付く。以前は Nlog の id とタグの target_id が食い違っていて、
+  // エラーも警告も出ないままタグが1件も付いていなかった
+  test('submit two nlog payments with their own tags via KFTL', async ({ page }) => {
+    const marker = makeUniqueLabel('nlog_pair')
+    const firstTag = `${marker}_tag1`
+    const secondTag = `${marker}_tag2`
+    await submitKftlText(page, `ーん\nテスト店舗_kftl\n${marker}_a\n150\n。${firstTag}\n${marker}_b\n120\n。${secondTag}`)
+
+    await navigateToRykv(page)
+    await searchByKeyword(page, marker)
+
+    const taggedWithFirst = page.locator('.kyou_attached_tags').filter({ hasText: firstTag })
+    const taggedWithSecond = page.locator('.kyou_attached_tags').filter({ hasText: secondTag })
+    await expect(taggedWithFirst, '1件目の支払いにタグが付いていない').toHaveCount(1, { timeout: 30000 })
+    await expect(taggedWithSecond, '2件目の支払いにタグが付いていない').toHaveCount(1, { timeout: 30000 })
+    // 同じ行に両方のタグが乗っていたら、支払いごとに分けられていない
+    await expect(taggedWithFirst.filter({ hasText: secondTag }), '2つの支払いのタグが同じ行に付いている').toHaveCount(0)
+  })
+
   test('submit urlog via KFTL', async ({ page }) => {
     const label = makeUniqueLabel('urlog_kftl')
     await submitKftlText(page, `ーう\nhttps://example.com/${label}`)

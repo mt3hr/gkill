@@ -12,18 +12,13 @@ type kftlTagStatementLine struct {
 	ctx      *KFTLStatementLineContext
 }
 
-func newKFTLTagStatementLine(lineText string, ctx *KFTLStatementLineContext, prevLineIsMetaInfo bool) *kftlTagStatementLine {
+func newKFTLTagStatementLine(lineText string, ctx *KFTLStatementLineContext, prevLineIsMetaInfo bool, resume resumeConstructorFunc) *kftlTagStatementLine {
 	// next target is same as this; prototype flag is inherited
 	ctx.NextIsPrototype = ctx.ThisIsPrototype
 	targetID := ctx.ThisStatementLineTargetID
 	ctx.NextStatementLineTargetID = &targetID
 
-	// Use factory to decide whether next line is Kmemo or None
-	if prevLineIsMetaInfo {
-		ctx.NextStatementLineConstructor = ctx.factory.generateKmemoConstructor(ctx.NextStatementLineText)
-	} else {
-		ctx.NextStatementLineConstructor = ctx.factory.generateNoneConstructor(ctx.NextStatementLineText)
-	}
+	ctx.NextStatementLineConstructor = afterMetaInfoConstructor(ctx.factory, ctx.NextStatementLineText, prevLineIsMetaInfo, resume)
 
 	return &kftlTagStatementLine{lineText: lineText, ctx: ctx}
 }

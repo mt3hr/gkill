@@ -553,6 +553,7 @@
     "KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE": "金額が変です",
     "KFTL_NLOG_INVALID_RECORD_COUNT_MESSAGE_TITLE": "タイトルと金額の個数が一致していません",
     "KFTL_NLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE": "内容がない支出の保存がスキップされました",
+    "KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE": "支出のタグやテキストは金額の行のあとに書いてください",
     "KFTL_NLOG_SHOP_NAME_TITLE": "店名",
     "KFTL_NLOG_TITLE_TITLE": "タイトル",
     "KFTL_NLOG_NLOG_LABEL_TITLE": "支出",
