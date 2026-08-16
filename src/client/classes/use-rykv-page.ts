@@ -27,6 +27,9 @@ export function useRykvPage() {
     const app_title_bar_height: Ref<number> = ref(50)
     const gkill_api = computed(() => GkillAPI.get_instance())
     const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
+    // 設定取得に失敗した。取得できないと is_loaded が立たず画面の初期化が走らないので、
+    // オーバーレイをスピナーからエラー表示＋再試行へ差し替えるために使う
+    const application_config_load_failed: Ref<boolean> = ref(false)
     const app_content_height: Ref<number> = ref(0)
     const app_content_width: Ref<number> = ref(0)
     const is_show_application_config_dialog: Ref<boolean> = ref(false)
@@ -57,10 +60,15 @@ export function useRykvPage() {
         const loaded_raw_value = useRoute().query.loaded
         const loaded = loaded_raw_value && (loaded_raw_value == 'true')
         req.force_reget = !loaded // メニューから遷移したときにはApplicationConfig再取得はしない（キャッシュから取得する）
+        application_config_load_failed.value = false
         return gkill_api.value.get_application_config(req)
             .then(async res => {
                 if (res.errors && res.errors.length !== 0) {
                     write_errors(res.errors)
+                    // 設定が来ないと画面の初期化(is_loadedのwatch)が一度も走らない。
+                    // 黙って戻ると読み込み中オーバーレイのまま永久に固まるので、
+                    // 失敗を画面へ伝えて再試行できるようにする
+                    application_config_load_failed.value = true
                     return
                 }
 
@@ -79,6 +87,12 @@ export function useRykvPage() {
                     write_messages(res.messages)
                     return
                 }
+            })
+            .catch((err: unknown) => {
+                // 通信例外もここで受ける。catchが無いと呼び出し元がawaitしていないぶん
+                // unhandled rejectionになり、やはり画面が固まったままになる
+                console.error(err)
+                application_config_load_failed.value = true
             })
     }
 
@@ -332,6 +346,7 @@ export function useRykvPage() {
         app_title_bar_height,
         gkill_api,
         application_config,
+        application_config_load_failed,
         app_content_height,
         app_content_width,
         is_show_application_config_dialog,

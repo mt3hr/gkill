@@ -426,3 +426,65 @@ describe('dashboardKyouHandlers の結線', () => {
         expect(page.messages.value[0].is_error).toBe(true)
     })
 })
+
+/**
+ * 設定が取れないと application_config.is_loaded が立たず、画面の初期化が
+ * 一度も走らない。黙って戻ると読み込み中オーバーレイのまま永久に固まるので、
+ * 失敗を画面へ伝えて再試行できるようにする。
+ */
+describe('ApplicationConfig 取得の失敗', () => {
+    test('errors が返ったら application_config_load_failed が立ち、設定は差し替わらない', async () => {
+        const api = make_fake_api()
+        api.get_application_config = vi.fn().mockResolvedValue({
+            application_config: new ApplicationConfig(),
+            messages: null,
+            errors: [{ error_code: 'ERR000001', error_message: '設定が取れない' }],
+        })
+        vi.spyOn(GkillAPI, 'get_instance').mockReturnValue(api as unknown as GkillAPI)
+
+        const { page } = mount_page()
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(page.application_config_load_failed.value, '失敗が画面へ伝わっていない').toBe(true)
+        expect(page.application_config.value.is_loaded, '失敗したのに設定が差し替わっている').toBeFalsy()
+    })
+
+    test('通信例外でも application_config_load_failed が立つ', async () => {
+        // catch が無いと呼び出し元が await していないぶん unhandled rejection になり、
+        // やはり画面が固まったままになる
+        const api = make_fake_api()
+        api.get_application_config = vi.fn().mockRejectedValue(new Error('network down'))
+        vi.spyOn(GkillAPI, 'get_instance').mockReturnValue(api as unknown as GkillAPI)
+        const console_error = vi.spyOn(console, 'error').mockImplementation(() => { })
+
+        const { page } = mount_page()
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(page.application_config_load_failed.value, '例外が画面へ伝わっていない').toBe(true)
+        console_error.mockRestore()
+    })
+
+    test('再試行が成功したら失敗フラグは倒れる', async () => {
+        const api = make_fake_api()
+        const loaded_config = new ApplicationConfig()
+        loaded_config.is_loaded = true
+        api.get_application_config = vi.fn()
+            .mockResolvedValueOnce({
+                application_config: new ApplicationConfig(),
+                messages: null,
+                errors: [{ error_code: 'ERR000001', error_message: '設定が取れない' }],
+            })
+            .mockResolvedValue({ application_config: loaded_config, messages: null, errors: null })
+        vi.spyOn(GkillAPI, 'get_instance').mockReturnValue(api as unknown as GkillAPI)
+
+        const { page } = mount_page()
+        await vi.advanceTimersByTimeAsync(0)
+        expect(page.application_config_load_failed.value).toBe(true)
+
+        await page.load_application_config()
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(page.application_config_load_failed.value, '再試行しても失敗表示のままになる').toBe(false)
+        expect(page.application_config.value.is_loaded).toBe(true)
+    })
+})
