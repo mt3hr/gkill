@@ -9,7 +9,7 @@ Vue コンポーネント（`pages/`）から使用されるロジック層。
 
 ```
 classes/
-├── (ルートファイル 279個)        # use-*.ts Composable + ユーティリティ
+├── (ルートファイル 282個)        # use-*.ts Composable + ユーティリティ
 ├── api/                        # GkillAPI クライアント → api/README.md
 ├── datas/                      # データモデル → datas/README.md
 ├── dnote/                      # Dynamic Note システム → dnote/README.md
@@ -90,7 +90,9 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | ファイル | 対応ページ |
 |---------|-----------|
 | `use-login-page.ts` / `use-login-view.ts` | ログインページ |
-| `use-kftl-page.ts` / `use-kftl-view.ts` | KFTL エディタ |
+| `use-kftl-page.ts` / `use-kftl-view.ts` | KFTL エディタ。`use-kftl-view.ts` はタブのホストも兼ねる（送信対象タブは `do_submit()` の引数で渡す。確認ダイアログの往復中も誤配送しないため） |
+| `use-kftl-dialog-host.ts` | メモ帳ダイアログの一覧（開いているウィンドウ）。スロット番号は空いている最小のものを払い出す ―― `useFloatingDialog` の保存キーとカスケード量がこれで決まる。上限8枚 |
+| `use-kftl-tabs.ts` | KFTL のタブを持つ**共有シングルトン**ストア。`/mkfl` ではインラインの KFTLView と plaing 側のメモ帳ダイアログが同時にマウントされるので、インスタンスごとに配列を持つと片方の古い配列でもう片方のタブが消える。独立した `effectScope(true)` で作る（setup 直下に watch を張ると最初のコンポーネントの unmount で永続化が止まる） |
 | `use-mi-page.ts` | Mi ページ |
 | `use-kyou-page.ts` | Kyou ページ |
 | `use-rykv-page.ts` / `use-rykv-view.ts` | Rykv ページ |
@@ -194,6 +196,7 @@ Vue 3 の Composable パターン（`use-*.ts`）でコンポーネントのロ�
 | `markdown-to-html.ts` | Markdown → HTML 変換（IDFKyou の .md/.markdown リッチ表示用。DOMPurify サニタイズ付き） |
 | `mermaid-render.ts` | Markdown 内 ```mermaid コードブロックの図描画 |
 | `decode-text.ts` | テキストファイルの文字コード判定・デコード |
+| `kftl-tabs.ts` | KFTL のタブの純関数（`derive_kftl_tab_label` / `add_kftl_tab` / `close_kftl_tab` / `load_kftl_tabs` / `save_kftl_tabs`）。タブは常に1枚以上。旧形式の単一キー `kftl_content` からの移行もここ。`parse_kftl_tabs` は壊れたJSONでも throw しない |
 | `kyou-view-relay.ts` | Kyou 系イベントの中継ハンドラ束（`build_kyou_view_relay` / `build_kyou_dialog_relay` / ページ最上位の `RykvDialogHost` 用 `build_kyou_dialog_host_handlers`）。`v-on="crudRelayHandlers"` にそのまま渡す |
 | `kyou-reload.ts` | Kyou を最新化する唯一の手順（`refresh_kyou` / `refresh_kyou_in_list` / `build_mi_reload_query`）。同じ更新から派生した引き直しは `new_reload_batch()` の値を共有して合流させる。引き直し中は `is_kyou_reloading(id)` が真 |
 | `cascade-delete-kyou.ts` | Kyou 削除時の連鎖削除。付随する Tag / Text / Notification と、その Kyou を参照している ReKyou / MiReKyou も論理削除する |

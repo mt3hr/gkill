@@ -34,7 +34,53 @@
       <td>Bouton d'enregistrement</td>
       <td>Cliquez sur le bouton d'enregistrement pour analyser et enregistrer le texte du bloc-notes saisi.</td>
     </tr>
+    <tr>
+      <td>Onglets</td>
+      <td>Permettent de conserver plusieurs brouillons à la fois. Chaque onglet contient son propre texte.</td>
+    </tr>
+    <tr>
+      <td>Bouton d'ajout d'onglet</td>
+      <td>Ajoute un nouvel onglet vide.</td>
+    </tr>
+    <tr>
+      <td>Bouton de fermeture d'onglet</td>
+      <td>Ferme cet onglet. Une confirmation apparaît s'il contient encore du texte.</td>
+    </tr>
   </table>
+
+  <h2>Utilisation des onglets</h2>
+  <p>Vous pouvez conserver plusieurs brouillons côte à côte. Si vous pensez à autre chose pendant la rédaction d'un enregistrement, appuyez sur le bouton d'ajout d'onglet, écrivez-le dans un nouvel onglet et revenez ensuite à l'onglet d'origine.</p>
+  <table>
+    <tr>
+      <th>Action</th>
+      <th>Résultat</th>
+    </tr>
+    <tr>
+      <td>Appuyer sur le bouton d'ajout d'onglet</td>
+      <td>Un onglet vide est ajouté.</td>
+    </tr>
+    <tr>
+      <td>Cliquer sur le nom d'un onglet</td>
+      <td>L'éditeur bascule sur le contenu de cet onglet.</td>
+    </tr>
+    <tr>
+      <td>Appuyer sur le bouton de fermeture d'onglet</td>
+      <td>Cet onglet est fermé. Une confirmation apparaît s'il contient encore du texte.</td>
+    </tr>
+    <tr>
+      <td>Appuyer sur le bouton d'enregistrement</td>
+      <td>Seul le contenu de cet onglet est enregistré, et l'onglet enregistré est fermé. Les autres onglets restent tels quels.</td>
+    </tr>
+    <tr>
+      <td>Choisir un modèle</td>
+      <td>Un nouvel onglet s'ouvre avec le modèle. Le texte en cours n'est pas perdu.</td>
+    </tr>
+  </table>
+  <p>Le nom de l'onglet reprend celui du modèle lorsqu'il a été ouvert depuis un modèle, sinon la première ligne du texte. Les onglets encore vides portent un numéro.</p>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Le texte en cours est conservé même après la fermeture de l'écran. À la prochaine ouverture, les onglets que vous aviez reviennent tels quels.
+  </div>
 
   <h2>À propos du bloc-notes</h2>
   <p>Le bloc-notes utilise un format de texte propre à gkill qui permet de créer en masse plusieurs enregistrements dans un seul texte. Chaque ligne représente une commande ou une entrée de données.</p>
@@ -46,10 +92,10 @@
   <h2>Procédure d'utilisation</h2>
   <ol>
     <li>Saisissez le contenu de l'enregistrement avec la syntaxe du bloc-notes dans la zone de saisie de texte.</li>
-    <li>Si nécessaire, insérez un texte type à l'aide du bouton de modèle.</li>
+    <li>Si nécessaire, insérez un texte type à l'aide du bouton de modèle. Le modèle s'ouvre dans un nouvel onglet, le texte en cours n'est donc pas perdu.</li>
     <li>Cliquez sur le bouton d'enregistrement pour créer l'enregistrement.</li>
     <li>Si le texte contient un tag encore jamais utilisé, une confirmation « C'est un nouveau tag. Voulez-vous l'ajouter ? » apparaît. Si le tag vous convient, poursuivez.</li>
-    <li>Une fois l'enregistrement réussi, la zone de texte est vidée.</li>
+    <li>Une fois l'enregistrement réussi, cet onglet est fermé. Les autres onglets conservent leur texte. S'il n'en reste aucun, un onglet vide est préparé.</li>
   </ol>
 
   <div class="tip">
@@ -58,6 +104,10 @@
 
   <div class="tip">
     <strong>Astuce :</strong> L'utilisation de modèles permet une saisie plus efficace. Il est pratique d'enregistrer comme modèles les schémas d'enregistrement que vous utilisez souvent.
+  </div>
+
+  <div class="tip">
+    <strong>Astuce :</strong> Sur les autres écrans, chaque choix de « Bloc-notes » dans le menu + ouvre une fenêtre supplémentaire. Chaque fenêtre peut afficher un onglet différent, et si deux fenêtres affichent le même onglet, ce que vous saisissez dans l'une apparaît dans l'autre.
   </div>
 
   <h2>Documents associés</h2>

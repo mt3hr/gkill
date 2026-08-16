@@ -263,7 +263,7 @@ sequenceDiagram
 
     User->>UI: KFTLテキスト入力<br>(プレフィックス付き複数行)
     User->>UI: 保存ボタン or 「！」入力
-    UI->>UI: collect_unknown_tags()<br>(use-kftl-view.ts:222)
+    UI->>UI: collect_unknown_tags()<br>(use-kftl-view.ts)
     alt 未使用のタグが含まれる
         UI-->>User: 「新しいタグです。追加しますか？」と確認
         User->>UI: 承認（do_submit(skip_unknown_tag_check=true) で再送）
@@ -294,11 +294,17 @@ sequenceDiagram
 ```
 
 > **新規タグの確認ゲート**は完全にクライアント側の処理。`do_submit(skip_unknown_tag_check)`
-> （`use-kftl-view.ts:262,281`）が未確認のときだけ `collect_unknown_tags()` を呼び、
+> （`use-kftl-view.ts` の `do_submit()`）が未確認のときだけ `collect_unknown_tags()` を呼び、
 > 打ち間違いで似たタグが増えるのを防ぐ。サーバ側は確認の有無を関知しない。
 > なお `do_submit()` の先頭には `is_requested_submit` の二重送信ガードがある
-> （`use-kftl-view.ts:263-266`）。KFTL は複数リクエストを1つの TXID で束ねて送るため、
+> （同 `do_submit()` の先頭）。KFTL は複数リクエストを1つの TXID で束ねて送るため、
 > 二重送信すると Kyou が丸ごと重複登録される。
+>
+> 確認ダイアログを挟むと `do_submit()` は1回の保存操作で2〜3回呼ばれる。**送信対象のタブは
+> `do_submit(target_tab_id, ...)` の引数で渡す**（持ち越し用の `submit_target_tab_id` を
+> 読むのは確認からの続行だけ）。gkill のフローティングダイアログは非モーダルなので、
+> 確認中でも背後のタブバーは押せてしまう。
+> 保存に成功すると、そのタブは閉じる（0枚になるなら空のタブが1枚できる）。
 
 ## 9. ファイルアップロード
 

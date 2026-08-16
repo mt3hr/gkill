@@ -1,16 +1,39 @@
 <template>
     <v-card class="kftl_view">
-        <v-card-title :height="title_height">
-            <v-row>
-                <v-col cols="auto">
-                    {{ i18n.global.t("KFTL_ADD_KYOU_TITLE") }}
+        <!-- タブ列はタイトル行に同居させる。別の行にするとテキストエリアの縦が
+             タブバーのぶんだけ削られる。
+             タブは v-window を使わない ―― 非表示の textarea は clientWidth が 0 になり、
+             行ラベルの行数計算が NaN に落ちる（kftl-statement-line.ts）ので、
+             アクティブなタブ1枚だけを描画する -->
+        <v-card-title class="kftl_title">
+            <v-row class="flex-nowrap align-center pa-0 ma-0">
+                <v-col class="pa-0 ma-0 kftl_tab_col">
+                    <v-tabs v-model="active_tab_id_model" :height="tab_bar_height" density="compact" show-arrows
+                        :center-active="false">
+                        <v-tab v-for="(tab, index) in tabs" :key="tab.id" :value="tab.id" class="kftl_tab">
+                            <span class="kftl_tab_label">{{ tab_label(tab, index) }}</span>
+                            <!-- v-tab は button を描画するので、閉じるは v-btn ではなく v-icon にする（button のネストを避ける）。
+                                 .stop が無いとタブのアクティブ化も一緒に起きる -->
+                            <v-icon size="x-small" icon="mdi-close" class="ml-1 kftl_tab_close" role="button"
+                                :aria-label="i18n.global.t('KFTL_TAB_CLOSE_TITLE')"
+                                @click.stop.prevent="request_close_tab(tab.id)" />
+                        </v-tab>
+                        <v-tooltip :text="i18n.global.t('KFTL_TAB_ADD_TITLE')">
+                            <template v-slot:activator="{ props }">
+                                <v-btn v-bind="props" icon="mdi-plus" size="small" variant="text"
+                                    class="align-self-center ml-1 kftl_tab_add" :disabled="is_tab_locked"
+                                    @click="add_tab" />
+                            </template>
+                        </v-tooltip>
+                    </v-tabs>
                 </v-col>
-                <v-spacer />
-                <v-col cols="auto">
-                    <v-btn dark color="primary" @click="show_kftl_template_dialog" :disabled="is_requested_submit">{{
-                        i18n.global.t("KFTL_TEMPLATE_TITLE") }}</v-btn>
+                <v-col cols="auto" class="pa-0 ma-0 ml-2">
+                    <!-- テンプレートは新しいタブを作るので、送信の確認往復中は押せないようにする -->
+                    <v-btn dark color="primary" @click="show_kftl_template_dialog"
+                        :disabled="is_requested_submit || is_tab_locked">{{
+                            i18n.global.t("KFTL_TEMPLATE_TITLE") }}</v-btn>
                 </v-col>
-                <v-col cols="auto">
+                <v-col cols="auto" class="pa-0 ma-0 ml-2">
                     <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{
                         i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
@@ -21,7 +44,7 @@
             <tbody>
                 <tr>
                     <td>
-                        <div class="kftl_line_label line_label_wrap">
+                        <div class="kftl_line_label line_label_wrap" ref="kftl_line_label_wrap">
                             <KFTLLineLabel v-for="(line_label_data, index) in line_label_datas"
                                 :key="index" :application_config="application_config"
                                 :gkill_api="gkill_api" :line_label_data="line_label_data"
@@ -30,8 +53,9 @@
                     </td>
                     <td>
                         <div class="kftl_text_area_wrap">
-                            <textarea id="kftl_text_area" class="kftl_text_area" v-model="text_area_content"
-                                :readonly="is_requested_submit" autofocus></textarea>
+                            <textarea :id="text_area_element_id" class="kftl_text_area" ref="kftl_text_area"
+                                v-model="text_area_content" :readonly="is_requested_submit"
+                                @scroll="update_line_labels" @input="onTextAreaInput"></textarea>
                         </div>
                     </td>
                 </tr>
@@ -95,6 +119,9 @@
     <ConfirmUnknownMiBoardDialog :unknown_mi_boards="unknown_mi_boards" :is_requested_submit="is_requested_submit"
         @requested_confirm="confirm_mi_board_submit()" @requested_cancel="cancel_mi_board_submit()"
         ref="confirm_unknown_mi_board_dialog" />
+    <ConfirmCloseKFTLTabDialog :tab_label="pending_close_tab_label"
+        @requested_confirm="confirm_close_tab()" @requested_cancel="cancel_close_tab()"
+        ref="confirm_close_kftl_tab_dialog" />
 </template>
 
 <script setup lang="ts">
@@ -106,6 +133,7 @@ import type { KFTLViewEmits } from './kftl-view-emits'
 import KFTLLineLabel from './kftl-line-label.vue'
 import KFTLTemplateDialog from '../dialogs/kftl-template-dialog.vue'
 import ConfirmUnknownMiBoardDialog from '../dialogs/confirm-unknown-mi-board-dialog.vue'
+import ConfirmCloseKFTLTabDialog from '../dialogs/confirm-close-kftl-tab-dialog.vue'
 import { useKftlView } from '@/classes/use-kftl-view'
 
 const props = defineProps<KFTLProps>()
@@ -115,18 +143,33 @@ const {
     // Template refs
     kftl_template_dialog,
     confirm_unknown_mi_board_dialog,
+    confirm_close_kftl_tab_dialog,
+    kftl_text_area,
+    kftl_line_label_wrap,
 
     // Confirm unknown mi board
     unknown_mi_boards,
     cancel_mi_board_submit,
     confirm_mi_board_submit,
 
+    // Tabs
+    tabs,
+    active_tab_id_model,
+    is_tab_locked,
+    tab_bar_height,
+    tab_label,
+    add_tab,
+    request_close_tab,
+    confirm_close_tab,
+    cancel_close_tab,
+    pending_close_tab_label,
+
     // State
     text_area_content,
+    text_area_element_id,
     line_label_datas,
     line_label_styles,
     is_requested_submit,
-    title_height,
     show_confirm_unknown_tag_dialog,
     unknown_tags,
 
@@ -140,6 +183,7 @@ const {
     line_label_height_px,
     kftl_input_height_px,
     kftl_input_width_px,
+    title_height_px,
 
     // Business logic
     submit,
@@ -148,6 +192,8 @@ const {
     show_kftl_template_dialog,
     paste_template,
     focus_kftl_text_area,
+    onTextAreaInput,
+    update_line_labels,
 
     // Event relay objects
     errorMessageRelayHandlers,
@@ -194,5 +240,47 @@ textarea {
 
 .kftl_line_label::-webkit-scrollbar {
     display: none;
+}
+
+/* title_height はテキストエリアの高さ計算に使う定数。
+   v-card-title に height prop は無いので、ここで実寸を定数へ固定しておく。
+   既定の縦パディングと line-height を潰さないと、タブ列より背が高くなって
+   タイトルとテキストエリアのあいだに余白ができる */
+.kftl_title {
+    height: calc(v-bind(title_height_px));
+    min-height: calc(v-bind(title_height_px));
+    padding: 0 8px;
+    line-height: normal;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.kftl_title > .v-row {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* タブ列は残り幅を全部使う。テンプレート/保存ボタンは右端に固定 */
+.kftl_tab_col {
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* v-tabs の既定は大文字化。半角英数のタブ名が化けるので戻す */
+.kftl_tab {
+    min-width: 88px;
+    max-width: 180px;
+    text-transform: none;
+}
+
+.kftl_tab_label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kftl_tab_close {
+    cursor: pointer;
 }
 </style>
