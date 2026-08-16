@@ -56,11 +56,25 @@ test.describe('KFTL CRUD Flows', () => {
     await submitKftlText(page, `${label}\n～～\n～～`)
     await navigateToRykv(page)
     await searchByKeyword(page, label)
-    // タスク化した行は元の記録と同じ本文で表示されるので、リポジトリ名で特定する
-    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*MiReKyou\s*$/ }), 'タスク化した行が作られていない')
-      .toHaveCount(1, { timeout: 30000 })
-    await expect(page.locator('.kyou_rep_name').filter({ hasText: /^\s*Kmemo\s*$/ }), '元のメモが作られていない')
-      .toHaveCount(1, { timeout: 30000 })
+
+    // rykv の一覧は行高 180px で、is_row_height の閾値(120)より大きいので is_compact にならない。
+    // つまりタスク化した行は参照先のKyouを行の中に描くので、リポジトリ名のバッジは
+    // 「タスク化した行に2つ（自分と参照先のメモ）＋元のメモの行に1つ」出る。
+    // ページ全体で .kyou_rep_name を数えるとメモが2つに見えるため、行（.kyou_in_list）単位で数える
+    const rows = page.locator('.kyou_in_list')
+    await expect(rows, '元のメモとタスク化した行の2件にならない').toHaveCount(2, { timeout: 30000 })
+
+    // タスク化した行は元の記録と同じ本文で表示されるので、参照先ブロックの有無で見分ける
+    const taskedRow = rows.filter({ has: page.locator('.mirekyou_target') })
+    await expect(taskedRow, 'タスク化した行が作られていない').toHaveCount(1)
+    await expect(taskedRow.locator('.kyou_rep_name').first(), 'タスク化した行のリポジトリ名が違う')
+      .toHaveText(/^\s*MiReKyou\s*$/)
+    await expect(taskedRow.locator('.mirekyou_target .kyou_rep_name'), 'タスク化した行に参照先のメモが描かれていない')
+      .toHaveText(/^\s*Kmemo\s*$/)
+
+    const memoRow = rows.filter({ hasNot: page.locator('.mirekyou_target') })
+    await expect(memoRow, '元のメモが作られていない').toHaveCount(1)
+    await expect(memoRow.locator('.kyou_rep_name'), '元のメモのリポジトリ名が違う').toHaveText(/^\s*Kmemo\s*$/)
   })
 
   test('submit timeis start via KFTL', async ({ page }) => {
