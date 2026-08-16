@@ -8,12 +8,22 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { EditTimeIsViewProps } from '@/pages/views/edit-time-is-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
+import type { ComponentRef } from '@/classes/component-ref'
+import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
+import { add_tags_to_target } from '@/classes/kyou-tags'
+import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
 
 export function useAddTimeIsView(options: {
     props: EditTimeIsViewProps,
     emits: KyouViewEmits,
 }) {
     const { props, emits } = options
+
+    // ── Template refs ──
+    const kyou_tags_view = ref<ComponentRef | null>(null)
+
+    // ── Confirm unknown tag ──
+    const confirm_unknown_tag = useConfirmUnknownTag({ application_config: () => props.application_config })
 
     // ── State refs ──
     const is_requested_submit = ref(false)
@@ -44,6 +54,7 @@ export function useAddTimeIsView(options: {
         timeis_start_time_string.value = (moment(timeis.value.start_time).format("HH:mm:ss"))
         timeis_end_date_typed.value = null
         timeis_end_time_string.value = ""
+        kyou_tags_view.value?.reset()
     }
 
     function reset_start_date_time(): void {
@@ -116,6 +127,39 @@ export function useAddTimeIsView(options: {
                 return
             }
 
+            // タグツリーに無いタグ名なら、保存する前に確認を取る
+            const tag_names = kyou_tags_view.value?.get_tag_names() ?? []
+            const unknown_tags = confirm_unknown_tag.collect_unknown_tags(tag_names)
+            if (unknown_tags.length !== 0) {
+                confirm_unknown_tag.open_confirm(unknown_tags)
+                return
+            }
+
+            await execute_save(tag_names)
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    function cancel_save(): void {
+        confirm_unknown_tag.close_confirm()
+    }
+
+    async function confirm_save(): Promise<void> {
+        confirm_unknown_tag.close_confirm()
+        try {
+            is_requested_submit.value = true
+            // 確認ダイアログは非モーダルなので、確認中にタグ欄を書き換えられる。取り直す
+            await execute_save(kyou_tags_view.value?.get_tag_names() ?? [])
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    async function execute_save(tag_names: Array<string>): Promise<void> {
+        try {
+            is_requested_submit.value = true
+
             // 更新後TimeIs情報を用意する
             let end_time: Date | null = null
             if (timeis_end_date_string.value !== "" && timeis_end_time_string.value !== "") {
@@ -148,6 +192,19 @@ export function useAddTimeIsView(options: {
             if (res.messages && res.messages.length !== 0) {
                 emits('received_messages', res.messages)
             }
+
+            // タグは registered_kyou より必ず先に付ける。
+            // 先に emit すると、タグで絞り込んだ列が空のタグ列を見て「一致しない」と判定し、
+            // エラーも出ないまま行が現れない
+            const tag_result = await add_tags_to_target(props.gkill_api, props.application_config, new_timeis.id, tag_names)
+            tag_result.added_tags.forEach(added_tag => emits('registered_tag', added_tag))
+            if (tag_result.messages.length !== 0) {
+                emits('received_messages', tag_result.messages)
+            }
+            if (tag_result.errors.length !== 0) {
+                emits('received_errors', tag_result.errors)
+            }
+
             // 追加した記録は列へ局所挿入されるので、リスト全体の引き直しは要求しない。
             // Kyouが返らなかったときだけ、従来どおり引き直しへ落とす
             if (res.added_kyou) {
@@ -162,8 +219,20 @@ export function useAddTimeIsView(options: {
         }
     }
 
+    // ── CRUD relay handlers ──
+    const crudRelayHandlers = build_kyou_view_relay(emits)
+
     // ── Return ──
     return {
+        // Template refs
+        kyou_tags_view,
+        confirm_unknown_tag_dialog: confirm_unknown_tag.confirm_unknown_tag_dialog,
+
+        // Confirm unknown tag
+        unknown_tags: confirm_unknown_tag.unknown_tags,
+        cancel_save,
+        confirm_save,
+
         // State
         is_requested_submit,
         timeis_title,
@@ -185,5 +254,8 @@ export function useAddTimeIsView(options: {
         reset_end_date_time,
         now_to_start_date_time,
         now_to_end_date_time,
+
+        // Event relay objects
+        crudRelayHandlers,
     }
 }

@@ -63,6 +63,8 @@
             </v-col>
         </v-row>
 
+        <EditKyouTagsView :application_config="application_config" :gkill_api="gkill_api" :kyou="null"
+            :is_readonly="is_requested_submit" ref="kyou_tags_view" v-on="crudRelayHandlers" />
         <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
@@ -76,12 +78,17 @@
                 }}</v-btn>
             </v-col>
         </v-row>
+        <ConfirmUnknownTagDialog :unknown_tags="unknown_tags" :is_requested_submit="is_requested_submit"
+            @requested_confirm="confirm_save()" @requested_cancel="cancel_save()"
+            ref="confirm_unknown_tag_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
 import type { KyouViewEmits } from './kyou-view-emits'
 import LantanaFlowersView from './lantana-flowers-view.vue'
+import EditKyouTagsView from './edit-kyou-tags-view.vue'
+import ConfirmUnknownTagDialog from '../dialogs/confirm-unknown-tag-dialog.vue'
 import type { AddLantanaViewProps } from './add-lantana-view-props'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
@@ -92,6 +99,11 @@ const emits = defineEmits<KyouViewEmits>()
 
 const {
     edit_lantana_flowers,
+    kyou_tags_view,
+    confirm_unknown_tag_dialog,
+    unknown_tags,
+    cancel_save,
+    confirm_save,
     is_requested_submit,
     mood,
     related_date_typed,
@@ -103,5 +115,6 @@ const {
     reset_related_date_time,
     now_to_related_date_time,
     reset,
+    crudRelayHandlers,
 } = useAddLantanaView({ props, emits })
 </script>

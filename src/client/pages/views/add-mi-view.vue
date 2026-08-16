@@ -212,6 +212,8 @@
                 </v-row>
             </v-col>
         </v-row>
+        <EditKyouTagsView :application_config="application_config" :gkill_api="gkill_api" :kyou="null"
+            :is_readonly="is_requested_submit" ref="kyou_tags_view" v-on="crudRelayHandlers" />
         <v-row class="pa-0 ma-0 flex-row-reverse gkill-dialog-actions">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
@@ -229,6 +231,10 @@
             v-on="crudRelayHandlers"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
+        <!-- 確認はタグ→板名の順に1つずつ出す（KFTLと同じ） -->
+        <ConfirmUnknownTagDialog :unknown_tags="unknown_tags" :is_requested_submit="is_requested_submit"
+            @requested_confirm="confirm_tag_save()" @requested_cancel="cancel_tag_save()"
+            ref="confirm_unknown_tag_dialog" />
         <ConfirmUnknownMiBoardDialog :unknown_mi_boards="unknown_mi_boards"
             :is_requested_submit="is_requested_submit"
             @requested_confirm="confirm_save()" @requested_cancel="cancel_save()"
@@ -242,6 +248,8 @@ import type { AddMiViewProps } from './add-mi-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import ConfirmUnknownMiBoardDialog from '../dialogs/confirm-unknown-mi-board-dialog.vue'
+import ConfirmUnknownTagDialog from '../dialogs/confirm-unknown-tag-dialog.vue'
+import EditKyouTagsView from './edit-kyou-tags-view.vue'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
 import { useAddMiView } from '@/classes/use-add-mi-view'
@@ -253,12 +261,19 @@ const {
     // Template refs
     new_board_name_dialog,
     add_notification_views,
+    kyou_tags_view,
     confirm_unknown_mi_board_dialog,
+    confirm_unknown_tag_dialog,
 
     // Confirm unknown mi board
     unknown_mi_boards,
     cancel_save,
     confirm_save,
+
+    // Confirm unknown tag
+    unknown_tags,
+    cancel_tag_save,
+    confirm_tag_save,
 
     // State
     is_requested_submit,

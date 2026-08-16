@@ -9,12 +9,21 @@ import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
+import type { ComponentRef } from '@/classes/component-ref'
+import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
+import { apply_kyou_tag_changes } from '@/classes/kyou-tags'
 
 export function useEditTimeIsView(options: {
     props: EditTimeIsViewProps,
     emits: KyouViewEmits,
 }) {
     const { props, emits } = options
+
+    // ── Template refs ──
+    const kyou_tags_view = ref<ComponentRef | null>(null)
+
+    // ── Confirm unknown tag ──
+    const confirm_unknown_tag = useConfirmUnknownTag({ application_config: () => props.application_config })
 
     // ── State refs ──
     const is_loading = ref(true)
@@ -57,6 +66,7 @@ export function useEditTimeIsView(options: {
         timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
         reset_start_date_time()
         reset_end_date_time()
+        kyou_tags_view.value?.reset()
     }
 
     function reset_start_date_time(): void {
@@ -82,6 +92,22 @@ export function useEditTimeIsView(options: {
     function clear_end_date_time(): void {
         timeis_end_date_typed.value = null
         timeis_end_time_string.value = ""
+    }
+
+    /**
+     * TimeIsの中身が変わっているか。
+     *
+     * タグだけを足したときにこれが偽なら update_timeis は呼ばない。
+     * 呼ぶと中身の同じ新しい版が1つ増えてしまう
+     */
+    function is_body_changed(): boolean {
+        const timeis = cloned_kyou.value.typed_timeis
+        if (!timeis) {
+            return false
+        }
+        return !(timeis.title === timeis_title.value &&
+            (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate().getTime()) &&
+            (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate().getTime() || (timeis.end_time === null && timeis_end_date_string.value === "" && timeis_end_time_string.value === "")))
     }
 
     async function save(): Promise<void> {
@@ -138,10 +164,10 @@ export function useEditTimeIsView(options: {
                 return
             }
 
-            // 更新がなかったらエラーメッセージを出力する
-            if (timeis.title === timeis_title.value &&
-                (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate().getTime()) &&
-                (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate().getTime() || (timeis.end_time === null && timeis_end_date_string.value === "" && timeis_end_time_string.value === ""))) {
+            // 更新がなかったらエラーメッセージを出力する。
+            // タグだけを足した/外したときもここで弾かれないよう、タグの変更も更新とみなす
+            const has_tag_changes = kyou_tags_view.value?.has_pending_changes() ?? false
+            if (!is_body_changed() && !has_tag_changes) {
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.timeis_is_no_update
                 error.error_message = i18n.global.t("TIMEIS_IS_NO_UPDATE_MESSAGE")
@@ -151,39 +177,99 @@ export function useEditTimeIsView(options: {
                 return
             }
 
-            // 更新後TimeIs情報を用意する
-            let end_time: Date | null = null
-            if (timeis_end_date_string.value !== "" && timeis_end_time_string.value !== "") {
-                end_time = moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate()
-            }
-            const updated_timeis = timeis.clone()
-            updated_timeis.title = timeis_title.value
-            updated_timeis.start_time = moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate()
-            updated_timeis.end_time = end_time
-            updated_timeis.update_app = "gkill"
-            updated_timeis.update_device = props.application_config.device
-            updated_timeis.update_time = new Date(Date.now())
-            updated_timeis.update_user = props.application_config.user_id
-
-            // 更新リクエストを飛ばす
-            await delete_gkill_kyou_cache(updated_timeis.id)
-            const req = new UpdateTimeisRequest()
-            req.timeis = updated_timeis
-            req.want_response_kyou = true
-            const res = await props.gkill_api.update_timeis(req)
-            if (res.errors && res.errors.length !== 0) {
-                emits('received_errors', res.errors)
+            // タグツリーに無いタグ名なら、保存する前に確認を取る
+            const tag_names = kyou_tags_view.value?.get_tag_names() ?? []
+            const unknown_tags = confirm_unknown_tag.collect_unknown_tags(tag_names)
+            if (unknown_tags.length !== 0) {
+                confirm_unknown_tag.open_confirm(unknown_tags)
                 return
             }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
+
+            await execute_save()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    function cancel_save(): void {
+        confirm_unknown_tag.close_confirm()
+    }
+
+    async function confirm_save(): Promise<void> {
+        confirm_unknown_tag.close_confirm()
+        try {
+            is_requested_submit.value = true
+            await execute_save()
+        } finally {
+            is_requested_submit.value = false
+        }
+    }
+
+    async function execute_save(): Promise<void> {
+        try {
+            is_requested_submit.value = true
+            const timeis = cloned_kyou.value.typed_timeis
+            if (!timeis) {
+                return
             }
-            emits("updated_kyou", res.updated_kyou!)
+
+            // 中身が変わったときだけ更新リクエストを飛ばす
+            if (is_body_changed()) {
+                let end_time: Date | null = null
+                if (timeis_end_date_string.value !== "" && timeis_end_time_string.value !== "") {
+                    end_time = moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate()
+                }
+                const updated_timeis = timeis.clone()
+                updated_timeis.title = timeis_title.value
+                updated_timeis.start_time = moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate()
+                updated_timeis.end_time = end_time
+                updated_timeis.update_app = "gkill"
+                updated_timeis.update_device = props.application_config.device
+                updated_timeis.update_time = new Date(Date.now())
+                updated_timeis.update_user = props.application_config.user_id
+
+                await delete_gkill_kyou_cache(updated_timeis.id)
+                const req = new UpdateTimeisRequest()
+                req.timeis = updated_timeis
+                req.want_response_kyou = true
+                const res = await props.gkill_api.update_timeis(req)
+                if (res.errors && res.errors.length !== 0) {
+                    emits('received_errors', res.errors)
+                    return
+                }
+                if (res.messages && res.messages.length !== 0) {
+                    emits('received_messages', res.messages)
+                }
+                emits("updated_kyou", res.updated_kyou!)
+            }
+
+            // 確認ダイアログは非モーダルなので、確認中にタグ欄を書き換えられる。取り直す
+            await apply_tag_changes()
+
+            // タグの変更は updated_kyou を出さないので、これが唯一の反映信号になる
             emits('requested_reload_kyou', props.kyou)
             emits('requested_close_dialog')
             return
         } finally {
             is_requested_submit.value = false
+        }
+    }
+
+    /** タグ欄で足したもの・外したものをサーバへ反映する */
+    async function apply_tag_changes(): Promise<void> {
+        const tags_view = kyou_tags_view.value
+        if (!tags_view) {
+            return
+        }
+        const result = await apply_kyou_tag_changes(props.gkill_api, props.application_config, cloned_kyou.value.id,
+            tags_view.get_tag_names(), tags_view.get_removed_tags())
+        result.added_tags.forEach(added_tag => emits('registered_tag', added_tag))
+        result.removed_tags.forEach(removed_tag => emits('deleted_tag', removed_tag))
+        if (result.messages.length !== 0) {
+            emits('received_messages', result.messages)
+        }
+        if (result.errors.length !== 0) {
+            emits('received_errors', result.errors)
         }
     }
 
@@ -195,6 +281,15 @@ export function useEditTimeIsView(options: {
 
     // ── Return ──
     return {
+        // Template refs
+        kyou_tags_view,
+        confirm_unknown_tag_dialog: confirm_unknown_tag.confirm_unknown_tag_dialog,
+
+        // Confirm unknown tag
+        unknown_tags: confirm_unknown_tag.unknown_tags,
+        cancel_save,
+        confirm_save,
+
         // State
         is_loading,
         is_requested_submit,

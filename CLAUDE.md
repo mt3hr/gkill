@@ -241,7 +241,8 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 - **⊗ を押した既存タグは保存を押すまで消さない**（押し間違えを戻せるように）。実削除は `is_deleted=true` の版を足す `update_tag`
 - **確認はタグ → 板名の順に1つずつ**（`use-kftl-view.ts` の `do_submit` と同じ）。mi / mi-re-kyou の4画面は `do_save(skip_unknown_tag_check, skip_unknown_mi_board_check)` の再入フラグで表現する。確認ダイアログは非モーダルなので、再入のたびに子ビューから値を取り直すこと
 - **タグ欄は既存フィールドより後ろ（アクション行の直前）に置く。** E2E ヘルパ `fillDialogField(dialog, N, ...)` は入力欄の位置インデックスで掴むので、前に挿すと既存 spec が総崩れになる
-- 未知タグ確認は共有部品 `pages/dialogs/confirm-unknown-tag-dialog.vue` + `classes/use-confirm-unknown-tag.ts`（板名版と対）。`add-tag-view` / KFTL に手書き複製されていたマークアップはここへ寄せた
+- 未知タグ確認は共有部品 `pages/dialogs/confirm-unknown-tag-dialog.vue` + `classes/use-confirm-unknown-tag.ts`（板名版と対）。`add-tag-view` / KFTL に手書き複製されていたマークアップと、`add_tag` の手順を12本のコンテキストメニュー・削除確認から寄せた
+- **「確認が開いているか」を呼び出し元が持つときは `closed` イベントで倒す。** `unknown_tags` の空判定で代用すると、ブラウザバックで閉じたときに空にならないので開きっぱなし扱いになる（KFTLのタブ操作が永久ロックされる）。ただし **`closed` は `requested_confirm` より先に来る**（ダイアログが `hide()` してから emit するため）ので、確認の続行で読む値（KFTLの `submit_target_tab_id` 等）を `closed` で消してはいけない
 - 守るテスト: `kyou-tags.test.ts` / `edit-kyou-tags-view.test.ts` / `add-views.test.ts` の「registered_kyou は add_tag が終わってから emit される」/ `edit-views.test.ts` の「タグ欄」節 / `e2e/add-dialog-crud.spec.ts` の「URLogを本文とタグ入りで一度に追加できる」
 
 **KFTL（メモ帳）のタブ**（2026-08-16）。`kftl-view.vue` がタブのホストで、`/kftl` ページ・各画面のメモ帳ダイアログ（`kftl-dialog.vue`）・打刻メモ帳（`mkfl-view.vue`）の**3系統すべて**に効く。純関数は `classes/kftl-tabs.ts`、状態は `classes/use-kftl-tabs.ts`。守るべき約束:

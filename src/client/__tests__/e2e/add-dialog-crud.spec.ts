@@ -111,6 +111,35 @@ test.describe('GUI Add Dialog Flows', () => {
     await expectPageToContainText(page, label)
   })
 
+  /**
+   * 追加画面のタグ欄。
+   *
+   * タグ欄は既存フィールドの後ろ（アクション行の直前）に置いてあるので、
+   * URL(0) / タイトル(1) / 日付(2) / 時刻(3) の次で index=4。
+   * ここが前へ動くと他のテストの `fillDialogField` の位置指定が総崩れになる。
+   *
+   * タグは Kyou 本体より後に登録される（列への局所挿入が `refresh_kyou` で引き直す都合上、
+   * `add_tag` が終わってから `registered_kyou` を出す必要があるため）。
+   * `clickDialogButton` は**最初の**書き込みAPIの応答＝`add_urlog` で戻るので、
+   * そこで画面遷移すると飛行中の `add_tag` が中断される。
+   * ダイアログが閉じるのは全リクエストが終わったあとなので、それを待ってから遷移する。
+   */
+  test('URLogを本文とタグ入りで一度に追加できる', async ({ page }) => {
+    const label = makeUniqueLabel('urlog_with_tag')
+    const tagLabel = makeUniqueLabel('e2eAddTag')
+
+    const dialog = await openAddDialog(page, MENU.addURLog)
+    await fillDialogField(dialog, 0, `https://example.com/${label}`)
+    await fillDialogField(dialog, 1, label)
+    await fillDialogField(dialog, 4, tagLabel)
+    await clickDialogButton(page, SAVE_BUTTON)
+    await expect(dialog, '保存してもダイアログが閉じない').toBeHidden({ timeout: 30000 })
+
+    await navigateToRykv(page)
+    await expectPageToContainText(page, label)
+    await expectPageToContainText(page, tagLabel)
+  })
+
   test('KCをタイトルと数値で追加すると一覧に出る', async ({ page }) => {
     const label = makeUniqueLabel('kc_add')
 

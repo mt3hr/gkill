@@ -79,8 +79,8 @@ src/
 │   │   ├── dnote/   #     Dynamic Note (集計・フィルタ)
 │   │   └── kftl/    #     KFTL パーサ
 │   └── pages/       #   Vue ページ・ビュー・ダイアログ
-│       ├── views/   #     View コンポーネント (202個)
-│       └── dialogs/ #     Dialog コンポーネント (115個)
+│       ├── views/   #     View コンポーネント (203個)
+│       └── dialogs/ #     Dialog コンポーネント (116個)
 ├── server/          # Go バックエンド
 │   └── gkill/
 │       ├── api/     #   HTTP API (90エンドポイント)

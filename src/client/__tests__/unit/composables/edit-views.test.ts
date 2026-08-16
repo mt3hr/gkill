@@ -99,6 +99,8 @@ function createBaseProps(kyouData = {}) {
       device: 'test-device',
       user_id: 'admin',
       mi_default_board: 'Inbox',
+      // タグの実在確認(use-confirm-unknown-tag)が参照するタグツリー
+      tag_struct: { children: [{ tag_name: '既知タグ', children: [] }] },
       // 板の実在確認(use-confirm-unknown-mi-board)が参照する板ツリー
       mi_board_struct: {
         board_name: '',
@@ -168,6 +170,100 @@ describe('useEditKmemoView', () => {
     const view = useEditKmemoView({ props, emits })
     expect(view.kmemo_value).toBeDefined()
     expect(typeof view.save).toBe('function')
+  })
+
+  // ── タグ欄 ──
+  //
+  // タグを足しただけで「更新されていません」で弾かれると保存できない。
+  // かといって update_kmemo を呼ぶと、中身の同じ新しい版が1つ増えてしまう
+
+  test('本文を変えずタグだけ足しても KMEMO_IS_NO_UPDATE で弾かれない', async () => {
+    props.gkill_api.add_tag.mockImplementation((req: { tag: { tag: string } }) => Promise.resolve({
+      added_tag: req.tag, messages: [], errors: [],
+    }))
+    const view = useEditKmemoView({ props, emits })
+    view.kyou_tags_view.value = {
+      has_pending_changes: () => true,
+      get_tag_names: () => ['既知タグ'],
+      get_removed_tags: () => [],
+      reset: () => { },
+    }
+
+    await view.save()
+
+    const error_calls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
+    expect(error_calls).toHaveLength(0)
+    expect(props.gkill_api.add_tag).toHaveBeenCalledTimes(1)
+  })
+
+  test('本文を変えずタグだけ足したときは update_kmemo を呼ばない', async () => {
+    props.gkill_api.add_tag.mockImplementation((req: { tag: { tag: string } }) => Promise.resolve({
+      added_tag: req.tag, messages: [], errors: [],
+    }))
+    const view = useEditKmemoView({ props, emits })
+    view.kyou_tags_view.value = {
+      has_pending_changes: () => true,
+      get_tag_names: () => ['既知タグ'],
+      get_removed_tags: () => [],
+      reset: () => { },
+    }
+
+    await view.save()
+
+    expect(props.gkill_api.update_kmemo).not.toHaveBeenCalled()
+  })
+
+  // タグの変更は updated_kyou を出さないので、これが唯一の反映信号になる
+  test('タグだけ変えても requested_reload_kyou を出す', async () => {
+    props.gkill_api.update_tag.mockImplementation((req: { tag: { tag: string } }) => Promise.resolve({
+      updated_tag: req.tag, messages: [], errors: [],
+    }))
+    const removed_tag = { id: 'tag-1', tag: '買い物', target_id: 'test-kyou-id', is_deleted: false }
+    const view = useEditKmemoView({ props, emits })
+    view.kyou_tags_view.value = {
+      has_pending_changes: () => true,
+      get_tag_names: () => [],
+      get_removed_tags: () => [{ ...removed_tag, clone: () => ({ ...removed_tag }) }],
+      reset: () => { },
+    }
+
+    await view.save()
+
+    expect(props.gkill_api.update_tag).toHaveBeenCalledTimes(1)
+    expect(emits.mock.calls.filter((c: unknown[]) => c[0] === 'requested_reload_kyou')).toHaveLength(1)
+    expect(emits.mock.calls.filter((c: unknown[]) => c[0] === 'deleted_tag')).toHaveLength(1)
+  })
+
+  test('本文もタグも変えていなければ従来どおりエラー', async () => {
+    const view = useEditKmemoView({ props, emits })
+    view.kyou_tags_view.value = {
+      has_pending_changes: () => false,
+      get_tag_names: () => [],
+      get_removed_tags: () => [],
+      reset: () => { },
+    }
+
+    await view.save()
+
+    const error_calls = emits.mock.calls.filter((c: unknown[]) => c[0] === 'received_errors')
+    expect(error_calls.length).toBeGreaterThan(0)
+    expect(props.gkill_api.update_kmemo).not.toHaveBeenCalled()
+  })
+
+  test('タグ名が新しいときは保存せず確認ダイアログを開く', async () => {
+    const view = useEditKmemoView({ props, emits })
+    view.kyou_tags_view.value = {
+      has_pending_changes: () => true,
+      get_tag_names: () => ['新しいタグ'],
+      get_removed_tags: () => [],
+      reset: () => { },
+    }
+
+    await view.save()
+
+    expect(view.unknown_tags.value).toEqual(['新しいタグ'])
+    expect(props.gkill_api.add_tag).not.toHaveBeenCalled()
+    expect(props.gkill_api.update_kmemo).not.toHaveBeenCalled()
   })
 })
 
