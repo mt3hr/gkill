@@ -71,6 +71,8 @@ export function useRykvView(options: {
     const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
     const is_loading: Ref<boolean> = ref(true)
     const inited = ref(false)
+    const is_restoring_columns = ref(false) // 保存済み列の初期検索がまだ走っている。表示制御には使わない
+    const running_search_count = ref(0) // 飛行中の検索の本数。準備完了信号にだけ使う
     const received_init_request = ref(false)
     const skip_search_this_tick = ref(false)
     const abort_controllers = new Map<string, AbortController>() // 列ごとの検索中断用。キーは列のquery_id
@@ -80,6 +82,11 @@ export function useRykvView(options: {
 
     // ── Computed ──
     const kyou_list_view_height = computed(() => props.app_content_height)
+
+    // 「操作してよい状態」をE2Eが決定論的に待つための信号。
+    // 画面の表示/非表示には一切使わない(使うと初期検索を待たなくした意味がなくなる)
+    const is_view_ready = computed(() =>
+        inited.value && !is_restoring_columns.value && running_search_count.value === 0)
 
     const page_list = computed(() => [
         { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
@@ -411,9 +418,12 @@ export function useRykvView(options: {
     })
 
     async function init(): Promise<void> {
-        if (inited.value) {
+        if (inited.value || is_restoring_columns.value) {
             return
         }
+        // 再入ガードは同期で立てる。nextTickの中で立てると、その1tickの間に
+        // もう一度呼ばれたときに二重初期化できてしまう
+        is_restoring_columns.value = true
         return nextTick(async () => {
             const wait_promises = new Array<Promise<unknown>>()
             try {
@@ -471,6 +481,7 @@ export function useRykvView(options: {
                     drawer.value = props.app_content_width.valueOf() >= 760
                     is_loading.value = false
                     skip_search_this_tick.value = false
+                    is_restoring_columns.value = false
                 })
                 nextTick(() => default_query.value = query_editor_sidebar.value!.get_default_query()!.clone())
             }
@@ -493,6 +504,8 @@ export function useRykvView(options: {
 
             seq = (search_seqs.get(query_id) ?? 0) + 1
             search_seqs.set(query_id, seq)
+            // 採番できた回だけ数える。deep_equalsの早期returnはseq=-1のままなので数えない
+            running_search_count.value++
 
             // フォーカス列の検索のときだけDnoteを止める。他列の検索で集計中の内容を消さない。
             // 止めるのは実際に検索することが確定した後。deep_equalsの早期returnより前に
@@ -625,6 +638,11 @@ export function useRykvView(options: {
             // abort含め例外時はloading状態を解除する（ただし新しいsearchが開始されていない場合のみ）
             if (is_current()) {
                 nextTick(() => get_kyou_list_view(query_id)?.set_loading(false))
+            }
+        } finally {
+            // 採番できた回だけ減らす。増やしたのと同じ条件にする
+            if (seq !== -1) {
+                running_search_count.value--
             }
         }
     }
@@ -1041,11 +1059,13 @@ export function useRykvView(options: {
         default_query,
         is_loading,
         inited,
+        is_restoring_columns,
         kyou_detail_view_width,
 
         // Computed
         kyou_list_view_height,
         page_list,
+        is_view_ready,
 
         // Template event handlers
         toggle_drawer,
