@@ -185,7 +185,7 @@ Stack: Vue 3 + Vuetify 4 + Vue Router 5 + vue-i18n 11 + Vite 8 + TypeScript 6 + 
 - `router/index.ts` — 13 page routes (login, kftl, mi, rykv, kyou, mkfl, plaing, saihate, dashboard, set_new_password, register_first_account, shared_page, shared_mi) + 1 redirect-only route (`/regist_first_account` → `/register_first_account`, query preserved)
 - `pages/views/` — 203 view components, `pages/dialogs/` — 116 dialog components (Escape key closes via `useFloatingDialog`), including ZIP contents browser, plugin HTML views (`plugin-html-view.vue`, `plugin-html-context-menu.vue`, `plugin-config-dialog.vue`), and Dnote trend/correlation graph components (client-side aggregation, no server API)
 - `classes/api/gkill-api.ts` — Singleton `GkillAPI` class (~3,300 lines), client-side API wrapper
-- `classes/kftl/` — KFTL parser (49 statement types; the Go side has 46). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
+- `classes/kftl/` — KFTL parser (50 statement types; the Go side has 47). Accepts the same Japanese/ASCII prefixes as the Go parser; ASCII constants and match/strip helpers centralized in `kftl-prefixes.ts`
 - `classes/cascade-delete-kyou.ts` — cascade delete for Kyou. The attached Tag / Text / Notification and the ReKyou / MiReKyou that reference the Kyou are looked up in reverse via `GetReKyousByTargetID` / `GetMiReKyousByTargetID` and logically deleted together with it. Depth cap 32 (`max_cascade_depth`), 16 lookups in flight per level (`request_chunk_size`). **The Kyou itself is deleted last** (deleting it first makes the server's `FindKyous` drop the referencing records from its results, so the reverse lookup can no longer find them). No TXID / `commit_tx` is used, so a partial commit is possible. On failure: ERR900093 `cascade_delete_depth_exceeded` / ERR900094 `cascade_delete_failed`, i18n key `FAILED_CASCADE_DELETE_KYOU_MESSAGE`
 - `serviceWorker.ts` — PWA service worker (Workbox precaching, POST caching, push notifications, Web Share Target; `/zip_cache/.*` on NavigationRoute denylist)
 
@@ -304,7 +304,7 @@ multipart POST がもう一度届き、素直に保存すると2件目ができ�
 
 **Naming convention (identifiers):** データクラスのプロパティ/メソッド・ローカル変数・通常関数は snake_case（Go 側 JSON タグとの写像）。コンポーザブルは `useXxx`、イベントコールバックは `onXxx`、CRUD リレーハンドラ束は `xxxHandlers`（束の生成は `kyou-view-relay.ts` に一元化。いずれも camelCase）。型は PascalCase、enum メンバーは snake_case。`@typescript-eslint/naming-convention` で機械検査される（`eslint.config.js` の `app/naming-convention` ブロック。対象は `src/client` 本体のみで、`__tests__`・`src/mcp`・`src/tools`・`*.d.ts` は別流儀として対象外）。
 
-**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 913 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
+**i18n:** 7 languages (ja, en, zh, ko, es, fr, de) in `src/locales/`. 914 keys per locale. Flat key-value JSON. Shared between frontend (import) and backend (Go embed).
 
 ### MCP Server — `src/mcp/`
 

@@ -8,6 +8,7 @@ import { KFTLStatement } from '@/classes/kftl/kftl-statement'
 import { KFTLKmemoRequest } from '@/classes/kftl/kftl_kmemo/kftl-kmemo-request'
 import { KFTLMiRequest } from '@/classes/kftl/kftl_mi/kftl-mi-request'
 import { KFTLMiReKyouRequest } from '@/classes/kftl/kftl_mirekyou/kftl-mi-re-kyou-request'
+import { KFTLNlogRequest } from '@/classes/kftl/kftl_nlog/kftl-nlog-request'
 import type { KFTLRequest } from '@/classes/kftl/kftl-request'
 import type { GkillAPI } from '@/classes/api/gkill-api'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
@@ -16,6 +17,10 @@ function pick_mi_re_kyou_request(requests: Array<KFTLRequest>): KFTLMiReKyouRequ
   const found = requests.find((request) => request instanceof KFTLMiReKyouRequest)
   expect(found).toBeInstanceOf(KFTLMiReKyouRequest)
   return found as KFTLMiReKyouRequest
+}
+
+function pick_nlog_requests(requests: Array<KFTLRequest>): Array<KFTLNlogRequest> {
+  return requests.filter((request) => request instanceof KFTLNlogRequest) as Array<KFTLNlogRequest>
 }
 
 function pick_kmemo_request(requests: Array<KFTLRequest>): KFTLKmemoRequest {
@@ -366,6 +371,154 @@ describe('KFTL Request Generation', () => {
       const requests = await stmt.generate_requests()
       expect(requests.length).toBe(2)
       expect(pick_mi_re_kyou_request(requests).get_mi_board_name()).toBe('仕事')
+    })
+  })
+
+  /**
+   * 支出(「ーん」のブロック)。支払い(品名と金額のペア)1組ごとに1つのリクエストになるので、
+   * 金額の行のあとに書いたタグ・テキストは「直前の支払い」だけに付く。
+   * 店名と関連時刻だけがブロック全体で共有される。
+   */
+  describe('Nlog (ーん)', () => {
+    test('支払いの数だけリクエストができ、店名は共有される', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\nお茶\n120')
+      const requests = await stmt.generate_requests()
+      const nlogs = pick_nlog_requests(requests)
+      expect(nlogs.length).toBe(2)
+      expect(nlogs.map((nlog) => nlog.title)).toEqual(['おにぎり', 'お茶'])
+      expect(nlogs.map((nlog) => nlog.amount)).toEqual([150, 120])
+      expect(nlogs.map((nlog) => nlog.shop_name)).toEqual(['コンビニ', 'コンビニ'])
+      expect(await stmt.get_invalid_line_indexs()).toEqual([])
+    })
+
+    test('支払いごとに別の request_id を持つ', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\nお茶\n120')
+      const nlogs = pick_nlog_requests(await stmt.generate_requests())
+      expect(nlogs[0].get_request_id()).not.toBe(nlogs[1].get_request_id())
+    })
+
+    test('金額の行のあとのタグは直前の支払いだけに付く', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\n。食費\nお茶\n120\n。飲み物')
+      const stmt_requests = await stmt.generate_requests()
+      const nlogs = pick_nlog_requests(stmt_requests)
+      expect(nlogs.length).toBe(2)
+      expect(nlogs[0].get_tags()).toEqual(['食費'])
+      expect(nlogs[1].get_tags()).toEqual(['飲み物'])
+      expect(await stmt.get_invalid_line_indexs()).toEqual([])
+    })
+
+    test('1行に複数タグを書いても直前の支払いだけに付く', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\n。食費、朝食\nお茶\n120')
+      const nlogs = pick_nlog_requests(await stmt.generate_requests())
+      expect(nlogs[0].get_tags()).toEqual(['食費', '朝食'])
+      expect(nlogs[1].get_tags()).toEqual([])
+    })
+
+    // タグ行でブロックが切れると、以降の品名行が拾われずおかしな行になっていた
+    test('タグ行のあとも品名行を続けられる', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\n。食費\n。朝食\nお茶\n120')
+      const stmt_requests = await stmt.generate_requests()
+      const nlogs = pick_nlog_requests(stmt_requests)
+      expect(nlogs.length).toBe(2)
+      expect(nlogs[0].get_tags()).toEqual(['食費', '朝食'])
+      expect(nlogs[1].title).toBe('お茶')
+      expect(await stmt.get_invalid_line_indexs()).toEqual([])
+    })
+
+    test('金額の行のあとのテキストブロックは直前の支払いに付き、閉じたあとも続けられる', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\nーー\n朝ごはん用\nーー\nお茶\n120')
+      const stmt_requests = await stmt.generate_requests()
+      const nlogs = pick_nlog_requests(stmt_requests)
+      expect(nlogs.length).toBe(2)
+      expect(nlogs[0].get_texts()).toEqual(['朝ごはん用'])
+      expect(nlogs[1].get_texts()).toEqual([])
+      expect(nlogs[1].title).toBe('お茶')
+      expect(await stmt.get_invalid_line_indexs()).toEqual([])
+    })
+
+    test('「、」で今までどおりブロックから抜けられる', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\n、\n次のメモ')
+      const requests = await stmt.generate_requests()
+      expect(pick_nlog_requests(requests).length).toBe(1)
+      expect(requests.filter((request) => request instanceof KFTLKmemoRequest).length).toBe(1)
+      expect(await stmt.get_invalid_line_indexs()).toEqual([])
+    })
+
+    // タグはブロックの中・金額の行のあとに書かせる。前に書かれても黙って捨てない
+    test('「ーん」より前のタグはおかしな行になる', async () => {
+      const stmt = new KFTLStatement('。買い物\nーん\nコンビニ\nおにぎり\n150')
+      expect(await stmt.get_invalid_line_indexs()).toContain(1)
+    })
+
+    test('「ーん」より前のテキストブロックもおかしな行になる', async () => {
+      const stmt = new KFTLStatement('ーー\nメモ\nーー\nーん\nコンビニ\nおにぎり\n150')
+      expect(await stmt.get_invalid_line_indexs()).toContain(3)
+    })
+
+    test('店名の位置・最初の品名の位置に書いたタグはおかしな行になる', async () => {
+      const shop_position = new KFTLStatement('ーん\n。食費\nおにぎり\n150')
+      expect(await shop_position.get_invalid_line_indexs()).toContain(1)
+      const title_position = new KFTLStatement('ーん\nコンビニ\n。食費\n150')
+      expect(await title_position.get_invalid_line_indexs()).toContain(2)
+    })
+
+    test('「ーん」より前の関連時刻はブロックの全支払いに効く', async () => {
+      const stmt = new KFTLStatement('？2025-01-15 10:00:00\nーん\nコンビニ\nおにぎり\n150\nお茶\n120')
+      const nlogs = pick_nlog_requests(await stmt.generate_requests())
+      expect(nlogs.length).toBe(2)
+      for (const nlog of nlogs) {
+        const related_time = nlog.get_related_time()!
+        expect(related_time.getFullYear()).toBe(2025)
+        expect(related_time.getMonth()).toBe(0)
+        expect(related_time.getDate()).toBe(15)
+      }
+    })
+
+    // 関連時刻だけは支払いごとではなくブロック全体。書いた位置より前の支払いにも効く
+    test('ブロックの中の関連時刻もブロックの全支払いに効く', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\n？2025-01-15 10:00:00\nお茶\n120')
+      const stmt_requests = await stmt.generate_requests()
+      const nlogs = pick_nlog_requests(stmt_requests)
+      expect(nlogs.length).toBe(2)
+      for (const nlog of nlogs) {
+        expect(nlog.get_related_time()!.getFullYear()).toBe(2025)
+      }
+      expect(await stmt.get_invalid_line_indexs()).toEqual([])
+    })
+
+    test('小数の金額が切り捨てられずに通る', async () => {
+      const stmt = new KFTLStatement('ーん\nカフェ\nコーヒー\n-1.5')
+      const nlogs = pick_nlog_requests(await stmt.generate_requests())
+      expect(nlogs[0].amount).toBe(-1.5)
+    })
+
+    test('品名だけで金額が無いとエラーになる', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\nお茶')
+      const nlogs = pick_nlog_requests(await stmt.generate_requests())
+      const incomplete = nlogs.find((nlog) => nlog.title === 'お茶')!
+      const errors = await incomplete.do_request({} as unknown as GkillAPI, {} as unknown as ApplicationConfig)
+      expect(errors.length).toBe(1)
+      expect(errors[0].error_code).toBe('ERR900014')
+    })
+
+    // 末尾の改行が品名行として解釈されるだけなので、エラーにも支払いにもしない
+    test('末尾の空行は支払いを作らずエラーにもならない', async () => {
+      const stmt = new KFTLStatement('ーん\nコンビニ\nおにぎり\n150\n')
+      const nlogs = pick_nlog_requests(await stmt.generate_requests())
+      const blank = nlogs.find((nlog) => nlog.title === '')!
+      const errors = await blank.do_request({} as unknown as GkillAPI, {} as unknown as ApplicationConfig)
+      expect(errors).toEqual([])
+      expect(await stmt.get_invalid_line_indexs()).toEqual([])
+    })
+
+    test('ASCII の /expense と # でも同じ結果になる', async () => {
+      const stmt = new KFTLStatement('/expense\nConvenience store\nRice ball\n150\n#food\nTea\n120\n#drink')
+      const stmt_requests = await stmt.generate_requests()
+      const nlogs = pick_nlog_requests(stmt_requests)
+      expect(nlogs.length).toBe(2)
+      expect(nlogs[0].get_tags()).toEqual(['food'])
+      expect(nlogs[1].get_tags()).toEqual(['drink'])
+      expect(await stmt.get_invalid_line_indexs()).toEqual([])
     })
   })
 })

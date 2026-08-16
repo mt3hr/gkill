@@ -158,6 +158,16 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         });
     }
 
+    /**
+     * `？`行で明示指定された関連時刻。指定が無ければ null。
+     *
+     * get_related_time() は未指定でも「今」を返すので、「指定されたかどうか」の判定には使えない。
+     * 支出ブロックが「ブロックの前に書かれた関連時刻」を取り込むために使う
+     */
+    get_raw_related_time(): Date | null {
+        return this.related_time
+    }
+
     get_related_time(): Date | null {
         let time = new Date(Date.now())
         if (this.related_time != null) {

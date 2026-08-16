@@ -97,6 +97,22 @@ Rice ball
 150
 Tea
 120</pre>
+<p>A <code>。</code> tag line or a <code>--</code> text block written after an amount line applies to <strong>that payment only</strong>, so each payment can have its own.</p>
+<pre>/expense
+Convenience store
+Rice ball
+150
+#food
+--
+For breakfast
+--
+Tea
+120
+#drink</pre>
+<p>A <code>?</code> date and time applies to the whole shopping trip, not to a single payment.</p>
+<div class="tip">
+  <strong>Note:</strong> Write tags and texts after the amount line. Written before <code>/expense</code> or right after the shop name, there is no payment to attach them to, so the line is treated as invalid.
+</div>
 
 <h3>11. Time Log (Full): <code>/timeis</code></h3>
 <p>Next lines: title, start time, end time.</p>

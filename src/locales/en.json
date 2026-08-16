@@ -553,6 +553,7 @@
     "KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE": "Amount is invalid",
     "KFTL_NLOG_INVALID_RECORD_COUNT_MESSAGE_TITLE": "Title and amount counts do not match",
     "KFTL_NLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE": "Expense with no content was skipped",
+    "KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE": "Write tags and texts for an expense after its amount line",
     "KFTL_NLOG_SHOP_NAME_TITLE": "Shop Name",
     "KFTL_NLOG_TITLE_TITLE": "Title",
     "KFTL_NLOG_NLOG_LABEL_TITLE": "Expense",
