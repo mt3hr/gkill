@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { checkGkillServer } from './check-server'
 import { loginAsAdmin } from './helpers'
+import { navigateToMi } from './crud-helpers'
 
 test.beforeAll(async () => {
   const alive = await checkGkillServer()
@@ -13,15 +14,12 @@ test.describe('Mi Board', () => {
   })
 
   test('can navigate to Mi board page', async ({ page }) => {
-    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
+    await navigateToMi(page)
     await expect(page).toHaveURL(/mi/)
   })
 
   test('Mi board displays task list', async ({ page }) => {
-    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await navigateToMi(page)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
     const textContent = await app.textContent()
@@ -29,9 +27,7 @@ test.describe('Mi Board', () => {
   })
 
   test('mi board page has task-related UI elements', async ({ page }) => {
-    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await navigateToMi(page)
     // Check for task board or task list related elements (buttons, lists, cards)
     const buttons = page.locator('button')
     const buttonsCount = await buttons.count()
@@ -45,9 +41,7 @@ test.describe('Mi Board', () => {
   test('Mi page renders without JavaScript errors', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
-    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await navigateToMi(page)
     // Filter out known benign errors
     const criticalErrors = errors.filter(e =>
       !e.includes('ResizeObserver') &&
@@ -60,18 +54,14 @@ test.describe('Mi Board', () => {
   })
 
   test('Mi page app container has substantial content', async ({ page }) => {
-    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await navigateToMi(page)
     // Check that the page rendered more than just a blank container
     const textContent = await page.locator('#app').textContent()
     expect(textContent!.length).toBeGreaterThan(0)
   })
 
   test('Mi page has add button or FAB', async ({ page }) => {
-    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await navigateToMi(page)
     // Look for an add/plus button (FAB or toolbar button)
     const addButton = page.locator('button').filter({ hasText: /追加|add|\+/i })
     const fabButton = page.locator('.v-btn--fab, [class*="fab"]')
@@ -82,12 +72,9 @@ test.describe('Mi Board', () => {
   })
 
   test('Mi page responds to window resize', async ({ page }) => {
-    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
-    await page.waitForSelector('#app', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await navigateToMi(page)
     // Resize to mobile width
     await page.setViewportSize({ width: 375, height: 812 })
-    await page.waitForTimeout(1000)
     const app = page.locator('#app')
     await expect(app).toBeVisible()
     // Restore
@@ -102,7 +89,7 @@ test.describe('Mi Board', () => {
    * 以前は 44px の見出しに対して 48 を引いており 4px の空白が出ていた。
    */
   test('板の列がコンテンツ領域をぴったり埋める', async ({ page }) => {
-    await page.goto('/mi', { waitUntil: 'domcontentloaded' })
+    await navigateToMi(page)
 
     const column = page.locator('.mi_view_table td > .v-card').first()
     await expect(column, '板の列が出ない').toBeVisible({ timeout: 30000 })
