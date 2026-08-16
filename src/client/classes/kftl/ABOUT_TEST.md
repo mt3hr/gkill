@@ -26,7 +26,7 @@ Vitest
 - **Type Detection**: `kmemo:`, `mi:`, `timeis:` 等のステートメント型判定
 - **Request Generation**: 解析済みステートメントから GkillAPI リクエストオブジェクトへの変換
 - **MiReKyou ブロック**: `～～` で開いて閉じるブロックの行の並び（タイトル行なし・途中で閉じる・空ブロック）、板名の前後どちらにも書けるタグ、波ダッシュ(U+301C)の正規化、対象 Kyou の id 解決、対象が無いときのガード、日時の `？` 省略
-- **Individual Types**: ステートメント型は全48種（基底 `KFTLStatementLine` を除く）。このファイルはその全数を個別に回すものではなく、型判定で取り違えが起きやすい箇所（Split / SplitAndNextSecond、Kmemo の catch-all、exact-match プレフィックスの重複、startsWith と exact の違い）を補足的に検証する
+- **Individual Types**: ステートメント型は全50種（基底 `KFTLStatementLine` を除く）。このファイルはその全数を個別に回すものではなく、型判定で取り違えが起きやすい箇所（Split / SplitAndNextSecond、Kmemo の catch-all、exact-match プレフィックスの重複、startsWith と exact の違い）を補足的に検証する
 
 ## 実行方法
 

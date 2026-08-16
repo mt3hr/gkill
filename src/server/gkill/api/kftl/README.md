@@ -108,7 +108,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_lantana.go` | Lantana | 気分値行の解釈・リクエスト生成 |
 | `kftl_mi.go` | Mi | タスク行の解釈・リクエスト生成 |
 | `kftl_mirekyou.go` | MiReKyou | 既存の記録をタスク化する行の解釈・リクエスト生成（`～～` で開いて閉じるブロック。タイトル行は無く、ブロック内のタグは MiReKyou 自身に付く） |
-| `kftl_nlog.go` | Nlog | 支出記録行の解釈・リクエスト生成 |
+| `kftl_nlog.go` | Nlog | 支出記録行の解釈・リクエスト生成（`ーん` で開き、店名のあとに（品名, 金額）のペアを繰り返すブロック。**支払い1組ごとに1つのリクエスト**になり RequestID をそのまま Nlog の ID にするので、金額の行のあとに書いたタグ・テキストはその支払いに付く。ブロック全体で共有するのは店名と関連時刻だけ。`ーん` より前のタグ・テキストはエラー） |
 | `kftl_timeis.go` | TimeIs | タイムスタンプ行の解釈・リクエスト生成（Start/End/EndIfExist/EndByTag/EndByTagIfExist） |
 | `kftl_urlog.go` | URLog | ブックマーク行の解釈・リクエスト生成 |
 
@@ -116,13 +116,13 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 
 | ファイル | 役割 |
 |---------|------|
-| `kftl_tag_statement_line.go` | Tag 行（`。` プレフィックス） |
-| `kftl_text_statement_lines.go` | Text 行（`ーー` プレフィックス） |
+| `kftl_tag_statement_line.go` | Tag 行（`。` プレフィックス）。`resume` を渡すとブロックの中に留まる |
+| `kftl_text_statement_lines.go` | Text 行（`ーー` プレフィックス）。出口を決めるのは終了行なので `resume` を開始行から終了行まで持ち回る |
 | `kftl_related_time_statement_line.go` | RelatedTime 行（`？` プレフィックス） |
 | `kftl_split_statement_lines.go` | Split / SplitNextSecond 行（`、` / `、、` プレフィックス） |
 | `kftl_none_statement_line.go` | None 行 — 認識できないプレフィックスの行（スキップ） |
 
-### テスト（4ファイル）
+### テスト（5ファイル）
 
 | ファイル | 説明 |
 |---------|------|
@@ -130,6 +130,7 @@ KFTL テキストの各行は、先頭の文字列（プレフィックス）で
 | `kftl_request_map_test.go` | リクエストマップの集約テスト |
 | `kftl_statement_test.go` | KFTL テキスト全体のパース・実行テスト |
 | `kftl_mirekyou_test.go` | MiReKyou ブロックの行の並び・タグの帰属・対象の解決テスト |
+| `kftl_nlog_test.go` | 支出ブロックの支払いごとのタグ・テキストの帰属、ブロック全体に効く関連時刻、ブロック前のメタ情報行の拒否 |
 
 ## 開発ガイドライン
 

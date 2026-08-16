@@ -22,7 +22,7 @@ kftl/
 ├── kftl_lantana/               # Lantana 行（3ファイル）
 ├── kftl_mi/                    # Mi 行（7ファイル）
 ├── kftl_mirekyou/              # MiReKyou 行（9ファイル）
-├── kftl_nlog/                  # Nlog 行（5ファイル）
+├── kftl_nlog/                  # Nlog 行（7ファイル）
 ├── kftl_urlog/                 # URLog 行（4ファイル）
 ├── kftl_timeis/                # TimeIs 行（5ファイル）
 │   ├── kftl_timeis_start/      # TimeIs 開始（3ファイル）
@@ -110,15 +110,23 @@ Mi と違ってタイトル行を持たず、ブロックの中に書いたタ�
 | `kftl-end-mi-re-kyou-statement-line.ts` | MiReKyou 終了行（`～～` プレフィックス） |
 | `kftl-mi-re-kyou-request.ts` | MiReKyou リクエスト生成 |
 
-### `kftl_nlog/`（5ファイル）— 支出記録
+### `kftl_nlog/`（7ファイル）— 支出記録
+
+`ーん`（ASCII は `/expense`）で開き、店名のあとに（品名, 金額）のペアを繰り返すブロック。
+**支払い1組ごとに1つの `KFTLNlogRequest`** になり、request_id をそのまま Nlog の id にする。
+そのため金額の行のあとに書いたタグ行・テキストブロックは、汎用の行クラスのまま
+「直前の支払い」に付く。ブロック全体で共有するのは店名と関連時刻（`？`）だけ。
+`ーん` より前にタグ・テキストを書くと、付け先が決まらないのでおかしな行になる。
 
 | ファイル | 役割 |
 |---------|------|
-| `kftl-start-nlog-statement-line.ts` | Nlog 開始行（`ーん` プレフィックス） |
-| `kftl-nlog-title-statement-line.ts` | Nlog タイトル行 |
+| `kftl-start-nlog-statement-line.ts` | Nlog 開始行（`ーん` プレフィックス）。ブロックの共有状態を作り、ブロック前のメタ情報行を検査する |
+| `kftl-nlog-block.ts` | ブロックの共有状態（店名・関連時刻）と、ブロック内に留まる次行の先読み |
+| `kftl-nlog-title-statement-line.ts` | Nlog タイトル行。ここで支払いごとの target_id を採番する |
 | `kftl-nlog-shop-name-statement-line.ts` | Nlog 店名行 |
 | `kftl-nlog-amount-statement-line.ts` | Nlog 金額行 |
-| `kftl-nlog-request.ts` | Nlog リクエスト生成 |
+| `kftl-nlog-related-time-statement-line.ts` | ブロック内の関連時刻行。付け先は支払いではなくブロック |
+| `kftl-nlog-request.ts` | 支払い1件ぶんの Nlog リクエスト生成 |
 
 ### `kftl_urlog/`（4ファイル）— ブックマーク
 
@@ -190,6 +198,11 @@ TimeIs は最も複雑な KFTL 型で、開始/終了の複数パターンを持
 - `kftl-start-text-statement-line.ts` — テキスト開始行（`ーー` プレフィックス）
 - `kftl-text-statement-line.ts` — テキスト本文行
 - `kftl-end-text-statement-line.ts` — テキスト終了行
+
+> タグ行とテキスト終了行は、次の行を kmemo か none にして**そこでブロックを打ち切る**。
+> ブロックの中で使うときは `KFTLBlockReentryProvider`（`kftl-statement-line.ts`）を渡すと、
+> 次の行もブロックの中として解釈される。渡さなければ（既定の `null`）従来どおり。
+> テキストは出口を決めるのが終了行なので、開始行から終了行まで持ち回る必要がある。
 
 **`kftl_split/`（2ファイル）:**
 - `kftl-split-statement-line.ts` — 区切り行（`、` プレフィックス）

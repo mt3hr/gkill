@@ -722,7 +722,9 @@ const TOOLS = [
       "/mi or ーみ → next line is task title, " +
       "~~ or ～～ → turn the record written just ABOVE into a task (repost task). Opens AND closes with the same ~~ marker, and is meaningless on its own — the record it tasks must come first. There is NO title line (the original record is shown as-is). Inside the block: board name, estimated start, estimated end, deadline (all optional, no ? needed before a date). Lines starting with # inside the block become tags on the TASK itself and may appear before or after the board name. Use /mi for a brand new task and ~~ to task an existing record, " +
       "/mood or ーら → next line is mood value (0-10), " +
-      "/expense or ーん → next 3 lines: shop name, then title/description, then amount as integer (IMPORTANT: prefix is /expense, NOT /nlog), " +
+      "/expense or ーん → next lines: shop name, then (title/description, amount) pairs repeating — one expense record per pair. " +
+      "A #tag line or a -- text block written after an amount line attaches to that one payment only; write them after the amount, never before /expense. " +
+      "(IMPORTANT: prefix is /expense, NOT /nlog), " +
       "/url or ーう → next line is URL, " +
       "/num or ーか → next line is title then value, " +
       "/start or ーた → next line is timeis start label, " +

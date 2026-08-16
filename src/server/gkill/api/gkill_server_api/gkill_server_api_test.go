@@ -7553,6 +7553,41 @@ func helperGetKyousWithWord(t *testing.T, tsURL string, sessionID string, word s
 	return len(getResp.Kyous)
 }
 
+// helperGetKyousWithTag queries GetKyous filtering by tag name and returns the count.
+func helperGetKyousWithTag(t *testing.T, tsURL string, sessionID string, tag string) int {
+	t.Helper()
+	now := time.Now()
+	startDate := now.Add(-time.Hour)
+	endDate := now.Add(time.Hour)
+	getReq := &req_res.GetKyousRequest{
+		SessionID:  sessionID,
+		LocaleName: "ja",
+		Query: &find.FindQuery{
+			Tags:              []string{tag},
+			CalendarStartDate: &startDate,
+			CalendarEndDate:   &endDate,
+			IncludeCreateMi:   true,
+			IncludeCheckMi:    true,
+			IncludeLimitMi:    true,
+			IncludeStartMi:    true,
+			IncludeEndMi:      true,
+		},
+	}
+	resp := postJSON(t, tsURL+"/api/get_kyous", getReq)
+	defer resp.Body.Close()
+
+	var getResp req_res.GetKyousResponse
+	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
+		t.Fatalf("decode get kyous response: %v", err)
+	}
+	if len(getResp.Errors) > 0 {
+		for _, e := range getResp.Errors {
+			t.Errorf("get kyous error: code=%s msg=%s", e.ErrorCode, e.ErrorMessage)
+		}
+	}
+	return len(getResp.Kyous)
+}
+
 func TestHandleSubmitKFTLText_Lantana(t *testing.T) {
 	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
 	defer cleanup()
@@ -7586,7 +7621,46 @@ func TestHandleSubmitKFTLText_Nlog(t *testing.T) {
 	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
 
-	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーん\n500\nテスト店")
+	// 支出は「ーん → 店名 → 品名 → 金額」の順。以前このテストは店名と金額が逆で、
+	// 品名と金額の数が合わないぶんを黙って切り詰める挙動のせいで
+	// 1件も書かないまま成功していた。いまは数が合わなければエラーになる
+	marker := fmt.Sprintf("kftl_nlog_test_%d", time.Now().UnixNano())
+	helperSubmitKFTLAndVerify(t, tsURL, sessionID, "ーん\nテスト店\n"+marker+"\n500")
+
+	count := helperGetKyousWithWord(t, tsURL, sessionID, marker)
+	if count == 0 {
+		t.Fatal("expected at least 1 kyou for submitted Nlog, got 0")
+	}
+}
+
+// 支払い(品名と金額のペア)1組ごとに1件の記録になり、金額の行のあとに書いたタグは
+// その支払いだけに付く。以前は2件目以降の支払いにタグが付いていなかった
+func TestHandleSubmitKFTLText_NlogTagPerPayment(t *testing.T) {
+	tsURL, gkillAPI, cleanup := setupTestRouterWithRepos(t)
+	defer cleanup()
+
+	passwordHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	sessionID := loginAndGetSession(t, tsURL, gkillAPI, "admin", passwordHash)
+
+	marker := fmt.Sprintf("kftl_nlog_pair_%d", time.Now().UnixNano())
+	firstTag := marker + "_tag1"
+	secondTag := marker + "_tag2"
+	helperSubmitKFTLAndVerify(t, tsURL, sessionID,
+		"ーん\nテスト店\n"+marker+"_a\n150\n。"+firstTag+"\n"+marker+"_b\n120\n。"+secondTag)
+
+	if count := helperGetKyousWithWord(t, tsURL, sessionID, marker+"_a"); count == 0 {
+		t.Error("expected a kyou for the first payment, got 0")
+	}
+	if count := helperGetKyousWithWord(t, tsURL, sessionID, marker+"_b"); count == 0 {
+		t.Error("expected a kyou for the second payment, got 0")
+	}
+	// タグは支払いごとに1件ずつ。どちらのタグも実在する Nlog に付いていること
+	if count := helperGetKyousWithTag(t, tsURL, sessionID, firstTag); count != 1 {
+		t.Errorf("expected 1 kyou tagged %s, got %d", firstTag, count)
+	}
+	if count := helperGetKyousWithTag(t, tsURL, sessionID, secondTag); count != 1 {
+		t.Errorf("expected 1 kyou tagged %s, got %d", secondTag, count)
+	}
 }
 
 func TestHandleSubmitKFTLText_TimeIsStart(t *testing.T) {

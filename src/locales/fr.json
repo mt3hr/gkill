@@ -553,6 +553,7 @@
     "KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE": "Le montant est invalide",
     "KFTL_NLOG_INVALID_RECORD_COUNT_MESSAGE_TITLE": "Le nombre de titres et de montants ne correspond pas",
     "KFTL_NLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE": "La dépense sans contenu a été ignorée",
+    "KFTL_NLOG_META_INFO_MUST_BE_AFTER_AMOUNT_MESSAGE_TITLE": "Écrivez les étiquettes et les textes d'une dépense après sa ligne de montant",
     "KFTL_NLOG_SHOP_NAME_TITLE": "Nom du magasin",
     "KFTL_NLOG_TITLE_TITLE": "Titre",
     "KFTL_NLOG_NLOG_LABEL_TITLE": "Dépense",
