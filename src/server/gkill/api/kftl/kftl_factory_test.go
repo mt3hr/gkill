@@ -188,6 +188,7 @@ func TestGenerateDefaultConstructor_AllSplitters(t *testing.T) {
 	splitters := []string{
 		splitterKC,
 		splitterMi,
+		splitterMiReKyou,
 		splitterLantana,
 		splitterNlog,
 		splitterTimeIsStart,
