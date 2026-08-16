@@ -80,9 +80,14 @@ async function confirmUnknownMiBoardIfShown(page: Page): Promise<void> {
  * Navigates to /kftl, fills textarea, and clicks save.
  *
  * 保存完了は固定sleepではなく実シグナルで待つ。
- * 成功時のみ clear() が走って textarea が空になり、エラー時は内容が残る
- * (use-kftl-view.ts の submit()/clear() を参照)。
+ * 成功すると**そのタブが閉じる**。タブが0枚になるので空のタブが1枚作り直され、
+ * 結果として textarea は空になる。エラー時はタブが閉じないので内容が残る
+ * (use-kftl-view.ts の do_submit() と use-kftl-tabs.ts の close_tab() を参照)。
  * エラーを期待する呼び出しでは expectSuccess: false を渡すこと。
+ *
+ * **前提: 保存時にタブが1枚しかないこと。** 2枚以上あると保存後のアクティブタブは
+ * 隣のタブになり、その中身が残るので `toHaveValue('')` が成立しない。
+ * タブを増やすテストはこのヘルパーではなく kftl-tabs.spec.ts を使うこと。
  */
 export async function submitKftlText(
   page: Page,
@@ -92,8 +97,8 @@ export async function submitKftlText(
   const { expectSuccess = true } = options
   await page.goto('/kftl', { waitUntil: 'domcontentloaded' })
   await page.waitForSelector('#app', { timeout: 15000 })
-  // Use id selector for the KFTL textarea
-  const textarea = page.locator('#kftl_text_area')
+  // メモ帳ダイアログは複数枚開けるので id は一意採番。掴む口は class
+  const textarea = page.locator('textarea.kftl_text_area')
   await expect(textarea).toBeVisible({ timeout: 90000 })
   // Wait for the save button to become enabled (application_config loaded)
   const saveButton = page.locator('button').filter({ hasText: /保存|送信|submit|save/i }).first()
@@ -247,6 +252,7 @@ export const MENU = {
   addMi: /^\s*タスク\s*$/,
   addNlog: /^\s*支出\s*$/,
   addLantana: /^\s*気分\s*$/,
+  kftl: /^\s*メモ帳\s*$/, // KFTL_APP_NAME（「打刻メモ帳」と区別する）
 } as const
 
 /**

@@ -42,7 +42,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import kftlView from './kftl-view.vue'
 import PlaingTimeIsView from './plaing-time-is-view.vue'
 import type { MKFLProps } from './mkfl-view-props';
@@ -54,6 +54,11 @@ import type { Tag } from "@/classes/datas/tag"
 import { useMkflView } from '@/classes/use-mkfl-view'
 
 const plaing_timeis_view = ref<InstanceType<typeof PlaingTimeIsView> | null>(null);
+const kftl_view = ref<InstanceType<typeof kftlView> | null>(null);
+
+// 以前はテキストエリアの autofocus 属性で載っていたが、view に autofocus を書くと
+// 他画面に埋め込んだときにページ読込でフォーカスを奪うので、置く側から明示的に呼ぶ
+onMounted(() => kftl_view.value?.focus_kftl_text_area())
 
 defineProps<MKFLProps>()
 const emits = defineEmits<MKFLViewEmits>()

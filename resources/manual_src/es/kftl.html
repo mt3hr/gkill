@@ -34,7 +34,53 @@
       <td>Botón de guardar</td>
       <td>Haga clic en el botón de guardar para analizar y guardar el texto del bloc de notas introducido.</td>
     </tr>
+    <tr>
+      <td>Pestañas</td>
+      <td>Permiten mantener varios borradores a la vez. Cada pestaña guarda su propio texto.</td>
+    </tr>
+    <tr>
+      <td>Botón de añadir pestaña</td>
+      <td>Añade una pestaña vacía nueva.</td>
+    </tr>
+    <tr>
+      <td>Botón de cerrar pestaña</td>
+      <td>Cierra esa pestaña. Si todavía tiene texto, se le pregunta antes.</td>
+    </tr>
   </table>
+
+  <h2>Uso de las pestañas</h2>
+  <p>Puede mantener varios borradores a la vez. Si mientras escribe un registro recuerda otra cosa, pulse el botón de añadir pestaña, escríbala en una pestaña nueva y vuelva después a la original.</p>
+  <table>
+    <tr>
+      <th>Acción</th>
+      <th>Resultado</th>
+    </tr>
+    <tr>
+      <td>Pulsar el botón de añadir pestaña</td>
+      <td>Se añade una pestaña vacía.</td>
+    </tr>
+    <tr>
+      <td>Hacer clic en el nombre de una pestaña</td>
+      <td>El editor cambia al contenido de esa pestaña.</td>
+    </tr>
+    <tr>
+      <td>Pulsar el botón de cerrar pestaña</td>
+      <td>Se cierra esa pestaña. Si todavía tiene texto, se le pregunta antes.</td>
+    </tr>
+    <tr>
+      <td>Pulsar el botón de guardar</td>
+      <td>Solo se guarda el contenido de esa pestaña, y la pestaña guardada se cierra. Las demás se mantienen.</td>
+    </tr>
+    <tr>
+      <td>Elegir una plantilla</td>
+      <td>Se abre una pestaña nueva con la plantilla dentro. El texto sin terminar no se pierde.</td>
+    </tr>
+  </table>
+  <p>El nombre de la pestaña es el de la plantilla cuando se abrió desde una; si no, se toma de la primera línea del texto. Las pestañas sin nada escrito llevan un número.</p>
+
+  <div class="tip">
+    <strong>Consejo:</strong> El texto sin terminar se conserva aunque cierre la pantalla. La próxima vez que la abra, las pestañas que tenía vuelven tal cual.
+  </div>
 
   <h2>Acerca del bloc de notas</h2>
   <p>El bloc de notas utiliza un formato de texto propio de gkill que permite crear múltiples registros de forma masiva en un solo texto. Cada línea representa un comando o entrada de datos.</p>
@@ -46,10 +92,10 @@
   <h2>Pasos de operación</h2>
   <ol>
     <li>Introduzca el contenido del registro con la sintaxis del bloc de notas en el área de entrada de texto.</li>
-    <li>Si lo necesita, inserte un texto predefinido desde el botón de plantilla.</li>
+    <li>Si lo necesita, inserte un texto predefinido desde el botón de plantilla. La plantilla se abre en una pestaña nueva, así que el texto sin terminar no se pierde.</li>
     <li>Haga clic en el botón de guardar para crear el registro.</li>
     <li>Si incluye una etiqueta que nunca ha usado, se le pregunta «Es una etiqueta nueva. ¿Desea agregarla?». Si la etiqueta es correcta, continúe.</li>
-    <li>Cuando se guarda correctamente, el área de texto se vacía.</li>
+    <li>Cuando se guarda correctamente, esa pestaña se cierra. Las demás conservan su texto. Si no queda ninguna, se prepara una pestaña vacía.</li>
   </ol>
 
   <div class="tip">
@@ -58,6 +104,10 @@
 
   <div class="tip">
     <strong>Consejo:</strong> Aprovechar las plantillas permite introducir datos de forma más eficiente. Resulta práctico configurar como plantilla los patrones de registro que use con frecuencia.
+  </div>
+
+  <div class="tip">
+    <strong>Consejo:</strong> En otras pantallas, cada vez que elige «Bloc de notas» en el menú + se abre otra ventana del bloc de notas. Cada ventana puede mostrar una pestaña distinta y, si dos ventanas muestran la misma pestaña, lo que escribe en una aparece en la otra.
   </div>
 
   <h2>Documentos relacionados</h2>

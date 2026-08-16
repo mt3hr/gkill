@@ -28,8 +28,17 @@ export abstract class KFTLStatementLine {
     }
 
     get_count_line_in_textarea(textarea_info: TextAreaInfo): number {
-        const textarea_element = document.getElementById(textarea_info.text_area_element_id)!
+        const textarea_element = textarea_info.text_area_element ?? document.getElementById(textarea_info.text_area_element_id)
+        if (textarea_element === null) {
+            return 1
+        }
         const kftl_text_area_width = textarea_element.clientWidth
+        // 幅が測れない（非表示・未マウント）と text_width / 0 が Infinity になり、
+        // parseInt("Infinity") は NaN を返す。NaN は行ラベルの v-for に流れて
+        // ラベルが丸ごと消えるので、測れないときは1行として扱う
+        if (kftl_text_area_width <= 0) {
+            return 1
+        }
         const text_width = KFTLStatementLine.get_text_width(this.get_statement_line_text(), KFTLStatementLine.get_canvas_font(textarea_element)).valueOf()
         const lines = 1 + parseInt(`${text_width / kftl_text_area_width}`)
         return lines

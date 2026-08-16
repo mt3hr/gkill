@@ -52,7 +52,7 @@ src/client/
 │   ├── tag-struct.ts                # タグ階層構造ユーティリティ
 │   ├── long-press.ts                # v-long-press カスタムディレクティブ
 │   ├── looks-like-url.ts            # URL判定ユーティリティ
-│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、253ファイル）
+│   └── use-*.ts                     # Composition関数群（コンテキストメニュー等、255ファイル）
 ├── assets/                          # 画像等の静的アセット
 ├── __tests__/                       # Vitest ユニットテスト + Playwright E2E
 │   ├── e2e/                        # E2E spec（run-e2e.mjs / free-port.mjs / auth.setup.ts 等を含む）
@@ -154,7 +154,7 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 
 ### ダイアログ アクセシビリティ
 
-113ダイアログ中86件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
+114ダイアログ中86件が `useFloatingDialog()` Composition関数（`src/client/classes/use-floating-dialog.ts`）を共有し、以下のアクセシビリティ機能を提供する。残りは別機構（`useDialogHistoryStack` 等）を用いる（例: `plugin-config-dialog.vue`）:
 
 | 機能 | 説明 |
 |------|------|
@@ -165,6 +165,26 @@ Dnote（集計ビュー）の時系列トレンドグラフ機能を構成する
 **自動フォーカスの選び方**（`src/client/classes/dialog-autofocus.ts`）: 探索は `.gkill-floating-dialog__body` の中だけ。ヘッダには透過トグルの `v-checkbox` と×ボタンが常に先頭にあるため、ルートから探すと必ずそれを掴む。既に `autofocus` を書いた要素があるダイアログでは何もせず Vuetify に任せる。`readonly`（日付ピッカーの見せかけ入力）・`disabled`・非表示・`v-selection-control` 配下のチェックボックス・`inputmode="none"` の `v-select` は候補から外す。入力欄は内側の `v-if` でデータ待ちのことが多いので、`MutationObserver` で生えてくるのを2秒だけ見張って一度だけ当てる。自前でフォーカス先を決めているダイアログ（`save-clipboard-to-file-dialog.vue` は保存ボタン）は `autofocus: false` で切る。
 
 ※ フォーカストラップ（Tab循環）とフォーカス復帰は v1.1.0 で削除されたまま。自動フォーカスのみ復活させた。
+
+### ダイアログの重なり順
+
+同じ種類のダイアログを複数枚同時に開ける（`rykv-dialog-host` 系、メモ帳ダイアログ）。
+重なり順は `use-floating-dialog.ts` のモジュールレベルの `z_order`（末尾が最前面）から出す:
+
+- z-index は `1100 + z_order 内の位置`。**単調増加のカウンタにしてはいけない** ―― Vuetify の
+  overlay（メニュー / ツールチップ）が 2400 なので、上へ伸ばし続けるとダイアログの中の
+  メニューがダイアログの下へ潜る。この方式なら伸びるのは同時に開いている枚数ぶんだけ
+- 触った（`pointerdown` / `focusin`）ダイアログが最前面へ出る。**そのとき自分から開いた
+  子孫のダイアログも一緒に上げる** ―― 確認ダイアログは `Teleport to="body"` で親の兄弟に
+  なるので、連れていかないと親をクリックしただけで確認が後ろへ隠れる。親子は
+  `provide`/`inject` で持つ（コンポーネント木は Teleport をまたいでも保たれる）
+- ブラウザバックと Escape が閉じるのは**見た目の最前面**。`use-dialog-history-stack.ts` の
+  `stack` は積んだ順なので、前面化のたびに `raise_dialog_history_entries()` で同じ順へ
+  並べ替える。2つのコンポーザブルは同じコンポーネントの setup で呼ばれるので、
+  `getCurrentInstance()` を鍵にして結んでいる
+- 同じ種類を複数枚出すときは、`useFloatingDialog` の保存キー（`${key}:pos` / `:size` /
+  `:transparent`）をインスタンスごとに分け、`centerOffset` でずらすこと。全ダイアログが
+  `centerMode: "always"` なので、分けないとピクセル単位で完全に重なって位置を奪い合う
 
 ### アラート アクセシビリティ
 
@@ -206,7 +226,7 @@ gkill では **Props/Emit パターンのみ** で状態管理を行う。
 | `GkillAPI` シングルトン | バックエンド通信（`GkillAPI.get_instance()`） |
 | Vuetify `useTheme()` | テーマ状態（ライト/ダーク切替） |
 | vue-i18n | ロケール状態 |
-| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（253ファイル） |
+| `use-*.ts` Composition関数 | コンテキストメニュー等の共有ロジック（255ファイル） |
 
 ### ComponentRef 型
 
