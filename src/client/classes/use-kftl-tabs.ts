@@ -40,6 +40,18 @@ export interface KFTLTabsStore {
     note_active_tab(tab_id: string): void
 
     has_content(): boolean
+
+    /**
+     * 送信中のタブを掴む。掴めたら true、false なら別のウィンドウが送信中。
+     *
+     * `is_requested_submit` / `is_submitting` は**ビューごと**なので、同じタブを映している
+     * 別ウィンドウの保存は止められない。KFTLは複数リクエストをtxで束ねて送るため、
+     * 二重送信するとKyouが丸ごと重複登録される。ウィンドウをまたいだ排他はここにしか置けない
+     */
+    try_begin_submit(tab_id: string): boolean
+
+    /** 送信中のタブを手放す。冪等（掴んでいないタブの解放は no-op） */
+    end_submit(tab_id: string): void
 }
 
 let shared_store: KFTLTabsStore | null = null
@@ -125,6 +137,29 @@ function create_kftl_tabs_store(): KFTLTabsStore {
         return has_kftl_tab_content(tabs.value)
     }
 
+    /**
+     * 送信中のタブ。
+     *
+     * 素の Set で持つ（リアクティブにしない）。UIからは読まないので ref にする必要が無く、
+     * `is_tab_locked` に混ぜるのは**禁止** ―― 「送信中のタブから他のタブへ切り替えられない」
+     * という別の不具合になる。
+     * localStorage にも出さない（永続化 watch は [tabs, last_active_tab_id] だけを見ている）。
+     * リロードで掴んだままのタブが二度と保存できなくなるため、出してはいけない
+     */
+    const submitting_tab_ids = new Set<string>()
+
+    function try_begin_submit(tab_id: string): boolean {
+        if (submitting_tab_ids.has(tab_id)) {
+            return false
+        }
+        submitting_tab_ids.add(tab_id)
+        return true
+    }
+
+    function end_submit(tab_id: string): void {
+        submitting_tab_ids.delete(tab_id)
+    }
+
     return {
         tabs,
         last_active_tab_id,
@@ -135,5 +170,7 @@ function create_kftl_tabs_store(): KFTLTabsStore {
         close_tab,
         note_active_tab,
         has_content,
+        try_begin_submit,
+        end_submit,
     }
 }
