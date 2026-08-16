@@ -77,7 +77,6 @@
                 :inited="false /* これは見られないのでfalseのままでOK */"
                 @requested_search="onSidebarRequestedSearch"
                 @updated_query="onSidebarUpdatedQuery"
-                @inited="onSidebarInited"
                 @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
                 @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
                 ref="query_editor_sidebar" />
@@ -365,7 +364,6 @@ const {
     toggle_dnote,
     onSidebarRequestedSearch,
     onSidebarUpdatedQuery,
-    onSidebarInited,
     onColumnScrollList,
     onColumnClickedListView,
     onColumnClickedKyou,

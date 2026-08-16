@@ -42,7 +42,8 @@ import type { Kyou } from '@/classes/datas/kyou'
 import {
   createColumnViewMockApi,
   makeColumnQuery,
-  makeViewApplicationConfig,
+  makeColumnViewProps,
+  finish_application_config_load,
   setupColumns,
   flushAsync,
 } from '../../helpers/rykv-mi-harness'
@@ -59,17 +60,15 @@ function kyouIds(list: unknown): string[] {
 
 function createView(config_overrides: Record<string, unknown> = {}) {
   const { api, pending_get_kyous } = createColumnViewMockApi()
-  const props = {
-    gkill_api: api,
-    application_config: makeViewApplicationConfig(config_overrides),
-    app_title_bar_height: 50,
-    app_content_height: 600,
-    app_content_width: 800,
+  const raw_props = makeColumnViewProps(api, config_overrides, {
     is_shared_rykv_view: false,
     share_title: '',
-  } as unknown as RykvViewProps
+  })
+  const props = raw_props as unknown as RykvViewProps
   const view = useRykvView({ props, emits: noop_emits })
-  return { api, pending_get_kyous, view }
+  // init() は application_config.is_loaded の watch で起動する
+  const start_init = () => finish_application_config_load(raw_props)
+  return { api, pending_get_kyous, view, start_init }
 }
 
 describe('useRykvView 列×検索ルーティング', () => {
@@ -329,13 +328,13 @@ describe('useRykvView 列×検索ルーティング', () => {
 
   test('init(hot reload OFF)後、focused_queryが列0の保存済み条件に同期される', async () => {
     // 同期しないと検索ボタンがサイドバーの既定値から条件を組み、保存済み条件を上書きする
-    const { api, view } = createView({ rykv_hot_reload: false })
+    const { api, view, start_init } = createView({ rykv_hot_reload: false })
     const saved = makeColumnQuery('saved-col')
     saved.keywords = 'saved-keyword'
     api.get_saved_rykv_find_kyou_querys.mockReturnValue([saved])
     view.query_editor_sidebar.value = { get_default_query: () => new FindKyouQuery() }
 
-    view.onSidebarInited()
+    start_init()
     await flushAsync()
 
     expect(view.inited.value).toBe(true)
