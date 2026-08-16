@@ -224,6 +224,7 @@ flowchart TD
     Split --> Prefix{行頭プレフィックス判定<br/>日本語 / ASCII}
     Prefix -->|通常テキスト| Kmemo[kftl-kmemo-request → add_kmemo]
     Prefix -->|/mi ・タスク| Mi[kftl-mi-request → add_mi]
+    Prefix -->|~~ ・記録をタスク化| MiReKyou[kftl-mi-re-kyou-request → add_mirekyou]
     Prefix -->|/mood ・気分| Lantana[kftl-lantana-request → add_lantana]
     Prefix -->|/num| Kc[kftl-kc-request → add_kc]
     Prefix -->|/expense| Nlog[kftl-nlog-request → add_nlog]
@@ -231,6 +232,7 @@ flowchart TD
     Prefix -->|/url| Urlog[kftl-urlog-request → add_urlog]
     Kmemo --> Tx[全 Request が同一 TXID を共有]
     Mi --> Tx
+    MiReKyou --> Tx
     Lantana --> Tx
     Kc --> Tx
     Nlog --> Tx
