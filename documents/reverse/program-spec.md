@@ -564,7 +564,7 @@ Kyou の削除は Kyou 単体の論理削除ではなく、`src/client/classes/c
 |---|---|---|
 | ページ | 15 | `pages/*.vue` |
 | ビュー | 202 | `pages/views/*.vue` |
-| ダイアログ | 114 | `pages/dialogs/*.vue` |
+| ダイアログ | 115 | `pages/dialogs/*.vue` |
 
 ### テーマ
 

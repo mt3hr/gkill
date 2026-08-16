@@ -904,5 +904,9 @@
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "Edit Search Condition",
     "SAVED_FIND_QUERY_NAME_LABEL": "Name",
     "SAVED_FIND_QUERY_DEFAULT_NAME": "New Search Condition",
-    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "Saved Search Conditions"
+    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "Saved Search Conditions",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_TITLE": "Shared content is duplicated",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "The same content has already been saved. Save it again?",
+    "SAVE_ANYWAY_TITLE": "Save anyway",
+    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Not saved because it is a duplicate"
 }
