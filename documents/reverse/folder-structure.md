@@ -79,8 +79,8 @@ src/client/
 │   ├── old-shared-mi-page.vue
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
-│   ├── views/              # ビューコンポーネント（202ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（115ファイル、browse-zip-contents-dialog.vue 含む）
+│   ├── views/              # ビューコンポーネント（203ファイル）
+│   └── dialogs/            # ダイアログコンポーネント（116ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
@@ -93,10 +93,10 @@ src/client/
 │   ├── dnote/              # Dnote集計ユーティリティ（dnote-trend-aggregator.ts, dnote-predicate/ 等）
 │   ├── dto/                # データ転送オブジェクト
 │   ├── lantana/            # 気分値関連クラス
-│   ├── kftl/               # KFTLパーサー（48ステートメント型）
+│   ├── kftl/               # KFTLパーサー（49ステートメント型）
 │   ├── component-ref.ts    # ComponentRef 型（any をここに封じ込める）
 │   ├── kyou-content-text.ts # Kyou の内容/IDのクリップボードコピー
-│   └── use-*.ts            # Composition関数群（255ファイル）
+│   └── use-*.ts            # Composition関数群（257ファイル）
 ├── __tests__/              # テスト
 │   ├── e2e/                # Playwright E2E（run-e2e.mjs, free-port.mjs, auth.setup.ts 等）
 │   ├── helpers/            # テストヘルパー
