@@ -370,18 +370,12 @@ watch(() => application_config.value.is_loaded, async (is_loaded) => {
     }
     await nextTick(() => { })
     gps_log_map.value?.centering()
-    // 初期データ取得: application_config ロード完了後にデータを取得する
-    // is_loading は use-dashboard-page.ts 側で false にしない（fetch完了後に隠す）
-    is_fetching.value = true
-    try {
-        await Promise.all([
-            fetch_mi_kyous().then(() => mi_list_view.value?.set_loading(false)),
-            fetch_dnote_kyous().then((kyous) => dnote_view.value?.reload(kyous, dnote_query.value)),
-        ])
-    } finally {
-        is_fetching.value = false
-    }
+    // ApplicationConfig が来た時点で見せる。取得の完了は待たない。
+    // 待つと fetch が1本でも解決しないだけで画面全体が固まる。
+    // 進行は DnoteView / KyouListView それぞれのローディングで見せる
+    // (日付変更時の fetch_for_date と同じ形)
     is_loading.value = false
+    await fetch_for_date()
 })
 
 // パネル高さは panel_height で決定的に決まる（DnoteView・GPSLogMapとも fill 高さ = panel_height）
