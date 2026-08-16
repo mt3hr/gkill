@@ -16,6 +16,8 @@ import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import type NewBoardNameDialog from '@/pages/dialogs/new-board-name-dialog.vue'
 import type { ComponentRef } from '@/classes/component-ref'
 import { useConfirmUnknownMiBoard } from '@/classes/use-confirm-unknown-mi-board'
+import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
+import { add_tags_to_target } from '@/classes/kyou-tags'
 import { sort_mi_board_names_by_config_order } from '@/classes/mi-board-names'
 
 export function useAddMiView(options: {
@@ -27,9 +29,13 @@ export function useAddMiView(options: {
     // ── Template refs ──
     const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null)
     const add_notification_views = ref<ComponentRef | null>(null)
+    const kyou_tags_view = ref<ComponentRef | null>(null)
 
     // ── Confirm unknown mi board ──
     const confirm_unknown_mi_board = useConfirmUnknownMiBoard({ application_config: () => props.application_config })
+
+    // ── Confirm unknown tag ──
+    const confirm_unknown_tag = useConfirmUnknownTag({ application_config: () => props.application_config })
 
     // ── State refs ──
     const is_requested_submit = ref(false)
@@ -154,9 +160,21 @@ export function useAddMiView(options: {
         mi_limit_date_typed.value = mi.value && mi.value.limit_time ? moment(mi.value.limit_time).toDate() : null
         mi_limit_time_string.value = mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("HH:mm:ss") : ""
         notifications.value.splice(0)
+        kyou_tags_view.value?.reset()
     }
 
     async function save(): Promise<void> {
+        await do_save(false, false)
+    }
+
+    /**
+     * 保存の本体。確認を挟むたびにここへ戻ってくる。
+     *
+     * 確認は「タグ → 板名」の順に1つずつ出す（KFTLの do_submit と同じ）。
+     * 確認ダイアログは非モーダルなので、確認中に入力を変えられる。
+     * 再入のたびに Notification もタグ名も取り直すこと
+     */
+    async function do_save(skip_unknown_tag_check: boolean, skip_unknown_mi_board_check: boolean): Promise<void> {
         try {
             is_requested_submit.value = true
             // Notification チェック
@@ -252,19 +270,42 @@ export function useAddMiView(options: {
                 return
             }
 
-            // 実在しない板名なら、保存する前に確認を取る。
-            // 板はサーバ側で検証されず「その名前のタスクが1件でもあること」で実体化するので、
-            // 打ち間違いがそのまま新しい板になってしまう
-            const unknown_boards = confirm_unknown_mi_board.collect_unknown_mi_boards([mi_board_name.value])
-            if (unknown_boards.length !== 0) {
-                confirm_unknown_mi_board.open_confirm(unknown_boards)
-                return
+            // タグツリーに無いタグ名なら、保存する前に確認を取る
+            const tag_names = kyou_tags_view.value?.get_tag_names() ?? []
+            if (!skip_unknown_tag_check) {
+                const unknown_tags = confirm_unknown_tag.collect_unknown_tags(tag_names)
+                if (unknown_tags.length !== 0) {
+                    confirm_unknown_tag.open_confirm(unknown_tags)
+                    return
+                }
             }
 
-            await execute_save(notification_results)
+            // 実在しない板名なら、保存する前に確認を取る。
+            // 板はサーバ側で検証されず「その名前のタスクが1件でもあること」で実体化するので、
+            // 打ち間違いがそのまま新しい板になってしまう。
+            // タグの確認を通した後に改めてここへ来る（確認は1つずつ順に出す）
+            if (!skip_unknown_mi_board_check) {
+                const unknown_boards = confirm_unknown_mi_board.collect_unknown_mi_boards([mi_board_name.value])
+                if (unknown_boards.length !== 0) {
+                    confirm_unknown_mi_board.open_confirm(unknown_boards)
+                    return
+                }
+            }
+
+            await execute_save(notification_results, tag_names)
         } finally {
             is_requested_submit.value = false
         }
+    }
+
+    function cancel_tag_save(): void {
+        confirm_unknown_tag.close_confirm()
+    }
+
+    /** タグの確認を通した。次は板名の確認へ進む */
+    async function confirm_tag_save(): Promise<void> {
+        confirm_unknown_tag.close_confirm()
+        await do_save(true, false)
     }
 
     function cancel_save(): void {
@@ -274,26 +315,10 @@ export function useAddMiView(options: {
     async function confirm_save(): Promise<void> {
         confirm_unknown_mi_board.remember_confirmed_mi_boards()
         confirm_unknown_mi_board.close_confirm()
-        try {
-            is_requested_submit.value = true
-            // 確認を挟んでいる間に Notification の入力が変わっている可能性があるので取り直す
-            const notification_results = new Array<Notification>()
-            if (add_notification_views.value) {
-                for (let i = 0; i < add_notification_views.value.length; i++) {
-                    const notification = await add_notification_views.value[i].get_notification()
-                    if (!notification) {
-                        return
-                    }
-                    notification_results.push(notification)
-                }
-            }
-            await execute_save(notification_results)
-        } finally {
-            is_requested_submit.value = false
-        }
+        await do_save(true, true)
     }
 
-    async function execute_save(notification_results: Array<Notification>): Promise<void> {
+    async function execute_save(notification_results: Array<Notification>, tag_names: Array<string>): Promise<void> {
         try {
             is_requested_submit.value = true
             if (!mi.value) {
@@ -360,6 +385,19 @@ export function useAddMiView(options: {
                     emits('received_messages', notif_res.messages)
                 }
             }
+
+            // タグは registered_kyou より必ず先に付ける。
+            // 先に emit すると、タグで絞り込んだ列が空のタグ列を見て「一致しない」と判定し、
+            // エラーも出ないまま行が現れない
+            const tag_result = await add_tags_to_target(props.gkill_api, props.application_config, new_mi.id, tag_names)
+            tag_result.added_tags.forEach(added_tag => emits('registered_tag', added_tag))
+            if (tag_result.messages.length !== 0) {
+                emits('received_messages', tag_result.messages)
+            }
+            if (tag_result.errors.length !== 0) {
+                emits('received_errors', tag_result.errors)
+            }
+
             // 追加した記録は列へ局所挿入されるので、リスト全体の引き直しは要求しない。
             // Kyouが返らなかったときだけ、従来どおり引き直しへ落とす
             if (res.added_kyou) {
@@ -404,12 +442,19 @@ export function useAddMiView(options: {
         // Template refs
         new_board_name_dialog,
         add_notification_views,
+        kyou_tags_view,
         confirm_unknown_mi_board_dialog: confirm_unknown_mi_board.confirm_unknown_mi_board_dialog,
+        confirm_unknown_tag_dialog: confirm_unknown_tag.confirm_unknown_tag_dialog,
 
         // Confirm unknown mi board
         unknown_mi_boards: confirm_unknown_mi_board.unknown_mi_boards,
         cancel_save,
         confirm_save,
+
+        // Confirm unknown tag
+        unknown_tags: confirm_unknown_tag.unknown_tags,
+        cancel_tag_save,
+        confirm_tag_save,
 
         // State
         is_requested_submit,

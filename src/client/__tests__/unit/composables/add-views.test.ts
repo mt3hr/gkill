@@ -290,6 +290,67 @@ describe('useAddUrlogView', () => {
     expect(typeof view.save).toBe('function')
     expect(typeof view.reset).toBe('function')
   })
+
+  // 局所挿入(use-registered-kyou-local-insert.ts)は渡されたKyouをそのまま使わず
+  // refresh_kyou で引き直すので、その時点でサーバにタグが入っていれば
+  // attached_tags 込みで差し込まれる。逆に registered_kyou を先に emit すると、
+  // タグで絞り込んだ列が空のタグ列を見て「一致しない」と判定し、
+  // エラーも出ないまま行が現れない。順序が唯一の防御線
+  test('registered_kyou は add_tag が終わってから emit される', async () => {
+    const call_order: string[] = []
+    props.gkill_api.add_urlog.mockImplementation(() => {
+      call_order.push('add_urlog')
+      return Promise.resolve({ added_kyou: { id: 'new-urlog-id' }, messages: [], errors: [] })
+    })
+    // 遅延させて「先にemitしていないか」を確実に捕まえる
+    props.gkill_api.add_tag.mockImplementation((req: { tag: { tag: string } }) => new Promise(resolve => {
+      setTimeout(() => {
+        call_order.push('add_tag')
+        resolve({ added_tag: req.tag, messages: [], errors: [] })
+      }, 10)
+    }))
+    // emitされた瞬間に記録する。save()が返ってから mock.calls を読むと
+    // 実際の順序に関わらず registered_kyou が最後に積まれて検査にならない
+    const ordered_emits = vi.fn((event: string) => {
+      if (event === 'registered_kyou') {
+        call_order.push('registered_kyou')
+      }
+    })
+    const view = useAddUrlogView({ props, emits: ordered_emits })
+    view.url.value = 'https://example.com/'
+    // タグ欄の子ビューは親から見ると template ref。値を返すだけのスタブで十分
+    view.kyou_tags_view.value = { get_tag_names: () => ['既知タグ'], reset: () => { } }
+    // 未知タグ確認を挟ませないため、タグツリーに入れておく
+    props.application_config.tag_struct = { children: [{ tag_name: '既知タグ', children: [] }] }
+
+    await view.save()
+
+    expect(call_order).toEqual(['add_urlog', 'add_tag', 'registered_kyou'])
+  })
+
+  test('タグ名が新しいときは保存せず確認ダイアログを開く', async () => {
+    const view = useAddUrlogView({ props, emits })
+    view.url.value = 'https://example.com/'
+    view.kyou_tags_view.value = { get_tag_names: () => ['新しいタグ'], reset: () => { } }
+
+    await view.save()
+
+    expect(view.unknown_tags.value).toEqual(['新しいタグ'])
+    expect(props.gkill_api.add_urlog).not.toHaveBeenCalled()
+    expect(props.gkill_api.add_tag).not.toHaveBeenCalled()
+  })
+
+  test('タグを書かなければ add_tag は呼ばれない', async () => {
+    props.gkill_api.add_urlog.mockResolvedValue({ added_kyou: { id: 'new-urlog-id' }, messages: [], errors: [] })
+    const view = useAddUrlogView({ props, emits })
+    view.url.value = 'https://example.com/'
+    view.kyou_tags_view.value = { get_tag_names: () => [], reset: () => { } }
+
+    await view.save()
+
+    expect(props.gkill_api.add_urlog).toHaveBeenCalledTimes(1)
+    expect(props.gkill_api.add_tag).not.toHaveBeenCalled()
+  })
 })
 
 // ========== useAddLantanaView ==========

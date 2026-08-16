@@ -6,9 +6,7 @@ import { OpenDirectoryRequest } from '@/classes/api/req_res/open-directory-reque
 import { OpenFileRequest } from '@/classes/api/req_res/open-file-request'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { copy_kyou_content } from '@/classes/kyou-content-text'
-import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
-import { Tag } from '@/classes/datas/tag'
-import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { add_tags_to_target, parse_tag_names } from '@/classes/kyou-tags'
 import type { URLogContextMenuProps } from '@/pages/views/ur-log-context-menu-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 
@@ -120,41 +118,17 @@ export function useURLogContextMenu(options: {
     }
 
     async function execute_add_tag_from_history(tag_value: string): Promise<void> {
-        props.gkill_api.push_tag_to_history(tag_value)
-        const tag_names = tag_value.split("\u3001")
-        for (let i = 0; i < tag_names.length; i++) {
-            const tag = tag_names[i]
-            const new_tag = new Tag()
-            new_tag.tag = tag
-            new_tag.id = props.gkill_api.generate_uuid()
-            new_tag.is_deleted = false
-            new_tag.target_id = props.kyou.id
-            new_tag.related_time = new Date(Date.now())
-            new_tag.create_app = "gkill"
-            new_tag.create_device = props.application_config.device
-            new_tag.create_time = new Date(Date.now())
-            new_tag.create_user = props.application_config.user_id
-            new_tag.update_app = "gkill"
-            new_tag.update_device = props.application_config.device
-            new_tag.update_time = new Date(Date.now())
-            new_tag.update_user = props.application_config.user_id
-
-            await delete_gkill_kyou_cache(new_tag.id)
-            await delete_gkill_kyou_cache(new_tag.target_id)
-            const req = new AddTagRequest()
-            req.tag = new_tag
-            const res = await props.gkill_api.add_tag(req)
-            if (res.errors && res.errors.length !== 0) {
-                emits('received_errors', res.errors)
-                return
-            }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
-            }
-            emits('registered_tag', res.added_tag)
-            emits('requested_reload_kyou', props.kyou)
+        // 追加の手順（id採番・キャッシュ破棄・履歴への積み直し）は classes/kyou-tags.ts に集約してある
+        const result = await add_tags_to_target(props.gkill_api, props.application_config, props.kyou.id, parse_tag_names(tag_value))
+        if (result.messages.length !== 0) {
+            emits('received_messages', result.messages)
         }
-        return
+        if (result.errors.length !== 0) {
+            emits('received_errors', result.errors)
+            return
+        }
+        result.added_tags.forEach(added_tag => emits('registered_tag', added_tag))
+        emits('requested_reload_kyou', props.kyou)
     }
 
     // ── Return ──

@@ -2,7 +2,7 @@
 
 ## 概要
 
-ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、42 specファイル230テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
+ページ・ビュー・ダイアログのテスト。Playwright による E2E テスト（13ルート全網羅 + CRUD/設定/回帰テスト、42 specファイル231テスト宣言）、Vue Composable のユニットテスト、ルーターのテストで構成される。
 
 ## E2E の書き方の規約
 
@@ -74,7 +74,7 @@ const record = await waitForKyouByText(page, label)
 
 ## テストファイル一覧
 
-### E2E テスト（42 specファイル, 230テスト宣言）
+### E2E テスト（42 specファイル, 231テスト宣言）
 
 #### ページ表示・ナビゲーション系（12ファイル）
 
@@ -129,7 +129,7 @@ const record = await waitForKyouByText(page, label)
 | `src/client/__tests__/e2e/mi-board-columns.spec.ts` | mi の板列×検索: 各板の列に自板のタスクだけが出る、板クリック後に別列で検索しても板名表示と検索条件が汚染されない |
 | `src/client/__tests__/e2e/saved-find-query.spec.ts` | 保存済み検索条件: 設定画面で登録→設定適用→ライフログビューのサイドバーFABから呼び出してサイドバーへ反映、タスク側は未登録なのでFAB非表示 |
 
-### Composable ユニットテスト（49ファイル）
+### Composable ユニットテスト（50ファイル）
 
 | ファイル | テスト内容 |
 |---------|-----------|
