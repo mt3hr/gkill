@@ -2,8 +2,7 @@ import { type Ref, ref } from 'vue'
 import { i18n } from '@/i18n'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request'
-import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { remove_attached_tags } from '@/classes/kyou-tags'
 import type { ConfirmDeleteTagViewProps } from '@/pages/views/confirm-delete-tag-view-props'
 import type { KyouViewEmits } from '@/pages/views/kyou-view-emits'
 import { build_kyou_view_relay } from '@/classes/kyou-view-relay'
@@ -32,28 +31,16 @@ export function useConfirmDeleteTagView(options: {
         }
         is_requested_submit.value = true
         try {
-            // 更新後タグ情報を用意する
-            const updated_tag = props.tag.clone()
-            updated_tag.is_deleted = true
-            updated_tag.update_app = "gkill"
-            updated_tag.update_device = props.application_config.device
-            updated_tag.update_time = new Date(Date.now())
-            updated_tag.update_user = props.application_config.user_id
-
-            // 更新リクエストを飛ばす
-            await delete_gkill_kyou_cache(updated_tag.id)
-            await delete_gkill_kyou_cache(updated_tag.target_id)
-            const req = new UpdateTagRequest()
-            req.tag = updated_tag
-            const res = await props.gkill_api.update_tag(req)
-            if (res.errors && res.errors.length !== 0) {
-                emits('received_errors', res.errors)
+            // 削除は is_deleted=true の版を足す。手順は classes/kyou-tags.ts に集約してある
+            const result = await remove_attached_tags(props.gkill_api, props.application_config, [props.tag])
+            if (result.errors.length !== 0) {
+                emits('received_errors', result.errors)
                 return
             }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
+            if (result.messages.length !== 0) {
+                emits('received_messages', result.messages)
             }
-            emits('deleted_tag', res.updated_tag)
+            result.removed_tags.forEach(removed_tag => emits('deleted_tag', removed_tag))
             emits('requested_reload_kyou', props.kyou)
         } catch (err: unknown) {
             console.error(err)

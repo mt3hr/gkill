@@ -10,9 +10,7 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { DiscardTXRequest } from '@/classes/api/req_res/discard-tx-request'
 import { CommitTXRequest } from '@/classes/api/req_res/commit-tx-request'
-import { tag_exists_in_tag_struct } from '@/classes/tag-struct'
-import { useFloatingDialog } from '@/classes/use-floating-dialog'
-import { close_dialog_via_history, useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { useConfirmUnknownTag } from '@/classes/use-confirm-unknown-tag'
 import type { KFTLProps } from '@/pages/views/kftl-props'
 import type { KFTLViewEmits } from '@/pages/views/kftl-view-emits'
 import type { KFTLRequest, KFTLRequestResult } from '@/classes/kftl/kftl-request'
@@ -51,6 +49,9 @@ export function useKftlView(options: {
 
     // ── Confirm unknown mi board ──
     const confirm_unknown_mi_board = useConfirmUnknownMiBoard({ application_config: () => props.application_config })
+
+    // ── Confirm unknown tag ──
+    const confirm_unknown_tag = useConfirmUnknownTag({ application_config: () => props.application_config })
 
     // ── Tabs ──
     // タブの一覧と中身は共有シングルトン（use-kftl-tabs.ts のコメント参照）。
@@ -114,14 +115,15 @@ export function useKftlView(options: {
     const line_label_styles: Ref<Array<Record<string, string>>> = ref(new Array<Record<string, string>>())
     const invalid_line_numbers: Ref<Array<number>> = ref(new Array<number>())
     const is_requested_submit: Ref<boolean> = ref(true)
-    const show_confirm_unknown_tag_dialog: Ref<boolean> = ref(false)
-    const unknown_tags: Ref<string[]> = ref([])
-
-    // ── Dialog UI ──
-    useDialogHistoryStack(show_confirm_unknown_tag_dialog)
-    const confirm_dialog_ui = useFloatingDialog("kftl-confirm-unknown-tag-dialog", {
-        centerMode: "always",
-    })
+    /**
+     * タグ確認が開いているか。
+     *
+     * 共有ダイアログ(ConfirmUnknownTagDialog)は自分で表示状態を持つので、
+     * こちらは「開いた」で立て、`closed` イベントで倒すだけの写し。
+     * `unknown_tags` の空判定で代用してはいけない ―― ブラウザバックで閉じても
+     * 空にならないので、タブ操作が永久にロックされる
+     */
+    const is_confirm_unknown_tag_open: Ref<boolean> = ref(false)
 
     // ── Computed ──
     const text_area_width_px = computed(() => text_area_width.value.toString().concat("px"))
@@ -135,12 +137,12 @@ export function useKftlView(options: {
     /**
      * タブの切替・追加・クローズを止める条件。
      *
-     * タグ確認が開いている間も止めるが、これは `show_confirm_unknown_tag_dialog` が
-     * **どの閉じ方でも false になる**（`useDialogHistoryStack`）ので固まらない。
+     * タグ確認が開いている間も止めるが、これは `is_confirm_unknown_tag_open` が
+     * ダイアログの `closed`（どの閉じ方でも1回だけ来る）で倒れるので固まらない。
      * 板名確認はブラウザバックで閉じても `unknown_mi_boards` が空にならないため、
      * ロック条件に入れていない（入れると永久ロックになる）
      */
-    const is_tab_locked = computed(() => is_submitting.value || show_confirm_unknown_tag_dialog.value)
+    const is_tab_locked = computed(() => is_submitting.value || is_confirm_unknown_tag_open.value)
 
     /** アクティブなタブの本文。setter があるので v-model にそのまま渡せる */
     const text_area_content = computed<string>({
@@ -495,26 +497,14 @@ export function useKftlView(options: {
         }
     }
 
-    // 追加されるタグのうち、TagStructに存在しないものを重複なく集める
+    // 追加されるタグのうち、TagStructに存在しないものを重複なく集める。
+    // 実在判定は共有ゲート(use-confirm-unknown-tag.ts)に任せ、ここは行から集めるだけ
     function collect_unknown_tags(kftl_requests: Array<KFTLRequest>): Array<string> {
-        const unknown = new Array<string>()
+        const candidates = new Array<string>()
         for (let i = 0; i < kftl_requests.length; i++) {
-            const tags = kftl_requests[i].get_tags()
-            for (let j = 0; j < tags.length; j++) {
-                const tag = tags[j]
-                if (tag === "") {
-                    continue
-                }
-                if (tag_exists_in_tag_struct(tag, props.application_config.tag_struct)) {
-                    continue
-                }
-                if (unknown.includes(tag)) {
-                    continue
-                }
-                unknown.push(tag)
-            }
+            candidates.push(...kftl_requests[i].get_tags())
         }
-        return unknown
+        return confirm_unknown_tag.collect_unknown_tags(candidates)
     }
 
     async function submit(): Promise<void> {
@@ -523,18 +513,35 @@ export function useKftlView(options: {
     }
 
     function cancel_submit(): void {
-        close_dialog_via_history(show_confirm_unknown_tag_dialog)
-        unknown_tags.value = []
+        confirm_unknown_tag.close_confirm()
+        is_confirm_unknown_tag_open.value = false
         submit_target_tab_id.value = null
     }
 
     async function confirm_submit(): Promise<void> {
         const target_tab_id = submit_target_tab_id.value ?? active_tab_id.value
-        close_dialog_via_history(show_confirm_unknown_tag_dialog)
-        unknown_tags.value = []
+        confirm_unknown_tag.close_confirm()
+        is_confirm_unknown_tag_open.value = false
         submit_target_tab_id.value = null
         // タグの確認を通しただけ。板名の確認はこの後の do_submit で改めて出る
         await do_submit(target_tab_id, true, false)
+    }
+
+    /**
+     * 確認ダイアログが閉じた。保存・キャンセル・×・Escape・ブラウザバックのどれでも来る。
+     *
+     * `cancel_submit` / `confirm_submit` も自分でロックを倒すので、これは
+     * **ブラウザバックのような明示の経路を通らない閉じ方**のための保険。
+     * これが無いと `unknown_tags` の空判定と同じで、タブが二度と切り替えられなくなる。
+     *
+     * **`submit_target_tab_id` はここで消してはいけない。**
+     * ダイアログの「保存」は `hide()` してから `requested_confirm` を出すので、
+     * ここが先に走る。消すと `confirm_submit()` が持ち越した対象を見失い、
+     * 確認中に切り替えたタブへ誤配送される。
+     * ブラウザバックで古い値が残っても、新しい送信は必ずアクティブなタブを渡すので害はない
+     */
+    function onConfirmUnknownTagClosed(): void {
+        is_confirm_unknown_tag_open.value = false
     }
 
     function cancel_mi_board_submit(): void {
@@ -593,11 +600,11 @@ export function useKftlView(options: {
             if (!skip_unknown_tag_check) {
                 const not_found = collect_unknown_tags(kftl_requests)
                 if (not_found.length > 0) {
-                    unknown_tags.value = not_found
                     // 保存マーカーを消しておかないと、確認中の入力で再度submitされてしまう
                     set_submitting_content(remove_save_marker(get_submitting_content()))
                     submit_target_tab_id.value = target_tab_id
-                    show_confirm_unknown_tag_dialog.value = true
+                    is_confirm_unknown_tag_open.value = true
+                    confirm_unknown_tag.open_confirm(not_found)
                     return
                 }
             }
@@ -775,6 +782,7 @@ export function useKftlView(options: {
         kftl_text_area,
         kftl_line_label_wrap,
         confirm_unknown_mi_board_dialog: confirm_unknown_mi_board.confirm_unknown_mi_board_dialog,
+        confirm_unknown_tag_dialog: confirm_unknown_tag.confirm_unknown_tag_dialog,
 
         // Confirm unknown mi board
         unknown_mi_boards: confirm_unknown_mi_board.unknown_mi_boards,
@@ -802,11 +810,8 @@ export function useKftlView(options: {
         line_label_styles,
         is_requested_submit,
         title_height,
-        show_confirm_unknown_tag_dialog,
-        unknown_tags,
-
-        // Dialog UI
-        confirm_dialog_ui,
+        unknown_tags: confirm_unknown_tag.unknown_tags,
+        is_confirm_unknown_tag_open,
 
         // Computed
         text_area_width_px,
@@ -821,6 +826,7 @@ export function useKftlView(options: {
         submit,
         cancel_submit,
         confirm_submit,
+        onConfirmUnknownTagClosed,
         show_kftl_template_dialog,
         paste_template,
         focus_kftl_text_area,

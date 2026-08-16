@@ -12,6 +12,8 @@
                 </v-col>
             </v-row>
         </v-card-title>
+        <EditKyouTagsView :application_config="application_config" :gkill_api="gkill_api" :kyou="null"
+            :is_readonly="is_requested_submit" ref="kyou_tags_view" v-on="crudRelayHandlers" />
         <v-row class="pa-0 ma-0 gkill-dialog-actions">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -19,6 +21,9 @@
                     i18n.global.t('REKYOU_TITLE') }}</v-btn>
             </v-col>
         </v-row>
+        <ConfirmUnknownTagDialog :unknown_tags="unknown_tags" :is_requested_submit="is_requested_submit"
+            @requested_confirm="confirm_rekyou()" @requested_cancel="cancel_rekyou()"
+            ref="confirm_unknown_tag_dialog" />
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
                 :highlight_targets="[kyou.generate_info_identifier()]" :is_image_view="false" :kyou="kyou"
@@ -39,12 +44,19 @@ import { i18n } from '@/i18n'
 import type { ConfirmReKyouViewProps } from './confirm-re-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
+import EditKyouTagsView from './edit-kyou-tags-view.vue'
+import ConfirmUnknownTagDialog from '../dialogs/confirm-unknown-tag-dialog.vue'
 import { useConfirmReKyouView } from '@/classes/use-confirm-re-kyou-view'
 
 const props = defineProps<ConfirmReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const {
+    kyou_tags_view,
+    confirm_unknown_tag_dialog,
+    unknown_tags,
+    cancel_rekyou,
+    confirm_rekyou,
     is_requested_submit,
     show_kyou,
     rekyou,

@@ -10,8 +10,8 @@ Vue Router のルートページ、データ操作用 View コンポーネント
 ```
 pages/
 ├── (ルートページ 15 .vue + 2 .ts)  # Vue Router ルートページ
-├── views/                          # View コンポーネント（202 .vue）
-└── dialogs/                        # Dialog コンポーネント（115 .vue）
+├── views/                          # View コンポーネント（203 .vue）
+└── dialogs/                        # Dialog コンポーネント（116 .vue）
 ```
 
 ## 設計パターン
@@ -69,7 +69,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `shared-mi-page-props.ts` | — | 共有 Mi Props |
 | `shared-rykv-page-props.ts` | — | 共有 Rykv Props |
 
-## views/ — 全 View コンポーネント一覧（202 .vue）
+## views/ — 全 View コンポーネント一覧（203 .vue）
 
 ### データ追加系（23コンポーネント）
 
@@ -98,7 +98,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `add-new-rep-type-struct-element-view.vue` | リポジトリ型要素追加 |
 | `add-new-tag-struct-element-view.vue` | タグ構造要素追加 |
 
-### データ編集系（33コンポーネント）
+### データ編集系（34コンポーネント）
 
 | コンポーネント | 説明 |
 |--------------|------|
@@ -252,7 +252,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 | `plugin-html-view.vue` | プラグイン HTML コンテンツ表示 |
 | `plugin-html-context-menu.vue` | プラグイン HTML コンテキストメニュー |
 
-## dialogs/ — 全 Dialog コンポーネント一覧（115 .vue）
+## dialogs/ — 全 Dialog コンポーネント一覧（116 .vue）
 
 ### データ追加ダイアログ（22コンポーネント）
 
@@ -262,7 +262,7 @@ Kyou 系の CRUD イベント（`deleted_kyou` / `registered_tag` / `requested_o
 
 `edit-kc-dialog.vue`, `edit-kmemo-dialog.vue`, `edit-lantana-dialog.vue`, `edit-mi-dialog.vue`, `edit-mi-re-kyou-dialog.vue`, `edit-nlog-dialog.vue`, `edit-time-is-dialog.vue`, `edit-ur-log-dialog.vue`, `edit-idf-kyou-dialog.vue`, `edit-re-kyou-dialog.vue`, `edit-tag-dialog.vue`, `edit-text-dialog.vue`, `edit-notification-dialog.vue`, `edit-ryuu-dialog.vue`, `edit-ryuu-item-dialog.vue`, `edit-folder-dialog.vue`, `edit-dnote-dialog.vue`, `edit-dnote-item-dialog.vue`, `edit-dnote-list-dialog.vue`, `edit-dnote-trend-graph-dialog.vue`, `edit-device-struct-dialog.vue`, `edit-device-struct-element-dialog.vue`, `edit-kftl-template-struct-dialog.vue`, `edit-kftl-template-struct-element-dialog.vue`, `edit-rep-struct-dialog.vue`, `edit-rep-struct-element-dialog.vue`, `edit-rep-type-struct-dialog.vue`, `edit-rep-type-struct-element-dialog.vue`, `edit-tag-struct-dialog.vue`, `edit-tag-struct-element-dialog.vue`, `edit-mi-board-struct-dialog.vue`
 
-### 削除確認ダイアログ（24コンポーネント）
+### 削除確認ダイアログ（25コンポーネント）
 
 `confirm-delete-idf-kyou-dialog.vue`, `confirm-delete-tag-dialog.vue`, `confirm-delete-text-dialog.vue`, `confirm-delete-notification-dialog.vue`, `confirm-delete-share-kyou-list-dialog.vue`, `confirm-delete-device-struct-dialog.vue`, `confirm-delete-kftl-template-struct-dialog.vue`, `confirm-delete-rep-dialog.vue`, `confirm-delete-rep-struct-dialog.vue`, `confirm-delete-rep-type-struct-dialog.vue`, `confirm-delete-tag-struct-dialog.vue`, `confirm-delete-mi-board-struct-dialog.vue`, `confirm-delete-dnote-item-list-dialog.vue`, `confirm-delete-dnote-list-query-dialog.vue`, `confirm-delete-dnote-trend-graph-dialog.vue`, `confirm-delete-ryuu-item-dialog.vue`（+ `select-move-target-folder-dialog.vue` は移動先フォルダ選択、+ `confirm-unknown-mi-board-dialog.vue` は「まだ実在しない板名で保存してよいか」の確認、+ `confirm-close-kftl-tab-dialog.vue` は「内容が残っているメモ帳のタブを閉じてよいか」の確認、+ `confirm-save-duplicated-shared-data-dialog.vue` は「同じ内容の共有をもう一度受け取ったときに保存し直すか」の確認）
 
