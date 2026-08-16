@@ -33,7 +33,7 @@ client/
 │   └── lantana/             # Lantana ユーティリティ（3ファイル）
 ├── pages/                   # Vue ページ → pages/README.md
 │   ├── views/               # View コンポーネント（202 .vue）
-│   └── dialogs/             # Dialog コンポーネント（114 .vue）
+│   └── dialogs/             # Dialog コンポーネント（115 .vue）
 ├── plugins/
 │   └── vuetify.ts           # Vuetify プラグイン設定
 └── router/

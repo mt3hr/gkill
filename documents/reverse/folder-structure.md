@@ -80,7 +80,7 @@ src/client/
 │   ├── shared-mi-page.vue
 │   ├── shared-rykv-page.vue
 │   ├── views/              # ビューコンポーネント（202ファイル）
-│   └── dialogs/            # ダイアログコンポーネント（114ファイル、browse-zip-contents-dialog.vue 含む）
+│   └── dialogs/            # ダイアログコンポーネント（115ファイル、browse-zip-contents-dialog.vue 含む）
 ├── i18n.ts                 # i18n設定（ja のみ静的、他6言語は動的import）
 ├── assets/                 # 画像等の静的アセット
 ├── classes/
@@ -293,7 +293,7 @@ src/locales/
 └── de.json    # ドイツ語
 ```
 
-906キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
+910キー/言語。フラットなキーバリューJSON形式。フロントエンド（import）とバックエンド（go:embed）で共用されます。
 
 ### src/tools/ — ユーティリティスクリプト
 

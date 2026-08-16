@@ -904,5 +904,9 @@
     "EDIT_SAVED_FIND_QUERY_QUERY_TITLE": "Suchbedingung bearbeiten",
     "SAVED_FIND_QUERY_NAME_LABEL": "Name",
     "SAVED_FIND_QUERY_DEFAULT_NAME": "Neue Suchbedingung",
-    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "Gespeicherte Suchbedingungen"
+    "OPEN_SAVED_FIND_QUERY_LIST_TITLE": "Gespeicherte Suchbedingungen",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_TITLE": "Geteilter Inhalt ist doppelt",
+    "CONFIRM_SAVE_DUPLICATED_SHARED_DATA_MESSAGE": "Derselbe Inhalt wurde bereits gespeichert. Erneut speichern?",
+    "SAVE_ANYWAY_TITLE": "Trotzdem speichern",
+    "SKIPPED_DUPLICATED_SHARED_DATA_MESSAGE": "Wegen Duplikat nicht gespeichert"
 }

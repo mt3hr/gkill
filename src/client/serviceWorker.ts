@@ -1,11 +1,21 @@
 /// <reference lib="webworker" />
 import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
-import { is_url } from './classes/looks-like-url';
 import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { CacheFirst } from 'workbox-strategies'
-import { should_cache_response, parse_bool_loose, KYOU_CACHE_NAME, CONFIG_CACHE_NAME } from './classes/service-worker-utils';
+import { should_cache_response, is_successful_gkill_response, parse_bool_loose, KYOU_CACHE_NAME, CONFIG_CACHE_NAME } from './classes/service-worker-utils';
+import {
+  SHARE_FORCE_SAVE_FORM_KEY,
+  SHARE_TARGET_PATH,
+  append_share_ledger,
+  decide_share_save_target,
+  find_duplicated_share_entry,
+  read_share_ledger,
+  write_share_ledger,
+  type SharedPayload,
+  type ShareLedgerEntry,
+} from './classes/share-target-dedup';
 
 declare let clients: Clients;
 declare let self: ServiceWorkerGlobalScope
@@ -48,6 +58,7 @@ registerRoute(
       /^\/files\/.*/,  // "/files/..." は除外
       /^\/zip_cache\/.*/,  // "/zip_cache/..." は除外（ZIP展開キャッシュ）
       /^\/resources\/manual\/.*/,  // "/resources/manual/..." は除外（ヘルプHTML）
+      /^\/share-target$/,  // "/share-target" は除外（下の専用ハンドラが respondWith する）
     ],
   }),
 )
@@ -216,123 +227,148 @@ self.addEventListener('fetch', (event: FetchEvent) => {
   }
 })
 
+/** 共有された内容を保存する。保存できたときだけ true を返す（台帳へ載せてよいかの判断に使う）。 */
+async function save_shared_payload(payload: SharedPayload): Promise<boolean> {
+  try {
+    const target = decide_share_save_target(payload)
+    if (!target) {
+      return false
+    }
+
+    // Get session ID via Cookie Store API (available in service workers)
+    let session_id = ""
+    if (typeof cookieStore !== 'undefined') {
+      const cookie = await cookieStore.get('gkill_session_id')
+      if (cookie && cookie.value) {
+        session_id = cookie.value
+      }
+    }
+
+    const now = new Date(Date.now())
+
+    // Get device/user info from application config
+    const config_res = await fetch('/api/get_application_config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ session_id, locale_name: 'en' }),
+    })
+    const config_json = await config_res.json()
+    const app_config = config_json.application_config ?? {}
+    const device: string = app_config.device ?? ""
+    const user_id: string = app_config.user_id ?? ""
+
+    const make_kyou_base = () => ({
+      is_deleted: false,
+      id: crypto.randomUUID(),
+      rep_name: "",
+      related_time: now,
+      data_type: "",
+      create_time: now,
+      create_app: "gkill_share",
+      create_device: device,
+      create_user: user_id,
+      update_time: now,
+      update_app: "gkill_share",
+      update_device: device,
+      update_user: user_id,
+    })
+
+    if (target.kind === 'urlog') {
+      const res = await fetch('/api/add_urlog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          session_id,
+          locale_name: 'en',
+          tx_id: null,
+          want_response_kyou: false,
+          added_kyou: null,
+          urlog: {
+            ...make_kyou_base(),
+            url: target.url,
+            title: target.title,
+            description: "",
+            favicon_image: "",
+            thumbnail_image: "",
+          },
+        }),
+      })
+      return await is_successful_gkill_response(res)
+    }
+
+    const res = await fetch('/api/add_kmemo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        session_id,
+        locale_name: 'en',
+        tx_id: null,
+        want_response_kyou: false,
+        added_kyou: null,
+        kmemo: {
+          ...make_kyou_base(),
+          content: target.content,
+        },
+      }),
+    })
+    return await is_successful_gkill_response(res)
+  } catch (e) {
+    console.error('[SW] share-target error:', e)
+    return false
+  }
+}
+
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method === 'POST' &&
-    new URL(req.url).pathname === '/share-target') {
+    new URL(req.url).pathname === SHARE_TARGET_PATH) {
 
     event.respondWith((async () => {
-      let is_saved = false
+      let form: FormData | null = null
       try {
-        const form = await req.formData();
-        const shared_url = form.get('url') as string | null;
-        const shared_text = form.get('text') as string | null;
-        const shared_title = form.get('title') as string | null;
-
-        // Get session ID via Cookie Store API (available in service workers)
-        let session_id = ""
-        if (typeof cookieStore !== 'undefined') {
-          const cookie = await cookieStore.get('gkill_session_id')
-          if (cookie && cookie.value) {
-            session_id = cookie.value
-          }
-        }
-
-        const now = new Date(Date.now())
-
-        // Get device/user info from application config
-        const config_res = await fetch('/api/get_application_config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ session_id, locale_name: 'en' }),
-        })
-        const config_json = await config_res.json()
-        const app_config = config_json.application_config ?? {}
-        const device: string = app_config.device ?? ""
-        const user_id: string = app_config.user_id ?? ""
-
-        const make_kyou_base = () => ({
-          is_deleted: false,
-          id: crypto.randomUUID(),
-          rep_name: "",
-          related_time: now,
-          data_type: "",
-          create_time: now,
-          create_app: "gkill_share",
-          create_device: device,
-          create_user: user_id,
-          update_time: now,
-          update_app: "gkill_share",
-          update_device: device,
-          update_user: user_id,
-        })
-
-        const add_urlog = async (url: string, title: string): Promise<void> => {
-          await fetch('/api/add_urlog', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              session_id,
-              locale_name: 'en',
-              tx_id: null,
-              want_response_kyou: false,
-              added_kyou: null,
-              urlog: {
-                ...make_kyou_base(),
-                url,
-                title,
-                description: "",
-                favicon_image: "",
-                thumbnail_image: "",
-              },
-            }),
-          })
-        }
-
-        const add_kmemo = async (content: string): Promise<void> => {
-          await fetch('/api/add_kmemo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              session_id,
-              locale_name: 'en',
-              tx_id: null,
-              want_response_kyou: false,
-              added_kyou: null,
-              kmemo: {
-                ...make_kyou_base(),
-                content,
-              },
-            }),
-          })
-        }
-
-        if (is_url(shared_url)) {
-          await add_urlog(shared_url, shared_title ?? "")
-          is_saved = true
-        } else if (is_url(shared_title)) {
-          await add_urlog(shared_title, "")
-          is_saved = true
-        } else if (shared_text) {
-          const shared_text_lines = String(shared_text).split("http")
-          const shared_text_lines_last_line = "http" + shared_text_lines[shared_text.length >= 2 ? shared_text_lines.length - 1 : 0]
-          if (is_url(shared_text)) {
-            await add_urlog(shared_text, shared_title ?? "")
-            is_saved = true
-          } else if (is_url(shared_text_lines_last_line)) { // AndroidのGoogleアプリだと末尾にURLが入っていることがある
-            await add_urlog(shared_text_lines_last_line, "")
-            is_saved = true
-          } else {
-            await add_kmemo(shared_text)
-            is_saved = true
-          }
-        }
+        form = await req.formData()
       } catch (e) {
-        console.error('[SW] share-target error:', e)
-        is_saved = false
+        console.error('[SW] share-target form parse error:', e)
+      }
+      const payload: SharedPayload = {
+        title: (form?.get('title') as string | null) ?? "",
+        text: (form?.get('text') as string | null) ?? "",
+        url: (form?.get('url') as string | null) ?? "",
+      }
+      // 重複確認のうえで「それでも保存する」を押された経路。台帳の照会を飛ばす
+      const is_force = form?.get(SHARE_FORCE_SAVE_FORM_KEY) != null
+
+      const now = Date.now()
+      const ledger = await read_share_ledger()
+
+      // Androidはタスク復帰で同じ共有インテントを再配送する。届く内容は初回と同じなので、
+      // 保存済みの内容を覚えておくことでしか二重保存を止められない
+      const duplicated = is_force ? null : find_duplicated_share_entry(ledger, payload, now)
+      if (duplicated) {
+        return Response.redirect('/saihate?share_result=duplicate&share_entry_id=' + encodeURIComponent(duplicated.id), 303)
+      }
+
+      const is_saved = await save_shared_payload(payload)
+      if (is_saved) {
+        // 保存できたときだけ載せる。失敗を載せると、保存できていないのに次の共有が弾かれる。
+        // 強制保存では既存の行の時刻を進める（次の再配送もそこから期間ぶん弾く）
+        const existing = find_duplicated_share_entry(ledger, payload, now)
+        const entry: ShareLedgerEntry = {
+          id: existing ? existing.id : crypto.randomUUID(),
+          saved_at: now,
+          payload,
+        }
+        // 応答を返す前に必ず書き切る。SWは応答後すぐ止まりうる
+        await write_share_ledger(append_share_ledger(ledger, entry, now))
+      }
+
+      if (is_force) {
+        return new Response(JSON.stringify({ is_saved }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
       }
       return Response.redirect('/saihate?is_saved=' + is_saved, 303);
     })());
