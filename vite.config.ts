@@ -78,6 +78,10 @@ export default defineConfig(() => {
   // GKILL_API_PROXY_TARGET でproxy先を上書きできる
   // (`npm run dev -- --api=<url>` がこれを設定する。E2Eが空きポートで立てたサーバ向けにも使う)
   const api_target = process.env.GKILL_API_PROXY_TARGET ?? 'http://localhost:9999'
+  // gkillのTLS証明書は自己署名なので、https宛のproxyは既定 (secure: true) だと
+  // 「self-signed certificate」で全リクエストが落ちる。devサーバのproxy限定の設定で、
+  // ビルド成果物には影響しない (targetがhttpのときは無視される)
+  const api_proxy = { target: api_target, secure: false }
   return {
     build: {
       minify: minify,
@@ -133,10 +137,10 @@ export default defineConfig(() => {
       // gkill_serverが配信する非SPAパスをまとめてproxyする。
       // SPAルート (/rykv, /kftl, /mi など) はvue-routerが処理するのでproxyしない
       proxy: {
-        '/api': api_target,
-        '/files': api_target, // IDFファイル・サムネイル
-        '/zip_cache': api_target, // ZIP展開キャッシュ
-        '/resources/manual': api_target, // ヘルプHTML
+        '/api': api_proxy,
+        '/files': api_proxy, // IDFファイル・サムネイル
+        '/zip_cache': api_proxy, // ZIP展開キャッシュ
+        '/resources/manual': api_proxy, // ヘルプHTML
       },
     },
     resolve: {
