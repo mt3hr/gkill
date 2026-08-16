@@ -39,9 +39,13 @@ export function useCalendarQuery(options: {
 
         const query_id_changed = last_synced_query_id.value !== query.value.query_id
         last_synced_query_id.value = query.value.query_id
-        use_calendar.value = query.value.calendar_start_date !== null || query.value.calendar_end_date !== null
+        const has_dates = query.value.calendar_start_date !== null || query.value.calendar_end_date !== null
 
-        if (query_id_changed || query.value.calendar_start_date !== null || query.value.calendar_end_date !== null) {
+        // チェック状態を動かすのは「別の列に切り替わったとき」と「日付が載って着信したとき」だけ。
+        // 同一列でのnull着信でここを触ると、同じ日付の2回クリック(Vuetifyのレンジ解除で
+        // 選択が空になる)のたびにチェックが勝手に外れ、ピッカーごと消えてしまう
+        if (query_id_changed || has_dates) {
+            use_calendar.value = has_dates
             const start_date = moment(query.value.calendar_start_date)
             const date_list = Array<Date>()
             if (query.value.calendar_start_date && query.value.calendar_end_date) {
@@ -65,8 +69,8 @@ export function useCalendarQuery(options: {
             }
             dates.value = date_list
         }
-        // 同一query_idで両方null着信（チェックオフ）のときはローカルの日付選択を保持する
-        // （即時トグルで値が復活する。チェックrefだけ上で更新済み）
+        // 同一query_idで両方null着信（チェックオフ／ピッカーでの選択解除）のときは
+        // ローカルの日付選択もチェック状態も触らない（チェックの即時トグルで値が復活する）
 
         if (!props.inited) {
             nextTick(() => {
@@ -116,6 +120,11 @@ export function useCalendarQuery(options: {
     }
 
     function clicked_clear_calendar_button(): void {
+        // クリアは選択そのものを捨てる。既定期間が設定されていれば直後に既定の範囲が
+        // 着信して選び直されるが、未設定(rykv_default_period === -1)だと返ってくるのが
+        // null/nullで再構築の条件に入らないため、ここで落とさないと古い選択が残って
+        // 次の編集で復活してしまう
+        dates.value = []
         emits('request_clear_calendar_query')
     }
 
