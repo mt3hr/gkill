@@ -1,4 +1,3 @@
-import { i18n } from '@/i18n'
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
@@ -17,6 +16,7 @@ import type miExtractCheckStateQuery from '@/pages/views/mi-extract-check-state-
 import type miSortTypeQuery from '@/pages/views/mi-sort-type-query.vue'
 import type MiBoardQuery from '@/pages/views/mi-board-query.vue'
 import { SavedFindQueryConfig, type SavedFindQueryItem } from '@/classes/datas/config/saved-find-query-config'
+import { MI_ALL_BOARD_KEY } from '@/classes/mi-board-names'
 
 export function useMiQueryEditorSidebar(options: {
     props: MiQueryEditorSidebarProps,
@@ -85,7 +85,7 @@ export function useMiQueryEditorSidebar(options: {
         default_query.value = FindKyouQuery.generate_default_query_for_mi(props.application_config)
         default_query.value.query_id = props.gkill_api.generate_uuid()
         // mi_board_name はコンストラクタ既定の null（=「すべて」）のまま。
-        // 番兵文字列(MI_ALL_BOARD_NAME_TITLE)は表示層だけが使い、クエリへは持ち込まない
+        // 番兵(MI_ALL_BOARD_KEY)はサイドバーだけが使い、クエリへは持ち込まない
     }, { immediate: true })
 
     watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
@@ -126,9 +126,11 @@ export function useMiQueryEditorSidebar(options: {
         }
 
         if (board_query.value) {
-            // 「すべて」の番兵文字列→null変換はここ1点のみ（番兵は表示層専用。クエリ上のnull=「すべて」）
+            // 「すべて」の番兵→null変換はここ1点のみ（番兵はサイドバー専用。クエリ上のnull=「すべて」）。
+            // 番兵はロケール非依存のMI_ALL_BOARD_KEY。ツリーが emit するのはノードのkeyで、
+            // それは append_all_mi_board() が入れた "すべて" 固定なので、i18nの訳語と比べてはいけない
             const board_name = board_query.value.get_board_name()
-            find_query.mi_board_name = board_name === i18n.global.t("MI_ALL_BOARD_NAME_TITLE") ? null : board_name
+            find_query.mi_board_name = board_name === MI_ALL_BOARD_KEY ? null : board_name
         }
 
         find_query.reps = get_default_query().reps

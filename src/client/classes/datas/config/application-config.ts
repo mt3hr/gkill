@@ -14,6 +14,7 @@ import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-r
 import { MiBoardStructElementData } from './mi-board-struct-element-data'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
+import { MI_ALL_BOARD_KEY } from '@/classes/mi-board-names'
 
 /**
  * ツリー全体を探して条件に合うノードがあるか調べる。
@@ -489,16 +490,19 @@ export class ApplicationConfig {
     async append_all_mi_board(): Promise<Array<GkillError>> {
         // 直下だけでなくツリー全体を探す。
         // 「すべて」をフォルダへ入れると、直下だけ見ていた頃はルートに再生成されて2個になっていた
-        const exist = has_struct_node(this.mi_board_struct, node => (node as MiBoardStructElementData).board_name === "すべて")
+        const exist = has_struct_node(this.mi_board_struct, node => (node as MiBoardStructElementData).board_name === MI_ALL_BOARD_KEY)
 
         if (!exist) {
             const board_struct = new MiBoardStructElementData()
-            board_struct.key = "すべて"
+            // key/board_name はロケール非依存の番兵。ツリーがクリックで emit するのは key で、
+            // サイドバーはそれを MI_ALL_BOARD_KEY と比べて mi_board_name=null(=全件)へ戻す。
+            // 表示名(name)だけが訳語
+            board_struct.key = MI_ALL_BOARD_KEY
             board_struct.name = i18n.global.t('ALL_MI_BOARD_NAME')
             board_struct.check_when_inited = true
             board_struct.is_checked = board_struct.check_when_inited
             board_struct.id = GkillAPI.get_gkill_api().generate_uuid()
-            board_struct.board_name = "すべて"
+            board_struct.board_name = MI_ALL_BOARD_KEY
             this.mi_board_struct.children?.unshift(board_struct)
         }
         return new Array<GkillError>()

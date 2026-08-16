@@ -1,7 +1,8 @@
-import { i18n } from '@/i18n'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import type { MiBoardQueryEmits } from '@/pages/views/mi-board-query-emits'
 import type { MiBoardQueryProps } from '@/pages/views/mi-board-query-props'
+import { CheckState } from '@/pages/views/check-state'
+import { MI_ALL_BOARD_KEY, resolve_clicked_mi_board_names } from '@/classes/mi-board-names'
 
 export function useMiBoardQuery(options: {
     props: MiBoardQueryProps,
@@ -11,7 +12,9 @@ export function useMiBoardQuery(options: {
 
     // ── State refs ──
     const mi_board_struct = computed(() => props.application_config.mi_board_struct)
-    const board_name: Ref<string> = ref(i18n.global.t("MI_ALL_BOARD_NAME_TITLE"))
+    // 番兵はロケール非依存の MI_ALL_BOARD_KEY。ツリーが emit するのは key なので、
+    // i18n の訳語と比較すると日本語以外のロケールで「すべて」が効かなくなる
+    const board_name: Ref<string> = ref(MI_ALL_BOARD_KEY)
     const use_board = ref(true)
 
     // ── Watchers ──
@@ -33,13 +36,26 @@ export function useMiBoardQuery(options: {
             return
         }
         // クエリ上 mi_board_name=null は「すべて」。
-        // 番兵文字列MI_ALL_BOARD_NAME_TITLEは表示層（ここ）だけが使う
+        // 番兵MI_ALL_BOARD_KEYはサイドバー（ここ）だけが使う
         board_name.value = props.find_kyou_query.mi_board_name
-            ?? i18n.global.t("MI_ALL_BOARD_NAME_TITLE")
+            ?? MI_ALL_BOARD_KEY
     }
 
     function get_board_name(): string {
         return board_name.value
+    }
+
+    // ── Template event handlers ──
+    // ツリーの行がクリックされたとき。開く板の決定は
+    // resolve_clicked_mi_board_names() に閉じている（ルート行のクリックでは何も開かない）
+    function onClickedItems(_e: MouseEvent, items: Array<string>, check_state: CheckState, is_by_user: boolean): void {
+        if (!is_by_user || check_state !== CheckState.checked) {
+            return
+        }
+        resolve_clicked_mi_board_names(items, props.application_config.mi_board_struct).forEach(board => {
+            board_name.value = board
+            emits('request_open_focus_board', board)
+        })
     }
 
     // ── Return ──
@@ -51,5 +67,8 @@ export function useMiBoardQuery(options: {
 
         // Methods
         get_board_name,
+
+        // Template event handlers
+        onClickedItems,
     }
 }

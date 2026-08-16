@@ -4,7 +4,7 @@ import type { ApplicationConfig } from "@/classes/datas/config/application-confi
 import { MiCheckState } from "./mi-check-state"
 import { MiSortType } from "./mi-sort-type"
 import type { RepStructElementData } from "@/classes/datas/config/rep-struct-element-data"
-import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
+import { is_struct_container_node, type FoldableStructModel } from "@/pages/views/foldable-struct-model"
 import moment from "moment"
 import type { DeviceStructElementData } from "@/classes/datas/config/device-struct-element-data"
 import type { RepTypeStructElementData } from "@/classes/datas/config/rep-type-struct-element-data"
@@ -350,7 +350,8 @@ export class FindKyouQuery {
             const device_children = device.children
             if (device_children) {
                 device_children.forEach(child_device => {
-                    if (child_device.check_when_inited) {
+                    // フォルダ（入れ物）は除く。collect_inited_tag_names と同じ理由
+                    if (child_device.check_when_inited && !is_struct_container_node(child_device)) {
                         device_names.push(child_device.device_name)
                     }
                     if (child_device) {
@@ -368,7 +369,8 @@ export class FindKyouQuery {
             const rep_type_children = rep_type.children
             if (rep_type_children) {
                 rep_type_children.forEach(child_rep_type => {
-                    if (child_rep_type.check_when_inited) {
+                    // フォルダ（入れ物）は除く。collect_inited_tag_names と同じ理由
+                    if (child_rep_type.check_when_inited && !is_struct_container_node(child_rep_type)) {
                         rep_type_names.push(child_rep_type.rep_type_name)
                     }
                     if (child_rep_type) {
@@ -489,8 +491,10 @@ export class FindKyouQuery {
         const collect_checked_keys = (structs: Array<FoldableStructModel>): Set<string> => {
             const checked_keys = new Set<string>()
             const walk = (struct: FoldableStructModel): void => {
+                // indeterminate のクリアは入れ物にも要るので、walk 自体は打ち切らない。
+                // 集合へ入れないだけ（フォルダ名は実在する記録種別 / 端末名ではない）
                 struct.indeterminate = false
-                if (struct.is_checked) {
+                if (struct.is_checked && !is_struct_container_node(struct)) {
                     checked_keys.add(struct.key)
                 }
                 if (struct.children) {
